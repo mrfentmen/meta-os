@@ -126,6 +126,17 @@ and resolve/reject with the file-reader result. Current result:
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.
 
+## Evaluation (Agent 3: Sanitas)
+
+Meta Sanitas scenario sets, ground truth, and eval harness live in
+`eval/sanitas/` (see its README): 20 labeled scenarios, a fixture
+stub and an always-clean baseline, and a harness that scores any
+assessment source against the frozen v2 contract and reports
+precision, recall, false-positive and false-negative rates, and
+latency. `npm test` runs the harness tests alongside the UI tests.
+Spark stays OFF: the harness runs fully on fixtures until Del
+green-lights the test phase.
+
 ## The /api/assess contract (v2, shared with the native app)
 
 Default endpoint: same-origin `/api/assess` (configurable in the UI).
