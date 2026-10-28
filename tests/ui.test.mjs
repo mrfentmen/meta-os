@@ -690,6 +690,21 @@ test("history: empty history note says analysis is running, matching the native 
   assert.match(swift, /Analysis is running — assessments and errors will appear here as they arrive\./);
 });
 
+// ---------- camera permission wait (web parity with the native camera) ----------
+// The native camera has a requesting-permission state while the system
+// prompt is up; the web panel said "Camera is off." through that wait.
+// No browser exists in this suite, so these are static checks on the
+// shipped wiring: the Start handler says the wait before awaiting the
+// start, disables Start until the prompt resolves, and the native side
+// carries the same waiting text in its requesting-permission state.
+test("camera: web Start says it is waiting for camera permission, matching the native camera", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /els\.btnCameraStart\.addEventListener\("click", async \(\) => \{[\s\S]*?setCameraState\("Waiting for camera permission…"\)/);
+  assert.match(app, /els\.btnCameraStart\.disabled = true;\n\s+setCameraState\("Waiting for camera permission…"\)/);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url), "utf8");
+  assert.match(swift, /Waiting for camera permission…/);
+});
+
 // ---------- last round trip (web parity with the native status bar) ----------
 // The native app's status bar shows the client-measured last round trip,
 // so the web Camera panel must show the same line, next to the sampler

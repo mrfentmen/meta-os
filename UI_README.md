@@ -27,7 +27,10 @@ ES modules for the node test runner; it declares zero dependencies.)
 - **Camera** (`js/camera.js`, wired in `js/app.js`): `getUserMedia`
   start/stop/reset, a visible CAMERA LIVE indicator while the stream is
   active, and honest states for permission denied, no camera found, camera
-  busy, and unsupported browser/context. A facing selector offers the
+  busy, and unsupported browser/context. While the browser permission
+  prompt is up, Start says "Waiting for camera permission…" and stays
+  disabled until the prompt resolves, matching the native camera's
+  requesting-permission state, instead of still saying "Camera is off." A facing selector offers the
   front camera and the rear camera — the one a phone demo points at the
   scene — as a preference, never an exact requirement, so a device with
   only one camera still gets that camera. Changing it while the camera

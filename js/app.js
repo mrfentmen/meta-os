@@ -587,6 +587,17 @@ els.btnVideoAssess.addEventListener("click", async () => {
 });
 
 els.btnCameraStart.addEventListener("click", async () => {
+  // Native parity: the native camera has a requesting-permission state
+  // ("Waiting for camera permission…") while the system prompt is up.
+  // The web panel said "Camera is off." through that whole wait, which
+  // reads as if nothing is happening while the user decides. Say the
+  // wait out loud, and keep Start disabled until the prompt resolves —
+  // the native Start button is disabled in its requesting state too —
+  // so a second tap cannot fire a second permission request. The
+  // refreshButtons() at the end restores the button to the real state:
+  // disabled once live, enabled again after a denied or failed start.
+  els.btnCameraStart.disabled = true;
+  setCameraState("Waiting for camera permission…");
   try {
     await camera.start();
     els.cameraIndicator.hidden = false;
