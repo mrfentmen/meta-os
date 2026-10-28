@@ -542,7 +542,17 @@ final class AppModel: ObservableObject {
                 at: 0
             )
         } catch let error as AssessError {
-            lastRoundTripMs = error.latencyMs
+            // A failure with no request behind it (invalid endpoint URL,
+            // request-body encode failure — AssessClient reports nil
+            // latency there) leaves the previous round trip alone,
+            // exactly like a frame-capture failure: no request was made,
+            // so there is no new measurement, and the old value is real
+            // information a typo'd endpoint should not erase. Only
+            // Reset Session clears it. A failure of a request that was
+            // actually attempted carries a measured latency and updates it.
+            if let latencyMs = error.latencyMs {
+                lastRoundTripMs = latencyMs
+            }
             let status: LogStatus
             switch error.kind {
             case .http: status = .httpError

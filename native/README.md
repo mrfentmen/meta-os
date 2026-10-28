@@ -134,6 +134,11 @@ rebuilding.
 - `processing.latency_ms` stays `null` unless the server reports it.
   The latency the app displays itself ("Last round trip") is measured
   client-side with a clock around the actual request — including failures.
+  When no request was attempted at all (an invalid endpoint URL, so the
+  client reports no latency), there is no new measurement, so the previous
+  value stays on screen until Reset Session clears it — a failed submit
+  never erases a real earlier measurement, just as a frame-capture failure
+  leaves it alone.
 - Contract violations (wrong product, bad timestamp, a boolean where a
   number belongs, confidence outside 0…1, missing `latency_ms` key, …)
   reject the whole response with the specific problems listed.
