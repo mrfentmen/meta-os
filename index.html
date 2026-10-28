@@ -80,6 +80,19 @@
     <p class="note">Needs no camera. If the model backend is not connected, the request fails honestly in the history and the session log, and no assessment appears — same as a live frame.</p>
   </section>
 
+  <section class="panel" aria-label="Prerecorded video input">
+    <h2>Prerecorded video</h2>
+    <p class="note">For a recorded clip when neither a live camera nor a still image is the source. Play the clip, pause on the frame you want assessed, and tap “Assess this frame”: only that one frame is sent to the assessment endpoint, under the product selected above, and logged exactly like a live frame. The whole video is never sent, and it is not stored by this app.</p>
+    <label for="video-input">Choose a video file</label>
+    <input id="video-input" type="file" accept="video/*">
+    <video id="video-preview" controls playsinline muted hidden></video>
+    <p id="video-state" class="note">No video chosen.</p>
+    <div class="controls">
+      <button id="btn-video-assess" type="button" class="btn-primary" disabled>Assess this frame</button>
+    </div>
+    <p class="note">Needs no camera. If the model backend is not connected, the request fails honestly in the history and the session log, and no assessment appears — same as a live frame.</p>
+  </section>
+
   <section class="panel" aria-label="Configuration">
     <h2>Analysis configuration</h2>
     <label for="endpoint">Assessment endpoint</label>

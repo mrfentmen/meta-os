@@ -14,6 +14,7 @@ import { FrameSampler } from "../js/sampler.js";
 import { assessFrame, AssessError } from "../js/client.js";
 import { SessionLog } from "../js/log.js";
 import { isSupportedImageFile, readFileAsDataURL } from "../js/image_input.js";
+import { isSupportedVideoFile, captureVideoFrame } from "../js/video_input.js";
 
 function validAssessment(product = "vigiles") {
   return {
@@ -545,6 +546,48 @@ test("image input: readFileAsDataURL rejects when the reader errors", async () =
     if (previous === undefined) delete globalThis.FileReader;
     else globalThis.FileReader = previous;
   }
+});
+
+// ---------- prerecorded-video input ----------
+
+test("video input: only video/* files are accepted", () => {
+  assert.equal(isSupportedVideoFile({ type: "video/mp4" }), true);
+  assert.equal(isSupportedVideoFile({ type: "video/webm" }), true);
+  assert.equal(isSupportedVideoFile({ type: "VIDEO/MP4" }), true);
+  assert.equal(isSupportedVideoFile({ type: "image/jpeg" }), false);
+  assert.equal(isSupportedVideoFile({ type: "text/plain" }), false);
+  assert.equal(isSupportedVideoFile({ type: "" }), false);
+  assert.equal(isSupportedVideoFile({}), false);
+  assert.equal(isSupportedVideoFile(null), false);
+});
+
+test("video input: captureVideoFrame draws the current frame and returns a JPEG data URL", () => {
+  const drawn = [];
+  const video = { videoWidth: 640, videoHeight: 360 };
+  const canvas = {
+    width: 0,
+    height: 0,
+    getContext: () => ({ drawImage: (el, x, y, w, h) => drawn.push([el, x, y, w, h]) }),
+    toDataURL: (type, quality) => `data:${type};base64,frame-${quality}`,
+  };
+  assert.equal(captureVideoFrame(video, canvas), "data:image/jpeg;base64,frame-0.8");
+  assert.equal(canvas.width, 640);
+  assert.equal(canvas.height, 360);
+  assert.deepEqual(drawn, [[video, 0, 0, 640, 360]]);
+});
+
+test("video input: captureVideoFrame throws when the video has no dimensions yet", () => {
+  const canvas = { getContext: () => { throw new Error("should not draw"); }, toDataURL: () => "" };
+  assert.throws(() => captureVideoFrame({ videoWidth: 0, videoHeight: 0 }, canvas), /not ready yet/);
+  assert.throws(() => captureVideoFrame({ videoWidth: 640, videoHeight: 0 }, canvas), /not ready yet/);
+});
+
+test("video input: the shipped page has the video panel elements", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(html, /<input[^>]*id="video-input"[^>]*accept="video\/\*"/);
+  assert.match(html, /<video[^>]*id="video-preview"[^>]*controls/);
+  assert.match(html, /id="video-state"/);
+  assert.match(html, /id="btn-video-assess"/);
 });
 
 // ---------- accessibility announcements ----------

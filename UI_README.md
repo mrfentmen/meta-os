@@ -39,6 +39,17 @@ ES modules for the node test runner; it declares zero dependencies.)
   body, the UI shows "Model backend not connected" with the real error,
   records the failure in the history and the session log, and displays no
   assessment. The UI never invents a result.
+- **Prerecorded-video input** (`js/video_input.js`, wired in `js/app.js`): a
+  file picker for a recorded clip — the input used when neither a live
+  camera nor a still image is the source. The clip plays in the page;
+  "Assess this frame" captures only the frame showing at that moment
+  (paused where the user wants it) and sends that one JPEG through the
+  same client, validation, history entry, and session-log entry as a
+  live frame. The whole video is never sent; the object URL lives in
+  memory and is revoked by Reset or when another file is chosen. The
+  assess button stays disabled until the video's metadata has loaded,
+  so a frame can never be requested from a frameless video, and a
+  capture failure is logged honestly with no assessment invented.
 - **Still-image input** (`js/image_input.js`, wired in `js/app.js`): a
   file picker for prerecorded or photographed scenes — the input the
   Ignis and Sanitas demos use when a live camera is not the source.

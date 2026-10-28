@@ -10,6 +10,7 @@ import { assessFrame, AssessError } from "./client.js";
 import { SessionLog } from "./log.js";
 import { PRODUCT_BY_ID, isProductId } from "./products.js";
 import { isSupportedImageFile, readFileAsDataURL } from "./image_input.js";
+import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -48,6 +49,10 @@ const els = {
   imagePreview: $("image-preview"),
   imageState: $("image-state"),
   btnImageAssess: $("btn-image-assess"),
+  videoInput: $("video-input"),
+  videoPreview: $("video-preview"),
+  videoState: $("video-state"),
+  btnVideoAssess: $("btn-video-assess"),
 };
 
 const camera = new Camera(els.video);
@@ -404,6 +409,90 @@ els.btnImageAssess.addEventListener("click", async () => {
   }
 });
 
+// Prerecorded-video input state: the chosen file's object URL lives in
+// memory only and is revoked by Reset (and when another file is chosen).
+// "Assess this frame" captures the frame showing at that moment and
+// sends it once, under whichever product is selected, exactly like a
+// live sampled frame. The assess button stays disabled until the video's
+// metadata has loaded, so capture cannot be tapped on a frameless video.
+let videoObjectUrl = null;
+let videoAssessing = false;
+
+function clearVideoInput() {
+  if (videoObjectUrl) {
+    URL.revokeObjectURL(videoObjectUrl);
+    videoObjectUrl = null;
+  }
+  els.videoPreview.removeAttribute("src");
+  els.videoPreview.load();
+  els.videoPreview.hidden = true;
+  els.btnVideoAssess.disabled = true;
+}
+
+els.videoInput.addEventListener("change", () => {
+  const file = els.videoInput.files && els.videoInput.files[0];
+  clearVideoInput();
+  if (!file) {
+    els.videoState.textContent = "No video chosen.";
+    return;
+  }
+  if (!isSupportedVideoFile(file)) {
+    els.videoState.textContent = "That file is not a video. Choose a video file.";
+    return;
+  }
+  videoObjectUrl = URL.createObjectURL(file);
+  els.videoPreview.src = videoObjectUrl;
+  els.videoPreview.hidden = false;
+  els.videoState.textContent = `Video ready: ${file.name}. Play it, pause on the frame you want assessed, and tap “Assess this frame”. Only that frame is sent; the video is not stored by this app.`;
+});
+
+els.videoPreview.addEventListener("loadedmetadata", () => {
+  // Metadata loaded means the video has dimensions, so a frame capture
+  // will succeed. The button enables only while a video is loaded.
+  els.btnVideoAssess.disabled = !videoObjectUrl;
+});
+
+els.videoPreview.addEventListener("error", () => {
+  els.videoState.textContent = "That video could not be played in this browser. Try another file.";
+  els.btnVideoAssess.disabled = true;
+});
+
+els.btnVideoAssess.addEventListener("click", async () => {
+  if (!videoObjectUrl || videoAssessing) return;
+  videoAssessing = true;
+  els.btnVideoAssess.disabled = true;
+  setBackendStatus("unknown", `Contacting model backend: ${currentEndpoint()} …`);
+  const timestamp = new Date().toISOString();
+  let image;
+  try {
+    image = captureVideoFrame(els.videoPreview, els.captureCanvas);
+  } catch (err) {
+    // Same honest handling as a failed live capture: logged, shown in
+    // the video panel, no assessment invented.
+    log.record({
+      requestTimestamp: timestamp,
+      product: currentProductId,
+      latencyMs: null,
+      status: "invalid_response",
+      error: `Video frame capture failed: ${err.message}`,
+      scenarioLabel: currentScenarioLabel(),
+    });
+    updateLogStats();
+    els.videoState.textContent = `Could not capture this frame: ${err.message}`;
+    videoAssessing = false;
+    els.btnVideoAssess.disabled = false;
+    return;
+  }
+  try {
+    await submitAssessment(currentProductId, timestamp, image);
+  } catch {
+    // submitAssessment already rendered and logged the failure.
+  } finally {
+    videoAssessing = false;
+    els.btnVideoAssess.disabled = !videoObjectUrl;
+  }
+});
+
 els.btnCameraStart.addEventListener("click", async () => {
   try {
     await camera.start();
@@ -449,6 +538,9 @@ els.btnReset.addEventListener("click", () => {
   els.imagePreview.removeAttribute("src");
   els.imageState.textContent = "No image chosen.";
   els.btnImageAssess.disabled = true;
+  els.videoInput.value = "";
+  clearVideoInput();
+  els.videoState.textContent = "No video chosen.";
   setCameraState("Camera stopped. View reset.");
   setBackendStatus("unknown", "Model backend status unknown. Start analysis to contact the endpoint.");
   els.latest.textContent = "No assessment received yet.";
