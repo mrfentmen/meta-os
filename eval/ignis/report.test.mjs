@@ -23,6 +23,7 @@ import {
   assertWritableReportPath,
   classifyRunKind,
   computeCategoryConfusion,
+  computeCategoryHeadline,
   computeConfusableNegatives,
   renderRunReport,
 } from "./report.mjs";
@@ -126,6 +127,54 @@ test("report: confusable-negative breakdown counts the stub's three false alarms
   assert.match(report, /## Confusable negatives/);
   assert.match(report, /Total: 3 of 5 confusable-negative scenarios predicted as an alert category/);
   assert.match(report, /IGN-007/);
+});
+
+test("report: headline finding names the stub's weakest category and most-confused pair, above the table", async () => {
+  const run = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  const headline = computeCategoryHeadline(run.records);
+  assert.equal(headline.weakest.truth, "flame-like lighting");
+  assert.equal(headline.weakest.correct, 1);
+  assert.equal(headline.weakest.total, 3);
+  assert.equal(headline.mostConfused.truth, "flame-like lighting");
+  assert.equal(headline.mostConfused.predicted, "visible flame");
+  assert.equal(headline.mostConfused.count, 2);
+  assert.deepEqual(headline.mostConfused.scenarioIds, ["IGN-010", "IGN-018"]);
+  const report = renderRunReport(run);
+  assert.match(report, /## Headline finding/);
+  assert.match(report, /Weakest category: flame-like lighting — 1 of 3 correct \(0\.333\)/);
+  assert.match(report, /Most confused pair: flame-like lighting -> visible flame — 2 scenario\(s\) \(IGN-010, IGN-018\)/);
+  assert.ok(report.indexOf("## Headline finding") < report.indexOf("## Per-category confusion"));
+});
+
+test("report: headline finding names nothing assessable on a held run, and no misses on a perfect run", async () => {
+  const heldRun = await buildRun((s) => assessViaModelAdapter(s, {}), "server model adapter (held while Spark stays off)", "held-state run, no live model");
+  const heldHeadline = computeCategoryHeadline(heldRun.records);
+  assert.equal(heldHeadline.weakest, null);
+  assert.equal(heldHeadline.mostConfused, null);
+  assert.match(renderRunReport(heldRun), /No category finding: nothing in this run was assessed/);
+  const perfectRun = await buildRun(
+    (s) => fakeAssessment(s.ground_truth_label),
+    "server model adapter (held while Spark stays off)",
+    "held-state run, no live model",
+  );
+  assert.equal(computeCategoryHeadline(perfectRun.records).mostConfused, null);
+  assert.match(renderRunReport(perfectRun), /No category misses: every assessed scenario matched its ground truth/);
+});
+
+test("report: headline tie-breaks are deterministic — most misses wins the weakest tie, names win the pair tie", () => {
+  const headline = computeCategoryHeadline([
+    { scenario_id: "T1", ground_truth_label: "alpha", actual_category: "alpha" },
+    { scenario_id: "T2", ground_truth_label: "alpha", actual_category: "beta" },
+    { scenario_id: "T3", ground_truth_label: "beta", actual_category: "beta" },
+    { scenario_id: "T4", ground_truth_label: "beta", actual_category: "alpha" },
+    { scenario_id: "T5", ground_truth_label: "beta", actual_category: "beta" },
+    { scenario_id: "T6", ground_truth_label: "beta", actual_category: "gamma" },
+  ]);
+  // Both truth categories sit at 0.500, but beta has 2 misses to alpha's 1.
+  assert.equal(headline.weakest.truth, "beta");
+  // All three confused pairs have count 1; alpha -> beta wins alphabetically.
+  assert.equal(headline.mostConfused.truth, "alpha");
+  assert.equal(headline.mostConfused.predicted, "beta");
 });
 
 test("report: a held run's confusion is all ERROR and its confusables are unassessed, not clean", async () => {

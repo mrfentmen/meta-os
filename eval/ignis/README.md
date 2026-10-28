@@ -54,7 +54,11 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   renders a truth-vs-predicted category table and a
   confusable-negative breakdown (steam or fog / flame-like lighting
   predicted as an alert category), so alert-level metrics cannot hide
-  systematic category swaps.
+  systematic category swaps. A headline finding above the full table
+  names the weakest truth category (lowest category-correct rate)
+  and the most-confused truth -> predicted pair; when nothing was
+  assessed it says so instead of naming a category, and ERROR counts
+  as a failure, never as a confusion.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and

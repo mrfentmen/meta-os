@@ -32,7 +32,9 @@
 // non-alert scenes (steam or fog, flame-like lighting) that were
 // predicted as an alert category (visible smoke, visible flame).
 // Errored records appear in the table under ERROR: they are failures,
-// not confusions.
+// not confusions. Above the full table, a headline finding names the
+// weakest truth category and the most-confused pair, so the single
+// biggest failure mode is visible without reading the whole matrix.
 // A run's numbers are only ever compared against a baseline run the
 // caller supplies; the bar is recall AND category accuracy, never
 // precision alone (the baseline never fires a false alarm by
@@ -165,6 +167,61 @@ export function classifyRunKind(run) {
   return "unlabelled";
 }
 
+// The headline finding names the single biggest failure mode before
+// the full table, so a reader need not read the whole matrix: the
+// truth category with the lowest category-correct rate, and the
+// most-confused truth -> predicted pair. Rates are correct / total
+// for the truth category, matching category-accuracy semantics —
+// errored records count as misses, not as excused. A truth category
+// is only ranked when at least one of its scenarios was assessed;
+// when nothing in the run was assessed at all there is no weakest
+// category to name, and the headline says so instead of inventing
+// one. The most-confused pair counts only real predicted categories:
+// ERROR is a failure, not a confusion, so a run whose misses are all
+// errors has no most-confused pair. Ties break deterministically —
+// weakest by most misses then truth name, pair by truth then
+// predicted name — so the headline never depends on record order.
+export function computeCategoryHeadline(records) {
+  const perCategory = {};
+  for (const r of records) {
+    perCategory[r.ground_truth_label] ??= { truth: r.ground_truth_label, total: 0, correct: 0, assessed: 0 };
+    const entry = perCategory[r.ground_truth_label];
+    entry.total += 1;
+    if (r.actual_category !== null) entry.assessed += 1;
+    if (r.actual_category === r.ground_truth_label) entry.correct += 1;
+  }
+  const ranked = Object.values(perCategory)
+    .filter((e) => e.assessed > 0)
+    .map((e) => ({ ...e, rate: e.total === 0 ? 0 : e.correct / e.total }))
+    .sort((a, b) => {
+      if (a.rate !== b.rate) return a.rate - b.rate;
+      const missesA = a.total - a.correct;
+      const missesB = b.total - b.correct;
+      if (missesA !== missesB) return missesB - missesA;
+      return a.truth < b.truth ? -1 : a.truth > b.truth ? 1 : 0;
+    });
+  const weakest = ranked.length > 0 ? ranked[0] : null;
+  const pairCounts = {};
+  for (const r of records) {
+    if (r.actual_category === null || r.actual_category === r.ground_truth_label) continue;
+    pairCounts[r.ground_truth_label] ??= {};
+    pairCounts[r.ground_truth_label][r.actual_category] ??= [];
+    pairCounts[r.ground_truth_label][r.actual_category].push(r.scenario_id);
+  }
+  const pairs = [];
+  for (const truth of Object.keys(pairCounts).sort()) {
+    for (const predicted of Object.keys(pairCounts[truth]).sort()) {
+      pairs.push({ truth, predicted, count: pairCounts[truth][predicted].length, scenarioIds: pairCounts[truth][predicted] });
+    }
+  }
+  pairs.sort((a, b) => {
+    if (a.count !== b.count) return b.count - a.count;
+    if (a.truth !== b.truth) return a.truth < b.truth ? -1 : 1;
+    return a.predicted < b.predicted ? -1 : a.predicted > b.predicted ? 1 : 0;
+  });
+  return { weakest, mostConfused: pairs.length > 0 ? pairs[0] : null, perCategory: ranked };
+}
+
 // Alert categories for the Ignis product (from scenarios.json and
 // adapter.mjs: only visible smoke and visible flame fire an alert).
 // Confusable negatives are the non-alert categories a source most
@@ -273,6 +330,28 @@ export function renderRunReport(run, baselineRun = null) {
     `- Category accuracy: ${fmt(m.category_accuracy)}`,
     `- Latency (harness wall clock): mean ${fmtLatency(m.latency_ms.mean)} ms, median ${fmtLatency(m.latency_ms.median)} ms, max ${fmtLatency(m.latency_ms.max)} ms`,
     `- Errors: ${m.errors.count}${m.errors.scenario_ids.length > 0 ? ` (${m.errors.scenario_ids.join(", ")})` : ""}`,
+    "",
+  );
+  const headline = computeCategoryHeadline(run.records);
+  lines.push("## Headline finding", "");
+  if (headline.weakest === null) {
+    lines.push(
+      "No category finding: nothing in this run was assessed, so no weakest category " +
+        "or confused pair can be named. This run's numbers describe source availability, not detection.",
+    );
+  } else if (headline.weakest.rate === 1) {
+    lines.push("No category misses: every assessed scenario matched its ground truth.");
+  } else {
+    const w = headline.weakest;
+    lines.push(`- Weakest category: ${w.truth} — ${w.correct} of ${w.total} correct (${w.rate.toFixed(3)}).`);
+    if (headline.mostConfused === null) {
+      lines.push("- Most confused pair: none — every category miss in this run produced no assessment (ERROR), not a wrong category.");
+    } else {
+      const p = headline.mostConfused;
+      lines.push(`- Most confused pair: ${p.truth} -> ${p.predicted} — ${p.count} scenario(s) (${p.scenarioIds.join(", ")}).`);
+    }
+  }
+  lines.push(
     "",
     "## Per-scenario records",
     "",
