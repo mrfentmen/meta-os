@@ -94,7 +94,14 @@
 // false negative — so a slow alert failure mode is visible without
 // scanning the per-scenario table; all four rows always render, so
 // the totals sum to the sample size, and a group with no recorded
-// latency shows n/a, never a fabricated zero.
+// latency shows n/a, never a fabricated zero. A latency-by-alert-
+// correctness section right after it collapses those four outcomes
+// into two — alert correct (true positives plus true negatives)
+// versus alert error (false positives plus false negatives) — so
+// whether alert failures as a whole run slower than alert successes
+// is visible without adding the four rows above; both rows always
+// render, so the totals sum to the sample size, and a group with no
+// recorded latency shows n/a, never a fabricated zero.
 // An alert-errors section names the scenarios behind the summary
 // line's FP/FN counts: false positives (an alert fired where none
 // was expected) and false negatives (an expected alert that never
@@ -506,6 +513,49 @@ export function computeLatencyByAlertOutcome(records) {
     if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
   }
   return ["true positive", "true negative", "false positive", "false negative"].map((outcome) => {
+    const e = groups[outcome];
+    const sorted = e.latencies.sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+    }
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return {
+      outcome,
+      total: e.total,
+      recorded: sorted.length,
+      meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+      medianMs: median,
+      maxMs: sorted[sorted.length - 1],
+    };
+  });
+}
+
+// Latency by alert correctness: one row per alert-correctness
+// group, in fixed order alert correct, alert error, with the count
+// of recorded harness wall-clock latencies, their mean, their median
+// (averaged-middle, matching the distribution's median), and their
+// max. Alert correct collapses the alert-outcome split: a record is
+// alert correct when the fired outcome matched expectation (true
+// positives plus true negatives), and an alert error otherwise
+// (false positives plus false negatives), using the validated
+// alert_correct field, so the two scenario totals always sum to the
+// sample size. Records with no latency take no part in a group's
+// numbers but still count toward its scenario total, so a group
+// whose scenarios carry no latency reads as recorded 0 with n/a
+// statistics — never as a fabricated zero.
+export function computeLatencyByAlertCorrectness(records) {
+  const groups = {
+    "alert correct": { outcome: "alert correct", total: 0, latencies: [] },
+    "alert error": { outcome: "alert error", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    const outcome = r.alert_correct ? "alert correct" : "alert error";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["alert correct", "alert error"].map((outcome) => {
     const e = groups[outcome];
     const sorted = e.latencies.sort((a, b) => a - b);
     if (sorted.length === 0) {
@@ -994,6 +1044,28 @@ export function renderRunReport(run, baselineRun = null) {
     "| --- | --- | --- | --- | --- | --- |",
   );
   for (const row of latencyByAlertOutcome) {
+    lines.push(
+      `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
+  }
+  const latencyByAlertCorrectness = computeLatencyByAlertCorrectness(run.records);
+  lines.push(
+    "",
+    "## Latency by alert correctness",
+    "",
+    "Harness wall-clock latencies collapsed from the alert-outcome split above into two " +
+      "groups — alert correct (an expected alert fired, or no alert fired where none was " +
+      "expected: true positives plus true negatives) versus alert error (an alert fired " +
+      "where none was expected, or an expected alert never fired: false positives plus " +
+      "false negatives) — so whether alert failures as a whole run slower than alert " +
+      "successes is visible without adding the four rows above. Mean and median are over " +
+      "the recorded latencies only; both rows always render, so the scenario totals sum " +
+      "to the sample size, and a group with no recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Alert correctness | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByAlertCorrectness) {
     lines.push(
       `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
     );
