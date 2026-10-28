@@ -50,10 +50,15 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   it was produced by an older run.mjs. `--baseline <baseline-run.json>`
   adds the recall-and-category-accuracy verdict against the baseline.
   `--out` to a trio filename is refused: a live run belongs in its
-  own `live-run-report.md`, never as an edit to the trio.
+  own `live-run-report.md`, never as an edit to the trio. It also
+  renders a truth-vs-predicted category table and a
+  confusable-negative breakdown (steam or fog / flame-like lighting
+  predicted as an alert category), so alert-level metrics cannot hide
+  systematic category swaps.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
-  baseline comparison verdicts, run-JSON validation, trio protection,
+  baseline comparison verdicts, per-category confusion and
+  confusable-negative breakdowns, run-JSON validation, trio protection,
   and the CLI end to end.
 - `adapter.test.mjs` — adapter tests: label loading, alert-definition
   consistency, metric math, alert-correctness logic,

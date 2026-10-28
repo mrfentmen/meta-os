@@ -22,6 +22,8 @@ import {
   PROTECTED_REPORT_NAMES,
   assertWritableReportPath,
   classifyRunKind,
+  computeCategoryConfusion,
+  computeConfusableNegatives,
   renderRunReport,
 } from "./report.mjs";
 
@@ -90,6 +92,62 @@ test("report: baseline comparison — stub beats the baseline, baseline does not
   assert.match(renderRunReport(stubRun, baselineRun), /BEATS the baseline on recall and category accuracy/);
   assert.match(renderRunReport(baselineRun, baselineRun), /does NOT beat the baseline/);
   assert.match(renderRunReport(stubRun), /No baseline run supplied/);
+});
+
+test("report: per-category confusion table names the stub's exact swaps", async () => {
+  const run = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  const confusion = computeCategoryConfusion(run.records);
+  assert.equal(confusion.counts["visible smoke"]["indeterminate"], 1); // IGN-003
+  assert.equal(confusion.counts["steam or fog"]["visible smoke"], 1); // IGN-007
+  assert.equal(confusion.counts["flame-like lighting"]["visible flame"], 2); // IGN-010, IGN-018
+  assert.equal(confusion.counts["obscured or distant hazard"]["flame-like lighting"], 1); // IGN-012
+  assert.equal(confusion.counts["indeterminate"]["steam or fog"], 1); // IGN-015
+  assert.equal(confusion.counts["visible smoke"]["visible smoke"], 2); // IGN-001, IGN-016
+  assert.equal(confusion.counts["steam or fog"]["steam or fog"], 1); // IGN-008
+  assert.ok(!confusion.predictedCategories.includes("ERROR")); // the stub assesses every scenario
+  const report = renderRunReport(run);
+  assert.match(report, /## Per-category confusion/);
+  assert.match(report, /\| steam or fog \|/);
+  assert.match(report, /failures, not confusions/);
+});
+
+test("report: confusable-negative breakdown counts the stub's three false alarms", async () => {
+  const run = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  const confusables = computeConfusableNegatives(run.records);
+  const steam = confusables.find((e) => e.truth === "steam or fog");
+  const flameLike = confusables.find((e) => e.truth === "flame-like lighting");
+  assert.equal(steam.total, 2);
+  assert.equal(steam.falseAlarmCount, 1);
+  assert.deepEqual(steam.falseAlarms["visible smoke"], ["IGN-007"]);
+  assert.equal(flameLike.total, 3);
+  assert.equal(flameLike.falseAlarmCount, 2);
+  assert.deepEqual(flameLike.falseAlarms["visible flame"], ["IGN-010", "IGN-018"]);
+  const report = renderRunReport(run);
+  assert.match(report, /## Confusable negatives/);
+  assert.match(report, /Total: 3 of 5 confusable-negative scenarios predicted as an alert category/);
+  assert.match(report, /IGN-007/);
+});
+
+test("report: a held run's confusion is all ERROR and its confusables are unassessed, not clean", async () => {
+  const run = await buildRun((s) => assessViaModelAdapter(s, {}), "server model adapter (held while Spark stays off)", "held-state run, no live model");
+  const confusion = computeCategoryConfusion(run.records);
+  assert.deepEqual(confusion.predictedCategories, ["ERROR"]);
+  assert.equal(confusion.counts["visible smoke"]["ERROR"], 3); // IGN-001, IGN-003, IGN-016
+  const confusables = computeConfusableNegatives(run.records);
+  assert.ok(confusables.every((e) => e.assessed === 0 && e.falseAlarmCount === 0));
+  const report = renderRunReport(run);
+  assert.match(report, /## Per-category confusion/);
+  assert.match(report, /none assessed/);
+});
+
+test("report: confusion ordering puts ERROR last and truth categories alphabetically", () => {
+  const confusion = computeCategoryConfusion([
+    { ground_truth_label: "visible smoke", actual_category: null },
+    { ground_truth_label: "steam or fog", actual_category: "visible smoke" },
+    { ground_truth_label: "steam or fog", actual_category: "steam or fog" },
+  ]);
+  assert.deepEqual(confusion.truthCategories, ["steam or fog", "visible smoke"]);
+  assert.deepEqual(confusion.predictedCategories, ["steam or fog", "visible smoke", "ERROR"]);
 });
 
 test("report: invalid run JSON is rejected, not rendered", () => {

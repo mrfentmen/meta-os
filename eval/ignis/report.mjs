@@ -23,6 +23,16 @@
 // The renderer never rewrites the trio reports: --out to one of the
 // trio filenames is refused, so a live run lands in its own file
 // (live-run-report.md) and never edits a fixture/held/baseline record.
+//
+// Alert-level metrics hide which categories are confused: a run can
+// look respectable while systematically swapping one category for
+// another (the stub swaps steam/fog for smoke and flame-like lighting
+// for flame). The report therefore also renders a truth-vs-predicted
+// category table, and a confusable-negative breakdown counting the
+// non-alert scenes (steam or fog, flame-like lighting) that were
+// predicted as an alert category (visible smoke, visible flame).
+// Errored records appear in the table under ERROR: they are failures,
+// not confusions.
 // A run's numbers are only ever compared against a baseline run the
 // caller supplies; the bar is recall AND category accuracy, never
 // precision alone (the baseline never fires a false alarm by
@@ -155,6 +165,66 @@ export function classifyRunKind(run) {
   return "unlabelled";
 }
 
+// Alert categories for the Ignis product (from scenarios.json and
+// adapter.mjs: only visible smoke and visible flame fire an alert).
+// Confusable negatives are the non-alert categories a source most
+// plausibly mistakes for an alert: steam or fog for smoke, flame-like
+// lighting for flame.
+export const IGNIS_ALERT_CATEGORIES = ["visible smoke", "visible flame"];
+export const CONFUSABLE_NEGATIVE_CATEGORIES = ["steam or fog", "flame-like lighting"];
+const ERROR_PREDICTED = "ERROR";
+
+// Truth-vs-predicted category counts for a run's records. Only the
+// two record fields the table needs are read, so hand-built record
+// lists work as well as full run JSON. Truth categories sort
+// alphabetically; predicted categories sort alphabetically with
+// ERROR last, so a held-state run's all-ERROR column never sorts
+// ahead of a real category. Errored records (actual_category null)
+// count under ERROR: they produced no prediction, so they are
+// failures, not confusions.
+export function computeCategoryConfusion(records) {
+  const counts = {};
+  for (const r of records) {
+    const predicted = r.actual_category === null ? ERROR_PREDICTED : r.actual_category;
+    counts[r.ground_truth_label] ??= {};
+    counts[r.ground_truth_label][predicted] = (counts[r.ground_truth_label][predicted] || 0) + 1;
+  }
+  const truthCategories = Object.keys(counts).sort();
+  const predictedSet = new Set();
+  for (const truth of truthCategories) {
+    for (const predicted of Object.keys(counts[truth])) predictedSet.add(predicted);
+  }
+  const predictedCategories = [...predictedSet].sort((a, b) => {
+    if (a === ERROR_PREDICTED) return 1;
+    if (b === ERROR_PREDICTED) return -1;
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
+  return { truthCategories, predictedCategories, counts };
+}
+
+// For each confusable-negative truth category present in the
+// records: how many of its scenarios there are, how many were
+// assessed at all, and how many were predicted as an alert category
+// (a confusable false alarm), grouped by the predicted alert category
+// with scenario ids. A truth category with no assessed scenarios
+// reports zero assessed rather than zero false alarms, so a
+// held-state run never reads as "no confusable problem" — it reads
+// as "nothing assessed".
+export function computeConfusableNegatives(records) {
+  return CONFUSABLE_NEGATIVE_CATEGORIES.map((truth) => {
+    const truthRecords = records.filter((r) => r.ground_truth_label === truth);
+    const assessed = truthRecords.filter((r) => r.actual_category !== null);
+    const falseAlarms = {};
+    for (const r of assessed) {
+      if (!IGNIS_ALERT_CATEGORIES.includes(r.actual_category)) continue;
+      falseAlarms[r.actual_category] ??= [];
+      falseAlarms[r.actual_category].push(r.scenario_id);
+    }
+    const falseAlarmCount = Object.values(falseAlarms).reduce((n, ids) => n + ids.length, 0);
+    return { truth, total: truthRecords.length, assessed: assessed.length, falseAlarmCount, falseAlarms };
+  }).filter((entry) => entry.total > 0);
+}
+
 export function assertWritableReportPath(outPath) {
   if (PROTECTED_REPORT_NAMES.includes(basename(outPath))) {
     throw new Error(
@@ -221,6 +291,50 @@ export function renderRunReport(run, baselineRun = null) {
     misses.length > 0
       ? misses.map((id) => `- ${id}: predicted category did not match ground truth`).join("\n")
       : "None: every scenario's predicted category matched its ground truth.",
+  );
+  const confusion = computeCategoryConfusion(run.records);
+  lines.push("", "## Per-category confusion", "");
+  lines.push(
+    "Rows are ground-truth categories, columns are predicted categories. " +
+      "Diagonal cells are correct predictions; off-diagonal cells are category misses. " +
+      "The ERROR column counts records that produced no assessment — failures, not confusions.",
+    "",
+    `| Truth \ Predicted | ${confusion.predictedCategories.join(" | ")} | Total |`,
+    `| --- | ${confusion.predictedCategories.map(() => "---").join(" | ")} | --- |`,
+  );
+  for (const truth of confusion.truthCategories) {
+    const cells = confusion.predictedCategories.map((p) => confusion.counts[truth][p] || 0);
+    const total = cells.reduce((n, c) => n + c, 0);
+    lines.push(`| ${truth} | ${cells.join(" | ")} | ${total} |`);
+  }
+  const confusables = computeConfusableNegatives(run.records);
+  const confusableTotal = confusables.reduce((n, e) => n + e.total, 0);
+  const confusableFalseAlarms = confusables.reduce((n, e) => n + e.falseAlarmCount, 0);
+  lines.push("", "## Confusable negatives", "");
+  lines.push(
+    "Confusable negatives are non-alert scenes a source plausibly mistakes for an alert: " +
+      "steam or fog for smoke, flame-like lighting for flame. This section counts, per confusable " +
+      "truth category, how many scenarios were predicted as an alert category (visible smoke, visible flame).",
+    "",
+  );
+  if (confusables.length === 0) {
+    lines.push("- No confusable-negative scenarios in this run.");
+  }
+  for (const entry of confusables) {
+    if (entry.assessed === 0) {
+      lines.push(`- ${entry.truth}: ${entry.total} scenario(s), none assessed — no confusable false alarm could occur.`);
+    } else if (entry.falseAlarmCount === 0) {
+      lines.push(`- ${entry.truth}: 0 of ${entry.total} predicted as an alert category.`);
+    } else {
+      const byPredicted = Object.entries(entry.falseAlarms)
+        .map(([predicted, ids]) => `${predicted}: ${ids.length} (${ids.join(", ")})`)
+        .join("; ");
+      lines.push(`- ${entry.truth}: ${entry.falseAlarmCount} of ${entry.total} predicted as an alert category — ${byPredicted}.`);
+    }
+  }
+  lines.push(
+    "",
+    `Total: ${confusableFalseAlarms} of ${confusableTotal} confusable-negative scenarios predicted as an alert category.`,
   );
   if (baseline !== null) {
     const b = baseline.metrics;
