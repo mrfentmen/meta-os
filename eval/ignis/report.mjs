@@ -35,6 +35,9 @@
 // not confusions. Above the full table, a headline finding names the
 // weakest truth category and the most-confused pair, so the single
 // biggest failure mode is visible without reading the whole matrix.
+// A per-category rate table backs the headline: one correct/total
+// rate per truth category, so the weakest claim is checkable without
+// counting the confusion matrix.
 // A run's numbers are only ever compared against a baseline run the
 // caller supplies; the bar is recall AND category accuracy, never
 // precision alone (the baseline never fires a false alarm by
@@ -222,6 +225,29 @@ export function computeCategoryHeadline(records) {
   return { weakest, mostConfused: pairs.length > 0 ? pairs[0] : null, perCategory: ranked };
 }
 
+// One rate row per truth category present in the records, sorted
+// alphabetically by truth name: correct predictions over all of that
+// category's scenarios. The rate uses the headline's definition —
+// correct / total, with records that produced no assessment counting
+// as misses, matching category-accuracy semantics — so the headline's
+// weakest category is the lowest row of this table (headline ties
+// break by most misses, then truth name). The assessed count is
+// carried alongside so a held-state row of 0.000 reads as "nothing
+// assessed", not as a measured zero.
+export function computeCategoryRates(records) {
+  const perCategory = {};
+  for (const r of records) {
+    perCategory[r.ground_truth_label] ??= { truth: r.ground_truth_label, total: 0, correct: 0, assessed: 0 };
+    const entry = perCategory[r.ground_truth_label];
+    entry.total += 1;
+    if (r.actual_category !== null) entry.assessed += 1;
+    if (r.actual_category === r.ground_truth_label) entry.correct += 1;
+  }
+  return Object.values(perCategory)
+    .map((e) => ({ ...e, rate: e.total === 0 ? 0 : e.correct / e.total }))
+    .sort((a, b) => (a.truth < b.truth ? -1 : a.truth > b.truth ? 1 : 0));
+}
+
 // Alert categories for the Ignis product (from scenarios.json and
 // adapter.mjs: only visible smoke and visible flame fire an alert).
 // Confusable negatives are the non-alert categories a source most
@@ -350,6 +376,23 @@ export function renderRunReport(run, baselineRun = null) {
       const p = headline.mostConfused;
       lines.push(`- Most confused pair: ${p.truth} -> ${p.predicted} — ${p.count} scenario(s) (${p.scenarioIds.join(", ")}).`);
     }
+  }
+  const rates = computeCategoryRates(run.records);
+  lines.push(
+    "",
+    "## Per-category rates",
+    "",
+    "Each row is one ground-truth category: correct predictions over all of its scenarios. " +
+      "Records that produced no assessment count as misses, matching category-accuracy semantics " +
+      "and the headline's definition — so the headline's weakest category is the lowest row here " +
+      "(headline ties break by most misses, then truth name). The assessed column keeps a held-state " +
+      "row of 0.000 honest: it means nothing was assessed, not that a source scored zero.",
+    "",
+    "| Truth | Correct | Total | Assessed | Rate |",
+    "| --- | --- | --- | --- | --- |",
+  );
+  for (const row of rates) {
+    lines.push(`| ${row.truth} | ${row.correct} | ${row.total} | ${row.assessed} | ${row.rate.toFixed(3)} |`);
   }
   lines.push(
     "",

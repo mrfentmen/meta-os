@@ -58,7 +58,13 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   names the weakest truth category (lowest category-correct rate)
   and the most-confused truth -> predicted pair; when nothing was
   assessed it says so instead of naming a category, and ERROR counts
-  as a failure, never as a confusion.
+  as a failure, never as a confusion. A per-category rate table right
+  below the headline backs the weakest claim: one correct/total rate
+  per truth category (unassessed records count as misses, matching
+  category-accuracy semantics), with an assessed column so a
+  held-state row of 0.000 reads as nothing assessed, not a measured
+  zero — so the headline is checkable without counting the confusion
+  matrix.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and

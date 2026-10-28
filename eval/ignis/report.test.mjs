@@ -24,6 +24,7 @@ import {
   classifyRunKind,
   computeCategoryConfusion,
   computeCategoryHeadline,
+  computeCategoryRates,
   computeConfusableNegatives,
   renderRunReport,
 } from "./report.mjs";
@@ -144,6 +145,43 @@ test("report: headline finding names the stub's weakest category and most-confus
   assert.match(report, /Weakest category: flame-like lighting — 1 of 3 correct \(0\.333\)/);
   assert.match(report, /Most confused pair: flame-like lighting -> visible flame — 2 scenario\(s\) \(IGN-010, IGN-018\)/);
   assert.ok(report.indexOf("## Headline finding") < report.indexOf("## Per-category confusion"));
+});
+
+test("report: per-category rate table backs the headline — stub rates, alphabetical order, errors as misses", async () => {
+  const run = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  const rates = computeCategoryRates(run.records);
+  assert.deepEqual(
+    rates.map((r) => r.truth),
+    ["flame-like lighting", "indeterminate", "no hazard visible", "obscured or distant hazard", "steam or fog", "visible flame", "visible smoke"],
+  );
+  const flameLike = rates.find((r) => r.truth === "flame-like lighting");
+  assert.equal(flameLike.correct, 1);
+  assert.equal(flameLike.total, 3);
+  assert.equal(flameLike.assessed, 3);
+  assert.equal(flameLike.rate, 1 / 3);
+  const smoke = rates.find((r) => r.truth === "visible smoke");
+  assert.equal(smoke.correct, 2);
+  assert.equal(smoke.total, 3);
+  const report = renderRunReport(run);
+  assert.match(report, /## Per-category rates/);
+  assert.match(report, /\| flame-like lighting \| 1 \| 3 \| 3 \| 0\.333 \|/);
+  assert.match(report, /\| visible smoke \| 2 \| 3 \| 3 \| 0\.667 \|/);
+  assert.ok(report.indexOf("## Headline finding") < report.indexOf("## Per-category rates"));
+  assert.ok(report.indexOf("## Per-category rates") < report.indexOf("## Per-scenario records"));
+  // The headline's weakest row is the table's lowest rate.
+  assert.equal(computeCategoryHeadline(run.records).weakest.truth, "flame-like lighting");
+});
+
+test("report: per-category rates count unassessed records as misses and show assessed separately", () => {
+  const rates = computeCategoryRates([
+    { scenario_id: "T1", ground_truth_label: "alpha", actual_category: "alpha" },
+    { scenario_id: "T2", ground_truth_label: "alpha", actual_category: null },
+    { scenario_id: "T3", ground_truth_label: "beta", actual_category: null },
+  ]);
+  assert.deepEqual(rates, [
+    { truth: "alpha", total: 2, correct: 1, assessed: 1, rate: 0.5 },
+    { truth: "beta", total: 1, correct: 0, assessed: 0, rate: 0 },
+  ]);
 });
 
 test("report: headline finding names nothing assessable on a held run, and no misses on a perfect run", async () => {
