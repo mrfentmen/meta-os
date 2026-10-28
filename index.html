@@ -24,6 +24,12 @@
     <video id="preview" playsinline muted></video>
     <canvas id="capture-canvas" hidden></canvas>
     <p id="camera-state" class="note">Camera is off.</p>
+    <label for="camera-facing">Camera facing</label>
+    <select id="camera-facing">
+      <option value="user" selected>Front-facing (selfie view)</option>
+      <option value="environment">Rear-facing (point the phone at the scene)</option>
+    </select>
+    <p class="note">A preference, not a requirement: a device with only one camera uses that camera either way. Changing it while the camera is live restarts the stream; if the restart fails, the camera is left off and the error shows here, like a failed Start.</p>
     <div class="controls">
       <button id="btn-camera-start" type="button" class="btn-primary">Start camera</button>
       <button id="btn-camera-stop" type="button" disabled>Stop camera</button>

@@ -33,18 +33,25 @@ over a network. Open `index.html`.
    Allow it: the video preview appears and the CAMERA LIVE indicator
    shows. Deny it once, reload, and confirm the UI shows the
    permission-denied state in plain words — not a blank panel.
-3. Product switch while live: switch to Ignis, then Sanitas. The accent
+3. Camera facing: while live, switch the facing selector to
+   Rear-facing. The stream restarts on the rear camera (the view now
+   shows what the back of the phone points at). Switch back to
+   Front-facing and confirm the selfie view returns. On a device with
+   only one camera, either choice still shows that camera — the facing
+   is a preference, not a requirement, so no error may appear for
+   lacking a second camera.
+4. Product switch while live: switch to Ignis, then Sanitas. The accent
    color changes (orange, then green), the limitations notice changes
    to that product's text, and earlier history entries keep the product
    they were recorded under.
-4. Sampling: start analysis with no backend running. Confirm the
+5. Sampling: start analysis with no backend running. Confirm the
    loading indicator appears while a request is outstanding, the
    sampler counters move (ticks / sent / skipped / failed), and each
    failure lands in the history styled as an error with the real
    message. No assessment card may appear.
-5. Rotation: rotate the phone. The layout re-flows, the video keeps
+6. Rotation: rotate the phone. The layout re-flows, the video keeps
    running, and no control disappears off screen.
-6. Log export: after a few entries, tap Export log (JSON) and confirm
+7. Log export: after a few entries, tap Export log (JSON) and confirm
    the downloaded file opens and lists the entries with product,
    timestamp, latency, and outcome.
 

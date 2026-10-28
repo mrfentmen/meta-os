@@ -19,6 +19,7 @@ const els = {
   captureCanvas: $("capture-canvas"),
   cameraIndicator: $("camera-indicator"),
   cameraState: $("camera-state"),
+  cameraFacing: $("camera-facing"),
   btnCameraStart: $("btn-camera-start"),
   btnCameraStop: $("btn-camera-stop"),
   btnAnalysisStart: $("btn-analysis-start"),
@@ -591,6 +592,25 @@ els.btnCameraStop.addEventListener("click", () => {
   setCameraState("Camera stopped.");
   refreshButtons();
   updateSamplerStats();
+});
+
+// Front vs rear camera. While the camera is off this only records the
+// choice for the next Start. While it is live it restarts the stream on
+// the new facing; a failed restart leaves the camera off and reports
+// the real error, and analysis (if running) keeps ticking honestly
+// against the restarted stream.
+els.cameraFacing.addEventListener("change", async () => {
+  try {
+    await camera.switchFacing(els.cameraFacing.value);
+    if (camera.active) {
+      els.cameraIndicator.hidden = false;
+      setCameraState("Camera is live. No frames are sent anywhere until analysis is started.");
+    }
+  } catch (err) {
+    els.cameraIndicator.hidden = true;
+    setCameraState(describeCameraError(err));
+  }
+  refreshButtons();
 });
 
 els.btnAnalysisStart.addEventListener("click", () => {

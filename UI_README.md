@@ -24,7 +24,14 @@ ES modules for the node test runner; it declares zero dependencies.)
 - **Camera** (`js/camera.js`, wired in `js/app.js`): `getUserMedia`
   start/stop/reset, a visible CAMERA LIVE indicator while the stream is
   active, and honest states for permission denied, no camera found, camera
-  busy, and unsupported browser/context.
+  busy, and unsupported browser/context. A facing selector offers the
+  front camera and the rear camera — the one a phone demo points at the
+  scene — as a preference, never an exact requirement, so a device with
+  only one camera still gets that camera. Changing it while the camera
+  is off applies to the next Start; changing it while live restarts the
+  stream, and a failed restart leaves the camera off with the real error
+  shown. The native Mac app has no facing selector: a Mac has a single
+  built-in camera, so there is nothing to choose between.
 - **Frame sampler** (`js/sampler.js`): while analysis is running, one frame
   every N seconds (default 3, configurable 1–60 in the UI) is drawn to a
   canvas and encoded as JPEG. If the previous request has not returned, the
