@@ -72,6 +72,11 @@ rebuilding.
   Application Support/MetaTrio/session-log.json on every record, the
   timeline and the latest assessment are restored from it on launch,
   and Clear Log removes the saved file so a cleared log never comes back.
+  Reset Session is not Clear Log: it stops the camera and analysis and
+  clears only the on-screen preview, latest assessment, and timeline —
+  the saved log is kept, so the timeline comes back on relaunch from that
+  log until Clear Log removes it (web parity: the web Reset likewise
+  clears the on-screen history but keeps the saved log).
   A missing or corrupt saved file simply starts an empty log — logging
   itself never breaks, and no entry is ever invented to fill the gap.
 - Backend health check (web parity): a "Check Backend Health" button in

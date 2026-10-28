@@ -186,7 +186,15 @@ private struct CameraPanel: View {
                 Button("Stop Analysis") { model.stopAnalysis() }
                     .disabled(!model.analysisRunning)
                 Button("Reset Session") { model.resetSession() }
-                    .accessibilityHint("Stops the camera and analysis and clears the preview, timeline, and session log.")
+                    // Honest label, matching AppModel.resetSession: Reset
+                    // clears only the on-screen preview, latest
+                    // assessment, and timeline. The saved session log
+                    // is kept, so the timeline comes back on relaunch
+                    // from that log until Clear Log removes it. The old
+                    // hint claimed Reset cleared the session log, which
+                    // was false — a VoiceOver user would have believed
+                    // the log was gone when it was not.
+                    .accessibilityHint("Stops the camera and analysis and clears the on-screen preview and timeline. The saved session log is kept — use Clear Log to remove it.")
             }
 
             Text(model.config.inputGuidance)

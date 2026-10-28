@@ -209,7 +209,9 @@ final class AppModel: ObservableObject {
     }
 
     /// Stops capture and clears the displayed assessment and timeline.
-    /// The session log is kept (export it before quitting if you need it).
+    /// The session log is kept (export it before quitting if you need it),
+    /// so the timeline comes back on relaunch from that log until Clear
+    /// Log removes it — Reset Session never deletes saved entries.
     func resetSession() {
         stopAnalysis()
         camera.stop()
