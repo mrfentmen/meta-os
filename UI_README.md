@@ -152,6 +152,15 @@ wiring (page note, Show assessment button, live and restored entries
 carrying their assessment). Current result:
 **89 tests, 89 pass, 0 fail** (Node v24).
 
+Live client↔server check (`tests/client-server.test.mjs`): the real web
+client against the real server over HTTP, no fetch doubles, no model —
+the server runs with an empty environment, so the health check reports
+the model held (not configured, live calls off) and a valid assess
+request surfaces the real 503 Spark-hold message as a typed HTTP error,
+with no assessment rendered; a bad product surfaces the real 400; and
+the server serves the actual frontend entry point. Full `npm test`
+(including Agent 2 and Agent 3 suites): **149 tests, 149 pass, 0 fail**.
+
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.
 
