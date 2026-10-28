@@ -12,6 +12,14 @@ struct TimelineView: View {
             Text("Event timeline")
                 .font(.headline)
                 .accessibilityAddTraits(.isHeader)
+            // Web parity: the web history panel carries this note, and
+            // without it nothing in the native panel says the rows can
+            // be tapped. Failure rows stay plain text — they have no
+            // assessment to show.
+            Text("Tap an assessment row to view that assessment again in the Latest assessment panel. Failure rows have no assessment to show.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             if model.timeline.isEmpty {
                 if model.analysisRunning {
                     Text("Analysis is running — assessments and errors will appear here as they arrive.")

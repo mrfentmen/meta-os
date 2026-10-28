@@ -221,6 +221,16 @@ final class AppModel: ObservableObject {
         displayedAssessmentNote = nil
         timeline = []
         backendStatus = .unknown("Model backend status unknown. Start analysis to contact the endpoint.")
+        // Web parity (js/app.js Reset handler): the web Reset also
+        // clears the backend-health result, so a pre-reset check does
+        // not linger on screen as if it were current, and the status
+        // bar's last round trip is a pre-reset measurement, so it goes
+        // too. Sampler counters are deliberately kept, exactly like the
+        // web Reset, which stops the sampler without zeroing its counts;
+        // product, endpoint, interval, and scenario choices are kept on
+        // both sides as well.
+        backendHealth = "Backend health not checked yet. Checking it contacts the server's health route only; it never sends a frame and never returns an assessment."
+        lastRoundTripMs = nil
     }
 
     // MARK: - Backend health check
