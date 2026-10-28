@@ -27,6 +27,7 @@ import {
   computeCategoryHeadline,
   computeCategoryRates,
   computeConfusableNegatives,
+  computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
   computeSlowestScenario,
@@ -404,7 +405,7 @@ test("report: per-scenario records carry a latency column — measured values, n
   const run = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
   assert.ok(run.records.every((r) => typeof r.latency_ms === "number"));
   const report = renderRunReport(run);
-  assert.match(report, /\| Scenario \| Truth \| Actual \| Alert correct \| Category correct \| Latency \(ms\) \| Error \|/);
+  assert.match(report, /\| Scenario \| Truth \| Actual \| Alert correct \| Category correct \| Latency \(ms\) \| Outlier \| Error \|/);
   // Harness wall clock per scenario: a number with one decimal, never a fabricated zero.
   assert.match(report, /\| IGN-001 \| visible smoke \| visible smoke \| true \| true \| \d+\.\d \|/);
   // Hand-built: a record carrying no latency renders n/a, and a record
@@ -421,6 +422,71 @@ test("report: per-scenario records carry a latency column — measured values, n
   assert.throws(
     () => renderRunReport({ ...handRun, records: [{ ...handRun.records[0], latency_ms: "fast" }] }),
     /latency_ms: present but not a number/,
+  );
+});
+
+test("report: latency outliers flag only latencies strictly above twice the median", async () => {
+  const rec = (id, latencyMs) => ({
+    scenario_id: id,
+    ground_truth_label: "visible smoke",
+    ...(latencyMs === undefined ? {} : { latency_ms: latencyMs }),
+  });
+  // Median of [10, 11, 12, 100] is 11.5, threshold 23: only the 100 flags.
+  // A record with no latency is ignored, never a zero.
+  assert.deepEqual(
+    computeLatencyOutliers([rec("T1", 10), rec("T2", 11), rec("T3", 12), rec("T4", 100), rec("T5")]).map(
+      (o) => o.scenarioId,
+    ),
+    ["T4"],
+  );
+  assert.deepEqual(
+    computeLatencyOutliers([rec("T1", 10), rec("T2", 11), rec("T3", 12), rec("T4", 100), rec("T5")])[0],
+    { scenarioId: "T4", truth: "visible smoke", latencyMs: 100, medianMs: 11.5, thresholdMs: 23 },
+  );
+  // Strict threshold: exactly twice the median (median 20, latency 40) does not flag;
+  // one unit above it does.
+  assert.deepEqual(computeLatencyOutliers([rec("T1", 10), rec("T2", 20), rec("T3", 40)]), []);
+  assert.deepEqual(
+    computeLatencyOutliers([rec("T1", 10), rec("T2", 20), rec("T3", 41)]).map((o) => o.scenarioId),
+    ["T3"],
+  );
+  // No typical latency, no flag: fewer than two recorded latencies,
+  // and a zero median (flagging on a zero baseline would single out
+  // every positive latency, including a 5 ms one).
+  assert.deepEqual(computeLatencyOutliers([rec("T1", 100)]), []);
+  assert.deepEqual(computeLatencyOutliers([rec("T1")]), []);
+  assert.deepEqual(computeLatencyOutliers([rec("T1", 0), rec("T2", 0), rec("T3", 5)]), []);
+  // Rendered: the outlier row carries "yes" in the Outlier column, a
+  // typical row carries an empty cell, and the header names the column.
+  const handRun = {
+    source: "test source",
+    generated: "test run",
+    records: [10, 11, 12, 100].map((latencyMs, i) => ({
+      scenario_id: `IGN-T${i + 1}`,
+      ground_truth_label: "visible smoke",
+      alert_expected: true,
+      alert_fired: true,
+      alert_correct: true,
+      category_correct: true,
+      actual_category: "visible smoke",
+      error: null,
+      latency_ms: latencyMs,
+    })),
+    metrics: { sample_size: 4, true_positives: 4, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 4, mean: 33.25, median: 11.5, max: 100 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const report = renderRunReport(handRun);
+  assert.match(
+    report,
+    /\| Scenario \| Truth \| Actual \| Alert correct \| Category correct \| Latency \(ms\) \| Outlier \| Error \|/,
+  );
+  assert.match(report, /\| IGN-T4 \| visible smoke \| visible smoke \| true \| true \| 100\.0 \| yes \|/);
+  assert.match(report, /\| IGN-T1 \| visible smoke \| visible smoke \| true \| true \| 10\.0 \|  \|/);
+  // The existing latency-column test's header assertion is updated by
+  // this feature: a stub render carries the new column too.
+  const stubRun = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  assert.match(
+    renderRunReport(stubRun),
+    /\| Scenario \| Truth \| Actual \| Alert correct \| Category correct \| Latency \(ms\) \| Outlier \| Error \|/,
   );
 });
 

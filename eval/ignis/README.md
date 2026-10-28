@@ -79,7 +79,10 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   failures, not confusions. The per-scenario table carries each
   record's harness wall-clock latency (n/a when the record carries
   none), so a slow scenario is visible without the summary
-  statistics.
+  statistics, and flags a latency outlier (yes) when a scenario's
+  latency is more than twice the run's median recorded latency;
+  runs with fewer than two recorded latencies, or a median of zero,
+  flag nothing rather than singling a scenario out on a zero baseline.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and

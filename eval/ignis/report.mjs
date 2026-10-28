@@ -51,6 +51,11 @@
 // each record's harness wall-clock latency, so a slow scenario is
 // visible without reading the summary statistics — and a record
 // that carries no latency shows n/a rather than a fabricated zero.
+// The same table flags latency outliers: a scenario whose latency
+// is more than twice the median recorded latency for the run. A run
+// with fewer than two recorded latencies, or a median recorded
+// latency of zero, flags nothing — there is no typical latency to
+// compare against, so no scenario is singled out on a zero baseline.
 // A run's numbers are only ever compared against a baseline run the
 // caller supplies; the bar is recall AND category accuracy, never
 // precision alone (the baseline never fires a false alarm by
@@ -274,6 +279,40 @@ export function computeSlowestScenario(records) {
 // break by most misses, then truth name). The assessed count is
 // carried alongside so a held-state row of 0.000 reads as "nothing
 // assessed", not as a measured zero.
+// Latency outliers: records whose harness wall-clock latency is
+// strictly more than twice the median recorded latency for the run.
+// Only records carrying a numeric latency take part, both in the
+// median and in the flagging — a record with no latency is ignored,
+// never treated as zero. The threshold is strict: a latency exactly
+// twice the median is typical-scale, not an outlier. With fewer
+// than two recorded latencies, or a median of zero, there is no
+// typical latency to compare against, so nothing is flagged rather
+// than flagging on a zero baseline. Results sort by scenario id, so
+// the flag set never depends on record order. This is harness wall
+// clock, not a reported model field.
+export function computeLatencyOutliers(records) {
+  const latencies = records
+    .filter((r) => typeof r.latency_ms === "number")
+    .map((r) => r.latency_ms)
+    .sort((a, b) => a - b);
+  if (latencies.length < 2) return [];
+  const mid = Math.floor(latencies.length / 2);
+  const median =
+    latencies.length % 2 === 1 ? latencies[mid] : (latencies[mid - 1] + latencies[mid]) / 2;
+  if (median <= 0) return [];
+  const threshold = 2 * median;
+  return records
+    .filter((r) => typeof r.latency_ms === "number" && r.latency_ms > threshold)
+    .map((r) => ({
+      scenarioId: r.scenario_id,
+      truth: r.ground_truth_label,
+      latencyMs: r.latency_ms,
+      medianMs: median,
+      thresholdMs: threshold,
+    }))
+    .sort((a, b) => (a.scenarioId < b.scenarioId ? -1 : a.scenarioId > b.scenarioId ? 1 : 0));
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -508,12 +547,18 @@ export function renderRunReport(run, baselineRun = null) {
   for (const row of rates) {
     lines.push(`| ${row.truth} | ${row.correct} | ${row.total} | ${row.assessed} | ${row.rate.toFixed(3)} |`);
   }
+  const outlierIds = new Set(computeLatencyOutliers(run.records).map((o) => o.scenarioId));
   lines.push(
     "",
     "## Per-scenario records",
     "",
-    "| Scenario | Truth | Actual | Alert correct | Category correct | Latency (ms) | Error |",
-    "| --- | --- | --- | --- | --- | --- | --- |",
+    "A scenario is flagged as a latency outlier when its harness wall-clock latency is more than " +
+      "twice the median recorded latency for this run. Runs with fewer than two recorded latencies, " +
+      "or a median recorded latency of zero, flag nothing — there is no typical latency to compare " +
+      "against, so no scenario is singled out on a zero baseline.",
+    "",
+    "| Scenario | Truth | Actual | Alert correct | Category correct | Latency (ms) | Outlier | Error |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- |",
   );
   for (const r of run.records) {
     // Harness wall clock per scenario, never a reported model field;
@@ -521,7 +566,7 @@ export function renderRunReport(run, baselineRun = null) {
     const latency = typeof r.latency_ms === "number" ? fmtLatency(r.latency_ms) : "n/a";
     lines.push(
       `| ${r.scenario_id} | ${r.ground_truth_label} | ${r.actual_category === null ? "ERROR" : r.actual_category} | ` +
-        `${r.alert_correct} | ${r.category_correct} | ${latency} | ${r.error === null ? "" : r.error} |`,
+        `${r.alert_correct} | ${r.category_correct} | ${latency} | ${outlierIds.has(r.scenario_id) ? "yes" : ""} | ${r.error === null ? "" : r.error} |`,
     );
   }
   const misses = computeMisses(run.records);
