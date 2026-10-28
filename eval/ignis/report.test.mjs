@@ -35,6 +35,7 @@ import {
   computeLatencyByAlertOutcome,
   computeLatencyByAlertCorrectness,
   computeLatencyByAlertExpectation,
+  computeLatencyByAlertFired,
   computeLatencyByOutcome,
   computeLatencyDistribution,
   computeLatencyOutliers,
@@ -959,6 +960,66 @@ test("report: latency by alert expectation splits TP/FN vs TN/FP into two rows",
   assert.ok(rendered.indexOf("## Latency by alert expectation") < rendered.indexOf("## Misses"));
   assert.match(rendered, /\| alert expected \| 3 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
   assert.match(rendered, /\| alert not expected \| 1 \| 1 \| 100\.0 \| 100\.0 \| 100\.0 \|/);
+});
+
+test("report: latency by alert fired splits TP+FP from TN+FN", () => {
+  const rec = (id, truth, actual, expected, fired, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Alert fired: 10, 30 -> mean 20, median 20, max 30, recorded 2 of 2.
+  // Alert not fired: 100 + one unmeasured -> mean/median/max 100, recorded 1 of 2.
+  // Both rows always render, in fixed alert-fired/alert-not-fired
+  // order, so the totals sum to the sample size.
+  assert.deepEqual(
+    computeLatencyByAlertFired([
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, 30),
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T3", "steam or fog", "steam or fog", false, false, 100),
+      rec("IGN-T4", "visible flame", null, true, false),
+    ]),
+    [
+      { outcome: "alert fired", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "alert not fired", total: 2, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+    ],
+  );
+  // A group with no recorded latency shows null statistics, never zero.
+  assert.deepEqual(
+    computeLatencyByAlertFired([
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T2", "steam or fog", "steam or fog", false, false),
+    ]),
+    [
+      { outcome: "alert fired", total: 1, recorded: 1, meanMs: 10, medianMs: 10, maxMs: 10 },
+      { outcome: "alert not fired", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+    ],
+  );
+  // Rendered: section after Latency by alert expectation, before Misses,
+  // rows in fixed order, n/a for the unmeasured group in the second run.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, 30),
+      rec("IGN-T3", "steam or fog", "steam or fog", false, false, 100),
+      rec("IGN-T4", "visible flame", null, true, false),
+    ],
+    metrics: { sample_size: 4, true_positives: 2, false_positives: 0, true_negatives: 1, false_negatives: 1, precision: 1, recall: 0.6667, false_positive_rate: 0, false_negative_rate: 0.3333, category_accuracy: 0.75, latency_ms: { n: 3, mean: 46.666, median: 30, max: 100 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by alert fired/);
+  assert.ok(rendered.indexOf("## Latency by alert fired") > rendered.indexOf("## Latency by alert expectation"));
+  assert.ok(rendered.indexOf("## Latency by alert fired") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| alert fired \| 2 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| alert not fired \| 2 \| 1 \| 100\.0 \| 100\.0 \| 100\.0 \|/);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {
