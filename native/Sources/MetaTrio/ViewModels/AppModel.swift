@@ -80,6 +80,15 @@ final class AppModel: ObservableObject {
     }
     @Published var scenarioLabel: String = ""
 
+    // Still-image input (web parity): the chosen file lives in memory
+    // only, exactly like the web frontend's preview + data URL. It is
+    // never written to disk by this app and is cleared by Reset Session.
+    @Published private(set) var stillImage: NSImage?
+    @Published private(set) var stillImageName: String?
+    @Published private(set) var stillImageAssessing = false
+    @Published private(set) var stillImageError: String?
+    private var stillImageDataURL: String?
+
     // Observable runtime state.
     @Published private(set) var backendStatus: BackendStatus =
         .unknown("Model backend status unknown. Start analysis to contact the endpoint.")
@@ -151,9 +160,88 @@ final class AppModel: ObservableObject {
     func resetSession() {
         stopAnalysis()
         camera.stop()
+        clearStillImage()
         displayedAssessment = nil
         timeline = []
         backendStatus = .unknown("Model backend status unknown. Start analysis to contact the endpoint.")
+    }
+
+    // MARK: - Still-image input
+
+    /// Opens an image-only file picker. Non-image files cannot be
+    /// chosen: the panel's allowedContentTypes is [.image].
+    func chooseStillImage() {
+        let panel = NSOpenPanel()
+        panel.title = "Choose a still image"
+        panel.allowedContentTypes = [.image]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+        stillImageError = nil
+        guard let image = NSImage(contentsOf: url),
+              let dataURL = Self.jpegDataURL(for: image)
+        else {
+            stillImage = nil
+            stillImageName = nil
+            stillImageDataURL = nil
+            stillImageError = "Could not read that image as a JPEG."
+            return
+        }
+        stillImage = image
+        stillImageName = url.lastPathComponent
+        stillImageDataURL = dataURL
+    }
+
+    /// Sends the chosen still image once, under the product selected
+    /// at assess time, through the same submit path — same validation,
+    /// same history entry, same session-log entry — as a live frame.
+    /// No camera is needed. With no backend running this fails exactly
+    /// like a live frame: honest error, no assessment.
+    func assessStillImage() {
+        guard let dataURL = stillImageDataURL, !stillImageAssessing else {
+            return
+        }
+        stillImageAssessing = true
+        // Plain Task awaiting a @MainActor method: the hop back onto
+        // the main actor is explicit, and no capture-list/attribute
+        // ordering question arises (this sandbox has no Swift compiler
+        // to check it against).
+        Task {
+            await self.runStillImageAssessment(dataURL: dataURL)
+        }
+    }
+
+    private func runStillImageAssessment(dataURL: String) async {
+        defer { stillImageAssessing = false }
+        // submitAssessment already records the outcome in the timeline
+        // and the session log and sets backendStatus, so a failure
+        // here needs no extra handling.
+        do {
+            try await submitAssessment(timestamp: ISO8601.now(), imageDataURL: dataURL)
+        } catch {
+            // Outcome already logged and rendered by submitAssessment.
+        }
+    }
+
+    func clearStillImage() {
+        stillImage = nil
+        stillImageName = nil
+        stillImageDataURL = nil
+        stillImageError = nil
+        stillImageAssessing = false
+    }
+
+    private static func jpegDataURL(for image: NSImage) -> String? {
+        guard let tiff = image.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let jpeg = rep.representation(using: .jpeg, properties: [:])
+        else {
+            return nil
+        }
+        return "data:image/jpeg;base64,\(jpeg.base64EncodedString())"
     }
 
     // MARK: - Timeline
@@ -193,10 +281,10 @@ final class AppModel: ObservableObject {
 
     // MARK: - Sampling pipeline
 
-    /// One end-to-end sample: capture a frame, POST it, validate the
-    /// reply, record the outcome in the log, and update the display.
+    /// One end-to-end sample: capture a frame, then submit it.
     /// Throws the AssessError on failure so the sampler counts it; the
-    /// failure is also rendered and logged here before rethrowing.
+    /// failure is also rendered and logged by submitAssessment before
+    /// rethrowing.
     private func runSample() async throws {
         let timestamp = ISO8601.now()
 
@@ -209,6 +297,16 @@ final class AppModel: ObservableObject {
             throw AssessError(kind: .invalid, message: message, latencyMs: nil)
         }
 
+        try await submitAssessment(timestamp: timestamp, imageDataURL: image)
+    }
+
+    /// Shared submit path for live frames and still images: POST the
+    /// image, validate the reply, record the outcome in the log, and
+    /// update the display. Throws on failure after rendering and
+    /// logging it, so callers that count failures (the sampler) can
+    /// count it and callers that do not (still-image assess) can
+    /// swallow it safely.
+    private func submitAssessment(timestamp: String, imageDataURL: String) async throws {
         requestInFlight = true
         defer { requestInFlight = false }
 
@@ -217,7 +315,7 @@ final class AppModel: ObservableObject {
                 endpoint: trimmedEndpoint,
                 product: selectedProduct,
                 timestamp: timestamp,
-                imageDataURL: image
+                imageDataURL: imageDataURL
             )
             lastRoundTripMs = latencyMs
             recordLog(timestamp: timestamp, latencyMs: latencyMs, status: .ok, response: response)

@@ -26,6 +26,15 @@ rebuilding.
   notice that is always on screen.
 - Live camera preview via AVFoundation, with honest states: permission
   denied, no camera, camera error — shown as themselves, never papered over.
+- Still-image input (web parity): an image-only file picker for
+  prerecorded or photographed scenes — the input the Ignis and Sanitas
+  demos use when a live camera is not the source. The chosen image is
+  previewed in memory, sent once through the same submit path as a live
+  frame (same endpoint, same v2 validation, same timeline entry, same
+  session-log entry) under the product selected at assess time, and
+  cleared by Clear or Reset Session. It needs no camera and is never
+  written to disk by the app. Until the backend exists, a still-image
+  request fails exactly like a live frame — honest error, no assessment.
 - Frame sampler: one frame every N seconds (default 3, adjustable 1–60),
   with the sampled-not-continuous disclosure on screen. A tick that fires
   while a request is still in flight is skipped and counted — sampling can
@@ -81,7 +90,9 @@ Sources/MetaTrio/
     CameraService.swift           AVFoundation session, permission, frame grab
     FrameSampler.swift            Non-overlapping sampling timer + counters
   ViewModels/
-    AppModel.swift                Camera -> sampler -> client -> UI wiring
+    AppModel.swift                Camera -> sampler -> client -> UI wiring,
+                                  plus still-image input sharing the
+                                  same submit path as live frames
   Views/
     ContentView.swift             Window layout, header, camera panel, settings, status bar
     CameraPreviewView.swift       AVCaptureVideoPreviewLayer host

@@ -59,9 +59,14 @@ over a network. Open `index.html`.
 3. Sample interval: change the interval to 1 s and to 60 s and confirm
    the sampler follows the new value (visible in the counters).
 
-## 2b. Still-image input (web, any device)
+## 2b. Still-image input (web, any device; native Mac panel mirrors it)
 
 No camera needed, so this can be checked before the camera checks.
+The native app has the same input as a Still image panel (Choose Image /
+Assess this image / Clear, image-only picker, in-memory preview, sent
+once under the selected product, cleared by Reset Session), so repeat
+steps 1–4 below in the native app as well, with the picker in place of
+the file input.
 
 1. Choose a non-image file: the UI says it is not an image and the
    Assess button stays disabled.
@@ -131,9 +136,11 @@ and any fix that followed). Until then, this file's status is:
 - Web on phone: NOT RUN
 - Web on Mac browser: NOT RUN (page load and module execution only,
   in headless Chromium in the sandbox)
-- Still-image input: NOT RUN in a real browser (unit tests cover file
-  validation and reading; element ids and module syntax were checked in
-  the sandbox, but the file-picker and tap path needs a real browser)
+- Still-image input: NOT RUN in a real browser or in the native app
+  (web unit tests cover file validation and reading; element ids and
+  module syntax were checked in the sandbox, but the file-picker and
+  tap path needs a real browser, and the native panel has not been
+  compiled — no Swift toolchain in the sandbox)
 - Native app build and camera: NOT RUN (no Swift toolchain in the
   sandbox; source reviewed by inspection only)
 - Live backend round trip: BLOCKED (no `/api/assess` server yet)

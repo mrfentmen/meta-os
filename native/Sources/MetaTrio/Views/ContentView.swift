@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 // Main window: product switcher and product identity on top, camera +
@@ -29,6 +30,7 @@ struct ContentView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 CameraPanel(model: model, camera: model.camera)
+                StillImagePanel(model: model)
                 SettingsPanel(model: model)
             }
             .padding(12)
@@ -200,6 +202,67 @@ private struct CameraPanel: View {
             Text("Camera error: \(message)")
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+// MARK: - Still image panel (web parity)
+
+private struct StillImagePanel: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Still image")
+                .font(.headline)
+            Text("For prerecorded or photographed scenes — the input Ignis and Sanitas demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let image = model.stillImage {
+                Image(nsImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxHeight: 240)
+                    .background(Color.black)
+                    .cornerRadius(6)
+            }
+
+            if let name = model.stillImageName {
+                Text("Image ready: \(name). Tap “Assess this image” to send it once.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("No image chosen.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let error = model.stillImageError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            HStack(spacing: 8) {
+                Button("Choose Image") { model.chooseStillImage() }
+                Button("Assess this image") { model.assessStillImage() }
+                    .disabled(model.stillImage == nil || model.stillImageAssessing)
+                Button("Clear") { model.clearStillImage() }
+                    .disabled(model.stillImage == nil && model.stillImageError == nil)
+            }
+            if model.stillImageAssessing {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Sending still image…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
         }
     }
 }

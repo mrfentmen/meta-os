@@ -39,6 +39,17 @@ ES modules for the node test runner; it declares zero dependencies.)
   body, the UI shows "Model backend not connected" with the real error,
   records the failure in the history and the session log, and displays no
   assessment. The UI never invents a result.
+- **Still-image input** (`js/image_input.js`, wired in `js/app.js`): a
+  file picker for prerecorded or photographed scenes — the input the
+  Ignis and Sanitas demos use when a live camera is not the source.
+  Choosing an image shows an in-memory preview; "Assess this image"
+  sends it once to the same endpoint, under the product selected at that
+  moment, through the same client, validation, history entry, and
+  session-log entry as a live frame. It needs no camera, accepts
+  `image/*` files only, and stores nothing: the preview and the data URL
+  live in memory and are cleared by Reset. Until the backend exists, a
+  still-image request fails exactly like a live frame — honest error,
+  no assessment.
 - **Event display**: latest validated assessment (product, assessment
   category, timestamp, observations with category, description, evidence,
   and confidence or "not reported", uncertainty list, human-review flag,
@@ -99,8 +110,9 @@ after it settles, surfaces errors without wedging, and stops cleanly; the
 client sends the product with every request and maps network/HTTP/invalid
 (including wrong-product and server error-body) failures to typed errors;
 the session log export matches the documented shape with per-entry and
-top-level product. Current result:
-**68 tests, 68 pass, 0 fail** (Node v24).
+top-level product; the still-image helpers accept `image/*` files only
+and resolve/reject with the file-reader result. Current result:
+**71 tests, 71 pass, 0 fail** (Node v24).
 
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.
