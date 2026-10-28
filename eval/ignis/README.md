@@ -127,6 +127,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   of the alert-outcome split, so whether alert-firing scenarios run slower than quiet ones
   is visible without adding the four rows above; both rows always render, so the totals sum to
   the sample size, and a group with no recorded latency shows n/a, never a fabricated zero.
+  A latency-by-assessed section right after it collapses the outcome split into two —
+  assessed (a category was returned, right or wrong: correct plus miss) versus unassessed
+  (no assessment was returned) — so whether scenarios that fail to produce an assessment
+  run slower than ones that do is visible without adding the three outcome rows above; both
+  rows always render, so the totals sum to the sample size, and a group with no recorded
+  latency shows n/a, never a fabricated zero.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false

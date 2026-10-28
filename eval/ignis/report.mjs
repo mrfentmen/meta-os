@@ -664,6 +664,49 @@ export function computeLatencyByAlertFired(records) {
   });
 }
 
+// Latency by assessed: one row per assessed-status
+// group, in fixed order assessed, unassessed, with
+// the count of recorded harness wall-clock latencies, their mean,
+// their median (averaged-middle, matching the distribution's
+// median), and their max. Assessed collapses the outcome split:
+// a record is assessed when an assessment was returned at all
+// (correct plus miss), and unassessed otherwise (no assessment
+// returned), using the validated actual_category field, so the
+// two scenario totals always sum to the sample size. Records
+// with no latency take no part in a group's numbers but still
+// count toward its scenario total, so a group whose scenarios
+// carry no latency reads as recorded 0 with n/a statistics —
+// never as a fabricated zero.
+export function computeLatencyByAssessed(records) {
+  const groups = {
+    assessed: { outcome: "assessed", total: 0, latencies: [] },
+    unassessed: { outcome: "unassessed", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    const outcome = r.actual_category === null ? "unassessed" : "assessed";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["assessed", "unassessed"].map((outcome) => {
+    const e = groups[outcome];
+    const sorted = e.latencies.sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+    }
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return {
+      outcome,
+      total: e.total,
+      recorded: sorted.length,
+      meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+      medianMs: median,
+      maxMs: sorted[sorted.length - 1],
+    };
+  });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1200,6 +1243,27 @@ export function renderRunReport(run, baselineRun = null) {
     "| --- | --- | --- | --- | --- | --- |",
   );
   for (const row of latencyByAlertFired) {
+    lines.push(
+      `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
+  }
+  const latencyByAssessed = computeLatencyByAssessed(run.records);
+  lines.push(
+    "",
+    "## Latency by assessed",
+    "",
+    "Harness wall-clock latencies split by whether an assessment was returned at all — " +
+      "assessed (a category was returned, right or wrong: correct plus miss) versus " +
+      "unassessed (no assessment was returned) — so whether scenarios that fail to " +
+      "produce an assessment run slower than ones that do is visible without adding " +
+      "the three outcome rows above. Mean and median are over the recorded latencies " +
+      "only; both rows always render, so the scenario totals sum to the sample size, " +
+      "and a group with no recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Assessed | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByAssessed) {
     lines.push(
       `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
     );
