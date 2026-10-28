@@ -81,6 +81,14 @@ rebuilding.
   the header trait, and decorative color dots are hidden from VoiceOver
   because the status is already stated in words next to them. No
   assessment information lives only in color or in an icon.
+- Scenario picker matching the web frontend (web parity): a dropdown of
+  the current product's evaluation scenarios, written into each session
+  log entry as ground-truth context for the evaluation lane. A custom
+  scenario label typed in the field below overrides the picked scenario,
+  exactly like the web frontend. Switching products resets the picker
+  (the custom field is left alone, also like the web frontend), so one
+  product's scenario can never label another product's entries. The
+  picker and the custom field both carry VoiceOver labels.
 
 ### Honesty rules (enforced in code, not just promised)
 
@@ -201,10 +209,11 @@ Verified in the sandbox (no Mac available there):
   export shape, sampling disclosure wording).
 - No syntax check of any kind was run: the sandbox has no `swift` or
   `swiftc` binary (`which swift swiftc` returns nothing). Zero compiler
-  evidence exists for this code. That includes the VoiceOver labels
-  added in the latest Agent 1 change: they use only long-standing
-  SwiftUI accessibility modifiers and were checked by careful
-  inspection, not by a build or by VoiceOver on a Mac.
+  evidence exists for this code. That includes the scenario picker
+  added in the latest Agent 1 change: it uses only long-standing
+  SwiftUI Picker/tag bindings and the existing AppModel log path, and
+  was checked by careful inspection, not by a build or by running it
+  on a Mac.
 
 Not verified anywhere yet:
 

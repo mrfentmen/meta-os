@@ -68,8 +68,16 @@ final class AppModel: ObservableObject {
     // User settings.
     @Published var selectedProduct: ProductID = .vigiles {
         didSet {
-            if oldValue != selectedProduct, sampler.isRunning {
-                stopAnalysis()
+            if oldValue != selectedProduct {
+                // Web parity: switching products resets the scenario
+                // picker, so one product's scenario can never label
+                // another product's log entries. The custom label field
+                // is left alone, exactly like the web frontend, which
+                // resets only the dropdown.
+                selectedScenario = ""
+                if sampler.isRunning {
+                    stopAnalysis()
+                }
             }
         }
     }
@@ -80,6 +88,10 @@ final class AppModel: ObservableObject {
         }
     }
     @Published var scenarioLabel: String = ""
+    /// Scenario picked from the current product's evaluation list
+    /// (web parity with the web frontend's scenario dropdown). Empty
+    /// means no scenario picked; the custom label above wins over it.
+    @Published var selectedScenario: String = ""
 
     // Still-image input (web parity): the chosen file lives in memory
     // only, exactly like the web frontend's preview + data URL. It is
@@ -146,8 +158,12 @@ final class AppModel: ObservableObject {
     }
 
     private var currentScenarioLabel: String? {
+        // Web parity (js/app.js currentScenarioLabel): a custom label
+        // wins over the picked scenario; otherwise the picked scenario
+        // is the label; otherwise there is no label.
         let trimmed = scenarioLabel.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
+        if !trimmed.isEmpty { return trimmed }
+        return selectedScenario.isEmpty ? nil : selectedScenario
     }
 
     // MARK: - Camera controls

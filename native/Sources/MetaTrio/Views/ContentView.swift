@@ -396,25 +396,29 @@ private struct SettingsPanel: View {
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
+                // Scenario picker (web parity): the current product's
+                // evaluation scenarios as a dropdown, written to the
+                // session log as ground-truth context. Switching
+                // products resets the pick in AppModel, so one
+                // product's scenario can never label another's entries.
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Scenario label (optional, recorded in the session log for evaluation)")
+                    Picker("Scenario (optional, written to the evaluation log as ground-truth context)", selection: $model.selectedScenario) {
+                        Text("— no label —").tag("")
+                        ForEach(model.config.scenarios, id: \.self) { scenario in
+                            Text(scenario).tag(scenario)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .accessibilityLabel("Scenario")
+                    .accessibilityHint("Optional scenario for the current product, recorded in the session log for evaluation. Switching products resets this choice.")
+                    Text("Or a custom scenario label (overrides the choice above)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     TextField("Scenario label", text: $model.scenarioLabel)
                         .textFieldStyle(.roundedBorder)
                         .labelsHidden()
                         .accessibilityLabel("Scenario label")
-                        .accessibilityHint("Optional label recorded in the session log for evaluation.")
-                }
-
-                DisclosureGroup("Evaluation scenarios for \(model.config.displayName)") {
-                    VStack(alignment: .leading, spacing: 2) {
-                        ForEach(Array(model.config.scenarios.enumerated()), id: \.offset) { index, scenario in
-                            Text("\(index + 1). \(scenario)")
-                                .font(.callout)
-                        }
-                    }
-                    .padding(.top, 4)
+                        .accessibilityHint("Optional custom label recorded in the session log for evaluation. It overrides the scenario choice above.")
                 }
 
                 Text("Categories the server may return: \(model.config.categories.joined(separator: ", ")).")
