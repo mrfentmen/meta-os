@@ -114,10 +114,19 @@ open MetaTrio.app
    and confirm the app shows the real connection error, not a fake
    result.
 
-## 4. Live backend round trip (blocked until Agent 2 lands)
+## 4. Live backend round trip (server exists, live calls HELD)
 
-Once Agent 2's `/api/assess` server exists, repeat checks 1–3 with the
-endpoint pointed at it, for one product at a time:
+Agent 2's `/api/assess` server exists (`server/server.mjs`), but live
+model calls are held per Del's ruling (Spark stays off until the build
+is complete and Del green-lights the test phase). The held-state round
+trip is verified: 2026-10-28, the server answered `/api/health` with
+`live_enabled: false`, and a valid assess request returned HTTP 503
+with the real held message. The frontends surface that message honestly
+and render no assessment. Until live calls are enabled, repeat checks
+1–3 against the held server only to confirm the honest-error path; the
+live-model checks below stay blocked. Once live calls are enabled,
+repeat checks 1–3 with the endpoint pointed at it, for one product at
+a time:
 
 1. A real frame returns a valid v2 assessment: it renders with product,
    category, observations, evidence, confidence (or "not reported"),
@@ -143,4 +152,8 @@ and any fix that followed). Until then, this file's status is:
   compiled — no Swift toolchain in the sandbox)
 - Native app build and camera: NOT RUN (no Swift toolchain in the
   sandbox; source reviewed by inspection only)
-- Live backend round trip: BLOCKED (no `/api/assess` server yet)
+- Live backend round trip: BLOCKED on live calls (server exists, live
+  calls held per Del's ruling); held-state round trip VERIFIED
+  2026-10-28 (`/api/health` reports `live_enabled: false`, assess
+  returns HTTP 503 with the real held message, frontends show it and
+  render no assessment)

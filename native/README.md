@@ -98,9 +98,13 @@ rebuilding.
 
 ### Honesty rules (enforced in code, not just promised)
 
-- **Zero hardcoded or fake detections.** With no backend, the app shows
-  "Model backend not connected" plus the real error. That is the correct
-  state until Agent 2's server exists.
+- **Zero hardcoded or fake detections.** With no backend reachable, the
+  app shows "Model backend not connected" plus the real error. Agent 2's
+  server now exists, but live model calls are held per Del's ruling, so
+  the current correct state against it is the server's real held error
+  (HTTP 503, "Live model calls are held…") and no assessment rendered.
+  That held error is the intended behavior until Del green-lights the
+  test phase — not a bug.
 - `confidence` stays `null` unless the server returns a real number;
   the UI prints "confidence: not reported".
 - `processing.latency_ms` stays `null` unless the server reports it.

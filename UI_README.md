@@ -237,10 +237,17 @@ never mixed with the client measurement.
 
 ## What is NOT connected yet
 
-- **No model backend exists.** Nothing implements `/api/assess` yet; that
-  is Agent 2's lane (Meta model integration). Until it lands, every
-  analysis request fails and the UI's disconnected state is what you will
-  see. That is the intended, honest behavior — not a bug.
+- **No live model assessment yet.** Agent 2's `/api/assess` server exists
+  (`server/server.mjs`), but live model calls are held per Del's ruling
+  (Spark stays off until the build is complete and Del green-lights the
+  test phase). Verified 2026-10-28: the server answers `/api/health`
+  with `live_enabled: false`, and a valid assess request returns HTTP
+  503 with the real held message ("Live model calls are held: Spark
+  stays off until the build is complete and Del green-lights the test
+  phase."). Until live calls are enabled, every analysis request ends
+  in that honest held error and no assessment renders. That is the
+  intended behavior — not a bug. The full live round trip (a real frame
+  returning a valid v2 assessment) is still unproven.
 - No evaluation harness consumes the exported log yet (Agent 3's lane).
 - Camera behavior is verified only up to page load and module execution in
   headless Chromium: this sandbox has no camera device, so a live
