@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta Sentinel — Visual Event Assessment Prototype</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>Meta Sentinel</h1>
+  <p id="backend-status" class="status" data-state="unknown">Model backend status unknown. Start analysis to contact the endpoint.</p>
+</header>
+
+<main>
+  <section class="panel" aria-label="Camera">
+    <div class="panel-head">
+      <h2>Camera</h2>
+      <span id="camera-indicator" class="camera-indicator" hidden><span class="dot" aria-hidden="true"></span>CAMERA LIVE</span>
+    </div>
+    <video id="preview" playsinline muted></video>
+    <canvas id="capture-canvas" hidden></canvas>
+    <p id="camera-state" class="note">Camera is off.</p>
+    <div class="controls">
+      <button id="btn-camera-start" type="button">Start camera</button>
+      <button id="btn-camera-stop" type="button" disabled>Stop camera</button>
+      <button id="btn-analysis-start" type="button" disabled>Start analysis</button>
+      <button id="btn-analysis-stop" type="button" disabled>Stop analysis</button>
+      <button id="btn-reset" type="button">Reset</button>
+    </div>
+    <p id="in-flight" class="note" hidden>Analysis request in flight…</p>
+    <p id="sampler-stats" class="note mono">Ticks: 0 · Sent: 0 · Skipped (request in flight): 0 · Failed: 0</p>
+  </section>
+
+  <section class="panel" aria-label="Configuration">
+    <h2>Analysis configuration</h2>
+    <label for="endpoint">Assessment endpoint</label>
+    <input id="endpoint" type="text" value="/api/assess" autocomplete="off" spellcheck="false">
+    <label for="interval-seconds">Sampling interval (seconds, 1–60)</label>
+    <input id="interval-seconds" type="number" value="3" min="1" max="60" step="1">
+    <label for="scenario-label">Scenario label (optional, written to the evaluation log as ground-truth context)</label>
+    <input id="scenario-label" type="text" placeholder="e.g. staged-fall-01" autocomplete="off">
+    <p id="sampling-disclosure" class="note"></p>
+  </section>
+
+  <section class="panel" aria-label="Latest assessment">
+    <h2>Latest assessment</h2>
+    <div id="latest-assessment" class="mono-block">No assessment received yet.</div>
+    <p class="note">Assessments describe observable evidence only. They do not establish intent, guilt, or that a crime occurred.</p>
+  </section>
+
+  <section class="panel" aria-label="Event history">
+    <h2>Event history</h2>
+    <p id="history-empty" class="note">No events yet.</p>
+    <ul id="history-list" class="history"></ul>
+  </section>
+
+  <section class="panel" aria-label="Evaluation session log">
+    <h2>Evaluation session log</h2>
+    <p id="log-stats" class="note mono">Session log entries: 0</p>
+    <div class="controls">
+      <button id="btn-export-log" type="button">Export log (JSON)</button>
+      <button id="btn-clear-log" type="button">Clear log</button>
+    </div>
+    <p class="note">The log lives in memory only. Export it before reloading the page or the entries are lost. Frames are sent to the assessment endpoint and are not stored by this app.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  <p>Experimental prototype for staged, consenting scenarios. Not an operational law-enforcement or emergency-dispatch system. This app never contacts police or emergency services, and performs no face recognition or identity inference.</p>
+</footer>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

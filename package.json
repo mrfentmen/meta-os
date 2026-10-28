@@ -1,0 +1,1 @@
+{"description":"Meta Sentinel frontend: camera, sampled-frame analysis client, evaluation session log. No dependencies, no build step.","name":"meta-sentinel","private":true,"scripts":{"test":"node --test tests/ui.test.mjs"},"type":"module","version":"0.1.0"}

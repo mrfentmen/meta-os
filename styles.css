@@ -1,0 +1,248 @@
+/* Meta Sentinel — restrained operational UI. Flat colors, 1px borders,
+   no gradients, no decorative effects. */
+
+:root {
+  --bg: #14161a;
+  --panel: #1d2026;
+  --panel-border: #3a3f47;
+  --text: #e6e6e6;
+  --muted: #9aa0a8;
+  --accent: #4f7ec2;
+  --ok: #5da864;
+  --warn: #c9a227;
+  --err: #c2504a;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.status {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.status[data-state="connected"] {
+  color: var(--ok);
+}
+
+.status[data-state="error"] {
+  color: var(--err);
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 12px 14px;
+}
+
+.panel h2 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.camera-indicator {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--err);
+}
+
+.camera-indicator .dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--err);
+  margin-right: 6px;
+}
+
+video {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+button {
+  background: #262a31;
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+label {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  background: #101216;
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 14px;
+  font-family: var(--mono);
+}
+
+.note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.mono-block {
+  font-family: var(--mono);
+  font-size: 13px;
+  white-space: normal;
+}
+
+.assessment-head {
+  margin: 0 0 6px;
+}
+
+.assessment-time {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.review-flag {
+  color: var(--warn);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.observations {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+
+.uncertainty {
+  color: var(--muted);
+}
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-item {
+  border-left: 3px solid var(--muted);
+  padding: 6px 0 6px 10px;
+  margin-bottom: 8px;
+}
+
+.history-item p {
+  margin: 2px 0;
+}
+
+.history-ok {
+  border-left-color: var(--ok);
+}
+
+.history-review {
+  border-left-color: var(--warn);
+}
+
+.history-error {
+  border-left-color: var(--err);
+}
+
+.history-error .history-head strong {
+  color: var(--err);
+}
+
+.footer {
+  padding: 12px 16px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  main {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .controls button {
+    flex: 1 1 40%;
+  }
+}
