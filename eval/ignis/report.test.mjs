@@ -44,6 +44,7 @@ import {
   computeLatencyByErrorMessage,
   computeLatencyByTruthPredictedPair,
   computeLatencyByConfusableStatus,
+  computeLatencyByMissPair,
   computeLatencyByOutcome,
   computeLatencyDistribution,
   computeLatencyOutliers,
@@ -1524,6 +1525,67 @@ test("report: latency by confusable-negative status splits latencies into confus
   assert.match(rendered, /\| confusable negative \| 1 \| 1 \| 10\.0 \| 10\.0 \| 10\.0 \|/);
   assert.match(rendered, /\| other non-alert \| 1 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
   assert.match(rendered, /\| alert \| 1 \| 0 \| n\/a \| n\/a \| n\/a \|/);
+});
+
+test("report: latency by miss pair splits miss latencies by swap, most frequent first", () => {
+  const rec = (id, truth, actual, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: false,
+    alert_fired: false,
+    alert_correct: true,
+    category_correct: actual === truth,
+    error: actual === null ? "held" : null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Steam -> smoke twice (10, 30: mean/median 20, max 30) sorts
+  // before flame-like -> flame once (100), before smoke -> ERROR
+  // once with no latency (recorded 0, n/a statistics, never zero).
+  // The correct steam -> steam record is not a miss and appears
+  // in neither row, so the totals sum to the miss count (4), not
+  // the sample size (5).
+  assert.deepEqual(
+    computeLatencyByMissPair([
+      rec("IGN-T1", "steam or fog", "visible smoke", 10),
+      rec("IGN-T2", "steam or fog", "steam or fog", 5),
+      rec("IGN-T3", "steam or fog", "visible smoke", 30),
+      rec("IGN-T4", "flame-like lighting", "visible flame", 100),
+      rec("IGN-T5", "visible smoke", null),
+    ]),
+    [
+      { truth: "steam or fog", predicted: "visible smoke", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { truth: "flame-like lighting", predicted: "visible flame", total: 1, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+      { truth: "visible smoke", predicted: "ERROR", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+    ],
+  );
+  // Rendered: section after Latency by confusable-negative status,
+  // before Misses; a run with no misses says none.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "steam or fog", "visible smoke", 10),
+      rec("IGN-T2", "steam or fog", "visible smoke", 30),
+      rec("IGN-T3", "visible smoke", null),
+    ],
+    metrics: { sample_size: 3, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 1, precision: null, recall: 0, false_positive_rate: 0, false_negative_rate: 1, category_accuracy: 0, latency_ms: { n: 2, mean: 20, median: 20, max: 30 }, errors: { count: 1, scenario_ids: ["IGN-T3"] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by miss pair/);
+  assert.ok(rendered.indexOf("## Latency by miss pair") > rendered.indexOf("## Latency by confusable-negative status"));
+  assert.ok(rendered.indexOf("## Latency by miss pair") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| steam or fog \| visible smoke \| 2 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| visible smoke \| ERROR \| 1 \| 0 \| n\/a \| n\/a \| n\/a \|/);
+  const cleanRun = {
+    source: "test source",
+    generated: "test run",
+    records: [rec("IGN-T1", "steam or fog", "steam or fog", 10)],
+    metrics: { sample_size: 1, true_positives: 0, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const cleanRendered = renderRunReport(cleanRun);
+  const section = cleanRendered.slice(cleanRendered.indexOf("## Latency by miss pair"), cleanRendered.indexOf("## Misses"));
+  assert.match(section, /None: every scenario's predicted category matched its ground truth\./);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {

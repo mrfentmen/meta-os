@@ -172,6 +172,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   than the scenes that should never fire is visible without scanning the per-scenario table; all three
   rows always render, so the totals sum to the sample size, and a group with no recorded latency
   shows n/a, never a fabricated zero.
+  A latency-by-miss-pair section right after it splits the recorded latencies by miss pair —
+  one row per truth -> predicted pair among the misses only, most frequent first (matching the
+  miss-pair counts' ordering, with an unassessed record reading as ERROR), so whether the
+  dominant swap runs slower than the other misses is visible without scanning the per-scenario
+  table; the totals sum to the miss count, not the sample size, and a pair with no recorded latency
+  shows n/a, never a fabricated zero; a run with no misses says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false
