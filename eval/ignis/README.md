@@ -28,10 +28,16 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
 - `baseline.mjs` — always-no-hazard baseline (`assessBaseline`).
   Predicts "no hazard visible" for every scene, fires no alert,
   performs no inspection. Mirrors `../sanitas/baseline.mjs`.
+- `stub.mjs` — deterministic fixture source (`assessStub`). NOT a
+  model: a table keyed by scenario_id, deliberately imperfect, with
+  its misses documented in the file before any run. Mirrors
+  `../sanitas/stub.mjs`.
 - `run.mjs` — held-state runner. Prints the report for the wired
   source and says plainly that its numbers describe source
   availability, not model performance. With `--baseline`, runs the
-  same scenario set against the baseline instead.
+  same scenario set against the baseline instead. With `--stub`,
+  runs the same scenario set against the fixture stub, then the
+  baseline, and prints the stub-vs-baseline comparison.
 - `adapter.test.mjs` — adapter tests: label loading, alert-definition
   consistency, metric math, alert-correctness logic,
   malformed-input containment, the held-state refusal, and the
@@ -94,11 +100,34 @@ nothing, since the baseline never fires a false alarm by
 construction — the same bar the Sanitas set applies to its
 always-clean baseline.
 
+## The stub, and the comparison it enables
+
+`node eval/ignis/run.mjs --stub` runs the 20 labeled scenarios
+against `assessStub` and then the baseline on the same set.
+Measured 2026-10-28 (fixture numbers, not model performance):
+
+- Stub: TP=4 FP=3 TN=12 FN=1, precision 0.571, recall 0.800,
+  false-positive rate 0.200, false-negative rate 0.200,
+  category accuracy 0.700, errors 0
+- Baseline: TP=0 FP=0 TN=15 FN=5, precision n/a, recall 0.000,
+  false-positive rate 0.000, false-negative rate 1.000,
+  category accuracy 0.150, errors 0
+
+Documented stub misses: IGN-003 predicted indeterminate (a missed
+alert); IGN-007, IGN-010, IGN-018 predicted an alert category on a
+confusable negative (false alarms); IGN-012 and IGN-015 predicted a
+wrong non-alert category. The stub beats the baseline on recall
+(0.800 vs 0.000) and category accuracy (0.700 vs 0.150) — the
+comparison exercises the harness on a source that sometimes alerts
+and sometimes misses, which the do-nothing baseline cannot do.
+Neither number describes a model.
+
 ## Run it
 
 ```sh
 node eval/ignis/run.mjs
 node eval/ignis/run.mjs --baseline
+node eval/ignis/run.mjs --stub
 node eval/ignis/run.mjs --out eval/ignis/last-run.json
 npm test   # runs the whole repo suite, including eval/ignis/adapter.test.mjs
 ```

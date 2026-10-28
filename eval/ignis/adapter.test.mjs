@@ -18,6 +18,7 @@ import {
   assessViaModelAdapter,
 } from "./adapter.mjs";
 import { assessBaseline } from "./baseline.mjs";
+import { assessStub } from "./stub.mjs";
 import { validateAssessment } from "../../js/schema.js";
 import { PRODUCT_BY_ID } from "../../js/products.js";
 
@@ -234,4 +235,56 @@ test("held state: a full held run records the refusal for every scenario and fab
   const metrics = computeMetrics(records);
   assert.equal(metrics.errors.count, scenarios.length);
   assert.equal(metrics.category_accuracy, 0);
+});
+
+// ---------- stub: deterministic fixture source, documented misses ----------
+
+test("stub: answers pass v2 schema validation for every scenario, and unknown ids throw", async () => {
+  for (const scenario of scenarios) {
+    const answer = await assessStub(scenario);
+    assert.equal(validateAssessment(answer, "ignis").ok, true);
+    assert.equal(answer.processing.model, "ignis-stub-fixture");
+    assert.equal(answer.processing.latency_ms, null);
+  }
+  await assert.rejects(assessStub({ scenario_id: "IGN-XXX" }), /stub has no fixture/);
+});
+
+test("stub: full-set metrics are exactly the documented fixture numbers (TP=4 FP=3 TN=12 FN=1, accuracy 14/20)", async () => {
+  const records = await runIgnisEval(scenarios, assessStub);
+  assert.equal(records.length, scenarios.length);
+  const byId = Object.fromEntries(records.map((r) => [r.scenario_id, r]));
+  // Documented misses (see stub.mjs): one missed alert, three false alarms,
+  // two wrong-category non-alerts. Everything else matches its label.
+  assert.equal(byId["IGN-003"].actual_category, "indeterminate");
+  assert.equal(byId["IGN-007"].actual_category, "visible smoke");
+  assert.equal(byId["IGN-010"].actual_category, "visible flame");
+  assert.equal(byId["IGN-012"].actual_category, "flame-like lighting");
+  assert.equal(byId["IGN-015"].actual_category, "steam or fog");
+  assert.equal(byId["IGN-018"].actual_category, "visible flame");
+  for (const r of records) {
+    assert.equal(r.error, null);
+    if (!["IGN-003", "IGN-007", "IGN-010", "IGN-012", "IGN-015", "IGN-018"].includes(r.scenario_id)) {
+      assert.equal(r.category_correct, true, `${r.scenario_id} should match its label`);
+    } else {
+      assert.equal(r.category_correct, false, `${r.scenario_id} is a documented miss`);
+    }
+  }
+  const metrics = computeMetrics(records);
+  assert.equal(metrics.true_positives, 4);
+  assert.equal(metrics.false_positives, 3);
+  assert.equal(metrics.true_negatives, 12);
+  assert.equal(metrics.false_negatives, 1);
+  assert.equal(metrics.precision, 4 / 7);
+  assert.equal(metrics.recall, 4 / 5);
+  assert.equal(metrics.false_positive_rate, 3 / 15);
+  assert.equal(metrics.false_negative_rate, 1 / 5);
+  assert.equal(metrics.category_accuracy, 14 / 20);
+  assert.equal(metrics.errors.count, 0);
+});
+
+test("stub: beats the baseline on recall and category accuracy, on the same harness", async () => {
+  const stubMetrics = computeMetrics(await runIgnisEval(scenarios, assessStub));
+  const baselineMetrics = computeMetrics(await runIgnisEval(scenarios, assessBaseline));
+  assert.ok(stubMetrics.recall > baselineMetrics.recall);
+  assert.ok(stubMetrics.category_accuracy > baselineMetrics.category_accuracy);
 });
