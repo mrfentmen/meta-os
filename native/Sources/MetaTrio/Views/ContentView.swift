@@ -184,6 +184,33 @@ private struct CameraPanel: View {
 
             stateText
 
+            // Camera facing (web parity): the web frontend's picker
+            // offers front vs rear as a preference, never a requirement.
+            // The native picker does the same — CameraService.setFacing
+            // records the choice while off and restarts the capture
+            // while live, and falls back to the default camera when no
+            // device sits at the chosen position, so a rear pick on a
+            // single-camera Mac still shows the front camera rather
+            // than failing. The note below says so in plain words, so
+            // the picker never implies a second camera exists.
+            VStack(alignment: .leading, spacing: 4) {
+                Picker("Camera facing", selection: Binding(
+                    get: { camera.facing },
+                    set: { camera.setFacing($0) }
+                )) {
+                    ForEach(CameraService.Facing.allCases, id: \.self) { facing in
+                        Text(facing.label).tag(facing)
+                    }
+                }
+                .pickerStyle(.menu)
+                .accessibilityLabel("Camera facing")
+                .accessibilityHint("Front or rear camera. A preference, not a requirement: a Mac with only one camera uses that camera either way.")
+                Text("A facing is a preference, not a requirement: a Mac with only one camera uses that camera whichever facing is chosen.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
             if model.analysisRunning {
                 Label("ANALYSIS ACTIVE — sampling one frame every \(model.intervalSeconds) s", systemImage: "dot.radiowaves.left.and.right")
                     .font(.caption)

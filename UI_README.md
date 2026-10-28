@@ -30,8 +30,12 @@ ES modules for the node test runner; it declares zero dependencies.)
   only one camera still gets that camera. Changing it while the camera
   is off applies to the next Start; changing it while live restarts the
   stream, and a failed restart leaves the camera off with the real error
-  shown. The native Mac app has no facing selector: a Mac has a single
-  built-in camera, so there is nothing to choose between.
+  The native Mac app has a facing picker matching the web one: front
+  vs rear, as a preference never a requirement — a rear pick on a
+  single-camera Mac still opens the front camera instead of failing.
+  Changing it while the camera is off applies to the next Start;
+  changing it while live restarts the capture, and a failed restart
+  shows the real error instead of silently keeping the old camera.
 - **Frame sampler** (`js/sampler.js`): while analysis is running, one frame
   every N seconds (default 3, configurable 1–60 in the UI) is drawn to a
   canvas and encoded as JPEG. If the previous request has not returned, the

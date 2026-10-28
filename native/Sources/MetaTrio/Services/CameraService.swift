@@ -31,6 +31,32 @@ enum CameraError: LocalizedError {
 }
 
 final class CameraService: NSObject, ObservableObject {
+    /// Which camera the user wants. Front is the built-in Mac camera;
+    /// rear is the camera a phone demo points at the scene. On a Mac
+    /// this is a preference, never a requirement, exactly like the web
+    /// frontend's facingMode: if no device sits at the chosen position,
+    /// device(for:) falls back to the default camera instead of failing,
+    /// so a single-camera Mac still gets its camera either way.
+    enum Facing: String, CaseIterable {
+        case front
+        case rear
+
+        var avPosition: AVCaptureDevice.Position {
+            switch self {
+            case .front: return .front
+            case .rear: return .back
+            }
+        }
+
+        /// The web frontend's picker labels, word for word.
+        var label: String {
+            switch self {
+            case .front: return "Front-facing (selfie view)"
+            case .rear: return "Rear-facing (point the phone at the scene)"
+            }
+        }
+    }
+
     enum State: Equatable {
         case idle
         case requestingPermission
@@ -42,6 +68,11 @@ final class CameraService: NSObject, ObservableObject {
     }
 
     @Published private(set) var state: State = .idle
+
+    /// The facing the next start uses. Changed only through setFacing,
+    /// so a change while live restarts the capture on the new facing
+    /// instead of silently applying to a later start.
+    @Published private(set) var facing: Facing = .front
 
     /// The session the preview layer renders. Identity is stable for the
     /// lifetime of the app; it simply has no input until start() succeeds.
@@ -97,6 +128,51 @@ final class CameraService: NSObject, ObservableObject {
         setState(.stopped)
     }
 
+    /// Records a new facing. While the camera is off this only records
+    /// the choice, which the next start uses. While live it restarts
+    /// the capture on the new facing, mirroring the web frontend's
+    /// switchFacing (which restarts the stream): the session is stopped,
+    /// the old input is removed, and configureAndStart rebuilds the
+    /// input for the new facing. A failed restart lands in .failed with
+    /// the real message, exactly like a failed start — it never falls
+    /// back silently to the old facing while claiming the new one.
+    /// Called from the UI, so on the main thread.
+    func setFacing(_ newFacing: Facing) {
+        facing = newFacing
+        guard isRunning else { return }
+        sessionQueue.async { [weak self] in
+            guard let self = self else { return }
+            if self.session.isRunning {
+                self.session.stopRunning()
+            }
+            self.session.beginConfiguration()
+            for input in self.session.inputs {
+                self.session.removeInput(input)
+            }
+            self.session.commitConfiguration()
+            self.configured = false
+            self.frameLock.lock()
+            self.latestSampleBuffer = nil
+            self.frameLock.unlock()
+            DispatchQueue.main.async { [weak self] in
+                self?.start()
+            }
+        }
+    }
+
+    /// The device at the chosen position, or the default camera when
+    /// none sits there. The fallback is what makes the facing a
+    /// preference: a rear pick on a single-camera Mac still opens the
+    /// front camera instead of reporting no camera.
+    private func device(for facing: Facing) -> AVCaptureDevice? {
+        let discovery = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [.builtInWideAngleCamera],
+            mediaType: .video,
+            position: facing.avPosition
+        )
+        return discovery.devices.first ?? AVCaptureDevice.default(for: .video)
+    }
+
     /// Encodes the most recent frame as a JPEG data URL
     /// ("data:image/jpeg;base64,..."), the image format of the client ->
     /// server contract. Throws CameraError when no frame is available.
@@ -136,7 +212,7 @@ final class CameraService: NSObject, ObservableObject {
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
             if !self.configured {
-                guard let device = AVCaptureDevice.default(for: .video) else {
+                guard let device = self.device(for: self.facing) else {
                     self.setState(.noCamera)
                     return
                 }
