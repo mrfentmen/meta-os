@@ -148,6 +148,13 @@ final class AppModel: ObservableObject {
         sampler.onTick = { [weak self] in
             self?.syncSamplerStats()
         }
+        // Web parity: the session log survives a relaunch, so the
+        // timeline and the latest assessment are restored from it, the
+        // same way the web frontend replays its saved log on load.
+        // Reset Session still clears the on-screen timeline without
+        // clearing the log; Clear Log clears both the saved and the
+        // in-memory log, so a cleared log never comes back on relaunch.
+        restoreTimelineFromLog()
     }
 
     var config: ProductConfig { selectedProduct.config }
@@ -395,6 +402,37 @@ final class AppModel: ObservableObject {
     }
 
     // MARK: - Timeline
+
+    /// Replays the persisted session log oldest-first, inserting each
+    /// entry at the top, so the newest entry ends up on top exactly as
+    /// it would after live recording (mirrors the web frontend's
+    /// restoreHistoryFromLog). The latest assessment shown is the
+    /// newest successful one. A saved entry whose product key is
+    /// unknown is shown under the currently selected product rather
+    /// than dropped — the entry itself is never rewritten.
+    private func restoreTimelineFromLog() {
+        logCount = log.count
+        var latestOk: AssessmentResponse?
+        for entry in log.entries {
+            let product = ProductID(rawValue: entry.product) ?? selectedProduct
+            if entry.status == .ok, let response = entry.response {
+                latestOk = response
+                timeline.insert(
+                    TimelineItem(product: product, timestamp: response.timestamp, kind: .assessment(response)),
+                    at: 0
+                )
+            } else {
+                let message = entry.error ?? "Unknown error."
+                timeline.insert(
+                    TimelineItem(product: product, timestamp: entry.requestTimestamp, kind: .failure(message)),
+                    at: 0
+                )
+            }
+        }
+        if let latestOk = latestOk {
+            displayedAssessment = latestOk
+        }
+    }
 
     func display(_ item: TimelineItem) {
         if case .assessment(let response) = item.kind {

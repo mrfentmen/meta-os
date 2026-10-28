@@ -59,6 +59,12 @@ rebuilding.
   Uncertainty section; an event timeline (failures included, in red);
   a session log with per-entry client-measured latency and JSON export in
   the same shape the web frontend produces, for the evaluation lane.
+  The session log survives a relaunch (web parity): it is saved to
+  Application Support/MetaTrio/session-log.json on every record, the
+  timeline and the latest assessment are restored from it on launch,
+  and Clear Log removes the saved file so a cleared log never comes back.
+  A missing or corrupt saved file simply starts an empty log — logging
+  itself never breaks, and no entry is ever invented to fill the gap.
 - Backend health check (web parity): a "Check Backend Health" button in
   Settings that GETs the server's /api/health for the configured
   endpoint (the /api/assess suffix is swapped for /api/health, so the
@@ -115,7 +121,8 @@ Sources/MetaTrio/
   Models/
     Assessment.swift              V2 contract types (Codable)
     ProductConfig.swift           ProductID + per-product config as data
-    SessionLog.swift              In-memory log + JSON export
+    SessionLog.swift              Session log + JSON export, persisted
+                                  across relaunches (web parity)
   Services/
     ISO8601.swift                 Timestamp formatting/validation
     ContractValidator.swift       Strict v2 validation of server replies
@@ -220,6 +227,10 @@ Not verified anywhere yet:
 - Compilation. SwiftUI/AVFoundation/AppKit files cannot be compiled in the
   Linux sandbox. First build happens on the Mac via the steps above; treat
   any first-build errors as the expected first iteration, not a surprise.
+  That includes the session-log persistence added in the latest Agent 1
+  change: it uses only long-standing Foundation file and Codable APIs and
+  the existing AppModel log path, and was checked by careful inspection,
+  not by a build or by running it on a Mac.
 - Camera behavior on real hardware (permission prompt, preview, frame
   capture) — only exercisable on the Mac. The exact checklist is
   `../docs/HARDWARE_VERIFICATION.md`.
