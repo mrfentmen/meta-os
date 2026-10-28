@@ -138,6 +138,13 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   scenarios that get the category wrong run slower than ones that get it right is visible
   without adding the three outcome rows above; both rows always render, so the totals sum
   to the sample size, and a group with no recorded latency shows n/a, never a fabricated zero.
+  A latency-by-miss-status section right after it collapses the outcome split the third way —
+  miss (an assessment was returned but differed from the ground truth) versus non-miss (the
+  exact match plus every unassessed record) — completing the three two-way collapses of the
+  outcome split with assessed and category correctness, so whether scenarios that return a wrong
+  category run slower than ones that do not is visible without adding the three outcome rows
+  above; both rows always render, so the totals sum to the sample size, and a group with no
+  recorded latency shows n/a, never a fabricated zero.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false

@@ -38,6 +38,7 @@ import {
   computeLatencyByAlertFired,
   computeLatencyByAssessed,
   computeLatencyByCategoryCorrectness,
+  computeLatencyByMissStatus,
   computeLatencyByOutcome,
   computeLatencyDistribution,
   computeLatencyOutliers,
@@ -1143,6 +1144,68 @@ test("report: latency by category correctness splits correct from incorrect", ()
   assert.ok(rendered.indexOf("## Latency by category correctness") < rendered.indexOf("## Misses"));
   assert.match(rendered, /\| category correct \| 1 \| 1 \| 10\.0 \| 10\.0 \| 10\.0 \|/);
   assert.match(rendered, /\| category incorrect \| 3 \| 2 \| 65\.0 \| 65\.0 \| 100\.0 \|/);
+});
+
+test("report: latency by miss status splits miss from non-miss", () => {
+  const rec = (id, truth, actual, expected, fired, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Miss: 30 -> mean/median/max 30, recorded 1 of 1.
+  // Non-miss (correct + unassessed): 10, 100 + one unmeasured
+  // -> mean 55, median 55, max 100, recorded 2 of 3.
+  // Both rows always render, in fixed miss/non-miss order, so
+  // the totals sum to the sample size.
+  assert.deepEqual(
+    computeLatencyByMissStatus([
+      rec("IGN-T2", "visible smoke", "visible flame", true, true, 30),
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T3", "steam or fog", null, false, false, 100),
+      rec("IGN-T4", "visible flame", null, true, false),
+    ]),
+    [
+      { outcome: "miss", total: 1, recorded: 1, meanMs: 30, medianMs: 30, maxMs: 30 },
+      { outcome: "non-miss", total: 3, recorded: 2, meanMs: 55, medianMs: 55, maxMs: 100 },
+    ],
+  );
+  // A group with no recorded latency shows null statistics, never zero.
+  assert.deepEqual(
+    computeLatencyByMissStatus([
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T2", "visible smoke", "visible flame", true, true),
+    ]),
+    [
+      { outcome: "miss", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+      { outcome: "non-miss", total: 1, recorded: 1, meanMs: 10, medianMs: 10, maxMs: 10 },
+    ],
+  );
+  // Rendered: section after Latency by category correctness, before
+  // Misses, rows in fixed order, n/a for the unmeasured group in
+  // the second run.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T2", "visible smoke", "visible flame", true, true, 30),
+      rec("IGN-T3", "steam or fog", null, false, false, 100),
+      rec("IGN-T4", "visible flame", null, true, false),
+    ],
+    metrics: { sample_size: 4, true_positives: 1, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0.25, latency_ms: { n: 3, mean: 46.666, median: 30, max: 100 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by miss status/);
+  assert.ok(rendered.indexOf("## Latency by miss status") > rendered.indexOf("## Latency by category correctness"));
+  assert.ok(rendered.indexOf("## Latency by miss status") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| miss \| 1 \| 1 \| 30\.0 \| 30\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| non-miss \| 3 \| 2 \| 55\.0 \| 55\.0 \| 100\.0 \|/);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {

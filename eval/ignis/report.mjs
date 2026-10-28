@@ -751,6 +751,54 @@ export function computeLatencyByCategoryCorrectness(records) {
   });
 }
 
+// Latency by miss status: one row per miss-status
+// group, in fixed order miss, non-miss, with the count of recorded
+// harness wall-clock latencies, their mean, their median
+// (averaged-middle, matching the distribution's median), and their
+// max. Miss status collapses the outcome split the third way,
+// completing the set with assessed and category correctness: a
+// record is a miss when an assessment was returned but differed
+// from the ground truth, and non-miss otherwise (the exact match
+// plus every unassessed record), using the validated
+// actual_category field against the ground truth, so the two
+// scenario totals always sum to the sample size. Records with no
+// latency take no part in a group's numbers but still count toward
+// its scenario total, so a group whose scenarios carry no latency
+// reads as recorded 0 with n/a statistics — never as a fabricated
+// zero.
+export function computeLatencyByMissStatus(records) {
+  const groups = {
+    miss: { outcome: "miss", total: 0, latencies: [] },
+    "non-miss": { outcome: "non-miss", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    const outcome =
+      r.actual_category !== null && r.actual_category !== r.ground_truth_label
+        ? "miss"
+        : "non-miss";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["miss", "non-miss"].map((outcome) => {
+    const e = groups[outcome];
+    const sorted = e.latencies.sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+    }
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return {
+      outcome,
+      total: e.total,
+      recorded: sorted.length,
+      meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+      medianMs: median,
+      maxMs: sorted[sorted.length - 1],
+    };
+  });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1329,6 +1377,28 @@ export function renderRunReport(run, baselineRun = null) {
     "| --- | --- | --- | --- | --- | --- |",
   );
   for (const row of latencyByCategoryCorrectness) {
+    lines.push(
+      `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
+  }
+  const latencyByMissStatus = computeLatencyByMissStatus(run.records);
+  lines.push(
+    "",
+    "## Latency by miss status",
+    "",
+    "Harness wall-clock latencies split by whether the record is a miss — miss (an " +
+      "assessment was returned but differed from the ground truth) versus non-miss (the " +
+      "exact match plus every unassessed record) — completing the three two-way collapses " +
+      "of the outcome split with assessed and category correctness, so whether scenarios " +
+      "that return a wrong category run slower than ones that do not is visible without " +
+      "adding the three outcome rows above. Mean and median are over the recorded latencies " +
+      "only; both rows always render, so the scenario totals sum to the sample size, and a " +
+      "group with no recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Miss status | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByMissStatus) {
     lines.push(
       `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
     );
