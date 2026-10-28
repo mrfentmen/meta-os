@@ -638,6 +638,21 @@ test("video input: captureVideoFrame draws the current frame and returns a JPEG 
   assert.deepEqual(drawn, [[video, 0, 0, 640, 360]]);
 });
 
+test("video input: captureVideoFrame downscales an oversize frame to a 1280px longest side, like live capture", () => {
+  const drawn = [];
+  const video = { videoWidth: 4000, videoHeight: 3000 };
+  const canvas = {
+    width: 0,
+    height: 0,
+    getContext: () => ({ drawImage: (el, x, y, w, h) => drawn.push([el, x, y, w, h]) }),
+    toDataURL: (type, quality) => `data:${type};base64,frame-${quality}`,
+  };
+  assert.equal(captureVideoFrame(video, canvas), "data:image/jpeg;base64,frame-0.8");
+  assert.equal(canvas.width, 1280);
+  assert.equal(canvas.height, 960);
+  assert.deepEqual(drawn, [[video, 0, 0, 1280, 960]]);
+});
+
 test("video input: captureVideoFrame throws when the video has no dimensions yet", () => {
   const canvas = { getContext: () => { throw new Error("should not draw"); }, toDataURL: () => "" };
   assert.throws(() => captureVideoFrame({ videoWidth: 0, videoHeight: 0 }, canvas), /not ready yet/);
