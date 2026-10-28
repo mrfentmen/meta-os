@@ -20,6 +20,7 @@ const els = {
   cameraIndicator: $("camera-indicator"),
   cameraState: $("camera-state"),
   cameraFacing: $("camera-facing"),
+  analysisActive: $("analysis-active"),
   btnCameraStart: $("btn-camera-start"),
   btnCameraStop: $("btn-camera-stop"),
   btnAnalysisStart: $("btn-analysis-start"),
@@ -189,6 +190,18 @@ function updateHistoryEmpty() {
     : "No events yet. Assessments and errors will appear here.";
 }
 
+// Native parity: the native camera panel shows an ANALYSIS ACTIVE
+// banner while sampling runs, with the live interval, so a run is
+// visible at a glance instead of only in the moving counters. The web
+// Camera panel shows the same line: hidden while idle, shown while the
+// sampler runs, and reworded when the interval changes mid-run.
+function updateAnalysisActive() {
+  const seconds = currentIntervalMs() / 1000;
+  els.analysisActive.textContent =
+    `Analysis active — sampling one frame every ${seconds} second${seconds === 1 ? "" : "s"}.`;
+  els.analysisActive.hidden = !sampler.running;
+}
+
 function refreshButtons() {
   const camActive = camera.active;
   els.btnCameraStart.disabled = camActive;
@@ -196,6 +209,7 @@ function refreshButtons() {
   els.btnAnalysisStart.disabled = !camActive || sampler.running;
   els.btnAnalysisStop.disabled = !sampler.running;
   updateHistoryEmpty();
+  updateAnalysisActive();
 }
 
 function describeCameraError(err) {
@@ -731,6 +745,7 @@ els.intervalSeconds.addEventListener("change", () => {
   if (sampler.running) {
     sampler.setIntervalMs(currentIntervalMs());
   }
+  updateAnalysisActive();
 });
 
 els.btnClearLog.addEventListener("click", () => {

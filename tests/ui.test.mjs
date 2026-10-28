@@ -839,3 +839,28 @@ test("panels: still-image and video panels show an in-panel sending note while a
   assert.match(swift, /Text\("Sending still image…"\)/);
   assert.match(swift, /Text\("Sending video frame…"\)/);
 });
+
+// ---------- analysis-active banner (web parity with the native camera panel) ----------
+// The native camera panel shows an ANALYSIS ACTIVE banner with the live
+// sampling interval while analysis runs; the web Camera panel only had
+// moving counters and a request-only in-flight line, so a running
+// analysis with no request currently out was not visible at a glance.
+// No browser exists in this suite, so these are static checks on the
+// shipped markup and wiring: the banner element exists hidden by
+// default with the default 3-second wording, updateAnalysisActive
+// rewords it from the live interval and hides it unless the sampler
+// runs, refreshButtons — called on analysis start, stop, and Reset —
+// refreshes it, the interval-change handler refreshes it too, and the
+// native panel carries the same banner.
+test("camera: web shows an analysis-active banner while sampling, matching the native camera panel", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(html, /id="analysis-active"[^>]*hidden>Analysis active — sampling one frame every 3 seconds\.</);
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /analysisActive: \$\("analysis-active"\)/);
+  assert.match(app, /function updateAnalysisActive\(\) \{[\s\S]*?els\.analysisActive\.hidden = !sampler\.running;/);
+  assert.match(app, /Analysis active — sampling one frame every \$\{seconds\} second/);
+  assert.match(app, /function refreshButtons\(\) \{[\s\S]*?updateAnalysisActive\(\);/);
+  assert.match(app, /els\.intervalSeconds\.addEventListener\("change", \(\) => \{[\s\S]*?updateAnalysisActive\(\);/);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url), "utf8");
+  assert.match(swift, /ANALYSIS ACTIVE — sampling one frame every/);
+});
