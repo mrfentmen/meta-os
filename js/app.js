@@ -51,7 +51,12 @@ const els = {
 };
 
 const camera = new Camera(els.video);
-const log = new SessionLog();
+// The log survives a reload: entries are kept in this browser's local
+// storage (assessments and errors only, never frames) until exported or
+// cleared. A store that is unavailable simply leaves the log in memory.
+const log = new SessionLog({
+  storage: typeof localStorage !== "undefined" ? localStorage : null,
+});
 
 // The product selected in the UI. Every assess request carries this id,
 // and every log entry records it; switching applies from the next tick.
@@ -482,6 +487,38 @@ els.btnExport.addEventListener("click", () => {
   URL.revokeObjectURL(url);
 });
 
+// Restore the on-screen history from a log kept across a reload.
+// Entries are replayed oldest-first; addHistoryItem prepends, so the
+// newest entry ends up on top, exactly as it would after live recording.
+// The latest assessment shown is the newest successful one.
+function restoreHistoryFromLog() {
+  let latestOk = null;
+  for (const entry of log.entries()) {
+    if (entry.status === "ok" && entry.response) {
+      latestOk = entry.response;
+      const product = PRODUCT_BY_ID[entry.response.product];
+      const name = product ? product.displayName : entry.response.product;
+      const category = entry.response.assessment.category;
+      addHistoryItem({
+        title: entry.response.assessment.requires_human_review
+          ? `${name} · ${category} (human review)`
+          : `${name} · ${category}`,
+        timestamp: entry.response.timestamp,
+        body: entry.response.assessment.summary,
+        kind: entry.response.assessment.requires_human_review ? "review" : "ok",
+      });
+    } else {
+      addHistoryItem({
+        title: "Analysis request failed",
+        timestamp: entry.request_timestamp,
+        body: entry.error || "Unknown error.",
+        kind: "error",
+      });
+    }
+  }
+  if (latestOk) renderLatest(latestOk);
+}
+
 // Initial state.
 if (!cameraSupported()) {
   setCameraState("This browser does not expose a camera API (getUserMedia unavailable). A secure context (HTTPS or localhost) and a camera are required.");
@@ -489,5 +526,6 @@ if (!cameraSupported()) {
 }
 renderProduct();
 updateSamplingDisclosure();
+restoreHistoryFromLog();
 updateLogStats();
 refreshButtons();

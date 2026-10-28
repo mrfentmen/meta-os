@@ -1,19 +1,74 @@
-// In-memory evaluation session log (BRIEF.md section 7, v2 contract).
+// Evaluation session log (BRIEF.md section 7, v2 contract).
 // Every analysis request the UI makes is recorded exactly once: the request
 // timestamp, the product it was assessed under, the measured round-trip
 // latency, the outcome status, and either the validated response or the
-// real error. Nothing is persisted and nothing is uploaded; the operator
-// exports the log as JSON for the evaluation lane. Shape matches the native
-// app's SessionLog export (per-entry product plus a top-level product for
-// the product active at export time).
+// real error. Entries hold assessments and errors only — never frames or
+// image data — and nothing is uploaded; the operator exports the log as
+// JSON for the evaluation lane. When a storage adapter is supplied (the
+// app passes the browser's localStorage), entries survive a page reload:
+// they are restored on construction, saved on every record, and removed
+// on clear. A missing, corrupt, or unwritable store never breaks logging:
+// the log keeps working in memory. Shape matches the native app's
+// SessionLog export (per-entry product plus a top-level product for the
+// product active at export time).
 
 export const LOG_STATUSES = ["ok", "network_error", "http_error", "invalid_response"];
 
 export class SessionLog {
-  constructor({ nowFn = () => new Date() } = {}) {
+  constructor({ nowFn = () => new Date(), storage = null, storageKey = "meta-trio-session-log-v1" } = {}) {
     this._nowFn = nowFn;
+    this._storage = storage;
+    this._storageKey = storageKey;
     this._entries = [];
     this._seq = 0;
+    this._restore();
+  }
+
+  // Reloads previously saved entries, keeping only well-formed ones, so a
+  // stale or hand-edited store cannot inject an entry the log would never
+  // have recorded itself.
+  _restore() {
+    if (!this._storage) return;
+    let raw;
+    try {
+      raw = this._storage.getItem(this._storageKey);
+    } catch {
+      return;
+    }
+    if (typeof raw !== "string" || raw === "") return;
+    let parsed;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return;
+    }
+    if (!Array.isArray(parsed)) return;
+    for (const entry of parsed) {
+      if (!entry || typeof entry !== "object" || !Number.isInteger(entry.seq) || !LOG_STATUSES.includes(entry.status)) {
+        continue;
+      }
+      this._entries.push(entry);
+      if (entry.seq > this._seq) this._seq = entry.seq;
+    }
+  }
+
+  _save() {
+    if (!this._storage) return;
+    try {
+      this._storage.setItem(this._storageKey, JSON.stringify(this._entries));
+    } catch {
+      // Private browsing, quota, or a disabled store: in-memory logging
+      // continues, and the next reload simply starts from an empty log.
+    }
+  }
+
+  _removeSaved() {
+    if (!this._storage) return;
+    try {
+      this._storage.removeItem(this._storageKey);
+    } catch {
+      // Same as _save: clearing the in-memory log still succeeds.
+    }
   }
 
   get count() {
@@ -37,6 +92,7 @@ export class SessionLog {
       error,
     };
     this._entries.push(entry);
+    this._save();
     return entry;
   }
 
@@ -47,6 +103,7 @@ export class SessionLog {
   clear() {
     this._entries = [];
     this._seq = 0;
+    this._removeSaved();
   }
 
   // Shape consumed by the Agent 3 evaluation lane.

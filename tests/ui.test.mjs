@@ -1,7 +1,8 @@
 // Node built-in test runner, no dependencies:  node --test tests/ui.test.mjs
 // Covers the pure logic the browser loads: trio product configs, v2 schema
 // validation, sampler skip-while-in-flight, analysis client error handling,
-// session log shape (with product), still-image input validation and read.
+// session log shape (with product) and storage persistence, still-image
+// input validation and read.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -422,6 +423,73 @@ test("log: entries() returns a copy and clear() resets sequence", () => {
   assert.equal(log.count, 0);
   const again = log.record({ requestTimestamp: "t", product: "vigiles", latencyMs: 1, status: "ok" });
   assert.equal(again.seq, 1);
+});
+
+function fakeStorage(initial = {}) {
+  const store = new Map(Object.entries(initial));
+  return {
+    getItem: (key) => (store.has(key) ? store.get(key) : null),
+    setItem: (key, value) => store.set(key, value),
+    removeItem: (key) => store.delete(key),
+    has: (key) => store.has(key),
+  };
+}
+
+test("log: with storage, records are saved and restored with sequence intact", () => {
+  const storage = fakeStorage();
+  const first = new SessionLog({ storage });
+  first.record({ requestTimestamp: "t1", product: "vigiles", latencyMs: 10, status: "ok", response: validAssessment() });
+  first.record({ requestTimestamp: "t2", product: "ignis", latencyMs: 5, status: "network_error", error: "fetch failed" });
+  assert.equal(storage.has("meta-trio-session-log-v1"), true);
+
+  const reloaded = new SessionLog({ storage });
+  assert.equal(reloaded.count, 2);
+  assert.deepEqual(reloaded.entries().map((e) => e.seq), [1, 2]);
+  assert.equal(reloaded.entries()[0].product, "vigiles");
+  assert.equal(reloaded.entries()[1].error, "fetch failed");
+  const next = reloaded.record({ requestTimestamp: "t3", product: "sanitas", latencyMs: 1, status: "ok" });
+  assert.equal(next.seq, 3);
+});
+
+test("log: clear() removes the saved copy, so a reload starts empty", () => {
+  const storage = fakeStorage();
+  const log = new SessionLog({ storage });
+  log.record({ requestTimestamp: "t", product: "vigiles", latencyMs: 1, status: "ok" });
+  log.clear();
+  assert.equal(storage.has("meta-trio-session-log-v1"), false);
+  assert.equal(new SessionLog({ storage }).count, 0);
+});
+
+test("log: corrupt or malformed saved data is ignored, never fatal", () => {
+  const corrupt = new SessionLog({ storage: fakeStorage({ "meta-trio-session-log-v1": "{not json" }) });
+  assert.equal(corrupt.count, 0);
+  const wrongShape = new SessionLog({ storage: fakeStorage({ "meta-trio-session-log-v1": JSON.stringify({ seq: 1 }) }) });
+  assert.equal(wrongShape.count, 0);
+  const mixed = new SessionLog({
+    storage: fakeStorage({
+      "meta-trio-session-log-v1": JSON.stringify([
+        { seq: 1, status: "ok", request_timestamp: "t1", product: "vigiles" },
+        { seq: 2, status: "made_up", request_timestamp: "t2", product: "vigiles" },
+        { seq: "three", status: "ok", request_timestamp: "t3", product: "vigiles" },
+      ]),
+    }),
+  });
+  assert.equal(mixed.count, 1);
+  assert.equal(mixed.entries()[0].seq, 1);
+});
+
+test("log: an unwritable store never breaks recording", () => {
+  const broken = {
+    getItem: () => null,
+    setItem: () => { throw new Error("denied"); },
+    removeItem: () => { throw new Error("denied"); },
+  };
+  const log = new SessionLog({ storage: broken });
+  const entry = log.record({ requestTimestamp: "t", product: "vigiles", latencyMs: 1, status: "ok" });
+  assert.equal(entry.seq, 1);
+  assert.equal(log.count, 1);
+  log.clear();
+  assert.equal(log.count, 0);
 });
 
 test("log: rejects an unknown status", () => {

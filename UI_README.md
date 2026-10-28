@@ -64,15 +64,16 @@ ES modules for the node test runner; it declares zero dependencies.)
   not double-announce the same result. The product switcher's radios are
   visually hidden inputs, so keyboard focus shows as a visible outline on
   the option label itself.
-- **Evaluation session log** (`js/log.js`): every request is recorded in
-  memory with its request timestamp, product, measured latency, outcome
+- **Evaluation session log** (`js/log.js`): every request is recorded
+  with its request timestamp, product, measured latency, outcome
   status, and the full validated response or the real error. A scenario
   dropdown offers the current product's evaluation scenarios, and a custom
   label field overrides it; the chosen label is written into each entry as
   ground-truth context for evaluation. Switching products resets the
   dropdown choice so one product's scenario can never label another
-  product's entries. **Export log (JSON)** downloads the log for the
-  Agent 3 evaluation lane.
+  product's entries. On load, the saved history and the latest
+  assessment are restored on screen. **Export log (JSON)** downloads the log
+  for the Agent 3 evaluation lane.
 
 ## Sampling disclosure
 
@@ -80,8 +81,9 @@ Analysis uses **sampled frames, not continuous video**. The UI states the
 configured interval on screen at all times: one frame every N seconds is
 sent to the endpoint, and events between samples are not seen by the
 system. Frames are encoded in memory, sent only to the configured endpoint,
-and are not stored by this app. The session log is in-memory only and is
-lost on page reload unless exported.
+and are not stored by this app. The session log is kept in the browser's local storage, so it survives
+page reloads until exported or cleared; it holds assessments and errors
+only, never frames.
 
 ## Run it
 
