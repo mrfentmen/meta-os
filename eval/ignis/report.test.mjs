@@ -635,6 +635,42 @@ test("report: latency distribution expands mean/median/max into quartiles and p9
   assert.match(renderRunReport(noLatencyRun), /No latency distribution: no record in this run carries a latency measurement\./);
 });
 
+test("report: latency outliers section names the flagged scenarios, with median and threshold", () => {
+  const base = {
+    source: "test source",
+    generated: "test run",
+    records: [10, 20, 30, 40, 100].map((latency_ms, i) => ({
+      scenario_id: `IGN-T${i + 1}`, ground_truth_label: "visible smoke", alert_expected: true,
+      alert_fired: true, alert_correct: true, category_correct: true,
+      actual_category: "visible smoke", error: null, latency_ms,
+    })),
+    metrics: { sample_size: 5, true_positives: 5, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 5, mean: 40, median: 30, max: 100 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(base);
+  assert.match(rendered, /## Latency outliers/);
+  // The section sits after the distribution and before the Misses,
+  // so the latency story reads in one place. Median 30, threshold
+  // 60: only the 100 ms scenario is an outlier.
+  assert.ok(rendered.indexOf("## Latency outliers") > rendered.indexOf("## Latency distribution"));
+  assert.ok(rendered.indexOf("## Latency outliers") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| IGN-T5 \| visible smoke \| 100\.0 \| 30\.0 \| 60\.0 \|/);
+  assert.ok(!rendered.includes("| IGN-T1 | visible smoke | 10.0"));
+  // No-outlier run: latencies 10-40, median 25, threshold 50, nothing flagged.
+  const clean = {
+    ...base,
+    records: base.records.slice(0, 4),
+    metrics: { ...base.metrics, sample_size: 4, true_positives: 4, latency_ms: { n: 4, mean: 25, median: 25, max: 40 } },
+  };
+  assert.match(renderRunReport(clean), /None: no scenario's latency is more than twice the run's median recorded latency\./);
+  // No-latency run: nothing recorded, so no outlier can be named.
+  const noLatency = {
+    ...base,
+    records: base.records.map(({ latency_ms, ...r }) => r),
+    metrics: { ...base.metrics, latency_ms: { n: 0, mean: null, median: null, max: null } },
+  };
+  assert.match(renderRunReport(noLatency), /None recorded: no record in this run carries a latency measurement, so no outlier can be named\./);
+});
+
 test("report: alert errors split FP/FN scenarios from category misses", () => {
   const rec = (id, truth, actual, expected, fired) => ({
     scenario_id: id,

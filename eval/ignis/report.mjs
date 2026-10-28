@@ -74,7 +74,11 @@
 // mean/median/max into min, quartiles and p90 over the recorded
 // harness latencies, so the tail is visible without scanning the
 // per-scenario table — and a run with no recorded latency says so
-// instead of inventing one.
+// instead of inventing one. A latency-outliers section right after
+// the distribution names the scenarios the per-scenario table flags
+// (latency more than twice the median recorded latency), with each
+// outlier's latency, the run median, and the threshold, so the tail
+// needs no scan of that table either.
 // An alert-errors section names the scenarios behind the summary
 // line's FP/FN counts: false positives (an alert fired where none
 // was expected) and false negatives (an expected alert that never
@@ -754,6 +758,33 @@ export function renderRunReport(run, baselineRun = null) {
       `- 90th percentile: ${fmtLatency(latencyDist.p90Ms)} ms.`,
       `- Maximum: ${fmtLatency(latencyDist.maxMs)} ms.`,
     );
+  }
+  const latencyOutliers = computeLatencyOutliers(run.records);
+  lines.push(
+    "",
+    "## Latency outliers",
+    "",
+    "The scenarios whose harness wall-clock latency is more than twice the median recorded " +
+      "latency for this run — the same scenarios the per-scenario table flags with \"yes\" in " +
+      "the Outlier column, named here so the latency tail needs no scan of that table. " +
+      "Runs with fewer than two recorded latencies, or a median recorded latency of zero, " +
+      "flag nothing — there is no typical latency to compare against.",
+    "",
+  );
+  if (latencyOutliers.length === 0) {
+    lines.push(
+      run.records.some((r) => typeof r.latency_ms === "number")
+        ? "None: no scenario's latency is more than twice the run's median recorded latency."
+        : "None recorded: no record in this run carries a latency measurement, so no outlier can be named.",
+    );
+  } else {
+    lines.push(
+      "| Scenario | Truth | Latency (ms) | Median (ms) | Threshold (ms) |",
+      "| --- | --- | --- | --- | --- |",
+    );
+    for (const o of latencyOutliers) {
+      lines.push(`| ${o.scenarioId} | ${o.truth} | ${fmtLatency(o.latencyMs)} | ${fmtLatency(o.medianMs)} | ${fmtLatency(o.thresholdMs)} |`);
+    }
   }
   const misses = computeMisses(run.records);
   lines.push("", `## Misses (${misses.length})`, "");
