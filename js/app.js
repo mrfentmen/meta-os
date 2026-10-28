@@ -173,12 +173,25 @@ function updateLogStats() {
   els.logStats.textContent = `Session log entries: ${log.count}`;
 }
 
+// Native parity: the native timeline's empty state says analysis is
+// running when it is, instead of just "No events yet." The web history
+// note must say the same, so an empty history during a run does not
+// look like nothing is happening. This only sets the text; whether the
+// note shows at all is separate — addHistoryItem hides it once the
+// first entry arrives, and Reset shows it again.
+function updateHistoryEmpty() {
+  els.historyEmpty.textContent = sampler.running
+    ? "Analysis is running — assessments and errors will appear here as they arrive."
+    : "No events yet.";
+}
+
 function refreshButtons() {
   const camActive = camera.active;
   els.btnCameraStart.disabled = camActive;
   els.btnCameraStop.disabled = !camActive;
   els.btnAnalysisStart.disabled = !camActive || sampler.running;
   els.btnAnalysisStop.disabled = !sampler.running;
+  updateHistoryEmpty();
 }
 
 function describeCameraError(err) {

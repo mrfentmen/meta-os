@@ -88,7 +88,10 @@ ES modules for the node test runner; it declares zero dependencies.)
   (failures included, styled distinctly; every assessment entry carries
   a "Show assessment" button that displays that past assessment again in
   the Latest assessment panel, labelled as a past result — the web match
-  for the native timeline's selectable rows), a loading indicator while a
+  for the native timeline's selectable rows; while the history is still
+  empty and analysis is running, its note reads "Analysis is running —
+  assessments and errors will appear here as they arrive.", matching
+  the native timeline's empty state, instead of "No events yet."), a loading indicator while a
   request is outstanding, and live sampler counters (ticks / sent /
   skipped / failed). The Camera panel also shows the last round trip —
   the client-measured time for the last completed assessment request,

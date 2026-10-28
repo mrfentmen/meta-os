@@ -673,6 +673,23 @@ test("history: past assessments can be shown again from the web history", () => 
   assert.match(app, /kind: entry\.response\.assessment\.requires_human_review \? "review" : "ok",\n\s+assessment: entry\.response,/);
 });
 
+// ---------- empty history note (web parity with the native timeline) ----------
+// The native timeline's empty state says analysis is running when it is,
+// so the web history note must do the same: "No events yet." while idle,
+// the running line while the sampler runs. No browser exists in this
+// suite, so these are static checks on the shipped wiring: the note text
+// follows sampler.running, and refreshButtons — called on every state
+// change including analysis start, stop, and Reset — refreshes it.
+test("history: empty history note says analysis is running, matching the native timeline", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /function updateHistoryEmpty\(\) \{/);
+  assert.match(app, /els\.historyEmpty\.textContent = sampler\.running/);
+  assert.match(app, /Analysis is running — assessments and errors will appear here as they arrive\./);
+  assert.match(app, /function refreshButtons\(\) \{[\s\S]*?updateHistoryEmpty\(\);/);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/TimelineView.swift", import.meta.url), "utf8");
+  assert.match(swift, /Analysis is running — assessments and errors will appear here as they arrive\./);
+});
+
 // ---------- last round trip (web parity with the native status bar) ----------
 // The native app's status bar shows the client-measured last round trip,
 // so the web Camera panel must show the same line, next to the sampler
