@@ -87,12 +87,17 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   by exact message (most frequent first, ties alphabetical), so a
   run that fails in several different ways reads as a failure
   profile, not one lump; a run with no errored records says none.
+  A latency distribution section expands the summary line's
+  mean/median/max into min, quartiles and p90 over the recorded
+  harness latencies, so the tail is visible without scanning the
+  per-scenario table; a run with no recorded latency says so
+  instead of inventing one.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and
   confusable-negative breakdowns, misses detail and miss-pair counts,
-  error-message breakdown grouping and rendering, latency-outlier
-  flagging, run-JSON validation, trio protection, and the CLI end to end.
+  error-message breakdown grouping and rendering, latency
+  distribution, latency-outlier flagging, run-JSON validation, trio protection, and the CLI end to end.
 - `adapter.test.mjs` — adapter tests: label loading, alert-definition
   consistency, metric math, alert-correctness logic,
   malformed-input containment, the held-state refusal, and the

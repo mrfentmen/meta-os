@@ -66,6 +66,11 @@
 // by exact message, so a run that fails in several different ways
 // reads as a failure profile, not one lump — and a held-state run's
 // single shared refusal reads as one row, not a list of ids.
+// A latency distribution section expands the summary line's
+// mean/median/max into min, quartiles and p90 over the recorded
+// harness latencies, so the tail is visible without scanning the
+// per-scenario table — and a run with no recorded latency says so
+// instead of inventing one.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -315,6 +320,37 @@ export function computeLatencyOutliers(records) {
       thresholdMs: threshold,
     }))
     .sort((a, b) => (a.scenarioId < b.scenarioId ? -1 : a.scenarioId > b.scenarioId ? 1 : 0));
+}
+
+// Latency distribution over the recorded harness wall-clock
+// latencies: min, quartiles and p90, by linear interpolation on
+// the sorted values. The p50 of this definition is the
+// averaged-middle median, so it matches the summary line's median
+// and the outlier threshold's median exactly. Records with no
+// latency are ignored, never treated as zero; with no recorded
+// latency there is no distribution and the result is null, so the
+// render says so instead of inventing one.
+export function computeLatencyDistribution(records) {
+  const latencies = records
+    .filter((r) => typeof r.latency_ms === "number")
+    .map((r) => r.latency_ms)
+    .sort((a, b) => a - b);
+  if (latencies.length === 0) return null;
+  const quantile = (p) => {
+    const pos = p * (latencies.length - 1);
+    const lo = Math.floor(pos);
+    const hi = Math.ceil(pos);
+    return latencies[lo] + (pos - lo) * (latencies[hi] - latencies[lo]);
+  };
+  return {
+    count: latencies.length,
+    minMs: latencies[0],
+    p25Ms: quantile(0.25),
+    medianMs: quantile(0.5),
+    p75Ms: quantile(0.75),
+    p90Ms: quantile(0.9),
+    maxMs: latencies[latencies.length - 1],
+  };
 }
 
 export function computeCategoryRates(records) {
@@ -596,6 +632,30 @@ export function renderRunReport(run, baselineRun = null) {
     lines.push(
       `| ${r.scenario_id} | ${r.ground_truth_label} | ${r.actual_category === null ? "ERROR" : r.actual_category} | ` +
         `${r.alert_correct} | ${r.category_correct} | ${latency} | ${outlierIds.has(r.scenario_id) ? "yes" : ""} | ${r.error === null ? "" : r.error} |`,
+    );
+  }
+  const latencyDist = computeLatencyDistribution(run.records);
+  lines.push(
+    "",
+    "## Latency distribution",
+    "",
+    "Harness wall-clock latencies for this run, expanding the summary line's mean/median/max " +
+      "into min, quartiles and p90. Quantiles use linear interpolation on the sorted recorded " +
+      "latencies, so the median here is the same averaged-middle median as the summary line " +
+      "and the outlier threshold above. Records with no latency take no part.",
+    "",
+  );
+  if (latencyDist === null) {
+    lines.push("No latency distribution: no record in this run carries a latency measurement.");
+  } else {
+    lines.push(
+      `- Recorded latencies: ${latencyDist.count} of ${run.records.length} scenario(s).`,
+      `- Minimum: ${fmtLatency(latencyDist.minMs)} ms.`,
+      `- 25th percentile: ${fmtLatency(latencyDist.p25Ms)} ms.`,
+      `- Median: ${fmtLatency(latencyDist.medianMs)} ms.`,
+      `- 75th percentile: ${fmtLatency(latencyDist.p75Ms)} ms.`,
+      `- 90th percentile: ${fmtLatency(latencyDist.p90Ms)} ms.`,
+      `- Maximum: ${fmtLatency(latencyDist.maxMs)} ms.`,
     );
   }
   const misses = computeMisses(run.records);

@@ -28,6 +28,7 @@ import {
   computeCategoryRates,
   computeConfusableNegatives,
   computeErrorBreakdown,
+  computeLatencyDistribution,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -539,6 +540,56 @@ test("report: error breakdown groups records by exact message, most frequent fir
     metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
   };
   assert.match(renderRunReport(cleanRun), /None: no record in this run carries an error message\./);
+});
+
+test("report: latency distribution expands mean/median/max into quartiles and p90", () => {
+  const rec = (id, latencyMs) => ({
+    scenario_id: id,
+    ground_truth_label: "visible smoke",
+    ...(latencyMs === undefined ? {} : { latency_ms: latencyMs }),
+  });
+  // Linear interpolation on sorted latencies; the p50 is the
+  // averaged-middle median, matching the summary line and the
+  // outlier threshold. Compared within epsilon: interpolated
+  // quantiles need not be exactly representable in binary.
+  const approx = (dist, expected) => {
+    assert.equal(dist.count, expected.count);
+    for (const field of ["minMs", "p25Ms", "medianMs", "p75Ms", "p90Ms", "maxMs"]) {
+      assert.ok(Math.abs(dist[field] - expected[field]) < 1e-9, `${field}: ${dist[field]} != ${expected[field]}`);
+    }
+  };
+  approx(computeLatencyDistribution([rec("T1", 10), rec("T2", 20), rec("T3", 30), rec("T4", 40)]), {
+    count: 4, minMs: 10, p25Ms: 17.5, medianMs: 25, p75Ms: 32.5, p90Ms: 37, maxMs: 40,
+  });
+  // A single recorded latency: every quantile is that value.
+  // Records with no latency are ignored, never treated as zero.
+  approx(computeLatencyDistribution([rec("T1", 50), rec("T2")]), {
+    count: 1, minMs: 50, p25Ms: 50, medianMs: 50, p75Ms: 50, p90Ms: 50, maxMs: 50,
+  });
+  assert.equal(computeLatencyDistribution([rec("T1")]), null);
+  // Rendered: values on a recorded run; a no-latency run says so, not zero.
+  const base = {
+    source: "test source",
+    generated: "test run",
+    records: [10, 20, 30, 40].map((latency_ms, i) => ({
+      scenario_id: `IGN-T${i + 1}`, ground_truth_label: "visible smoke", alert_expected: true,
+      alert_fired: true, alert_correct: true, category_correct: true,
+      actual_category: "visible smoke", error: null, latency_ms,
+    })),
+    metrics: { sample_size: 4, true_positives: 4, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 4, mean: 25, median: 25, max: 40 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(base);
+  assert.match(rendered, /## Latency distribution/);
+  assert.match(rendered, /- Recorded latencies: 4 of 4 scenario\(s\)\./);
+  assert.match(rendered, /- 25th percentile: 17\.5 ms\./);
+  assert.match(rendered, /- Median: 25\.0 ms\./);
+  assert.match(rendered, /- 90th percentile: 37\.0 ms\./);
+  const noLatencyRun = {
+    ...base,
+    records: base.records.map(({ latency_ms, ...r }) => r),
+    metrics: { ...base.metrics, latency_ms: { n: 0, mean: null, median: null, max: null } },
+  };
+  assert.match(renderRunReport(noLatencyRun), /No latency distribution: no record in this run carries a latency measurement\./);
 });
 
 test("report: CLI renders a run JSON to a file and refuses a trio target", () => {
