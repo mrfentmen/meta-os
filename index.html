@@ -97,6 +97,10 @@
     <h2>Analysis configuration</h2>
     <label for="endpoint">Assessment endpoint</label>
     <input id="endpoint" type="text" value="/api/assess" autocomplete="off" spellcheck="false">
+    <div class="controls">
+      <button id="btn-backend-check" type="button">Check backend</button>
+    </div>
+    <p id="backend-health" class="note" aria-live="polite">Backend health not checked yet. Checking it contacts the server's health route only; it never sends a frame and never returns an assessment.</p>
     <label for="interval-seconds">Sampling interval (seconds, 1–60)</label>
     <input id="interval-seconds" type="number" value="3" min="1" max="60" step="1">
     <label for="scenario-select">Scenario (optional, written to the evaluation log as ground-truth context)</label>

@@ -6,7 +6,7 @@
 
 import { Camera, cameraSupported } from "./camera.js";
 import { FrameSampler } from "./sampler.js";
-import { assessFrame, AssessError } from "./client.js";
+import { assessFrame, AssessError, checkHealth } from "./client.js";
 import { SessionLog } from "./log.js";
 import { PRODUCT_BY_ID, isProductId } from "./products.js";
 import { isSupportedImageFile, readFileAsDataURL } from "./image_input.js";
@@ -32,6 +32,8 @@ const els = {
   productGuidance: $("product-guidance"),
   productLimitations: $("product-limitations"),
   endpoint: $("endpoint"),
+  btnBackendCheck: $("btn-backend-check"),
+  backendHealth: $("backend-health"),
   intervalSeconds: $("interval-seconds"),
   scenarioSelect: $("scenario-select"),
   scenarioLabel: $("scenario-label"),
@@ -543,6 +545,7 @@ els.btnReset.addEventListener("click", () => {
   els.videoState.textContent = "No video chosen.";
   setCameraState("Camera stopped. View reset.");
   setBackendStatus("unknown", "Model backend status unknown. Start analysis to contact the endpoint.");
+  els.backendHealth.textContent = "Backend health not checked yet. Checking it contacts the server's health route only; it never sends a frame and never returns an assessment.";
   els.latest.textContent = "No assessment received yet.";
   els.history.replaceChildren();
   els.historyEmpty.hidden = false;
@@ -610,6 +613,36 @@ function restoreHistoryFromLog() {
   }
   if (latestOk) renderLatest(latestOk);
 }
+
+// Backend health check: asks the server's health route whether it is up
+// and what its model state is. A reachable server with the model held
+// is reported exactly that way — reachable is not the same as ready to
+// assess, and this check never sends a frame.
+let backendChecking = false;
+
+els.btnBackendCheck.addEventListener("click", async () => {
+  if (backendChecking) return;
+  backendChecking = true;
+  els.btnBackendCheck.disabled = true;
+  els.backendHealth.textContent = `Checking ${currentEndpoint()} …`;
+  try {
+    const health = await checkHealth(currentEndpoint());
+    const products = health.products.join(", ");
+    const modelState = health.live_enabled
+      ? "live calls on"
+      : health.model.configured
+        ? "key configured, live calls held"
+        : "key not configured, live calls held";
+    els.backendHealth.textContent =
+      `Backend reachable: ${health.service} · products: ${products} · model: ${modelState}. ` +
+      "This does not mean an assessment is available — an assess request still has to succeed.";
+  } catch (err) {
+    els.backendHealth.textContent = `Backend health check failed: ${err.message}`;
+  } finally {
+    backendChecking = false;
+    els.btnBackendCheck.disabled = false;
+  }
+});
 
 // Initial state.
 if (!cameraSupported()) {

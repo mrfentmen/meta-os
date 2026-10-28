@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 import { PRODUCTS, PRODUCT_BY_ID, PRODUCT_IDS, isProductId } from "../js/products.js";
 import { validateAssessment } from "../js/schema.js";
 import { FrameSampler } from "../js/sampler.js";
-import { assessFrame, AssessError } from "../js/client.js";
+import { assessFrame, AssessError, checkHealth, healthUrlFor } from "../js/client.js";
 import { SessionLog } from "../js/log.js";
 import { isSupportedImageFile, readFileAsDataURL } from "../js/image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "../js/video_input.js";
@@ -359,6 +359,68 @@ test("client: non-JSON body throws AssessError kind=invalid", async () => {
     assessFrame("/api/assess", { product: "vigiles", timestamp: "t", image: "i" }, fakeFetch),
     (err) => err instanceof AssessError && err.kind === "invalid",
   );
+});
+
+// ---------- backend health check ----------
+
+function validHealth() {
+  return {
+    ok: true,
+    service: "meta-trio-assess",
+    products: ["vigiles", "ignis", "sanitas"],
+    model: { configured: false, live_enabled: false },
+  };
+}
+
+test("health: healthUrlFor swaps /api/assess for /api/health, or appends it to a bare base", () => {
+  assert.equal(healthUrlFor("/api/assess"), "/api/health");
+  assert.equal(healthUrlFor("http://localhost:8080/api/assess"), "http://localhost:8080/api/health");
+  assert.equal(healthUrlFor("http://localhost:8080"), "http://localhost:8080/api/health");
+  assert.equal(healthUrlFor("http://localhost:8080/"), "http://localhost:8080/api/health");
+});
+
+test("health: checkHealth GETs the health route and returns the parsed body", async () => {
+  let seenUrl = null;
+  let seenInit = null;
+  const fakeFetch = async (url, init) => {
+    seenUrl = url;
+    seenInit = init;
+    return { ok: true, status: 200, statusText: "OK", json: async () => validHealth() };
+  };
+  const result = await checkHealth("/api/assess", fakeFetch);
+  assert.deepEqual(result, validHealth());
+  assert.equal(seenUrl, "/api/health");
+  assert.equal(seenInit.method, "GET");
+});
+
+test("health: network failure throws AssessError kind=network", async () => {
+  const fakeFetch = async () => { throw new TypeError("fetch failed"); };
+  await assert.rejects(
+    checkHealth("/api/assess", fakeFetch),
+    (err) => err instanceof AssessError && err.kind === "network" && /fetch failed/.test(err.message),
+  );
+});
+
+test("health: HTTP error status throws AssessError kind=http with the status", async () => {
+  const fakeFetch = async () => ({ ok: false, status: 503, statusText: "Service Unavailable", json: async () => ({}) });
+  await assert.rejects(
+    checkHealth("/api/assess", fakeFetch),
+    (err) => err instanceof AssessError && err.kind === "http" && /503/.test(err.message),
+  );
+});
+
+test("health: malformed body throws AssessError kind=invalid, never a partial result", async () => {
+  const fakeFetch = async () => ({ ok: true, status: 200, statusText: "OK", json: async () => ({ ok: true, service: "x" }) });
+  await assert.rejects(
+    checkHealth("/api/assess", fakeFetch),
+    (err) => err instanceof AssessError && err.kind === "invalid",
+  );
+});
+
+test("health: the shipped page has the check button and health line", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.ok(html.includes('id="btn-backend-check"'), "page is missing the backend check button");
+  assert.ok(html.includes('id="backend-health"'), "page is missing the backend health line");
 });
 
 // ---------- session log ----------
