@@ -67,11 +67,15 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   matrix. The Misses section names each miss as truth -> predicted
   (ERROR with a no-assessment note for unassessed records), so a miss
   is diagnosable without cross-referencing the per-scenario table.
+  A miss-pair counts table right after it aggregates those misses by
+  truth -> predicted pair, most frequent first, so the dominant swap
+  is visible without counting the Misses list; ERROR rows there are
+  failures, not confusions.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and
-  confusable-negative breakdowns, run-JSON validation, trio protection,
-  and the CLI end to end.
+  confusable-negative breakdowns, misses detail and miss-pair counts,
+  run-JSON validation, trio protection, and the CLI end to end.
 - `adapter.test.mjs` — adapter tests: label loading, alert-definition
   consistency, metric math, alert-correctness logic,
   malformed-input containment, the held-state refusal, and the

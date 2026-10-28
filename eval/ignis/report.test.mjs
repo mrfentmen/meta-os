@@ -26,6 +26,7 @@ import {
   computeCategoryHeadline,
   computeCategoryRates,
   computeConfusableNegatives,
+  computeMissPairs,
   computeMisses,
   renderRunReport,
 } from "./report.mjs";
@@ -215,6 +216,50 @@ test("report: misses section names truth -> predicted per miss, ERROR for unasse
   );
   const heldRun = await buildRun((s) => assessViaModelAdapter(s, {}), "server model adapter (held while Spark stays off)", "held-state run, no live model");
   assert.match(renderRunReport(heldRun), /- IGN-001: visible smoke -> ERROR \(no assessment\)/);
+});
+
+test("report: miss-pair counts aggregate the misses — stub's dominant swap first, held run all ERROR", async () => {
+  const run = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  assert.deepEqual(
+    computeMissPairs(run.records).map((p) => `${p.truth} -> ${p.predicted}: ${p.count}`),
+    [
+      "flame-like lighting -> visible flame: 2",
+      "indeterminate -> steam or fog: 1",
+      "obscured or distant hazard -> flame-like lighting: 1",
+      "steam or fog -> visible smoke: 1",
+      "visible smoke -> indeterminate: 1",
+    ],
+  );
+  assert.deepEqual(computeMissPairs(run.records)[0].scenarioIds, ["IGN-010", "IGN-018"]);
+  const report = renderRunReport(run);
+  assert.match(report, /## Miss-pair counts/);
+  assert.match(report, /\| flame-like lighting \| visible flame \| 2 \| IGN-010, IGN-018 \|/);
+  assert.ok(report.indexOf("## Misses (6)") < report.indexOf("## Miss-pair counts"));
+  assert.ok(report.indexOf("## Miss-pair counts") < report.indexOf("## Per-category confusion"));
+  // Hand-built: ERROR sorts last among same-truth, same-count pairs, and
+  // counts group across records; a correct record contributes no pair.
+  assert.deepEqual(
+    computeMissPairs([
+      { scenario_id: "T1", ground_truth_label: "alpha", actual_category: null, category_correct: false },
+      { scenario_id: "T2", ground_truth_label: "alpha", actual_category: "beta", category_correct: false },
+      { scenario_id: "T3", ground_truth_label: "alpha", actual_category: "beta", category_correct: false },
+      { scenario_id: "T4", ground_truth_label: "alpha", actual_category: "alpha", category_correct: true },
+    ]).map((p) => `${p.truth} -> ${p.predicted}: ${p.count}`),
+    ["alpha -> beta: 2", "alpha -> ERROR: 1"],
+  );
+  const heldRun = await buildRun((s) => assessViaModelAdapter(s, {}), "server model adapter (held while Spark stays off)", "held-state run, no live model");
+  const heldPairs = computeMissPairs(heldRun.records);
+  assert.equal(heldPairs.length, 7);
+  assert.ok(heldPairs.every((p) => p.predicted === "ERROR"));
+  assert.equal(heldPairs.find((p) => p.truth === "visible smoke").count, 3);
+  assert.match(renderRunReport(heldRun), /\| visible smoke \| ERROR \| 3 \| IGN-001, IGN-003, IGN-016 \|/);
+  const perfectRun = await buildRun(
+    (s) => fakeAssessment(s.ground_truth_label),
+    "server model adapter (held while Spark stays off)",
+    "held-state run, no live model",
+  );
+  assert.deepEqual(computeMissPairs(perfectRun.records), []);
+  assert.match(renderRunReport(perfectRun), /## Miss-pair counts/);
 });
 
 test("report: headline finding names nothing assessable on a held run, and no misses on a perfect run", async () => {

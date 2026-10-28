@@ -40,7 +40,10 @@
 // counting the confusion matrix. The Misses section names each miss
 // as truth -> predicted, so a miss is diagnosable without
 // cross-referencing the per-scenario table; unassessed records show
-// ERROR, matching the confusion table's convention.
+// ERROR, matching the confusion table's convention. A miss-pair
+// counts table right after the Misses section aggregates those same
+// misses by truth -> predicted pair, so the dominant swap is visible
+// without counting the Misses list.
 // A run's numbers are only ever compared against a baseline run the
 // caller supplies; the bar is recall AND category accuracy, never
 // precision alone (the baseline never fires a false alarm by
@@ -278,6 +281,41 @@ export function computeMisses(records) {
     }));
 }
 
+// Miss-pair counts: the Misses list aggregated by truth -> predicted
+// pair, so the dominant swap is visible without counting that list.
+// Same miss definition as computeMisses (category_correct false),
+// same ERROR convention for unassessed records — a held run's pairs
+// are all ERROR, which reads as a failure profile, not confusions.
+// Sorting is count descending, then truth alphabetically, then
+// predicted alphabetically with ERROR last (matching the confusion
+// table's convention), so the table never depends on record order.
+export function computeMissPairs(records) {
+  const counts = {};
+  for (const m of computeMisses(records)) {
+    counts[m.truth] ??= {};
+    counts[m.truth][m.predicted] ??= [];
+    counts[m.truth][m.predicted].push(m.scenarioId);
+  }
+  const pairs = [];
+  for (const truth of Object.keys(counts).sort()) {
+    for (const predicted of Object.keys(counts[truth]).sort((a, b) => {
+      if (a === ERROR_PREDICTED) return 1;
+      if (b === ERROR_PREDICTED) return -1;
+      return a < b ? -1 : a > b ? 1 : 0;
+    })) {
+      pairs.push({ truth, predicted, count: counts[truth][predicted].length, scenarioIds: counts[truth][predicted] });
+    }
+  }
+  pairs.sort((a, b) => {
+    if (a.count !== b.count) return b.count - a.count;
+    if (a.truth !== b.truth) return a.truth < b.truth ? -1 : 1;
+    if (a.predicted === ERROR_PREDICTED) return 1;
+    if (b.predicted === ERROR_PREDICTED) return -1;
+    return a.predicted < b.predicted ? -1 : a.predicted > b.predicted ? 1 : 0;
+  });
+  return pairs;
+}
+
 // Truth-vs-predicted category counts for a run's records. Only the
 // two record fields the table needs are read, so hand-built record
 // lists work as well as full run JSON. Truth categories sort
@@ -441,6 +479,26 @@ export function renderRunReport(run, baselineRun = null) {
           .join("\n")
       : "None: every scenario's predicted category matched its ground truth.",
   );
+  const missPairs = computeMissPairs(run.records);
+  lines.push("", "## Miss-pair counts", "");
+  lines.push(
+    "The misses above, aggregated by truth -> predicted pair: one row " +
+      "per pair, most frequent first, so the dominant swap is visible " +
+      "without counting the Misses list. ERROR rows are failures, not " +
+      "confusions — a run whose misses are all errors has no dominant swap.",
+    "",
+  );
+  if (missPairs.length === 0) {
+    lines.push("None: every scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Truth | Predicted | Count | Scenarios |",
+      "| --- | --- | --- | --- |",
+    );
+    for (const p of missPairs) {
+      lines.push(`| ${p.truth} | ${p.predicted} | ${p.count} | ${p.scenarioIds.join(", ")} |`);
+    }
+  }
   const confusion = computeCategoryConfusion(run.records);
   lines.push("", "## Per-category confusion", "");
   lines.push(
