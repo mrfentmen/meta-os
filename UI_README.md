@@ -98,7 +98,9 @@ ES modules for the node test runner; it declares zero dependencies.)
   for the native timeline's selectable rows; while the history is still
   empty and analysis is running, its note reads "Analysis is running —
   assessments and errors will appear here as they arrive.", matching
-  the native timeline's empty state, instead of "No events yet."), a loading indicator while a
+  the native timeline's empty state, and while idle it reads "No events
+  yet. Assessments and errors will appear here.", matching the native
+  timeline's idle empty state, instead of just "No events yet."), a loading indicator while a
   request is outstanding, and live sampler counters (ticks / sent /
   skipped / failed). The Camera panel also shows the last round trip —
   the client-measured time for the last completed assessment request,

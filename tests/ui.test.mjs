@@ -690,6 +690,22 @@ test("history: empty history note says analysis is running, matching the native 
   assert.match(swift, /Analysis is running — assessments and errors will appear here as they arrive\./);
 });
 
+// The idle half of the same empty state: the native timeline says
+// "No events yet. Assessments and errors will appear here." while
+// nothing runs, and the web note said only "No events yet." — which
+// never says what will appear there. Same static-check shape as the
+// running half: the idle branch of updateHistoryEmpty, the initial
+// markup (the text before the first refreshButtons call), and the
+// native idle line must all carry the full sentence.
+test("history: idle empty history note matches the native timeline", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /els\.historyEmpty\.textContent = sampler\.running\n\s+\? "Analysis is running — assessments and errors will appear here as they arrive\."\n\s+: "No events yet\. Assessments and errors will appear here\.";/);
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(html, /id="history-empty"[^>]*>No events yet\. Assessments and errors will appear here\.</);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/TimelineView.swift", import.meta.url), "utf8");
+  assert.match(swift, /Text\("No events yet\. Assessments and errors will appear here\."\)/);
+});
+
 // ---------- camera permission wait (web parity with the native camera) ----------
 // The native camera has a requesting-permission state while the system
 // prompt is up; the web panel said "Camera is off." through that wait.

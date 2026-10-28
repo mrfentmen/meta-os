@@ -174,15 +174,17 @@ function updateLogStats() {
 }
 
 // Native parity: the native timeline's empty state says analysis is
-// running when it is, instead of just "No events yet." The web history
-// note must say the same, so an empty history during a run does not
-// look like nothing is happening. This only sets the text; whether the
-// note shows at all is separate — addHistoryItem hides it once the
-// first entry arrives, and Reset shows it again.
+// running when it is, and "No events yet. Assessments and errors will
+// appear here." when it is not — not just "No events yet." The web
+// history note must say the same in both cases, so an empty history
+// during a run does not look like nothing is happening, and an idle
+// empty history still says what will appear there. This only sets the
+// text; whether the note shows at all is separate — addHistoryItem
+// hides it once the first entry arrives, and Reset shows it again.
 function updateHistoryEmpty() {
   els.historyEmpty.textContent = sampler.running
     ? "Analysis is running — assessments and errors will appear here as they arrive."
-    : "No events yet.";
+    : "No events yet. Assessments and errors will appear here.";
 }
 
 function refreshButtons() {
