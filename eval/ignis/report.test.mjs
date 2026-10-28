@@ -26,6 +26,7 @@ import {
   computeCategoryHeadline,
   computeCategoryRates,
   computeConfusableNegatives,
+  computeMisses,
   renderRunReport,
 } from "./report.mjs";
 
@@ -182,6 +183,38 @@ test("report: per-category rates count unassessed records as misses and show ass
     { truth: "alpha", total: 2, correct: 1, assessed: 1, rate: 0.5 },
     { truth: "beta", total: 1, correct: 0, assessed: 0, rate: 0 },
   ]);
+});
+
+test("report: misses section names truth -> predicted per miss, ERROR for unassessed records", async () => {
+  const run = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  assert.deepEqual(
+    computeMisses(run.records).map((m) => `${m.scenarioId}: ${m.truth} -> ${m.predicted}`),
+    [
+      "IGN-003: visible smoke -> indeterminate",
+      "IGN-007: steam or fog -> visible smoke",
+      "IGN-010: flame-like lighting -> visible flame",
+      "IGN-012: obscured or distant hazard -> flame-like lighting",
+      "IGN-015: indeterminate -> steam or fog",
+      "IGN-018: flame-like lighting -> visible flame",
+    ],
+  );
+  const report = renderRunReport(run);
+  assert.match(report, /## Misses \(6\)/);
+  assert.match(report, /- IGN-003: visible smoke -> indeterminate/);
+  assert.match(report, /- IGN-007: steam or fog -> visible smoke/);
+  assert.match(report, /- IGN-018: flame-like lighting -> visible flame/);
+  assert.doesNotMatch(report, /predicted category did not match ground truth/);
+  // Hand-built: an unassessed record is a miss that shows ERROR, not a category,
+  // and a correct record is not a miss.
+  assert.deepEqual(
+    computeMisses([
+      { scenario_id: "T1", ground_truth_label: "visible smoke", actual_category: null, category_correct: false },
+      { scenario_id: "T2", ground_truth_label: "visible smoke", actual_category: "visible smoke", category_correct: true },
+    ]),
+    [{ scenarioId: "T1", truth: "visible smoke", predicted: "ERROR" }],
+  );
+  const heldRun = await buildRun((s) => assessViaModelAdapter(s, {}), "server model adapter (held while Spark stays off)", "held-state run, no live model");
+  assert.match(renderRunReport(heldRun), /- IGN-001: visible smoke -> ERROR \(no assessment\)/);
 });
 
 test("report: headline finding names nothing assessable on a held run, and no misses on a perfect run", async () => {

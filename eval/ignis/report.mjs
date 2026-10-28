@@ -37,7 +37,10 @@
 // biggest failure mode is visible without reading the whole matrix.
 // A per-category rate table backs the headline: one correct/total
 // rate per truth category, so the weakest claim is checkable without
-// counting the confusion matrix.
+// counting the confusion matrix. The Misses section names each miss
+// as truth -> predicted, so a miss is diagnosable without
+// cross-referencing the per-scenario table; unassessed records show
+// ERROR, matching the confusion table's convention.
 // A run's numbers are only ever compared against a baseline run the
 // caller supplies; the bar is recall AND category accuracy, never
 // precision alone (the baseline never fires a false alarm by
@@ -257,6 +260,24 @@ export const IGNIS_ALERT_CATEGORIES = ["visible smoke", "visible flame"];
 export const CONFUSABLE_NEGATIVE_CATEGORIES = ["steam or fog", "flame-like lighting"];
 const ERROR_PREDICTED = "ERROR";
 
+// One entry per category miss, in record order: the scenario id with
+// the truth category and the predicted category, so a miss is
+// diagnosable without cross-referencing the per-scenario table.
+// Records that produced no assessment show ERROR, matching the
+// confusion table's convention — a failure, not a wrong category.
+// The filter is category_correct, the same definition the old bare
+// id list used, so the section's count does not change — only the
+// detail per miss does.
+export function computeMisses(records) {
+  return records
+    .filter((r) => !r.category_correct)
+    .map((r) => ({
+      scenarioId: r.scenario_id,
+      truth: r.ground_truth_label,
+      predicted: r.actual_category === null ? ERROR_PREDICTED : r.actual_category,
+    }));
+}
+
 // Truth-vs-predicted category counts for a run's records. Only the
 // two record fields the table needs are read, so hand-built record
 // lists work as well as full run JSON. Truth categories sort
@@ -407,11 +428,17 @@ export function renderRunReport(run, baselineRun = null) {
         `${r.alert_correct} | ${r.category_correct} | ${r.error === null ? "" : r.error} |`,
     );
   }
-  const misses = run.records.filter((r) => !r.category_correct).map((r) => r.scenario_id);
+  const misses = computeMisses(run.records);
   lines.push("", `## Misses (${misses.length})`, "");
   lines.push(
     misses.length > 0
-      ? misses.map((id) => `- ${id}: predicted category did not match ground truth`).join("\n")
+      ? misses
+          .map(
+            (m) =>
+              `- ${m.scenarioId}: ${m.truth} -> ${m.predicted}` +
+              (m.predicted === ERROR_PREDICTED ? " (no assessment)" : ""),
+          )
+          .join("\n")
       : "None: every scenario's predicted category matched its ground truth.",
   );
   const confusion = computeCategoryConfusion(run.records);

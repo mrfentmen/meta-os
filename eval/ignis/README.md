@@ -64,7 +64,9 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   category-accuracy semantics), with an assessed column so a
   held-state row of 0.000 reads as nothing assessed, not a measured
   zero — so the headline is checkable without counting the confusion
-  matrix.
+  matrix. The Misses section names each miss as truth -> predicted
+  (ERROR with a no-assessment note for unassessed records), so a miss
+  is diagnosable without cross-referencing the per-scenario table.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and
