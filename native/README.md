@@ -25,8 +25,10 @@ rebuilding.
   categories, evaluation scenarios, input guidance, and a limitations
   notice that is always on screen. Switching products applies to the
   next sampled frame (web parity): a running analysis keeps running,
-  each frame is assessed and logged under the product selected at that
-  moment, and earlier entries keep the product they were recorded under.
+  each frame is assessed and logged under the product selected when it
+  started, so a switch made while a request is in flight cannot relabel
+  that request's log or timeline entry, and earlier entries keep the
+  product they were recorded under.
 - Live camera preview via AVFoundation, with honest states: permission
   denied, no camera, camera error — shown as themselves, never papered over.
 - Still-image input (web parity): an image-only file picker for

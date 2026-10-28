@@ -76,10 +76,11 @@ final class AppModel: ObservableObject {
                 // resets only the dropdown. Switching does NOT stop a
                 // running analysis: like the web frontend, it applies
                 // to the next sampled frame. That is safe because the
-                // submit path reads selectedProduct at submit time, so
-                // every frame is assessed and logged under the product
-                // selected at that moment, and earlier entries keep the
-                // product they were recorded under.
+                // submit path takes the product captured at sample or
+                // tap time, so every frame is assessed and logged under
+                // the product selected when it started, a switch
+                // mid-request cannot relabel it, and earlier entries
+                // keep the product they were recorded under.
                 selectedScenario = ""
             }
         }
@@ -305,22 +306,26 @@ final class AppModel: ObservableObject {
             return
         }
         stillImageAssessing = true
+        // Capture the product at tap time (see submitAssessment): a
+        // product switch while the request is in flight must not
+        // relabel this image's log and timeline entries.
+        let requestProduct = selectedProduct
         // Plain Task awaiting a @MainActor method: the hop back onto
         // the main actor is explicit, and no capture-list/attribute
         // ordering question arises (this sandbox has no Swift compiler
         // to check it against).
         Task {
-            await self.runStillImageAssessment(dataURL: dataURL)
+            await self.runStillImageAssessment(dataURL: dataURL, product: requestProduct)
         }
     }
 
-    private func runStillImageAssessment(dataURL: String) async {
+    private func runStillImageAssessment(dataURL: String, product: ProductID) async {
         defer { stillImageAssessing = false }
         // submitAssessment already records the outcome in the timeline
         // and the session log and sets backendStatus, so a failure
         // here needs no extra handling.
         do {
-            try await submitAssessment(timestamp: ISO8601.now(), imageDataURL: dataURL)
+            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL)
         } catch {
             // Outcome already logged and rendered by submitAssessment.
         }
@@ -366,15 +371,19 @@ final class AppModel: ObservableObject {
         }
         videoAssessing = true
         let seconds = player.currentTime().seconds
+        // Capture the product at tap time (see submitAssessment): a
+        // product switch while the request is in flight must not
+        // relabel this frame's log and timeline entries.
+        let requestProduct = selectedProduct
         // Plain Task awaiting a @MainActor method: same shape as the
         // still-image path (this sandbox has no Swift compiler to
         // check it against).
         Task {
-            await self.runVideoFrameAssessment(url: url, seconds: seconds)
+            await self.runVideoFrameAssessment(url: url, seconds: seconds, product: requestProduct)
         }
     }
 
-    private func runVideoFrameAssessment(url: URL, seconds: Double) async {
+    private func runVideoFrameAssessment(url: URL, seconds: Double, product: ProductID) async {
         defer { videoAssessing = false }
         let dataURL: String
         do {
@@ -387,18 +396,18 @@ final class AppModel: ObservableObject {
             let message = "Video frame capture failed: \(error.localizedDescription)"
             videoError = message
             let timestamp = ISO8601.now()
-            recordLog(timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message)
+            recordLog(product: product, timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message)
             // No request was made, so this is not a backend failure:
             // show the capture failure itself, not a backend message.
             backendStatus = .error(message)
             timeline.insert(
-                TimelineItem(product: selectedProduct, timestamp: timestamp, kind: .failure(message)),
+                TimelineItem(product: product, timestamp: timestamp, kind: .failure(message)),
                 at: 0
             )
             return
         }
         do {
-            try await submitAssessment(timestamp: ISO8601.now(), imageDataURL: dataURL)
+            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL)
         } catch {
             // Outcome already logged and rendered by submitAssessment.
         }
@@ -498,17 +507,22 @@ final class AppModel: ObservableObject {
     /// rethrowing.
     private func runSample() async throws {
         let timestamp = ISO8601.now()
+        // Web parity (js/app.js runSample): the product is captured
+        // before the frame is captured, so a switch mid-sample labels
+        // the entry with the product the sample started under, not the
+        // one selected when the request happens to finish.
+        let requestProduct = selectedProduct
 
         let image: String
         do {
             image = try camera.captureFrameDataURL()
         } catch {
             let message = "Frame capture failed: \(error.localizedDescription)"
-            recordLog(timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message)
+            recordLog(product: requestProduct, timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message)
             throw AssessError(kind: .invalid, message: message, latencyMs: nil)
         }
 
-        try await submitAssessment(timestamp: timestamp, imageDataURL: image)
+        try await submitAssessment(product: requestProduct, timestamp: timestamp, imageDataURL: image)
     }
 
     /// Shared submit path for live frames and still images: POST the
@@ -517,28 +531,39 @@ final class AppModel: ObservableObject {
     /// logging it, so callers that count failures (the sampler) can
     /// count it and callers that do not (still-image assess) can
     /// swallow it safely.
-    private func submitAssessment(timestamp: String, imageDataURL: String) async throws {
+    ///
+    /// The product is a parameter, captured by the caller at sample or
+    /// tap time — never read from selectedProduct after an await.
+    /// The old code read selectedProduct after the request returned,
+    /// so switching products while a request was in flight relabelled
+    /// that request's log and timeline entries under the new product.
+    /// The web frontend does not have this bug: its submitAssessment
+    /// takes the product as a parameter, and its history title uses the
+    /// assessment's own product. Here the validated response product
+    /// equals the request product, so the request product is the honest
+    /// label for the log, the timeline, and the announcement.
+    private func submitAssessment(product: ProductID, timestamp: String, imageDataURL: String) async throws {
         requestInFlight = true
         defer { requestInFlight = false }
 
         do {
             let (response, latencyMs) = try await client.assess(
                 endpoint: trimmedEndpoint,
-                product: selectedProduct,
+                product: product,
                 timestamp: timestamp,
                 imageDataURL: imageDataURL
             )
             lastRoundTripMs = latencyMs
-            recordLog(timestamp: timestamp, latencyMs: latencyMs, status: .ok, response: response)
+            recordLog(product: product, timestamp: timestamp, latencyMs: latencyMs, status: .ok, response: response)
             backendStatus = .connected("Model backend connected: \(trimmedEndpoint)")
             displayedAssessment = response
             displayedAssessmentNote = nil
             AccessibilityAnnouncement.newAssessment(
-                productDisplayName: selectedProduct.config.displayName,
+                productDisplayName: product.config.displayName,
                 response: response
             )
             timeline.insert(
-                TimelineItem(product: selectedProduct, timestamp: response.timestamp, kind: .assessment(response)),
+                TimelineItem(product: product, timestamp: response.timestamp, kind: .assessment(response)),
                 at: 0
             )
         } catch let error as AssessError {
@@ -559,11 +584,11 @@ final class AppModel: ObservableObject {
             case .invalid: status = .invalidResponse
             case .network: status = .networkError
             }
-            recordLog(timestamp: timestamp, latencyMs: error.latencyMs, status: status, error: error.message)
+            recordLog(product: product, timestamp: timestamp, latencyMs: error.latencyMs, status: status, error: error.message)
             backendStatus = .error("Model backend not connected: \(error.message)")
             AccessibilityAnnouncement.backendFailure(message: error.message)
             timeline.insert(
-                TimelineItem(product: selectedProduct, timestamp: timestamp, kind: .failure(error.message)),
+                TimelineItem(product: product, timestamp: timestamp, kind: .failure(error.message)),
                 at: 0
             )
             throw error
@@ -571,6 +596,7 @@ final class AppModel: ObservableObject {
     }
 
     private func recordLog(
+        product: ProductID,
         timestamp: String,
         latencyMs: Int?,
         status: LogStatus,
@@ -579,7 +605,7 @@ final class AppModel: ObservableObject {
     ) {
         log.record(
             requestTimestamp: timestamp,
-            product: selectedProduct,
+            product: product,
             latencyMs: latencyMs,
             status: status,
             response: response,
