@@ -9,6 +9,7 @@ import { FrameSampler } from "./sampler.js";
 import { assessFrame, AssessError } from "./client.js";
 import { SessionLog } from "./log.js";
 import { PRODUCT_BY_ID, isProductId } from "./products.js";
+import { isSupportedImageFile, readFileAsDataURL } from "./image_input.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -43,6 +44,10 @@ const els = {
   btnExport: $("btn-export-log"),
   btnClearLog: $("btn-clear-log"),
   logStats: $("log-stats"),
+  imageInput: $("image-input"),
+  imagePreview: $("image-preview"),
+  imageState: $("image-state"),
+  btnImageAssess: $("btn-image-assess"),
 };
 
 const camera = new Camera(els.video);
@@ -245,26 +250,13 @@ function addHistoryItem({ title, timestamp, body, kind }) {
   els.history.prepend(item);
 }
 
-async function runSample() {
+// One assessment request, shared by live sampled frames and by a chosen
+// still image: same endpoint, same validation, same history entry, same
+// session-log entry. Throws on failure after rendering and logging it,
+// so the sampler can count the error and the still-image button can
+// simply swallow it (it is already on screen).
+async function submitAssessment(product, timestamp, image) {
   const endpoint = currentEndpoint();
-  const product = currentProductId;
-  const timestamp = new Date().toISOString();
-  let image;
-  try {
-    image = camera.captureFrame(els.captureCanvas);
-  } catch (err) {
-    log.record({
-      requestTimestamp: timestamp,
-      product,
-      latencyMs: null,
-      status: "invalid_response",
-      error: `Frame capture failed: ${err.message}`,
-      scenarioLabel: currentScenarioLabel(),
-    });
-    updateLogStats();
-    throw err;
-  }
-
   els.inFlight.hidden = false;
   const started = performance.now();
   try {
@@ -293,6 +285,7 @@ async function runSample() {
       body: assessment.assessment.summary,
       kind: assessment.assessment.requires_human_review ? "review" : "ok",
     });
+    return assessment;
   } catch (err) {
     const latencyMs = Math.round(performance.now() - started);
     const kind = err instanceof AssessError ? err.kind : "network";
@@ -319,6 +312,34 @@ async function runSample() {
   }
 }
 
+async function runSample() {
+  const product = currentProductId;
+  const timestamp = new Date().toISOString();
+  let image;
+  try {
+    image = camera.captureFrame(els.captureCanvas);
+  } catch (err) {
+    log.record({
+      requestTimestamp: timestamp,
+      product,
+      latencyMs: null,
+      status: "invalid_response",
+      error: `Frame capture failed: ${err.message}`,
+      scenarioLabel: currentScenarioLabel(),
+    });
+    updateLogStats();
+    throw err;
+  }
+  await submitAssessment(product, timestamp, image);
+}
+
+// Still-image input state: the chosen file's data URL lives in memory
+// only, and is cleared by Reset. It is assessed under whichever product
+// is selected when "Assess this image" is tapped, exactly like the next
+// live sampled frame.
+let stillImageDataUrl = null;
+let stillImageAssessing = false;
+
 const sampler = new FrameSampler({
   intervalMs: 3000,
   onSample: runSample,
@@ -334,6 +355,48 @@ els.productRadios.forEach((radio) => {
       renderProduct();
     }
   });
+});
+
+els.imageInput.addEventListener("change", async () => {
+  const file = els.imageInput.files && els.imageInput.files[0];
+  stillImageDataUrl = null;
+  els.imagePreview.hidden = true;
+  els.imagePreview.removeAttribute("src");
+  els.btnImageAssess.disabled = true;
+  if (!file) {
+    els.imageState.textContent = "No image chosen.";
+    return;
+  }
+  if (!isSupportedImageFile(file)) {
+    els.imageState.textContent = "That file is not an image. Choose an image file.";
+    return;
+  }
+  els.imageState.textContent = "Reading image…";
+  try {
+    stillImageDataUrl = await readFileAsDataURL(file);
+    els.imagePreview.src = stillImageDataUrl;
+    els.imagePreview.hidden = false;
+    els.imageState.textContent =
+      `Image ready: ${file.name}. Tap “Assess this image” to send it once to the assessment endpoint, under the product selected above. It is not stored by this app.`;
+    els.btnImageAssess.disabled = false;
+  } catch (err) {
+    els.imageState.textContent = `Could not read that image: ${err.message}`;
+  }
+});
+
+els.btnImageAssess.addEventListener("click", async () => {
+  if (!stillImageDataUrl || stillImageAssessing) return;
+  stillImageAssessing = true;
+  els.btnImageAssess.disabled = true;
+  setBackendStatus("unknown", `Contacting model backend: ${currentEndpoint()} …`);
+  try {
+    await submitAssessment(currentProductId, new Date().toISOString(), stillImageDataUrl);
+  } catch {
+    // submitAssessment already rendered and logged the failure.
+  } finally {
+    stillImageAssessing = false;
+    els.btnImageAssess.disabled = !stillImageDataUrl;
+  }
 });
 
 els.btnCameraStart.addEventListener("click", async () => {
@@ -375,6 +438,12 @@ els.btnReset.addEventListener("click", () => {
   sampler.stop();
   camera.stop();
   els.cameraIndicator.hidden = true;
+  stillImageDataUrl = null;
+  els.imageInput.value = "";
+  els.imagePreview.hidden = true;
+  els.imagePreview.removeAttribute("src");
+  els.imageState.textContent = "No image chosen.";
+  els.btnImageAssess.disabled = true;
   setCameraState("Camera stopped. View reset.");
   setBackendStatus("unknown", "Model backend status unknown. Start analysis to contact the endpoint.");
   els.latest.textContent = "No assessment received yet.";

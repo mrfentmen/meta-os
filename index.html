@@ -67,6 +67,19 @@
     <p class="note">Switching products applies to the next sampled frame. Earlier log entries keep the product they were assessed under.</p>
   </section>
 
+  <section class="panel" aria-label="Still image input">
+    <h2>Still image</h2>
+    <p class="note">For prerecorded or photographed scenes — the input Ignis and Sanitas demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.</p>
+    <label for="image-input">Choose an image file</label>
+    <input id="image-input" type="file" accept="image/*">
+    <img id="image-preview" hidden alt="Chosen still image preview">
+    <p id="image-state" class="note">No image chosen.</p>
+    <div class="controls">
+      <button id="btn-image-assess" type="button" class="btn-primary" disabled>Assess this image</button>
+    </div>
+    <p class="note">Needs no camera. If the model backend is not connected, the request fails honestly in the history and the session log, and no assessment appears — same as a live frame.</p>
+  </section>
+
   <section class="panel" aria-label="Configuration">
     <h2>Analysis configuration</h2>
     <label for="endpoint">Assessment endpoint</label>

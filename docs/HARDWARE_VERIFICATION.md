@@ -59,6 +59,24 @@ over a network. Open `index.html`.
 3. Sample interval: change the interval to 1 s and to 60 s and confirm
    the sampler follows the new value (visible in the counters).
 
+## 2b. Still-image input (web, any device)
+
+No camera needed, so this can be checked before the camera checks.
+
+1. Choose a non-image file: the UI says it is not an image and the
+   Assess button stays disabled.
+2. Choose an image: a preview appears, the Assess button enables, and
+   the note says the image is sent once under the selected product and
+   is not stored.
+3. With no backend running, tap Assess this image: the loading
+   indicator shows while the request is outstanding, then the honest
+   "Model backend not connected" error lands in the history and the
+   session log, and no assessment card appears. The log entry carries
+   the product selected at assess time and the scenario label, if one
+   was chosen.
+4. Tap Reset: the preview clears, the file choice clears, and the
+   Assess button disables again.
+
 ## 3. Native macOS app (MetaTrio)
 
 Requires a Mac with macOS 13+ and Xcode 15+. Build with the bundled-app
@@ -113,6 +131,9 @@ and any fix that followed). Until then, this file's status is:
 - Web on phone: NOT RUN
 - Web on Mac browser: NOT RUN (page load and module execution only,
   in headless Chromium in the sandbox)
+- Still-image input: NOT RUN in a real browser (unit tests cover file
+  validation and reading; element ids and module syntax were checked in
+  the sandbox, but the file-picker and tap path needs a real browser)
 - Native app build and camera: NOT RUN (no Swift toolchain in the
   sandbox; source reviewed by inspection only)
 - Live backend round trip: BLOCKED (no `/api/assess` server yet)

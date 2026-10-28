@@ -1,7 +1,7 @@
 // Node built-in test runner, no dependencies:  node --test tests/ui.test.mjs
 // Covers the pure logic the browser loads: trio product configs, v2 schema
 // validation, sampler skip-while-in-flight, analysis client error handling,
-// session log shape (with product).
+// session log shape (with product), still-image input validation and read.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -11,6 +11,7 @@ import { validateAssessment } from "../js/schema.js";
 import { FrameSampler } from "../js/sampler.js";
 import { assessFrame, AssessError } from "../js/client.js";
 import { SessionLog } from "../js/log.js";
+import { isSupportedImageFile, readFileAsDataURL } from "../js/image_input.js";
 
 function validAssessment(product = "vigiles") {
   return {
@@ -428,4 +429,51 @@ test("log: rejects an unknown status", () => {
     () => log.record({ requestTimestamp: "t", product: "vigiles", latencyMs: 1, status: "made_up" }),
     RangeError,
   );
+});
+
+// ---------- still-image input ----------
+
+test("image input: only image/* files are accepted", () => {
+  assert.equal(isSupportedImageFile({ type: "image/jpeg" }), true);
+  assert.equal(isSupportedImageFile({ type: "image/png" }), true);
+  assert.equal(isSupportedImageFile({ type: "IMAGE/JPEG" }), true);
+  assert.equal(isSupportedImageFile({ type: "text/plain" }), false);
+  assert.equal(isSupportedImageFile({ type: "video/mp4" }), false);
+  assert.equal(isSupportedImageFile({ type: "" }), false);
+  assert.equal(isSupportedImageFile({}), false);
+  assert.equal(isSupportedImageFile(null), false);
+});
+
+test("image input: readFileAsDataURL resolves with the reader result", async () => {
+  const previous = globalThis.FileReader;
+  class MockReader {
+    readAsDataURL() {
+      this.result = "data:image/jpeg;base64,abc";
+      this.onload();
+    }
+  }
+  globalThis.FileReader = MockReader;
+  try {
+    assert.equal(await readFileAsDataURL({ type: "image/jpeg" }), "data:image/jpeg;base64,abc");
+  } finally {
+    if (previous === undefined) delete globalThis.FileReader;
+    else globalThis.FileReader = previous;
+  }
+});
+
+test("image input: readFileAsDataURL rejects when the reader errors", async () => {
+  const previous = globalThis.FileReader;
+  class FailingReader {
+    readAsDataURL() {
+      this.error = new Error("read failed");
+      this.onerror();
+    }
+  }
+  globalThis.FileReader = FailingReader;
+  try {
+    await assert.rejects(() => readFileAsDataURL({ type: "image/jpeg" }), /read failed/);
+  } finally {
+    if (previous === undefined) delete globalThis.FileReader;
+    else globalThis.FileReader = previous;
+  }
 });
