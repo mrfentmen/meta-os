@@ -88,6 +88,12 @@
 // so a slow failure mode is visible without scanning the
 // per-scenario table; all three rows always render, so the scenario
 // totals sum to the sample size, and a group with no recorded
+// latency shows n/a, never a fabricated zero. A latency-by-alert-
+// outcome section right after it breaks the recorded latencies down
+// by alert outcome — true positive, true negative, false positive,
+// false negative — so a slow alert failure mode is visible without
+// scanning the per-scenario table; all four rows always render, so
+// the totals sum to the sample size, and a group with no recorded
 // latency shows n/a, never a fabricated zero.
 // An alert-errors section names the scenarios behind the summary
 // line's FP/FN counts: false positives (an alert fired where none
@@ -449,6 +455,57 @@ export function computeLatencyByOutcome(records) {
     if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
   }
   return ["correct", "miss", "unassessed"].map((outcome) => {
+    const e = groups[outcome];
+    const sorted = e.latencies.sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+    }
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return {
+      outcome,
+      total: e.total,
+      recorded: sorted.length,
+      meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+      medianMs: median,
+      maxMs: sorted[sorted.length - 1],
+    };
+  });
+}
+
+// Latency by alert outcome: one row per alert-outcome group, in
+// fixed order true positive, true negative, false positive, false
+// negative, with the count of recorded harness wall-clock latencies,
+// their mean, their median (averaged-middle, matching the
+// distribution's median), and their max. The split uses
+// alert_expected / alert_fired only, matching the metrics
+// definition, so the four scenario totals always sum to the sample
+// size and a run with no alert errors still shows the error groups
+// explicitly. Records with no latency take no part in a group's
+// numbers but still count toward its scenario total, so a group
+// whose scenarios carry no latency reads as recorded 0 with n/a
+// statistics — never as a fabricated zero.
+export function computeLatencyByAlertOutcome(records) {
+  const groups = {
+    "true positive": { outcome: "true positive", total: 0, latencies: [] },
+    "true negative": { outcome: "true negative", total: 0, latencies: [] },
+    "false positive": { outcome: "false positive", total: 0, latencies: [] },
+    "false negative": { outcome: "false negative", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    const outcome =
+      r.alert_expected && r.alert_fired
+        ? "true positive"
+        : !r.alert_expected && !r.alert_fired
+          ? "true negative"
+          : !r.alert_expected && r.alert_fired
+            ? "false positive"
+            : "false negative";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["true positive", "true negative", "false positive", "false negative"].map((outcome) => {
     const e = groups[outcome];
     const sorted = e.latencies.sort((a, b) => a - b);
     if (sorted.length === 0) {
@@ -917,6 +974,26 @@ export function renderRunReport(run, baselineRun = null) {
     "| --- | --- | --- | --- | --- | --- |",
   );
   for (const row of latencyByOutcome) {
+    lines.push(
+      `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
+  }
+  const latencyByAlertOutcome = computeLatencyByAlertOutcome(run.records);
+  lines.push(
+    "",
+    "## Latency by alert outcome",
+    "",
+    "Harness wall-clock latencies broken down by alert outcome — true positive (an expected alert " +
+      "fired), true negative (no alert fired where none was expected), false positive (an alert " +
+      "fired where none was expected), false negative (an expected alert never fired) — so a slow " +
+      "alert failure mode is visible without scanning the per-scenario table. Mean and median are " +
+      "over the recorded latencies only; all four rows always render, so the scenario totals sum " +
+      "to the sample size, and a group with no recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Alert outcome | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByAlertOutcome) {
     lines.push(
       `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
     );

@@ -32,6 +32,7 @@ import {
   computeAlertErrors,
   computeErrorBreakdown,
   computeLatencyByCategory,
+  computeLatencyByAlertOutcome,
   computeLatencyByOutcome,
   computeLatencyDistribution,
   computeLatencyOutliers,
@@ -777,6 +778,65 @@ test("report: latency by outcome breaks recorded latencies down by correct/miss/
   assert.match(rendered, /\| correct \| 2 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
   assert.match(rendered, /\| miss \| 2 \| 1 \| 100\.0 \| 100\.0 \| 100\.0 \|/);
   assert.match(rendered, /\| unassessed \| 1 \| 0 \| n\/a \| n\/a \| n\/a \|/);
+});
+
+test("report: latency by alert outcome breaks recorded latencies down by TP/TN/FP/FN", () => {
+  const rec = (id, truth, actual, expected, fired, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // True positive: 10, 30 -> mean 20, median 20, max 30, recorded 2 of 2.
+  // True negative: 40 + one unmeasured -> mean/median/max 40, recorded 1 of 2.
+  // False positive: nothing recorded -> null statistics, never zero.
+  // False negative: 200 -> mean/median/max 200, recorded 1 of 1.
+  // All four rows always render, in fixed TP/TN/FP/FN order, so the
+  // totals sum to the sample size.
+  assert.deepEqual(
+    computeLatencyByAlertOutcome([
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, 30),
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T3", "steam or fog", "steam or fog", false, false, 40),
+      rec("IGN-T4", "no hazard visible", "no hazard visible", false, false),
+      rec("IGN-T5", "steam or fog", "visible flame", false, true),
+      rec("IGN-T6", "visible flame", null, true, false, 200),
+    ]),
+    [
+      { outcome: "true positive", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "true negative", total: 2, recorded: 1, meanMs: 40, medianMs: 40, maxMs: 40 },
+      { outcome: "false positive", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+      { outcome: "false negative", total: 1, recorded: 1, meanMs: 200, medianMs: 200, maxMs: 200 },
+    ],
+  );
+  // Rendered: section after Latency by outcome, before Misses, rows
+  // in fixed order, n/a for the unmeasured group.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, 30),
+      rec("IGN-T3", "steam or fog", "steam or fog", false, false, 40),
+      rec("IGN-T4", "no hazard visible", "no hazard visible", false, false),
+      rec("IGN-T5", "steam or fog", "visible flame", false, true),
+      rec("IGN-T6", "visible flame", null, true, false, 200),
+    ],
+    metrics: { sample_size: 6, true_positives: 2, false_positives: 1, true_negatives: 2, false_negatives: 1, precision: 0.6667, recall: 0.6667, false_positive_rate: 0.3333, false_negative_rate: 0.3333, category_accuracy: 0.6667, latency_ms: { n: 4, mean: 70, median: 35, max: 200 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by alert outcome/);
+  assert.ok(rendered.indexOf("## Latency by alert outcome") > rendered.indexOf("## Latency by outcome"));
+  assert.ok(rendered.indexOf("## Latency by alert outcome") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| true positive \| 2 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| true negative \| 2 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
+  assert.match(rendered, /\| false positive \| 1 \| 0 \| n\/a \| n\/a \| n\/a \|/);
+  assert.match(rendered, /\| false negative \| 1 \| 1 \| 200\.0 \| 200\.0 \| 200\.0 \|/);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {

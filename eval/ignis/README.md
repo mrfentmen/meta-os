@@ -105,7 +105,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   outcome — correct, miss, unassessed — so a slow failure mode is
   visible without scanning the per-scenario table; all three rows
   always render, so the totals sum to the sample size, and a group
-  with no recorded latency shows n/a, never a fabricated zero. An alert-errors section names the
+  with no recorded latency shows n/a, never a fabricated zero. A latency-by-alert-outcome
+  section right after it breaks the recorded latencies down by alert outcome — true positive,
+  true negative, false positive, false negative — so a slow alert failure mode is visible
+  without scanning the per-scenario table; all four rows always render, so the totals sum to
+  the sample size, and a group with no recorded latency shows n/a, never a fabricated zero.
+  An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false
   negatives (an expected alert that never fired), each with truth
