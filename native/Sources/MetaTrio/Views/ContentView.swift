@@ -23,6 +23,23 @@ struct ContentView: View {
             }
             Divider()
             StatusBar(model: model)
+            Divider()
+            // Web parity: the web frontend carries this disclaimer as a
+            // footer on every page. The native window had no equivalent
+            // — its per-product limitations notice says what one
+            // product never claims, but nothing in the window said the
+            // whole app is a prototype that never contacts emergency
+            // services, never dispatches or cites, and never identifies
+            // anyone. A demo window without it could be read as an
+            // operational system, so it sits below the status bar,
+            // always visible, in the web footer's words.
+            Text("Experimental prototype for staged, consenting scenarios. Not an operational law-enforcement, fire-detection, or enforcement system. This app never contacts police or emergency services, performs no face recognition or identity inference, and never dispatches or cites automatically.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
         }
         .frame(minWidth: 1020, minHeight: 660)
     }

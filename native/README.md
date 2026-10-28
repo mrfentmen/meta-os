@@ -91,6 +91,7 @@ rebuilding.
   says plainly that reachable does not mean an assessment is available.
   The check never sends a frame and never returns an assessment, and it
   never changes the assessment status in the status bar.
+- Prototype disclaimer footer (web parity): below the status bar, always visible, in the web footer's words — an experimental prototype for staged, consenting scenarios, not an operational law-enforcement, fire-detection, or enforcement system, that never contacts police or emergency services, performs no face recognition or identity inference, and never dispatches or cites automatically. The per-product limitations notice says what one product never claims; the footer says it for the whole app.
 - Empty states that say what is actually happening: the assessment area
   shows a waiting state while a request is in flight, the real backend
   error when the backend failed, and "No assessment received yet" only
