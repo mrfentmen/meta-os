@@ -40,6 +40,7 @@ import {
   computeLatencyByCategoryCorrectness,
   computeLatencyByMissStatus,
   computeLatencyByPredictedCategory,
+  computeLatencyByErrorStatus,
   computeLatencyByOutcome,
   computeLatencyDistribution,
   computeLatencyOutliers,
@@ -1271,6 +1272,68 @@ test("report: latency by predicted category breaks recorded latencies down by pr
   assert.ok(rendered.indexOf("## Latency by predicted category") < rendered.indexOf("## Misses"));
   assert.match(rendered, /\| visible flame \| 2 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
   assert.match(rendered, /\| ERROR \| 1 \| 0 \| n\/a \| n\/a \| n\/a \|/);
+});
+
+test("report: latency by error status breaks recorded latencies down by error presence", () => {
+  const rec = (id, truth, actual, expected, fired, error, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: error === undefined ? null : error,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Errored: 10, 30 -> mean/median 20, max 30, recorded 2 of 3
+  // (one errored record carries no latency, and one errored record
+  // also returned an assessment — it still counts as errored).
+  // No error: 100 -> 100/100/100, recorded 1 of 1.
+  // Both rows always render, in fixed errored/no-error order, so
+  // the totals sum to the sample size.
+  assert.deepEqual(
+    computeLatencyByErrorStatus([
+      rec("IGN-T2", "visible smoke", "visible flame", true, true, "boom", 30),
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, "held", 10),
+      rec("IGN-T3", "steam or fog", null, false, false, "held"),
+      rec("IGN-T4", "visible flame", "visible flame", true, true, null, 100),
+    ]),
+    [
+      { outcome: "errored", total: 3, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "no error", total: 1, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+    ],
+  );
+  // A group with no recorded latency shows null statistics, never zero.
+  assert.deepEqual(
+    computeLatencyByErrorStatus([
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, "held"),
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, null, 10),
+    ]),
+    [
+      { outcome: "errored", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+      { outcome: "no error", total: 1, recorded: 1, meanMs: 10, medianMs: 10, maxMs: 10 },
+    ],
+  );
+  // Rendered: section after Latency by predicted category, before
+  // Misses, rows in fixed order, n/a for the unmeasured group.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, "held", 10),
+      rec("IGN-T2", "visible smoke", "visible flame", true, true, "held", 30),
+      rec("IGN-T3", "steam or fog", null, false, false, "held"),
+      rec("IGN-T4", "visible flame", "visible flame", true, true, null, 100),
+    ],
+    metrics: { sample_size: 4, true_positives: 1, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0.25, latency_ms: { n: 3, mean: 46.666, median: 30, max: 100 }, errors: { count: 3, scenario_ids: ["IGN-T1", "IGN-T2", "IGN-T3"] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by error status/);
+  assert.ok(rendered.indexOf("## Latency by error status") > rendered.indexOf("## Latency by predicted category"));
+  assert.ok(rendered.indexOf("## Latency by error status") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| errored \| 3 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| no error \| 1 \| 1 \| 100\.0 \| 100\.0 \| 100\.0 \|/);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {

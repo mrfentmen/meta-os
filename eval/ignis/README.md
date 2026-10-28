@@ -149,6 +149,11 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   category present, sorted alphabetically with ERROR last (matching the confusion table, where
   an unassessed record reads as ERROR), so a slow predicted category is visible without scanning
   the per-scenario table; a category with no recorded latency shows n/a, never a fabricated zero.
+  A latency-by-error-status section right after it splits the recorded latencies by whether the
+  record carries an error message at all — errored (including a record that also returned an
+  assessment) versus no error — so whether failing scenarios run slower than clean ones is
+  visible without scanning the per-scenario table; both rows always render, so the totals sum
+  to the sample size, and a group with no recorded latency shows n/a, never a fabricated zero.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false

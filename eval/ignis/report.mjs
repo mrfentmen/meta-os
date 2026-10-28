@@ -846,6 +846,49 @@ export function computeLatencyByPredictedCategory(records) {
     });
 }
 
+// Latency by error status: one row per error-status
+// group, in fixed order errored, no error, with the count of
+// recorded harness wall-clock latencies, their mean, their median
+// (averaged-middle, matching the distribution's median), and their
+// max. A record is errored when it carries an error message at
+// all, using the validated error field — the same definition the
+// error-message breakdown groups by, so a record that carries both
+// an assessment and an error message still counts as errored —
+// and no error otherwise, so the two scenario totals always sum
+// to the sample size. Records with no latency take no part in a
+// group's numbers but still count toward its scenario total, so
+// a group whose scenarios carry no latency reads as recorded 0
+// with n/a statistics — never as a fabricated zero.
+export function computeLatencyByErrorStatus(records) {
+  const groups = {
+    errored: { outcome: "errored", total: 0, latencies: [] },
+    "no error": { outcome: "no error", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    const outcome = r.error !== null ? "errored" : "no error";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["errored", "no error"].map((outcome) => {
+    const e = groups[outcome];
+    const sorted = e.latencies.sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+    }
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return {
+      outcome,
+      total: e.total,
+      recorded: sorted.length,
+      meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+      medianMs: median,
+      maxMs: sorted[sorted.length - 1],
+    };
+  });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1468,6 +1511,26 @@ export function renderRunReport(run, baselineRun = null) {
   for (const row of latencyByPredictedCategory) {
     lines.push(
       `| ${row.predicted} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
+  }
+  const latencyByErrorStatus = computeLatencyByErrorStatus(run.records);
+  lines.push(
+    "",
+    "## Latency by error status",
+    "",
+    "Harness wall-clock latencies split by whether the record carries an error message — " +
+      "errored (a record that failed in some way, whether or not it also returned an " +
+      "assessment) versus no error — so whether failing scenarios run slower than clean " +
+      "ones is visible without scanning the per-scenario table. Mean and median are over " +
+      "the recorded latencies only; both rows always render, so the scenario totals sum " +
+      "to the sample size, and a group with no recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Error status | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByErrorStatus) {
+    lines.push(
+      `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
     );
   }
   const misses = computeMisses(run.records);
