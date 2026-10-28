@@ -50,6 +50,12 @@ ES modules for the node test runner; it declares zero dependencies.)
   every N seconds (default 3, configurable 1–60 in the UI) is drawn to a
   canvas and encoded as JPEG. If the previous request has not returned, the
   tick is skipped and counted — at most one request is ever in flight.
+  If capturing the frame itself fails, the tick is counted as failed and
+  logged with a null latency, and — like a video-frame capture failure —
+  it lands in the event history as an "Analysis request failed" entry and
+  sets the backend status to the capture failure itself on both
+  frontends; no request was made, so the last round trip is untouched,
+  no assessment is invented, and the sampler keeps ticking.
 - **Analysis client** (`js/client.js`): POSTs each frame with its product
   to the assessment endpoint and validates every response against the v2
   contract schema (`js/schema.js`), with the same strictness as the native
@@ -190,7 +196,7 @@ top-level product; the still-image helpers accept `image/*` files only
 and resolve/reject with the file-reader result; the history re-inspection
 wiring (page note, Show assessment button, live and restored entries
 carrying their assessment). Current result:
-**96 tests, 96 pass, 0 fail** (Node v24).
+**97 tests, 97 pass, 0 fail** (Node v24).
 
 Web↔native product-config parity (`tests/product-parity.test.mjs`): the
 test reads the native app's `ProductConfig.swift` and asserts the web
@@ -207,7 +213,7 @@ the model held (not configured, live calls off) and a valid assess
 request surfaces the real 503 Spark-hold message as a typed HTTP error,
 with no assessment rendered; a bad product surfaces the real 400; and
 the server serves the actual frontend entry point. Full `npm test`
-(including Agent 2 and Agent 3 suites): **196 tests, 196 pass, 0 fail**.
+(including Agent 2 and Agent 3 suites): **198 tests, 198 pass, 0 fail**.
 
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.

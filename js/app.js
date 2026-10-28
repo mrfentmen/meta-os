@@ -434,15 +434,35 @@ async function runSample() {
   try {
     image = camera.captureFrame(els.captureCanvas);
   } catch (err) {
+    // Video-path parity: the prerecorded-video path records a capture
+    // failure directly in the history and the backend status, in the
+    // same shapes as a backend failure, because no request was made —
+    // it shows the capture failure itself, not a backend message, and
+    // it leaves the last round trip alone (there is no new
+    // measurement). The live path only logged it, so a failed tick
+    // during a run never reached the history a reviewer reads, even
+    // though the sampler counted it as a failed tick. Same honest
+    // handling otherwise: logged with a null latency, no assessment
+    // invented, and the sampler keeps ticking — the camera may still
+    // be live and the next tick may succeed, so the camera state text
+    // is left alone.
+    const message = `Frame capture failed: ${err.message}`;
     log.record({
       requestTimestamp: timestamp,
       product,
       latencyMs: null,
       status: "invalid_response",
-      error: `Frame capture failed: ${err.message}`,
+      error: message,
       scenarioLabel: currentScenarioLabel(),
     });
     updateLogStats();
+    setBackendStatus("error", message);
+    addHistoryItem({
+      title: "Analysis request failed",
+      timestamp,
+      body: message,
+      kind: "error",
+    });
     throw err;
   }
   await submitAssessment(product, timestamp, image);

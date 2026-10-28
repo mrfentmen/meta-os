@@ -519,6 +519,19 @@ final class AppModel: ObservableObject {
         } catch {
             let message = "Frame capture failed: \(error.localizedDescription)"
             recordLog(product: requestProduct, timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message)
+            // Video-path parity: the video-frame path records a capture
+            // failure directly in the timeline and the backend status,
+            // in the same shapes as a backend failure. The live path
+            // only logged it, so a failed tick during a run never
+            // reached the timeline a reviewer reads, even though the
+            // sampler counted it as a failed tick. No request was made,
+            // so this shows the capture failure itself, not a backend
+            // message, and leaves the last round trip alone.
+            backendStatus = .error(message)
+            timeline.insert(
+                TimelineItem(product: requestProduct, timestamp: timestamp, kind: .failure(message)),
+                at: 0
+            )
             throw AssessError(kind: .invalid, message: message, latencyMs: nil)
         }
 

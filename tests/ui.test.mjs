@@ -864,3 +864,31 @@ test("camera: web shows an analysis-active banner while sampling, matching the n
   const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url), "utf8");
   assert.match(swift, /ANALYSIS ACTIVE — sampling one frame every/);
 });
+
+// ---------- live frame capture failure (web + native parity with the video path) ----------
+// The prerecorded-video path on both frontends records a capture failure
+// directly in the history/timeline and the backend status, in the same
+// shapes as a backend failure. The live sampled-frame path only logged
+// it, so a failed tick during a run never reached the history a
+// reviewer reads, even though the sampler counted it as a failed tick.
+// No browser exists in this suite, so these are static checks on the
+// shipped wiring, anchored on runSample so they cannot pass off the
+// video path: the web live catch builds the capture message, logs it
+// with a null latency (no request, so the last round trip is untouched),
+// sets the backend status to the capture message itself, and adds an
+// "Analysis request failed" history entry carrying that message, then
+// still rethrows so the sampler counts the tick as failed; the native
+// live catch carries the same backend-status error and timeline
+// insertion before rethrowing.
+test("camera: a live frame capture failure lands in history and backend status, matching the video path", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /async function runSample\(\) \{[\s\S]*?const message = `Frame capture failed: \$\{err\.message\}`;/);
+  assert.match(app, /async function runSample\(\) \{[\s\S]*?error: message,\n\s+scenarioLabel: currentScenarioLabel\(\),/);
+  assert.match(app, /async function runSample\(\) \{[\s\S]*?setBackendStatus\("error", message\);/);
+  assert.match(app, /async function runSample\(\) \{[\s\S]*?addHistoryItem\(\{\n\s+title: "Analysis request failed",\n\s+timestamp,\n\s+body: message,\n\s+kind: "error",/);
+  assert.match(app, /async function runSample\(\) \{[\s\S]*?throw err;\n\s+\}\n\s+await submitAssessment\(product, timestamp, image\);/);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/ViewModels/AppModel.swift", import.meta.url), "utf8");
+  assert.match(swift, /private func runSample\(\) async throws \{[\s\S]*?let message = "Frame capture failed: /);
+  assert.match(swift, /private func runSample\(\) async throws \{[\s\S]*?backendStatus = \.error\(message\)/);
+  assert.match(swift, /private func runSample\(\) async throws \{[\s\S]*?TimelineItem\(product: requestProduct, timestamp: timestamp, kind: \.failure\(message\)\)/);
+});
