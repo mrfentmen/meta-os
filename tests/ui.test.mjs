@@ -5,6 +5,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 import { PRODUCTS, PRODUCT_BY_ID, PRODUCT_IDS, isProductId } from "../js/products.js";
 import { validateAssessment } from "../js/schema.js";
@@ -476,4 +477,28 @@ test("image input: readFileAsDataURL rejects when the reader errors", async () =
     if (previous === undefined) delete globalThis.FileReader;
     else globalThis.FileReader = previous;
   }
+});
+
+// ---------- accessibility announcements ----------
+// Static checks on the shipped markup and stylesheet: a new assessment
+// and a backend-status change must be announced to screen readers, and
+// keyboard focus on a product radio (whose input is visually hidden)
+// must show a visible ring on its label. These are not DOM tests — the
+// suite has no browser — so they assert on the exact attributes and
+// rules the browser will use.
+
+test("a11y: backend status and latest assessment are polite live regions", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const backendTag = html.match(/<p[^>]*id="backend-status"[^>]*>/);
+  assert.ok(backendTag, "backend-status element exists");
+  assert.match(backendTag[0], /aria-live="polite"/, "backend status is announced");
+  const latestTag = html.match(/<div[^>]*id="latest-assessment"[^>]*>/);
+  assert.ok(latestTag, "latest-assessment element exists");
+  assert.match(latestTag[0], /aria-live="polite"/, "latest assessment is announced");
+  assert.match(latestTag[0], /aria-atomic="true"/, "latest assessment is announced whole");
+});
+
+test("a11y: keyboard focus on a product option shows a visible ring", () => {
+  const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
+  assert.match(css, /\.product-option:has\(input:focus-visible\)\s*\{[^}]*outline:/);
 });
