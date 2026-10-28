@@ -115,7 +115,10 @@ ES modules for the node test runner; it declares zero dependencies.)
   "Waiting for the first assessment…", matching the native app's
   Latest panel, and a failed first request shows the real backend
   error in the panel, matching the native panel — "No assessment
-  received yet." is only for when nothing has been attempted), an event history timeline
+  received yet." is only for when nothing has been attempted; under
+  the assessment both panels carry the note "Assessments describe
+  observable evidence only. Each product's limitations notice (above)
+  states what its assessments never claim."), an event history timeline
   (failures included, styled distinctly; every assessment entry carries
   a "Show assessment" button that displays that past assessment again in
   the Latest assessment panel, labelled as a past result — the web match

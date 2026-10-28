@@ -960,3 +960,20 @@ test("camera: a no-request failure leaves the last round trip alone and logs a n
   const swift = readFileSync(new URL("../native/Sources/MetaTrio/Services/AssessClient.swift", import.meta.url), "utf8");
   assert.match(swift, /throw AssessError\(kind: \.network, message: "Endpoint is not a valid http\(s\) URL: \\\(endpoint\)", latencyMs: nil\)/);
 });
+
+// ---------- observable-evidence note (native parity with the web latest panel) ----------
+// The web Latest panel carries a note under the assessment saying
+// assessments describe observable evidence only, pointing at the
+// product limitations notice; the native Latest panel had nothing
+// equivalent, so a bare assessment could be read as more than it
+// claims. No browser or Swift toolchain exists in this suite, so
+// these are static checks on the shipped markup and view source: the
+// web note exists, and the native note sits in rightColumn next to
+// the Latest panel (before the timeline), in the web panel's words.
+test("latest: native panel carries the observable-evidence note, matching the web panel", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(html, /Assessments describe observable evidence only\. Each product's limitations notice \(above\) states what its assessments never claim\./);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url), "utf8");
+  const rightColumn = swift.slice(swift.indexOf("private var rightColumn"), swift.indexOf("TimelineView(model: model)"));
+  assert.match(rightColumn, /Text\("Assessments describe observable evidence only\. Each product's limitations notice \(above\) states what its assessments never claim\."\)/);
+});

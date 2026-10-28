@@ -89,6 +89,16 @@ struct ContentView: View {
                 Text("No assessment received yet.")
                     .foregroundStyle(.secondary)
             }
+            // Web parity: the web Latest panel carries this note under
+            // the assessment, and the native panel had nothing
+            // equivalent — a bare assessment with no reminder that it
+            // describes observable evidence only could be read as more
+            // than it claims. Same words as the web panel; the
+            // limitations notice it points to sits in the header above.
+            Text("Assessments describe observable evidence only. Each product's limitations notice (above) states what its assessments never claim.")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
             Divider()
             TimelineView(model: model)
         }
