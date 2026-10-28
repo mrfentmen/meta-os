@@ -961,6 +961,37 @@ test("camera: a no-request failure leaves the last round trip alone and logs a n
   assert.match(swift, /throw AssessError\(kind: \.network, message: "Endpoint is not a valid http\(s\) URL: \\\(endpoint\)", latencyMs: nil\)/);
 });
 
+// ---------- empty summary / empty evidence (native parity with the web latest panel) ----------
+// Summary and evidence need only be strings in the v2 contract, so a
+// server may validly report either as empty. The native panel renders
+// the summary paragraph only when it is non-empty and renders an
+// observation's Evidence line only when its evidence is non-empty; the
+// web panel rendered both unconditionally, leaving a blank paragraph
+// for an empty summary and a bare "(; confidence …)" slot for empty
+// evidence. No browser or Swift toolchain exists in this suite, so
+// these are static checks on the shipped panel sources: the web
+// renderLatest guards both fields, and the native view already does.
+test("latest: web panel omits an empty summary, matching the native panel", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /if \(assessment\.assessment\.summary !== ""\) \{\n\s+const text = document\.createElement\("p"\);/);
+  const swift = readFileSync(
+    new URL("../native/Sources/MetaTrio/Views/AssessmentView.swift", import.meta.url),
+    "utf8",
+  );
+  assert.match(swift, /if !response\.assessment\.summary\.isEmpty \{/);
+});
+
+test("latest: web observation line omits empty evidence, matching the native panel", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /const evidencePart = obs\.evidence !== "" \? `\$\{obs\.evidence\}; ` : "";/);
+  assert.match(app, /` — \$\{obs\.description\} \(\$+\{evidencePart\}\$\{confidence\}\)`/);
+  const swift = readFileSync(
+    new URL("../native/Sources/MetaTrio/Views/AssessmentView.swift", import.meta.url),
+    "utf8",
+  );
+  assert.match(swift, /if !observation\.evidence\.isEmpty \{/);
+});
+
 // ---------- observable-evidence note (native parity with the web latest panel) ----------
 // The web Latest panel carries a note under the assessment saying
 // assessments describe observable evidence only, pointing at the

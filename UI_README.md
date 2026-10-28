@@ -118,7 +118,10 @@ ES modules for the node test runner; it declares zero dependencies.)
   received yet." is only for when nothing has been attempted; under
   the assessment both panels carry the note "Assessments describe
   observable evidence only. Each product's limitations notice (above)
-  states what its assessments never claim."), an event history timeline
+  states what its assessments never claim."; an empty summary leaves no
+  blank paragraph and an empty evidence string leaves no bare "(;
+  confidence …)" slot, matching the native panel, which renders each
+  only when it is non-empty — both are valid v2 responses), an event history timeline
   (failures included, styled distinctly; every assessment entry carries
   a "Show assessment" button that displays that past assessment again in
   the Latest assessment panel, labelled as a past result — the web match

@@ -272,9 +272,19 @@ function renderLatest(assessment, earlierNote = null) {
   }
   wrap.appendChild(head);
 
-  const text = document.createElement("p");
-  text.textContent = assessment.assessment.summary;
-  wrap.appendChild(text);
+  // Native parity: the native panel renders the summary paragraph only
+  // when the server reported one, and renders an observation's Evidence
+  // line only when its evidence string is non-empty. The web panel did
+  // neither — an empty summary left a blank paragraph, and an empty
+  // evidence string left a bare "(; confidence …)" slot that reads as
+  // a missing value rather than "no evidence stated". Both are valid
+  // v2 responses (summary and evidence need only be strings), so the
+  // panel omits the empty field instead of inventing a placeholder.
+  if (assessment.assessment.summary !== "") {
+    const text = document.createElement("p");
+    text.textContent = assessment.assessment.summary;
+    wrap.appendChild(text);
+  }
 
   if (assessment.observations.length > 0) {
     const list = document.createElement("ul");
@@ -285,7 +295,8 @@ function renderLatest(assessment, earlierNote = null) {
       category.textContent = obs.category;
       item.appendChild(category);
       const confidence = obs.confidence === null ? "confidence not reported" : `confidence ${obs.confidence.toFixed(2)}`;
-      item.appendChild(document.createTextNode(` — ${obs.description} (${obs.evidence}; ${confidence})`));
+      const evidencePart = obs.evidence !== "" ? `${obs.evidence}; ` : "";
+      item.appendChild(document.createTextNode(` — ${obs.description} (${evidencePart}${confidence})`));
       list.appendChild(item);
     }
     wrap.appendChild(list);
