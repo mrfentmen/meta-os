@@ -73,11 +73,14 @@ final class AppModel: ObservableObject {
                 // picker, so one product's scenario can never label
                 // another product's log entries. The custom label field
                 // is left alone, exactly like the web frontend, which
-                // resets only the dropdown.
+                // resets only the dropdown. Switching does NOT stop a
+                // running analysis: like the web frontend, it applies
+                // to the next sampled frame. That is safe because the
+                // submit path reads selectedProduct at submit time, so
+                // every frame is assessed and logged under the product
+                // selected at that moment, and earlier entries keep the
+                // product they were recorded under.
                 selectedScenario = ""
-                if sampler.isRunning {
-                    stopAnalysis()
-                }
             }
         }
     }

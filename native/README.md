@@ -23,7 +23,10 @@ rebuilding.
 
 - Product switcher (Vigiles / Ignis / Sanitas) with per-product identity,
   categories, evaluation scenarios, input guidance, and a limitations
-  notice that is always on screen.
+  notice that is always on screen. Switching products applies to the
+  next sampled frame (web parity): a running analysis keeps running,
+  each frame is assessed and logged under the product selected at that
+  moment, and earlier entries keep the product they were recorded under.
 - Live camera preview via AVFoundation, with honest states: permission
   denied, no camera, camera error — shown as themselves, never papered over.
 - Still-image input (web parity): an image-only file picker for
