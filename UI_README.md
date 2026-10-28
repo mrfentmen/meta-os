@@ -66,7 +66,11 @@ ES modules for the node test runner; it declares zero dependencies.)
   memory and is revoked by Reset or when another file is chosen. The
   assess button stays disabled until the video's metadata has loaded,
   so a frame can never be requested from a frameless video, and a
-  capture failure is logged honestly with no assessment invented. A
+  capture failure is logged honestly with no assessment invented — and,
+  matching the native app, it also lands in the event history as an
+  "Analysis request failed" entry and sets the backend status to the
+  capture failure itself (no request was made, so it is not a backend
+  message and the last round trip is untouched). A
   Clear button clears just this input (file choice, preview, Assess
   disabled) without stopping the camera or analysis, matching the
   native panel's Clear button; Reset still clears both inputs together

@@ -652,6 +652,30 @@ test("video input: the shipped page has the video panel elements", () => {
   assert.match(html, /id="btn-video-assess"/);
 });
 
+// ---------- video frame capture failure (web parity with the native app) ----------
+// The native app's video-frame path records a capture failure directly
+// in the timeline and the backend status, in the same shapes as a
+// backend failure, because no request was made. The web panel only
+// logged it and showed it in the video panel, so the failure never
+// reached the history a reviewer reads. No browser exists in this
+// suite, so these are static checks on the shipped wiring: the web
+// capture catch sets the backend status to the capture message itself
+// (not a backend message), adds an "Analysis request failed" history
+// entry carrying that message, and still logs it with a null latency
+// (no request, so the last round trip is untouched); the native side
+// carries the same timeline insertion and backend-status error.
+test("video input: a video frame capture failure lands in the web history and backend status, matching the native app", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /const message = `Video frame capture failed: \$\{err\.message\}`;/);
+  assert.match(app, /error: message,\n\s+scenarioLabel: currentScenarioLabel\(\),/);
+  assert.match(app, /setBackendStatus\("error", message\);/);
+  assert.match(app, /addHistoryItem\(\{\n\s+title: "Analysis request failed",\n\s+timestamp,\n\s+body: message,\n\s+kind: "error",/);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/ViewModels/AppModel.swift", import.meta.url), "utf8");
+  assert.match(swift, /let message = "Video frame capture failed: /);
+  assert.match(swift, /backendStatus = \.error\(message\)/);
+  assert.match(swift, /TimelineItem\(product: product, timestamp: timestamp, kind: \.failure\(message\)\)/);
+});
+
 // ---------- history inspection (web parity with the native timeline) ----------
 // The native timeline's assessment rows are selectable and redisplay that
 // assessment; the web history must do the same. No browser exists in this

@@ -579,17 +579,32 @@ els.btnVideoAssess.addEventListener("click", async () => {
   try {
     image = captureVideoFrame(els.videoPreview, els.captureCanvas);
   } catch (err) {
-    // Same honest handling as a failed live capture: logged, shown in
-    // the video panel, no assessment invented.
+    // Native parity: the native app's video-frame path records a
+    // capture failure directly in the timeline and the backend status,
+    // in the same shapes as a backend failure, because no request was
+    // made — it shows the capture failure itself, not a backend
+    // message, and it leaves the last round trip alone (there is no
+    // new measurement). The web panel only logged it and showed it in
+    // the video panel, so the failure never reached the history a
+    // reviewer reads. Same honest handling as a failed live capture
+    // otherwise: logged, no assessment invented.
+    const message = `Video frame capture failed: ${err.message}`;
     log.record({
       requestTimestamp: timestamp,
       product: currentProductId,
       latencyMs: null,
       status: "invalid_response",
-      error: `Video frame capture failed: ${err.message}`,
+      error: message,
       scenarioLabel: currentScenarioLabel(),
     });
     updateLogStats();
+    setBackendStatus("error", message);
+    addHistoryItem({
+      title: "Analysis request failed",
+      timestamp,
+      body: message,
+      kind: "error",
+    });
     els.videoState.textContent = `Could not capture this frame: ${err.message}`;
     videoAssessing = false;
     els.btnVideoAssess.disabled = false;
