@@ -1,0 +1,298 @@
+import SwiftUI
+
+// Main window: product switcher and product identity on top, camera +
+// controls + settings on the left, latest assessment + timeline on the
+// right, and a status bar (backend state, sampler counters, measured
+// latency, session log) along the bottom. Every status shown reflects
+// real state — there are no decorative indicators.
+
+struct ContentView: View {
+    @EnvironmentObject var model: AppModel
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HeaderView(model: model)
+            Divider()
+            HSplitView {
+                leftColumn
+                    .frame(minWidth: 380, idealWidth: 440)
+                rightColumn
+                    .frame(minWidth: 420)
+            }
+            Divider()
+            StatusBar(model: model)
+        }
+        .frame(minWidth: 1020, minHeight: 660)
+    }
+
+    private var leftColumn: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                CameraPanel(model: model, camera: model.camera)
+                SettingsPanel(model: model)
+            }
+            .padding(12)
+        }
+    }
+
+    private var rightColumn: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Latest assessment")
+                .font(.headline)
+            if let assessment = model.displayedAssessment {
+                ScrollView {
+                    AssessmentView(response: assessment)
+                }
+                .frame(maxHeight: 320)
+            } else {
+                Text("No assessment received yet.")
+                    .foregroundStyle(.secondary)
+            }
+            Divider()
+            TimelineView(model: model)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// MARK: - Header: product switcher + identity + limitations
+
+private struct HeaderView: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Picker("Product", selection: $model.selectedProduct) {
+                ForEach(ProductID.allCases) { product in
+                    Text(product.config.displayName).tag(product)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Circle()
+                    .fill(accentColor)
+                    .frame(width: 9, height: 9)
+                Text(model.config.department)
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                Text(model.config.tagline)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+
+            Text(model.config.limitations)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(8)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.secondary.opacity(0.08))
+                .cornerRadius(6)
+        }
+        .padding(12)
+    }
+
+    private var accentColor: Color {
+        switch model.config.accentColorName {
+        case "blue": return .blue
+        case "orange": return .orange
+        case "green": return .green
+        default: return .accentColor
+        }
+    }
+}
+
+// MARK: - Camera panel
+
+private struct CameraPanel: View {
+    @ObservedObject var model: AppModel
+    @ObservedObject var camera: CameraService
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            ZStack(alignment: .topLeading) {
+                CameraPreviewView(session: camera.session)
+                    .frame(minHeight: 240)
+                    .background(Color.black)
+                    .cornerRadius(6)
+                if camera.state == .running {
+                    Label("CAMERA LIVE", systemImage: "record.circle.fill")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.red)
+                        .cornerRadius(4)
+                        .padding(8)
+                }
+            }
+
+            stateText
+
+            if model.analysisRunning {
+                Label("ANALYSIS ACTIVE — sampling one frame every \(model.intervalSeconds) s", systemImage: "dot.radiowaves.left.and.right")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundStyle(.orange)
+            }
+
+            HStack(spacing: 8) {
+                Button("Start Camera") { model.startCamera() }
+                    .disabled(camera.state == .running || camera.state == .requestingPermission)
+                Button("Stop Camera") { model.stopCamera() }
+                    .disabled(camera.state != .running)
+                Button("Start Analysis") { model.startAnalysis() }
+                    .disabled(camera.state != .running || model.analysisRunning)
+                Button("Stop Analysis") { model.stopAnalysis() }
+                    .disabled(!model.analysisRunning)
+                Button("Reset Session") { model.resetSession() }
+            }
+
+            Text(model.config.inputGuidance)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    @ViewBuilder
+    private var stateText: some View {
+        switch camera.state {
+        case .idle:
+            Text("Camera is off.")
+                .foregroundStyle(.secondary)
+        case .requestingPermission:
+            Text("Waiting for camera permission…")
+                .foregroundStyle(.secondary)
+        case .running:
+            Text("Camera is live. No frames are sent anywhere until analysis is started.")
+                .foregroundStyle(.secondary)
+        case .stopped:
+            Text("Camera stopped.")
+                .foregroundStyle(.secondary)
+        case .denied:
+            Text("Camera permission denied. Grant access in System Settings → Privacy & Security → Camera, then start the camera again.")
+                .foregroundStyle(.red)
+                .fixedSize(horizontal: false, vertical: true)
+        case .noCamera:
+            Text("No camera was found on this Mac.")
+                .foregroundStyle(.red)
+        case .failed(let message):
+            Text("Camera error: \(message)")
+                .foregroundStyle(.red)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+}
+
+// MARK: - Settings
+
+private struct SettingsPanel: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        GroupBox("Settings") {
+            VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Assessment endpoint")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField("Assessment endpoint", text: $model.endpoint)
+                        .textFieldStyle(.roundedBorder)
+                        .labelsHidden()
+                }
+
+                Stepper(value: $model.intervalSeconds, in: 1...60) {
+                    Text("Sample one frame every \(model.intervalSeconds) second\(model.intervalSeconds == 1 ? "" : "s")")
+                }
+
+                Text("Analysis uses sampled frames: one frame every \(model.intervalSeconds) second\(model.intervalSeconds == 1 ? "" : "s") is sent to the assessment endpoint. This is not continuous video analysis, and events between samples are not seen by the system.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Scenario label (optional, recorded in the session log for evaluation)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    TextField("Scenario label", text: $model.scenarioLabel)
+                        .textFieldStyle(.roundedBorder)
+                        .labelsHidden()
+                }
+
+                DisclosureGroup("Evaluation scenarios for \(model.config.displayName)") {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(Array(model.config.scenarios.enumerated()), id: \.offset) { index, scenario in
+                            Text("\(index + 1). \(scenario)")
+                                .font(.callout)
+                        }
+                    }
+                    .padding(.top, 4)
+                }
+
+                Text("Categories the server may return: \(model.config.categories.joined(separator: ", ")).")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(4)
+        }
+    }
+}
+
+// MARK: - Status bar
+
+private struct StatusBar: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        HStack(spacing: 12) {
+            statusIndicator
+            Text(model.backendStatus.message)
+                .font(.callout)
+                .lineLimit(2)
+            Spacer()
+            if model.requestInFlight {
+                ProgressView()
+                    .controlSize(.small)
+                Text("Assessment request in flight…")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            if let lastRoundTripMs = model.lastRoundTripMs {
+                Text("Last round trip: \(lastRoundTripMs) ms (client-measured)")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+            }
+            Text("Ticks: \(model.samplerStats.ticks) · Sent: \(model.samplerStats.sent) · Skipped (request in flight): \(model.samplerStats.skipped) · Failed: \(model.samplerStats.failed)")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Text("Session log entries: \(model.logCount)")
+                .font(.callout)
+                .foregroundStyle(.secondary)
+            Button("Export Log") { model.exportLog() }
+            Button("Clear Log") { model.clearLog() }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    private var statusIndicator: some View {
+        Circle()
+            .fill(statusColor)
+            .frame(width: 10, height: 10)
+    }
+
+    private var statusColor: Color {
+        switch model.backendStatus {
+        case .unknown: return .gray
+        case .connected: return .green
+        case .error: return .red
+        }
+    }
+}

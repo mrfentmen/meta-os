@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  OPTIONAL — only needed if you enable App Sandbox for the app in Xcode
+  (Signing & Capabilities). The Scripts/make-app.sh build is NOT sandboxed
+  and does not use this file. Camera access there is governed by the
+  NSCameraUsageDescription in the bundle's Info.plist plus the user's
+  Privacy & Security grant.
+-->
+<plist version="1.0">
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.device.camera</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+</dict>
+</plist>
