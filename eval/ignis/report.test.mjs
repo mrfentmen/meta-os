@@ -29,6 +29,7 @@ import {
   computeConfusableNegatives,
   computeMissPairs,
   computeMisses,
+  computeSlowestScenario,
   renderRunReport,
 } from "./report.mjs";
 
@@ -179,6 +180,38 @@ test("report: headline finding names the stub's weakest category and most-confus
   assert.match(report, /Weakest category: flame-like lighting — 1 of 3 correct \(0\.333\)/);
   assert.match(report, /Most confused pair: flame-like lighting -> visible flame — 2 scenario\(s\) \(IGN-010, IGN-018\)/);
   assert.ok(report.indexOf("## Headline finding") < report.indexOf("## Per-category confusion"));
+});
+
+test("report: headline names the slowest scenario — max latency, missing latency ignored, ties alphabetical", async () => {
+  // Hand-built: the max wins, a record with no latency is ignored
+  // (never a zero), and an exact tie breaks by scenario id.
+  assert.deepEqual(
+    computeSlowestScenario([
+      { scenario_id: "T2", ground_truth_label: "beta", latency_ms: 12.5 },
+      { scenario_id: "T1", ground_truth_label: "alpha" },
+      { scenario_id: "T3", ground_truth_label: "gamma", latency_ms: 12.5 },
+      { scenario_id: "T4", ground_truth_label: "delta", latency_ms: 3.0 },
+    ]),
+    { scenarioId: "T2", truth: "beta", latencyMs: 12.5 },
+  );
+  assert.equal(computeSlowestScenario([{ scenario_id: "T1", ground_truth_label: "alpha" }]), null);
+  // Rendered: a stub run's headline carries a slowest line (wall-clock
+  // values vary run to run, so match the shape, not a number), and a
+  // hand-built run with no latency says none recorded, not zero.
+  const stubRun = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  const stubReport = renderRunReport(stubRun);
+  assert.match(stubReport, /- Slowest scenario: IGN-\d+ \(.+\) — \d+\.\d ms \(harness wall clock\)\./);
+  assert.ok(stubReport.indexOf("## Headline finding") < stubReport.indexOf("Slowest scenario:"));
+  assert.ok(stubReport.indexOf("Slowest scenario:") < stubReport.indexOf("## Per-category rates"));
+  const handRun = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      { scenario_id: "IGN-T1", ground_truth_label: "visible smoke", alert_expected: true, alert_fired: true, alert_correct: true, category_correct: true, actual_category: "visible smoke", error: null },
+    ],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 1, mean: 0, median: 0, max: 0 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  assert.match(renderRunReport(handRun), /- Slowest scenario: none recorded — no record in this run carries a latency measurement\./);
 });
 
 test("report: per-category rate table backs the headline — stub rates, alphabetical order, errors as misses", async () => {

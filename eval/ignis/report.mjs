@@ -35,6 +35,10 @@
 // not confusions. Above the full table, a headline finding names the
 // weakest truth category and the most-confused pair, so the single
 // biggest failure mode is visible without reading the whole matrix.
+// It also names the slowest scenario by harness wall-clock latency,
+// so the run's latency tail is visible without scanning the
+// per-scenario table; a run with no recorded latency says so instead
+// of inventing one.
 // A per-category rate table backs the headline: one correct/total
 // rate per truth category, so the weakest claim is checkable without
 // counting the confusion matrix. The Misses section names each miss
@@ -237,6 +241,28 @@ export function computeCategoryHeadline(records) {
     return a.predicted < b.predicted ? -1 : a.predicted > b.predicted ? 1 : 0;
   });
   return { weakest, mostConfused: pairs.length > 0 ? pairs[0] : null, perCategory: ranked };
+}
+
+// The slowest scenario by harness wall-clock latency: the record
+// carrying the largest numeric latency_ms. Records with no latency
+// are ignored, never treated as zero; when no record carries one
+// there is no slowest scenario to name and the result is null, so
+// the render says so instead of inventing a value. Ties break by
+// scenario id alphabetically, so the result never depends on record
+// order. This is harness wall clock, not a reported model field.
+export function computeSlowestScenario(records) {
+  let slowest = null;
+  for (const r of records) {
+    if (typeof r.latency_ms !== "number") continue;
+    if (
+      slowest === null ||
+      r.latency_ms > slowest.latencyMs ||
+      (r.latency_ms === slowest.latencyMs && r.scenario_id < slowest.scenarioId)
+    ) {
+      slowest = { scenarioId: r.scenario_id, truth: r.ground_truth_label, latencyMs: r.latency_ms };
+    }
+  }
+  return slowest;
 }
 
 // One rate row per truth category present in the records, sorted
@@ -458,6 +484,12 @@ export function renderRunReport(run, baselineRun = null) {
       const p = headline.mostConfused;
       lines.push(`- Most confused pair: ${p.truth} -> ${p.predicted} — ${p.count} scenario(s) (${p.scenarioIds.join(", ")}).`);
     }
+  }
+  const slowest = computeSlowestScenario(run.records);
+  if (slowest === null) {
+    lines.push("- Slowest scenario: none recorded — no record in this run carries a latency measurement.");
+  } else {
+    lines.push(`- Slowest scenario: ${slowest.scenarioId} (${slowest.truth}) — ${fmtLatency(slowest.latencyMs)} ms (harness wall clock).`);
   }
   const rates = computeCategoryRates(run.records);
   lines.push(

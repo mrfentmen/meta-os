@@ -61,7 +61,10 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   names the weakest truth category (lowest category-correct rate)
   and the most-confused truth -> predicted pair; when nothing was
   assessed it says so instead of naming a category, and ERROR counts
-  as a failure, never as a confusion. A per-category rate table right
+  as a failure, never as a confusion. It also names the slowest
+  scenario by harness wall-clock latency, or says none was recorded
+  when no record carries one, so the latency tail needs no scan of
+  the per-scenario table. A per-category rate table right
   below the headline backs the weakest claim: one correct/total rate
   per truth category (unassessed records count as misses, matching
   category-accuracy semantics), with an assessed column so a
