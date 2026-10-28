@@ -210,7 +210,18 @@ function describeCameraError(err) {
   }
 }
 
+// Native parity: the native app's Latest panel says "Waiting for the
+// first assessment…" while a request is outstanding and no assessment
+// has been shown yet, instead of leaving "No assessment received yet."
+// on screen as if nothing were happening. The web panel does the same:
+// submitAssessment shows the waiting line only while no assessment has
+// ever been displayed (a displayed assessment, live or re-shown from
+// history, stays put during later requests), and a failed first request
+// puts "No assessment received yet." back, since it produced nothing.
+let latestAssessmentShown = false;
+
 function renderLatest(assessment, earlierNote = null) {
+  latestAssessmentShown = true;
   const product = PRODUCT_BY_ID[assessment.product] || null;
   const wrap = document.createElement("div");
 
@@ -333,6 +344,9 @@ function addHistoryItem({ title, timestamp, body, kind, assessment = null }) {
 async function submitAssessment(product, timestamp, image) {
   const endpoint = currentEndpoint();
   els.inFlight.hidden = false;
+  if (!latestAssessmentShown) {
+    els.latest.textContent = "Waiting for the first assessment…";
+  }
   const started = performance.now();
   try {
     const assessment = await assessFrame(endpoint, { product, timestamp, image });
@@ -377,6 +391,9 @@ async function submitAssessment(product, timestamp, image) {
       scenarioLabel: currentScenarioLabel(),
     });
     setBackendStatus("error", `Model backend not connected: ${err.message}`);
+    if (!latestAssessmentShown) {
+      els.latest.textContent = "No assessment received yet.";
+    }
     addHistoryItem({
       title: "Analysis request failed",
       timestamp,
@@ -663,6 +680,7 @@ els.btnReset.addEventListener("click", () => {
   setBackendStatus("unknown", "Model backend status unknown. Start analysis to contact the endpoint.");
   els.backendHealth.textContent = "Backend health not checked yet. Checking it contacts the server's health route only; it never sends a frame and never returns an assessment.";
   clearLastRoundTrip();
+  latestAssessmentShown = false;
   els.latest.textContent = "No assessment received yet.";
   els.history.replaceChildren();
   els.historyEmpty.hidden = false;

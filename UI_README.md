@@ -87,7 +87,11 @@ ES modules for the node test runner; it declares zero dependencies.)
 - **Event display**: latest validated assessment (product, assessment
   category, timestamp, observations with category, description, evidence,
   and confidence or "not reported", uncertainty list, human-review flag,
-  and server model/latency or "not reported"), an event history timeline
+  and server model/latency or "not reported"; while a request is
+  outstanding and no assessment has been shown yet, the panel reads
+  "Waiting for the first assessment…", matching the native app's
+  Latest panel, and a failed first request puts "No assessment
+  received yet." back), an event history timeline
   (failures included, styled distinctly; every assessment entry carries
   a "Show assessment" button that displays that past assessment again in
   the Latest assessment panel, labelled as a past result — the web match

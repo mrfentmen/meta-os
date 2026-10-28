@@ -705,6 +705,28 @@ test("camera: web Start says it is waiting for camera permission, matching the n
   assert.match(swift, /Waiting for camera permission…/);
 });
 
+// ---------- waiting for the first assessment (web parity with the native latest panel) ----------
+// The native app's Latest panel says "Waiting for the first
+// assessment…" while a request is outstanding and no assessment has
+// been shown yet; the web panel left "No assessment received yet." on
+// screen through that wait, as if nothing were happening. No browser
+// exists in this suite, so these are static checks on the shipped
+// wiring: submitAssessment shows the waiting line only while no
+// assessment has ever been displayed (renderLatest sets the flag, so a
+// displayed assessment stays put during later requests), a failed
+// first request puts "No assessment received yet." back, Reset clears
+// the flag, and the native panel carries the same waiting line.
+test("latest: web panel waits for the first assessment, matching the native panel", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /let latestAssessmentShown = false;/);
+  assert.match(app, /function renderLatest\(assessment, earlierNote = null\) \{\n\s+latestAssessmentShown = true;/);
+  assert.match(app, /if \(!latestAssessmentShown\) \{\n\s+els\.latest\.textContent = "Waiting for the first assessment…";\n\s+\}/);
+  assert.match(app, /if \(!latestAssessmentShown\) \{\n\s+els\.latest\.textContent = "No assessment received yet\.";\n\s+\}/);
+  assert.match(app, /els\.btnReset\.addEventListener\("click", \(\) => \{[\s\S]*?latestAssessmentShown = false;\n\s+els\.latest\.textContent = "No assessment received yet\.";/);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url), "utf8");
+  assert.match(swift, /Text\("Waiting for the first assessment…"\)/);
+});
+
 // ---------- last round trip (web parity with the native status bar) ----------
 // The native app's status bar shows the client-measured last round trip,
 // so the web Camera panel must show the same line, next to the sampler
