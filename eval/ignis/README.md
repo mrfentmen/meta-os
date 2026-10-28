@@ -25,12 +25,17 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   `formatIgnisReport` / `assessViaModelAdapter` / `computeMetrics`
   (re-exported from the Sanitas harness). No dependencies, no network
   beyond what the server adapter itself gates.
+- `baseline.mjs` — always-no-hazard baseline (`assessBaseline`).
+  Predicts "no hazard visible" for every scene, fires no alert,
+  performs no inspection. Mirrors `../sanitas/baseline.mjs`.
 - `run.mjs` — held-state runner. Prints the report for the wired
   source and says plainly that its numbers describe source
-  availability, not model performance.
+  availability, not model performance. With `--baseline`, runs the
+  same scenario set against the baseline instead.
 - `adapter.test.mjs` — adapter tests: label loading, alert-definition
   consistency, metric math, alert-correctness logic,
-  malformed-input containment, and the held-state refusal.
+  malformed-input containment, the held-state refusal, and the
+  baseline's exact full-set numbers.
 
 ## The contract the adapter reads
 
@@ -69,10 +74,31 @@ When the test phase lands the Spark transport, this same function
 returns real assessments and the same harness scores them — no adapter
 change, no new wiring, and no fabricated assessment in between.
 
+## The baseline, and the bar it sets
+
+`node eval/ignis/run.mjs --baseline` runs the 20 labeled scenarios
+against `assessBaseline` and measures, honestly, what a do-nothing
+source scores. Measured 2026-10-28 (fixture numbers, not model
+performance):
+
+- Sample size: 20 scenarios
+- Confusion (alert): TP=0 FP=0 TN=15 FN=5
+- Precision: n/a (no alert ever predicted; denominator zero)
+- Recall: 0.000, false-positive rate: 0.000, false-negative rate: 1.000
+- Category accuracy: 0.150 (the 3 "no hazard visible" scenarios only)
+- Errors: 0
+
+A future real source must beat this baseline on recall and category
+accuracy to claim value. Beating it on precision alone proves
+nothing, since the baseline never fires a false alarm by
+construction — the same bar the Sanitas set applies to its
+always-clean baseline.
+
 ## Run it
 
 ```sh
 node eval/ignis/run.mjs
+node eval/ignis/run.mjs --baseline
 node eval/ignis/run.mjs --out eval/ignis/last-run.json
 npm test   # runs the whole repo suite, including eval/ignis/adapter.test.mjs
 ```

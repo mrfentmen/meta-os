@@ -17,6 +17,8 @@ import {
   computeMetrics,
   assessViaModelAdapter,
 } from "./adapter.mjs";
+import { assessBaseline } from "./baseline.mjs";
+import { validateAssessment } from "../../js/schema.js";
 import { PRODUCT_BY_ID } from "../../js/products.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -186,6 +188,38 @@ test("held state: the wired source throws the held refusal under an empty enviro
     assessViaModelAdapter(oneScenario(), {}),
     /Live model calls are held/,
   );
+});
+
+// ---------- baseline: always-no-hazard, the bar a real source must beat ----------
+
+test("baseline: answers pass v2 schema validation for every scenario", async () => {
+  for (const scenario of scenarios) {
+    const answer = await assessBaseline(scenario);
+    assert.equal(answer.assessment.category, "no hazard visible");
+    assert.equal(answer.assessment.requires_human_review, false);
+    assert.equal(validateAssessment(answer, "ignis").ok, true);
+  }
+});
+
+test("baseline: full-set metrics are exactly the do-nothing numbers (TP=0 FP=0 TN=15 FN=5, accuracy 3/20)", async () => {
+  const records = await runIgnisEval(scenarios, assessBaseline);
+  assert.equal(records.length, scenarios.length);
+  for (const r of records) {
+    assert.equal(r.alert_fired, false, `${r.scenario_id} must never fire an alert`);
+    assert.equal(r.error, null);
+    assert.equal(r.category_correct, r.ground_truth_label === "no hazard visible");
+  }
+  const metrics = computeMetrics(records);
+  assert.equal(metrics.true_positives, 0);
+  assert.equal(metrics.false_positives, 0);
+  assert.equal(metrics.true_negatives, 15);
+  assert.equal(metrics.false_negatives, 5);
+  assert.equal(metrics.precision, null);
+  assert.equal(metrics.recall, 0);
+  assert.equal(metrics.false_positive_rate, 0);
+  assert.equal(metrics.false_negative_rate, 1);
+  assert.equal(metrics.category_accuracy, 3 / 20);
+  assert.equal(metrics.errors.count, 0);
 });
 
 test("held state: a full held run records the refusal for every scenario and fabricates nothing", async () => {
