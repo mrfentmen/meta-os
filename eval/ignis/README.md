@@ -97,14 +97,22 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   negatives (an expected alert that never fired), each with truth
   and predicted category — distinct from the category Misses, since
   it asks whether an alert fired at all, not which category was
-  predicted; a clean run says none.
+  predicted; a clean run says none. An alert-correct section
+  completes the alert-confusion set with the scenarios behind the
+  summary line's TP/TN counts — true positives (an expected alert
+  fired, even when the category is wrong) and true negatives (no
+  alert expected, none fired); its counts match TP/TN exactly by
+  the same fired-versus-expected definition, so an unassessed
+  non-alert record reads as a true negative with ERROR; a run with
+  no alert-correct scenario says none.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and
   confusable-negative breakdowns, misses detail and miss-pair counts,
   error-message breakdown grouping and rendering, latency
   distribution, latency-outlier flagging, alert-error FP/FN
-  splitting and rendering, run-JSON validation, trio protection, and the CLI end to end.
+  splitting and rendering, alert-correct TP/TN splitting and
+  rendering, run-JSON validation, trio protection, and the CLI end to end.
 - `adapter.test.mjs` — adapter tests: label loading, alert-definition
   consistency, metric math, alert-correctness logic,
   malformed-input containment, the held-state refusal, and the

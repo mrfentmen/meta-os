@@ -543,6 +543,38 @@ export function computeAlertErrors(records) {
   return { falsePositives, falseNegatives };
 }
 
+// Alert-level correct outcomes: the scenarios behind the summary
+// line's TP/TN counts, completing the set computeAlertErrors starts.
+// A true positive fired an expected alert; a true negative fired no
+// alert where none was expected. The split uses alert_expected /
+// alert_fired only, matching the metrics definition, so the two list
+// lengths always equal the summary line's TP and TN counts. That
+// also fixes the edge cases honestly: a right-alert, wrong-category
+// record is a true positive (an alert success, a category miss),
+// and an unassessed record on a non-alert scenario is a true
+// negative — no alert fired, none expected — even though no
+// assessment was produced, so it reads as ERROR. Each list sorts by
+// scenario id, so the section never depends on record order.
+// Records whose alert outcome missed expectation appear in neither
+// list; they are the alert errors.
+export function computeAlertCorrect(records) {
+  const byId = (a, b) => (a.scenarioId < b.scenarioId ? -1 : a.scenarioId > b.scenarioId ? 1 : 0);
+  const entry = (r) => ({
+    scenarioId: r.scenario_id,
+    truth: r.ground_truth_label,
+    predicted: r.actual_category === null ? ERROR_PREDICTED : r.actual_category,
+  });
+  const truePositives = records
+    .filter((r) => r.alert_expected && r.alert_fired)
+    .map(entry)
+    .sort(byId);
+  const trueNegatives = records
+    .filter((r) => !r.alert_expected && !r.alert_fired)
+    .map(entry)
+    .sort(byId);
+  return { truePositives, trueNegatives };
+}
+
 export function assertWritableReportPath(outPath) {
   if (PROTECTED_REPORT_NAMES.includes(basename(outPath))) {
     throw new Error(
@@ -824,6 +856,39 @@ export function renderRunReport(run, baselineRun = null) {
     lines.push(
       renderList("False positives", alertErrors.falsePositives),
       renderList("False negatives", alertErrors.falseNegatives),
+    );
+  }
+  const alertCorrect = computeAlertCorrect(run.records);
+  lines.push(
+    "",
+    "## Alert correct",
+    "",
+    "The scenarios behind the summary line's true-positive and true-negative counts, " +
+      "completing the alert-confusion set the Alert errors section starts. This is the " +
+      "same alert-fired-versus-expected question, not a category claim: a true positive " +
+      "may still be a category miss (right alert, wrong category). Counts here match the " +
+      "summary line's TP and TN exactly, by the same definition — so an unassessed record " +
+      "on a non-alert scenario appears as a true negative (no alert fired, none expected) " +
+      "even though no assessment was produced, and reads as ERROR.",
+    "",
+  );
+  if (alertCorrect.truePositives.length === 0 && alertCorrect.trueNegatives.length === 0) {
+    lines.push("None: no scenario's alert outcome matched its expectation.");
+  } else {
+    const renderList = (label, list) =>
+      list.length === 0
+        ? `- ${label} (0): none.`
+        : [
+            `- ${label} (${list.length}):`,
+            ...list.map(
+              (e) =>
+                `  - ${e.scenarioId}: ${e.truth} -> ${e.predicted}` +
+                (e.predicted === ERROR_PREDICTED ? " (no assessment)" : ""),
+            ),
+          ].join("\n");
+    lines.push(
+      renderList("True positives", alertCorrect.truePositives),
+      renderList("True negatives", alertCorrect.trueNegatives),
     );
   }
   if (baseline !== null) {
