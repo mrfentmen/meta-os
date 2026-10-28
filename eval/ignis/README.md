@@ -70,7 +70,10 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   A miss-pair counts table right after it aggregates those misses by
   truth -> predicted pair, most frequent first, so the dominant swap
   is visible without counting the Misses list; ERROR rows there are
-  failures, not confusions.
+  failures, not confusions. The per-scenario table carries each
+  record's harness wall-clock latency (n/a when the record carries
+  none), so a slow scenario is visible without the summary
+  statistics.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and

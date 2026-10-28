@@ -335,6 +335,30 @@ test("report: the trio filenames are protected, a live filename is writable", ()
   assert.doesNotThrow(() => assertWritableReportPath(join("/tmp", "live-run-report.md")));
 });
 
+test("report: per-scenario records carry a latency column — measured values, n/a when the record has none", async () => {
+  const run = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  assert.ok(run.records.every((r) => typeof r.latency_ms === "number"));
+  const report = renderRunReport(run);
+  assert.match(report, /\| Scenario \| Truth \| Actual \| Alert correct \| Category correct \| Latency \(ms\) \| Error \|/);
+  // Harness wall clock per scenario: a number with one decimal, never a fabricated zero.
+  assert.match(report, /\| IGN-001 \| visible smoke \| visible smoke \| true \| true \| \d+\.\d \|/);
+  // Hand-built: a record carrying no latency renders n/a, and a record
+  // carrying a non-number latency is rejected, not rendered.
+  const handRun = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      { scenario_id: "IGN-T1", ground_truth_label: "visible smoke", alert_expected: true, alert_fired: true, alert_correct: true, category_correct: true, actual_category: "visible smoke", error: null },
+    ],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 1, mean: 0, median: 0, max: 0 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  assert.match(renderRunReport(handRun), /\| IGN-T1 \| visible smoke \| visible smoke \| true \| true \| n\/a \|/);
+  assert.throws(
+    () => renderRunReport({ ...handRun, records: [{ ...handRun.records[0], latency_ms: "fast" }] }),
+    /latency_ms: present but not a number/,
+  );
+});
+
 test("report: CLI renders a run JSON to a file and refuses a trio target", () => {
   const dir = mkdtempSync(join(tmpdir(), "ignis-report-"));
   const runPath = join(dir, "run.json");

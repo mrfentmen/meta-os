@@ -43,7 +43,10 @@
 // ERROR, matching the confusion table's convention. A miss-pair
 // counts table right after the Misses section aggregates those same
 // misses by truth -> predicted pair, so the dominant swap is visible
-// without counting the Misses list.
+// without counting the Misses list. The per-scenario table carries
+// each record's harness wall-clock latency, so a slow scenario is
+// visible without reading the summary statistics — and a record
+// that carries no latency shows n/a rather than a fabricated zero.
 // A run's numbers are only ever compared against a baseline run the
 // caller supplies; the bar is recall AND category accuracy, never
 // precision alone (the baseline never fires a false alarm by
@@ -125,6 +128,9 @@ export function validateRunJson(run) {
       }
       if (!(typeof r.error === "string" || r.error === null)) {
         errors.push(`${prefix}.error: neither a string nor null`);
+      }
+      if ("latency_ms" in r && typeof r.latency_ms !== "number") {
+        errors.push(`${prefix}.latency_ms: present but not a number`);
       }
     });
   }
@@ -457,13 +463,16 @@ export function renderRunReport(run, baselineRun = null) {
     "",
     "## Per-scenario records",
     "",
-    "| Scenario | Truth | Actual | Alert correct | Category correct | Error |",
-    "| --- | --- | --- | --- | --- | --- |",
+    "| Scenario | Truth | Actual | Alert correct | Category correct | Latency (ms) | Error |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
   );
   for (const r of run.records) {
+    // Harness wall clock per scenario, never a reported model field;
+    // a record that carries no latency renders n/a, not zero.
+    const latency = typeof r.latency_ms === "number" ? fmtLatency(r.latency_ms) : "n/a";
     lines.push(
       `| ${r.scenario_id} | ${r.ground_truth_label} | ${r.actual_category === null ? "ERROR" : r.actual_category} | ` +
-        `${r.alert_correct} | ${r.category_correct} | ${r.error === null ? "" : r.error} |`,
+        `${r.alert_correct} | ${r.category_correct} | ${latency} | ${r.error === null ? "" : r.error} |`,
     );
   }
   const misses = computeMisses(run.records);
