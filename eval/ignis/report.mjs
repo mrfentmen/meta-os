@@ -574,6 +574,50 @@ export function computeLatencyByAlertCorrectness(records) {
   });
 }
 
+// Latency by alert expectation: one row per alert-expectation
+// group, in fixed order alert expected, alert not expected, with
+// the count of recorded harness wall-clock latencies, their mean,
+// their median (averaged-middle, matching the distribution's
+// median), and their max. Alert expected collapses the
+// alert-outcome split the other way from alert correctness: a
+// record is alert expected when an alert was expected at all (true
+// positives plus false negatives), and alert not expected otherwise
+// (true negatives plus false positives), using the validated
+// alert_expected field, so the two scenario totals always sum to
+// the sample size. Records with no latency take no part in a
+// group's numbers but still count toward its scenario total, so a
+// group whose scenarios carry no latency reads as recorded 0 with
+// n/a statistics — never as a fabricated zero.
+export function computeLatencyByAlertExpectation(records) {
+  const groups = {
+    "alert expected": { outcome: "alert expected", total: 0, latencies: [] },
+    "alert not expected": { outcome: "alert not expected", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    const outcome = r.alert_expected ? "alert expected" : "alert not expected";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["alert expected", "alert not expected"].map((outcome) => {
+    const e = groups[outcome];
+    const sorted = e.latencies.sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+    }
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return {
+      outcome,
+      total: e.total,
+      recorded: sorted.length,
+      meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+      medianMs: median,
+      maxMs: sorted[sorted.length - 1],
+    };
+  });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1066,6 +1110,28 @@ export function renderRunReport(run, baselineRun = null) {
     "| --- | --- | --- | --- | --- | --- |",
   );
   for (const row of latencyByAlertCorrectness) {
+    lines.push(
+      `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
+  }
+  const latencyByAlertExpectation = computeLatencyByAlertExpectation(run.records);
+  lines.push(
+    "",
+    "## Latency by alert expectation",
+    "",
+    "Harness wall-clock latencies split by whether an alert was expected at all — alert " +
+      "expected (an expected alert fired, or an expected alert never fired: true positives " +
+      "plus false negatives) versus alert not expected (no alert fired where none was " +
+      "expected, or an alert fired where none was expected: true negatives plus false " +
+      "positives) — so whether alert-bearing scenarios run slower than non-alert ones is " +
+      "visible without adding the four alert-outcome rows above. Mean and median are over " +
+      "the recorded latencies only; both rows always render, so the scenario totals sum " +
+      "to the sample size, and a group with no recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Alert expectation | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByAlertExpectation) {
     lines.push(
       `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
     );
