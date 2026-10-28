@@ -707,6 +707,50 @@ export function computeLatencyByAssessed(records) {
   });
 }
 
+// Latency by category correctness: one row per category-correctness
+// group, in fixed order category correct, category incorrect, with
+// the count of recorded harness wall-clock latencies, their mean,
+// their median (averaged-middle, matching the distribution's
+// median), and their max. Category correctness collapses the
+// outcome split the other way from assessed: a record is category
+// correct when the predicted category matched the ground truth
+// exactly, and category incorrect otherwise (a miss plus every
+// unassessed record), using the validated category_correct field,
+// so the two scenario totals always sum to the sample size.
+// Records with no latency take no part in a group's numbers but
+// still count toward its scenario total, so a group whose scenarios
+// carry no latency reads as recorded 0 with n/a statistics —
+// never as a fabricated zero.
+export function computeLatencyByCategoryCorrectness(records) {
+  const groups = {
+    "category correct": { outcome: "category correct", total: 0, latencies: [] },
+    "category incorrect": { outcome: "category incorrect", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    const outcome = r.category_correct ? "category correct" : "category incorrect";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["category correct", "category incorrect"].map((outcome) => {
+    const e = groups[outcome];
+    const sorted = e.latencies.sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+    }
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return {
+      outcome,
+      total: e.total,
+      recorded: sorted.length,
+      meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+      medianMs: median,
+      maxMs: sorted[sorted.length - 1],
+    };
+  });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1264,6 +1308,27 @@ export function renderRunReport(run, baselineRun = null) {
     "| --- | --- | --- | --- | --- | --- |",
   );
   for (const row of latencyByAssessed) {
+    lines.push(
+      `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
+  }
+  const latencyByCategoryCorrectness = computeLatencyByCategoryCorrectness(run.records);
+  lines.push(
+    "",
+    "## Latency by category correctness",
+    "",
+    "Harness wall-clock latencies split by whether the predicted category matched the " +
+      "ground truth — category correct (the exact match) versus category incorrect (a " +
+      "miss plus every unassessed record) — so whether scenarios that get the category " +
+      "wrong run slower than ones that get it right is visible without adding the three " +
+      "outcome rows above. Mean and median are over the recorded latencies only; both " +
+      "rows always render, so the scenario totals sum to the sample size, and a group " +
+      "with no recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Category correctness | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByCategoryCorrectness) {
     lines.push(
       `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
     );
