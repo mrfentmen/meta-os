@@ -889,6 +889,51 @@ export function computeLatencyByErrorStatus(records) {
   });
 }
 
+// Latency by error message: one row per distinct error message,
+// in the same grouping the error-message breakdown uses — most
+// frequent first, ties alphabetical — with the count of recorded
+// harness wall-clock latencies, their mean, their median
+// (averaged-middle, matching the distribution's median), and
+// their max. Only records carrying an error message appear, so
+// the scenario totals sum to the error count, not the sample
+// size — the no-error records are already covered by the
+// latency-by-error-status section this one refines. Records with
+// no latency take no part in a message's numbers but still count
+// toward its scenario total, so a message whose scenarios carry
+// no latency reads as recorded 0 with n/a statistics — never as
+// a fabricated zero.
+export function computeLatencyByErrorMessage(records) {
+  const byMessage = {};
+  for (const r of records) {
+    if (r.error === null) continue;
+    byMessage[r.error] ??= { message: r.error, total: 0, latencies: [] };
+    const entry = byMessage[r.error];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return Object.values(byMessage)
+    .map((e) => {
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { message: e.message, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        message: e.message,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    })
+    .sort((a, b) => {
+      if (a.total !== b.total) return b.total - a.total;
+      return a.message < b.message ? -1 : a.message > b.message ? 1 : 0;
+    });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1532,6 +1577,34 @@ export function renderRunReport(run, baselineRun = null) {
     lines.push(
       `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
     );
+  }
+  const latencyByErrorMessage = computeLatencyByErrorMessage(run.records);
+  lines.push(
+    "",
+    "## Latency by error message",
+    "",
+    "Harness wall-clock latencies for the errored records only, split by the distinct error " +
+      "message each record carries — the per-message refinement of latency by error status, " +
+      "so whether one failure mode runs slower than another is visible without scanning the " +
+      "per-scenario table. Rows sort most frequent first, ties alphabetical, matching the " +
+      "error-message breakdown's order; the scenario totals sum to the error count, not the " +
+      "sample size, since records with no error message appear in neither row. Mean and " +
+      "median are over the recorded latencies only; a message with no recorded latency " +
+      "shows n/a, never a fabricated zero.",
+    "",
+  );
+  if (latencyByErrorMessage.length === 0) {
+    lines.push("None: no record carried an error message.");
+  } else {
+    lines.push(
+      "| Error message | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByErrorMessage) {
+      lines.push(
+        `| ${row.message} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
   }
   const misses = computeMisses(run.records);
   lines.push("", `## Misses (${misses.length})`, "");

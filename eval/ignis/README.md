@@ -154,6 +154,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   assessment) versus no error — so whether failing scenarios run slower than clean ones is
   visible without scanning the per-scenario table; both rows always render, so the totals sum
   to the sample size, and a group with no recorded latency shows n/a, never a fabricated zero.
+  A latency-by-error-message section right after it refines the errored row per distinct error
+  message — most frequent first, ties alphabetical, matching the error-message breakdown's order —
+  so whether one failure mode runs slower than another is visible without scanning the
+  per-scenario table; its scenario totals sum to the error count, not the sample size, since
+  records with no error message appear in neither row, and a message with no recorded latency
+  shows n/a, never a fabricated zero; a run with no errored records says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false

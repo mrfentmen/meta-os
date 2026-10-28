@@ -41,6 +41,7 @@ import {
   computeLatencyByMissStatus,
   computeLatencyByPredictedCategory,
   computeLatencyByErrorStatus,
+  computeLatencyByErrorMessage,
   computeLatencyByOutcome,
   computeLatencyDistribution,
   computeLatencyOutliers,
@@ -1334,6 +1335,82 @@ test("report: latency by error status breaks recorded latencies down by error pr
   assert.ok(rendered.indexOf("## Latency by error status") < rendered.indexOf("## Misses"));
   assert.match(rendered, /\| errored \| 3 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
   assert.match(rendered, /\| no error \| 1 \| 1 \| 100\.0 \| 100\.0 \| 100\.0 \|/);
+});
+
+test("report: latency by error message splits errored latencies per message", () => {
+  const rec = (id, truth, actual, expected, fired, error, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: error === undefined ? null : error,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // "held": 10, 30 -> mean/median 20, max 30, recorded 2 of 3
+  // (one held record carries no latency). "boom": 40 -> 40/40/40.
+  // Most frequent first, so held sorts before boom; records with
+  // no error message appear in neither row, so the totals sum to
+  // the error count (4), not the sample size (5).
+  assert.deepEqual(
+    computeLatencyByErrorMessage([
+      rec("IGN-T2", "visible smoke", "visible flame", true, true, "boom", 40),
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, "held", 10),
+      rec("IGN-T3", "steam or fog", null, false, false, "held"),
+      rec("IGN-T4", "visible flame", "visible flame", true, true, "held", 30),
+      rec("IGN-T5", "visible flame", "visible flame", true, true, null, 100),
+    ]),
+    [
+      { message: "held", total: 3, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { message: "boom", total: 1, recorded: 1, meanMs: 40, medianMs: 40, maxMs: 40 },
+    ],
+  );
+  // Ties sort alphabetically; a message with no recorded latency
+  // shows null statistics, never zero; no errored records at all
+  // yields no rows.
+  assert.deepEqual(
+    computeLatencyByErrorMessage([
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, "zeta"),
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, "alpha", 5),
+    ]),
+    [
+      { message: "alpha", total: 1, recorded: 1, meanMs: 5, medianMs: 5, maxMs: 5 },
+      { message: "zeta", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+    ],
+  );
+  assert.deepEqual(
+    computeLatencyByErrorMessage([rec("IGN-T1", "visible smoke", "visible smoke", true, true, null, 10)]),
+    [],
+  );
+  // Rendered: section after Latency by error status, before
+  // Misses, rows most frequent first, n/a for the unmeasured
+  // message; a run with no errored records says none.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, "held", 10),
+      rec("IGN-T2", "visible smoke", "visible flame", true, true, "held", 30),
+      rec("IGN-T3", "steam or fog", null, false, false, "held"),
+      rec("IGN-T4", "visible flame", "visible flame", true, true, "boom", 40),
+      rec("IGN-T5", "visible flame", "visible flame", true, true, null, 100),
+    ],
+    metrics: { sample_size: 5, true_positives: 1, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0.4, latency_ms: { n: 4, mean: 45, median: 35, max: 100 }, errors: { count: 4, scenario_ids: ["IGN-T1", "IGN-T2", "IGN-T3", "IGN-T4"] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by error message/);
+  assert.ok(rendered.indexOf("## Latency by error message") > rendered.indexOf("## Latency by error status"));
+  assert.ok(rendered.indexOf("## Latency by error message") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| held \| 3 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| boom \| 1 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
+  const cleanRun = {
+    ...run,
+    records: [rec("IGN-T5", "visible flame", "visible flame", true, true, null, 100)],
+    metrics: { ...run.metrics, sample_size: 1, errors: { count: 0, scenario_ids: [] } },
+  };
+  assert.match(renderRunReport(cleanRun), /None: no record carried an error message\./);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {
