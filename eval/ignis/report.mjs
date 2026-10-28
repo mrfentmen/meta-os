@@ -78,7 +78,12 @@
 // the distribution names the scenarios the per-scenario table flags
 // (latency more than twice the median recorded latency), with each
 // outlier's latency, the run median, and the threshold, so the tail
-// needs no scan of that table either.
+// needs no scan of that table either. A latency-by-category section
+// right after the outliers breaks the recorded latencies down by
+// ground-truth category — count, mean, median, max — so a slow
+// category is visible without scanning the per-scenario table; a
+// category with no recorded latency shows n/a, never a fabricated
+// zero.
 // An alert-errors section names the scenarios behind the summary
 // line's FP/FN counts: false positives (an alert fired where none
 // was expected) and false negatives (an expected alert that never
@@ -367,6 +372,45 @@ export function computeLatencyDistribution(records) {
     p90Ms: quantile(0.9),
     maxMs: latencies[latencies.length - 1],
   };
+}
+
+// Latency by ground-truth category: one row per truth category
+// present in the records, sorted alphabetically, with the count of
+// recorded harness wall-clock latencies, their mean, their median
+// (averaged-middle, matching the distribution's median), and their
+// max. Records with no latency take no part in a category's numbers
+// but still count toward its scenario total, so a category whose
+// scenarios carry no latency reads as recorded 0 with n/a
+// statistics — never as a fabricated zero. A category with no
+// recorded latency has null mean/median/max, so the render says n/a
+// instead of inventing a value.
+export function computeLatencyByCategory(records) {
+  const byTruth = {};
+  for (const r of records) {
+    byTruth[r.ground_truth_label] ??= { truth: r.ground_truth_label, total: 0, latencies: [] };
+    const entry = byTruth[r.ground_truth_label];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return Object.values(byTruth)
+    .map((e) => {
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { truth: e.truth, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median =
+        sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        truth: e.truth,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    })
+    .sort((a, b) => (a.truth < b.truth ? -1 : a.truth > b.truth ? 1 : 0));
 }
 
 export function computeCategoryRates(records) {
@@ -785,6 +829,23 @@ export function renderRunReport(run, baselineRun = null) {
     for (const o of latencyOutliers) {
       lines.push(`| ${o.scenarioId} | ${o.truth} | ${fmtLatency(o.latencyMs)} | ${fmtLatency(o.medianMs)} | ${fmtLatency(o.thresholdMs)} |`);
     }
+  }
+  const latencyByCategory = computeLatencyByCategory(run.records);
+  lines.push(
+    "",
+    "## Latency by category",
+    "",
+    "Harness wall-clock latencies broken down by ground-truth category, so a slow category is " +
+      "visible without scanning the per-scenario table. Mean and median are over the recorded " +
+      "latencies only; a category with no recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Truth | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByCategory) {
+    lines.push(
+      `| ${row.truth} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
   }
   const misses = computeMisses(run.records);
   lines.push("", `## Misses (${misses.length})`, "");

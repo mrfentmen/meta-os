@@ -31,6 +31,7 @@ import {
   computeAlertCorrect,
   computeAlertErrors,
   computeErrorBreakdown,
+  computeLatencyByCategory,
   computeLatencyDistribution,
   computeLatencyOutliers,
   computeMissPairs,
@@ -669,6 +670,58 @@ test("report: latency outliers section names the flagged scenarios, with median 
     metrics: { ...base.metrics, latency_ms: { n: 0, mean: null, median: null, max: null } },
   };
   assert.match(renderRunReport(noLatency), /None recorded: no record in this run carries a latency measurement, so no outlier can be named\./);
+});
+
+test("report: latency by category breaks recorded latencies down by truth category", () => {
+  const rec = (id, truth, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    alert_expected: false,
+    alert_fired: false,
+    alert_correct: true,
+    category_correct: true,
+    actual_category: truth,
+    error: null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Smoke: 10, 30 -> mean 20, median 20, max 30, recorded 2 of 2.
+  // Steam: 100 + one unmeasured -> mean/median/max 100, recorded 1 of 2.
+  // No hazard: nothing recorded -> null statistics, never zero.
+  assert.deepEqual(
+    computeLatencyByCategory([
+      rec("IGN-T2", "visible smoke", 30),
+      rec("IGN-T1", "visible smoke", 10),
+      rec("IGN-T3", "steam or fog", 100),
+      rec("IGN-T4", "steam or fog"),
+      rec("IGN-T5", "no hazard visible"),
+    ]),
+    [
+      { truth: "no hazard visible", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+      { truth: "steam or fog", total: 2, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+      { truth: "visible smoke", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+    ],
+  );
+  // Rendered: section after Latency outliers, before Misses, rows
+  // sorted alphabetically by truth, n/a for the unmeasured category.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", 10),
+      rec("IGN-T2", "visible smoke", 30),
+      rec("IGN-T3", "steam or fog", 100),
+      rec("IGN-T4", "steam or fog"),
+      rec("IGN-T5", "no hazard visible"),
+    ],
+    metrics: { sample_size: 5, true_positives: 0, false_positives: 0, true_negatives: 5, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 3, mean: 46.666, median: 30, max: 100 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by category/);
+  assert.ok(rendered.indexOf("## Latency by category") > rendered.indexOf("## Latency outliers"));
+  assert.ok(rendered.indexOf("## Latency by category") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| visible smoke \| 2 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| steam or fog \| 2 \| 1 \| 100\.0 \| 100\.0 \| 100\.0 \|/);
+  assert.match(rendered, /\| no hazard visible \| 1 \| 0 \| n\/a \| n\/a \| n\/a \|/);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {
