@@ -754,17 +754,20 @@ test("camera: web Start says it is waiting for camera permission, matching the n
 // wiring: submitAssessment shows the waiting line only while no
 // assessment has ever been displayed (renderLatest sets the flag, so a
 // displayed assessment stays put during later requests), a failed
-// first request puts "No assessment received yet." back, Reset clears
+// first request shows the real backend error (the native panel shows
+// its backend-status error the same way, and reserves "No assessment
+// received yet." for when nothing has been attempted), Reset clears
 // the flag, and the native panel carries the same waiting line.
 test("latest: web panel waits for the first assessment, matching the native panel", () => {
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
   assert.match(app, /let latestAssessmentShown = false;/);
   assert.match(app, /function renderLatest\(assessment, earlierNote = null\) \{\n\s+latestAssessmentShown = true;/);
   assert.match(app, /if \(!latestAssessmentShown\) \{\n\s+els\.latest\.textContent = "Waiting for the first assessment…";\n\s+\}/);
-  assert.match(app, /if \(!latestAssessmentShown\) \{\n\s+els\.latest\.textContent = "No assessment received yet\.";\n\s+\}/);
+  assert.match(app, /if \(!latestAssessmentShown\) \{\n\s+els\.latest\.textContent = `Model backend not connected: \$\{err\.message\}`;\n\s+\}/);
   assert.match(app, /els\.btnReset\.addEventListener\("click", \(\) => \{[\s\S]*?latestAssessmentShown = false;\n\s+els\.latest\.textContent = "No assessment received yet\.";/);
   const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url), "utf8");
   assert.match(swift, /Text\("Waiting for the first assessment…"\)/);
+  assert.match(swift, /\} else if case \.error\(let message\) = model\.backendStatus \{\n\s+Text\(message\)/);
 });
 
 // ---------- last round trip (web parity with the native status bar) ----------

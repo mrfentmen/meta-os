@@ -99,8 +99,9 @@ ES modules for the node test runner; it declares zero dependencies.)
   and server model/latency or "not reported"; while a request is
   outstanding and no assessment has been shown yet, the panel reads
   "Waiting for the first assessment…", matching the native app's
-  Latest panel, and a failed first request puts "No assessment
-  received yet." back), an event history timeline
+  Latest panel, and a failed first request shows the real backend
+  error in the panel, matching the native panel — "No assessment
+  received yet." is only for when nothing has been attempted), an event history timeline
   (failures included, styled distinctly; every assessment entry carries
   a "Show assessment" button that displays that past assessment again in
   the Latest assessment panel, labelled as a past result — the web match

@@ -221,7 +221,9 @@ function describeCameraError(err) {
 // submitAssessment shows the waiting line only while no assessment has
 // ever been displayed (a displayed assessment, live or re-shown from
 // history, stays put during later requests), and a failed first request
-// puts "No assessment received yet." back, since it produced nothing.
+// shows the real backend error, exactly like the native panel —
+// "No assessment received yet." is only for when nothing has been
+// attempted at all, so a failure is never mistaken for "not tried yet."
 let latestAssessmentShown = false;
 
 function renderLatest(assessment, earlierNote = null) {
@@ -396,7 +398,7 @@ async function submitAssessment(product, timestamp, image) {
     });
     setBackendStatus("error", `Model backend not connected: ${err.message}`);
     if (!latestAssessmentShown) {
-      els.latest.textContent = "No assessment received yet.";
+      els.latest.textContent = `Model backend not connected: ${err.message}`;
     }
     addHistoryItem({
       title: "Analysis request failed",
