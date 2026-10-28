@@ -142,6 +142,19 @@ carrying their assessment). Current result:
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.
 
+Render check (headless, 2026-10-28): the page was served over local HTTP
+and rendered in headless Chromium at 1280 px and at 390 px widths.
+Desktop shows the two-column layout with the Vigiles badge, the product
+switcher, categories, input guidance, and the limitations notice on
+screen; the phone width shows a single column with the product switcher
+stacked and no sideways overflow. The rendered DOM carries the Vigiles
+scenario options in the scenario dropdown, which only the page's JS
+builds (the shipped HTML leaves that select empty), so the modules
+executed, not just the static markup. This covers layout and script
+execution only: a live camera capture, a real phone browser, and a real
+frame round trip still need the real-hardware pass in
+`docs/HARDWARE_VERIFICATION.md`.
+
 ## The /api/assess contract (v2, shared with the native app)
 
 Default endpoint: same-origin `/api/assess` (configurable in the UI).
