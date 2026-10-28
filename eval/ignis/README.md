@@ -42,6 +42,8 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   consistency, metric math, alert-correctness logic,
   malformed-input containment, the held-state refusal, and the
   baseline's exact full-set numbers.
+- `fixture-run-report.md` — the measured output of the last fixture
+  run (`run.mjs --stub`), labeled as a fixture run.
 
 ## The contract the adapter reads
 
