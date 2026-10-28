@@ -37,7 +37,24 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   availability, not model performance. With `--baseline`, runs the
   same scenario set against the baseline instead. With `--stub`,
   runs the same scenario set against the fixture stub, then the
-  baseline, and prints the stub-vs-baseline comparison.
+  baseline, and prints the stub-vs-baseline comparison. With
+  `--out <path>`, writes the run JSON; its source/generated labels
+  are evidence-based (all-held refusal → held-state, any returned
+  assessment → live-model), so a future live run is never mislabeled
+  as held by a stale runner string.
+- `report.mjs` — run-report renderer. Turns a `run.mjs --out` JSON
+  file into the markdown format of the report trio, classifying the
+  run by record evidence (all-held refusal → held-state, named
+  fixture source → fixture, any returned assessment → live-model),
+  never by its labels alone — so a live run renders as live even if
+  it was produced by an older run.mjs. `--baseline <baseline-run.json>`
+  adds the recall-and-category-accuracy verdict against the baseline.
+  `--out` to a trio filename is refused: a live run belongs in its
+  own `live-run-report.md`, never as an edit to the trio.
+- `report.test.mjs` — renderer tests: fixture/held/live-shaped
+  classification (including assessments beating a stale held label),
+  baseline comparison verdicts, run-JSON validation, trio protection,
+  and the CLI end to end.
 - `adapter.test.mjs` — adapter tests: label loading, alert-definition
   consistency, metric math, alert-correctness logic,
   malformed-input containment, the held-state refusal, and the
@@ -160,8 +177,28 @@ node eval/ignis/run.mjs
 node eval/ignis/run.mjs --baseline
 node eval/ignis/run.mjs --stub
 node eval/ignis/run.mjs --out eval/ignis/last-run.json
-npm test   # runs the whole repo suite, including eval/ignis/adapter.test.mjs
+npm test   # runs the whole repo suite, including eval/ignis/adapter.test.mjs and report.test.mjs
 ```
+
+## Reporting a run (the test-phase path, built now, no live call)
+
+When Del green-lights the test phase, a live run is reported in two
+steps, with no new wiring and no edit to the trio:
+
+```sh
+node eval/ignis/run.mjs --out eval/ignis/live-run.json
+node eval/ignis/run.mjs --baseline --out eval/ignis/baseline-run.json
+node eval/ignis/report.mjs eval/ignis/live-run.json \
+  --baseline eval/ignis/baseline-run.json \
+  --out eval/ignis/live-run-report.md
+```
+
+The renderer classifies by record evidence and refuses a trio
+filename as `--out`, so the live numbers land in their own file
+with the baseline verdict (recall and category accuracy, never
+precision alone) attached. Until the test phase, the same command
+on a held `--out` JSON renders a held-state report, not a live one
+— the classification, not the filename, decides what a run is.
 
 ## What is unproven (do not claim otherwise)
 

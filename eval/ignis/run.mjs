@@ -41,13 +41,29 @@ const useBaseline = process.argv.includes("--baseline");
 const useStub = process.argv.includes("--stub");
 
 const assess = useBaseline ? assessBaseline : useStub ? assessStub : assessViaModelAdapter;
-const source = useBaseline
+let source = useBaseline
   ? "baseline always-no-hazard (fixture)"
   : useStub
     ? "stub (fixture, not a model)"
     : "server model adapter (held while Spark stays off)";
 const records = await runIgnisEval(scenarios, assess);
 const metrics = computeMetrics(records);
+// Evidence-based labels for the default (wired-source) run: a stale
+// "held" label must never describe a run that returned assessments.
+// When the test phase lands the Spark transport, this same runner
+// labels a live run "live" and its --out JSON "live-model run"
+// with no further change; until then the held label stays exact.
+const allHeld =
+  records.length > 0 &&
+  records.every((r) => typeof r.error === "string" && r.error.includes("Live model calls are held"));
+const anyAssessment = records.some((r) => r.actual_category !== null);
+if (!useBaseline && !useStub) {
+  source = allHeld
+    ? "server model adapter (held while Spark stays off)"
+    : anyAssessment
+      ? "server model adapter (live)"
+      : "server model adapter (errors, no assessments)";
+}
 console.log(formatIgnisReport({ source, records, metrics }));
 console.log("");
 if (useStub) {
@@ -79,12 +95,24 @@ if (useBaseline) {
       "are documented in stub.mjs before any run. These are fixture " +
       "numbers, not model performance.",
   );
-} else {
+} else if (allHeld) {
   console.log(
     "Held-state note: every scenario above records the server adapter's " +
       "refusal as its error. These numbers describe source availability " +
       "(no assessment available while live calls are held), not model " +
       "performance. No assessment was fabricated to fill the gap.",
+  );
+} else if (anyAssessment) {
+  console.log(
+    "Live-model note: the scenarios above returned real assessments. " +
+      "These numbers describe this scenario set against the wired source " +
+      "only — not real-hardware camera input, and not photographs, unless " +
+      "the run itself was produced from real frames.",
+  );
+} else {
+  console.log(
+    "Errored note: no scenario above returned an assessment. These numbers " +
+      "describe the failure, not detection, and must not be quoted as a model result.",
   );
 }
 
@@ -92,7 +120,7 @@ if (outPath) {
   writeFileSync(
     outPath,
     JSON.stringify(
-      { source, records, metrics, generated: useBaseline || useStub ? "fixture run, no live model" : "held-state run, no live model" },
+      { source, records, metrics, generated: useBaseline || useStub ? "fixture run, no live model" : allHeld ? "held-state run, no live model" : anyAssessment ? "live-model run" : "errored run, no assessments" },
       null,
       2,
     ) + "\n",
