@@ -1008,3 +1008,32 @@ test("latest: native panel carries the observable-evidence note, matching the we
   const rightColumn = swift.slice(swift.indexOf("private var rightColumn"), swift.indexOf("TimelineView(model: model)"));
   assert.match(rightColumn, /Text\("Assessments describe observable evidence only\. Each product's limitations notice \(above\) states what its assessments never claim\."\)/);
 });
+
+// ---------- uncertainty section (web parity with the native latest panel) ----------
+// The native panel gives uncertainty its own labeled section: one line
+// per item, and "The model reported no uncertainty items." when the
+// server reported none. The web panel squeezed the items into a single
+// joined paragraph ("Uncertainty: …") and said "none stated" when
+// empty, so a multi-item uncertainty read as one run-on sentence and
+// an empty one softened the fact that the model reported nothing. No
+// browser or Swift toolchain exists in this suite, so these are static
+// checks on the shipped panel sources, anchored on renderLatest: the
+// web panel builds the heading, one list item per uncertainty item,
+// and the native empty wording, and the native view already does.
+test("latest: web uncertainty section matches the native panel", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  const render = app.slice(app.indexOf("function renderLatest"), app.indexOf("function addHistoryItem"));
+  assert.match(render, /uncertaintyHead\.textContent = "Uncertainty";/);
+  assert.match(render, /for \(const item of assessment\.assessment\.uncertainty\) \{/);
+  assert.match(render, /line\.textContent = item;/);
+  assert.match(render, /uncertainty\.textContent = "The model reported no uncertainty items\.";/);
+  assert.doesNotMatch(render, /Uncertainty: none stated\./);
+  assert.doesNotMatch(render, /uncertainty\.join\(" "\)/);
+  const swift = readFileSync(
+    new URL("../native/Sources/MetaTrio/Views/AssessmentView.swift", import.meta.url),
+    "utf8",
+  );
+  assert.match(swift, /Text\("Uncertainty"\)/);
+  assert.match(swift, /Text\("The model reported no uncertainty items\."\)/);
+  assert.match(swift, /ForEach\(Array\(response\.assessment\.uncertainty\.enumerated\(\)\), id: \\.offset\)/);
+});

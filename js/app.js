@@ -302,13 +302,34 @@ function renderLatest(assessment, earlierNote = null) {
     wrap.appendChild(list);
   }
 
-  const uncertainty = document.createElement("p");
-  uncertainty.className = "uncertainty";
-  uncertainty.textContent =
-    assessment.assessment.uncertainty.length > 0
-      ? `Uncertainty: ${assessment.assessment.uncertainty.join(" ")}`
-      : "Uncertainty: none stated.";
-  wrap.appendChild(uncertainty);
+  // Native parity: the native panel gives uncertainty its own
+  // labeled section — one line per item, and "The model reported no
+  // uncertainty items." when the server reported none — instead of
+  // squeezing the items into one joined paragraph. The web panel did
+  // the latter, so a multi-item uncertainty read as one run-on
+  // sentence and an empty one read as "none stated", which softens
+  // the fact that the model reported nothing. Uncertainty is never
+  // softened or hidden: same heading, same per-item lines, same
+  // empty wording as the native panel.
+  const uncertaintyHead = document.createElement("h3");
+  uncertaintyHead.className = "subhead";
+  uncertaintyHead.textContent = "Uncertainty";
+  wrap.appendChild(uncertaintyHead);
+  if (assessment.assessment.uncertainty.length > 0) {
+    const uncertainty = document.createElement("ul");
+    uncertainty.className = "uncertainty";
+    for (const item of assessment.assessment.uncertainty) {
+      const line = document.createElement("li");
+      line.textContent = item;
+      uncertainty.appendChild(line);
+    }
+    wrap.appendChild(uncertainty);
+  } else {
+    const uncertainty = document.createElement("p");
+    uncertainty.className = "note";
+    uncertainty.textContent = "The model reported no uncertainty items.";
+    wrap.appendChild(uncertainty);
+  }
 
   const processing = document.createElement("p");
   processing.className = "note mono";
