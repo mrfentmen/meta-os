@@ -44,6 +44,10 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   baseline's exact full-set numbers.
 - `fixture-run-report.md` — the measured output of the last fixture
   run (`run.mjs --stub`), labeled as a fixture run.
+- `held-state-run-report.md` — the measured output of the last
+  held-state run (`run.mjs` with no flag), labeled as a held-state
+  run: every scenario records the server adapter's refusal, and its
+  numbers describe source availability, not model performance.
 
 ## The contract the adapter reads
 
@@ -123,6 +127,23 @@ wrong non-alert category. The stub beats the baseline on recall
 comparison exercises the harness on a source that sometimes alerts
 and sometimes misses, which the do-nothing baseline cannot do.
 Neither number describes a model.
+
+## The held-state run, and why it is not the baseline
+
+`node eval/ignis/run.mjs` (no flag) runs the 20 labeled scenarios
+against the real server model adapter. Measured 2026-10-28 (held
+numbers, not model performance):
+
+- Held: TP=0 FP=0 TN=15 FN=5, precision n/a, recall 0.000,
+  false-positive rate 0.000, false-negative rate 1.000,
+  category accuracy 0.000, errors 20 (every scenario, same refusal)
+
+The confusion counts match the baseline's, but the runs are not
+equivalent: the baseline predicts "no hazard visible" everywhere
+(category accuracy 0.150, 0 errors), while the held run predicts
+nothing (category accuracy 0.000, 20 errors). The held run proves
+the default runner refuses honestly under the Spark hold instead
+of fabricating assessments; it proves nothing about detection.
 
 ## Run it
 
