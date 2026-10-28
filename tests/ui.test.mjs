@@ -13,7 +13,7 @@ import { validateAssessment } from "../js/schema.js";
 import { FrameSampler } from "../js/sampler.js";
 import { assessFrame, AssessError, checkHealth, healthUrlFor } from "../js/client.js";
 import { SessionLog } from "../js/log.js";
-import { isSupportedImageFile, readFileAsDataURL } from "../js/image_input.js";
+import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "../js/image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "../js/video_input.js";
 
 function validAssessment(product = "vigiles") {
@@ -591,6 +591,42 @@ test("image input: readFileAsDataURL resolves with the reader result", async () 
     if (previous === undefined) delete globalThis.FileReader;
     else globalThis.FileReader = previous;
   }
+});
+
+test("image input: downscaleImageToDataURL draws the image at its own size and returns a JPEG data URL", () => {
+  const drawn = [];
+  const image = { naturalWidth: 640, naturalHeight: 360 };
+  const canvas = {
+    width: 0,
+    height: 0,
+    getContext: () => ({ drawImage: (el, x, y, w, h) => drawn.push([el, x, y, w, h]) }),
+    toDataURL: (type, quality) => `data:${type};base64,still-${quality}`,
+  };
+  assert.equal(downscaleImageToDataURL(image, canvas), "data:image/jpeg;base64,still-0.8");
+  assert.equal(canvas.width, 640);
+  assert.equal(canvas.height, 360);
+  assert.deepEqual(drawn, [[image, 0, 0, 640, 360]]);
+});
+
+test("image input: downscaleImageToDataURL downscales an oversize image to a 1280px longest side, like live capture", () => {
+  const drawn = [];
+  const image = { naturalWidth: 4000, naturalHeight: 3000 };
+  const canvas = {
+    width: 0,
+    height: 0,
+    getContext: () => ({ drawImage: (el, x, y, w, h) => drawn.push([el, x, y, w, h]) }),
+    toDataURL: (type, quality) => `data:${type};base64,still-${quality}`,
+  };
+  assert.equal(downscaleImageToDataURL(image, canvas), "data:image/jpeg;base64,still-0.8");
+  assert.equal(canvas.width, 1280);
+  assert.equal(canvas.height, 960);
+  assert.deepEqual(drawn, [[image, 0, 0, 1280, 960]]);
+});
+
+test("image input: downscaleImageToDataURL throws when the image has no dimensions yet", () => {
+  const canvas = { getContext: () => { throw new Error("should not draw"); }, toDataURL: () => "" };
+  assert.throws(() => downscaleImageToDataURL({ naturalWidth: 0, naturalHeight: 0 }, canvas), /not ready yet/);
+  assert.throws(() => downscaleImageToDataURL({ naturalWidth: 640, naturalHeight: 0 }, canvas), /not ready yet/);
 });
 
 test("image input: readFileAsDataURL rejects when the reader errors", async () => {

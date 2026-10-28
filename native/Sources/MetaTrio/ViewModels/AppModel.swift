@@ -438,10 +438,42 @@ final class AppModel: ObservableObject {
         videoAssessing = false
     }
 
+    /// Frames are downscaled so the longest side is at most this many
+    /// pixels before JPEG encoding, keeping request bodies reasonable —
+    /// the same cap the live camera (CameraService) and the web
+    /// frontend's still-image path use.
+    private static let maxStillImageDimension: CGFloat = 1280
+    private static let stillImageJPEGQuality: CGFloat = 0.8
+
     private static func jpegDataURL(for image: NSImage) -> String? {
-        guard let tiff = image.tiffRepresentation,
+        // Live-camera parity: the live camera downscales to the cap at
+        // JPEG 0.8, and the still-image path did neither — it encoded
+        // the chosen image at full size with the default quality, so a
+        // phone photo could be several megabytes as a base64 data URL
+        // and risk the server's request-body cap while a live frame
+        // sails under it. Downscale only when the cap actually bites;
+        // an image already under it keeps its size, and every still
+        // image is encoded at the live camera's 0.8 quality.
+        let size = image.size
+        let longestSide = max(size.width, size.height)
+        var source = image
+        if longestSide > maxStillImageDimension {
+            let scale = maxStillImageDimension / longestSide
+            let newSize = NSSize(width: size.width * scale, height: size.height * scale)
+            let resized = NSImage(size: newSize)
+            resized.lockFocus()
+            image.draw(
+                in: NSRect(origin: .zero, size: newSize),
+                from: NSRect(origin: .zero, size: size),
+                operation: .copy,
+                fraction: 1.0
+            )
+            resized.unlockFocus()
+            source = resized
+        }
+        guard let tiff = source.tiffRepresentation,
               let rep = NSBitmapImageRep(data: tiff),
-              let jpeg = rep.representation(using: .jpeg, properties: [:])
+              let jpeg = rep.representation(using: .jpeg, properties: [.compressionFactor: stillImageJPEGQuality])
         else {
             return nil
         }

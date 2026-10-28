@@ -4,12 +4,12 @@
 // detection logic and no sample data: if the backend is unreachable, the
 // UI shows the error and nothing else.
 
-import { Camera, cameraSupported } from "./camera.js";
+import { Camera, cameraSupported, MAX_FRAME_DIMENSION } from "./camera.js";
 import { FrameSampler } from "./sampler.js";
 import { assessFrame, AssessError, checkHealth } from "./client.js";
 import { SessionLog } from "./log.js";
 import { PRODUCT_BY_ID, isProductId } from "./products.js";
-import { isSupportedImageFile, readFileAsDataURL } from "./image_input.js";
+import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
 const $ = (id) => document.getElementById(id);
@@ -583,12 +583,30 @@ els.imageInput.addEventListener("change", async () => {
   els.imageState.textContent = "Reading image…";
   try {
     stillImageDataUrl = await readFileAsDataURL(file);
+    // Live-capture parity: a phone photo can be far larger than the
+    // 1280px cap live and video frames are downscaled to, and the
+    // still-image path sent the file's original bytes. Decode it and,
+    // only when the cap actually bites, replace the payload with the
+    // downscaled JPEG — a small image keeps its original bytes and
+    // format, and a file that will not decode fails here, honestly,
+    // instead of sending undecodable bytes to the endpoint.
+    const probe = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("That image could not be decoded."));
+      img.src = stillImageDataUrl;
+    });
+    if (Math.max(probe.naturalWidth, probe.naturalHeight) > MAX_FRAME_DIMENSION) {
+      stillImageDataUrl = downscaleImageToDataURL(probe, els.captureCanvas);
+    }
     els.imagePreview.src = stillImageDataUrl;
     els.imagePreview.hidden = false;
     els.imageState.textContent =
       `Image ready: ${file.name}. Tap “Assess this image” to send it once to the assessment endpoint, under the product selected above. It is not stored by this app.`;
     els.btnImageAssess.disabled = false;
   } catch (err) {
+    stillImageDataUrl = null;
+    els.btnImageAssess.disabled = true;
     els.imageState.textContent = `Could not read that image: ${err.message}`;
   }
 });
