@@ -1097,6 +1097,56 @@ export function computeLatencyByMissPair(records) {
     });
 }
 
+// Latency by miss truth category: one row per ground-truth category
+// among the misses only (same miss definition as computeMisses:
+// category_correct false), sorted most frequent first, then truth
+// alphabetically, with the count of recorded harness wall-clock
+// latencies, their mean, their median (averaged-middle, matching
+// the distribution's median), and their max. This is the coarser
+// misses-only marginal behind the miss-pair table: the pair table
+// says which swap runs slowest, but only this table says whether
+// one truth category's misses as a class run slower than another's
+// — and latency by category, which includes the correct pairs,
+// cannot isolate the misses. The scenario totals sum to the miss
+// count, not the sample size. Records with no latency take no
+// part in a category's numbers but still count toward its scenario
+// total, so a category whose scenarios carry no latency reads as
+// recorded 0 with n/a statistics — never as a fabricated zero.
+export function computeLatencyByMissTruth(records) {
+  const byTruth = {};
+  for (const r of records) {
+    if (r.category_correct) continue;
+    const entry = (byTruth[r.ground_truth_label] ??= {
+      truth: r.ground_truth_label,
+      total: 0,
+      latencies: [],
+    });
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return Object.values(byTruth)
+    .map((e) => {
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { truth: e.truth, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        truth: e.truth,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    })
+    .sort((a, b) => {
+      if (a.total !== b.total) return b.total - a.total;
+      return a.truth < b.truth ? -1 : a.truth > b.truth ? 1 : 0;
+    });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1834,6 +1884,31 @@ export function renderRunReport(run, baselineRun = null) {
     for (const row of latencyByMissPair) {
       lines.push(
         `| ${row.truth} | ${row.predicted} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const latencyByMissTruth = computeLatencyByMissTruth(run.records);
+  lines.push(
+    "",
+    "## Latency by miss truth category",
+    "",
+    "Harness wall-clock latencies broken down by ground-truth category — one row per truth category " +
+      "among the misses only, most frequent first, so whether one truth category's misses as a class " +
+      "run slower than another's is visible without scanning the per-scenario table. The scenario totals " +
+      "sum to the miss count, not the sample size, and a category with no recorded latency shows n/a, " +
+      "never a fabricated zero; a run with no misses says none.",
+    "",
+  );
+  if (latencyByMissTruth.length === 0) {
+    lines.push("None: every scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Truth | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByMissTruth) {
+      lines.push(
+        `| ${row.truth} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );
     }
   }

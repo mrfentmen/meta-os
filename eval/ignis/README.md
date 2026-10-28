@@ -178,6 +178,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   dominant swap runs slower than the other misses is visible without scanning the per-scenario
   table; the totals sum to the miss count, not the sample size, and a pair with no recorded latency
   shows n/a, never a fabricated zero; a run with no misses says none.
+  A latency-by-miss-truth-category section right after it is the coarser misses-only marginal
+  behind the miss-pair table — one row per ground-truth category among the misses only, most
+  frequent first, then truth alphabetically — so whether one truth category's misses as a class
+  run slower than another's is visible without scanning the per-scenario table; the totals sum
+  to the miss count, not the sample size, and a category with no recorded latency shows n/a,
+  never a fabricated zero; a run with no misses says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false
