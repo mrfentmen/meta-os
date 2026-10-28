@@ -673,6 +673,24 @@ test("history: past assessments can be shown again from the web history", () => 
   assert.match(app, /kind: entry\.response\.assessment\.requires_human_review \? "review" : "ok",\n\s+assessment: entry\.response,/);
 });
 
+// ---------- last round trip (web parity with the native status bar) ----------
+// The native app's status bar shows the client-measured last round trip,
+// so the web Camera panel must show the same line, next to the sampler
+// counters. No browser exists in this suite, so these are static checks
+// on the shipped markup and wiring: the element exists, app.js fills it
+// from the client-measured latency on both the success and the failure
+// path of submitAssessment (never from the server-reported processing
+// latency), and Reset clears it again.
+test("status: web shows the client-measured last round trip, cleared by Reset", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(html, /id="last-round-trip"/);
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /lastRoundTrip: \$\("last-round-trip"\)/);
+  assert.match(app, /Last round trip: .* ms \(client-measured\)/);
+  assert.equal((app.match(/updateLastRoundTrip\(latencyMs\);/g) || []).length, 2);
+  assert.match(app, /els\.btnReset\.addEventListener\("click", \(\) => \{[\s\S]*?clearLastRoundTrip\(\);/);
+});
+
 // ---------- accessibility announcements ----------
 // Static checks on the shipped markup and stylesheet: a new assessment
 // and a backend-status change must be announced to screen readers, and

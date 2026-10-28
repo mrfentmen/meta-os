@@ -41,6 +41,7 @@ const els = {
   backendStatus: $("backend-status"),
   inFlight: $("in-flight"),
   samplerStats: $("sampler-stats"),
+  lastRoundTrip: $("last-round-trip"),
   latest: $("latest-assessment"),
   history: $("history-list"),
   historyEmpty: $("history-empty"),
@@ -147,6 +148,24 @@ function updateSamplerStats() {
   els.samplerStats.textContent =
     `Ticks: ${sampler.tickCount} · Sent: ${sampler.sampledCount} · ` +
     `Skipped (request in flight): ${sampler.skippedCount} · Failed: ${sampler.errorCount}`;
+}
+
+// Native parity: the native app's status bar shows the last round trip,
+// so the web Camera panel shows it too. It is the client-measured time
+// for the last completed assessment request, success or failure — never
+// the server-reported processing.latency_ms inside a response. Hidden
+// until the first request completes; Reset clears it, exactly like the
+// native Reset Session. A frame-capture failure makes no request, so it
+// leaves the previous value alone, and the backend health check never
+// touches it (it sends no frame).
+function updateLastRoundTrip(latencyMs) {
+  els.lastRoundTrip.textContent = `Last round trip: ${latencyMs} ms (client-measured)`;
+  els.lastRoundTrip.hidden = false;
+}
+
+function clearLastRoundTrip() {
+  els.lastRoundTrip.textContent = "";
+  els.lastRoundTrip.hidden = true;
 }
 
 function updateLogStats() {
@@ -304,6 +323,7 @@ async function submitAssessment(product, timestamp, image) {
   try {
     const assessment = await assessFrame(endpoint, { product, timestamp, image });
     const latencyMs = Math.round(performance.now() - started);
+    updateLastRoundTrip(latencyMs);
     log.record({
       requestTimestamp: timestamp,
       product,
@@ -331,6 +351,7 @@ async function submitAssessment(product, timestamp, image) {
     return assessment;
   } catch (err) {
     const latencyMs = Math.round(performance.now() - started);
+    updateLastRoundTrip(latencyMs);
     const kind = err instanceof AssessError ? err.kind : "network";
     const status = kind === "http" ? "http_error" : kind === "invalid" ? "invalid_response" : "network_error";
     log.record({
@@ -597,6 +618,7 @@ els.btnReset.addEventListener("click", () => {
   setCameraState("Camera stopped. View reset.");
   setBackendStatus("unknown", "Model backend status unknown. Start analysis to contact the endpoint.");
   els.backendHealth.textContent = "Backend health not checked yet. Checking it contacts the server's health route only; it never sends a frame and never returns an assessment.";
+  clearLastRoundTrip();
   els.latest.textContent = "No assessment received yet.";
   els.history.replaceChildren();
   els.historyEmpty.hidden = false;

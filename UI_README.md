@@ -76,7 +76,14 @@ ES modules for the node test runner; it declares zero dependencies.)
   the Latest assessment panel, labelled as a past result — the web match
   for the native timeline's selectable rows), a loading indicator while a
   request is outstanding, and live sampler counters (ticks / sent /
-  skipped / failed).
+  skipped / failed). The Camera panel also shows the last round trip —
+  the client-measured time for the last completed assessment request,
+  success or failure, matching the native app's status bar. It is never
+  the server-reported `processing.latency_ms` inside a response; it stays
+  hidden until the first request completes, Reset clears it, a
+  frame-capture failure leaves the previous value alone (no request was
+  made), and the backend health check never touches it (it sends no
+  frame).
 - **Accessibility announcements**: the backend-status line and the
   latest-assessment panel are polite live regions, so a new assessment
   or a backend failure is announced to screen readers without stealing
@@ -143,7 +150,7 @@ top-level product; the still-image helpers accept `image/*` files only
 and resolve/reject with the file-reader result; the history re-inspection
 wiring (page note, Show assessment button, live and restored entries
 carrying their assessment). Current result:
-**88 tests, 88 pass, 0 fail** (Node v24).
+**89 tests, 89 pass, 0 fail** (Node v24).
 
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.
