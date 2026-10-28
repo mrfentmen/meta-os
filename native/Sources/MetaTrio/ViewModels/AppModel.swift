@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import Foundation
 import UniformTypeIdentifiers
 
@@ -89,6 +90,17 @@ final class AppModel: ObservableObject {
     @Published private(set) var stillImageError: String?
     private var stillImageDataURL: String?
 
+    // Prerecorded-video input (web parity): the player plays the
+    // user's file in place — the video is never copied or stored by
+    // this app. "Assess this frame" extracts only the frame at the
+    // current playback position and sends that one JPEG through the
+    // same submit path as a live frame.
+    @Published private(set) var videoPlayer: AVPlayer?
+    @Published private(set) var videoName: String?
+    @Published private(set) var videoAssessing = false
+    @Published private(set) var videoError: String?
+    private var videoURL: URL?
+
     // Observable runtime state.
     @Published private(set) var backendStatus: BackendStatus =
         .unknown("Model backend status unknown. Start analysis to contact the endpoint.")
@@ -161,6 +173,7 @@ final class AppModel: ObservableObject {
         stopAnalysis()
         camera.stop()
         clearStillImage()
+        clearVideo()
         displayedAssessment = nil
         timeline = []
         backendStatus = .unknown("Model backend status unknown. Start analysis to contact the endpoint.")
@@ -232,6 +245,85 @@ final class AppModel: ObservableObject {
         stillImageDataURL = nil
         stillImageError = nil
         stillImageAssessing = false
+    }
+
+    // MARK: - Prerecorded-video input
+
+    /// Opens a video-only file picker. The chosen file is played from
+    /// its own location; this app never copies it. Play the clip and
+    /// pause on the frame to assess, exactly like the web frontend.
+    func chooseVideo() {
+        let panel = NSOpenPanel()
+        panel.title = "Choose a prerecorded video"
+        panel.allowedContentTypes = [.movie, .mpeg4Movie, .quickTimeMovie]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+        videoError = nil
+        videoURL = url
+        videoName = url.lastPathComponent
+        videoPlayer = AVPlayer(url: url)
+    }
+
+    /// Sends only the frame at the player's current position, once,
+    /// under the product selected at assess time, through the same
+    /// submit path as a live frame. A frame-extraction failure is
+    /// logged and shown as a failure, never papered over with a
+    /// neighbouring frame or a placeholder.
+    func assessVideoFrame() {
+        guard let url = videoURL, let player = videoPlayer, !videoAssessing else {
+            return
+        }
+        videoAssessing = true
+        let seconds = player.currentTime().seconds
+        // Plain Task awaiting a @MainActor method: same shape as the
+        // still-image path (this sandbox has no Swift compiler to
+        // check it against).
+        Task {
+            await self.runVideoFrameAssessment(url: url, seconds: seconds)
+        }
+    }
+
+    private func runVideoFrameAssessment(url: URL, seconds: Double) async {
+        defer { videoAssessing = false }
+        let dataURL: String
+        do {
+            dataURL = try await VideoFrameService.jpegDataURL(for: url, at: seconds)
+        } catch {
+            // Extraction failed before any request was made, so there
+            // is no submitAssessment failure to reuse: record and show
+            // this failure directly, in the same shapes as a backend
+            // failure (timeline entry + session-log entry + status).
+            let message = "Video frame capture failed: \(error.localizedDescription)"
+            videoError = message
+            let timestamp = ISO8601.now()
+            recordLog(timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message)
+            // No request was made, so this is not a backend failure:
+            // show the capture failure itself, not a backend message.
+            backendStatus = .error(message)
+            timeline.insert(
+                TimelineItem(product: selectedProduct, timestamp: timestamp, kind: .failure(message)),
+                at: 0
+            )
+            return
+        }
+        do {
+            try await submitAssessment(timestamp: ISO8601.now(), imageDataURL: dataURL)
+        } catch {
+            // Outcome already logged and rendered by submitAssessment.
+        }
+    }
+
+    func clearVideo() {
+        videoPlayer?.pause()
+        videoPlayer = nil
+        videoURL = nil
+        videoName = nil
+        videoError = nil
+        videoAssessing = false
     }
 
     private static func jpegDataURL(for image: NSImage) -> String? {

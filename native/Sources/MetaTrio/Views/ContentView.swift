@@ -1,4 +1,5 @@
 import AppKit
+import AVKit
 import SwiftUI
 
 // Main window: product switcher and product identity on top, camera +
@@ -31,6 +32,7 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 14) {
                 CameraPanel(model: model, camera: model.camera)
                 StillImagePanel(model: model)
+                VideoPanel(model: model)
                 SettingsPanel(model: model)
             }
             .padding(12)
@@ -259,6 +261,65 @@ private struct StillImagePanel: View {
                     ProgressView()
                         .controlSize(.small)
                     Text("Sending still image…")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Prerecorded video panel (web parity)
+
+private struct VideoPanel: View {
+    @ObservedObject var model: AppModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Prerecorded video")
+                .font(.headline)
+            Text("For a recorded clip when neither a live camera nor a still image is the source. Play the clip, pause on the frame you want assessed, and tap “Assess this frame”: only that one frame is sent to the assessment endpoint, under the product selected above, and logged exactly like a live frame. The whole video is never sent, and it is not stored by this app.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let player = model.videoPlayer {
+                VideoPlayer(player: player)
+                    .frame(minHeight: 240)
+                    .background(Color.black)
+                    .cornerRadius(6)
+            }
+
+            if let name = model.videoName {
+                Text("Video ready: \(name). Play it, pause on the frame you want assessed, and tap “Assess this frame”. Only that frame is sent; the video is not stored by this app.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("No video chosen.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let error = model.videoError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            HStack(spacing: 8) {
+                Button("Choose Video") { model.chooseVideo() }
+                Button("Assess this frame") { model.assessVideoFrame() }
+                    .disabled(model.videoPlayer == nil || model.videoAssessing)
+                Button("Clear") { model.clearVideo() }
+                    .disabled(model.videoPlayer == nil && model.videoError == nil)
+            }
+            if model.videoAssessing {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Sending video frame…")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

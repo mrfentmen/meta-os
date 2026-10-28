@@ -35,6 +35,15 @@ rebuilding.
   cleared by Clear or Reset Session. It needs no camera and is never
   written to disk by the app. Until the backend exists, a still-image
   request fails exactly like a live frame — honest error, no assessment.
+- Prerecorded-video input (web parity): a video-only file picker for a
+  recorded clip — the input used when neither a live camera nor a still
+  image is the source. The clip plays in the app from its own location
+  (never copied or stored by the app); "Assess this frame" extracts only
+  the frame at the paused playback position and sends that one JPEG
+  through the same submit path as a live frame. A frame-extraction
+  failure is logged and shown as a failure, never replaced with a
+  neighbouring frame. Until the backend exists, a video-frame request
+  fails exactly like a live frame — honest error, no assessment.
 - Frame sampler: one frame every N seconds (default 3, adjustable 1–60),
   with the sampled-not-continuous disclosure on screen. A tick that fires
   while a request is still in flight is skipped and counted — sampling can
@@ -89,10 +98,13 @@ Sources/MetaTrio/
     AssessClient.swift            POST /api/assess, measured latency, typed errors
     CameraService.swift           AVFoundation session, permission, frame grab
     FrameSampler.swift            Non-overlapping sampling timer + counters
+    VideoFrameService.swift       One-frame JPEG extraction from a
+                                  prerecorded video at a playback position
   ViewModels/
     AppModel.swift                Camera -> sampler -> client -> UI wiring,
-                                  plus still-image input sharing the
-                                  same submit path as live frames
+                                  plus still-image and prerecorded-video
+                                  input sharing the same submit path as
+                                  live frames
   Views/
     ContentView.swift             Window layout, header, camera panel, settings, status bar
     CameraPreviewView.swift       AVCaptureVideoPreviewLayer host
