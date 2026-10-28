@@ -25,6 +25,7 @@ import {
   computeCategoryConfusion,
   computeBaselineDeltas,
   computeCategoryHeadline,
+  computeCategoryCorrect,
   computeCategoryRates,
   computeConfusableNegatives,
   computeAlertCorrect,
@@ -330,6 +331,46 @@ test("report: miss-pair counts aggregate the misses — stub's dominant swap fir
   );
   assert.deepEqual(computeMissPairs(perfectRun.records), []);
   assert.match(renderRunReport(perfectRun), /## Miss-pair counts/);
+});
+
+test("report: category correct lists the scenarios behind category accuracy, completing the category set", async () => {
+  const run = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  // The complement of the six stub misses: 14 of 20, category
+  // accuracy 0.700. Sorted by scenario id, so the list never
+  // depends on record order.
+  assert.deepEqual(
+    computeCategoryCorrect(run.records).map((e) => e.scenarioId),
+    ["IGN-001", "IGN-002", "IGN-004", "IGN-005", "IGN-006", "IGN-008", "IGN-009", "IGN-011", "IGN-013", "IGN-014", "IGN-016", "IGN-017", "IGN-019", "IGN-020"],
+  );
+  assert.deepEqual(computeCategoryCorrect(run.records)[0], {
+    scenarioId: "IGN-001",
+    truth: "visible smoke",
+    predicted: "visible smoke",
+  });
+  // Correct + misses account for every record, with no overlap.
+  assert.equal(computeCategoryCorrect(run.records).length + computeMisses(run.records).length, run.records.length);
+  // Hand-built: a wrong-category record and an unassessed record
+  // are excluded; the list sorts by id regardless of input order.
+  assert.deepEqual(
+    computeCategoryCorrect([
+      { scenario_id: "T3", ground_truth_label: "beta", actual_category: "beta", category_correct: true },
+      { scenario_id: "T1", ground_truth_label: "alpha", actual_category: "gamma", category_correct: false },
+      { scenario_id: "T2", ground_truth_label: "alpha", actual_category: null, category_correct: false },
+      { scenario_id: "T4", ground_truth_label: "gamma", actual_category: "gamma", category_correct: true },
+    ]).map((e) => e.scenarioId),
+    ["T3", "T4"],
+  );
+  const report = renderRunReport(run);
+  assert.match(report, /## Category correct/);
+  assert.match(report, /14 correct of 20/);
+  assert.match(report, /- IGN-001: visible smoke -> visible smoke/);
+  assert.match(report, /- IGN-020: indeterminate -> indeterminate/);
+  assert.ok(report.indexOf("## Miss-pair counts") < report.indexOf("## Category correct"));
+  assert.ok(report.indexOf("## Category correct") < report.indexOf("## Per-category confusion"));
+  // A held run predicts nothing, so its category-correct list is empty.
+  const heldRun = await buildRun((s) => assessViaModelAdapter(s, {}), "server model adapter (held while Spark stays off)", "held-state run, no live model");
+  assert.deepEqual(computeCategoryCorrect(heldRun.records), []);
+  assert.match(renderRunReport(heldRun), /None: no scenario's predicted category matched its ground truth\./);
 });
 
 test("report: headline finding names nothing assessable on a held run, and no misses on a perfect run", async () => {

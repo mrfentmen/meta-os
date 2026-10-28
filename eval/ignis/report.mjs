@@ -47,7 +47,11 @@
 // ERROR, matching the confusion table's convention. A miss-pair
 // counts table right after the Misses section aggregates those same
 // misses by truth -> predicted pair, so the dominant swap is visible
-// without counting the Misses list. The per-scenario table carries
+// without counting the Misses list. A category-correct section after
+// the miss-pair counts names the scenarios behind category accuracy,
+// completing the category set the Misses section starts: the correct
+// scenarios are the complement of the misses, so the two lists
+// together account for every scenario in the run. The per-scenario table carries
 // each record's harness wall-clock latency, so a slow scenario is
 // visible without reading the summary statistics — and a record
 // that carries no latency shows n/a rather than a fabricated zero.
@@ -437,6 +441,29 @@ export function computeMissPairs(records) {
   return pairs;
 }
 
+// Category-level correct outcomes: the scenarios behind category
+// accuracy, completing the set computeMisses starts. A correct
+// scenario predicted the exact ground-truth category; the filter is
+// category_correct, the same definition the Misses section negates,
+// so the correct list and the Misses list together account for every
+// record in the run, with no scenario in both and none in neither.
+// Predicted is the actual category (never ERROR for a genuine
+// correct record, since a correct prediction is an assessment); the
+// ERROR fallback only covers a hand-built record that claims
+// category_correct with no assessment. The list sorts by scenario
+// id, so the section never depends on record order.
+export function computeCategoryCorrect(records) {
+  const byId = (a, b) => (a.scenarioId < b.scenarioId ? -1 : a.scenarioId > b.scenarioId ? 1 : 0);
+  return records
+    .filter((r) => r.category_correct)
+    .map((r) => ({
+      scenarioId: r.scenario_id,
+      truth: r.ground_truth_label,
+      predicted: r.actual_category === null ? ERROR_PREDICTED : r.actual_category,
+    }))
+    .sort(byId);
+}
+
 // Truth-vs-predicted category counts for a run's records. Only the
 // two record fields the table needs are read, so hand-built record
 // lists work as well as full run JSON. Truth categories sort
@@ -760,6 +787,29 @@ export function renderRunReport(run, baselineRun = null) {
     for (const p of missPairs) {
       lines.push(`| ${p.truth} | ${p.predicted} | ${p.count} | ${p.scenarioIds.join(", ")} |`);
     }
+  }
+  const categoryCorrect = computeCategoryCorrect(run.records);
+  lines.push(
+    "",
+    "## Category correct",
+    "",
+    "The scenarios behind category accuracy, completing the category set the Misses section " +
+      "starts: these are the scenarios whose predicted category matched the ground truth exactly. " +
+      "Together with the Misses list above, this list accounts for every scenario in the run — " +
+      "no scenario appears in both, and none appears in neither — so the count here plus the " +
+      `Misses count equals the sample size (${categoryCorrect.length} correct of ${run.records.length}).`,
+    "",
+  );
+  if (categoryCorrect.length === 0) {
+    lines.push("None: no scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      ...categoryCorrect.map(
+        (e) =>
+          `- ${e.scenarioId}: ${e.truth} -> ${e.predicted}` +
+          (e.predicted === ERROR_PREDICTED ? " (no assessment)" : ""),
+      ),
+    );
   }
   const confusion = computeCategoryConfusion(run.records);
   lines.push("", "## Per-category confusion", "");
