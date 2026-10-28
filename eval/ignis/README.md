@@ -48,6 +48,11 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   held-state run (`run.mjs` with no flag), labeled as a held-state
   run: every scenario records the server adapter's refusal, and its
   numbers describe source availability, not model performance.
+- `baseline-run-report.md` — the measured output of the last
+  baseline run (`run.mjs --baseline`), labeled as a baseline run:
+  the always-no-hazard source's scores, which are the bar a real
+  source must beat, not model performance. With the fixture and
+  held-state reports, this completes the report trio.
 
 ## The contract the adapter reads
 
@@ -104,7 +109,10 @@ A future real source must beat this baseline on recall and category
 accuracy to claim value. Beating it on precision alone proves
 nothing, since the baseline never fires a false alarm by
 construction — the same bar the Sanitas set applies to its
-always-clean baseline.
+always-clean baseline. The full measured run, including the
+baseline-vs-held distinction, is documented in
+`baseline-run-report.md`, completing the report trio alongside the
+fixture and held-state reports.
 
 ## The stub, and the comparison it enables
 
