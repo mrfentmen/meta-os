@@ -208,7 +208,8 @@ never mixed with the client measurement.
 - Camera behavior is verified only up to page load and module execution in
   headless Chromium: this sandbox has no camera device, so a live
   `getUserMedia` capture, real frame encoding from a device, and phone
-  viewport behavior still need a pass on real hardware.
+  viewport behavior still need a pass on real hardware. The exact
+  checklist for that pass is `docs/HARDWARE_VERIFICATION.md`.
 
 ## Scope and safety
 

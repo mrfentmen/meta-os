@@ -166,6 +166,7 @@ Not verified anywhere yet:
   Linux sandbox. First build happens on the Mac via the steps above; treat
   any first-build errors as the expected first iteration, not a surprise.
 - Camera behavior on real hardware (permission prompt, preview, frame
-  capture) — only exercisable on the Mac.
+  capture) — only exercisable on the Mac. The exact checklist is
+  `../docs/HARDWARE_VERIFICATION.md`.
 - Any live round trip — no `/api/assess` server exists yet (Agent 2's lane),
   and no live Spark call has ever been completed by this team.
