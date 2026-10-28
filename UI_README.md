@@ -49,7 +49,11 @@ ES modules for the node test runner; it declares zero dependencies.)
   memory and is revoked by Reset or when another file is chosen. The
   assess button stays disabled until the video's metadata has loaded,
   so a frame can never be requested from a frameless video, and a
-  capture failure is logged honestly with no assessment invented.
+  capture failure is logged honestly with no assessment invented. A
+  Clear button clears just this input (file choice, preview, Assess
+  disabled) without stopping the camera or analysis, matching the
+  native panel's Clear button; Reset still clears both inputs together
+  with the rest of the view.
 - **Still-image input** (`js/image_input.js`, wired in `js/app.js`): a
   file picker for prerecorded or photographed scenes — the input the
   Ignis and Sanitas demos use when a live camera is not the source.
@@ -58,7 +62,9 @@ ES modules for the node test runner; it declares zero dependencies.)
   moment, through the same client, validation, history entry, and
   session-log entry as a live frame. It needs no camera, accepts
   `image/*` files only, and stores nothing: the preview and the data URL
-  live in memory and are cleared by Reset. Until the backend exists, a
+  live in memory and are cleared by the panel's Clear button or by Reset
+  (Clear touches only this input — it never stops the camera or
+  analysis — matching the native panel's Clear button). Until the backend exists, a
   still-image request fails exactly like a live frame — honest error,
   no assessment.
 - **Event display**: latest validated assessment (product, assessment

@@ -51,10 +51,12 @@ const els = {
   imagePreview: $("image-preview"),
   imageState: $("image-state"),
   btnImageAssess: $("btn-image-assess"),
+  btnImageClear: $("btn-image-clear"),
   videoInput: $("video-input"),
   videoPreview: $("video-preview"),
   videoState: $("video-state"),
   btnVideoAssess: $("btn-video-assess"),
+  btnVideoClear: $("btn-video-clear"),
 };
 
 const camera = new Camera(els.video);
@@ -375,7 +377,7 @@ async function runSample() {
 }
 
 // Still-image input state: the chosen file's data URL lives in memory
-// only, and is cleared by Reset. It is assessed under whichever product
+// only, and is cleared by its Clear button or by Reset. It is assessed under whichever product
 // is selected when "Assess this image" is tapped, exactly like the next
 // live sampled frame.
 let stillImageDataUrl = null;
@@ -396,6 +398,22 @@ els.productRadios.forEach((radio) => {
       renderProduct();
     }
   });
+});
+
+// Clears only the still-image input (preview, file choice, Assess
+// disabled) without stopping the camera or analysis — the web match for
+// the native panel's Clear button. Reset reuses this for the same panel.
+function clearStillImageInput() {
+  stillImageDataUrl = null;
+  els.imageInput.value = "";
+  els.imagePreview.hidden = true;
+  els.imagePreview.removeAttribute("src");
+  els.imageState.textContent = "No image chosen.";
+  els.btnImageAssess.disabled = true;
+}
+
+els.btnImageClear.addEventListener("click", () => {
+  clearStillImageInput();
 });
 
 els.imageInput.addEventListener("change", async () => {
@@ -441,7 +459,7 @@ els.btnImageAssess.addEventListener("click", async () => {
 });
 
 // Prerecorded-video input state: the chosen file's object URL lives in
-// memory only and is revoked by Reset (and when another file is chosen).
+// memory only and is revoked by its Clear button or by Reset (and when another file is chosen).
 // "Assess this frame" captures the frame showing at that moment and
 // sends it once, under whichever product is selected, exactly like a
 // live sampled frame. The assess button stays disabled until the video's
@@ -459,6 +477,15 @@ function clearVideoInput() {
   els.videoPreview.hidden = true;
   els.btnVideoAssess.disabled = true;
 }
+
+// Clears only the prerecorded-video input (file choice, preview, Assess
+// disabled) without stopping the camera or analysis — the web match for
+// the native panel's Clear button. Reset reuses the same steps.
+els.btnVideoClear.addEventListener("click", () => {
+  els.videoInput.value = "";
+  clearVideoInput();
+  els.videoState.textContent = "No video chosen.";
+});
 
 els.videoInput.addEventListener("change", () => {
   const file = els.videoInput.files && els.videoInput.files[0];
@@ -563,12 +590,7 @@ els.btnReset.addEventListener("click", () => {
   sampler.stop();
   camera.stop();
   els.cameraIndicator.hidden = true;
-  stillImageDataUrl = null;
-  els.imageInput.value = "";
-  els.imagePreview.hidden = true;
-  els.imagePreview.removeAttribute("src");
-  els.imageState.textContent = "No image chosen.";
-  els.btnImageAssess.disabled = true;
+  clearStillImageInput();
   els.videoInput.value = "";
   clearVideoInput();
   els.videoState.textContent = "No video chosen.";
