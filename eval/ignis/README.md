@@ -83,11 +83,16 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   latency is more than twice the run's median recorded latency;
   runs with fewer than two recorded latencies, or a median of zero,
   flag nothing rather than singling a scenario out on a zero baseline.
+  An error-breakdown section splits the summary line's error total
+  by exact message (most frequent first, ties alphabetical), so a
+  run that fails in several different ways reads as a failure
+  profile, not one lump; a run with no errored records says none.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and
   confusable-negative breakdowns, misses detail and miss-pair counts,
-  run-JSON validation, trio protection, and the CLI end to end.
+  error-message breakdown grouping and rendering, latency-outlier
+  flagging, run-JSON validation, trio protection, and the CLI end to end.
 - `adapter.test.mjs` — adapter tests: label loading, alert-definition
   consistency, metric math, alert-correctness logic,
   malformed-input containment, the held-state refusal, and the

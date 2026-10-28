@@ -62,6 +62,10 @@
 // construction, so its precision is vacuous, not perfect). The
 // comparison renders signed deltas for both bar metrics, so the size
 // of the margin is visible without subtracting the two lines above.
+// An error-message breakdown splits the summary line's error total
+// by exact message, so a run that fails in several different ways
+// reads as a failure profile, not one lump — and a held-state run's
+// single shared refusal reads as one row, not a list of ids.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -440,6 +444,31 @@ export function computeConfusableNegatives(records) {
   }).filter((entry) => entry.total > 0);
 }
 
+// Error-message breakdown: records carrying an error message,
+// grouped by the exact message string, so a run that fails in
+// several different ways reads as a failure profile, not one lump.
+// The summary line's count + id list stays the total; this section
+// splits it. Sorting is count descending, then message
+// alphabetically, so the section never depends on record order.
+// A record that carries both an assessment and an error message is
+// still grouped here: the message is evidence of a failure mode,
+// not a claim that no assessment exists. Records with no error
+// message are excluded, never counted as a blank-message group.
+export function computeErrorBreakdown(records) {
+  const groups = {};
+  for (const r of records) {
+    if (r.error === null) continue;
+    groups[r.error] ??= [];
+    groups[r.error].push(r.scenario_id);
+  }
+  return Object.entries(groups)
+    .map(([message, scenarioIds]) => ({ message, count: scenarioIds.length, scenarioIds }))
+    .sort((a, b) => {
+      if (a.count !== b.count) return b.count - a.count;
+      return a.message < b.message ? -1 : a.message > b.message ? 1 : 0;
+    });
+}
+
 export function assertWritableReportPath(outPath) {
   if (PROTECTED_REPORT_NAMES.includes(basename(outPath))) {
     throw new Error(
@@ -646,6 +675,28 @@ export function renderRunReport(run, baselineRun = null) {
     "",
     `Total: ${confusableFalseAlarms} of ${confusableTotal} confusable-negative scenarios predicted as an alert category.`,
   );
+  const errorBreakdown = computeErrorBreakdown(run.records);
+  lines.push(
+    "",
+    "## Error breakdown",
+    "",
+    "Records carrying an error message, grouped by the exact message, so a run that fails in " +
+      "several different ways reads as a failure profile, not one lump. The summary line above " +
+      "carries the total; this section splits it. Most frequent first, ties alphabetical.",
+    "",
+  );
+  if (errorBreakdown.length === 0) {
+    lines.push("None: no record in this run carries an error message.");
+  } else {
+    lines.push(
+      "| Error | Count | Scenarios |",
+      "| --- | --- | --- |",
+    );
+    for (const e of errorBreakdown) {
+      // Escape pipes so a message containing one cannot break the table.
+      lines.push(`| ${e.message.replaceAll("|", "\\|")} | ${e.count} | ${e.scenarioIds.join(", ")} |`);
+    }
+  }
   if (baseline !== null) {
     const b = baseline.metrics;
     const deltas = computeBaselineDeltas(m, b);

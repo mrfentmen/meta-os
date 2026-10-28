@@ -27,6 +27,7 @@ import {
   computeCategoryHeadline,
   computeCategoryRates,
   computeConfusableNegatives,
+  computeErrorBreakdown,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -488,6 +489,56 @@ test("report: latency outliers flag only latencies strictly above twice the medi
     renderRunReport(stubRun),
     /\| Scenario \| Truth \| Actual \| Alert correct \| Category correct \| Latency \(ms\) \| Outlier \| Error \|/,
   );
+});
+
+test("report: error breakdown groups records by exact message, most frequent first", () => {
+  const rec = (id, error) => ({
+    scenario_id: id,
+    ground_truth_label: "visible smoke",
+    error,
+  });
+  // Count descending; ties alphabetical; null-error records excluded, never a blank group.
+  assert.deepEqual(
+    computeErrorBreakdown([
+      rec("T1", "timeout"),
+      rec("T2", "held refusal"),
+      rec("T3", "timeout"),
+      rec("T4", null),
+      rec("T5", "held refusal"),
+      rec("T6", "bad shape"),
+    ]),
+    [
+      { message: "held refusal", count: 2, scenarioIds: ["T2", "T5"] },
+      { message: "timeout", count: 2, scenarioIds: ["T1", "T3"] },
+      { message: "bad shape", count: 1, scenarioIds: ["T6"] },
+    ],
+  );
+  assert.deepEqual(computeErrorBreakdown([rec("T1", null)]), []);
+  // Rendered: a mixed-error run splits the summary total into rows;
+  // an error-free run says none instead of rendering an empty table.
+  const mixedRun = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      { scenario_id: "IGN-T1", ground_truth_label: "visible smoke", alert_expected: true, alert_fired: false, alert_correct: false, category_correct: false, actual_category: null, error: "timeout" },
+      { scenario_id: "IGN-T2", ground_truth_label: "visible smoke", alert_expected: true, alert_fired: false, alert_correct: false, category_correct: false, actual_category: null, error: "timeout" },
+      { scenario_id: "IGN-T3", ground_truth_label: "visible smoke", alert_expected: true, alert_fired: false, alert_correct: false, category_correct: false, actual_category: null, error: "bad shape | malformed" },
+    ],
+    metrics: { sample_size: 3, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 3, precision: null, recall: 0, false_positive_rate: 0, false_negative_rate: 1, category_accuracy: 0, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 3, scenario_ids: ["IGN-T1", "IGN-T2", "IGN-T3"] } },
+  };
+  const mixed = renderRunReport(mixedRun);
+  assert.match(mixed, /## Error breakdown/);
+  assert.match(mixed, /\| timeout \| 2 \| IGN-T1, IGN-T2 \|/);
+  // A pipe inside a message is escaped so it cannot break the table.
+  assert.match(mixed, /\| bad shape \\\| malformed \| 1 \| IGN-T3 \|/);
+  const cleanRun = {
+    ...mixedRun,
+    records: [
+      { scenario_id: "IGN-T1", ground_truth_label: "visible smoke", alert_expected: true, alert_fired: true, alert_correct: true, category_correct: true, actual_category: "visible smoke", error: null },
+    ],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
+  };
+  assert.match(renderRunReport(cleanRun), /None: no record in this run carries an error message\./);
 });
 
 test("report: CLI renders a run JSON to a file and refuses a trio target", () => {
