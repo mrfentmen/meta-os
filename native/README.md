@@ -1,11 +1,11 @@
-# MetaTrio — native macOS app (Sentinel · Ember · Sanitas)
+# MetaTrio — native macOS app (Vigiles · Ignis · Sanitas)
 
 One native SwiftUI macOS application hosting all three products behind a
 product switcher, on the shared foundation defined in
 `~/workspace/hackathon/meta-sentinel/MASTER_DIRECTIVE_V2.md`:
 
-- **Meta Sentinel** — NYPD-oriented visual incident awareness (live camera).
-- **Meta Ember** — FDNY-oriented fire/smoke hazard awareness (camera aimed at
+- **Meta Vigiles** — NYPD-oriented visual incident awareness (live camera).
+- **Meta Ignis** — FDNY-oriented fire/smoke hazard awareness (camera aimed at
   prerecorded footage or safe demonstrations — never a real fire).
 - **Meta Sanitas** — Department of Sanitation-oriented sanitation observation.
 
@@ -21,7 +21,7 @@ rebuilding.
 
 ## What the app does
 
-- Product switcher (Sentinel / Ember / Sanitas) with per-product identity,
+- Product switcher (Vigiles / Ignis / Sanitas) with per-product identity,
   categories, evaluation scenarios, input guidance, and a limitations
   notice that is always on screen.
 - Live camera preview via AVFoundation, with honest states: permission
@@ -135,7 +135,7 @@ live in the window, the endpoint is editable at runtime.
   Default: `http://localhost:8080/api/assess`.
 - The server is Agent 2's lane and is **not** part of this folder. It holds
   the Meta API key server-side; the key never enters this app.
-- Request: `POST {"product": "sentinel|ember|sanitas", "timestamp":
+- Request: `POST {"product": "vigiles|ignis|sanitas", "timestamp":
   "<ISO-8601>", "image": "data:image/jpeg;base64,..."}`
 - Response: the v2 assessment JSON above, or `{"error": "..."}`.
 - Until that server runs, expect — and demo honestly — the

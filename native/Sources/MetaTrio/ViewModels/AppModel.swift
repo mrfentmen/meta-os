@@ -65,7 +65,7 @@ final class AppModel: ObservableObject {
     static let defaultEndpoint = "http://localhost:8080/api/assess"
 
     // User settings.
-    @Published var selectedProduct: ProductID = .sentinel {
+    @Published var selectedProduct: ProductID = .vigiles {
         didSet {
             if oldValue != selectedProduct, sampler.isRunning {
                 stopAnalysis()

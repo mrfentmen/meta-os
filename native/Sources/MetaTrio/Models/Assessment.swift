@@ -1,6 +1,6 @@
 import Foundation
 
-// The unified v2 assessment contract shared by Meta Sentinel, Meta Ember,
+// The unified v2 assessment contract shared by Meta Vigiles, Meta Ignis,
 // and Meta Sanitas (MASTER_DIRECTIVE_V2.md section 9, frozen in
 // FIRST_RESPONSE.md). The server returns exactly this shape or an
 // {"error": "..."} object. Instances are only ever created by

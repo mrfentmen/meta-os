@@ -8,8 +8,8 @@ import Foundation
 // product id to the server, which applies the matching prompt profile.
 
 enum ProductID: String, CaseIterable, Identifiable, Codable {
-    case sentinel
-    case ember
+    case vigiles
+    case ignis
     case sanitas
 
     var id: String { rawValue }
@@ -37,15 +37,15 @@ struct ProductConfig {
 
     static func config(for product: ProductID) -> ProductConfig {
         switch product {
-        case .sentinel: return sentinel
-        case .ember: return ember
+        case .vigiles: return vigiles
+        case .ignis: return ignis
         case .sanitas: return sanitas
         }
     }
 
-    static let sentinel = ProductConfig(
-        product: .sentinel,
-        displayName: "Meta Sentinel",
+    static let vigiles = ProductConfig(
+        product: .vigiles,
+        displayName: "Meta Vigiles",
         department: "NYPD-oriented — visual incident awareness",
         tagline: "Evidence-supported event assessments for human review.",
         accentColorName: "blue",
@@ -73,9 +73,9 @@ struct ProductConfig {
         inputGuidance: "Live camera. Perform staged actions in view of the camera; analysis samples frames at the interval set below."
     )
 
-    static let ember = ProductConfig(
-        product: .ember,
-        displayName: "Meta Ember",
+    static let ignis = ProductConfig(
+        product: .ignis,
+        displayName: "Meta Ignis",
         department: "FDNY-oriented — fire and smoke hazard awareness",
         tagline: "Visible fire and smoke hazard indicators for human review.",
         accentColorName: "orange",
