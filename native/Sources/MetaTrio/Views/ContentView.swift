@@ -43,6 +43,7 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Latest assessment")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
             if let assessment = model.displayedAssessment {
                 ScrollView {
                     AssessmentView(response: assessment)
@@ -55,6 +56,8 @@ struct ContentView: View {
                     Text("Waiting for the first assessment…")
                         .foregroundStyle(.secondary)
                 }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Waiting for the first assessment")
             } else if case .error(let message) = model.backendStatus {
                 Text(message)
                     .foregroundStyle(.red)
@@ -88,11 +91,14 @@ private struct HeaderView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .accessibilityLabel("Product")
+            .accessibilityHint("Switches the product for the next assessment. Earlier log entries keep the product they were assessed under.")
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Circle()
                     .fill(accentColor)
                     .frame(width: 9, height: 9)
+                    .accessibilityHidden(true)
                 Text(model.config.department)
                     .font(.subheadline)
                     .fontWeight(.semibold)
@@ -137,6 +143,8 @@ private struct CameraPanel: View {
                     .frame(minHeight: 240)
                     .background(Color.black)
                     .cornerRadius(6)
+                    .accessibilityLabel("Live camera preview")
+                    .accessibilityValue(cameraAccessibilityValue)
                 if camera.state == .running {
                     Label("CAMERA LIVE", systemImage: "record.circle.fill")
                         .font(.caption)
@@ -147,6 +155,7 @@ private struct CameraPanel: View {
                         .background(Color.red)
                         .cornerRadius(4)
                         .padding(8)
+                        .accessibilityLabel("Camera live")
                 }
             }
 
@@ -157,6 +166,7 @@ private struct CameraPanel: View {
                     .font(.caption)
                     .fontWeight(.bold)
                     .foregroundStyle(.orange)
+                    .accessibilityLabel("Analysis active, sampling one frame every \(model.intervalSeconds) seconds")
             }
 
             HStack(spacing: 8) {
@@ -166,15 +176,31 @@ private struct CameraPanel: View {
                     .disabled(camera.state != .running)
                 Button("Start Analysis") { model.startAnalysis() }
                     .disabled(camera.state != .running || model.analysisRunning)
+                    .accessibilityHint("Starts sampling one frame every \(model.intervalSeconds) seconds and sending each frame to the assessment endpoint.")
                 Button("Stop Analysis") { model.stopAnalysis() }
                     .disabled(!model.analysisRunning)
                 Button("Reset Session") { model.resetSession() }
+                    .accessibilityHint("Stops the camera and analysis and clears the preview, timeline, and session log.")
             }
 
             Text(model.config.inputGuidance)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// Plain-words camera state for VoiceOver, mirroring the on-screen
+    /// state text. The preview itself carries no assessment information.
+    private var cameraAccessibilityValue: String {
+        switch camera.state {
+        case .idle: return "Camera off"
+        case .requestingPermission: return "Waiting for camera permission"
+        case .running: return "Camera live"
+        case .stopped: return "Camera stopped"
+        case .denied: return "Camera permission denied"
+        case .noCamera: return "No camera found"
+        case .failed(_): return "Camera error"
         }
     }
 
@@ -229,6 +255,7 @@ private struct StillImagePanel: View {
                     .frame(maxHeight: 240)
                     .background(Color.black)
                     .cornerRadius(6)
+                    .accessibilityLabel("Chosen still image preview")
             }
 
             if let name = model.stillImageName {
@@ -253,6 +280,7 @@ private struct StillImagePanel: View {
                 Button("Choose Image") { model.chooseStillImage() }
                 Button("Assess this image") { model.assessStillImage() }
                     .disabled(model.stillImage == nil || model.stillImageAssessing)
+                    .accessibilityHint("Sends the chosen image once to the assessment endpoint.")
                 Button("Clear") { model.clearStillImage() }
                     .disabled(model.stillImage == nil && model.stillImageError == nil)
             }
@@ -288,6 +316,7 @@ private struct VideoPanel: View {
                     .frame(minHeight: 240)
                     .background(Color.black)
                     .cornerRadius(6)
+                    .accessibilityLabel("Prerecorded video player")
             }
 
             if let name = model.videoName {
@@ -312,6 +341,7 @@ private struct VideoPanel: View {
                 Button("Choose Video") { model.chooseVideo() }
                 Button("Assess this frame") { model.assessVideoFrame() }
                     .disabled(model.videoPlayer == nil || model.videoAssessing)
+                    .accessibilityHint("Sends only the frame showing at the paused playback position to the assessment endpoint.")
                 Button("Clear") { model.clearVideo() }
                     .disabled(model.videoPlayer == nil && model.videoError == nil)
             }
@@ -343,6 +373,7 @@ private struct SettingsPanel: View {
                     TextField("Assessment endpoint", text: $model.endpoint)
                         .textFieldStyle(.roundedBorder)
                         .labelsHidden()
+                        .accessibilityLabel("Assessment endpoint")
                 }
 
                 Stepper(value: $model.intervalSeconds, in: 1...60) {
@@ -361,6 +392,8 @@ private struct SettingsPanel: View {
                     TextField("Scenario label", text: $model.scenarioLabel)
                         .textFieldStyle(.roundedBorder)
                         .labelsHidden()
+                        .accessibilityLabel("Scenario label")
+                        .accessibilityHint("Optional label recorded in the session log for evaluation.")
                 }
 
                 DisclosureGroup("Evaluation scenarios for \(model.config.displayName)") {
@@ -425,6 +458,9 @@ private struct StatusBar: View {
         Circle()
             .fill(statusColor)
             .frame(width: 10, height: 10)
+            // Decorative only: the backend status text next to it
+            // already states the state in words.
+            .accessibilityHidden(true)
     }
 
     private var statusColor: Color {

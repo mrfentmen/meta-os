@@ -40,6 +40,9 @@ struct AssessmentView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        // One VoiceOver item: category, human-review flag, and the
+        // timestamp/product line, in reading order.
+        .accessibilityElement(children: .combine)
     }
 
     /// Display name for the product key the server returned, falling back
@@ -54,6 +57,7 @@ struct AssessmentView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Observations")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
                 ForEach(Array(response.observations.enumerated()), id: \.offset) { _, observation in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(alignment: .firstTextBaseline) {
@@ -71,6 +75,9 @@ struct AssessmentView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    // One VoiceOver item per observation, so category,
+                    // confidence, description, and evidence are read together.
+                    .accessibilityElement(children: .combine)
                 }
             }
         }
@@ -80,6 +87,7 @@ struct AssessmentView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text("Uncertainty")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
             if response.assessment.uncertainty.isEmpty {
                 Text("The model reported no uncertainty items.")
                     .foregroundStyle(.secondary)

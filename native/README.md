@@ -65,6 +65,13 @@ rebuilding.
   when nothing has been attempted; the timeline says analysis is running
   instead of looking empty. The assessment header shows the product's
   display name (Meta Vigiles / Ignis / Sanitas), not the raw contract key.
+- VoiceOver labels matching the web frontend (web parity): the product
+  picker, camera preview (with a plain-words camera state), still-image
+  and video panels, settings fields, assessment header and observations,
+  and timeline rows are labeled for VoiceOver, section headings carry
+  the header trait, and decorative color dots are hidden from VoiceOver
+  because the status is already stated in words next to them. No
+  assessment information lives only in color or in an icon.
 
 ### Honesty rules (enforced in code, not just promised)
 
@@ -181,7 +188,10 @@ Verified in the sandbox (no Mac available there):
   export shape, sampling disclosure wording).
 - No syntax check of any kind was run: the sandbox has no `swift` or
   `swiftc` binary (`which swift swiftc` returns nothing). Zero compiler
-  evidence exists for this code.
+  evidence exists for this code. That includes the VoiceOver labels
+  added in the latest Agent 1 change: they use only long-standing
+  SwiftUI accessibility modifiers and were checked by careful
+  inspection, not by a build or by VoiceOver on a Mac.
 
 Not verified anywhere yet:
 

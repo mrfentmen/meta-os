@@ -11,6 +11,7 @@ struct TimelineView: View {
         VStack(alignment: .leading, spacing: 6) {
             Text("Event timeline")
                 .font(.headline)
+                .accessibilityAddTraits(.isHeader)
             if model.timeline.isEmpty {
                 if model.analysisRunning {
                     Text("Analysis is running — assessments and errors will appear here as they arrive.")
@@ -50,6 +51,9 @@ struct TimelineView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // One VoiceOver item per row: title, product, timestamp, detail.
+        // Assessment rows stay buttons; failure rows stay plain text.
+        .accessibilityElement(children: .combine)
 
         switch item.kind {
         case .assessment:
