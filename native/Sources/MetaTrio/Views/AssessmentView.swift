@@ -36,10 +36,16 @@ struct AssessmentView: View {
                 }
                 Spacer()
             }
-            Text("\(response.timestamp) · product: \(response.product)")
+            Text("\(response.timestamp) · \(productDisplayName)")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+    }
+
+    /// Display name for the product key the server returned, falling back
+    /// to the raw key if it is not one of the three known products.
+    private var productDisplayName: String {
+        ProductID(rawValue: response.product)?.config.displayName ?? response.product
     }
 
     @ViewBuilder

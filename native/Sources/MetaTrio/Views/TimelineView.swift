@@ -12,8 +12,13 @@ struct TimelineView: View {
             Text("Event timeline")
                 .font(.headline)
             if model.timeline.isEmpty {
-                Text("No events yet. Assessments and errors will appear here.")
-                    .foregroundStyle(.secondary)
+                if model.analysisRunning {
+                    Text("Analysis is running — assessments and errors will appear here as they arrive.")
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("No events yet. Assessments and errors will appear here.")
+                        .foregroundStyle(.secondary)
+                }
             } else {
                 List(model.timeline) { item in
                     row(for: item)

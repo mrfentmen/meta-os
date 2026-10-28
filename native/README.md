@@ -41,6 +41,12 @@ rebuilding.
   Uncertainty section; an event timeline (failures included, in red);
   a session log with per-entry client-measured latency and JSON export in
   the same shape the web frontend produces, for the evaluation lane.
+- Empty states that say what is actually happening: the assessment area
+  shows a waiting state while a request is in flight, the real backend
+  error when the backend failed, and "No assessment received yet" only
+  when nothing has been attempted; the timeline says analysis is running
+  instead of looking empty. The assessment header shows the product's
+  display name (Meta Vigiles / Ignis / Sanitas), not the raw contract key.
 
 ### Honesty rules (enforced in code, not just promised)
 

@@ -44,6 +44,17 @@ struct ContentView: View {
                     AssessmentView(response: assessment)
                 }
                 .frame(maxHeight: 320)
+            } else if model.requestInFlight {
+                HStack(spacing: 8) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text("Waiting for the first assessment…")
+                        .foregroundStyle(.secondary)
+                }
+            } else if case .error(let message) = model.backendStatus {
+                Text(message)
+                    .foregroundStyle(.red)
+                    .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("No assessment received yet.")
                     .foregroundStyle(.secondary)
@@ -63,6 +74,9 @@ private struct HeaderView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            Text("Product")
+                .font(.caption)
+                .foregroundStyle(.secondary)
             Picker("Product", selection: $model.selectedProduct) {
                 ForEach(ProductID.allCases) { product in
                     Text(product.config.displayName).tag(product)
@@ -115,6 +129,7 @@ private struct CameraPanel: View {
         VStack(alignment: .leading, spacing: 8) {
             ZStack(alignment: .topLeading) {
                 CameraPreviewView(session: camera.session)
+                    .aspectRatio(16.0 / 9.0, contentMode: .fit)
                     .frame(minHeight: 240)
                     .background(Color.black)
                     .cornerRadius(6)
