@@ -56,7 +56,13 @@ rebuilding.
   `assessment{category, summary, uncertainty[], requires_human_review}`,
   `processing{model, latency_ms}`.
 - Latest-assessment view with observations, evidence, and a plainly labeled
-  Uncertainty section; an event timeline (failures included, in red);
+  Uncertainty section; an event timeline (failures included, in red).
+  Tapping an assessment row redisplays that past assessment in the panel
+  (web parity: the web "Show assessment" button does the same), and the
+  panel then carries a plain-words note that it is a past result shown
+  again for review, not a new assessment — so a re-inspected result can
+  never be mistaken for the latest one. A new assessment clears the note.
+  Failure rows are not tappable: there is no assessment to display.
   a session log with per-entry client-measured latency and JSON export in
   the same shape the web frontend produces, for the evaluation lane.
   The session log survives a relaunch (web parity): it is saved to

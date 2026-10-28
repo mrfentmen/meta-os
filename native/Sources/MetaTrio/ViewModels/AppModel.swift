@@ -125,6 +125,12 @@ final class AppModel: ObservableObject {
         "Backend health not checked yet. Checking it contacts the server's health route only; it never sends a frame and never returns an assessment."
     @Published private(set) var healthChecking = false
     @Published private(set) var displayedAssessment: AssessmentResponse?
+    /// Plain-words note shown under the "Latest assessment" heading when
+    /// the panel shows a re-inspected past result instead of the newest
+    /// assessment (web parity: the web "Show assessment" button labels
+    /// the panel the same way). Nil when the panel shows the newest
+    /// assessment, after a reset, or before anything is shown.
+    @Published private(set) var displayedAssessmentNote: String?
     @Published private(set) var timeline: [TimelineItem] = []
     @Published private(set) var analysisRunning = false
     @Published private(set) var requestInFlight = false
@@ -207,6 +213,7 @@ final class AppModel: ObservableObject {
         clearStillImage()
         clearVideo()
         displayedAssessment = nil
+        displayedAssessmentNote = nil
         timeline = []
         backendStatus = .unknown("Model backend status unknown. Start analysis to contact the endpoint.")
     }
@@ -437,6 +444,7 @@ final class AppModel: ObservableObject {
     func display(_ item: TimelineItem) {
         if case .assessment(let response) = item.kind {
             displayedAssessment = response
+            displayedAssessmentNote = "Showing an earlier assessment from \(item.timestamp). This is a past result shown again for review, not a new assessment."
         }
     }
 
@@ -509,6 +517,7 @@ final class AppModel: ObservableObject {
             recordLog(timestamp: timestamp, latencyMs: latencyMs, status: .ok, response: response)
             backendStatus = .connected("Model backend connected: \(trimmedEndpoint)")
             displayedAssessment = response
+            displayedAssessmentNote = nil
             timeline.insert(
                 TimelineItem(product: selectedProduct, timestamp: response.timestamp, kind: .assessment(response)),
                 at: 0

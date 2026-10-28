@@ -44,6 +44,12 @@ struct ContentView: View {
             Text("Latest assessment")
                 .font(.headline)
                 .accessibilityAddTraits(.isHeader)
+            if let note = model.displayedAssessmentNote {
+                Text(note)
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             if let assessment = model.displayedAssessment {
                 ScrollView {
                     AssessmentView(response: assessment)
