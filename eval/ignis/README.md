@@ -166,6 +166,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   whether one particular swap runs slower than another is visible without scanning the per-scenario table; the
   diagonal correct pairs are included, so the totals sum to the sample size, and a pair with no recorded latency
   shows n/a, never a fabricated zero.
+  A latency-by-confusable-negative-status section right after it splits the recorded latencies by
+  confusable-negative status — confusable negative (steam or fog, flame-like lighting), other non-alert,
+  alert (visible smoke, visible flame) — so whether the false-alarm-prone scenes as a class run slower
+  than the scenes that should never fire is visible without scanning the per-scenario table; all three
+  rows always render, so the totals sum to the sample size, and a group with no recorded latency
+  shows n/a, never a fabricated zero.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false

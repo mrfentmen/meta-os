@@ -43,6 +43,7 @@ import {
   computeLatencyByErrorStatus,
   computeLatencyByErrorMessage,
   computeLatencyByTruthPredictedPair,
+  computeLatencyByConfusableStatus,
   computeLatencyByOutcome,
   computeLatencyDistribution,
   computeLatencyOutliers,
@@ -1466,6 +1467,63 @@ test("report: latency by truth -> predicted pair splits latencies per confusion 
   assert.match(rendered, /\| visible smoke \| visible smoke \| 1 \| 1 \| 10\.0 \| 10\.0 \| 10\.0 \|/);
   assert.match(rendered, /\| visible smoke \| visible flame \| 1 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
   assert.match(rendered, /\| visible smoke \| ERROR \| 1 \| 0 \| n\/a \| n\/a \| n\/a \|/);
+});
+
+test("report: latency by confusable-negative status splits latencies into confusable, other non-alert, alert", () => {
+  const rec = (id, truth, actual, expected, fired, error, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: error === undefined ? null : error,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Confusable negative: steam 10, 30 plus flame-like lighting with
+  // no latency -> total 3, recorded 2, mean/median 20, max 30.
+  // Other non-alert: no hazard 40. Alert: smoke 100 plus flame
+  // with no latency -> total 2, recorded 1, 100/100/100. A group
+  // with no recorded latency at all would read null statistics,
+  // never zero; here every group has at least one latency, and the
+  // unmeasured records still count toward their group's total.
+  assert.deepEqual(
+    computeLatencyByConfusableStatus([
+      rec("IGN-T3", "flame-like lighting", null, false, false, "held"),
+      rec("IGN-T2", "steam or fog", "steam or fog", false, false, null, 30),
+      rec("IGN-T1", "steam or fog", "steam or fog", false, false, null, 10),
+      rec("IGN-T4", "no hazard visible", "no hazard visible", false, false, null, 40),
+      rec("IGN-T6", "visible flame", null, true, false, "held"),
+      rec("IGN-T5", "visible smoke", "visible smoke", true, true, null, 100),
+    ]),
+    [
+      { outcome: "confusable negative", total: 3, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "other non-alert", total: 1, recorded: 1, meanMs: 40, medianMs: 40, maxMs: 40 },
+      { outcome: "alert", total: 2, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+    ],
+  );
+  // Rendered: section after Latency by truth -> predicted pair,
+  // before Misses, all three rows always render so totals sum to
+  // the sample size, n/a for the unmeasured alert record's group
+  // statistics when a group carries no latency at all.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "steam or fog", "steam or fog", false, false, null, 10),
+      rec("IGN-T2", "no hazard visible", "no hazard visible", false, false, null, 40),
+      rec("IGN-T3", "visible smoke", null, true, false, "held"),
+    ],
+    metrics: { sample_size: 3, true_positives: 0, false_positives: 0, true_negatives: 2, false_negatives: 1, precision: null, recall: 0, false_positive_rate: 0, false_negative_rate: 1, category_accuracy: 2 / 3, latency_ms: { n: 2, mean: 25, median: 25, max: 40 }, errors: { count: 1, scenario_ids: ["IGN-T3"] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by confusable-negative status/);
+  assert.ok(rendered.indexOf("## Latency by confusable-negative status") > rendered.indexOf("## Latency by truth -> predicted pair"));
+  assert.ok(rendered.indexOf("## Latency by confusable-negative status") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| confusable negative \| 1 \| 1 \| 10\.0 \| 10\.0 \| 10\.0 \|/);
+  assert.match(rendered, /\| other non-alert \| 1 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
+  assert.match(rendered, /\| alert \| 1 \| 0 \| n\/a \| n\/a \| n\/a \|/);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {

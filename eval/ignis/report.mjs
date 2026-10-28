@@ -986,6 +986,61 @@ export function computeLatencyByTruthPredictedPair(records) {
     });
 }
 
+// Latency by confusable-negative status: one row per status group,
+// in fixed order confusable negative, other non-alert, alert, with
+// the count of recorded harness wall-clock latencies, their mean,
+// their median (averaged-middle, matching the distribution's
+// median), and their max. A record is a confusable negative when
+// its ground truth is one of the confusable-negative categories
+// (steam or fog, flame-like lighting — the same list the
+// confusable-negatives breakdown counts), an alert when its ground
+// truth is an alert category (visible smoke, visible flame), and
+// other non-alert otherwise (no hazard visible, indeterminate,
+// obscured or distant hazard, or any truth outside both lists —
+// non-alert by the alert list's definition, so the three scenario
+// totals always sum to the sample size). This is the latency side
+// of the confusable-negatives question: latency by category can
+// say steam runs slow, but only this split says whether the
+// false-alarm-prone scenes as a class run slower than the scenes
+// that should never fire. Records with no latency take no part in
+// a group's numbers but still count toward its scenario total, so
+// a group whose scenarios carry no latency reads as recorded 0
+// with n/a statistics — never as a fabricated zero.
+export function computeLatencyByConfusableStatus(records) {
+  const groups = {
+    "confusable negative": { outcome: "confusable negative", total: 0, latencies: [] },
+    "other non-alert": { outcome: "other non-alert", total: 0, latencies: [] },
+    alert: { outcome: "alert", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    const outcome = CONFUSABLE_NEGATIVE_CATEGORIES.includes(r.ground_truth_label)
+      ? "confusable negative"
+      : IGNIS_ALERT_CATEGORIES.includes(r.ground_truth_label)
+        ? "alert"
+        : "other non-alert";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["confusable negative", "other non-alert", "alert"].map((outcome) => {
+    const e = groups[outcome];
+    const sorted = e.latencies.sort((a, b) => a - b);
+    if (sorted.length === 0) {
+      return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+    }
+    const mid = Math.floor(sorted.length / 2);
+    const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    return {
+      outcome,
+      total: e.total,
+      recorded: sorted.length,
+      meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+      medianMs: median,
+      maxMs: sorted[sorted.length - 1],
+    };
+  });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1678,6 +1733,27 @@ export function renderRunReport(run, baselineRun = null) {
   for (const row of latencyByTruthPredictedPair) {
     lines.push(
       `| ${row.truth} | ${row.predicted} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
+  }
+  const latencyByConfusableStatus = computeLatencyByConfusableStatus(run.records);
+  lines.push(
+    "",
+    "## Latency by confusable-negative status",
+    "",
+    "Harness wall-clock latencies broken down by confusable-negative status — confusable negative " +
+      "(ground truth steam or fog, or flame-like lighting: the scenes a source plausibly mistakes " +
+      "for an alert), other non-alert (every other non-alert truth), alert (ground truth visible " +
+      "smoke or visible flame) — so whether the false-alarm-prone scenes as a class run slower " +
+      "than the scenes that should never fire is visible without scanning the per-scenario table. " +
+      "All three rows always render, so the scenario totals sum to the sample size, and a group " +
+      "with no recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Status | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByConfusableStatus) {
+    lines.push(
+      `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
     );
   }
   const misses = computeMisses(run.records);
