@@ -91,13 +91,20 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   mean/median/max into min, quartiles and p90 over the recorded
   harness latencies, so the tail is visible without scanning the
   per-scenario table; a run with no recorded latency says so
-  instead of inventing one.
+  instead of inventing one. An alert-errors section names the
+  scenarios behind the summary line's FP/FN counts — false
+  positives (an alert fired where none was expected) and false
+  negatives (an expected alert that never fired), each with truth
+  and predicted category — distinct from the category Misses, since
+  it asks whether an alert fired at all, not which category was
+  predicted; a clean run says none.
 - `report.test.mjs` — renderer tests: fixture/held/live-shaped
   classification (including assessments beating a stale held label),
   baseline comparison verdicts, per-category confusion and
   confusable-negative breakdowns, misses detail and miss-pair counts,
   error-message breakdown grouping and rendering, latency
-  distribution, latency-outlier flagging, run-JSON validation, trio protection, and the CLI end to end.
+  distribution, latency-outlier flagging, alert-error FP/FN
+  splitting and rendering, run-JSON validation, trio protection, and the CLI end to end.
 - `adapter.test.mjs` — adapter tests: label loading, alert-definition
   consistency, metric math, alert-correctness logic,
   malformed-input containment, the held-state refusal, and the

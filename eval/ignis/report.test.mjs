@@ -27,6 +27,7 @@ import {
   computeCategoryHeadline,
   computeCategoryRates,
   computeConfusableNegatives,
+  computeAlertErrors,
   computeErrorBreakdown,
   computeLatencyDistribution,
   computeLatencyOutliers,
@@ -590,6 +591,61 @@ test("report: latency distribution expands mean/median/max into quartiles and p9
     metrics: { ...base.metrics, latency_ms: { n: 0, mean: null, median: null, max: null } },
   };
   assert.match(renderRunReport(noLatencyRun), /No latency distribution: no record in this run carries a latency measurement\./);
+});
+
+test("report: alert errors split FP/FN scenarios from category misses", () => {
+  const rec = (id, truth, actual, expected, fired) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+  });
+  // FP: fired where none expected. FN: expected but never fired.
+  // Alert-correct records appear in neither list, even when the
+  // category is wrong (right alert, wrong category is a category
+  // miss, not an alert error). Lists sort by scenario id, so the
+  // section never depends on record order.
+  assert.deepEqual(
+    computeAlertErrors([
+      rec("T3", "steam or fog", "visible smoke", false, true),
+      rec("T1", "visible smoke", null, true, false),
+      rec("T2", "visible smoke", "visible flame", true, true),
+      rec("T4", "no hazard visible", "no hazard visible", false, false),
+      rec("T5", "visible flame", "visible flame", true, true),
+    ]),
+    {
+      falsePositives: [{ scenarioId: "T3", truth: "steam or fog", predicted: "visible smoke" }],
+      falseNegatives: [{ scenarioId: "T1", truth: "visible smoke", predicted: "ERROR" }],
+    },
+  );
+  assert.deepEqual(computeAlertErrors([rec("T1", "visible smoke", "visible smoke", true, true)]), {
+    falsePositives: [],
+    falseNegatives: [],
+  });
+  // Rendered: both lists with truth -> predicted; a clean run says none.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      { scenario_id: "IGN-T1", ground_truth_label: "visible smoke", alert_expected: true, alert_fired: false, alert_correct: false, category_correct: false, actual_category: null, error: "held" },
+      { scenario_id: "IGN-T2", ground_truth_label: "steam or fog", alert_expected: false, alert_fired: true, alert_correct: false, category_correct: false, actual_category: "visible smoke", error: null },
+      { scenario_id: "IGN-T3", ground_truth_label: "visible smoke", alert_expected: true, alert_fired: true, alert_correct: true, category_correct: true, actual_category: "visible smoke", error: null },
+    ],
+    metrics: { sample_size: 3, true_positives: 1, false_positives: 1, true_negatives: 0, false_negatives: 1, precision: 0.5, recall: 0.5, false_positive_rate: 1, false_negative_rate: 0.5, category_accuracy: 1 / 3, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 1, scenario_ids: ["IGN-T1"] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Alert errors/);
+  assert.match(rendered, /- False positives \(1\):\n  - IGN-T2: steam or fog -> visible smoke/);
+  assert.match(rendered, /- False negatives \(1\):\n  - IGN-T1: visible smoke -> ERROR \(no assessment\)/);
+  const cleanRun = {
+    ...run,
+    records: [
+      { scenario_id: "IGN-T1", ground_truth_label: "visible smoke", alert_expected: true, alert_fired: true, alert_correct: true, category_correct: true, actual_category: "visible smoke", error: null },
+    ],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
+  };
+  assert.match(renderRunReport(cleanRun), /None: every scenario's alert outcome matched its expectation\./);
 });
 
 test("report: CLI renders a run JSON to a file and refuses a trio target", () => {

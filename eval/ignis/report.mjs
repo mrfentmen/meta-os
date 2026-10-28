@@ -71,6 +71,14 @@
 // harness latencies, so the tail is visible without scanning the
 // per-scenario table — and a run with no recorded latency says so
 // instead of inventing one.
+// An alert-errors section names the scenarios behind the summary
+// line's FP/FN counts: false positives (an alert fired where none
+// was expected) and false negatives (an expected alert that never
+// fired), each with truth and predicted category. This is distinct
+// from the category Misses: an alert error is about whether an
+// alert fired at all, not which category was predicted — a missed
+// alert on an unassessed record reads as ERROR, a failure, not a
+// wrong category.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -505,6 +513,36 @@ export function computeErrorBreakdown(records) {
     });
 }
 
+// Alert-level errors: the scenarios behind the summary line's
+// FP/FN counts, split from the category Misses. A false positive
+// fired an alert where none was expected; a false negative missed
+// an expected alert. The split uses alert_expected/alert_fired
+// only, so it stays meaningful when the category view does not: a
+// source can fire the right alert with the wrong category (an alert
+// success, a category miss) or the wrong alert outcome with the
+// right non-alert category. Predicted is ERROR for unassessed
+// records, matching the confusion table's convention. Each list
+// sorts by scenario id, so the section never depends on record
+// order. Records whose alert outcome matched expectation appear in
+// neither list.
+export function computeAlertErrors(records) {
+  const byId = (a, b) => (a.scenarioId < b.scenarioId ? -1 : a.scenarioId > b.scenarioId ? 1 : 0);
+  const entry = (r) => ({
+    scenarioId: r.scenario_id,
+    truth: r.ground_truth_label,
+    predicted: r.actual_category === null ? ERROR_PREDICTED : r.actual_category,
+  });
+  const falsePositives = records
+    .filter((r) => r.alert_fired && !r.alert_expected)
+    .map(entry)
+    .sort(byId);
+  const falseNegatives = records
+    .filter((r) => r.alert_expected && !r.alert_fired)
+    .map(entry)
+    .sort(byId);
+  return { falsePositives, falseNegatives };
+}
+
 export function assertWritableReportPath(outPath) {
   if (PROTECTED_REPORT_NAMES.includes(basename(outPath))) {
     throw new Error(
@@ -756,6 +794,37 @@ export function renderRunReport(run, baselineRun = null) {
       // Escape pipes so a message containing one cannot break the table.
       lines.push(`| ${e.message.replaceAll("|", "\\|")} | ${e.count} | ${e.scenarioIds.join(", ")} |`);
     }
+  }
+  const alertErrors = computeAlertErrors(run.records);
+  lines.push(
+    "",
+    "## Alert errors",
+    "",
+    "The scenarios behind the summary line's false-positive and false-negative counts, " +
+      "so an alert-level failure is diagnosable without cross-referencing the per-scenario table. " +
+      "This is distinct from the category Misses above: it asks whether an alert fired at all, " +
+      "not which category was predicted. ERROR rows are failures, not wrong categories — " +
+      "an unassessed record on an alert-expected scenario is a false negative, not a confusion.",
+    "",
+  );
+  if (alertErrors.falsePositives.length === 0 && alertErrors.falseNegatives.length === 0) {
+    lines.push("None: every scenario's alert outcome matched its expectation.");
+  } else {
+    const renderList = (label, list) =>
+      list.length === 0
+        ? `- ${label} (0): none.`
+        : [
+            `- ${label} (${list.length}):`,
+            ...list.map(
+              (e) =>
+                `  - ${e.scenarioId}: ${e.truth} -> ${e.predicted}` +
+                (e.predicted === ERROR_PREDICTED ? " (no assessment)" : ""),
+            ),
+          ].join("\n");
+    lines.push(
+      renderList("False positives", alertErrors.falsePositives),
+      renderList("False negatives", alertErrors.falseNegatives),
+    );
   }
   if (baseline !== null) {
     const b = baseline.metrics;
