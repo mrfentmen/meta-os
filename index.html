@@ -3,12 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Meta Sentinel — Visual Event Assessment Prototype</title>
+<title>Meta Trio — Visual Event Assessment Prototype</title>
 <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-product="vigiles">
 <header class="topbar">
-  <h1>Meta Sentinel</h1>
+  <div class="brand">
+    <h1>Meta Trio</h1>
+    <p id="product-badge" class="product-badge">Meta Vigiles</p>
+  </div>
   <p id="backend-status" class="status" data-state="unknown">Model backend status unknown. Start analysis to contact the endpoint.</p>
 </header>
 
@@ -22,14 +25,46 @@
     <canvas id="capture-canvas" hidden></canvas>
     <p id="camera-state" class="note">Camera is off.</p>
     <div class="controls">
-      <button id="btn-camera-start" type="button">Start camera</button>
+      <button id="btn-camera-start" type="button" class="btn-primary">Start camera</button>
       <button id="btn-camera-stop" type="button" disabled>Stop camera</button>
-      <button id="btn-analysis-start" type="button" disabled>Start analysis</button>
+      <button id="btn-analysis-start" type="button" class="btn-primary" disabled>Start analysis</button>
       <button id="btn-analysis-stop" type="button" disabled>Stop analysis</button>
       <button id="btn-reset" type="button">Reset</button>
     </div>
     <p id="in-flight" class="note" hidden>Analysis request in flight…</p>
     <p id="sampler-stats" class="note mono">Ticks: 0 · Sent: 0 · Skipped (request in flight): 0 · Failed: 0</p>
+  </section>
+
+  <section class="panel" aria-label="Product">
+    <h2>Product</h2>
+    <div class="product-switch" role="radiogroup" aria-label="Product">
+      <label class="product-option" data-product-option="vigiles">
+        <input type="radio" name="product" value="vigiles" checked>
+        <span class="product-option-name">Vigiles</span>
+        <span class="product-option-sub">Incident awareness</span>
+      </label>
+      <label class="product-option" data-product-option="ignis">
+        <input type="radio" name="product" value="ignis">
+        <span class="product-option-name">Ignis</span>
+        <span class="product-option-sub">Fire &amp; smoke</span>
+      </label>
+      <label class="product-option" data-product-option="sanitas">
+        <input type="radio" name="product" value="sanitas">
+        <span class="product-option-name">Sanitas</span>
+        <span class="product-option-sub">Sanitation</span>
+      </label>
+    </div>
+    <p id="product-department" class="product-department"></p>
+    <p id="product-tagline" class="product-tagline"></p>
+    <h3 class="subhead">Categories this product can report</h3>
+    <ul id="product-categories" class="chips"></ul>
+    <h3 class="subhead">How to supply input</h3>
+    <p id="product-guidance" class="note"></p>
+    <div class="limitations">
+      <h3 class="subhead">Limitations — always in effect</h3>
+      <p id="product-limitations" class="note"></p>
+    </div>
+    <p class="note">Switching products applies to the next sampled frame. Earlier log entries keep the product they were assessed under.</p>
   </section>
 
   <section class="panel" aria-label="Configuration">
@@ -38,7 +73,9 @@
     <input id="endpoint" type="text" value="/api/assess" autocomplete="off" spellcheck="false">
     <label for="interval-seconds">Sampling interval (seconds, 1–60)</label>
     <input id="interval-seconds" type="number" value="3" min="1" max="60" step="1">
-    <label for="scenario-label">Scenario label (optional, written to the evaluation log as ground-truth context)</label>
+    <label for="scenario-select">Scenario (optional, written to the evaluation log as ground-truth context)</label>
+    <select id="scenario-select"></select>
+    <label for="scenario-label">Or a custom scenario label (overrides the choice above)</label>
     <input id="scenario-label" type="text" placeholder="e.g. staged-fall-01" autocomplete="off">
     <p id="sampling-disclosure" class="note"></p>
   </section>
@@ -46,7 +83,7 @@
   <section class="panel" aria-label="Latest assessment">
     <h2>Latest assessment</h2>
     <div id="latest-assessment" class="mono-block">No assessment received yet.</div>
-    <p class="note">Assessments describe observable evidence only. They do not establish intent, guilt, or that a crime occurred.</p>
+    <p class="note">Assessments describe observable evidence only. Each product's limitations notice (above) states what its assessments never claim.</p>
   </section>
 
   <section class="panel" aria-label="Event history">
@@ -62,12 +99,12 @@
       <button id="btn-export-log" type="button">Export log (JSON)</button>
       <button id="btn-clear-log" type="button">Clear log</button>
     </div>
-    <p class="note">The log lives in memory only. Export it before reloading the page or the entries are lost. Frames are sent to the assessment endpoint and are not stored by this app.</p>
+    <p class="note">The log lives in memory only. Export it before reloading the page or the entries are lost. Frames are sent to the assessment endpoint and are not stored by this app. Each entry records the product it was assessed under.</p>
   </section>
 </main>
 
 <footer class="footer">
-  <p>Experimental prototype for staged, consenting scenarios. Not an operational law-enforcement or emergency-dispatch system. This app never contacts police or emergency services, and performs no face recognition or identity inference.</p>
+  <p>Experimental prototype for staged, consenting scenarios. Not an operational law-enforcement, fire-detection, or enforcement system. This app never contacts police or emergency services, performs no face recognition or identity inference, and never dispatches or cites automatically.</p>
 </footer>
 
 <script type="module" src="js/app.js"></script>

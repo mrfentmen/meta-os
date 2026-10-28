@@ -1,10 +1,12 @@
-/* Meta Sentinel — restrained operational UI. Flat colors, 1px borders,
-   no gradients, no decorative effects. */
+/* Meta Trio — restrained operational UI. Flat colors, 1px borders,
+   no gradients, no decorative effects. The active product tints only
+   functional accents (switcher, badge, limitations rule) via --accent. */
 
 :root {
   --bg: #14161a;
   --panel: #1d2026;
   --panel-border: #3a3f47;
+  --input-bg: #101216;
   --text: #e6e6e6;
   --muted: #9aa0a8;
   --accent: #4f7ec2;
@@ -12,6 +14,18 @@
   --warn: #c9a227;
   --err: #c2504a;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+body[data-product="vigiles"] {
+  --accent: #4f7ec2;
+}
+
+body[data-product="ignis"] {
+  --accent: #d97a2b;
+}
+
+body[data-product="sanitas"] {
+  --accent: #5da864;
 }
 
 * {
@@ -30,16 +44,35 @@ body {
 .topbar {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
+  justify-content: space-between;
   gap: 8px 16px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--panel-border);
 }
 
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
 .topbar h1 {
   margin: 0;
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.product-badge {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 2px 10px;
 }
 
 .status {
@@ -60,22 +93,31 @@ main {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  padding: 12px 16px;
-  max-width: 1200px;
+  padding: 16px;
+  max-width: 1240px;
   margin: 0 auto;
 }
 
 .panel {
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 4px;
-  padding: 12px 14px;
+  border-radius: 8px;
+  padding: 14px 16px;
 }
 
 .panel h2 {
   margin: 0 0 10px;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
+}
+
+.subhead {
+  margin: 14px 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 .panel-head {
@@ -106,7 +148,7 @@ video {
   aspect-ratio: 4 / 3;
   background: #000;
   border: 1px solid var(--panel-border);
-  border-radius: 4px;
+  border-radius: 6px;
   object-fit: cover;
 }
 
@@ -121,9 +163,10 @@ button {
   background: #262a31;
   color: var(--text);
   border: 1px solid var(--panel-border);
-  border-radius: 4px;
-  padding: 8px 12px;
+  border-radius: 6px;
+  padding: 8px 14px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -131,9 +174,144 @@ button:hover:not(:disabled) {
   border-color: var(--accent);
 }
 
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
+}
+
+.btn-primary:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+/* Product switcher: three real radio options, styled as a segmented row. */
+.product-switch {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+
+.product-option {
+  display: block;
+  margin: 0;
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--input-bg);
+}
+
+.product-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.product-option-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.product-option-sub {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.product-option:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.product-option:has(input:checked) .product-option-name {
+  color: var(--accent);
+}
+
+/* Per-option checked tint uses the option's own product color, not the
+   currently selected accent, so the switcher reads correctly at a glance. */
+.product-option[data-product-option="vigiles"]:has(input:checked) {
+  border-color: #4f7ec2;
+  box-shadow: inset 0 0 0 1px #4f7ec2;
+}
+
+.product-option[data-product-option="vigiles"]:has(input:checked) .product-option-name {
+  color: #4f7ec2;
+}
+
+.product-option[data-product-option="ignis"]:has(input:checked) {
+  border-color: #d97a2b;
+  box-shadow: inset 0 0 0 1px #d97a2b;
+}
+
+.product-option[data-product-option="ignis"]:has(input:checked) .product-option-name {
+  color: #d97a2b;
+}
+
+.product-option[data-product-option="sanitas"]:has(input:checked) {
+  border-color: #5da864;
+  box-shadow: inset 0 0 0 1px #5da864;
+}
+
+.product-option[data-product-option="sanitas"]:has(input:checked) .product-option-name {
+  color: #5da864;
+}
+
+.product-department {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.product-tagline {
+  margin: 0;
+  font-size: 14px;
+}
+
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  font-size: 12.5px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  color: var(--text);
+  background: var(--input-bg);
+}
+
+.limitations {
+  margin-top: 14px;
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+}
+
+.limitations .subhead {
+  margin-top: 0;
+}
+
+.limitations p {
+  margin-bottom: 0;
 }
 
 label {
@@ -144,15 +322,20 @@ label {
 }
 
 input[type="text"],
-input[type="number"] {
+input[type="number"],
+select {
   width: 100%;
-  background: #101216;
+  background: var(--input-bg);
   color: var(--text);
   border: 1px solid var(--panel-border);
-  border-radius: 4px;
+  border-radius: 6px;
   padding: 8px;
   font-size: 14px;
   font-family: var(--mono);
+}
+
+select {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 .note {
@@ -173,6 +356,12 @@ input[type="number"] {
 
 .assessment-head {
   margin: 0 0 6px;
+}
+
+.assessment-product {
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 700;
 }
 
 .assessment-time {
@@ -230,7 +419,7 @@ input[type="number"] {
 
 .footer {
   padding: 12px 16px 20px;
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
   color: var(--muted);
   font-size: 13px;
@@ -244,5 +433,9 @@ input[type="number"] {
 
   .controls button {
     flex: 1 1 40%;
+  }
+
+  .product-switch {
+    grid-template-columns: 1fr;
   }
 }
