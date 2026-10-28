@@ -42,6 +42,7 @@ import {
   computeLatencyByPredictedCategory,
   computeLatencyByErrorStatus,
   computeLatencyByErrorMessage,
+  computeLatencyByTruthPredictedPair,
   computeLatencyByOutcome,
   computeLatencyDistribution,
   computeLatencyOutliers,
@@ -1411,6 +1412,60 @@ test("report: latency by error message splits errored latencies per message", ()
     metrics: { ...run.metrics, sample_size: 1, errors: { count: 0, scenario_ids: [] } },
   };
   assert.match(renderRunReport(cleanRun), /None: no record carried an error message\./);
+});
+
+test("report: latency by truth -> predicted pair splits latencies per confusion pair", () => {
+  const rec = (id, truth, actual, expected, fired, error, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: error === undefined ? null : error,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // smoke -> smoke: 10, 30 -> mean/median 20, max 30.
+  // smoke -> flame: 40 -> 40/40/40. smoke -> ERROR: no latency,
+  // so null statistics, never zero. flame -> flame: 100.
+  // Truth alphabetical, predicted alphabetical with ERROR last
+  // within each truth, so the smoke rows read flame, smoke, ERROR.
+  assert.deepEqual(
+    computeLatencyByTruthPredictedPair([
+      rec("IGN-T3", "visible smoke", null, true, false, "held"),
+      rec("IGN-T2", "visible smoke", "visible flame", true, true, null, 40),
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, null, 10),
+      rec("IGN-T4", "visible smoke", "visible smoke", true, true, null, 30),
+      rec("IGN-T5", "visible flame", "visible flame", true, true, null, 100),
+    ]),
+    [
+      { truth: "visible flame", predicted: "visible flame", total: 1, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+      { truth: "visible smoke", predicted: "visible flame", total: 1, recorded: 1, meanMs: 40, medianMs: 40, maxMs: 40 },
+      { truth: "visible smoke", predicted: "visible smoke", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { truth: "visible smoke", predicted: "ERROR", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+    ],
+  );
+  // Rendered: section after Latency by error message, before
+  // Misses, diagonal pairs included so totals sum to the sample
+  // size, n/a for the unmeasured pair.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, null, 10),
+      rec("IGN-T2", "visible smoke", "visible flame", true, true, null, 40),
+      rec("IGN-T3", "visible smoke", null, true, false, "held"),
+    ],
+    metrics: { sample_size: 3, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 1, precision: 1, recall: 0.5, false_positive_rate: 0, false_negative_rate: 0.5, category_accuracy: 1 / 3, latency_ms: { n: 2, mean: 25, median: 25, max: 40 }, errors: { count: 1, scenario_ids: ["IGN-T3"] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by truth -> predicted pair/);
+  assert.ok(rendered.indexOf("## Latency by truth -> predicted pair") > rendered.indexOf("## Latency by error message"));
+  assert.ok(rendered.indexOf("## Latency by truth -> predicted pair") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| visible smoke \| visible smoke \| 1 \| 1 \| 10\.0 \| 10\.0 \| 10\.0 \|/);
+  assert.match(rendered, /\| visible smoke \| visible flame \| 1 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
+  assert.match(rendered, /\| visible smoke \| ERROR \| 1 \| 0 \| n\/a \| n\/a \| n\/a \|/);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {

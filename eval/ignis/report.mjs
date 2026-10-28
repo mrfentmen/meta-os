@@ -934,6 +934,58 @@ export function computeLatencyByErrorMessage(records) {
     });
 }
 
+// Latency by truth -> predicted pair: one row per pair present in
+// the records, sorted by truth alphabetically then predicted
+// alphabetically with ERROR last (matching the confusion table's
+// ordering), with the count of recorded harness wall-clock
+// latencies, their mean, their median (averaged-middle, matching
+// the distribution's median), and their max. This is the joint
+// breakdown the two one-sided breakdowns imply: latency by
+// category (truth alone) and latency by predicted category
+// (predicted alone) cannot say whether one particular swap runs
+// slower than another, and this table can — including the diagonal
+// correct pairs, so the scenario totals sum to the sample size.
+// An unassessed record reads as ERROR, matching the confusion
+// table's convention. Records with no latency take no part in a
+// pair's numbers but still count toward its scenario total, so a
+// pair whose scenarios carry no latency reads as recorded 0 with
+// n/a statistics — never as a fabricated zero.
+export function computeLatencyByTruthPredictedPair(records) {
+  const byPair = {};
+  for (const r of records) {
+    const predicted = r.actual_category === null ? ERROR_PREDICTED : r.actual_category;
+    const key = `${r.ground_truth_label}\0${predicted}`;
+    byPair[key] ??= { truth: r.ground_truth_label, predicted, total: 0, latencies: [] };
+    const entry = byPair[key];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return Object.values(byPair)
+    .map((e) => {
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { truth: e.truth, predicted: e.predicted, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        truth: e.truth,
+        predicted: e.predicted,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    })
+    .sort((a, b) => {
+      if (a.truth !== b.truth) return a.truth < b.truth ? -1 : 1;
+      if (a.predicted === ERROR_PREDICTED) return 1;
+      if (b.predicted === ERROR_PREDICTED) return -1;
+      return a.predicted < b.predicted ? -1 : a.predicted > b.predicted ? 1 : 0;
+    });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1605,6 +1657,28 @@ export function renderRunReport(run, baselineRun = null) {
         `| ${row.message} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );
     }
+  }
+  const latencyByTruthPredictedPair = computeLatencyByTruthPredictedPair(run.records);
+  lines.push(
+    "",
+    "## Latency by truth -> predicted pair",
+    "",
+    "Harness wall-clock latencies broken down by ground-truth -> predicted pair — the joint " +
+      "breakdown behind latency by category and latency by predicted category, so whether " +
+      "one particular swap runs slower than another is visible without scanning the " +
+      "per-scenario table. Rows sort by truth alphabetically, then predicted alphabetically " +
+      "with ERROR last, matching the confusion table's ordering; an unassessed record reads " +
+      "as ERROR. The diagonal correct pairs are included, so the scenario totals sum to the " +
+      "sample size. Mean and median are over the recorded latencies only; a pair with no " +
+      "recorded latency shows n/a, never a fabricated zero.",
+    "",
+    "| Truth | Predicted | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+    "| --- | --- | --- | --- | --- | --- | --- |",
+  );
+  for (const row of latencyByTruthPredictedPair) {
+    lines.push(
+      `| ${row.truth} | ${row.predicted} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+    );
   }
   const misses = computeMisses(run.records);
   lines.push("", `## Misses (${misses.length})`, "");

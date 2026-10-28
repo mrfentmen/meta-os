@@ -160,6 +160,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   per-scenario table; its scenario totals sum to the error count, not the sample size, since
   records with no error message appear in neither row, and a message with no recorded latency
   shows n/a, never a fabricated zero; a run with no errored records says none.
+  A latency-by-truth -> predicted-pair section right after it is the joint breakdown behind latency by
+  category and latency by predicted category — one row per truth -> predicted pair present, sorted by truth
+  then predicted with ERROR last (matching the confusion table, where an unassessed record reads as ERROR), so
+  whether one particular swap runs slower than another is visible without scanning the per-scenario table; the
+  diagonal correct pairs are included, so the totals sum to the sample size, and a pair with no recorded latency
+  shows n/a, never a fabricated zero.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false
