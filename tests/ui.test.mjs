@@ -1090,3 +1090,34 @@ test("status: native still-image and video assess show a contacting status while
     "video contacting status is set before the request",
   );
 });
+
+// ---------- sampling interval clamp (web parity with the native Stepper) ----------
+// The native interval Stepper can only hold 1–60, so the value on screen
+// is always the value being sampled at. The web number box accepted
+// anything — 99, 0, or blank — while the interval below silently fell
+// back to 3 s, so the box and the disclosure (and the sampler) disagreed
+// about the real interval. No browser exists in this suite, so these are
+// static checks on the shipped wiring: the interval helper clamps to the
+// range with the 3 s default only for a blank or non-numeric box, the
+// change handler writes the clamped value back into the box before
+// refreshing the disclosure and the sampler, and the native panel holds
+// the same range in its Stepper.
+test("config: web sampling interval clamps to 1–60 like the native Stepper, instead of silently falling back", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /function currentIntervalSeconds\(\) \{/);
+  assert.match(app, /if \(!Number\.isFinite\(seconds\)\) return 3;/);
+  assert.match(app, /return Math\.min\(60, Math\.max\(1, seconds\)\);/);
+  assert.match(
+    app,
+    /els\.intervalSeconds\.addEventListener\("change", \(\) => \{\n\s+els\.intervalSeconds\.value = String\(currentIntervalSeconds\(\)\);/,
+  );
+  assert.match(
+    app,
+    /els\.intervalSeconds\.addEventListener\("change", \(\) => \{[\s\S]*?updateSamplingDisclosure\(\);/,
+  );
+  const swift = readFileSync(
+    new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url),
+    "utf8",
+  );
+  assert.match(swift, /Stepper\(value: \$model\.intervalSeconds, in: 1\.\.\.60\)/);
+});

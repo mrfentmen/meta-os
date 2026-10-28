@@ -112,10 +112,22 @@ function renderProduct() {
   els.scenarioSelect.value = "";
 }
 
-function currentIntervalMs() {
+// Native parity: the native interval Stepper can only hold 1–60, so
+// the value on screen is always the value being sampled at. The web
+// number box accepted anything — 99, 0, or blank — while the interval
+// below silently fell back to 3 s, so the box and the disclosure (and
+// the sampler) disagreed about the real interval. Clamp to the range
+// instead, with the 3 s default only for a blank or non-numeric box,
+// and write the clamped value back into the box on change, so what the
+// box shows is what runs.
+function currentIntervalSeconds() {
   const seconds = Number(els.intervalSeconds.value);
-  const safe = Number.isFinite(seconds) && seconds >= 1 && seconds <= 60 ? seconds : 3;
-  return Math.round(safe * 1000);
+  if (!Number.isFinite(seconds)) return 3;
+  return Math.min(60, Math.max(1, seconds));
+}
+
+function currentIntervalMs() {
+  return Math.round(currentIntervalSeconds() * 1000);
 }
 
 function currentEndpoint() {
@@ -806,6 +818,7 @@ els.btnReset.addEventListener("click", () => {
 });
 
 els.intervalSeconds.addEventListener("change", () => {
+  els.intervalSeconds.value = String(currentIntervalSeconds());
   updateSamplingDisclosure();
   if (sampler.running) {
     sampler.setIntervalMs(currentIntervalMs());
