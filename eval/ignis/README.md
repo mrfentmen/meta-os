@@ -48,9 +48,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   fixture source → fixture, any returned assessment → live-model),
   never by its labels alone — so a live run renders as live even if
   it was produced by an older run.mjs. `--baseline <baseline-run.json>`
-  adds the recall-and-category-accuracy verdict against the baseline.
+  adds the recall-and-category-accuracy verdict against the baseline, with signed deltas
+  for both bar metrics.
   `--out` to a trio filename is refused: a live run belongs in its
-  own `live-run-report.md`, never as an edit to the trio. It also
+  own `live-run-report.md`, never as an edit to the trio. With a baseline supplied, the
+  comparison section renders signed recall and category-accuracy deltas (this run minus
+  baseline, n/a when either side is n/a) alongside the beat-the-baseline verdict. It also
   renders a truth-vs-predicted category table and a
   confusable-negative breakdown (steam or fog / flame-like lighting
   predicted as an alert category), so alert-level metrics cannot hide

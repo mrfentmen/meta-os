@@ -50,7 +50,9 @@
 // A run's numbers are only ever compared against a baseline run the
 // caller supplies; the bar is recall AND category accuracy, never
 // precision alone (the baseline never fires a false alarm by
-// construction, so its precision is vacuous, not perfect).
+// construction, so its precision is vacuous, not perfect). The
+// comparison renders signed deltas for both bar metrics, so the size
+// of the margin is visible without subtracting the two lines above.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -390,6 +392,21 @@ function fmtLatency(v) {
   return v === null ? "n/a" : v.toFixed(1);
 }
 
+// Signed deltas against a supplied baseline run's metrics: run minus
+// baseline for the two bar metrics, recall and category accuracy. A
+// delta is null when either side is null (e.g. recall on a run that
+// never fired an alert is n/a, not zero), so a null delta never reads
+// as "no change". The beats flags reuse the verdict's definition:
+// strictly greater on BOTH metrics, never precision alone.
+export function computeBaselineDeltas(runMetrics, baselineMetrics) {
+  const delta = (a, b) => (a === null || b === null ? null : a - b);
+  const recallDelta = delta(runMetrics.recall, baselineMetrics.recall);
+  const categoryAccuracyDelta = delta(runMetrics.category_accuracy, baselineMetrics.category_accuracy);
+  const recallBeats = recallDelta !== null && recallDelta > 0;
+  const accuracyBeats = categoryAccuracyDelta !== null && categoryAccuracyDelta > 0;
+  return { recallDelta, categoryAccuracyDelta, recallBeats, accuracyBeats, beats: recallBeats && accuracyBeats };
+}
+
 export function renderRunReport(run, baselineRun = null) {
   const errors = validateRunJson(run);
   if (errors.length > 0) throw new Error(`invalid run JSON: ${errors.join("; ")}`);
@@ -554,17 +571,17 @@ export function renderRunReport(run, baselineRun = null) {
   );
   if (baseline !== null) {
     const b = baseline.metrics;
-    const recallBeats = m.recall !== null && b.recall !== null && m.recall > b.recall;
-    const accuracyBeats =
-      m.category_accuracy !== null && b.category_accuracy !== null && m.category_accuracy > b.category_accuracy;
-    const beats = recallBeats && accuracyBeats;
+    const deltas = computeBaselineDeltas(m, b);
+    const fmtDelta = (d) => (d === null ? "n/a" : `${d >= 0 ? "+" : ""}${d.toFixed(3)}`);
     lines.push(
       "",
       "## Comparison against the baseline",
       "",
       `Baseline (always-no-hazard): recall ${fmt(b.recall)}, category accuracy ${fmt(b.category_accuracy)}.`,
       `This run: recall ${fmt(m.recall)}, category accuracy ${fmt(m.category_accuracy)}.`,
-      beats
+      `Recall delta: ${fmtDelta(deltas.recallDelta)} (this run minus baseline; n/a when either side's recall is n/a).`,
+      `Category-accuracy delta: ${fmtDelta(deltas.categoryAccuracyDelta)} (this run minus baseline).`,
+      deltas.beats
         ? "Verdict: this run BEATS the baseline on recall and category accuracy — the bar a real source must clear."
         : "Verdict: this run does NOT beat the baseline on both recall and category accuracy. " +
           "Beating it on precision alone proves nothing, since the baseline never fires a false alarm by construction.",

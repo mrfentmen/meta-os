@@ -23,6 +23,7 @@ import {
   assertWritableReportPath,
   classifyRunKind,
   computeCategoryConfusion,
+  computeBaselineDeltas,
   computeCategoryHeadline,
   computeCategoryRates,
   computeConfusableNegatives,
@@ -96,6 +97,37 @@ test("report: baseline comparison — stub beats the baseline, baseline does not
   assert.match(renderRunReport(stubRun, baselineRun), /BEATS the baseline on recall and category accuracy/);
   assert.match(renderRunReport(baselineRun, baselineRun), /does NOT beat the baseline/);
   assert.match(renderRunReport(stubRun), /No baseline run supplied/);
+});
+
+test("report: baseline comparison renders signed deltas — stub beats baseline by +0.800 recall, +0.550 accuracy", async () => {
+  const stubRun = await buildRun(assessStub, "stub (fixture, not a model)", "fixture run, no live model");
+  const baselineRun = await buildRun(assessBaseline, "baseline always-no-hazard (fixture)", "fixture run, no live model");
+  const deltas = computeBaselineDeltas(stubRun.metrics, baselineRun.metrics);
+  assert.equal(deltas.recallDelta, 0.8);
+  // 14/20 - 3/20 is 0.5499999999999999 in binary floating point, so
+  // compare within epsilon; the rendered line still prints +0.550.
+  assert.ok(Math.abs(deltas.categoryAccuracyDelta - 0.55) < 1e-9);
+  assert.equal(deltas.beats, true);
+  // Baseline against itself: zero deltas, not a beat.
+  const selfDeltas = computeBaselineDeltas(baselineRun.metrics, baselineRun.metrics);
+  assert.equal(selfDeltas.recallDelta, 0);
+  assert.equal(selfDeltas.categoryAccuracyDelta, 0);
+  assert.equal(selfDeltas.beats, false);
+  // Null on either side is n/a, never zero: a held run's recall is
+  // null only when its metrics say so, and a null delta must not
+  // read as "no change" or count as a beat.
+  const nullDeltas = computeBaselineDeltas(
+    { recall: null, category_accuracy: 0.5 },
+    { recall: 0, category_accuracy: 0.15 },
+  );
+  assert.equal(nullDeltas.recallDelta, null);
+  assert.equal(nullDeltas.beats, false);
+  const report = renderRunReport(stubRun, baselineRun);
+  assert.match(report, /Recall delta: \+0\.800/);
+  assert.match(report, /Category-accuracy delta: \+0\.550/);
+  const heldReport = renderRunReport(baselineRun, baselineRun);
+  assert.match(heldReport, /Recall delta: \+0\.000/);
+  assert.match(heldReport, /Category-accuracy delta: \+0\.000/);
 });
 
 test("report: per-category confusion table names the stub's exact swaps", async () => {
