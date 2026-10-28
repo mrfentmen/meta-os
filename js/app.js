@@ -54,11 +54,13 @@ const els = {
   imageState: $("image-state"),
   btnImageAssess: $("btn-image-assess"),
   btnImageClear: $("btn-image-clear"),
+  imageAssessing: $("image-assessing"),
   videoInput: $("video-input"),
   videoPreview: $("video-preview"),
   videoState: $("video-state"),
   btnVideoAssess: $("btn-video-assess"),
   btnVideoClear: $("btn-video-clear"),
+  videoAssessing: $("video-assessing"),
 };
 
 const camera = new Camera(els.video);
@@ -464,6 +466,7 @@ function clearStillImageInput() {
   els.imagePreview.removeAttribute("src");
   els.imageState.textContent = "No image chosen.";
   els.btnImageAssess.disabled = true;
+  els.imageAssessing.hidden = true;
 }
 
 els.btnImageClear.addEventListener("click", () => {
@@ -501,6 +504,13 @@ els.btnImageAssess.addEventListener("click", async () => {
   if (!stillImageDataUrl || stillImageAssessing) return;
   stillImageAssessing = true;
   els.btnImageAssess.disabled = true;
+  // Native parity: the native Still image panel shows "Sending still
+  // image…" in the panel while the request is outstanding. The web
+  // panel only had the generic in-flight line in the distant Camera
+  // panel, so a user watching this panel saw nothing move while the
+  // request was out. Show the same line here, and hide it again when
+  // the request settles, success or failure.
+  els.imageAssessing.hidden = false;
   setBackendStatus("unknown", `Contacting model backend: ${currentEndpoint()} …`);
   try {
     await submitAssessment(currentProductId, new Date().toISOString(), stillImageDataUrl);
@@ -508,6 +518,7 @@ els.btnImageAssess.addEventListener("click", async () => {
     // submitAssessment already rendered and logged the failure.
   } finally {
     stillImageAssessing = false;
+    els.imageAssessing.hidden = true;
     els.btnImageAssess.disabled = !stillImageDataUrl;
   }
 });
@@ -530,6 +541,7 @@ function clearVideoInput() {
   els.videoPreview.load();
   els.videoPreview.hidden = true;
   els.btnVideoAssess.disabled = true;
+  els.videoAssessing.hidden = true;
 }
 
 // Clears only the prerecorded-video input (file choice, preview, Assess
@@ -573,6 +585,11 @@ els.btnVideoAssess.addEventListener("click", async () => {
   if (!videoObjectUrl || videoAssessing) return;
   videoAssessing = true;
   els.btnVideoAssess.disabled = true;
+  // Native parity: the native video panel shows "Sending video
+  // frame…" in the panel while the request is outstanding, for the
+  // same reason as the still-image note above — the generic in-flight
+  // line lives in the Camera panel, not here.
+  els.videoAssessing.hidden = false;
   setBackendStatus("unknown", `Contacting model backend: ${currentEndpoint()} …`);
   const timestamp = new Date().toISOString();
   let image;
@@ -607,6 +624,7 @@ els.btnVideoAssess.addEventListener("click", async () => {
     });
     els.videoState.textContent = `Could not capture this frame: ${err.message}`;
     videoAssessing = false;
+    els.videoAssessing.hidden = true;
     els.btnVideoAssess.disabled = false;
     return;
   }
@@ -616,6 +634,7 @@ els.btnVideoAssess.addEventListener("click", async () => {
     // submitAssessment already rendered and logged the failure.
   } finally {
     videoAssessing = false;
+    els.videoAssessing.hidden = true;
     els.btnVideoAssess.disabled = !videoObjectUrl;
   }
 });

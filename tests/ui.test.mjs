@@ -808,3 +808,31 @@ test("a11y: keyboard focus on a product option shows a visible ring", () => {
   const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
   assert.match(css, /\.product-option:has\(input:focus-visible\)\s*\{[^}]*outline:/);
 });
+
+// ---------- in-panel assessing notes (web parity with the native panels) ----------
+// The native Still image panel shows "Sending still image…" and the
+// native video panel shows "Sending video frame…" inside the panel
+// while the request is outstanding. The web panels had only the generic
+// in-flight line in the Camera panel, so a user watching the panel they
+// just tapped saw nothing move. No browser exists in this suite, so
+// these are static checks on the shipped markup and wiring: each panel
+// carries its note hidden by default, its Assess handler shows the note
+// while the request is out and hides it again when it settles (the video
+// path also hides it on a capture failure, which never reaches the
+// submit path), Clear hides it too, and the native panels carry the
+// same lines.
+test("panels: still-image and video panels show an in-panel sending note while assessing, matching the native panels", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(html, /id="image-assessing"[^>]*hidden>Sending still image…</);
+  assert.match(html, /id="video-assessing"[^>]*hidden>Sending video frame…</);
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /imageAssessing: \$\("image-assessing"\)/);
+  assert.match(app, /videoAssessing: \$\("video-assessing"\)/);
+  assert.match(app, /els\.btnImageAssess\.addEventListener\("click", async \(\) => \{[\s\S]*?els\.imageAssessing\.hidden = false;/);
+  assert.match(app, /els\.btnImageAssess\.addEventListener\("click", async \(\) => \{[\s\S]*?els\.imageAssessing\.hidden = true;/);
+  assert.match(app, /els\.btnVideoAssess\.addEventListener\("click", async \(\) => \{[\s\S]*?els\.videoAssessing\.hidden = false;/);
+  assert.match(app, /els\.btnVideoAssess\.addEventListener\("click", async \(\) => \{[\s\S]*?els\.videoAssessing\.hidden = true;/);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url), "utf8");
+  assert.match(swift, /Text\("Sending still image…"\)/);
+  assert.match(swift, /Text\("Sending video frame…"\)/);
+});

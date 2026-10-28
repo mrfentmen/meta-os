@@ -74,7 +74,9 @@ ES modules for the node test runner; it declares zero dependencies.)
   Clear button clears just this input (file choice, preview, Assess
   disabled) without stopping the camera or analysis, matching the
   native panel's Clear button; Reset still clears both inputs together
-  with the rest of the view.
+  with the rest of the view. While the frame is being sent, the panel
+  shows "Sending video frame…", matching the native video panel, so
+  the wait is visible where the button was tapped.
 - **Still-image input** (`js/image_input.js`, wired in `js/app.js`): a
   file picker for prerecorded or photographed scenes — the input the
   Ignis and Sanitas demos use when a live camera is not the source.
@@ -85,7 +87,10 @@ ES modules for the node test runner; it declares zero dependencies.)
   `image/*` files only, and stores nothing: the preview and the data URL
   live in memory and are cleared by the panel's Clear button or by Reset
   (Clear touches only this input — it never stops the camera or
-  analysis — matching the native panel's Clear button). Until the backend exists, a
+  analysis — matching the native panel's Clear button). While the image
+  is being sent, the panel shows "Sending still image…", matching the
+  native still-image panel, so the wait is visible where the button was
+  tapped. Until the backend exists, a
   still-image request fails exactly like a live frame — honest error,
   no assessment.
 - **Event display**: latest validated assessment (product, assessment
