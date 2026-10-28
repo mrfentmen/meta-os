@@ -6,8 +6,8 @@
 // that the web and native sides still agree on the product keys, and
 // probes for a live /api/assess server on localhost:8080. Prints one
 // line per check and a summary. Exit code 1 if any real check fails.
-// The server probe is informational: "not running" is the expected
-// state until the server lane lands, and is never counted as a failure.
+// The server probe is informational only: whether the server happens
+// to be running at this moment is reported, never counted as a failure.
 //
 // This tool changes nothing and calls nothing external. Spark stays off.
 
@@ -106,7 +106,7 @@ try {
   });
   console.log(`INFO  assess server - something answered on localhost:8080 (HTTP ${res.status})`);
 } catch {
-  console.log("INFO  assess server - nothing on localhost:8080 (expected until the server lane lands)");
+  console.log("INFO  assess server - nothing answered on localhost:8080 (start it with: node server/server.mjs)");
 }
 
 const failed = results.filter((r) => !r.ok);

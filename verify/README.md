@@ -21,8 +21,9 @@ Runs, in order:
    and the native `ProductID` enum must both be exactly
    vigiles / ignis / sanitas.
 6. An informational probe of `http://localhost:8080/api/assess`.
-   Nothing answering is the expected state until the server lane lands;
-   it is reported, never counted as a failure.
+   Nothing answering just means the server is not running right now
+   (`node server/server.mjs` starts it); it is reported, never counted
+   as a failure.
 
 Exit code is 1 if any of checks 1-5 fail.
 
