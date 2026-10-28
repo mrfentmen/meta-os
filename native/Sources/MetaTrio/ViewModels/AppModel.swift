@@ -104,6 +104,14 @@ final class AppModel: ObservableObject {
     // Observable runtime state.
     @Published private(set) var backendStatus: BackendStatus =
         .unknown("Model backend status unknown. Start analysis to contact the endpoint.")
+    /// Backend health text, kept separate from backendStatus on purpose:
+    /// this check contacts the health route only, never sends a frame
+    /// and never returns an assessment, so it must never change the
+    /// assessment status shown in the status bar. Mirrors the web
+    /// frontend's backend-health paragraph.
+    @Published private(set) var backendHealth: String =
+        "Backend health not checked yet. Checking it contacts the server's health route only; it never sends a frame and never returns an assessment."
+    @Published private(set) var healthChecking = false
     @Published private(set) var displayedAssessment: AssessmentResponse?
     @Published private(set) var timeline: [TimelineItem] = []
     @Published private(set) var analysisRunning = false
@@ -117,6 +125,7 @@ final class AppModel: ObservableObject {
     let camera = CameraService()
     private let sampler = FrameSampler(intervalSeconds: 3)
     private let client = AssessClient()
+    private let healthClient = HealthClient()
     private let log = SessionLog()
 
     init() {
@@ -177,6 +186,39 @@ final class AppModel: ObservableObject {
         displayedAssessment = nil
         timeline = []
         backendStatus = .unknown("Model backend status unknown. Start analysis to contact the endpoint.")
+    }
+
+    // MARK: - Backend health check
+
+    /// Asks the server's health route whether it is up and what its
+    /// model state is, exactly like the web frontend's backend-health
+    /// check. A reachable server with the model held is reported exactly
+    /// that way — reachable is not the same as ready to assess, and
+    /// this check never sends a frame. It touches only backendHealth,
+    /// never backendStatus, the displayed assessment, or the timeline.
+    func checkBackendHealth() {
+        guard !healthChecking else { return }
+        healthChecking = true
+        backendHealth = "Checking \(trimmedEndpoint) …"
+        Task {
+            do {
+                let health = try await healthClient.checkHealth(endpoint: trimmedEndpoint)
+                let products = health.products.joined(separator: ", ")
+                let modelState = health.modelLiveEnabled
+                    ? "live calls on"
+                    : health.modelConfigured
+                        ? "key configured, live calls held"
+                        : "key not configured, live calls held"
+                backendHealth =
+                    "Backend reachable: \(health.service) · products: \(products) · model: \(modelState). " +
+                    "This does not mean an assessment is available — an assess request still has to succeed."
+            } catch let error as AssessError {
+                backendHealth = "Backend health check failed: \(error.message)"
+            } catch {
+                backendHealth = "Backend health check failed: \(error.localizedDescription)"
+            }
+            healthChecking = false
+        }
     }
 
     // MARK: - Still-image input

@@ -59,6 +59,15 @@ rebuilding.
   Uncertainty section; an event timeline (failures included, in red);
   a session log with per-entry client-measured latency and JSON export in
   the same shape the web frontend produces, for the evaluation lane.
+- Backend health check (web parity): a "Check Backend Health" button in
+  Settings that GETs the server's /api/health for the configured
+  endpoint (the /api/assess suffix is swapped for /api/health, so the
+  check always points at the server the user configured). It reports
+  the service name, the products list, and the model state — live calls
+  on, or key configured / not configured with live calls held — and
+  says plainly that reachable does not mean an assessment is available.
+  The check never sends a frame and never returns an assessment, and it
+  never changes the assessment status in the status bar.
 - Empty states that say what is actually happening: the assessment area
   shows a waiting state while a request is in flight, the real backend
   error when the backend failed, and "No assessment received yet" only
@@ -174,6 +183,10 @@ live in the window, the endpoint is editable at runtime.
 - Request: `POST {"product": "vigiles|ignis|sanitas", "timestamp":
   "<ISO-8601>", "image": "data:image/jpeg;base64,..."}`
 - Response: the v2 assessment JSON above, or `{"error": "..."}`.
+- Health: `GET` the same base with `/api/assess` swapped for
+  `/api/health` returns `{ok, service, products, model: {configured,
+  live_enabled}}` and never exposes the key. The Settings panel's
+  "Check Backend Health" button reads exactly this route.
 - Until that server runs, expect — and demo honestly — the
   "backend not connected" state with the real connection error in the
   timeline and the session log.
@@ -201,5 +214,8 @@ Not verified anywhere yet:
 - Camera behavior on real hardware (permission prompt, preview, frame
   capture) — only exercisable on the Mac. The exact checklist is
   `../docs/HARDWARE_VERIFICATION.md`.
-- Any live round trip — no `/api/assess` server exists yet (Agent 2's lane),
-  and no live Spark call has ever been completed by this team.
+- Any live round trip — the local `/api/assess` server now exists
+  (Agent 2's lane) and its held-state round trip is documented in
+  `../server/README.md` (503 held message, web + native error paths),
+  but no live Spark call has ever been completed by this team, and the
+  native app itself has never run against that server on a Mac.

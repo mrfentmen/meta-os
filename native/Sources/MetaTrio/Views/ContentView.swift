@@ -376,6 +376,17 @@ private struct SettingsPanel: View {
                         .accessibilityLabel("Assessment endpoint")
                 }
 
+                VStack(alignment: .leading, spacing: 4) {
+                    Button("Check Backend Health") { model.checkBackendHealth() }
+                        .disabled(model.healthChecking)
+                        .accessibilityHint("Contacts the server's health route only. It never sends a frame and never returns an assessment.")
+                    Text(model.backendHealth)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .accessibilityLabel("Backend health: \(model.backendHealth)")
+                }
+
                 Stepper(value: $model.intervalSeconds, in: 1...60) {
                     Text("Sample one frame every \(model.intervalSeconds) second\(model.intervalSeconds == 1 ? "" : "s")")
                 }
