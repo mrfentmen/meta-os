@@ -65,7 +65,10 @@ ES modules for the node test runner; it declares zero dependencies.)
   category, timestamp, observations with category, description, evidence,
   and confidence or "not reported", uncertainty list, human-review flag,
   and server model/latency or "not reported"), an event history timeline
-  (failures included, styled distinctly), a loading indicator while a
+  (failures included, styled distinctly; every assessment entry carries
+  a "Show assessment" button that displays that past assessment again in
+  the Latest assessment panel, labelled as a past result — the web match
+  for the native timeline's selectable rows), a loading indicator while a
   request is outstanding, and live sampler counters (ticks / sent /
   skipped / failed).
 - **Accessibility announcements**: the backend-status line and the
@@ -131,8 +134,10 @@ client sends the product with every request and maps network/HTTP/invalid
 (including wrong-product and server error-body) failures to typed errors;
 the session log export matches the documented shape with per-entry and
 top-level product; the still-image helpers accept `image/*` files only
-and resolve/reject with the file-reader result. Current result:
-**71 tests, 71 pass, 0 fail** (Node v24).
+and resolve/reject with the file-reader result; the history re-inspection
+wiring (page note, Show assessment button, live and restored entries
+carrying their assessment). Current result:
+**88 tests, 88 pass, 0 fail** (Node v24).
 
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.

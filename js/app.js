@@ -175,10 +175,16 @@ function describeCameraError(err) {
   }
 }
 
-function renderLatest(assessment) {
+function renderLatest(assessment, earlierNote = null) {
   const product = PRODUCT_BY_ID[assessment.product] || null;
   const wrap = document.createElement("div");
 
+  if (earlierNote) {
+    const note = document.createElement("p");
+    note.className = "note";
+    note.textContent = earlierNote;
+    wrap.appendChild(note);
+  }
   const head = document.createElement("p");
   head.className = "assessment-head";
   const type = document.createElement("strong");
@@ -237,7 +243,7 @@ function renderLatest(assessment) {
   els.latest.replaceChildren(wrap);
 }
 
-function addHistoryItem({ title, timestamp, body, kind }) {
+function addHistoryItem({ title, timestamp, body, kind, assessment = null }) {
   els.historyEmpty.hidden = true;
   const item = document.createElement("li");
   item.className = `history-item history-${kind}`;
@@ -257,6 +263,28 @@ function addHistoryItem({ title, timestamp, body, kind }) {
     const bodyEl = document.createElement("p");
     bodyEl.textContent = body;
     item.appendChild(bodyEl);
+  }
+
+  // Native parity: the native timeline's assessment rows are selectable
+  // and redisplay that assessment. The web history gains the same, as a
+  // button, so a past result can be inspected again during the session.
+  // Failure entries carry no assessment, so they get no button. Showing
+  // an earlier assessment never re-sends a frame, never changes the
+  // backend status, and is labelled as a past result in the panel, so
+  // it cannot be mistaken for a new result.
+  if (assessment) {
+    const show = document.createElement("button");
+    show.type = "button";
+    show.className = "history-show";
+    show.textContent = "Show assessment";
+    show.setAttribute("aria-label", `Show assessment from ${timestamp}`);
+    show.addEventListener("click", () => {
+      renderLatest(
+        assessment,
+        `Showing an earlier assessment from ${timestamp}. This is a past result shown again for review, not a new assessment.`,
+      );
+    });
+    item.appendChild(show);
   }
 
   els.history.prepend(item);
@@ -296,6 +324,7 @@ async function submitAssessment(product, timestamp, image) {
       timestamp: assessment.timestamp,
       body: assessment.assessment.summary,
       kind: assessment.assessment.requires_human_review ? "review" : "ok",
+      assessment,
     });
     return assessment;
   } catch (err) {
@@ -601,6 +630,7 @@ function restoreHistoryFromLog() {
         timestamp: entry.response.timestamp,
         body: entry.response.assessment.summary,
         kind: entry.response.assessment.requires_human_review ? "review" : "ok",
+        assessment: entry.response,
       });
     } else {
       addHistoryItem({

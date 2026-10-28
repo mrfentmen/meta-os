@@ -652,6 +652,27 @@ test("video input: the shipped page has the video panel elements", () => {
   assert.match(html, /id="btn-video-assess"/);
 });
 
+// ---------- history inspection (web parity with the native timeline) ----------
+// The native timeline's assessment rows are selectable and redisplay that
+// assessment; the web history must do the same. No browser exists in this
+// suite, so these are static checks on the shipped markup and wiring:
+// the page explains the button, app.js adds one per assessment entry,
+// and both the live path and the reload-restore path hand the validated
+// assessment to the history item. Failure entries carry no assessment,
+// so they get no button.
+
+test("history: past assessments can be shown again from the web history", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  assert.match(html, /Show assessment.*Latest assessment panel/);
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /show\.textContent = "Show assessment"/);
+  assert.match(app, /Showing an earlier assessment from .*not a new assessment/);
+  // Live path: the submitted assessment reaches the history item.
+  assert.match(app, /kind: assessment\.assessment\.requires_human_review \? "review" : "ok",\n\s+assessment,/);
+  // Reload path: a restored log entry's response reaches the history item.
+  assert.match(app, /kind: entry\.response\.assessment\.requires_human_review \? "review" : "ok",\n\s+assessment: entry\.response,/);
+});
+
 // ---------- accessibility announcements ----------
 // Static checks on the shipped markup and stylesheet: a new assessment
 // and a backend-status change must be announced to screen readers, and
