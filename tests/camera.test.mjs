@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 import {
   CAMERA_FACINGS,
   Camera,
+  MAX_FRAME_DIMENSION,
   facingConstraints,
   isFacingMode,
 } from "../js/camera.js";
@@ -133,4 +134,62 @@ test("camera: switchFacing rejects an unknown facing and leaves the stream alone
   assert.equal(camera.facingMode, "user");
   assert.equal(streams[0].stopped.length, 0);
   assert.equal(calls.length, 1);
+});
+
+function fakeCanvas() {
+  const draws = [];
+  const dataUrlCalls = [];
+  return {
+    draws,
+    dataUrlCalls,
+    width: 0,
+    height: 0,
+    getContext: () => ({
+      drawImage: (...args) => {
+        draws.push(args);
+      },
+    }),
+    toDataURL: (...args) => {
+      dataUrlCalls.push(args);
+      return "data:image/jpeg;base64,fake";
+    },
+  };
+}
+
+async function liveCamera(videoWidth, videoHeight) {
+  installFakeCamera();
+  const videoEl = { ...fakeVideoEl(), videoWidth, videoHeight };
+  const camera = new Camera(videoEl);
+  await camera.start();
+  return { camera, videoEl };
+}
+
+test("camera: captureFrame downscales an oversize frame to a 1280px longest side, matching the native camera", async () => {
+  assert.equal(MAX_FRAME_DIMENSION, 1280);
+  const { camera, videoEl } = await liveCamera(4000, 3000);
+  const canvas = fakeCanvas();
+  const url = camera.captureFrame(canvas);
+  assert.equal(url, "data:image/jpeg;base64,fake");
+  assert.equal(canvas.width, 1280);
+  assert.equal(canvas.height, 960);
+  assert.equal(canvas.draws.length, 1);
+  assert.deepEqual(canvas.draws[0], [videoEl, 0, 0, 1280, 960]);
+  assert.deepEqual(canvas.dataUrlCalls, [["image/jpeg", 0.8]]);
+});
+
+test("camera: captureFrame leaves a frame already under the cap at its own size", async () => {
+  const { camera, videoEl } = await liveCamera(640, 480);
+  const canvas = fakeCanvas();
+  camera.captureFrame(canvas);
+  assert.equal(canvas.width, 640);
+  assert.equal(canvas.height, 480);
+  assert.deepEqual(canvas.draws[0], [videoEl, 0, 0, 640, 480]);
+});
+
+test("camera: captureFrame throws when the camera is off or the frame has no dimensions yet", async () => {
+  installFakeCamera();
+  const off = new Camera(fakeVideoEl());
+  assert.throws(() => off.captureFrame(fakeCanvas()), /Camera is not active/);
+  const { camera } = await liveCamera(0, 0);
+  assert.throws(() => camera.captureFrame(fakeCanvas()), /not ready yet/);
 });
