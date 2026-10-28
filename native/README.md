@@ -95,7 +95,14 @@ rebuilding.
   and timeline rows are labeled for VoiceOver, section headings carry
   the header trait, and decorative color dots are hidden from VoiceOver
   because the status is already stated in words next to them. No
-  assessment information lives only in color or in an icon.
+  assessment information lives only in color or in an icon. New results
+  are also announced (web parity: the web frontend's polite live
+  regions): a validated assessment announces its product, category,
+  summary, and human-review flag when it arrives, and a backend failure
+  announces the "Model backend not connected" status — both without
+  stealing focus. Re-inspecting a past timeline row announces nothing,
+  exactly like the web history, which is deliberately not a live region,
+  so a redisplayed past result can never sound like a new one.
 - Scenario picker matching the web frontend (web parity): a dropdown of
   the current product's evaluation scenarios, written into each session
   log entry as ground-truth context for the evaluation lane. A custom
@@ -140,6 +147,10 @@ Sources/MetaTrio/
     ISO8601.swift                 Timestamp formatting/validation
     ContractValidator.swift       Strict v2 validation of server replies
     AssessClient.swift            POST /api/assess, measured latency, typed errors
+    AccessibilityAnnouncement.swift VoiceOver announcements for new
+                                  assessments and backend failures (web
+                                  live-region parity), never for
+                                  re-inspected past rows
     CameraService.swift           AVFoundation session, permission, frame grab
     FrameSampler.swift            Non-overlapping sampling timer + counters
     VideoFrameService.swift       One-frame JPEG extraction from a
@@ -229,21 +240,22 @@ Verified in the sandbox (no Mac available there):
   export shape, sampling disclosure wording).
 - No syntax check of any kind was run: the sandbox has no `swift` or
   `swiftc` binary (`which swift swiftc` returns nothing). Zero compiler
-  evidence exists for this code. That includes the scenario picker
-  added in the latest Agent 1 change: it uses only long-standing
-  SwiftUI Picker/tag bindings and the existing AppModel log path, and
-  was checked by careful inspection, not by a build or by running it
-  on a Mac.
+  evidence exists for this code. That includes the VoiceOver
+  announcements added in the latest Agent 1 change: they use only the
+  long-standing AppKit `NSAccessibility.post` announcement API and the
+  existing AppModel submit path, and were checked by careful
+  inspection, not by a build or by running them on a Mac.
 
 Not verified anywhere yet:
 
 - Compilation. SwiftUI/AVFoundation/AppKit files cannot be compiled in the
   Linux sandbox. First build happens on the Mac via the steps above; treat
   any first-build errors as the expected first iteration, not a surprise.
-  That includes the session-log persistence added in the latest Agent 1
-  change: it uses only long-standing Foundation file and Codable APIs and
-  the existing AppModel log path, and was checked by careful inspection,
-  not by a build or by running it on a Mac.
+  That includes the VoiceOver announcements added in the latest Agent 1
+  change: they use only the long-standing AppKit `NSAccessibility.post`
+  announcement API and the existing AppModel submit path, and were
+  checked by careful inspection, not by a build or by running them
+  on a Mac.
 - Camera behavior on real hardware (permission prompt, preview, frame
   capture) — only exercisable on the Mac. The exact checklist is
   `../docs/HARDWARE_VERIFICATION.md`.

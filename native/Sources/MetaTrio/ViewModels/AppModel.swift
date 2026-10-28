@@ -521,6 +521,10 @@ final class AppModel: ObservableObject {
             backendStatus = .connected("Model backend connected: \(trimmedEndpoint)")
             displayedAssessment = response
             displayedAssessmentNote = nil
+            AccessibilityAnnouncement.newAssessment(
+                productDisplayName: selectedProduct.config.displayName,
+                response: response
+            )
             timeline.insert(
                 TimelineItem(product: selectedProduct, timestamp: response.timestamp, kind: .assessment(response)),
                 at: 0
@@ -535,6 +539,7 @@ final class AppModel: ObservableObject {
             }
             recordLog(timestamp: timestamp, latencyMs: error.latencyMs, status: status, error: error.message)
             backendStatus = .error("Model backend not connected: \(error.message)")
+            AccessibilityAnnouncement.backendFailure(message: error.message)
             timeline.insert(
                 TimelineItem(product: selectedProduct, timestamp: timestamp, kind: .failure(error.message)),
                 at: 0
