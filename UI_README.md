@@ -60,7 +60,11 @@ ES modules for the node test runner; it declares zero dependencies.)
   to the assessment endpoint and validates every response against the v2
   contract schema (`js/schema.js`), with the same strictness as the native
   validator. Malformed responses are reported as errors, never rendered as
-  detections.
+  detections. Like the native clients, it rejects an endpoint that is not
+  a valid http(s) URL before anything is sent (a relative endpoint such
+  as `/api/assess` still goes to fetch as before); that no-request
+  failure is logged with a null latency and leaves the last round trip
+  alone, instead of stamping the time-to-reject as a round trip.
 - **Honest disconnected state**: if the endpoint is unreachable, returns an
   HTTP error, returns a server `{"error": ...}` body, or returns an invalid
   body, the UI shows "Model backend not connected" with the real error,
@@ -196,7 +200,7 @@ top-level product; the still-image helpers accept `image/*` files only
 and resolve/reject with the file-reader result; the history re-inspection
 wiring (page note, Show assessment button, live and restored entries
 carrying their assessment). Current result:
-**97 tests, 97 pass, 0 fail** (Node v24).
+**100 tests, 100 pass, 0 fail** (Node v24).
 
 Web↔native product-config parity (`tests/product-parity.test.mjs`): the
 test reads the native app's `ProductConfig.swift` and asserts the web
@@ -213,7 +217,7 @@ the model held (not configured, live calls off) and a valid assess
 request surfaces the real 503 Spark-hold message as a typed HTTP error,
 with no assessment rendered; a bad product surfaces the real 400; and
 the server serves the actual frontend entry point. Full `npm test`
-(including Agent 2 and Agent 3 suites): **198 tests, 198 pass, 0 fail**.
+(including Agent 2 and Agent 3 suites): **202 tests, 202 pass, 0 fail**.
 
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.

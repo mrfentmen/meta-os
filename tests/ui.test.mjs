@@ -892,3 +892,71 @@ test("camera: a live frame capture failure lands in history and backend status, 
   assert.match(swift, /private func runSample\(\) async throws \{[\s\S]*?backendStatus = \.error\(message\)/);
   assert.match(swift, /private func runSample\(\) async throws \{[\s\S]*?TimelineItem\(product: requestProduct, timestamp: timestamp, kind: \.failure\(message\)\)/);
 });
+
+// ---------- no-request endpoint failure (web parity with the native client) ----------
+// The native AssessClient rejects an endpoint that is not a valid http(s)
+// URL before anything is sent, and reports a nil latency — no request was
+// attempted, so there is no round trip to measure and AppModel leaves the
+// last round trip alone. The web client passed every endpoint straight to
+// fetch, so a mistyped scheme failed only when fetch rejected it, and the
+// submit path then stamped the time-to-reject as a "last round trip" and
+// logged it as a measured latency. These tests pin the fix at both ends:
+// the client refuses before fetching (fetch is never called, for an
+// assess request or a health check), an absolute http(s) endpoint still
+// reaches fetch, and the submit catch logs a null latency and guards the
+// round-trip display when the error says no request was made.
+test("client: non-http(s) endpoint is rejected before any fetch, matching the native client", async () => {
+  let calls = 0;
+  const countingFetch = async () => {
+    calls += 1;
+    throw new Error("must not be called");
+  };
+  const payload = { product: "vigiles", timestamp: "t", image: "i" };
+  for (const endpoint of ["ftp://example.com/api/assess", "http://exa mple/api/assess", "localhost:8080/api/assess"]) {
+    calls = 0;
+    await assert.rejects(
+      assessFrame(endpoint, payload, countingFetch),
+      (err) => {
+        assert.ok(err instanceof AssessError);
+        assert.equal(err.kind, "network");
+        assert.equal(err.noRequest, true);
+        assert.match(err.message, /not a valid http\(s\) URL/);
+        return true;
+      },
+    );
+    assert.equal(calls, 0);
+  }
+});
+
+test("client: absolute http(s) endpoint still reaches fetch, and the health check rejects a bad scheme before fetching", async () => {
+  let seenUrl = null;
+  const fakeFetch = async (url) => {
+    seenUrl = url;
+    return { ok: true, status: 200, statusText: "OK", json: async () => validAssessment("vigiles") };
+  };
+  const result = await assessFrame(
+    "http://localhost:8080/api/assess",
+    { product: "vigiles", timestamp: "t", image: "i" },
+    fakeFetch,
+  );
+  assert.equal(seenUrl, "http://localhost:8080/api/assess");
+  assert.deepEqual(result, validAssessment("vigiles"));
+  let healthCalls = 0;
+  await assert.rejects(
+    checkHealth("ftp://example.com/api/assess", async () => {
+      healthCalls += 1;
+      throw new Error("must not be called");
+    }),
+    (err) => err instanceof AssessError && err.kind === "network" && err.noRequest === true,
+  );
+  assert.equal(healthCalls, 0);
+});
+
+test("camera: a no-request failure leaves the last round trip alone and logs a null latency, matching the native client", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /async function submitAssessment\(product, timestamp, image\) \{[\s\S]*?const noRequest = err instanceof AssessError && err\.noRequest;/);
+  assert.match(app, /async function submitAssessment\(product, timestamp, image\) \{[\s\S]*?const latencyMs = noRequest \? null : Math\.round\(performance\.now\(\) - started\);/);
+  assert.match(app, /async function submitAssessment\(product, timestamp, image\) \{[\s\S]*?if \(latencyMs !== null\) \{\n\s+updateLastRoundTrip\(latencyMs\);\n\s+\}/);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/Services/AssessClient.swift", import.meta.url), "utf8");
+  assert.match(swift, /throw AssessError\(kind: \.network, message: "Endpoint is not a valid http\(s\) URL: \\\(endpoint\)", latencyMs: nil\)/);
+});

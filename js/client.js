@@ -8,10 +8,40 @@
 import { validateAssessment } from "./schema.js";
 
 export class AssessError extends Error {
-  constructor(kind, message) {
+  constructor(kind, message, options = {}) {
     super(message);
     this.name = "AssessError";
     this.kind = kind; // "network" | "http" | "invalid"
+    // True only when no request was attempted at all (the endpoint was
+    // rejected before sending). Callers use it to leave measured
+    // state alone: there is no round trip to report and no latency
+    // to log for a request that never went out.
+    this.noRequest = options.noRequest === true;
+  }
+}
+
+// Native parity (AssessClient.swift, HealthClient.swift): the native
+// clients reject an endpoint that is not a valid http(s) URL before
+// anything is sent, and report a nil latency for it. The web client
+// passed every endpoint straight to fetch, so a mistyped scheme failed
+// only when fetch rejected it — and the UI then stamped the
+// time-to-reject as a "last round trip" and logged it as a measured
+// latency, which it was not. An endpoint with no scheme ("/api/assess",
+// the default) is a same-origin relative URL and still goes to fetch,
+// exactly as before; only an endpoint that claims a scheme is checked,
+// and it must parse as http(s) — "localhost:8080/..." is rejected here
+// exactly as the native client rejects it.
+function assertHttpEndpoint(endpoint, display = endpoint) {
+  const candidate = String(endpoint).trim();
+  if (!/^[A-Za-z][A-Za-z0-9+.-]*:/.test(candidate)) return;
+  let parsed = null;
+  try {
+    parsed = new URL(candidate);
+  } catch {
+    parsed = null;
+  }
+  if (!parsed || (parsed.protocol !== "http:" && parsed.protocol !== "https:")) {
+    throw new AssessError("network", `Endpoint is not a valid http(s) URL: ${display}`, { noRequest: true });
   }
 }
 
@@ -58,6 +88,7 @@ function validateHealth(body) {
 // that state is in the returned body for the UI to say plainly.
 export async function checkHealth(endpoint, fetchFn = (url, opts) => fetch(url, opts)) {
   const url = healthUrlFor(endpoint);
+  assertHttpEndpoint(url, endpoint);
   let res;
   try {
     res = await fetchFn(url, { method: "GET" });
@@ -100,6 +131,7 @@ export async function checkHealth(endpoint, fetchFn = (url, opts) => fetch(url, 
 // (ISO-8601), image: string (JPEG data URL) }
 // fetchFn is injectable for tests; defaults to the global fetch.
 export async function assessFrame(endpoint, payload, fetchFn = (url, opts) => fetch(url, opts)) {
+  assertHttpEndpoint(endpoint);
   let res;
   try {
     res = await fetchFn(endpoint, {

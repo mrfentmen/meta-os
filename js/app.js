@@ -398,8 +398,21 @@ async function submitAssessment(product, timestamp, image) {
     });
     return assessment;
   } catch (err) {
-    const latencyMs = Math.round(performance.now() - started);
-    updateLastRoundTrip(latencyMs);
+    // Native parity: a failure with no request behind it (the client
+    // rejected the endpoint before sending) carries no measured
+    // latency — the native client reports nil there, and AppModel
+    // leaves the last round trip alone. The web path measured the time
+    // until fetch rejected and stamped it as a round trip, which was
+    // not a round trip at all, and logged it as a measured latency.
+    // Log null and leave the previous round trip in place: it is real
+    // information a typo'd endpoint should not erase. Only Reset
+    // clears it. The still-image and video paths share this catch
+    // through submitAssessment, so they inherit the same handling.
+    const noRequest = err instanceof AssessError && err.noRequest;
+    const latencyMs = noRequest ? null : Math.round(performance.now() - started);
+    if (latencyMs !== null) {
+      updateLastRoundTrip(latencyMs);
+    }
     const kind = err instanceof AssessError ? err.kind : "network";
     const status = kind === "http" ? "http_error" : kind === "invalid" ? "invalid_response" : "network_error";
     log.record({
