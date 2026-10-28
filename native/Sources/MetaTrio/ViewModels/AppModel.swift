@@ -321,6 +321,14 @@ final class AppModel: ObservableObject {
 
     private func runStillImageAssessment(dataURL: String, product: ProductID) async {
         defer { stillImageAssessing = false }
+        // Web parity (js/app.js still-image handler): the web panel
+        // sets the backend status to "Contacting…" while the request is
+        // outstanding. The native path went straight to
+        // submitAssessment, so the status bar kept showing the previous
+        // state — a stale "connected" from an earlier success — for the
+        // whole flight. submitAssessment overwrites this on settle
+        // (connected or error), so it never sticks.
+        backendStatus = .unknown("Contacting model backend: \(trimmedEndpoint) …")
         // submitAssessment already records the outcome in the timeline
         // and the session log and sets backendStatus, so a failure
         // here needs no extra handling.
@@ -385,6 +393,14 @@ final class AppModel: ObservableObject {
 
     private func runVideoFrameAssessment(url: URL, seconds: Double, product: ProductID) async {
         defer { videoAssessing = false }
+        // Web parity (js/app.js video handler): the web panel sets the
+        // backend status to "Contacting…" before it captures the frame,
+        // so the status bar moves while the request is outstanding. The
+        // native path left the previous state up for the whole flight.
+        // A capture failure below overwrites this with the real error,
+        // exactly like the web handler, and submitAssessment overwrites
+        // it on settle, so it never sticks.
+        backendStatus = .unknown("Contacting model backend: \(trimmedEndpoint) …")
         let dataURL: String
         do {
             dataURL = try await VideoFrameService.jpegDataURL(for: url, at: seconds)

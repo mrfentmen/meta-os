@@ -1037,3 +1037,56 @@ test("latest: web uncertainty section matches the native panel", () => {
   assert.match(swift, /Text\("The model reported no uncertainty items\."\)/);
   assert.match(swift, /ForEach\(Array\(response\.assessment\.uncertainty\.enumerated\(\)\), id: \\.offset\)/);
 });
+
+// ---------- contacting status on still-image / video assess (native parity with the web panels) ----------
+// The web still-image and video handlers set the backend status to
+// "Contacting…" while the request is outstanding; the native
+// still-image and video paths went straight to submitAssessment, so
+// the status bar kept showing the previous state for the whole flight
+// (a stale "connected" from an earlier success). No browser or Swift
+// toolchain exists in this suite, so these are static checks on the
+// shipped wiring: the web handlers already set it, and both native run
+// methods now set it before the request, where submitAssessment
+// overwrites it on settle (connected or error) and a video capture
+// failure overwrites it with the real error.
+test("status: native still-image and video assess show a contacting status while the request is outstanding, matching the web panels", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(
+    app,
+    /els\.btnImageAssess\.addEventListener\("click", async \(\) => \{[\s\S]*?setBackendStatus\("unknown", `Contacting model backend: \$\{currentEndpoint\(\)\} …`\);/,
+  );
+  assert.match(
+    app,
+    /els\.btnVideoAssess\.addEventListener\("click", async \(\) => \{[\s\S]*?setBackendStatus\("unknown", `Contacting model backend: \$\{currentEndpoint\(\)\} …`\);/,
+  );
+  const swift = readFileSync(
+    new URL("../native/Sources/MetaTrio/ViewModels/AppModel.swift", import.meta.url),
+    "utf8",
+  );
+  const still = swift.slice(
+    swift.indexOf("private func runStillImageAssessment"),
+    swift.indexOf("func clearStillImage()"),
+  );
+  assert.match(
+    still,
+    /backendStatus = \.unknown\("Contacting model backend: \\\(trimmedEndpoint\) …"\)/,
+  );
+  assert.ok(
+    still.indexOf('backendStatus = .unknown("Contacting model backend:') <
+      still.indexOf("submitAssessment(product:"),
+    "still-image contacting status is set before the request",
+  );
+  const video = swift.slice(
+    swift.indexOf("private func runVideoFrameAssessment"),
+    swift.indexOf("func clearVideo()"),
+  );
+  assert.match(
+    video,
+    /backendStatus = \.unknown\("Contacting model backend: \\\(trimmedEndpoint\) …"\)/,
+  );
+  assert.ok(
+    video.indexOf('backendStatus = .unknown("Contacting model backend:') <
+      video.indexOf("submitAssessment(product:"),
+    "video contacting status is set before the request",
+  );
+});
