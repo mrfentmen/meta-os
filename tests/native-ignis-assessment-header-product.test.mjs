@@ -11,9 +11,11 @@
 // product name read in the same gray as its timestamp while the web
 // name read red and bold. The fix concatenates two Text segments: a
 // secondary timestamp segment and a bold product segment tinted by
-// the assessment-own accentColor, keeping the caption size and the
-// timestamp-first order. No Swift toolchain exists in this sandbox,
-// so these are static checks on the shipped Swift.
+// the assessment-own accentColor, keeping the timestamp-first order.
+// The subline size moved from caption (12pt) to 12.5pt under IGNIS-UI-19
+// to match the web's 12.5px product/timestamp rules; see
+// native-ignis-assessment-subline-size.test.mjs. No Swift toolchain
+// exists in this sandbox, so these are static checks on the shipped Swift.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -33,7 +35,7 @@ const headerFn = assessment.slice(
 );
 assert.ok(headerFn.length > 0, "header exists");
 
-test("native header subline: timestamp muted, product bold in own accent, caption size", () => {
+test("native header subline: timestamp muted, product bold in own accent, 12.5pt size", () => {
   assert.match(
     headerFn,
     /Text\("\\\(response\.timestamp\) · "\)\s+\.foregroundStyle\(\.secondary\)\s+\+ Text\(productDisplayName\)\s+\.fontWeight\(\.bold\)\s+\.foregroundStyle\(accentColor\)/,
@@ -41,8 +43,8 @@ test("native header subline: timestamp muted, product bold in own accent, captio
   );
   assert.match(
     headerFn,
-    /\)\s+\.font\(\.caption\)/,
-    "concatenated subline keeps the caption size",
+    /\.font\(\.system\(size: 12\.5\)\)/,
+    "concatenated subline uses the 12.5pt size (UI-19, was caption under UI-13)",
   );
 });
 

@@ -138,8 +138,9 @@ struct AssessmentView: View {
             // the native subline was one secondary caption, so a
             // redisplayed Ignis assessment's product name read in the
             // same gray as its timestamp while the web name read red
-            // and bold. The subline keeps its timestamp-first order
-            // and its caption size; only the product segment changes,
+            // and bold. The subline keeps its timestamp-first order;
+            // its size is 12.5pt per UI-19, not the caption size it
+            // kept under UI-13. Only the product segment changes,
             // tinted by the same assessment-own accentColor the UI-5
             // rule, UI-6 wash, and UI-9 border already use, so an
             // unknown product key falls back to the system accent,
@@ -153,7 +154,19 @@ struct AssessmentView: View {
                     .fontWeight(.bold)
                     .foregroundStyle(accentColor)
             )
-            .font(.caption)
+            // UI-19: subline at 12.5pt, the native counterpart to the
+            // web .assessment-product and .assessment-time rules
+            // (both 12.5px). Until now the concatenated subline used
+            // .caption (12pt), so both segments read a half point
+            // smaller than the web's product name and timestamp while
+            // the review flag (UI-16) already matched its own web
+            // rule at 12pt and the processing line (UI-15) already
+            // matched at 12.5pt. The size is the only change: the
+            // timestamp-first order, the secondary timestamp, the
+            // bold own-accent product segment, and the header's
+            // single VoiceOver item are untouched, and the flag
+            // keeps its caption size.
+            .font(.system(size: 12.5))
         }
         // One VoiceOver item: category, human-review flag, and the
         // timestamp/product line, in reading order.
