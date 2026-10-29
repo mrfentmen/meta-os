@@ -82,6 +82,18 @@ final class AppModel: ObservableObject {
                 // mid-request cannot relabel it, and earlier entries
                 // keep the product they were recorded under.
                 selectedScenario = ""
+                // Web parity: the web frontend's limitations line is a
+                // polite live region, so a switch reads the new
+                // product's safety limits aloud there. The native
+                // header used to set the new limitations text
+                // silently, so a VoiceOver user who had just switched
+                // products heard the picker's new value but not the
+                // limits that now apply — and the limits are the
+                // safety text, not decoration. Announced verbatim, in
+                // the header's own words: a switch touches no backend
+                // and sends no frame. didSet does not run during
+                // init, so launching on Vigiles announces nothing.
+                AccessibilityAnnouncement.productLimitations(config.limitations)
             }
         }
     }

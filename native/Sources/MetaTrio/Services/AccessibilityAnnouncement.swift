@@ -36,7 +36,16 @@ import AppKit
 // VoiceOver user who had just picked a file heard nothing confirming
 // the Assess button was now enabled, while only the failure case was
 // announced. Clearing an input stays silent: the user tapped Clear
-// themselves, and nothing new becomes possible.
+// themselves, and nothing new becomes possible. Switching products
+// announces the new product's limitations in the same verbatim way:
+// the web frontend's limitations line is a polite live region, so a
+// switch reads its new safety limits aloud there, but the native
+// header only set the new text silently — a VoiceOver user who had
+// just switched products heard the picker's new value, not the limits
+// that now apply. Only the limitations are announced, not the
+// department, tagline, guidance, or category list: those are read by
+// navigating to them, while the limitations are the safety text that
+// must reach the user at the moment of the switch.
 enum AccessibilityAnnouncement {
     static func post(_ message: String) {
         guard !message.isEmpty else { return }
@@ -99,6 +108,17 @@ enum AccessibilityAnnouncement {
     /// misdescribe a file the app just accepted as a backend or
     /// camera problem.
     static func inputReady(_ message: String) {
+        post(message)
+    }
+
+    /// Announcement for a newly selected product's limitations, in the
+    /// header's own words. Switching products touches no backend and
+    /// sends no frame, so it is posted verbatim, never through
+    /// backendFailure or captureFailure: either would misdescribe a
+    /// product switch as a backend or camera problem. The picker
+    /// itself announces the new product's name, so only the
+    /// limitations text is posted here.
+    static func productLimitations(_ message: String) {
         post(message)
     }
 
