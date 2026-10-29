@@ -22,14 +22,14 @@ const model = readFileSync(
 const web = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
 
 test("web: submitAssessment takes the product as a parameter, captured at sample/tap time", () => {
-  assert.match(web, /async function submitAssessment\(product, timestamp, image\)/);
+  assert.match(web, /async function submitAssessment\(product, timestamp, image, scenarioLabel\)/);
   assert.match(web, /const product = currentProductId;\n  const timestamp = new Date\(\)\.toISOString\(\)/);
 });
 
 test("native: submitAssessment takes the product as a parameter", () => {
   assert.match(
     model,
-    /private func submitAssessment\(product: ProductID, timestamp: String, imageDataURL: String\)/,
+    /private func submitAssessment\(product: ProductID, timestamp: String, imageDataURL: String, scenarioLabel: String\?\)/,
   );
 });
 
@@ -41,11 +41,11 @@ test("native: live sample captures the product before capture, still/video captu
   assert.match(sample, /let requestProduct = selectedProduct/);
   assert.match(
     model,
-    /func assessStillImage\(\) \{[\s\S]*?let requestProduct = selectedProduct[\s\S]*?runStillImageAssessment\(dataURL: dataURL, product: requestProduct\)/,
+    /func assessStillImage\(\) \{[\s\S]*?let requestProduct = selectedProduct[\s\S]*?runStillImageAssessment\(dataURL: dataURL, product: requestProduct, scenarioLabel: requestScenarioLabel\)/,
   );
   assert.match(
     model,
-    /func assessVideoFrame\(\) \{[\s\S]*?let requestProduct = selectedProduct[\s\S]*?runVideoFrameAssessment\(url: url, seconds: seconds, product: requestProduct\)/,
+    /func assessVideoFrame\(\) \{[\s\S]*?let requestProduct = selectedProduct[\s\S]*?runVideoFrameAssessment\(url: url, seconds: seconds, product: requestProduct, scenarioLabel: requestScenarioLabel\)/,
   );
 });
 

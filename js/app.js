@@ -413,8 +413,12 @@ function addHistoryItem({ title, timestamp, body, kind, assessment = null }) {
 // still image: same endpoint, same validation, same history entry, same
 // session-log entry. Throws on failure after rendering and logging it,
 // so the sampler can count the error and the still-image button can
-// simply swallow it (it is already on screen).
-async function submitAssessment(product, timestamp, image) {
+// simply swallow it (it is already on screen). The scenario label is a
+// parameter, captured by the caller at sample or tap time, exactly like
+// the product: reading it here after the request returned would let a
+// scenario change made mid-request relabel that request's log entry
+// with ground truth it was never assessed under.
+async function submitAssessment(product, timestamp, image, scenarioLabel) {
   const endpoint = currentEndpoint();
   const generation = viewGeneration;
   els.inFlight.hidden = false;
@@ -431,7 +435,7 @@ async function submitAssessment(product, timestamp, image) {
       latencyMs,
       status: "ok",
       response: assessment,
-      scenarioLabel: currentScenarioLabel(),
+      scenarioLabel,
     });
     // A Reset while this request was out clears the view; the settling
     // request must not put its result back on screen. The log entry
@@ -477,7 +481,7 @@ async function submitAssessment(product, timestamp, image) {
       latencyMs,
       status,
       error: err.message,
-      scenarioLabel: currentScenarioLabel(),
+      scenarioLabel,
     });
     // Same Reset rule as the success path: the log entry stands, but a
     // request that settled after a Reset must not repaint the cleared
@@ -508,6 +512,9 @@ async function submitAssessment(product, timestamp, image) {
 async function runSample() {
   const product = currentProductId;
   const timestamp = new Date().toISOString();
+  // Captured with the product, before any capture or request: a
+  // scenario change mid-sample must not relabel this sample's entry.
+  const scenarioLabel = currentScenarioLabel();
   let image;
   try {
     image = camera.captureFrame(els.captureCanvas);
@@ -531,7 +538,7 @@ async function runSample() {
       latencyMs: null,
       status: "invalid_response",
       error: message,
-      scenarioLabel: currentScenarioLabel(),
+      scenarioLabel,
     });
     updateLogStats();
     setBackendStatus("error", message);
@@ -543,7 +550,7 @@ async function runSample() {
     });
     throw err;
   }
-  await submitAssessment(product, timestamp, image);
+  await submitAssessment(product, timestamp, image, scenarioLabel);
 }
 
 // Still-image input state: the chosen file's data URL lives in memory
@@ -644,8 +651,11 @@ els.btnImageAssess.addEventListener("click", async () => {
   // the request settles, success or failure.
   els.imageAssessing.hidden = false;
   setBackendStatus("unknown", `Contacting model backend: ${currentEndpoint()} …`);
+  // Scenario captured at tap time, like the product: a change made
+  // while this request is out must not relabel its log entry.
+  const scenarioLabel = currentScenarioLabel();
   try {
-    await submitAssessment(currentProductId, new Date().toISOString(), stillImageDataUrl);
+    await submitAssessment(currentProductId, new Date().toISOString(), stillImageDataUrl, scenarioLabel);
   } catch {
     // submitAssessment already rendered and logged the failure.
   } finally {
@@ -724,6 +734,9 @@ els.btnVideoAssess.addEventListener("click", async () => {
   els.videoAssessing.hidden = false;
   setBackendStatus("unknown", `Contacting model backend: ${currentEndpoint()} …`);
   const timestamp = new Date().toISOString();
+  // Scenario captured at tap time, like the product: a change made
+  // while capture or this request is outstanding must not relabel it.
+  const scenarioLabel = currentScenarioLabel();
   let image;
   try {
     image = captureVideoFrame(els.videoPreview, els.captureCanvas);
@@ -744,7 +757,7 @@ els.btnVideoAssess.addEventListener("click", async () => {
       latencyMs: null,
       status: "invalid_response",
       error: message,
-      scenarioLabel: currentScenarioLabel(),
+      scenarioLabel,
     });
     updateLogStats();
     setBackendStatus("error", message);
@@ -761,7 +774,7 @@ els.btnVideoAssess.addEventListener("click", async () => {
     return;
   }
   try {
-    await submitAssessment(currentProductId, timestamp, image);
+    await submitAssessment(currentProductId, timestamp, image, scenarioLabel);
   } catch {
     // submitAssessment already rendered and logged the failure.
   } finally {

@@ -320,18 +320,20 @@ final class AppModel: ObservableObject {
         stillImageAssessing = true
         // Capture the product at tap time (see submitAssessment): a
         // product switch while the request is in flight must not
-        // relabel this image's log and timeline entries.
+        // relabel this image's log and timeline entries. The scenario
+        // label is captured the same way, for the same reason.
         let requestProduct = selectedProduct
+        let requestScenarioLabel = currentScenarioLabel
         // Plain Task awaiting a @MainActor method: the hop back onto
         // the main actor is explicit, and no capture-list/attribute
         // ordering question arises (this sandbox has no Swift compiler
         // to check it against).
         Task {
-            await self.runStillImageAssessment(dataURL: dataURL, product: requestProduct)
+            await self.runStillImageAssessment(dataURL: dataURL, product: requestProduct, scenarioLabel: requestScenarioLabel)
         }
     }
 
-    private func runStillImageAssessment(dataURL: String, product: ProductID) async {
+    private func runStillImageAssessment(dataURL: String, product: ProductID, scenarioLabel: String?) async {
         defer { stillImageAssessing = false }
         // Web parity (js/app.js still-image handler): the web panel
         // sets the backend status to "Contacting…" while the request is
@@ -345,7 +347,7 @@ final class AppModel: ObservableObject {
         // and the session log and sets backendStatus, so a failure
         // here needs no extra handling.
         do {
-            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL)
+            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL, scenarioLabel: scenarioLabel)
         } catch {
             // Outcome already logged and rendered by submitAssessment.
         }
@@ -393,17 +395,19 @@ final class AppModel: ObservableObject {
         let seconds = player.currentTime().seconds
         // Capture the product at tap time (see submitAssessment): a
         // product switch while the request is in flight must not
-        // relabel this frame's log and timeline entries.
+        // relabel this frame's log and timeline entries. The scenario
+        // label is captured the same way, for the same reason.
         let requestProduct = selectedProduct
+        let requestScenarioLabel = currentScenarioLabel
         // Plain Task awaiting a @MainActor method: same shape as the
         // still-image path (this sandbox has no Swift compiler to
         // check it against).
         Task {
-            await self.runVideoFrameAssessment(url: url, seconds: seconds, product: requestProduct)
+            await self.runVideoFrameAssessment(url: url, seconds: seconds, product: requestProduct, scenarioLabel: requestScenarioLabel)
         }
     }
 
-    private func runVideoFrameAssessment(url: URL, seconds: Double, product: ProductID) async {
+    private func runVideoFrameAssessment(url: URL, seconds: Double, product: ProductID, scenarioLabel: String?) async {
         defer { videoAssessing = false }
         // Same Reset rule as submitAssessment: extraction awaits, so a
         // Reset can land mid-extraction. The failure still logs, but
@@ -427,7 +431,7 @@ final class AppModel: ObservableObject {
             // failure (timeline entry + session-log entry + status).
             let message = "Video frame capture failed: \(error.localizedDescription)"
             let timestamp = ISO8601.now()
-            recordLog(product: product, timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message)
+            recordLog(product: product, timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message, scenarioLabel: scenarioLabel)
             if generation == viewGeneration {
                 videoError = message
                 // No request was made, so this is not a backend failure:
@@ -441,7 +445,7 @@ final class AppModel: ObservableObject {
             return
         }
         do {
-            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL)
+            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL, scenarioLabel: scenarioLabel)
         } catch {
             // Outcome already logged and rendered by submitAssessment.
         }
@@ -576,15 +580,17 @@ final class AppModel: ObservableObject {
         // Web parity (js/app.js runSample): the product is captured
         // before the frame is captured, so a switch mid-sample labels
         // the entry with the product the sample started under, not the
-        // one selected when the request happens to finish.
+        // one selected when the request happens to finish. The scenario
+        // label is captured the same way, for the same reason.
         let requestProduct = selectedProduct
+        let requestScenarioLabel = currentScenarioLabel
 
         let image: String
         do {
             image = try camera.captureFrameDataURL()
         } catch {
             let message = "Frame capture failed: \(error.localizedDescription)"
-            recordLog(product: requestProduct, timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message)
+            recordLog(product: requestProduct, timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message, scenarioLabel: requestScenarioLabel)
             // Video-path parity: the video-frame path records a capture
             // failure directly in the timeline and the backend status,
             // in the same shapes as a backend failure. The live path
@@ -601,7 +607,7 @@ final class AppModel: ObservableObject {
             throw AssessError(kind: .invalid, message: message, latencyMs: nil)
         }
 
-        try await submitAssessment(product: requestProduct, timestamp: timestamp, imageDataURL: image)
+        try await submitAssessment(product: requestProduct, timestamp: timestamp, imageDataURL: image, scenarioLabel: requestScenarioLabel)
     }
 
     /// Shared submit path for live frames and still images: POST the
@@ -620,8 +626,11 @@ final class AppModel: ObservableObject {
     /// takes the product as a parameter, and its history title uses the
     /// assessment's own product. Here the validated response product
     /// equals the request product, so the request product is the honest
-    /// label for the log, the timeline, and the announcement.
-    private func submitAssessment(product: ProductID, timestamp: String, imageDataURL: String) async throws {
+    /// label for the log, the timeline, and the announcement. The
+    /// scenario label is a parameter for the same reason: a scenario
+    /// change mid-request must not relabel the entry with ground
+    /// truth it was never assessed under.
+    private func submitAssessment(product: ProductID, timestamp: String, imageDataURL: String, scenarioLabel: String?) async throws {
         // Captured before the await: a Reset while this request is out
         // bumps viewGeneration, and the settle path below must then
         // log only, not repaint the cleared view.
@@ -636,7 +645,7 @@ final class AppModel: ObservableObject {
                 timestamp: timestamp,
                 imageDataURL: imageDataURL
             )
-            recordLog(product: product, timestamp: timestamp, latencyMs: latencyMs, status: .ok, response: response)
+            recordLog(product: product, timestamp: timestamp, latencyMs: latencyMs, status: .ok, response: response, scenarioLabel: scenarioLabel)
             if generation == viewGeneration {
                 lastRoundTripMs = latencyMs
                 backendStatus = .connected("Model backend connected: \(trimmedEndpoint)")
@@ -666,7 +675,7 @@ final class AppModel: ObservableObject {
             case .invalid: status = .invalidResponse
             case .network: status = .networkError
             }
-            recordLog(product: product, timestamp: timestamp, latencyMs: error.latencyMs, status: status, error: error.message)
+            recordLog(product: product, timestamp: timestamp, latencyMs: error.latencyMs, status: status, error: error.message, scenarioLabel: scenarioLabel)
             if generation == viewGeneration {
                 if let latencyMs = error.latencyMs {
                     lastRoundTripMs = latencyMs
@@ -688,7 +697,8 @@ final class AppModel: ObservableObject {
         latencyMs: Int?,
         status: LogStatus,
         response: AssessmentResponse? = nil,
-        error: String? = nil
+        error: String? = nil,
+        scenarioLabel: String?
     ) {
         log.record(
             requestTimestamp: timestamp,
@@ -697,7 +707,7 @@ final class AppModel: ObservableObject {
             status: status,
             response: response,
             error: error,
-            scenarioLabel: currentScenarioLabel
+            scenarioLabel: scenarioLabel
         )
         logCount = log.count
     }
