@@ -52,6 +52,7 @@ const els = {
   btnClearLog: $("btn-clear-log"),
   logStats: $("log-stats"),
   logStatsByProduct: $("log-stats-by-product"),
+  logStatsFailedByProduct: $("log-stats-failed-by-product"),
   logStatsByFailure: $("log-stats-by-failure"),
   logStatsLastOk: $("log-stats-last-ok"),
   logStatsFirstOk: $("log-stats-first-ok"),
@@ -280,6 +281,16 @@ function updateLogStats() {
   const stats = log.stats();
   els.logStatsByProduct.textContent =
     `Assessments by product: Vigiles ${stats.byProduct.vigiles} · Ignis ${stats.byProduct.ignis} · Sanitas ${stats.byProduct.sanitas} · Failed ${stats.failed}`;
+  // DETAIL-34: the failed-by-product line breaks DETAIL-1's
+  // global failed total down per product — the failure mirror
+  // of the per-product ok counts, and the count behind
+  // DETAIL-12's failed shares — always-rendered zeros, so a
+  // product with no failures reads 0, never a missing bucket,
+  // and successes never move a bucket. A failure with an
+  // unknown or missing product still counts in DETAIL-1's
+  // global total but moves no bucket here.
+  els.logStatsFailedByProduct.textContent =
+    `Failed by product: Vigiles ${stats.failedCountByProduct.vigiles} · Ignis ${stats.failedCountByProduct.ignis} · Sanitas ${stats.failedCountByProduct.sanitas}`;
   // DETAIL-2: the failure line breaks the same failed total down by
   // recorded cause, from the same stats() call — no new data, no
   // sampling, no model. It always renders (zeros included), like the

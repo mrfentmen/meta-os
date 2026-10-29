@@ -870,6 +870,20 @@ export class SessionLog {
       failedShareByStatusByProduct,
       failedShareByStatus,
       failedShareByStatusWithinProduct,
+      // DETAIL-34: the per-product failed counts
+      // (failedCountByProduct): the count behind DETAIL-12's
+      // failed shares and DETAIL-33's within-product
+      // denominators, exposed on its own — the failure mirror
+      // of DETAIL-1's per-product ok counts (byProduct) and
+      // the failure half of DETAIL-14's entry counts. Always
+      // plain counts, never null: a product with no failures
+      // reads 0, and the three buckets sum to the global
+      // failed total only when every failure carries a known
+      // product — a failure with an unknown or missing
+      // product still counts in the global failed total but
+      // moves no bucket, exactly as DETAIL-9's cause buckets
+      // do. Successes never move a bucket.
+      failedCountByProduct,
       entryShareByProduct: {
         vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
         ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,
