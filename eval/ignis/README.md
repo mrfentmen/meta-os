@@ -205,6 +205,13 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   the per-scenario table; the totals sum to the errored-miss count, not the miss count, since
   misses with no error message appear in no row, and a message with no recorded latency shows n/a,
   never a fabricated zero; a run with no errored miss says none.
+  A latency-by-miss-alert-outcome section right after it is the alert-side split of the
+  misses — one row per alert-outcome group among the misses only, in fixed order true positive,
+  true negative, false positive, false negative (using alert_expected / alert_fired only, matching
+  the alert-outcome definition) — so whether the misses that fired an alert run slower than the
+  misses that stayed silent is visible without scanning the per-scenario table; only groups present
+  among the misses render, so the totals sum to the miss count, not the sample size, and a group with
+  no recorded latency shows n/a, never a fabricated zero; a run with no misses says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false

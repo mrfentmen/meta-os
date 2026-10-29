@@ -1306,6 +1306,68 @@ export function computeLatencyByMissErrorMessage(records) {
     });
 }
 
+// Latency by miss alert outcome: one row per alert-outcome group
+// among the misses only (same miss definition as computeMisses:
+// category_correct false), in the same fixed order the
+// latency-by-alert-outcome section uses — true positive, true
+// negative, false positive, false negative — derived from
+// alert_expected / alert_fired only, with the count of recorded
+// harness wall-clock latencies, their mean, their median
+// (averaged-middle, matching the distribution's median), and
+// their max. This is the alert-side split of the misses: the
+// error-status split says whether the misses that failed outright
+// run slower than the misses that returned a wrong category, but
+// only this table says whether the misses that fired an alert run
+// slower than the misses that stayed silent — and latency by
+// alert outcome, which includes the correct records, cannot
+// isolate the misses. Only groups present among the misses
+// render, so the scenario totals sum to the miss count, not the
+// sample size. Records with no latency take no part in a group's
+// numbers but still count toward its scenario total, so a group
+// whose scenarios carry no latency reads as recorded 0 with n/a
+// statistics — never as a fabricated zero.
+export function computeLatencyByMissAlertOutcome(records) {
+  const groups = {
+    "true positive": { outcome: "true positive", total: 0, latencies: [] },
+    "true negative": { outcome: "true negative", total: 0, latencies: [] },
+    "false positive": { outcome: "false positive", total: 0, latencies: [] },
+    "false negative": { outcome: "false negative", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    if (r.category_correct) continue;
+    const outcome =
+      r.alert_expected && r.alert_fired
+        ? "true positive"
+        : !r.alert_expected && !r.alert_fired
+          ? "true negative"
+          : !r.alert_expected && r.alert_fired
+            ? "false positive"
+            : "false negative";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["true positive", "true negative", "false positive", "false negative"]
+    .filter((outcome) => groups[outcome].total > 0)
+    .map((outcome) => {
+      const e = groups[outcome];
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        outcome,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -2146,6 +2208,33 @@ export function renderRunReport(run, baselineRun = null) {
     for (const row of latencyByMissErrorMessage) {
       lines.push(
         `| ${row.message} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const latencyByMissAlertOutcome = computeLatencyByMissAlertOutcome(run.records);
+  lines.push(
+    "",
+    "## Latency by miss alert outcome",
+    "",
+    "Harness wall-clock latencies broken down by alert outcome — one row per alert-outcome group " +
+      "among the misses only, in fixed order true positive, true negative, false positive, false " +
+      "negative, so whether the misses that fired an alert run slower than the misses that stayed " +
+      "silent is visible without scanning the per-scenario table. Only groups present among the " +
+      "misses render, so the scenario totals sum to the miss count, not the sample size, and a " +
+      "group with no recorded latency shows n/a, never a fabricated zero; a run with no misses " +
+      "says none.",
+    "",
+  );
+  if (latencyByMissAlertOutcome.length === 0) {
+    lines.push("None: every scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Alert outcome | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByMissAlertOutcome) {
+      lines.push(
+        `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );
     }
   }

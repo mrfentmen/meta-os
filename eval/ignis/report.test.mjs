@@ -46,6 +46,7 @@ import {
   computeLatencyByConfusableStatus,
   computeLatencyByMissErrorStatus,
   computeLatencyByMissErrorMessage,
+  computeLatencyByMissAlertOutcome,
   computeLatencyByMissPair,
   computeLatencyByMissPredicted,
   computeLatencyByMissTruth,
@@ -1853,6 +1854,75 @@ test("report: latency by miss error message splits errored miss latencies per me
   const noErroredRendered = renderRunReport(noErroredRun);
   const section = noErroredRendered.slice(noErroredRendered.indexOf("## Latency by miss error message"), noErroredRendered.indexOf("## Misses"));
   assert.match(section, /None: no miss carried an error message\./);
+});
+
+test("report: latency by miss alert outcome splits miss latencies by fired-vs-expected, fixed order", () => {
+  const rec = (id, truth, actual, expected, fired, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: actual === null ? "held" : null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // True positives: 10, 30 -> mean/median 20, max 30, recorded 2 of 2.
+  // True negative: 40. False positive: 100. False negative: no
+  // latency, so its statistics are null, never zero. The correct
+  // records (a true positive and a false negative) appear in no
+  // row, so the totals sum to the miss count (5), not the sample
+  // size (7), and only groups present among the misses render.
+  assert.deepEqual(
+    computeLatencyByMissAlertOutcome([
+      rec("IGN-T1", "steam or fog", "visible smoke", true, true, 10),
+      rec("IGN-T2", "steam or fog", "visible smoke", true, true, 30),
+      rec("IGN-T3", "visible smoke", "visible smoke", true, true, 999),
+      rec("IGN-T4", "steam or fog", "visible smoke", false, false, 40),
+      rec("IGN-T5", "visible smoke", "visible flame", false, true, 100),
+      rec("IGN-T6", "flame-like lighting", "visible smoke", true, false),
+      rec("IGN-T7", "visible smoke", "visible smoke", true, false, 999),
+    ]),
+    [
+      { outcome: "true positive", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "true negative", total: 1, recorded: 1, meanMs: 40, medianMs: 40, maxMs: 40 },
+      { outcome: "false positive", total: 1, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+      { outcome: "false negative", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+    ],
+  );
+  // A clean run yields no rows.
+  assert.deepEqual(
+    computeLatencyByMissAlertOutcome([
+      rec("IGN-T1", "steam or fog", "steam or fog", true, true, 10),
+    ]),
+    [],
+  );
+  // Rendered: section after Latency by miss error message, before
+  // Misses; a clean run says none with the clean-run message.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "steam or fog", "visible smoke", true, true, 10),
+      rec("IGN-T2", "steam or fog", "visible smoke", false, false, 40),
+    ],
+    metrics: { sample_size: 2, true_positives: 1, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 2, mean: 25, median: 25, max: 40 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by miss alert outcome/);
+  assert.ok(rendered.indexOf("## Latency by miss alert outcome") > rendered.indexOf("## Latency by miss error message"));
+  assert.ok(rendered.indexOf("## Latency by miss alert outcome") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| true positive \| 1 \| 1 \| 10\.0 \| 10\.0 \| 10\.0 \|/);
+  const cleanRun = {
+    source: "test source",
+    generated: "test run",
+    records: [rec("IGN-T1", "steam or fog", "steam or fog", true, true, 10)],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const cleanRendered = renderRunReport(cleanRun);
+  const section = cleanRendered.slice(cleanRendered.indexOf("## Latency by miss alert outcome"), cleanRendered.indexOf("## Misses"));
+  assert.match(section, /None: every scenario's predicted category matched its ground truth\./);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {
