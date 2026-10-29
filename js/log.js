@@ -256,6 +256,19 @@ export class SessionLog {
   // entry without a usable request timestamp leaves its bucket
   // open for a later usable success. The panel renders "none"
   // per product with no success.
+  // DETAIL-19 adds the opening counterpart to DETAIL-7's last
+  // failure (firstFailedAtByProduct, null per product with no
+  // failure carrying a usable timestamp): each product's bucket
+  // holds the request timestamp of its FIRST recorded failure, by
+  // insertion order — set once, never overwritten, so a later
+  // failure (even one carrying an earlier timestamp string) never
+  // moves the bucket, and the pair with DETAIL-7 says when a
+  // product's failures began and when they last happened. Same
+  // bucket rules as DETAIL-7: successes never move a bucket, a
+  // failure with an unknown or missing product moves no bucket,
+  // and a failure without a usable request timestamp leaves its
+  // bucket open for a later usable failure. The panel renders
+  // "none" per product with no failure.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -268,6 +281,7 @@ export class SessionLog {
     const lastOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const firstOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const lastFailedAtByProduct = { vigiles: null, ignis: null, sanitas: null };
+    const firstFailedAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const firstEntryAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const lastEntryAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     let ok = 0;
@@ -372,6 +386,13 @@ export class SessionLog {
           if (Object.hasOwn(lastFailedAtByProduct, entry.product)) {
             lastFailedAtByProduct[entry.product] = entry.request_timestamp;
           }
+          // DETAIL-19: first failure per product, set once by
+          // insertion order — a later failure never overwrites
+          // it, and a timestamp-less failure leaves the bucket
+          // open for a later usable failure.
+          if (Object.hasOwn(firstFailedAtByProduct, entry.product) && firstFailedAtByProduct[entry.product] === null) {
+            firstFailedAtByProduct[entry.product] = entry.request_timestamp;
+          }
         }
       }
     }
@@ -400,6 +421,7 @@ export class SessionLog {
       lastOkAtByProduct,
       firstOkAtByProduct,
       lastFailedAtByProduct,
+      firstFailedAtByProduct,
       firstEntryAtByProduct,
       lastEntryAtByProduct,
       entrySpanMsByProduct,

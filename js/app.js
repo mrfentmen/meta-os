@@ -59,6 +59,7 @@ const els = {
   logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),
   logStatsFirstOkByProduct: $("log-stats-first-ok-by-product"),
   logStatsLastFailedByProduct: $("log-stats-last-failed-by-product"),
+  logStatsFirstFailedByProduct: $("log-stats-first-failed-by-product"),
   logStatsAvgLatencyByProduct: $("log-stats-avg-latency-by-product"),
   logStatsFailuresByProduct: $("log-stats-failures-by-product"),
   logStatsLatencyRangeByProduct: $("log-stats-latency-range-by-product"),
@@ -311,6 +312,13 @@ function updateLogStats() {
   // successes never move a bucket.
   els.logStatsLastFailedByProduct.textContent =
     `Last failure by product: Vigiles ${stats.lastFailedAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastFailedAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastFailedAtByProduct.sanitas ?? "none"}`;
+  // DETAIL-19: the per-product first-failure line opens DETAIL-7's
+  // last-failure line — each product's first recorded failure by
+  // its request timestamp, or "none" per product with no failure —
+  // same always-renders shape as the other stats lines, and
+  // successes never move a bucket.
+  els.logStatsFirstFailedByProduct.textContent =
+    `First failure by product: Vigiles ${stats.firstFailedAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstFailedAtByProduct.ignis ?? "none"} · Sanitas ${stats.firstFailedAtByProduct.sanitas ?? "none"}`;
   // DETAIL-8: the per-product average-latency line splits DETAIL-4's
   // mean per product, rounded to whole milliseconds, or "none" per
   // product with no success carrying a usable latency — same
