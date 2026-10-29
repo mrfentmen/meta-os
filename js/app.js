@@ -55,6 +55,7 @@ const els = {
   logStatsByFailure: $("log-stats-by-failure"),
   logStatsLastOk: $("log-stats-last-ok"),
   logStatsAvgLatency: $("log-stats-avg-latency"),
+  logStatsLatencyRange: $("log-stats-latency-range"),
   logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
@@ -269,6 +270,14 @@ function updateLogStats() {
   // — same always-renders shape as the other stats lines.
   els.logStatsAvgLatency.textContent =
     `Average successful latency: ${stats.avgOkLatencyMs === null ? "none" : `${Math.round(stats.avgOkLatencyMs)} ms`}`;
+  // DETAIL-6: the latency-range line bounds the average with the
+  // fastest and slowest recorded successful latencies, rounded to
+  // whole milliseconds, or "none" when no success carries a usable
+  // latency — same always-renders shape as the other stats lines.
+  // min null implies max null by construction, so one check covers
+  // both ends.
+  els.logStatsLatencyRange.textContent =
+    `Fastest/slowest successful latency: ${stats.minOkLatencyMs === null ? "none" : `${Math.round(stats.minOkLatencyMs)} ms / ${Math.round(stats.maxOkLatencyMs)} ms`}`;
   // DETAIL-5: the per-product last-success line names each product's
   // most recent recorded success by its request timestamp, or "none"
   // per product with no success — same always-renders shape as the

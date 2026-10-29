@@ -109,6 +109,15 @@ export class SessionLog {
   // ok entry with an unknown or missing product moves no bucket, and
   // an ok entry with no usable request timestamp leaves its bucket's
   // previous value in place.
+  // DETAIL-6 bounds DETAIL-4's mean with the fastest and slowest
+  // successful latencies (minOkLatencyMs / maxOkLatencyMs, both null
+  // when no ok entry carries a usable latency): a mean alone cannot
+  // tell a tight session from one with one very slow success, and
+  // the range says which. Same measurement rules as DETAIL-4:
+  // failures never contribute, and an ok entry with no finite
+  // latency_ms is skipped rather than counted as zero, so both ends
+  // are always real recorded measurements. The panel renders them
+  // rounded to whole milliseconds.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -119,6 +128,8 @@ export class SessionLog {
     let lastOkAt = null;
     let latencySum = 0;
     let latencyCount = 0;
+    let minOkLatencyMs = null;
+    let maxOkLatencyMs = null;
     for (const entry of this._entries) {
       if (entry.status === "ok") {
         ok += 1;
@@ -134,6 +145,12 @@ export class SessionLog {
         if (Number.isFinite(entry.latency_ms)) {
           latencySum += entry.latency_ms;
           latencyCount += 1;
+          if (minOkLatencyMs === null || entry.latency_ms < minOkLatencyMs) {
+            minOkLatencyMs = entry.latency_ms;
+          }
+          if (maxOkLatencyMs === null || entry.latency_ms > maxOkLatencyMs) {
+            maxOkLatencyMs = entry.latency_ms;
+          }
         }
       } else {
         failed += 1;
@@ -151,6 +168,8 @@ export class SessionLog {
       lastOkAt,
       lastOkAtByProduct,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
+      minOkLatencyMs,
+      maxOkLatencyMs,
     };
   }
 
