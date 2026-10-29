@@ -78,7 +78,23 @@ struct TimelineView: View {
             // muted color, the title keeps its semibold weight, and
             // the row detail below kept its callout size until UI-43.
             HStack(alignment: .firstTextBaseline, spacing: 6) {
+                // IGNIS-UI-53: timeline row title at 15pt, the
+                // native counterpart to the web history head (js/
+                // app.js renders the title as a strong element in a
+                // .history-head paragraph, and styles.css gives that
+                // head no font-size of its own, so the title inherits
+                // the 15px body size). Until now the native title
+                // carried no font at all, so it read at the default
+                // 17pt body size, two points larger than the web
+                // title, while the row product name and timestamp
+                // (UI-37) already matched their own 12.5px web rules
+                // and the row detail (UI-43) already matched its own
+                // 15px web rule. The size is the only change: the
+                // semibold weight, the assessment-primary and
+                // failure-red colors, and the row layout are
+                // untouched.
                 Text(item.title)
+                    .font(.system(size: 15))
                     .fontWeight(.semibold)
                     .foregroundStyle(titleColor(for: item))
                 Text(item.product.config.displayName)
