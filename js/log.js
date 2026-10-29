@@ -992,6 +992,31 @@ export class SessionLog {
         invalid_response: shareOfAllEntries(failedByStatusByProduct.sanitas.invalid_response),
       },
     };
+    // DETAIL-43: the global failure-cause shares of all
+    // entries (failedShareByStatusOfEntries): each DETAIL-9
+    // global cause count over the session's entry total, so
+    // a session where network errors are a sixth of
+    // everything recorded reads that at a glance, where
+    // DETAIL-31's failed-total shares alone do not say it
+    // — the entry-total mirror of DETAIL-31, and the
+    // collapsed form of DETAIL-42's nine product-cause
+    // cells. Derived only from the DETAIL-9 global counts
+    // and the entry total, reusing DETAIL-40's
+    // shareOfAllEntries helper, not a new rule: successes
+    // never move a cell (they sit in the denominator
+    // only), and unlike DETAIL-42's cells these always sum
+    // to the global DETAIL-25 failed share once any entry
+    // exists, because failedByStatus is product-blind — a
+    // failure with an unknown or missing product still
+    // moves its cause cell. Null per cause on an empty log
+    // (nothing to divide by); 0 per cause with no failures
+    // of that cause once the session holds any entry,
+    // including a success-only log.
+    const failedShareByStatusOfEntries = {
+      network_error: shareOfAllEntries(failedByStatus.network_error),
+      http_error: shareOfAllEntries(failedByStatus.http_error),
+      invalid_response: shareOfAllEntries(failedByStatus.invalid_response),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1117,6 +1142,16 @@ export class SessionLog {
       // empty log; 0 per cell with no failures of that
       // combination once the session holds any entry.
       failedShareByStatusOfEntriesByProduct,
+      // DETAIL-43: the global failure-cause shares of all
+      // entries (failedShareByStatusOfEntries): each
+      // DETAIL-9 global cause count over the session
+      // entry total — the entry-total mirror of
+      // DETAIL-31's failed-total shares and the collapsed
+      // form of DETAIL-42's nine cells. Null per cause on
+      // an empty log; 0 per cause with no failures of that
+      // cause once the session holds any entry. The three
+      // cells always sum to the global failed share.
+      failedShareByStatusOfEntries,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
