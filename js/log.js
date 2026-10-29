@@ -431,6 +431,33 @@ export class SessionLog {
   // shares do. Successes never move a cell. The panel renders
   // each cell as a whole percent, or "none" per cell with no
   // failures in the session.
+  // DETAIL-47 adds the per-product usable-latency-count shares
+  // of all entries (okLatencyCountShareOfEntriesByProduct):
+  // each DETAIL-36 product count over the session's total
+  // entries, so a session where Vigiles measurements are a
+  // sixth of everything recorded reads that at a glance,
+  // where DETAIL-45's shares of the measurement total alone
+  // do not say it — the entry-total mirror of DETAIL-45,
+  // and the measurement-count split of DETAIL-13's entry
+  // shares: failures and latency-less successes sit in the
+  // denominator but move no bucket. Derived only from the
+  // DETAIL-36 counts and the entry total, reusing
+  // DETAIL-40's shareOfAllEntries helper, not a new rule:
+  // failures never contribute, even a failure carrying a
+  // latency value; an ok entry with no finite latency is
+  // skipped rather than counted as zero; and an ok entry
+  // with an unknown or missing product sits in the
+  // denominator but moves no bucket, so the three shares
+  // sum to the global usable-latency-count share of entries
+  // only when every usable-latency success carries a known
+  // product. Null per product on an empty log (nothing to
+  // divide by); 0 per product with no usable latency once
+  // the session holds any entry, including a failure-only
+  // log and a success-only log with no finite latency —
+  // unlike DETAIL-45, which reads null until the first
+  // usable measurement, because its denominator is the
+  // measurement count. A 0 ms latency still counts as a
+  // measurement, exactly as in DETAIL-45.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -1131,6 +1158,17 @@ export class SessionLog {
       ignis: shareOfSessionWindow("ignis", entrySpanMsByProduct.ignis),
       sanitas: shareOfSessionWindow("sanitas", entrySpanMsByProduct.sanitas),
     };
+    // DETAIL-47: the per-product usable-latency-count shares
+    // of all entries (okLatencyCountShareOfEntriesByProduct):
+    // each DETAIL-36 product count over the session's entry
+    // total, reusing DETAIL-40's shareOfAllEntries helper.
+    // Null per product on an empty log; 0 per product with
+    // no usable latency once the session holds any entry.
+    const okLatencyCountShareOfEntriesByProduct = {
+      vigiles: shareOfAllEntries(latencyCountByProduct.vigiles),
+      ignis: shareOfAllEntries(latencyCountByProduct.ignis),
+      sanitas: shareOfAllEntries(latencyCountByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1296,6 +1334,15 @@ export class SessionLog {
       // with entries but no usable timestamp pair; 0 per
       // product with no entries once a nonzero window exists.
       entrySpanShareByProduct,
+      // DETAIL-47: the per-product usable-latency-count
+      // shares of all entries
+      // (okLatencyCountShareOfEntriesByProduct): each
+      // product's DETAIL-36 count over the session entry
+      // total — the entry-total mirror of DETAIL-45's
+      // measurement-total shares. Null per product on an
+      // empty log; 0 per product with no usable latency
+      // once the session holds any entry.
+      okLatencyCountShareOfEntriesByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
