@@ -32,6 +32,15 @@ struct AssessmentView: View {
                 .fill(accentColor)
                 .frame(width: 3)
         }
+        // UI-6: product-accent panel wash, the native counterpart to
+        // the web panel gradient (R2/UI-3: 0.09 red at the top on
+        // Ignis). The wash uses the same assessment-own accent as
+        // the UI-5 rule, so a redisplayed panel keeps its product
+        // tint under any selection. It is a flat 0.09 wash, matching
+        // the web gradient's top strength, rather than a gradient:
+        // the UI-5 rule already marks the edge, and a fade would add
+        // a second accent treatment to the same panel.
+        .background(accentColor.opacity(0.09))
     }
 
     /// Panel accent from the assessment's own product, mirroring the
