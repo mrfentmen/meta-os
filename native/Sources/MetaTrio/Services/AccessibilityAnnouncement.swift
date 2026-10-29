@@ -28,7 +28,15 @@ import AppKit
 // failure: it sets only the panel's error text, it involves no
 // backend and no frame capture, so it is posted verbatim, never
 // through backendFailure or captureFailure, either of which would
-// misdescribe what went wrong.
+// misdescribe what went wrong. A successfully chosen input is
+// announced the same way, in the panel's own ready words: the web
+// frontend's image-state and video-state lines are polite live
+// regions, so choosing a file reads its "ready" line aloud there, but
+// the native panels used to set the same ready text silently — a
+// VoiceOver user who had just picked a file heard nothing confirming
+// the Assess button was now enabled, while only the failure case was
+// announced. Clearing an input stays silent: the user tapped Clear
+// themselves, and nothing new becomes possible.
 enum AccessibilityAnnouncement {
     static func post(_ message: String) {
         guard !message.isEmpty else { return }
@@ -81,6 +89,16 @@ enum AccessibilityAnnouncement {
     /// backendFailure or captureFailure: either would misdescribe a
     /// file the app could not decode as a backend or camera problem.
     static func inputError(_ message: String) {
+        post(message)
+    }
+
+    /// Announcement for a successfully chosen still image or video, in
+    /// the panel's own ready words. Choosing the file touches no
+    /// backend and captures no frame, so it is posted verbatim, never
+    /// through backendFailure or captureFailure: either would
+    /// misdescribe a file the app just accepted as a backend or
+    /// camera problem.
+    static func inputReady(_ message: String) {
         post(message)
     }
 

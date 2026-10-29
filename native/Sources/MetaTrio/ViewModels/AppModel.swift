@@ -350,6 +350,13 @@ final class AppModel: ObservableObject {
         stillImage = image
         stillImageName = url.lastPathComponent
         stillImageDataURL = dataURL
+        // Web parity: the web frontend's image-state line is a polite
+        // live region, so this same ready line is read aloud there the
+        // moment it is set. The native panel used to set it silently,
+        // so a VoiceOver user who had just picked a file heard nothing
+        // confirming the Assess button was now enabled — only the read
+        // failure was announced. Announced in the panel's own words.
+        AccessibilityAnnouncement.inputReady("Image ready: \(url.lastPathComponent). Tap “Assess this image” to send it once.")
     }
 
     /// Sends the chosen still image once, under the product selected
@@ -443,6 +450,13 @@ final class AppModel: ObservableObject {
         videoURL = url
         videoName = url.lastPathComponent
         videoPlayer = AVPlayer(url: url)
+        // Web parity: the web frontend's video-state line is a polite
+        // live region, so its ready line is read aloud there the moment
+        // a file is chosen. The native panel used to set its ready text
+        // silently, so a VoiceOver user who had just picked a clip heard
+        // nothing confirming the Assess button was now enabled.
+        // Announced in the panel's own words.
+        AccessibilityAnnouncement.inputReady("Video ready: \(url.lastPathComponent). Play it, pause on the frame you want assessed, and tap “Assess this frame”. Only that frame is sent; the video is not stored by this app.")
     }
 
     /// Sends only the frame at the player's current position, once,
