@@ -1255,6 +1255,57 @@ export function computeLatencyByMissErrorStatus(records) {
     });
 }
 
+// Latency by miss error message: one row per distinct error message
+// among the misses only (same miss definition as computeMisses:
+// category_correct false), in the same grouping the error-message
+// breakdown uses — most frequent first, ties alphabetical — with
+// the count of recorded harness wall-clock latencies, their mean,
+// their median (averaged-middle, matching the distribution's
+// median), and their max. This is the per-message refinement of
+// latency by miss error status: the error-status split says the
+// misses that failed outright run slower or faster than the misses
+// that returned a wrong category, but only this table says whether
+// one failure mode runs slower than another — and latency by error
+// message, which includes the correct records, cannot isolate the
+// misses. Only misses carrying an error message appear, so the
+// scenario totals sum to the errored-miss count, not the miss
+// count and not the sample size. Records with no latency take no
+// part in a message's numbers but still count toward its scenario
+// total, so a message whose scenarios carry no latency reads as
+// recorded 0 with n/a statistics — never as a fabricated zero.
+export function computeLatencyByMissErrorMessage(records) {
+  const byMessage = {};
+  for (const r of records) {
+    if (r.category_correct) continue;
+    if (r.error === null) continue;
+    byMessage[r.error] ??= { message: r.error, total: 0, latencies: [] };
+    const entry = byMessage[r.error];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return Object.values(byMessage)
+    .map((e) => {
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { message: e.message, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        message: e.message,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    })
+    .sort((a, b) => {
+      if (a.total !== b.total) return b.total - a.total;
+      return a.message < b.message ? -1 : a.message > b.message ? 1 : 0;
+    });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -2067,6 +2118,34 @@ export function renderRunReport(run, baselineRun = null) {
     for (const row of latencyByMissErrorStatus) {
       lines.push(
         `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const latencyByMissErrorMessage = computeLatencyByMissErrorMessage(run.records);
+  lines.push(
+    "",
+    "## Latency by miss error message",
+    "",
+    "Harness wall-clock latencies for the errored misses only, split by the distinct error " +
+      "message each miss carries — the per-message refinement of latency by miss error status, " +
+      "so whether one failure mode runs slower than another among the misses is visible " +
+      "without scanning the per-scenario table. Rows sort most frequent first, ties " +
+      "alphabetical, matching the error-message breakdown's order; the scenario totals sum " +
+      "to the errored-miss count, not the miss count, since misses with no error message " +
+      "appear in no row. A message with no recorded latency shows n/a, never a fabricated " +
+      "zero; a run with no errored miss says none.",
+    "",
+  );
+  if (latencyByMissErrorMessage.length === 0) {
+    lines.push("None: no miss carried an error message.");
+  } else {
+    lines.push(
+      "| Error message | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByMissErrorMessage) {
+      lines.push(
+        `| ${row.message} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );
     }
   }
