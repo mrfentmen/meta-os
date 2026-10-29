@@ -60,6 +60,7 @@ const els = {
   logStatsLastFailedByProduct: $("log-stats-last-failed-by-product"),
   logStatsAvgLatencyByProduct: $("log-stats-avg-latency-by-product"),
   logStatsFailuresByProduct: $("log-stats-failures-by-product"),
+  logStatsLatencyRangeByProduct: $("log-stats-latency-range-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -309,6 +310,14 @@ function updateLogStats() {
   // missing bucket, and successes never move a bucket.
   els.logStatsFailuresByProduct.textContent =
     `Failures by cause by product: Vigiles Network ${stats.failedByStatusByProduct.vigiles.network_error}, HTTP ${stats.failedByStatusByProduct.vigiles.http_error}, Invalid response ${stats.failedByStatusByProduct.vigiles.invalid_response} · Ignis Network ${stats.failedByStatusByProduct.ignis.network_error}, HTTP ${stats.failedByStatusByProduct.ignis.http_error}, Invalid response ${stats.failedByStatusByProduct.ignis.invalid_response} · Sanitas Network ${stats.failedByStatusByProduct.sanitas.network_error}, HTTP ${stats.failedByStatusByProduct.sanitas.http_error}, Invalid response ${stats.failedByStatusByProduct.sanitas.invalid_response}`;
+  // DETAIL-10: the per-product latency-range line splits DETAIL-6's
+  // range per product, rounded to whole milliseconds, or "none" per
+  // product with no success carrying a usable latency — same
+  // always-renders shape as the other stats lines, and failures
+  // never contribute to any bucket. Min null implies max null per
+  // bucket by construction, so one check covers both ends.
+  els.logStatsLatencyRangeByProduct.textContent =
+    `Fastest/slowest successful latency by product: Vigiles ${stats.minOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.vigiles)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.minOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.ignis)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.ignis)} ms`} · Sanitas ${stats.minOkLatencyMsByProduct.sanitas === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.sanitas)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.sanitas)} ms`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

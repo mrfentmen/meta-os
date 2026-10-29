@@ -149,6 +149,18 @@ export class SessionLog {
   // and a failure still counts in the session failed total and
   // the global cause breakdown even when it moves no product
   // bucket, so the buckets never invent a product or a cause.
+  // DETAIL-10 splits DETAIL-6's range per product
+  // (minOkLatencyMsByProduct / maxOkLatencyMsByProduct, null per
+  // product with no ok entry carrying a usable latency): a session
+  // where Ignis successes span 50–900 ms but Vigiles successes are
+  // all near 100 ms reads differently from one where all three span
+  // the same range. Same measurement rules as DETAIL-6, per bucket:
+  // failures never contribute, an ok entry with an unknown or
+  // missing product moves no bucket, and an ok entry with no finite
+  // latency_ms is skipped rather than counted as zero, so both ends
+  // of each range are always real recorded measurements for that
+  // product. The panel renders each range rounded to whole
+  // milliseconds, or "none" per product with no usable latency.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -169,6 +181,8 @@ export class SessionLog {
     const latencyCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     let minOkLatencyMs = null;
     let maxOkLatencyMs = null;
+    const minOkLatencyMsByProduct = { vigiles: null, ignis: null, sanitas: null };
+    const maxOkLatencyMsByProduct = { vigiles: null, ignis: null, sanitas: null };
     for (const entry of this._entries) {
       if (entry.status === "ok") {
         ok += 1;
@@ -193,6 +207,14 @@ export class SessionLog {
           }
           if (maxOkLatencyMs === null || entry.latency_ms > maxOkLatencyMs) {
             maxOkLatencyMs = entry.latency_ms;
+          }
+          if (Object.hasOwn(minOkLatencyMsByProduct, entry.product)) {
+            if (minOkLatencyMsByProduct[entry.product] === null || entry.latency_ms < minOkLatencyMsByProduct[entry.product]) {
+              minOkLatencyMsByProduct[entry.product] = entry.latency_ms;
+            }
+            if (maxOkLatencyMsByProduct[entry.product] === null || entry.latency_ms > maxOkLatencyMsByProduct[entry.product]) {
+              maxOkLatencyMsByProduct[entry.product] = entry.latency_ms;
+            }
           }
         }
       } else {
@@ -228,6 +250,8 @@ export class SessionLog {
       },
       minOkLatencyMs,
       maxOkLatencyMs,
+      minOkLatencyMsByProduct,
+      maxOkLatencyMsByProduct,
     };
   }
 
