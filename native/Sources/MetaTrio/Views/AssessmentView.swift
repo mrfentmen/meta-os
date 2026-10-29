@@ -216,10 +216,23 @@ struct AssessmentView: View {
                     .foregroundStyle(.secondary)
             } else {
                 ForEach(Array(response.assessment.uncertainty.enumerated()), id: \.offset) { _, item in
+                    // UI-14: uncertainty items in the web .uncertainty
+                    // style, the native counterpart to styles.css
+                    // rendering the web uncertainty list in --muted.
+                    // Until now the items used the default text color
+                    // while the heading (UI-12) and the empty note
+                    // below both read muted, so a populated list read
+                    // bolder than the web list and inconsistent with
+                    // its own section. The muted style sits on the
+                    // row so bullet and item share it, exactly like
+                    // the web list items inheriting the list color.
+                    // It tracks no accent: uncertainty is muted for
+                    // every product, like the web rule.
                     HStack(alignment: .top, spacing: 6) {
                         Text("•")
                         Text(item)
                     }
+                    .foregroundStyle(.secondary)
                 }
             }
         }
