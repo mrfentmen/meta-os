@@ -54,6 +54,7 @@ const els = {
   logStatsByProduct: $("log-stats-by-product"),
   logStatsByFailure: $("log-stats-by-failure"),
   logStatsLastOk: $("log-stats-last-ok"),
+  logStatsFirstOk: $("log-stats-first-ok"),
   logStatsAvgLatency: $("log-stats-avg-latency"),
   logStatsLatencyRange: $("log-stats-latency-range"),
   logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),
@@ -289,6 +290,22 @@ function updateLogStats() {
   // shape, and failures never move the timestamp.
   els.logStatsLastOk.textContent =
     `Last successful assessment: ${stats.lastOkAt ?? "none"}`;
+  // DETAIL-30: the global first-success line opens DETAIL-3's
+  // last-success line — the session's first recorded success by
+  // its request timestamp, or "none" when the log holds no ok
+  // entry — same always-renders shape as the other stats lines,
+  // so an empty session never changes the panel's shape. No new
+  // stats field: stats() already exposes firstOkAt from
+  // DETAIL-22, set once by insertion order, so a success with an
+  // unknown or missing product still opens it (the per-product
+  // DETAIL-18 buckets stay product-gated), a timestamp-less
+  // success leaves it open for a later usable success, and
+  // failures never move it. The pair with the last-success line
+  // says when the session's successes began and when they last
+  // happened, where DETAIL-22's success span alone does not
+  // name the endpoints.
+  els.logStatsFirstOk.textContent =
+    `First successful assessment: ${stats.firstOkAt ?? "none"}`;
   // DETAIL-4: the average-latency line means the recorded round-trip
   // latency over successful assessments only, rounded to whole
   // milliseconds, or "none" when no success carries a usable latency
