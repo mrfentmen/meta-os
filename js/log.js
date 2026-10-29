@@ -305,6 +305,24 @@ export class SessionLog {
   // timestamp order, which the insertion-order endpoints preserve
   // honestly. The panel renders each span in whole milliseconds,
   // or "none" per product with no usable success pair.
+  // DETAIL-22 spans the global first-to-last success
+  // (okSpanMs, null with no usable success pair): the
+  // milliseconds between the session's first and last recorded
+  // success timestamps, across products — how long the session's
+  // successes stretch, where the per-product DETAIL-21 spans
+  // alone do not say it at a glance. Derived only from the
+  // global firstOkAt/lastOkAt endpoints, so the same endpoint
+  // rules apply: a success with an unknown or missing product
+  // still opens and closes the global span (the per-product
+  // buckets stay product-gated), and a success without a usable
+  // timestamp leaves both endpoints in place. A session with
+  // exactly one usable success reads 0, not null — one success
+  // spans no time. A bucket timestamp that does not parse reads
+  // null, never NaN, and the difference is kept raw, not
+  // clamped: a negative span means successes were recorded out
+  // of timestamp order, which the insertion-order endpoints
+  // preserve honestly. The panel renders the span in whole
+  // milliseconds, or "none" with no usable success pair.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -323,6 +341,7 @@ export class SessionLog {
     let ok = 0;
     let failed = 0;
     let lastOkAt = null;
+    let firstOkAt = null;
     let latencySum = 0;
     let latencyCount = 0;
     const latencySumByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -372,6 +391,14 @@ export class SessionLog {
           entryCountByProduct[entry.product] += 1;
         }
         if (typeof entry.request_timestamp === "string" && entry.request_timestamp !== "") {
+          // DETAIL-22: first success across products, set once by
+          // insertion order — mirrors lastOkAt, so it covers an ok
+          // entry with an unknown or missing product too, and a
+          // timestamp-less ok entry leaves it open for a later
+          // usable success.
+          if (firstOkAt === null) {
+            firstOkAt = entry.request_timestamp;
+          }
           lastOkAt = entry.request_timestamp;
           if (Object.hasOwn(lastOkAtByProduct, entry.product)) {
             lastOkAtByProduct[entry.product] = entry.request_timestamp;
@@ -463,6 +490,26 @@ export class SessionLog {
       ignis: entrySpanMs(firstOkAtByProduct.ignis, lastOkAtByProduct.ignis),
       sanitas: entrySpanMs(firstOkAtByProduct.sanitas, lastOkAtByProduct.sanitas),
     };
+    // DETAIL-22: the global success span (okSpanMs, null with no
+    // usable success pair): the milliseconds between the session's
+    // first and last recorded success timestamps, across products
+    // — how long the session's successes stretch, where the
+    // per-product DETAIL-21 spans alone do not say it at a glance.
+    // Derived only from the global firstOkAt/lastOkAt endpoints,
+    // reusing DETAIL-17's span helper, not a new rule: the
+    // endpoints mirror DETAIL-3's lastOkAt, so a success with an
+    // unknown or missing product still opens and closes the global
+    // span (the per-product buckets stay product-gated), and a
+    // success without a usable timestamp leaves both endpoints in
+    // place. A session with exactly one usable success reads 0
+    // (first and last are the same timestamp), not null. A bucket
+    // timestamp that does not parse reads null, never NaN, and the
+    // difference is kept raw, not clamped: a negative span means
+    // successes were recorded out of timestamp order, which the
+    // insertion-order endpoints preserve honestly. The panel
+    // renders the span in whole milliseconds, or "none" with no
+    // usable success pair.
+    const okSpanMs = entrySpanMs(firstOkAt, lastOkAt);
     return {
       total: this._entries.length,
       ok,
@@ -472,6 +519,7 @@ export class SessionLog {
       failedByStatus,
       failedByStatusByProduct,
       lastOkAt,
+      firstOkAt,
       lastOkAtByProduct,
       firstOkAtByProduct,
       lastFailedAtByProduct,
@@ -481,6 +529,7 @@ export class SessionLog {
       entrySpanMsByProduct,
       failedSpanMsByProduct,
       okSpanMsByProduct,
+      okSpanMs,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
       avgOkLatencyMsByProduct: {
         vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,
