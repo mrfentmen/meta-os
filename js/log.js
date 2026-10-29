@@ -1169,6 +1169,52 @@ export class SessionLog {
       ignis: shareOfAllEntries(latencyCountByProduct.ignis),
       sanitas: shareOfAllEntries(latencyCountByProduct.sanitas),
     };
+    // DETAIL-48: the per-product ok-span shares of the
+    // global ok window (okSpanShareByProduct): each product's
+    // DETAIL-21 ok span over the session's global ok span
+    // (DETAIL-22), so a session where Vigiles successes
+    // stretch across the whole ok window while Ignis covers
+    // half of it reads that at a glance — the ok-only
+    // companion to DETAIL-46's any-status entry-span
+    // shares, where entry counts and entry windows alone do
+    // not say how long each product was actually succeeding.
+    // Derived only from the DETAIL-21 spans and the global
+    // ok span, not a new rule: only successes move the
+    // endpoints, so failures move neither a bucket nor the
+    // global ok window, and an ok entry with an unknown or
+    // missing product moves no product bucket but still
+    // stretches the global window, so it dilutes every
+    // share without moving any bucket. These are raw
+    // ratios, never clamped, and they do NOT sum to 1:
+    // product ok windows overlap, and the global window
+    // is first-to-last across products, not a sum of
+    // product windows — a share above 1 or below 0 means
+    // timestamps ran out of insertion order, exactly as
+    // DETAIL-21's raw spans do. Null per product when the
+    // session holds no usable ok window at all (an empty
+    // log, a failure-only log, a single success, or all
+    // successes at one timestamp — a zero global ok span
+    // has no shares to divide, never NaN); null per
+    // product whose own ok span is unknown (successes
+    // recorded but no usable timestamp pair — never a
+    // fabricated window); 0 per product with no successes
+    // once a nonzero ok window exists, because it covered
+    // none of the window — the deliberate contrast with
+    // DETAIL-21's null, matching DETAIL-46's
+    // 0-once-a-window-exists rule — and 0 per
+    // single-success product, whose zero-length window
+    // covers none of a nonzero ok window.
+    const shareOfOkWindow = (product, span) => {
+      if (okSpanMs === null || okSpanMs === 0) return null;
+      if (okCountByProduct[product] === 0) return 0;
+      if (span === null) return null;
+      return span / okSpanMs;
+    };
+    const okSpanShareByProduct = {
+      vigiles: shareOfOkWindow("vigiles", okSpanMsByProduct.vigiles),
+      ignis: shareOfOkWindow("ignis", okSpanMsByProduct.ignis),
+      sanitas: shareOfOkWindow("sanitas", okSpanMsByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1343,6 +1389,17 @@ export class SessionLog {
       // empty log; 0 per product with no usable latency
       // once the session holds any entry.
       okLatencyCountShareOfEntriesByProduct,
+      // DETAIL-48: the per-product ok-span shares of the
+      // global ok window (okSpanShareByProduct): each
+      // product's DETAIL-21 ok span over the global ok
+      // span — the ok-only companion to DETAIL-46's
+      // entry-span shares. Raw ratios, never clamped, and
+      // they do NOT sum to 1 (product ok windows overlap).
+      // Null per product with no usable ok window, or
+      // with successes but no usable timestamp pair; 0 per
+      // product with no successes once a nonzero ok
+      // window exists.
+      okSpanShareByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
