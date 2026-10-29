@@ -232,8 +232,20 @@ private struct CameraPanel: View {
             HStack(spacing: 8) {
                 Button("Start Camera") { model.startCamera() }
                     .disabled(camera.state == .running || camera.state == .requestingPermission)
+                // Stop stays enabled while permission is requested,
+                // not just while the camera is running: stopCamera is
+                // the cancel for a permission wait — CameraService.stop
+                // bumps the start generation, so the permission
+                // callback stands down instead of starting a camera
+                // the user just stopped — but the button used to be
+                // disabled exactly during that wait, so the only way
+                // to abandon it was Reset Session, which also clears
+                // the latest assessment and the timeline. A wait
+                // cancelled this way leaves the view alone, matching
+                // the web frontend's Stop button during its pending
+                // start.
                 Button("Stop Camera") { model.stopCamera() }
-                    .disabled(camera.state != .running)
+                    .disabled(camera.state != .running && camera.state != .requestingPermission)
                 Button("Start Analysis") { model.startAnalysis() }
                     .disabled(camera.state != .running || model.analysisRunning)
                     .accessibilityHint("Starts sampling one frame every \(model.intervalSeconds) seconds and sending each frame to the assessment endpoint.")

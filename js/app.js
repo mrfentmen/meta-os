@@ -217,7 +217,17 @@ function updateAnalysisActive() {
 function refreshButtons() {
   const camActive = camera.active;
   els.btnCameraStart.disabled = camActive || cameraStartPending || cameraUnsupported;
-  els.btnCameraStop.disabled = !camActive;
+  // Stop stays enabled while a start is pending, not just while the
+  // camera is live: the Stop handler already clears the pending flag
+  // and bumps the start generation, so it is the cancel for a
+  // permission wait — but the button used to be disabled exactly
+  // during that wait (camActive is false until the prompt resolves),
+  // so the only way to abandon the wait was Reset, which also clears
+  // the latest assessment and the history. A pending start cancelled
+  // this way leaves the view alone: the stale Start settle touches
+  // nothing, and the Camera class discards the stream if permission
+  // is granted after the stop.
+  els.btnCameraStop.disabled = !camActive && !cameraStartPending;
   els.btnAnalysisStart.disabled = !camActive || sampler.running;
   els.btnAnalysisStop.disabled = !sampler.running;
   updateHistoryEmpty();

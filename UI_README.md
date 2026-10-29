@@ -30,7 +30,10 @@ ES modules for the node test runner; it declares zero dependencies.)
   busy, and unsupported browser/context. While the browser permission
   prompt is up, Start says "Waiting for camera permission…" and stays
   disabled until the prompt resolves, matching the native camera's
-  requesting-permission state, instead of still saying "Camera is off." A facing selector offers the
+  requesting-permission state, instead of still saying "Camera is off."
+  Stop camera stays enabled during that wait on both frontends, so the
+  wait can be cancelled without Reset, which would also clear the
+  latest assessment and the history. A facing selector offers the
   front camera and the rear camera — the one a phone demo points at the
   scene — as a preference, never an exact requirement, so a device with
   only one camera still gets that camera. Changing it while the camera
