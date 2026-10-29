@@ -365,6 +365,33 @@ function renderLatest(assessment, earlierNote = null) {
   const product = PRODUCT_BY_ID[assessment.product] || null;
   const wrap = document.createElement("div");
 
+  // HANA Agent1: the panel wash follows the assessment's own product,
+  // not the selected product's — the web counterpart to the native
+  // UI-6 panel wash. The theme blocks wash every .panel in the
+  // selected product's accent, so without this a redisplayed
+  // assessment re-tinted on every product switch (flat under Vigiles,
+  // green under Sanitas for an Ignis assessment). The section is
+  // tagged, not the inner wrap, because the gradient lives on the
+  // section; stale classes are removed first so a redisplayed
+  // assessment never keeps its predecessor's wash. An unknown product
+  // key gets no class and keeps the selection wash, like the
+  // product-name fallback.
+  const latestPanel = els.latest.closest(".panel");
+  if (latestPanel) {
+    latestPanel.classList.remove(
+      "latest-product-vigiles",
+      "latest-product-ignis",
+      "latest-product-sanitas",
+    );
+    const washByProduct = {
+      vigiles: "latest-product-vigiles",
+      ignis: "latest-product-ignis",
+      sanitas: "latest-product-sanitas",
+    };
+    const wash = washByProduct[assessment.product];
+    if (wash) latestPanel.classList.add(wash);
+  }
+
   if (earlierNote) {
     const note = document.createElement("p");
     note.className = "note";
@@ -1169,6 +1196,16 @@ els.btnReset.addEventListener("click", () => {
   clearLastRoundTrip();
   latestAssessmentShown = false;
   els.latest.textContent = "No assessment received yet.";
+  // HANA Agent1: Reset also clears the panel wash class, so the
+  // cleared panel does not keep the last assessment's product tint.
+  const resetLatestPanel = els.latest.closest(".panel");
+  if (resetLatestPanel) {
+    resetLatestPanel.classList.remove(
+      "latest-product-vigiles",
+      "latest-product-ignis",
+      "latest-product-sanitas",
+    );
+  }
   els.history.replaceChildren();
   els.historyEmpty.hidden = false;
   refreshButtons();

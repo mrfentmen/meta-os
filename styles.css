@@ -606,3 +606,30 @@ body[data-product="ignis"] .product-option[data-product-option="ignis"]:has(inpu
   border-color: #d92b2b;
   box-shadow: inset 0 0 0 1px #d92b2b, 0 0 14px rgba(217, 43, 43, 0.35);
 }
+
+/* HANA Agent1: the Latest assessment panel's wash follows the
+   assessment's own product, not the selected product's — the web
+   counterpart to the native UI-6 panel wash. The theme blocks above
+   wash every panel in the SELECTED product's accent
+   (body[data-product] .panel), so a past Ignis assessment shown again
+   under Vigiles read flat (Vigiles has no panel gradient), and one
+   shown under Sanitas read green. The native panel washes in the
+   assessment's own accent at a flat 0.09; the web rules use the same
+   0.09-at-the-top gradient shape the theme blocks already use, with
+   fixed rgba values per product, so a switch cannot re-tint a shown
+   assessment. These rules sit after the theme blocks and use the
+   body .panel.latest-product-<product> selector, which ties the theme
+   rules' specificity and wins on source order. An unknown product key
+   gets no class, so the panel keeps the selection wash, like the
+   native panel's system-accent fallback and the product-name rule. */
+body .panel.latest-product-vigiles {
+  background: linear-gradient(180deg, rgba(79, 126, 194, 0.09), var(--panel) 42%);
+}
+
+body .panel.latest-product-ignis {
+  background: linear-gradient(180deg, rgba(217, 43, 43, 0.09), var(--panel) 42%);
+}
+
+body .panel.latest-product-sanitas {
+  background: linear-gradient(180deg, rgba(93, 168, 100, 0.09), var(--panel) 42%);
+}
