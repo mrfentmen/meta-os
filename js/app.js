@@ -496,8 +496,18 @@ function renderLatest(assessment, earlierNote = null) {
     }
     wrap.appendChild(uncertainty);
   } else {
+    // HANA Agent1: the empty uncertainty note now reads at body size,
+    // like the native panel's note. The native empty note is a plain
+    // Text — body size, secondary — and the web's own populated
+    // uncertainty items read at body size in --muted, but the web
+    // empty note used class "note" (13px), so an assessment with no
+    // uncertainty items read its note smaller than both its own
+    // populated list and the native note. The note now carries class
+    // "uncertainty" — muted color, body size inherited — changing no
+    // wording, no heading, and no populated-list rendering; the
+    // earlierNote paragraph above the panel keeps class "note".
     const uncertainty = document.createElement("p");
-    uncertainty.className = "note";
+    uncertainty.className = "uncertainty";
     uncertainty.textContent = "The model reported no uncertainty items.";
     wrap.appendChild(uncertainty);
   }
