@@ -20,7 +20,7 @@ ES modules for the node test runner; it declares zero dependencies.)
   scenarios, input guidance, and a limitations notice that stays on screen.
   Switching products applies to the next sampled frame; earlier log entries
   keep the product they were assessed under. The active product also tints
-  the UI accent (blue / orange / green).
+  the UI accent (blue / red / green).
 - **Camera** (`js/camera.js`, wired in `js/app.js`): `getUserMedia`
   start/stop/reset, a visible CAMERA LIVE indicator while the stream is
   active, and honest states for permission denied, no camera found, camera

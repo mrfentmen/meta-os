@@ -155,7 +155,7 @@ private struct HeaderView: View {
     private var accentColor: Color {
         switch model.config.accentColorName {
         case "blue": return .blue
-        case "orange": return .orange
+        case "red": return .red
         case "green": return .green
         default: return .accentColor
         }

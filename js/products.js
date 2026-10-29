@@ -42,7 +42,7 @@ export const PRODUCTS = [
     displayName: "Meta Ignis",
     department: "FDNY-oriented — fire and smoke hazard awareness",
     tagline: "Visible fire and smoke hazard indicators for human review.",
-    accent: "#d97a2b",
+    accent: "#d92b2b",
     categories: [
       "visible smoke",
       "visible flame",

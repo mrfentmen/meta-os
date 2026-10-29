@@ -78,7 +78,7 @@ struct ProductConfig {
         displayName: "Meta Ignis",
         department: "FDNY-oriented — fire and smoke hazard awareness",
         tagline: "Visible fire and smoke hazard indicators for human review.",
-        accentColorName: "orange",
+        accentColorName: "red",
         categories: [
             "visible smoke",
             "visible flame",

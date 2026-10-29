@@ -41,7 +41,7 @@ over a network. Open `index.html`.
    is a preference, not a requirement, so no error may appear for
    lacking a second camera.
 4. Product switch while live: switch to Ignis, then Sanitas. The accent
-   color changes (orange, then green), the limitations notice changes
+   color changes (red, then green), the limitations notice changes
    to that product's text, and earlier history entries keep the product
    they were recorded under.
 5. Sampling: start analysis with no backend running. Confirm the

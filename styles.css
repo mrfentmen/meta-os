@@ -21,7 +21,7 @@ body[data-product="vigiles"] {
 }
 
 body[data-product="ignis"] {
-  --accent: #d97a2b;
+  --accent: #d92b2b;
 }
 
 body[data-product="sanitas"] {
@@ -259,12 +259,12 @@ button:disabled {
 }
 
 .product-option[data-product-option="ignis"]:has(input:checked) {
-  border-color: #d97a2b;
-  box-shadow: inset 0 0 0 1px #d97a2b;
+  border-color: #d92b2b;
+  box-shadow: inset 0 0 0 1px #d92b2b;
 }
 
 .product-option[data-product-option="ignis"]:has(input:checked) .product-option-name {
-  color: #d97a2b;
+  color: #d92b2b;
 }
 
 .product-option[data-product-option="sanitas"]:has(input:checked) {

@@ -20,7 +20,7 @@ ES modules for the node test runner; it declares zero dependencies.)
   scenarios, input guidance, and a limitations notice that stays on screen.
   Switching products applies to the next sampled frame; earlier log entries
   keep the product they were assessed under. The active product also tints
-  the UI accent (blue / orange / green). On both frontends, a switch made
+  the UI accent (blue / red / green). On both frontends, a switch made
   while a request is in flight cannot relabel that request: the product
   is captured when the sample starts or the Assess button is tapped, and
   that product labels the request's log and history/timeline entries.

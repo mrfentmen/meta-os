@@ -20,7 +20,7 @@ import { PRODUCTS, PRODUCT_IDS } from "../js/products.js";
 
 const ACCENT_HEX_BY_COLOR_NAME = {
   blue: "#4f7ec2",
-  orange: "#d97a2b",
+  red: "#d92b2b",
   green: "#5da864",
 };
 
