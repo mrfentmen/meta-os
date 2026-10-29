@@ -168,8 +168,15 @@ private struct HeaderView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // IGNIS-UI-40: Product label at 13pt, the native
+            // counterpart to the web label rule (13px, muted).
+            // Until now the label used .caption (12pt), so it read
+            // one point smaller than the web labels while the
+            // endpoint and scenario labels (UI-33) already matched
+            // their own 13px web rule. The size is the only change:
+            // the muted color and the wording are untouched.
             Text("Product")
-                .font(.caption)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
             Picker("Product", selection: $model.selectedProduct) {
                 ForEach(ProductID.allCases) { product in
