@@ -400,7 +400,18 @@ function renderLatest(assessment, earlierNote = null) {
   }
   const head = document.createElement("p");
   head.className = "assessment-head";
+  // HANA Agent1: the category reads at the native panel's title3
+  // size, like its product name and timestamp already match their
+  // native sizes (12.5px, UI-19). The native category is a title3
+  // Text (20pt, bold), but the web category was a bare strong, so
+  // it read at the 15px body size — a title that did not stand out
+  // from the summary and observation text below it, while the native
+  // title stands above them. The class is the only change: the
+  // category keeps its bold weight (strong), its position first in
+  // the head line, and its wording, and the product, timestamp, and
+  // review-flag spans keep their own sizes.
   const type = document.createElement("strong");
+  type.className = "assessment-category";
   type.textContent = assessment.assessment.category;
   head.appendChild(type);
   const productEl = document.createElement("span");

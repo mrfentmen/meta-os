@@ -379,6 +379,19 @@ select {
   margin: 0 0 6px;
 }
 
+/* HANA Agent1: the Latest panel's category at the native panel's
+   title3 size (20pt, bold). The web category was a bare strong, so
+   it read at the 15px body size while the native category reads at
+   title3 — the panel's title did not stand out from its summary and
+   observations. The mapping is 1:1 pt-to-px, like the 12.5pt subline
+   (UI-19) and the 13pt uncertainty heading (UI-12). Weight comes
+   from the strong element itself, so no font-weight is set here, and
+   the rule is scoped to the assessment head: history titles keep
+   their body-size strong. */
+.assessment-category {
+  font-size: 20px;
+}
+
 .assessment-product {
   color: var(--accent);
   font-size: 12.5px;
