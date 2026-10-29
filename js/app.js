@@ -99,6 +99,7 @@ const els = {
   logStatsOkShareOfTotalByProduct: $("log-stats-ok-share-of-total-by-product"),
   logStatsFailedShareByStatusOfEntriesByProduct: $("log-stats-failed-share-by-status-of-entries-by-product"),
   logStatsFailedShareByStatusOfEntries: $("log-stats-failed-share-by-status-of-entries"),
+  logStatsFailedShareByStatusOfEntriesWithinProduct: $("log-stats-failed-share-by-status-of-entries-within-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -698,6 +699,16 @@ function updateLogStats() {
   // global failed share, unknown-product failures included.
   els.logStatsFailedShareByStatusOfEntries.textContent =
     `Failure-cause share of all entries: Network ${stats.failedShareByStatusOfEntries.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntries.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntries.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntries.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntries.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntries.invalid_response * 100)}%`}`;
+  // DETAIL-44: the per-product failure-cause-share-of-that-
+  // product's-entries line re-bases DETAIL-9's product-cause
+  // counts on each product's own entry total, rendered as
+  // whole percents, or "none" per product with no entries of
+  // that product — the within-product slice DETAIL-42's
+  // global-entry cells imply but do not state, and the cause
+  // split of DETAIL-12's per-product failed-share line.
+  // A success-only product reads 0% per cause, never "none".
+  els.logStatsFailedShareByStatusOfEntriesWithinProduct.textContent =
+    `Failure-cause share of that product's entries by product: Vigiles Network ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.invalid_response * 100)}%`} · Sanitas Network ${stats.failedShareByStatusOfEntriesWithinProduct.sanitas.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.sanitas.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.sanitas.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.sanitas.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.sanitas.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.sanitas.invalid_response * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

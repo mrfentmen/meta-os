@@ -1017,6 +1017,47 @@ export class SessionLog {
       http_error: shareOfAllEntries(failedByStatus.http_error),
       invalid_response: shareOfAllEntries(failedByStatus.invalid_response),
     };
+    // DETAIL-44: the per-product failure-cause shares of that
+    // product's own entries (failedShareByStatusOfEntriesWithinProduct):
+    // each DETAIL-9 product-cause count over that product's own
+    // entry total (DETAIL-14), so the cells say what slice of
+    // everything Vigiles recorded is Vigiles network errors, not
+    // what slice of the whole session's entries it is — DETAIL-42's
+    // cells re-based per product, and the cause split of
+    // DETAIL-12's failed-share-by-product line: the three cause
+    // cells for a product sum to that product's DETAIL-12 failed
+    // share. Derived only from the DETAIL-9 counts and the
+    // per-product entry totals, not a new rule: successes of a
+    // product sit in that product's denominator but move no
+    // cell, and a failure with an unknown or missing product
+    // moves no bucket and no denominator here (unlike DETAIL-42's
+    // global denominator and DETAIL-43's product-blind cells),
+    // exactly as DETAIL-33's within-product cells do. Null per
+    // product with no entries of that product — an empty log,
+    // and a product with no entries even while other products
+    // have them, unlike DETAIL-42, which reads 0 for that
+    // product once the session holds any entry at all; 0 per
+    // cause with no failures of that cause once that product
+    // holds any entry, including a success-only product.
+    const shareOfProductEntries = (product, count) =>
+      entryCountByProduct[product] === 0 ? null : count / entryCountByProduct[product];
+    const failedShareByStatusOfEntriesWithinProduct = {
+      vigiles: {
+        network_error: shareOfProductEntries("vigiles", failedByStatusByProduct.vigiles.network_error),
+        http_error: shareOfProductEntries("vigiles", failedByStatusByProduct.vigiles.http_error),
+        invalid_response: shareOfProductEntries("vigiles", failedByStatusByProduct.vigiles.invalid_response),
+      },
+      ignis: {
+        network_error: shareOfProductEntries("ignis", failedByStatusByProduct.ignis.network_error),
+        http_error: shareOfProductEntries("ignis", failedByStatusByProduct.ignis.http_error),
+        invalid_response: shareOfProductEntries("ignis", failedByStatusByProduct.ignis.invalid_response),
+      },
+      sanitas: {
+        network_error: shareOfProductEntries("sanitas", failedByStatusByProduct.sanitas.network_error),
+        http_error: shareOfProductEntries("sanitas", failedByStatusByProduct.sanitas.http_error),
+        invalid_response: shareOfProductEntries("sanitas", failedByStatusByProduct.sanitas.invalid_response),
+      },
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1152,6 +1193,16 @@ export class SessionLog {
       // cause once the session holds any entry. The three
       // cells always sum to the global failed share.
       failedShareByStatusOfEntries,
+      // DETAIL-44: the per-product failure-cause shares of
+      // that product's own entries
+      // (failedShareByStatusOfEntriesWithinProduct): each
+      // DETAIL-9 product-cause count over that product's own
+      // entry total — the within-product mirror of DETAIL-42's
+      // global-entry cells and the cause split of DETAIL-12's
+      // per-product failed shares. Null per product with no
+      // entries of that product; 0 per cause with no failures
+      // of that cause once that product holds any entry.
+      failedShareByStatusOfEntriesWithinProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
