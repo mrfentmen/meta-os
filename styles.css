@@ -523,3 +523,14 @@ body[data-product="sanitas"] .product-option[data-product-option="sanitas"]:has(
 body[data-product="sanitas"] .status[data-state="connected"] {
   color: #7f9c82;
 }
+
+/* Ignis theme (Del UI push, Oct 29; R2): red identity polish, scoped to
+   body[data-product="ignis"] only. Mirrors the Sanitas panel treatment
+   in Ignis red #d92b2b; this block never restyles Vigiles or Sanitas.
+   The native header carries the matching pieces (flame chip, accent
+   limitations rule); the web panel gradient is the web half of R2. */
+body[data-product="ignis"] .panel {
+  background: linear-gradient(180deg, rgba(217, 43, 43, 0.09), var(--panel) 42%);
+  border-color: rgba(217, 43, 43, 0.5);
+  box-shadow: 0 0 0 1px rgba(217, 43, 43, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35);
+}

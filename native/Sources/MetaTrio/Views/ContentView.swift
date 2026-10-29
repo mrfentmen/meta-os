@@ -138,6 +138,19 @@ private struct HeaderView: View {
                 Text(model.config.tagline)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                // R2: Ignis-only flame chip — the header's accent dot is
+                // shared across products, so Ignis gets its own flame
+                // marker in the identity row, in the product accent.
+                if model.selectedProduct == .ignis {
+                    Label("Flame", systemImage: "flame.fill")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(accentColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(accentColor.opacity(0.12))
+                        .cornerRadius(999)
+                }
             }
 
             Text(model.config.limitations)
@@ -148,6 +161,13 @@ private struct HeaderView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.secondary.opacity(0.08))
                 .cornerRadius(6)
+                // R2: accent leading rule, matching the web
+                // .limitations border-left in --accent — red on Ignis.
+                .overlay(alignment: .leading) {
+                    Rectangle()
+                        .fill(accentColor)
+                        .frame(width: 3)
+                }
         }
         .padding(12)
     }
