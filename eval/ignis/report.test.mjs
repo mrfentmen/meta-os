@@ -68,6 +68,7 @@ import {
   computeCorrectLatencyOutliers,
   computeLatencyByCorrectCategory,
   computeLatencyByCorrectAlertOutcome,
+  computeLatencyByCorrectAlertCorrectness,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -2742,7 +2743,7 @@ test("report: latency by correct category splits correct latencies by category, 
     metrics: { sample_size: 1, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
   };
   const noCorrectRendered = renderRunReport(noCorrectRun);
-  const section = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct category"), noCorrectRendered.indexOf("## Latency distribution among correct"));
+  const section = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct category"), noCorrectRendered.indexOf("## Latency by correct alert outcome"));
   assert.match(section, /None: no scenario's predicted category matched its ground truth\./);
 });
 
@@ -2792,7 +2793,7 @@ test("report: latency by correct alert outcome splits correct latencies by fired
     [],
   );
   // Rendered: section after Latency by correct category, before
-  // Latency distribution among correct; a run with no correct
+  // Latency by correct alert correctness; a run with no correct
   // records says none.
   const run = {
     source: "test source",
@@ -2817,7 +2818,78 @@ test("report: latency by correct alert outcome splits correct latencies by fired
     metrics: { sample_size: 1, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
   };
   const noCorrectRendered = renderRunReport(noCorrectRun);
-  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct alert outcome"), noCorrectRendered.indexOf("## Latency distribution among correct"));
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct alert outcome"), noCorrectRendered.indexOf("## Latency by correct alert correctness"));
+  assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
+});
+
+test("report: latency by correct alert correctness splits correct latencies by alert right-vs-wrong, fixed order", () => {
+  const rec = (id, truth, actual, expected, fired, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: actual === null ? "held" : null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Alert correct: 10, 30 -> mean/median 20, max 30, recorded 2 of 2.
+  // Alert error: 40 plus one record with no latency (null statistics,
+  // never zero) -> recorded 1 of 2. Both groups occur for genuine
+  // correct records: a correctly categorized scene can still carry
+  // a wrong alert. The miss records (alert correct and alert error
+  // at 999) appear in no row, so the totals sum to the correct
+  // count (4), not the sample size (6), and only groups present
+  // among the correct records render.
+  assert.deepEqual(
+    computeLatencyByCorrectAlertCorrectness([
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, 30),
+      rec("IGN-T3", "steam or fog", "steam or fog", false, true, 40),
+      rec("IGN-T4", "visible smoke", "visible smoke", true, false),
+      rec("IGN-T5", "steam or fog", "visible smoke", true, true, 999),
+      rec("IGN-T6", "visible smoke", "visible flame", true, false, 999),
+    ]),
+    [
+      { outcome: "alert correct", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "alert error", total: 2, recorded: 1, meanMs: 40, medianMs: 40, maxMs: 40 },
+    ],
+  );
+  // A run with no correct records yields no rows.
+  assert.deepEqual(
+    computeLatencyByCorrectAlertCorrectness([
+      rec("IGN-T1", "steam or fog", "visible smoke", true, true, 10),
+    ]),
+    [],
+  );
+  // Rendered: section after Latency by correct alert outcome, before
+  // Latency distribution among correct; a run with no correct
+  // records says none.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, 30),
+      rec("IGN-T3", "steam or fog", "steam or fog", false, true, 40),
+    ],
+    metrics: { sample_size: 3, true_positives: 2, false_positives: 1, true_negatives: 0, false_negatives: 0, precision: 0.6666666666666666, recall: 1, false_positive_rate: 1, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 3, mean: 26.666666666666668, median: 30, max: 40 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by correct alert correctness/);
+  assert.ok(rendered.indexOf("## Latency by correct alert correctness") > rendered.indexOf("## Latency by correct alert outcome"));
+  assert.ok(rendered.indexOf("## Latency by correct alert correctness") < rendered.indexOf("## Latency distribution among correct"));
+  assert.match(rendered, /\| alert correct \| 2 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| alert error \| 1 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
+  const noCorrectRun = {
+    source: "test source",
+    generated: "test run",
+    records: [rec("IGN-T1", "steam or fog", "visible smoke", true, true, 10)],
+    metrics: { sample_size: 1, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const noCorrectRendered = renderRunReport(noCorrectRun);
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct alert correctness"), noCorrectRendered.indexOf("## Latency distribution among correct"));
   assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
 });
 

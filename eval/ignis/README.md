@@ -294,6 +294,13 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   the false rows cover hand-built records that claim correctness with mismatched alert flags, only groups
   present among the correct records render, the scenario totals sum to the correct count, not the sample size,
   a group with no recorded latency shows n/a, never a fabricated zero, and a run with no correct records says none.
+  A latency-by-correct-alert-correctness section right after it collapses those four outcomes into two —
+  alert correct versus alert error — among the correct records only, in fixed order alert correct, alert error,
+  so whether the successes whose alert was right run slower than the successes whose alert was wrong is visible
+  without scanning the per-scenario table; both groups occur for genuine correct records, since a correctly
+  categorized scene can still carry a wrong alert, only groups present among the correct records render, the
+  scenario totals sum to the correct count, not the sample size, a group with no recorded latency shows n/a,
+  never a fabricated zero, and a run with no correct records says none.
   A latency-distribution-among-correct section right after it expands the correct sections' means into
   min, quartiles and p90 over the correct records alone — the same quantiles as the full-run latency
   distribution, but without the misses pulling the numbers up — so whether the successes cluster fast

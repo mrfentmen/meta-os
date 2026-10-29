@@ -645,6 +645,61 @@ export function computeLatencyByCorrectAlertOutcome(records) {
     });
 }
 
+// Latency by correct alert correctness: one row per alert-correctness
+// group among the correct records only (category_correct true),
+// in the same fixed order the latency-by-alert-correctness section
+// uses — alert correct, alert error — derived from the validated
+// alert_correct field, with the count of recorded harness wall-clock
+// latencies, their mean, their median (averaged-middle, matching the
+// distribution's median), and their max. This is the collapsed
+// alert-side split of the successes: the alert-outcome split says
+// whether the successes that fired an alert run slower than the
+// successes that stayed silent, but only this table says whether the
+// successes whose alert was right run slower than the successes
+// whose alert was wrong — and latency by alert correctness, which
+// includes the misses, cannot isolate the successes. Unlike the
+// alert-outcome split, both groups occur for genuine correct
+// records: a correctly categorized scene can still carry a wrong
+// alert (fired when none was expected, or silent when one was), so
+// neither row is a hand-built-only artifact. Only groups present
+// among the correct records render, so the scenario totals sum to
+// the correct count, not the sample size. Records with no latency
+// take no part in a group's numbers but still count toward its
+// scenario total, so a group whose scenarios carry no latency reads
+// as recorded 0 with n/a statistics — never as a fabricated zero.
+export function computeLatencyByCorrectAlertCorrectness(records) {
+  const groups = {
+    "alert correct": { outcome: "alert correct", total: 0, latencies: [] },
+    "alert error": { outcome: "alert error", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    if (!r.category_correct) continue;
+    const outcome = r.alert_correct ? "alert correct" : "alert error";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["alert correct", "alert error"]
+    .filter((outcome) => groups[outcome].total > 0)
+    .map((outcome) => {
+      const e = groups[outcome];
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        outcome,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    });
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -3106,6 +3161,33 @@ export function renderRunReport(run, baselineRun = null) {
       "| --- | --- | --- | --- | --- | --- |",
     );
     for (const row of latencyByCorrectAlertOutcome) {
+      lines.push(
+        `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const latencyByCorrectAlertCorrectness = computeLatencyByCorrectAlertCorrectness(run.records);
+  lines.push(
+    "",
+    "## Latency by correct alert correctness",
+    "",
+    "Harness wall-clock latencies broken down by alert correctness — one row per alert-correctness group " +
+      "among the correct records only, in fixed order alert correct, alert error, so whether the successes " +
+      "whose alert was right run slower than the successes whose alert was wrong is visible without scanning " +
+      "the per-scenario table. Both groups occur for genuine correct records: a correctly categorized scene " +
+      "can still carry a wrong alert. Only groups present among the correct records render, so the scenario " +
+      "totals sum to the correct count, not the sample size, and a group with no recorded latency shows n/a, " +
+      "never a fabricated zero; a run with no correct records says none.",
+    "",
+  );
+  if (latencyByCorrectAlertCorrectness.length === 0) {
+    lines.push("None: no scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Alert correctness | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByCorrectAlertCorrectness) {
       lines.push(
         `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );
