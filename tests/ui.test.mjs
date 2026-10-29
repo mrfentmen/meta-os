@@ -1190,3 +1190,35 @@ test("config: web sampling interval clamps to 1–60 like the native Stepper, in
   );
   assert.match(swift, /Stepper\(value: \$model\.intervalSeconds, in: 1\.\.\.60\)/);
 });
+
+// ---------- reset across an in-flight request (web parity with the native app) ----------
+// Reset clears the view, but it cannot cancel a request already out on
+// the network: when that request settles, its success or failure used to
+// repaint the cleared view — latest panel, history entry, backend
+// status, last round trip — as if Reset had never happened. Both
+// frontends now carry a view generation: submitAssessment captures it
+// when the request starts, Reset bumps it, and the settle path only
+// touches the screen when the numbers still match. The session-log
+// entry is recorded either way: the request genuinely happened, and
+// the log survives Reset by design. No browser exists in this suite,
+// so these are static checks on the shipped wiring, plus the native
+// video-extraction failure path, which also awaits and can straddle a
+// Reset.
+test("reset: a request outstanding across Reset logs but does not repaint the cleared view, matching the native app", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /let viewGeneration = 0;/);
+  assert.match(app, /async function submitAssessment\(product, timestamp, image\) \{\n\s+const endpoint = currentEndpoint\(\);\n\s+const generation = viewGeneration;/);
+  assert.match(app, /els\.btnReset\.addEventListener\("click", \(\) => \{\n\s+\/\/ Bump the view generation first[\s\S]*?\n\s+viewGeneration \+= 1;/);
+  // Both settle paths log unconditionally and gate only the display.
+  assert.match(app, /if \(generation === viewGeneration\) \{\n\s+updateLastRoundTrip\(latencyMs\);\n\s+setBackendStatus\("connected"/);
+  assert.match(app, /if \(generation === viewGeneration\) \{\n\s+if \(latencyMs !== null\) \{\n\s+updateLastRoundTrip\(latencyMs\);\n\s+\}\n\s+setBackendStatus\("error"/);
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/ViewModels/AppModel.swift", import.meta.url), "utf8");
+  assert.match(swift, /private var viewGeneration = 0/);
+  assert.match(swift, /func resetSession\(\) \{\n\s+\/\/ Bump the view generation first[\s\S]*?\n\s+viewGeneration \+= 1/);
+  assert.match(swift, /let generation = viewGeneration\n\s+requestInFlight = true/);
+  assert.match(swift, /recordLog\(product: product, timestamp: timestamp, latencyMs: latencyMs, status: \.ok, response: response\)\n\s+if generation == viewGeneration \{/);
+  assert.match(swift, /recordLog\(product: product, timestamp: timestamp, latencyMs: error\.latencyMs, status: status, error: error\.message\)\n\s+if generation == viewGeneration \{/);
+  // The async video-extraction failure path carries the same guard.
+  assert.match(swift, /let generation = viewGeneration\n\s+\/\/ Web parity \(js\/app\.js video handler\):/);
+  assert.match(swift, /recordLog\(product: product, timestamp: timestamp, latencyMs: nil, status: \.invalidResponse, error: message\)\n\s+if generation == viewGeneration \{/);
+});

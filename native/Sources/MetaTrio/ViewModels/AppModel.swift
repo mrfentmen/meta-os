@@ -143,6 +143,14 @@ final class AppModel: ObservableObject {
     /// Client-measured round-trip time of the most recent request that was
     /// actually attempted (nil before the first one). Never estimated.
     @Published private(set) var lastRoundTripMs: Int?
+    /// View generation, bumped by resetSession. A request outstanding
+    /// across a Reset must not repopulate the cleared view when it
+    /// settles (same rule as the web frontend's viewGeneration): the
+    /// session-log entry is still recorded — the request genuinely
+    /// happened and the log survives Reset by design — but the latest
+    /// panel, timeline, backend status, round trip, and announcement
+    /// stay as Reset left them.
+    private var viewGeneration = 0
 
     let camera = CameraService()
     private let sampler = FrameSampler(intervalSeconds: 3)
@@ -214,6 +222,10 @@ final class AppModel: ObservableObject {
     /// so the timeline comes back on relaunch from that log until Clear
     /// Log removes it — Reset Session never deletes saved entries.
     func resetSession() {
+        // Bump the view generation first: a request outstanding across
+        // this Reset still logs when it settles, but must not repaint
+        // the view this method just cleared (see viewGeneration above).
+        viewGeneration += 1
         stopAnalysis()
         camera.stop()
         clearStillImage()
@@ -393,6 +405,10 @@ final class AppModel: ObservableObject {
 
     private func runVideoFrameAssessment(url: URL, seconds: Double, product: ProductID) async {
         defer { videoAssessing = false }
+        // Same Reset rule as submitAssessment: extraction awaits, so a
+        // Reset can land mid-extraction. The failure still logs, but
+        // must not repaint the cleared panel, status, or timeline.
+        let generation = viewGeneration
         // Web parity (js/app.js video handler): the web panel sets the
         // backend status to "Contacting…" before it captures the frame,
         // so the status bar moves while the request is outstanding. The
@@ -410,16 +426,18 @@ final class AppModel: ObservableObject {
             // this failure directly, in the same shapes as a backend
             // failure (timeline entry + session-log entry + status).
             let message = "Video frame capture failed: \(error.localizedDescription)"
-            videoError = message
             let timestamp = ISO8601.now()
             recordLog(product: product, timestamp: timestamp, latencyMs: nil, status: .invalidResponse, error: message)
-            // No request was made, so this is not a backend failure:
-            // show the capture failure itself, not a backend message.
-            backendStatus = .error(message)
-            timeline.insert(
-                TimelineItem(product: product, timestamp: timestamp, kind: .failure(message)),
-                at: 0
-            )
+            if generation == viewGeneration {
+                videoError = message
+                // No request was made, so this is not a backend failure:
+                // show the capture failure itself, not a backend message.
+                backendStatus = .error(message)
+                timeline.insert(
+                    TimelineItem(product: product, timestamp: timestamp, kind: .failure(message)),
+                    at: 0
+                )
+            }
             return
         }
         do {
@@ -604,6 +622,10 @@ final class AppModel: ObservableObject {
     /// equals the request product, so the request product is the honest
     /// label for the log, the timeline, and the announcement.
     private func submitAssessment(product: ProductID, timestamp: String, imageDataURL: String) async throws {
+        // Captured before the await: a Reset while this request is out
+        // bumps viewGeneration, and the settle path below must then
+        // log only, not repaint the cleared view.
+        let generation = viewGeneration
         requestInFlight = true
         defer { requestInFlight = false }
 
@@ -614,19 +636,21 @@ final class AppModel: ObservableObject {
                 timestamp: timestamp,
                 imageDataURL: imageDataURL
             )
-            lastRoundTripMs = latencyMs
             recordLog(product: product, timestamp: timestamp, latencyMs: latencyMs, status: .ok, response: response)
-            backendStatus = .connected("Model backend connected: \(trimmedEndpoint)")
-            displayedAssessment = response
-            displayedAssessmentNote = nil
-            AccessibilityAnnouncement.newAssessment(
-                productDisplayName: product.config.displayName,
-                response: response
-            )
-            timeline.insert(
-                TimelineItem(product: product, timestamp: response.timestamp, kind: .assessment(response)),
-                at: 0
-            )
+            if generation == viewGeneration {
+                lastRoundTripMs = latencyMs
+                backendStatus = .connected("Model backend connected: \(trimmedEndpoint)")
+                displayedAssessment = response
+                displayedAssessmentNote = nil
+                AccessibilityAnnouncement.newAssessment(
+                    productDisplayName: product.config.displayName,
+                    response: response
+                )
+                timeline.insert(
+                    TimelineItem(product: product, timestamp: response.timestamp, kind: .assessment(response)),
+                    at: 0
+                )
+            }
         } catch let error as AssessError {
             // A failure with no request behind it (invalid endpoint URL,
             // request-body encode failure — AssessClient reports nil
@@ -636,9 +660,6 @@ final class AppModel: ObservableObject {
             // information a typo'd endpoint should not erase. Only
             // Reset Session clears it. A failure of a request that was
             // actually attempted carries a measured latency and updates it.
-            if let latencyMs = error.latencyMs {
-                lastRoundTripMs = latencyMs
-            }
             let status: LogStatus
             switch error.kind {
             case .http: status = .httpError
@@ -646,12 +667,17 @@ final class AppModel: ObservableObject {
             case .network: status = .networkError
             }
             recordLog(product: product, timestamp: timestamp, latencyMs: error.latencyMs, status: status, error: error.message)
-            backendStatus = .error("Model backend not connected: \(error.message)")
-            AccessibilityAnnouncement.backendFailure(message: error.message)
-            timeline.insert(
-                TimelineItem(product: product, timestamp: timestamp, kind: .failure(error.message)),
-                at: 0
-            )
+            if generation == viewGeneration {
+                if let latencyMs = error.latencyMs {
+                    lastRoundTripMs = latencyMs
+                }
+                backendStatus = .error("Model backend not connected: \(error.message)")
+                AccessibilityAnnouncement.backendFailure(message: error.message)
+                timeline.insert(
+                    TimelineItem(product: product, timestamp: timestamp, kind: .failure(error.message)),
+                    at: 0
+                )
+            }
             throw error
         }
     }

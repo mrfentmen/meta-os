@@ -252,6 +252,15 @@ function describeCameraError(err) {
 // attempted at all, so a failure is never mistaken for "not tried yet."
 let latestAssessmentShown = false;
 
+// Reset generation: a request outstanding when Reset is tapped must not
+// repopulate the cleared view when it settles. submitAssessment captures
+// this number when it starts; Reset bumps it. Display updates (latest
+// panel, history, backend status, last round trip) happen only when the
+// captured number still matches. The session-log entry is still recorded:
+// the request genuinely happened, and the log survives Reset by design,
+// so a stale entry is honest there while a stale panel is not.
+let viewGeneration = 0;
+
 function renderLatest(assessment, earlierNote = null) {
   latestAssessmentShown = true;
   const product = PRODUCT_BY_ID[assessment.product] || null;
@@ -407,6 +416,7 @@ function addHistoryItem({ title, timestamp, body, kind, assessment = null }) {
 // simply swallow it (it is already on screen).
 async function submitAssessment(product, timestamp, image) {
   const endpoint = currentEndpoint();
+  const generation = viewGeneration;
   els.inFlight.hidden = false;
   if (!latestAssessmentShown) {
     els.latest.textContent = "Waiting for the first assessment…";
@@ -415,7 +425,6 @@ async function submitAssessment(product, timestamp, image) {
   try {
     const assessment = await assessFrame(endpoint, { product, timestamp, image });
     const latencyMs = Math.round(performance.now() - started);
-    updateLastRoundTrip(latencyMs);
     log.record({
       requestTimestamp: timestamp,
       product,
@@ -424,22 +433,28 @@ async function submitAssessment(product, timestamp, image) {
       response: assessment,
       scenarioLabel: currentScenarioLabel(),
     });
-    setBackendStatus("connected", `Model backend connected: ${endpoint}`);
-    renderLatest(assessment);
-    const category = assessment.assessment.category;
-    // The history title uses the assessment's own product, not the
-    // currently selected one: the user may have switched mid-request.
-    const assessedProduct = PRODUCT_BY_ID[assessment.product];
-    const assessedName = assessedProduct ? assessedProduct.displayName : assessment.product;
-    addHistoryItem({
-      title: assessment.assessment.requires_human_review
-        ? `${assessedName} · ${category} (human review)`
-        : `${assessedName} · ${category}`,
-      timestamp: assessment.timestamp,
-      body: assessment.assessment.summary,
-      kind: assessment.assessment.requires_human_review ? "review" : "ok",
-      assessment,
-    });
+    // A Reset while this request was out clears the view; the settling
+    // request must not put its result back on screen. The log entry
+    // above stands either way — the request genuinely happened.
+    if (generation === viewGeneration) {
+      updateLastRoundTrip(latencyMs);
+      setBackendStatus("connected", `Model backend connected: ${endpoint}`);
+      renderLatest(assessment);
+      const category = assessment.assessment.category;
+      // The history title uses the assessment's own product, not the
+      // currently selected one: the user may have switched mid-request.
+      const assessedProduct = PRODUCT_BY_ID[assessment.product];
+      const assessedName = assessedProduct ? assessedProduct.displayName : assessment.product;
+      addHistoryItem({
+        title: assessment.assessment.requires_human_review
+          ? `${assessedName} · ${category} (human review)`
+          : `${assessedName} · ${category}`,
+        timestamp: assessment.timestamp,
+        body: assessment.assessment.summary,
+        kind: assessment.assessment.requires_human_review ? "review" : "ok",
+        assessment,
+      });
+    }
     return assessment;
   } catch (err) {
     // Native parity: a failure with no request behind it (the client
@@ -454,9 +469,6 @@ async function submitAssessment(product, timestamp, image) {
     // through submitAssessment, so they inherit the same handling.
     const noRequest = err instanceof AssessError && err.noRequest;
     const latencyMs = noRequest ? null : Math.round(performance.now() - started);
-    if (latencyMs !== null) {
-      updateLastRoundTrip(latencyMs);
-    }
     const kind = err instanceof AssessError ? err.kind : "network";
     const status = kind === "http" ? "http_error" : kind === "invalid" ? "invalid_response" : "network_error";
     log.record({
@@ -467,16 +479,25 @@ async function submitAssessment(product, timestamp, image) {
       error: err.message,
       scenarioLabel: currentScenarioLabel(),
     });
-    setBackendStatus("error", `Model backend not connected: ${err.message}`);
-    if (!latestAssessmentShown) {
-      els.latest.textContent = `Model backend not connected: ${err.message}`;
+    // Same Reset rule as the success path: the log entry stands, but a
+    // request that settled after a Reset must not repaint the cleared
+    // view with its failure, its round trip, or a "failed first
+    // request" line in the latest panel.
+    if (generation === viewGeneration) {
+      if (latencyMs !== null) {
+        updateLastRoundTrip(latencyMs);
+      }
+      setBackendStatus("error", `Model backend not connected: ${err.message}`);
+      if (!latestAssessmentShown) {
+        els.latest.textContent = `Model backend not connected: ${err.message}`;
+      }
+      addHistoryItem({
+        title: "Analysis request failed",
+        timestamp,
+        body: err.message,
+        kind: "error",
+      });
     }
-    addHistoryItem({
-      title: "Analysis request failed",
-      timestamp,
-      body: err.message,
-      kind: "error",
-    });
     throw err;
   } finally {
     els.inFlight.hidden = true;
@@ -816,6 +837,10 @@ els.btnAnalysisStop.addEventListener("click", () => {
 });
 
 els.btnReset.addEventListener("click", () => {
+  // Bump the view generation first: a request outstanding across this
+  // Reset still logs when it settles, but must not repaint the view
+  // this handler just cleared (see viewGeneration above).
+  viewGeneration += 1;
   sampler.stop();
   camera.stop();
   els.cameraIndicator.hidden = true;

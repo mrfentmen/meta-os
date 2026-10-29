@@ -139,7 +139,11 @@ ES modules for the node test runner; it declares zero dependencies.)
   hidden until the first request completes, Reset clears it, a
   frame-capture failure leaves the previous value alone (no request was
   made), and the backend health check never touches it (it sends no
-  frame).
+  frame). A request outstanding when Reset is tapped still lands in the
+  session log when it settles — the request genuinely happened and the
+  log survives Reset by design — but it no longer repaints the cleared
+  view (latest panel, history, backend status, round trip) on either
+  frontend.
 - **Accessibility announcements**: the backend-status line and the
   latest-assessment panel are polite live regions, so a new assessment
   or a backend failure is announced to screen readers without stealing
