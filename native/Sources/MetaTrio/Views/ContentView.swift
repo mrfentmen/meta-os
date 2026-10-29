@@ -62,8 +62,20 @@ struct ContentView: View {
                 .font(.headline)
                 .accessibilityAddTraits(.isHeader)
             if let note = model.displayedAssessmentNote {
+                // UI-21: Latest-panel notes at 13pt, the native
+                // counterpart to the web .note rule (13px, muted).
+                // Until now both notes in this panel used .callout
+                // (16pt), so the redisplayed-assessment note and the
+                // observable-evidence note below both read larger
+                // than the web panel's notes while the assessment
+                // itself (UI-20 summary, UI-19 subline) already
+                // matched its own web rules. The size is the only
+                // change: the muted color, the wrapping, and the
+                // wording are untouched, and the section title
+                // keeps its headline size — the web panel title is
+                // its own rule, not a note.
                 Text(note)
-                    .font(.callout)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -95,8 +107,11 @@ struct ContentView: View {
             // describes observable evidence only could be read as more
             // than it claims. Same words as the web panel; the
             // limitations notice it points to sits in the header above.
+            // UI-21: the note reads at 13pt, the native counterpart
+            // to the web .note rule (13px, muted) — see the
+            // displayed-assessment note above for the same mirror.
             Text("Assessments describe observable evidence only. Each product's limitations notice (above) states what its assessments never claim.")
-                .font(.callout)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Divider()
