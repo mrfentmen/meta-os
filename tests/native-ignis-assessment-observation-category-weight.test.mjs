@@ -69,7 +69,7 @@ test("native observation category: no semibold left in the panel, neighbors unto
   );
   assert.match(
     observationsFn,
-    /Text\("Evidence: \\\(observation\.evidence\)"\)\s+\.font\(\.callout\)\s+\.foregroundStyle\(\.secondary\)/,
-    "evidence line keeps its callout size and muted color",
+    /Text\("Evidence: \\\(observation\.evidence\)"\)\s+\.font\(\.system\(size: 15\)\)\s+\.foregroundStyle\(\.secondary\)/,
+    "evidence line keeps its muted color at its UI-48 15pt size",
   );
 });

@@ -227,8 +227,26 @@ struct AssessmentView: View {
                         }
                         Text(observation.description)
                         if !observation.evidence.isEmpty {
+                            // IGNIS-UI-48: evidence line at 15pt, the
+                            // native counterpart to the web observation
+                            // line (js/app.js renders evidence inline
+                            // in the observation <li>, and styles.css
+                            // .observations sets only margin and
+                            // padding-left, so the line inherits the
+                            // 15px body size). Until now the native
+                            // evidence line used .callout (16pt), so
+                            // it read one point larger than the web
+                            // line it comes from while the summary
+                            // (UI-20) and the timeline row detail
+                            // (UI-43) already matched their own 15px
+                            // web rules. The size is the only change:
+                            // the "Evidence: " label, the muted color,
+                            // and the non-empty guard are untouched,
+                            // and the confidence caption and the
+                            // description keep their own treatments —
+                            // they are not this item's counterpart.
                             Text("Evidence: \(observation.evidence)")
-                                .font(.callout)
+                                .font(.system(size: 15))
                                 .foregroundStyle(.secondary)
                         }
                     }

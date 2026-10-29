@@ -79,8 +79,8 @@ test("native observation rows: content styles unchanged (UI-17 category, confide
   );
   assert.match(
     observationsFn,
-    /\.font\(\.callout\)\s+\.foregroundStyle\(\.secondary\)/,
-    "evidence keeps its callout secondary style",
+    /\.font\(\.system\(size: 15\)\)\s+\.foregroundStyle\(\.secondary\)/,
+    "evidence keeps its secondary style at its UI-48 15pt size",
   );
   assert.match(
     observationsFn,
