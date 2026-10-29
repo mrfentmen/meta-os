@@ -506,11 +506,28 @@ function renderLatest(assessment, earlierNote = null) {
   divider.setAttribute("aria-hidden", "true");
   wrap.appendChild(divider);
 
+  // Native parity: the native panel's processing line reads
+  // "Model: … · Server-reported latency: …", with the latency as a
+  // whole number when it is one and one decimal otherwise — the
+  // native serverLatencyText rule. The web line said "server
+  // latency" and interpolated the raw number, so a fractional
+  // latency printed at full precision (812.55 ms) and, worse, the
+  // wording did not say whose latency it was: the panel also shows
+  // a client-measured round trip elsewhere, so "server latency"
+  // could be read as that round trip. "Server-reported" names the
+  // source exactly, like the native line, and the formatting matches
+  // it: a null latency still reads "not reported", never invented.
+  const latencyMs = assessment.processing.latency_ms;
+  const serverLatency =
+    latencyMs === null
+      ? "not reported"
+      : Number.isInteger(latencyMs)
+        ? `${latencyMs} ms`
+        : `${latencyMs.toFixed(1)} ms`;
   const processing = document.createElement("p");
   processing.className = "note mono";
   processing.textContent =
-    `Model: ${assessment.processing.model} · server latency: ` +
-    (assessment.processing.latency_ms === null ? "not reported" : `${assessment.processing.latency_ms} ms`);
+    `Model: ${assessment.processing.model} · Server-reported latency: ${serverLatency}`;
   wrap.appendChild(processing);
 
   els.latest.replaceChildren(wrap);
