@@ -112,6 +112,7 @@ const els = {
   logStatsOkLatencyCountShareOfOwnOkByProduct: $("log-stats-ok-latency-count-share-of-own-ok-by-product"),
   logStatsFailedSpanShareOfEntryWindowByProduct: $("log-stats-failed-span-share-of-entry-window-by-product"),
   logStatsOkLatencyCountShareOfOwnEntriesByProduct: $("log-stats-ok-latency-count-share-of-own-entries-by-product"),
+  logStatsFailedSpanShareOfEntryWindow: $("log-stats-failed-span-share-of-entry-window"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -870,6 +871,22 @@ function updateLogStats() {
   // the denominator but move no bucket.
   els.logStatsOkLatencyCountShareOfOwnEntriesByProduct.textContent =
     `Successful latency-measurement share of that product's own entries by product: Vigiles ${stats.okLatencyCountShareOfOwnEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfOwnEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnEntriesByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareOfOwnEntriesByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnEntriesByProduct.sanitas * 100)}%`}`;
+  // DETAIL-57: the global failure-span-share-of-entry-
+  // window line re-bases DETAIL-23's global failed span
+  // on the session's global entry span, rendered as a
+  // whole percent, or "none" with no usable entry window
+  // or no usable failed span — the collapsed form of
+  // DETAIL-55's per-product shares, so failures covering
+  // half the whole window read at a glance. Raw ratio,
+  // never clamped: above 100% or below 0% means
+  // timestamps ran out of insertion order, and this is
+  // not the sum of DETAIL-55's shares because product
+  // failed windows overlap. Successes stretch the
+  // denominator without moving the numerator, and an
+  // unknown- or missing-product failure still moves
+  // this product-blind numerator, unlike DETAIL-55.
+  els.logStatsFailedSpanShareOfEntryWindow.textContent =
+    `Failure-span share of entry window: ${stats.failedSpanShareOfEntryWindow === null ? "none" : `${Math.round(stats.failedSpanShareOfEntryWindow * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
