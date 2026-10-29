@@ -449,20 +449,30 @@ private struct StillImagePanel: View {
                     .accessibilityLabel("Chosen still image preview")
             }
 
+            // UI-30: still-image state texts at 13pt, the native
+            // counterparts to the web #image-state and
+            // #image-assessing notes (13px, muted). Until now the
+            // ready, no-image, error, and assessing lines used
+            // .caption (12pt), so they read one point smaller than
+            // the web panel's state lines while the still-image
+            // intro (UI-25) already matched its own 13px web rule.
+            // The size is the only change: the muted color, the
+            // red error color, the wrapping, and the wording are
+            // untouched.
             if let name = model.stillImageName {
                 Text("Image ready: \(name). Tap “Assess this image” to send it once.")
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("No image chosen.")
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             }
 
             if let error = model.stillImageError {
                 Text(error)
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -480,7 +490,7 @@ private struct StillImagePanel: View {
                     ProgressView()
                         .controlSize(.small)
                     Text("Sending still image…")
-                        .font(.caption)
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
             }
