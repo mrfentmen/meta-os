@@ -386,30 +386,46 @@ private struct CameraPanel: View {
         }
     }
 
+    // UI-35: camera state texts at 13pt, the native counterparts
+    // to the web #camera-state note (13px, muted or red). Until
+    // now the state lines carried no font at all, so they read at
+    // the default body size, larger than the web panel's state
+    // line while the camera-facing note (UI-28) and the
+    // product-guidance note (UI-29) already matched their own
+    // 13px web rules. The size is the only change: the muted
+    // color, the red error color, the wrapping on the denied
+    // and failed lines, and the wording are untouched.
     @ViewBuilder
     private var stateText: some View {
         switch camera.state {
         case .idle:
             Text("Camera is off.")
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
         case .requestingPermission:
             Text("Waiting for camera permission…")
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
         case .running:
             Text("Camera is live. No frames are sent anywhere until analysis is started.")
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
         case .stopped:
             Text("Camera stopped.")
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
         case .denied:
             Text("Camera permission denied. Grant access in System Settings → Privacy & Security → Camera, then start the camera again.")
+                .font(.system(size: 13))
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
         case .noCamera:
             Text("No camera was found on this Mac.")
+                .font(.system(size: 13))
                 .foregroundStyle(.red)
         case .failed(let message):
             Text("Camera error: \(message)")
+                .font(.system(size: 13))
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
         }
