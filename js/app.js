@@ -100,6 +100,7 @@ const els = {
   logStatsFailedShareByStatusOfEntriesByProduct: $("log-stats-failed-share-by-status-of-entries-by-product"),
   logStatsFailedShareByStatusOfEntries: $("log-stats-failed-share-by-status-of-entries"),
   logStatsFailedShareByStatusOfEntriesWithinProduct: $("log-stats-failed-share-by-status-of-entries-within-product"),
+  logStatsOkLatencyCountShareByProduct: $("log-stats-ok-latency-count-share-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -709,6 +710,16 @@ function updateLogStats() {
   // A success-only product reads 0% per cause, never "none".
   els.logStatsFailedShareByStatusOfEntriesWithinProduct.textContent =
     `Failure-cause share of that product's entries by product: Vigiles Network ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.invalid_response * 100)}%`} · Sanitas Network ${stats.failedShareByStatusOfEntriesWithinProduct.sanitas.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.sanitas.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.sanitas.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.sanitas.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.sanitas.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.sanitas.invalid_response * 100)}%`}`;
+  // DETAIL-45: the per-product usable-latency-count-share
+  // line re-bases DETAIL-36's counts on the session's total
+  // usable-latency count, rendered as whole percents, or
+  // "none" per product with no usable ok latency in the
+  // session — the count slice DETAIL-35's latency-sum
+  // shares imply but do not state, so a product supplying
+  // most measurements reads differently from one eating
+  // most measured time. Failures never move a share.
+  els.logStatsOkLatencyCountShareByProduct.textContent =
+    `Successful latency-measurement share by product: Vigiles ${stats.okLatencyCountShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
