@@ -47,6 +47,22 @@ struct AssessmentView: View {
         // rounded card edge instead of running square to the panel
         // boundary; it changes no color, rule, or content.
         .clipShape(RoundedRectangle(cornerRadius: 8))
+        // UI-9: product-accent panel border, the native counterpart
+        // to the web theme panels' border-color of rgba(accent, 0.5)
+        // — Ignis red and Sanitas green in their theme blocks. The
+        // stroke sits after the clip so the full 1pt line follows
+        // the rounded edge instead of being cut to a half line by
+        // it, and it uses the same assessment-own accent as the
+        // UI-5 rule and UI-6 wash. Note the generalization: the web
+        // Vigiles panel carries only the neutral panel-border, not
+        // an accent border, but the native panel already tints
+        // Vigiles by its own accent in rule and wash, so the border
+        // follows the panel's own accent for all three products
+        // rather than adding a second, neutral edge rule.
+        .overlay(
+            RoundedRectangle(cornerRadius: 8)
+                .stroke(accentColor.opacity(0.5), lineWidth: 1)
+        )
     }
 
     /// Panel accent from the assessment's own product, mirroring the
