@@ -968,6 +968,23 @@ export class SessionLog {
       // successes in the session; 0 per product with no
       // successes once any success exists.
       okShareOfOkByProduct,
+      // DETAIL-38: the usable-latency sums (okLatencySum /
+      // okLatencySumByProduct): the total behind DETAIL-4's
+      // global mean, DETAIL-8's per-product means, and
+      // DETAIL-35's per-product shares — the denominator those
+      // shares divide by, so a share of half the total reads
+      // against a real millisecond total, not just a fraction.
+      // No new summing rule: the loop already sums them for
+      // the means and shares, so the same rules apply —
+      // failures never contribute, even a failure carrying a
+      // latency value; an ok entry with no finite latency is
+      // skipped rather than summed as zero; and an ok entry
+      // with an unknown or missing product sums globally but
+      // moves no bucket, exactly as DETAIL-4/8/35 do. Always
+      // plain sums, never null: a session or product with no
+      // usable latency reads 0.
+      okLatencySum: latencySum,
+      okLatencySumByProduct: latencySumByProduct,
       entryShareByProduct: {
         vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
         ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,

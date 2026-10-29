@@ -92,6 +92,8 @@ const els = {
   logStatsOkLatencyCount: $("log-stats-ok-latency-count"),
   logStatsOkLatencyCountByProduct: $("log-stats-ok-latency-count-by-product"),
   logStatsOkShareOfOkByProduct: $("log-stats-ok-share-of-ok-by-product"),
+  logStatsOkLatencySum: $("log-stats-ok-latency-sum"),
+  logStatsOkLatencySumByProduct: $("log-stats-ok-latency-sum-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -614,6 +616,24 @@ function updateLogStats() {
   // the panel's shape, and failures never move a share.
   els.logStatsOkShareOfOkByProduct.textContent =
     `Successful share of successes by product: Vigiles ${stats.okShareOfOkByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfOkByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfOkByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfOkByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareOfOkByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareOfOkByProduct.sanitas * 100)}%`}`;
+  // DETAIL-38: the usable-latency sum lines name the total
+  // measured round-trip time, globally and per product — the
+  // total behind DETAIL-4's mean, DETAIL-8's per-product
+  // means, and DETAIL-35's per-product shares (the denominator
+  // those shares divide by), rendered in whole milliseconds,
+  // so a share of half the total reads against a real total —
+  // same always-renders shape as the other stats lines, so a
+  // quiet session reads 0 ms, never a missing line. No new
+  // summing rule: stats() already sums them for the means and
+  // shares, so failures never contribute (even a failure
+  // carrying a latency value), an ok entry with no finite
+  // latency is skipped rather than summed as zero, and an ok
+  // entry with an unknown or missing product sums globally
+  // but moves no bucket.
+  els.logStatsOkLatencySum.textContent =
+    `Total successful latency: ${Math.round(stats.okLatencySum)} ms`;
+  els.logStatsOkLatencySumByProduct.textContent =
+    `Total successful latency by product: Vigiles ${Math.round(stats.okLatencySumByProduct.vigiles)} ms · Ignis ${Math.round(stats.okLatencySumByProduct.ignis)} ms · Sanitas ${Math.round(stats.okLatencySumByProduct.sanitas)} ms`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
