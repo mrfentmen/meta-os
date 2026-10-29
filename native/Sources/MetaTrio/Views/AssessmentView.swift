@@ -113,9 +113,20 @@ struct AssessmentView: View {
                     .font(.title3)
                     .fontWeight(.bold)
                 if response.assessment.requiresHumanReview {
+                    // UI-16: review flag carries 0.6pt tracking, the
+                    // native counterpart to the web .review-flag rule
+                    // (12px, weight 700, warn, letter-spacing 0.05em =
+                    // 0.6pt at 12pt). The native Label already matched
+                    // size (.caption = 12pt), weight, and warn color
+                    // (.orange), but had no tracking, so the flag read
+                    // tighter than the web's letterspaced flag. Text
+                    // stays the uppercase literal, icon and color
+                    // unchanged; the tracking follows the flag's own
+                    // 12pt size, not any product accent.
                     Label("REQUIRES HUMAN REVIEW", systemImage: "exclamationmark.triangle.fill")
                         .font(.caption)
                         .fontWeight(.bold)
+                        .tracking(0.6)
                         .foregroundStyle(.orange)
                 }
                 Spacer()
