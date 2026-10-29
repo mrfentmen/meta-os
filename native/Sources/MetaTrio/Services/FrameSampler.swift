@@ -54,6 +54,20 @@ final class FrameSampler {
     /// swallowed silently: onSample itself is responsible for surfacing
     /// and logging the failure (AppModel does both) before rethrowing.
     func tick() async {
+        // A tick whose Task was queued by the timer before Stop or
+        // Reset Session must not run at all. stop() invalidates the
+        // timer, but it cannot recall a Task the timer already
+        // created: that Task still lands on the main actor, and
+        // without this guard it would run a sample against a camera
+        // Reset just stopped — capture fails, and runSample's failure
+        // path would paint the timeline and the status bar Reset had
+        // just cleared, with a failure for a sample that never should
+        // have run. A cancelled tick is not a tick, so it is not
+        // counted either; the counters keep only samples that really
+        // ran. The web sampler needs no equivalent: its interval
+        // callback calls tick() synchronously, so there is no queued
+        // Task a Stop or Reset can land behind.
+        guard isRunning else { return }
         tickCount += 1
         if inFlight {
             skippedCount += 1
