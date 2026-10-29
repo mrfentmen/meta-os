@@ -9,15 +9,31 @@ struct TimelineView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
+            // IGNIS-UI-34: timeline panel title at 15pt bold, the
+            // native counterpart to the web .panel h2 rule (15px
+            // weight 700). Until now the title used .headline (17pt
+            // semibold), so it read larger and one step lighter than
+            // the web history title while the Latest panel title
+            // (UI-23) already matched its own 15px web rule. The
+            // size and weight are the only changes: the wording and
+            // the header trait are untouched.
             Text("Event timeline")
-                .font(.headline)
+                .font(.system(size: 15, weight: .bold))
                 .accessibilityAddTraits(.isHeader)
             // Web parity: the web history panel carries this note, and
             // without it nothing in the native panel says the rows can
             // be tapped. Failure rows stay plain text — they have no
             // assessment to show.
+            // IGNIS-UI-34: timeline intro note at 13pt, the native
+            // counterpart to the web .note rule (13px, muted).
+            // Until now the note used .caption (12pt), so it read
+            // one point smaller than the web panel's notes while the
+            // still-image, video, header, camera-facing, and Settings
+            // notes (UI-25 through UI-33) already matched their own
+            // 13px web rules. The size is the only change: the muted
+            // color, the wrapping, and the wording are untouched.
             Text("Tap an assessment row to view that assessment again in the Latest assessment panel. Failure rows have no assessment to show.")
-                .font(.caption)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if model.timeline.isEmpty {
