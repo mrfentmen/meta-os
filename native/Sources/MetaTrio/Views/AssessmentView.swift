@@ -63,6 +63,22 @@ struct AssessmentView: View {
             RoundedRectangle(cornerRadius: 8)
                 .stroke(accentColor.opacity(0.5), lineWidth: 1)
         )
+        // UI-10: panel drop shadow, the native counterpart to the
+        // web theme panels' box-shadow of
+        // 0 0 0 1px rgba(accent, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35).
+        // The 1px 0.15 ring is deliberately NOT mirrored: the UI-9
+        // stroke already draws a stronger 1pt accent edge at 0.5, so
+        // a second faint ring would double the edge. Only the drop
+        // shadow is new: black at 0.35, offset 8pt down, radius 12.
+        // The radius is an approximation, stated plainly: a CSS blur
+        // of 24px spreads roughly twice as far as a SwiftUI shadow
+        // radius unit, so 12 approximates the web spread while the
+        // 8pt offset and 0.35 strength map directly. The shadow is
+        // product-neutral black, exactly like the web shadow — it
+        // tracks no accent, so it needs no assessment-own-accent
+        // treatment. It sits last, after the border overlay, so the
+        // whole bordered card casts it.
+        .shadow(color: .black.opacity(0.35), radius: 12, x: 0, y: 8)
     }
 
     /// Panel accent from the assessment's own product, mirroring the
