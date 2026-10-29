@@ -301,6 +301,13 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   categorized scene can still carry a wrong alert, only groups present among the correct records render, the
   scenario totals sum to the correct count, not the sample size, a group with no recorded latency shows n/a,
   never a fabricated zero, and a run with no correct records says none.
+  A latency-by-correct-alert-expectation section right after it splits the correct records' latencies by
+  alert expectation — one row per alert-expectation group among the correct records only, in fixed order alert
+  expected, alert not expected — so whether the successes where an alert was expected run slower than the
+  successes where none was is visible without scanning the per-scenario table; both groups occur for genuine
+  correct records, since a correctly categorized scene may or may not expect an alert, only groups present
+  among the correct records render, the scenario totals sum to the correct count, not the sample size, a group
+  with no recorded latency shows n/a, never a fabricated zero, and a run with no correct records says none.
   A latency-distribution-among-correct section right after it expands the correct sections' means into
   min, quartiles and p90 over the correct records alone — the same quantiles as the full-run latency
   distribution, but without the misses pulling the numbers up — so whether the successes cluster fast
