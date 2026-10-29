@@ -808,6 +808,59 @@ export function computeLatencyByCorrectAlertFired(records) {
     });
 }
 
+// Latency by correct assessed: one row per assessed-status
+// group among the correct records only (category_correct true),
+// in the same fixed order the latency-by-assessed section
+// uses — assessed, unassessed — derived from the validated
+// actual_category field, with the count of recorded harness
+// wall-clock latencies, their mean, their median (averaged-middle,
+// matching the distribution's median), and their max. This is the
+// assessed split of the successes: it says whether the successes
+// that returned a category run slower than the successes that
+// returned nothing in two rows — and latency by assessed, which
+// includes the misses, cannot isolate the successes. Only the
+// assessed row occurs for genuine correct records, since a correct
+// record returned its category; the unassessed row covers
+// hand-built records that claim correctness with no assessment
+// returned. Only groups present among the correct records render,
+// so the scenario totals sum to the correct count, not the sample
+// size. Records with no latency take no part in a group's numbers
+// but still count toward its scenario total, so a group whose
+// scenarios carry no latency reads as recorded 0 with n/a
+// statistics — never as a fabricated zero.
+export function computeLatencyByCorrectAssessed(records) {
+  const groups = {
+    assessed: { outcome: "assessed", total: 0, latencies: [] },
+    unassessed: { outcome: "unassessed", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    if (!r.category_correct) continue;
+    const outcome = r.actual_category === null ? "unassessed" : "assessed";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["assessed", "unassessed"]
+    .filter((outcome) => groups[outcome].total > 0)
+    .map((outcome) => {
+      const e = groups[outcome];
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        outcome,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    });
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -3350,6 +3403,34 @@ export function renderRunReport(run, baselineRun = null) {
       "| --- | --- | --- | --- | --- | --- |",
     );
     for (const row of latencyByCorrectAlertFired) {
+      lines.push(
+        `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const latencyByCorrectAssessed = computeLatencyByCorrectAssessed(run.records);
+  lines.push(
+    "",
+    "## Latency by correct assessed",
+    "",
+    "Harness wall-clock latencies broken down by whether an assessment was returned — one row per assessed-status " +
+      "group among the correct records only, in fixed order assessed, unassessed, so whether the successes " +
+      "that returned a category run slower than the successes that returned nothing is visible in two rows " +
+      "without adding the misses the latency-by-assessed section includes. Only the assessed row occurs for " +
+      "genuine correct records, since a correct record returned its category; the unassessed row covers " +
+      "hand-built records that claim correctness with no assessment returned. Only groups present among the " +
+      "correct records render, so the scenario totals sum to the correct count, not the sample size, and a " +
+      "group with no recorded latency shows n/a, never a fabricated zero; a run with no correct records says none.",
+    "",
+  );
+  if (latencyByCorrectAssessed.length === 0) {
+    lines.push("None: no scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Assessed | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByCorrectAssessed) {
       lines.push(
         `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );
