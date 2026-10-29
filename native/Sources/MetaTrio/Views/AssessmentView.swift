@@ -176,8 +176,22 @@ struct AssessmentView: View {
                 ForEach(Array(response.observations.enumerated()), id: \.offset) { _, observation in
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(alignment: .firstTextBaseline) {
+                            // UI-17: observation category in the web
+                            // <strong> weight, the native counterpart
+                            // to js/app.js rendering the web
+                            // observation category with a strong
+                            // element (weight 700). Until now the
+                            // native category used semibold (600),
+                            // so it read one step lighter than the
+                            // web category while the header category
+                            // already matched at bold. Only the
+                            // category weight changes: the confidence
+                            // caption, description, and evidence
+                            // lines keep their own styles, and the
+                            // single-line web layout versus the
+                            // native stacked rows is unchanged.
                             Text(observation.category)
-                                .fontWeight(.semibold)
+                                .fontWeight(.bold)
                             Spacer()
                             Text(confidenceText(observation.confidence))
                                 .font(.caption)
