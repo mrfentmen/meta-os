@@ -385,6 +385,29 @@ select {
   font-weight: 700;
 }
 
+/* HANA Agent1: a redisplayed assessment's product name keeps the
+   assessment's own product accent, not the selected product's. The
+   base rule above uses var(--accent), which follows the current
+   selection, so a past Ignis assessment shown again under Vigiles
+   read its product name in Vigiles blue — and even a fresh
+   assessment could land tinted wrong if the user switched products
+   while its request was in flight. Same fixed-hex reason as the
+   history-product rules: the name is the assessment's identity, so
+   it must not re-tint on a switch. An unknown product key gets no
+   class and keeps the base selection accent, like the native
+   panel's system-accent fallback. */
+.assessment-product.assessment-product-vigiles {
+  color: #4f7ec2;
+}
+
+.assessment-product.assessment-product-ignis {
+  color: #d92b2b;
+}
+
+.assessment-product.assessment-product-sanitas {
+  color: #5da864;
+}
+
 .assessment-time {
   color: var(--muted);
   font-size: 12.5px;

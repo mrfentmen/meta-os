@@ -378,6 +378,21 @@ function renderLatest(assessment, earlierNote = null) {
   head.appendChild(type);
   const productEl = document.createElement("span");
   productEl.className = "assessment-product";
+  // HANA Agent1: the product name keeps the assessment's own product
+  // accent, not the selected product's. The base .assessment-product
+  // rule uses var(--accent), which follows the current selection, so
+  // a past assessment shown again under another product — or a fresh
+  // one whose request was in flight across a switch — read its name
+  // in the wrong product's color. Same fixed-hex classes as the
+  // history-product edges; an unknown product key gets no class and
+  // keeps the base selection accent.
+  if (assessment.product === "vigiles") {
+    productEl.classList.add("assessment-product-vigiles");
+  } else if (assessment.product === "ignis") {
+    productEl.classList.add("assessment-product-ignis");
+  } else if (assessment.product === "sanitas") {
+    productEl.classList.add("assessment-product-sanitas");
+  }
   productEl.textContent = ` ${product ? product.displayName : assessment.product}`;
   head.appendChild(productEl);
   const time = document.createElement("span");
