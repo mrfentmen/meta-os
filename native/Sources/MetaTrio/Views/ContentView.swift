@@ -160,7 +160,6 @@ private struct HeaderView: View {
                 .padding(8)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.secondary.opacity(0.08))
-                .cornerRadius(6)
                 // R2: accent leading rule, matching the web
                 // .limitations border-left in --accent — red on Ignis.
                 .overlay(alignment: .leading) {
@@ -168,6 +167,16 @@ private struct HeaderView: View {
                         .fill(accentColor)
                         .frame(width: 3)
                 }
+                // UI-8: rounded box corners, the counterpart to the
+                // UI-7 assessment-panel clip. The box's background used
+                // to be rounded with cornerRadius(6), but the overlay
+                // sits after that modifier, so the rule was never cut
+                // to the rounded edge and ran square past the box's
+                // corners at the leading edge. The clip sits after the
+                // overlay, so the background and the rule share the
+                // same 6px rounded edge; it changes no color, rule,
+                // or content.
+                .clipShape(RoundedRectangle(cornerRadius: 6))
         }
         .padding(12)
     }
