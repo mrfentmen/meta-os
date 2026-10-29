@@ -302,6 +302,7 @@ final class AppModel: ObservableObject {
             }
             if requestGeneration == viewGeneration {
                 backendHealth = resultText
+                AccessibilityAnnouncement.healthResult(resultText)
             }
             healthChecking = false
         }

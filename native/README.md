@@ -109,9 +109,12 @@ rebuilding.
   assessment information lives only in color or in an icon. New results
   are also announced (web parity: the web frontend's polite live
   regions): a validated assessment announces its product, category,
-  summary, and human-review flag when it arrives, and a backend failure
-  announces the "Model backend not connected" status — both without
-  stealing focus. Re-inspecting a past timeline row announces nothing,
+  summary, and human-review flag when it arrives, a backend failure
+  announces the "Model backend not connected" status, and a settled
+  backend-health result announces in the health line's own words —
+  all without stealing focus. The interim "Checking …" text is not
+  announced, and a health result from before a Reset Session is never
+  announced as current. Re-inspecting a past timeline row announces nothing,
   exactly like the web history, which is deliberately not a live region,
   so a redisplayed past result can never sound like a new one.
 - Scenario picker matching the web frontend (web parity): a dropdown of

@@ -2,8 +2,9 @@ import AppKit
 
 // VoiceOver announcements for new results, the native match for the web
 // frontend's polite live regions (the backend-status line and the
-// latest-assessment panel). A new validated assessment or a backend
-// failure is announced without stealing focus, so a VoiceOver user
+// latest-assessment panel, and the backend-health line). A new validated
+// assessment, a backend failure, or a settled backend-health result is
+// announced without stealing focus, so a VoiceOver user
 // learns about it as it arrives instead of having to poll the timeline.
 // A frame-capture failure is announced too, with its own message: the
 // web frontend's live backend-status line reads a capture failure aloud
@@ -53,6 +54,19 @@ enum AccessibilityAnnouncement {
     /// here would wrongly tell the listener the backend was not
     /// connected, when no request was ever made.
     static func captureFailure(message: String) {
+        post(message)
+    }
+
+    /// Announcement for a settled backend-health result, success or
+    /// failure, in the health line's own words. Web parity: the web
+    /// frontend's health line is a polite live region, so a VoiceOver
+    /// user hears the result there; the native app used to set the
+    /// same line silently, so the result never reached a VoiceOver
+    /// user at all. The interim "Checking …" text is deliberately
+    /// not announced — only the settled result is — and the call site
+    /// posts it only inside the view-generation guard, so a result
+    /// from before a Reset Session is never announced as current.
+    static func healthResult(_ message: String) {
         post(message)
     }
 }

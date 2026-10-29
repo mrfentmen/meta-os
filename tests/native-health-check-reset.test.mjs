@@ -75,7 +75,10 @@ test("native: the health check captures the view generation and applies its resu
   assert.match(nativeHealth, /let requestGeneration = viewGeneration/);
   assert.match(
     nativeHealth,
-    /if requestGeneration == viewGeneration \{\s*backendHealth = resultText\s*\}/,
+    // The settled result is also announced to VoiceOver inside the same
+    // guard (see native-health-check-announcement.test.mjs), so the
+    // block may carry that one extra line and nothing else.
+    /if requestGeneration == viewGeneration \{\s*backendHealth = resultText\s*(?:AccessibilityAnnouncement\.healthResult\(resultText\)\s*)?\}/,
   );
   assert.doesNotMatch(nativeHealth, /backendHealth =\s*"Backend reachable:/);
   assert.doesNotMatch(nativeHealth, /backendHealth = "Backend health check failed:/);
