@@ -97,6 +97,7 @@ const els = {
   logStatsFailedShareOfFailedByProduct: $("log-stats-failed-share-of-failed-by-product"),
   logStatsFailedShareOfEntriesByProduct: $("log-stats-failed-share-of-entries-by-product"),
   logStatsOkShareOfTotalByProduct: $("log-stats-ok-share-of-total-by-product"),
+  logStatsFailedShareByStatusOfEntriesByProduct: $("log-stats-failed-share-by-status-of-entries-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -671,6 +672,18 @@ function updateLogStats() {
   // failures sit in the denominator but move no bucket.
   els.logStatsOkShareOfTotalByProduct.textContent =
     `Successful share of all entries by product: Vigiles ${stats.okShareOfTotalByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfTotalByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfTotalByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfTotalByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareOfTotalByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareOfTotalByProduct.sanitas * 100)}%`}`;
+  // DETAIL-42: the per-product failure-cause-share-of-all-entries
+  // line re-bases DETAIL-9's product-cause counts on the session
+  // entry total, rendered as whole percents, or "none" per cell
+  // on an empty log — the entry-total slice DETAIL-29's
+  // failed-total cells imply but do not state, and the cause
+  // split of DETAIL-40's failed-share line — same
+  // always-renders shape as the other stats lines, so a quiet
+  // session never changes the panel's shape, and successes
+  // never move a cell (they sit in the denominator only). A
+  // success-only log reads 0% per cell, never "none".
+  els.logStatsFailedShareByStatusOfEntriesByProduct.textContent =
+    `Failure-cause share of all entries by product: Vigiles Network ${stats.failedShareByStatusOfEntriesByProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesByProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesByProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusOfEntriesByProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesByProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesByProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.ignis.invalid_response * 100)}%`} · Sanitas Network ${stats.failedShareByStatusOfEntriesByProduct.sanitas.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.sanitas.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesByProduct.sanitas.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.sanitas.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesByProduct.sanitas.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.sanitas.invalid_response * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

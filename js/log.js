@@ -952,6 +952,46 @@ export class SessionLog {
       ignis: shareOfAllEntries(okCountByProduct.ignis),
       sanitas: shareOfAllEntries(okCountByProduct.sanitas),
     };
+    // DETAIL-42: the per-product failure-cause shares of all
+    // entries (failedShareByStatusOfEntriesByProduct): each
+    // DETAIL-9 product-cause count over the session's entry
+    // total, so a session where Ignis network errors are a
+    // sixth of everything recorded reads that at a glance,
+    // where DETAIL-29's failed-total cells alone do not say
+    // it — the entry-total mirror of DETAIL-29, and the
+    // cause split of DETAIL-40's failed shares: the three
+    // cause cells for a product sum to that product's
+    // DETAIL-40 share. Derived only from the DETAIL-9
+    // counts and the entry total, reusing DETAIL-40's
+    // shareOfAllEntries helper, not a new rule: successes
+    // never move a cell (they sit in the denominator only),
+    // and a failure with an unknown or missing product sits
+    // in the denominator but moves no cell, so the nine
+    // cells sum to the global DETAIL-25 failed share only
+    // when every failure carries a known product. Null per
+    // cell on an empty log (nothing to divide by); 0 per
+    // cell with no failures of that combination once the
+    // session holds any entry, including a success-only
+    // log — unlike DETAIL-29, which reads null until the
+    // first failure, because its denominator is the failed
+    // total.
+    const failedShareByStatusOfEntriesByProduct = {
+      vigiles: {
+        network_error: shareOfAllEntries(failedByStatusByProduct.vigiles.network_error),
+        http_error: shareOfAllEntries(failedByStatusByProduct.vigiles.http_error),
+        invalid_response: shareOfAllEntries(failedByStatusByProduct.vigiles.invalid_response),
+      },
+      ignis: {
+        network_error: shareOfAllEntries(failedByStatusByProduct.ignis.network_error),
+        http_error: shareOfAllEntries(failedByStatusByProduct.ignis.http_error),
+        invalid_response: shareOfAllEntries(failedByStatusByProduct.ignis.invalid_response),
+      },
+      sanitas: {
+        network_error: shareOfAllEntries(failedByStatusByProduct.sanitas.network_error),
+        http_error: shareOfAllEntries(failedByStatusByProduct.sanitas.http_error),
+        invalid_response: shareOfAllEntries(failedByStatusByProduct.sanitas.invalid_response),
+      },
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1068,6 +1108,15 @@ export class SessionLog {
       // empty log; 0 per product with no successes once the
       // session holds any entry, failure-only log included.
       okShareOfTotalByProduct,
+      // DETAIL-42: the per-product failure-cause shares of
+      // all entries (failedShareByStatusOfEntriesByProduct):
+      // each DETAIL-9 product-cause count over the session
+      // entry total — the entry-total mirror of DETAIL-29's
+      // failed-total cells and the cause split of
+      // DETAIL-40's failed shares. Null per cell on an
+      // empty log; 0 per cell with no failures of that
+      // combination once the session holds any entry.
+      failedShareByStatusOfEntriesByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
