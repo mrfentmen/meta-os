@@ -269,6 +269,24 @@ export class SessionLog {
   // and a failure without a usable request timestamp leaves its
   // bucket open for a later usable failure. The panel renders
   // "none" per product with no failure.
+  // DETAIL-20 spans DETAIL-19 to DETAIL-7 per product
+  // (failedSpanMsByProduct, null per product with no usable
+  // failure pair): the milliseconds between a product's first and
+  // last recorded failure timestamps — how long that product's
+  // failures stretch, where the two endpoint lines alone do not
+  // say it at a glance. Derived only from the DETAIL-19/7
+  // buckets, so the same bucket rules apply: successes never move
+  // a bucket, a failure with an unknown or missing product moves
+  // no bucket, and a failure without a usable timestamp leaves
+  // both endpoints in place. A product with exactly one usable
+  // failure reads 0 (first and last are the same timestamp), not
+  // null — one failure spans no time. A bucket timestamp that
+  // does not parse (the endpoints accept any non-empty string)
+  // reads null, never NaN. The difference is kept raw, not
+  // clamped: a negative span means failures were recorded out of
+  // timestamp order, which the insertion-order endpoints preserve
+  // honestly. The panel renders each span in whole milliseconds,
+  // or "none" per product with no usable failure pair.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -409,6 +427,15 @@ export class SessionLog {
       ignis: entrySpanMs(firstEntryAtByProduct.ignis, lastEntryAtByProduct.ignis),
       sanitas: entrySpanMs(firstEntryAtByProduct.sanitas, lastEntryAtByProduct.sanitas),
     };
+    // DETAIL-20: span between the DETAIL-19 first and DETAIL-7
+    // last failure endpoints per product; null when either
+    // endpoint is missing or unparseable, 0 for a single usable
+    // failure. Reuses DETAIL-17's span helper, not a new rule.
+    const failedSpanMsByProduct = {
+      vigiles: entrySpanMs(firstFailedAtByProduct.vigiles, lastFailedAtByProduct.vigiles),
+      ignis: entrySpanMs(firstFailedAtByProduct.ignis, lastFailedAtByProduct.ignis),
+      sanitas: entrySpanMs(firstFailedAtByProduct.sanitas, lastFailedAtByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -425,6 +452,7 @@ export class SessionLog {
       firstEntryAtByProduct,
       lastEntryAtByProduct,
       entrySpanMsByProduct,
+      failedSpanMsByProduct,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
       avgOkLatencyMsByProduct: {
         vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,
