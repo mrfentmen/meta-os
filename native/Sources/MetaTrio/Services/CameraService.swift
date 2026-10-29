@@ -78,6 +78,14 @@ final class CameraService: NSObject, ObservableObject {
     /// lifetime of the app; it simply has no input until start() succeeds.
     let session = AVCaptureSession()
 
+    /// Start generation: bumped by stop(), captured by start() and by
+    /// every queued restart, so a start still awaiting the permission
+    /// prompt (or a queued session start) when a stop or Reset lands
+    /// can tell it is stale when it runs, instead of leaving the
+    /// camera live after a stop that said it was stopped. This mirrors
+    /// the web Camera class's start generation.
+    private var startGeneration = 0
+
     private let sessionQueue = DispatchQueue(label: "com.metatrio.camera.session")
     private let frameQueue = DispatchQueue(label: "com.metatrio.camera.frames")
     private let videoOutput = AVCaptureVideoDataOutput()
@@ -95,6 +103,10 @@ final class CameraService: NSObject, ObservableObject {
     var isRunning: Bool { state == .running }
 
     func start() {
+        // Captured before any async work: stop() bumps the generation,
+        // so a stop while the permission prompt is up invalidates this
+        // start's callback.
+        let generation = startGeneration
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             configureAndStart()
@@ -102,6 +114,11 @@ final class CameraService: NSObject, ObservableObject {
             setState(.requestingPermission)
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
                 guard let self = self else { return }
+                // A stop or Reset during the prompt invalidates this
+                // start: granting it must not start a camera the user
+                // just stopped, and denying it must not overwrite the
+                // stopped state with a denial for a pre-stop attempt.
+                guard generation == self.startGeneration else { return }
                 if granted {
                     self.configureAndStart()
                 } else {
@@ -116,6 +133,11 @@ final class CameraService: NSObject, ObservableObject {
     }
 
     func stop() {
+        // Invalidate any start still awaiting permission, a queued
+        // session start, or a queued facing restart: their later work
+        // checks this generation and stands down instead of starting
+        // a camera this stop just stopped.
+        startGeneration += 1
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
             if self.session.isRunning {
@@ -140,6 +162,10 @@ final class CameraService: NSObject, ObservableObject {
     func setFacing(_ newFacing: Facing) {
         facing = newFacing
         guard isRunning else { return }
+        // Captured before the queued restart: a stop or Reset while
+        // the restart is queued invalidates it, so the dispatched
+        // start must not revive a camera that was just stopped.
+        let generation = startGeneration
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
             if self.session.isRunning {
@@ -154,6 +180,7 @@ final class CameraService: NSObject, ObservableObject {
             self.frameLock.lock()
             self.latestSampleBuffer = nil
             self.frameLock.unlock()
+            guard generation == self.startGeneration else { return }
             DispatchQueue.main.async { [weak self] in
                 self?.start()
             }
@@ -209,8 +236,13 @@ final class CameraService: NSObject, ObservableObject {
     // MARK: - Session setup
 
     private func configureAndStart() {
+        // Captured before queueing: a stop while this block waits on
+        // the session queue invalidates it, so the queued block must
+        // not start a session the user just stopped.
+        let generation = startGeneration
         sessionQueue.async { [weak self] in
             guard let self = self else { return }
+            guard generation == self.startGeneration else { return }
             if !self.configured {
                 guard let device = self.device(for: self.facing) else {
                     self.setState(.noCamera)

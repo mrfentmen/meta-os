@@ -261,6 +261,15 @@ let latestAssessmentShown = false;
 // so a stale entry is honest there while a stale panel is not.
 let viewGeneration = 0;
 
+// Camera-start generation: bumped by Stop and by Reset, captured by
+// the Start and facing handlers before their await. A start still
+// awaiting the permission prompt when Stop or Reset lands must not
+// repaint the stopped view with "Camera is live." when it settles —
+// the Camera class already discards that stream, so the stale handler
+// simply touches nothing (Stop/Reset already set the state and the
+// buttons), instead of re-announcing a camera that is off.
+let cameraStartGeneration = 0;
+
 // In-flight request count: the Camera panel's "Analysis request in
 // flight…" line is shared by every submit path — a live sampled frame,
 // a still image, and a prerecorded-video frame can all be outstanding
@@ -845,11 +854,21 @@ els.btnCameraStart.addEventListener("click", async () => {
   // disabled once live, enabled again after a denied or failed start.
   els.btnCameraStart.disabled = true;
   setCameraState("Waiting for camera permission…");
+  const startGeneration = cameraStartGeneration;
   try {
     await camera.start();
+    // A Stop or Reset during the wait invalidates this start: the
+    // Camera class discarded its stream, and this handler must not
+    // repaint the stopped view with a live indicator and live text.
+    // Stop/Reset already set the state and the buttons, so a stale
+    // settle touches nothing at all.
+    if (startGeneration !== cameraStartGeneration) return;
     els.cameraIndicator.hidden = false;
     setCameraState("Camera is live. No frames are sent anywhere until analysis is started.");
   } catch (err) {
+    // Same rule on failure: a pre-stop permission denial must not
+    // overwrite Reset's "Camera stopped. View reset." with its error.
+    if (startGeneration !== cameraStartGeneration) return;
     els.cameraIndicator.hidden = true;
     setCameraState(describeCameraError(err));
   }
@@ -857,6 +876,9 @@ els.btnCameraStart.addEventListener("click", async () => {
 });
 
 els.btnCameraStop.addEventListener("click", () => {
+  // Invalidate a start still awaiting permission, before stopping:
+  // its settle path must not revive the camera this handler stops.
+  cameraStartGeneration += 1;
   sampler.stop();
   camera.stop();
   els.cameraIndicator.hidden = true;
@@ -871,13 +893,19 @@ els.btnCameraStop.addEventListener("click", () => {
 // the real error, and analysis (if running) keeps ticking honestly
 // against the restarted stream.
 els.cameraFacing.addEventListener("change", async () => {
+  // Same generation rule as Start: a restart still awaiting
+  // permission when Stop or Reset lands must not repaint the stopped
+  // view with a live indicator when it settles.
+  const switchGeneration = cameraStartGeneration;
   try {
     await camera.switchFacing(els.cameraFacing.value);
+    if (switchGeneration !== cameraStartGeneration) return;
     if (camera.active) {
       els.cameraIndicator.hidden = false;
       setCameraState("Camera is live. No frames are sent anywhere until analysis is started.");
     }
   } catch (err) {
+    if (switchGeneration !== cameraStartGeneration) return;
     els.cameraIndicator.hidden = true;
     setCameraState(describeCameraError(err));
   }
@@ -903,6 +931,9 @@ els.btnReset.addEventListener("click", () => {
   // Reset still logs when it settles, but must not repaint the view
   // this handler just cleared (see viewGeneration above).
   viewGeneration += 1;
+  // A camera start still awaiting permission is invalidated too, so
+  // its settle path cannot revive the camera Reset just stopped.
+  cameraStartGeneration += 1;
   sampler.stop();
   camera.stop();
   els.cameraIndicator.hidden = true;

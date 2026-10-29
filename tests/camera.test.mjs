@@ -193,3 +193,72 @@ test("camera: captureFrame throws when the camera is off or the frame has no dim
   const { camera } = await liveCamera(0, 0);
   assert.throws(() => camera.captureFrame(fakeCanvas()), /not ready yet/);
 });
+
+// A start still awaiting permission when Stop lands: the permission
+// prompt is a real await in Camera.start, and Reset/Stop used to be a
+// no-op against it (no stream existed yet to stop), so the settling
+// start attached its stream and left the camera live after a stop that
+// said it was stopped. The start now carries a generation that stop()
+// bumps, and a stale settle discards its stream instead of attaching
+// it. These tests drive that window with a deferred getUserMedia.
+function installDeferredCamera() {
+  const streams = [];
+  // One resolver per pending getUserMedia call, in call order: a
+  // second start overwrites a single "next" slot, so resolving must
+  // drain the queue oldest-first or the first start never settles.
+  const pending = [];
+  Object.defineProperty(globalThis, "navigator", {
+    value: {
+      mediaDevices: {
+        getUserMedia: () =>
+          new Promise((resolve) => {
+            pending.push(() => {
+              const stream = fakeStream();
+              streams.push(stream);
+              resolve(stream);
+            });
+          }),
+      },
+    },
+    configurable: true,
+    writable: true,
+  });
+  return {
+    streams,
+    resolveNext: () => {
+      const fn = pending.shift();
+      fn();
+    },
+  };
+}
+
+test("camera: a start outstanding across Stop never attaches its stream when it settles", async () => {
+  const deferred = installDeferredCamera();
+  const videoEl = fakeVideoEl();
+  const camera = new Camera(videoEl);
+  const started = camera.start();
+  camera.stop();
+  deferred.resolveNext();
+  await started;
+  assert.equal(camera.active, false);
+  assert.equal(videoEl.srcObject, null);
+  assert.equal(deferred.streams.length, 1);
+  assert.equal(deferred.streams[0].stopped.length, 1);
+});
+
+test("camera: of two overlapping starts, only the newer one's stream attaches", async () => {
+  const deferred = installDeferredCamera();
+  const videoEl = fakeVideoEl();
+  const camera = new Camera(videoEl);
+  const first = camera.start();
+  const second = camera.start();
+  deferred.resolveNext();
+  await first;
+  assert.equal(camera.active, false);
+  assert.equal(deferred.streams[0].stopped.length, 1);
+  deferred.resolveNext();
+  await second;
+  assert.equal(camera.active, true);
+  assert.equal(videoEl.srcObject, deferred.streams[1]);
+  assert.equal(deferred.streams[1].stopped.length, 0);
+});

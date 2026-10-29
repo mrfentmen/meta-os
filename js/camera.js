@@ -40,6 +40,11 @@ export class Camera {
     this.videoEl = videoEl;
     this.stream = null;
     this.facingMode = "user";
+    // Start generation: bumped by stop() and by every new start, so a
+    // start still awaiting permission (or a video play) when a stop
+    // lands can tell it is stale when it settles, instead of attaching
+    // a stream the user just stopped.
+    this._startGeneration = 0;
   }
 
   get active() {
@@ -59,9 +64,30 @@ export class Camera {
     }
     if (this.stream) return;
     this.facingMode = facingMode;
-    this.stream = await navigator.mediaDevices.getUserMedia(facingConstraints(facingMode));
+    // Captured before the first await: stop() bumps the generation, and
+    // a second start bumps it too, so either one invalidates this
+    // start. A stale start must never attach its stream — the user
+    // stopped the camera while the permission prompt was up, and
+    // attaching it would leave the camera live after a Stop or Reset
+    // that said it was stopped.
+    const startGeneration = ++this._startGeneration;
+    const stream = await navigator.mediaDevices.getUserMedia(facingConstraints(facingMode));
+    if (startGeneration !== this._startGeneration) {
+      // Discard this stream's tracks; it is not the camera's stream and
+      // must not be left running either.
+      for (const track of stream.getTracks()) {
+        track.stop();
+      }
+      return;
+    }
+    this.stream = stream;
     this.videoEl.srcObject = this.stream;
     await this.videoEl.play();
+    // A stop during the play await already stopped the tracks, nulled
+    // the stream, and cleared srcObject; returning here just keeps
+    // this start from reporting success for a camera that is off. The
+    // app handler has its own generation guard for the on-screen state.
+    if (startGeneration !== this._startGeneration) return;
   }
 
   // Switches the facing. While the camera is off this only records the
@@ -83,6 +109,10 @@ export class Camera {
   }
 
   stop() {
+    // Invalidate any start still awaiting permission or a play: its
+    // settle path checks this generation and discards its stream
+    // instead of attaching it.
+    this._startGeneration += 1;
     if (this.stream) {
       for (const track of this.stream.getTracks()) {
         track.stop();
