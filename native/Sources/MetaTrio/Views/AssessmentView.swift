@@ -20,6 +20,30 @@ struct AssessmentView: View {
             processingLine
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // UI-5: product-accent leading rule, the native counterpart to
+        // the web panel gradient and the UI-4 timeline rule. The rule
+        // color comes from the assessment's own product, so a
+        // redisplayed Ignis assessment keeps its red rule under any
+        // selection, and it sits on the outer stack so the whole panel
+        // carries it, not just one section.
+        .padding(.leading, 10)
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: 3)
+        }
+    }
+
+    /// Panel accent from the assessment's own product, mirroring the
+    /// TimelineView row-accent mapping. An unknown product key falls
+    /// back to the system accent rather than guessing a product.
+    private var accentColor: Color {
+        switch ProductID(rawValue: response.product)?.config.accentColorName {
+        case "blue": return .blue
+        case "red": return .red
+        case "green": return .green
+        default: return .accentColor
+        }
     }
 
     private var header: some View {
