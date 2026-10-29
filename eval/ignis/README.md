@@ -280,6 +280,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   is visible without a correct record's fast latency hiding it; ties break by scenario id
   alphabetically, a run whose misses carry no latency says so instead of naming one, and
   a run with no misses says none.
+  A latency-by-correct-category section right after it breaks the correct records' latencies down by
+  category — one row per category among the correct records only, most frequent first — so whether one
+  category's successes as a class run slower than another's is visible without scanning the per-scenario
+  table; for a correct record truth and predicted coincide, so a single category column covers both
+  sides, the scenario totals sum to the correct count, not the sample size, a category with no recorded
+  latency shows n/a, never a fabricated zero, and a run with no correct records says none.
   A latency-distribution-among-correct section right after it expands the correct sections' means into
   min, quartiles and p90 over the correct records alone — the same quantiles as the full-run latency
   distribution, but without the misses pulling the numbers up — so whether the successes cluster fast

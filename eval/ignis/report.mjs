@@ -531,6 +531,55 @@ export function computeCorrectLatencyOutliers(records) {
   return computeLatencyOutliers(records.filter((r) => r.category_correct));
 }
 
+// Latency by correct category: one row per category among the
+// correct records only (category_correct true), sorted most
+// frequent first, then category alphabetically, with the count of
+// recorded harness wall-clock latencies, their mean, their median
+// (averaged-middle, matching the distribution's median), and their
+// max. For a correct record the truth and the predicted category
+// coincide, so a single category column covers both sides — this is
+// the correct-side marginal that latency by category cannot isolate,
+// since that table mixes the misses in. The scenario totals sum to
+// the correct count, not the sample size. Records with no latency
+// take no part in a category's numbers but still count toward its
+// scenario total, so a category whose scenarios carry no latency
+// reads as recorded 0 with n/a statistics — never as a fabricated
+// zero.
+export function computeLatencyByCorrectCategory(records) {
+  const byCategory = {};
+  for (const r of records) {
+    if (!r.category_correct) continue;
+    const entry = (byCategory[r.ground_truth_label] ??= {
+      truth: r.ground_truth_label,
+      total: 0,
+      latencies: [],
+    });
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return Object.values(byCategory)
+    .map((e) => {
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { truth: e.truth, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        truth: e.truth,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    })
+    .sort((a, b) => {
+      if (a.total !== b.total) return b.total - a.total;
+      return a.truth < b.truth ? -1 : a.truth > b.truth ? 1 : 0;
+    });
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -2941,8 +2990,34 @@ export function renderRunReport(run, baselineRun = null) {
   } else {
     lines.push(`- Fastest miss: ${fastestMiss.scenarioId} (${fastestMiss.truth}) — ${fmtLatency(fastestMiss.latencyMs)} ms (harness wall clock).`);
   }
-  const correctLatencyDist = computeCorrectLatencyDistribution(run.records);
+  const latencyByCorrectCategory = computeLatencyByCorrectCategory(run.records);
   const correctCount = run.records.filter((r) => r.category_correct).length;
+  lines.push(
+    "",
+    "## Latency by correct category",
+    "",
+    "Harness wall-clock latencies broken down by category — one row per category " +
+      "among the correct records only, most frequent first, so whether one category's successes as a class " +
+      "run slower than another's is visible without scanning the per-scenario table. For a correct record the " +
+      "truth and the predicted category coincide, so a single category column covers both sides. The scenario totals " +
+      "sum to the correct count, not the sample size, and a category with no recorded latency shows n/a, " +
+      "never a fabricated zero; a run with no correct records says none.",
+    "",
+  );
+  if (latencyByCorrectCategory.length === 0) {
+    lines.push("None: no scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Category | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByCorrectCategory) {
+      lines.push(
+        `| ${row.truth} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const correctLatencyDist = computeCorrectLatencyDistribution(run.records);
   lines.push(
     "",
     "## Latency distribution among correct",
