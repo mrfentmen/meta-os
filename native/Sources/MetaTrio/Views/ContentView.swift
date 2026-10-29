@@ -717,7 +717,21 @@ private struct SettingsPanel: View {
                 }
 
                 Stepper(value: $model.intervalSeconds, in: 1...60) {
+                    // IGNIS-UI-46: stepper label at 13pt muted, the
+                    // native counterpart to the web label rule (13px,
+                    // muted) that styles the web interval label. Until
+                    // now the label was a plain Text at the default
+                    // body size, so it read four points larger and in
+                    // full-strength text color than the web label
+                    // while the endpoint and custom-scenario labels
+                    // (UI-33) already matched their own 13px web
+                    // rules. The size and color are the only change:
+                    // the 1...60 range, the binding, the plural
+                    // wording, and the Stepper control itself are
+                    // untouched.
                     Text("Sample one frame every \(model.intervalSeconds) second\(model.intervalSeconds == 1 ? "" : "s")")
+                        .font(.system(size: 13))
+                        .foregroundStyle(.secondary)
                 }
 
                 // UI-32: sampling-disclosure line at 13pt, the native
