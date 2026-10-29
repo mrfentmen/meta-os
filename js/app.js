@@ -731,16 +731,38 @@ els.btnImageAssess.addEventListener("click", async () => {
 // metadata has loaded, so capture cannot be tapped on a frameless video.
 let videoObjectUrl = null;
 let videoAssessing = false;
+// Video readiness, separate from the object URL: choosing a file creates
+// the URL at once, but the video has no frame to capture until its
+// metadata loads. The Assess button's own comment has always said it
+// stays disabled until metadata loads, yet every place that re-enabled
+// it tested only the URL — so a video chosen while a request was out
+// (or whose metadata arrived while a request was out) re-enabled the
+// button on a frameless video, and a tap then failed capture honestly
+// but pointlessly, or was silently dropped by the assessing guard.
+// One helper owns the button now: enabled only with a URL, loaded
+// metadata, and no assessment in flight. The still-image panel needs
+// no equivalent: its data URL itself is the readiness signal — it is
+// null while a read is in flight, so its finally path already enables
+// only a truly ready image. Native needs no change either: its Assess
+// button is already gated on assessing, and a not-ready native player
+// fails extraction with the real error instead of sending a blank
+// frame, so no native button ever promises a frame it cannot capture.
+let videoMetadataLoaded = false;
+
+function refreshVideoAssessButton() {
+  els.btnVideoAssess.disabled = !videoObjectUrl || !videoMetadataLoaded || videoAssessing;
+}
 
 function clearVideoInput() {
   if (videoObjectUrl) {
     URL.revokeObjectURL(videoObjectUrl);
     videoObjectUrl = null;
   }
+  videoMetadataLoaded = false;
   els.videoPreview.removeAttribute("src");
   els.videoPreview.load();
   els.videoPreview.hidden = true;
-  els.btnVideoAssess.disabled = true;
+  refreshVideoAssessButton();
   els.videoAssessing.hidden = true;
 }
 
@@ -772,19 +794,25 @@ els.videoInput.addEventListener("change", () => {
 
 els.videoPreview.addEventListener("loadedmetadata", () => {
   // Metadata loaded means the video has dimensions, so a frame capture
-  // will succeed. The button enables only while a video is loaded.
-  els.btnVideoAssess.disabled = !videoObjectUrl;
+  // will succeed — but only if no assessment is in flight: metadata
+  // arriving for a video chosen mid-request must not enable the button
+  // under that request, or a tap would be silently dropped by the
+  // assessing guard below. The helper keeps it disabled until the
+  // request settles, and the settle path then enables it.
+  videoMetadataLoaded = true;
+  refreshVideoAssessButton();
 });
 
 els.videoPreview.addEventListener("error", () => {
   els.videoState.textContent = "That video could not be played in this browser. Try another file.";
-  els.btnVideoAssess.disabled = true;
+  videoMetadataLoaded = false;
+  refreshVideoAssessButton();
 });
 
 els.btnVideoAssess.addEventListener("click", async () => {
-  if (!videoObjectUrl || videoAssessing) return;
+  if (!videoObjectUrl || !videoMetadataLoaded || videoAssessing) return;
   videoAssessing = true;
-  els.btnVideoAssess.disabled = true;
+  refreshVideoAssessButton();
   // Native parity: the native video panel shows "Sending video
   // frame…" in the panel while the request is outstanding, for the
   // same reason as the still-image note above — the generic in-flight
@@ -828,7 +856,9 @@ els.btnVideoAssess.addEventListener("click", async () => {
     els.videoState.textContent = `Could not capture this frame: ${err.message}`;
     videoAssessing = false;
     els.videoAssessing.hidden = true;
-    els.btnVideoAssess.disabled = false;
+    // Not a blanket re-enable: a video chosen mid-request (or one
+    // whose metadata never loaded) must not come back enabled here.
+    refreshVideoAssessButton();
     return;
   }
   try {
@@ -838,7 +868,10 @@ els.btnVideoAssess.addEventListener("click", async () => {
   } finally {
     videoAssessing = false;
     els.videoAssessing.hidden = true;
-    els.btnVideoAssess.disabled = !videoObjectUrl;
+    // A video chosen while this request was out enables here only if
+    // its metadata has actually loaded by now; otherwise the button
+    // stays disabled until loadedmetadata, exactly as a fresh choice.
+    refreshVideoAssessButton();
   }
 });
 
