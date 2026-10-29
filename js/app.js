@@ -261,6 +261,28 @@ let latestAssessmentShown = false;
 // so a stale entry is honest there while a stale panel is not.
 let viewGeneration = 0;
 
+// In-flight request count: the Camera panel's "Analysis request in
+// flight…" line is shared by every submit path — a live sampled frame,
+// a still image, and a prerecorded-video frame can all be outstanding
+// at once (the sampler guards only live-vs-live, and each panel guards
+// only itself), so a single boolean hid the line as soon as the first
+// of several requests settled, while another was still out. Count
+// instead: the line shows while at least one request is outstanding
+// and hides only when the last one settles. Reset never touches the
+// count — a request outstanding across Reset is still outstanding, and
+// its settle path still hides the line, exactly as before.
+let inFlightCount = 0;
+
+function showInFlight() {
+  inFlightCount += 1;
+  els.inFlight.hidden = false;
+}
+
+function hideInFlight() {
+  inFlightCount = Math.max(0, inFlightCount - 1);
+  els.inFlight.hidden = inFlightCount === 0;
+}
+
 function renderLatest(assessment, earlierNote = null) {
   latestAssessmentShown = true;
   const product = PRODUCT_BY_ID[assessment.product] || null;
@@ -421,7 +443,7 @@ function addHistoryItem({ title, timestamp, body, kind, assessment = null }) {
 async function submitAssessment(product, timestamp, image, scenarioLabel) {
   const endpoint = currentEndpoint();
   const generation = viewGeneration;
-  els.inFlight.hidden = false;
+  showInFlight();
   if (!latestAssessmentShown) {
     els.latest.textContent = "Waiting for the first assessment…";
   }
@@ -504,7 +526,7 @@ async function submitAssessment(product, timestamp, image, scenarioLabel) {
     }
     throw err;
   } finally {
-    els.inFlight.hidden = true;
+    hideInFlight();
     updateLogStats();
   }
 }

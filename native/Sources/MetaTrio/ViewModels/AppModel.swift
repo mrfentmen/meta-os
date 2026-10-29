@@ -151,6 +151,20 @@ final class AppModel: ObservableObject {
     /// panel, timeline, backend status, round trip, and announcement
     /// stay as Reset left them.
     private var viewGeneration = 0
+    /// In-flight request count, backing the published requestInFlight
+    /// flag (web parity with js/app.js inFlightCount): the status bar's
+    /// "Assessment request in flight…" line is shared by every submit
+    /// path — a live sampled frame, a still image, and a
+    /// prerecorded-video frame can all be outstanding at once (the
+    /// sampler guards only live-vs-live, and each panel guards only
+    /// itself), so a single boolean hid the line as soon as the first
+    /// of several requests settled, while another was still out. The
+    /// flag stays true while at least one request is outstanding and
+    /// clears only when the last one settles. Reset never touches the
+    /// count — a request outstanding across Reset is still
+    /// outstanding, and its settle path still clears the flag, exactly
+    /// as before.
+    private var inFlightCount = 0
 
     let camera = CameraService()
     private let sampler = FrameSampler(intervalSeconds: 3)
@@ -636,7 +650,13 @@ final class AppModel: ObservableObject {
         // log only, not repaint the cleared view.
         let generation = viewGeneration
         requestInFlight = true
-        defer { requestInFlight = false }
+        inFlightCount += 1
+        defer {
+            inFlightCount -= 1
+            if inFlightCount == 0 {
+                requestInFlight = false
+            }
+        }
 
         do {
             let (response, latencyMs) = try await client.assess(

@@ -1222,3 +1222,51 @@ test("reset: a request outstanding across Reset logs but does not repaint the cl
   assert.match(swift, /let generation = viewGeneration\n\s+\/\/ Web parity \(js\/app\.js video handler\):/);
   assert.match(swift, /recordLog\(product: product, timestamp: timestamp, latencyMs: nil, status: \.invalidResponse, error: message, scenarioLabel: scenarioLabel\)\n\s+if generation == viewGeneration \{/);
 });
+
+// ---------- in-flight indicator with overlapping requests ----------
+// The Camera panel's "Analysis request in flight…" line (and the native
+// status bar's equivalent) is shared by every submit path, but it used
+// to be a single boolean: a live sampled frame, a still image, and a
+// prerecorded-video frame can all be outstanding at once — the sampler
+// guards only live-vs-live, and each panel guards only itself — so the
+// first of several requests to settle hid the line while another was
+// still out, and the UI claimed nothing was in flight when something
+// was. Both frontends now count outstanding requests: the line shows
+// while at least one is out and hides only when the last one settles.
+// Reset never touches the count — a request outstanding across Reset
+// is still outstanding. No browser exists in this suite, so these are
+// static checks on the shipped wiring, in the same style as the Reset
+// checks above.
+test("in-flight: the loading line stays up until the last overlapping request settles, on web and native", () => {
+  const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+  assert.match(app, /let inFlightCount = 0;/);
+  assert.match(app, /function showInFlight\(\) \{\n\s+inFlightCount \+= 1;\n\s+els\.inFlight\.hidden = false;\n\}/);
+  assert.match(app, /function hideInFlight\(\) \{\n\s+inFlightCount = Math\.max\(0, inFlightCount - 1\);\n\s+els\.inFlight\.hidden = inFlightCount === 0;\n\}/);
+  // submitAssessment uses the counter at both ends, never the bare flip.
+  const submit = app.slice(
+    app.indexOf("async function submitAssessment"),
+    app.indexOf("async function runSample"),
+  );
+  assert.match(submit, /const generation = viewGeneration;\n\s+showInFlight\(\);/);
+  assert.match(submit, /\} finally \{\n\s+hideInFlight\(\);/);
+  assert.doesNotMatch(submit, /els\.inFlight\.hidden/);
+  // Reset leaves the count alone: the outstanding request is still out.
+  const reset = app.slice(
+    app.indexOf('els.btnReset.addEventListener'),
+    app.indexOf('els.intervalSeconds.addEventListener'),
+  );
+  assert.doesNotMatch(reset, /inFlightCount|showInFlight|hideInFlight/);
+
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/ViewModels/AppModel.swift", import.meta.url), "utf8");
+  assert.match(swift, /private var inFlightCount = 0/);
+  assert.match(
+    swift,
+    /let generation = viewGeneration\n\s+requestInFlight = true\n\s+inFlightCount \+= 1\n\s+defer \{\n\s+inFlightCount -= 1\n\s+if inFlightCount == 0 \{\n\s+requestInFlight = false/,
+  );
+  assert.doesNotMatch(swift, /defer \{ requestInFlight = false \}/);
+  const nativeReset = swift.slice(
+    swift.indexOf("func resetSession()"),
+    swift.indexOf("// MARK: - Backend health check"),
+  );
+  assert.doesNotMatch(nativeReset, /inFlightCount|requestInFlight/);
+});
