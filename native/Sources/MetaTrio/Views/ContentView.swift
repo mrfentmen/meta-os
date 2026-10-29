@@ -356,8 +356,17 @@ private struct CameraPanel: View {
                     .accessibilityHint("Stops the camera and analysis and clears the on-screen preview and timeline. The saved session log is kept — use Clear Log to remove it.")
             }
 
+            // UI-29: camera product-guidance note at 13pt, the native
+            // counterpart to the web .note rule (13px, muted).
+            // Until now the note used .caption (12pt), so it read
+            // one point smaller than the web panel's product
+            // guidance while the facing note (UI-28) and the
+            // still-image and video intros (UI-25, UI-26) already
+            // matched their own 13px web rules. The size is the
+            // only change: the muted color, the wrapping, and
+            // the per-product wording are untouched.
             Text(model.config.inputGuidance)
-                .font(.caption)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
