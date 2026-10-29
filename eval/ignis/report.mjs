@@ -1147,6 +1147,63 @@ export function computeLatencyByMissTruth(records) {
     });
 }
 
+// Latency by miss predicted category: one row per predicted category
+// among the misses only (same miss definition as computeMisses:
+// category_correct false; an unassessed record reads as ERROR,
+// matching the confusion table's convention), sorted most
+// frequent first, then predicted alphabetically with ERROR last
+// (matching the miss-pair counts' ordering), with the count of
+// recorded harness wall-clock latencies, their mean, their median
+// (averaged-middle, matching the distribution's median), and
+// their max. This is the predicted-side misses-only marginal
+// behind the miss-pair table: the pair table says which swap runs
+// slowest, but only this table says whether one predicted
+// category's misses as a class run slower than another's — and
+// latency by predicted category, which includes the correct
+// pairs, cannot isolate the misses. The scenario totals sum to
+// the miss count, not the sample size. Records with no latency
+// take no part in a category's numbers but still count toward
+// its scenario total, so a category whose scenarios carry no
+// latency reads as recorded 0 with n/a statistics — never as a
+// fabricated zero.
+export function computeLatencyByMissPredicted(records) {
+  const byPredicted = {};
+  for (const r of records) {
+    if (r.category_correct) continue;
+    const predicted = r.actual_category === null ? ERROR_PREDICTED : r.actual_category;
+    const entry = (byPredicted[predicted] ??= {
+      predicted,
+      total: 0,
+      latencies: [],
+    });
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return Object.values(byPredicted)
+    .map((e) => {
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { predicted: e.predicted, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        predicted: e.predicted,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    })
+    .sort((a, b) => {
+      if (a.total !== b.total) return b.total - a.total;
+      if (a.predicted === ERROR_PREDICTED) return 1;
+      if (b.predicted === ERROR_PREDICTED) return -1;
+      return a.predicted < b.predicted ? -1 : a.predicted > b.predicted ? 1 : 0;
+    });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -1909,6 +1966,31 @@ export function renderRunReport(run, baselineRun = null) {
     for (const row of latencyByMissTruth) {
       lines.push(
         `| ${row.truth} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const latencyByMissPredicted = computeLatencyByMissPredicted(run.records);
+  lines.push(
+    "",
+    "## Latency by miss predicted category",
+    "",
+    "Harness wall-clock latencies broken down by predicted category — one row per predicted category " +
+      "among the misses only, most frequent first, so whether one predicted category's misses as a class " +
+      "run slower than another's is visible without scanning the per-scenario table. The scenario totals " +
+      "sum to the miss count, not the sample size, and a category with no recorded latency shows n/a, " +
+      "never a fabricated zero; a run with no misses says none.",
+    "",
+  );
+  if (latencyByMissPredicted.length === 0) {
+    lines.push("None: every scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Predicted | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByMissPredicted) {
+      lines.push(
+        `| ${row.predicted} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );
     }
   }
