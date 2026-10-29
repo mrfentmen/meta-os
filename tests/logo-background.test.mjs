@@ -73,7 +73,27 @@ test("background script is slow, still under reduced motion, paused when hidden"
   );
   assert.match(
     bg,
-    /var SCALE = 1\.25;/,
-    "logo-background.js slightly oversizes the loop so it still reads as one loop",
+    /var SCALE = 1\.05;/,
+    "logo-background.js is a little smaller than the first background size",
+  );
+  assert.match(
+    bg,
+    /vigiles: \[/,
+    "logo-background.js carries a Vigiles palette",
+  );
+  assert.match(
+    bg,
+    /ignis: \[[\s\S]*?#d92b2b/,
+    "logo-background.js carries an Ignis red palette around #d92b2b",
+  );
+  assert.match(
+    bg,
+    /sanitas: \[[\s\S]*?#5da864/,
+    "logo-background.js carries a Sanitas green palette around #5da864",
+  );
+  assert.match(
+    bg,
+    /MutationObserver/,
+    "logo-background.js follows product switches via MutationObserver",
   );
 });

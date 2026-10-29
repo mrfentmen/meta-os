@@ -31,12 +31,48 @@
   // Slightly oversized: the panels cover the middle of the page,
   // and the panels are see-through, so the loop ghosts through
   // them at a size that still reads as one loop, not a crop.
-  var SCALE = 1.25;
+  var SCALE = 1.05;
   var GLYPHS = " .,:;irsXA253hMHGS#9B&@";
-  var PALETTE = [
-    "#062258", "#07357f", "#0750bc", "#0869df",
-    "#0d82f0", "#20a3ff", "#43c2ff", "#8be5ff", "#e9fbff",
-  ];
+  // One ramp per product, each built around that product's accent:
+  // Vigiles blue #4f7ec2, Ignis red #d92b2b, Sanitas green #5da864.
+  var PALETTES = {
+    vigiles: [
+      "#062258", "#07357f", "#0750bc", "#4f7ec2",
+      "#6a96d8", "#8ab4e8", "#a8c8f0", "#c8ddf8", "#eaf2ff",
+    ],
+    ignis: [
+      "#3d0a08", "#5c1410", "#7f1d18", "#a32424",
+      "#d92b2b", "#e85545", "#f07a68", "#ffa08e", "#ffd9d0",
+    ],
+    sanitas: [
+      "#0a2e12", "#123f1c", "#1e5429", "#2f6b3a",
+      "#5da864", "#7cc47f", "#9ad69c", "#bfe8c2", "#e6f9e8",
+    ],
+  };
+  var GLOWS = {
+    vigiles: "rgba(91, 220, 255, 0.9)",
+    ignis: "rgba(255, 120, 90, 0.9)",
+    sanitas: "rgba(120, 220, 140, 0.9)",
+  };
+  var SPECULARS = {
+    vigiles: "#eafcff",
+    ignis: "#ffe8e0",
+    sanitas: "#e8fbe9",
+  };
+  var currentProduct = "vigiles";
+  var currentPalette = PALETTES.vigiles;
+  var currentGlow = GLOWS.vigiles;
+  var currentSpecular = SPECULARS.vigiles;
+
+  // The app sets document.body.dataset.product on every product
+  // switch (js/app.js), so watch it and re-tint the loop live.
+  function applyProduct(product) {
+    if (!PALETTES[product]) product = "vigiles";
+    currentProduct = product;
+    currentPalette = PALETTES[product];
+    currentGlow = GLOWS[product];
+    currentSpecular = SPECULARS[product];
+  }
   var CELL_COUNT = WIDTH * HEIGHT;
   var glyphBuffer = new Uint8Array(CELL_COUNT);
   var colorBuffer = new Uint8Array(CELL_COUNT);
@@ -255,9 +291,9 @@
         1,
       );
       var colorIndex = clamp(
-        Math.round(colorBrightness * (PALETTE.length - 1)),
+        Math.round(colorBrightness * (currentPalette.length - 1)),
         0,
-        PALETTE.length - 1,
+        currentPalette.length - 1,
       );
       zBuffer[index] = invDepth;
       glyphBuffer[index] = glyphIndex;
@@ -281,13 +317,13 @@
       if (character === " ") continue;
       var x = ((c % WIDTH) + 0.5) * cellWidth;
       var y = (Math.floor(c / WIDTH) + 0.5) * cellHeight;
-      ctx.fillStyle = PALETTE[colorBuffer[c]];
+      ctx.fillStyle = currentPalette[colorBuffer[c]];
       ctx.fillText(character, x, y);
     }
 
-    ctx.shadowColor = "rgba(91, 220, 255, 0.9)";
+    ctx.shadowColor = currentGlow;
     ctx.shadowBlur = cellHeight * 0.85;
-    ctx.fillStyle = "#eafcff";
+    ctx.fillStyle = currentSpecular;
     for (var s = 0; s < CELL_COUNT; s++) {
       if (specBuffer[s] < 0.66 || !glyphBuffer[s]) continue;
       var ch = GLYPHS[glyphBuffer[s]];
@@ -299,6 +335,18 @@
     ctx.shadowBlur = 0;
 
     if (running && !reducedMotion) requestAnimationFrame(renderFrame);
+  }
+
+  // Tint from the product the page opened on, then follow switches.
+  applyProduct(document.body.dataset.product);
+  if ("MutationObserver" in window) {
+    new MutationObserver(function (mutations) {
+      for (var m = 0; m < mutations.length; m++) {
+        if (mutations[m].attributeName === "data-product") {
+          applyProduct(document.body.dataset.product);
+        }
+      }
+    }).observe(document.body, { attributes: true, attributeFilter: ["data-product"] });
   }
 
   resizeCanvas();
