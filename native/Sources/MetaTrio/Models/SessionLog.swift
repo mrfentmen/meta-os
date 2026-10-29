@@ -91,14 +91,36 @@ final class SessionLog {
             .appendingPathComponent("session-log.json")
     }
 
+    /// Web parity: the web frontend's log restore keeps every
+    /// well-formed entry and drops only the malformed ones, so a stale
+    /// or hand-edited store cannot inject a bad entry and cannot wipe
+    /// the good ones either. The native restore used to decode the
+    /// whole saved array in one shot, so a single malformed entry —
+    /// one bad status string, one non-integer seq, one response from
+    /// an older shape — made the entire decode fail and the relaunch
+    /// start from an empty log, silently discarding every good entry
+    /// the operator had recorded. Decode one entry at a time instead
+    /// and keep only the entries that decode cleanly; the next record
+    /// rewrites the file with just the kept entries, so the bad one
+    /// drops out on its own without ever taking the good ones with it.
     private static func loadSavedEntries() -> [SessionLogEntry] {
         guard let url = persistenceURL,
               let data = try? Data(contentsOf: url),
-              let saved = try? JSONDecoder().decode([SessionLogEntry].self, from: data)
+              let rawEntries = try? JSONSerialization.jsonObject(with: data) as? [Any]
         else {
             return []
         }
-        return saved
+        let decoder = JSONDecoder()
+        var kept: [SessionLogEntry] = []
+        for rawEntry in rawEntries {
+            guard let entryData = try? JSONSerialization.data(withJSONObject: rawEntry),
+                  let entry = try? decoder.decode(SessionLogEntry.self, from: entryData)
+            else {
+                continue
+            }
+            kept.append(entry)
+        }
+        return kept
     }
 
     /// Best effort, like the web log's storage writes: a failed save
