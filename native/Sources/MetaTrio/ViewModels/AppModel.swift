@@ -448,6 +448,15 @@ final class AppModel: ObservableObject {
         // whole flight. submitAssessment overwrites this on settle
         // (connected or error), so it never sticks.
         backendStatus = .unknown("Contacting model backend: \(trimmedEndpoint) …")
+        // Announced in the status line's own words: the web
+        // backend-status line is a live region, so a web user hears
+        // this line on tap, but the native line changes silently —
+        // a VoiceOver user who had just tapped Assess heard nothing
+        // until the result or failure arrived. Announced only here,
+        // after the generation guard, so a stale tap Reset already
+        // cleared stays silent; the live sampler never sets this
+        // line, so no tick can announce here.
+        AccessibilityAnnouncement.requestStarted("Contacting model backend: \(trimmedEndpoint) …")
         // submitAssessment already records the outcome in the timeline
         // and the session log and sets backendStatus, so a failure
         // here needs no extra handling.
@@ -553,6 +562,14 @@ final class AppModel: ObservableObject {
         // exactly like the web handler, and submitAssessment overwrites
         // it on settle, so it never sticks.
         backendStatus = .unknown("Contacting model backend: \(trimmedEndpoint) …")
+        // Announced in the status line's own words, like the
+        // still-image path: the web backend-status line is a live
+        // region, so a web user hears this line on tap, but the
+        // native line changes silently. Announced only here, after
+        // the generation guard, so a stale tap Reset already cleared
+        // stays silent; the live sampler never sets this line, so no
+        // tick can announce here.
+        AccessibilityAnnouncement.requestStarted("Contacting model backend: \(trimmedEndpoint) …")
         let dataURL: String
         do {
             dataURL = try await VideoFrameService.jpegDataURL(for: url, at: seconds)

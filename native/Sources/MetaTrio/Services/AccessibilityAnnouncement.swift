@@ -155,4 +155,26 @@ enum AccessibilityAnnouncement {
     static func healthResult(_ message: String) {
         post(message)
     }
+
+    /// Announcement for a one-shot assess request starting, in the
+    /// status line's own words. Web parity: the web frontend's
+    /// backend-status line is a polite live region, so tapping
+    /// "Assess this image" or "Assess this frame" reads its
+    /// "Contacting model backend …" line aloud there, but the native
+    /// app used to set the same line silently — a VoiceOver user who
+    /// had just tapped Assess heard nothing at all until the result
+    /// or the failure arrived, so a slow backend sounded exactly like
+    /// a dead tap. Posted verbatim, never through a failure helper:
+    /// no request has failed yet, and nothing about the capture has
+    /// failed either — the request is only just starting.
+    /// Only the two tap paths announce this: Start Analysis already
+    /// announces its banner through analysisStarted, and the live
+    /// sampler never sets the "Contacting…" line at all, so no
+    /// sampler tick can ever announce here — there is no per-second
+    /// spam risk. The call sites post it only after the
+    /// view-generation guard, so a tap Reset already cleared is
+    /// never announced as a request in flight.
+    static func requestStarted(_ message: String) {
+        post(message)
+    }
 }
