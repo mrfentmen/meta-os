@@ -425,6 +425,19 @@ export function computeMissLatencyOutliers(records) {
   return computeLatencyOutliers(records.filter((r) => !r.category_correct));
 }
 
+// Slowest miss: the slowest scenario among the misses only, by the
+// same rule as computeSlowestScenario — largest numeric latency_ms,
+// ties alphabetical by scenario id, records with no latency ignored,
+// null when no miss carries one — but over the misses alone (same
+// miss definition as computeMisses: category_correct false, so an
+// unassessed record counts as a miss here too, but carries no latency
+// and can never be named). The full-run slowest answers which
+// scenario ran slowest overall; this one answers which failure ran
+// slowest, without a correct record's slow latency hiding it.
+export function computeSlowestMiss(records) {
+  return computeSlowestScenario(records.filter((r) => !r.category_correct));
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -2798,6 +2811,24 @@ export function renderRunReport(run, baselineRun = null) {
     for (const o of missLatencyOutliers) {
       lines.push(`| ${o.scenarioId} | ${o.truth} | ${fmtLatency(o.latencyMs)} | ${fmtLatency(o.medianMs)} | ${fmtLatency(o.thresholdMs)} |`);
     }
+  }
+  const slowestMiss = computeSlowestMiss(run.records);
+  lines.push(
+    "",
+    "## Slowest miss",
+    "",
+    "The slowest miss by harness wall-clock latency — the same slowest-scenario rule as the headline " +
+      "finding, but over the misses alone, so the slowest failure is visible without a correct record's " +
+      "slow latency hiding it, and without scanning the per-scenario table. Records with no latency " +
+      "take no part, never treated as zero; ties break by scenario id alphabetically.",
+    "",
+  );
+  if (missCount === 0) {
+    lines.push("None: every scenario's predicted category matched its ground truth.");
+  } else if (slowestMiss === null) {
+    lines.push("None recorded: no miss in this run carries a latency measurement, so no slowest miss can be named.");
+  } else {
+    lines.push(`- Slowest miss: ${slowestMiss.scenarioId} (${slowestMiss.truth}) — ${fmtLatency(slowestMiss.latencyMs)} ms (harness wall clock).`);
   }
   const misses = computeMisses(run.records);
   lines.push("", `## Misses (${misses.length})`, "");

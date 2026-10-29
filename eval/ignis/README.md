@@ -270,6 +270,11 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   fewer than two recorded miss latencies or a zero miss median flags nothing, a run
   whose misses carry no latency says so instead of naming one, and a run with no misses
   says none.
+  A slowest-miss section right after it names the single slowest miss by harness wall-clock
+  latency — the same slowest-scenario rule as the headline finding, but over the misses
+  alone, so the slowest failure is visible without a correct record's slow latency hiding
+  it; ties break by scenario id alphabetically, a run whose misses carry no latency says
+  so instead of naming one, and a run with no misses says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false
