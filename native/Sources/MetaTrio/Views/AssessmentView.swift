@@ -336,7 +336,23 @@ struct AssessmentView: View {
                     // untouched.
                     .padding(.leading, 18)
                     .overlay(alignment: .topLeading) {
+                        // IGNIS-UI-52: bullet at 15pt, the native
+                        // counterpart to the web disc marker (the web
+                        // observations <ul> sets no font-size of its
+                        // own, so its default disc scales with the
+                        // 15px body size of the line it marks). Until
+                        // now the native bullet was a plain Text at
+                        // the default 17pt body size, so it read two
+                        // points larger than the web disc while the
+                        // category (UI-49), description (UI-50),
+                        // confidence (UI-51), and evidence line
+                        // (UI-48) in the same row already matched
+                        // their own 15px web rules. The size is the
+                        // only change: the 18pt inset, the topLeading
+                        // position, and the accessibilityHidden
+                        // marker treatment are untouched.
                         Text("•")
+                            .font(.system(size: 15))
                             .accessibilityHidden(true)
                     }
                     // One VoiceOver item per observation, so category,

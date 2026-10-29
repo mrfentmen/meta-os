@@ -41,8 +41,8 @@ assert.ok(uncertaintyFn.length > 0, "uncertainty section exists");
 test("native observation rows: 18pt leading inset, topLeading overlay bullet, hidden from VoiceOver", () => {
   assert.match(
     observationsFn,
-    /\.padding\(\.leading, 18\)\s+\.overlay\(alignment: \.topLeading\) \{\s+Text\("•"\)\s+\.accessibilityHidden\(true\)\s+\}/,
-    "row carries 18pt leading padding and a hidden topLeading bullet overlay",
+    /\.padding\(\.leading, 18\)\s+\.overlay\(alignment: \.topLeading\) \{\s+[\s\S]*?Text\("•"\)\s+\.font\(\.system\(size: 15\)\)\s+\.accessibilityHidden\(true\)\s+\}/,
+    "row carries 18pt leading padding and a hidden 15pt topLeading bullet overlay",
   );
 });
 
