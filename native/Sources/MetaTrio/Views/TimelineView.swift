@@ -59,6 +59,18 @@ struct TimelineView: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // UI-4: product-accent leading rule, the native counterpart to
+        // the web history edge (border-left in the entry's product
+        // accent, not its status color). The rule color comes from the
+        // row's own product, so rows keep their product under any
+        // selection, and it sits on `content` so both assessment and
+        // failure rows carry it, exactly like the web history items.
+        .padding(.leading, 10)
+        .overlay(alignment: .leading) {
+            Rectangle()
+                .fill(accentColor(for: item.product))
+                .frame(width: 3)
+        }
         // One VoiceOver item per row: title, product, timestamp, detail.
         // Assessment rows stay buttons; failure rows stay plain text.
         .accessibilityElement(children: .combine)
@@ -82,6 +94,18 @@ struct TimelineView: View {
             return .primary
         case .failure:
             return .red
+        }
+    }
+
+    // Row accent from the row's own product, mirroring ContentView's
+    // selected-product accent mapping — the timeline keeps each row's
+    // product, it never re-tints to the current selection.
+    private func accentColor(for product: ProductID) -> Color {
+        switch product.config.accentColorName {
+        case "blue": return .blue
+        case "red": return .red
+        case "green": return .green
+        default: return .accentColor
         }
     }
 }
