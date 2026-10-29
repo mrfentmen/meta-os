@@ -61,6 +61,7 @@ const els = {
   logStatsAvgLatencyByProduct: $("log-stats-avg-latency-by-product"),
   logStatsFailuresByProduct: $("log-stats-failures-by-product"),
   logStatsLatencyRangeByProduct: $("log-stats-latency-range-by-product"),
+  logStatsOkShareByProduct: $("log-stats-ok-share-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -318,6 +319,13 @@ function updateLogStats() {
   // bucket by construction, so one check covers both ends.
   els.logStatsLatencyRangeByProduct.textContent =
     `Fastest/slowest successful latency by product: Vigiles ${stats.minOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.vigiles)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.minOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.ignis)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.ignis)} ms`} · Sanitas ${stats.minOkLatencyMsByProduct.sanitas === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.sanitas)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.sanitas)} ms`}`;
+  // DETAIL-11: the per-product successful-share line splits each
+  // product's own entries into the share that succeeded, rendered
+  // as a whole percent, or "none" per product with no entries —
+  // same always-renders shape as the other stats lines, and a
+  // product that only failed reads 0%, never "none".
+  els.logStatsOkShareByProduct.textContent =
+    `Successful share by product: Vigiles ${stats.okShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareByProduct.ignis === null ? "none" : `${Math.round(stats.okShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

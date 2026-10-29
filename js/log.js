@@ -161,6 +161,20 @@ export class SessionLog {
   // of each range are always real recorded measurements for that
   // product. The panel renders each range rounded to whole
   // milliseconds, or "none" per product with no usable latency.
+  // DETAIL-11 adds the per-product successful share
+  // (okShareByProduct, null per product with no entry of that
+  // product): a session where Ignis succeeds 9 times in 10 but
+  // Vigiles succeeds 3 times in 10 reads differently from one
+  // where both succeed at the same rate, and the raw counts alone
+  // do not say that at a glance. Each share is that product's ok
+  // entries over that product's own entries (ok plus failed), so
+  // a product that only failed reads 0, not null, and a product
+  // with no entries reads null. Same bucket rules as the other
+  // per-product fields: an entry with an unknown or missing
+  // product moves no bucket (though it still counts in the
+  // global ok/failed totals), so the shares never invent a
+  // product. The panel renders each share as a whole percent, or
+  // "none" per product with no entries.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -183,11 +197,17 @@ export class SessionLog {
     let maxOkLatencyMs = null;
     const minOkLatencyMsByProduct = { vigiles: null, ignis: null, sanitas: null };
     const maxOkLatencyMsByProduct = { vigiles: null, ignis: null, sanitas: null };
+    const okCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
+    const entryCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     for (const entry of this._entries) {
       if (entry.status === "ok") {
         ok += 1;
         if (Object.hasOwn(byProduct, entry.product)) {
           byProduct[entry.product] += 1;
+        }
+        if (Object.hasOwn(okCountByProduct, entry.product)) {
+          okCountByProduct[entry.product] += 1;
+          entryCountByProduct[entry.product] += 1;
         }
         if (typeof entry.request_timestamp === "string" && entry.request_timestamp !== "") {
           lastOkAt = entry.request_timestamp;
@@ -219,6 +239,9 @@ export class SessionLog {
         }
       } else {
         failed += 1;
+        if (Object.hasOwn(entryCountByProduct, entry.product)) {
+          entryCountByProduct[entry.product] += 1;
+        }
         if (Object.hasOwn(failedByStatus, entry.status)) {
           failedByStatus[entry.status] += 1;
         }
@@ -252,6 +275,11 @@ export class SessionLog {
       maxOkLatencyMs,
       minOkLatencyMsByProduct,
       maxOkLatencyMsByProduct,
+      okShareByProduct: {
+        vigiles: entryCountByProduct.vigiles === 0 ? null : okCountByProduct.vigiles / entryCountByProduct.vigiles,
+        ignis: entryCountByProduct.ignis === 0 ? null : okCountByProduct.ignis / entryCountByProduct.ignis,
+        sanitas: entryCountByProduct.sanitas === 0 ? null : okCountByProduct.sanitas / entryCountByProduct.sanitas,
+      },
     };
   }
 
