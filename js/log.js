@@ -225,6 +225,24 @@ export class SessionLog {
   // rules as DETAIL-15: an entry with an unknown or missing
   // product moves no bucket, and an entry without a usable
   // timestamp leaves its bucket's previous value in place.
+  // DETAIL-17 spans DETAIL-15 to DETAIL-16 per product
+  // (entrySpanMsByProduct, null per product with no usable entry
+  // pair): the milliseconds between a product's first and last
+  // recorded entry timestamps, any status — how long that
+  // product's recording stretches, where the two endpoint lines
+  // alone do not say it at a glance. Derived only from the
+  // DETAIL-15/16 buckets, so the same bucket rules apply: an
+  // entry with an unknown or missing product moves no bucket,
+  // and an entry without a usable timestamp leaves both endpoints
+  // in place. A product with exactly one usable entry reads 0
+  // (first and last are the same timestamp), not null — one
+  // entry spans no time. A bucket timestamp that does not parse
+  // (the endpoints accept any non-empty string) reads null, never
+  // NaN. The difference is kept raw, not clamped: a negative span
+  // means entries were recorded out of timestamp order, which the
+  // insertion-order endpoints preserve honestly. The panel renders
+  // each span in whole milliseconds, or "none" per product with no
+  // usable entry pair.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -336,6 +354,19 @@ export class SessionLog {
         }
       }
     }
+    // DETAIL-17: span between the DETAIL-15 first and DETAIL-16
+    // last endpoints per product; null when either endpoint is
+    // missing or unparseable, 0 for a single usable entry.
+    const entrySpanMs = (first, last) => {
+      if (first === null || last === null) return null;
+      const span = Date.parse(last) - Date.parse(first);
+      return Number.isFinite(span) ? span : null;
+    };
+    const entrySpanMsByProduct = {
+      vigiles: entrySpanMs(firstEntryAtByProduct.vigiles, lastEntryAtByProduct.vigiles),
+      ignis: entrySpanMs(firstEntryAtByProduct.ignis, lastEntryAtByProduct.ignis),
+      sanitas: entrySpanMs(firstEntryAtByProduct.sanitas, lastEntryAtByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -349,6 +380,7 @@ export class SessionLog {
       lastFailedAtByProduct,
       firstEntryAtByProduct,
       lastEntryAtByProduct,
+      entrySpanMsByProduct,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
       avgOkLatencyMsByProduct: {
         vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,
