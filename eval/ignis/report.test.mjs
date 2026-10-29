@@ -65,6 +65,7 @@ import {
   computeSlowestCorrect,
   computeFastestCorrect,
   computeCorrectLatencyDistribution,
+  computeCorrectLatencyOutliers,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -2880,9 +2881,10 @@ test("report: latency distribution among correct uses the correct records only",
     computeCorrectLatencyDistribution([rec("IGN-T1", "visible smoke", "visible smoke")]),
     null,
   );
-  // Rendered: section after Fastest miss, before Slowest correct;
-  // values on a mixed run, none on a run with no correct records,
-  // and a no-measurement message when the correct records carry none.
+  // Rendered: section after Fastest miss, before Latency outliers
+  // among correct; values on a mixed run, none on a run with no
+  // correct records, and a no-measurement message when the correct
+  // records carry none.
   const metrics = { sample_size: 2, true_positives: 1, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 2, mean: 25, median: 25, max: 40 }, errors: { count: 0, scenario_ids: [] } };
   const run = {
     source: "test source",
@@ -2896,8 +2898,8 @@ test("report: latency distribution among correct uses the correct records only",
   const rendered = renderRunReport(run);
   assert.match(rendered, /## Latency distribution among correct/);
   assert.ok(rendered.indexOf("## Latency distribution among correct") > rendered.indexOf("## Fastest miss"));
-  assert.ok(rendered.indexOf("## Latency distribution among correct") < rendered.indexOf("## Slowest correct"));
-  const section = rendered.slice(rendered.indexOf("## Latency distribution among correct"), rendered.indexOf("## Slowest correct"));
+  assert.ok(rendered.indexOf("## Latency distribution among correct") < rendered.indexOf("## Latency outliers among correct"));
+  const section = rendered.slice(rendered.indexOf("## Latency distribution among correct"), rendered.indexOf("## Latency outliers among correct"));
   assert.match(section, /- Recorded latencies: 2 of 2 correct record\(s\)\./);
   assert.match(section, /- Minimum: 10\.0 ms\./);
   assert.match(section, /- 90th percentile: 37\.0 ms\./);
@@ -2909,7 +2911,7 @@ test("report: latency distribution among correct uses the correct records only",
     metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
   };
   const noCorrectRendered = renderRunReport(noCorrectRun);
-  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency distribution among correct"), noCorrectRendered.indexOf("## Slowest correct"));
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency distribution among correct"), noCorrectRendered.indexOf("## Latency outliers among correct"));
   assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
   const unmeasuredRun = {
     source: "test source",
@@ -2918,8 +2920,114 @@ test("report: latency distribution among correct uses the correct records only",
     metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
   };
   const unmeasuredRendered = renderRunReport(unmeasuredRun);
-  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Latency distribution among correct"), unmeasuredRendered.indexOf("## Slowest correct"));
+  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Latency distribution among correct"), unmeasuredRendered.indexOf("## Latency outliers among correct"));
   assert.match(unmeasuredSection, /No latency distribution among the correct records: no correct record in this run carries a latency measurement\./);
+});
+
+test("report: latency outliers among correct use the correct-only median", () => {
+  const rec = (id, truth, actual, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    category_correct: actual === truth,
+    error: null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Correct latencies 10, 20, 100: median 20, threshold 40, so 100
+  // flags — even though the miss's 1000 would lift a full-run
+  // median to 60 and its threshold to 120, hiding it. Misses never
+  // enter the correct records' median or flagging.
+  assert.deepEqual(
+    computeCorrectLatencyOutliers([
+      rec("IGN-T1", "visible smoke", "visible smoke", 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", 20),
+      rec("IGN-T3", "steam or fog", "steam or fog", 100),
+      rec("IGN-T4", "visible smoke", "visible flame", 1000),
+    ]),
+    [{ scenarioId: "IGN-T3", truth: "steam or fog", latencyMs: 100, medianMs: 20, thresholdMs: 40 }],
+  );
+  // Exactly twice the correct median is typical-scale, not an outlier:
+  // correct latencies 10, 20, 40 give median 20 and threshold 40, and
+  // the 40 at the threshold does not flag.
+  assert.deepEqual(
+    computeCorrectLatencyOutliers([
+      rec("IGN-T1", "visible smoke", "visible smoke", 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", 20),
+      rec("IGN-T3", "steam or fog", "steam or fog", 40),
+    ]),
+    [],
+  );
+  // Fewer than two recorded correct latencies, a zero correct median,
+  // and a correct-without-latency run all flag nothing.
+  assert.deepEqual(
+    computeCorrectLatencyOutliers([rec("IGN-T1", "visible smoke", "visible smoke", 100)]),
+    [],
+  );
+  assert.deepEqual(
+    computeCorrectLatencyOutliers([
+      rec("IGN-T1", "visible smoke", "visible smoke", 0),
+      rec("IGN-T2", "visible smoke", "visible smoke", 0),
+    ]),
+    [],
+  );
+  assert.deepEqual(
+    computeCorrectLatencyOutliers([rec("IGN-T1", "visible smoke", "visible smoke")]),
+    [],
+  );
+  // A miss never counts as correct, so it never enters the median
+  // or the flagging even when it carries a latency, and a correct
+  // record without latency never counts as zero.
+  assert.deepEqual(
+    computeCorrectLatencyOutliers([
+      rec("IGN-T1", "visible smoke", "visible smoke", 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", 20),
+      rec("IGN-T3", "steam or fog", "steam or fog", 100),
+      rec("IGN-T4", "visible smoke", "visible flame", 999),
+      rec("IGN-T5", "visible smoke", "visible smoke"),
+    ]),
+    [{ scenarioId: "IGN-T3", truth: "steam or fog", latencyMs: 100, medianMs: 20, thresholdMs: 40 }],
+  );
+  // Rendered: section after Latency distribution among correct,
+  // before Slowest correct; values on a mixed run, none on a run
+  // with no correct records, and a no-measurement message when the
+  // correct records carry none.
+  const metrics = { sample_size: 4, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 4, mean: 282.5, median: 60, max: 1000 }, errors: { count: 0, scenario_ids: [] } };
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      { ...rec("IGN-T1", "visible smoke", "visible smoke", 10), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T2", "visible smoke", "visible smoke", 20), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T3", "steam or fog", "steam or fog", 100), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T4", "visible smoke", "visible flame", 1000), alert_expected: true, alert_fired: true, alert_correct: true },
+    ],
+    metrics,
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency outliers among correct/);
+  assert.ok(rendered.indexOf("## Latency outliers among correct") > rendered.indexOf("## Latency distribution among correct"));
+  assert.ok(rendered.indexOf("## Latency outliers among correct") < rendered.indexOf("## Slowest correct"));
+  const section = rendered.slice(rendered.indexOf("## Latency outliers among correct"), rendered.indexOf("## Slowest correct"));
+  assert.match(section, /\| IGN-T3 \| steam or fog \| 100\.0 \| 20\.0 \| 40\.0 \|/);
+  assert.doesNotMatch(section, /IGN-T4/);
+  const noCorrectRun = {
+    source: "test source",
+    generated: "test run",
+    records: [{ ...rec("IGN-T1", "visible smoke", "visible flame", 10), alert_expected: true, alert_fired: true, alert_correct: true }],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const noCorrectRendered = renderRunReport(noCorrectRun);
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency outliers among correct"), noCorrectRendered.indexOf("## Slowest correct"));
+  assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
+  const unmeasuredRun = {
+    source: "test source",
+    generated: "test run",
+    records: [{ ...rec("IGN-T1", "visible smoke", "visible smoke"), alert_expected: true, alert_fired: true, alert_correct: true }],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const unmeasuredRendered = renderRunReport(unmeasuredRun);
+  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Latency outliers among correct"), unmeasuredRendered.indexOf("## Slowest correct"));
+  assert.match(unmeasuredSection, /None recorded: no correct record in this run carries a latency measurement, so no outlier can be named\./);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {

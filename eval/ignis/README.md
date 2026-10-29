@@ -286,6 +286,14 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   or drag a slow tail is visible at a glance; the recorded count is out of the correct count, not the
   sample size, records with no latency take no part, a run whose correct records carry no latency says
   so instead of inventing a distribution, and a run with no correct records says none.
+  A latency-outliers-among-correct section right after it names the correct records whose latency is
+  more than twice the correct records' median recorded latency — the same strict rule as the
+  full-run latency outliers, but judged against the successes' own typical latency, so a
+  slow success is visible without the misses moving the median or threshold;
+  each outlier carries its latency, the correct records' median, and the threshold, a run with
+  fewer than two recorded correct latencies or a zero correct median flags nothing, a run
+  whose correct records carry no latency says so instead of naming one, and a run with no correct
+  records says none.
   A slowest-correct section right after it names the single slowest correct record by harness
   wall-clock latency — the same slowest-scenario rule as the headline finding, but over the
   correct records alone, so the slowest success is visible without a miss's slow latency hiding

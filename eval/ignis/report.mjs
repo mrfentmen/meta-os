@@ -515,6 +515,22 @@ export function computeCorrectLatencyDistribution(records) {
   return computeLatencyDistribution(records.filter((r) => r.category_correct));
 }
 
+// Latency outliers among the correct records only: the same strict
+// more-than-twice-the-median rule as computeLatencyOutliers, but
+// over the recorded harness wall-clock latencies of the correct
+// records alone (category_correct true, so a miss never enters,
+// and an unassessed record never counts as correct here either).
+// The full-run outliers answer which scenarios ran slow for the
+// run; this one answers which successes ran slow for the
+// successes, judged against the successes' own typical latency —
+// a miss's fast or slow latency never moves the correct records'
+// median or threshold. With fewer than two recorded correct
+// latencies, or a median correct latency of zero, nothing is
+// flagged, exactly as the full-run rule.
+export function computeCorrectLatencyOutliers(records) {
+  return computeLatencyOutliers(records.filter((r) => r.category_correct));
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -2951,6 +2967,36 @@ export function renderRunReport(run, baselineRun = null) {
       `- 90th percentile: ${fmtLatency(correctLatencyDist.p90Ms)} ms.`,
       `- Maximum: ${fmtLatency(correctLatencyDist.maxMs)} ms.`,
     );
+  }
+  const correctLatencyOutliers = computeCorrectLatencyOutliers(run.records);
+  lines.push(
+    "",
+    "## Latency outliers among correct",
+    "",
+    "The correct records whose harness wall-clock latency is more than twice the median recorded " +
+      "latency among the correct records alone — the same strict rule as the full-run latency " +
+      "outliers, but judged against the successes' own typical latency, so a slow success " +
+      "is visible without the misses pulling the median up or down. A run with " +
+      "fewer than two recorded correct latencies, or a median correct latency of zero, flags " +
+      "nothing — there is no typical correct latency to compare against.",
+    "",
+  );
+  if (correctCount === 0) {
+    lines.push("None: no scenario's predicted category matched its ground truth.");
+  } else if (correctLatencyOutliers.length === 0) {
+    lines.push(
+      run.records.some((r) => r.category_correct && typeof r.latency_ms === "number")
+        ? "None: no correct record's latency is more than twice the correct records' median recorded latency."
+        : "None recorded: no correct record in this run carries a latency measurement, so no outlier can be named.",
+    );
+  } else {
+    lines.push(
+      "| Scenario | Truth | Latency (ms) | Median (ms) | Threshold (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const o of correctLatencyOutliers) {
+      lines.push(`| ${o.scenarioId} | ${o.truth} | ${fmtLatency(o.latencyMs)} | ${fmtLatency(o.medianMs)} | ${fmtLatency(o.thresholdMs)} |`);
+    }
   }
   const slowestCorrect = computeSlowestCorrect(run.records);
   lines.push(
