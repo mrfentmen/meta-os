@@ -20,6 +20,19 @@ struct AssessmentView: View {
             processingLine
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        // UI-11: panel inner padding, the native counterpart to the
+        // web .panel padding of 14px 16px. Until now the native card
+        // carried no inner inset at all — only the UI-5 leading gap
+        // — so its text sat flush against the top, bottom, and
+        // trailing card edges while the web panel breathed inside
+        // its border. The inset sits before the UI-5 leading padding
+        // so the rule overlay still lands on the card's outer edge
+        // and the wash, clip, border, and shadow still cover the
+        // whole card; the leading total is therefore 16pt panel inset
+        // plus the 10pt rule gap (26pt), while top, bottom, and
+        // trailing map directly from the CSS pixels. It changes no
+        // color, rule, content, or spacing between sections.
+        .padding(EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16))
         // UI-5: product-accent leading rule, the native counterpart to
         // the web panel gradient and the UI-4 timeline rule. The rule
         // color comes from the assessment's own product, so a
