@@ -203,6 +203,18 @@ export class SessionLog {
   // product moves no bucket (though it still counts in the
   // total). The panel renders each share as a whole percent,
   // or "none" per product only on an empty log.
+  // DETAIL-14 exposes the counts behind DETAIL-13's shares
+  // (entryCountByProduct): each product's entries, ok plus
+  // failed, as plain counts — the denominator DETAIL-11/12
+  // already divide by, and the numerator DETAIL-13 divides by
+  // the session total. Unlike byProduct, which counts only
+  // successes, a product that only failed still reads its full
+  // count here. Always-renders zeros, never null: an empty log
+  // reads 0 per product, and a product with no entries reads 0
+  // in a non-empty session. Same bucket rules: an entry with an
+  // unknown or missing product moves no bucket (though it still
+  // counts in the total), so the three counts sum to the total
+  // only when every entry carries a known product.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -290,6 +302,7 @@ export class SessionLog {
       ok,
       failed,
       byProduct,
+      entryCountByProduct,
       failedByStatus,
       failedByStatusByProduct,
       lastOkAt,

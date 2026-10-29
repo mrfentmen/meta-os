@@ -64,6 +64,7 @@ const els = {
   logStatsOkShareByProduct: $("log-stats-ok-share-by-product"),
   logStatsFailedShareByProduct: $("log-stats-failed-share-by-product"),
   logStatsEntryShareByProduct: $("log-stats-entry-share-by-product"),
+  logStatsEntryCountByProduct: $("log-stats-entry-count-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -340,6 +341,13 @@ function updateLogStats() {
   // entries in a non-empty session reads 0%, never "none".
   els.logStatsEntryShareByProduct.textContent =
     `Session share by product: Vigiles ${stats.entryShareByProduct.vigiles === null ? "none" : `${Math.round(stats.entryShareByProduct.vigiles * 100)}%`} · Ignis ${stats.entryShareByProduct.ignis === null ? "none" : `${Math.round(stats.entryShareByProduct.ignis * 100)}%`} · Sanitas ${stats.entryShareByProduct.sanitas === null ? "none" : `${Math.round(stats.entryShareByProduct.sanitas * 100)}%`}`;
+  // DETAIL-14: the per-product entry-count line exposes the
+  // counts behind DETAIL-13's shares — ok plus failed per
+  // product, always-rendered zeros, so a product that only
+  // failed still shows its full count here, unlike DETAIL-1's
+  // success-only line.
+  els.logStatsEntryCountByProduct.textContent =
+    `Entries by product: Vigiles ${stats.entryCountByProduct.vigiles} · Ignis ${stats.entryCountByProduct.ignis} · Sanitas ${stats.entryCountByProduct.sanitas}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
