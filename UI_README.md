@@ -148,7 +148,9 @@ ES modules for the node test runner; it declares zero dependencies.)
   latest-assessment panel are polite live regions, so a new assessment
   or a backend failure is announced to screen readers without stealing
   focus; the event history is deliberately not a live region, so it does
-  not double-announce the same result. The product switcher's radios are
+  not double-announce the same result. On native, a session-log export
+  failure is announced in the status line's own words too — it is a file
+  write, not a backend failure, so it is never announced as one. The product switcher's radios are
   visually hidden inputs, so keyboard focus shows as a visible outline on
   the option label itself.
 - **Evaluation session log** (`js/log.js`): every request is recorded

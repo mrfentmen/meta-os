@@ -625,7 +625,17 @@ final class AppModel: ObservableObject {
             )
             try data.write(to: url, options: .atomic)
         } catch {
-            backendStatus = .error("Session log export failed: \(error.localizedDescription)")
+            // The status bar is not a live region, so without this a
+            // VoiceOver user would never hear that the export they
+            // just asked for failed, even though the error is on
+            // screen — the same silent-status hole the capture-failure
+            // and health-result announcements already closed. Announced
+            // verbatim, not as a backend failure: the export writes a
+            // file, it sends nothing to the backend, and the backend
+            // may be perfectly fine.
+            let message = "Session log export failed: \(error.localizedDescription)"
+            backendStatus = .error(message)
+            AccessibilityAnnouncement.exportFailure(message)
         }
     }
 

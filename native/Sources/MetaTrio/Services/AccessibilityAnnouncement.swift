@@ -12,7 +12,11 @@ import AppKit
 // status silently, so a VoiceOver user never heard that a tick had
 // failed. A capture failure is not a backend failure — no request was
 // made — so it is announced verbatim, never prefixed with "Model backend
-// not connected". Re-inspecting a past timeline row deliberately does
+// not connected". A session-log export failure is announced the same
+// way: it sets the status bar to an error, and it used to do so
+// silently, so a VoiceOver user never heard that the export they just
+// asked for had failed — and the backend may be perfectly fine, so
+// prefixing it as a backend failure would mislead. Re-inspecting a past timeline row deliberately does
 // NOT announce: the web history is not a live region either, so a
 // redisplayed past result can never sound like a new one.
 //
@@ -54,6 +58,15 @@ enum AccessibilityAnnouncement {
     /// here would wrongly tell the listener the backend was not
     /// connected, when no request was ever made.
     static func captureFailure(message: String) {
+        post(message)
+    }
+
+    /// Announcement for a session-log export failure, in the status
+    /// line's own words. The export touches no backend and sends no
+    /// frame, so it is posted verbatim, never through backendFailure:
+    /// calling that here would wrongly tell the listener the backend
+    /// was not connected, when the failure was writing the file.
+    static func exportFailure(_ message: String) {
         post(message)
     }
 
