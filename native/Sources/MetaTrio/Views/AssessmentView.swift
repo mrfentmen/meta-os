@@ -12,7 +12,22 @@ struct AssessmentView: View {
         VStack(alignment: .leading, spacing: 12) {
             header
             if !response.assessment.summary.isEmpty {
+                // UI-20: summary at 15pt, the native counterpart to
+                // the web panel rendering the summary as a plain <p>
+                // at the 15px body size (styles.css body rule; js/app.js
+                // gives the paragraph no class). Until now the native
+                // summary was a plain Text at the default body size,
+                // so it read smaller than the web paragraph while the
+                // category (title3, UI-13's web counterpart), subline
+                // (12.5pt, UI-19), and processing line (12.5pt mono,
+                // UI-15) already matched their own web rules. The size
+                // is the only change: the non-empty guard, the wording,
+                // and every other section are untouched, and the
+                // observation description keeps its own default size —
+                // it is a stacked native row, not the web's inline
+                // line, so it is not this item's counterpart.
                 Text(response.assessment.summary)
+                    .font(.system(size: 15))
             }
             observationsSection
             uncertaintySection
