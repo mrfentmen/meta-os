@@ -53,6 +53,7 @@ const els = {
   logStats: $("log-stats"),
   logStatsByProduct: $("log-stats-by-product"),
   logStatsByFailure: $("log-stats-by-failure"),
+  logStatsLastOk: $("log-stats-last-ok"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -253,6 +254,13 @@ function updateLogStats() {
   // the same shape and the line never appears or vanishes mid-run.
   els.logStatsByFailure.textContent =
     `Failures by cause: Network ${stats.failedByStatus.network_error} · HTTP ${stats.failedByStatus.http_error} · Invalid response ${stats.failedByStatus.invalid_response}`;
+  // DETAIL-3: the last-success line names the most recent recorded
+  // success by its request timestamp, or "none" when the log holds no
+  // ok entry — same always-renders shape as the other stats lines, so
+  // an empty session and a quiet session never change the panel's
+  // shape, and failures never move the timestamp.
+  els.logStatsLastOk.textContent =
+    `Last successful assessment: ${stats.lastOkAt ?? "none"}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

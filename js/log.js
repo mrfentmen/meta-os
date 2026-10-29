@@ -87,17 +87,29 @@ export class SessionLog {
   // status (DETAIL-2): a failed request still counts as a session
   // event, and the cause breakdown says whether the session is losing
   // requests to the network, to HTTP errors, or to invalid responses.
+  // DETAIL-3 adds the request timestamp of the most recent successful
+  // assessment (lastOkAt, null when the log holds no ok entry): a
+  // session that went quiet after its last success reads differently
+  // from one that never succeeded, and failures never move it, so it
+  // always names a real recorded success. It uses the entry's request
+  // timestamp — the assessment's own timestamp, the same value the
+  // history renders — not the log-write time, and an ok entry with no
+  // usable request timestamp leaves the previous value in place.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     const failedByStatus = { network_error: 0, http_error: 0, invalid_response: 0 };
     let ok = 0;
     let failed = 0;
+    let lastOkAt = null;
     for (const entry of this._entries) {
       if (entry.status === "ok") {
         ok += 1;
         if (Object.hasOwn(byProduct, entry.product)) {
           byProduct[entry.product] += 1;
+        }
+        if (typeof entry.request_timestamp === "string" && entry.request_timestamp !== "") {
+          lastOkAt = entry.request_timestamp;
         }
       } else {
         failed += 1;
@@ -106,7 +118,7 @@ export class SessionLog {
         }
       }
     }
-    return { total: this._entries.length, ok, failed, byProduct, failedByStatus };
+    return { total: this._entries.length, ok, failed, byProduct, failedByStatus, lastOkAt };
   }
 
   record({ requestTimestamp, product = null, latencyMs = null, status, response = null, error = null, scenarioLabel = null }) {
