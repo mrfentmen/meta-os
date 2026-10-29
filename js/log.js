@@ -95,6 +95,12 @@ export class SessionLog {
   // timestamp — the assessment's own timestamp, the same value the
   // history renders — not the log-write time, and an ok entry with no
   // usable request timestamp leaves the previous value in place.
+  // DETAIL-4 adds the mean measured round-trip latency of successful
+  // assessments (avgOkLatencyMs, null when no ok entry carries a
+  // usable latency): failures never contribute, and an ok entry with
+  // no finite latency_ms is skipped rather than counted as zero, so
+  // the mean is always over real recorded measurements. The panel
+  // renders it rounded to whole milliseconds.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -102,6 +108,8 @@ export class SessionLog {
     let ok = 0;
     let failed = 0;
     let lastOkAt = null;
+    let latencySum = 0;
+    let latencyCount = 0;
     for (const entry of this._entries) {
       if (entry.status === "ok") {
         ok += 1;
@@ -111,6 +119,10 @@ export class SessionLog {
         if (typeof entry.request_timestamp === "string" && entry.request_timestamp !== "") {
           lastOkAt = entry.request_timestamp;
         }
+        if (Number.isFinite(entry.latency_ms)) {
+          latencySum += entry.latency_ms;
+          latencyCount += 1;
+        }
       } else {
         failed += 1;
         if (Object.hasOwn(failedByStatus, entry.status)) {
@@ -118,7 +130,15 @@ export class SessionLog {
         }
       }
     }
-    return { total: this._entries.length, ok, failed, byProduct, failedByStatus, lastOkAt };
+    return {
+      total: this._entries.length,
+      ok,
+      failed,
+      byProduct,
+      failedByStatus,
+      lastOkAt,
+      avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
+    };
   }
 
   record({ requestTimestamp, product = null, latencyMs = null, status, response = null, error = null, scenarioLabel = null }) {
