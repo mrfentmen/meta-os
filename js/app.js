@@ -107,6 +107,7 @@ const els = {
   logStatsOkLatencyCountShareOfEntries: $("log-stats-ok-latency-count-share-of-entries"),
   logStatsFailedSpanShareByProduct: $("log-stats-failed-span-share-by-product"),
   logStatsOkLatencyCountShareOfOk: $("log-stats-ok-latency-count-share-of-ok"),
+  logStatsOkLatencyCountShareOfOkByProduct: $("log-stats-ok-latency-count-share-of-ok-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -799,6 +800,18 @@ function updateLogStats() {
   // move neither side of the share.
   els.logStatsOkLatencyCountShareOfOk.textContent =
     `Successful latency-measurement share of successes: ${stats.okLatencyCountShareOfOk === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOk * 100)}%`}`;
+  // DETAIL-52: the per-product usable-latency-count-share-
+  // of-ok-successes line splits DETAIL-51's global share
+  // by product, rendered as whole percents, or "none"
+  // per product only when the session holds no successes
+  // at all — the product slice DETAIL-51's single number
+  // implies but does not state, so a session where
+  // Vigiles measurements are half of all successes reads
+  // differently from one where Ignis supplied them. A
+  // success-only log with no finite latency reads 0% per
+  // product, never "none", and failures move no share.
+  els.logStatsOkLatencyCountShareOfOkByProduct.textContent =
+    `Successful latency-measurement share of successes by product: Vigiles ${stats.okLatencyCountShareOfOkByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOkByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfOkByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOkByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareOfOkByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOkByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

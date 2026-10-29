@@ -1296,6 +1296,41 @@ export class SessionLog {
     // this product-blind share, exactly as DETAIL-49's
     // does. A 0 ms latency still counts as a measurement.
     const okLatencyCountShareOfOk = ok === 0 ? null : latencyCount / ok;
+    // DETAIL-52: the per-product usable-latency-count shares
+    // of ok successes (okLatencyCountShareOfOkByProduct):
+    // each DETAIL-36 product count over the session's ok
+    // total, reusing DETAIL-37's shareOfAllOk helper — the
+    // by-product split of DETAIL-51's global share, so a
+    // session where Vigiles measurements are half of all
+    // successes reads at a glance, where the global share
+    // alone does not say which product supplied them. The
+    // success-only mirror of DETAIL-47's entry-total
+    // shares and the measurement-count mirror of
+    // DETAIL-37's ok-count shares: the same log reads
+    // differently on each base, and only this one says
+    // what slice of the successes each product measured.
+    // Derived only from the DETAIL-36 counts and the ok
+    // total, not a new rule: failures sit in neither side
+    // (they are not in the ok total and never count as
+    // measurements, even a failure carrying a latency
+    // value); an ok entry with no finite latency sits in
+    // the denominator but moves no bucket; and an ok entry
+    // with an unknown or missing product sits in the
+    // denominator but moves no bucket, so the three shares
+    // sum to DETAIL-51's global share only when every
+    // usable-latency success carries a known product,
+    // exactly as DETAIL-37's and DETAIL-47's shares do.
+    // Null per product with no successes at all (an empty
+    // log and a failure-only log alike — never a divide
+    // by zero); 0 per product with no usable latency once
+    // the session holds any success, including a
+    // success-only log with no finite latency. A 0 ms
+    // latency still counts as a measurement.
+    const okLatencyCountShareOfOkByProduct = {
+      vigiles: shareOfAllOk(latencyCountByProduct.vigiles),
+      ignis: shareOfAllOk(latencyCountByProduct.ignis),
+      sanitas: shareOfAllOk(latencyCountByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1514,6 +1549,19 @@ export class SessionLog {
       // with no finite latency sits in the denominator
       // only; a 0 ms latency still counts.
       okLatencyCountShareOfOk,
+      // DETAIL-52: the per-product usable-latency-count
+      // shares of ok successes
+      // (okLatencyCountShareOfOkByProduct): each
+      // DETAIL-36 product count over the session ok total
+      // — the by-product split of DETAIL-51's global
+      // share. Null per product with no successes at all;
+      // 0 per product with no usable latency once the
+      // session holds any success. The shares sum to
+      // DETAIL-51 only when every usable-latency success
+      // carries a known product; an unknown- or
+      // missing-product success sits in the denominator
+      // but moves no bucket.
+      okLatencyCountShareOfOkByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
