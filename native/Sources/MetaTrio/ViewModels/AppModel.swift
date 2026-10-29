@@ -400,7 +400,17 @@ final class AppModel: ObservableObject {
         stillImageName = nil
         stillImageDataURL = nil
         stillImageError = nil
-        stillImageAssessing = false
+        // The assessing flag is NOT cleared here, exactly like the web
+        // frontend's Clear/Reset: web clearStillImageInput clears the
+        // input but leaves stillImageAssessing alone, so a new image
+        // chosen while the old request is still out cannot be sent
+        // until that request settles (its Task defer clears the flag).
+        // Clearing it here used to re-enable the Assess button for a
+        // newly chosen image while the old request was still in
+        // flight — a second send from the same panel, which the
+        // guard in assessStillImage exists to prevent. With the image
+        // nil the button stays disabled either way; the flag is owned
+        // by the in-flight Task's defer, not by Clear or Reset Session.
     }
 
     // MARK: - Prerecorded-video input
@@ -517,7 +527,11 @@ final class AppModel: ObservableObject {
         videoURL = nil
         videoName = nil
         videoError = nil
-        videoAssessing = false
+        // Same rule as clearStillImage above, and same as the web
+        // frontend's clearVideoInput: the assessing flag is owned by
+        // the in-flight Task's defer, not by Clear or Reset Session,
+        // so a video chosen while the old frame's request is still out
+        // cannot be sent until that request settles.
     }
 
     /// Frames are downscaled so the longest side is at most this many
