@@ -56,16 +56,26 @@ struct TimelineView: View {
     @ViewBuilder
     private func row(for item: TimelineItem) -> some View {
         let content = VStack(alignment: .leading, spacing: 2) {
+            // IGNIS-UI-37: timeline row product name and timestamp at
+            // 12.5pt, the native counterparts to the web assessment
+            // head's 12.5px rules (.assessment-product for the product
+            // name, .assessment-time for the timestamp). Until now
+            // both used .caption (12pt), so they read a half point
+            // smaller than the web head's product and time while the
+            // timeline title (UI-34) already matched its own 15px web
+            // rule. The size is the only change: both keep their
+            // muted color, the title keeps its semibold weight, and
+            // the row detail below keeps its callout size.
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(item.title)
                     .fontWeight(.semibold)
                     .foregroundStyle(titleColor(for: item))
                 Text(item.product.config.displayName)
-                    .font(.caption)
+                    .font(.system(size: 12.5))
                     .foregroundStyle(.secondary)
                 Spacer()
                 Text(item.timestamp)
-                    .font(.caption)
+                    .font(.system(size: 12.5))
                     .foregroundStyle(.secondary)
             }
             if !item.detail.isEmpty {
