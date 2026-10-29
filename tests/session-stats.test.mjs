@@ -39,6 +39,7 @@ test("empty log: all stats zero", () => {
     ok: 0,
     failed: 0,
     byProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
+    failedByStatus: { network_error: 0, http_error: 0, invalid_response: 0 },
   });
 });
 
@@ -55,6 +56,7 @@ test("ok entries bucket by their own product; failures count once, unbucketed", 
     ok: 4,
     failed: 2,
     byProduct: { vigiles: 1, ignis: 2, sanitas: 1 },
+    failedByStatus: { network_error: 1, http_error: 1, invalid_response: 0 },
   });
 });
 
@@ -66,6 +68,7 @@ test("ok entry with unknown product counts in ok but in no bucket", () => {
     ok: 1,
     failed: 0,
     byProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
+    failedByStatus: { network_error: 0, http_error: 0, invalid_response: 0 },
   });
 });
 
@@ -79,6 +82,7 @@ test("stats follow clear: back to zero", () => {
     ok: 0,
     failed: 0,
     byProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
+    failedByStatus: { network_error: 0, http_error: 0, invalid_response: 0 },
   });
 });
 

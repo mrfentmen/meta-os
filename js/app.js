@@ -52,6 +52,7 @@ const els = {
   btnClearLog: $("btn-clear-log"),
   logStats: $("log-stats"),
   logStatsByProduct: $("log-stats-by-product"),
+  logStatsByFailure: $("log-stats-by-failure"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -245,6 +246,13 @@ function updateLogStats() {
   const stats = log.stats();
   els.logStatsByProduct.textContent =
     `Assessments by product: Vigiles ${stats.byProduct.vigiles} · Ignis ${stats.byProduct.ignis} · Sanitas ${stats.byProduct.sanitas} · Failed ${stats.failed}`;
+  // DETAIL-2: the failure line breaks the same failed total down by
+  // recorded cause, from the same stats() call — no new data, no
+  // sampling, no model. It always renders (zeros included), like the
+  // per-product line, so an empty session and a failing session read
+  // the same shape and the line never appears or vanishes mid-run.
+  els.logStatsByFailure.textContent =
+    `Failures by cause: Network ${stats.failedByStatus.network_error} · HTTP ${stats.failedByStatus.http_error} · Invalid response ${stats.failedByStatus.invalid_response}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

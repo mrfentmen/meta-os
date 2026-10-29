@@ -83,9 +83,14 @@ export class SessionLog {
   // ok entry with an unknown or missing product is counted in `ok`
   // but in no product bucket, so the buckets never invent a product;
   // the app always records a real product, so in practice the buckets
-  // sum to `ok`. Pure read over the entries: no sampling, no model.
+  // sum to `ok`. Failures are likewise bucketed by their recorded
+  // status (DETAIL-2): a failed request still counts as a session
+  // event, and the cause breakdown says whether the session is losing
+  // requests to the network, to HTTP errors, or to invalid responses.
+  // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
+    const failedByStatus = { network_error: 0, http_error: 0, invalid_response: 0 };
     let ok = 0;
     let failed = 0;
     for (const entry of this._entries) {
@@ -96,9 +101,12 @@ export class SessionLog {
         }
       } else {
         failed += 1;
+        if (Object.hasOwn(failedByStatus, entry.status)) {
+          failedByStatus[entry.status] += 1;
+        }
       }
     }
-    return { total: this._entries.length, ok, failed, byProduct };
+    return { total: this._entries.length, ok, failed, byProduct, failedByStatus };
   }
 
   record({ requestTimestamp, product = null, latencyMs = null, status, response = null, error = null, scenarioLabel = null }) {
