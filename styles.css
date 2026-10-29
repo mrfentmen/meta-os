@@ -452,6 +452,17 @@ select {
   border-left-color: #d92b2b;
 }
 
+/* HANA Agent1: the Vigiles counterpart, completing the set — a Vigiles
+   entry's edge uses the Vigiles product accent #4f7ec2, not its status
+   color, matching the native timeline rows, which carry their own
+   product's accent for all three products (UI-4). Fixed hex, not
+   var(--accent): --accent follows the currently selected product, so a
+   fixed value is what keeps each entry's edge on its own product under
+   any selection, exactly like the Sanitas and Ignis rules above. */
+.history-item.history-product-vigiles {
+  border-left-color: #4f7ec2;
+}
+
 /* Past-assessment button on a history entry: small and quiet, so the
    timeline stays a list, not a wall of buttons. The global
    button:focus-visible rule already gives it a visible focus ring. */

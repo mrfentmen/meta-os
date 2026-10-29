@@ -467,14 +467,22 @@ function addHistoryItem({ title, timestamp, body, kind, assessment = null, produ
   item.className = `history-item history-${kind}`;
   // M3 (Sanitas identity in results): a Sanitas entry's edge uses the
   // Sanitas product accent, not its status color. Only Sanitas entries
-  // get the product class; other products keep their status edges.
-  // IGNIS-UI-3 adds the Ignis counterpart: an Ignis entry's edge uses
-  // the Ignis product accent, not its status color.
+  // got the product class at first; other products kept their status
+  // edges. IGNIS-UI-3 adds the Ignis counterpart: an Ignis entry's
+  // edge uses the Ignis product accent, not its status color. HANA
+  // Agent1 completes the set: a Vigiles entry's edge uses the Vigiles
+  // product accent, matching the native timeline rows, which carry
+  // their own product's accent for all three products (UI-4). Without
+  // this branch the web Vigiles entries kept status edges while the
+  // native Vigiles rows showed the blue product edge, so the two
+  // surfaces disagreed on exactly the default product's rows.
   const entryProduct = assessment?.product ?? product;
   if (entryProduct === "sanitas") {
     item.classList.add("history-product-sanitas");
   } else if (entryProduct === "ignis") {
     item.classList.add("history-product-ignis");
+  } else if (entryProduct === "vigiles") {
+    item.classList.add("history-product-vigiles");
   }
 
   const head = document.createElement("p");
