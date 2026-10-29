@@ -88,6 +88,7 @@ const els = {
   logStatsFailedShareByStatusWithinProduct: $("log-stats-failed-share-by-status-within-product"),
   logStatsFirstFailed: $("log-stats-first-failed"),
   logStatsLastFailed: $("log-stats-last-failed"),
+  logStatsOkLatencyShareByProduct: $("log-stats-ok-latency-share-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -574,6 +575,16 @@ function updateLogStats() {
     `First failure: ${stats.firstFailedAt ?? "none"}`;
   els.logStatsLastFailed.textContent =
     `Last failure: ${stats.lastFailedAt ?? "none"}`;
+  // DETAIL-35: the per-product successful-latency-share line
+  // re-bases DETAIL-8's latency sums on the session total,
+  // rendered as whole percents, or "none" per product with no
+  // usable ok latency in the session — the latency-total
+  // slice DETAIL-8's means imply but do not state — same
+  // always-renders shape as the other stats lines, so a
+  // quiet session never changes the panel's shape, and
+  // failures never move a share.
+  els.logStatsOkLatencyShareByProduct.textContent =
+    `Successful latency share by product: Vigiles ${stats.okLatencyShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyShareByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
