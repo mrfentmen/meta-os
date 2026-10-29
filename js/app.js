@@ -80,6 +80,7 @@ const els = {
   logStatsMedianLatency: $("log-stats-median-latency"),
   logStatsFirstEntry: $("log-stats-first-entry"),
   logStatsLastEntry: $("log-stats-last-entry"),
+  logStatsMedianLatencyByProduct: $("log-stats-median-latency-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -483,6 +484,15 @@ function updateLogStats() {
     `First entry: ${stats.firstEntryAt ?? "none"}`;
   els.logStatsLastEntry.textContent =
     `Last entry: ${stats.lastEntryAt ?? "none"}`;
+  // DETAIL-28: the per-product median-latency line splits
+  // DETAIL-26's global median per product, rounded to whole
+  // milliseconds, or "none" per product with no success carrying
+  // a usable latency — the typical success DETAIL-8's mean and
+  // DETAIL-10's range imply per product but do not state —
+  // same always-renders shape as the other stats lines, so a
+  // quiet session never changes the panel's shape.
+  els.logStatsMedianLatencyByProduct.textContent =
+    `Median successful latency by product: Vigiles ${stats.medianOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.medianOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.medianOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.medianOkLatencyMsByProduct.ignis)} ms`} · Sanitas ${stats.medianOkLatencyMsByProduct.sanitas === null ? "none" : `${Math.round(stats.medianOkLatencyMsByProduct.sanitas)} ms`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

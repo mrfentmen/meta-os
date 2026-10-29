@@ -401,6 +401,17 @@ export class SessionLog {
   // two-success session reads the midpoint, not one end.
   // The panel renders it rounded to whole milliseconds, or
   // "none" when no success carries a usable latency.
+  // DETAIL-28 adds the per-product medians
+  // (medianOkLatencyMsByProduct, null per product with no usable
+  // latency): DETAIL-26's global median split per product, so a
+  // session where Ignis successes are typically slow but Vigiles
+  // successes are typically fast reads differently from one
+  // where all three sit together. Same measurement rules as the
+  // global median and the per-product mean/range: failures never
+  // contribute, an ok entry with no finite latency_ms is skipped,
+  // and an ok entry with an unknown or missing product moves no
+  // bucket. The panel renders each bucket rounded to whole
+  // milliseconds, or "none" per product.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -429,6 +440,7 @@ export class SessionLog {
     const okLatencies = [];
     const latencySumByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     const latencyCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
+    const okLatenciesByProduct = { vigiles: [], ignis: [], sanitas: [] };
     let minOkLatencyMs = null;
     let maxOkLatencyMs = null;
     const minOkLatencyMsByProduct = { vigiles: null, ignis: null, sanitas: null };
@@ -512,6 +524,7 @@ export class SessionLog {
           if (Object.hasOwn(latencySumByProduct, entry.product)) {
             latencySumByProduct[entry.product] += entry.latency_ms;
             latencyCountByProduct[entry.product] += 1;
+            okLatenciesByProduct[entry.product].push(entry.latency_ms);
           }
           if (minOkLatencyMs === null || entry.latency_ms < minOkLatencyMs) {
             minOkLatencyMs = entry.latency_ms;
@@ -678,6 +691,29 @@ export class SessionLog {
           ? sortedOkLatencies[mid]
           : (sortedOkLatencies[mid - 1] + sortedOkLatencies[mid]) / 2;
     }
+    // DETAIL-28: the per-product medians split DETAIL-26's global
+    // median per product, under the exact same rule — each bucket
+    // sorted ascending so insertion order never moves it, odd
+    // count reads its middle value, even count reads the mean of
+    // its two middle values, null per product with no usable
+    // latency. Failures never contribute, an ok entry with no
+    // finite latency is skipped, and an ok entry with an unknown
+    // or missing product moves no bucket, exactly as the
+    // per-product mean and range do — the global median still
+    // counts it, the buckets do not.
+    const medianOf = (values) => {
+      if (values.length === 0) return null;
+      const sorted = values.slice().sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 === 1
+        ? sorted[mid]
+        : (sorted[mid - 1] + sorted[mid]) / 2;
+    };
+    const medianOkLatencyMsByProduct = {
+      vigiles: medianOf(okLatenciesByProduct.vigiles),
+      ignis: medianOf(okLatenciesByProduct.ignis),
+      sanitas: medianOf(okLatenciesByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -715,6 +751,7 @@ export class SessionLog {
       minOkLatencyMs,
       maxOkLatencyMs,
       medianOkLatencyMs,
+      medianOkLatencyMsByProduct,
       minOkLatencyMsByProduct,
       maxOkLatencyMsByProduct,
       okShareByProduct: {
