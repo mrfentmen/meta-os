@@ -191,6 +191,13 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   as a class run slower than another's is visible without scanning the per-scenario table; the totals
   sum to the miss count, not the sample size, and a category with no recorded latency shows n/a,
   never a fabricated zero; a run with no misses says none.
+  A latency-by-miss-error-status section right after it is the failure-vs-confusion split of the
+  misses — one row per error-status group among the misses only, errored first (a record is errored
+  when it carries an error message at all) — so whether the misses that failed outright run slower
+  than the misses that returned a wrong category is visible without scanning the per-scenario table;
+  only groups present among the misses render, so the totals sum to the miss count, not the sample
+  size, and a group with no recorded latency shows n/a, never a fabricated zero; a run with no
+  misses says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false
