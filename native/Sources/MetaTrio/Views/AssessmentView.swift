@@ -41,6 +41,12 @@ struct AssessmentView: View {
         // the UI-5 rule already marks the edge, and a fade would add
         // a second accent treatment to the same panel.
         .background(accentColor.opacity(0.09))
+        // UI-7: rounded panel corners, the native counterpart to the
+        // web .panel border-radius of 8px. The clip sits after the
+        // wash so the wash and the UI-5 rule are cut to the same
+        // rounded card edge instead of running square to the panel
+        // boundary; it changes no color, rule, or content.
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 
     /// Panel accent from the assessment's own product, mirroring the
