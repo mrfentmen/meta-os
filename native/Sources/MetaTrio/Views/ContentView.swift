@@ -675,7 +675,7 @@ private struct SettingsPanel: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
-        GroupBox("Settings") {
+        GroupBox {
             VStack(alignment: .leading, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
                     // UI-33: endpoint label at 13pt, the native
@@ -797,6 +797,23 @@ private struct SettingsPanel: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(4)
+        } label: {
+            // IGNIS-UI-54: Settings title at 15pt bold, the native
+            // counterpart to the web .panel h2 rule (15px, weight
+            // 700). The native Settings panel is the counterpart to
+            // the web Analysis configuration panel — same fields
+            // inside (endpoint, backend health, interval, scenario,
+            // categories) — but its GroupBox label carried no
+            // explicit font, so it read in the system
+            // GroupBox label style rather than the panel-heading
+            // treatment while the Latest title (UI-22), the
+            // timeline title (UI-34), and the still-image and
+            // video titles (UI-36) already matched their own 15px
+            // bold web rules. The size and weight are the only
+            // change: the "Settings" wording, the GroupBox box, and
+            // every field inside are untouched.
+            Text("Settings")
+                .font(.system(size: 15, weight: .bold))
         }
     }
 }
