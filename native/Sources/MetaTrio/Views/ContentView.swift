@@ -103,20 +103,41 @@ struct ContentView: View {
                 }
                 .frame(maxHeight: 320)
             } else if model.requestInFlight {
+                // UI-24: Latest-panel placeholders at 13pt mono, the
+                // native counterpart to the web #latest-assessment
+                // container, which always carries class mono-block
+                // (13px, ui-monospace stack) — so the waiting, error,
+                // and no-assessment strings inherit that size and
+                // face on the web. Until now all three native
+                // placeholders were plain Text at the default body
+                // size, so they read larger and in the default face
+                // while the assessment itself (UI-20 summary, UI-19
+                // subline, UI-15 processing line) already matched
+                // its own web rules. Size and face are the only
+                // change, following the UI-15 mono precedent
+                // (.system monospaced design as the stand-in for
+                // the web's ui-monospace stack): the waiting text
+                // keeps its secondary color and combined VoiceOver
+                // label, the error keeps its red color and wrapping,
+                // and the no-assessment text keeps its secondary
+                // color. No wording changes.
                 HStack(spacing: 8) {
                     ProgressView()
                         .controlSize(.small)
                     Text("Waiting for the first assessment…")
+                        .font(.system(size: 13, design: .monospaced))
                         .foregroundStyle(.secondary)
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Waiting for the first assessment")
             } else if case .error(let message) = model.backendStatus {
                 Text(message)
+                    .font(.system(size: 13, design: .monospaced))
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("No assessment received yet.")
+                    .font(.system(size: 13, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
             // Web parity: the web Latest panel carries this note under
