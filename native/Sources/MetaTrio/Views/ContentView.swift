@@ -707,8 +707,18 @@ private struct SettingsPanel: View {
                         .accessibilityHint("Optional custom label recorded in the session log for evaluation. It overrides the scenario choice above.")
                 }
 
+                // UI-38: categories line at 13pt, the native
+                // counterpart to the web .note rule (13px, muted).
+                // Until now the line used .caption (12pt), so it read
+                // one point smaller than the web panel's Settings
+                // notes while the backend-health and sampling-
+                // disclosure lines (UI-32) and the endpoint and
+                // scenario labels (UI-33) already matched their own
+                // 13px web rules. The size is the only change: the
+                // muted color, the wrapping, and the wording are
+                // untouched.
                 Text("Categories the server may return: \(model.config.categories.joined(separator: ", ")).")
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
