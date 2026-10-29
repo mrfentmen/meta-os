@@ -29,7 +29,7 @@ test("web: submitAssessment takes the product as a parameter, captured at sample
 test("native: submitAssessment takes the product as a parameter", () => {
   assert.match(
     model,
-    /private func submitAssessment\(product: ProductID, timestamp: String, imageDataURL: String, scenarioLabel: String\?\)/,
+    /private func submitAssessment\(product: ProductID, timestamp: String, imageDataURL: String, scenarioLabel: String\?, generation: Int\)/,
   );
 });
 
@@ -41,11 +41,11 @@ test("native: live sample captures the product before capture, still/video captu
   assert.match(sample, /let requestProduct = selectedProduct/);
   assert.match(
     model,
-    /func assessStillImage\(\) \{[\s\S]*?let requestProduct = selectedProduct[\s\S]*?runStillImageAssessment\(dataURL: dataURL, product: requestProduct, scenarioLabel: requestScenarioLabel\)/,
+    /func assessStillImage\(\) \{[\s\S]*?let requestProduct = selectedProduct[\s\S]*?runStillImageAssessment\(dataURL: dataURL, product: requestProduct, scenarioLabel: requestScenarioLabel, generation: requestGeneration\)/,
   );
   assert.match(
     model,
-    /func assessVideoFrame\(\) \{[\s\S]*?let requestProduct = selectedProduct[\s\S]*?runVideoFrameAssessment\(url: url, seconds: seconds, product: requestProduct, scenarioLabel: requestScenarioLabel\)/,
+    /func assessVideoFrame\(\) \{[\s\S]*?let requestProduct = selectedProduct[\s\S]*?runVideoFrameAssessment\(url: url, seconds: seconds, product: requestProduct, scenarioLabel: requestScenarioLabel, generation: requestGeneration\)/,
   );
 });
 

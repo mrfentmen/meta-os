@@ -1215,11 +1215,13 @@ test("reset: a request outstanding across Reset logs but does not repaint the cl
   const swift = readFileSync(new URL("../native/Sources/MetaTrio/ViewModels/AppModel.swift", import.meta.url), "utf8");
   assert.match(swift, /private var viewGeneration = 0/);
   assert.match(swift, /func resetSession\(\) \{\n\s+\/\/ Bump the view generation first[\s\S]*?\n\s+viewGeneration \+= 1/);
-  assert.match(swift, /let generation = viewGeneration\n\s+requestInFlight = true/);
+  assert.match(swift, /private func submitAssessment\(product: ProductID, timestamp: String, imageDataURL: String, scenarioLabel: String\?, generation: Int\)/);
+  assert.doesNotMatch(swift, /let generation = viewGeneration/);
   assert.match(swift, /recordLog\(product: product, timestamp: timestamp, latencyMs: latencyMs, status: \.ok, response: response, scenarioLabel: scenarioLabel\)\n\s+if generation == viewGeneration \{/);
   assert.match(swift, /recordLog\(product: product, timestamp: timestamp, latencyMs: error\.latencyMs, status: status, error: error\.message, scenarioLabel: scenarioLabel\)\n\s+if generation == viewGeneration \{/);
-  // The async video-extraction failure path carries the same guard.
-  assert.match(swift, /let generation = viewGeneration\n\s+\/\/ Web parity \(js\/app\.js video handler\):/);
+  // The async video-extraction failure path carries the same guard,
+  // now on the generation captured at tap time, not one re-read here.
+  assert.match(swift, /private func runVideoFrameAssessment\(url: URL, seconds: Double, product: ProductID, scenarioLabel: String\?, generation: Int\)/);
   assert.match(swift, /recordLog\(product: product, timestamp: timestamp, latencyMs: nil, status: \.invalidResponse, error: message, scenarioLabel: scenarioLabel\)\n\s+if generation == viewGeneration \{/);
 });
 
@@ -1261,7 +1263,7 @@ test("in-flight: the loading line stays up until the last overlapping request se
   assert.match(swift, /private var inFlightCount = 0/);
   assert.match(
     swift,
-    /let generation = viewGeneration\n\s+requestInFlight = true\n\s+inFlightCount \+= 1\n\s+defer \{\n\s+inFlightCount -= 1\n\s+if inFlightCount == 0 \{\n\s+requestInFlight = false/,
+    /requestInFlight = true\n\s+inFlightCount \+= 1\n\s+defer \{\n\s+inFlightCount -= 1\n\s+if inFlightCount == 0 \{\n\s+requestInFlight = false/,
   );
   assert.doesNotMatch(swift, /defer \{ requestInFlight = false \}/);
   const nativeReset = swift.slice(
@@ -1269,4 +1271,82 @@ test("in-flight: the loading line stays up until the last overlapping request se
     swift.indexOf("// MARK: - Backend health check"),
   );
   assert.doesNotMatch(nativeReset, /inFlightCount|requestInFlight/);
+});
+
+// ---------- reset generation captured at sample/tap time (native) ----------
+// The native submit path used to capture the view generation itself,
+// when the request started. That left a hole the web frontend does not
+// have, because its capture is synchronous: the native prerecorded-video
+// frame extraction awaits between the tap and submit, so a Reset tapped
+// mid-extraction gave submit the post-reset generation and its settling
+// result repainted the view Reset had just cleared — while the
+// extraction failure path, which kept the pre-extraction generation,
+// correctly stayed dark. The same hole existed, smaller, in the Task hop
+// between an Assess tap and its runner. The generation is now captured
+// at sample or tap time, beside the product and the scenario, and
+// threaded through to submit; a stale still-image or video runner
+// returns before it sets any status or sends anything. No Swift
+// toolchain exists in this suite, so these are static checks on the
+// shipped wiring, in the same style as the Reset checks above.
+test("reset: native view generation is captured at sample/tap time, so a Reset during video extraction cannot let the result repaint the cleared view", () => {
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/ViewModels/AppModel.swift", import.meta.url), "utf8");
+  // Captured beside product and scenario on every path.
+  assert.match(
+    swift,
+    /func assessStillImage\(\) \{[\s\S]*?let requestGeneration = viewGeneration[\s\S]*?runStillImageAssessment\(dataURL: dataURL, product: requestProduct, scenarioLabel: requestScenarioLabel, generation: requestGeneration\)/,
+  );
+  assert.match(
+    swift,
+    /func assessVideoFrame\(\) \{[\s\S]*?let requestGeneration = viewGeneration[\s\S]*?runVideoFrameAssessment\(url: url, seconds: seconds, product: requestProduct, scenarioLabel: requestScenarioLabel, generation: requestGeneration\)/,
+  );
+  const sample = swift.slice(
+    swift.indexOf("private func runSample()"),
+    swift.indexOf("try await submitAssessment(product: requestProduct"),
+  );
+  assert.match(sample, /let requestGeneration = viewGeneration/);
+  assert.match(
+    swift,
+    /try await submitAssessment\(product: requestProduct, timestamp: timestamp, imageDataURL: image, scenarioLabel: requestScenarioLabel, generation: requestGeneration\)/,
+  );
+  // Submit takes the generation as a parameter and never re-reads it.
+  assert.match(
+    swift,
+    /private func submitAssessment\(product: ProductID, timestamp: String, imageDataURL: String, scenarioLabel: String\?, generation: Int\)/,
+  );
+  const submit = swift.slice(
+    swift.indexOf("private func submitAssessment("),
+    swift.indexOf("private func recordLog("),
+  );
+  assert.doesNotMatch(submit, /viewGeneration =|let generation = viewGeneration/);
+  assert.match(submit, /if generation == viewGeneration \{/);
+  // Stale runners abort before touching the status bar or the network.
+  const still = swift.slice(
+    swift.indexOf("private func runStillImageAssessment"),
+    swift.indexOf("func clearStillImage()"),
+  );
+  assert.ok(
+    still.indexOf("guard generation == viewGeneration else { return }") <
+      still.indexOf('backendStatus = .unknown("Contacting model backend:'),
+    "stale still-image runner returns before setting the contacting status",
+  );
+  const video = swift.slice(
+    swift.indexOf("private func runVideoFrameAssessment"),
+    swift.indexOf("func clearVideo()"),
+  );
+  assert.ok(
+    video.indexOf("guard generation == viewGeneration else { return }") <
+      video.indexOf('backendStatus = .unknown("Contacting model backend:'),
+    "stale video runner returns before setting the contacting status",
+  );
+  assert.ok(
+    video.indexOf("guard generation == viewGeneration else { return }") <
+      video.indexOf("try await VideoFrameService.jpegDataURL"),
+    "stale video runner returns before extracting a frame",
+  );
+  // The video success path now passes the same tap-time generation the
+  // extraction failure path already guarded on.
+  assert.match(
+    video,
+    /try await submitAssessment\(product: product, timestamp: ISO8601\.now\(\), imageDataURL: dataURL, scenarioLabel: scenarioLabel, generation: generation\)/,
+  );
 });

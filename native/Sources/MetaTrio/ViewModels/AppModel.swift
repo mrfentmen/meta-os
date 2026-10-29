@@ -338,17 +338,26 @@ final class AppModel: ObservableObject {
         // label is captured the same way, for the same reason.
         let requestProduct = selectedProduct
         let requestScenarioLabel = currentScenarioLabel
+        // The view generation is captured at tap time too, like the
+        // product and the scenario: the Task below is a hop, and a
+        // Reset tapped before it runs must not let this tap's request
+        // repaint the view Reset just cleared.
+        let requestGeneration = viewGeneration
         // Plain Task awaiting a @MainActor method: the hop back onto
         // the main actor is explicit, and no capture-list/attribute
         // ordering question arises (this sandbox has no Swift compiler
         // to check it against).
         Task {
-            await self.runStillImageAssessment(dataURL: dataURL, product: requestProduct, scenarioLabel: requestScenarioLabel)
+            await self.runStillImageAssessment(dataURL: dataURL, product: requestProduct, scenarioLabel: requestScenarioLabel, generation: requestGeneration)
         }
     }
 
-    private func runStillImageAssessment(dataURL: String, product: ProductID, scenarioLabel: String?) async {
+    private func runStillImageAssessment(dataURL: String, product: ProductID, scenarioLabel: String?, generation: Int) async {
         defer { stillImageAssessing = false }
+        // A Reset tapped between the Assess tap and this Task running
+        // clears the still-image input; a stale tap must set nothing
+        // and send nothing — the image it would have sent was cleared.
+        guard generation == viewGeneration else { return }
         // Web parity (js/app.js still-image handler): the web panel
         // sets the backend status to "Contacting…" while the request is
         // outstanding. The native path went straight to
@@ -361,7 +370,7 @@ final class AppModel: ObservableObject {
         // and the session log and sets backendStatus, so a failure
         // here needs no extra handling.
         do {
-            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL, scenarioLabel: scenarioLabel)
+            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL, scenarioLabel: scenarioLabel, generation: generation)
         } catch {
             // Outcome already logged and rendered by submitAssessment.
         }
@@ -413,20 +422,30 @@ final class AppModel: ObservableObject {
         // label is captured the same way, for the same reason.
         let requestProduct = selectedProduct
         let requestScenarioLabel = currentScenarioLabel
+        // The view generation is captured at tap time too, like the
+        // product and the scenario: the Task below is a hop, and
+        // extraction below awaits, so a Reset in either window must
+        // not let this tap's request repaint the view Reset cleared.
+        let requestGeneration = viewGeneration
         // Plain Task awaiting a @MainActor method: same shape as the
         // still-image path (this sandbox has no Swift compiler to
         // check it against).
         Task {
-            await self.runVideoFrameAssessment(url: url, seconds: seconds, product: requestProduct, scenarioLabel: requestScenarioLabel)
+            await self.runVideoFrameAssessment(url: url, seconds: seconds, product: requestProduct, scenarioLabel: requestScenarioLabel, generation: requestGeneration)
         }
     }
 
-    private func runVideoFrameAssessment(url: URL, seconds: Double, product: ProductID, scenarioLabel: String?) async {
+    private func runVideoFrameAssessment(url: URL, seconds: Double, product: ProductID, scenarioLabel: String?, generation: Int) async {
         defer { videoAssessing = false }
-        // Same Reset rule as submitAssessment: extraction awaits, so a
-        // Reset can land mid-extraction. The failure still logs, but
-        // must not repaint the cleared panel, status, or timeline.
-        let generation = viewGeneration
+        // Same Reset rule as submitAssessment, with the generation
+        // captured at tap time (not here): extraction awaits, so a
+        // Reset can land mid-extraction, and a Reset before this Task
+        // runs clears the video input. A stale tap sets nothing and
+        // extracts nothing; a Reset mid-extraction still logs the
+        // failure, but must not repaint the cleared panel, status,
+        // or timeline — and, now that submitAssessment takes this same
+        // generation, neither may its success.
+        guard generation == viewGeneration else { return }
         // Web parity (js/app.js video handler): the web panel sets the
         // backend status to "Contacting…" before it captures the frame,
         // so the status bar moves while the request is outstanding. The
@@ -459,7 +478,7 @@ final class AppModel: ObservableObject {
             return
         }
         do {
-            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL, scenarioLabel: scenarioLabel)
+            try await submitAssessment(product: product, timestamp: ISO8601.now(), imageDataURL: dataURL, scenarioLabel: scenarioLabel, generation: generation)
         } catch {
             // Outcome already logged and rendered by submitAssessment.
         }
@@ -598,6 +617,10 @@ final class AppModel: ObservableObject {
         // label is captured the same way, for the same reason.
         let requestProduct = selectedProduct
         let requestScenarioLabel = currentScenarioLabel
+        // The view generation is captured at sample time too, like the
+        // product and the scenario, so submitAssessment never re-reads
+        // it after an await (see its comment below).
+        let requestGeneration = viewGeneration
 
         let image: String
         do {
@@ -621,7 +644,7 @@ final class AppModel: ObservableObject {
             throw AssessError(kind: .invalid, message: message, latencyMs: nil)
         }
 
-        try await submitAssessment(product: requestProduct, timestamp: timestamp, imageDataURL: image, scenarioLabel: requestScenarioLabel)
+        try await submitAssessment(product: requestProduct, timestamp: timestamp, imageDataURL: image, scenarioLabel: requestScenarioLabel, generation: requestGeneration)
     }
 
     /// Shared submit path for live frames and still images: POST the
@@ -643,12 +666,18 @@ final class AppModel: ObservableObject {
     /// label for the log, the timeline, and the announcement. The
     /// scenario label is a parameter for the same reason: a scenario
     /// change mid-request must not relabel the entry with ground
-    /// truth it was never assessed under.
-    private func submitAssessment(product: ProductID, timestamp: String, imageDataURL: String, scenarioLabel: String?) async throws {
-        // Captured before the await: a Reset while this request is out
-        // bumps viewGeneration, and the settle path below must then
-        // log only, not repaint the cleared view.
-        let generation = viewGeneration
+    /// truth it was never assessed under. The view generation is a
+    /// parameter for the same reason again, and it must be captured by
+    /// the caller at sample or tap time, never re-read here: submit
+    /// used to capture it itself, so a Reset during the prerecorded-
+    /// video frame extraction — an await that sits between the tap and
+    /// this call — gave submit the post-reset generation, and its
+    /// settle path then repainted the view Reset had just cleared,
+    /// even though the extraction failure path (which kept the
+    /// pre-extraction generation) correctly stayed dark. A Reset while
+    /// the request itself is out still bumps viewGeneration, and the
+    /// settle path below then logs only, without repainting.
+    private func submitAssessment(product: ProductID, timestamp: String, imageDataURL: String, scenarioLabel: String?, generation: Int) async throws {
         requestInFlight = true
         inFlightCount += 1
         defer {
