@@ -977,6 +977,58 @@ export function computeLatencyByCorrectConfusableStatus(records) {
     });
 }
 
+// Latency by correct error status: one row per error-status group
+// among the correct records only (category_correct true), in the
+// same fixed order the latency-by-error-status section uses —
+// errored, no error — derived from whether the record carries an
+// error message at all, with the count of recorded harness
+// wall-clock latencies, their mean, their median (averaged-middle,
+// matching the distribution's median), and their max. This is the
+// failure-mode split of the successes: a correct record that still
+// carries an error message is the hand-built case, and latency by
+// error status, which includes the misses, cannot isolate the
+// successes. Only the no-error group occurs for genuine correct
+// records, since a correct record returned its category cleanly;
+// the errored row covers hand-built records that claim correctness
+// with an error message attached. Only groups present among the
+// correct records render, so the scenario totals sum to the correct
+// count, not the sample size. Records with no latency take no part
+// in a group's numbers but still count toward its scenario total,
+// so a group whose scenarios carry no latency reads as recorded 0
+// with n/a statistics — never as a fabricated zero.
+export function computeLatencyByCorrectErrorStatus(records) {
+  const groups = {
+    errored: { outcome: "errored", total: 0, latencies: [] },
+    "no error": { outcome: "no error", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    if (!r.category_correct) continue;
+    const outcome = r.error !== null ? "errored" : "no error";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["errored", "no error"]
+    .filter((outcome) => groups[outcome].total > 0)
+    .map((outcome) => {
+      const e = groups[outcome];
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        outcome,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    });
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -3603,6 +3655,33 @@ export function renderRunReport(run, baselineRun = null) {
       "| --- | --- | --- | --- | --- | --- |",
     );
     for (const row of latencyByCorrectConfusableStatus) {
+      lines.push(
+        `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const latencyByCorrectErrorStatus = computeLatencyByCorrectErrorStatus(run.records);
+  lines.push(
+    "",
+    "## Latency by correct error status",
+    "",
+    "Harness wall-clock latencies broken down by error status — one row per error-status " +
+      "group among the correct records only, in fixed order errored, no error, so whether the successes " +
+      "that still carry an error message run slower than the successes that returned cleanly is visible in two rows without adding the misses the latency-by-miss-error-status " +
+      "section includes. Only the no-error group occurs for genuine correct records, since a correct record returned its category cleanly; the errored row covers hand-built records that claim " +
+      "correctness with an error message attached. Only groups present among the " +
+      "correct records render, so the scenario totals sum to the correct count, not the sample size, and a " +
+      "group with no recorded latency shows n/a, never a fabricated zero; a run with no correct records says none.",
+    "",
+  );
+  if (latencyByCorrectErrorStatus.length === 0) {
+    lines.push("None: no scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Error status | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByCorrectErrorStatus) {
       lines.push(
         `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );

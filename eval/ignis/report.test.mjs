@@ -74,6 +74,7 @@ import {
   computeLatencyByCorrectAssessed,
   computeLatencyByCorrectOutcome,
   computeLatencyByCorrectConfusableStatus,
+  computeLatencyByCorrectErrorStatus,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -3267,7 +3268,80 @@ test("report: latency by correct confusable-negative status splits correct laten
     metrics: { sample_size: 1, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
   };
   const noCorrectRendered = renderRunReport(noCorrectRun);
-  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct confusable-negative status"), noCorrectRendered.indexOf("## Latency distribution among correct"));
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct confusable-negative status"), noCorrectRendered.indexOf("## Latency by correct error status"));
+  assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
+});
+
+test("report: latency by correct error status splits correct latencies by error status, fixed order", () => {
+  const rec = (id, truth, actual, latency_ms, error, categoryCorrect) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: true,
+    alert_fired: true,
+    alert_correct: true,
+    category_correct: categoryCorrect !== undefined ? categoryCorrect : actual === truth,
+    error: error !== undefined ? error : actual === null ? "held" : null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Errored: 10, 30 -> mean/median 20, max 30, recorded 2 of 2.
+  // No error: 40 plus one record with no latency -> recorded 1 of 2.
+  // Only the no-error group occurs for genuine correct records,
+  // since a correct record returned its category cleanly; the
+  // errored rows cover hand-built records that claim correctness
+  // with an error message attached. The non-correct records (a
+  // wrong category and an unassessed miss, both at 999) appear in
+  // no row, so the totals sum to the correct count (4), not the
+  // sample size (6), and only groups present among the correct
+  // records render, in fixed errored/no-error order.
+  assert.deepEqual(
+    computeLatencyByCorrectErrorStatus([
+      rec("IGN-T1", "visible smoke", "visible smoke", 10, "held", true),
+      rec("IGN-T2", "visible smoke", "visible smoke", 30, "timeout", true),
+      rec("IGN-T3", "no hazard visible", "no hazard visible", 40),
+      rec("IGN-T4", "no hazard visible", "no hazard visible", undefined),
+      rec("IGN-T5", "steam or fog", "visible smoke", 999),
+      rec("IGN-T6", "visible smoke", null, 999),
+    ]),
+    [
+      { outcome: "errored", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "no error", total: 2, recorded: 1, meanMs: 40, medianMs: 40, maxMs: 40 },
+    ],
+  );
+  // A run with no correct records yields no rows.
+  assert.deepEqual(
+    computeLatencyByCorrectErrorStatus([
+      rec("IGN-T1", "steam or fog", "visible smoke", 10),
+    ]),
+    [],
+  );
+  // Rendered: section after Latency by correct confusable-negative
+  // status, before Latency distribution among correct; a run with
+  // no correct records says none.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", "visible smoke", 10, "held", true),
+      rec("IGN-T2", "no hazard visible", "no hazard visible", 40),
+      rec("IGN-T3", "visible smoke", "visible smoke", 50),
+    ],
+    metrics: { sample_size: 3, true_positives: 2, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 3, mean: 33.333333333333336, median: 40, max: 50 }, errors: { count: 1, scenario_ids: ["IGN-T1"] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by correct error status/);
+  assert.ok(rendered.indexOf("## Latency by correct error status") > rendered.indexOf("## Latency by correct confusable-negative status"));
+  assert.ok(rendered.indexOf("## Latency by correct error status") < rendered.indexOf("## Latency distribution among correct"));
+  assert.match(rendered, /\| errored \| 1 \| 1 \| 10\.0 \| 10\.0 \| 10\.0 \|/);
+  assert.match(rendered, /\| no error \| 2 \| 2 \| 45\.0 \| 45\.0 \| 50\.0 \|/);
+  const noCorrectRun = {
+    source: "test source",
+    generated: "test run",
+    records: [rec("IGN-T1", "steam or fog", "visible smoke", 10)],
+    metrics: { sample_size: 1, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const noCorrectRendered = renderRunReport(noCorrectRun);
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct error status"), noCorrectRendered.indexOf("## Latency distribution among correct"));
   assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
 });
 

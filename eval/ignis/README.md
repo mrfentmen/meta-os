@@ -333,6 +333,14 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   scene, or alert scene each lands in its own group, only groups present among the correct records render, the scenario
   totals sum to the correct count, not the sample size, a group with no recorded latency shows n/a, never a fabricated
   zero, and a run with no correct records says none.
+  A latency-by-correct-error-status section right after it splits the correct records' latencies by
+  error status — one row per error-status group among the correct records only, in fixed order errored,
+  no error — so whether the successes that still carry an error message run slower than the successes that
+  returned cleanly is visible in two rows without adding the misses the latency-by-miss-error-status section
+  includes; only the no-error group occurs for genuine correct records, since a correct record returned its category
+  cleanly, and the errored row covers hand-built records that claim correctness with an error message attached, only
+  groups present among the correct records render, the scenario totals sum to the correct count, not the sample size, a
+  group with no recorded latency shows n/a, never a fabricated zero, and a run with no correct records says none.
   A latency-distribution-among-correct section right after it expands the correct sections' means into
   min, quartiles and p90 over the correct records alone — the same quantiles as the full-run latency
   distribution, but without the misses pulling the numbers up — so whether the successes cluster fast
