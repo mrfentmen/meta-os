@@ -499,6 +499,22 @@ export function computeFastestCorrect(records) {
   return computeFastestScenario(records.filter((r) => r.category_correct));
 }
 
+// Latency distribution among the correct records only: the same
+// min, quartiles and p90 as computeLatencyDistribution, but over
+// the recorded harness wall-clock latencies of the correct records
+// alone (category_correct true, so a miss never enters, and an
+// unassessed record never counts as correct here either). The
+// full-run distribution answers how slow the run was; this one
+// answers how slow its successes were, without the misses pulling
+// the quantiles up. Records with no latency are ignored, never
+// treated as zero; with no recorded correct latency there is no
+// distribution and the result is null, so the render says so
+// instead of inventing one — and a run with no correct records at
+// all says none, which the render distinguishes by counting them.
+export function computeCorrectLatencyDistribution(records) {
+  return computeLatencyDistribution(records.filter((r) => r.category_correct));
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -2909,8 +2925,34 @@ export function renderRunReport(run, baselineRun = null) {
   } else {
     lines.push(`- Fastest miss: ${fastestMiss.scenarioId} (${fastestMiss.truth}) — ${fmtLatency(fastestMiss.latencyMs)} ms (harness wall clock).`);
   }
-  const slowestCorrect = computeSlowestCorrect(run.records);
+  const correctLatencyDist = computeCorrectLatencyDistribution(run.records);
   const correctCount = run.records.filter((r) => r.category_correct).length;
+  lines.push(
+    "",
+    "## Latency distribution among correct",
+    "",
+    "Harness wall-clock latencies for the correct records only, expanding the correct sections' means into min, " +
+      "quartiles and p90 — the same quantiles as the full-run latency distribution, but over the successes " +
+      "alone, so whether the correct records cluster fast or drag a slow tail is visible without the misses " +
+      "pulling the numbers up. Records with no latency take no part.",
+    "",
+  );
+  if (correctCount === 0) {
+    lines.push("None: no scenario's predicted category matched its ground truth.");
+  } else if (correctLatencyDist === null) {
+    lines.push("No latency distribution among the correct records: no correct record in this run carries a latency measurement.");
+  } else {
+    lines.push(
+      `- Recorded latencies: ${correctLatencyDist.count} of ${correctCount} correct record(s).`,
+      `- Minimum: ${fmtLatency(correctLatencyDist.minMs)} ms.`,
+      `- 25th percentile: ${fmtLatency(correctLatencyDist.p25Ms)} ms.`,
+      `- Median: ${fmtLatency(correctLatencyDist.medianMs)} ms.`,
+      `- 75th percentile: ${fmtLatency(correctLatencyDist.p75Ms)} ms.`,
+      `- 90th percentile: ${fmtLatency(correctLatencyDist.p90Ms)} ms.`,
+      `- Maximum: ${fmtLatency(correctLatencyDist.maxMs)} ms.`,
+    );
+  }
+  const slowestCorrect = computeSlowestCorrect(run.records);
   lines.push(
     "",
     "## Slowest correct",

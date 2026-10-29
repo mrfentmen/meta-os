@@ -64,6 +64,7 @@ import {
   computeFastestMiss,
   computeSlowestCorrect,
   computeFastestCorrect,
+  computeCorrectLatencyDistribution,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -2655,7 +2656,7 @@ test("report: fastest miss is the fastest scenario among the misses only", () =>
   assert.match(rendered, /## Fastest miss/);
   assert.ok(rendered.indexOf("## Fastest miss") > rendered.indexOf("## Slowest miss"));
   assert.ok(rendered.indexOf("## Fastest miss") < rendered.indexOf("## Misses"));
-  const section = rendered.slice(rendered.indexOf("## Fastest miss"), rendered.indexOf("## Slowest correct"));
+  const section = rendered.slice(rendered.indexOf("## Fastest miss"), rendered.indexOf("## Latency distribution among correct"));
   assert.match(section, /- Fastest miss: IGN-T1 \(visible smoke\) — 10\.0 ms \(harness wall clock\)\./);
   assert.doesNotMatch(section, /IGN-T4/);
   const cleanRun = {
@@ -2665,7 +2666,7 @@ test("report: fastest miss is the fastest scenario among the misses only", () =>
     metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
   };
   const cleanRendered = renderRunReport(cleanRun);
-  const cleanSection = cleanRendered.slice(cleanRendered.indexOf("## Fastest miss"), cleanRendered.indexOf("## Slowest correct"));
+  const cleanSection = cleanRendered.slice(cleanRendered.indexOf("## Fastest miss"), cleanRendered.indexOf("## Latency distribution among correct"));
   assert.match(cleanSection, /None: every scenario's predicted category matched its ground truth\./);
   const unmeasuredRun = {
     source: "test source",
@@ -2674,7 +2675,7 @@ test("report: fastest miss is the fastest scenario among the misses only", () =>
     metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
   };
   const unmeasuredRendered = renderRunReport(unmeasuredRun);
-  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Fastest miss"), unmeasuredRendered.indexOf("## Slowest correct"));
+  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Fastest miss"), unmeasuredRendered.indexOf("## Latency distribution among correct"));
   assert.match(unmeasuredSection, /None recorded: no miss in this run carries a latency measurement, so no fastest miss can be named\./);
 });
 
@@ -2832,6 +2833,93 @@ test("report: fastest correct is the fastest scenario among the correct records 
   const unmeasuredRendered = renderRunReport(unmeasuredRun);
   const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Fastest correct"), unmeasuredRendered.indexOf("## Misses"));
   assert.match(unmeasuredSection, /None recorded: no correct record in this run carries a latency measurement, so no fastest correct can be named\./);
+});
+
+test("report: latency distribution among correct uses the correct records only", () => {
+  const rec = (id, truth, actual, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    category_correct: actual === truth,
+    error: null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  const approx = (dist, expected) => {
+    assert.equal(dist.count, expected.count);
+    for (const field of ["minMs", "p25Ms", "medianMs", "p75Ms", "p90Ms", "maxMs"]) {
+      assert.ok(Math.abs(dist[field] - expected[field]) < 1e-9, `${field}: ${dist[field]} != ${expected[field]}`);
+    }
+  };
+  // Same quantiles as the full-run distribution, but the miss's
+  // 999 never enters: only the four correct records count.
+  approx(
+    computeCorrectLatencyDistribution([
+      rec("IGN-T1", "visible smoke", "visible smoke", 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", 20),
+      rec("IGN-T3", "steam or fog", "steam or fog", 30),
+      rec("IGN-T4", "steam or fog", "steam or fog", 40),
+      rec("IGN-T5", "visible smoke", "visible flame", 999),
+    ]),
+    { count: 4, minMs: 10, p25Ms: 17.5, medianMs: 25, p75Ms: 32.5, p90Ms: 37, maxMs: 40 },
+  );
+  // An unassessed record never counts as correct, so it never
+  // enters the quantiles even when it carries a latency.
+  approx(
+    computeCorrectLatencyDistribution([
+      rec("IGN-T1", "visible smoke", "visible smoke", 10),
+      rec("IGN-T2", "visible smoke", null, 999),
+    ]),
+    { count: 1, minMs: 10, p25Ms: 10, medianMs: 10, p75Ms: 10, p90Ms: 10, maxMs: 10 },
+  );
+  // An all-miss run and a correct-without-latency run both yield null.
+  assert.equal(
+    computeCorrectLatencyDistribution([rec("IGN-T1", "visible smoke", "visible flame", 10)]),
+    null,
+  );
+  assert.equal(
+    computeCorrectLatencyDistribution([rec("IGN-T1", "visible smoke", "visible smoke")]),
+    null,
+  );
+  // Rendered: section after Fastest miss, before Slowest correct;
+  // values on a mixed run, none on a run with no correct records,
+  // and a no-measurement message when the correct records carry none.
+  const metrics = { sample_size: 2, true_positives: 1, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 2, mean: 25, median: 25, max: 40 }, errors: { count: 0, scenario_ids: [] } };
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      { ...rec("IGN-T1", "visible smoke", "visible smoke", 10), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T2", "visible smoke", "visible smoke", 40), alert_expected: true, alert_fired: true, alert_correct: true },
+    ],
+    metrics,
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency distribution among correct/);
+  assert.ok(rendered.indexOf("## Latency distribution among correct") > rendered.indexOf("## Fastest miss"));
+  assert.ok(rendered.indexOf("## Latency distribution among correct") < rendered.indexOf("## Slowest correct"));
+  const section = rendered.slice(rendered.indexOf("## Latency distribution among correct"), rendered.indexOf("## Slowest correct"));
+  assert.match(section, /- Recorded latencies: 2 of 2 correct record\(s\)\./);
+  assert.match(section, /- Minimum: 10\.0 ms\./);
+  assert.match(section, /- 90th percentile: 37\.0 ms\./);
+  assert.match(section, /- Maximum: 40\.0 ms\./);
+  const noCorrectRun = {
+    source: "test source",
+    generated: "test run",
+    records: [{ ...rec("IGN-T1", "visible smoke", "visible flame", 10), alert_expected: true, alert_fired: true, alert_correct: true }],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const noCorrectRendered = renderRunReport(noCorrectRun);
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency distribution among correct"), noCorrectRendered.indexOf("## Slowest correct"));
+  assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
+  const unmeasuredRun = {
+    source: "test source",
+    generated: "test run",
+    records: [{ ...rec("IGN-T1", "visible smoke", "visible smoke"), alert_expected: true, alert_fired: true, alert_correct: true }],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const unmeasuredRendered = renderRunReport(unmeasuredRun);
+  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Latency distribution among correct"), unmeasuredRendered.indexOf("## Slowest correct"));
+  assert.match(unmeasuredSection, /No latency distribution among the correct records: no correct record in this run carries a latency measurement\./);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {

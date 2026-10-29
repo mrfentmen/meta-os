@@ -280,6 +280,12 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   is visible without a correct record's fast latency hiding it; ties break by scenario id
   alphabetically, a run whose misses carry no latency says so instead of naming one, and
   a run with no misses says none.
+  A latency-distribution-among-correct section right after it expands the correct sections' means into
+  min, quartiles and p90 over the correct records alone — the same quantiles as the full-run latency
+  distribution, but without the misses pulling the numbers up — so whether the successes cluster fast
+  or drag a slow tail is visible at a glance; the recorded count is out of the correct count, not the
+  sample size, records with no latency take no part, a run whose correct records carry no latency says
+  so instead of inventing a distribution, and a run with no correct records says none.
   A slowest-correct section right after it names the single slowest correct record by harness
   wall-clock latency — the same slowest-scenario rule as the headline finding, but over the
   correct records alone, so the slowest success is visible without a miss's slow latency hiding
