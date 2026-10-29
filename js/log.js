@@ -844,6 +844,31 @@ export class SessionLog {
       ignis: latencyCount === 0 || latencySum === 0 ? null : latencySumByProduct.ignis / latencySum,
       sanitas: latencyCount === 0 || latencySum === 0 ? null : latencySumByProduct.sanitas / latencySum,
     };
+    // DETAIL-37: the per-product successful-count shares
+    // (okShareOfOkByProduct): each product's ok count from
+    // DETAIL-1 over the session's ok total, so a session where
+    // Ignis successes are half of all successes reads that at a
+    // glance, where DETAIL-1's raw counts alone do not say it —
+    // the count mirror of DETAIL-35's latency-total shares, and
+    // the ok-total mirror of DETAIL-13's entry shares. Derived
+    // only from the DETAIL-1 counts and the ok total, not a new
+    // rule: failures never contribute (they are not in the ok
+    // total and move no bucket), an ok entry with no finite
+    // latency still counts here — this is a count share, not a
+    // latency share, so DETAIL-35's skip rule does not apply —
+    // and an ok entry with an unknown or missing product sits
+    // in the denominator but moves no bucket, so the shares sum
+    // to 1 only when every success carries a known product,
+    // exactly as DETAIL-13's and DETAIL-35's shares do. Null
+    // per product with no successes at all (an empty log and a
+    // failure-only log alike); 0 per product with no successes
+    // once the session holds any success.
+    const shareOfAllOk = (count) => (ok === 0 ? null : count / ok);
+    const okShareOfOkByProduct = {
+      vigiles: shareOfAllOk(okCountByProduct.vigiles),
+      ignis: shareOfAllOk(okCountByProduct.ignis),
+      sanitas: shareOfAllOk(okCountByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -936,6 +961,13 @@ export class SessionLog {
       // or product with no usable latency reads 0.
       okLatencyCount: latencyCount,
       okLatencyCountByProduct: latencyCountByProduct,
+      // DETAIL-37: the per-product successful-count shares
+      // (okShareOfOkByProduct): each product's ok count over
+      // the session ok total — the count mirror of DETAIL-35's
+      // latency-total shares. Null per product with no
+      // successes in the session; 0 per product with no
+      // successes once any success exists.
+      okShareOfOkByProduct,
       entryShareByProduct: {
         vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
         ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,
