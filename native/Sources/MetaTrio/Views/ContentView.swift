@@ -782,27 +782,44 @@ private struct StatusBar: View {
     var body: some View {
         HStack(spacing: 12) {
             statusIndicator
+            // IGNIS-UI-44: status-bar lines at their web sizes, the
+            // native counterparts to the web status lines. Until now
+            // all five lines used .callout (16pt), so they read larger
+            // than every web line they mirror while the footer below
+            // (UI-23) already matched its own 13px web rule. The
+            // backend message takes 13pt, like the web .status rule
+            // (13px); the in-flight line takes 13pt, like the web
+            // #in-flight .note rule (13px); and the round-trip,
+            // sampler-stats, and log-entries lines take 12.5pt mono,
+            // like the web #last-round-trip, #sampler-stats, and
+            // #log-stats .note.mono rules (the .mono rule's 12.5px
+            // wins over the .note rule's 13px), following the UI-15
+            // mono precedent (.system monospaced design as the
+            // stand-in for the web's ui-monospace stack). Sizes and
+            // the mono face are the only changes: the two-line
+            // limit, the muted colors, the wording, and the Export
+            // and Clear buttons are untouched.
             Text(model.backendStatus.message)
-                .font(.callout)
+                .font(.system(size: 13))
                 .lineLimit(2)
             Spacer()
             if model.requestInFlight {
                 ProgressView()
                     .controlSize(.small)
                 Text("Assessment request in flight…")
-                    .font(.callout)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             }
             if let lastRoundTripMs = model.lastRoundTripMs {
                 Text("Last round trip: \(lastRoundTripMs) ms (client-measured)")
-                    .font(.callout)
+                    .font(.system(size: 12.5, design: .monospaced))
                     .foregroundStyle(.secondary)
             }
             Text("Ticks: \(model.samplerStats.ticks) · Sent: \(model.samplerStats.sent) · Skipped (request in flight): \(model.samplerStats.skipped) · Failed: \(model.samplerStats.failed)")
-                .font(.callout)
+                .font(.system(size: 12.5, design: .monospaced))
                 .foregroundStyle(.secondary)
             Text("Session log entries: \(model.logCount)")
-                .font(.callout)
+                .font(.system(size: 12.5, design: .monospaced))
                 .foregroundStyle(.secondary)
             Button("Export Log") { model.exportLog() }
             Button("Clear Log") { model.clearLog() }
