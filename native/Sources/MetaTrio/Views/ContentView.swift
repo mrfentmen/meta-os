@@ -203,7 +203,8 @@ private struct HeaderView: View {
                 // (UI-40) already matched its own 13px web rule.
                 // The sizes are the only change: the department
                 // keeps its semibold weight, the tagline keeps its
-                // muted color, and the flame chip is untouched.
+                // muted color, and the flame chip carries its own
+                // UI-42 rule below.
                 Text(model.config.department)
                     .font(.system(size: 13))
                     .fontWeight(.semibold)
@@ -213,10 +214,23 @@ private struct HeaderView: View {
                 // R2: Ignis-only flame chip — the header's accent dot is
                 // shared across products, so Ignis gets its own flame
                 // marker in the identity row, in the product accent.
+                // IGNIS-UI-42: flame chip at 13pt bold with 0.52pt
+                // tracking, the native counterpart to the web
+                // .product-badge rule (13px, weight 700,
+                // letter-spacing 0.04em = 0.52pt at 13pt) — the
+                // header's accent pill. Until now the chip used
+                // .caption (12pt) semibold with no tracking, so it
+                // read one point smaller, one step lighter, and
+                // tighter than the web badge while the department
+                // and tagline beside it (UI-41) already matched
+                // their own web rules. Type is the only change:
+                // the accent color, padding, corner radius, icon,
+                // and wording are untouched.
                 if model.selectedProduct == .ignis {
                     Label("Flame", systemImage: "flame.fill")
-                        .font(.caption)
-                        .fontWeight(.semibold)
+                        .font(.system(size: 13))
+                        .fontWeight(.bold)
+                        .tracking(0.52)
                         .foregroundStyle(accentColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 3)
