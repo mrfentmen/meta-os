@@ -118,11 +118,22 @@ export class SessionLog {
   // latency_ms is skipped rather than counted as zero, so both ends
   // are always real recorded measurements. The panel renders them
   // rounded to whole milliseconds.
+  // DETAIL-7 mirrors DETAIL-5 on the failure side
+  // (lastFailedAtByProduct, null per product with no failure): a
+  // session where Ignis just failed but Vigiles has not failed all
+  // day reads differently from one where all three failed together.
+  // Same rules as DETAIL-5, per bucket: successes never move a
+  // bucket, a failure with an unknown or missing product moves no
+  // bucket, and a failure with no usable request timestamp leaves
+  // its bucket's previous value in place. It uses the entry's
+  // request timestamp — the same value the history renders — not
+  // the log-write time.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     const failedByStatus = { network_error: 0, http_error: 0, invalid_response: 0 };
     const lastOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
+    const lastFailedAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     let ok = 0;
     let failed = 0;
     let lastOkAt = null;
@@ -157,6 +168,11 @@ export class SessionLog {
         if (Object.hasOwn(failedByStatus, entry.status)) {
           failedByStatus[entry.status] += 1;
         }
+        if (typeof entry.request_timestamp === "string" && entry.request_timestamp !== "") {
+          if (Object.hasOwn(lastFailedAtByProduct, entry.product)) {
+            lastFailedAtByProduct[entry.product] = entry.request_timestamp;
+          }
+        }
       }
     }
     return {
@@ -167,6 +183,7 @@ export class SessionLog {
       failedByStatus,
       lastOkAt,
       lastOkAtByProduct,
+      lastFailedAtByProduct,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
       minOkLatencyMs,
       maxOkLatencyMs,

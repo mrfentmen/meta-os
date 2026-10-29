@@ -57,6 +57,7 @@ const els = {
   logStatsAvgLatency: $("log-stats-avg-latency"),
   logStatsLatencyRange: $("log-stats-latency-range"),
   logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),
+  logStatsLastFailedByProduct: $("log-stats-last-failed-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -285,6 +286,13 @@ function updateLogStats() {
   // shape, and failures never move a bucket.
   els.logStatsLastOkByProduct.textContent =
     `Last success by product: Vigiles ${stats.lastOkAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastOkAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastOkAtByProduct.sanitas ?? "none"}`;
+  // DETAIL-7: the per-product last-failure line mirrors DETAIL-5 on
+  // the failure side — each product's most recent recorded failure
+  // by its request timestamp, or "none" per product with no failure
+  // — same always-renders shape as the other stats lines, and
+  // successes never move a bucket.
+  els.logStatsLastFailedByProduct.textContent =
+    `Last failure by product: Vigiles ${stats.lastFailedAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastFailedAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastFailedAtByProduct.sanitas ?? "none"}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
