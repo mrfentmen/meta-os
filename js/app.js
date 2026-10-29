@@ -65,6 +65,7 @@ const els = {
   logStatsFailedShareByProduct: $("log-stats-failed-share-by-product"),
   logStatsEntryShareByProduct: $("log-stats-entry-share-by-product"),
   logStatsEntryCountByProduct: $("log-stats-entry-count-by-product"),
+  logStatsFirstEntryByProduct: $("log-stats-first-entry-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -348,6 +349,15 @@ function updateLogStats() {
   // success-only line.
   els.logStatsEntryCountByProduct.textContent =
     `Entries by product: Vigiles ${stats.entryCountByProduct.vigiles} · Ignis ${stats.entryCountByProduct.ignis} · Sanitas ${stats.entryCountByProduct.sanitas}`;
+  // DETAIL-15: the per-product first-entry line names each
+  // product's first recorded entry by its request timestamp, any
+  // status — the opening counterpart to DETAIL-5/7's last-success
+  // and last-failure lines — or "none" per product with no entry
+  // carrying a usable timestamp, same always-renders shape as the
+  // other stats lines, so a quiet product never changes the
+  // panel's shape.
+  els.logStatsFirstEntryByProduct.textContent =
+    `First entry by product: Vigiles ${stats.firstEntryAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstEntryAtByProduct.ignis ?? "none"} · Sanitas ${stats.firstEntryAtByProduct.sanitas ?? "none"}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

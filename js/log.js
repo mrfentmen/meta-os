@@ -226,6 +226,7 @@ export class SessionLog {
     };
     const lastOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const lastFailedAtByProduct = { vigiles: null, ignis: null, sanitas: null };
+    const firstEntryAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     let ok = 0;
     let failed = 0;
     let lastOkAt = null;
@@ -241,6 +242,20 @@ export class SessionLog {
     const failedCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     const entryCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     for (const entry of this._entries) {
+      // DETAIL-15: the first recorded entry per product, any status,
+      // by insertion order — set once, never overwritten, so a later
+      // entry (even one carrying an earlier timestamp string) never
+      // moves the bucket. An entry without a usable timestamp or
+      // with an unknown/missing product moves no bucket, and a later
+      // usable entry can still fill it.
+      if (
+        typeof entry.request_timestamp === "string" &&
+        entry.request_timestamp !== "" &&
+        Object.hasOwn(firstEntryAtByProduct, entry.product) &&
+        firstEntryAtByProduct[entry.product] === null
+      ) {
+        firstEntryAtByProduct[entry.product] = entry.request_timestamp;
+      }
       if (entry.status === "ok") {
         ok += 1;
         if (Object.hasOwn(byProduct, entry.product)) {
@@ -308,6 +323,7 @@ export class SessionLog {
       lastOkAt,
       lastOkAtByProduct,
       lastFailedAtByProduct,
+      firstEntryAtByProduct,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
       avgOkLatencyMsByProduct: {
         vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,
