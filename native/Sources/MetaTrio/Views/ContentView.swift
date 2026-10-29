@@ -439,8 +439,16 @@ private struct StillImagePanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // UI-36: still-image title at 15pt bold, the native
+            // counterpart to the web .panel h2 rule (15px, weight
+            // 700). Until now the title used .headline (17pt
+            // semibold), so it read larger and one step lighter
+            // than the web panel's title while the Latest title
+            // (UI-23) and the timeline title (UI-34) already
+            // matched their own 15px web rules. The size and
+            // weight are the only change: the wording is untouched.
             Text("Still image")
-                .font(.headline)
+                .font(.system(size: 15, weight: .bold))
             // UI-25: still-image intro note at 13pt, the native
             // counterpart to the web .note rule (13px, muted).
             // Until now the intro used .caption (12pt), so it read
@@ -521,8 +529,17 @@ private struct VideoPanel: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
+            // UI-36: video title at 15pt bold, the native
+            // counterpart to the web .panel h2 rule (15px, weight
+            // 700). Until now the title used .headline (17pt
+            // semibold), so it read larger and one step lighter
+            // than the web panel's title while the Latest title
+            // (UI-23), the timeline title (UI-34), and the
+            // still-image title above already matched their own
+            // 15px web rules. The size and weight are the only
+            // change: the wording is untouched.
             Text("Prerecorded video")
-                .font(.headline)
+                .font(.system(size: 15, weight: .bold))
             // UI-26: video intro note at 13pt, the native
             // counterpart to the web .note rule (13px, muted).
             // Until now the intro used .caption (12pt), so it read
