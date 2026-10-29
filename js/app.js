@@ -461,10 +461,17 @@ function renderLatest(assessment, earlierNote = null) {
   els.latest.replaceChildren(wrap);
 }
 
-function addHistoryItem({ title, timestamp, body, kind, assessment = null }) {
+function addHistoryItem({ title, timestamp, body, kind, assessment = null, product = null }) {
   els.historyEmpty.hidden = true;
   const item = document.createElement("li");
   item.className = `history-item history-${kind}`;
+  // M3 (Sanitas identity in results): a Sanitas entry's edge uses the
+  // Sanitas product accent, not its status color. Only Sanitas entries
+  // get the product class; other products keep their status edges.
+  const entryProduct = assessment?.product ?? product;
+  if (entryProduct === "sanitas") {
+    item.classList.add("history-product-sanitas");
+  }
 
   const head = document.createElement("p");
   head.className = "history-head";
@@ -599,6 +606,7 @@ async function submitAssessment(product, timestamp, image, scenarioLabel) {
         timestamp,
         body: err.message,
         kind: "error",
+        product,
       });
     }
     throw err;
