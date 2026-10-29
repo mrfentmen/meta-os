@@ -105,6 +105,7 @@ test("empty log: all stats zero", () => {
     okSpanShareOfEntryWindow: null,
     failedSpanShareOfOwnEntryWindowByProduct: { vigiles: null, ignis: null, sanitas: null },
     okSpanShareOfOwnEntryWindowByProduct: { vigiles: null, ignis: null, sanitas: null },
+    okShareOfOwnEntriesByProduct: { vigiles: null, ignis: null, sanitas: null },
   });
 });
 
@@ -211,6 +212,7 @@ test("ok entries bucket by their own product; failures count once, unbucketed", 
     okSpanShareOfEntryWindow: null,
     failedSpanShareOfOwnEntryWindowByProduct: { vigiles: null, ignis: null, sanitas: null },
     okSpanShareOfOwnEntryWindowByProduct: { vigiles: null, ignis: null, sanitas: null },
+    okShareOfOwnEntriesByProduct: { vigiles: 1 / 2, ignis: 2 / 3, sanitas: 1 },
   });
 });
 
@@ -288,6 +290,7 @@ test("ok entry with unknown product counts in ok but in no bucket", () => {
     okSpanShareOfEntryWindow: null,
     failedSpanShareOfOwnEntryWindowByProduct: { vigiles: null, ignis: null, sanitas: null },
     okSpanShareOfOwnEntryWindowByProduct: { vigiles: null, ignis: null, sanitas: null },
+    okShareOfOwnEntriesByProduct: { vigiles: null, ignis: null, sanitas: null },
   });
 });
 
@@ -367,6 +370,7 @@ test("stats follow clear: back to zero", () => {
     okSpanShareOfEntryWindow: null,
     failedSpanShareOfOwnEntryWindowByProduct: { vigiles: null, ignis: null, sanitas: null },
     okSpanShareOfOwnEntryWindowByProduct: { vigiles: null, ignis: null, sanitas: null },
+    okShareOfOwnEntriesByProduct: { vigiles: null, ignis: null, sanitas: null },
   });
 });
 

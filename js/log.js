@@ -1697,6 +1697,47 @@ export class SessionLog {
       ignis: shareOkOfOwnEntryWindow("ignis", okSpanMsByProduct.ignis),
       sanitas: shareOkOfOwnEntryWindow("sanitas", okSpanMsByProduct.sanitas),
     };
+    // DETAIL-61: the per-product ok-count shares of
+    // that product's own entries
+    // (okShareOfOwnEntriesByProduct): each product's
+    // DETAIL-1 ok count over that product's own
+    // entry total — the within-product re-base
+    // DETAIL-41's entry-total shares imply but do not
+    // state, so a session where Vigiles succeeded on
+    // three of its own four entries reads 3/4 at a
+    // glance even when Vigiles is a small slice of
+    // the whole session, and a product whose every
+    // entry succeeded reads 1 whatever its share of
+    // the session. This is the product's own success
+    // rate, continuing the within-product line of
+    // DETAIL-54/56/59/60: only that product's entries
+    // move its denominator, so other products'
+    // entries dilute DETAIL-41's shares without
+    // touching these, and an unknown- or
+    // missing-product entry moves no bucket and no
+    // product denominator, unlike DETAIL-41 where it
+    // sits in the global denominator. Derived only
+    // from the DETAIL-1 counts and the per-product
+    // entry totals, not a new rule: failures sit in
+    // the denominator but move no bucket (they are
+    // not successes), an ok entry with no finite
+    // latency still counts here — this is a count
+    // share, not a latency share, so DETAIL-35's skip
+    // rule does not apply — and unlike the span
+    // shares, a single entry still divides: a single
+    // success reads 1 and a single failure reads 0,
+    // because a count denominator is never a zero
+    // window. Null per product with no entries of
+    // that product at all, empty log alike — nothing
+    // to divide by, never NaN; 0 per product with
+    // entries but no successes.
+    const shareOkOfOwnEntries = (product) =>
+      entryCountByProduct[product] === 0 ? null : okCountByProduct[product] / entryCountByProduct[product];
+    const okShareOfOwnEntriesByProduct = {
+      vigiles: shareOkOfOwnEntries("vigiles"),
+      ignis: shareOkOfOwnEntries("ignis"),
+      sanitas: shareOkOfOwnEntries("sanitas"),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -2027,6 +2068,20 @@ export class SessionLog {
       // success moves no bucket and no denominator,
       // unlike DETAIL-58.
       okSpanShareOfOwnEntryWindowByProduct,
+      // DETAIL-61: the per-product ok-count shares
+      // of that product's own entries
+      // (okShareOfOwnEntriesByProduct): each
+      // product's DETAIL-1 ok count over that
+      // product's own entry total — the
+      // within-product re-base of DETAIL-41's
+      // entry-total shares, the product's own success
+      // rate. Null per product with no entries of
+      // that product; 0 with entries but no
+      // successes; 1 when every entry of that product
+      // succeeded. An unknown- or missing-product
+      // entry moves no bucket and no denominator,
+      // unlike DETAIL-41.
+      okShareOfOwnEntriesByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and

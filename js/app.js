@@ -116,6 +116,7 @@ const els = {
   logStatsOkSpanShareOfEntryWindow: $("log-stats-ok-span-share-of-entry-window"),
   logStatsFailedSpanShareOfOwnEntryWindowByProduct: $("log-stats-failed-span-share-of-own-entry-window-by-product"),
   logStatsOkSpanShareOfOwnEntryWindowByProduct: $("log-stats-ok-span-share-of-own-entry-window-by-product"),
+  logStatsOkShareOfOwnEntriesByProduct: $("log-stats-ok-share-of-own-entries-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -940,6 +941,21 @@ function updateLogStats() {
   // means timestamps ran out of insertion order.
   els.logStatsOkSpanShareOfOwnEntryWindowByProduct.textContent =
     `Success-span share of that product's own entry window by product: Vigiles ${stats.okSpanShareOfOwnEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfOwnEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfOwnEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfOwnEntryWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareOfOwnEntryWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareOfOwnEntryWindowByProduct.sanitas * 100)}%`}`;
+  // DETAIL-61: the per-product success-share-of-
+  // that-product's-own-entries line re-bases
+  // DETAIL-1's per-product ok counts on each
+  // product's own entry total, rendered as whole
+  // percents, or "none" per product with no entries
+  // of that product — the product's own success
+  // rate, the within-product slice DETAIL-41's
+  // entry-total shares imply but do not state, so a
+  // product that succeeded on three of its own four
+  // entries reads 75% whatever its share of the
+  // session. A product with entries but no successes
+  // reads 0%, never "none", and other products'
+  // entries move no share.
+  els.logStatsOkShareOfOwnEntriesByProduct.textContent =
+    `Success share of that product's own entries by product: Vigiles ${stats.okShareOfOwnEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfOwnEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareOfOwnEntriesByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
