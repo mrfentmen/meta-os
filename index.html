@@ -81,7 +81,7 @@
     <label for="image-input">Choose an image file</label>
     <input id="image-input" type="file" accept="image/*">
     <img id="image-preview" hidden alt="Chosen still image preview">
-    <p id="image-state" class="note">No image chosen.</p>
+    <p id="image-state" class="note" aria-live="polite" aria-atomic="true">No image chosen.</p>
     <div class="controls">
       <button id="btn-image-assess" type="button" class="btn-primary" disabled>Assess this image</button>
       <button id="btn-image-clear" type="button">Clear</button>
@@ -96,7 +96,7 @@
     <label for="video-input">Choose a video file</label>
     <input id="video-input" type="file" accept="video/*">
     <video id="video-preview" controls playsinline muted hidden></video>
-    <p id="video-state" class="note">No video chosen.</p>
+    <p id="video-state" class="note" aria-live="polite" aria-atomic="true">No video chosen.</p>
     <div class="controls">
       <button id="btn-video-assess" type="button" class="btn-primary" disabled>Assess this frame</button>
       <button id="btn-video-clear" type="button">Clear</button>

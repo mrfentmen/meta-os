@@ -334,6 +334,17 @@ final class AppModel: ObservableObject {
             stillImageName = nil
             stillImageDataURL = nil
             stillImageError = "Could not read that image as a JPEG."
+            // Web parity: the web frontend's image-state line is a
+            // polite live region, so this same failure is read aloud
+            // there the moment it is set. The native panel used to
+            // set this error text silently, so a VoiceOver user who
+            // had just picked a file heard nothing about why the
+            // Assess button stayed disabled — unlike the video-frame
+            // capture failure and the export failure, which are both
+            // announced. Announced verbatim: no backend and no frame
+            // capture is involved, so neither backendFailure nor
+            // captureFailure describes it.
+            AccessibilityAnnouncement.inputError("Could not read that image as a JPEG.")
             return
         }
         stillImage = image

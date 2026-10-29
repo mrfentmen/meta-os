@@ -23,7 +23,12 @@ import AppKit
 // Posting an announcement when VoiceOver is not running is harmless:
 // the notification simply has no listener. Nothing here invents a
 // result — both call sites announce only what the app already
-// displayed from a real server response or a real error.
+// displayed from a real server response or a real error. A
+// still-image read failure is announced the same way as an export
+// failure: it sets only the panel's error text, it involves no
+// backend and no frame capture, so it is posted verbatim, never
+// through backendFailure or captureFailure, either of which would
+// misdescribe what went wrong.
 enum AccessibilityAnnouncement {
     static func post(_ message: String) {
         guard !message.isEmpty else { return }
@@ -67,6 +72,15 @@ enum AccessibilityAnnouncement {
     /// calling that here would wrongly tell the listener the backend
     /// was not connected, when the failure was writing the file.
     static func exportFailure(_ message: String) {
+        post(message)
+    }
+
+    /// Announcement for a still-image read failure, in the panel's own
+    /// words. Reading the chosen file touches no backend and captures
+    /// no frame, so it is posted verbatim, never through
+    /// backendFailure or captureFailure: either would misdescribe a
+    /// file the app could not decode as a backend or camera problem.
+    static func inputError(_ message: String) {
         post(message)
     }
 
