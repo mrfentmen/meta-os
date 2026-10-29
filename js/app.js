@@ -106,6 +106,7 @@ const els = {
   logStatsOkSpanShareByProduct: $("log-stats-ok-span-share-by-product"),
   logStatsOkLatencyCountShareOfEntries: $("log-stats-ok-latency-count-share-of-entries"),
   logStatsFailedSpanShareByProduct: $("log-stats-failed-span-share-by-product"),
+  logStatsOkLatencyCountShareOfOk: $("log-stats-ok-latency-count-share-of-ok"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -785,6 +786,19 @@ function updateLogStats() {
   // Successes never move a share.
   els.logStatsFailedSpanShareByProduct.textContent =
     `Failure-span share of failed window by product: Vigiles ${stats.failedSpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.ignis * 100)}%`} · Sanitas ${stats.failedSpanShareByProduct.sanitas === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.sanitas * 100)}%`}`;
+  // DETAIL-51: the global usable-latency-count-share-
+  // of-ok-successes line re-bases DETAIL-36's global
+  // count on the session's ok total, rendered as a whole
+  // percent, or "none" only when the session holds no
+  // successes at all — the success-only slice DETAIL-49's
+  // entry-total share implies but does not state, so a
+  // session where most successes carry a latency reads
+  // differently from one where the same measurements sit
+  // in a failure-heavy log. A success-only log with no
+  // finite latency reads 0%, never "none", and failures
+  // move neither side of the share.
+  els.logStatsOkLatencyCountShareOfOk.textContent =
+    `Successful latency-measurement share of successes: ${stats.okLatencyCountShareOfOk === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOk * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

@@ -1275,6 +1275,27 @@ export class SessionLog {
       ignis: shareOfFailedWindow("ignis", failedSpanMsByProduct.ignis),
       sanitas: shareOfFailedWindow("sanitas", failedSpanMsByProduct.sanitas),
     };
+    // DETAIL-51: the global usable-latency-count share
+    // of ok successes (okLatencyCountShareOfOk): the
+    // DETAIL-36 global count over the session's ok total,
+    // reusing DETAIL-37's shareOfAllOk helper — the
+    // success-only re-base DETAIL-49's entry-total share
+    // implies but does not state, so a session where
+    // three of four successes carry a usable latency reads
+    // differently from one where the same three
+    // measurements sit in a log full of failures. Null
+    // when the session holds no successes at all (an
+    // empty log and a failure-only log alike — never a
+    // divide by zero); 0 once successes exist but none
+    // carries a usable latency. Failures sit in neither
+    // side: they are not in the ok total and never count
+    // as measurements, even a failure carrying a latency
+    // value. An ok entry with no finite latency sits in
+    // the denominator but moves no measurement, and an
+    // unknown- or missing-product success still moves
+    // this product-blind share, exactly as DETAIL-49's
+    // does. A 0 ms latency still counts as a measurement.
+    const okLatencyCountShareOfOk = ok === 0 ? null : latencyCount / ok;
     return {
       total: this._entries.length,
       ok,
@@ -1483,6 +1504,16 @@ export class SessionLog {
       // pair; 0 per product with no failures once a
       // nonzero failed window exists.
       failedSpanShareByProduct,
+      // DETAIL-51: the global usable-latency-count share
+      // of ok successes (okLatencyCountShareOfOk): the
+      // DETAIL-36 global count over the session ok total
+      // — the success-only re-base of DETAIL-49's
+      // entry-total share. Null with no successes at all;
+      // 0 once successes exist but none carries a usable
+      // latency. Failures move neither side; an ok entry
+      // with no finite latency sits in the denominator
+      // only; a 0 ms latency still counts.
+      okLatencyCountShareOfOk,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
