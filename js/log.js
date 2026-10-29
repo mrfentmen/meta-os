@@ -1408,6 +1408,55 @@ export class SessionLog {
       ignis: okCountByProduct.ignis === 0 ? null : latencyCountByProduct.ignis / okCountByProduct.ignis,
       sanitas: okCountByProduct.sanitas === 0 ? null : latencyCountByProduct.sanitas / okCountByProduct.sanitas,
     };
+    // DETAIL-55: the per-product failed-span shares of
+    // the global entry window
+    // (failedSpanShareOfEntryWindowByProduct): each
+    // product's DETAIL-20 failed span over the session's
+    // global entry span (DETAIL-24), so a session where
+    // Vigiles failures stretch across half the whole
+    // recording window while Ignis covers a tenth of it
+    // reads that at a glance — the failed mirror of
+    // DETAIL-53's ok-span shares, and the entry-window
+    // re-basing of DETAIL-50's failed-window shares,
+    // where the failed window alone does not say how
+    // much of the whole session each product was
+    // actually failing. Derived only from the DETAIL-20
+    // spans and the global entry span, not a new rule:
+    // any entry moves the denominator's endpoints, so
+    // successes and unknown- or missing-product entries
+    // stretch the global window without moving any
+    // bucket, diluting every share; only failures move
+    // a bucket. These are raw ratios, never clamped,
+    // and they do NOT sum to 1: product failed windows
+    // overlap, and the global window is first-to-last
+    // across products, not a sum of product windows — a
+    // share above 1 or below 0 means timestamps ran out
+    // of insertion order, exactly as DETAIL-20's raw
+    // spans do. Null per product when the session holds
+    // no usable entry window at all (an empty log, a
+    // single entry, or all entries at one timestamp — a
+    // zero global entry span has no shares to divide,
+    // never NaN); null per product whose own failed span
+    // is unknown (failures recorded but no usable
+    // timestamp pair — never a fabricated window); 0 per
+    // product with no failures once a nonzero entry
+    // window exists, because it covered none of the
+    // window — the deliberate contrast with DETAIL-20's
+    // null, matching DETAIL-53's 0-once-a-window-exists
+    // rule — and 0 per single-failure product, whose
+    // zero-length window covers none of a nonzero entry
+    // window.
+    const shareFailedOfEntryWindow = (product, span) => {
+      if (globalEntrySpanMs === null || globalEntrySpanMs === 0) return null;
+      if (failedCountByProduct[product] === 0) return 0;
+      if (span === null) return null;
+      return span / globalEntrySpanMs;
+    };
+    const failedSpanShareOfEntryWindowByProduct = {
+      vigiles: shareFailedOfEntryWindow("vigiles", failedSpanMsByProduct.vigiles),
+      ignis: shareFailedOfEntryWindow("ignis", failedSpanMsByProduct.ignis),
+      sanitas: shareFailedOfEntryWindow("sanitas", failedSpanMsByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1662,6 +1711,19 @@ export class SessionLog {
       // or missing-product success moves no bucket and no
       // product denominator, unlike DETAIL-52.
       okLatencyCountShareOfOwnOkByProduct,
+      // DETAIL-55: the per-product failed-span shares of
+      // the global entry window
+      // (failedSpanShareOfEntryWindowByProduct): each
+      // product's DETAIL-20 failed span over the global
+      // entry span — the failed mirror of DETAIL-53's
+      // ok-span shares, and the entry-window re-basing
+      // of DETAIL-50's failed-window shares. Raw ratios,
+      // never clamped, and they do NOT sum to 1 (product
+      // failed windows overlap). Null per product with
+      // no usable entry window, or with failures but no
+      // usable timestamp pair; 0 per product with no
+      // failures once a nonzero entry window exists.
+      failedSpanShareOfEntryWindowByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
