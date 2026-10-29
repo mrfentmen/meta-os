@@ -1588,6 +1588,60 @@ export class SessionLog {
           : okSpanMs === null
             ? null
             : okSpanMs / globalEntrySpanMs;
+    // DETAIL-59 (renumbered after Rowan's distinct DETAIL-58 landed first, both sides kept in the merge):
+    // the per-product failed-span shares of
+    // that product's own entry window
+    // (failedSpanShareOfOwnEntryWindowByProduct): each
+    // product's DETAIL-20 failed span over that
+    // product's own DETAIL-17 entry span — the
+    // within-product re-base DETAIL-55's global-entry
+    // shares imply but do not state, so a session
+    // where Vigiles failures stretch across half of
+    // everything Vigiles itself recorded reads that at
+    // a glance even when Vigiles is a small slice of
+    // the whole session, and a product whose failures
+    // span its whole own window reads 1 whatever its
+    // share of the session. Derived only from the
+    // DETAIL-20 spans and the DETAIL-17 spans, not a
+    // new rule: only that product's entries move its
+    // denominator's endpoints, so other products'
+    // entries stretch DETAIL-55's global window
+    // without touching these, and an unknown- or
+    // missing-product failure moves no bucket and no
+    // product denominator, unlike DETAIL-57's
+    // product-blind global — the deliberate contrast
+    // with DETAIL-57, matching DETAIL-56's and
+    // DETAIL-54's within-product rule. These are raw
+    // ratios, never clamped: a share above 1 or below
+    // 0 means timestamps ran out of insertion order,
+    // exactly as DETAIL-20's raw spans do. Null per
+    // product with no usable own entry window at all
+    // (no entries of that product, a single entry of
+    // that product, or all of that product's entries
+    // at one timestamp — a zero own entry span has
+    // no share to divide, never NaN); null per
+    // product whose own failed span is unknown
+    // (failures recorded but no usable timestamp pair
+    // — never a fabricated window); 0 per product
+    // with no failures once a nonzero own entry
+    // window exists, because it covered none of its
+    // own window — the deliberate contrast with
+    // DETAIL-20's null, matching DETAIL-55's
+    // 0-once-a-window-exists rule — and 0 per
+    // single-failure product, whose zero-length
+    // failed window covers none of a nonzero own
+    // entry window.
+    const shareFailedOfOwnEntryWindow = (product, span) => {
+      if (entrySpanMsByProduct[product] === null || entrySpanMsByProduct[product] === 0) return null;
+      if (failedCountByProduct[product] === 0) return 0;
+      if (span === null) return null;
+      return span / entrySpanMsByProduct[product];
+    };
+    const failedSpanShareOfOwnEntryWindowByProduct = {
+      vigiles: shareFailedOfOwnEntryWindow("vigiles", failedSpanMsByProduct.vigiles),
+      ignis: shareFailedOfOwnEntryWindow("ignis", failedSpanMsByProduct.ignis),
+      sanitas: shareFailedOfOwnEntryWindow("sanitas", failedSpanMsByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1889,6 +1943,20 @@ export class SessionLog {
       // Unknown- or missing-product successes move this
       // product-blind share, unlike DETAIL-53.
       okSpanShareOfEntryWindow,
+      // DETAIL-59: the per-product failed-span shares
+      // of that product's own entry window
+      // (failedSpanShareOfOwnEntryWindowByProduct): each
+      // product's DETAIL-20 failed span over that
+      // product's own DETAIL-17 entry span — the
+      // within-product re-base of DETAIL-55's
+      // global-entry shares. Null per product with no
+      // usable own entry window, or with failures but
+      // no usable failed timestamp pair; 0 per product
+      // with no failures once a nonzero own entry
+      // window exists. An unknown- or missing-product
+      // failure moves no bucket and no denominator,
+      // unlike DETAIL-57.
+      failedSpanShareOfOwnEntryWindowByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
