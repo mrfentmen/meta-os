@@ -59,6 +59,7 @@ const els = {
   logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),
   logStatsLastFailedByProduct: $("log-stats-last-failed-by-product"),
   logStatsAvgLatencyByProduct: $("log-stats-avg-latency-by-product"),
+  logStatsFailuresByProduct: $("log-stats-failures-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -301,6 +302,13 @@ function updateLogStats() {
   // never contribute to any bucket.
   els.logStatsAvgLatencyByProduct.textContent =
     `Average successful latency by product: Vigiles ${stats.avgOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.avgOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.ignis)} ms`} · Sanitas ${stats.avgOkLatencyMsByProduct.sanitas === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.sanitas)} ms`}`;
+  // DETAIL-9: the per-product failures-by-cause line splits
+  // DETAIL-2's cause breakdown per product, from the same stats()
+  // call — same always-renders shape as the other stats lines, so
+  // a product with no failure of a cause reads zero, never a
+  // missing bucket, and successes never move a bucket.
+  els.logStatsFailuresByProduct.textContent =
+    `Failures by cause by product: Vigiles Network ${stats.failedByStatusByProduct.vigiles.network_error}, HTTP ${stats.failedByStatusByProduct.vigiles.http_error}, Invalid response ${stats.failedByStatusByProduct.vigiles.invalid_response} · Ignis Network ${stats.failedByStatusByProduct.ignis.network_error}, HTTP ${stats.failedByStatusByProduct.ignis.http_error}, Invalid response ${stats.failedByStatusByProduct.ignis.invalid_response} · Sanitas Network ${stats.failedByStatusByProduct.sanitas.network_error}, HTTP ${stats.failedByStatusByProduct.sanitas.http_error}, Invalid response ${stats.failedByStatusByProduct.sanitas.invalid_response}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

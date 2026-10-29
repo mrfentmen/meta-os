@@ -139,10 +139,25 @@ export class SessionLog {
   // counted as zero, so each mean is always over real recorded
   // measurements for that product. The panel renders each mean
   // rounded to whole milliseconds.
+  // DETAIL-9 splits DETAIL-2's cause breakdown per product
+  // (failedByStatusByProduct, zeros per product with no failure of
+  // that cause): a session where Ignis failures are all network
+  // errors but Vigiles failures are all HTTP errors reads
+  // differently from one where both fail the same way. Same rules
+  // as DETAIL-2, per bucket: successes never move a bucket, a
+  // failure with an unknown or missing product moves no bucket,
+  // and a failure still counts in the session failed total and
+  // the global cause breakdown even when it moves no product
+  // bucket, so the buckets never invent a product or a cause.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     const failedByStatus = { network_error: 0, http_error: 0, invalid_response: 0 };
+    const failedByStatusByProduct = {
+      vigiles: { network_error: 0, http_error: 0, invalid_response: 0 },
+      ignis: { network_error: 0, http_error: 0, invalid_response: 0 },
+      sanitas: { network_error: 0, http_error: 0, invalid_response: 0 },
+    };
     const lastOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const lastFailedAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     let ok = 0;
@@ -185,6 +200,9 @@ export class SessionLog {
         if (Object.hasOwn(failedByStatus, entry.status)) {
           failedByStatus[entry.status] += 1;
         }
+        if (Object.hasOwn(failedByStatusByProduct, entry.product) && Object.hasOwn(failedByStatus, entry.status)) {
+          failedByStatusByProduct[entry.product][entry.status] += 1;
+        }
         if (typeof entry.request_timestamp === "string" && entry.request_timestamp !== "") {
           if (Object.hasOwn(lastFailedAtByProduct, entry.product)) {
             lastFailedAtByProduct[entry.product] = entry.request_timestamp;
@@ -198,6 +216,7 @@ export class SessionLog {
       failed,
       byProduct,
       failedByStatus,
+      failedByStatusByProduct,
       lastOkAt,
       lastOkAtByProduct,
       lastFailedAtByProduct,
