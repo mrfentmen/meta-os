@@ -105,6 +105,7 @@ const els = {
   logStatsOkLatencyCountShareOfEntriesByProduct: $("log-stats-ok-latency-count-share-of-entries-by-product"),
   logStatsOkSpanShareByProduct: $("log-stats-ok-span-share-by-product"),
   logStatsOkLatencyCountShareOfEntries: $("log-stats-ok-latency-count-share-of-entries"),
+  logStatsFailedSpanShareByProduct: $("log-stats-failed-span-share-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -771,6 +772,19 @@ function updateLogStats() {
   // moves this share even though it moves no bucket.
   els.logStatsOkLatencyCountShareOfEntries.textContent =
     `Successful latency-measurement share of all entries: ${stats.okLatencyCountShareOfEntries === null ? "none" : `${Math.round(stats.okLatencyCountShareOfEntries * 100)}%`}`;
+  // DETAIL-50: the per-product failed-span-share-of-
+  // failed-window line re-bases DETAIL-20's per-product
+  // failed spans on the session's global failed span,
+  // rendered as whole percents, or "none" per product
+  // with no usable failed window or no usable timestamp
+  // pair — the failed-only mirror of DETAIL-48's
+  // ok-span-share line. Raw ratios, never clamped: a
+  // share above 100% or below 0% means timestamps ran
+  // out of insertion order, and the three shares do not
+  // sum to 100% because product failed windows overlap.
+  // Successes never move a share.
+  els.logStatsFailedSpanShareByProduct.textContent =
+    `Failure-span share of failed window by product: Vigiles ${stats.failedSpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.ignis * 100)}%`} · Sanitas ${stats.failedSpanShareByProduct.sanitas === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
