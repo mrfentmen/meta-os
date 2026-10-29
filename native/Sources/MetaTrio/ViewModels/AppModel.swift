@@ -101,6 +101,29 @@ final class AppModel: ObservableObject {
     @Published var intervalSeconds: Int = 3 {
         didSet {
             sampler.setInterval(TimeInterval(intervalSeconds))
+            // Web parity: the web interval change handler rewords the
+            // ANALYSIS ACTIVE banner through updateAnalysisActive, and
+            // the banner is a polite, atomic live region, so a
+            // VoiceOver user who changes the interval mid-run hears
+            // the new interval there. The native banner's SwiftUI
+            // label rewords the same way, but a label change posts no
+            // announcement, so a VoiceOver user who stepped the
+            // interval mid-run heard the Stepper's new number and
+            // nothing confirming sampling was still active at that
+            // interval. Post the banner's own words, through the same
+            // helper as the start announcement, only while a run is
+            // actually active: while idle the banner is hidden and
+            // the next Start announces the interval then, so an
+            // idle change stays silent. Starting never double
+            // announces: startAnalysis sets the sampler interval
+            // directly and never assigns intervalSeconds, and didSet
+            // does not run during init. The announcement is polite,
+            // so rapid stepping replaces rather than queues readings,
+            // and an interval change sends no frame, so it is never
+            // a backend or capture failure.
+            if analysisRunning {
+                AccessibilityAnnouncement.analysisStarted("Analysis active, sampling one frame every \(intervalSeconds) seconds")
+            }
         }
     }
     @Published var scenarioLabel: String = ""

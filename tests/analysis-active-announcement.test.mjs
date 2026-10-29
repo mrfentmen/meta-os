@@ -18,9 +18,11 @@
 // sampler tick, so unlike the sampler-stats line there is no
 // per-second spam risk in announcing it. Stopping deliberately stays
 // silent: the user tapped Stop themselves, like Clear, and the banner
-// hides without a word. This test reads the Swift sources (it cannot
+// hides without a word. The mid-run interval-change announcement lives
+// in tests/native-interval-change-announcement.test.mjs; this test
+// covers the start path and the silent stop. This test reads the Swift sources (it cannot
 // run Swift in this sandbox) to assert the announcement exists and is
-// called from the start path only.
+// called from the start path.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
