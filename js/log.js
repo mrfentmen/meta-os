@@ -1457,6 +1457,44 @@ export class SessionLog {
       ignis: shareFailedOfEntryWindow("ignis", failedSpanMsByProduct.ignis),
       sanitas: shareFailedOfEntryWindow("sanitas", failedSpanMsByProduct.sanitas),
     };
+    // DETAIL-56 (renumbered after Rowan's distinct DETAIL-55 landed first, both sides kept in the merge):
+    // the per-product usable-latency-count shares
+    // of that product's own entries
+    // (okLatencyCountShareOfOwnEntriesByProduct): each
+    // DETAIL-36 product count over that product's own
+    // entry total (DETAIL-14) — the within-product
+    // re-base DETAIL-47's entry-total shares imply but do
+    // not state, so a session where half of everything
+    // Vigiles recorded carries a latency reads at a glance
+    // even when Vigiles is a small slice of all entries,
+    // and a product whose every entry is a measured
+    // success reads 1 whatever its share of the session.
+    // Derived only from the DETAIL-36 counts and the
+    // per-product entry counts, not a new rule: failures
+    // sit in the denominator but move no bucket (they are
+    // entries of the product but never measurements, even
+    // a failure carrying a latency value); an ok entry
+    // with no finite latency sits in its own product's
+    // denominator but moves no bucket; and an ok entry
+    // with an unknown or missing product moves no bucket
+    // and no product denominator, so it dilutes DETAIL-47's
+    // shares without touching these — the deliberate
+    // contrast with DETAIL-47, matching DETAIL-54's
+    // within-product rule and DETAIL-44's. Null per
+    // product with no entries of that product at all (an
+    // empty log, and any product with no entries yet
+    // alike — never a divide by zero); 0 per product with
+    // entries but no usable latency, including a
+    // failure-only product and a success-only product
+    // with no finite latency — the deliberate contrast
+    // with DETAIL-54, whose failure-only product reads
+    // null because its denominator is the ok count. A
+    // 0 ms latency still counts as a measurement.
+    const okLatencyCountShareOfOwnEntriesByProduct = {
+      vigiles: entryCountByProduct.vigiles === 0 ? null : latencyCountByProduct.vigiles / entryCountByProduct.vigiles,
+      ignis: entryCountByProduct.ignis === 0 ? null : latencyCountByProduct.ignis / entryCountByProduct.ignis,
+      sanitas: entryCountByProduct.sanitas === 0 ? null : latencyCountByProduct.sanitas / entryCountByProduct.sanitas,
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1724,6 +1762,18 @@ export class SessionLog {
       // usable timestamp pair; 0 per product with no
       // failures once a nonzero entry window exists.
       failedSpanShareOfEntryWindowByProduct,
+      // DETAIL-56: the per-product usable-latency-count
+      // shares of that product's own entries
+      // (okLatencyCountShareOfOwnEntriesByProduct): each
+      // product's DETAIL-36 count over that product's own
+      // entry total — the within-product re-base of
+      // DETAIL-47's entry-total shares. Null per product
+      // with no entries of that product; 0 per product
+      // with entries but no usable latency, failure-only
+      // product included. An unknown- or missing-product
+      // entry moves no bucket and no product denominator,
+      // unlike DETAIL-47.
+      okLatencyCountShareOfOwnEntriesByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
