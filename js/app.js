@@ -9,6 +9,7 @@ import { FrameSampler } from "./sampler.js";
 import { assessFrame, AssessError, checkHealth } from "./client.js";
 import { SessionLog } from "./log.js";
 import { PRODUCT_BY_ID, isProductId } from "./products.js";
+import { ContactsStore } from "./contacts.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -51,6 +52,13 @@ const els = {
   btnClearLog: $("btn-clear-log"),
   logStats: $("log-stats"),
   logStatsByProduct: $("log-stats-by-product"),
+  contactsList: $("contacts-list"),
+  contactsEmpty: $("contacts-empty"),
+  contactName: $("contact-name"),
+  contactRole: $("contact-role"),
+  contactOrg: $("contact-org"),
+  btnContactAdd: $("btn-contact-add"),
+  contactsFormNote: $("contacts-form-note"),
   imageInput: $("image-input"),
   imagePreview: $("image-preview"),
   imageState: $("image-state"),
@@ -70,6 +78,14 @@ const camera = new Camera(els.video);
 // storage (assessments and errors only, never frames) until exported or
 // cleared. A store that is unavailable simply leaves the log in memory.
 const log = new SessionLog({
+  storage: typeof localStorage !== "undefined" ? localStorage : null,
+});
+
+// Contacts directory (Del direction 2026-10-29: Milo leads contacts,
+// Sanitas first). Same local-only storage pattern as the session log:
+// entries survive a reload, and an unavailable store leaves the panel
+// working in memory. Nothing here sends or notifies anyone.
+const contacts = new ContactsStore({
   storage: typeof localStorage !== "undefined" ? localStorage : null,
 });
 
@@ -111,6 +127,45 @@ function renderProduct() {
     els.scenarioSelect.appendChild(option);
   }
   els.scenarioSelect.value = "";
+  renderContacts();
+}
+
+// Contacts panel: the directory for the currently selected product.
+// Sample entries are flagged sample by the store and shown with a SAMPLE
+// chip, so a placeholder is never mistaken for a real person. Delete is
+// a human action on one entry; there is no send, notify, or dispatch
+// action anywhere in this panel.
+function renderContacts() {
+  const entries = contacts.list(currentProductId);
+  els.contactsList.replaceChildren();
+  els.contactsEmpty.hidden = entries.length !== 0;
+  for (const entry of entries) {
+    const item = document.createElement("li");
+    item.className = "contact-item";
+    const name = document.createElement("strong");
+    name.textContent = entry.name;
+    item.appendChild(name);
+    if (entry.sample) {
+      const chip = document.createElement("span");
+      chip.className = "sample-chip";
+      chip.textContent = "SAMPLE";
+      item.appendChild(chip);
+    }
+    const meta = document.createElement("p");
+    meta.className = "contact-meta";
+    meta.textContent = `${entry.role} · ${entry.organization}`;
+    item.appendChild(meta);
+    const del = document.createElement("button");
+    del.type = "button";
+    del.textContent = "Delete";
+    del.setAttribute("aria-label", `Delete contact ${entry.name}`);
+    del.addEventListener("click", () => {
+      contacts.remove(entry.id);
+      renderContacts();
+    });
+    item.appendChild(del);
+    els.contactsList.appendChild(item);
+  }
 }
 
 // Native parity: the native interval Stepper can only hold 1–60, so
@@ -822,6 +877,24 @@ els.productRadios.forEach((radio) => {
       renderProduct();
     }
   });
+});
+
+els.btnContactAdd.addEventListener("click", () => {
+  try {
+    contacts.add({
+      product: currentProductId,
+      name: els.contactName.value,
+      role: els.contactRole.value,
+      organization: els.contactOrg.value,
+    });
+    els.contactName.value = "";
+    els.contactRole.value = "";
+    els.contactOrg.value = "";
+    els.contactsFormNote.textContent = "";
+    renderContacts();
+  } catch {
+    els.contactsFormNote.textContent = "Name, role, and organization are all required.";
+  }
 });
 
 // Clears only the still-image input (preview, file choice, Assess

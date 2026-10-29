@@ -147,6 +147,25 @@
     </div>
     <p class="note">The log is kept in this browser's local storage, so it survives reloading the page, until you export or clear it. Frames are sent to the assessment endpoint and are not stored by this app. Each entry records the product it was assessed under.</p>
   </section>
+
+  <section class="panel" aria-label="Contacts">
+    <h2>Contacts</h2>
+    <p class="note">Human review directory for the selected product. Contacts are stored only in this browser. Nothing here sends or notifies anyone: reaching out is always a human action, never automatic.</p>
+    <p class="note">Sample contacts are placeholders, not real people, and are marked SAMPLE.</p>
+    <ul id="contacts-list" class="contacts"></ul>
+    <p id="contacts-empty" class="note" hidden>No contacts for this product yet. Add one below.</p>
+    <h3 class="subhead">Add a contact</h3>
+    <label for="contact-name">Name</label>
+    <input id="contact-name" type="text" autocomplete="off">
+    <label for="contact-role">Role</label>
+    <input id="contact-role" type="text" autocomplete="off">
+    <label for="contact-org">Organization</label>
+    <input id="contact-org" type="text" autocomplete="off">
+    <div class="controls">
+      <button id="btn-contact-add" type="button" class="btn-primary">Add contact</button>
+    </div>
+    <p id="contacts-form-note" class="note" aria-live="polite"></p>
+  </section>
 </main>
 
 <footer class="footer">

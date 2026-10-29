@@ -611,6 +611,42 @@ body[data-product="sanitas"] .status[data-state="connected"] {
   color: #7f9c82;
 }
 
+/* Contacts directory: one entry per row, SAMPLE flag unmistakable. */
+.contacts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.contact-item {
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.contact-item strong {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.contact-meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 2px 0 6px;
+}
+
+.sample-chip {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
 /* Ignis theme (Del UI push, Oct 29; R2 + UI-3): red identity polish,
    scoped to body[data-product="ignis"] only. Mirrors the Sanitas theme
    block in Ignis red #d92b2b; this block never restyles Vigiles or
