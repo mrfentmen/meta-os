@@ -95,6 +95,7 @@ const els = {
   logStatsOkLatencySum: $("log-stats-ok-latency-sum"),
   logStatsOkLatencySumByProduct: $("log-stats-ok-latency-sum-by-product"),
   logStatsFailedShareOfFailedByProduct: $("log-stats-failed-share-of-failed-by-product"),
+  logStatsFailedShareOfEntriesByProduct: $("log-stats-failed-share-of-entries-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -645,6 +646,19 @@ function updateLogStats() {
   // shape, and successes never move a share.
   els.logStatsFailedShareOfFailedByProduct.textContent =
     `Failed share of failures by product: Vigiles ${stats.failedShareOfFailedByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareOfFailedByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.ignis * 100)}%`} · Sanitas ${stats.failedShareOfFailedByProduct.sanitas === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.sanitas * 100)}%`}`;
+  // DETAIL-40: the per-product failed-share-of-all-entries
+  // line re-bases DETAIL-34's failed counts on the session
+  // entry total, rendered as whole percents, or "none" per
+  // product on an empty log — the failure slice DETAIL-34's
+  // raw counts imply but do not state, and the failed
+  // mirror of DETAIL-37's success shares — same
+  // always-renders shape as the other stats lines, so a
+  // quiet session never changes the panel's shape, and
+  // successes never move a share (they sit in the
+  // denominator only). A success-only log reads 0% per
+  // product, never "none".
+  els.logStatsFailedShareOfEntriesByProduct.textContent =
+    `Failed share of all entries by product: Vigiles ${stats.failedShareOfEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareOfEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareOfEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareOfEntriesByProduct.ignis * 100)}%`} · Sanitas ${stats.failedShareOfEntriesByProduct.sanitas === null ? "none" : `${Math.round(stats.failedShareOfEntriesByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
