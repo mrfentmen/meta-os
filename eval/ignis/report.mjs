@@ -1523,6 +1523,59 @@ export function computeLatencyByMissAlertFired(records) {
     });
 }
 
+// Latency by miss assessed: one row per assessed-status
+// group among the misses only (same miss definition as computeMisses:
+// category_correct false), in the same fixed order the
+// latency-by-assessed section uses — assessed, unassessed — derived
+// from the validated actual_category field, with the count of
+// recorded harness wall-clock latencies, their mean, their median
+// (averaged-middle, matching the distribution's median), and their
+// max. This is the collapse of the misses' assessed split: the
+// outcome split says whether the misses that returned an assessment
+// run slower than the misses that returned none only through the
+// assessed rows mixed with correct records, but only this table says
+// so in two rows — assessed misses (a wrong category returned)
+// versus unassessed misses (the ERROR rows of the Misses list, no
+// assessment returned) — and latency by assessed, which includes the
+// correct records, cannot isolate the misses. Only groups present
+// among the misses render, so the scenario totals sum to the miss
+// count, not the sample size. Records with no latency take no part
+// in a group's numbers but still count toward its scenario total, so
+// a group whose scenarios carry no latency reads as recorded 0 with
+// n/a statistics — never as a fabricated zero.
+export function computeLatencyByMissAssessed(records) {
+  const groups = {
+    assessed: { outcome: "assessed", total: 0, latencies: [] },
+    unassessed: { outcome: "unassessed", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    if (r.category_correct) continue;
+    const outcome = r.actual_category === null ? "unassessed" : "assessed";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["assessed", "unassessed"]
+    .filter((outcome) => groups[outcome].total > 0)
+    .map((outcome) => {
+      const e = groups[outcome];
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        outcome,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    });
+}
+
 export function computeCategoryRates(records) {
   const perCategory = {};
   for (const r of records) {
@@ -2466,6 +2519,32 @@ export function renderRunReport(run, baselineRun = null) {
       "| --- | --- | --- | --- | --- | --- |",
     );
     for (const row of latencyByMissAlertFired) {
+      lines.push(
+        `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const latencyByMissAssessed = computeLatencyByMissAssessed(run.records);
+  lines.push(
+    "",
+    "## Latency by miss assessed",
+    "",
+    "Harness wall-clock latencies broken down by whether an assessment was returned at all — one row per " +
+      "assessed-status group among the misses only, in fixed order assessed, unassessed, so whether the misses " +
+      "that returned a wrong category run slower than the misses that returned nothing is visible in two rows " +
+      "without adding the correct records the latency-by-assessed section includes. Only groups present among " +
+      "the misses render, so the scenario totals sum to the miss count, not the sample size, and a group with " +
+      "no recorded latency shows n/a, never a fabricated zero; a run with no misses says none.",
+    "",
+  );
+  if (latencyByMissAssessed.length === 0) {
+    lines.push("None: every scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Assessed | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByMissAssessed) {
       lines.push(
         `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );

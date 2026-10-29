@@ -233,6 +233,13 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   visible in two rows without adding the four alert-outcome rows above; only groups present
   among the misses render, so the totals sum to the miss count, not the sample size, and
   a group with no recorded latency shows n/a, never a fabricated zero; a run with no misses says none.
+  A latency-by-miss-assessed section right after it is the collapse of the misses' assessed split —
+  one row per assessed-status group among the misses only, in fixed order assessed, unassessed (using
+  the validated actual_category field, matching the assessed definition) — so whether the misses that
+  returned a wrong category run slower than the misses that returned nothing is visible in two rows
+  without adding the correct records the latency-by-assessed section includes; only groups present
+  among the misses render, so the totals sum to the miss count, not the sample size, and a group with
+  no recorded latency shows n/a, never a fabricated zero; a run with no misses says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false
