@@ -45,7 +45,12 @@ import AppKit
 // that now apply. Only the limitations are announced, not the
 // department, tagline, guidance, or category list: those are read by
 // navigating to them, while the limitations are the safety text that
-// must reach the user at the moment of the switch.
+// must reach the user at the moment of the switch. A camera failure
+// state is announced the same way, in the panel's own state-text words:
+// the web camera-state line is a live region, so a denial, a missing
+// camera, or a failed start reads aloud there, but the native panel
+// used to set the same text silently, so a VoiceOver user who had just
+// tapped Start Camera heard nothing about why no preview went live.
 enum AccessibilityAnnouncement {
     static func post(_ message: String) {
         guard !message.isEmpty else { return }
@@ -175,6 +180,26 @@ enum AccessibilityAnnouncement {
     /// view-generation guard, so a tap Reset already cleared is
     /// never announced as a request in flight.
     static func requestStarted(_ message: String) {
+        post(message)
+    }
+
+    /// Announcement for a camera failure state, in the camera panel's
+    /// own state-text words. Web parity: the web frontend's
+    /// camera-state line is a polite live region, so a permission
+    /// denial, a missing camera, or a failed start is read aloud there
+    /// the moment it is set, but the native app used to set the same
+    /// state text silently — a VoiceOver user who had just tapped
+    /// Start Camera heard nothing about why no preview went live, and
+    /// the preview's accessibilityValue only speaks when navigated to.
+    /// Posted verbatim, never as a backend or capture failure: a
+    /// camera that never started involves no backend and no frame, so
+    /// either label would misdescribe what went wrong.
+    /// Only failure states announce: a successful start is the tap the
+    /// user just made, a stop is too, and the permission prompt itself
+    /// is spoken by the system, so idle, requesting-permission,
+    /// running, and stopped stay silent, exactly like Stop Analysis
+    /// and Clear.
+    static func cameraFailure(_ message: String) {
         post(message)
     }
 }

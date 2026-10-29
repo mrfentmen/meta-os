@@ -279,11 +279,50 @@ final class CameraService: NSObject, ObservableObject {
     }
 
     private func setState(_ newState: State) {
+        // Web parity: the web frontend's camera-state line is a polite
+        // live region, so a permission denial, a missing camera, or a
+        // failed start is read aloud there the moment it is set. The
+        // native panel used to set the same state text silently, so a
+        // VoiceOver user who had just tapped Start Camera heard nothing
+        // about why no preview went live — the preview's
+        // accessibilityValue only speaks when navigated to. Failure
+        // states therefore announce in the state text's own words, on
+        // the main thread right after the state lands, so a user who
+        // navigates to the preview next hears the same words. Only
+        // failure states announce: a successful start is the tap the
+        // user just made, a stop is too, and the permission prompt
+        // itself is spoken by the system. A camera failure touches no
+        // backend and sends no frame, so it is never announced as a
+        // backend or capture failure. Every failure path funnels
+        // through here — a denied permission, a missing device, a
+        // failed configure, a session that did not start, and a failed
+        // facing restart — so no failure state can arrive silently.
+        // A repeat of the same failure (a second Start tap on a denied
+        // camera) announces again: it is a fresh user action with a
+        // fresh outcome, not a timer tick.
+        let failureMessage: String? = {
+            switch newState {
+            case .denied:
+                return "Camera permission denied. Grant access in System Settings → Privacy & Security → Camera, then start the camera again."
+            case .noCamera:
+                return "No camera was found on this Mac."
+            case .failed(let message):
+                return "Camera error: \(message)"
+            default:
+                return nil
+            }
+        }()
         if Thread.isMainThread {
             state = newState
+            if let failureMessage {
+                AccessibilityAnnouncement.cameraFailure(failureMessage)
+            }
         } else {
             DispatchQueue.main.async { [weak self] in
                 self?.state = newState
+                if let failureMessage {
+                    AccessibilityAnnouncement.cameraFailure(failureMessage)
+                }
             }
         }
     }
