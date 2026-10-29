@@ -193,11 +193,22 @@ private struct HeaderView: View {
                     .fill(accentColor)
                     .frame(width: 9, height: 9)
                     .accessibilityHidden(true)
+                // IGNIS-UI-41: department at 13pt and tagline at
+                // 14pt, the native counterparts to the web
+                // .product-department rule (13px, muted) and the
+                // .product-tagline rule (14px). Until now both used
+                // .subheadline (15pt), so the department read two
+                // points larger and the tagline one point larger
+                // than the web identity row while the Product label
+                // (UI-40) already matched its own 13px web rule.
+                // The sizes are the only change: the department
+                // keeps its semibold weight, the tagline keeps its
+                // muted color, and the flame chip is untouched.
                 Text(model.config.department)
-                    .font(.subheadline)
+                    .font(.system(size: 13))
                     .fontWeight(.semibold)
                 Text(model.config.tagline)
-                    .font(.subheadline)
+                    .font(.system(size: 14))
                     .foregroundStyle(.secondary)
                 // R2: Ignis-only flame chip — the header's accent dot is
                 // shared across products, so Ignis gets its own flame
