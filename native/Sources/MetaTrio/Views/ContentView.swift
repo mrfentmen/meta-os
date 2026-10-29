@@ -528,20 +528,30 @@ private struct VideoPanel: View {
                     .accessibilityLabel("Prerecorded video player")
             }
 
+            // UI-31: video state texts at 13pt, the native
+            // counterparts to the web #video-state and
+            // #video-assessing notes (13px, muted). Until now the
+            // ready, no-video, error, and assessing lines used
+            // .caption (12pt), so they read one point smaller than
+            // the web panel's state lines while the video intro
+            // (UI-26) already matched its own 13px web rule.
+            // The size is the only change: the muted color, the
+            // red error color, the wrapping, and the wording are
+            // untouched.
             if let name = model.videoName {
                 Text("Video ready: \(name). Play it, pause on the frame you want assessed, and tap “Assess this frame”. Only that frame is sent; the video is not stored by this app.")
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 Text("No video chosen.")
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
             }
 
             if let error = model.videoError {
                 Text(error)
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.red)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -559,7 +569,7 @@ private struct VideoPanel: View {
                     ProgressView()
                         .controlSize(.small)
                     Text("Sending video frame…")
-                        .font(.caption)
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
             }
