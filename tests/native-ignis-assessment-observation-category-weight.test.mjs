@@ -37,8 +37,8 @@ assert.ok(categoryBlock.length > 0, "observation category block exists");
 test("native observation category: bold weight, matching web strong", () => {
   assert.match(
     categoryBlock,
-    /Text\(observation\.category\)\s+\.fontWeight\(\.bold\)/,
-    "observation category is bold",
+    /Text\(observation\.category\)\s+\.font\(\.system\(size: 15\)\)\s+\.fontWeight\(\.bold\)/,
+    "observation category is bold at its UI-49 15pt size",
   );
 });
 

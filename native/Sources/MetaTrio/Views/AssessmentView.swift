@@ -218,7 +218,27 @@ struct AssessmentView: View {
                             // lines keep their own styles, and the
                             // single-line web layout versus the
                             // native stacked rows is unchanged.
+                            // IGNIS-UI-49: category at 15pt, the
+                            // native counterpart to the web
+                            // observation line (js/app.js renders the
+                            // category as the strong element opening
+                            // the observation <li>, and styles.css
+                            // .observations sets only margin and
+                            // padding-left, so the line inherits the
+                            // 15px body size). Until now the native
+                            // category was a plain bold Text at the
+                            // default 17pt body size, so it read two
+                            // points larger than the web category
+                            // while the evidence line (UI-48) already
+                            // matched its own 15px web rule. The size
+                            // is the only change: the bold weight, the
+                            // firstTextBaseline row, and the
+                            // confidence caption, description, and
+                            // evidence lines keep their own
+                            // treatments — they are not this item's
+                            // counterpart.
                             Text(observation.category)
+                                .font(.system(size: 15))
                                 .fontWeight(.bold)
                             Spacer()
                             Text(confidenceText(observation.confidence))

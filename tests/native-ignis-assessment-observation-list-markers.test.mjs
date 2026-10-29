@@ -64,8 +64,8 @@ test("web observations list: <ul> with padding-left 18px", () => {
 test("native observation rows: content styles unchanged (UI-17 category, confidence, evidence)", () => {
   assert.match(
     observationsFn,
-    /Text\(observation\.category\)\s+\.fontWeight\(\.bold\)/,
-    "category keeps its UI-17 bold weight",
+    /Text\(observation\.category\)\s+\.font\(\.system\(size: 15\)\)\s+\.fontWeight\(\.bold\)/,
+    "category keeps its UI-17 bold weight at its UI-49 15pt size",
   );
   assert.match(
     observationsFn,

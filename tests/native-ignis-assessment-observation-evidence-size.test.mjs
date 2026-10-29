@@ -90,7 +90,7 @@ test("native observation evidence: neighbors untouched", () => {
   );
   assert.match(
     observationsFn,
-    /Text\(observation\.category\)\s+\.fontWeight\(\.bold\)/,
-    "observation category keeps its bold weight",
+    /Text\(observation\.category\)\s+\.font\(\.system\(size: 15\)\)\s+\.fontWeight\(\.bold\)/,
+    "observation category keeps its bold weight at its UI-49 15pt size",
   );
 });
