@@ -65,7 +65,7 @@ struct TimelineView: View {
             // timeline title (UI-34) already matched its own 15px web
             // rule. The size is the only change: both keep their
             // muted color, the title keeps its semibold weight, and
-            // the row detail below keeps its callout size.
+            // the row detail below kept its callout size until UI-43.
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(item.title)
                     .fontWeight(.semibold)
@@ -79,8 +79,18 @@ struct TimelineView: View {
                     .foregroundStyle(.secondary)
             }
             if !item.detail.isEmpty {
+                // IGNIS-UI-43: timeline row detail at 15pt, the native
+                // counterpart to the web history body (a plain <p> in
+                // a .history-item, inheriting the 15px body size).
+                // Until now the detail used .callout (16pt), so it
+                // read one point larger than the web body line while
+                // the row product name and timestamp (UI-37) already
+                // matched their own 12.5px web rules. The size is the
+                // only change: the three-line limit, the wording
+                // (the assessment summary or the failure message),
+                // and the row's product-accent edge are untouched.
                 Text(item.detail)
-                    .font(.callout)
+                    .font(.system(size: 15))
                     .lineLimit(3)
             }
         }
