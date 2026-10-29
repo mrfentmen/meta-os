@@ -272,7 +272,18 @@ final class AppModel: ObservableObject {
         guard !healthChecking else { return }
         healthChecking = true
         backendHealth = "Checking \(trimmedEndpoint) …"
+        // The view generation is captured at tap time, like the
+        // assessment paths capture it: a health check outstanding
+        // across Reset Session must not repaint the health line Reset
+        // just cleared ("Backend health not checked yet.") with a
+        // pre-reset result, success or failure — Reset's whole point
+        // for this line is that a pre-reset check does not linger as
+        // if it were current. The checking flag still clears in every
+        // case, so the button re-enables; only the text is guarded,
+        // exactly like submitAssessment guards its display updates.
+        let requestGeneration = viewGeneration
         Task {
+            let resultText: String
             do {
                 let health = try await healthClient.checkHealth(endpoint: trimmedEndpoint)
                 let products = health.products.joined(separator: ", ")
@@ -281,13 +292,16 @@ final class AppModel: ObservableObject {
                     : health.modelConfigured
                         ? "key configured, live calls held"
                         : "key not configured, live calls held"
-                backendHealth =
+                resultText =
                     "Backend reachable: \(health.service) · products: \(products) · model: \(modelState). " +
                     "This does not mean an assessment is available — an assess request still has to succeed."
             } catch let error as AssessError {
-                backendHealth = "Backend health check failed: \(error.message)"
+                resultText = "Backend health check failed: \(error.message)"
             } catch {
-                backendHealth = "Backend health check failed: \(error.localizedDescription)"
+                resultText = "Backend health check failed: \(error.localizedDescription)"
+            }
+            if requestGeneration == viewGeneration {
+                backendHealth = resultText
             }
             healthChecking = false
         }

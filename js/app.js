@@ -970,6 +970,16 @@ els.btnBackendCheck.addEventListener("click", async () => {
   backendChecking = true;
   els.btnBackendCheck.disabled = true;
   els.backendHealth.textContent = `Checking ${currentEndpoint()} …`;
+  // Reset generation, captured like the assessment paths capture it: a
+  // health check outstanding across Reset must not repaint the health
+  // line Reset just cleared ("Backend health not checked yet.") with a
+  // pre-reset result, success or failure — that result describes a
+  // check from before the reset, and Reset's whole point for this line
+  // is that a pre-reset check does not linger as if it were current.
+  // The button still re-enables in finally; only the text is guarded,
+  // exactly like submitAssessment guards its display updates but still
+  // records its log entry.
+  const generation = viewGeneration;
   try {
     const health = await checkHealth(currentEndpoint());
     const products = health.products.join(", ");
@@ -978,11 +988,15 @@ els.btnBackendCheck.addEventListener("click", async () => {
       : health.model.configured
         ? "key configured, live calls held"
         : "key not configured, live calls held";
-    els.backendHealth.textContent =
-      `Backend reachable: ${health.service} · products: ${products} · model: ${modelState}. ` +
-      "This does not mean an assessment is available — an assess request still has to succeed.";
+    if (generation === viewGeneration) {
+      els.backendHealth.textContent =
+        `Backend reachable: ${health.service} · products: ${products} · model: ${modelState}. ` +
+        "This does not mean an assessment is available — an assess request still has to succeed.";
+    }
   } catch (err) {
-    els.backendHealth.textContent = `Backend health check failed: ${err.message}`;
+    if (generation === viewGeneration) {
+      els.backendHealth.textContent = `Backend health check failed: ${err.message}`;
+    }
   } finally {
     backendChecking = false;
     els.btnBackendCheck.disabled = false;
