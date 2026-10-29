@@ -689,6 +689,24 @@ test("video input: captureVideoFrame downscales an oversize frame to a 1280px lo
   assert.deepEqual(drawn, [[video, 0, 0, 1280, 960]]);
 });
 
+// ---------- native video frame downscale (native parity with the web video path) ----------
+// The web video path, the native live camera, and the native still-image
+// path all cap frames at a 1280px longest side at JPEG 0.8. The native
+// video-frame path did neither — it encoded the extracted frame at
+// full size with the default JPEG quality, so a 4K clip's frame could
+// be several megabytes while every other frame path sailed under the
+// server's request-body cap. No Swift toolchain exists in this sandbox,
+// so this is a static check on the shipped Swift source, in the same
+// style as the other native-parity checks in this suite.
+test("video input: native video frame downscales to a 1280px longest side at JPEG 0.8, like live capture", () => {
+  const swift = readFileSync(new URL("../native/Sources/MetaTrio/Services/VideoFrameService.swift", import.meta.url), "utf8");
+  assert.match(swift, /private static let maxFrameDimension: CGFloat = 1280/);
+  assert.match(swift, /private static let jpegQuality: CGFloat = 0\.8/);
+  assert.match(swift, /if longestSide > maxFrameDimension \{\n\s+let scale = maxFrameDimension \/ longestSide/);
+  assert.match(swift, /rep\.representation\(using: \.jpeg, properties: \[\.compressionFactor: jpegQuality\]\)/);
+  assert.doesNotMatch(swift, /rep\.representation\(using: \.jpeg, properties: \[:\]\)/);
+});
+
 test("video input: captureVideoFrame throws when the video has no dimensions yet", () => {
   const canvas = { getContext: () => { throw new Error("should not draw"); }, toDataURL: () => "" };
   assert.throws(() => captureVideoFrame({ videoWidth: 0, videoHeight: 0 }, canvas), /not ready yet/);

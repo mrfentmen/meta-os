@@ -8,6 +8,12 @@ import AVFoundation
 // whole video is never sent, never copied, and never stored by this
 // app: the AVAsset reads the user's file in place, and only the single
 // extracted JPEG leaves the machine, inside the assessment request.
+// Live-capture parity: the extracted frame is downscaled so its
+// longest side is at most 1280 px and encoded at JPEG 0.8, exactly
+// like the live camera, the native still-image path, and the web
+// video path — a 4K clip's frame used to go out at full size with the
+// default JPEG quality, several megabytes as a base64 data URL, while
+// every other frame path sailed under the server's request-body cap.
 //
 // Throws VideoFrameError with a plain message for every failure mode
 // (no video track, unplayable file, frame generation failure), so the
@@ -33,6 +39,13 @@ enum VideoFrameError: Error, LocalizedError {
 }
 
 enum VideoFrameService {
+    /// Frames are downscaled so the longest side is at most this many
+    /// pixels before JPEG encoding, keeping request bodies reasonable —
+    /// the same cap the live camera, the still-image path, and the web
+    /// video path use, at the same 0.8 quality.
+    private static let maxFrameDimension: CGFloat = 1280
+    private static let jpegQuality: CGFloat = 0.8
+
     /// Extracts the frame at `seconds` into the video as a JPEG data
     /// URL. Exact-frame tolerances (.zero) are requested so the frame
     /// assessed is the one showing at the paused playback position,
@@ -58,9 +71,27 @@ enum VideoFrameService {
             cgImage: cgImage,
             size: NSSize(width: cgImage.width, height: cgImage.height)
         )
-        guard let tiff = image.tiffRepresentation,
+        // Downscale only when the cap actually bites; a frame already
+        // under it keeps its size, exactly like the still-image path.
+        var source = image
+        let longestSide = max(image.size.width, image.size.height)
+        if longestSide > maxFrameDimension {
+            let scale = maxFrameDimension / longestSide
+            let newSize = NSSize(width: image.size.width * scale, height: image.size.height * scale)
+            let resized = NSImage(size: newSize)
+            resized.lockFocus()
+            image.draw(
+                in: NSRect(origin: .zero, size: newSize),
+                from: NSRect(origin: .zero, size: image.size),
+                operation: .copy,
+                fraction: 1.0
+            )
+            resized.unlockFocus()
+            source = resized
+        }
+        guard let tiff = source.tiffRepresentation,
               let rep = NSBitmapImageRep(data: tiff),
-              let jpeg = rep.representation(using: .jpeg, properties: [:])
+              let jpeg = rep.representation(using: .jpeg, properties: [.compressionFactor: jpegQuality])
         else {
             throw VideoFrameError.jpegEncodingFailed
         }
