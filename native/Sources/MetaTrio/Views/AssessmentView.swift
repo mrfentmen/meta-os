@@ -239,8 +239,21 @@ struct AssessmentView: View {
     }
 
     private var processingLine: some View {
+        // UI-15: processing line in the web "note mono" style, the
+        // native counterpart to js/app.js rendering the web
+        // processing line with class "note mono" (muted, 12.5px,
+        // ui-monospace stack). Until now the native line used
+        // .caption — 12pt proportional system text — so it read as
+        // ordinary body copy while the web line read as a small
+        // monospace status line. The size maps directly (12.5pt);
+        // the design is stated plainly as a stand-in: SwiftUI's
+        // .monospaced design is the system monospace face, not the
+        // web's ui-monospace stack verbatim. The muted color is
+        // unchanged (.secondary, the established stand-in for
+        // --muted), and the wording is untouched — only the face
+        // and size change, so no other section gains a mono face.
         Text("Model: \(response.processing.model) · Server-reported latency: \(serverLatencyText)")
-            .font(.caption)
+            .font(.system(size: 12.5, design: .monospaced))
             .foregroundStyle(.secondary)
     }
 
