@@ -94,6 +94,7 @@ const els = {
   logStatsOkShareOfOkByProduct: $("log-stats-ok-share-of-ok-by-product"),
   logStatsOkLatencySum: $("log-stats-ok-latency-sum"),
   logStatsOkLatencySumByProduct: $("log-stats-ok-latency-sum-by-product"),
+  logStatsFailedShareOfFailedByProduct: $("log-stats-failed-share-of-failed-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -634,6 +635,16 @@ function updateLogStats() {
     `Total successful latency: ${Math.round(stats.okLatencySum)} ms`;
   els.logStatsOkLatencySumByProduct.textContent =
     `Total successful latency by product: Vigiles ${Math.round(stats.okLatencySumByProduct.vigiles)} ms · Ignis ${Math.round(stats.okLatencySumByProduct.ignis)} ms · Sanitas ${Math.round(stats.okLatencySumByProduct.sanitas)} ms`;
+  // DETAIL-39: the per-product failed-count-share line
+  // re-bases DETAIL-34's failed counts on the session
+  // failed total, rendered as whole percents, or "none"
+  // per product with no failures in the session — the
+  // failure slice DETAIL-34's raw counts imply but do not
+  // state — same always-renders shape as the other stats
+  // lines, so a quiet session never changes the panel's
+  // shape, and successes never move a share.
+  els.logStatsFailedShareOfFailedByProduct.textContent =
+    `Failed share of failures by product: Vigiles ${stats.failedShareOfFailedByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareOfFailedByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.ignis * 100)}%`} · Sanitas ${stats.failedShareOfFailedByProduct.sanitas === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

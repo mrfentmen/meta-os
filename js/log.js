@@ -869,6 +869,32 @@ export class SessionLog {
       ignis: shareOfAllOk(okCountByProduct.ignis),
       sanitas: shareOfAllOk(okCountByProduct.sanitas),
     };
+    // DETAIL-39: the per-product failed-count shares
+    // (failedShareOfFailedByProduct): each product's failed
+    // count from DETAIL-34 over the session's failed total,
+    // so a session where Ignis failures are half of all
+    // failures reads that at a glance, where DETAIL-34's raw
+    // counts alone do not say it — the failure mirror of
+    // DETAIL-37's ok-count shares, and the failed-total
+    // mirror of DETAIL-13's entry shares. Derived only from
+    // the DETAIL-34 counts and the failed total, not a new
+    // rule: successes never contribute (they are not in the
+    // failed total and move no bucket), a failure's cause
+    // does not matter here — every failed status counts
+    // alike, unlike DETAIL-29/31/33's cause splits — and a
+    // failure with an unknown or missing product sits in
+    // the denominator but moves no bucket, so the shares sum
+    // to 1 only when every failure carries a known product,
+    // exactly as DETAIL-37's shares do. Null per product
+    // with no failures at all (an empty log and a
+    // success-only log alike); 0 per product with no
+    // failures once the session holds any failure.
+    const shareOfAllFailed = (count) => (failed === 0 ? null : count / failed);
+    const failedShareOfFailedByProduct = {
+      vigiles: shareOfAllFailed(failedCountByProduct.vigiles),
+      ignis: shareOfAllFailed(failedCountByProduct.ignis),
+      sanitas: shareOfAllFailed(failedCountByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -985,6 +1011,13 @@ export class SessionLog {
       // usable latency reads 0.
       okLatencySum: latencySum,
       okLatencySumByProduct: latencySumByProduct,
+      // DETAIL-39: the per-product failed-count shares
+      // (failedShareOfFailedByProduct): each product's failed
+      // count over the session failed total — the failure
+      // mirror of DETAIL-37's ok-count shares. Null per
+      // product with no failures in the session; 0 per
+      // product with no failures once any failure exists.
+      failedShareOfFailedByProduct,
       entryShareByProduct: {
         vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
         ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,
