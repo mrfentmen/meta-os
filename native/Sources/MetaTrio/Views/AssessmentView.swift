@@ -169,8 +169,27 @@ struct AssessmentView: View {
 
     private var uncertaintySection: some View {
         VStack(alignment: .leading, spacing: 4) {
+            // UI-12: uncertainty heading in the web .subhead style, the
+            // native counterpart to js/app.js rendering the web
+            // Uncertainty heading with class "subhead" (13px, weight
+            // 700, uppercase, letter-spacing 0.05em, muted). Until now
+            // the native heading used .headline — 17pt semibold, no
+            // case or tracking, default color — so it read as a body
+            // section title while the web heading read as a small
+            // muted label above the uncertainty items. The mapping is
+            // direct except for the color, stated plainly: .secondary
+            // approximates the web --muted #9aa0a8 with the system
+            // secondary gray rather than a fixed hex, and the tracking
+            // is 0.05em of the 13pt size (0.65pt). The header trait is
+            // kept, and the Observations heading is deliberately
+            // untouched: the web panel renders observations as a bare
+            // list with no heading at all, so there is no web
+            // counterpart to mirror there.
             Text("Uncertainty")
-                .font(.headline)
+                .font(.system(size: 13, weight: .bold))
+                .textCase(.uppercase)
+                .tracking(0.65)
+                .foregroundStyle(.secondary)
                 .accessibilityAddTraits(.isHeader)
             if response.assessment.uncertainty.isEmpty {
                 Text("The model reported no uncertainty items.")
