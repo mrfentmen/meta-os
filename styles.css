@@ -621,15 +621,26 @@ body[data-product="ignis"] .product-option[data-product-option="ignis"]:has(inpu
    body .panel.latest-product-<product> selector, which ties the theme
    rules' specificity and wins on source order. An unknown product key
    gets no class, so the panel keeps the selection wash, like the
-   native panel's system-accent fallback and the product-name rule. */
+   native panel's system-accent fallback and the product-name rule.
+   The same rules also carry the panel border in the assessment's own
+   accent at 0.5 — the web counterpart to the native UI-9 panel
+   border, which strokes the assessment's own accent at 0.5 for all
+   three products. Without it, a redisplayed Ignis assessment kept
+   the selected product's border (Sanitas green under Sanitas, the
+   neutral panel border under Vigiles) while its wash and product
+   name already read Ignis red. The border uses the same fixed rgba
+   values as the wash, so a switch cannot re-tint it either. */
 body .panel.latest-product-vigiles {
   background: linear-gradient(180deg, rgba(79, 126, 194, 0.09), var(--panel) 42%);
+  border-color: rgba(79, 126, 194, 0.5);
 }
 
 body .panel.latest-product-ignis {
   background: linear-gradient(180deg, rgba(217, 43, 43, 0.09), var(--panel) 42%);
+  border-color: rgba(217, 43, 43, 0.5);
 }
 
 body .panel.latest-product-sanitas {
   background: linear-gradient(180deg, rgba(93, 168, 100, 0.09), var(--panel) 42%);
+  border-color: rgba(93, 168, 100, 0.5);
 }
