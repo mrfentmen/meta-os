@@ -248,6 +248,14 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   the latency-by-outcome section includes; only groups present among the misses render, so the totals
   sum to the miss count, not the sample size, and a group with no recorded latency shows n/a, never
   a fabricated zero; a run with no misses says none.
+  A latency-by-miss-confusable-negative-status section right after it is the confusable-negative
+  split of the misses — one row per confusable-negative-status group among the misses only, in fixed
+  order confusable negative, other non-alert, alert (using the ground-truth label, matching the
+  confusable-negative-status definition) — so whether the misses on the false-alarm-prone scenes run
+  slower than the misses on other scenes is visible without adding the correct records the
+  latency-by-confusable-negative-status section includes; only groups present among the misses render,
+  so the totals sum to the miss count, not the sample size, and a group with no recorded latency shows
+  n/a, never a fabricated zero; a run with no misses says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false
