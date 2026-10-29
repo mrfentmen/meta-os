@@ -262,9 +262,23 @@ private struct CameraPanel: View {
                     .accessibilityLabel("Live camera preview")
                     .accessibilityValue(cameraAccessibilityValue)
                 if camera.state == .running {
+                    // IGNIS-UI-39: CAMERA LIVE label at 0.96pt tracking,
+                    // the native counterpart to the web .camera-indicator
+                    // rule (12px, weight 700, letter-spacing 0.08em).
+                    // Until now the label used .caption (12pt) bold, so
+                    // it already matched the web size and weight, but
+                    // it carried no tracking, so its letters read tighter
+                    // than the web indicator's letterspaced capitals
+                    // while the review flag (UI-16) already matched its
+                    // own 0.05em web tracking. The tracking is 0.08em of
+                    // the label's own 12pt size (0.96pt). The tracking is
+                    // the only change: the caption size, the bold weight,
+                    // the white text, the red badge, and the wording are
+                    // untouched.
                     Label("CAMERA LIVE", systemImage: "record.circle.fill")
                         .font(.caption)
                         .fontWeight(.bold)
+                        .tracking(0.96)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
