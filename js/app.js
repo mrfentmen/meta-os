@@ -101,6 +101,7 @@ const els = {
   logStatsFailedShareByStatusOfEntries: $("log-stats-failed-share-by-status-of-entries"),
   logStatsFailedShareByStatusOfEntriesWithinProduct: $("log-stats-failed-share-by-status-of-entries-within-product"),
   logStatsOkLatencyCountShareByProduct: $("log-stats-ok-latency-count-share-by-product"),
+  logStatsEntrySpanShareByProduct: $("log-stats-entry-span-share-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -720,6 +721,17 @@ function updateLogStats() {
   // most measured time. Failures never move a share.
   els.logStatsOkLatencyCountShareByProduct.textContent =
     `Successful latency-measurement share by product: Vigiles ${stats.okLatencyCountShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.sanitas * 100)}%`}`;
+  // DETAIL-46: the per-product entry-span-share-of-session-window
+  // line re-bases DETAIL-17's per-product entry spans on the
+  // session's global entry span, rendered as whole percents,
+  // or "none" per product with no usable session window or no
+  // usable timestamp pair — the window-coverage companion to
+  // DETAIL-13's entry-count-share line. Raw ratios, never
+  // clamped: a share above 100% or below 0% means timestamps
+  // ran out of insertion order, and the three shares do not
+  // sum to 100% because product windows overlap.
+  els.logStatsEntrySpanShareByProduct.textContent =
+    `Entry-span share of session window by product: Vigiles ${stats.entrySpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

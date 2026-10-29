@@ -90,6 +90,7 @@ test("empty log: all stats zero", () => {
     failedShareByStatusOfEntries: { network_error: null, http_error: null, invalid_response: null },
     failedShareByStatusOfEntriesWithinProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     okLatencyCountShareByProduct: { vigiles: null, ignis: null, sanitas: null },
+    entrySpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
   });
 });
 
@@ -181,6 +182,7 @@ test("ok entries bucket by their own product; failures count once, unbucketed", 
     failedShareByStatusOfEntries: { network_error: 1 / 6, http_error: 1 / 6, invalid_response: 0 },
     failedShareByStatusOfEntriesWithinProduct: { vigiles: { network_error: 0, http_error: 1 / 2, invalid_response: 0 }, ignis: { network_error: 1 / 3, http_error: 0, invalid_response: 0 }, sanitas: { network_error: 0, http_error: 0, invalid_response: 0 } },
     okLatencyCountShareByProduct: { vigiles: 0.25, ignis: 0.5, sanitas: 0.25 },
+    entrySpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
   });
 });
 
@@ -243,6 +245,7 @@ test("ok entry with unknown product counts in ok but in no bucket", () => {
     failedShareByStatusOfEntries: { network_error: 0, http_error: 0, invalid_response: 0 },
     failedShareByStatusOfEntriesWithinProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     okLatencyCountShareByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
+    entrySpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
   });
 });
 
@@ -307,6 +310,7 @@ test("stats follow clear: back to zero", () => {
     failedShareByStatusOfEntries: { network_error: null, http_error: null, invalid_response: null },
     failedShareByStatusOfEntriesWithinProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     okLatencyCountShareByProduct: { vigiles: null, ignis: null, sanitas: null },
+    entrySpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
   });
 });
 

@@ -1090,6 +1090,47 @@ export class SessionLog {
       ignis: shareOfAllLatencies(latencyCountByProduct.ignis),
       sanitas: shareOfAllLatencies(latencyCountByProduct.sanitas),
     };
+    // DETAIL-46: the per-product entry-span shares of the
+    // session window (entrySpanShareByProduct): each product's
+    // DETAIL-17 entry span over the session's global entry
+    // span (DETAIL-24), so a session where Vigiles recordings
+    // stretch across the whole window while Ignis covers half
+    // of it reads that at a glance — the window-coverage
+    // companion to DETAIL-13's entry-count shares, where raw
+    // counts alone do not say how long each product was
+    // actually recording. Derived only from the DETAIL-17
+    // spans and the global span, not a new rule: any status
+    // moves the endpoints, and an entry with an unknown or
+    // missing product moves no product bucket but still moves
+    // the global window, so it stretches the denominator
+    // without moving any share. These are raw ratios, never
+    // clamped, and they do NOT sum to 1: product windows
+    // overlap, and the global window is first-to-last across
+    // products, not a sum of product windows — a share above
+    // 1 or below 0 means timestamps ran out of insertion
+    // order, exactly as DETAIL-17's raw spans do. Null per
+    // product when the session holds no usable window at all
+    // (an empty log, a single entry, or all entries at one
+    // timestamp — a zero global span has no shares to divide,
+    // never NaN); null per product whose own span is unknown
+    // (entries recorded but no usable timestamp pair — never
+    // a fabricated window); 0 per product with no entries
+    // once a nonzero window exists, because it covered none
+    // of the window — the deliberate contrast with DETAIL-17's
+    // null, matching DETAIL-45's 0-once-a-total-exists rule —
+    // and 0 per single-entry product, whose zero-length window
+    // covers none of a nonzero session window.
+    const shareOfSessionWindow = (product, span) => {
+      if (globalEntrySpanMs === null || globalEntrySpanMs === 0) return null;
+      if (entryCountByProduct[product] === 0) return 0;
+      if (span === null) return null;
+      return span / globalEntrySpanMs;
+    };
+    const entrySpanShareByProduct = {
+      vigiles: shareOfSessionWindow("vigiles", entrySpanMsByProduct.vigiles),
+      ignis: shareOfSessionWindow("ignis", entrySpanMsByProduct.ignis),
+      sanitas: shareOfSessionWindow("sanitas", entrySpanMsByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1245,6 +1286,16 @@ export class SessionLog {
       // measurement exists, including a session of only
       // 0 ms successes.
       okLatencyCountShareByProduct,
+      // DETAIL-46: the per-product entry-span shares of the
+      // session window (entrySpanShareByProduct): each
+      // product's DETAIL-17 entry span over the global entry
+      // span — the window-coverage companion to DETAIL-13's
+      // entry-count shares. Raw ratios, never clamped, and
+      // they do NOT sum to 1 (product windows overlap).
+      // Null per product with no usable session window, or
+      // with entries but no usable timestamp pair; 0 per
+      // product with no entries once a nonzero window exists.
+      entrySpanShareByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
