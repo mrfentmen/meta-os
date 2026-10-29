@@ -285,6 +285,11 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   correct records alone, so the slowest success is visible without a miss's slow latency hiding
   it; ties break by scenario id alphabetically, a run whose correct records carry no latency says
   so instead of naming one, and a run with no correct records says none.
+  A fastest-correct section right after it names the single fastest correct record by harness
+  wall-clock latency — the mirror of the slowest correct, over the correct records alone, so the
+  quickest success is visible without a miss's fast latency hiding it; ties break by scenario id
+  alphabetically, a run whose correct records carry no latency says so instead of naming one,
+  and a run with no correct records says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false

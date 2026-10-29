@@ -487,6 +487,18 @@ export function computeSlowestCorrect(records) {
   return computeSlowestScenario(records.filter((r) => r.category_correct));
 }
 
+// Fastest correct: the fastest scenario among the correct records
+// only, by the same rule as computeFastestScenario — smallest numeric
+// latency_ms, ties alphabetical by scenario id, records with no
+// latency ignored, null when no correct record carries one. The
+// slowest correct answers which success ran slowest; this one
+// answers which success ran quickest, without a miss's fast latency
+// hiding it — a correct record can still be suspiciously fast, and
+// that floor is invisible until it is named.
+export function computeFastestCorrect(records) {
+  return computeFastestScenario(records.filter((r) => r.category_correct));
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -2915,6 +2927,24 @@ export function renderRunReport(run, baselineRun = null) {
     lines.push("None recorded: no correct record in this run carries a latency measurement, so no slowest correct can be named.");
   } else {
     lines.push(`- Slowest correct: ${slowestCorrect.scenarioId} (${slowestCorrect.truth}) — ${fmtLatency(slowestCorrect.latencyMs)} ms (harness wall clock).`);
+  }
+  const fastestCorrect = computeFastestCorrect(run.records);
+  lines.push(
+    "",
+    "## Fastest correct",
+    "",
+    "The fastest correct record by harness wall-clock latency — the mirror of the slowest correct, " +
+      "over the correct records alone, so the quickest success is visible without a miss's fast " +
+      "latency hiding it, and without scanning the per-scenario table. Records with no latency " +
+      "take no part, never treated as zero; ties break by scenario id alphabetically.",
+    "",
+  );
+  if (correctCount === 0) {
+    lines.push("None: no scenario's predicted category matched its ground truth.");
+  } else if (fastestCorrect === null) {
+    lines.push("None recorded: no correct record in this run carries a latency measurement, so no fastest correct can be named.");
+  } else {
+    lines.push(`- Fastest correct: ${fastestCorrect.scenarioId} (${fastestCorrect.truth}) — ${fmtLatency(fastestCorrect.latencyMs)} ms (harness wall clock).`);
   }
   const misses = computeMisses(run.records);
   lines.push("", `## Misses (${misses.length})`, "");

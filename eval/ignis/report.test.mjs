@@ -63,6 +63,7 @@ import {
   computeSlowestMiss,
   computeFastestMiss,
   computeSlowestCorrect,
+  computeFastestCorrect,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -2732,7 +2733,7 @@ test("report: slowest correct is the slowest scenario among the correct records 
   assert.match(rendered, /## Slowest correct/);
   assert.ok(rendered.indexOf("## Slowest correct") > rendered.indexOf("## Fastest miss"));
   assert.ok(rendered.indexOf("## Slowest correct") < rendered.indexOf("## Misses"));
-  const section = rendered.slice(rendered.indexOf("## Slowest correct"), rendered.indexOf("## Misses"));
+  const section = rendered.slice(rendered.indexOf("## Slowest correct"), rendered.indexOf("## Fastest correct"));
   assert.match(section, /- Slowest correct: IGN-T3 \(steam or fog\) — 100\.0 ms \(harness wall clock\)\./);
   assert.doesNotMatch(section, /IGN-T4/);
   const noCorrectRun = {
@@ -2742,7 +2743,7 @@ test("report: slowest correct is the slowest scenario among the correct records 
     metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
   };
   const noCorrectRendered = renderRunReport(noCorrectRun);
-  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Slowest correct"), noCorrectRendered.indexOf("## Misses"));
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Slowest correct"), noCorrectRendered.indexOf("## Fastest correct"));
   assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
   const unmeasuredRun = {
     source: "test source",
@@ -2751,8 +2752,86 @@ test("report: slowest correct is the slowest scenario among the correct records 
     metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
   };
   const unmeasuredRendered = renderRunReport(unmeasuredRun);
-  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Slowest correct"), unmeasuredRendered.indexOf("## Misses"));
+  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Slowest correct"), unmeasuredRendered.indexOf("## Fastest correct"));
   assert.match(unmeasuredSection, /None recorded: no correct record in this run carries a latency measurement, so no slowest correct can be named\./);
+});
+
+test("report: fastest correct is the fastest scenario among the correct records only", () => {
+  const rec = (id, truth, actual, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    category_correct: actual === truth,
+    error: null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // The miss's 1 never hides the correct records' own fastest:
+  // among correct 10, 20, 100, the fastest correct is the 10, not
+  // the miss, and a correct record with no latency never counts
+  // as zero.
+  assert.deepEqual(
+    computeFastestCorrect([
+      rec("IGN-T1", "visible smoke", "visible smoke", 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", 20),
+      rec("IGN-T3", "steam or fog", "steam or fog", 100),
+      rec("IGN-T4", "visible smoke", "visible flame", 1),
+      rec("IGN-T5", "visible smoke", "visible smoke"),
+    ]),
+    { scenarioId: "IGN-T1", truth: "visible smoke", latencyMs: 10 },
+  );
+  // Ties break alphabetically, and no recorded correct latency —
+  // no correct records at all, or correct records without latency
+  // — names nothing.
+  assert.deepEqual(
+    computeFastestCorrect([
+      rec("IGN-T2", "visible smoke", "visible smoke", 50),
+      rec("IGN-T1", "visible smoke", "visible smoke", 50),
+    ]),
+    { scenarioId: "IGN-T1", truth: "visible smoke", latencyMs: 50 },
+  );
+  assert.equal(computeFastestCorrect([rec("IGN-T1", "visible smoke", "visible flame", 10)]), null);
+  assert.equal(computeFastestCorrect([rec("IGN-T1", "visible smoke", "visible smoke")]), null);
+  assert.equal(computeFastestCorrect([]), null);
+  // Rendered: section after Slowest correct, before Misses; value on
+  // a mixed run, none on a run with no correct records, and a
+  // no-measurement message when the correct records carry none.
+  const metrics = { sample_size: 4, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 4, mean: 282.5, median: 60, max: 1000 }, errors: { count: 0, scenario_ids: [] } };
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      { ...rec("IGN-T1", "visible smoke", "visible smoke", 10), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T2", "visible smoke", "visible smoke", 20), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T3", "steam or fog", "steam or fog", 100), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T4", "visible smoke", "visible flame", 1000), alert_expected: true, alert_fired: true, alert_correct: true },
+    ],
+    metrics,
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Fastest correct/);
+  assert.ok(rendered.indexOf("## Fastest correct") > rendered.indexOf("## Slowest correct"));
+  assert.ok(rendered.indexOf("## Fastest correct") < rendered.indexOf("## Misses"));
+  const section = rendered.slice(rendered.indexOf("## Fastest correct"), rendered.indexOf("## Misses"));
+  assert.match(section, /- Fastest correct: IGN-T1 \(visible smoke\) — 10\.0 ms \(harness wall clock\)\./);
+  assert.doesNotMatch(section, /IGN-T4/);
+  const noCorrectRun = {
+    source: "test source",
+    generated: "test run",
+    records: [{ ...rec("IGN-T1", "visible smoke", "visible flame", 10), alert_expected: true, alert_fired: true, alert_correct: true }],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const noCorrectRendered = renderRunReport(noCorrectRun);
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Fastest correct"), noCorrectRendered.indexOf("## Misses"));
+  assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
+  const unmeasuredRun = {
+    source: "test source",
+    generated: "test run",
+    records: [{ ...rec("IGN-T1", "visible smoke", "visible smoke"), alert_expected: true, alert_fired: true, alert_correct: true }],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const unmeasuredRendered = renderRunReport(unmeasuredRun);
+  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Fastest correct"), unmeasuredRendered.indexOf("## Misses"));
+  assert.match(unmeasuredSection, /None recorded: no correct record in this run carries a latency measurement, so no fastest correct can be named\./);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {
