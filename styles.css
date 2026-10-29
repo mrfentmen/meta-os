@@ -469,3 +469,43 @@ select {
     grid-template-columns: 1fr;
   }
 }
+
+/* Sanitas theme (Del UI push, Oct 29): green identity with futuristic
+   polish, scoped to body[data-product="sanitas"] only. The base theme
+   above stays flat for the other products; this block never restyles
+   Vigiles or Ignis. */
+
+body[data-product="sanitas"] .topbar {
+  background: linear-gradient(180deg, rgba(93, 168, 100, 0.16), transparent 75%);
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 rgba(93, 168, 100, 0.35);
+}
+
+body[data-product="sanitas"] .product-badge {
+  background: linear-gradient(135deg, #7cc184, #3d8a48);
+  color: #0d1a0f;
+  border-color: transparent;
+  box-shadow: 0 0 14px rgba(93, 168, 100, 0.45);
+}
+
+body[data-product="sanitas"] .panel {
+  background: linear-gradient(180deg, rgba(93, 168, 100, 0.09), var(--panel) 42%);
+  border-color: rgba(93, 168, 100, 0.5);
+  box-shadow: 0 0 0 1px rgba(93, 168, 100, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+body[data-product="sanitas"] .btn-primary:not(:disabled) {
+  background: linear-gradient(135deg, #79c180, #3f8f4b);
+  border-color: #79c180;
+  box-shadow: 0 0 14px rgba(93, 168, 100, 0.35);
+}
+
+body[data-product="sanitas"] .chip {
+  border-color: rgba(93, 168, 100, 0.55);
+  background: rgba(93, 168, 100, 0.1);
+}
+
+body[data-product="sanitas"] .product-option[data-product-option="sanitas"]:has(input:checked) {
+  border-color: #5da864;
+  box-shadow: inset 0 0 0 1px #5da864, 0 0 14px rgba(93, 168, 100, 0.35);
+}
