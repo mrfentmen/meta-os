@@ -318,6 +318,29 @@ export function computeSlowestScenario(records) {
   return slowest;
 }
 
+// The fastest scenario by harness wall-clock latency: the mirror of
+// computeSlowestScenario — the record carrying the smallest numeric
+// latency_ms. Records with no latency are ignored, never treated as
+// zero; when no record carries one there is no fastest scenario to
+// name and the result is null, so the render says so instead of
+// inventing a value. Ties break by scenario id alphabetically, so
+// the result never depends on record order. This is harness wall
+// clock, not a reported model field.
+export function computeFastestScenario(records) {
+  let fastest = null;
+  for (const r of records) {
+    if (typeof r.latency_ms !== "number") continue;
+    if (
+      fastest === null ||
+      r.latency_ms < fastest.latencyMs ||
+      (r.latency_ms === fastest.latencyMs && r.scenario_id < fastest.scenarioId)
+    ) {
+      fastest = { scenarioId: r.scenario_id, truth: r.ground_truth_label, latencyMs: r.latency_ms };
+    }
+  }
+  return fastest;
+}
+
 // One rate row per truth category present in the records, sorted
 // alphabetically by truth name: correct predictions over all of that
 // category's scenarios. The rate uses the headline's definition —
@@ -436,6 +459,20 @@ export function computeMissLatencyOutliers(records) {
 // slowest, without a correct record's slow latency hiding it.
 export function computeSlowestMiss(records) {
   return computeSlowestScenario(records.filter((r) => !r.category_correct));
+}
+
+// Fastest miss: the fastest scenario among the misses only, by the
+// same rule as computeFastestScenario — smallest numeric latency_ms,
+// ties alphabetical by scenario id, records with no latency ignored,
+// null when no miss carries one — but over the misses alone (same
+// miss definition as computeMisses: category_correct false, so an
+// unassessed record counts as a miss here too, but carries no latency
+// and can never be named). The slowest miss answers which failure
+// dragged; this one answers which failure was quickest, so a fast
+// failure is visible without a correct record's fast latency hiding
+// it, and without scanning the per-scenario table.
+export function computeFastestMiss(records) {
+  return computeFastestScenario(records.filter((r) => !r.category_correct));
 }
 
 // Latency by ground-truth category: one row per truth category
@@ -2829,6 +2866,24 @@ export function renderRunReport(run, baselineRun = null) {
     lines.push("None recorded: no miss in this run carries a latency measurement, so no slowest miss can be named.");
   } else {
     lines.push(`- Slowest miss: ${slowestMiss.scenarioId} (${slowestMiss.truth}) — ${fmtLatency(slowestMiss.latencyMs)} ms (harness wall clock).`);
+  }
+  const fastestMiss = computeFastestMiss(run.records);
+  lines.push(
+    "",
+    "## Fastest miss",
+    "",
+    "The fastest miss by harness wall-clock latency — the mirror of the slowest miss, over the " +
+      "misses alone, so the quickest failure is visible without a correct record's fast latency " +
+      "hiding it, and without scanning the per-scenario table. Records with no latency " +
+      "take no part, never treated as zero; ties break by scenario id alphabetically.",
+    "",
+  );
+  if (missCount === 0) {
+    lines.push("None: every scenario's predicted category matched its ground truth.");
+  } else if (fastestMiss === null) {
+    lines.push("None recorded: no miss in this run carries a latency measurement, so no fastest miss can be named.");
+  } else {
+    lines.push(`- Fastest miss: ${fastestMiss.scenarioId} (${fastestMiss.truth}) — ${fmtLatency(fastestMiss.latencyMs)} ms (harness wall clock).`);
   }
   const misses = computeMisses(run.records);
   lines.push("", `## Misses (${misses.length})`, "");

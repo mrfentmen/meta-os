@@ -275,6 +275,11 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   alone, so the slowest failure is visible without a correct record's slow latency hiding
   it; ties break by scenario id alphabetically, a run whose misses carry no latency says
   so instead of naming one, and a run with no misses says none.
+  A fastest-miss section right after it names the single fastest miss by harness wall-clock
+  latency — the mirror of the slowest miss, over the misses alone, so the quickest failure
+  is visible without a correct record's fast latency hiding it; ties break by scenario id
+  alphabetically, a run whose misses carry no latency says so instead of naming one, and
+  a run with no misses says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false
