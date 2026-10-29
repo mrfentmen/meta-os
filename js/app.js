@@ -62,6 +62,7 @@ const els = {
   logStatsFailuresByProduct: $("log-stats-failures-by-product"),
   logStatsLatencyRangeByProduct: $("log-stats-latency-range-by-product"),
   logStatsOkShareByProduct: $("log-stats-ok-share-by-product"),
+  logStatsFailedShareByProduct: $("log-stats-failed-share-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -326,6 +327,12 @@ function updateLogStats() {
   // product that only failed reads 0%, never "none".
   els.logStatsOkShareByProduct.textContent =
     `Successful share by product: Vigiles ${stats.okShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareByProduct.ignis === null ? "none" : `${Math.round(stats.okShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareByProduct.sanitas * 100)}%`}`;
+  // DETAIL-12: the mirror line — each product's own entries split
+  // into the share that failed, rendered as a whole percent, or
+  // "none" per product with no entries. A product that only
+  // succeeded reads 0%, never "none".
+  els.logStatsFailedShareByProduct.textContent =
+    `Failed share by product: Vigiles ${stats.failedShareByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareByProduct.ignis * 100)}%`} · Sanitas ${stats.failedShareByProduct.sanitas === null ? "none" : `${Math.round(stats.failedShareByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

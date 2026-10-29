@@ -175,6 +175,17 @@ export class SessionLog {
   // global ok/failed totals), so the shares never invent a
   // product. The panel renders each share as a whole percent, or
   // "none" per product with no entries.
+  // DETAIL-12 adds the mirror: the per-product failed share
+  // (failedShareByProduct, null per product with no entry of that
+  // product): each share is that product's failed entries over
+  // that product's own entries (ok plus failed), so a product
+  // that only succeeded reads 0, not null, a product that only
+  // failed reads 1, and okShare + failedShare sum to 1 wherever
+  // either is non-null. Same bucket rules as DETAIL-11: an entry
+  // with an unknown or missing product moves no bucket (though
+  // it still counts in the global ok/failed totals). The panel
+  // renders each share as a whole percent, or "none" per product
+  // with no entries.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -198,6 +209,7 @@ export class SessionLog {
     const minOkLatencyMsByProduct = { vigiles: null, ignis: null, sanitas: null };
     const maxOkLatencyMsByProduct = { vigiles: null, ignis: null, sanitas: null };
     const okCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
+    const failedCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     const entryCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     for (const entry of this._entries) {
       if (entry.status === "ok") {
@@ -241,6 +253,7 @@ export class SessionLog {
         failed += 1;
         if (Object.hasOwn(entryCountByProduct, entry.product)) {
           entryCountByProduct[entry.product] += 1;
+          failedCountByProduct[entry.product] += 1;
         }
         if (Object.hasOwn(failedByStatus, entry.status)) {
           failedByStatus[entry.status] += 1;
@@ -279,6 +292,11 @@ export class SessionLog {
         vigiles: entryCountByProduct.vigiles === 0 ? null : okCountByProduct.vigiles / entryCountByProduct.vigiles,
         ignis: entryCountByProduct.ignis === 0 ? null : okCountByProduct.ignis / entryCountByProduct.ignis,
         sanitas: entryCountByProduct.sanitas === 0 ? null : okCountByProduct.sanitas / entryCountByProduct.sanitas,
+      },
+      failedShareByProduct: {
+        vigiles: entryCountByProduct.vigiles === 0 ? null : failedCountByProduct.vigiles / entryCountByProduct.vigiles,
+        ignis: entryCountByProduct.ignis === 0 ? null : failedCountByProduct.ignis / entryCountByProduct.ignis,
+        sanitas: entryCountByProduct.sanitas === 0 ? null : failedCountByProduct.sanitas / entryCountByProduct.sanitas,
       },
     };
   }
