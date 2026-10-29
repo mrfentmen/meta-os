@@ -122,6 +122,27 @@ enum AccessibilityAnnouncement {
         post(message)
     }
 
+    /// Announcement for analysis starting, in the camera panel banner's
+    /// own words. Starting analysis touches the backend only through
+    /// the sampled frames that follow — the start itself sends nothing
+    /// yet — so it is posted verbatim, never through backendFailure or
+    /// captureFailure: either would misdescribe a user starting
+    /// sampling as a failure. The web banner is a polite live region
+    /// for the same reason: on the web a Start tap also moves the
+    /// backend-status line to \"Contacting model backend\", which says
+    /// a request path is opening, but never confirms sampling is
+    /// running or at what interval, while on native even that line
+    /// changes silently, so a VoiceOver user who had just tapped Start
+    /// Analysis heard nothing at all. Only the start is announced:
+    /// stopping is a tap the user made themselves, like Clear, and the
+    /// banner hides without a word. The banner changes only on user
+    /// actions — start, stop, or an interval change mid-run — never on
+    /// a sampler tick, so unlike the sampler-stats line there is no
+    /// per-second spam risk.
+    static func analysisStarted(_ message: String) {
+        post(message)
+    }
+
     /// Announcement for a settled backend-health result, success or
     /// failure, in the health line's own words. Web parity: the web
     /// frontend's health line is a polite live region, so a VoiceOver

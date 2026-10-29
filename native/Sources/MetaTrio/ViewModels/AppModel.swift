@@ -235,6 +235,16 @@ final class AppModel: ObservableObject {
         sampler.setInterval(TimeInterval(intervalSeconds))
         sampler.start()
         analysisRunning = sampler.isRunning
+        // Announced in the camera panel banner's own words: the banner
+        // appears silently, and the backend-status line changes
+        // silently too on native, so without this a VoiceOver user who
+        // had just tapped Start Analysis heard nothing confirming
+        // sampling was running or at what interval. Announced only
+        // when the sampler actually started; stopping stays silent,
+        // like Clear — the user tapped Stop themselves.
+        if analysisRunning {
+            AccessibilityAnnouncement.analysisStarted("Analysis active, sampling one frame every \(intervalSeconds) seconds")
+        }
     }
 
     func stopAnalysis() {

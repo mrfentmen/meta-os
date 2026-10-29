@@ -206,7 +206,15 @@ function updateHistoryEmpty() {
 // banner while sampling runs, with the live interval, so a run is
 // visible at a glance instead of only in the moving counters. The web
 // Camera panel shows the same line: hidden while idle, shown while the
-// sampler runs, and reworded when the interval changes mid-run.
+// sampler runs, and reworded when the interval changes mid-run. It is
+// a polite, atomic live region, so starting analysis reads the banner
+// aloud: the backend-status line only ever says a request path is
+// opening, never that sampling is running or at what interval, and on
+// native even that line changes silently. The line changes only on
+// user actions — start, stop, or an interval change — never on a
+// sampler tick, so unlike the sampler-stats line there is no
+// per-second spam risk in announcing it. Stopping hides the line
+// without a word: the user tapped Stop themselves, like Clear.
 function updateAnalysisActive() {
   const seconds = currentIntervalMs() / 1000;
   els.analysisActive.textContent =
