@@ -62,7 +62,24 @@ export class Camera {
       err.name = "NotSupportedError";
       throw err;
     }
-    if (this.stream) return;
+    if (this.stream) {
+      if (this.active) return;
+      // A stream object whose tracks have all ended outside the app —
+      // the device was unplugged, or the browser revoked the camera —
+      // must not make start() a no-op success: the old code returned
+      // here on any non-null stream, so a Start after such an outside
+      // end reported success while the camera stayed dead, and the
+      // handler went on to show "Camera is live" for a black preview.
+      // Discard the dead tracks (stopping ended tracks is harmless)
+      // and fall through to a fresh getUserMedia request. This is the
+      // manual equivalent of stop(), which is not used here because
+      // it bumps the start generation this start is about to claim.
+      for (const track of this.stream.getTracks()) {
+        track.stop();
+      }
+      this.stream = null;
+      this.videoEl.srcObject = null;
+    }
     this.facingMode = facingMode;
     // Captured before the first await: stop() bumps the generation, and
     // a second start bumps it too, so either one invalidates this

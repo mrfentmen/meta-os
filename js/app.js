@@ -1001,8 +1001,21 @@ els.btnCameraStart.addEventListener("click", async () => {
     // Stop/Reset already set the state and the buttons, so a stale
     // settle touches nothing at all.
     if (startGeneration !== cameraStartGeneration) return;
-    els.cameraIndicator.hidden = false;
-    setCameraState("Camera is live. No frames are sent anywhere until analysis is started.");
+    // Native parity: the native camera checks its session is actually
+    // running after configureAndStart and reports "Capture session did
+    // not start" when it is not, instead of claiming live. The web
+    // handler claimed live on any resolving start — but a stream can
+    // end outside the app while permission or play is awaited (device
+    // unplugged, camera revoked), and start() then resolves with no
+    // live track. Say so honestly instead of showing CAMERA LIVE for
+    // a dead preview; Start stays enabled, so a retry is one tap away.
+    if (!camera.active) {
+      els.cameraIndicator.hidden = true;
+      setCameraState("Camera did not start — its stream ended before it went live. Try Start camera again.");
+    } else {
+      els.cameraIndicator.hidden = false;
+      setCameraState("Camera is live. No frames are sent anywhere until analysis is started.");
+    }
   } catch (err) {
     // Same rule on failure: a pre-stop permission denial must not
     // overwrite Reset's "Camera stopped. View reset." with its error.
