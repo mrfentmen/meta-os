@@ -51,6 +51,7 @@ import {
   computeLatencyByMissAlertExpectation,
   computeLatencyByMissAlertFired,
   computeLatencyByMissAssessed,
+  computeLatencyByMissOutcome,
   computeLatencyByMissPair,
   computeLatencyByMissPredicted,
   computeLatencyByMissTruth,
@@ -2195,6 +2196,71 @@ test("report: latency by miss assessed splits the misses by whether an assessmen
   };
   const cleanRendered = renderRunReport(cleanRun);
   const section = cleanRendered.slice(cleanRendered.indexOf("## Latency by miss assessed"), cleanRendered.indexOf("## Misses"));
+  assert.match(section, /None: every scenario's predicted category matched its ground truth\./);
+});
+
+test("report: latency by miss outcome splits the misses into wrong-category and unassessed", () => {
+  const rec = (id, truth, actual, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    category_correct: actual === truth,
+    error: null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Wrong-category misses: 10, 30 -> mean/median 20, max 30,
+  // recorded 2 of 2. Unassessed misses: 100 + one
+  // unmeasured -> mean/median/max 100, recorded 1 of 2. Only
+  // groups present among the misses render, in fixed
+  // miss/unassessed order, so the totals sum to
+  // the miss count (4), not the sample size (6): the two correct
+  // records appear in no row, and no correct row can occur.
+  assert.deepEqual(
+    computeLatencyByMissOutcome([
+      rec("IGN-T1", "steam or fog", "visible smoke", 10),
+      rec("IGN-T2", "steam or fog", "visible smoke", 30),
+      rec("IGN-T3", "visible smoke", null, 100),
+      rec("IGN-T4", "flame-like lighting", null),
+      rec("IGN-T5", "visible smoke", "visible smoke", 999),
+      rec("IGN-T6", "no hazard visible", "no hazard visible", 999),
+    ]),
+    [
+      { outcome: "miss", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "unassessed", total: 2, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+    ],
+  );
+  // A clean run yields no rows.
+  assert.deepEqual(
+    computeLatencyByMissOutcome([
+      rec("IGN-T1", "steam or fog", "steam or fog", 10),
+    ]),
+    [],
+  );
+  // Rendered: section after Latency by miss assessed, before
+  // Misses; a clean run says none with the clean-run message.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      { ...rec("IGN-T1", "steam or fog", "visible smoke", 10), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T2", "visible smoke", null, 40), alert_expected: true, alert_fired: false, alert_correct: false },
+    ],
+    metrics: { sample_size: 2, true_positives: 1, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 2, mean: 25, median: 25, max: 40 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by miss outcome/);
+  assert.ok(rendered.indexOf("## Latency by miss outcome") > rendered.indexOf("## Latency by miss assessed"));
+  assert.ok(rendered.indexOf("## Latency by miss outcome") < rendered.indexOf("## Misses"));
+  assert.match(rendered, /\| miss \| 1 \| 1 \| 10\.0 \| 10\.0 \| 10\.0 \|/);
+  assert.match(rendered, /\| unassessed \| 1 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
+  const cleanRun = {
+    source: "test source",
+    generated: "test run",
+    records: [{ ...rec("IGN-T1", "steam or fog", "steam or fog", 10), alert_expected: true, alert_fired: true, alert_correct: true }],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const cleanRendered = renderRunReport(cleanRun);
+  const section = cleanRendered.slice(cleanRendered.indexOf("## Latency by miss outcome"), cleanRendered.indexOf("## Misses"));
   assert.match(section, /None: every scenario's predicted category matched its ground truth\./);
 });
 
