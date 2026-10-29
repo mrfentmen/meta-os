@@ -120,9 +120,29 @@ struct AssessmentView: View {
                 }
                 Spacer()
             }
-            Text("\(response.timestamp) · \(productDisplayName)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+            // UI-13: product name in the web .assessment-product style,
+            // the native counterpart to the web Latest panel rendering
+            // the product name bold (weight 700) in the assessment's
+            // own product accent, with the timestamp muted. Until now
+            // the native subline was one secondary caption, so a
+            // redisplayed Ignis assessment's product name read in the
+            // same gray as its timestamp while the web name read red
+            // and bold. The subline keeps its timestamp-first order
+            // and its caption size; only the product segment changes,
+            // tinted by the same assessment-own accentColor the UI-5
+            // rule, UI-6 wash, and UI-9 border already use, so an
+            // unknown product key falls back to the system accent,
+            // exactly like the web base rule falling back to the
+            // selected product's accent. Text concatenation keeps the
+            // subline one VoiceOver item under the header's combine.
+            (
+                Text("\(response.timestamp) · ")
+                    .foregroundStyle(.secondary)
+                + Text(productDisplayName)
+                    .fontWeight(.bold)
+                    .foregroundStyle(accentColor)
+            )
+            .font(.caption)
         }
         // One VoiceOver item: category, human-review flag, and the
         // timestamp/product line, in reading order.
