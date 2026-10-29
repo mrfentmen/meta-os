@@ -361,8 +361,21 @@ private struct CameraPanel: View {
             }
 
             if model.analysisRunning {
+                // IGNIS-UI-45: ANALYSIS ACTIVE banner at 13pt, the
+                // native counterpart to the web #analysis-active
+                // line, which carries class .note (13px, muted).
+                // Until now the banner used .caption (12pt), so it
+                // read one point smaller than the web line it
+                // mirrors while the camera state lines (UI-35) and
+                // the facing and guidance notes (UI-28, UI-29)
+                // already matched their own 13px web rules. The
+                // size is the only change: the bold weight, the
+                // orange indicator color, the icon, the wording,
+                // and the accessibility label are untouched — the
+                // banner keeps its native indicator treatment,
+                // only its size now matches the web line.
                 Label("ANALYSIS ACTIVE — sampling one frame every \(model.intervalSeconds) s", systemImage: "dot.radiowaves.left.and.right")
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .fontWeight(.bold)
                     .foregroundStyle(.orange)
                     .accessibilityLabel("Analysis active, sampling one frame every \(model.intervalSeconds) seconds")
