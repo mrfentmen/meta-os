@@ -343,6 +343,27 @@ export class SessionLog {
   // global endpoints, reusing DETAIL-17's span helper, not a
   // new rule. The panel renders the span in whole
   // milliseconds, or "none" with no usable failure pair.
+  // DETAIL-24 spans the global first-to-last entry
+  // (entrySpanMs, null with no usable entry pair): the
+  // milliseconds between the session's first and last recorded
+  // entry timestamps, across products and across statuses —
+  // how long the session's recorded activity stretches, where
+  // the per-product DETAIL-17 spans alone do not say it at a
+  // glance. It introduces the global firstEntryAt/lastEntryAt
+  // endpoints, mirroring DETAIL-22's firstOkAt/lastOkAt: an
+  // entry of any status, with an unknown or missing product,
+  // still opens and closes the global span (the per-product
+  // buckets stay product-gated), and an entry without a usable
+  // timestamp leaves both endpoints in place. A session with
+  // exactly one usable entry reads 0, not null — one entry
+  // spans no time. A bucket timestamp that does not parse reads
+  // null, never NaN, and the difference is kept raw, not
+  // clamped: a negative span means entries were recorded out
+  // of timestamp order, which the insertion-order endpoints
+  // preserve honestly. Derived only from those two global
+  // endpoints, reusing DETAIL-17's span helper, not a new rule.
+  // The panel renders the span in whole milliseconds, or
+  // "none" with no usable entry pair.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -364,6 +385,8 @@ export class SessionLog {
     let firstOkAt = null;
     let lastFailedAt = null;
     let firstFailedAt = null;
+    let lastEntryAt = null;
+    let firstEntryAt = null;
     let latencySum = 0;
     let latencyCount = 0;
     const latencySumByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -402,6 +425,17 @@ export class SessionLog {
         Object.hasOwn(lastEntryAtByProduct, entry.product)
       ) {
         lastEntryAtByProduct[entry.product] = entry.request_timestamp;
+      }
+      // DETAIL-24: first/last entry across products, any status,
+      // by insertion order — mirrors firstOkAt/lastOkAt, so it
+      // covers an entry with an unknown or missing product too,
+      // and a timestamp-less entry leaves both endpoints open
+      // for a later usable entry.
+      if (typeof entry.request_timestamp === "string" && entry.request_timestamp !== "") {
+        if (firstEntryAt === null) {
+          firstEntryAt = entry.request_timestamp;
+        }
+        lastEntryAt = entry.request_timestamp;
       }
       if (entry.status === "ok") {
         ok += 1;
@@ -563,6 +597,27 @@ export class SessionLog {
     // The panel renders the span in whole milliseconds, or
     // "none" with no usable failure pair.
     const failedSpanMs = entrySpanMs(firstFailedAt, lastFailedAt);
+    // DETAIL-24: the global entry span (entrySpanMs, null with no
+    // usable entry pair): the milliseconds between the session's
+    // first and last recorded entry timestamps, across products
+    // and across statuses — how long the session's recorded
+    // activity stretches, where the per-product DETAIL-17 spans
+    // alone do not say it at a glance. Derived only from the
+    // global firstEntryAt/lastEntryAt endpoints, reusing
+    // DETAIL-17's span helper, not a new rule: the endpoints
+    // mirror DETAIL-22's firstOkAt/lastOkAt, so an entry of any
+    // status, with an unknown or missing product, still opens
+    // and closes the global span (the per-product buckets stay
+    // product-gated), and an entry without a usable timestamp
+    // leaves both endpoints in place. A session with exactly one
+    // usable entry reads 0 (first and last are the same
+    // timestamp), not null. A bucket timestamp that does not
+    // parse reads null, never NaN, and the difference is kept
+    // raw, not clamped: a negative span means entries were
+    // recorded out of timestamp order, which the insertion-order
+    // endpoints preserve honestly. The panel renders the span in
+    // whole milliseconds, or "none" with no usable entry pair.
+    const globalEntrySpanMs = entrySpanMs(firstEntryAt, lastEntryAt);
     return {
       total: this._entries.length,
       ok,
@@ -581,11 +636,14 @@ export class SessionLog {
       firstFailedAt,
       firstEntryAtByProduct,
       lastEntryAtByProduct,
+      firstEntryAt,
+      lastEntryAt,
       entrySpanMsByProduct,
       failedSpanMsByProduct,
       okSpanMsByProduct,
       okSpanMs,
       failedSpanMs,
+      entrySpanMs: globalEntrySpanMs,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
       avgOkLatencyMsByProduct: {
         vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,
