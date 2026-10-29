@@ -782,6 +782,41 @@ export class SessionLog {
       http_error: shareOfAllFailures(failedByStatus.http_error),
       invalid_response: shareOfAllFailures(failedByStatus.invalid_response),
     };
+    // DETAIL-33: the per-product failure-cause shares of that
+    // product's own failures (failedShareByStatusWithinProduct):
+    // each DETAIL-9 product-cause count over that product's own
+    // failed total, so the cells say what slice of Vigiles'
+    // failures are network errors, not what slice of all
+    // failures Vigiles' network errors are — DETAIL-29's cells
+    // re-based per product. Null per product with no failures
+    // of that product (empty log, success-only log, and a
+    // product with successes but no failures alike); 0 per
+    // cause with no failures of that cause once that product
+    // holds any failure. The cells for a product sum to 1 once
+    // it holds any failure: failedCountByProduct counts exactly
+    // the bucketed failures, so a failure with an unknown or
+    // missing product moves no bucket and no denominator here
+    // (unlike DETAIL-31's product-blind cells), and successes
+    // never move a cell.
+    const shareOfProductFailures = (product, count) =>
+      failedCountByProduct[product] === 0 ? null : count / failedCountByProduct[product];
+    const failedShareByStatusWithinProduct = {
+      vigiles: {
+        network_error: shareOfProductFailures("vigiles", failedByStatusByProduct.vigiles.network_error),
+        http_error: shareOfProductFailures("vigiles", failedByStatusByProduct.vigiles.http_error),
+        invalid_response: shareOfProductFailures("vigiles", failedByStatusByProduct.vigiles.invalid_response),
+      },
+      ignis: {
+        network_error: shareOfProductFailures("ignis", failedByStatusByProduct.ignis.network_error),
+        http_error: shareOfProductFailures("ignis", failedByStatusByProduct.ignis.http_error),
+        invalid_response: shareOfProductFailures("ignis", failedByStatusByProduct.ignis.invalid_response),
+      },
+      sanitas: {
+        network_error: shareOfProductFailures("sanitas", failedByStatusByProduct.sanitas.network_error),
+        http_error: shareOfProductFailures("sanitas", failedByStatusByProduct.sanitas.http_error),
+        invalid_response: shareOfProductFailures("sanitas", failedByStatusByProduct.sanitas.invalid_response),
+      },
+    };
     return {
       total: this._entries.length,
       ok,
@@ -834,6 +869,7 @@ export class SessionLog {
       },
       failedShareByStatusByProduct,
       failedShareByStatus,
+      failedShareByStatusWithinProduct,
       entryShareByProduct: {
         vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
         ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,

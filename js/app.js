@@ -84,6 +84,7 @@ const els = {
   logStatsMedianLatencyByProduct: $("log-stats-median-latency-by-product"),
   logStatsFailedShareByStatusByProduct: $("log-stats-failed-share-by-status-by-product"),
   logStatsFailedShareByStatus: $("log-stats-failed-share-by-status"),
+  logStatsFailedShareByStatusWithinProduct: $("log-stats-failed-share-by-status-within-product"),
   logStatsFirstFailed: $("log-stats-first-failed"),
   logStatsLastFailed: $("log-stats-last-failed"),
   contactsList: $("contacts-list"),
@@ -533,6 +534,15 @@ function updateLogStats() {
   // never move a cell.
   els.logStatsFailedShareByStatus.textContent =
     `Failure-cause share of all failures: Network ${stats.failedShareByStatus.network_error === null ? "none" : `${Math.round(stats.failedShareByStatus.network_error * 100)}%`}, HTTP ${stats.failedShareByStatus.http_error === null ? "none" : `${Math.round(stats.failedShareByStatus.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatus.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatus.invalid_response * 100)}%`}`;
+  // DETAIL-33: the per-product failure-cause-share line re-bases
+  // DETAIL-29's cells on each product's own failures, rendered
+  // as whole percents, or "none" per product with no failures
+  // of that product — the slice DETAIL-9's counts imply but do
+  // not state — same always-renders shape as the other stats
+  // lines, so a quiet session never changes the panel's shape,
+  // and successes never move a cell.
+  els.logStatsFailedShareByStatusWithinProduct.textContent =
+    `Failure-cause share of that product's failures: Vigiles Network ${stats.failedShareByStatusWithinProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusWithinProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusWithinProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusWithinProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusWithinProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusWithinProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.ignis.invalid_response * 100)}%`} · Sanitas Network ${stats.failedShareByStatusWithinProduct.sanitas.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.sanitas.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusWithinProduct.sanitas.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.sanitas.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusWithinProduct.sanitas.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.sanitas.invalid_response * 100)}%`}`;
   // DETAIL-32: the global first- and last-failure lines name
   // the endpoints DETAIL-23's failure span already spans —
   // the first and last recorded failure timestamps, any

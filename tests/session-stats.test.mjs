@@ -73,6 +73,7 @@ test("empty log: all stats zero", () => {
     failedShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     failedShareByStatusByProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     failedShareByStatus: { network_error: null, http_error: null, invalid_response: null },
+    failedShareByStatusWithinProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     entryShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     entryCountByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
   });
@@ -149,6 +150,7 @@ test("ok entries bucket by their own product; failures count once, unbucketed", 
     failedShareByProduct: { vigiles: 0.5, ignis: 1 / 3, sanitas: 0 },
     failedShareByStatusByProduct: { vigiles: { network_error: 0, http_error: 0.5, invalid_response: 0 }, ignis: { network_error: 0.5, http_error: 0, invalid_response: 0 }, sanitas: { network_error: 0, http_error: 0, invalid_response: 0 } },
     failedShareByStatus: { network_error: 0.5, http_error: 0.5, invalid_response: 0 },
+    failedShareByStatusWithinProduct: { vigiles: { network_error: 0, http_error: 1, invalid_response: 0 }, ignis: { network_error: 1, http_error: 0, invalid_response: 0 }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     entryShareByProduct: { vigiles: 1 / 3, ignis: 0.5, sanitas: 1 / 6 },
     entryCountByProduct: { vigiles: 2, ignis: 3, sanitas: 1 },
   });
@@ -196,6 +198,7 @@ test("ok entry with unknown product counts in ok but in no bucket", () => {
     failedShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     failedShareByStatusByProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     failedShareByStatus: { network_error: null, http_error: null, invalid_response: null },
+    failedShareByStatusWithinProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     entryShareByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
     entryCountByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
   });
@@ -245,6 +248,7 @@ test("stats follow clear: back to zero", () => {
     failedShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     failedShareByStatusByProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     failedShareByStatus: { network_error: null, http_error: null, invalid_response: null },
+    failedShareByStatusWithinProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     entryShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     entryCountByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
   });
