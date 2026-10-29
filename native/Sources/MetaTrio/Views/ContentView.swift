@@ -58,8 +58,18 @@ struct ContentView: View {
 
     private var rightColumn: some View {
         VStack(alignment: .leading, spacing: 10) {
+            // UI-22: Latest-panel title at 15pt bold, the native
+            // counterpart to the web .panel h2 rule (15px, weight
+            // 700). Until now the title used .headline (17pt
+            // semibold), so it read larger and one step lighter
+            // than the web panel's title while the notes below it
+            // (UI-21, 13pt) already matched their own web rule.
+            // The size and weight are the only change: the wording,
+            // the header trait, and the 10pt column spacing — the
+            // native counterpart to the web h2's 10px bottom margin
+            // — are untouched.
             Text("Latest assessment")
-                .font(.headline)
+                .font(.system(size: 15, weight: .bold))
                 .accessibilityAddTraits(.isHeader)
             if let note = model.displayedAssessmentNote {
                 // UI-21: Latest-panel notes at 13pt, the native
