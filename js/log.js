@@ -1215,6 +1215,18 @@ export class SessionLog {
       ignis: shareOfOkWindow("ignis", okSpanMsByProduct.ignis),
       sanitas: shareOfOkWindow("sanitas", okSpanMsByProduct.sanitas),
     };
+    // DETAIL-49: the global usable-latency-count share
+    // of all entries (okLatencyCountShareOfEntries):
+    // the DETAIL-36 global count over the session's entry
+    // total, reusing DETAIL-40's shareOfAllEntries helper
+    // — the collapsed form of DETAIL-47's per-product
+    // shares, so a session where half of everything
+    // recorded carries a usable latency reads at a glance.
+    // Null on an empty log; 0 once the session holds any
+    // entry with no usable latency. Unlike DETAIL-47, an
+    // unknown- or missing-product success still moves
+    // this share, since the count is product-blind.
+    const okLatencyCountShareOfEntries = shareOfAllEntries(latencyCount);
     return {
       total: this._entries.length,
       ok,
@@ -1400,6 +1412,17 @@ export class SessionLog {
       // product with no successes once a nonzero ok
       // window exists.
       okSpanShareByProduct,
+      // DETAIL-49: the global usable-latency-count share
+      // of all entries (okLatencyCountShareOfEntries):
+      // the DETAIL-36 global count over the session entry
+      // total — the collapsed form of DETAIL-47's
+      // per-product shares. Null on an empty log; 0 once
+      // the session holds any entry with no usable
+      // latency. It equals the sum of DETAIL-47's shares
+      // only when every usable-latency success carries a
+      // known product; an unknown- or missing-product
+      // success sits in this share but moves no bucket.
+      okLatencyCountShareOfEntries,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and

@@ -93,6 +93,7 @@ test("empty log: all stats zero", () => {
     entrySpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     okLatencyCountShareOfEntriesByProduct: { vigiles: null, ignis: null, sanitas: null },
     okSpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
+    okLatencyCountShareOfEntries: null,
   });
 });
 
@@ -187,6 +188,7 @@ test("ok entries bucket by their own product; failures count once, unbucketed", 
     entrySpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     okLatencyCountShareOfEntriesByProduct: { vigiles: 1 / 6, ignis: 1 / 3, sanitas: 1 / 6 },
     okSpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
+    okLatencyCountShareOfEntries: 2 / 3,
   });
 });
 
@@ -252,6 +254,7 @@ test("ok entry with unknown product counts in ok but in no bucket", () => {
     entrySpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     okLatencyCountShareOfEntriesByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
     okSpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
+    okLatencyCountShareOfEntries: 1,
   });
 });
 
@@ -319,6 +322,7 @@ test("stats follow clear: back to zero", () => {
     entrySpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     okLatencyCountShareOfEntriesByProduct: { vigiles: null, ignis: null, sanitas: null },
     okSpanShareByProduct: { vigiles: null, ignis: null, sanitas: null },
+    okLatencyCountShareOfEntries: null,
   });
 });
 

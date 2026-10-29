@@ -104,6 +104,7 @@ const els = {
   logStatsEntrySpanShareByProduct: $("log-stats-entry-span-share-by-product"),
   logStatsOkLatencyCountShareOfEntriesByProduct: $("log-stats-ok-latency-count-share-of-entries-by-product"),
   logStatsOkSpanShareByProduct: $("log-stats-ok-span-share-by-product"),
+  logStatsOkLatencyCountShareOfEntries: $("log-stats-ok-latency-count-share-of-entries"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -759,6 +760,17 @@ function updateLogStats() {
   // overlap. Failures never move a share.
   els.logStatsOkSpanShareByProduct.textContent =
     `Success-span share of ok window by product: Vigiles ${stats.okSpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareByProduct.sanitas * 100)}%`}`;
+  // DETAIL-49: the global usable-latency-count-share-
+  // of-all-entries line collapses DETAIL-47's three
+  // shares into one, rendered as a whole percent, or
+  // "none" only on an empty log — the single number a
+  // product split cannot state, so a session where half
+  // of everything recorded carries a usable latency
+  // reads at a glance. A failure-only log reads 0%,
+  // never "none", and an unknown-product success still
+  // moves this share even though it moves no bucket.
+  els.logStatsOkLatencyCountShareOfEntries.textContent =
+    `Successful latency-measurement share of all entries: ${stats.okLatencyCountShareOfEntries === null ? "none" : `${Math.round(stats.okLatencyCountShareOfEntries * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
