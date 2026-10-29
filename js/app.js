@@ -228,6 +228,17 @@ function refreshButtons() {
   // nothing, and the Camera class discards the stream if permission
   // is granted after the stop.
   els.btnCameraStop.disabled = !camActive && !cameraStartPending;
+  // The facing picker waits out a pending start too. The Start call
+  // fixes its getUserMedia constraints when it is made, so a facing
+  // change landing mid-wait would only record a choice the stream
+  // being requested does not use: the picker would say rear while
+  // the camera that attaches shows the front view. Stop stays enabled
+  // as the cancel, and every path that clears the pending flag (the
+  // Start settle, Stop, Reset) refreshes the buttons, so the picker
+  // comes back the moment the wait ends. Native needs no equivalent:
+  // its configureAndStart reads the facing when permission is granted,
+  // so a mid-wait pick there is honestly the camera that opens.
+  els.cameraFacing.disabled = cameraStartPending;
   els.btnAnalysisStart.disabled = !camActive || sampler.running;
   els.btnAnalysisStop.disabled = !sampler.running;
   updateHistoryEmpty();

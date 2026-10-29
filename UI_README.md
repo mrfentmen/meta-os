@@ -39,6 +39,13 @@ ES modules for the node test runner; it declares zero dependencies.)
   only one camera still gets that camera. Changing it while the camera
   is off applies to the next Start; changing it while live restarts the
   stream, and a failed restart leaves the camera off with the real error.
+  While a Start is still awaiting permission the picker is disabled:
+  the Start call already fixed its camera constraints, so a mid-wait
+  change would only record a choice the requested stream does not use
+  and leave the picker disagreeing with the camera that opens. The
+  native picker needs no such guard — it reads the facing when
+  permission is granted, so a mid-wait pick there is the camera that
+  opens.
   While analysis is running, the Camera panel also shows "Analysis active
   — sampling one frame every N seconds", matching the native panel's
   ANALYSIS ACTIVE banner; it is hidden while idle and rewords itself
