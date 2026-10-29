@@ -493,6 +493,19 @@ function renderLatest(assessment, earlierNote = null) {
     wrap.appendChild(uncertainty);
   }
 
+  // Native parity: the native panel puts a Divider between the
+  // uncertainty section and the processing line, so the model and
+  // latency line reads as footer metadata, not as another finding.
+  // The web panel ran the processing line straight after the
+  // uncertainty list (or its "no uncertainty items" note) with no
+  // rule at all, so the footer blended into the findings. The rule
+  // is aria-hidden: it is a visual separator only, like the native
+  // Divider, not a landmark a screen reader should stop on.
+  const divider = document.createElement("hr");
+  divider.className = "assessment-divider";
+  divider.setAttribute("aria-hidden", "true");
+  wrap.appendChild(divider);
+
   const processing = document.createElement("p");
   processing.className = "note mono";
   processing.textContent =

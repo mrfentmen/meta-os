@@ -607,6 +607,12 @@ body[data-product="ignis"] .product-option[data-product-option="ignis"]:has(inpu
   box-shadow: inset 0 0 0 1px #d92b2b, 0 0 14px rgba(217, 43, 43, 0.35);
 }
 
+.assessment-divider {
+  border: 0;
+  border-top: 1px solid var(--panel-border);
+  margin: 12px 0;
+}
+
 /* HANA Agent1: the Latest assessment panel's wash follows the
    assessment's own product, not the selected product's — the web
    counterpart to the native UI-6 panel wash. The theme blocks above
