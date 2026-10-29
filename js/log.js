@@ -186,6 +186,23 @@ export class SessionLog {
   // it still counts in the global ok/failed totals). The panel
   // renders each share as a whole percent, or "none" per product
   // with no entries.
+  // DETAIL-13 adds the session-mix share (entryShareByProduct):
+  // each product's entries over the session's total entries, so
+  // a session split 2/1/1 across the products reads differently
+  // from one where a single product dominates, and the raw
+  // counts alone do not say that at a glance. The denominator
+  // here is the session total, not the product's own entries,
+  // so the null rule differs from DETAIL-11/12 on purpose: an
+  // empty log reads null per product (no total to divide by),
+  // but once the log holds any entry, a product with no entries
+  // reads 0 — it genuinely holds 0% of the session — never
+  // "none". The three shares sum to 1 when every entry carries
+  // a known product, and to less than 1 when unknown-product
+  // entries sit in the total but in no bucket. Same bucket
+  // rules as DETAIL-11: an entry with an unknown or missing
+  // product moves no bucket (though it still counts in the
+  // total). The panel renders each share as a whole percent,
+  // or "none" per product only on an empty log.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -297,6 +314,11 @@ export class SessionLog {
         vigiles: entryCountByProduct.vigiles === 0 ? null : failedCountByProduct.vigiles / entryCountByProduct.vigiles,
         ignis: entryCountByProduct.ignis === 0 ? null : failedCountByProduct.ignis / entryCountByProduct.ignis,
         sanitas: entryCountByProduct.sanitas === 0 ? null : failedCountByProduct.sanitas / entryCountByProduct.sanitas,
+      },
+      entryShareByProduct: {
+        vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
+        ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,
+        sanitas: this._entries.length === 0 ? null : entryCountByProduct.sanitas / this._entries.length,
       },
     };
   }

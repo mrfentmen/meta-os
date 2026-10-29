@@ -63,6 +63,7 @@ const els = {
   logStatsLatencyRangeByProduct: $("log-stats-latency-range-by-product"),
   logStatsOkShareByProduct: $("log-stats-ok-share-by-product"),
   logStatsFailedShareByProduct: $("log-stats-failed-share-by-product"),
+  logStatsEntryShareByProduct: $("log-stats-entry-share-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -333,6 +334,12 @@ function updateLogStats() {
   // succeeded reads 0%, never "none".
   els.logStatsFailedShareByProduct.textContent =
     `Failed share by product: Vigiles ${stats.failedShareByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareByProduct.ignis * 100)}%`} · Sanitas ${stats.failedShareByProduct.sanitas === null ? "none" : `${Math.round(stats.failedShareByProduct.sanitas * 100)}%`}`;
+  // DETAIL-13: the session-mix line — each product's entries as a
+  // share of the session total, rendered as a whole percent, or
+  // "none" per product only on an empty log. A product with no
+  // entries in a non-empty session reads 0%, never "none".
+  els.logStatsEntryShareByProduct.textContent =
+    `Session share by product: Vigiles ${stats.entryShareByProduct.vigiles === null ? "none" : `${Math.round(stats.entryShareByProduct.vigiles * 100)}%`} · Ignis ${stats.entryShareByProduct.ignis === null ? "none" : `${Math.round(stats.entryShareByProduct.ignis * 100)}%`} · Sanitas ${stats.entryShareByProduct.sanitas === null ? "none" : `${Math.round(stats.entryShareByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
