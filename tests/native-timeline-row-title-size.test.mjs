@@ -10,7 +10,7 @@
 // while the row product name and timestamp (UI-37) already matched
 // their own 12.5px web rules and the row detail (UI-43) already
 // matched its own 15px web rule. The fix gives the title a 15pt
-// system font, keeping its semibold weight and its assessment-primary
+// system font, keeping its bold weight (UI-55) and its assessment-primary
 // and failure-red colors. No Swift toolchain exists in this sandbox,
 // so these are static checks on the shipped Swift.
 
@@ -56,11 +56,11 @@ test("native timeline row title: web contract — history head strong on a 15px 
   );
 });
 
-test("native timeline row title: takes 15pt, keeps semibold weight and row colors", () => {
+test("native timeline row title: takes 15pt, keeps bold weight and row colors", () => {
   assert.match(
     title,
-    /Text\(item\.title\)\s+\.font\(\.system\(size: 15\)\)\s+\.fontWeight\(\.semibold\)\s+\.foregroundStyle\(titleColor\(for: item\)\)/,
-    "title takes 15pt and keeps its semibold weight and titleColor",
+    /Text\(item\.title\)\s+\.font\(\.system\(size: 15\)\)\s+\.fontWeight\(\.bold\)\s+\.foregroundStyle\(titleColor\(for: item\)\)/,
+    "title takes 15pt and keeps its UI-55 bold weight and titleColor",
   );
   assert.match(
     timeline,

@@ -93,9 +93,20 @@ struct TimelineView: View {
                 // semibold weight, the assessment-primary and
                 // failure-red colors, and the row layout are
                 // untouched.
+                // IGNIS-UI-55: timeline row title at bold weight, the
+                // native counterpart to the web history title, which
+                // js/app.js renders as a strong element (weight 700).
+                // Until now the native title used semibold (600), so
+                // it read one step lighter than the web title while
+                // the observation category (UI-17) already matched
+                // its own web strong at bold and the row title size
+                // (UI-53) already matched at 15pt. The weight is the
+                // only change: the 15pt size, the assessment-primary
+                // and failure-red colors, the firstTextBaseline row,
+                // and the 10pt leading rule gap are untouched.
                 Text(item.title)
                     .font(.system(size: 15))
-                    .fontWeight(.semibold)
+                    .fontWeight(.bold)
                     .foregroundStyle(titleColor(for: item))
                 Text(item.product.config.displayName)
                     .font(.system(size: 12.5))
