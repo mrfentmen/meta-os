@@ -37,11 +37,22 @@ struct TimelineView: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             if model.timeline.isEmpty {
+                // IGNIS-UI-47: empty-state notes at 13pt, the native
+                // counterparts to the web #history-empty note (class
+                // .note at 13px, muted). Until now both notes were
+                // plain Texts at the default body size, so they read
+                // four points larger than the web note while the
+                // timeline intro note just above them (UI-34) already
+                // matched its own 13px web rule. The size is the only
+                // change: the muted color and the wording — which
+                // match the web strings exactly — are untouched.
                 if model.analysisRunning {
                     Text("Analysis is running — assessments and errors will appear here as they arrive.")
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 } else {
                     Text("No events yet. Assessments and errors will appear here.")
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                 }
             } else {
