@@ -109,6 +109,7 @@ const els = {
   logStatsOkLatencyCountShareOfOk: $("log-stats-ok-latency-count-share-of-ok"),
   logStatsOkLatencyCountShareOfOkByProduct: $("log-stats-ok-latency-count-share-of-ok-by-product"),
   logStatsOkSpanShareOfEntryWindowByProduct: $("log-stats-ok-span-share-of-entry-window-by-product"),
+  logStatsOkLatencyCountShareOfOwnOkByProduct: $("log-stats-ok-latency-count-share-of-own-ok-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -826,6 +827,19 @@ function updateLogStats() {
   // without moving any bucket.
   els.logStatsOkSpanShareOfEntryWindowByProduct.textContent =
     `Success-span share of entry window by product: Vigiles ${stats.okSpanShareOfEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareOfEntryWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindowByProduct.sanitas * 100)}%`}`;
+  // DETAIL-54: the per-product usable-latency-count-share-
+  // of-that-product's-own-successes line re-bases
+  // DETAIL-36's counts on each product's own ok total,
+  // rendered as whole percents, or "none" per product
+  // with no successes of that product — the within-
+  // product slice DETAIL-52's global-ok shares imply
+  // but do not state, so a product whose own successes
+  // are all measured reads 100% whatever its share of
+  // the session. A product with successes but no finite
+  // latency reads 0%, never "none", and failures move
+  // no share.
+  els.logStatsOkLatencyCountShareOfOwnOkByProduct.textContent =
+    `Successful latency-measurement share of that product's own successes by product: Vigiles ${stats.okLatencyCountShareOfOwnOkByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnOkByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfOwnOkByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnOkByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareOfOwnOkByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnOkByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

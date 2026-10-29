@@ -1375,6 +1375,39 @@ export class SessionLog {
       ignis: shareOfEntryWindow("ignis", okSpanMsByProduct.ignis),
       sanitas: shareOfEntryWindow("sanitas", okSpanMsByProduct.sanitas),
     };
+    // DETAIL-54: the per-product usable-latency-count shares
+    // of that product's own ok successes (renumbered
+    // DETAIL-54 after Rowan's distinct DETAIL-53 landed
+    // first, both sides kept in the merge):
+    // (okLatencyCountShareOfOwnOkByProduct): each
+    // DETAIL-36 product count over that product's own ok
+    // count — the within-product re-base DETAIL-52's
+    // global-ok shares imply but do not state, so a
+    // session where half of Vigiles successes carry a
+    // latency reads at a glance even when Vigiles is a
+    // small slice of all successes, and a product whose
+    // successes are all measured reads 1 whatever its
+    // share of the session. Derived only from the
+    // DETAIL-36 counts and the per-product ok counts, not
+    // a new rule: failures sit in neither side; an ok
+    // entry with no finite latency sits in its own
+    // product's denominator but moves no bucket; and an
+    // ok entry with an unknown or missing product moves
+    // no bucket and no product denominator, so it dilutes
+    // DETAIL-52's shares without touching these — the
+    // deliberate contrast with DETAIL-52, matching
+    // DETAIL-44's within-product rule. Null per product
+    // with no successes of that product at all (an empty
+    // log, a failure-only log, and any product with no
+    // successes yet alike — never a divide by zero);
+    // 0 per product with successes but no usable latency,
+    // including a success-only log with no finite latency.
+    // A 0 ms latency still counts as a measurement.
+    const okLatencyCountShareOfOwnOkByProduct = {
+      vigiles: okCountByProduct.vigiles === 0 ? null : latencyCountByProduct.vigiles / okCountByProduct.vigiles,
+      ignis: okCountByProduct.ignis === 0 ? null : latencyCountByProduct.ignis / okCountByProduct.ignis,
+      sanitas: okCountByProduct.sanitas === 0 ? null : latencyCountByProduct.sanitas / okCountByProduct.sanitas,
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1618,6 +1651,17 @@ export class SessionLog {
       // product with no successes once a nonzero entry
       // window exists.
       okSpanShareOfEntryWindowByProduct,
+      // DETAIL-54: the per-product usable-latency-count
+      // shares of that product's own ok successes
+      // (okLatencyCountShareOfOwnOkByProduct): each
+      // DETAIL-36 product count over that product's own
+      // ok count — the within-product re-base of
+      // DETAIL-52's global-ok shares. Null per product
+      // with no successes of that product; 0 per product
+      // with successes but no usable latency. An unknown-
+      // or missing-product success moves no bucket and no
+      // product denominator, unlike DETAIL-52.
+      okLatencyCountShareOfOwnOkByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
