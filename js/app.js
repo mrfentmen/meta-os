@@ -78,6 +78,8 @@ const els = {
   logStatsOkShare: $("log-stats-ok-share"),
   logStatsFailedShare: $("log-stats-failed-share"),
   logStatsMedianLatency: $("log-stats-median-latency"),
+  logStatsFirstEntry: $("log-stats-first-entry"),
+  logStatsLastEntry: $("log-stats-last-entry"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -466,6 +468,21 @@ function updateLogStats() {
   // lines, so a quiet session never changes the panel's shape.
   els.logStatsMedianLatency.textContent =
     `Median successful latency: ${stats.medianOkLatencyMs === null ? "none" : `${Math.round(stats.medianOkLatencyMs)} ms`}`;
+  // DETAIL-27: the global first- and last-entry lines name the
+  // endpoints DETAIL-24's entry span already spans — the first
+  // and last recorded entry timestamps, any status, across
+  // products — or "none" per endpoint with no usable entry,
+  // same always-renders shape as the other stats lines, so a
+  // quiet session never changes the panel's shape. An entry
+  // with an unknown or missing product still opens and closes
+  // these endpoints (the per-product DETAIL-15/16 buckets stay
+  // product-gated), and a timestamp-less entry leaves both
+  // endpoints in place. The endpoints follow insertion order,
+  // not timestamp order, exactly as the span does.
+  els.logStatsFirstEntry.textContent =
+    `First entry: ${stats.firstEntryAt ?? "none"}`;
+  els.logStatsLastEntry.textContent =
+    `Last entry: ${stats.lastEntryAt ?? "none"}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
