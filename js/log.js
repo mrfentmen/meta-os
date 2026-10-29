@@ -75,6 +75,32 @@ export class SessionLog {
     return this._entries.length;
   }
 
+  // Session stats for the detail view (Del direction 2026-10-29: session
+  // stats per product, Rowan's detail/stats lane). Counts only what the
+  // log actually recorded: successful assessments bucketed by their own
+  // product, and failures as one total (a failed request still counts
+  // as a session event, but it produced no assessment to bucket). An
+  // ok entry with an unknown or missing product is counted in `ok`
+  // but in no product bucket, so the buckets never invent a product;
+  // the app always records a real product, so in practice the buckets
+  // sum to `ok`. Pure read over the entries: no sampling, no model.
+  stats() {
+    const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
+    let ok = 0;
+    let failed = 0;
+    for (const entry of this._entries) {
+      if (entry.status === "ok") {
+        ok += 1;
+        if (Object.hasOwn(byProduct, entry.product)) {
+          byProduct[entry.product] += 1;
+        }
+      } else {
+        failed += 1;
+      }
+    }
+    return { total: this._entries.length, ok, failed, byProduct };
+  }
+
   record({ requestTimestamp, product = null, latencyMs = null, status, response = null, error = null, scenarioLabel = null }) {
     if (!LOG_STATUSES.includes(status)) {
       throw new RangeError(`unknown log status: ${status}`);

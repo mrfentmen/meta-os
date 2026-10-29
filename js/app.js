@@ -50,6 +50,7 @@ const els = {
   btnExport: $("btn-export-log"),
   btnClearLog: $("btn-clear-log"),
   logStats: $("log-stats"),
+  logStatsByProduct: $("log-stats-by-product"),
   imageInput: $("image-input"),
   imagePreview: $("image-preview"),
   imageState: $("image-state"),
@@ -186,6 +187,9 @@ function clearLastRoundTrip() {
 
 function updateLogStats() {
   els.logStats.textContent = `Session log entries: ${log.count}`;
+  const stats = log.stats();
+  els.logStatsByProduct.textContent =
+    `Assessments by product: Vigiles ${stats.byProduct.vigiles} · Ignis ${stats.byProduct.ignis} · Sanitas ${stats.byProduct.sanitas} · Failed ${stats.failed}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
