@@ -470,6 +470,14 @@ final class AppModel: ObservableObject {
                 // No request was made, so this is not a backend failure:
                 // show the capture failure itself, not a backend message.
                 backendStatus = .error(message)
+                // Web parity: the web frontend's backend-status line is
+                // a polite live region, so this same error is read
+                // aloud there the moment it is set. The native status
+                // bar is not a live region, so without this call a
+                // VoiceOver user would never hear that the frame
+                // extraction failed, even though the error is on
+                // screen. Announced verbatim, not as a backend failure.
+                AccessibilityAnnouncement.captureFailure(message: message)
                 timeline.insert(
                     TimelineItem(product: product, timestamp: timestamp, kind: .failure(message)),
                     at: 0
@@ -637,6 +645,14 @@ final class AppModel: ObservableObject {
             // so this shows the capture failure itself, not a backend
             // message, and leaves the last round trip alone.
             backendStatus = .error(message)
+            // Web parity: the web frontend's backend-status line is a
+            // polite live region, so this same error is read aloud
+            // there the moment it is set. The native status bar is not
+            // a live region, so without this call a VoiceOver user
+            // would never hear that the tick failed, even though the
+            // error is on screen. Announced verbatim, not as a backend
+            // failure, because no request was made.
+            AccessibilityAnnouncement.captureFailure(message: message)
             timeline.insert(
                 TimelineItem(product: requestProduct, timestamp: timestamp, kind: .failure(message)),
                 at: 0

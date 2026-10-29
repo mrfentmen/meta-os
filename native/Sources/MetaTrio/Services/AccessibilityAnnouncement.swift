@@ -5,9 +5,15 @@ import AppKit
 // latest-assessment panel). A new validated assessment or a backend
 // failure is announced without stealing focus, so a VoiceOver user
 // learns about it as it arrives instead of having to poll the timeline.
-// Re-inspecting a past timeline row deliberately does NOT announce:
-// the web history is not a live region either, so a redisplayed past
-// result can never sound like a new one.
+// A frame-capture failure is announced too, with its own message: the
+// web frontend's live backend-status line reads a capture failure aloud
+// the moment it is set, and the native app used to set the same error
+// status silently, so a VoiceOver user never heard that a tick had
+// failed. A capture failure is not a backend failure — no request was
+// made — so it is announced verbatim, never prefixed with "Model backend
+// not connected". Re-inspecting a past timeline row deliberately does
+// NOT announce: the web history is not a live region either, so a
+// redisplayed past result can never sound like a new one.
 //
 // Posting an announcement when VoiceOver is not running is harmless:
 // the notification simply has no listener. Nothing here invents a
@@ -38,5 +44,15 @@ enum AccessibilityAnnouncement {
     /// status line the web frontend's live region reads.
     static func backendFailure(message: String) {
         post("Model backend not connected: \(message)")
+    }
+
+    /// Announcement for a frame-capture failure (live sample or video
+    /// frame extraction). The message is already the status line's own
+    /// wording ("Frame capture failed: …" / "Video frame capture
+    /// failed: …"), so it is posted verbatim: calling backendFailure
+    /// here would wrongly tell the listener the backend was not
+    /// connected, when no request was ever made.
+    static func captureFailure(message: String) {
+        post(message)
     }
 }
