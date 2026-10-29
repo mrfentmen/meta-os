@@ -262,6 +262,14 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   cluster fast or drag a slow tail is visible at a glance; the recorded count is out of the miss
   count, not the sample size, records with no latency take no part, a run whose misses carry no
   latency says so instead of inventing a distribution, and a run with no misses says none.
+  A latency-outliers-among-misses section right after it names the misses whose latency is
+  more than twice the misses' median recorded latency — the same strict rule as the
+  full-run latency outliers, but judged against the failures' own typical latency, so a
+  slow failure is visible without the correct records moving the median or threshold;
+  each outlier carries its latency, the misses' median, and the threshold, a run with
+  fewer than two recorded miss latencies or a zero miss median flags nothing, a run
+  whose misses carry no latency says so instead of naming one, and a run with no misses
+  says none.
   An alert-errors section names the
   scenarios behind the summary line's FP/FN counts — false
   positives (an alert fired where none was expected) and false

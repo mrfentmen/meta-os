@@ -59,6 +59,7 @@ import {
   computeLatencyByOutcome,
   computeLatencyDistribution,
   computeMissLatencyDistribution,
+  computeMissLatencyOutliers,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -2416,6 +2417,109 @@ test("report: latency distribution among misses covers failures without correct 
   const unmeasuredRendered = renderRunReport(unmeasuredRun);
   const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Latency distribution among misses"), unmeasuredRendered.indexOf("## Misses"));
   assert.match(unmeasuredSection, /No latency distribution among the misses: no miss in this run carries a latency measurement\./);
+});
+
+test("report: latency outliers among misses use the misses-only median", () => {
+  const rec = (id, truth, actual, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    category_correct: actual === truth,
+    error: null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Miss latencies 10, 20, 100: median 20, threshold 40, so 100
+  // flags — even though the correct record's 1000 would lift a
+  // full-run median to 60 and its threshold to 120, hiding it.
+  // Correct records never enter the misses' median or flagging.
+  assert.deepEqual(
+    computeMissLatencyOutliers([
+      rec("IGN-T1", "visible smoke", "visible flame", 10),
+      rec("IGN-T2", "visible smoke", "visible flame", 20),
+      rec("IGN-T3", "steam or fog", "visible smoke", 100),
+      rec("IGN-T4", "visible smoke", "visible smoke", 1000),
+    ]),
+    [{ scenarioId: "IGN-T3", truth: "steam or fog", latencyMs: 100, medianMs: 20, thresholdMs: 40 }],
+  );
+  // Exactly twice the miss median is typical-scale, not an outlier:
+  // miss latencies 10, 20, 40 give median 20 and threshold 40, and
+  // the 40 at the threshold does not flag.
+  assert.deepEqual(
+    computeMissLatencyOutliers([
+      rec("IGN-T1", "visible smoke", "visible flame", 10),
+      rec("IGN-T2", "visible smoke", "visible flame", 20),
+      rec("IGN-T3", "steam or fog", "visible smoke", 40),
+    ]),
+    [],
+  );
+  // Fewer than two recorded miss latencies, a zero miss median,
+  // and a misses-without-latency run all flag nothing.
+  assert.deepEqual(
+    computeMissLatencyOutliers([rec("IGN-T1", "visible smoke", "visible flame", 100)]),
+    [],
+  );
+  assert.deepEqual(
+    computeMissLatencyOutliers([
+      rec("IGN-T1", "visible smoke", "visible flame", 0),
+      rec("IGN-T2", "visible smoke", "visible flame", 0),
+    ]),
+    [],
+  );
+  assert.deepEqual(
+    computeMissLatencyOutliers([rec("IGN-T1", "visible smoke", "visible flame")]),
+    [],
+  );
+  // An unassessed record counts as a miss but carries no latency,
+  // so it never enters the median or the flagging.
+  assert.deepEqual(
+    computeMissLatencyOutliers([
+      rec("IGN-T1", "visible smoke", null),
+      rec("IGN-T2", "visible smoke", "visible flame", 10),
+      rec("IGN-T3", "visible smoke", "visible flame", 20),
+      rec("IGN-T4", "steam or fog", "visible smoke", 100),
+    ]),
+    [{ scenarioId: "IGN-T4", truth: "steam or fog", latencyMs: 100, medianMs: 20, thresholdMs: 40 }],
+  );
+  // Rendered: section after Latency distribution among misses,
+  // before Misses; values on a miss run, none on a clean run, and
+  // a no-measurement message when the misses carry none.
+  const metrics = { sample_size: 4, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 4, mean: 282.5, median: 60, max: 1000 }, errors: { count: 0, scenario_ids: [] } };
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      { ...rec("IGN-T1", "visible smoke", "visible flame", 10), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T2", "visible smoke", "visible flame", 20), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T3", "steam or fog", "visible smoke", 100), alert_expected: true, alert_fired: true, alert_correct: true },
+      { ...rec("IGN-T4", "visible smoke", "visible smoke", 1000), alert_expected: true, alert_fired: true, alert_correct: true },
+    ],
+    metrics,
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency outliers among misses/);
+  assert.ok(rendered.indexOf("## Latency outliers among misses") > rendered.indexOf("## Latency distribution among misses"));
+  assert.ok(rendered.indexOf("## Latency outliers among misses") < rendered.indexOf("## Misses"));
+  const section = rendered.slice(rendered.indexOf("## Latency outliers among misses"), rendered.indexOf("## Misses"));
+  assert.match(section, /\| IGN-T3 \| steam or fog \| 100\.0 \| 20\.0 \| 40\.0 \|/);
+  assert.doesNotMatch(section, /IGN-T4/);
+  const cleanRun = {
+    source: "test source",
+    generated: "test run",
+    records: [{ ...rec("IGN-T1", "visible smoke", "visible smoke", 10), alert_expected: true, alert_fired: true, alert_correct: true }],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const cleanRendered = renderRunReport(cleanRun);
+  const cleanSection = cleanRendered.slice(cleanRendered.indexOf("## Latency outliers among misses"), cleanRendered.indexOf("## Misses"));
+  assert.match(cleanSection, /None: every scenario's predicted category matched its ground truth\./);
+  const unmeasuredRun = {
+    source: "test source",
+    generated: "test run",
+    records: [{ ...rec("IGN-T1", "visible smoke", "visible flame"), alert_expected: true, alert_fired: true, alert_correct: true }],
+    metrics: { sample_size: 1, true_positives: 1, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 0, mean: null, median: null, max: null }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const unmeasuredRendered = renderRunReport(unmeasuredRun);
+  const unmeasuredSection = unmeasuredRendered.slice(unmeasuredRendered.indexOf("## Latency outliers among misses"), unmeasuredRendered.indexOf("## Misses"));
+  assert.match(unmeasuredSection, /None recorded: no miss in this run carries a latency measurement, so no outlier can be named\./);
 });
 
 test("report: alert errors split FP/FN scenarios from category misses", () => {
