@@ -586,8 +586,17 @@ private struct SettingsPanel: View {
         GroupBox("Settings") {
             VStack(alignment: .leading, spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
+                    // UI-33: endpoint label at 13pt, the native
+                    // counterpart to the web label rule (13px, muted).
+                    // Until now the label used .caption (12pt), so it
+                    // read one point smaller than the web panel's
+                    // endpoint label while the backend-health and
+                    // sampling-disclosure lines (UI-32) already matched
+                    // their own 13px web rules. The size is the only
+                    // change: the muted color and the wording are
+                    // untouched.
                     Text("Assessment endpoint")
-                        .font(.caption)
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                     TextField("Assessment endpoint", text: $model.endpoint)
                         .textFieldStyle(.roundedBorder)
@@ -647,8 +656,16 @@ private struct SettingsPanel: View {
                     .pickerStyle(.menu)
                     .accessibilityLabel("Scenario")
                     .accessibilityHint("Optional scenario for the current product, recorded in the session log for evaluation. Switching products resets this choice.")
+                    // UI-33: custom-scenario label at 13pt, the native
+                    // counterpart to the web label rule (13px, muted).
+                    // Until now the label used .caption (12pt), so it
+                    // read one point smaller than the web panel's
+                    // scenario label while the endpoint label above
+                    // now matches its own 13px web rule. The size is
+                    // the only change: the muted color and the wording
+                    // are untouched.
                     Text("Or a custom scenario label (overrides the choice above)")
-                        .font(.caption)
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                     TextField("Scenario label", text: $model.scenarioLabel)
                         .textFieldStyle(.roundedBorder)
