@@ -66,6 +66,7 @@ const els = {
   logStatsEntryShareByProduct: $("log-stats-entry-share-by-product"),
   logStatsEntryCountByProduct: $("log-stats-entry-count-by-product"),
   logStatsFirstEntryByProduct: $("log-stats-first-entry-by-product"),
+  logStatsLastEntryByProduct: $("log-stats-last-entry-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -358,6 +359,14 @@ function updateLogStats() {
   // panel's shape.
   els.logStatsFirstEntryByProduct.textContent =
     `First entry by product: Vigiles ${stats.firstEntryAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstEntryAtByProduct.ignis ?? "none"} · Sanitas ${stats.firstEntryAtByProduct.sanitas ?? "none"}`;
+  // DETAIL-16: the per-product last-entry line names each
+  // product's most recent recorded entry by its request timestamp,
+  // any status — the closing counterpart to DETAIL-15's first-entry
+  // line — or "none" per product with no entry carrying a usable
+  // timestamp, same always-renders shape as the other stats lines,
+  // so a quiet product never changes the panel's shape.
+  els.logStatsLastEntryByProduct.textContent =
+    `Last entry by product: Vigiles ${stats.lastEntryAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastEntryAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastEntryAtByProduct.sanitas ?? "none"}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

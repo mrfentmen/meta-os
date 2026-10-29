@@ -215,6 +215,16 @@ export class SessionLog {
   // unknown or missing product moves no bucket (though it still
   // counts in the total), so the three counts sum to the total
   // only when every entry carries a known product.
+  // DETAIL-16 adds the closing counterpart to DETAIL-15's first
+  // entry (lastEntryAtByProduct, null per product with no entry
+  // carrying a usable timestamp): each product's bucket holds the
+  // request timestamp of its MOST RECENT recorded entry, any
+  // status — overwritten on every usable entry, so it reads when
+  // recording for a product last happened, not when it last
+  // succeeded (DETAIL-5) or last failed (DETAIL-7). Same bucket
+  // rules as DETAIL-15: an entry with an unknown or missing
+  // product moves no bucket, and an entry without a usable
+  // timestamp leaves its bucket's previous value in place.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -227,6 +237,7 @@ export class SessionLog {
     const lastOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const lastFailedAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const firstEntryAtByProduct = { vigiles: null, ignis: null, sanitas: null };
+    const lastEntryAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     let ok = 0;
     let failed = 0;
     let lastOkAt = null;
@@ -255,6 +266,19 @@ export class SessionLog {
         firstEntryAtByProduct[entry.product] === null
       ) {
         firstEntryAtByProduct[entry.product] = entry.request_timestamp;
+      }
+      // DETAIL-16: the most recent recorded entry per product, any
+      // status, by insertion order — overwritten on every usable
+      // entry, so a later entry (even one carrying an earlier
+      // timestamp string) always moves the bucket. An entry
+      // without a usable timestamp or with an unknown/missing
+      // product moves no bucket.
+      if (
+        typeof entry.request_timestamp === "string" &&
+        entry.request_timestamp !== "" &&
+        Object.hasOwn(lastEntryAtByProduct, entry.product)
+      ) {
+        lastEntryAtByProduct[entry.product] = entry.request_timestamp;
       }
       if (entry.status === "ok") {
         ok += 1;
@@ -324,6 +348,7 @@ export class SessionLog {
       lastOkAtByProduct,
       lastFailedAtByProduct,
       firstEntryAtByProduct,
+      lastEntryAtByProduct,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
       avgOkLatencyMsByProduct: {
         vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,
