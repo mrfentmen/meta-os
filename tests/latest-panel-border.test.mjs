@@ -76,7 +76,13 @@ test("web: Latest panel borders match the theme panel borders for Ignis and Sani
   assert.ok(sanitasTheme, "Sanitas theme panel border is rgba(93, 168, 100, 0.5)");
 });
 
-test("web: Latest panel border adds no second wash or shadow treatment", () => {
+// Superseded in part by the UI-10 shadow slice: these rules now DO
+// carry a box-shadow — the product-neutral drop, governed by
+// tests/latest-panel-shadow.test.mjs (drop only, no faint ring,
+// identical across products). What this test still guards is that
+// the border slice added no SECOND wash; the shadow assertion moved
+// to that file rather than being dropped.
+test("web: Latest panel border adds no second wash", () => {
   for (const product of Object.keys(borders)) {
     const rule = css.match(
       new RegExp(`body \\.panel\\.latest-product-${product} \\{[^}]*\\}`),
@@ -84,6 +90,5 @@ test("web: Latest panel border adds no second wash or shadow treatment", () => {
     assert.ok(rule, `${product} panel rule exists`);
     const backgrounds = rule[0].match(/background:/g) || [];
     assert.equal(backgrounds.length, 1, "exactly one background — the wash");
-    assert.doesNotMatch(rule[0], /box-shadow/, "no shadow override on the Latest panel");
   }
 });
