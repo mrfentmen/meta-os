@@ -71,6 +71,7 @@ const els = {
   logStatsLastEntryByProduct: $("log-stats-last-entry-by-product"),
   logStatsEntrySpanByProduct: $("log-stats-entry-span-by-product"),
   logStatsFailedSpanByProduct: $("log-stats-failed-span-by-product"),
+  logStatsOkSpanByProduct: $("log-stats-ok-span-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -401,6 +402,14 @@ function updateLogStats() {
   // quiet product never changes the panel's shape.
   els.logStatsFailedSpanByProduct.textContent =
     `Failure span by product: Vigiles ${stats.failedSpanMsByProduct.vigiles === null ? "none" : `${stats.failedSpanMsByProduct.vigiles} ms`} · Ignis ${stats.failedSpanMsByProduct.ignis === null ? "none" : `${stats.failedSpanMsByProduct.ignis} ms`} · Sanitas ${stats.failedSpanMsByProduct.sanitas === null ? "none" : `${stats.failedSpanMsByProduct.sanitas} ms`}`;
+  // DETAIL-21: the per-product success-span line names each
+  // product's first-to-last recorded success stretch in whole
+  // milliseconds — the span DETAIL-18/5's endpoints imply but do
+  // not state — or "none" per product with no usable success pair,
+  // same always-renders shape as the other stats lines, so a
+  // quiet product never changes the panel's shape.
+  els.logStatsOkSpanByProduct.textContent =
+    `Success span by product: Vigiles ${stats.okSpanMsByProduct.vigiles === null ? "none" : `${stats.okSpanMsByProduct.vigiles} ms`} · Ignis ${stats.okSpanMsByProduct.ignis === null ? "none" : `${stats.okSpanMsByProduct.ignis} ms`} · Sanitas ${stats.okSpanMsByProduct.sanitas === null ? "none" : `${stats.okSpanMsByProduct.sanitas} ms`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
