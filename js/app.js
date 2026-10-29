@@ -89,6 +89,8 @@ const els = {
   logStatsFirstFailed: $("log-stats-first-failed"),
   logStatsLastFailed: $("log-stats-last-failed"),
   logStatsOkLatencyShareByProduct: $("log-stats-ok-latency-share-by-product"),
+  logStatsOkLatencyCount: $("log-stats-ok-latency-count"),
+  logStatsOkLatencyCountByProduct: $("log-stats-ok-latency-count-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -585,6 +587,23 @@ function updateLogStats() {
   // failures never move a share.
   els.logStatsOkLatencyShareByProduct.textContent =
     `Successful latency share by product: Vigiles ${stats.okLatencyShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyShareByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.sanitas * 100)}%`}`;
+  // DETAIL-36: the usable-latency count lines name how many
+  // successes carried a usable latency, globally and per
+  // product — the count behind DETAIL-4's mean and DETAIL-8's
+  // per-product means, so a mean over one measurement reads
+  // differently from a mean over a hundred — same
+  // always-renders shape as the other stats lines, so a quiet
+  // session reads 0, never a missing line. No new counting
+  // rule: stats() already counts them for the means, so
+  // failures never contribute (even a failure carrying a
+  // latency value), an ok entry with no finite latency is
+  // skipped rather than counted as zero, and an ok entry
+  // with an unknown or missing product counts globally but
+  // moves no bucket.
+  els.logStatsOkLatencyCount.textContent =
+    `Successful latencies measured: ${stats.okLatencyCount}`;
+  els.logStatsOkLatencyCountByProduct.textContent =
+    `Successful latencies measured by product: Vigiles ${stats.okLatencyCountByProduct.vigiles} · Ignis ${stats.okLatencyCountByProduct.ignis} · Sanitas ${stats.okLatencyCountByProduct.sanitas}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

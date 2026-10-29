@@ -920,6 +920,22 @@ export class SessionLog {
       // 0 per product with no usable latency once a nonzero
       // total exists.
       okLatencyShareByProduct,
+      // DETAIL-36: the usable-latency counts (okLatencyCount
+      // / okLatencyCountByProduct): the count behind
+      // DETAIL-4's global mean and DETAIL-8's per-product
+      // means — how many successes carried a usable latency,
+      // so a mean over one measurement reads differently from
+      // a mean over a hundred. No new counting rule: the loop
+      // already counts them for the means, so the same rules
+      // apply — failures never contribute, even a failure
+      // carrying a latency value; an ok entry with no finite
+      // latency is skipped rather than counted as zero; and
+      // an ok entry with an unknown or missing product counts
+      // globally but moves no bucket, exactly as DETAIL-4/8's
+      // means do. Always plain counts, never null: a session
+      // or product with no usable latency reads 0.
+      okLatencyCount: latencyCount,
+      okLatencyCountByProduct: latencyCountByProduct,
       entryShareByProduct: {
         vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
         ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,
