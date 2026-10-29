@@ -804,12 +804,14 @@ test("history: idle empty history note matches the native timeline", () => {
 // prompt is up; the web panel said "Camera is off." through that wait.
 // No browser exists in this suite, so these are static checks on the
 // shipped wiring: the Start handler says the wait before awaiting the
-// start, disables Start until the prompt resolves, and the native side
-// carries the same waiting text in its requesting-permission state.
+// start, marks the start pending (refreshButtons() owns the disabled
+// state from that flag, so no mid-wait refresh can re-enable Start),
+// and the native side carries the same waiting text in its
+// requesting-permission state.
 test("camera: web Start says it is waiting for camera permission, matching the native camera", () => {
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
   assert.match(app, /els\.btnCameraStart\.addEventListener\("click", async \(\) => \{[\s\S]*?setCameraState\("Waiting for camera permission…"\)/);
-  assert.match(app, /els\.btnCameraStart\.disabled = true;\n\s+setCameraState\("Waiting for camera permission…"\)/);
+  assert.match(app, /cameraStartPending = true;\n\s+refreshButtons\(\);\n\s+setCameraState\("Waiting for camera permission…"\)/);
   const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url), "utf8");
   assert.match(swift, /Waiting for camera permission…/);
 });

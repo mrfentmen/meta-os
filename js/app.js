@@ -216,7 +216,7 @@ function updateAnalysisActive() {
 
 function refreshButtons() {
   const camActive = camera.active;
-  els.btnCameraStart.disabled = camActive;
+  els.btnCameraStart.disabled = camActive || cameraStartPending || cameraUnsupported;
   els.btnCameraStop.disabled = !camActive;
   els.btnAnalysisStart.disabled = !camActive || sampler.running;
   els.btnAnalysisStop.disabled = !sampler.running;
@@ -269,6 +269,25 @@ let viewGeneration = 0;
 // simply touches nothing (Stop/Reset already set the state and the
 // buttons), instead of re-announcing a camera that is off.
 let cameraStartGeneration = 0;
+
+// Whether this browser exposes no camera API at all. refreshButtons()
+// owns the Start button from this too: the init block used to disable
+// Start directly, and the init refreshButtons() right after it
+// re-enabled it, so a camera-less browser offered a Start button
+// whose tap could only fail with the unsupported error.
+const cameraUnsupported = !cameraSupported();
+
+// Whether a camera start is still awaiting the permission prompt.
+// refreshButtons() owns the Start button from this flag, not from a
+// one-off disable in the Start handler: that direct disable used to
+// be undone by any other path that refreshed the buttons mid-wait —
+// changing the facing selector while the prompt was up re-enabled
+// Start, and a second tap fired a second permission request. Stop and
+// Reset clear the flag, since their settle paths already own the
+// buttons; a stale Start settle touches nothing, so it must never
+// clear a flag a newer start now owns — and a stale settle only ever
+// follows a Stop or Reset, which already cleared it.
+let cameraStartPending = false;
 
 // In-flight request count: the Camera panel's "Analysis request in
 // flight…" line is shared by every submit path — a live sampled frame,
@@ -882,10 +901,17 @@ els.btnCameraStart.addEventListener("click", async () => {
   // reads as if nothing is happening while the user decides. Say the
   // wait out loud, and keep Start disabled until the prompt resolves —
   // the native Start button is disabled in its requesting state too —
-  // so a second tap cannot fire a second permission request. The
-  // refreshButtons() at the end restores the button to the real state:
-  // disabled once live, enabled again after a denied or failed start.
-  els.btnCameraStart.disabled = true;
+  // so a second tap cannot fire a second permission request. One flag
+  // owns that disabled state, through refreshButtons(): a direct
+  // disable here used to be undone by the facing-change settle path
+  // refreshing the buttons mid-wait, re-enabling Start while the
+  // first permission request was still outstanding. The flag stays
+  // set until this start settles (or Stop/Reset clears it), so no
+  // mid-wait refresh can re-enable the button. The refreshButtons()
+  // at the end restores the button to the real state: disabled once
+  // live, enabled again after a denied or failed start.
+  cameraStartPending = true;
+  refreshButtons();
   setCameraState("Waiting for camera permission…");
   const startGeneration = cameraStartGeneration;
   try {
@@ -905,6 +931,7 @@ els.btnCameraStart.addEventListener("click", async () => {
     els.cameraIndicator.hidden = true;
     setCameraState(describeCameraError(err));
   }
+  cameraStartPending = false;
   refreshButtons();
 });
 
@@ -912,6 +939,10 @@ els.btnCameraStop.addEventListener("click", () => {
   // Invalidate a start still awaiting permission, before stopping:
   // its settle path must not revive the camera this handler stops.
   cameraStartGeneration += 1;
+  // And clear the pending-start flag, so refreshButtons() below
+  // cannot leave Start disabled for a start that will never settle
+  // as current — the stale settle path touches nothing.
+  cameraStartPending = false;
   sampler.stop();
   camera.stop();
   els.cameraIndicator.hidden = true;
@@ -967,6 +998,11 @@ els.btnReset.addEventListener("click", () => {
   // A camera start still awaiting permission is invalidated too, so
   // its settle path cannot revive the camera Reset just stopped.
   cameraStartGeneration += 1;
+  // And its pending-start flag clears with it, so refreshButtons()
+  // below re-enables Start: a stale settle touches nothing, so
+  // leaving the flag set would strand the button disabled for a
+  // start that will never settle as current.
+  cameraStartPending = false;
   sampler.stop();
   camera.stop();
   els.cameraIndicator.hidden = true;
@@ -1095,9 +1131,8 @@ els.btnBackendCheck.addEventListener("click", async () => {
 });
 
 // Initial state.
-if (!cameraSupported()) {
+if (cameraUnsupported) {
   setCameraState("This browser does not expose a camera API (getUserMedia unavailable). A secure context (HTTPS or localhost) and a camera are required.");
-  els.btnCameraStart.disabled = true;
 }
 renderProduct();
 updateSamplingDisclosure();
