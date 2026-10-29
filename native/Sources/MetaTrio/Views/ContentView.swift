@@ -406,8 +406,17 @@ private struct StillImagePanel: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Still image")
                 .font(.headline)
+            // UI-25: still-image intro note at 13pt, the native
+            // counterpart to the web .note rule (13px, muted).
+            // Until now the intro used .caption (12pt), so it read
+            // one point smaller than the web panel's intro while
+            // the Latest-panel notes (UI-21) and footer (UI-23)
+            // already matched their own 13px web rules. The size
+            // is the only change: the muted color, the wrapping,
+            // and the wording are untouched, and the panel title
+            // keeps its headline size.
             Text("For prerecorded or photographed scenes — the input Ignis and Sanitas demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.")
-                .font(.caption)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
