@@ -101,10 +101,19 @@ export class SessionLog {
   // no finite latency_ms is skipped rather than counted as zero, so
   // the mean is always over real recorded measurements. The panel
   // renders it rounded to whole milliseconds.
+  // DETAIL-5 splits DETAIL-3's last success per product
+  // (lastOkAtByProduct, null per product with no ok entry): a session
+  // where Ignis went quiet but Vigiles just succeeded reads
+  // differently from one where all three went quiet together. Same
+  // rules as DETAIL-3, per bucket: failures never move a bucket, an
+  // ok entry with an unknown or missing product moves no bucket, and
+  // an ok entry with no usable request timestamp leaves its bucket's
+  // previous value in place.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     const failedByStatus = { network_error: 0, http_error: 0, invalid_response: 0 };
+    const lastOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     let ok = 0;
     let failed = 0;
     let lastOkAt = null;
@@ -118,6 +127,9 @@ export class SessionLog {
         }
         if (typeof entry.request_timestamp === "string" && entry.request_timestamp !== "") {
           lastOkAt = entry.request_timestamp;
+          if (Object.hasOwn(lastOkAtByProduct, entry.product)) {
+            lastOkAtByProduct[entry.product] = entry.request_timestamp;
+          }
         }
         if (Number.isFinite(entry.latency_ms)) {
           latencySum += entry.latency_ms;
@@ -137,6 +149,7 @@ export class SessionLog {
       byProduct,
       failedByStatus,
       lastOkAt,
+      lastOkAtByProduct,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
     };
   }

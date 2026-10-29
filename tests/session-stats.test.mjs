@@ -41,6 +41,7 @@ test("empty log: all stats zero", () => {
     byProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
     failedByStatus: { network_error: 0, http_error: 0, invalid_response: 0 },
     lastOkAt: null,
+    lastOkAtByProduct: { vigiles: null, ignis: null, sanitas: null },
     avgOkLatencyMs: null,
   });
 });
@@ -60,6 +61,11 @@ test("ok entries bucket by their own product; failures count once, unbucketed", 
     byProduct: { vigiles: 1, ignis: 2, sanitas: 1 },
     failedByStatus: { network_error: 1, http_error: 1, invalid_response: 0 },
     lastOkAt: "2026-10-29T12:00:00.000Z",
+    lastOkAtByProduct: {
+      vigiles: "2026-10-29T12:00:00.000Z",
+      ignis: "2026-10-29T12:00:00.000Z",
+      sanitas: "2026-10-29T12:00:00.000Z",
+    },
     avgOkLatencyMs: 100,
   });
 });
@@ -74,6 +80,7 @@ test("ok entry with unknown product counts in ok but in no bucket", () => {
     byProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
     failedByStatus: { network_error: 0, http_error: 0, invalid_response: 0 },
     lastOkAt: "2026-10-29T12:00:00.000Z",
+    lastOkAtByProduct: { vigiles: null, ignis: null, sanitas: null },
     avgOkLatencyMs: 100,
   });
 });
@@ -90,6 +97,7 @@ test("stats follow clear: back to zero", () => {
     byProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
     failedByStatus: { network_error: 0, http_error: 0, invalid_response: 0 },
     lastOkAt: null,
+    lastOkAtByProduct: { vigiles: null, ignis: null, sanitas: null },
     avgOkLatencyMs: null,
   });
 });

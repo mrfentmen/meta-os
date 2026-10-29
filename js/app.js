@@ -55,6 +55,7 @@ const els = {
   logStatsByFailure: $("log-stats-by-failure"),
   logStatsLastOk: $("log-stats-last-ok"),
   logStatsAvgLatency: $("log-stats-avg-latency"),
+  logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -268,6 +269,13 @@ function updateLogStats() {
   // — same always-renders shape as the other stats lines.
   els.logStatsAvgLatency.textContent =
     `Average successful latency: ${stats.avgOkLatencyMs === null ? "none" : `${Math.round(stats.avgOkLatencyMs)} ms`}`;
+  // DETAIL-5: the per-product last-success line names each product's
+  // most recent recorded success by its request timestamp, or "none"
+  // per product with no success — same always-renders shape as the
+  // other stats lines, so a quiet product never changes the panel's
+  // shape, and failures never move a bucket.
+  els.logStatsLastOkByProduct.textContent =
+    `Last success by product: Vigiles ${stats.lastOkAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastOkAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastOkAtByProduct.sanitas ?? "none"}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
