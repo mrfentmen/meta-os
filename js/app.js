@@ -456,7 +456,16 @@ function renderLatest(assessment, earlierNote = null) {
       const category = document.createElement("strong");
       category.textContent = obs.category;
       item.appendChild(category);
-      const confidence = obs.confidence === null ? "confidence not reported" : `confidence ${obs.confidence.toFixed(2)}`;
+      // HANA Agent1: the confidence label carries the native panel's
+      // colon — AssessmentView confidenceText reads "confidence:
+      // 0.72" and "confidence: not reported", but the web line used
+      // the colon-less form, so the same value read as a bare label
+      // on one surface and a labeled value on the other. The colon
+      // is the only change: the web
+      // line keeps its single-line layout (native shows confidence
+      // on its own caption row), the two-decimal format, and the
+      // "not reported" wording for a null confidence, never invented.
+      const confidence = obs.confidence === null ? "confidence: not reported" : `confidence: ${obs.confidence.toFixed(2)}`;
       const evidencePart = obs.evidence !== "" ? `${obs.evidence}; ` : "";
       item.appendChild(document.createTextNode(` — ${obs.description} (${evidencePart}${confidence})`));
       list.appendChild(item);
