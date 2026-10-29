@@ -46,7 +46,7 @@ test("anchor: Reset and Clear both go through clearStillImageInput, so a stale r
   assert.match(webReset, /clearStillImageInput\(\);/);
   assert.match(webClear, /els\.imagePreview\.hidden = true;/);
   assert.match(webClear, /els\.imageState\.textContent = "No image chosen\.";/);
-  assert.match(webClear, /els\.btnImageAssess\.disabled = true;/);
+  assert.match(webClear, /refreshStillImageAssessButton\(\);/);
 });
 
 test("web: each choice captures a read generation, bumped before any await", () => {

@@ -14,9 +14,11 @@
 // One helper now owns the button: enabled only with a URL, loaded
 // metadata, and no assessment in flight. No browser exists in this
 // suite, so these are static checks on the shipped wiring, in the same
-// style as the other Agent 1 tests. The still-image panel needs no
-// equivalent: its data URL is null while a read is in flight, so its
-// settle path already enables only a truly ready image. Native needs
+// style as the other Agent 1 tests. The still-image panel's
+// read-in-flight window needs no equivalent here: its data URL is null
+// while a read is in flight, so a read settle already enables only a
+// truly ready image — but its assessment-in-flight window now has its
+// own helper (see still-image-assess-button.test.mjs). Native needs
 // no change: its Assess button is already gated on assessing, and a
 // not-ready native player fails extraction with the real error.
 

@@ -630,6 +630,20 @@ async function runSample() {
 // live sampled frame.
 let stillImageDataUrl = null;
 let stillImageAssessing = false;
+// One helper owns the still-image Assess button, exactly like the
+// video helper and exactly like the native button's disabled rule
+// (nil image or assessing): enabled only with a data URL ready and
+// no assessment in flight. Every place that used to set the button
+// directly tested only the data URL, so a new image chosen while a
+// request was out — its read finishing mid-request — re-enabled the
+// button under that request, and a tap was then silently dropped by
+// the assessing guard. The read-in-flight window needs no equivalent:
+// the data URL is null while a read is in flight, so a read settle
+// already enables only a truly ready image; this helper covers the
+// assessment-in-flight window instead.
+function refreshStillImageAssessButton() {
+  els.btnImageAssess.disabled = !stillImageDataUrl || stillImageAssessing;
+}
 // Still-image read generation: choosing a file reads it asynchronously
 // (FileReader, then a decode probe), so a Reset, a Clear, or a second
 // file choice can land while a read is still in flight. The read
@@ -668,7 +682,7 @@ function clearStillImageInput() {
   els.imagePreview.hidden = true;
   els.imagePreview.removeAttribute("src");
   els.imageState.textContent = "No image chosen.";
-  els.btnImageAssess.disabled = true;
+  refreshStillImageAssessButton();
   els.imageAssessing.hidden = true;
 }
 
@@ -685,7 +699,7 @@ els.imageInput.addEventListener("change", async () => {
   stillImageDataUrl = null;
   els.imagePreview.hidden = true;
   els.imagePreview.removeAttribute("src");
-  els.btnImageAssess.disabled = true;
+  refreshStillImageAssessButton();
   if (!file) {
     els.imageState.textContent = "No image chosen.";
     return;
@@ -725,14 +739,17 @@ els.imageInput.addEventListener("change", async () => {
     els.imagePreview.hidden = false;
     els.imageState.textContent =
       `Image ready: ${file.name}. Tap “Assess this image” to send it once to the assessment endpoint, under the product selected above. It is not stored by this app.`;
-    els.btnImageAssess.disabled = false;
+    // Through the helper, not a bare enable: a read finishing for a
+    // new image chosen while a request is out must not enable the
+    // button under that request.
+    refreshStillImageAssessButton();
   } catch (err) {
     // A stale read's failure must not overwrite the newer state
     // either — not the cleared panel, and not a newer read's
     // "Reading image…" line.
     if (readGeneration !== stillImageReadGeneration) return;
     stillImageDataUrl = null;
-    els.btnImageAssess.disabled = true;
+    refreshStillImageAssessButton();
     els.imageState.textContent = `Could not read that image: ${err.message}`;
   }
 });
@@ -740,7 +757,7 @@ els.imageInput.addEventListener("change", async () => {
 els.btnImageAssess.addEventListener("click", async () => {
   if (!stillImageDataUrl || stillImageAssessing) return;
   stillImageAssessing = true;
-  els.btnImageAssess.disabled = true;
+  refreshStillImageAssessButton();
   // Native parity: the native Still image panel shows "Sending still
   // image…" in the panel while the request is outstanding. The web
   // panel only had the generic in-flight line in the distant Camera
@@ -759,7 +776,10 @@ els.btnImageAssess.addEventListener("click", async () => {
   } finally {
     stillImageAssessing = false;
     els.imageAssessing.hidden = true;
-    els.btnImageAssess.disabled = !stillImageDataUrl;
+    // Through the helper: a new image chosen while this request was
+    // out enables here only because the request is settled now, and
+    // a Clear during the request keeps it disabled (no data URL).
+    refreshStillImageAssessButton();
   }
 });
 
