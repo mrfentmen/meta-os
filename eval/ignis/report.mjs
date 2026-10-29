@@ -392,6 +392,22 @@ export function computeLatencyDistribution(records) {
   };
 }
 
+// Latency distribution among the misses only: the same min,
+// quartiles and p90 as computeLatencyDistribution, but over the
+// recorded harness wall-clock latencies of the misses alone (same
+// miss definition as computeMisses: category_correct false, so an
+// unassessed record counts as a miss here too). The full-run
+// distribution answers how slow the run was; this one answers how
+// slow its failures were, without the correct records pulling the
+// quantiles down. Records with no latency are ignored, never
+// treated as zero; with no recorded miss latency there is no
+// distribution and the result is null, so the render says so
+// instead of inventing one — and a run with no misses at all says
+// none, which the render distinguishes by counting the misses.
+export function computeMissLatencyDistribution(records) {
+  return computeLatencyDistribution(records.filter((r) => !r.category_correct));
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -2708,6 +2724,33 @@ export function renderRunReport(run, baselineRun = null) {
         `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );
     }
+  }
+  const missLatencyDist = computeMissLatencyDistribution(run.records);
+  const missCount = run.records.filter((r) => !r.category_correct).length;
+  lines.push(
+    "",
+    "## Latency distribution among misses",
+    "",
+    "Harness wall-clock latencies for the misses only, expanding the miss sections' means into min, " +
+      "quartiles and p90 — the same quantiles as the full-run latency distribution, but over the failures " +
+      "alone, so whether the misses cluster fast or drag a slow tail is visible without the correct " +
+      "records pulling the numbers down. Records with no latency take no part.",
+    "",
+  );
+  if (missCount === 0) {
+    lines.push("None: every scenario's predicted category matched its ground truth.");
+  } else if (missLatencyDist === null) {
+    lines.push("No latency distribution among the misses: no miss in this run carries a latency measurement.");
+  } else {
+    lines.push(
+      `- Recorded latencies: ${missLatencyDist.count} of ${missCount} miss(es).`,
+      `- Minimum: ${fmtLatency(missLatencyDist.minMs)} ms.`,
+      `- 25th percentile: ${fmtLatency(missLatencyDist.p25Ms)} ms.`,
+      `- Median: ${fmtLatency(missLatencyDist.medianMs)} ms.`,
+      `- 75th percentile: ${fmtLatency(missLatencyDist.p75Ms)} ms.`,
+      `- 90th percentile: ${fmtLatency(missLatencyDist.p90Ms)} ms.`,
+      `- Maximum: ${fmtLatency(missLatencyDist.maxMs)} ms.`,
+    );
   }
   const misses = computeMisses(run.records);
   lines.push("", `## Misses (${misses.length})`, "");
