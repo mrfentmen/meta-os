@@ -208,7 +208,7 @@ private struct HeaderView: View {
             }
 
             Text(model.config.limitations)
-                .font(.caption)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(8)
