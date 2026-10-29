@@ -599,8 +599,17 @@ private struct SettingsPanel: View {
                     Button("Check Backend Health") { model.checkBackendHealth() }
                         .disabled(model.healthChecking)
                         .accessibilityHint("Contacts the server's health route only. It never sends a frame and never returns an assessment.")
+                    // UI-32: backend-health line at 13pt, the native
+                    // counterpart to the web .note rule (13px, muted).
+                    // Until now the line used .caption (12pt), so it
+                    // read one point smaller than the web panel's
+                    // backend-health note while the header limitations
+                    // (UI-27) already matched their own 13px web rule.
+                    // The size is the only change: the muted color,
+                    // the wrapping, and the accessibility label are
+                    // untouched.
                     Text(model.backendHealth)
-                        .font(.caption)
+                        .font(.system(size: 13))
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                         .accessibilityLabel("Backend health: \(model.backendHealth)")
@@ -610,8 +619,16 @@ private struct SettingsPanel: View {
                     Text("Sample one frame every \(model.intervalSeconds) second\(model.intervalSeconds == 1 ? "" : "s")")
                 }
 
+                // UI-32: sampling-disclosure line at 13pt, the native
+                // counterpart to the web .note rule (13px, muted).
+                // Until now the line used .caption (12pt), so it read
+                // one point smaller than the web panel's sampling
+                // disclosure note while the backend-health line above
+                // now matches its own 13px web rule. The size is the
+                // only change: the muted color, the wrapping, and the
+                // wording are untouched.
                 Text("Analysis uses sampled frames: one frame every \(model.intervalSeconds) second\(model.intervalSeconds == 1 ? "" : "s") is sent to the assessment endpoint. This is not continuous video analysis, and events between samples are not seen by the system.")
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
