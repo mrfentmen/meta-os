@@ -921,6 +921,37 @@ export class SessionLog {
       ignis: shareOfAllEntries(failedCountByProduct.ignis),
       sanitas: shareOfAllEntries(failedCountByProduct.sanitas),
     };
+    // DETAIL-41: the per-product successful-count shares of
+    // all entries (okShareOfTotalByProduct): each product's
+    // ok count from DETAIL-1 over the session's total entry
+    // count, so a session where Ignis successes are a third
+    // of everything recorded reads that at a glance, where
+    // DETAIL-37's ok-total shares alone do not say it — the
+    // entry-total mirror of DETAIL-37, the ok half of
+    // DETAIL-13's entry shares, and the success mirror of
+    // DETAIL-40's failed shares. Derived only from the
+    // DETAIL-1 counts and the entry total, reusing
+    // DETAIL-40's shareOfAllEntries helper, not a new rule:
+    // failures sit in the denominator but move no bucket
+    // (they are not successes), an ok entry with no finite
+    // latency still counts here — this is a count share, not
+    // a latency share, so DETAIL-35's skip rule does not
+    // apply — and an ok entry with an unknown or missing
+    // product sits in the denominator but moves no bucket, so
+    // the shares sum to the session ok share (DETAIL-25),
+    // and to 1 only when every entry is a known-product
+    // success, exactly as DETAIL-37's shares do within the
+    // ok total. Null per product on an empty log (nothing
+    // to divide by); 0 per product with no successes once
+    // the session holds any entry — a failure-only log
+    // reads 0 per product, not "none", because the
+    // denominator exists and the buckets are genuinely
+    // empty.
+    const okShareOfTotalByProduct = {
+      vigiles: shareOfAllEntries(okCountByProduct.vigiles),
+      ignis: shareOfAllEntries(okCountByProduct.ignis),
+      sanitas: shareOfAllEntries(okCountByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -1028,6 +1059,15 @@ export class SessionLog {
       // 0 per product with no failures of that product once
       // the session holds any entry.
       failedShareOfEntriesByProduct,
+      // DETAIL-41: the per-product successful-count shares
+      // of all entries (okShareOfTotalByProduct): each
+      // product's ok count over the session total entry
+      // count — the entry-total mirror of DETAIL-37's
+      // ok-total shares and the success mirror of
+      // DETAIL-40's failed shares. Null per product on an
+      // empty log; 0 per product with no successes once the
+      // session holds any entry, failure-only log included.
+      okShareOfTotalByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
