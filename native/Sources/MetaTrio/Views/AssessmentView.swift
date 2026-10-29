@@ -204,6 +204,30 @@ struct AssessmentView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
+                    // UI-18: observation list bullet and 18pt inset, the
+                    // native counterpart to the web .observations rule
+                    // (a <ul> with padding-left 18px and default disc
+                    // markers). Until now the native rows sat flush
+                    // left with no marker, so a populated list read as
+                    // loose stacked blocks while the web list read as
+                    // an indented bulleted list. The 18pt leading
+                    // padding puts the row text where the web text
+                    // sits, and the bullet sits in that padding box
+                    // via a topLeading overlay — the same outside
+                    // position the web disc occupies — instead of
+                    // pushing the text further right, as a leading
+                    // HStack glyph would. The bullet is a visual
+                    // marker only (accessibilityHidden, like a web
+                    // list marker, which VoiceOver does not read), so
+                    // the row's combined VoiceOver item is unchanged.
+                    // The heading, category weight (UI-17), confidence
+                    // caption, description, and evidence lines are
+                    // untouched.
+                    .padding(.leading, 18)
+                    .overlay(alignment: .topLeading) {
+                        Text("•")
+                            .accessibilityHidden(true)
+                    }
                     // One VoiceOver item per observation, so category,
                     // confidence, description, and evidence are read together.
                     .accessibilityElement(children: .combine)
