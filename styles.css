@@ -4,7 +4,7 @@
 
 :root {
   --bg: #14161a;
-  --panel: #1d2026;
+  --panel: rgba(29, 32, 38, 0.8);
   --panel-border: #3a3f47;
   --input-bg: #101216;
   --text: #e6e6e6;
@@ -41,6 +41,26 @@ body {
   line-height: 1.45;
 }
 
+/* Spinning ASCII Meta loop behind the app. Dim on purpose: the
+   panels stay opaque, so the loop shows in the gaps around them
+   and never sits under readable text. It ignores pointer input. */
+#logo-background {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.topbar,
+main,
+.footer {
+  position: relative;
+  z-index: 1;
+}
+
 .topbar {
   display: flex;
   flex-wrap: wrap;
@@ -49,6 +69,7 @@ body {
   gap: 8px 16px;
   padding: 12px 16px;
   border-bottom: 1px solid var(--panel-border);
+  background: rgba(20, 22, 26, 0.92);
 }
 
 .brand {
@@ -525,6 +546,7 @@ select {
   margin: 0 auto;
   color: var(--muted);
   font-size: 13px;
+  background: rgba(20, 22, 26, 0.92);
 }
 
 @media (max-width: 720px) {
