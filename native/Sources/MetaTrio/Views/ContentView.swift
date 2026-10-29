@@ -478,8 +478,16 @@ private struct VideoPanel: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Prerecorded video")
                 .font(.headline)
+            // UI-26: video intro note at 13pt, the native
+            // counterpart to the web .note rule (13px, muted).
+            // Until now the intro used .caption (12pt), so it read
+            // one point smaller than the web panel's intro while
+            // the still-image intro (UI-25) already matched its own
+            // 13px web rule. The size is the only change: the muted
+            // color, the wrapping, and the wording are untouched,
+            // and the panel title keeps its headline size.
             Text("For a recorded clip when neither a live camera nor a still image is the source. Play the clip, pause on the frame you want assessed, and tap “Assess this frame”: only that one frame is sent to the assessment endpoint, under the product selected above, and logged exactly like a live frame. The whole video is never sent, and it is not stored by this app.")
-                .font(.caption)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
