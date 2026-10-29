@@ -298,8 +298,18 @@ private struct CameraPanel: View {
                 .pickerStyle(.menu)
                 .accessibilityLabel("Camera facing")
                 .accessibilityHint("Front or rear camera. A preference, not a requirement: a Mac with only one camera uses that camera either way.")
+                // UI-28: camera facing note at 13pt, the native
+                // counterpart to the web .note rule (13px, muted).
+                // Until now the note used .caption (12pt), so it read
+                // one point smaller than the web panel's facing note
+                // while the still-image and video intros (UI-25,
+                // UI-26) and the header limitations (UI-27) already
+                // matched their own 13px web rules. The size is the
+                // only change: the muted color, the wrapping, and
+                // the wording are untouched, and the picker above
+                // keeps its menu style.
                 Text("A facing is a preference, not a requirement: a Mac with only one camera uses that camera whichever facing is chosen.")
-                    .font(.caption)
+                    .font(.system(size: 13))
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
