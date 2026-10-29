@@ -67,6 +67,7 @@ import {
   computeCorrectLatencyDistribution,
   computeCorrectLatencyOutliers,
   computeLatencyByCorrectCategory,
+  computeLatencyByCorrectAlertOutcome,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -2743,6 +2744,81 @@ test("report: latency by correct category splits correct latencies by category, 
   const noCorrectRendered = renderRunReport(noCorrectRun);
   const section = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct category"), noCorrectRendered.indexOf("## Latency distribution among correct"));
   assert.match(section, /None: no scenario's predicted category matched its ground truth\./);
+});
+
+test("report: latency by correct alert outcome splits correct latencies by fired-vs-expected, fixed order", () => {
+  const rec = (id, truth, actual, expected, fired, latency_ms) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: expected,
+    alert_fired: fired,
+    alert_correct: expected === fired,
+    category_correct: actual === truth,
+    error: actual === null ? "held" : null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // True positives: 10, 30 -> mean/median 20, max 30, recorded 2 of 2.
+  // True negative: 40. The false rows cover hand-built records
+  // that claim correctness with mismatched alert flags — a genuine
+  // correct record's expectation and firing always agree — so a
+  // false positive at 100 and a false negative with no latency
+  // (null statistics, never zero) render here too. The miss records
+  // (a true positive and a false negative) appear in no row, so the
+  // totals sum to the correct count (5), not the sample size (7),
+  // and only groups present among the correct records render.
+  assert.deepEqual(
+    computeLatencyByCorrectAlertOutcome([
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, 30),
+      rec("IGN-T3", "steam or fog", "steam or fog", false, false, 40),
+      rec("IGN-T4", "steam or fog", "steam or fog", false, true, 100),
+      rec("IGN-T5", "visible smoke", "visible smoke", true, false),
+      rec("IGN-T6", "steam or fog", "visible smoke", true, true, 999),
+      rec("IGN-T7", "visible smoke", "visible flame", true, false, 999),
+    ]),
+    [
+      { outcome: "true positive", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "true negative", total: 1, recorded: 1, meanMs: 40, medianMs: 40, maxMs: 40 },
+      { outcome: "false positive", total: 1, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+      { outcome: "false negative", total: 1, recorded: 0, meanMs: null, medianMs: null, maxMs: null },
+    ],
+  );
+  // A run with no correct records yields no rows.
+  assert.deepEqual(
+    computeLatencyByCorrectAlertOutcome([
+      rec("IGN-T1", "steam or fog", "visible smoke", true, true, 10),
+    ]),
+    [],
+  );
+  // Rendered: section after Latency by correct category, before
+  // Latency distribution among correct; a run with no correct
+  // records says none.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "visible smoke", "visible smoke", true, true, 10),
+      rec("IGN-T2", "visible smoke", "visible smoke", true, true, 30),
+      rec("IGN-T3", "steam or fog", "steam or fog", false, false, 40),
+    ],
+    metrics: { sample_size: 3, true_positives: 2, false_positives: 0, true_negatives: 1, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 3, mean: 26.666666666666668, median: 30, max: 40 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by correct alert outcome/);
+  assert.ok(rendered.indexOf("## Latency by correct alert outcome") > rendered.indexOf("## Latency by correct category"));
+  assert.ok(rendered.indexOf("## Latency by correct alert outcome") < rendered.indexOf("## Latency distribution among correct"));
+  assert.match(rendered, /\| true positive \| 2 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| true negative \| 1 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
+  const noCorrectRun = {
+    source: "test source",
+    generated: "test run",
+    records: [rec("IGN-T1", "steam or fog", "visible smoke", true, true, 10)],
+    metrics: { sample_size: 1, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const noCorrectRendered = renderRunReport(noCorrectRun);
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct alert outcome"), noCorrectRendered.indexOf("## Latency distribution among correct"));
+  assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
 });
 
 test("report: slowest correct is the slowest scenario among the correct records only", () => {
