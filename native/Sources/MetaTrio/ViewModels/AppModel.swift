@@ -311,6 +311,10 @@ final class AppModel: ObservableObject {
 
     /// Opens an image-only file picker. Non-image files cannot be
     /// chosen: the panel's allowedContentTypes is [.image].
+    /// The read below is fully synchronous (panel, NSImage, JPEG
+    /// encode), so unlike the web file-input handler there is no
+    /// suspension point a Reset Session could land inside — no
+    /// read-generation guard is needed on this side.
     func chooseStillImage() {
         let panel = NSOpenPanel()
         panel.title = "Choose a still image"

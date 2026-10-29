@@ -581,6 +581,14 @@ async function runSample() {
 // live sampled frame.
 let stillImageDataUrl = null;
 let stillImageAssessing = false;
+// Still-image read generation: choosing a file reads it asynchronously
+// (FileReader, then a decode probe), so a Reset, a Clear, or a second
+// file choice can land while a read is still in flight. The read
+// captures this number when it starts; Clear bumps it, each new choice
+// bumps it, and the read touches nothing once its number is stale —
+// otherwise a pre-reset image would repaint the panel Reset cleared,
+// or an earlier file would overwrite a later one.
+let stillImageReadGeneration = 0;
 
 const sampler = new FrameSampler({
   intervalMs: 3000,
@@ -603,6 +611,9 @@ els.productRadios.forEach((radio) => {
 // disabled) without stopping the camera or analysis — the web match for
 // the native panel's Clear button. Reset reuses this for the same panel.
 function clearStillImageInput() {
+  // Invalidate any read still in flight: its settle path must not
+  // repaint this cleared panel (see stillImageReadGeneration).
+  stillImageReadGeneration += 1;
   stillImageDataUrl = null;
   els.imageInput.value = "";
   els.imagePreview.hidden = true;
@@ -617,6 +628,10 @@ els.btnImageClear.addEventListener("click", () => {
 });
 
 els.imageInput.addEventListener("change", async () => {
+  // Captured before any await, and bumped even for a non-image file or
+  // an emptied choice: either one supersedes a read still in flight,
+  // and that read must not repaint the state this handler just set.
+  const readGeneration = ++stillImageReadGeneration;
   const file = els.imageInput.files && els.imageInput.files[0];
   stillImageDataUrl = null;
   els.imagePreview.hidden = true;
@@ -633,6 +648,10 @@ els.imageInput.addEventListener("change", async () => {
   els.imageState.textContent = "Reading image…";
   try {
     stillImageDataUrl = await readFileAsDataURL(file);
+    // A Reset, Clear, or newer choice during the read invalidates it:
+    // return without touching the panel, which now shows the newer
+    // state (cleared, or the newer file's "Reading image…").
+    if (readGeneration !== stillImageReadGeneration) return;
     // Live-capture parity: a phone photo can be far larger than the
     // 1280px cap live and video frames are downscaled to, and the
     // still-image path sent the file's original bytes. Decode it and,
@@ -646,6 +665,10 @@ els.imageInput.addEventListener("change", async () => {
       img.onerror = () => reject(new Error("That image could not be decoded."));
       img.src = stillImageDataUrl;
     });
+    // Same guard after the decode probe: a Reset, Clear, or newer
+    // choice during decoding must not let this read set the preview,
+    // the ready text, or the Assess button.
+    if (readGeneration !== stillImageReadGeneration) return;
     if (Math.max(probe.naturalWidth, probe.naturalHeight) > MAX_FRAME_DIMENSION) {
       stillImageDataUrl = downscaleImageToDataURL(probe, els.captureCanvas);
     }
@@ -655,6 +678,10 @@ els.imageInput.addEventListener("change", async () => {
       `Image ready: ${file.name}. Tap “Assess this image” to send it once to the assessment endpoint, under the product selected above. It is not stored by this app.`;
     els.btnImageAssess.disabled = false;
   } catch (err) {
+    // A stale read's failure must not overwrite the newer state
+    // either — not the cleared panel, and not a newer read's
+    // "Reading image…" line.
+    if (readGeneration !== stillImageReadGeneration) return;
     stillImageDataUrl = null;
     els.btnImageAssess.disabled = true;
     els.imageState.textContent = `Could not read that image: ${err.message}`;
