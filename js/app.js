@@ -703,7 +703,17 @@ function clearStillImageInput() {
   els.imagePreview.removeAttribute("src");
   els.imageState.textContent = "No image chosen.";
   refreshStillImageAssessButton();
-  els.imageAssessing.hidden = true;
+  // The "Sending still image…" line is owned by the request, not by
+  // the input: Clear must not hide it for a request still out. The
+  // line used to hide unconditionally here, so clearing (or choosing
+  // a new image, or Reset, which reuses this helper) during a request
+  // left the panel silent while that request was still outstanding —
+  // the very wait the line exists to show. The native panel has no
+  // such hole: it shows its progress line while stillImageAssessing
+  // is true whatever the image is, and only its Task defer clears it.
+  // So hide the line only when no request is out; the Assess settle
+  // path still hides it when the request finishes.
+  els.imageAssessing.hidden = !stillImageAssessing;
 }
 
 els.btnImageClear.addEventListener("click", () => {
@@ -843,7 +853,15 @@ function clearVideoInput() {
   els.videoPreview.load();
   els.videoPreview.hidden = true;
   refreshVideoAssessButton();
-  els.videoAssessing.hidden = true;
+  // Same rule as the still-image panel, for the same reason: the
+  // "Sending video frame…" line is owned by the request, not by the
+  // input, so Clear (a new choice, or Reset, which reuses this helper)
+  // during a request must not hide it while that request is still out.
+  // The native panel shows its progress line while videoAssessing is
+  // true whatever the player is, and only its Task defer clears it;
+  // the web Assess settle paths still hide this line when the request
+  // finishes.
+  els.videoAssessing.hidden = !videoAssessing;
 }
 
 // Clears only the prerecorded-video input (file choice, preview, Assess
