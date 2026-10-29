@@ -243,6 +243,19 @@ export class SessionLog {
   // insertion-order endpoints preserve honestly. The panel renders
   // each span in whole milliseconds, or "none" per product with no
   // usable entry pair.
+  // DETAIL-18 adds the opening counterpart to DETAIL-5's last
+  // success (firstOkAtByProduct, null per product with no ok entry
+  // carrying a usable timestamp): each product's bucket holds the
+  // request timestamp of its FIRST recorded success, by insertion
+  // order — set once, never overwritten, so a later success (even
+  // one carrying an earlier timestamp string) never moves the
+  // bucket, and the pair with DETAIL-5 says when a product's
+  // successes began and when they last happened. Same bucket
+  // rules as DETAIL-5: failures never move a bucket, an ok entry
+  // with an unknown or missing product moves no bucket, and an ok
+  // entry without a usable request timestamp leaves its bucket
+  // open for a later usable success. The panel renders "none"
+  // per product with no success.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -253,6 +266,7 @@ export class SessionLog {
       sanitas: { network_error: 0, http_error: 0, invalid_response: 0 },
     };
     const lastOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
+    const firstOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const lastFailedAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const firstEntryAtByProduct = { vigiles: null, ignis: null, sanitas: null };
     const lastEntryAtByProduct = { vigiles: null, ignis: null, sanitas: null };
@@ -311,6 +325,13 @@ export class SessionLog {
           lastOkAt = entry.request_timestamp;
           if (Object.hasOwn(lastOkAtByProduct, entry.product)) {
             lastOkAtByProduct[entry.product] = entry.request_timestamp;
+          }
+          // DETAIL-18: first success per product, set once by
+          // insertion order — a later ok entry never overwrites
+          // it, and a timestamp-less ok entry leaves the bucket
+          // open for a later usable success.
+          if (Object.hasOwn(firstOkAtByProduct, entry.product) && firstOkAtByProduct[entry.product] === null) {
+            firstOkAtByProduct[entry.product] = entry.request_timestamp;
           }
         }
         if (Number.isFinite(entry.latency_ms)) {
@@ -377,6 +398,7 @@ export class SessionLog {
       failedByStatusByProduct,
       lastOkAt,
       lastOkAtByProduct,
+      firstOkAtByProduct,
       lastFailedAtByProduct,
       firstEntryAtByProduct,
       lastEntryAtByProduct,

@@ -57,6 +57,7 @@ const els = {
   logStatsAvgLatency: $("log-stats-avg-latency"),
   logStatsLatencyRange: $("log-stats-latency-range"),
   logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),
+  logStatsFirstOkByProduct: $("log-stats-first-ok-by-product"),
   logStatsLastFailedByProduct: $("log-stats-last-failed-by-product"),
   logStatsAvgLatencyByProduct: $("log-stats-avg-latency-by-product"),
   logStatsFailuresByProduct: $("log-stats-failures-by-product"),
@@ -296,6 +297,13 @@ function updateLogStats() {
   // shape, and failures never move a bucket.
   els.logStatsLastOkByProduct.textContent =
     `Last success by product: Vigiles ${stats.lastOkAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastOkAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastOkAtByProduct.sanitas ?? "none"}`;
+  // DETAIL-18: the per-product first-success line opens DETAIL-5's
+  // last-success line — each product's first recorded success by
+  // its request timestamp, or "none" per product with no success —
+  // same always-renders shape as the other stats lines, and
+  // failures never move a bucket.
+  els.logStatsFirstOkByProduct.textContent =
+    `First success by product: Vigiles ${stats.firstOkAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstOkAtByProduct.ignis ?? "none"} · Sanitas ${stats.firstOkAtByProduct.sanitas ?? "none"}`;
   // DETAIL-7: the per-product last-failure line mirrors DETAIL-5 on
   // the failure side — each product's most recent recorded failure
   // by its request timestamp, or "none" per product with no failure
