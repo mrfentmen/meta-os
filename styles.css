@@ -445,6 +445,13 @@ select {
   border-left-color: #5da864;
 }
 
+/* IGNIS-UI-3: the Ignis counterpart to M3 — an Ignis entry's edge uses
+   the Ignis product accent, not its status color. Scoped to Ignis
+   entries only, regardless of which product is currently selected. */
+.history-item.history-product-ignis {
+  border-left-color: #d92b2b;
+}
+
 /* Past-assessment button on a history entry: small and quiet, so the
    timeline stays a list, not a wall of buttons. The global
    button:focus-visible rule already gives it a visible focus ring. */
@@ -524,13 +531,44 @@ body[data-product="sanitas"] .status[data-state="connected"] {
   color: #7f9c82;
 }
 
-/* Ignis theme (Del UI push, Oct 29; R2): red identity polish, scoped to
-   body[data-product="ignis"] only. Mirrors the Sanitas panel treatment
-   in Ignis red #d92b2b; this block never restyles Vigiles or Sanitas.
-   The native header carries the matching pieces (flame chip, accent
-   limitations rule); the web panel gradient is the web half of R2. */
+/* Ignis theme (Del UI push, Oct 29; R2 + UI-3): red identity polish,
+   scoped to body[data-product="ignis"] only. Mirrors the Sanitas theme
+   block in Ignis red #d92b2b; this block never restyles Vigiles or
+   Sanitas. The native header carries the matching pieces (flame chip,
+   accent limitations rule); the web panel gradient is the web half
+   of R2, and UI-3 completes the web theme with the topbar, badge,
+   primary button, chips, and switcher glow. */
 body[data-product="ignis"] .panel {
   background: linear-gradient(180deg, rgba(217, 43, 43, 0.09), var(--panel) 42%);
   border-color: rgba(217, 43, 43, 0.5);
   box-shadow: 0 0 0 1px rgba(217, 43, 43, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+body[data-product="ignis"] .topbar {
+  background: linear-gradient(180deg, rgba(217, 43, 43, 0.16), transparent 75%);
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 rgba(217, 43, 43, 0.35);
+}
+
+body[data-product="ignis"] .product-badge {
+  background: linear-gradient(135deg, #e54848, #b01e1e);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 0 14px rgba(217, 43, 43, 0.45);
+}
+
+body[data-product="ignis"] .btn-primary:not(:disabled) {
+  background: linear-gradient(135deg, #e54848, #b01e1e);
+  border-color: #e54848;
+  box-shadow: 0 0 14px rgba(217, 43, 43, 0.35);
+}
+
+body[data-product="ignis"] .chip {
+  border-color: rgba(217, 43, 43, 0.55);
+  background: rgba(217, 43, 43, 0.1);
+}
+
+body[data-product="ignis"] .product-option[data-product-option="ignis"]:has(input:checked) {
+  border-color: #d92b2b;
+  box-shadow: inset 0 0 0 1px #d92b2b, 0 0 14px rgba(217, 43, 43, 0.35);
 }

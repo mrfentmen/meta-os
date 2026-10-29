@@ -468,9 +468,13 @@ function addHistoryItem({ title, timestamp, body, kind, assessment = null, produ
   // M3 (Sanitas identity in results): a Sanitas entry's edge uses the
   // Sanitas product accent, not its status color. Only Sanitas entries
   // get the product class; other products keep their status edges.
+  // IGNIS-UI-3 adds the Ignis counterpart: an Ignis entry's edge uses
+  // the Ignis product accent, not its status color.
   const entryProduct = assessment?.product ?? product;
   if (entryProduct === "sanitas") {
     item.classList.add("history-product-sanitas");
+  } else if (entryProduct === "ignis") {
+    item.classList.add("history-product-ignis");
   }
 
   const head = document.createElement("p");
