@@ -71,6 +71,7 @@ test("empty log: all stats zero", () => {
     maxOkLatencyMsByProduct: { vigiles: null, ignis: null, sanitas: null },
     okShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     failedShareByProduct: { vigiles: null, ignis: null, sanitas: null },
+    failedShareByStatusByProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     entryShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     entryCountByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
   });
@@ -145,6 +146,7 @@ test("ok entries bucket by their own product; failures count once, unbucketed", 
     maxOkLatencyMsByProduct: { vigiles: 100, ignis: 100, sanitas: 100 },
     okShareByProduct: { vigiles: 0.5, ignis: 2 / 3, sanitas: 1 },
     failedShareByProduct: { vigiles: 0.5, ignis: 1 / 3, sanitas: 0 },
+    failedShareByStatusByProduct: { vigiles: { network_error: 0, http_error: 0.5, invalid_response: 0 }, ignis: { network_error: 0.5, http_error: 0, invalid_response: 0 }, sanitas: { network_error: 0, http_error: 0, invalid_response: 0 } },
     entryShareByProduct: { vigiles: 1 / 3, ignis: 0.5, sanitas: 1 / 6 },
     entryCountByProduct: { vigiles: 2, ignis: 3, sanitas: 1 },
   });
@@ -190,6 +192,7 @@ test("ok entry with unknown product counts in ok but in no bucket", () => {
     maxOkLatencyMsByProduct: { vigiles: null, ignis: null, sanitas: null },
     okShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     failedShareByProduct: { vigiles: null, ignis: null, sanitas: null },
+    failedShareByStatusByProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     entryShareByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
     entryCountByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
   });
@@ -237,6 +240,7 @@ test("stats follow clear: back to zero", () => {
     maxOkLatencyMsByProduct: { vigiles: null, ignis: null, sanitas: null },
     okShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     failedShareByProduct: { vigiles: null, ignis: null, sanitas: null },
+    failedShareByStatusByProduct: { vigiles: { network_error: null, http_error: null, invalid_response: null }, ignis: { network_error: null, http_error: null, invalid_response: null }, sanitas: { network_error: null, http_error: null, invalid_response: null } },
     entryShareByProduct: { vigiles: null, ignis: null, sanitas: null },
     entryCountByProduct: { vigiles: 0, ignis: 0, sanitas: 0 },
   });

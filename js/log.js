@@ -412,6 +412,25 @@ export class SessionLog {
   // and an ok entry with an unknown or missing product moves no
   // bucket. The panel renders each bucket rounded to whole
   // milliseconds, or "none" per product.
+  // DETAIL-29 adds the per-product failure-cause shares of all
+  // failures (failedShareByStatusByProduct): each product-cause
+  // count from DETAIL-9 over the session's failed total, so a
+  // session where half of all failures are Ignis network errors
+  // reads differently from one where the same count is a small
+  // slice of a much larger failure total — the DETAIL-9 counts
+  // alone do not say that at a glance. The denominator is the
+  // failed total, not the product's own failures, so the null
+  // rule differs from DETAIL-11/12 on purpose: a session with
+  // no failures at all reads null per cell (no failures to
+  // divide by — an empty log and a success-only log alike),
+  // but once the session holds any failure, a product-cause
+  // cell with no failures reads 0, never "none". The cells sum
+  // to 1 when every failure carries a known product, and to
+  // less than 1 when unknown- or missing-product failures sit
+  // in the denominator but in no cell, exactly as DETAIL-13's
+  // shares do. Successes never move a cell. The panel renders
+  // each cell as a whole percent, or "none" per cell with no
+  // failures in the session.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -714,6 +733,35 @@ export class SessionLog {
       ignis: medianOf(okLatenciesByProduct.ignis),
       sanitas: medianOf(okLatenciesByProduct.sanitas),
     };
+    // DETAIL-29: each DETAIL-9 product-cause count over the
+    // session failed total, so the cells say what slice of all
+    // failures each product-cause combination is. Null per cell
+    // with no failures at all (nothing to divide by, empty log
+    // and success-only log alike); 0 per cell with no failures
+    // of that combination once the session holds any failure.
+    // Derived only from the DETAIL-9 counts and the failed
+    // total, not a new rule: a failure with an unknown or
+    // missing product sits in the denominator but moves no
+    // cell, so the cells sum to less than 1 in that case, and
+    // successes never move a cell.
+    const shareOfAllFailures = (count) => (failed === 0 ? null : count / failed);
+    const failedShareByStatusByProduct = {
+      vigiles: {
+        network_error: shareOfAllFailures(failedByStatusByProduct.vigiles.network_error),
+        http_error: shareOfAllFailures(failedByStatusByProduct.vigiles.http_error),
+        invalid_response: shareOfAllFailures(failedByStatusByProduct.vigiles.invalid_response),
+      },
+      ignis: {
+        network_error: shareOfAllFailures(failedByStatusByProduct.ignis.network_error),
+        http_error: shareOfAllFailures(failedByStatusByProduct.ignis.http_error),
+        invalid_response: shareOfAllFailures(failedByStatusByProduct.ignis.invalid_response),
+      },
+      sanitas: {
+        network_error: shareOfAllFailures(failedByStatusByProduct.sanitas.network_error),
+        http_error: shareOfAllFailures(failedByStatusByProduct.sanitas.http_error),
+        invalid_response: shareOfAllFailures(failedByStatusByProduct.sanitas.invalid_response),
+      },
+    };
     return {
       total: this._entries.length,
       ok,
@@ -764,6 +812,7 @@ export class SessionLog {
         ignis: entryCountByProduct.ignis === 0 ? null : failedCountByProduct.ignis / entryCountByProduct.ignis,
         sanitas: entryCountByProduct.sanitas === 0 ? null : failedCountByProduct.sanitas / entryCountByProduct.sanitas,
       },
+      failedShareByStatusByProduct,
       entryShareByProduct: {
         vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
         ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,
