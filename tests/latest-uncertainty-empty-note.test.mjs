@@ -2,8 +2,10 @@
 //   node --test tests/latest-uncertainty-empty-note.test.mjs
 //
 // HANA Agent1: the Latest panel's empty uncertainty note reads at body
-// size, like the native panel's note. The native empty note is a plain
-// Text — body size, secondary — and the web's own populated uncertainty
+// size, like the native panel's note. The native empty note is now an
+// explicit 15pt Text, secondary (see the uncertainty-size test: the
+// native default read smaller than the web's 15px body size, as UI-20
+// showed for the summary) — and the web's own populated uncertainty
 // items read at body size in --muted, but the web empty note used class
 // "note" (13px), so an assessment with no uncertainty items read its
 // note smaller than both its own populated list and the native note.
@@ -42,12 +44,18 @@ test("web .uncertainty rule: muted color, no font-size, so body size is inherite
   assert.match(css, /body \{[^}]*font-size: 15px;/, "body size is 15px to inherit");
 });
 
-test("native empty uncertainty note: plain body Text, secondary, no font modifier", () => {
+test("native empty uncertainty note: secondary, explicit 15pt font", () => {
+  // Superseded guard, not dropped: this test once asserted the note
+  // carried no explicit font, because the native default was taken as
+  // body size. UI-20 showed the default reads smaller than the web's
+  // 15px body size, so the note now carries an explicit 15pt font,
+  // governed by tests/native-ignis-assessment-uncertainty-size.test.mjs.
+  // This guard keeps the secondary color and the explicit size here.
   const start = swift.indexOf('Text("The model reported no uncertainty items.")');
   assert.ok(start >= 0, "native empty note exists");
   const note = swift.slice(start, swift.indexOf("} else {", start));
   assert.match(note, /\.foregroundStyle\(\.secondary\)/, "note stays secondary");
-  assert.doesNotMatch(note, /\.font\(/, "note carries no explicit font size");
+  assert.match(note, /\.font\(\.system\(size: 15\)\)/, "note carries the 15pt font");
 });
 
 test("guards: populated list and earlier note unchanged", () => {

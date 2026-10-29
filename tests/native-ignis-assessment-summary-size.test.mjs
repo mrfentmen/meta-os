@@ -71,7 +71,12 @@ test("native summary: neighbors keep their sizes", () => {
   );
 });
 
-test("native summary: exactly one plain 15pt font", () => {
-  const plain = assessment.match(/\.font\(\.system\(size: 15\)\)/g) || [];
-  assert.equal(plain.length, 1, "exactly one plain 15pt font in the file");
+test("native summary: exactly one plain 15pt font in the summary block", () => {
+  // Superseded scope, not dropped: this guard once counted one plain
+  // 15pt font in the whole file, but the uncertainty section now
+  // carries its own 15pt fonts, governed by
+  // tests/native-ignis-assessment-uncertainty-size.test.mjs. The
+  // summary block itself still carries exactly one.
+  const plain = summaryBlock.match(/\.font\(\.system\(size: 15\)\)/g) || [];
+  assert.equal(plain.length, 1, "exactly one plain 15pt font in the summary block");
 });

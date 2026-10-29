@@ -289,8 +289,19 @@ struct AssessmentView: View {
                 .foregroundStyle(.secondary)
                 .accessibilityAddTraits(.isHeader)
             if response.assessment.uncertainty.isEmpty {
+                // Uncertainty empty note at 15pt, the native counterpart
+                // to the web panel rendering the empty note with class
+                // "uncertainty" at the 15px body size. Until now the
+                // note was a plain Text at the default size, so it read
+                // smaller than the web note and smaller than the
+                // populated list below once it takes the same 15pt
+                // size — the same default-size gap UI-20 closed for
+                // the summary. The size is the only change: the
+                // wording, the muted color, and the populated-list
+                // rendering are untouched.
                 Text("The model reported no uncertainty items.")
                     .foregroundStyle(.secondary)
+                    .font(.system(size: 15))
             } else {
                 ForEach(Array(response.assessment.uncertainty.enumerated()), id: \.offset) { _, item in
                     // UI-14: uncertainty items in the web .uncertainty
@@ -305,11 +316,22 @@ struct AssessmentView: View {
                     // the web list items inheriting the list color.
                     // It tracks no accent: uncertainty is muted for
                     // every product, like the web rule.
+                    // Uncertainty items at 15pt, the native counterpart
+                    // to the web .uncertainty list, which sets only the
+                    // muted color and inherits the 15px body size.
+                    // Until now the row was plain Text at the default
+                    // size, so a populated list read smaller than the
+                    // web list while the heading (UI-12) already
+                    // matched its own web rule. The size sits on the row so bullet and
+                    // item share it, exactly like the UI-14 muted
+                    // color they already share; the bullet, wording,
+                    // and muted color are untouched.
                     HStack(alignment: .top, spacing: 6) {
                         Text("•")
                         Text(item)
                     }
                     .foregroundStyle(.secondary)
+                    .font(.system(size: 15))
                 }
             }
         }
