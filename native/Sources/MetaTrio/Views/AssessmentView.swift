@@ -241,8 +241,28 @@ struct AssessmentView: View {
                                 .font(.system(size: 15))
                                 .fontWeight(.bold)
                             Spacer()
+                            // IGNIS-UI-51: confidence at 15pt, the
+                            // native counterpart to the web observation
+                            // line (js/app.js renders the confidence
+                            // inside the parenthetical in the
+                            // observation <li>, and styles.css
+                            // .observations sets only margin and
+                            // padding-left, so the line inherits the
+                            // 15px body size). Until now the native
+                            // confidence used .caption (12pt), so it
+                            // read three points smaller than the web
+                            // line it comes from while the category
+                            // (UI-49), description (UI-50), and
+                            // evidence line (UI-48) in the same row
+                            // already matched their own 15px web
+                            // rules. The size is the only change:
+                            // the muted color, the confidence
+                            // wording, and the firstTextBaseline row
+                            // are untouched, and the category,
+                            // description, and evidence lines keep
+                            // their own treatments.
                             Text(confidenceText(observation.confidence))
-                                .font(.caption)
+                                .font(.system(size: 15))
                                 .foregroundStyle(.secondary)
                         }
                         // IGNIS-UI-50: description at 15pt, the

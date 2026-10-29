@@ -77,8 +77,8 @@ test("native observation description: neighbors untouched", () => {
   );
   assert.match(
     observationsFn,
-    /Text\(confidenceText\(observation\.confidence\)\)\s+\.font\(\.caption\)\s+\.foregroundStyle\(\.secondary\)/,
-    "confidence caption keeps its caption size and muted color",
+    /Text\(confidenceText\(observation\.confidence\)\)\s+\.font\(\.system\(size: 15\)\)\s+\.foregroundStyle\(\.secondary\)/,
+    "confidence keeps its muted color at its UI-51 15pt size",
   );
   assert.match(
     observationsFn,
