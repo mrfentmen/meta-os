@@ -385,6 +385,22 @@ export class SessionLog {
   // here just as they open and close the global spans.
   // The panel renders each share as a whole percent, or
   // "none" on an empty log.
+  // DETAIL-26 adds the median successful latency
+  // (medianOkLatencyMs, null when no ok entry carries a usable
+  // latency): the middle recorded round-trip latency, where
+  // DETAIL-4's mean can be pulled by one very slow success and
+  // DETAIL-6's range alone does not say where the typical
+  // success sits. Same measurement rules as DETAIL-4/6:
+  // failures never contribute, and an ok entry with no finite
+  // latency_ms is skipped rather than counted as zero, so the
+  // median is always over real recorded measurements, across
+  // products — an ok entry with an unknown or missing product
+  // still counts here, just as it counts in the global mean
+  // and range. An odd count reads its middle value; an even
+  // count reads the mean of its two middle values, so a
+  // two-success session reads the midpoint, not one end.
+  // The panel renders it rounded to whole milliseconds, or
+  // "none" when no success carries a usable latency.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -410,6 +426,7 @@ export class SessionLog {
     let firstEntryAt = null;
     let latencySum = 0;
     let latencyCount = 0;
+    const okLatencies = [];
     const latencySumByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     const latencyCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     let minOkLatencyMs = null;
@@ -491,6 +508,7 @@ export class SessionLog {
         if (Number.isFinite(entry.latency_ms)) {
           latencySum += entry.latency_ms;
           latencyCount += 1;
+          okLatencies.push(entry.latency_ms);
           if (Object.hasOwn(latencySumByProduct, entry.product)) {
             latencySumByProduct[entry.product] += entry.latency_ms;
             latencyCountByProduct[entry.product] += 1;
@@ -647,6 +665,19 @@ export class SessionLog {
     // a new rule.
     const okShare = this._entries.length === 0 ? null : ok / this._entries.length;
     const failedShare = this._entries.length === 0 ? null : failed / this._entries.length;
+    // DETAIL-26: the median successful latency, over the same
+    // usable measurements DETAIL-4/6 use, sorted ascending so
+    // insertion order never moves it; null with no usable
+    // latency, never NaN.
+    const sortedOkLatencies = okLatencies.slice().sort((a, b) => a - b);
+    let medianOkLatencyMs = null;
+    if (sortedOkLatencies.length > 0) {
+      const mid = Math.floor(sortedOkLatencies.length / 2);
+      medianOkLatencyMs =
+        sortedOkLatencies.length % 2 === 1
+          ? sortedOkLatencies[mid]
+          : (sortedOkLatencies[mid - 1] + sortedOkLatencies[mid]) / 2;
+    }
     return {
       total: this._entries.length,
       ok,
@@ -683,6 +714,7 @@ export class SessionLog {
       },
       minOkLatencyMs,
       maxOkLatencyMs,
+      medianOkLatencyMs,
       minOkLatencyMsByProduct,
       maxOkLatencyMsByProduct,
       okShareByProduct: {

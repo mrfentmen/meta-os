@@ -77,6 +77,7 @@ const els = {
   logStatsEntrySpan: $("log-stats-entry-span"),
   logStatsOkShare: $("log-stats-ok-share"),
   logStatsFailedShare: $("log-stats-failed-share"),
+  logStatsMedianLatency: $("log-stats-median-latency"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -457,6 +458,14 @@ function updateLogStats() {
   // wherever either is non-null.
   els.logStatsFailedShare.textContent =
     `Failed share: ${stats.failedShare === null ? "none" : `${Math.round(stats.failedShare * 100)}%`}`;
+  // DETAIL-26: the median-latency line names the middle recorded
+  // successful latency, rounded to whole milliseconds, or "none"
+  // when no success carries a usable latency — the typical
+  // success DETAIL-4's mean and DETAIL-6's range imply but do
+  // not state — same always-renders shape as the other stats
+  // lines, so a quiet session never changes the panel's shape.
+  els.logStatsMedianLatency.textContent =
+    `Median successful latency: ${stats.medianOkLatencyMs === null ? "none" : `${Math.round(stats.medianOkLatencyMs)} ms`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
