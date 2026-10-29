@@ -58,6 +58,7 @@ const els = {
   logStatsLatencyRange: $("log-stats-latency-range"),
   logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),
   logStatsLastFailedByProduct: $("log-stats-last-failed-by-product"),
+  logStatsAvgLatencyByProduct: $("log-stats-avg-latency-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -293,6 +294,13 @@ function updateLogStats() {
   // successes never move a bucket.
   els.logStatsLastFailedByProduct.textContent =
     `Last failure by product: Vigiles ${stats.lastFailedAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastFailedAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastFailedAtByProduct.sanitas ?? "none"}`;
+  // DETAIL-8: the per-product average-latency line splits DETAIL-4's
+  // mean per product, rounded to whole milliseconds, or "none" per
+  // product with no success carrying a usable latency — same
+  // always-renders shape as the other stats lines, and failures
+  // never contribute to any bucket.
+  els.logStatsAvgLatencyByProduct.textContent =
+    `Average successful latency by product: Vigiles ${stats.avgOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.avgOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.ignis)} ms`} · Sanitas ${stats.avgOkLatencyMsByProduct.sanitas === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.sanitas)} ms`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

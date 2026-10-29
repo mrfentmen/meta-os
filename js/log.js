@@ -128,6 +128,17 @@ export class SessionLog {
   // its bucket's previous value in place. It uses the entry's
   // request timestamp — the same value the history renders — not
   // the log-write time.
+  // DETAIL-8 splits DETAIL-4's mean per product
+  // (avgOkLatencyMsByProduct, null per product with no ok entry
+  // carrying a usable latency): a session where Ignis successes
+  // are slow but Vigiles successes are fast reads differently from
+  // one where all three are slow together. Same measurement rules
+  // as DETAIL-4, per bucket: failures never contribute, an ok
+  // entry with an unknown or missing product moves no bucket, and
+  // an ok entry with no finite latency_ms is skipped rather than
+  // counted as zero, so each mean is always over real recorded
+  // measurements for that product. The panel renders each mean
+  // rounded to whole milliseconds.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -139,6 +150,8 @@ export class SessionLog {
     let lastOkAt = null;
     let latencySum = 0;
     let latencyCount = 0;
+    const latencySumByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
+    const latencyCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
     let minOkLatencyMs = null;
     let maxOkLatencyMs = null;
     for (const entry of this._entries) {
@@ -156,6 +169,10 @@ export class SessionLog {
         if (Number.isFinite(entry.latency_ms)) {
           latencySum += entry.latency_ms;
           latencyCount += 1;
+          if (Object.hasOwn(latencySumByProduct, entry.product)) {
+            latencySumByProduct[entry.product] += entry.latency_ms;
+            latencyCountByProduct[entry.product] += 1;
+          }
           if (minOkLatencyMs === null || entry.latency_ms < minOkLatencyMs) {
             minOkLatencyMs = entry.latency_ms;
           }
@@ -185,6 +202,11 @@ export class SessionLog {
       lastOkAtByProduct,
       lastFailedAtByProduct,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
+      avgOkLatencyMsByProduct: {
+        vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,
+        ignis: latencyCountByProduct.ignis === 0 ? null : latencySumByProduct.ignis / latencyCountByProduct.ignis,
+        sanitas: latencyCountByProduct.sanitas === 0 ? null : latencySumByProduct.sanitas / latencyCountByProduct.sanitas,
+      },
       minOkLatencyMs,
       maxOkLatencyMs,
     };
