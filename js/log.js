@@ -762,6 +762,26 @@ export class SessionLog {
         invalid_response: shareOfAllFailures(failedByStatusByProduct.sanitas.invalid_response),
       },
     };
+    // DETAIL-31: the global failure-cause shares of all failures
+    // (failedShareByStatus): each DETAIL-9 global cause count over
+    // the session failed total — DETAIL-29's per-product cells
+    // collapsed across products, so a session where network
+    // errors are half of all failures reads that at a glance
+    // without adding the nine product-cause cells. Same null
+    // rule as DETAIL-29: null per cause with no failures at all
+    // (empty log and success-only log alike), 0 per cause with
+    // no failures of that cause once the session holds any
+    // failure. Unlike DETAIL-29's cells, these always sum to 1
+    // once any failure exists: failedByStatus is product-blind,
+    // so a failure with an unknown or missing product still
+    // moves its cause cell, and record() rejects any other
+    // status, so no failure can sit in the denominator without
+    // a cell. Successes never move a cell.
+    const failedShareByStatus = {
+      network_error: shareOfAllFailures(failedByStatus.network_error),
+      http_error: shareOfAllFailures(failedByStatus.http_error),
+      invalid_response: shareOfAllFailures(failedByStatus.invalid_response),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -813,6 +833,7 @@ export class SessionLog {
         sanitas: entryCountByProduct.sanitas === 0 ? null : failedCountByProduct.sanitas / entryCountByProduct.sanitas,
       },
       failedShareByStatusByProduct,
+      failedShareByStatus,
       entryShareByProduct: {
         vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
         ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,
