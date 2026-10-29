@@ -113,6 +113,7 @@ const els = {
   logStatsFailedSpanShareOfEntryWindowByProduct: $("log-stats-failed-span-share-of-entry-window-by-product"),
   logStatsOkLatencyCountShareOfOwnEntriesByProduct: $("log-stats-ok-latency-count-share-of-own-entries-by-product"),
   logStatsFailedSpanShareOfEntryWindow: $("log-stats-failed-span-share-of-entry-window"),
+  logStatsOkSpanShareOfEntryWindow: $("log-stats-ok-span-share-of-entry-window"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -887,6 +888,23 @@ function updateLogStats() {
   // this product-blind numerator, unlike DETAIL-55.
   els.logStatsFailedSpanShareOfEntryWindow.textContent =
     `Failure-span share of entry window: ${stats.failedSpanShareOfEntryWindow === null ? "none" : `${Math.round(stats.failedSpanShareOfEntryWindow * 100)}%`}`;
+  // DETAIL-58: the global success-span-share-of-entry-
+  // window line re-bases DETAIL-22's global ok span on
+  // the session's global entry span, rendered as a
+  // whole percent, or "none" with no usable entry window
+  // or no usable ok span — the ok mirror of DETAIL-57
+  // and the collapsed form of DETAIL-53's per-product
+  // shares, so successes covering half the whole window
+  // read at a glance. Raw ratio, never clamped: above
+  // 100% or below 0% means timestamps ran out of
+  // insertion order, and this is not the sum of
+  // DETAIL-53's shares because product ok windows
+  // overlap. Failures stretch the denominator without
+  // moving the numerator, and an unknown- or
+  // missing-product success still moves this
+  // product-blind numerator, unlike DETAIL-53.
+  els.logStatsOkSpanShareOfEntryWindow.textContent =
+    `Success-span share of entry window: ${stats.okSpanShareOfEntryWindow === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindow * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

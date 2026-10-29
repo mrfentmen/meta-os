@@ -1541,6 +1541,53 @@ export class SessionLog {
           : failedSpanMs === null
             ? null
             : failedSpanMs / globalEntrySpanMs;
+    // DETAIL-58: the global ok-span share of the
+    // global entry window (okSpanShareOfEntryWindow):
+    // the session's DETAIL-22 global ok span over its
+    // DETAIL-24 global entry span — the ok mirror of
+    // DETAIL-57's failed share, and the collapsed form
+    // of DETAIL-53's per-product ok-span shares, so a
+    // session where successes stretch across half the
+    // whole recording window reads that at a glance,
+    // where the three by-product shares alone do not
+    // say how much of the window successes covered in
+    // total. Derived only from the two global spans,
+    // not a new rule: any entry moves the denominator's
+    // endpoints, so failures stretch the window without
+    // moving the numerator. The numerator is
+    // product-blind, unlike DETAIL-53: a success with an
+    // unknown or missing product still opens and closes
+    // the global ok span (DETAIL-22's endpoints cover
+    // it), so it moves this share where it moves no
+    // DETAIL-53 bucket — the deliberate contrast with
+    // DETAIL-53, matching DETAIL-57's and DETAIL-49's
+    // product-blind globals. This is a raw ratio, never
+    // clamped, and it is NOT the sum of DETAIL-53's
+    // shares: product ok windows overlap and the global
+    // window is first-to-last across products, not a sum
+    // of product windows — a share above 1 or below 0
+    // means timestamps ran out of insertion order,
+    // exactly as DETAIL-22's raw span does. Null when
+    // the session holds no usable entry window at all
+    // (an empty log, a single entry, or all entries at
+    // one timestamp — a zero global entry span has no
+    // share to divide, never NaN); null when successes
+    // were recorded but the global ok span is unknown
+    // (no usable timestamp pair — never a fabricated
+    // window); 0 with no successes once a nonzero entry
+    // window exists, because successes covered none of
+    // the window — the deliberate contrast with
+    // DETAIL-22's null — and 0 for a single-success
+    // session, whose zero-length ok window covers none
+    // of a nonzero entry window.
+    const okSpanShareOfEntryWindow =
+      globalEntrySpanMs === null || globalEntrySpanMs === 0
+        ? null
+        : ok === 0
+          ? 0
+          : okSpanMs === null
+            ? null
+            : okSpanMs / globalEntrySpanMs;
     return {
       total: this._entries.length,
       ok,
@@ -1831,6 +1878,17 @@ export class SessionLog {
       // missing-product failures move this product-blind
       // share, unlike DETAIL-55.
       failedSpanShareOfEntryWindow,
+      // DETAIL-58: the global ok-span share of the
+      // global entry window (okSpanShareOfEntryWindow):
+      // the DETAIL-22 global ok span over the DETAIL-24
+      // global entry span — the ok mirror of DETAIL-57
+      // and the collapsed form of DETAIL-53's per-product
+      // shares. Null with no usable entry window, or with
+      // successes but no usable ok span; 0 with no
+      // successes once a nonzero entry window exists.
+      // Unknown- or missing-product successes move this
+      // product-blind share, unlike DETAIL-53.
+      okSpanShareOfEntryWindow,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
