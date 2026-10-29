@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070b16">
+  <title>Meta Symbol | ASCII Studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070b16;
+      --panel: rgba(13, 21, 39, 0.78);
+      --line: rgba(119, 169, 255, 0.17);
+      --muted: #8291ac;
+      --text: #edf5ff;
+      --blue: #1877f2;
+      --cyan: #69ddff;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { width: 100%; min-height: 100%; }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      overflow: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(ellipse at 50% 44%, rgba(24, 89, 190, 0.16), transparent 38%),
+        radial-gradient(ellipse at 13% 6%, rgba(26, 77, 154, 0.14), transparent 32%),
+        radial-gradient(ellipse at 88% 92%, rgba(0, 190, 255, 0.07), transparent 30%),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.25;
+      background-image:
+        linear-gradient(rgba(133, 170, 230, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(133, 170, 230, 0.055) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse at center, black 15%, transparent 80%);
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      border: 1px solid rgba(151, 190, 255, 0.07);
+      box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.3);
+    }
+
+    .app-shell {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      min-height: 100svh;
+      padding: 30px clamp(18px, 4vw, 56px) 26px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      z-index: 2;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 auto;
+      border: 1px solid rgba(92, 174, 255, 0.34);
+      border-radius: 12px;
+      background: linear-gradient(145deg, rgba(24, 119, 242, 0.2), rgba(0, 209, 255, 0.06));
+      box-shadow: inset 0 0 18px rgba(24, 119, 242, 0.1), 0 0 24px rgba(24, 119, 242, 0.08);
+    }
+
+    .brand-mark svg { width: 25px; height: 25px; }
+
+    .eyebrow {
+      margin: 0 0 4px;
+      color: #78baff;
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: 0.015em;
+    }
+
+    .top-meta {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(11, 20, 37, 0.55);
+      color: #a8b7d0;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      backdrop-filter: blur(16px);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px rgba(105, 221, 255, 0.85);
+    }
+
+    .stage {
+      position: relative;
+      display: grid;
+      flex: 1;
+      place-items: center;
+      min-height: 0;
+      padding: 24px 0 32px;
+    }
+
+    .stage-glow {
+      position: absolute;
+      width: min(65vw, 700px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(22, 104, 230, 0.12), rgba(0, 178, 255, 0.035) 36%, transparent 68%);
+      filter: blur(12px);
+      pointer-events: none;
+    }
+
+    .stage-ring {
+      position: absolute;
+      width: min(70vw, 690px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(94, 148, 232, 0.08);
+      border-radius: 50%;
+      transform: scaleY(0.56) rotate(-12deg);
+      box-shadow: 0 0 70px rgba(31, 105, 219, 0.04), inset 0 0 70px rgba(31, 105, 219, 0.035);
+      pointer-events: none;
+    }
+
+    .stage-ring::before,
+    .stage-ring::after {
+      content: "";
+      position: absolute;
+      inset: 9%;
+      border: 1px solid rgba(94, 148, 232, 0.055);
+      border-radius: 50%;
+    }
+
+    .stage-ring::after { inset: 19%; }
+
+    #canvas-container {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: min(100%, 1120px);
+      max-width: 100%;
+      padding: 16px;
+      cursor: grab;
+      touch-action: none;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #canvas-container:active { cursor: grabbing; }
+
+    #ascii-canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: 100%;
+      max-height: min(58svh, 620px);
+      aspect-ratio: 1.76 / 1;
+      overflow: visible;
+      background: transparent;
+      filter: drop-shadow(0 0 22px rgba(24, 119, 242, 0.14));
+      transform: translateZ(0);
+    }
+
+    .hint {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #6f809d;
+      font-size: 10px;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .hint svg { width: 13px; height: 13px; opacity: 0.8; }
+
+    .control-dock {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      width: min(100%, 680px);
+      margin: 0 auto;
+      padding: 17px 20px;
+      border: 1px solid rgba(119, 169, 255, 0.2);
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(18, 29, 51, 0.86), rgba(9, 17, 33, 0.88));
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+      backdrop-filter: blur(22px);
+    }
+
+    .speed-control {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      gap: 11px;
+      min-width: 0;
+    }
+
+    .speed-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .speed-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #dce8fb;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .speed-label svg { width: 15px; height: 15px; color: #75bfff; }
+
+    .speed-value {
+      color: #86caff;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      display: block;
+      width: 100%;
+      height: 4px;
+      margin: 0;
+      border-radius: 99px;
+      background: rgba(135, 164, 211, 0.2);
+      accent-color: #51baff;
+      cursor: pointer;
+    }
+
+    input[type="range"]:focus-visible,
+    button:focus-visible,
+    #canvas-container:focus-visible {
+      outline: 2px solid #72ceff;
+      outline-offset: 4px;
+    }
+
+    .speed-scale {
+      display: flex;
+      justify-content: space-between;
+      color: #657590;
+      font-size: 9px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .dock-divider {
+      width: 1px;
+      align-self: stretch;
+      background: rgba(119, 169, 255, 0.15);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 0 13px;
+      border: 1px solid rgba(132, 166, 218, 0.2);
+      border-radius: 11px;
+      background: rgba(255, 255, 255, 0.035);
+      color: #cfdbef;
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+      white-space: nowrap;
+    }
+
+    button svg { width: 14px; height: 14px; }
+    button:hover { border-color: rgba(105, 191, 255, 0.48); background: rgba(58, 133, 230, 0.1); }
+    button:active { transform: translateY(1px); }
+
+    .primary-action {
+      border-color: rgba(73, 164, 255, 0.38);
+      background: linear-gradient(135deg, rgba(24, 119, 242, 0.24), rgba(29, 167, 255, 0.12));
+      color: #e8f5ff;
+    }
+
+    .footer-note {
+      position: absolute;
+      right: clamp(18px, 4vw, 56px);
+      bottom: 34px;
+      color: #52617a;
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 9px;
+      letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 620px) {
+      .app-shell { padding: 20px 16px 18px; }
+      .brand-mark { width: 34px; height: 34px; border-radius: 10px; }
+      .brand-title { font-size: 12px; }
+      .eyebrow { font-size: 9px; }
+      .top-meta { padding: 8px 10px; font-size: 9px; }
+      .stage { padding: 12px 0 26px; }
+      #canvas-container { padding: 8px 0; }
+      #ascii-canvas { max-height: 48svh; }
+      .stage-ring { width: 95vw; }
+      .stage-glow { width: 90vw; }
+      .control-dock { gap: 13px; padding: 14px; border-radius: 15px; }
+      .actions { gap: 6px; }
+      button { min-height: 38px; padding: 0 10px; }
+      .button-text { display: none; }
+      .footer-note { display: none; }
+    }
+
+    @media (max-height: 600px) {
+      .app-shell { padding-top: 16px; padding-bottom: 14px; }
+      .brand-mark { width: 30px; height: 30px; }
+      .stage { padding: 5px 0 18px; }
+      #ascii-canvas { max-height: 52svh; }
+      .control-dock { padding: 12px 16px; }
+      .hint { bottom: 4px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 48 48" fill="none">
+            <path d="M7 28.7C10.8 35.3 16.8 35.2 22.1 27.3L28.7 17.1C34.2 8.7 40.4 13.4 41 19.1C41.4 22.6 39.5 26.9 36.8 31.2" stroke="#65D5FF" stroke-width="4.3" stroke-linecap="round"/>
+            <path d="M6.7 19.3C7.2 13.5 13.7 8.5 19.1 17.1L25.7 27.3C31 35.2 37 35.3 40.8 28.7" stroke="#3288FF" stroke-width="4.3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p class="eyebrow">Interactive object / 001</p>
+          <h1 class="brand-title">Meta Loop <span style="color:#7487a5;font-weight:450">/ ASCII Studio</span></h1>
+        </div>
+      </div>
+      <div class="top-meta" aria-live="polite">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-label">LIVE RENDER</span>
+      </div>
+    </header>
+
+    <section class="stage" aria-label="Interactive rotating ASCII interpretation of the Meta loop symbol">
+      <div class="stage-glow" aria-hidden="true"></div>
+      <div class="stage-ring" aria-hidden="true"></div>
+      <div id="canvas-container" tabindex="0" role="application" aria-label="Interactive three dimensional ASCII ribbon. Drag or use the arrow keys to rotate it. Press Space to pause or resume.">
+        <canvas id="ascii-canvas" width="1200" height="680" role="img" aria-label="A three dimensional Meta-inspired infinity ribbon built from colored ASCII characters. Drag to rotate. Use arrow keys to rotate and Space to pause or resume."></canvas>
+      </div>
+      <div class="hint" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12V6a2 2 0 0 1 4 0v5-7a2 2 0 0 1 4 0v8-5a2 2 0 0 1 4 0v8a7 7 0 0 1-7 7h-1a7 7 0 0 1-5-2l-3-3a2 2 0 0 1 3-3l2 2"/></svg>
+        Drag to rotate · Explore the form
+      </div>
+    </section>
+
+    <section class="control-dock" aria-label="Animation controls">
+      <div class="speed-control">
+        <div class="speed-heading">
+          <label class="speed-label" for="speed">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            Rotation speed
+          </label>
+          <output class="speed-value" id="speed-value" for="speed">30%</output>
+        </div>
+        <input type="range" id="speed" min="0" max="100" value="30" aria-label="Rotation speed">
+        <div class="speed-scale"><span>Still</span><span>Slow</span><span>Fast</span></div>
+      </div>
+      <div class="dock-divider" aria-hidden="true"></div>
+      <div class="actions">
+        <button class="primary-action" id="pause-button" type="button" aria-pressed="false">
+          <svg id="pause-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v14M16 5v14"/></svg>
+          <span class="button-text" id="pause-label">Pause</span>
+        </button>
+        <button id="reset-button" type="button" aria-label="Reset rotation" title="Reset rotation">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg>
+          <span class="button-text">Reset</span>
+        </button>
+      </div>
+    </section>
+    <div class="footer-note" aria-hidden="true">124 × 52 CHARACTER FIELD</div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('ascii-canvas');
+    const scene = document.getElementById('canvas-container');
+    const speedSlider = document.getElementById('speed');
+    const speedValue = document.getElementById('speed-value');
+    const pauseButton = document.getElementById('pause-button');
+    const pauseLabel = document.getElementById('pause-label');
+    const pauseIcon = document.getElementById('pause-icon');
+    const statusLabel = document.getElementById('status-label');
+    const statusDot = document.getElementById('status-dot');
+    const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
+
+    // A wide ASCII grid creates a cleaner silhouette without losing the character-art look.
+    const WIDTH = 124;
+    const HEIGHT = 52;
+    const RING_POINTS = 320;
+    const TUBE_POINTS = 48;
+    const CAMERA_DISTANCE = 80;
+    const LOOP_X = 24.5;
+    const LOOP_Y = 26.5;
+    const LOOP_Z = 8.2;
+    const RIBBON_WIDTH = 3.65;
+    const RIBBON_THICKNESS = 0.72;
+    const X_PROJECTION = 0.99;
+    const Y_PROJECTION = 1.76;
+    const GLYPHS = ' .,:;irsXA253hMHGS#9B&@';
+    const PALETTE = [
+      '#062258', '#07357f', '#0750bc', '#0869df',
+      '#0d82f0', '#20a3ff', '#43c2ff', '#8be5ff', '#e9fbff'
+    ];
+    const CELL_COUNT = WIDTH * HEIGHT;
+    const glyphBuffer = new Uint8Array(CELL_COUNT);
+    const colorBuffer = new Uint8Array(CELL_COUNT);
+    const specBuffer = new Float32Array(CELL_COUNT);
+    const zBuffer = new Float32Array(CELL_COUNT);
+
+    let angleX = -0.045;
+    let angleY = 0.045;
+    let isDragging = false;
+    let isPaused = false;
+    let lastPointer = { x: 0, y: 0 };
+    let dragVelocityX = 0;
+    let dragVelocityY = 0;
+    let previousFrameTime = 0;
+    let viewWidth = 0;
+    let viewHeight = 0;
+    let pixelRatio = 1;
+
+    const lightDirection = normalize({ x: -0.38, y: 0.62, z: 0.91 });
+    const viewDirection = { x: 0, y: 0, z: 1 };
+    const halfVector = normalize({
+      x: lightDirection.x + viewDirection.x,
+      y: lightDirection.y + viewDirection.y,
+      z: lightDirection.z + viewDirection.z
+    });
+
+    function normalize(v) {
+      const length = Math.hypot(v.x, v.y, v.z) || 1;
+      return { x: v.x / length, y: v.y / length, z: v.z / length };
+    }
+
+    // A custom, slightly asymmetric infinity path inspired by Meta's continuous loop.
+    // The depth offset separates the two strands at the central crossover.
+    function loopPoint(u) {
+      const s = Math.sin(u);
+      const c = Math.cos(u);
+      return {
+        x: LOOP_X * s * (1 + 0.018 * s),
+        y: LOOP_Y * s * c * (1 + 0.025 * s),
+        z: LOOP_Z * c + 0.65 * Math.sin(2 * u)
+      };
+    }
+
+    // Build an actual ribbon panel instead of a round pipe. The face samples fill
+    // the broad surface, while separate edge samples create a softly rounded rim.
+    function buildSurface() {
+      const samples = [];
+      const frameStep = 0.0025;
+      const WIDTH_STEPS = 24;
+      const EDGE_STEPS = 9;
+
+      for (let j = 0; j < RING_POINTS; j++) {
+        const u = (j / RING_POINTS) * Math.PI * 2;
+        const center = loopPoint(u);
+        const before = loopPoint(u - frameStep);
+        const after = loopPoint(u + frameStep);
+        const tangent = normalize({
+          x: after.x - before.x,
+          y: after.y - before.y,
+          z: after.z - before.z
+        });
+
+        let nx = -tangent.y;
+        let ny = tangent.x;
+        let nz = 0;
+        const nLength = Math.hypot(nx, ny, nz) || 1;
+        nx /= nLength;
+        ny /= nLength;
+        nz /= nLength;
+
+        const binormal = normalize({
+          x: tangent.y * nz - tangent.z * ny,
+          y: tangent.z * nx - tangent.x * nz,
+          z: tangent.x * ny - tangent.y * nx
+        });
+        const localWidth = RIBBON_WIDTH * (0.90 + 0.10 * Math.pow(Math.abs(Math.sin(u)), 1.15));
+
+        // Sample both sides of the broad ribbon face across its full width.
+        for (let k = 0; k <= WIDTH_STEPS; k++) {
+          const across = -1 + (2 * k / WIDTH_STEPS);
+          const crown = 1 - 0.045 * across * across;
+          for (const side of [-1, 1]) {
+            const x = center.x + localWidth * across * nx + side * RIBBON_THICKNESS * crown * binormal.x;
+            const y = center.y + localWidth * across * ny + side * RIBBON_THICKNESS * crown * binormal.y;
+            const z = center.z + localWidth * across * nz + side * RIBBON_THICKNESS * crown * binormal.z;
+            const faceNormal = normalize({
+              x: side * binormal.x - 0.09 * across * nx,
+              y: side * binormal.y - 0.09 * across * ny,
+              z: side * binormal.z - 0.09 * across * nz
+            });
+            samples.push({
+              x, y, z,
+              nx: faceNormal.x,
+              ny: faceNormal.y,
+              nz: faceNormal.z,
+              u,
+              colorWave: 0.5 + 0.5 * Math.sin(u + 0.65)
+            });
+          }
+        }
+
+        // Rounded side rails keep the ribbon dimensional when viewed edge-on.
+        for (const edgeSide of [-1, 1]) {
+          for (let e = 0; e < EDGE_STEPS; e++) {
+            const theta = -Math.PI / 2 + Math.PI * e / (EDGE_STEPS - 1);
+            const st = Math.sin(theta);
+            const ct = Math.cos(theta);
+            const x = center.x + localWidth * edgeSide * nx + RIBBON_THICKNESS * st * binormal.x;
+            const y = center.y + localWidth * edgeSide * ny + RIBBON_THICKNESS * st * binormal.y;
+            const z = center.z + localWidth * edgeSide * nz + RIBBON_THICKNESS * st * binormal.z;
+            const edgeNormal = normalize({
+              x: edgeSide * ct * nx + st * binormal.x,
+              y: edgeSide * ct * ny + st * binormal.y,
+              z: edgeSide * ct * nz + st * binormal.z
+            });
+            samples.push({
+              x, y, z,
+              nx: edgeNormal.x,
+              ny: edgeNormal.y,
+              nz: edgeNormal.z,
+              u,
+              colorWave: 0.5 + 0.5 * Math.sin(u + 0.65)
+            });
+          }
+        }
+      }
+      return samples;
+    }
+
+    const surfaceSamples = buildSurface();
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const nextRatio = Math.min(window.devicePixelRatio || 1, 2);
+      const pixelWidth = Math.round(rect.width * nextRatio);
+      const pixelHeight = Math.round(rect.height * nextRatio);
+
+      if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
+        canvas.width = pixelWidth;
+        canvas.height = pixelHeight;
+        ctx.setTransform(nextRatio, 0, 0, nextRatio, 0, 0);
+        ctx.imageSmoothingEnabled = true;
+      }
+
+      pixelRatio = nextRatio;
+      viewWidth = rect.width;
+      viewHeight = rect.height;
+    }
+
+    if ('ResizeObserver' in window) {
+      new ResizeObserver(resizeCanvas).observe(canvas);
+    }
+    window.addEventListener('resize', resizeCanvas, { passive: true });
+
+    function resetRotation() {
+      angleX = -0.045;
+      angleY = 0.045;
+      dragVelocityX = 0;
+      dragVelocityY = 0;
+    }
+
+    function setPaused(nextPaused) {
+      isPaused = nextPaused;
+      pauseButton.setAttribute('aria-pressed', String(isPaused));
+      pauseLabel.textContent = isPaused ? 'Resume' : 'Pause';
+      pauseIcon.innerHTML = isPaused
+        ? '<path d="m8 5 11 7-11 7z" fill="currentColor" stroke="none"/>'
+        : '<path d="M8 5v14M16 5v14"/>';
+      statusLabel.textContent = isPaused ? 'RENDER PAUSED' : 'LIVE RENDER';
+      statusDot.style.background = isPaused ? '#6f809d' : '#69ddff';
+      statusDot.style.boxShadow = isPaused ? 'none' : '0 0 10px rgba(105, 221, 255, 0.85)';
+    }
+
+    speedSlider.addEventListener('input', () => {
+      speedValue.textContent = `${speedSlider.value}%`;
+    });
+
+    pauseButton.addEventListener('click', () => setPaused(!isPaused));
+    document.getElementById('reset-button').addEventListener('click', () => {
+      resetRotation();
+      setPaused(false);
+    });
+
+    scene.addEventListener('pointerdown', (event) => {
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      isDragging = true;
+      dragVelocityX = 0;
+      dragVelocityY = 0;
+      lastPointer = { x: event.clientX, y: event.clientY };
+      scene.setPointerCapture(event.pointerId);
+      scene.focus({ preventScroll: true });
+    });
+
+    scene.addEventListener('pointermove', (event) => {
+      if (!isDragging) return;
+      const dx = event.clientX - lastPointer.x;
+      const dy = event.clientY - lastPointer.y;
+      angleY += dx * 0.008;
+      angleX += dy * 0.008;
+      dragVelocityY = dx * 0.0017;
+      dragVelocityX = dy * 0.0017;
+      lastPointer = { x: event.clientX, y: event.clientY };
+    });
+
+    function stopDragging() { isDragging = false; }
+    scene.addEventListener('pointerup', stopDragging);
+    scene.addEventListener('pointercancel', stopDragging);
+    scene.addEventListener('lostpointercapture', stopDragging);
+
+    scene.addEventListener('keydown', (event) => {
+      const step = event.shiftKey ? 0.18 : 0.08;
+      if (event.key === 'ArrowLeft') { angleY -= step; event.preventDefault(); }
+      else if (event.key === 'ArrowRight') { angleY += step; event.preventDefault(); }
+      else if (event.key === 'ArrowUp') { angleX -= step; event.preventDefault(); }
+      else if (event.key === 'ArrowDown') { angleX += step; event.preventDefault(); }
+      else if (event.code === 'Space') { setPaused(!isPaused); event.preventDefault(); }
+    });
+
+    const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+
+    function renderFrame(timestamp = 0) {
+      if (!viewWidth || !viewHeight) resizeCanvas();
+      if (!viewWidth || !viewHeight) {
+        requestAnimationFrame(renderFrame);
+        return;
+      }
+
+      const frameScale = previousFrameTime
+        ? Math.min((timestamp - previousFrameTime) / (1000 / 60), 3)
+        : 1;
+      previousFrameTime = timestamp;
+
+      if (!isDragging && !isPaused) {
+        angleY += Number(speedSlider.value) * 0.0003 * frameScale;
+        angleX += dragVelocityX * frameScale;
+        angleY += dragVelocityY * frameScale;
+        const damping = Math.pow(0.90, frameScale);
+        dragVelocityX *= damping;
+        dragVelocityY *= damping;
+        if (Math.abs(dragVelocityX) < 0.00008) dragVelocityX = 0;
+        if (Math.abs(dragVelocityY) < 0.00008) dragVelocityY = 0;
+      }
+
+      glyphBuffer.fill(0);
+      colorBuffer.fill(0);
+      specBuffer.fill(0);
+      zBuffer.fill(-Infinity);
+
+      const cosY = Math.cos(angleY);
+      const sinY = Math.sin(angleY);
+      const cosX = Math.cos(angleX);
+      const sinX = Math.sin(angleX);
+
+      for (let i = 0; i < surfaceSamples.length; i++) {
+        const p = surfaceSamples[i];
+
+        // Rotate positions and the associated normals with the same transform.
+        const x1 = p.x * cosY + p.z * sinY;
+        const z1 = -p.x * sinY + p.z * cosY;
+        const nx1 = p.nx * cosY + p.nz * sinY;
+        const nz1 = -p.nx * sinY + p.nz * cosY;
+        const y2 = p.y * cosX - z1 * sinX;
+        const z2 = p.y * sinX + z1 * cosX;
+        const nx2 = nx1;
+        const ny2 = p.ny * cosX - nz1 * sinX;
+        const nz2 = p.ny * sinX + nz1 * cosX;
+
+        const depth = CAMERA_DISTANCE - z2;
+        if (depth <= 1) continue;
+        const invDepth = 1 / depth;
+        const xp = Math.round(WIDTH / 2 + x1 * invDepth * WIDTH * X_PROJECTION);
+        const yp = Math.round(HEIGHT / 2 - y2 * invDepth * HEIGHT * Y_PROJECTION);
+        if (xp < 0 || xp >= WIDTH || yp < 0 || yp >= HEIGHT) continue;
+
+        const index = xp + yp * WIDTH;
+        if (invDepth <= zBuffer[index]) continue;
+
+        const diffuse = Math.max(0, nx2 * lightDirection.x + ny2 * lightDirection.y + nz2 * lightDirection.z);
+        const halfDot = Math.max(0, nx2 * halfVector.x + ny2 * halfVector.y + nz2 * halfVector.z);
+        const specular = Math.pow(halfDot, 28);
+        const rimBase = 1 - Math.min(1, Math.abs(nz2));
+        const rim = rimBase * rimBase;
+        const colorWave = p.colorWave;
+
+        const glyphBrightness = clamp(0.13 + diffuse * 0.43 + specular * 0.92 + rim * 0.18, 0, 1);
+        const glyphIndex = clamp(Math.round(glyphBrightness * (GLYPHS.length - 1)), 1, GLYPHS.length - 1);
+        const colorBrightness = clamp(0.12 + diffuse * 0.48 + specular * 0.73 + rim * 0.13 + colorWave * 0.10, 0, 1);
+        const colorIndex = clamp(Math.round(colorBrightness * (PALETTE.length - 1)), 0, PALETTE.length - 1);
+
+        zBuffer[index] = invDepth;
+        glyphBuffer[index] = glyphIndex;
+        colorBuffer[index] = colorIndex;
+        specBuffer[index] = specular;
+      }
+
+      // Soft blue aura behind the characters, kept subtle so the glyphs remain crisp.
+      ctx.clearRect(0, 0, viewWidth, viewHeight);
+      const aura = ctx.createRadialGradient(
+        viewWidth * 0.5, viewHeight * 0.52, viewHeight * 0.02,
+        viewWidth * 0.5, viewHeight * 0.52, viewWidth * 0.43
+      );
+      aura.addColorStop(0, 'rgba(0, 105, 255, 0.105)');
+      aura.addColorStop(0.42, 'rgba(0, 119, 255, 0.035)');
+      aura.addColorStop(1, 'rgba(0, 119, 255, 0)');
+      ctx.fillStyle = aura;
+      ctx.fillRect(0, 0, viewWidth, viewHeight);
+
+      const cellWidth = viewWidth / WIDTH;
+      const cellHeight = viewHeight / HEIGHT;
+      const fontSize = Math.min(cellHeight * 1.01, cellWidth / 0.59);
+      ctx.font = `700 ${fontSize}px "SFMono-Regular", Consolas, "Liberation Mono", monospace`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Main pass: each character receives its own light-dependent blue or cyan tone.
+      for (let i = 0; i < CELL_COUNT; i++) {
+        const glyphIndex = glyphBuffer[i];
+        if (!glyphIndex) continue;
+        const character = GLYPHS[glyphIndex];
+        if (character === ' ') continue;
+        const x = ((i % WIDTH) + 0.5) * cellWidth;
+        const y = (Math.floor(i / WIDTH) + 0.5) * cellHeight;
+        ctx.fillStyle = PALETTE[colorBuffer[i]];
+        ctx.fillText(character, x, y);
+      }
+
+      // Specular pass: small bright glints sell the polished ribbon surface.
+      ctx.shadowColor = 'rgba(91, 220, 255, 0.9)';
+      ctx.shadowBlur = cellHeight * 0.85;
+      ctx.fillStyle = '#eafcff';
+      for (let i = 0; i < CELL_COUNT; i++) {
+        if (specBuffer[i] < 0.66 || !glyphBuffer[i]) continue;
+        const character = GLYPHS[glyphBuffer[i]];
+        if (character === ' ') continue;
+        const x = ((i % WIDTH) + 0.5) * cellWidth;
+        const y = (Math.floor(i / WIDTH) + 0.5) * cellHeight;
+        ctx.fillText(character, x, y);
+      }
+      ctx.shadowBlur = 0;
+
+      requestAnimationFrame(renderFrame);
+    }
+
+    resizeCanvas();
+    renderFrame();
+  </script>
+</body>
+</html>
