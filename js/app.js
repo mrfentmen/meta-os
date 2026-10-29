@@ -84,6 +84,8 @@ const els = {
   logStatsMedianLatencyByProduct: $("log-stats-median-latency-by-product"),
   logStatsFailedShareByStatusByProduct: $("log-stats-failed-share-by-status-by-product"),
   logStatsFailedShareByStatus: $("log-stats-failed-share-by-status"),
+  logStatsFirstFailed: $("log-stats-first-failed"),
+  logStatsLastFailed: $("log-stats-last-failed"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -531,6 +533,26 @@ function updateLogStats() {
   // never move a cell.
   els.logStatsFailedShareByStatus.textContent =
     `Failure-cause share of all failures: Network ${stats.failedShareByStatus.network_error === null ? "none" : `${Math.round(stats.failedShareByStatus.network_error * 100)}%`}, HTTP ${stats.failedShareByStatus.http_error === null ? "none" : `${Math.round(stats.failedShareByStatus.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatus.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatus.invalid_response * 100)}%`}`;
+  // DETAIL-32: the global first- and last-failure lines name
+  // the endpoints DETAIL-23's failure span already spans —
+  // the first and last recorded failure timestamps, any
+  // cause, across products — or "none" per endpoint with no
+  // usable failure, same always-renders shape as the other
+  // stats lines, so a quiet session never changes the
+  // panel's shape. No new stats fields: stats() already
+  // exposes firstFailedAt/lastFailedAt, set by insertion
+  // order, so a failure with an unknown or missing product
+  // still opens and closes these endpoints (the per-product
+  // DETAIL-19/7 buckets stay product-gated), a
+  // timestamp-less failure leaves both endpoints in place,
+  // and successes never move them — mirroring DETAIL-27's
+  // first/last-entry lines and DETAIL-30's first-success
+  // line, where the per-product first/last-failure lines
+  // alone do not say it at a glance.
+  els.logStatsFirstFailed.textContent =
+    `First failure: ${stats.firstFailedAt ?? "none"}`;
+  els.logStatsLastFailed.textContent =
+    `Last failure: ${stats.lastFailedAt ?? "none"}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
