@@ -918,6 +918,65 @@ export function computeLatencyByCorrectOutcome(records) {
     });
 }
 
+// Latency by correct confusable-negative status: one row per
+// confusable-negative-status group among the correct records only
+// (category_correct true), in the same fixed order the
+// latency-by-confusable-negative-status section uses — confusable
+// negative, other non-alert, alert — derived from the ground-truth
+// label, with the count of recorded harness wall-clock latencies,
+// their mean, their median (averaged-middle, matching the
+// distribution's median), and their max. This is the
+// false-alarm-prone split of the successes: a correct record on a
+// confusable negative (steam or fog, flame-like lighting) is the
+// scene a source plausibly mistakes for an alert, and latency by
+// confusable-negative status, which includes the misses, cannot
+// isolate the successes. All three groups occur for genuine correct
+// records, since a correctly categorized confusable-negative scene,
+// other non-alert scene, or alert scene each lands in its own group.
+// Only groups present among the correct records render, so the
+// scenario totals sum to the correct count, not the sample size.
+// Records with no latency take no part in a group's numbers but
+// still count toward its scenario total, so a group whose scenarios
+// carry no latency reads as recorded 0 with n/a statistics — never
+// as a fabricated zero.
+export function computeLatencyByCorrectConfusableStatus(records) {
+  const groups = {
+    "confusable negative": { outcome: "confusable negative", total: 0, latencies: [] },
+    "other non-alert": { outcome: "other non-alert", total: 0, latencies: [] },
+    alert: { outcome: "alert", total: 0, latencies: [] },
+  };
+  for (const r of records) {
+    if (!r.category_correct) continue;
+    const outcome = CONFUSABLE_NEGATIVE_CATEGORIES.includes(r.ground_truth_label)
+      ? "confusable negative"
+      : IGNIS_ALERT_CATEGORIES.includes(r.ground_truth_label)
+        ? "alert"
+        : "other non-alert";
+    const entry = groups[outcome];
+    entry.total += 1;
+    if (typeof r.latency_ms === "number") entry.latencies.push(r.latency_ms);
+  }
+  return ["confusable negative", "other non-alert", "alert"]
+    .filter((outcome) => groups[outcome].total > 0)
+    .map((outcome) => {
+      const e = groups[outcome];
+      const sorted = e.latencies.sort((a, b) => a - b);
+      if (sorted.length === 0) {
+        return { outcome, total: e.total, recorded: 0, meanMs: null, medianMs: null, maxMs: null };
+      }
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      return {
+        outcome,
+        total: e.total,
+        recorded: sorted.length,
+        meanMs: sorted.reduce((n, v) => n + v, 0) / sorted.length,
+        medianMs: median,
+        maxMs: sorted[sorted.length - 1],
+      };
+    });
+}
+
 // Latency by ground-truth category: one row per truth category
 // present in the records, sorted alphabetically, with the count of
 // recorded harness wall-clock latencies, their mean, their median
@@ -3517,6 +3576,33 @@ export function renderRunReport(run, baselineRun = null) {
       "| --- | --- | --- | --- | --- | --- |",
     );
     for (const row of latencyByCorrectOutcome) {
+      lines.push(
+        `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
+      );
+    }
+  }
+  const latencyByCorrectConfusableStatus = computeLatencyByCorrectConfusableStatus(run.records);
+  lines.push(
+    "",
+    "## Latency by correct confusable-negative status",
+    "",
+    "Harness wall-clock latencies broken down by confusable-negative status — one row per status " +
+      "group among the correct records only, in fixed order confusable negative, other non-alert, alert, so whether the successes " +
+      "on the false-alarm-prone scenes run slower than the successes on other scenes is visible in three rows without adding the misses the latency-by-miss-confusable-negative-status " +
+      "section includes. All three groups occur for genuine correct records, since a correctly categorized confusable-negative scene, " +
+      "other non-alert scene, or alert scene each lands in its own group. Only groups present among the " +
+      "correct records render, so the scenario totals sum to the correct count, not the sample size, and a " +
+      "group with no recorded latency shows n/a, never a fabricated zero; a run with no correct records says none.",
+    "",
+  );
+  if (latencyByCorrectConfusableStatus.length === 0) {
+    lines.push("None: no scenario's predicted category matched its ground truth.");
+  } else {
+    lines.push(
+      "| Status | Scenarios | Recorded | Mean (ms) | Median (ms) | Max (ms) |",
+      "| --- | --- | --- | --- | --- | --- |",
+    );
+    for (const row of latencyByCorrectConfusableStatus) {
       lines.push(
         `| ${row.outcome} | ${row.total} | ${row.recorded} | ${fmtLatency(row.meanMs)} | ${fmtLatency(row.medianMs)} | ${fmtLatency(row.maxMs)} |`,
       );

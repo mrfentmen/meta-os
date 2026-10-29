@@ -324,6 +324,15 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   present among the correct records render, the scenario totals sum to the correct count, not the sample size, a
   group with no recorded latency shows n/a, never a fabricated zero, and a run with no correct records says none.
   A latency-by-correct-outcome section right after it splits the correct records' latencies by outcome — one row per outcome group among the correct records only, in fixed order correct, miss, unassessed — so whether the successes that returned the matching category run slower than the successes that claim correctness with a wrong category or no assessment is visible in three rows without adding the misses the latency-by-outcome section includes; only the correct row occurs for genuine correct records, since a correct record returned its matching category, and the miss and unassessed rows cover hand-built records that claim correctness with a wrong category returned or no assessment returned, only groups present among the correct records render, the scenario totals sum to the correct count, not the sample size, a group with no recorded latency shows n/a, never a fabricated zero, and a run with no correct records says none.
+  A latency-by-correct-confusable-negative-status section right after it splits the correct records' latencies by
+  confusable-negative status — one row per status group among the correct records only, in fixed order confusable
+  negative, other non-alert, alert (using the ground-truth label, matching the confusable-negative-status definition) —
+  so whether the successes on the false-alarm-prone scenes run slower than the successes on other scenes is visible
+  in three rows without adding the misses the latency-by-miss-confusable-negative-status section includes; all three
+  groups occur for genuine correct records, since a correctly categorized confusable-negative scene, other non-alert
+  scene, or alert scene each lands in its own group, only groups present among the correct records render, the scenario
+  totals sum to the correct count, not the sample size, a group with no recorded latency shows n/a, never a fabricated
+  zero, and a run with no correct records says none.
   A latency-distribution-among-correct section right after it expands the correct sections' means into
   min, quartiles and p90 over the correct records alone — the same quantiles as the full-run latency
   distribution, but without the misses pulling the numbers up — so whether the successes cluster fast

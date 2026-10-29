@@ -73,6 +73,7 @@ import {
   computeLatencyByCorrectAlertFired,
   computeLatencyByCorrectAssessed,
   computeLatencyByCorrectOutcome,
+  computeLatencyByCorrectConfusableStatus,
   computeLatencyOutliers,
   computeMissPairs,
   computeMisses,
@@ -3187,7 +3188,86 @@ test("report: latency by correct outcome splits correct latencies by correct-vs-
     metrics: { sample_size: 1, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
   };
   const noCorrectRendered = renderRunReport(noCorrectRun);
-  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct outcome"), noCorrectRendered.indexOf("## Latency distribution among correct"));
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct outcome"), noCorrectRendered.indexOf("## Latency by correct confusable-negative status"));
+  assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
+});
+
+test("report: latency by correct confusable-negative status splits correct latencies by scene class, fixed order", () => {
+  const rec = (id, truth, actual, latency_ms, categoryCorrect) => ({
+    scenario_id: id,
+    ground_truth_label: truth,
+    actual_category: actual,
+    alert_expected: true,
+    alert_fired: true,
+    alert_correct: true,
+    category_correct: categoryCorrect !== undefined ? categoryCorrect : actual === truth,
+    error: actual === null ? "held" : null,
+    ...(latency_ms === undefined ? {} : { latency_ms }),
+  });
+  // Confusable negative: 10, 30 -> mean/median 20, max 30, recorded 2 of 2.
+  // Other non-alert: 40 plus one record with no latency -> recorded 1 of 2.
+  // Alert: 100 plus one record with no latency -> recorded 1 of 2.
+  // All three groups occur for genuine correct records, since a
+  // correctly categorized confusable-negative scene, other
+  // non-alert scene, or alert scene each lands in its own group.
+  // The non-correct records (a wrong category and an unassessed
+  // miss, both at 999) appear in no row, so the totals sum to
+  // the correct count (6), not the sample size (8), and only
+  // groups present among the correct records render, in fixed
+  // confusable-negative/other-non-alert/alert order.
+  assert.deepEqual(
+    computeLatencyByCorrectConfusableStatus([
+      rec("IGN-T1", "steam or fog", "steam or fog", 10),
+      rec("IGN-T2", "steam or fog", "steam or fog", 30),
+      rec("IGN-T3", "no hazard visible", "no hazard visible", 40),
+      rec("IGN-T4", "no hazard visible", "no hazard visible", undefined),
+      rec("IGN-T5", "visible smoke", "visible smoke", 100),
+      rec("IGN-T6", "visible smoke", "visible smoke", undefined),
+      rec("IGN-T7", "steam or fog", "visible smoke", 999),
+      rec("IGN-T8", "visible smoke", null, 999),
+    ]),
+    [
+      { outcome: "confusable negative", total: 2, recorded: 2, meanMs: 20, medianMs: 20, maxMs: 30 },
+      { outcome: "other non-alert", total: 2, recorded: 1, meanMs: 40, medianMs: 40, maxMs: 40 },
+      { outcome: "alert", total: 2, recorded: 1, meanMs: 100, medianMs: 100, maxMs: 100 },
+    ],
+  );
+  // A run with no correct records yields no rows.
+  assert.deepEqual(
+    computeLatencyByCorrectConfusableStatus([
+      rec("IGN-T1", "steam or fog", "visible smoke", 10),
+    ]),
+    [],
+  );
+  // Rendered: section after Latency by correct outcome, before
+  // Latency distribution among correct; a run with no correct
+  // records says none.
+  const run = {
+    source: "test source",
+    generated: "test run",
+    records: [
+      rec("IGN-T1", "steam or fog", "steam or fog", 10),
+      rec("IGN-T2", "steam or fog", "steam or fog", 30),
+      rec("IGN-T3", "no hazard visible", "no hazard visible", 40),
+      rec("IGN-T4", "visible smoke", "visible smoke", 50),
+    ],
+    metrics: { sample_size: 4, true_positives: 1, false_positives: 0, true_negatives: 3, false_negatives: 0, precision: 1, recall: 1, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 1, latency_ms: { n: 4, mean: 32.5, median: 35, max: 50 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const rendered = renderRunReport(run);
+  assert.match(rendered, /## Latency by correct confusable-negative status/);
+  assert.ok(rendered.indexOf("## Latency by correct confusable-negative status") > rendered.indexOf("## Latency by correct outcome"));
+  assert.ok(rendered.indexOf("## Latency by correct confusable-negative status") < rendered.indexOf("## Latency distribution among correct"));
+  assert.match(rendered, /\| confusable negative \| 2 \| 2 \| 20\.0 \| 20\.0 \| 30\.0 \|/);
+  assert.match(rendered, /\| other non-alert \| 1 \| 1 \| 40\.0 \| 40\.0 \| 40\.0 \|/);
+  assert.match(rendered, /\| alert \| 1 \| 1 \| 50\.0 \| 50\.0 \| 50\.0 \|/);
+  const noCorrectRun = {
+    source: "test source",
+    generated: "test run",
+    records: [rec("IGN-T1", "steam or fog", "visible smoke", 10)],
+    metrics: { sample_size: 1, true_positives: 0, false_positives: 0, true_negatives: 0, false_negatives: 0, precision: null, recall: null, false_positive_rate: 0, false_negative_rate: 0, category_accuracy: 0, latency_ms: { n: 1, mean: 10, median: 10, max: 10 }, errors: { count: 0, scenario_ids: [] } },
+  };
+  const noCorrectRendered = renderRunReport(noCorrectRun);
+  const noCorrectSection = noCorrectRendered.slice(noCorrectRendered.indexOf("## Latency by correct confusable-negative status"), noCorrectRendered.indexOf("## Latency distribution among correct"));
   assert.match(noCorrectSection, /None: no scenario's predicted category matched its ground truth\./);
 });
 
