@@ -364,6 +364,27 @@ export class SessionLog {
   // endpoints, reusing DETAIL-17's span helper, not a new rule.
   // The panel renders the span in whole milliseconds, or
   // "none" with no usable entry pair.
+  // DETAIL-25 adds the global successful and failed shares
+  // (okShare / failedShare, null on an empty log): each is
+  // that outcome's entries over the session total, so a
+  // session with 2 successes and 1 failure reads 2/3
+  // successful and 1/3 failed, where the per-product
+  // DETAIL-11/12 shares alone do not say it at a glance —
+  // they divide by each product's own entries, and a
+  // product with no entries reads null there. The global
+  // denominator is the session total, so the null rule
+  // differs on purpose: an empty log reads null for both
+  // (no total to divide by), but once the log holds any
+  // entry, a session with no successes reads 0 for okShare
+  // and 1 for failedShare, never "none". The two shares
+  // sum to 1 wherever either is non-null, because every
+  // recorded entry is either ok or one of the three
+  // failure statuses. Unlike the per-product buckets, the
+  // global shares count unknown- or missing-product
+  // entries: they sit in the session total, so they count
+  // here just as they open and close the global spans.
+  // The panel renders each share as a whole percent, or
+  // "none" on an empty log.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -618,6 +639,14 @@ export class SessionLog {
     // endpoints preserve honestly. The panel renders the span in
     // whole milliseconds, or "none" with no usable entry pair.
     const globalEntrySpanMs = entrySpanMs(firstEntryAt, lastEntryAt);
+    // DETAIL-25: the global shares (okShare / failedShare,
+    // null on an empty log): each outcome over the session
+    // total, so unknown- or missing-product entries count
+    // here, and the two sum to 1 wherever either is
+    // non-null. Derived only from the ok/failed totals, not
+    // a new rule.
+    const okShare = this._entries.length === 0 ? null : ok / this._entries.length;
+    const failedShare = this._entries.length === 0 ? null : failed / this._entries.length;
     return {
       total: this._entries.length,
       ok,
@@ -644,6 +673,8 @@ export class SessionLog {
       okSpanMs,
       failedSpanMs,
       entrySpanMs: globalEntrySpanMs,
+      okShare,
+      failedShare,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
       avgOkLatencyMsByProduct: {
         vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,

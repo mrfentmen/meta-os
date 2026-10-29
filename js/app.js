@@ -75,6 +75,8 @@ const els = {
   logStatsOkSpan: $("log-stats-ok-span"),
   logStatsFailedSpan: $("log-stats-failed-span"),
   logStatsEntrySpan: $("log-stats-entry-span"),
+  logStatsOkShare: $("log-stats-ok-share"),
+  logStatsFailedShare: $("log-stats-failed-share"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -438,6 +440,23 @@ function updateLogStats() {
   // quiet session never changes the panel's shape.
   els.logStatsEntrySpan.textContent =
     `Entry span: ${stats.entrySpanMs === null ? "none" : `${stats.entrySpanMs} ms`}`;
+  // DETAIL-25: the global successful-share line names the
+  // session's successes as a share of all entries, rendered
+  // as a whole percent, or "none" on an empty log — the
+  // share the per-product DETAIL-11 line implies but does
+  // not state across products — same always-renders shape
+  // as the other stats lines, so a quiet session never
+  // changes the panel's shape. A session with no successes
+  // reads 0%, never "none".
+  els.logStatsOkShare.textContent =
+    `Successful share: ${stats.okShare === null ? "none" : `${Math.round(stats.okShare * 100)}%`}`;
+  // DETAIL-25: the mirror line — the session's failures as
+  // a share of all entries, rendered as a whole percent, or
+  // "none" on an empty log. A session with no failures reads
+  // 0%, never "none", and the two shares sum to 100%
+  // wherever either is non-null.
+  els.logStatsFailedShare.textContent =
+    `Failed share: ${stats.failedShare === null ? "none" : `${Math.round(stats.failedShare * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
