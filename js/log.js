@@ -323,6 +323,26 @@ export class SessionLog {
   // of timestamp order, which the insertion-order endpoints
   // preserve honestly. The panel renders the span in whole
   // milliseconds, or "none" with no usable success pair.
+  // DETAIL-23 spans the global first-to-last failure
+  // (failedSpanMs, null with no usable failure pair): the
+  // milliseconds between the session's first and last recorded
+  // failure timestamps, across products — how long the session's
+  // failures stretch, where the per-product DETAIL-20 spans
+  // alone do not say it at a glance. It introduces the global
+  // firstFailedAt/lastFailedAt endpoints, mirroring DETAIL-22's
+  // firstOkAt/lastOkAt: a failure with an unknown or missing
+  // product still opens and closes the global span (the
+  // per-product buckets stay product-gated), and a failure
+  // without a usable timestamp leaves both endpoints in place.
+  // A session with exactly one usable failure reads 0, not
+  // null — one failure spans no time. A bucket timestamp that
+  // does not parse reads null, never NaN, and the difference is
+  // kept raw, not clamped: a negative span means failures were
+  // recorded out of timestamp order, which the insertion-order
+  // endpoints preserve honestly. Derived only from those two
+  // global endpoints, reusing DETAIL-17's span helper, not a
+  // new rule. The panel renders the span in whole
+  // milliseconds, or "none" with no usable failure pair.
   // Pure read over the entries: no sampling, no model.
   stats() {
     const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -342,6 +362,8 @@ export class SessionLog {
     let failed = 0;
     let lastOkAt = null;
     let firstOkAt = null;
+    let lastFailedAt = null;
+    let firstFailedAt = null;
     let latencySum = 0;
     let latencyCount = 0;
     const latencySumByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
@@ -446,6 +468,15 @@ export class SessionLog {
           failedByStatusByProduct[entry.product][entry.status] += 1;
         }
         if (typeof entry.request_timestamp === "string" && entry.request_timestamp !== "") {
+          // DETAIL-23: first/last failure across products, set
+          // by insertion order — mirrors firstOkAt/lastOkAt, so
+          // it covers a failure with an unknown or missing
+          // product too, and a timestamp-less failure leaves
+          // both endpoints open for a later usable failure.
+          if (firstFailedAt === null) {
+            firstFailedAt = entry.request_timestamp;
+          }
+          lastFailedAt = entry.request_timestamp;
           if (Object.hasOwn(lastFailedAtByProduct, entry.product)) {
             lastFailedAtByProduct[entry.product] = entry.request_timestamp;
           }
@@ -510,6 +541,28 @@ export class SessionLog {
     // renders the span in whole milliseconds, or "none" with no
     // usable success pair.
     const okSpanMs = entrySpanMs(firstOkAt, lastOkAt);
+    // DETAIL-23: the global failure span (failedSpanMs, null
+    // with no usable failure pair): the milliseconds between
+    // the session's first and last recorded failure
+    // timestamps, across products — how long the session's
+    // failures stretch, where the per-product DETAIL-20 spans
+    // alone do not say it at a glance. Derived only from the
+    // global firstFailedAt/lastFailedAt endpoints, reusing
+    // DETAIL-17's span helper, not a new rule: the endpoints
+    // mirror DETAIL-22's firstOkAt/lastOkAt, so a failure with
+    // an unknown or missing product still opens and closes
+    // the global span (the per-product buckets stay
+    // product-gated), and a failure without a usable
+    // timestamp leaves both endpoints in place. A session
+    // with exactly one usable failure reads 0 (first and last
+    // are the same timestamp), not null. A bucket timestamp
+    // that does not parse reads null, never NaN, and the
+    // difference is kept raw, not clamped: a negative span
+    // means failures were recorded out of timestamp order,
+    // which the insertion-order endpoints preserve honestly.
+    // The panel renders the span in whole milliseconds, or
+    // "none" with no usable failure pair.
+    const failedSpanMs = entrySpanMs(firstFailedAt, lastFailedAt);
     return {
       total: this._entries.length,
       ok,
@@ -524,12 +577,15 @@ export class SessionLog {
       firstOkAtByProduct,
       lastFailedAtByProduct,
       firstFailedAtByProduct,
+      lastFailedAt,
+      firstFailedAt,
       firstEntryAtByProduct,
       lastEntryAtByProduct,
       entrySpanMsByProduct,
       failedSpanMsByProduct,
       okSpanMsByProduct,
       okSpanMs,
+      failedSpanMs,
       avgOkLatencyMs: latencyCount === 0 ? null : latencySum / latencyCount,
       avgOkLatencyMsByProduct: {
         vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,

@@ -73,6 +73,7 @@ const els = {
   logStatsFailedSpanByProduct: $("log-stats-failed-span-by-product"),
   logStatsOkSpanByProduct: $("log-stats-ok-span-by-product"),
   logStatsOkSpan: $("log-stats-ok-span"),
+  logStatsFailedSpan: $("log-stats-failed-span"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -419,6 +420,14 @@ function updateLogStats() {
   // a quiet session never changes the panel's shape.
   els.logStatsOkSpan.textContent =
     `Success span: ${stats.okSpanMs === null ? "none" : `${stats.okSpanMs} ms`}`;
+  // DETAIL-23: the global failure-span line names the session's
+  // first-to-last recorded failure stretch in whole milliseconds
+  // — the span the per-product DETAIL-20 line implies but does
+  // not state across products — or "none" with no usable failure
+  // pair, same always-renders shape as the other stats lines, so
+  // a quiet session never changes the panel's shape.
+  els.logStatsFailedSpan.textContent =
+    `Failure span: ${stats.failedSpanMs === null ? "none" : `${stats.failedSpanMs} ms`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
