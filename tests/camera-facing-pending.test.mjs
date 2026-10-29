@@ -49,7 +49,7 @@ const resetHandler = app.slice(
 test("web: refreshButtons disables the facing picker while a start is pending", () => {
   assert.match(
     refreshButtons,
-    /els\.cameraFacing\.disabled = cameraStartPending;/,
+    /els\.cameraFacing\.disabled = cameraStartPending \|\| facingSwitchPending;/,
   );
 });
 

@@ -228,17 +228,25 @@ function refreshButtons() {
   // nothing, and the Camera class discards the stream if permission
   // is granted after the stop.
   els.btnCameraStop.disabled = !camActive && !cameraStartPending;
-  // The facing picker waits out a pending start too. The Start call
-  // fixes its getUserMedia constraints when it is made, so a facing
-  // change landing mid-wait would only record a choice the stream
-  // being requested does not use: the picker would say rear while
-  // the camera that attaches shows the front view. Stop stays enabled
-  // as the cancel, and every path that clears the pending flag (the
-  // Start settle, Stop, Reset) refreshes the buttons, so the picker
-  // comes back the moment the wait ends. Native needs no equivalent:
-  // its configureAndStart reads the facing when permission is granted,
-  // so a mid-wait pick there is honestly the camera that opens.
-  els.cameraFacing.disabled = cameraStartPending;
+  // The facing picker waits out a pending start too, and a pending
+  // live facing switch too. The Start call fixes its getUserMedia
+  // constraints when it is made, so a facing change landing mid-wait
+  // would only record a choice the stream being requested does not
+  // use: the picker would say rear while the camera that attaches
+  // shows the front view. A live switch has the same shape: it stops
+  // the stream, then awaits a start fixed to the first facing, and a
+  // second change landing in that window only records (the camera is
+  // not active while its stream is stopped, so switchFacing takes its
+  // record-only path) — the picker would say the new facing while
+  // the stream that attaches shows the old one. Stop stays enabled
+  // as the cancel, and every path that clears a pending flag (the
+  // Start settle, the switch settle, Stop, Reset) refreshes the
+  // buttons, so the picker comes back the moment the wait ends.
+  // Native needs no equivalent: its configureAndStart reads the
+  // facing when permission is granted, and its queued facing restart
+  // likewise reads the facing when it configures, so a mid-wait or
+  // mid-restart pick there is honestly the camera that opens.
+  els.cameraFacing.disabled = cameraStartPending || facingSwitchPending;
   els.btnAnalysisStart.disabled = !camActive || sampler.running;
   els.btnAnalysisStop.disabled = !sampler.running;
   updateHistoryEmpty();
@@ -309,6 +317,18 @@ const cameraUnsupported = !cameraSupported();
 // clear a flag a newer start now owns — and a stale settle only ever
 // follows a Stop or Reset, which already cleared it.
 let cameraStartPending = false;
+
+// Whether a live facing switch is still awaiting its restart. The
+// switch stops the stream, then awaits a start fixed to the facing
+// chosen when the switch began; a second change in that window only
+// records, because switchFacing takes its record-only path while the
+// camera is not active — so refreshButtons() owns the picker from
+// this flag too, exactly like the pending-start flag. The switch's
+// own settle clears it (in finally, so a stale settle after Stop or
+// Reset clears it as well as a live one), and Stop and Reset clear
+// it directly so the picker comes back at once instead of waiting
+// for a restart that will settle stale.
+let facingSwitchPending = false;
 
 // In-flight request count: the Camera panel's "Analysis request in
 // flight…" line is shared by every submit path — a live sampled frame,
@@ -984,6 +1004,11 @@ els.btnCameraStop.addEventListener("click", () => {
   // cannot leave Start disabled for a start that will never settle
   // as current — the stale settle path touches nothing.
   cameraStartPending = false;
+  // And the pending-switch flag, for the same reason: a switch
+  // settling stale must not leave the picker disabled, and Stop
+  // should bring it back at once rather than when that switch
+  // settles.
+  facingSwitchPending = false;
   sampler.stop();
   camera.stop();
   els.cameraIndicator.hidden = true;
@@ -1002,6 +1027,14 @@ els.cameraFacing.addEventListener("change", async () => {
   // permission when Stop or Reset lands must not repaint the stopped
   // view with a live indicator when it settles.
   const switchGeneration = cameraStartGeneration;
+  // The picker waits out its own switch, through refreshButtons():
+  // a second change while this restart is in flight would only
+  // record (the camera is not active while its stream is stopped),
+  // leaving the picker saying a facing the stream that attaches
+  // does not show. The flag clears in finally, so a stale settle
+  // after Stop or Reset brings the picker back too.
+  facingSwitchPending = true;
+  refreshButtons();
   try {
     await camera.switchFacing(els.cameraFacing.value);
     if (switchGeneration !== cameraStartGeneration) return;
@@ -1013,8 +1046,10 @@ els.cameraFacing.addEventListener("change", async () => {
     if (switchGeneration !== cameraStartGeneration) return;
     els.cameraIndicator.hidden = true;
     setCameraState(describeCameraError(err));
+  } finally {
+    facingSwitchPending = false;
+    refreshButtons();
   }
-  refreshButtons();
 });
 
 els.btnAnalysisStart.addEventListener("click", () => {
@@ -1044,6 +1079,9 @@ els.btnReset.addEventListener("click", () => {
   // leaving the flag set would strand the button disabled for a
   // start that will never settle as current.
   cameraStartPending = false;
+  // And the pending-switch flag, for the same reason: a switch
+  // settling stale must not leave the picker disabled.
+  facingSwitchPending = false;
   sampler.stop();
   camera.stop();
   els.cameraIndicator.hidden = true;
