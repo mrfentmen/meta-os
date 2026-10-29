@@ -245,7 +245,32 @@ struct AssessmentView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
+                        // IGNIS-UI-50: description at 15pt, the
+                        // native counterpart to the web observation
+                        // line (js/app.js renders the description
+                        // inline in the observation <li>, and
+                        // styles.css .observations sets only margin
+                        // and padding-left, so the line inherits the
+                        // 15px body size). Until now the native
+                        // description was a plain Text at the default
+                        // 17pt body size, so it read two points
+                        // larger than the web line it comes from
+                        // while the category (UI-49) and the evidence
+                        // line (UI-48) in the same stacked row already
+                        // matched their own 15px web rules. The size
+                        // is the only change: the stacked row layout
+                        // is untouched, and the category, confidence
+                        // caption, and evidence lines keep their own
+                        // treatments — they are not this item's
+                        // counterpart. (UI-20 once left the description
+                        // at its default size as a stacked row rather
+                        // than the web's inline line; UI-48/49 have
+                        // since treated the row's other elements as
+                        // counterparts of that same line, so the
+                        // description is the last element of the row
+                        // still reading larger than the line.)
                         Text(observation.description)
+                            .font(.system(size: 15))
                         if !observation.evidence.isEmpty {
                             // IGNIS-UI-48: evidence line at 15pt, the
                             // native counterpart to the web observation
