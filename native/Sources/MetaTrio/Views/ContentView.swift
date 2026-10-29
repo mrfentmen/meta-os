@@ -33,8 +33,16 @@ struct ContentView: View {
             // anyone. A demo window without it could be read as an
             // operational system, so it sits below the status bar,
             // always visible, in the web footer's words.
+            // UI-23: footer disclaimer at 13pt, the native
+            // counterpart to the web .footer rule (13px, muted).
+            // Until now the disclaimer used .caption (12pt), so it
+            // read one point smaller than the web footer while the
+            // Latest-panel notes (UI-21) already matched their own
+            // 13px web rule. The size is the only change: the muted
+            // color, the wrapping, the padding, and the wording —
+            // the web footer's words verbatim — are untouched.
             Text("Experimental prototype for staged, consenting scenarios. Not an operational law-enforcement, fire-detection, or enforcement system. This app never contacts police or emergency services, performs no face recognition or identity inference, and never dispatches or cites automatically.")
-                .font(.caption)
+                .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
