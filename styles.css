@@ -957,7 +957,7 @@ body[data-product="ignis"] .ignis-footage-source-panel {
 /* IGNIS-ONEOFONE-10 (Del's one-of-one bar, Oct 30): the Ignis
    scenario-breakdown panel follows the same visibility rule as
    the other Ignis-only panels — hidden unless Ignis is the selected
-   product, so under Vigiles or Sanitas it could never show that
+   product, so under Vigiles or Medicus it could never show that
    product's data, so it stays hidden rather than reading zeros
    for the wrong product. This block only owns visibility. No
    contract, server, or Spark-gate change. */
@@ -971,7 +971,7 @@ body[data-product="ignis"] .ignis-scenario-breakdown-panel {
 /* IGNIS-ONEOFONE-11 (Del's one-of-one bar, Oct 30): the Ignis
    review-by-source panel follows the same visibility rule as the
    other Ignis-only panels — hidden unless Ignis is the selected
-   product, so under Vigiles or Sanitas it could never show that
+   product, so under Vigiles or Medicus it could never show that
    product's data, so it stays hidden rather than reading zeros
    for the wrong product. This block only owns visibility. No
    contract, server, or Spark-gate change. */

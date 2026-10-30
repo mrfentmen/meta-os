@@ -1297,7 +1297,7 @@ function updateLogStats() {
   // each entry itself was stamped with at submit time. Labels are
   // open-ended, so the line lists them sorted for a stable read,
   // with unlabeled last. A held session stays zeros, and the panel
-  // itself is hidden under Vigiles and Sanitas by CSS, so this line
+  // itself is hidden under Vigiles and Medicus by CSS, so this line
   // only ever shows under Ignis.
   const scenarios = ignisScenarioBreakdown(log.entries());
   const scenarioParts = Object.keys(scenarios.byScenario)
@@ -1312,7 +1312,7 @@ function updateLogStats() {
   // here; a flagged entry with no usable source stamp still counts
   // in the total and in unknown source, so the queue never hides
   // an entry behind a missing stamp. A held session stays zeros,
-  // and the panel itself is hidden under Vigiles and Sanitas by
+  // and the panel itself is hidden under Vigiles and Medicus by
   // CSS, so this line only ever shows under Ignis.
   const reviewSource = ignisReviewBySource(log.entries());
   els.ignisReviewSource.textContent =

@@ -10,7 +10,7 @@
 // usable scenario label count in the total and in unlabeled, and
 // an empty or held session reads all zeros rather than inventing
 // a scenario mix. The panel itself lives in index.html (hidden
-// under Vigiles/Sanitas by styles.css) and is rendered from
+// under Vigiles/Medicus by styles.css) and is rendered from
 // log.entries() inside updateLogStats in js/app.js. No contract,
 // server, or Spark-gate change.
 
@@ -77,7 +77,7 @@ test("scenario breakdown: failed and other-product entries move no bucket", () =
     { status: "failed", product: "ignis", scenario_label: "Visible smoke" },
     { status: "error", product: "ignis", scenario_label: "Visible smoke" },
     { status: "ok", product: "vigiles", scenario_label: "Visible smoke" },
-    { status: "ok", product: "sanitas", scenario_label: "Visible smoke" },
+    { status: "ok", product: "medicus", scenario_label: "Visible smoke" },
   ]);
   assert.deepEqual(counts, {
     total: 1,

@@ -11,7 +11,7 @@
 // and other products move no bucket, a flagged entry with no
 // usable source stamp counts in the total and in unknownSource,
 // and an empty or held session reads all zeros. The panel itself
-// lives in index.html (hidden under Vigiles/Sanitas by styles.css)
+// lives in index.html (hidden under Vigiles/Medicus by styles.css)
 // and is rendered from log.entries() inside updateLogStats in
 // js/app.js. No contract, server, or Spark-gate change.
 
@@ -88,7 +88,7 @@ test("review by source: clear, unknown-flag, failed, and other-product entries m
     { status: "failed", product: "ignis", source: "live-camera", response: { assessment: { requires_human_review: true } } },
     { status: "error", product: "ignis", source: "live-camera", response: { assessment: { requires_human_review: true } } },
     { status: "ok", product: "vigiles", source: "live-camera", response: { assessment: { requires_human_review: true } } },
-    { status: "ok", product: "sanitas", source: "live-camera", response: { assessment: { requires_human_review: true } } },
+    { status: "ok", product: "medicus", source: "live-camera", response: { assessment: { requires_human_review: true } } },
   ]);
   assert.deepEqual(counts, {
     totalFlagged: 1,
