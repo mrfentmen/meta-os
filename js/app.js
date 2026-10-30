@@ -14,6 +14,7 @@ import { ignisLookAlikeScoreboard } from "./ignis-scoreboard.js";
 import { ignisReportedConfidence } from "./ignis-confidence.js";
 import { ignisReviewQueue } from "./ignis-review-queue.js";
 import { ignisEvidenceTransparency } from "./ignis-evidence.js";
+import { ignisUncertaintyDisclosure } from "./ignis-uncertainty.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -137,6 +138,7 @@ const els = {
   ignisConfidence: $("ignis-confidence"),
   ignisReviewQueue: $("ignis-review-queue"),
   ignisEvidence: $("ignis-evidence"),
+  ignisUncertainty: $("ignis-uncertainty"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1207,6 +1209,16 @@ function updateLogStats() {
   const evidence = ignisEvidenceTransparency(log.entries());
   els.ignisEvidence.textContent =
     `Fully evidenced ${evidence.fullyEvidenced} · Partially evidenced ${evidence.partiallyEvidenced} · No evidence recorded ${evidence.unevidenced} · Not assessable ${evidence.unassessable}`;
+  // IGNIS-ONEOFONE-5: the uncertainty-disclosure panel re-reads the
+  // same log entries — no new stats field, no new data — and renders
+  // the Ignis-only panel from the uncertainty lists recorded
+  // assessments themselves carried. Disclosing nothing is never read
+  // as reliable; a missing list is never read as none. A held session
+  // stays zeros, and the panel itself is hidden under Vigiles and
+  // Sanitas by CSS, so this line only ever shows under Ignis.
+  const uncertainty = ignisUncertaintyDisclosure(log.entries());
+  els.ignisUncertainty.textContent =
+    `Caveats disclosed ${uncertainty.disclosed} · None disclosed ${uncertainty.noneDisclosed} · Uncertainty not recorded ${uncertainty.unrecorded}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
