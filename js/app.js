@@ -24,6 +24,7 @@ import { ignisReviewBySource } from "./ignis-review-source.js";
 import { ignisReviewByModel } from "./ignis-review-model.js";
 import { ignisReviewAuditTrail } from "./ignis-review-audit-trail.js";
 import { ignisReviewByConfidence } from "./ignis-review-confidence.js";
+import { ignisReviewByScenario } from "./ignis-review-scenario.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -157,6 +158,7 @@ const els = {
   ignisReviewModel: $("ignis-review-model"),
   ignisReviewAuditTrail: $("ignis-review-audit-trail"),
   ignisReviewConfidence: $("ignis-review-confidence"),
+  ignisReviewScenario: $("ignis-review-scenario"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1351,6 +1353,23 @@ function updateLogStats() {
   const reviewConfidence = ignisReviewByConfidence(log.entries());
   els.ignisReviewConfidence.textContent =
     `Flagged observations ${reviewConfidence.total} · High (≥ 0.8) ${reviewConfidence.high} · Medium (≥ 0.5) ${reviewConfidence.medium} · Low (< 0.5) ${reviewConfidence.low} · Unreported ${reviewConfidence.unreported}`;
+  // IGNIS-ONEOFONE-15: the review queue by scenario label in honest
+  // form — the flagged queue ONEOFONE-3 counts, split by the
+  // scenario label ONEOFONE-10 reads on each entry itself.
+  // Scenario labels are open-ended, so the line lists them sorted
+  // for a stable read, with unlabeled last. Clear and unknown-flag
+  // entries are not awaiting review and read nowhere here; a
+  // flagged entry with no usable label still counts in the total
+  // and in unlabeled, so the queue never hides an entry behind a
+  // missing label. A held session stays zeros, and the panel
+  // itself is hidden under Vigiles and Medicus by CSS, so this
+  // line only ever shows under Ignis.
+  const reviewScenario = ignisReviewByScenario(log.entries());
+  const reviewScenarioParts = Object.keys(reviewScenario.byScenario)
+    .sort()
+    .map((label) => `${label} ${reviewScenario.byScenario[label]}`);
+  els.ignisReviewScenario.textContent =
+    [`Awaiting review ${reviewScenario.totalFlagged}`, ...reviewScenarioParts, `Unlabeled ${reviewScenario.unlabeled}`].join(" · ");
 }
 
 // Native parity: the native timeline's empty state says analysis is

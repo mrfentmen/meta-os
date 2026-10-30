@@ -1024,6 +1024,20 @@ body[data-product="ignis"] .ignis-review-confidence-panel {
   display: block;
 }
 
+/* IGNIS-ONEOFONE-15 (Del's one-of-one bar, Oct 30): the Ignis
+   review-by-scenario-label panel follows the same visibility rule
+   as the other Ignis-only panels — hidden unless Ignis is the
+   selected product, so under Vigiles or Medicus it could never show
+   that product's data, so it stays hidden rather than reading zeros
+   for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-review-scenario-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-scenario-panel {
+  display: block;
+}
+
 /* OPS-CONSOLE-3 (Del UI direction, Oct 29): second web-first
    dispatch/ops-console piece for Ignis, extending OPS-CONSOLE-1's
    panel headings to the rest of the console surface — the same four
