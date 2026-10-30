@@ -20,6 +20,7 @@ import { ignisObservationCategories } from "./ignis-observation-categories.js";
 import { ignisModelAttribution } from "./ignis-model-attribution.js";
 import { ignisFootageSource } from "./ignis-footage-source.js";
 import { ignisScenarioBreakdown } from "./ignis-scenario-breakdown.js";
+import { ignisReviewBySource } from "./ignis-review-source.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -149,6 +150,7 @@ const els = {
   ignisModelAttribution: $("ignis-model-attribution"),
   ignisFootageSource: $("ignis-footage-source"),
   ignisScenarioBreakdown: $("ignis-scenario-breakdown"),
+  ignisReviewSource: $("ignis-review-source"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1289,6 +1291,18 @@ function updateLogStats() {
     .map((label) => `${label} ${scenarios.byScenario[label]}`);
   els.ignisScenarioBreakdown.textContent =
     [`Assessments ${scenarios.total}`, ...scenarioParts, `Unlabeled ${scenarios.unlabeled}`].join(" · ");
+  // IGNIS-ONEOFONE-11: the review queue by source in honest form —
+  // the flagged queue ONEOFONE-3 counts, split by the source stamp
+  // ONEOFONE-9 recorded on each entry at submit time. Clear and
+  // unknown-flag entries are not awaiting review and read nowhere
+  // here; a flagged entry with no usable source stamp still counts
+  // in the total and in unknown source, so the queue never hides
+  // an entry behind a missing stamp. A held session stays zeros,
+  // and the panel itself is hidden under Vigiles and Sanitas by
+  // CSS, so this line only ever shows under Ignis.
+  const reviewSource = ignisReviewBySource(log.entries());
+  els.ignisReviewSource.textContent =
+    `Awaiting review ${reviewSource.totalFlagged} · Live camera ${reviewSource.liveCamera} · Still image ${reviewSource.stillImage} · Recorded video ${reviewSource.recordedVideo} · Unknown source ${reviewSource.unknownSource}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
