@@ -12,6 +12,7 @@ import { PRODUCT_BY_ID, isProductId } from "./products.js";
 import { ContactsStore } from "./contacts.js";
 import { ignisLookAlikeScoreboard } from "./ignis-scoreboard.js";
 import { ignisReportedConfidence } from "./ignis-confidence.js";
+import { ignisReviewQueue } from "./ignis-review-queue.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -133,6 +134,7 @@ const els = {
   logStatsOkSpanShareOfFailedWindowByProduct: $("log-stats-ok-span-share-of-failed-window-by-product"),
   ignisScoreboard: $("ignis-scoreboard"),
   ignisConfidence: $("ignis-confidence"),
+  ignisReviewQueue: $("ignis-review-queue"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1183,6 +1185,16 @@ function updateLogStats() {
   const confidence = ignisReportedConfidence(log.entries());
   els.ignisConfidence.textContent =
     `High (≥ 0.8) ${confidence.high} · Medium (≥ 0.5) ${confidence.medium} · Low (< 0.5) ${confidence.low} · Unreported ${confidence.unreported}`;
+  // IGNIS-ONEOFONE-3: the review queue re-reads the same log
+  // entries — no new stats field, no new data — and renders the
+  // Ignis-only panel from the requires_human_review flags recorded
+  // assessments themselves carried. It never flags anything itself
+  // and never notifies anyone. A held session stays zeros, and the
+  // panel itself is hidden under Vigiles and Sanitas by CSS, so
+  // this line only ever shows under Ignis.
+  const reviewQueue = ignisReviewQueue(log.entries());
+  els.ignisReviewQueue.textContent =
+    `Flagged for human review ${reviewQueue.flagged} · Clear ${reviewQueue.clear} · Flag not recorded ${reviewQueue.unknown}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
