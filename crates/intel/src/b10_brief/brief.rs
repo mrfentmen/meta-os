@@ -67,7 +67,7 @@ pub fn format_brief_announcement(room: &str, ts: i64) -> String {
 }
 
 pub fn brief_failure_line(room: &str, err: &str) -> String {
-    format!("Brief for {room} failed: {err}");
+    format!("Brief for {room} failed: {err}")
 }
 
 /// Trim snapshot text to a char budget without inventing content.

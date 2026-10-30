@@ -97,7 +97,7 @@ pub fn check_dep_graph(plan: &Plan) -> Result<Vec<String>, PlanError> {
             dependents.entry(d.as_str()).or_default().push(j.key.as_str());
         }
     }
-    let mut ready: Vec<&str> = indeg.iter().filter(|(_, &n)| n == 0).map(|(k, _)| **k).collect();
+    let mut ready: Vec<&str> = indeg.iter().filter(|(_, &n)| n == 0).map(|(k, _)| *k).collect();
     let mut order = Vec::new();
     while let Some(k) = ready.pop() {
         order.push(k.to_string());
