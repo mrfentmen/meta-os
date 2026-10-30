@@ -1,16 +1,29 @@
-//! Crate `relay` — Meta OS Rust rebuild skeleton (B00).
+//! Meta Nuntius relay binary (batch B08).
 //!
-//! Batch B08 — Nuntius relay. Owner: Hana.
-//! Source files this batch ports:
-//! - `relay/README.md`
-//! - `relay/relay.mjs`
-//! - `relay/relay.test.mjs`
-//!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! Thin entry point over the [`relay::http`] server layer: resolves
+//! `RELAY_PORT` (default 8787) and `RELAY_STORE_FILE` (unset =
+//! in-memory only), binds, and serves forever.
 
-// B00 gate-1 fix (Milo): a bin crate must have a main function or
-// `cargo build --workspace` fails for everyone (E0601). Stub only;
-// batch B08 (Hana) fills in the real relay entry point.
-fn main() {}
+use std::net::TcpListener;
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+
+fn main() {
+    let port: u16 = std::env::var("RELAY_PORT")
+        .ok()
+        .filter(|raw| !raw.is_empty())
+        .and_then(|raw| raw.parse::<u16>().ok())
+        .unwrap_or(8787);
+    let store_file: Option<PathBuf> = std::env::var("RELAY_STORE_FILE")
+        .ok()
+        .filter(|raw| !raw.is_empty())
+        .map(PathBuf::from);
+
+    let store = if store_file.is_some() { "file" } else { "memory" };
+    let relay = Arc::new(Mutex::new(relay::http::Relay::new(store_file)));
+    let listener = TcpListener::bind(format!("0.0.0.0:{port}")).unwrap_or_else(|err| {
+        panic!("Meta Nuntius: failed to bind port {port}: {err}")
+    });
+    println!("Meta Nuntius relay listening on port {port} (store: {store})");
+    relay::http::serve(listener, relay).expect("Meta Nuntius: serve failed");
+}

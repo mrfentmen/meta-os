@@ -4,14 +4,17 @@
 //! spec: port behavior, do not redesign. Same inputs, outputs, edge
 //! cases, error shapes — oddities ported and noted.
 //!
-//! This slice is the pure core: validation caps, notify ids, and the
-//! in-memory / JSONL room store. The HTTP server layer (routes,
-//! bodies, viewer) is the next slice; `main.rs` stays the B00 stub
-//! until that slice lands.
+//! Modules:
+//! - `validation`, `notify`, `sha256`, `store`, `json`: the pure core
+//!   (validation caps, notify ids, in-memory / JSONL room store).
+//! - `http`: the server layer (routes, bodies, viewer, std TCP serve),
+//!   plus the parity tests whose name roots mirror
+//!   `relay/relay.test.mjs`.
 //!
-//! No external crates: SHA-256 and the small JSON string handling
-//! are implemented here, mirroring the original's stdlib-only stance.
+//! No external crates: SHA-256 and the small JSON handling are
+//! implemented here, mirroring the original's stdlib-only stance.
 
+pub mod http;
 pub mod json;
 pub mod notify;
 pub mod sha256;
