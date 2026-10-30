@@ -28,6 +28,7 @@ import { ignisReviewByScenario } from "./ignis-review-scenario.js";
 import { ignisReviewByObservationCategory } from "./ignis-review-observation-category.js";
 import { ignisReviewByEvidence } from "./ignis-review-evidence.js";
 import { ignisReviewByUncertainty } from "./ignis-review-uncertainty.js";
+import { ignisReviewByObservationCount } from "./ignis-review-observation-count.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -165,6 +166,7 @@ const els = {
   ignisReviewObservationCategory: $("ignis-review-observation-category"),
   ignisReviewEvidence: $("ignis-review-evidence"),
   ignisReviewUncertainty: $("ignis-review-uncertainty"),
+  ignisReviewObservationCount: $("ignis-review-observation-count"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1416,6 +1418,15 @@ function updateLogStats() {
   const reviewUncertainty = ignisReviewByUncertainty(log.entries());
   els.ignisReviewUncertainty.textContent =
     `Awaiting review ${reviewUncertainty.totalFlagged} · Disclosed ${reviewUncertainty.disclosed} · None disclosed ${reviewUncertainty.noneDisclosed} · Unrecorded ${reviewUncertainty.unrecorded}`;
+  // IGNIS-ONEOFONE-19: the flagged queue's own observation count,
+  // counted on the same flagged entries ONEOFONE-18 reads — a
+  // flagged entry with no observations array counts as
+  // unrecorded, never a silent none. A held session stays zeros,
+  // and the panel itself is hidden under Vigiles and Medicus by
+  // CSS, so this line only ever shows under Ignis.
+  const reviewObservationCount = ignisReviewByObservationCount(log.entries());
+  els.ignisReviewObservationCount.textContent =
+    `Awaiting review ${reviewObservationCount.totalFlagged} · No observations ${reviewObservationCount.none} · One observation ${reviewObservationCount.one} · Two or three ${reviewObservationCount.twoOrThree} · Four or more ${reviewObservationCount.fourOrMore} · Unrecorded ${reviewObservationCount.unrecorded}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
