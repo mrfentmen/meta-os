@@ -28,7 +28,7 @@
 // ScrollView — are untouched. The other OPS-CONSOLE-6 elements are
 // NOT in this slice: camera status lines keep their UI-35 13pt
 // contract with the Ignis-only OPS-CONSOLE-5 treatment here and
-// gain their Vigiles treatment in the OPS-CONSOLE-9 follow-up,
+// gained their Vigiles treatment in the OPS-CONSOLE-9 follow-up,
 // while macOS system buttons own their corner radius, so that
 // element stays for a follow-up slice rather than being forced
 // here. No Swift toolchain exists in this sandbox, so these are
@@ -125,7 +125,7 @@ test("native ops-console body: placeholders and card treatment untouched", () =>
   );
 });
 
-test("native ops-console body: Observations heading gains nothing; camera state lines moved to OPS-CONSOLE-9", () => {
+test("native ops-console body: Observations heading gains nothing; camera state lines carry OPS-CONSOLE-9", () => {
   const observationsFn = assessmentView.slice(
     assessmentView.indexOf("private var observationsSection"),
     assessmentView.indexOf("private var uncertaintySection"),
@@ -135,17 +135,13 @@ test("native ops-console body: Observations heading gains nothing; camera state 
     /isVigilesAssessment/,
     "Observations heading gains no Vigiles treatment",
   );
-  // The camera state lines still carry only the OPS-CONSOLE-5
-  // Ignis treatment here; their Vigiles treatment is the
-  // OPS-CONSOLE-9 follow-up, not this slice.
-  assert.doesNotMatch(
-    contentView,
-    /isVigilesSelected/,
-    "no Vigiles camera-state gate exists yet — that is OPS-CONSOLE-9",
-  );
+  // OPS-CONSOLE-9 landed: the camera state lines now carry the
+  // two-gate conditional mono face and tracking, so Vigiles reads
+  // as a console line exactly as Ignis does. The full treatment
+  // is covered by native-vigiles-ops-console-status.test.mjs.
   assert.match(
     contentView,
-    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13, design: isIgnisSelected \? \.monospaced : \.default\)\)\s+\.tracking\(isIgnisSelected \? 0\.26 : 0\)/,
-    "camera state lines keep the OPS-CONSOLE-5 Ignis-only conditional mono face and tracking at 13pt",
+    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13, design: \(isIgnisSelected \|\| isVigilesSelected\) \? \.monospaced : \.default\)\)\s+\.tracking\(\(isIgnisSelected \|\| isVigilesSelected\) \? 0\.26 : 0\)/,
+    "camera state lines carry the OPS-CONSOLE-9 two-gate conditional mono face and tracking at 13pt",
   );
 });

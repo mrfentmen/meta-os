@@ -129,11 +129,13 @@ test("native ops-console body: Observations heading gains nothing; camera state 
   // OPS-CONSOLE-5 rewired this assertion: the state lines kept
   // their UI-35 13pt size and gained the conditional mono face
   // and 0.26pt tracking there, so the plain-font form this test
-  // used to assert no longer exists. The full treatment is
-  // covered by native-ignis-ops-console-status.test.mjs.
+  // used to assert no longer exists. OPS-CONSOLE-9 widened the
+  // gate to Ignis or Vigiles, and this assertion was rewired to
+  // the two-gate form. The full treatment is covered by
+  // native-ignis-ops-console-status.test.mjs.
   assert.match(
     contentView,
-    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13, design: isIgnisSelected \? \.monospaced : \.default\)\)\s+\.tracking\(isIgnisSelected \? 0\.26 : 0\)/,
-    "camera state lines now carry the OPS-CONSOLE-5 conditional mono face and tracking at 13pt",
+    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13, design: \(isIgnisSelected \|\| isVigilesSelected\) \? \.monospaced : \.default\)\)\s+\.tracking\(\(isIgnisSelected \|\| isVigilesSelected\) \? 0\.26 : 0\)/,
+    "camera state lines now carry the OPS-CONSOLE-5 conditional mono face and tracking at 13pt, widened to Vigiles by OPS-CONSOLE-9",
   );
 });

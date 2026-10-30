@@ -45,7 +45,7 @@ const stateLines = [
   'Text("Camera error:',
 ];
 
-function blockAfter(marker, length = 400) {
+function blockAfter(marker, length = 500) {
   const start = stateText.indexOf(marker);
   assert.ok(start >= 0, `${marker} exists in stateText`);
   return stateText.slice(start, start + length);
@@ -68,27 +68,27 @@ test("native ops-console status: gate reads the selected product, PanelHeading p
   );
 });
 
-test("native ops-console status: all seven state lines take mono at 0.26pt on Ignis, plain 13pt off it", () => {
+test("native ops-console status: all seven state lines take mono at 0.26pt on Ignis or Vigiles, plain 13pt off them", () => {
   for (const line of stateLines) {
     const block = blockAfter(line);
     assert.match(
       block,
-      /\.font\(\.system\(size: 13, design: isIgnisSelected \? \.monospaced : \.default\)\)/,
+      /\.font\(\.system\(size: 13, design: \(isIgnisSelected \|\| isVigilesSelected\) \? \.monospaced : \.default\)\)/,
       `${line} keeps 13pt and gains the conditional mono face`,
     );
     assert.match(
       block,
-      /\.tracking\(isIgnisSelected \? 0\.26 : 0\)/,
-      `${line} gains 0.26pt tracking on Ignis, none off it`,
+      /\.tracking\(\(isIgnisSelected \|\| isVigilesSelected\) \? 0\.26 : 0\)/,
+      `${line} gains 0.26pt tracking on Ignis or Vigiles, none off them`,
     );
   }
   assert.equal(
-    (stateText.match(/design: isIgnisSelected \? \.monospaced : \.default/g) || []).length,
+    (stateText.match(/design: \(isIgnisSelected \|\| isVigilesSelected\) \? \.monospaced : \.default/g) || []).length,
     7,
     "exactly the seven state lines carry the conditional face",
   );
   assert.equal(
-    (stateText.match(/tracking\(isIgnisSelected \? 0\.26 : 0\)/g) || []).length,
+    (stateText.match(/tracking\(\(isIgnisSelected \|\| isVigilesSelected\) \? 0\.26 : 0\)/g) || []).length,
     7,
     "exactly the seven state lines carry the conditional tracking",
   );
