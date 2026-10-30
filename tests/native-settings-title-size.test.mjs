@@ -56,7 +56,7 @@ test("native Settings title: PanelHeading with Ignis gate, keeps its wording", (
   // (covered by native-ignis-ops-console-headings).
   assert.match(
     title,
-    /PanelHeading\(title: "Settings", isIgnis: model\.selectedProduct == \.ignis\)/,
+    /PanelHeading\(title: "Settings", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)/,
     "Settings title uses PanelHeading gated on Ignis",
   );
   assert.doesNotMatch(

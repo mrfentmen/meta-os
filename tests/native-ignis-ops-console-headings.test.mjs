@@ -96,14 +96,14 @@ test("native panel titles: all five use PanelHeading gated on Ignis", () => {
     assert.match(
       contentView,
       new RegExp(
-        `PanelHeading\\(title: "${title}", isIgnis: model\\.selectedProduct == \\.ignis\\)`,
+        `PanelHeading\\(title: "${title}", isIgnis: model\\.selectedProduct == \\.ignis, isVigiles: model\\.selectedProduct == \\.vigiles\\)`,
       ),
       `${title} uses PanelHeading gated on the Ignis product`,
     );
   }
   assert.match(
     timelineView,
-    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis\)/,
+    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)/,
     "Event timeline uses PanelHeading gated on the Ignis product",
   );
 });
@@ -111,12 +111,12 @@ test("native panel titles: all five use PanelHeading gated on Ignis", () => {
 test("native panel titles: Latest and Timeline keep their header traits", () => {
   assert.match(
     contentView,
-    /PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    /PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
     "Latest heading keeps its header trait",
   );
   assert.match(
     timelineView,
-    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
     "Timeline heading keeps its header trait",
   );
 });

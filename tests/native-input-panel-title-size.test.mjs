@@ -48,7 +48,7 @@ test("native still-image title: PanelHeading with Ignis gate, no headline left",
   // (covered by native-ignis-ops-console-headings).
   assert.match(
     stillTitle,
-    /PanelHeading\(title: "Still image", isIgnis: model\.selectedProduct == \.ignis\)/,
+    /PanelHeading\(title: "Still image", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)/,
     "still-image title uses PanelHeading gated on Ignis",
   );
   assert.doesNotMatch(stillTitle, /\.font\(\.headline\)/, "no headline left on still-image title");
@@ -57,7 +57,7 @@ test("native still-image title: PanelHeading with Ignis gate, no headline left",
 test("native video title: PanelHeading with Ignis gate, no headline left", () => {
   assert.match(
     videoTitle,
-    /PanelHeading\(title: "Prerecorded video", isIgnis: model\.selectedProduct == \.ignis\)/,
+    /PanelHeading\(title: "Prerecorded video", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)/,
     "video title uses PanelHeading gated on Ignis",
   );
   assert.doesNotMatch(videoTitle, /\.font\(\.headline\)/, "no headline left on video title");

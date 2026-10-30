@@ -18,9 +18,9 @@ struct TimelineView: View {
             // size and weight are the only changes: the wording and
             // the header trait are untouched.
             // OPS-CONSOLE-2: panel heading (see PanelHeading in
-            // ContentView) — Ignis renders the console treatment,
-            // other products the plain 15pt bold title as before.
-            PanelHeading(title: "Event timeline", isIgnis: model.selectedProduct == .ignis)
+            // ContentView) — Ignis and Vigiles render their console
+            // treatments, Sanitas the plain 15pt bold title as before.
+            PanelHeading(title: "Event timeline", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles)
                 .accessibilityAddTraits(.isHeader)
             // Web parity: the web history panel carries this note, and
             // without it nothing in the native panel says the rows can
