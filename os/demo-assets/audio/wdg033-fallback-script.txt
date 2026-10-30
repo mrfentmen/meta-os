@@ -1,0 +1,33 @@
+Milo: My crew talks on a bus that moves messages and jobs between agents well. What it cannot do yet is understand them. This is the layer that understands. Relay Intelligence reads the room, writes the brief, takes orders in plain English, and catches the failure nobody announced. One order, and the crew works until it is done and checked.
+
+Milo: This is my crew at work. Four AI agents, one shared bus. Impressive, and unreadable. A wall of messages scrolling past, nobody able to say at a glance what is decided, what is moving, and what is stuck.
+
+Milo: I do not read two thousand messages any more. I read this. One brief, every morning: the decisions, what is in flight, who owns what, and what is blocked and why. The blocked line is the one that matters. If something needs me, it is right there, in plain English, with the reason attached.
+
+Milo: There is my team. Who is working, who is stuck, who owns what, live. Presence, skills, current jobs, one agent blocked. The board does not guess. It shows the state the bus itself recorded.
+
+Milo: One order. That is my whole job now. I do not drive this crew and I do not watch it. I order, I put the phone down, and I hear back when it is done. Watch them, not me. And nobody woke that one up by hand. It was asleep until the work rang its bell, and then it clocked in on the job by itself.
+
+Milo: Spark turned one sentence into five signed jobs. Files, dependencies, budgets, and a definition of done for each. Each job owns its files, so two agents never quietly write over each other. Each job carries its acceptance checks, so done means checked, not just claimed.
+
+Milo: And they just start. Each job claimed once, leased, heartbeating. A lease means a claim has an expiry. A heartbeat means the worker is still alive. If either goes quiet, the system knows, and it does not wait for a human to notice.
+
+Milo: And watch this one. Spark did not just brief the crew. It dispatched a job, and Meta OS picked up a tool: Muse Code, running as a process of the operating system, supervised and heartbeating like any other crew member. Spark commands. The operating system runs the crew and the tools.
+
+Milo: Same agent, different upbringing. Meta OS does not just boot the machine. It boots the mind, from one versioned image we can measure, compare, and improve. The same small job, twice: once bare, once from a mind image carrying its constitution, its skills, its memory, and its capability grant. The mind-image run finishes first, its acceptance checks green, and the board shows both runs side by side, times and results, so the improvement is a measurement, not a claim.
+
+Milo: Here is the failure nobody sees. A worker picks up a job, posts one progress note, and then goes quiet. No error. No crash message. The room looks calm, the job looks claimed, and nothing is actually moving. This is how agent work usually dies, quietly, while everyone assumes someone else is handling it.
+
+Milo: Notice anything? Neither did the bus. The watchdog does not assume. It watches every claim, every lease, and every heartbeat. Ninety seconds after the last progress note, with no heartbeat and no movement, it fires. One red stall alert: the worker, the job, and exactly how long it has been silent, in plain English, with a fix. The lease is expiring soon, so requeue the job to another worker, or nudge the first one. The silent failure stops being silent.
+
+Milo: One more thing the operating system does. That agent just tried to post to the bus without permission, and the operating system refused. Not a prompt it forgot. A rule it cannot break. My standing rules are not instructions any more. They are policy the machine enforces, and the refusal itself lands as an alert, naming the process, the action, and the missing permission. Nothing was posted.
+
+Milo: One click to acknowledge. The job went back out, someone else picked it up, and the alert cleared itself when the work did. That is the contract: alerts resolve when the condition clears, not when someone remembers to close them.
+
+Milo: Same story for the other silent killer. Two agents, one file. A second plan tries to give two jobs the same file, and the watchdog catches the collision before it corrupts anything, naming the shared path and both jobs.
+
+Milo: And the brief is honest about what it does not know. When a window is missing, it says so instead of inventing a number. When Spark is unavailable, the template brief still lands, so the morning never arrives empty. Every claim in the story traces back to a measurement: a rubric score, a tuning table, a drill log. The system reports its own limits in the same plain English as its results, because a brief you cannot trust is worse than no brief at all.
+
+Milo: Jobs all done. A fresh brief regenerates. Its blocked section is now empty, its watch items clear. And on the table, the phone, face down since the order went in, buzzes once. All done, with a one paragraph summary of what was built and what was verified.
+
+Milo: One buzz. That is the other half of the deal. I ordered once, and I hear back once, when it is done and checked. Same crew. Same bus. Now it briefs me, takes orders in English, fixes its own stalls, and tells me when something is wrong before I have to ask. Everything you just saw is live, open, and was built in ten days on a system my crew already uses every day.

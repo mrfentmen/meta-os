@@ -1,0 +1,238 @@
+{
+  "agents": [
+    {
+      "nick": "accountability-watcher",
+      "role": "Runs the accountability board and the PAR timer. Raises par-check-due, air-low-estimate, crew-unaccounted, and mayday alerts. Advises the incident commander; it never orders a crew.",
+      "serves": [
+        "accountability-board",
+        "par-timer"
+      ]
+    },
+    {
+      "nick": "incident-scribe",
+      "role": "Keeps the incident timeline as it happens and seals it at all-clear, so the record of the incident is complete and checkable afterward.",
+      "serves": [
+        "incident-timeline"
+      ]
+    },
+    {
+      "nick": "roster-keeper",
+      "role": "Keeps apparatus and crew roster state current across the incident: committed, available, out of service.",
+      "serves": [
+        "roster-board"
+      ]
+    },
+    {
+      "nick": "handoff-messenger",
+      "role": "The only agent in this pack that may post across worlds. Sends summary counts (never names) to hospital and EMS worlds when casualties are expected, and receives capacity and scene-safety summaries.",
+      "serves": [
+        "roster-board",
+        "incident-timeline"
+      ]
+    }
+  ],
+  "alerts": [
+    {
+      "carries": "The crew id and the PAR due time. Stays on the fireground; the accountability officer acts on it.",
+      "crosses_bus": false,
+      "kind": "par-check-due",
+      "privacy": "local",
+      "severity": "warning",
+      "urgency": "urgent"
+    },
+    {
+      "carries": "The crew id and the estimated minutes of air remaining, marked as an estimate, never a measurement.",
+      "crosses_bus": false,
+      "kind": "air-low-estimate",
+      "privacy": "local",
+      "severity": "warning",
+      "urgency": "urgent"
+    },
+    {
+      "carries": "The crew id and last known location inside the structure. Local only; names of members never ride any bus line.",
+      "crosses_bus": false,
+      "kind": "crew-unaccounted",
+      "privacy": "local",
+      "severity": "critical",
+      "urgency": "life-safety"
+    },
+    {
+      "carries": "A summary only: incident id, that a mayday is declared, and casualty counts by severity. No member names, no patient names.",
+      "crosses_bus": true,
+      "kind": "mayday-declared",
+      "privacy": "summary",
+      "severity": "critical",
+      "urgency": "life-safety"
+    }
+  ],
+  "cross_world": {
+    "receives": [
+      {
+        "carries": "Emergency department capacity state and diversion status as counts and states, never patient information.",
+        "from": "hospital",
+        "kind": "capacity-status"
+      },
+      {
+        "carries": "Road closures and scene perimeter state affecting apparatus access, summarized; no police record details.",
+        "from": "nypd",
+        "kind": "scene-safety-summary"
+      },
+      {
+        "carries": "How many transport units are committed and their destination hospitals, as counts.",
+        "from": "ems",
+        "kind": "transport-status"
+      }
+    ],
+    "sends": [
+      {
+        "carries": "Incident id, casualty counts by severity (critical, serious, minor), and an arrival window estimate. Counts only.",
+        "kind": "incoming-casualty-summary",
+        "never_carries": [
+          "patient names",
+          "patient identifiers",
+          "member names",
+          "medical details of any individual"
+        ],
+        "to": "hospital"
+      },
+      {
+        "carries": "Incident id, casualty counts by severity, and the staging location for transport units. Counts only.",
+        "kind": "incoming-casualty-summary",
+        "never_carries": [
+          "patient names",
+          "patient identifiers",
+          "member names",
+          "medical details of any individual"
+        ],
+        "to": "ems"
+      }
+    ]
+  },
+  "firstboot": [
+    {
+      "field": "department_name",
+      "label": "Department name",
+      "required": true
+    },
+    {
+      "field": "station_name",
+      "label": "Station or house name",
+      "required": true
+    },
+    {
+      "field": "battalion",
+      "label": "Battalion or division",
+      "required": false
+    },
+    {
+      "field": "unit_roster",
+      "label": "Unit roster: apparatus and the members riding each unit",
+      "required": true
+    },
+    {
+      "field": "par_interval_minutes",
+      "label": "PAR check interval in minutes",
+      "required": true
+    },
+    {
+      "field": "command_contact",
+      "label": "Chief or admin contact for this installation",
+      "required": true
+    },
+    {
+      "field": "room_name",
+      "label": "Bus room this installation joins",
+      "required": true
+    }
+  ],
+  "institution_type": "fire department",
+  "pack": "fdny",
+  "pack_name": "FDNY fire department world pack",
+  "privacy_classes": {
+    "bus_summary": [
+      "Casualty counts by severity on a mayday or multi-casualty incident",
+      "Unit availability counts for mutual-aid coordination",
+      "Incident id and incident type for cross-world summaries"
+    ],
+    "local_only": [
+      "Member names and assignments on the accountability board",
+      "Interior positions and last known locations",
+      "Air estimates per member",
+      "Full incident timeline before it is sealed and reviewed",
+      "Radio transcripts and scribe notes"
+    ]
+  },
+  "runtime": {
+    "parts": [
+      {
+        "path": "worlds/fdny/runtime/par_clock.py",
+        "proven": "Pinning tests on fixtures (tests/test_fdny_par_clock.py). UNPROVEN, stated plainly: not yet run on a booted Meta OS image, in a real station exercise, or wired as a systemd unit.",
+        "what": "The PAR clock: per-crew interval countdown, par-check-due (warning) and crew-unaccounted (critical, life-safety) alerts in the FND-020 frozen line format, enter/exit/complete commands for the human accountability officer, timeline and dedupe state on disk, pure core plus CLI, no model calls, no bus posts, no sensors."
+      }
+    ],
+    "status": "partial"
+  },
+  "status": "partial",
+  "summary": "Fireground accountability and incident record pack: tracks who is inside a structure, elapsed time and air estimates, PAR check timing, apparatus and crew roster state, and the sealed incident timeline. PARTIAL: the PAR clock runtime (worlds/fdny/runtime/par_clock.py) exists and is pinning-tested; every other declared watcher remains definition only, and nothing here runs a real fire department system.",
+  "summary_note": "Accountability aid only: it advises and records. It never orders crews, never dispatches, never guesses where a crew is, and never completes a PAR on its own. Command decisions stay with the incident commander.",
+  "urgency": [
+    {
+      "class": "life-safety",
+      "meaning": "Mayday and crew-unaccounted events. Preempts everything else on the bus.",
+      "rank": 1
+    },
+    {
+      "class": "urgent",
+      "meaning": "PAR checks due and air estimates running low.",
+      "rank": 2
+    },
+    {
+      "class": "routine",
+      "meaning": "Roster and unit state changes during an incident.",
+      "rank": 3
+    },
+    {
+      "class": "digest",
+      "meaning": "Sealed incident timeline and end-of-incident summary.",
+      "rank": 4
+    }
+  ],
+  "version": "0.1.0",
+  "watchers": [
+    {
+      "id": "accountability-board",
+      "inputs": [
+        "crew roster state",
+        "entry and exit reports from the accountability officer",
+        "incident clock"
+      ],
+      "watches": "Crew accountability on the fireground: which members are inside the structure, their entry time, elapsed interior time, and estimated remaining air, against the incident clock."
+    },
+    {
+      "id": "par-timer",
+      "inputs": [
+        "accountability board state",
+        "PAR interval from firstboot config"
+      ],
+      "watches": "PAR (personnel accountability report) check timing: when the next PAR check falls due for each interior crew and whether it completed."
+    },
+    {
+      "id": "roster-board",
+      "inputs": [
+        "unit status reports",
+        "roll-call roster from firstboot config",
+        "dispatch assignments"
+      ],
+      "watches": "Apparatus and crew roster state: which units are on scene, committed, available, or out of service, and who is riding each unit."
+    },
+    {
+      "id": "incident-timeline",
+      "inputs": [
+        "accountability board events",
+        "roster board events",
+        "incident scribe entries"
+      ],
+      "watches": "The incident timeline: dispatch, arrival, entry, PAR results, mayday events, and all-clear, kept as the verified record of the incident."
+    }
+  ]
+}
