@@ -1,0 +1,40 @@
+# relay-memory.service - OS-078 (Pax): the memory service ensure step.
+#
+# The memory service itself is a filesystem store, not a daemon:
+# mos/memory.py keeps a journaled, versioned store under
+# /var/lib/metaos/memory, with per-agent journals under agents/
+# and the shared crew journal under shared/. There is no process
+# to supervise, so this unit is the oneshot that guarantees the
+# namespaces exist at boot: it runs the module's ensure step as
+# the relay user (the bake chowns the store root to relay on
+# all three image routes) and exits, staying green via
+# RemainAfterExit. Restart=on-failure does not apply to a
+# oneshot ensure; a failed ensure fails the boot visibly
+# instead of silently leaving processes without memory.
+#
+# Ordering: PartOf=relay.target only. The unit needs no other
+# service: it touches local directories, never the bus, the
+# queue, or the network. It is deliberately NOT in the
+# relay-ready gate's checked set: the gate checks the serving
+# units, and memory is a store the serving units read, not a
+# service that serves. Adding it to the gate is owed follow-up
+# only if a gate line ever needs to prove the store exists.
+#
+# Still NOT proven here: a booted image running this unit, a
+# process launched with the store directories mounted (the
+# launcher wiring is owed beside OS-080's), and the boot brief
+# reading settled decisions from the store (OS-079, Hana).
+# systemd-analyze verify on this file is a syntax check only.
+[Unit]
+Description=Meta OS memory service (per-agent + shared crew memory)
+PartOf=relay.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=relay
+Group=relay
+ExecStart=/usr/bin/python3 /opt/relay/mos/memory.py ensure /var/lib/metaos/memory
+
+[Install]
+WantedBy=relay.target

@@ -49,6 +49,13 @@
 //! - `os/tests/test_mos_flow.py`
 //! - `os/tests/test_mos_gitops.py`
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! Ported in batch B23 (Milo): the `os/mos/cli.py` command surface
+//! (see the `cli` module), a real git backend for the review/merge
+//! commands (see the `git` module), and the 39 `os/os/` deployment
+//! assets carried byte-identical under `assets/os/` (see the `carried`
+//! module and its manifest).
+
+pub mod carried;
+pub mod cli;
+pub mod git;
+

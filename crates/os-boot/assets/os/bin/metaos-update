@@ -1,0 +1,50 @@
+#!/bin/sh
+# metaos-update (OS-021 v1): apply a relay+intel update from a git bundle.
+#   sudo metaos-update /path/to/metaos-update.bundle
+# The bundle is verified (git bundle verify) before anything is applied;
+# the previous /opt/relay tree is kept at /opt/relay.prev for rollback:
+#   sudo metaos-update --rollback
+# Rollback swaps the live tree with the kept previous tree, so a
+# second rollback swaps back. Base OS packages never update through
+# this path (frozen base, OS-003).
+# Test hook only, never set on the image: METAOS_RELAY_ROOT overrides
+# the target root (default /opt/relay); PREV and CUR follow it, so
+# tests can apply and roll back against fixture trees without root.
+set -eu
+TARGET=${METAOS_RELAY_ROOT:-/opt/relay}
+PREV="$TARGET.prev"
+CUR="$TARGET.cur"
+
+if [ "${1:-}" = "--rollback" ]; then
+    if [ -d "$PREV" ]; then
+        rm -rf "$CUR"
+        mv "$TARGET" "$CUR"
+        mv "$PREV" "$TARGET"
+        mv "$CUR" "$PREV"
+        systemctl restart relay.target || true
+        echo "metaos-update: rolled back. Previous tree kept at $PREV"
+        exit 0
+    fi
+    echo "metaos-update: no previous tree at $PREV" >&2
+    exit 1
+fi
+
+BUNDLE="${1:-}"
+if [ -z "$BUNDLE" ] || [ ! -f "$BUNDLE" ]; then
+    echo "usage: metaos-update <bundle-file> | --rollback" >&2
+    exit 2
+fi
+if [ ! -d "$TARGET/.git" ]; then
+    echo "metaos-update: $TARGET is not a git checkout - cannot apply bundle" >&2
+    exit 1
+fi
+
+cd "$TARGET"
+git bundle verify "$BUNDLE"
+rm -rf "$PREV"
+cp -a "$TARGET" "$PREV"
+git fetch "$BUNDLE" 'refs/heads/*:refs/remotes/bundle/*'
+NEWREF=$(git rev-parse refs/remotes/bundle/main 2>/dev/null || git rev-parse FETCH_HEAD)
+git checkout -f "$NEWREF"
+systemctl restart relay.target || true
+echo "metaos-update: applied $NEWREF (rollback: metaos-update --rollback)"

@@ -1,0 +1,31 @@
+# os/live-build/config/package-lists/metaos.list.chroot -- OS-008.
+#
+# The os/packages.txt set as real Debian package names, plus the
+# META_OS.md spec extras. Name set frozen by OS-010 first light:
+# this list must match packages.txt entry for entry. This list is
+# a name list only, exactly like packages.txt: versions pin under
+# OS-010 against a built image's package list, not here. The
+# mapping from the spec descriptions to package names: python3 +
+# venv becomes python3-venv, redis client tools become
+# redis-tools, fonts become fonts-dejavu, chromium stays chromium,
+# openssh-server stays openssh-server, qemu-guest-agent stays
+# qemu-guest-agent. openssh-server ships present but disabled by
+# default, matching the primary image; enabling it is a runtime
+# decision, not a build default.
+systemd
+systemd-sysv
+udev
+dbus
+linux-image-amd64
+initramfs-tools
+python3
+curl
+ca-certificates
+iproute2
+git
+python3-venv
+redis-tools
+chromium
+fonts-dejavu
+openssh-server
+qemu-guest-agent

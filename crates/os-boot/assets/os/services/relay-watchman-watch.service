@@ -1,0 +1,57 @@
+# relay-watchman-watch.service - OS-122 (Milo): the watchdog watching the
+# watchman as a system service.
+#
+# Runs intel/watchman_service.py serve_cycles as the relay user, ordered after
+# relay-watchman.service (the watcher watches the watchman, so it starts after
+# the thing it watches, never before it). Restart=on-failure: systemd owns
+# process death here, per the OS-034 contract, the same split as
+# relay-watchdog.service: the watcher process dying is a loud crash systemd
+# restarts, while a watchman going silent is a crew-dark judgment the loop
+# itself makes, never a restart fight.
+#
+# Machine list, stated plainly because no machine-naming convention exists in
+# this repo yet: the loop watches the machines named in WATCHMAN_WATCH_MACHINES
+# in /etc/metaos/watchman-watch.env (comma-separated, one name per machine,
+# each name matching that machine's watchman-jobs-<machine>.json snapshot files
+# under /run/metaos). The env file is optional (the EnvironmentFile=- prefix):
+# with no file, or an empty list, the loop cycles with zero machines, which
+# judges nothing and is a configuration gap, not a passing watch. The no-file
+# shape is safe by construction, not by luck: with no file systemd expands
+# ${WATCHMAN_WATCH_MACHINES} to nothing, leaving a bare --machines before
+# --snapshot-dir, and the CLI reads a bare --machines as an empty list
+# (nargs="?", const=""), so it still cycles empty instead of failing
+# argparse with exit 2 and restart-looping under Restart=on-failure. Image
+# integration (Pax OS-101) names the machines when it wires the per-machine
+# snapshot files; until then this unit is a verified unit file, not a live
+# watcher.
+#
+# Zero-credential image rule (OS-012), mirrored from relay-watchman.service:
+# this unit only runs once firstboot has written the secrets env file. The loop
+# itself posts nothing and holds no secret, but the watchman it watches does
+# not run on an unconfigured image, so there is nothing to watch until then.
+#
+# Honest gaps, stated plainly (same pattern as relay-watchdog.service):
+# "service active at boot" is NOT proven here: there is no test image in this
+# repo, the unit is not yet wired into relay.target wants or any image
+# enablement list (that wiring is Pax's OS-101 integration, deliberately not
+# claimed here), and a systemd restart of this unit is still owed on the test
+# image. systemd-analyze verify on this file is a syntax check only.
+[Unit]
+Description=Meta OS watchman watcher (watchdog watches the watchman)
+After=relay-watchman.service
+Wants=network-online.target
+ConditionPathExists=/etc/metaos/secrets.env
+PartOf=relay.target
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay
+EnvironmentFile=-/etc/metaos/watchman-watch.env
+ExecStart=/usr/bin/python3 /opt/relay/intel/watchman_service.py --machines ${WATCHMAN_WATCH_MACHINES} --snapshot-dir /run/metaos
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=relay.target

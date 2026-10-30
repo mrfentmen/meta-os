@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the Meta OS overseer tick periodically
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Unit=relay-overseer.service
+
+[Install]
+WantedBy=relay.target

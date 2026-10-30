@@ -1,0 +1,44 @@
+# relay-watchdog.service - OS-033 (Milo): the watchdog loop as a
+# system service.
+#
+# Runs intel/watchdog.py --loop as the relay user, ordered after
+# relay-jobs.service (META_OS.md service table: the watchdog reads
+# claims, leases, and heartbeats from the job queue, so it starts
+# after the queue service, never before it). Restart=on-failure:
+# systemd owns process death here, per the OS-034 contract — the
+# watchdog itself owns silent-but-alive stalls, never process
+# death, so the two never double-act on the same failure.
+#
+# Beat: --beat wires every tick to intel.store.wd_self_beat, which
+# renews muse-bus:intel:wd:beat (300s TTL, WDG-016). That key is
+# what the dashboard reads (DSH-015): while the unit ticks, the
+# panel renders watchdog-alive; stop the unit and the beat
+# expires after five missed 60s ticks into the dashboard's
+# watchdog-silent state. Without --beat this unit would tick
+# silently and the dashboard would never see it alive — the
+# flag is the whole point of the service, not an option.
+#
+# Honest gaps, stated plainly (same pattern as Hana's OS-049):
+# live snapshot reading waits on Pax's FND-014 ingest API, so
+# until ingest lands this loop ticks an empty (quiet) snapshot
+# — the beat renews and proves the loop alive, but the
+# detectors see no live jobs yet. And "service active at boot"
+# is NOT proven here: there is no test image in this repo and
+# the relay-jobs unit it orders after is not landed yet, so
+# boot activation and the stop-the-unit dashboard render are
+# still owed on the test image, not claimed from a unit file.
+# systemd-analyze verify on this file is a syntax check only.
+[Unit]
+Description=Meta OS watchdog loop
+After=relay-jobs.service
+
+[Service]
+Type=simple
+User=relay
+WorkingDirectory=/opt/relay
+ExecStart=/usr/bin/python3 /opt/relay/intel/watchdog.py --loop --room main --beat
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=relay.target
