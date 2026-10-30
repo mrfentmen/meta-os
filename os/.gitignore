@@ -1,0 +1,31 @@
+# Runtime state — never commit
+seen.txt
+error.log
+.*_reported
+messages*.jsonl*
+__pycache__/
+# Secrets — never commit
+token
+*.token
+.config/
+# INT-011: keyring and env files. The crew secret lives in
+# ~/.config/muse-relay/job-secret, never in this tree, and a
+# copy dropped here by mistake must stay uncommitted.
+*.env
+# DEM-013 exception: intel/metaos-demo.env holds only watchdog
+# threshold numbers (no secret of any kind) and is the demo
+# profile OS-038's drop-in loads — it must be committable.
+!intel/metaos-demo.env
+.env*
+*.keyring
+job-secret
+admin_secret
+*.pem
+*.key
+# OS-006: image build outputs never commit (os/build-all.sh and
+# os/build-image.sh write here; the image itself is never a repo file).
+os/work/
+os/metaos-*.img
+os/metaos-*.img.sha256
+os/metaos-*.iso
+os/metaos-*.iso.sha256
