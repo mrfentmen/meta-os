@@ -171,11 +171,28 @@ pub fn run_self_check<W: Watchdog>(
     room: &str,
     expected: Option<&Value>,
 ) -> Value {
+    run_self_check_with(watchdog, snapshot, now, room, expected, None)
+}
+
+/// The same check over an explicit detector list — the boot
+/// self-check drill edits the list (one detector removed, one
+/// replaced by a raising callable) to prove the fail modes.
+pub fn run_self_check_with<W: Watchdog>(
+    watchdog: &W,
+    snapshot: &Value,
+    now: Option<i64>,
+    room: &str,
+    expected: Option<&Value>,
+    detectors: Option<&[super::deps::Detector]>,
+) -> Value {
     let expected = match expected {
         Some(e) => e.clone(),
         None => expected(),
     };
-    let alerts = watchdog.tick(snapshot, now);
+    let alerts = match detectors {
+        Some(list) => watchdog.tick_with(snapshot, now, list),
+        None => watchdog.tick(snapshot, now),
+    };
     let mut found: Vec<(String, i64)> = Vec::new();
     for alert in &alerts {
         if alert.is_dict() {

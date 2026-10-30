@@ -241,3 +241,42 @@ pub trait AlertRecords {
     /// `store.build_alert_record(alert, room=...)`.
     fn build_alert_record(&self, alert: &Value, room: &str) -> Value;
 }
+
+/// `intel.gate` (B09) — the attempt-budget judgment the
+/// OS-096 drill exercises. The gate builds records; it never
+/// sends anything (the drill's sent ledger proves it).
+pub trait Gate {
+    /// `gate.gate_tick(snapshot, journal, now)` -> new records.
+    /// The journal is read, never mutated; the caller extends
+    /// its own journal with the returned records.
+    fn gate_tick(&self, snapshot: &Value, journal: &[Value], now: i64) -> Vec<Value>;
+    /// `gate.gate_brief_lines(records)`.
+    fn gate_brief_lines(&self, records: &[Value]) -> Vec<String>;
+}
+
+/// `intel.push` (B10) — the payload validator the gate drill
+/// checks every escalation against.
+pub trait Push {
+    /// `push.validate_push(payload)`.
+    fn validate_push(&self, payload: &Value) -> bool;
+}
+
+/// `intel.baton` (B10) — the continuation composer the
+/// OS-125 drill exercises. It composes and journals; it never
+/// moves a claim and carries no push path.
+pub trait Baton {
+    /// `baton.compose_baton(job)` — None for a non-record or
+    /// an id-less record.
+    fn compose_baton(&self, job: &Value) -> Option<Value>;
+    /// `baton.baton_pass_tick(snapshot, job_id, next, journal, now)`.
+    fn baton_pass_tick(
+        &self,
+        snapshot: &Value,
+        job_id: &str,
+        next: &str,
+        journal: &[Value],
+        now: i64,
+    ) -> Vec<Value>;
+    /// `baton.baton_brief_lines(records)`.
+    fn baton_brief_lines(&self, records: &[Value]) -> Vec<String>;
+}

@@ -1,131 +1,364 @@
-//! Port of `os/intel/drills/attempt_gate.py` (Milo, OS-096).
+//! Port of `os/intel/drills/attempt_gate.py` — attempt
+//! budgets + escalation gate drill (Milo lane, OS-096).
 //!
-//! Phases on fixtures with a fake clock: impossible burns exactly its
-//! budget then parks + escalates once (no loop/dup); crew-fixable dep
-//! parks nothing; money dale-call parks at once quoting the note;
-//! malformed budgets are unbudgeted; escalation count is exactly two and
-//! the sent ledger stays empty; inputs immutable; brief names parks.
+//! A deliberately impossible job burns exactly its budget,
+//! parks, and escalates exactly once — no loop, no duplicate
+//! pushes; a crew-fixable blocker resolves with zero
+//! escalation; a money blocker parks at once quoting the
+//! note verbatim. The gate (B09 `Gate` trait) builds records
+//! and never sends: the drill's sent ledger stays empty
+//! because the gate has no send path at all. Payload
+//! validation is the B10 `Push` trait.
 
-use crate::b09_core::gate::{self, JobInt, JobRecord};
-use crate::b10_brief::push as push_mod;
+use super::DrillOutcome;
+use crate::b12a_drills::deps::{Gate, Push};
+use crate::b12a_drills::value::Value;
 use crate::b12a_drills::{DrillReport, PhaseResult};
 
 pub const T0: i64 = 100000;
 
-fn job(id: &str, attempts: JobInt, max: JobInt, blocker: Option<&str>, note: &str) -> JobRecord {
-    JobRecord { id: Some(id.into()), status: "open".into(), attempts: Some(attempts), max_attempts: Some(max), blocker_kind: blocker.map(str::to_string), note: note.into() }
-}
-
-fn int(n: i64) -> JobInt {
-    JobInt::Int(n)
-}
-
-/// Run all phases; returns the drill report.
-pub fn run() -> DrillReport {
-    let mut phases = Vec::new();
-    // impossible: 2-budget job stalls twice
-    let j7 = job("7", int(0), int(2), None, "");
-    let tick1 = gate::gate_tick(&[JobRecord { attempts: Some(int(1)), ..j7.clone() }], &[]);
-    phases.push(if tick1.is_empty() {
-        PhaseResult::pass("impossible-tick1-quiet", "budget remains after rung 1")
-    } else {
-        PhaseResult::fail("impossible-tick1-quiet", format!("parked early: {tick1:?}"))
-    });
-    let j7b = JobRecord { attempts: Some(int(2)), ..j7.clone() };
-    let tick2 = gate::gate_tick(&[j7b.clone()], &tick1);
-    let parks = tick2.iter().filter(|r| r.kind == "parked").count();
-    let pushes = tick2.iter().filter(|r| r.kind == "blocked-push").count();
-    phases.push(if parks == 1 && pushes == 1 {
-        PhaseResult::pass("impossible-parks-once", "parked + exactly one escalation")
-    } else {
-        PhaseResult::fail("impossible-parks-once", format!("parks={parks} pushes={pushes}"))
-    });
-    // payload validates + names the budget fact
-    let payload_ok = tick2.iter().filter(|r| r.kind == "blocked-push").all(|r| {
-        let pv = push_mod::Push { push_type: "blocked".into(), job_id: r.job_id.clone(), title: String::new(), text: r.text.clone() };
-        push_mod::validate_push(&pv).is_ok() && r.text.contains('7')
-    });
-    phases.push(if payload_ok {
-        PhaseResult::pass("impossible-payload", "payload validates, names job 7")
-    } else {
-        PhaseResult::fail("impossible-payload", "payload invalid")
-    });
-    // tick 3: nothing new
-    let tick3 = gate::gate_tick(&[j7b], &tick2);
-    phases.push(if tick3.is_empty() {
-        PhaseResult::pass("impossible-no-loop", "third tick journals nothing")
-    } else {
-        PhaseResult::fail("impossible-no-loop", format!("looped: {tick3:?}"))
-    });
-    // crew-fixable: dep blocker across three ticks
-    let j8 = job("8", int(0), int(3), Some("dependency"), "wait");
-    let mut journal: Vec<gate::JournalRecord> = Vec::new();
-    let mut leaked = false;
-    for _ in 0..3 {
-        let recs = gate::gate_tick(&[j8.clone()], &journal);
-        if !recs.is_empty() {
-            leaked = true;
-        }
-        journal.extend(recs);
-    }
-    phases.push(if !leaked {
-        PhaseResult::pass("crew-fixable-quiet", "dependency parks nothing over 3 ticks")
-    } else {
-        PhaseResult::fail("crew-fixable-quiet", "gate fired on crew work")
-    });
-    // dale-call: money parks at once, quotes note verbatim
-    let j9 = job("9", int(1), int(5), Some("money"), "needs $40/mo API key approval");
-    let d1 = gate::gate_tick(&[j9.clone()], &[]);
-    let verbatim = d1.iter().filter(|r| r.kind == "blocked-push").all(|r| r.text.contains("needs $40/mo API key approval"));
-    phases.push(if d1.len() == 2 && verbatim {
-        PhaseResult::pass("dale-call-parks", "money parks at once, note verbatim")
-    } else {
-        PhaseResult::fail("dale-call-parks", format!("records: {d1:?}"))
-    });
-    let d2 = gate::gate_tick(&[j9], &d1);
-    phases.push(if d2.is_empty() {
-        PhaseResult::pass("dale-call-once", "second tick journals nothing")
-    } else {
-        PhaseResult::fail("dale-call-once", "duplicate escalation")
-    });
-    // malformed: non-numeric / missing max / zero max / negative
-    let malformed = vec![
-        job("m1", JobInt::Str("lots".into()), int(3), None, ""),
-        JobRecord { id: Some("m2".into()), status: "open".into(), attempts: Some(int(0)), max_attempts: None, blocker_kind: None, note: String::new() },
-        job("m3", int(0), int(0), None, ""),
-        job("m4", int(-1), int(3), None, ""),
+/// The drill's `job()` record builder.
+pub fn job(
+    job_id: &str,
+    attempts: Option<Value>,
+    maximum: Option<Value>,
+    blocker_kind: Option<&str>,
+    note: Option<&str>,
+    status: &str,
+) -> Value {
+    let mut pairs = vec![
+        ("id", Value::s(job_id)),
+        ("title", Value::s(&format!("job {}", job_id))),
+        ("status", Value::s(status)),
     ];
-    let m = gate::gate_tick(&malformed, &[]);
-    phases.push(if m.is_empty() {
-        PhaseResult::pass("malformed-unbudgeted", "no crash, no park, no escalation")
-    } else {
-        PhaseResult::fail("malformed-unbudgeted", format!("fired: {m:?}"))
-    });
-    // no-extra-contact: exactly two escalations total, sent ledger empty
-    let total_pushes = tick2.iter().filter(|r| r.kind == "blocked-push").count()
-        + d1.iter().filter(|r| r.kind == "blocked-push").count();
-    phases.push(if total_pushes == 2 {
-        PhaseResult::pass("no-extra-contact", "exactly two escalations; sent ledger empty (gate has no send path)")
-    } else {
-        PhaseResult::fail("no-extra-contact", format!("escalations={total_pushes}"))
-    });
-    // immutable: inputs unchanged
-    let snap = vec![job("z", int(0), int(1), None, "")];
-    let snap_before = snap.clone();
-    let _ = gate::gate_tick(&snap, &[]);
-    phases.push(if snap == snap_before {
-        PhaseResult::pass("immutable", "tick leaves inputs unchanged")
-    } else {
-        PhaseResult::fail("immutable", "inputs mutated")
-    });
-    // brief names parked jobs
-    let mut all = tick2.clone();
-    all.extend(d1.clone());
-    let lines = gate::gate_brief_lines(&all);
-    phases.push(if lines.iter().any(|l| l.contains('7')) && lines.iter().any(|l| l.contains('9')) {
-        PhaseResult::pass("brief", "brief names jobs 7 and 9")
-    } else {
-        PhaseResult::fail("brief", format!("lines: {lines:?}"))
-    });
-    DrillReport::new("attempt_gate", phases)
+    if let Some(a) = attempts {
+        pairs.push(("attempts", a));
+    }
+    if let Some(m) = maximum {
+        pairs.push(("max_attempts", m));
+    }
+    if let Some(b) = blocker_kind {
+        pairs.push(("blocker_kind", Value::s(b)));
+    }
+    if let Some(n) = note {
+        pairs.push(("note", Value::s(n)));
+    }
+    Value::obj(pairs)
+}
+
+fn snap(jobs: Vec<Value>) -> Value {
+    Value::obj(vec![("jobs", Value::List(jobs))])
+}
+
+struct Ctx<'a> {
+    phases: Vec<PhaseResult>,
+    lines: Vec<String>,
+    gate: &'a dyn Gate,
+    push: &'a dyn Push,
+}
+
+impl<'a> Ctx<'a> {
+    fn pass(&mut self, name: &str, line: String) {
+        self.phases.push(PhaseResult::pass(name, line.clone()));
+        self.lines.push(line);
+    }
+    fn fail(&mut self, name: &str, line: String) {
+        self.phases.push(PhaseResult::fail(name, line.clone()));
+        self.lines.push(line);
+    }
+}
+
+/// Run all phases against the gate/push surfaces.
+pub fn run(gate: &dyn Gate, push: &dyn Push) -> DrillOutcome {
+    let mut ctx = Ctx {
+        phases: Vec::new(),
+        lines: Vec::new(),
+        gate,
+        push,
+    };
+
+    // impossible
+    {
+        let name = "impossible";
+        let mut journal: Vec<Value> = Vec::new();
+        let mut failure: Option<String> = None;
+        let records = gate.gate_tick(&snap(vec![job("7", Some(Value::Int(0)), Some(Value::Int(2)), None, None, "claimed")]), &journal, T0);
+        if !records.is_empty() {
+            failure = Some("gate acted with budget remaining".to_string());
+        }
+        if failure.is_none() {
+            let records = gate.gate_tick(&snap(vec![job("7", Some(Value::Int(1)), Some(Value::Int(2)), None, None, "claimed")]), &journal, T0 + 60);
+            if !records.is_empty() {
+                failure = Some("gate acted at 1/2 attempts".to_string());
+            }
+        }
+        if failure.is_none() {
+            let full = snap(vec![job("7", Some(Value::Int(2)), Some(Value::Int(2)), None, None, "claimed")]);
+            let records = gate.gate_tick(&full, &journal, T0 + 120);
+            if records.len() != 2 {
+                failure = Some(format!(
+                    "expected parked + escalation, got {}",
+                    records.len()
+                ));
+            } else {
+                let parked = records[0].clone();
+                let escalation = records[1].clone();
+                if parked.get("kind").as_str() != Some("parked")
+                    || escalation.get("kind").as_str() != Some("escalation")
+                {
+                    failure = Some("wrong record kinds".to_string());
+                } else if !parked.get("reason").py_str().contains("2/2") {
+                    failure = Some("park reason does not name the budget".to_string());
+                } else {
+                    let payload = escalation.get("push");
+                    if !push.validate_push(&payload) {
+                        failure = Some("escalation payload does not validate".to_string());
+                    } else if payload.get("type").as_str() != Some("blocked")
+                        || payload.get("job_id").as_str() != Some("7")
+                    {
+                        failure = Some("payload is not the blocked push for 7".to_string());
+                    } else {
+                        journal.extend(records);
+                        let again = gate.gate_tick(&full, &journal, T0 + 180);
+                        if !again.is_empty() {
+                            failure = Some(format!(
+                                "second tick journaled {} new records",
+                                again.len()
+                            ));
+                        }
+                    }
+                }
+            }
+        }
+        match failure {
+            None => ctx.pass(
+                name,
+                "impossible: PASS: job 7 burned 2/2, parked, one escalation, second tick silent"
+                    .to_string(),
+            ),
+            Some(msg) => ctx.fail(name, format!("impossible: FAIL: {}", msg)),
+        }
+    }
+
+    // crew-fixable
+    {
+        let name = "crew-fixable";
+        let journal: Vec<Value> = Vec::new();
+        let snapshot = snap(vec![job(
+            "8",
+            Some(Value::Int(0)),
+            Some(Value::Int(3)),
+            Some("dependency"),
+            Some("waits on job 7"),
+            "claimed",
+        )]);
+        let mut failure = false;
+        for tick in 0..3 {
+            let records = gate.gate_tick(&snapshot, &journal, T0 + tick * 60);
+            if !records.is_empty() {
+                failure = true;
+                break;
+            }
+        }
+        if failure {
+            ctx.fail(
+                name,
+                "crew-fixable: FAIL: gate acted on a dependency blocker".to_string(),
+            );
+        } else {
+            ctx.pass(
+                name,
+                "crew-fixable: PASS: dependency blocker, 0/3, zero parks and zero escalations across 3 ticks"
+                    .to_string(),
+            );
+        }
+    }
+
+    // dale-call
+    {
+        let name = "dale-call";
+        let note = "needs $40/mo API key approval";
+        let mut journal: Vec<Value> = Vec::new();
+        let snapshot = snap(vec![job(
+            "9",
+            Some(Value::Int(1)),
+            Some(Value::Int(5)),
+            Some("money"),
+            Some(note),
+            "claimed",
+        )]);
+        let records = gate.gate_tick(&snapshot, &journal, T0);
+        let mut failure: Option<String> = None;
+        if records.len() != 2 {
+            failure = Some(format!(
+                "expected parked + escalation, got {}",
+                records.len()
+            ));
+        } else {
+            let parked = records[0].clone();
+            let escalation = records[1].clone();
+            if parked.get("question").as_str() != Some(note) {
+                failure = Some("park question is not the note verbatim".to_string());
+            } else {
+                let payload = escalation.get("push");
+                if !push.validate_push(&payload) {
+                    failure = Some("escalation payload does not validate".to_string());
+                } else if payload.get("question").as_str() != Some(note) {
+                    failure = Some("payload question is not the note verbatim".to_string());
+                } else {
+                    journal.extend(records);
+                    let again = gate.gate_tick(&snapshot, &journal, T0 + 60);
+                    if !again.is_empty() {
+                        failure = Some(format!(
+                            "second tick journaled {} new records",
+                            again.len()
+                        ));
+                    }
+                }
+            }
+        }
+        match failure {
+            None => ctx.pass(
+                name,
+                "dale-call: PASS: money blocker parked at 1/5 with the note quoted verbatim, one escalation, second tick silent"
+                    .to_string(),
+            ),
+            Some(msg) => ctx.fail(name, format!("dale-call: FAIL: {}", msg)),
+        }
+    }
+
+    // malformed
+    {
+        let name = "malformed";
+        let snapshot = snap(vec![
+            job("10", Some(Value::s("two")), Some(Value::Int(3)), None, None, "claimed"),
+            job("11", Some(Value::Int(1)), None, None, None, "claimed"),
+            job("12", Some(Value::Int(1)), Some(Value::Int(0)), None, None, "claimed"),
+            job("13", Some(Value::Int(-1)), Some(Value::Int(3)), None, None, "claimed"),
+            Value::obj(vec![
+                ("title", Value::s("no id at all")),
+                ("attempts", Value::Int(9)),
+                ("max_attempts", Value::Int(3)),
+            ]),
+            Value::s("not a record"),
+        ]);
+        let records = gate.gate_tick(&snapshot, &[], T0);
+        if records.is_empty() {
+            ctx.pass(
+                name,
+                "malformed: PASS: non-numeric, missing, zero, negative, and id-less jobs yield nothing and no crash"
+                    .to_string(),
+            );
+        } else {
+            ctx.fail(
+                name,
+                format!(
+                    "malformed: FAIL: gate acted on malformed jobs: {}",
+                    Value::List(records).py_repr()
+                ),
+            );
+        }
+    }
+
+    // no-extra-contact
+    {
+        let name = "no-extra-contact";
+        let sent: Vec<Value> = Vec::new();
+        let journal: Vec<Value> = Vec::new();
+        let snapshot = snap(vec![
+            job("7", Some(Value::Int(2)), Some(Value::Int(2)), None, None, "claimed"),
+            job(
+                "9",
+                Some(Value::Int(1)),
+                Some(Value::Int(5)),
+                Some("money"),
+                Some("needs $40/mo API key approval"),
+                "claimed",
+            ),
+        ]);
+        let records = gate.gate_tick(&snapshot, &journal, T0);
+        let escalations: Vec<Value> = records
+            .iter()
+            .filter(|r| r.get("kind").as_str() == Some("escalation"))
+            .cloned()
+            .collect();
+        let mut failure: Option<String> = None;
+        if escalations.len() != 2 {
+            failure = Some(format!(
+                "expected 2 escalations, got {}",
+                escalations.len()
+            ));
+        } else if escalations
+            .iter()
+            .any(|r| !push.validate_push(&r.get("push")))
+        {
+            failure = Some("an escalation payload is invalid".to_string());
+        } else if !sent.is_empty() {
+            failure = Some("the sent ledger is not empty".to_string());
+        }
+        match failure {
+            None => ctx.pass(
+                name,
+                "no-extra-contact: PASS: exactly 2 escalations, both payloads valid, sent ledger empty (gate builds, never sends)"
+                    .to_string(),
+            ),
+            Some(msg) => ctx.fail(name, format!("no-extra-contact: FAIL: {}", msg)),
+        }
+    }
+
+    // immutable
+    {
+        let name = "immutable";
+        let snapshot = snap(vec![job("7", Some(Value::Int(2)), Some(Value::Int(2)), None, None, "claimed")]);
+        let journal = vec![Value::obj(vec![
+            ("kind", Value::s("parked")),
+            ("job", Value::s("9")),
+            ("dedupe_key", Value::s("park:9")),
+        ])];
+        let snap_before = snapshot.clone();
+        let journal_before = journal.clone();
+        let _ = gate.gate_tick(&snapshot, &journal, T0);
+        if snapshot != snap_before || journal != journal_before {
+            ctx.fail(
+                name,
+                "immutable: FAIL: gate_tick mutated its inputs".to_string(),
+            );
+        } else {
+            ctx.pass(
+                name,
+                "immutable: PASS: snapshot and journal unchanged by the tick".to_string(),
+            );
+        }
+    }
+
+    // brief
+    {
+        let name = "brief";
+        let records = gate.gate_tick(
+            &snap(vec![job("7", Some(Value::Int(2)), Some(Value::Int(2)), None, None, "claimed")]),
+            &[],
+            T0,
+        );
+        let lines = gate.gate_brief_lines(&records);
+        let mut failure: Option<String> = None;
+        if lines.len() != 2 {
+            failure = Some(format!("expected 2 lines, got {}", lines.len()));
+        } else if !lines[0].contains("Parked job 7") {
+            failure = Some("parked line does not name job 7".to_string());
+        } else if !lines[1].contains("Escalated job 7") {
+            failure = Some("escalation line does not name job 7".to_string());
+        }
+        match failure {
+            None => ctx.pass(
+                name,
+                "brief: PASS: parked and escalation lines name job 7".to_string(),
+            ),
+            Some(msg) => ctx.fail(name, format!("brief: FAIL: {}", msg)),
+        }
+    }
+
+    DrillOutcome {
+        report: DrillReport::new("attempt_gate", ctx.phases),
+        lines: ctx.lines,
+    }
 }
