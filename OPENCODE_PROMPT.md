@@ -28,11 +28,11 @@ are the spec, and the Python originals stay untouched.
 
 - T015 [B27] Port `os/worlds/fdny/runtime/par_clock.py` into `crates/os-misc` — done when: behavior matches the source; its parity case `test_fdny_par_clock.py` lives in B31; state left: UNCOMPILED until gate 1 passes
 
-→ **STATE: OPEN.** Not ported. `crates/os-misc/src/b27/` holds only `validate.rs`; no par_clock module exists at the tip. Port `os/worlds/fdny/runtime/par_clock.py` into the `b27` subtree of `crates/os-misc`. Its parity case is T035 below.
+→ **STATE: IN PROGRESS BY BUFFY — NOT fleet work.** Buffy is porting `os/worlds/fdny/runtime/par_clock.py` herself right now (verified still unported at the tip: `crates/os-misc/src/b27/` holds only `validate.rs`). Fleet: do not touch this task. Its parity case is T035 below, which remains fleet scope and depends on her port landing.
 
 - T016 [B27] Verify-carried `os/worlds/README.md`, `os/worlds/dep/PACK.md`, `os/worlds/dep/pack.json` (B27 world-pack data) — done when: every file is inventoried and byte-identical to its source; the batch report lists them CARRIED
 
-→ **STATE: OPEN.** Verify-carried: no B27 carry/verification record exists yet (contrast B28–B30, which landed as CARRIED commits). The originals stay in `os/worlds/`; inventory every file named in the task and verify each is byte-identical to its source, then record them CARRIED in the batch report. Carried means byte-identical — never edit a carried file.
+→ **STATE: IN PROGRESS BY BUFFY — NOT fleet work.** Buffy is running this verify-carried group herself right now. Fleet: do not touch this task. The fleet's B27 carry scope is the remaining groups, T017–T020 below.
 
 - T017 [B27] Verify-carried `os/worlds/doe/PACK.md`, `os/worlds/doe/pack.json`, `os/worlds/dsny/PACK.md`, `os/worlds/dsny/pack.json` (B27 world-pack data) — done when: every file is inventoried and byte-identical to its source; the batch report lists them CARRIED
 
