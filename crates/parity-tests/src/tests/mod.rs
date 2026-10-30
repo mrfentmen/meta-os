@@ -44,8 +44,8 @@ pub mod test_os_stackbake;
 pub mod test_os_target_unit;
 pub mod test_os_tree;
 pub mod test_os_uplink;
-case!(test_pomodoro, ["pomodoro parse", "schedule"], []);
-case!(test_status, ["status shape"], []);
+pub mod test_pomodoro;
+pub mod test_status;
 pub mod test_worlds_pack;
 
 /// B24 cross-assigned case lives here (TASKS trap).
