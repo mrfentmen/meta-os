@@ -120,6 +120,7 @@ const els = {
   logStatsFailedSpanShareOfOwnOkWindowByProduct: $("log-stats-failed-span-share-of-own-ok-window-by-product"),
   logStatsOkSpanShareOfOwnFailedWindowByProduct: $("log-stats-ok-span-share-of-own-failed-window-by-product"),
   logStatsOkSpanShareOfFailedWindow: $("log-stats-ok-span-share-of-failed-window"),
+  logStatsFailedSpanShareOfOkWindow: $("log-stats-failed-span-share-of-ok-window"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1007,6 +1008,20 @@ function updateLogStats() {
   // timestamps ran out of insertion order.
   els.logStatsOkSpanShareOfFailedWindow.textContent =
     `Success-span share of failure window: ${stats.okSpanShareOfFailedWindow === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindow * 100)}%`}`;
+  // DETAIL-65: the global failure-span-share-of-
+  // ok-window line re-bases DETAIL-23's global
+  // failed span on DETAIL-22's global ok span,
+  // rendered as a whole percent, or "none" with no
+  // usable ok window or no usable failed span —
+  // the mirror of DETAIL-64, so a session where
+  // failures stretched twice as long as successes
+  // reads that at a glance. A session with
+  // successes but no failures reads 0%, never
+  // "none". Raw ratio, never clamped: above 100%
+  // or below 0% means timestamps ran out of
+  // insertion order.
+  els.logStatsFailedSpanShareOfOkWindow.textContent =
+    `Failure-span share of success window: ${stats.failedSpanShareOfOkWindow === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindow * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
