@@ -1,10 +1,17 @@
-//! Crate `os-workspace` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-workspace` — Meta OS Rust rebuild, batch B19 (Milo).
 //!
-//! Batch B19 — Workspace & artifact store. Owner: Milo.
-//! Source files this batch ports:
-//! - `os/mos/artifact_store.py`
-//! - `os/mos/gitops.py`
+//! Workspace & artifact store:
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! - `os/mos/artifact_store.py` (OS-083): git-backed versioned
+//!   shared filesystem where dispatched jobs deposit work products.
+//! - `os/mos/gitops.py`: safe Git review/merge — workers never
+//!   push to main.
+//!
+//! The Python/Node originals stay the live fallback until this
+//! batch is PORTED — nothing here edits them. No bus post, no
+//! live Redis, no network: deposits are local files plus local
+//! git only.
+
+pub mod artifact_store;
+pub mod git;
+pub mod gitops;
