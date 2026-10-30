@@ -1,0 +1,7 @@
+wake-and-claim: PASS
+wrong-addressee: PASS
+awake-and-other-runtime: PASS
+dedupe-and-second-job: PASS
+no-mind-image-honesty: PASS
+malformed-and-immutable: PASS
+6/6 phases PASS

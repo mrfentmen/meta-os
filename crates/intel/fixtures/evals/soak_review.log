@@ -1,0 +1,21 @@
+PASS clean week reads clean with zero gaps -- verdict=clean gaps=[]
+PASS clean week counts 3 failures, 3 covered
+PASS all 7 days present in clean week
+PASS bug coverage counts as coverage
+PASS alert plus bug both listed for one failure
+PASS one uncovered failure is the one gap -- gaps=['f2']
+PASS gap week still counts 2 of 3 covered
+PASS partial journal names its missing days
+PASS orphan covers are reported, never counted
+PASS duplicate alert still counts as one coverage
+PASS malformed entries are skipped, never a crash
+PASS failure without a day is listed undated
+PASS undated uncovered failure is still a gap
+PASS empty journal is clean with zero failures
+PASS non-list journal reads as empty, never crashes
+PASS inputs never mutated
+PASS no Dale contact in report
+PASS no push import in module
+PASS brief lines name the gap and the verdict
+PASS brief lines for clean week say all 7 days present
+20 PASS, 0 FAIL
