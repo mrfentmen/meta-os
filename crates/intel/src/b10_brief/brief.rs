@@ -474,6 +474,33 @@ pub fn recovery_line(record: Option<&RecoveryRecord>) -> String {
     format!("{PREFIX}{} recovered: {}", usable.len(), parts.join("; "))
 }
 
+/// INT-027 follow-up: the Sources lines for a morning brief, from a
+/// stated list of source pointers (a lane file, an eval log, a fixture
+/// manifest), named verbatim and in order. A pointer is never guessed
+/// from a job title; the list is supplied by the caller that builds
+/// the brief snapshot. An absent list, an empty list, or a list with
+/// no usable entry returns no lines at all, so a brief without
+/// pointers renders no Sources section rather than a padded one, and
+/// older briefs keep their exact shape. The lines are plain lines,
+/// not bullets, so the BRF-007 budget trim never drops a source
+/// pointer ahead of a watch item, and they are redacted by the
+/// composer, not here. Pointers name locations, not dated facts, so
+/// they carry no age label. Python skips non-string entries; in Rust
+/// the caller passes string items, so that case is type-level, and
+/// empty strings are skipped here to match Python's filter.
+///
+/// `None` means the snapshot carries no `source_pointers` list.
+pub fn source_pointer_lines(pointers: Option<&[&str]>) -> Vec<String> {
+    match pointers {
+        None => Vec::new(),
+        Some(list) => list
+            .iter()
+            .filter(|s| !s.is_empty())
+            .map(|s| format!("Source: {s}"))
+            .collect(),
+    }
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -681,5 +708,19 @@ mod tests {
             recovery_line(Some(&mismatch)),
             "In-flight jobs recovered at this boot: recovery incomplete, the lease sweep reports 2 recovered but 1 job records were recovered"
         );
+    }
+
+    #[test]
+    fn source_pointers_verbatim_in_order_or_no_lines() {
+        assert_eq!(
+            source_pointer_lines(Some(&["plan/lanes/HANA.md", "intel/evals/log.md"])),
+            vec![
+                "Source: plan/lanes/HANA.md",
+                "Source: intel/evals/log.md",
+            ]
+        );
+        assert_eq!(source_pointer_lines(None), Vec::<String>::new());
+        assert_eq!(source_pointer_lines(Some(&[])), Vec::<String>::new());
+        assert_eq!(source_pointer_lines(Some(&[""])), Vec::<String>::new());
     }
 }
