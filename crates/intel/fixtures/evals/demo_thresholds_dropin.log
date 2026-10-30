@@ -1,0 +1,5 @@
+OS-038 demo thresholds drop-in check: drop-in shape, demo values, production untouched
+PASS: drop-in is [Service] + EnvironmentFile=/opt/relay/intel/metaos-demo.env, no ExecStart
+PASS: demo profile switches thresholds (stall 1, progress-stall 1, all others at production defaults)
+PASS: production unit has no EnvironmentFile; INT-021 tournament 3/3 clean (0.13s)
+OS-038: PASS -- drop-in switches the stall windows on the demo image; production untouched

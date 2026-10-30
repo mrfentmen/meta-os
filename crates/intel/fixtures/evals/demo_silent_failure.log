@@ -1,0 +1,6 @@
+demo_silent_failure drill: phase 1: worker claims job, posts exactly one progress note, zero alerts while healthy
+demo_silent_failure drill: phase 2: CUE at T0+120s — worker silent, presence dropped, one progress note on record
+demo_silent_failure drill: phase 3: tick inside the stall window yields zero alerts; no worker activity appears after the cue
+demo_silent_failure drill: phase 4: presence-stall alert names milo/7, last progress 601s ago; announcement line held, not posted
+demo_silent_failure drill: CUE CARD — shot 7: On cue, the staged worker posts one progress note, then nothing. No error. No message. (claim to cue: 120s fake-clock; progress notes: 1; stall alert presence-stall at last-progress age 601s under production thresholds — demo-profile timing is DEM-012/DEM-013, not measured here)
+demo_silent_failure drill: PASS

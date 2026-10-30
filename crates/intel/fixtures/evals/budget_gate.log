@@ -1,0 +1,5 @@
+budget_gate drill: PASS phase 1 — 70/100: no warning, claim granted
+budget_gate drill: PASS phase 2 — 80/100: one budget-warning alert (spark, 80 of 100), claim still granted
+budget_gate drill: PASS phase 3 — 100/100: no warning, claim held, job stays open, brief line reads: Spend: spark lane: 100 of 100 budget (0 remaining) — new claims held (snapshot time not reported)
+budget_gate drill: PASS phase 4 — unbudgeted and malformed entries: no warning, no hold, no crash
+budget_gate drill: PASS — warning at threshold, hold at cap, brief line names the hold

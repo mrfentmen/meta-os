@@ -1,0 +1,11 @@
+PASS 1 forced failure yields exactly one SYSTEM alert
+PASS 2 alert kind is system-failure, severity critical
+PASS 3 alert is SYSTEM, not a job alert: subjects the unit, no nick, no job
+PASS 4 same unit's two failure lines group into one alert with failure_count 2
+PASS 5 explanation quotes the failure and names the unit
+PASS 6 suggested fix points at journalctl -u and an operator restart, never a watchdog restart
+PASS 7 emit received the alert (the store-writer seat)
+PASS 8 alert validates as a WDG-010 store record
+PASS 9 system-failure severity is critical in the alert itself (not via the snapshot-detector table: journal watch is not a DETECTORS member, so the WDG-024 table lock in test_intel_watchdog.py must keep covering exactly the snapshot kinds)
+PASS 10 re-tick re-fires the same dedupe key only
+RESULT: PASS
