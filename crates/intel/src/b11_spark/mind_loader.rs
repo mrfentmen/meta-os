@@ -19,7 +19,7 @@ pub struct Launch {
 /// FNV-1a stand-in hasher documented as such: the Python uses sha256;
 /// this port hashes with the same file-walk order and hex encoding, and
 /// the Mac gate re-verifies with sha256. (Oddity noted, not redesigned:
-//! gate-2 must confirm hash equality against Python before PORTED.)
+/// gate-2 must confirm hash equality against Python before PORTED.)
 pub fn hash_tree(files: &[(String, Vec<u8>)]) -> String {
     let mut sorted = files.to_vec();
     sorted.sort_by(|a, b| a.0.cmp(&b.0));
