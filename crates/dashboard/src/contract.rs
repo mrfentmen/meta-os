@@ -12,6 +12,9 @@
 //! - §5 dispatch payloads (DSP-037 preview) + request-only approve
 //!   (DSH-038) + never-auto-post (DSP-040)
 //! - §6 alerts feed order (DSH-013, newest-first, id-stable)
+//! - DSH-014 alert lifecycle rules (WDG-014: open -> acknowledged
+//!   -> resolved, idempotent re-ack/re-resolve, refused ack on
+//!   resolved, unresolved-critical header count, write gate off)
 //! - §8 deep links (DSH-022), demo mode (DSH-028, exact `demo=1`),
 //!   today counters (DSH-032)
 //! - §9 error/empty states (DSH-021, per-source, independent panels)
@@ -511,6 +514,133 @@ pub fn is_nonce_hex(s: &str) -> bool {
     s.len() == 16
         && s.bytes()
             .all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+}
+
+/// DSH-014 alert lifecycle (WDG-014, mirrored from
+/// `os/intel/store.py`): open -> acknowledged -> resolved. The
+/// card HTML rendering and the Node driver halves of
+/// `test_dashboard_alert_lifecycle.py` read the fold-excluded
+/// viewer and stay exclusion-blocked; what is ported here is the
+/// transition rule the driver pins, checked against the same
+/// fixture values (alert:1 open critical, alert:2 acknowledged
+/// warning, alert:3 resolved info).
+
+/// One alert record, lifecycle fields only.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LifecycleAlert {
+    pub id: String,
+    pub severity: String,
+    pub status: Option<String>,
+    pub acknowledged_at: Option<i64>,
+    pub acknowledged_by: Option<String>,
+    pub resolved_at: Option<i64>,
+}
+
+/// WDG-014 status, legacy-safe: an explicit status wins when it is
+/// one of open/acknowledged/resolved; a pre-WDG-014 record derives
+/// it from timestamps (resolved_at -> resolved, acknowledged_at ->
+/// acknowledged, otherwise open).
+pub fn alert_lifecycle_status(a: &LifecycleAlert) -> &'static str {
+    if let Some(s) = a.status.as_deref() {
+        if matches!(s, "open" | "acknowledged" | "resolved") {
+            return match s {
+                "open" => "open",
+                "acknowledged" => "acknowledged",
+                _ => "resolved",
+            };
+        }
+    }
+    if a.resolved_at.is_some() {
+        "resolved"
+    } else if a.acknowledged_at.is_some() {
+        "acknowledged"
+    } else {
+        "open"
+    }
+}
+
+/// Outcome of an ack/resolve attempt, in the driver-visible words
+/// of `test_dashboard_alert_lifecycle.py`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum LifecycleResult {
+    Acknowledged(LifecycleAlert),
+    AlreadyAcknowledged,
+    RefusedResolved,
+    Resolved(LifecycleAlert),
+    AlreadyResolved,
+    NotFound,
+}
+
+fn find_alert_mut<'a>(
+    alerts: &'a mut [LifecycleAlert],
+    id: &str,
+) -> Option<&'a mut LifecycleAlert> {
+    alerts.iter_mut().find(|a| a.id == id)
+}
+
+/// WDG-014 ack: open -> acknowledged, stamping now and by. Re-ack
+/// is idempotent (stamp untouched); acking a resolved alert is
+/// refused; a missing id is not found. Mirrors
+/// `os/intel/store.py::acknowledge_alert` (None -> NotFound,
+/// ValueError on resolved -> RefusedResolved).
+pub fn acknowledge_alert(
+    alerts: &mut [LifecycleAlert],
+    id: &str,
+    now: i64,
+    by: &str,
+) -> LifecycleResult {
+    let Some(a) = find_alert_mut(alerts, id) else {
+        return LifecycleResult::NotFound;
+    };
+    match alert_lifecycle_status(a) {
+        "resolved" => LifecycleResult::RefusedResolved,
+        "acknowledged" => LifecycleResult::AlreadyAcknowledged,
+        _ => {
+            a.status = Some("acknowledged".to_string());
+            a.acknowledged_at = Some(now);
+            a.acknowledged_by = Some(by.to_string());
+            LifecycleResult::Acknowledged(a.clone())
+        }
+    }
+}
+
+/// WDG-014 resolve: open/acknowledged -> resolved, stamping now
+/// and keeping any acknowledged_at/by, so the record shows the
+/// full walk. Re-resolve is idempotent; a missing id is not
+/// found. Mirrors `os/intel/store.py::resolve_alert`.
+pub fn resolve_alert(
+    alerts: &mut [LifecycleAlert],
+    id: &str,
+    now: i64,
+) -> LifecycleResult {
+    let Some(a) = find_alert_mut(alerts, id) else {
+        return LifecycleResult::NotFound;
+    };
+    if alert_lifecycle_status(a) == "resolved" {
+        return LifecycleResult::AlreadyResolved;
+    }
+    a.status = Some("resolved".to_string());
+    a.resolved_at = Some(now);
+    LifecycleResult::Resolved(a.clone())
+}
+
+/// Header critical count (DSH-014): only unresolved criticals
+/// count — a resolved critical leaves the count.
+pub fn unresolved_critical_count(alerts: &[LifecycleAlert]) -> usize {
+    alerts
+        .iter()
+        .filter(|a| {
+            a.severity.to_ascii_lowercase() == "critical"
+                && alert_lifecycle_status(a) != "resolved"
+        })
+        .count()
+}
+
+/// DSH-014 / spec §0: the live viewer write is gated off until
+/// Dale's viewer posting decision lands — the buttons ship
+/// disabled with this note, and no live write path exists.
+pub fn alert_write_enabled() -> (bool, &'static str) {
+    (false, "posting is off for this build")
 }
 
 /// Keyless rename log entry (signing test): v=1, cmd=rename, args,

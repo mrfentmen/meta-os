@@ -12,10 +12,17 @@
 //! fold-excluded crew-board.html), the OS-084 JSON-string-field
 //! parse, the live attach() cross-check, and the signing
 //! `admin.py` verify cross-check stay exclusion-blocked.
-//! test_dashboard_alert_lifecycle,
 //! test_dashboard_bus_index_identity,
 //! test_dashboard_palette, test_dashboard_screenshots,
 //! test_intel_brief_dashboard_consistency.
+//! Split (DSH-014, tests/b15_parity.rs below):
+//! test_dashboard_alert_lifecycle — the WDG-014 transition rules
+//! (status derivation, ack/resolve outcomes, unresolved-critical
+//! count, write gate) are ported against the file's fixture
+//! values; the Node-driver halves, the bus/index identical check,
+//! and the HTML rendering halves (resolved collapse rendering,
+//! disabled-button HTML, source-text checks over bus.html) stay
+//! exclusion-blocked: they read the fold-excluded viewer.
 //! Split — spec-note halves ported in tests/b15_spec_notes.rs, the
 //! viewer/Node halves below stay exclusion-blocked:
 //! test_dashboard_brief_sections (viewer half),
@@ -221,6 +228,123 @@ fn smoke_check_sections() -> Vec<String> {
 // the carried DASHBOARD_SPEC.md fixture (byte-identical to os/docs/).
 // The other 4 cases read fold-excluded bus.html and stay
 // exclusion-blocked (see the file header).
+
+// DSH-014 partial — test_dashboard_alert_lifecycle.py, rule half.
+// Fixture values from the file's Node driver: alert:1 open
+// critical, alert:2 acknowledged warning (acked by pax),
+// alert:3 resolved info. The driver/HTML halves stay blocked
+// (see the file header).
+
+fn lifecycle_fixtures() -> Vec<LifecycleAlert> {
+    vec![
+        LifecycleAlert {
+            id: "alert:1".into(),
+            severity: "critical".into(),
+            status: None,
+            acknowledged_at: None,
+            acknowledged_by: None,
+            resolved_at: None,
+        },
+        LifecycleAlert {
+            id: "alert:2".into(),
+            severity: "warning".into(),
+            status: Some("acknowledged".into()),
+            acknowledged_at: Some(1699999500),
+            acknowledged_by: Some("pax".into()),
+            resolved_at: None,
+        },
+        LifecycleAlert {
+            id: "alert:3".into(),
+            severity: "info".into(),
+            status: None,
+            acknowledged_at: None,
+            acknowledged_by: None,
+            resolved_at: Some(1699998500),
+        },
+    ]
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_feed_rows_carry_wdg014_status() {
+    let alerts = lifecycle_fixtures();
+    let rows: Vec<&str> =
+        alerts.iter().map(alert_lifecycle_status).collect();
+    assert_eq!(rows, vec!["open", "acknowledged", "resolved"]);
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_ack_persists_and_idempotent() {
+    let mut alerts = lifecycle_fixtures();
+    let ack = acknowledge_alert(&mut alerts, "alert:1", 1700003700, "rowan");
+    let row = match ack {
+        LifecycleResult::Acknowledged(row) => row,
+        other => panic!("ack must apply, got {other:?}"),
+    };
+    assert_eq!(row.status.as_deref(), Some("acknowledged"));
+    assert_eq!(row.acknowledged_at, Some(1700003700));
+    assert_eq!(row.acknowledged_by.as_deref(), Some("rowan"));
+    // Re-ack is idempotent, not re-stamped.
+    assert_eq!(
+        acknowledge_alert(&mut alerts, "alert:1", 1700003701, "rowan"),
+        LifecycleResult::AlreadyAcknowledged
+    );
+    assert_eq!(alerts[0].acknowledged_at, Some(1700003700));
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_resolved_refuses_ack() {
+    let mut alerts = lifecycle_fixtures();
+    assert_eq!(
+        acknowledge_alert(&mut alerts, "alert:3", 1700003700, "rowan"),
+        LifecycleResult::RefusedResolved
+    );
+    assert_eq!(
+        resolve_alert(&mut alerts, "alert:3", 1700003700),
+        LifecycleResult::AlreadyResolved
+    );
+    assert_eq!(
+        resolve_alert(&mut alerts, "nope", 1700003700),
+        LifecycleResult::NotFound
+    );
+    assert_eq!(
+        acknowledge_alert(&mut alerts, "nope", 1700003700, "rowan"),
+        LifecycleResult::NotFound
+    );
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_resolve_unblocks_header() {
+    let mut alerts = lifecycle_fixtures();
+    assert_eq!(unresolved_critical_count(&alerts), 1);
+    let r = resolve_alert(&mut alerts, "alert:1", 1700003800);
+    assert!(matches!(r, LifecycleResult::Resolved(_)));
+    // The resolved critical leaves the header count; the
+    // acknowledged warning was never in it.
+    assert_eq!(unresolved_critical_count(&alerts), 0);
+    // The resolved record keeps no ack stamp (it was never acked).
+    assert_eq!(alerts[0].acknowledged_at, None);
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_legacy_record_derives_status() {
+    let legacy = LifecycleAlert {
+        id: "alert:0".into(),
+        severity: "critical".into(),
+        status: None,
+        acknowledged_at: Some(1700001000),
+        acknowledged_by: None,
+        resolved_at: None,
+    };
+    assert_eq!(alert_lifecycle_status(&legacy), "acknowledged");
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_live_write_gate_off() {
+    assert_eq!(
+        alert_write_enabled(),
+        (false, "posting is off for this build")
+    );
+}
 
 #[test]
 fn test_dashboard_accessibility_palette_contrast_meets_aa() {
