@@ -38,11 +38,11 @@ case!(test_os_journal_watch, ["systemd failure fires", "err priority fires", "he
 pub mod test_os_livebuild;
 pub mod test_os_manifest;
 pub mod test_os_overseer_unit;
-case!(test_os_packer, ["packer template"], ["live packer build"]);
+pub mod test_os_packer;
 case!(test_os_power_cut, ["three runs pass", "recovers job and reports", "control reboot requeues nothing", "drill log names runs"], ["intel power-cut drill port absent on main (Hana unmerged)", "live reboot + lease expiry"]);
-case!(test_os_stackbake, ["stack bake"], []);
+pub mod test_os_stackbake;
 pub mod test_os_target_unit;
-case!(test_os_tree, ["tree"], []);
+pub mod test_os_tree;
 case!(test_os_uplink, ["uplink"], ["live uplink"]);
 case!(test_pomodoro, ["pomodoro parse", "schedule"], []);
 case!(test_status, ["status shape"], []);
