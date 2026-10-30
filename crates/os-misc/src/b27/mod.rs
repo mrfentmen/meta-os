@@ -14,3 +14,11 @@ pub const T016_FILES: &[&str] = &[
     "os/worlds/dep/PACK.md",
     "os/worlds/dep/pack.json",
 ];
+
+/// T017 verify-carried: doe + dsny packs (byte-identical, left in place).
+pub const T017_FILES: &[&str] = &[
+    "os/worlds/doe/PACK.md",
+    "os/worlds/doe/pack.json",
+    "os/worlds/dsny/PACK.md",
+    "os/worlds/dsny/pack.json",
+];
