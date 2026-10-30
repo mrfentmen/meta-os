@@ -11,6 +11,7 @@ import { SessionLog } from "./log.js";
 import { PRODUCT_BY_ID, isProductId } from "./products.js";
 import { ContactsStore } from "./contacts.js";
 import { ignisLookAlikeScoreboard } from "./ignis-scoreboard.js";
+import { ignisReportedConfidence } from "./ignis-confidence.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -131,6 +132,7 @@ const els = {
   logStatsFailedSpanShareOfOkWindowByProduct: $("log-stats-failed-span-share-of-ok-window-by-product"),
   logStatsOkSpanShareOfFailedWindowByProduct: $("log-stats-ok-span-share-of-failed-window-by-product"),
   ignisScoreboard: $("ignis-scoreboard"),
+  ignisConfidence: $("ignis-confidence"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1171,6 +1173,16 @@ function updateLogStats() {
   const scoreboard = ignisLookAlikeScoreboard(log.entries());
   els.ignisScoreboard.textContent =
     `Look-alikes — Steam or fog ${scoreboard.steamOrFog} · Flame-like lighting ${scoreboard.flameLikeLighting} | Hazards — Visible smoke ${scoreboard.visibleSmoke} · Visible flame ${scoreboard.visibleFlame} | Other — Obscured or distant hazard ${scoreboard.obscuredOrDistant} · No hazard visible ${scoreboard.noHazard} · Indeterminate ${scoreboard.indeterminate}`;
+  // IGNIS-ONEOFONE-2: the reported-confidence spread re-reads the
+  // same log entries — no new stats field, no new data — and renders
+  // the Ignis-only panel from recorded observation confidences
+  // alone. Bands group reported values; they never re-score an
+  // assessment or collapse it to alarm / no-alarm. A held session
+  // stays zeros, and the panel itself is hidden under Vigiles and
+  // Sanitas by CSS, so this line only ever shows under Ignis.
+  const confidence = ignisReportedConfidence(log.entries());
+  els.ignisConfidence.textContent =
+    `High (≥ 0.8) ${confidence.high} · Medium (≥ 0.5) ${confidence.medium} · Low (< 0.5) ${confidence.low} · Unreported ${confidence.unreported}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

@@ -810,6 +810,18 @@ body[data-product="ignis"] .panel h2 {
 body[data-product="ignis"] .ignis-scoreboard-panel {
   display: block;
 }
+/* IGNIS-ONEOFONE-2 (Del's one-of-one bar, Oct 29): the Ignis
+   reported-confidence panel shows only under Ignis, same rule as
+   the scoreboard above — under Vigiles or Sanitas it could never
+   show that product's data, so it stays hidden rather than reading
+   zeros for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-confidence-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-confidence-panel {
+  display: block;
+}
 
 /* OPS-CONSOLE-3 (Del UI direction, Oct 29): second web-first
    dispatch/ops-console piece for Ignis, extending OPS-CONSOLE-1's
