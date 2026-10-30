@@ -19,6 +19,7 @@ import { ignisReviewTriage } from "./ignis-review-triage.js";
 import { ignisObservationCategories } from "./ignis-observation-categories.js";
 import { ignisModelAttribution } from "./ignis-model-attribution.js";
 import { ignisFootageSource } from "./ignis-footage-source.js";
+import { ignisScenarioBreakdown } from "./ignis-scenario-breakdown.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -147,6 +148,7 @@ const els = {
   ignisObservationCategories: $("ignis-observation-categories"),
   ignisModelAttribution: $("ignis-model-attribution"),
   ignisFootageSource: $("ignis-footage-source"),
+  ignisScenarioBreakdown: $("ignis-scenario-breakdown"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1274,6 +1276,19 @@ function updateLogStats() {
   const footage = ignisFootageSource(log.entries());
   els.ignisFootageSource.textContent =
     `Assessments ${footage.total} · Live camera ${footage.liveCamera} · Still image ${footage.stillImage} · Recorded video ${footage.recordedVideo} · Unknown source ${footage.unknown}`;
+  // IGNIS-ONEOFONE-10: the scenario breakdown in honest form —
+  // the recorded ok Ignis assessments split by the scenario label
+  // each entry itself was stamped with at submit time. Labels are
+  // open-ended, so the line lists them sorted for a stable read,
+  // with unlabeled last. A held session stays zeros, and the panel
+  // itself is hidden under Vigiles and Sanitas by CSS, so this line
+  // only ever shows under Ignis.
+  const scenarios = ignisScenarioBreakdown(log.entries());
+  const scenarioParts = Object.keys(scenarios.byScenario)
+    .sort()
+    .map((label) => `${label} ${scenarios.byScenario[label]}`);
+  els.ignisScenarioBreakdown.textContent =
+    [`Assessments ${scenarios.total}`, ...scenarioParts, `Unlabeled ${scenarios.unlabeled}`].join(" · ");
 }
 
 // Native parity: the native timeline's empty state says analysis is
