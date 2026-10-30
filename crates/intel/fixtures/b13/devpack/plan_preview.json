@@ -1,0 +1,92 @@
+{
+  "budgets": {
+    "jobs": 5,
+    "max_attempts_total": 15
+  },
+  "jobs": [
+    {
+      "accept": [
+        "file-exists: intel/status.py"
+      ],
+      "deps": [],
+      "files": [
+        "intel/status.py"
+      ],
+      "key": "module",
+      "max_attempts": 3,
+      "req": [],
+      "title": "Build intel status module"
+    },
+    {
+      "accept": [
+        "file-exists: bus.html"
+      ],
+      "deps": [
+        "module"
+      ],
+      "files": [
+        "bus.html"
+      ],
+      "key": "panel",
+      "max_attempts": 3,
+      "req": [],
+      "title": "Add viewer panel stub for status"
+    },
+    {
+      "accept": [
+        "file-exists: tests/test_intel_status.py"
+      ],
+      "deps": [
+        "module"
+      ],
+      "files": [
+        "tests/test_intel_status.py"
+      ],
+      "key": "tests",
+      "max_attempts": 3,
+      "req": [],
+      "title": "Add tests for the status module"
+    },
+    {
+      "accept": [
+        "file-exists: docs/status-page.md"
+      ],
+      "deps": [
+        "panel",
+        "tests"
+      ],
+      "files": [
+        "docs/status-page.md"
+      ],
+      "key": "docs",
+      "max_attempts": 3,
+      "req": [],
+      "title": "Document the status page"
+    },
+    {
+      "accept": [
+        "file-exists: intel/notes/status-review.md"
+      ],
+      "deps": [
+        "docs"
+      ],
+      "files": [
+        "intel/notes/status-review.md"
+      ],
+      "key": "review",
+      "max_attempts": 3,
+      "req": [],
+      "title": "Review the status page feature"
+    }
+  ],
+  "posting_order": [
+    "module",
+    "panel",
+    "tests",
+    "docs",
+    "review"
+  ],
+  "room": "build-relay-intel",
+  "source": "hackathon/demo_goal_plan.json",
+  "summary": "Build the status page: module, panel, tests, docs, review."
+}

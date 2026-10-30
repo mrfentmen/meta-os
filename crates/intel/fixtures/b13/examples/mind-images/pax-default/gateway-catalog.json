@@ -1,0 +1,1 @@
+{"notes":"Declared catalog for the example bundle only. It is not a live gateway catalog: the OS-058/059 gateway bake replaces it when it lands, and tool grants must then resolve against that catalog instead.","servers":["jobs","briefs","alerts"]}

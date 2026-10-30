@@ -1,0 +1,1 @@
+{"actions":["jobs.post","jobs.read","briefs.read","alerts.read"],"identity":"pax","notes":"Coordinator grant for the example bundle: post and read jobs, read briefs and alerts. No spend, no bus post, no key handling."}
