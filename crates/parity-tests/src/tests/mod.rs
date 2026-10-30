@@ -20,7 +20,7 @@ pub mod test_boss_trigger;
 pub mod test_bus_rename;
 pub mod test_bustools_parity;
 case!(test_clip, ["clipboard fallback", "paste verify"], ["live clipboard tools"]);
-case!(test_fdny_par_clock, ["par clock"], []);
+pub mod test_fdny_par_clock;
 case!(test_os021_update, ["update apply", "rollback swap"], []);
 case!(test_os058_gateway_unit, ["unit shape"], []);
 case!(test_os059_gateway_bake, ["bake marker"], []);
