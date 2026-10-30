@@ -12,7 +12,7 @@
 //! busy-fixture shape constants (22 jobs: 10 claimed, 6 open, 3
 //! blocked, 3 done), the worst-case math on the pinned inputs,
 //! and the check's under-cap rule (worst single busy brief under
-//! the $75 half and $150 credit, both variants).
+//! the $75 half and the $150 credit, both variants).
 //!
 //! CARRIED (pending Hana B09/B10/B11, never faked green):
 //! - test_check_passes_with_exact_totals
