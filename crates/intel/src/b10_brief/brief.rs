@@ -136,6 +136,61 @@ pub fn trim_to_budget(text: &str, budget: usize) -> String {
     }
 }
 
+/// BRF-007 prompt files per brief kind (v1), and the v2 files
+/// (BRF-019): only morning and onjoin have a v2; ondemand has none
+/// on purpose — a v2 request for ondemand gets no file, never a
+/// silent v1 fallback under a v2 label.
+pub const BRIEF_PROMPT_FILES: &[(&str, &str)] = &[
+    ("morning", "brief_morning.md"),
+    ("onjoin", "brief_onjoin.md"),
+    ("ondemand", "brief_ondemand.md"),
+];
+pub const BRIEF_PROMPT_V2_FILES: &[(&str, &str)] = &[
+    ("morning", "brief_morning_v2.md"),
+    ("onjoin", "brief_onjoin_v2.md"),
+];
+
+/// BRF-007 follow-up: path of the prompt file for a kind.
+/// `version` is "v1" or "v2"; anything else has no file, as do
+/// unknown kinds and (for v2) ondemand. Those cases return None
+/// instead of guessing a filename that does not exist.
+/// `prompts_dir` overrides the carried fixtures dir; with None the
+/// base is the crate's carried `fixtures/b10/prompts` (the Python
+/// default is the prompts dir next to `brief.py`).
+pub fn brief_prompt_path(
+    kind: &str,
+    prompts_dir: Option<&str>,
+    version: &str,
+) -> Option<String> {
+    let files = match version {
+        "v1" => BRIEF_PROMPT_FILES,
+        "v2" => BRIEF_PROMPT_V2_FILES,
+        _ => return None,
+    };
+    let name = files.iter().find(|(k, _)| *k == kind)?.1;
+    let base = match prompts_dir {
+        Some(d) => d.to_string(),
+        None => format!("{}/fixtures/b10/prompts", env!("CARGO_MANIFEST_DIR")),
+    };
+    let base = base.trim_end_matches('/');
+    Some(format!("{base}/{name}"))
+}
+
+/// BRF-007 follow-up: text of the prompt file for a kind.
+/// Returns "" for an unknown kind, an unknown version, or an
+/// unreadable file, never raising, so a missing prompt file can
+/// never fail a brief: the composer then sends no system text.
+pub fn load_brief_prompt(
+    kind: &str,
+    prompts_dir: Option<&str>,
+    version: &str,
+) -> String {
+    match brief_prompt_path(kind, prompts_dir, version) {
+        Some(path) => std::fs::read_to_string(path).unwrap_or_default(),
+        None => String::new(),
+    }
+}
+
 /// Trim snapshot text to a char budget without inventing content.
 pub fn cap_snapshot_window(text: &str, budget: usize) -> String {
     if text.len() <= budget {

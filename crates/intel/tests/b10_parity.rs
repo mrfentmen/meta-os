@@ -295,3 +295,80 @@ use intel::b10_brief::window::{message_parts, window_line, RawMessage, SourceWin
         (String::new(), "plain hello".to_string())
     );
 }
+
+// ---- B10 T190 continued: brief prompt path + load (BRF-007/019) ----
+// Mirrors os/intel/brief.py brief_prompt_path / load_brief_prompt
+// against the carried fixtures in crates/intel/fixtures/b10/prompts
+// (test_intel_brief_prompt_wiring.py + test_intel_brief_prompt_version.py).
+// The generate_brief halves that feed the prompt to a Spark client
+// stay with the B11 client trait; only path/load are ported here.
+
+#[test]
+fn test_intel_brief_prompt_each_kind_loads_its_v1_file() {
+    let dir = "fixtures/b10/prompts";
+    for (kind, heading, file) in [
+        ("morning", "Morning brief prompt", "brief_morning.md"),
+        ("onjoin", "On-join brief prompt", "brief_onjoin.md"),
+        ("ondemand", "On-demand brief prompt", "brief_ondemand.md"),
+    ] {
+        let text = brief::load_brief_prompt(kind, Some(dir), "v1");
+        assert!(text.contains(heading), "{kind} must load its v1 file");
+        let path = brief::brief_prompt_path(kind, Some(dir), "v1").unwrap();
+        assert!(path.ends_with(file), "{kind} path must end in {file}");
+        assert_eq!(path.rsplit('/').next().unwrap(), file);
+    }
+}
+
+#[test]
+fn test_intel_brief_prompt_v1_default_and_v2_files() {
+    // Default dir (None) is the carried fixtures dir, like Python's
+    // default prompts dir next to brief.py.
+    let v1 = brief::load_brief_prompt("morning", None, "v1");
+    assert!(v1.contains("Morning brief prompt"));
+    assert!(v1.contains("v1 (BRF-001)"));
+    let v2 = brief::load_brief_prompt("morning", None, "v2");
+    assert!(v2.contains("Morning brief prompt"));
+    assert!(v2.contains("v2 (BRF-019)"));
+    let onjoin_v2 = brief::load_brief_prompt("onjoin", None, "v2");
+    assert!(onjoin_v2.contains("On-join brief prompt"));
+    assert!(onjoin_v2.contains("v2 (BRF-019)"));
+    assert_eq!(
+        brief::brief_prompt_path("morning", None, "v2")
+            .unwrap()
+            .rsplit('/')
+            .next()
+            .unwrap(),
+        "brief_morning_v2.md"
+    );
+    assert_eq!(
+        brief::brief_prompt_path("onjoin", None, "v2")
+            .unwrap()
+            .rsplit('/')
+            .next()
+            .unwrap(),
+        "brief_onjoin_v2.md"
+    );
+}
+
+#[test]
+fn test_intel_brief_prompt_v2_ondemand_loads_nothing_no_fallback() {
+    // Ondemand has no v2 file: the caller gets "", not a silent
+    // v1 text under a v2 label.
+    assert_eq!(brief::load_brief_prompt("ondemand", None, "v2"), "");
+    assert_eq!(brief::brief_prompt_path("ondemand", None, "v2"), None);
+}
+
+#[test]
+fn test_intel_brief_prompt_unknown_kind_version_and_missing_dir() {
+    assert_eq!(brief::load_brief_prompt("morning", None, "v3"), "");
+    assert_eq!(brief::brief_prompt_path("morning", None, "v3"), None);
+    assert_eq!(brief::load_brief_prompt("nope", None, "v2"), "");
+    assert_eq!(brief::brief_prompt_path("nope", None, "v2"), None);
+    assert_eq!(brief::load_brief_prompt("nope", None, "v1"), "");
+    assert_eq!(brief::brief_prompt_path("nope", None, "v1"), None);
+    // A missing directory loads nothing and never raises.
+    assert_eq!(
+        brief::load_brief_prompt("morning", Some("/nonexistent-prompts-dir"), "v1"),
+        ""
+    );
+}
