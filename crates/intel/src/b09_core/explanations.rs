@@ -67,7 +67,7 @@ pub fn render(key: &str, fields: &HashMap<String, String>) -> Result<(String, St
         .ok_or_else(|| format!("unknown template: {key}"))?;
     // dead-dep special: blocking_note defaults to "" then formats.
     let mut f = fields.clone();
-    if *key == "dead-dep" && !f.contains_key("blocking_note") {
+    if key == "dead-dep" && !f.contains_key("blocking_note") {
         f.insert("blocking_note".to_string(), String::new());
     }
     Ok((fill(expl, &f)?, fill(fix, &f)?))

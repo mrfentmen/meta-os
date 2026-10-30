@@ -175,7 +175,7 @@ fn parse_grant_json(text: &str, source: &str) -> Result<Grant, String> {
         if let Some(q2) = text[s..].find('"') {
             let key = &text[s..s + q2];
             let after = text[s + q2 + 1..].trim_start();
-            if after.starts_with(':') && !GRANT_KEYS.contains(&key) && key.chars().all(|c| c.is_ascii_alphanumeric() || c == "_-") {
+            if after.starts_with(':') && !GRANT_KEYS.contains(&key) && key.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-') {
                 // skip JSON string values like identity value
                 if key != "milo" && key != "crew/milo/" {
                     extra.push(key.to_string());

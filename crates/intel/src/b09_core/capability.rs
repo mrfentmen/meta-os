@@ -95,7 +95,13 @@ pub fn check_action(
     if !ACTIONS.contains(&action) {
         return None;
     }
-    let g = grant?;
+    let g = match grant {
+        Some(g) => g,
+        None => {
+            let id = identity_override.unwrap_or("").to_string();
+            return Some(refused(&id, action, subject.map(str::to_string), None, "no capability grant on file"));
+        }
+    };
     if g.identity.is_empty() {
         let id = identity_override.unwrap_or("").to_string();
         return Some(refused(&id, action, subject.map(str::to_string), None, "no capability grant on file"));

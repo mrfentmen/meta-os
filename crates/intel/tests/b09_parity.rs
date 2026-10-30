@@ -42,7 +42,7 @@ fn job(id: &str, a: i64, m: i64) -> gate::JobRecord {
     assert!(!approval_granted(false, false, false));
     assert!(approval_granted(false, true, false));
 }
-#[test] fn test_intel_cursor_maps_ingest paging() {
+#[test] fn test_intel_cursor_maps_ingest_paging() {
     use intel::b09_core::ingest::*;
     let mut s = Vec::new();
     store_messages(&mut s, vec![Message { id: "a".into(), room: "main".into(), ts: 1, body: "b".into() }]);
