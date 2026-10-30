@@ -124,6 +124,7 @@ const els = {
   logStatsEntrySpanShareOfOkWindow: $("log-stats-entry-span-share-of-ok-window"),
   logStatsEntrySpanShareOfFailedWindow: $("log-stats-entry-span-share-of-failed-window"),
   logStatsEntrySpanShareOfOwnOkWindowByProduct: $("log-stats-entry-span-share-of-own-ok-window-by-product"),
+  logStatsEntrySpanShareOfOwnFailedWindowByProduct: $("log-stats-entry-span-share-of-own-failed-window-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1070,6 +1071,23 @@ function updateLogStats() {
   // insertion order.
   els.logStatsEntrySpanShareOfOwnOkWindowByProduct.textContent =
     `Entry-span share of that product's own success window by product: Vigiles ${stats.entrySpanShareOfOwnOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOwnOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfOwnOkWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.sanitas * 100)}%`}`;
+  // DETAIL-69: the per-product entry-span-share-
+  // of-that-product's-own-failure-window line re-bases
+  // DETAIL-17's per-product entry spans on each
+  // product's own DETAIL-20 failed span, rendered as whole
+  // percents, or "none" per product with no usable own
+  // failure window or no usable own entry timestamp
+  // pair — the mirror of DETAIL-68, the within-product
+  // mirror of DETAIL-67, so a product whose recording
+  // ran twice everything it itself failed across reads
+  // 200% whatever its share of the session. A product
+  // whose every entry failed reads 100%, and other
+  // products' entries move no share. Raw ratios, never
+  // clamped: above 100% is the normal case, below
+  // 100% or below 0% means timestamps ran out of
+  // insertion order.
+  els.logStatsEntrySpanShareOfOwnFailedWindowByProduct.textContent =
+    `Entry-span share of that product's own failure window by product: Vigiles ${stats.entrySpanShareOfOwnFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOwnFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfOwnFailedWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
