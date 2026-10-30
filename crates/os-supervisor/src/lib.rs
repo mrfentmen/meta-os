@@ -1,47 +1,46 @@
-//! Crate `os-supervisor` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-supervisor` - Meta OS Rust rebuild, batch B21 (Milo).
 //!
-//! Batch B21 — Supervisor & watchdog. Owner: Milo.
-//! Source files this batch ports:
-//! - `os/intel/drills/kill_worker.py`
-//! - `os/intel/drills/watchman_boot.py`
-//! - `os/intel/drills/watchman_bridge.py`
-//! - `os/intel/drills/watchman_bridge_tick.py`
-//! - `os/intel/drills/watchman_cycle.py`
-//! - `os/intel/drills/watchman_loop.py`
-//! - `os/intel/drills/watchman_runner.py`
-//! - `os/intel/drills/watchman_service.py`
-//! - `os/intel/drills/watchman_service_cli.py`
-//! - `os/intel/drills/watchman_watch.py`
-//! - `os/intel/e2e_watchdog_surfaces.py`
-//! - `os/intel/thresholds.py`
-//! - `os/intel/watchdog.py`
-//! - `os/intel/watchdog_load_check.py`
-//! - `os/intel/watchman_boot.py`
-//! - `os/intel/watchman_bridge.py`
-//! - `os/intel/watchman_cycle.py`
-//! - `os/intel/watchman_loop.py`
-//! - `os/intel/watchman_runner.py`
-//! - `os/intel/watchman_service.py`
-//! - `os/intel/watchman_watch.py`
-//! - `os/mos/overseer.py`
-//! - `os/mos/reconcile.py`
-//! - `os/os/watchman/relay_watchman.py`
-//! - `os/tests/test_intel_e2e_watchdog_surfaces.py`
-//! - `os/tests/test_intel_watchdog.py`
-//! - `os/tests/test_intel_watchdog_load.py`
-//! - `os/tests/test_intel_watchdog_service.py`
-//! - `os/tests/test_intel_watchman_boot.py`
-//! - `os/tests/test_intel_watchman_bridge.py`
-//! - `os/tests/test_intel_watchman_bridge_tick.py`
-//! - `os/tests/test_intel_watchman_cycle.py`
-//! - `os/tests/test_intel_watchman_loop.py`
-//! - `os/tests/test_intel_watchman_runner.py`
-//! - `os/tests/test_intel_watchman_service.py`
-//! - `os/tests/test_intel_watchman_service_cli.py`
-//! - `os/tests/test_intel_watchman_service_unit.py`
-//! - `os/tests/test_intel_watchman_watch.py`
-//! - `os/tests/test_os_watchman.py`
+//! Supervisor and watchdog:
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! - `os/intel/thresholds.py` (FND-030/WDG-018/WDG-026)
+//! - `os/intel/watchdog.py` (WDG-001..WDG-009, WDG-012..WDG-017,
+//!   WDG-024..WDG-026, WDG-028, INT-010, OS-034, OS-037)
+//! - `os/intel/watchman_*.py` (OS-122 service loop, OS-129 boot
+//!   verification)
+//! - `os/intel/drills/kill_worker.py`, `watchman_*.py` drills,
+//!   `os/intel/e2e_watchdog_surfaces.py` (stages the supervisor
+//!   owns; dashboard surface needs the excluded bus.html and is
+//!   marked exclusion-blocked)
+//! - `os/mos/overseer.py`, `os/mos/reconcile.py` (dispatch,
+//!   verify, recover over an injected backend)
+//! - `os/os/watchman/relay_watchman.py` (OS-118 resident bell)
+//!
+//! The Python/Node originals stay the live fallback until this
+//! batch is PORTED - nothing here edits them. The alert store
+//! writer (`intel/store.py`, Hana B09), the brief composers
+//! (`intel/brief.py`, Hana B10), the Spark client (`intel/*`,
+//! Hana B11), and the push sender (Hana B10, never called here)
+//! are carried as seams: this crate ports the exact detector,
+//! judge, loop, and lifecycle behavior B21's tests pin, with the
+//! canonical home named in each module.
+
+pub mod alert_store;
+pub mod backend;
+pub mod budget_gate;
+pub mod drills;
+pub mod drills_watchman;
+pub mod watchdog_detectors;
+pub mod explanations;
+pub mod overseer;
+pub mod push_lite;
+pub mod reconcile;
+pub mod thresholds;
+pub mod watchdog;
+pub mod watchman;
+pub mod watchman_boot;
+pub mod watchman_bridge;
+pub mod watchman_cycle;
+pub mod watchman_loop;
+pub mod watchman_runner;
+pub mod watchman_service;
+pub mod watchman_watch;
