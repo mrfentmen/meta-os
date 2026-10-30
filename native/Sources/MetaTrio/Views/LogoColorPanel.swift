@@ -57,6 +57,19 @@ import SwiftUI
 // treatment the still-image and video intros carry. Heading,
 // presets, picker, value lines, slider, pause button, and the
 // large-logo note are untouched.
+// LOGO-NATIVE-6 (Del direction, Oct 30): the preset swatches gain
+// their hover names, the native counterpart to the web swatches'
+// title attributes. Until now a swatch was only a colored circle:
+// VoiceOver heard its name through the accessibility label, but a
+// sighted Mac user hovering a circle got no name at all, while a
+// web user hovering the same swatch reads its title (Meta blue,
+// Cyan, and so on). Now each preset button carries .help with its
+// own preset name, so the hover tooltip names the color the
+// button sets. The name comes from the preset itself, the same
+// source as the accessibility label, so the two can never drift
+// apart. Heading, intro, picker, value lines, slider, pause
+// button, pause spoken state, and the large-logo note are
+// untouched.
 
 private struct LogoColorPanel: View {
     @AppStorage("meta-trio-logo-color") private var customHex: String = ""
@@ -124,6 +137,7 @@ private struct LogoColorPanel: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel(preset.name)
                         .accessibilityAddTraits(customHex.lowercased() == preset.hex ? .isSelected : [])
+                        .help(preset.name)
                     }
                 }
                 ColorPicker("Custom logo color", selection: pickerBinding)
