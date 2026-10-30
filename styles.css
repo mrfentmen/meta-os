@@ -895,3 +895,50 @@ body[data-product="ignis"] .mono-block {
   border: 1px solid rgba(217, 43, 43, 0.4);
   background: rgba(0, 0, 0, 0.25);
 }
+
+/* OPS-CONSOLE-6 (Del UI direction, Oct 29): third web-first
+   dispatch/ops-console piece, extending the direction Milo's
+   Sanitas pass set and OPS-CONSOLE-1/3 carried to Ignis, to the
+   last product without it — Vigiles, in Vigiles blue. Panel
+   headings become console section labels — uppercase mono with
+   wide tracking and a blue accent tick — scoped to
+   body[data-product="vigiles"] only, so Ignis and Sanitas are
+   untouched. Size and weight deliberately stay at the base
+   15px/700: the base .panel h2 rule still owns those, so native
+   parity holds and the existing web-contract tests keep passing.
+   Subheads widen from the base 0.05em to 0.08em console tracking
+   (still below the h2's 0.12em, so heading hierarchy holds; size,
+   weight, and color stay at the base rule). Status lines read in
+   mono with 0.02em tracking — font and tracking only, never a
+   color change, so product blue stays an accent and never becomes
+   a status color. Primary buttons sharpen to a 3px radius,
+   matching the Sanitas and Ignis console buttons. The
+   latest-assessment readout frames in Vigiles blue at 0.4 over a
+   dark 0.25 fill, the Sanitas frame's shape in Vigiles blue. The
+   spinning ASCII background, disclosures, and limitations banner
+   are untouched; contract and Spark gates are untouched. */
+body[data-product="vigiles"] .panel h2 {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-left: 3px solid #4f7ec2;
+  padding-left: 10px;
+}
+
+body[data-product="vigiles"] .subhead {
+  letter-spacing: 0.08em;
+}
+
+body[data-product="vigiles"] .status {
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+body[data-product="vigiles"] .btn-primary {
+  border-radius: 3px;
+}
+
+body[data-product="vigiles"] .mono-block {
+  border: 1px solid rgba(79, 126, 194, 0.4);
+  background: rgba(0, 0, 0, 0.25);
+}

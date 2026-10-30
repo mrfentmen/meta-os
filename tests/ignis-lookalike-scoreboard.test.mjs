@@ -112,7 +112,13 @@ test("web: the scoreboard panel shows only under Ignis", () => {
   );
   assert.doesNotMatch(css, /body\[data-product="vigiles"\] \.ignis-scoreboard-panel/);
   assert.doesNotMatch(css, /body\[data-product="sanitas"\] \.ignis-scoreboard-panel/);
-  const block = css.slice(css.indexOf("/* IGNIS-ONEOFONE-1"));
+  // Scoped to the scoreboard block: OPS-CONSOLE-6 follows it with
+  // Vigiles' own console pass (same direction, Vigiles lane), which
+  // legitimately carries Vigiles blue and is not a scoreboard color.
+  const block = css.slice(
+    css.indexOf("/* IGNIS-ONEOFONE-1"),
+    css.indexOf("/* OPS-CONSOLE-6"),
+  );
   assert.doesNotMatch(block, /#5da864/, "no Sanitas green in the scoreboard block");
   assert.doesNotMatch(block, /#4f7ec2/, "no Vigiles blue in the scoreboard block");
 });

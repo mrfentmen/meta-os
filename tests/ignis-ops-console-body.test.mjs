@@ -18,8 +18,14 @@ import { readFileSync } from "node:fs";
 
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const marker = "/* OPS-CONSOLE-3";
-const consoleBlock = css.slice(css.indexOf(marker));
+const consoleBlock = css.slice(
+  css.indexOf(marker),
+  css.indexOf("/* OPS-CONSOLE-6"),
+);
 assert.notEqual(css.indexOf(marker), -1, "console block exists");
+// OPS-CONSOLE-6 follows this block with Vigiles' own console pass
+// (same direction, Vigiles lane); the guards below are scoped to
+// this block, so that later pass does not read as an Ignis restyle.
 
 function ignisRule(selector) {
   const rule = consoleBlock.match(
