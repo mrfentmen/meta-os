@@ -30,7 +30,7 @@ pub mod test_os094_job_artifacts;
 case!(test_os102_launch_run, ["mounted skill visible", "unmounted absent", "identical skills", "slot brief launch", "tampered skill refused", "tampered constitution refused", "missing launch refused", "empty argv refused", "nonzero exit returned", "stderr captured", "timeout kills child"], ["intel.launch_run + mind_loader ports absent on main (Hana B11/B14 unmerged)", "live worker/driver spawn"]);
 case!(test_os128_disk_audit, ["clean job reconstructs", "open job no progress", "goal key beats spec", "missing spec leak", "claimed no goal leak", "claimed no claimer leak", "artifact version mismatch", "artifact no manifest", "unparseable ref leak", "missing decision leak", "own journal counts", "corrupt journal leak", "non object record", "record no id", "missing roots empty", "audit rejects non list", "cli pass/fail codes", "cli missing file"], ["mos.disk_audit + artifact_store + memory ports absent on main (Milo B19/B20/B17 unmerged)"]);
 pub mod test_os_base;
-case!(test_os_boot_harness, ["harness"], ["live boot image"]);
+pub mod test_os_boot_harness;
 case!(test_os_boot_selfcheck, ["drill green record", "seeded fixture counts", "removed detector red", "crashing detector red", "unexpected kind red", "key shape round trip"], ["intel boot_selfcheck + watchdog + store drills absent on main (Hana unmerged)"]);
 case!(test_os_boot_status, ["drill green record", "down unit counted", "latest alert wins", "non dict skipped", "stale boundary 30/31", "key shape round trip"], ["intel boot_status drill + store absent on main (Hana unmerged)"]);
 pub mod test_os_bus_unit;
