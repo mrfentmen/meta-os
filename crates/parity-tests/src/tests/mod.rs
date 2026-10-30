@@ -33,7 +33,7 @@ pub mod test_os_base;
 case!(test_os_boot_harness, ["harness"], ["live boot image"]);
 case!(test_os_boot_selfcheck, ["selfcheck"], ["live boot image"]);
 case!(test_os_boot_status, ["status"], ["live boot image"]);
-case!(test_os_bus_unit, ["bus unit"], []);
+pub mod test_os_bus_unit;
 case!(test_os_journal_watch, ["journal watch"], ["live journald"]);
 case!(test_os_livebuild, ["livebuild config"], ["live build"]);
 case!(test_os_manifest, ["manifest"], []);
@@ -46,7 +46,7 @@ case!(test_os_tree, ["tree"], []);
 case!(test_os_uplink, ["uplink"], ["live uplink"]);
 case!(test_pomodoro, ["pomodoro parse", "schedule"], []);
 case!(test_status, ["status shape"], []);
-case!(test_worlds_pack, ["B27 validator parity"], []);
+pub mod test_worlds_pack;
 
 /// B24 cross-assigned case lives here (TASKS trap).
 pub const B24_PARITY_CASE: &str = "test_bustools_parity.py";
