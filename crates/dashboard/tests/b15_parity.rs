@@ -38,7 +38,9 @@
 //! test_dashboard_help, test_dashboard_intel_focus,
 //! test_dashboard_os043, test_dashboard_os084,
 //! test_dashboard_performance, test_dashboard_readonly_token,
-//! test_dashboard_str005, test_dashboard_today_counters.
+//! test_dashboard_str005, test_dashboard_today_counters (counting-rule
+//! half ported below against the file's fixture values; the Node-driver
+//! half and the bus/index identical check stay blocked).
 //! Split (T238): test_dashboard_accessibility — 2 cases ported below
 //! against the carried spec fixture + the DSH-018 palette values
 //! (contrast math, spec contrast notes); the other 4 cases
@@ -56,6 +58,32 @@
 //! (runbook carried byte-identical under fixtures/).
 
 use dashboard::contract::*;
+
+#[test] fn test_dashboard_today_counters_record_rules() {
+    // os/tests/test_dashboard_today_counters.py fixture values.
+    let now = 1793102100;
+    let today = now - 3600;
+    let today_brief = now - 7200;
+    let yesterday = now - 90000;
+    let jobs = vec![
+        TodayJob { status: "done".into(), done_at: Some(today) },
+        TodayJob { status: "done".into(), done_at: Some(yesterday) },
+        TodayJob { status: "done".into(), done_at: None },
+        TodayJob { status: "open".into(), done_at: None },
+    ];
+    let alerts = vec![
+        TodayAlert { created_at: Some(today), resolved_at: Some(today) },
+        TodayAlert { created_at: Some(today), resolved_at: None },
+        TodayAlert { created_at: Some(yesterday), resolved_at: Some(today) },
+        TodayAlert { created_at: Some(yesterday), resolved_at: None },
+        TodayAlert { created_at: None, resolved_at: Some(today) },
+    ];
+    let c = count_today_records(&jobs, &[yesterday, today_brief], Some(today_brief), &alerts, now);
+    assert_eq!((c.jobs_done, c.briefs, c.alerts_fired, c.alerts_resolved), (1, 1, 2, 3));
+    assert_eq!(today_line(&c), "today · jobs done 1 · briefs 1 · alerts fired 2 / resolved 3");
+    assert_eq!(count_today_records(&jobs, &[], Some(today), &alerts, now).briefs, 1);
+    assert_eq!(count_today_records(&jobs, &[], Some(yesterday), &alerts, now).briefs, 0);
+}
 
 #[test] fn test_dashboard_rollback_int031_exact_steps() {
     let runbook = "Deployments / All deployments / Rollback to this deployment \

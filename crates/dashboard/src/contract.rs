@@ -230,6 +230,80 @@ pub fn today_counts(
     }
 }
 
+/// DSH-032 record-level counting. The viewer used its local date; the
+/// Python fixtures are zone-agnostic by construction (-1h/-2h same day,
+/// -25h previous day in either zone), so the port uses the UTC calendar
+/// day (timestamp / 86400). A record missing the relevant timestamp is
+/// never counted.
+pub fn same_day(a: i64, b: i64) -> bool {
+    a.div_euclid(86400) == b.div_euclid(86400)
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TodayJob {
+    pub status: String,
+    pub done_at: Option<i64>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct TodayAlert {
+    pub created_at: Option<i64>,
+    pub resolved_at: Option<i64>,
+}
+
+/// DSH-032: count from the records the panels already read. Jobs need
+/// status "done" + a same-day `done_at`; briefs count distinct same-day
+/// timestamps across the history window plus the current brief (a brief
+/// that is also the newest history entry counts once); alerts count a
+/// same-day `created_at` as fired and a same-day `resolved_at` as
+/// resolved, independently of each other.
+pub fn count_today_records(
+    jobs: &[TodayJob],
+    history_ts: &[i64],
+    current_brief_ts: Option<i64>,
+    alerts: &[TodayAlert],
+    now: i64,
+) -> TodayCounts {
+    let jobs_done = jobs
+        .iter()
+        .filter(|j| j.status == "done" && j.done_at.map_or(false, |t| same_day(t, now)))
+        .count();
+    let mut brief_day: Vec<i64> = history_ts
+        .iter()
+        .copied()
+        .filter(|t| same_day(*t, now))
+        .collect();
+    if let Some(t) = current_brief_ts {
+        if same_day(t, now) {
+            brief_day.push(t);
+        }
+    }
+    brief_day.sort();
+    brief_day.dedup();
+    let alerts_fired = alerts
+        .iter()
+        .filter(|a| a.created_at.map_or(false, |t| same_day(t, now)))
+        .count();
+    let alerts_resolved = alerts
+        .iter()
+        .filter(|a| a.resolved_at.map_or(false, |t| same_day(t, now)))
+        .count();
+    TodayCounts {
+        jobs_done,
+        briefs: brief_day.len(),
+        alerts_fired,
+        alerts_resolved,
+    }
+}
+
+/// DSH-032 header-strip line, exact wording from the fixture.
+pub fn today_line(c: &TodayCounts) -> String {
+    format!(
+        "today · jobs done {} · briefs {} · alerts fired {} / resolved {}",
+        c.jobs_done, c.briefs, c.alerts_fired, c.alerts_resolved
+    )
+}
+
 /// DSH-021 error rows. A rejected token (401/403) renders the token row;
 /// any other read failure renders unreachable; empty reads are empty
 /// states, never errors; panels degrade independently.
@@ -793,5 +867,50 @@ mod tests {
     fn today_briefs_dedupe() {
         let c = today_counts(2, &[1, 1, 2], 3, 1);
         assert_eq!((c.jobs_done, c.briefs), (2, 2));
+    }
+
+    #[test]
+    fn today_records_match_fixture() {
+        // os/tests/test_dashboard_today_counters.py fixture values:
+        // NOW 1793102100 (2026-10-27 07:55 EDT / 11:55 UTC).
+        let now = 1793102100;
+        let today = now - 3600;
+        let today_brief = now - 7200;
+        let yesterday = now - 90000;
+        let jobs = vec![
+            TodayJob { status: "done".into(), done_at: Some(today) },
+            TodayJob { status: "done".into(), done_at: Some(yesterday) },
+            TodayJob { status: "done".into(), done_at: None },
+            TodayJob { status: "open".into(), done_at: None },
+        ];
+        let alerts = vec![
+            TodayAlert { created_at: Some(today), resolved_at: Some(today) },
+            TodayAlert { created_at: Some(today), resolved_at: None },
+            TodayAlert { created_at: Some(yesterday), resolved_at: Some(today) },
+            TodayAlert { created_at: Some(yesterday), resolved_at: None },
+            TodayAlert { created_at: None, resolved_at: Some(today) },
+        ];
+        // Step 1: current brief is also the newest history entry: counts once.
+        let c = count_today_records(
+            &jobs,
+            &[yesterday, today_brief],
+            Some(today_brief),
+            &alerts,
+            now,
+        );
+        assert_eq!(
+            (c.jobs_done, c.briefs, c.alerts_fired, c.alerts_resolved),
+            (1, 1, 2, 3)
+        );
+        assert_eq!(
+            today_line(&c),
+            "today · jobs done 1 · briefs 1 · alerts fired 2 / resolved 3"
+        );
+        // Step 2: a current brief with no history entry still counts once.
+        let c2 = count_today_records(&jobs, &[], Some(today), &alerts, now);
+        assert_eq!(c2.briefs, 1);
+        // Step 3: a yesterday brief counts zero.
+        let c3 = count_today_records(&jobs, &[], Some(yesterday), &alerts, now);
+        assert_eq!(c3.briefs, 0);
     }
 }
