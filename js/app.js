@@ -125,6 +125,7 @@ const els = {
   logStatsEntrySpanShareOfFailedWindow: $("log-stats-entry-span-share-of-failed-window"),
   logStatsEntrySpanShareOfOwnOkWindowByProduct: $("log-stats-entry-span-share-of-own-ok-window-by-product"),
   logStatsEntrySpanShareOfOwnFailedWindowByProduct: $("log-stats-entry-span-share-of-own-failed-window-by-product"),
+  logStatsEntrySpanShareOfOkWindowByProduct: $("log-stats-entry-span-share-of-ok-window-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1088,6 +1089,24 @@ function updateLogStats() {
   // insertion order.
   els.logStatsEntrySpanShareOfOwnFailedWindowByProduct.textContent =
     `Entry-span share of that product's own failure window by product: Vigiles ${stats.entrySpanShareOfOwnFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOwnFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfOwnFailedWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.sanitas * 100)}%`}`;
+  // DETAIL-70: the per-product entry-span-share-
+  // of-success-window line re-bases DETAIL-17's
+  // per-product entry spans on the session's global
+  // DETAIL-22 ok span, rendered as whole percents,
+  // or "none" per product with no usable global ok
+  // window or no usable own entry timestamp pair
+  // — the entry-side companion to DETAIL-48, the
+  // global-window mirror of DETAIL-68, so a product
+  // whose recording ran twice the whole success
+  // window reads 200% whatever its share of the
+  // successes. A failure-only product still covers
+  // the window its failures stretched across, and
+  // other products' entries move no share. Raw
+  // ratios, never clamped: above 100% is the normal
+  // case, below 100% or below 0% means timestamps
+  // ran out of insertion order.
+  els.logStatsEntrySpanShareOfOkWindowByProduct.textContent =
+    `Entry-span share of success window by product: Vigiles ${stats.entrySpanShareOfOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfOkWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindowByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
