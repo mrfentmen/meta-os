@@ -38,6 +38,8 @@ fn worst_case_math_on_pinned_scoring_row() {
 
 #[test]
 fn worst_single_busy_brief_stays_under_both_caps() {
+    // Both variants must stay under the $75 reserved half and the
+    // $150 credit — the check's acceptance rule on the pinned rows.
     let rows = vec![
         CostRow::new("scored 2-word titles", 1, 1, 416, 266, 3.0, 15.0),
         CostRow::new("long-title stress", 1, 1, 542, 298, 3.0, 15.0),
@@ -48,8 +50,6 @@ fn worst_single_busy_brief_stays_under_both_caps() {
     }
     let s = totals(&rows);
     assert!(s.passed);
-    // Both variants must stay under the $75 reserved half and the
-    // $150 credit — the check's acceptance rule on the pinned rows.
     // The 4415x breakeven multiplier is pinned by the exact
     // measurement rows (carried pending the intel crate); on
     // fixture rows the multiplier just needs to clear 1x.
