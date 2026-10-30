@@ -84,7 +84,7 @@ Per-product prompt profiles (categories + limitations) are derived from
 `js/products.js` in `model.mjs` (`PRODUCT_PROFILES`), so the server and
 the clients cannot drift.
 
-## OS queue path (Trio side, step 1 — envelope + submit, not yet wired in)
+## OS queue path (Trio side, steps 1-2 — envelope + submit + result fetch, not yet wired in)
 
 Del's direction, 2026-10-30 (relayed by Pax): the OS operates the Trio
 — one submission, Best Agentic aim. The Trio server submits assessments
@@ -109,10 +109,21 @@ is verified live by then, or the clean Trio ships alone.
   (`TRIO_QUEUE_URL` unset), malformed job, or submit failure — every
   refusal a typed `QueueError`, never a fabricated job id.
 
+Step 2 adds `fetchQueueResult(jobId, env, deps)`: one result fetch
+through an injected transport, returning `pending`, `done` (assessment
+verbatim, NOT validated here — the wiring step must run it through
+`validateAssessment` before it is ever sent), or `failed` (the agent's
+error string when it has one), with the same layered refusals
+(disabled / not configured / fetch failure) and malformed envelopes
+failing as typed `QueueError`s. The result envelope shape is PROPOSED,
+not yet agreed: version 1, kind `"trio-assessment-result"`, the job id
+echoed back, status `pending` | `done` | `failed`.
+
 Deliberately not in this step: wiring into `handleAssess`, and the
-claim/result poll. A submit returns a job id, not an assessment, and
+poll loop (repeat fetch until done/failed, then fall back to the
+direct Spark path). A submit returns a job id, not an assessment, and
 `/api/assess` must still return a v2 assessment object — so the
-result-retrieval shape is agreed with Pax's resident-agent end before
+proposed result shape is agreed with Pax's resident-agent end before
 anything is wired in. Until then the direct Spark path remains the only
 live path, and this module changes no request behaviour. The queue
 service itself is a named external service, never inside this repo: its
