@@ -16,7 +16,7 @@ macro_rules! case {
     };
 }
 
-case!(test_boss_trigger, ["loads"], ["live bus trigger"]);
+pub mod test_boss_trigger;
 case!(test_bus_rename, ["rename display"], ["live names registry"]);
 case!(test_bustools_parity, ["B24 poll/store parity"], ["relay_common transport"]);
 case!(test_clip, ["clipboard fallback", "paste verify"], ["live clipboard tools"]);
