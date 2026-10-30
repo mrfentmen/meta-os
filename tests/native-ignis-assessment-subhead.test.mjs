@@ -40,8 +40,8 @@ assert.ok(uncertaintyHead.length > 0, "uncertainty heading block exists");
 test("native uncertainty heading: subhead size, weight, case, tracking, muted color", () => {
   assert.match(
     uncertaintyHead,
-    /Text\("Uncertainty"\)\s+\.font\(\.system\(size: 13, weight: \.bold\)\)\s+\.textCase\(\.uppercase\)\s+\.tracking\(isIgnisAssessment \? 1\.04 : 0\.65\)\s+\.foregroundStyle\(\.secondary\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
-    "Uncertainty heading is 13pt bold, uppercase, 0.65pt tracking off Ignis and 1.04pt on Ignis, secondary, and keeps the header trait",
+    /Text\("Uncertainty"\)\s+\.font\(\.system\(size: 13, weight: \.bold\)\)\s+\.textCase\(\.uppercase\)\s+\.tracking\(\(isIgnisAssessment \|\| isVigilesAssessment\) \? 1\.04 : 0\.65\)\s+\.foregroundStyle\(\.secondary\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    "Uncertainty heading is 13pt bold, uppercase, 0.65pt tracking off Ignis and Vigiles and 1.04pt on either, secondary, and keeps the header trait",
   );
 });
 

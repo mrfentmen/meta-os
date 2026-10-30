@@ -117,6 +117,14 @@ struct AssessmentView: View {
         ProductID(rawValue: response.product) == .ignis
     }
 
+    /// Whether this card's own assessment is a Vigiles one, on the
+    /// same precedent: the card renders by its assessment's own
+    /// product, never by the selected product. An unknown product
+    /// key is not Vigiles rather than guessing.
+    private var isVigilesAssessment: Bool {
+        ProductID(rawValue: response.product) == .vigiles
+    }
+
     /// Panel accent from the assessment's own product, mirroring the
     /// TimelineView row-accent mapping. An unknown product key falls
     /// back to the system accent rather than guessing a product.
@@ -399,10 +407,15 @@ struct AssessmentView: View {
             // redisplayed Ignis assessment keeps its console
             // subhead under any selection, exactly as its red rule
             // already does.
+            // OPS-CONSOLE-8: a Vigiles assessment widens by the
+            // same web OPS-CONSOLE-6 subhead value, 0.08em of 13pt
+            // (1.04pt) — the web Vigiles subhead rule is identical
+            // to the Ignis one, so the two gates share one widened
+            // value and every other product keeps the UI-12 0.65pt.
             Text("Uncertainty")
                 .font(.system(size: 13, weight: .bold))
                 .textCase(.uppercase)
-                .tracking(isIgnisAssessment ? 1.04 : 0.65)
+                .tracking((isIgnisAssessment || isVigilesAssessment) ? 1.04 : 0.65)
                 .foregroundStyle(.secondary)
                 .accessibilityAddTraits(.isHeader)
             if response.assessment.uncertainty.isEmpty {

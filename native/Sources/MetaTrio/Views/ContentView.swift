@@ -113,15 +113,30 @@ struct ContentView: View {
                 // ScrollView and are untouched. Off Ignis the
                 // viewport is exactly as before: a clear
                 // background and no stroke.
+                // OPS-CONSOLE-8: on Vigiles the same viewport
+                // carries the web OPS-CONSOLE-6 mono-block frame —
+                // a 1px Vigiles-blue (#4f7ec2) stroke at 0.4 over
+                // the same dark 0.25 fill — so the Latest panel's
+                // readout reads as a console window on Vigiles
+                // exactly as it does on Ignis, each in its own
+                // accent. The fill is shared by the two console
+                // products, so it is one condition, not two fills
+                // stacked; the stroke keeps one branch per product
+                // so each accent stays its own color. Sanitas
+                // keeps the clear, unframed viewport it had.
                 ScrollView {
                     AssessmentView(response: assessment)
                 }
                 .frame(maxHeight: 320)
-                .background(model.selectedProduct == .ignis ? Color.black.opacity(0.25) : Color.clear)
+                .background((model.selectedProduct == .ignis || model.selectedProduct == .vigiles) ? Color.black.opacity(0.25) : Color.clear)
                 .overlay {
                     if model.selectedProduct == .ignis {
                         Rectangle()
                             .stroke(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255).opacity(0.4), lineWidth: 1)
+                    }
+                    if model.selectedProduct == .vigiles {
+                        Rectangle()
+                            .stroke(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255).opacity(0.4), lineWidth: 1)
                     }
                 }
             } else if model.requestInFlight {
