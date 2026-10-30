@@ -7,8 +7,9 @@
 // panels and a Logo panel with the studio presets, a custom picker,
 // persistence, and Reset. Static checks on the shipped Swift only:
 // no Swift toolchain exists in this sandbox, so no Mac build run is
-// claimed. Speed and pause controls stay in the web studio for the
-// follow-up slice, exactly as Hana scoped the web panel.
+// claimed. Speed and pause controls landed natively in LOGO-NATIVE-2
+// (tests/native-logo-animation.test.mjs); only the large logo stays
+// in the web studio now.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -71,7 +72,9 @@ test("logo: loop uses the web glyph set, animates by phase, still on reduced mot
   assert.ok(logoColor.includes('glyphs = " .,:;irsXA253hMHGS#9B&@"'));
   assert.ok(loopView.includes("TimelineView(.animation)"));
   assert.ok(loopView.includes("accessibilityReduceMotion"));
-  assert.ok(loopView.includes("? 0"), "reduced motion pins phase to a still frame");
+  // LOGO-NATIVE-2 moved the still frame into runningPhase's guard;
+  // the ternary form is gone but the still frame is not.
+  assert.ok(loopView.includes("if reduceMotion { return 0 }"), "reduced motion pins phase to a still frame");
   assert.ok(loopView.includes(".accessibilityHidden(true)"));
   assert.ok(loopView.includes(".allowsHitTesting(false)"));
 });
@@ -84,11 +87,14 @@ test("logo: custom color wins over product switches, reset returns product tint"
   assert.ok(panel.includes('customHex = ""'));
 });
 
-test("logo: panel has picker, value line, and follow-up note", () => {
+test("logo: panel has picker, value line, and large-logo note", () => {
   assert.ok(panel.includes('ColorPicker("Custom logo color"'));
   assert.ok(panel.includes('"Logo color: product color"'));
   assert.ok(panel.includes("Logo color: \\(customHex.uppercased())"));
-  assert.ok(panel.includes("stay in the web studio for the follow-up slice"));
+  // LOGO-NATIVE-2 replaced the follow-up note: speed and pause now
+  // live in the native panel, so only the large logo stays in the
+  // web studio.
+  assert.ok(panel.includes('"Large logo stays in the web studio."'));
 });
 
 test("logo: console wires the loop behind the panels and the panel into the left column", () => {
