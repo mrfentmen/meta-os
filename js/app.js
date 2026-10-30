@@ -119,6 +119,7 @@ const els = {
   logStatsOkShareOfOwnEntriesByProduct: $("log-stats-ok-share-of-own-entries-by-product"),
   logStatsFailedSpanShareOfOwnOkWindowByProduct: $("log-stats-failed-span-share-of-own-ok-window-by-product"),
   logStatsOkSpanShareOfOwnFailedWindowByProduct: $("log-stats-ok-span-share-of-own-failed-window-by-product"),
+  logStatsOkSpanShareOfFailedWindow: $("log-stats-ok-span-share-of-failed-window"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -991,6 +992,21 @@ function updateLogStats() {
   // ran out of insertion order.
   els.logStatsOkSpanShareOfOwnFailedWindowByProduct.textContent =
     `Success-span share of that product's own failure window by product: Vigiles ${stats.okSpanShareOfOwnFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfOwnFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfOwnFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfOwnFailedWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareOfOwnFailedWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareOfOwnFailedWindowByProduct.sanitas * 100)}%`}`;
+  // DETAIL-64: the global success-span-share-of-
+  // failure-window line re-bases DETAIL-22's global
+  // ok span on DETAIL-23's global failed span,
+  // rendered as a whole percent, or "none" with no
+  // usable failed window or no usable ok span —
+  // the cross-span re-base DETAIL-57's and
+  // DETAIL-58's entry-window shares imply but do
+  // not state, so a session where successes
+  // stretched twice as long as failures reads that
+  // at a glance. A session with failures but no
+  // successes reads 0%, never "none". Raw ratio,
+  // never clamped: above 100% or below 0% means
+  // timestamps ran out of insertion order.
+  els.logStatsOkSpanShareOfFailedWindow.textContent =
+    `Success-span share of failure window: ${stats.okSpanShareOfFailedWindow === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindow * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

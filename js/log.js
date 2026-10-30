@@ -1836,6 +1836,54 @@ export class SessionLog {
       ignis: shareOkOfOwnFailedWindow("ignis", okSpanMsByProduct.ignis),
       sanitas: shareOkOfOwnFailedWindow("sanitas", okSpanMsByProduct.sanitas),
     };
+    // DETAIL-64: the global ok-span share of the
+    // global failed window (okSpanShareOfFailedWindow):
+    // the session's DETAIL-22 global ok span over its
+    // DETAIL-23 global failed span — the cross-span
+    // re-base DETAIL-57's and DETAIL-58's
+    // entry-window shares imply but do not state, so
+    // a session where successes stretched twice as
+    // long as failures reads that at a glance, where
+    // the entry-window shares alone do not say how
+    // the two windows compare to each other.
+    // Derived only from the two global spans, not a
+    // new rule. The numerator and the denominator
+    // are both product-blind, unlike DETAIL-53's and
+    // DETAIL-55's buckets: a success with an unknown
+    // or missing product still opens and closes the
+    // global ok span, and a failure with an unknown
+    // or missing product still opens and closes the
+    // global failed span, so either moves this share
+    // where it moves no by-product bucket — the
+    // deliberate contrast with DETAIL-53/55,
+    // matching DETAIL-57's and DETAIL-58's
+    // product-blind globals. This is a raw ratio,
+    // never clamped, and it is NOT a difference of
+    // DETAIL-57's and DETAIL-58's shares: a share
+    // above 1 or below 0 means timestamps ran out
+    // of insertion order, exactly as DETAIL-22's and
+    // DETAIL-23's raw spans do. Null when the
+    // session holds no usable failed window at all
+    // (an empty log, a single failure, or all
+    // failures at one timestamp — a zero failed span
+    // has no share to divide, never NaN); null when
+    // successes were recorded but the global ok span
+    // is unknown (no usable timestamp pair — never
+    // a fabricated window); 0 with no successes
+    // once a nonzero failed window exists, because
+    // successes covered none of the failure window
+    // — the deliberate contrast with DETAIL-22's
+    // null — and 0 for a single-success session,
+    // whose zero-length ok window covers none of a
+    // nonzero failed window.
+    const okSpanShareOfFailedWindow =
+      failedSpanMs === null || failedSpanMs === 0
+        ? null
+        : ok === 0
+          ? 0
+          : okSpanMs === null
+            ? null
+            : okSpanMs / failedSpanMs;
     return {
       total: this._entries.length,
       ok,
@@ -2204,6 +2252,18 @@ export class SessionLog {
       // missing-product entry moves no bucket and no
       // denominator.
       okSpanShareOfOwnFailedWindowByProduct,
+      // DETAIL-64: the global ok-span share of the
+      // global failed window
+      // (okSpanShareOfFailedWindow): the DETAIL-22
+      // global ok span over the DETAIL-23 global
+      // failed span — the cross-span re-base
+      // DETAIL-57's and DETAIL-58's entry-window
+      // shares imply but do not state. Null with no
+      // usable failed window, or with successes but
+      // no usable ok span; 0 with no successes once
+      // a nonzero failed window exists. Both spans
+      // are product-blind, unlike DETAIL-53/55.
+      okSpanShareOfFailedWindow,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
