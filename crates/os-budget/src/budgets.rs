@@ -46,8 +46,7 @@ pub fn spend_ratio(spent: i64, cap: i64) -> Option<f64> {
 }
 
 /// `true` when spent has reached the warning threshold but not
-/// cap. The warning band is `[warn_percent, 100`) of cap: at cap the
-/// lane is held, not warned.
+/// cap. The warning band is `[warn_percent, 100%)` of cap: at cap the
 pub fn at_warning(spent: i64, cap: i64, warn_percent: u64) -> bool {
     match spend_ratio(spent, cap) {
         None => false,
