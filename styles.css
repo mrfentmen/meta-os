@@ -797,3 +797,16 @@ body[data-product="ignis"] .panel h2 {
   border-left: 3px solid #d92b2b;
   padding-left: 10px;
 }
+/* IGNIS-ONEOFONE-1 (Del's one-of-one bar, Oct 29): the Ignis
+   look-alike scoreboard panel shows only under Ignis. It counts
+   recorded assessments, so under Vigiles or Sanitas — where it could
+   never show that product's data — it stays hidden rather than
+   reading zeros for the wrong product. The h2 already carries the
+   OPS-CONSOLE-1 console treatment under Ignis; this block only owns
+   visibility. No contract, server, or Spark-gate change. */
+.ignis-scoreboard-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-scoreboard-panel {
+  display: block;
+}

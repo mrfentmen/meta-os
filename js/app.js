@@ -10,6 +10,7 @@ import { assessFrame, AssessError, checkHealth } from "./client.js";
 import { SessionLog } from "./log.js";
 import { PRODUCT_BY_ID, isProductId } from "./products.js";
 import { ContactsStore } from "./contacts.js";
+import { ignisLookAlikeScoreboard } from "./ignis-scoreboard.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -129,6 +130,7 @@ const els = {
   logStatsEntrySpanShareOfFailedWindowByProduct: $("log-stats-entry-span-share-of-failed-window-by-product"),
   logStatsFailedSpanShareOfOkWindowByProduct: $("log-stats-failed-span-share-of-ok-window-by-product"),
   logStatsOkSpanShareOfFailedWindowByProduct: $("log-stats-ok-span-share-of-failed-window-by-product"),
+  ignisScoreboard: $("ignis-scoreboard"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1158,6 +1160,17 @@ function updateLogStats() {
   // out of insertion order.
   els.logStatsOkSpanShareOfFailedWindowByProduct.textContent =
     `Success-span share of failure window by product: Vigiles ${stats.okSpanShareOfFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareOfFailedWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindowByProduct.sanitas * 100)}%`}`;
+  // IGNIS-ONEOFONE-1: the look-alike scoreboard re-reads the same
+  // log entries updateLogStats already runs on — no new stats field,
+  // no new data — and renders the Ignis-only panel from recorded
+  // assessments alone. An empty session reads all zeros, a held
+  // session (no model calls) stays zeros rather than inventing a
+  // reading, and failures never move a bucket. The panel itself is
+  // hidden under Vigiles and Sanitas by CSS, so this line only ever
+  // shows under Ignis.
+  const scoreboard = ignisLookAlikeScoreboard(log.entries());
+  els.ignisScoreboard.textContent =
+    `Look-alikes — Steam or fog ${scoreboard.steamOrFog} · Flame-like lighting ${scoreboard.flameLikeLighting} | Hazards — Visible smoke ${scoreboard.visibleSmoke} · Visible flame ${scoreboard.visibleFlame} | Other — Obscured or distant hazard ${scoreboard.obscuredOrDistant} · No hazard visible ${scoreboard.noHazard} · Indeterminate ${scoreboard.indeterminate}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
