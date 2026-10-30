@@ -128,6 +128,25 @@ pub fn default_open(section: &str) -> bool {
     section == "blocked"
 }
 
+/// DSH-031 / INT-025: the five Brief sections in render order.
+/// The keys are the record's section keys; the display titles are
+/// what the panel renders in each `<summary>` (pinned by
+/// test_dashboard_brief_sections.py and
+/// test_intel_brief_dashboard_consistency.py).
+pub const BRIEF_SECTION_ORDER: &[&str] =
+    &["decisions", "in_flight", "owners", "blocked", "watch_items"];
+
+pub fn brief_section_title(section: &str) -> Option<&'static str> {
+    match section {
+        "decisions" => Some("Decisions"),
+        "in_flight" => Some("In flight"),
+        "owners" => Some("Owners"),
+        "blocked" => Some("Blocked and why"),
+        "watch_items" => Some("Watch items"),
+        _ => None,
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct AlertCard {
     pub id: String,

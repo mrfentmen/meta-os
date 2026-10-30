@@ -26,7 +26,9 @@
 //! fold-excluded viewer.
 //! Split — spec-note halves ported in tests/b15_spec_notes.rs, the
 //! viewer/Node halves below stay exclusion-blocked:
-//! test_dashboard_brief_sections (viewer half),
+//! test_dashboard_brief_sections — rule half ported in this file
+//! (DSH-031 default-open map, titles, order); the toggle/HTML
+//! halves stay blocked,
 //! test_dashboard_cross_browser — FULLY ported (all 3 cases are
 //! log cases, carried as fixtures/DSH-035-CROSS-BROWSER-CHECK.md),
 //! test_dashboard_deep_links, test_dashboard_demo_mode,
@@ -399,6 +401,46 @@ fn test_dashboard_accessibility_palette_contrast_meets_aa() {
     let critical_panel = wcag_contrast_ratio("#f85149", "#161b22");
     assert!((critical_page - 5.65).abs() < 0.01, "critical/page: {critical_page}");
     assert!((critical_panel - 5.16).abs() < 0.01, "critical/panel: {critical_panel}");
+}
+
+// ---- DSH-031 rule half: test_dashboard_brief_sections.py, ported
+// against the contract (the toggle/HTML halves stay blocked: they
+// drive the fold-excluded viewer through a Node driver). ----
+
+#[test]
+fn test_dashboard_brief_sections_default_open_map() {
+    // Python case: test_blocked_open_rest_closed_by_default.
+    let open: Vec<(&str, bool)> = BRIEF_SECTION_ORDER
+        .iter()
+        .map(|s| (*s, default_open(s)))
+        .collect();
+    assert_eq!(
+        open,
+        [
+            ("decisions", false),
+            ("in_flight", false),
+            ("owners", false),
+            ("blocked", true),
+            ("watch_items", false),
+        ]
+    );
+}
+
+#[test]
+fn test_dashboard_brief_sections_titles_and_order() {
+    // Python cases pin the five <summary> titles and the INT-025
+    // section order (Decisions, In flight, Owners, Blocked and why,
+    // Watch items); items render whole, never truncated (DSH-031),
+    // which the viewer half covers and stays blocked.
+    let titles: Vec<&str> = BRIEF_SECTION_ORDER
+        .iter()
+        .map(|s| brief_section_title(s).expect("known section"))
+        .collect();
+    assert_eq!(
+        titles,
+        ["Decisions", "In flight", "Owners", "Blocked and why", "Watch items"]
+    );
+    assert_eq!(brief_section_title("unknown"), None);
 }
 
 #[test]
