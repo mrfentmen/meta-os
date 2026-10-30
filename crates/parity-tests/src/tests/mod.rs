@@ -36,12 +36,12 @@ case!(test_os_boot_status, ["drill green record", "down unit counted", "latest a
 pub mod test_os_bus_unit;
 case!(test_os_journal_watch, ["systemd failure fires", "err priority fires", "healthy relay silent", "gateway failure alert", "memory failure alert", "non relay silent", "unparseable skipped", "keyed entries accepted", "group by unit", "no nick/job", "critical severity", "not snapshot", "tick writes alert", "retick cooldown", "cli reports alert", "cli quiet zero", "cli missing file"], ["intel journal watch port absent on main (Hana unmerged)"]);
 pub mod test_os_livebuild;
-case!(test_os_manifest, ["manifest"], []);
+pub mod test_os_manifest;
 pub mod test_os_overseer_unit;
 case!(test_os_packer, ["packer template"], ["live packer build"]);
 case!(test_os_power_cut, ["three runs pass", "recovers job and reports", "control reboot requeues nothing", "drill log names runs"], ["intel power-cut drill port absent on main (Hana unmerged)", "live reboot + lease expiry"]);
 case!(test_os_stackbake, ["stack bake"], []);
-case!(test_os_target_unit, ["target unit"], []);
+pub mod test_os_target_unit;
 case!(test_os_tree, ["tree"], []);
 case!(test_os_uplink, ["uplink"], ["live uplink"]);
 case!(test_pomodoro, ["pomodoro parse", "schedule"], []);
