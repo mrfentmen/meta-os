@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta Nuntius — Trio Relay</title>
+<style>
+  :root {
+    --bg: #070b16;
+    --panel: #0d1424;
+    --line: #1c2946;
+    --text: #d7e1f5;
+    --dim: #7d8db0;
+    --accent: #4da3ff;
+    --info: #4da3ff;
+    --warning: #ffbd4a;
+    --critical: #ff5d5d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  header {
+    padding: 14px 18px 10px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  header h1 { font-size: 19px; margin: 0; letter-spacing: 0.04em; }
+  header h1 .meta { color: var(--accent); }
+  header .sub { color: var(--dim); font-size: 12px; }
+  #status { margin-left: auto; color: var(--dim); font-size: 12px; }
+  #status .ok { color: #3ddc84; }
+  #status .bad { color: var(--critical); }
+  section { padding: 10px 18px; }
+  #notifications-wrap { border-bottom: 1px solid var(--line); }
+  #notifications-wrap h2, #messages-wrap h2 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+    margin: 4px 0 8px;
+  }
+  #notifications { display: flex; flex-direction: column; gap: 6px; }
+  .notify {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--info);
+    padding: 6px 10px;
+    border-radius: 3px;
+    word-break: break-word;
+  }
+  .notify.warning { border-left-color: var(--warning); }
+  .notify.critical { border-left-color: var(--critical); }
+  .notify .sev { font-weight: bold; text-transform: uppercase; font-size: 11px; }
+  .notify.info .sev { color: var(--info); }
+  .notify.warning .sev { color: var(--warning); }
+  .notify.critical .sev { color: var(--critical); }
+  .empty { color: var(--dim); font-size: 12px; }
+  #controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  #controls label { color: var(--dim); font-size: 12px; }
+  input[type="text"] {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 5px 8px;
+    border-radius: 3px;
+    font: inherit;
+    width: 160px;
+  }
+  button {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 5px 12px;
+    border-radius: 3px;
+    font: inherit;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); }
+  button.active { border-color: var(--accent); color: var(--accent); }
+  #messages { display: flex; flex-direction: column; gap: 2px; }
+  .msg {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 5px 10px;
+    border-radius: 3px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .msg .ts { color: var(--dim); }
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="meta">Meta</span> Nuntius</h1>
+  <span class="sub">Trio / OS layer message relay — built in-repo during the hackathon</span>
+  <span id="status">connecting…</span>
+</header>
+
+<section id="notifications-wrap">
+  <h2>Notifications</h2>
+  <div id="notifications"><div class="empty">No notifications yet.</div></div>
+</section>
+
+<div id="controls">
+  <label for="room-input">Room</label>
+  <input type="text" id="room-input" value="main" maxlength="32">
+  <button id="room-go" type="button">Switch</button>
+  <button id="room-main" type="button" class="active">main</button>
+  <button id="room-1" type="button">1</button>
+</div>
+
+<section id="messages-wrap">
+  <h2>Messages</h2>
+  <div id="messages"><div class="empty">No messages yet.</div></div>
+</section>
+
+<script>
+"use strict";
+const NOTIFY_RE = /^relay: NOTIFY:(ntf-[0-9a-f]{16}) (info|warning|critical) \[([^\]]*)\] (.*)$/;
+const TS_RE = / \[ts:(\d+)\]$/;
+
+let room = "main";
+let watermark = -1; // index of the last line rendered in this room
+let polling = false;
+
+const messagesEl = document.getElementById("messages");
+const notificationsEl = document.getElementById("notifications");
+const statusEl = document.getElementById("status");
+const roomInput = document.getElementById("room-input");
+
+function emptyNote(el, text) {
+  const div = document.createElement("div");
+  div.className = "empty";
+  div.textContent = text;
+  el.appendChild(div);
+}
+
+function clearEmpties(el) {
+  for (const child of [...el.querySelectorAll(".empty")]) child.remove();
+}
+
+function renderMessage(line) {
+  clearEmpties(messagesEl);
+  const div = document.createElement("div");
+  div.className = "msg";
+  const m = line.match(TS_RE);
+  if (m) {
+    div.textContent = line.slice(0, m.index);
+    const ts = document.createElement("span");
+    ts.className = "ts";
+    const when = new Date(Number(m[1]) * 1000);
+    ts.textContent = " [" + when.toLocaleString() + "]";
+    div.appendChild(ts);
+  } else {
+    div.textContent = line;
+  }
+  messagesEl.appendChild(div);
+}
+
+function renderNotification(match, line) {
+  clearEmpties(notificationsEl);
+  const [, id, severity, topic, text] = match;
+  const div = document.createElement("div");
+  div.className = "notify " + severity;
+  const sev = document.createElement("span");
+  sev.className = "sev";
+  sev.textContent = severity;
+  div.appendChild(sev);
+  div.appendChild(document.createTextNode(" [" + topic + "] " + text));
+  div.title = id;
+  notificationsEl.prepend(div); // newest first
+}
+
+function renderLine(line) {
+  const match = line.match(NOTIFY_RE);
+  if (match) renderNotification(match, line);
+  renderMessage(line);
+}
+
+function setRoom(next) {
+  if (!/^[a-z0-9-]{1,32}$/.test(next)) {
+    statusEl.innerHTML = '<span class="bad">invalid room name</span>';
+    return;
+  }
+  room = next;
+  roomInput.value = next;
+  watermark = -1;
+  messagesEl.innerHTML = "";
+  notificationsEl.innerHTML = "";
+  emptyNote(messagesEl, "No messages yet.");
+  emptyNote(notificationsEl, "No notifications yet.");
+  for (const btn of document.querySelectorAll("#controls button[data-room]")) {
+    btn.classList.toggle("active", btn.dataset.room === next);
+  }
+  poll();
+}
+
+async function poll() {
+  if (polling) return;
+  polling = true;
+  try {
+    const res = await fetch(
+      "/rooms/" + encodeURIComponent(room) +
+      "/messages?since=" + watermark
+    );
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    for (const line of data.messages) {
+      watermark += 1;
+      renderLine(line);
+    }
+    statusEl.innerHTML =
+      'room <b>' + room + '</b> · ' + data.total +
+      ' lines · <span class="ok">live</span>';
+  } catch (err) {
+    statusEl.innerHTML = '<span class="bad">relay unreachable</span>';
+  } finally {
+    polling = false;
+  }
+}
+
+document.getElementById("room-go").addEventListener("click", () => {
+  setRoom(roomInput.value.trim());
+});
+roomInput.addEventListener("keydown", (ev) => {
+  if (ev.key === "Enter") setRoom(roomInput.value.trim());
+});
+for (const [id, name] of [["room-main", "main"], ["room-1", "1"]]) {
+  const btn = document.getElementById(id);
+  btn.dataset.room = name;
+  btn.addEventListener("click", () => setRoom(name));
+}
+
+poll();
+setInterval(poll, 2000);
+</script>
+</body>
+</html>

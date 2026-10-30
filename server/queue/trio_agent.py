@@ -26,7 +26,15 @@ TRIO_SPARK_VIA_HELPER=1). Nothing here invents an assessment:
     where latency_ms is the model call latency the transport measured
     (null when no call completed) and model is the model the API
     reported. A failed generation or a failed validation lands as
-    status "failed" with the reason in `error`.
+    status "failed" with the reason in `error`;
+  * OPTIONAL relay hook: when TRIO_RELAY_URL is set, each finished
+    job also posts a NOTIFY line to the Meta Nuntius relay in this
+    repo (relay/): topic "trio-result", severity info for an "ok"
+    result (naming the job id, product, and category) or warning for
+    a "failed" one (naming the job id, product, and error).
+    Fire-and-forget with a short timeout — a relay failure is logged
+    and swallowed, never fails the job. Env unset = no hook, and the
+    agent behaves exactly as it did before the hook existed.
 
 Run: python3 trio_agent.py [--once] [--lease 300]
      [--nick trio-agent] [--schema <path to js/schema.js>]
@@ -42,6 +50,7 @@ import sys
 import tempfile
 import threading
 import time
+import urllib.request
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -63,6 +72,42 @@ def _log(msg):
 def _now_iso():
     return datetime.now(timezone.utc).isoformat(
         timespec="milliseconds").replace("+00:00", "Z")
+
+
+def _relay_notify(result, product):
+    """Best-effort NOTIFY line to Meta Nuntius (relay/) after a job
+    result is written — only when TRIO_RELAY_URL is set. Topic
+    "trio-result"; an "ok" result posts severity info naming the job
+    id, product, and category, a "failed" one posts severity warning
+    naming the job id, product, and error. Fire-and-forget: a short
+    timeout, and every failure is logged and swallowed — a relay
+    problem must never fail or materially delay a job."""
+    base = os.environ.get("TRIO_RELAY_URL", "").rstrip("/")
+    if not base:
+        return
+    jid = result.get("job_id")
+    if result.get("status") == "ok":
+        category = ((result.get("assessment") or {})
+                    .get("assessment") or {}).get("category")
+        severity = "info"
+        text = (f"trio job {jid} product {product or 'unknown'} "
+                f"completed: category {category}")
+    else:
+        severity = "warning"
+        text = (f"trio job {jid} product {product or 'unknown'} "
+                f"failed: {result.get('error')}")
+    payload = json.dumps({
+        "severity": severity, "topic": "trio-result",
+        "text": str(text)[:500],
+    }).encode()
+    req = urllib.request.Request(
+        f"{base}/rooms/main/notify", data=payload, method="POST",
+        headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(req, timeout=2) as resp:
+            resp.read()
+    except Exception as e:  # relay trouble must never fail the job
+        _log(f"relay notify failed (ignored): {e}")
 
 
 class Agent:
@@ -121,13 +166,15 @@ class Agent:
 
     # -- serving -----------------------------------------------------------
 
-    def _finish_failed(self, jid, error, model=None, latency_ms=None):
+    def _finish_failed(self, jid, error, model=None, latency_ms=None,
+                       product=None):
         result = {
             "job_id": jid, "status": "failed", "assessment": None,
             "error": str(error)[:500], "model": model,
             "latency_ms": latency_ms, "completed_at": _now_iso(),
         }
         self.jobs.put_result(result)
+        _relay_notify(result, product)
         self.jobs.finish(jid, "failed", note=str(error)[:200])
         return "failed"
 
@@ -153,6 +200,7 @@ class Agent:
 
         hb = threading.Thread(target=heartbeat, daemon=True)
         hb.start()
+        product = None  # known once the envelope is parsed
         try:
             # Idempotency again after the claim (the spark_agent rule:
             # the queue is the source of truth, re-check under lease).
@@ -170,12 +218,14 @@ class Agent:
             data_url = (env.get("image") or {}).get("dataUrl") or ""
             if not data_url.startswith("data:image/jpeg;base64,"):
                 return self._finish_failed(jid, "envelope image is not "
-                                           "a JPEG data URL")
+                                           "a JPEG data URL",
+                                           product=product)
             raw = base64.b64decode(data_url.split(",", 1)[1])
             digest = hashlib.sha256(raw).hexdigest()
             if (env.get("image") or {}).get("sha256") != digest:
                 return self._finish_failed(jid, "frame sha256 mismatch "
-                                           "against the envelope")
+                                           "against the envelope",
+                                           product=product)
             with tempfile.NamedTemporaryFile(
                     suffix=".jpg", delete=False) as tf:
                 tf.write(raw)
@@ -190,13 +240,14 @@ class Agent:
                 return self._finish_failed(
                     jid, "model output failed validateAssessment: "
                     + "; ".join(errors[:5]),
-                    model=model, latency_ms=latency_ms)
+                    model=model, latency_ms=latency_ms, product=product)
             result = {
                 "job_id": jid, "status": "ok", "assessment": assessment,
                 "error": None, "model": model, "latency_ms": latency_ms,
                 "completed_at": _now_iso(),
             }
             self.jobs.put_result(result)
+            _relay_notify(result, product)
             self.jobs.finish(jid, "done",
                              note=f"assessment by {self.nick}")
             _log(f"{jid}: done — "
@@ -204,7 +255,8 @@ class Agent:
             return "done"
         except Exception as e:
             try:
-                return self._finish_failed(jid, f"generation failed: {e}")
+                return self._finish_failed(jid, f"generation failed: {e}",
+                                           product=product)
             except Exception:
                 return "lost"
         finally:

@@ -382,5 +382,107 @@ class DirectTransportStubTests(unittest.TestCase):
         self.assertIn("SPARK_API_KEY", str(cm.exception))
 
 
+class RelayNotifyHookTests(unittest.TestCase):
+    """The OPTIONAL Meta Nuntius hook (TRIO_RELAY_URL): a finished
+    job posts one NOTIFY line to a stub HTTP recorder on localhost;
+    with the env unset nothing is posted; with the relay dead the
+    job still completes. No real relay, no live calls."""
+
+    def setUp(self):
+        self._saved = os.environ.get("TRIO_RELAY_URL")
+        self.addCleanup(self._restore_env)
+
+    def _restore_env(self):
+        if self._saved is None:
+            os.environ.pop("TRIO_RELAY_URL", None)
+        else:
+            os.environ["TRIO_RELAY_URL"] = self._saved
+
+    def _start_recorder(self):
+        import threading
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        recorded = []
+
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                length = int(self.headers.get("Content-Length") or 0)
+                raw = self.rfile.read(length) if length else b"{}"
+                recorded.append((self.path, json.loads(raw)))
+                body = json.dumps(
+                    {"index": 0, "id": "ntf-0123456789abcdef"}).encode()
+                self.send_response(201)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        srv = HTTPServer(("127.0.0.1", 0), Handler)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        self.addCleanup(srv.shutdown)
+        return srv, recorded
+
+    def _serve_with_stub(self, db_name, generate):
+        store = trio_store.LocalSqliteStore(os.path.join(_TMP, db_name))
+        jobs = trio_store.JobStore(store)
+        env = build_job_via_node()
+        jid, _ = jobs.submit(env)
+        agent = Agent("test-agent", 60, SCHEMA, jobs=jobs)
+        agent.generate = generate
+        return jid, jobs, agent.serve_once()
+
+    def test_ok_result_posts_info_notify(self):
+        srv, recorded = self._start_recorder()
+        os.environ["TRIO_RELAY_URL"] = \
+            f"http://127.0.0.1:{srv.server_address[1]}"
+        jid, jobs, report = self._serve_with_stub(
+            "notify-ok.db",
+            lambda p, i, t: (canned_assessment(p, t), "muse-spark-1.3", 7))
+        self.assertEqual(report["done"], [jid])
+        self.assertEqual(len(recorded), 1)
+        path, body = recorded[0]
+        self.assertEqual(path, "/rooms/main/notify")
+        self.assertEqual(body["topic"], "trio-result")
+        self.assertEqual(body["severity"], "info")
+        self.assertIn(jid, body["text"])
+        self.assertIn("ignis", body["text"])
+        self.assertIn("steam or fog", body["text"])
+
+    def test_failed_result_posts_warning_notify(self):
+        srv, recorded = self._start_recorder()
+        os.environ["TRIO_RELAY_URL"] = \
+            f"http://127.0.0.1:{srv.server_address[1]}"
+        jid, jobs, report = self._serve_with_stub(
+            "notify-failed.db",
+            lambda p, i, t: ({"not": "a contract"}, "m", 1))
+        self.assertEqual(report["failed"], [jid])
+        self.assertEqual(len(recorded), 1)
+        path, body = recorded[0]
+        self.assertEqual(path, "/rooms/main/notify")
+        self.assertEqual(body["severity"], "warning")
+        self.assertIn(jid, body["text"])
+        self.assertIn("failed:", body["text"])
+
+    def test_unset_env_posts_nothing(self):
+        srv, recorded = self._start_recorder()
+        os.environ.pop("TRIO_RELAY_URL", None)
+        jid, jobs, report = self._serve_with_stub(
+            "notify-unset.db",
+            lambda p, i, t: (canned_assessment(p, t), "muse-spark-1.3", 7))
+        self.assertEqual(report["done"], [jid])
+        self.assertEqual(recorded, [])
+
+    def test_dead_relay_never_fails_the_job(self):
+        os.environ["TRIO_RELAY_URL"] = "http://127.0.0.1:1"
+        jid, jobs, report = self._serve_with_stub(
+            "notify-dead.db",
+            lambda p, i, t: (canned_assessment(p, t), "muse-spark-1.3", 7))
+        self.assertEqual(report["done"], [jid])
+        self.assertEqual(jobs.get_result(jid)["status"], "ok")
+
+
 if __name__ == "__main__":
     unittest.main()
