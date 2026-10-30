@@ -2,3 +2,9 @@
 name = "queue-core"
 version = "0.1.0"
 edition = "2021"
+description = "Rust port of the Trio queue core: envelope validation and job-store semantics from server/queue (Python originals stay untouched as fallback)"
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "queue_core"
+path = "src/lib.rs"
