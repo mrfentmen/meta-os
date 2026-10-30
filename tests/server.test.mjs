@@ -76,9 +76,16 @@ test("adapter refuses in every pre-test-phase state and never fabricates", async
   await assert.rejects(() => assessWithModel(input, {}), /held/i);
   await assert.rejects(() => assessWithModel(input, { SPARK_API_KEY: "k" }), /held/i);
   await assert.rejects(() => assessWithModel(input, { ASSESS_LIVE_MODEL: "1" }), /SPARK_API_KEY/);
+  // Gate open + key present now reaches the (stubbed) transport: a
+  // non-200 from Spark is a typed model_call_failed, never an assessment.
   await assert.rejects(
-    () => assessWithModel(input, { ASSESS_LIVE_MODEL: "1", SPARK_API_KEY: "k" }),
-    /not wired yet/i,
+    () =>
+      assessWithModel(
+        input,
+        { ASSESS_LIVE_MODEL: "1", SPARK_API_KEY: "k" },
+        { fetch: async () => ({ ok: false, status: 401 }) },
+      ),
+    (err) => err.code === "model_call_failed",
   );
 });
 

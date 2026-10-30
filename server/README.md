@@ -46,7 +46,7 @@ Failure is an HTTP status plus the contract error shape
 - `502` — the model call failed, or its response failed contract
   validation (off-contract output is never passed through).
 - `503` — no model assessment is available right now (held / not
-  configured / transport not wired — the message says which).
+  configured — the message says which).
 
 The server never fabricates an assessment. No model, no assessment —
 only the honest error.
@@ -55,6 +55,9 @@ only the honest error.
 
 Del's ruling (2026-10-28): **Spark stays off until the build is complete
 and Del green-lights the test phase. No live calls during the build.**
+That green light came 2026-10-30 00:23 EDT (relayed by Pax), with the
+transport shape verified against the real API — so gate 3 below is now
+wired, and gates 1–2 still refuse before any call can leave the server.
 
 `server/model.mjs` is the only place a model call can leave this
 server, and it refuses in layers:
@@ -62,9 +65,12 @@ server, and it refuses in layers:
 1. `ASSESS_LIVE_MODEL` unset → every call refused as *held*, even with a
    key present.
 2. Gate open, no key → refused as *not configured*.
-3. Gate open, key present → refused as *transport not wired*: the Spark
-   transport lands in the test phase, verified against the real API
-   before use, instead of being guessed at now.
+3. Gate open, key present → the Spark transport runs: POST
+   `https://api.meta.ai/v1/chat/completions`, model `muse-spark-1.3`,
+   OpenAI-style text + `image_url` (JPEG data URL) parts. The key
+   travels only in the `Authorization` header — never in a request body,
+   a commit, or a log. Del puts `SPARK_API_KEY` in the server
+   environment on the Mac himself.
 
 Configuration is environment-only, server-side:
 
@@ -96,10 +102,11 @@ HTTP/1.1 503
 ```
 
 The other refusal states travel the same path with their own message:
-gate open but no key → 503 *not configured*; gate open with a key →
-503 *transport not wired*; a model call that fails → 502. A request that
-fails validation never reaches the model at all (400, or 413 over the
-envelope cap).
+gate open but no key → 503 *not configured*; a model call that fails →
+502. A request that fails validation never reaches the model at all
+(400, or 413 over the envelope cap). In the test phase, gate open with a
+key runs the Spark transport; while the gate stays shut, every valid
+request still gets the 503 *held* answer above.
 
 ### 2. What the web UI shows
 
@@ -154,4 +161,8 @@ curl -s -X POST -H 'Content-Type: application/json' \
 request/image validation, every adapter refusal state, contract
 validation of model output (via a labelled test double injected at the
 handler boundary — tests only), and live HTTP checks of health, the
-held state, bad JSON, wrong methods, and static serving.
+held state, bad JSON, wrong methods, and static serving; plus
+`tests/server-spark-transport.test.mjs`, which exercises the Spark
+transport through an injected stub fetch (request shape, fenced-JSON
+unwrap, non-200 / non-JSON / empty-content failures, and the
+fetch-never-called refusal states). No test fires a live call.

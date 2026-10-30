@@ -154,10 +154,11 @@ export async function runIgnisEval(scenarios, assess) {
 // The wired assessment source: the real server model adapter, with no
 // frame attached (scenarios are labeled descriptions, not images —
 // same caveat as the Medicus harness, which runs descriptions against
-// fixtures). The adapter itself enforces the Spark gate, so in every
-// current gate state this throws a typed refusal (held /
-// not_configured / transport_not_wired) and the harness records it as
-// that scenario's error. env is injectable for tests; production
+// fixtures). The adapter itself enforces the Spark gate, so with the
+// gate shut this throws a typed refusal (held / not_configured) and the
+// harness records it as that scenario's error; with the gate open it
+// throws a typed model_call_failed for the missing image bytes instead
+// of an untyped crash. env is injectable for tests; production
 // passes the server environment through unchanged.
 export async function assessViaModelAdapter(scenario, env = process.env) {
   void scenario;
