@@ -34,6 +34,24 @@
 //! - `os/tests/test_dashboard_today_counters.py`
 //! - `os/tests/test_intel_brief_dashboard_consistency.py`
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! The backend contract lives in [`contract`]: brief payloads (BRF-042),
+//! staleness labels (BRF-043), visual-check verdicts (STR-004), the alerts
+//! feed (DSH-013), deep links (DSH-022), demo mode (DSH-028), today
+//! counters (DSH-032), error/empty states (DSH-021), the readonly-token
+//! posture (GOV-002), OS-043 / OS-084 surface, and the INT-031 rollback
+//! runbook pins. The spec docs themselves are carried byte-identical under
+//! `crates/dashboard/fixtures/` and checked by the parity tests.
+//!
+//! §7 crew-board rules (DSH-023 files/deps, DSH-024 attempts badge,
+//! DSH-025 alert ribbon, OS-084 artifact links) and the keyless
+//! signing entry builders live in [`contract`] too; the card/detail
+//! HTML rendering of those rules stays exclusion-blocked with the
+//! fold-excluded viewer.
+//!
+//! Deliberately absent: the web viewer. It was fold-excluded from the
+//! cleaned tree and is not a Rust target, so viewer/Node/browser-dependent
+//! parity cases are recorded exclusion-blocked in
+//! `crates/dashboard/tests/b15_parity.rs`, never faked green. See
+//! `batches/B15.md` for the compile gates and the parity rule.
+
+pub mod contract;
