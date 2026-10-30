@@ -60,12 +60,22 @@ pub const JOURNAL_NAME: &str = "journal.jsonl";
 /// which is fine for entry-sized objects.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Value {
+    /// JSON `null`.
     Null,
+    /// JSON `true` or `false`.
     Bool(bool),
+    /// A JSON integer that fits in `i64`. An integer literal too large
+    /// for `i64` parses as `Float` instead (see `parse_json`).
     Int(i64),
+    /// A JSON number with a fraction or exponent, or an integer literal
+    /// too large for `i64`.
     Float(f64),
+    /// A JSON string, with escapes already decoded.
     Str(String),
+    /// A JSON array, in order.
     List(Vec<Value>),
+    /// A JSON object. Members keep insertion order; duplicate keys are
+    /// kept as separate members and `get` returns the first match.
     Map(Vec<(String, Value)>),
 }
 
@@ -484,6 +494,8 @@ pub fn to_json_sorted(value: &Value) -> String {
 
 /// Refused write, bad nick or key, missing entry, corrupt journal.
 /// Mirrors `MemoryError`, a `ValueError` subclass in Python.
+/// The inner string is the full human-readable message; for journal
+/// problems it names the line and the reason.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MemoryError(pub String);
 
@@ -506,11 +518,23 @@ impl From<io::Error> for MemoryError {
 /// extras round-trip instead of being dropped.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Entry {
+    /// The memory key, a relative POSIX path (never absolute, never
+    /// carrying empty, `.`, or `..` segments).
     pub key: String,
+    /// The 1-based version number within this key's history. A first
+    /// write is version 1; each changed write adds one.
     pub version: i64,
+    /// Who wrote this version. An empty author at write time is stored
+    /// as `"unknown"`.
     pub author: String,
+    /// Unix timestamp in seconds, as written (or the write time when
+    /// the caller passed no timestamp).
     pub ts: i64,
+    /// The entry body.
     pub text: String,
+    /// Any journal fields beyond the five known ones, in stored order.
+    /// Python's reader returns the whole stored dict on read, so extras
+    /// round-trip instead of being dropped.
     pub extra: Vec<(String, Value)>,
 }
 
@@ -539,7 +563,11 @@ impl Entry {
 /// version. Mirrors the dict `write` returns, with `new_version` included.
 #[derive(Clone, Debug, PartialEq)]
 pub struct WriteOutcome {
+    /// The stored entry: the newly appended version, or the unchanged
+    /// current entry when the write was an identical restatement.
     pub entry: Entry,
+    /// `true` when the write appended a new version; `false` when the
+    /// text matched the key's latest text and nothing was appended.
     pub new_version: bool,
 }
 
@@ -547,7 +575,10 @@ pub struct WriteOutcome {
 /// separate keys and never merged. Mirrors `read_all`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct ReadAll {
+    /// The agent's own latest entries, keyed by key, sorted by key.
     pub own: BTreeMap<String, Entry>,
+    /// The shared crew's latest entries, keyed by key, sorted by key.
+    /// Kept separate from `own` and never merged with it.
     pub shared: BTreeMap<String, Entry>,
 }
 
@@ -555,14 +586,19 @@ pub struct ReadAll {
 /// `mount_paths`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct MountPaths {
+    /// The agent's own namespace directory: `<root>/agents/<nick>`.
     pub own: PathBuf,
+    /// The shared crew namespace directory: `<root>/shared`.
     pub shared: PathBuf,
 }
 
 /// The store namespaces `ensure_root` creates. Mirrors its return dict.
 #[derive(Clone, Debug, PartialEq)]
 pub struct EnsureRoot {
+    /// The per-agent base directory: `<root>/agents`. Created if
+    /// missing; individual agent directories are created on first use.
     pub agents: PathBuf,
+    /// The shared crew directory: `<root>/shared`. Created if missing.
     pub shared: PathBuf,
 }
 
@@ -841,7 +877,10 @@ pub fn read(
     read_version(&entries, key, version)
 }
 
-/// Latest shared entry for a key, or one numbered version.
+/// Latest shared entry for a key, or one numbered version. Same rules
+/// as `read`: `None` takes the latest version, `Some(v)` takes version
+/// `v` (1-based); a missing key, a version of 0 or below, or a
+/// version past the end raises instead of guessing.
 pub fn read_shared(
     root: &Path,
     key: &str,
@@ -862,7 +901,8 @@ pub fn history(root: &Path, agent: &str, key: &str) -> Result<Vec<Entry>, Memory
         .collect())
 }
 
-/// All versions of a shared key, oldest first.
+/// All versions of a shared key, oldest first. A key with no versions
+/// returns an empty list (unlike `read_shared`, which raises).
 pub fn history_shared(root: &Path, key: &str) -> Result<Vec<Entry>, MemoryError> {
     validate_key(key)?;
     Ok(read_journal(root, None)?
@@ -885,7 +925,9 @@ pub fn list_keys(root: &Path, agent: &str) -> Result<BTreeMap<String, Entry>, Me
     Ok(latest_map(&read_journal(root, Some(agent))?))
 }
 
-/// Latest shared entries, keyed by key, sorted by key.
+/// Latest shared entries, keyed by key, sorted by key. Only the
+/// latest version of each key appears; agent namespaces are not mixed
+/// in.
 pub fn list_shared_keys(root: &Path) -> Result<BTreeMap<String, Entry>, MemoryError> {
     Ok(latest_map(&read_journal(root, None)?))
 }
@@ -932,8 +974,14 @@ pub fn ensure_root(root: &Path) -> Result<EnsureRoot, MemoryError> {
 /// returns the same bytes so tests can assert on them without a binary.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CliOutcome {
+    /// Exit code: 0 on success, 2 on any error or usage problem.
     pub code: i32,
+    /// Bytes the Python CLI would print to stdout, including the
+    /// trailing newline on each line. Empty on errors.
     pub stdout: String,
+    /// Bytes the Python CLI would print to stderr. Error lines carry
+    /// the `MEMORY_ERROR: ` prefix; usage problems print the usage
+    /// line here. Empty on success.
     pub stderr: String,
 }
 
