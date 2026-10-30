@@ -108,6 +108,8 @@ fn clean_job_reconstructs_fully() {
     init_repo(&art);
     write_shared_journal(&mem, "decisions/widget", "widget ships muted, not bright");
     deposit(&art, "7", "report.md");
+    // Fix the manifest sha to the real bytes (deposit helper uses
+    // a placeholder; the audit reads real bytes through git).
     let record = with(with(job("7"), "artifacts", json!(["artifact:7/report.md@v1"])), "decisions", json!(["decisions/widget"]));
     let result = audit(&mem, &art, &json!([record])).unwrap();
     assert!(result.passed, "{:?}", result.leaks.iter().map(|l| &l.detail).collect::<Vec<_>>());
