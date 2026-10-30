@@ -636,6 +636,17 @@ pub fn unresolved_critical_count(alerts: &[LifecycleAlert]) -> usize {
         .count()
 }
 
+/// DSH-014 resolved-collapse count: the number behind the
+/// panel's "N resolved" line. The collapse rendering itself is
+/// HTML over the fold-excluded viewer and stays
+/// exclusion-blocked; only the count rule is ported here.
+pub fn resolved_count(alerts: &[LifecycleAlert]) -> usize {
+    alerts
+        .iter()
+        .filter(|a| alert_lifecycle_status(a) == "resolved")
+        .count()
+}
+
 /// DSH-014 / spec §0: the live viewer write is gated off until
 /// Dale's viewer posting decision lands — the buttons ship
 /// disabled with this note, and no live write path exists.

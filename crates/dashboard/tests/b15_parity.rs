@@ -18,11 +18,12 @@
 //! Split (DSH-014, tests/b15_parity.rs below):
 //! test_dashboard_alert_lifecycle — the WDG-014 transition rules
 //! (status derivation, ack/resolve outcomes, unresolved-critical
-//! count, write gate) are ported against the file's fixture
-//! values; the Node-driver halves, the bus/index identical check,
-//! and the HTML rendering halves (resolved collapse rendering,
-//! disabled-button HTML, source-text checks over bus.html) stay
-//! exclusion-blocked: they read the fold-excluded viewer.
+//! count, resolved-collapse count, write gate) are ported against
+//! the file's fixture values; the Node-driver halves, the bus/index
+//! identical check, and the HTML rendering halves (resolved
+//! collapse rendering, disabled-button HTML, source-text checks
+//! over bus.html) stay exclusion-blocked: they read the
+//! fold-excluded viewer.
 //! Split — spec-note halves ported in tests/b15_spec_notes.rs, the
 //! viewer/Node halves below stay exclusion-blocked:
 //! test_dashboard_brief_sections (viewer half),
@@ -359,6 +360,27 @@ fn test_dashboard_alert_lifecycle_live_write_gate_off() {
         alert_write_enabled(),
         (false, "posting is off for this build")
     );
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_resolved_collapse_count() {
+    // Driver's htmlBefore carries "1 resolved" (alert:3 only);
+    // after alert:1 resolves it carries "2 resolved". The HTML
+    // rendering stays blocked; this pins the count behind it.
+    let mut alerts = lifecycle_fixtures();
+    assert_eq!(resolved_count(&alerts), 1);
+    assert_eq!(
+        resolve_alert(&mut alerts, "alert:1", 1700003800),
+        LifecycleResult::Resolved(LifecycleAlert {
+            id: "alert:1".into(),
+            severity: "critical".into(),
+            status: Some("resolved".into()),
+            acknowledged_at: None,
+            acknowledged_by: None,
+            resolved_at: Some(1700003800),
+        })
+    );
+    assert_eq!(resolved_count(&alerts), 2);
 }
 
 #[test]
