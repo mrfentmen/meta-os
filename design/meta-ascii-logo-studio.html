@@ -549,7 +549,7 @@
           <svg id="pause-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 5v14M16 5v14"/></svg>
           <span class="button-text" id="pause-label">Pause</span>
         </button>
-        <button id="reset-button" type="button" aria-label="Reset rotation" title="Reset rotation">
+        <button id="reset-button" type="button" aria-label="Reset logo settings" title="Reset color, speed, rotation, and pause">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4L3 8"/><path d="M3 3v5h5"/></svg>
           <span class="button-text">Reset</span>
         </button>
@@ -589,6 +589,10 @@
     function saveStored(key, value) {
       try { if (window.localStorage) window.localStorage.setItem(key, value); }
       catch (e) { /* Store unavailable: this visit only. */ }
+    }
+    function clearStored(key) {
+      try { if (window.localStorage) window.localStorage.removeItem(key); }
+      catch (e) { /* Nothing to undo beyond the in-memory defaults. */ }
     }
     function storedColor() {
       const value = readStored(LOGO_COLOR_KEY);
@@ -805,10 +809,22 @@
       setPaused(!isPaused);
       saveStored(LOGO_PAUSED_KEY, isPaused ? '1' : '0');
     });
+    // STUDIO-RESET (Hana Agent1): Reset restores the whole studio
+    // to its defaults — Meta blue, 30%, playing, rotation home —
+    // and clears the shared saved keys, so a reload after Reset
+    // does not resurrect the old color or speed (the rotation-only
+    // Reset that STUDIO-PERSIST left behind did exactly that).
+    // Clearing the shared keys also returns the console panel to
+    // its product color on its next reload.
     document.getElementById('reset-button').addEventListener('click', () => {
       resetRotation();
       setPaused(false);
-      saveStored(LOGO_PAUSED_KEY, '0');
+      setAccentColor(DEFAULT_ACCENT);
+      speedSlider.value = '30';
+      speedValue.textContent = '30%';
+      clearStored(LOGO_COLOR_KEY);
+      clearStored(LOGO_SPEED_KEY);
+      clearStored(LOGO_PAUSED_KEY);
     });
 
     scene.addEventListener('pointerdown', (event) => {

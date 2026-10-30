@@ -198,6 +198,13 @@ Web console (phone or Mac browser):
     (The shipped root studio, logo-studio.html, has no back link;
     it is the verbatim v2 file and is not the studio the console
     links to.)
+11. Studio Reset: in the full studio pick a color that is not
+    Meta blue and drag the speed off 30%, then tap Reset. The
+    logo returns to Meta blue at 30%, playing, with its rotation
+    re-homed. Reload the studio — it still shows Meta blue at
+    30%, playing, not the pre-Reset choices. Reload the console
+    — its Logo panel reads "Logo color: product color" again,
+    because the two pages share the saved keys.
 
 Native Mac app (MetaTrio):
 
