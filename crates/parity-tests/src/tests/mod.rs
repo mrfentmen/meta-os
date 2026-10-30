@@ -19,7 +19,7 @@ macro_rules! case {
 pub mod test_boss_trigger;
 pub mod test_bus_rename;
 pub mod test_bustools_parity;
-case!(test_clip, ["clipboard fallback", "paste verify"], ["live clipboard tools"]);
+pub mod test_clip;
 pub mod test_fdny_par_clock;
 case!(test_os021_update, ["update apply", "rollback swap"], []);
 case!(test_os058_gateway_unit, ["unit shape"], []);
