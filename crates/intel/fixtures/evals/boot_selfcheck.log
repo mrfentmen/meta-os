@@ -1,0 +1,8 @@
+PASS: green record on seeded fixture
+PASS: 10 alerts from 9 detectors
+PASS: every detector entry ok
+PASS: record round-trips through store sink
+PASS: second boot test still green
+PASS: removed detector fails the boot test
+PASS: crashing detector fails the boot test
+RESULT: PASS

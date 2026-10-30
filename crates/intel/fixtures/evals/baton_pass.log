@@ -1,0 +1,6 @@
+full-pass: killed worker pax mid-job 7, baton names goal, progress, remaining files b/c, remaining steps, checks; next worker hana writes only b/c, zero duplicated file changes: PASS
+no-progress: job with nothing deposited yields an honest prompt, every file still to touch: PASS
+malformed: non-records, id-less records, and missing jobs yield nothing; string and spec forms parse: PASS
+idempotent: second pass journals nothing, job record unchanged, brief line names job/workers/count: PASS
+no-dale: pass record is journal only, baton module has no push path, Dale contacted at no rung: PASS
+baton_pass: ALL PHASES PASS

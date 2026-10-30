@@ -1,0 +1,6 @@
+PASS: tick -- exactly one presence-stall alert, severity critical: {'kind': 'presence-stall', 'severity': 'critical', 'nick': 'pax', 'job': '7', 'job_title': 'demo job', 'last_progress_age_seconds': 660, 'last_progress_age_minutes': 11, 'explanation': 'pax holds claimed job 7 but has been absent from presence for over 10 minutes with no progress on it for 11 minutes.', 'suggested_fix': 'Check on pax; if the worker is gone, the lease sweep will requeue job 7 for another worker.', 'dedupe_key': 'presence-stall:pax:7', 'created_at': 10000}
+PASS: store -- record id=presence-stall:pax:7 severity=critical room=build-int
+PASS: brief -- Watch items id=presence-stall:pax:7; template brief renders 'id: summary'
+PASS: dashboard -- panel row id=presence-stall:pax:7 severity=critical; card renders kind+severity (id literal itself is row data, not card text)
+PASS: quiet -- quiet tick yields zero alerts; Watch items empty
+INT-020: PASS -- id presence-stall:pax:7 severity critical on store, brief, and dashboard row

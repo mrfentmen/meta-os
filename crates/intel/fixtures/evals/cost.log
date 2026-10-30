@@ -1,0 +1,17 @@
+INT-007 demo-day Spark cost check
+rates: in $3.0/Mtok (default), out $15.0/Mtok (default) -- client defaults are planning placeholders, NOT pricing facts (see module docstring)
+transport note: primary agent transport carries no API cost; totals below are the HTTP fallback case
+
+call                                   base worst  tok_in tok_out_exp      $exp    $worst
+morning brief (Shot 2)                    1     1     244         177    0.0034    0.0161
+dispatch plan (Shot 5)                    1     2    3070         300    0.0137    0.0491
+closing brief (Shot 11)                   1     1     244         177    0.0034    0.0161
+alert polish (Shots 8/8b)                 2     3      54          15    0.0008    0.0466
+boot brief (Shot 0, OS-004 go only)       0     1     244         177    0.0000    0.0161
+
+expected demo day: $0.0213
+worst demo day: $0.1279
+worst with boot brief: $0.1440
+reserved half (GOV-001): $75.00; headroom: $74.8560
+credit: $150.00; real rates would have to exceed placeholder rates by 520x before the reserved half is breached
+PASS

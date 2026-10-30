@@ -1,0 +1,10 @@
+detector: wedged driver stall names driver-audio/d1, severity critical, age 10m: PASS
+detector: present wedged driver yields no presence-stall: PASS
+detector: fresh drivers yield no alert: PASS
+detector: watchdog.py has no driver special-casing: PASS
+equivalence: wedged worker fires the same progress-stall alert, critical, naming pax/w1: PASS
+demo: probe exit=0
+demo: probe stdout: probe: PASS
+demo: wedge fires at 61s and stays quiet at 30s under the demo profile: PASS
+contract: tick alerts once for the wedged driver, leaves both driver jobs claimed, sibling untouched: PASS
+driver_stall drill: PASS

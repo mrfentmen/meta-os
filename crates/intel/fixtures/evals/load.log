@@ -1,0 +1,14 @@
+INT-006 load check
+room: 2000 messages, queue: 200 jobs (10 claimed, 190 open)
+queue: in-memory fake surface, namespace muse-bus:int-job, caps muse-bus:int-cap, room build-int
+clock: fake clock never advanced, so every claimed job stays healthy and the tick must yield zero alerts; timings are perf_counter wall times
+brief: template path (no live Spark call; GOV-001 leaves live transport blocked), built from the BRF-023 capped 500-message window
+
+[PASS] seed queue: 200 jobs posted, 10 claimed and progressed, 190 left open
+[PASS] seed room: 2000 messages on the room list, seeded directly after the bus_trim-capped announcements
+[PASS] snapshot: snapshot read 2000 messages and 200 jobs in 0.004s
+[PASS] brief: morning brief (218 words, budget 220) in 0.009s, built from the BRF-023 capped 500-message window
+[PASS] tick: tick yielded zero alerts in 0.001s
+[PASS] budgets: snapshot 0.004s, brief 0.009s, tick 0.001s, total 0.014s, all inside budget
+
+INT-006: PASS (all stages)

@@ -1,0 +1,7 @@
+impossible: PASS: job 7 burned 2/2, parked, one escalation, second tick silent
+crew-fixable: PASS: dependency blocker, 0/3, zero parks and zero escalations across 3 ticks
+dale-call: PASS: money blocker parked at 1/5 with the note quoted verbatim, one escalation, second tick silent
+malformed: PASS: non-numeric, missing, zero, negative, and id-less jobs yield nothing and no crash
+no-extra-contact: PASS: exactly 2 escalations, both payloads valid, sent ledger empty (gate builds, never sends)
+immutable: PASS: snapshot and journal unchanged by the tick
+brief: PASS: parked and escalation lines name job 7
