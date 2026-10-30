@@ -26,6 +26,7 @@ import { ignisReviewAuditTrail } from "./ignis-review-audit-trail.js";
 import { ignisReviewByConfidence } from "./ignis-review-confidence.js";
 import { ignisReviewByScenario } from "./ignis-review-scenario.js";
 import { ignisReviewByObservationCategory } from "./ignis-review-observation-category.js";
+import { ignisReviewByEvidence } from "./ignis-review-evidence.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -161,6 +162,7 @@ const els = {
   ignisReviewConfidence: $("ignis-review-confidence"),
   ignisReviewScenario: $("ignis-review-scenario"),
   ignisReviewObservationCategory: $("ignis-review-observation-category"),
+  ignisReviewEvidence: $("ignis-review-evidence"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1385,6 +1387,19 @@ function updateLogStats() {
   const reviewObservationCategory = ignisReviewByObservationCategory(log.entries());
   els.ignisReviewObservationCategory.textContent =
     `Flagged observations ${reviewObservationCategory.total} · Visible smoke ${reviewObservationCategory.visibleSmoke} · Visible flame ${reviewObservationCategory.visibleFlame} · Steam or fog ${reviewObservationCategory.steamOrFog} · Flame-like lighting ${reviewObservationCategory.flameLikeLighting} · Obscured or distant ${reviewObservationCategory.obscuredOrDistant} · No hazard ${reviewObservationCategory.noHazard} · Indeterminate ${reviewObservationCategory.indeterminate}`;
+  // IGNIS-ONEOFONE-17: the review queue by evidence
+  // completeness in honest form — the flagged queue ONEOFONE-3
+  // counts, bucketed by whether their observations carry
+  // inspectable evidence (ONEOFONE-4's completeness read,
+  // queue-scoped). Clear and unknown-flag entries are not
+  // awaiting review and read nowhere here; a flagged entry with
+  // no observations array counts as unassessable, never a
+  // silent unevidenced. A held session stays zeros, and the
+  // panel itself is hidden under Vigiles and Medicus by CSS,
+  // so this line only ever shows under Ignis.
+  const reviewEvidence = ignisReviewByEvidence(log.entries());
+  els.ignisReviewEvidence.textContent =
+    `Awaiting review ${reviewEvidence.totalFlagged} · Fully evidenced ${reviewEvidence.fullyEvidenced} · Partially evidenced ${reviewEvidence.partiallyEvidenced} · Unevidenced ${reviewEvidence.unevidenced} · Unassessable ${reviewEvidence.unassessable}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
