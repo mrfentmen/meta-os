@@ -3,7 +3,8 @@
 //! Ports (behavior, not redesign):
 //! - `os/intel/alerts.py` -> [`alerts`]
 //! - `os/intel/baton.py` -> [`baton`]
-//! - `os/intel/brief.py` -> [`brief`]
+//! - `os/intel/brief.py` -> [`brief`], section derivation ->
+//!   [`sections`]
 //! - `os/intel/dispatch.py` -> [`dispatch`]
 //! - `os/intel/forecast.py` -> [`forecast`]
 //! - `os/intel/notify.py` -> [`notify`]
@@ -20,4 +21,5 @@ pub mod dispatch;
 pub mod forecast;
 pub mod notify;
 pub mod push;
+pub mod sections;
 pub mod wake;
