@@ -2024,6 +2024,65 @@ export class SessionLog {
         : globalEntrySpanMs === null
           ? null
           : globalEntrySpanMs / failedSpanMs;
+    // DETAIL-68: the per-product entry-span shares of
+    // that product's own success window
+    // (entrySpanShareOfOwnOkWindowByProduct): each
+    // product's DETAIL-17 entry span over that
+    // product's own DETAIL-21 ok span — the
+    // within-product re-base of DETAIL-66's global
+    // entry-window share, and the entry-side mirror
+    // of DETAIL-62's failed-span share of the same
+    // own success window, so a session where Vigiles
+    // recording stretches twice as long as Vigiles
+    // successes alone reads that at a glance even
+    // when Vigiles successes are a small slice of
+    // the session, and a product whose every entry
+    // succeeded reads 1 whatever its share of the
+    // session. Derived only from the DETAIL-17 spans
+    // and the DETAIL-21 spans, not a new rule: only
+    // that product's successes move its denominator's
+    // endpoints, and only that product's entries move
+    // its numerator, so other products' entries
+    // stretch no share here, and an unknown- or
+    // missing-product entry moves no bucket and no
+    // product denominator, unlike DETAIL-66's
+    // product-blind global. These are raw ratios,
+    // never clamped: a share above 1 is the normal
+    // case (the product's recording outlasts its
+    // successes), a share of exactly 1 means every
+    // entry of that product was a success spanning
+    // the whole product recording, and a share below
+    // 1 or below 0 means timestamps ran out of
+    // insertion order, exactly as DETAIL-17's and
+    // DETAIL-21's raw spans do. Null per product
+    // with no usable own success window at all (no
+    // successes of that product, a single success of
+    // that product, or all of that product's successes
+    // at one timestamp — a zero own ok span has no
+    // share to divide, never NaN); null per product
+    // whose own entry span is unknown (entries
+    // recorded but no usable timestamp pair — never
+    // a fabricated window; defensive only, since a
+    // nonzero own ok window already implies usable
+    // success timestamps among that product's
+    // entries, unless an unparseable first entry
+    // timestamp poisons the entry span alone); 0 per
+    // product whose own entry span is 0 once a
+    // nonzero own success window exists — reachable
+    // only when that product's entries were recorded
+    // out of timestamp order, so the first and last
+    // entry share one timestamp while its successes
+    // stretch.
+    const shareEntryOfOwnOkWindow = (product, span) => {
+      if (okSpanMsByProduct[product] === null || okSpanMsByProduct[product] === 0) return null;
+      if (span === null) return null;
+      return span / okSpanMsByProduct[product];
+    };
+    const entrySpanShareOfOwnOkWindowByProduct = {
+      vigiles: shareEntryOfOwnOkWindow("vigiles", entrySpanMsByProduct.vigiles),
+      ignis: shareEntryOfOwnOkWindow("ignis", entrySpanMsByProduct.ignis),
+      sanitas: shareEntryOfOwnOkWindow("sanitas", entrySpanMsByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -2439,6 +2498,19 @@ export class SessionLog {
       // nonzero failed window. Both spans are
       // product-blind, unlike DETAIL-53/55.
       entrySpanShareOfFailedWindow,
+      // DETAIL-68: the per-product entry-span shares
+      // of that product's own success window
+      // (entrySpanShareOfOwnOkWindowByProduct): each
+      // product's DETAIL-17 entry span over that
+      // product's own DETAIL-21 ok span — the
+      // within-product re-base of DETAIL-66. Null per
+      // product with no usable own success window, or
+      // with no usable own entry span; 0 when the
+      // product's own entry span is 0 against a
+      // nonzero own success window. An unknown- or
+      // missing-product entry moves no bucket and no
+      // denominator.
+      entrySpanShareOfOwnOkWindowByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and

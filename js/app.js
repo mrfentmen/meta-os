@@ -123,6 +123,7 @@ const els = {
   logStatsFailedSpanShareOfOkWindow: $("log-stats-failed-span-share-of-ok-window"),
   logStatsEntrySpanShareOfOkWindow: $("log-stats-entry-span-share-of-ok-window"),
   logStatsEntrySpanShareOfFailedWindow: $("log-stats-entry-span-share-of-failed-window"),
+  logStatsEntrySpanShareOfOwnOkWindowByProduct: $("log-stats-entry-span-share-of-own-ok-window-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1052,6 +1053,23 @@ function updateLogStats() {
   // means timestamps ran out of insertion order.
   els.logStatsEntrySpanShareOfFailedWindow.textContent =
     `Entry-span share of failure window: ${stats.entrySpanShareOfFailedWindow === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindow * 100)}%`}`;
+  // DETAIL-68: the per-product entry-span-share-of-
+  // that-product's-own-success-window line re-bases
+  // DETAIL-17's per-product entry spans on each
+  // product's own DETAIL-21 ok span, rendered as whole
+  // percents, or "none" per product with no usable own
+  // success window or no usable own entry span —
+  // the within-product re-base of DETAIL-66, so a
+  // product whose recording stretches twice as long
+  // as its own successes reads 200% whatever its
+  // share of the session. A product whose every
+  // entry succeeded reads 100%, and other products'
+  // entries move no share. Raw ratios, never
+  // clamped: above 100% is the normal case, below
+  // 100% or below 0% means timestamps ran out of
+  // insertion order.
+  els.logStatsEntrySpanShareOfOwnOkWindowByProduct.textContent =
+    `Entry-span share of that product's own success window by product: Vigiles ${stats.entrySpanShareOfOwnOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOwnOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfOwnOkWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
