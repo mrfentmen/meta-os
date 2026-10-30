@@ -23,6 +23,7 @@ import { ignisScenarioBreakdown } from "./ignis-scenario-breakdown.js";
 import { ignisReviewBySource } from "./ignis-review-source.js";
 import { ignisReviewByModel } from "./ignis-review-model.js";
 import { ignisReviewAuditTrail } from "./ignis-review-audit-trail.js";
+import { ignisReviewByConfidence } from "./ignis-review-confidence.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -155,6 +156,7 @@ const els = {
   ignisReviewSource: $("ignis-review-source"),
   ignisReviewModel: $("ignis-review-model"),
   ignisReviewAuditTrail: $("ignis-review-audit-trail"),
+  ignisReviewConfidence: $("ignis-review-confidence"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1339,6 +1341,16 @@ function updateLogStats() {
   const reviewAuditTrail = ignisReviewAuditTrail(log.entries());
   els.ignisReviewAuditTrail.textContent =
     `Awaiting review ${reviewAuditTrail.totalFlagged} · Full trail ${reviewAuditTrail.fullTrail} · Partial trail ${reviewAuditTrail.partialTrail} · No trail ${reviewAuditTrail.noTrail}`;
+  // IGNIS-ONEOFONE-14: the flagged queue's own reported confidence,
+  // banded with ONEOFONE-2's bands — observations on flagged ok
+  // Ignis assessments only, never clear, unknown-flag, failed, or
+  // other-product entries, and never a re-score. A flagged entry
+  // with no observations contributes nothing, and the panel itself
+  // is hidden under Vigiles and Medicus by CSS, so this line only
+  // ever shows under Ignis.
+  const reviewConfidence = ignisReviewByConfidence(log.entries());
+  els.ignisReviewConfidence.textContent =
+    `Flagged observations ${reviewConfidence.total} · High (≥ 0.8) ${reviewConfidence.high} · Medium (≥ 0.5) ${reviewConfidence.medium} · Low (< 0.5) ${reviewConfidence.low} · Unreported ${reviewConfidence.unreported}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
