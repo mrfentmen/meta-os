@@ -70,6 +70,72 @@ pub fn brief_failure_line(room: &str, err: &str) -> String {
     format!("Brief for {room} failed: {err}")
 }
 
+/// Frozen brief constants from `os/intel/brief.py` (BRF-007/028).
+pub const BRIEF_SECTIONS: &[&str] =
+    &["Decisions", "In flight", "Owners", "Blocked and why", "Watch items"];
+pub const BRIEF_KINDS: &[&str] = &["morning", "onjoin", "ondemand"];
+/// BRF-028: regeneration guard window in seconds.
+pub const BRIEF_REGENERATION_WINDOW_SECONDS: i64 = 300;
+
+/// Word budget per brief kind (BRIEF_BUDGETS); None for unknown kinds.
+pub fn brief_budget(kind: &str) -> Option<usize> {
+    match kind {
+        "morning" => Some(220),
+        "onjoin" => Some(150),
+        "ondemand" => Some(300),
+        _ => None,
+    }
+}
+
+/// BRF-026: the canned one-liner for a brief failure kind.
+///
+/// This is Python's `brief_failure_line(kind)`; it raises (here: Err)
+/// on an unknown kind — a failure line must never be invented.
+pub fn failure_copy_for_kind(kind: &str) -> Result<&'static str, String> {
+    match kind {
+        "unavailable" => Ok("No brief is available right now. Try again in a few minutes."),
+        "spark_down" => Ok("The brief writer is down, so no fresh brief could be written. Try again later."),
+        "no_data" => Ok("No brief yet, this room has no activity to brief on."),
+        _ => Err(format!("unknown brief failure kind: '{kind}'")),
+    }
+}
+
+/// BRF-007 rewrite pass: cut a brief to its word budget.
+///
+/// Drops bullet lines (`- `) from the end first, keeping section
+/// headings and the window line. If still over budget with no
+/// bullets left, truncates by words with a ` (trimmed)` marker.
+/// A brief already within budget is returned unchanged.
+/// Ported oddity: Python slices `words[:budget - 1]`, so a zero
+/// budget keeps all but the last word; that is preserved here.
+pub fn trim_to_budget(text: &str, budget: usize) -> String {
+    if text.split_whitespace().count() <= budget {
+        return text.to_string();
+    }
+    let mut lines: Vec<&str> = text.split('\n').collect();
+    while lines.join("\n").split_whitespace().count() > budget {
+        match lines.iter().rposition(|l| l.starts_with("- ")) {
+            Some(idx) => {
+                lines.remove(idx);
+            }
+            None => break,
+        }
+    }
+    let trimmed = lines.join("\n");
+    if trimmed.split_whitespace().count() > budget {
+        let words: Vec<&str> = trimmed.split_whitespace().collect();
+        let end = if budget == 0 {
+            words.len().saturating_sub(1)
+        } else {
+            budget - 1
+        };
+        let end = end.min(words.len());
+        format!("{} (trimmed)", words[..end].join(" "))
+    } else {
+        trimmed
+    }
+}
+
 /// Trim snapshot text to a char budget without inventing content.
 pub fn cap_snapshot_window(text: &str, budget: usize) -> String {
     if text.len() <= budget {
@@ -145,5 +211,36 @@ mod tests {
         let out = redact_secrets(&["API_TOKEN=abc".into(), "ROOM=main".into()]);
         assert_eq!(out[0], "API_TOKEN=<redacted>");
         assert_eq!(out[1], "ROOM=main");
+    }
+
+    #[test]
+    fn failure_copy_and_budgets() {
+        assert_eq!(
+            failure_copy_for_kind("unavailable").unwrap(),
+            "No brief is available right now. Try again in a few minutes."
+        );
+        assert_eq!(
+            failure_copy_for_kind("spark_down").unwrap(),
+            "The brief writer is down, so no fresh brief could be written. Try again later."
+        );
+        assert_eq!(
+            failure_copy_for_kind("no_data").unwrap(),
+            "No brief yet, this room has no activity to brief on."
+        );
+        assert!(failure_copy_for_kind("other").is_err());
+        assert_eq!(brief_budget("morning"), Some(220));
+        assert_eq!(brief_budget("onjoin"), Some(150));
+        assert_eq!(brief_budget("ondemand"), Some(300));
+        assert_eq!(brief_budget("daily"), None);
+        assert_eq!(BRIEF_REGENERATION_WINDOW_SECONDS, 300);
+    }
+
+    #[test]
+    fn trim_drops_bullets_then_truncates() {
+        let t = "Window: x\n## Watch items\n- one two\n- three four\n- five six";
+        assert_eq!(trim_to_budget(t, 5), "Window: x\n## Watch items");
+        assert_eq!(trim_to_budget(t, 100), t);
+        assert_eq!(trim_to_budget("a b c d e f", 3), "a b (trimmed)");
+        assert_eq!(trim_to_budget("one two three", 3), "one two three");
     }
 }

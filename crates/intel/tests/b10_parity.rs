@@ -239,6 +239,48 @@ use intel::b10_brief::window::{message_parts, window_line, RawMessage, SourceWin
     );
 }
 
+// ---- B10 T190 continued: brief constants, canned failure lines,
+// trim-to-budget (BRF-007/026/028) ----
+// Mirrors os/intel/brief.py BRIEF_SECTIONS / BRIEF_KINDS /
+// BRIEF_BUDGETS / BRIEF_REGENERATION_WINDOW_SECONDS /
+// BRIEF_FAILURE_COPY / _trim_to_budget directly.
+
+#[test] fn test_intel_brief_failure_copy_kinds() {
+    assert_eq!(
+        brief::failure_copy_for_kind("unavailable").unwrap(),
+        "No brief is available right now. Try again in a few minutes."
+    );
+    assert_eq!(
+        brief::failure_copy_for_kind("spark_down").unwrap(),
+        "The brief writer is down, so no fresh brief could be written. Try again later."
+    );
+    assert_eq!(
+        brief::failure_copy_for_kind("no_data").unwrap(),
+        "No brief yet, this room has no activity to brief on."
+    );
+    assert!(brief::failure_copy_for_kind("invented").is_err());
+}
+
+#[test] fn test_intel_brief_constants_and_budgets() {
+    assert_eq!(
+        brief::BRIEF_SECTIONS,
+        ["Decisions", "In flight", "Owners", "Blocked and why", "Watch items"]
+    );
+    assert_eq!(brief::BRIEF_KINDS, ["morning", "onjoin", "ondemand"]);
+    assert_eq!(brief::BRIEF_REGENERATION_WINDOW_SECONDS, 300);
+    assert_eq!(brief::brief_budget("morning"), Some(220));
+    assert_eq!(brief::brief_budget("onjoin"), Some(150));
+    assert_eq!(brief::brief_budget("ondemand"), Some(300));
+    assert_eq!(brief::brief_budget("bogus"), None);
+}
+
+#[test] fn test_intel_brief_trim_to_budget() {
+    let t = "Window: x\n## Watch items\n- one two\n- three four\n- five six";
+    assert_eq!(brief::trim_to_budget(t, 5), "Window: x\n## Watch items");
+    assert_eq!(brief::trim_to_budget("a b c d e f", 3), "a b (trimmed)");
+    assert_eq!(brief::trim_to_budget("one two three", 3), "one two three");
+}
+
 #[test] fn test_intel_brief_message_parts_forms() {
     assert_eq!(
         message_parts(&RawMessage::Dict { nick: "pax".into(), text: "hi".into() }),
