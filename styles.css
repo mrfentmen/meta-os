@@ -258,6 +258,13 @@ button:disabled {
   border-color: #f5f9ff;
 }
 
+/* LOGO-2 (Del direction, Oct 30): the Logo panel's speed slider
+   spans the panel like the other full-width controls; the pause
+   button reuses the existing .controls button treatment. */
+#logo-speed {
+  width: 100%;
+}
+
 /* Product switcher: three real radio options, styled as a segmented row. */
 .product-switch {
   display: grid;

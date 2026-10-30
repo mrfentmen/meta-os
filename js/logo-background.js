@@ -163,6 +163,49 @@
   var viewWidth = 0;
   var viewHeight = 0;
   var running = true;
+
+  // LOGO-2 (Del direction, Oct 30): the console Logo panel's
+  // speed slider and pause button, same storage pattern as the
+  // LOGO-1 color. Speed is a percent, 0 to 100: 0% is still,
+  // 25% reproduces this background's usual slow 0.0022 drift
+  // exactly, and 100% is four times that drift — still well
+  // below the studio's own pace, so the background never
+  // demands attention. No saved speed means the usual drift.
+  // Pause is the user's own stop, separate from the hidden-tab
+  // pause below and from reduced motion: pausing stops the
+  // loop, resuming restarts it, and neither changes the frame
+  // already on the canvas.
+  var speedStep = 0.0022;
+  var userPaused = false;
+  var LOGO_SPEED_KEY = "meta-trio-logo-speed";
+  var LOGO_PAUSED_KEY = "meta-trio-logo-paused";
+  function applySpeed(percent) {
+    var value = Number(percent);
+    if (!Number.isFinite(value)) return;
+    value = Math.max(0, Math.min(100, value));
+    speedStep = (value / 25) * 0.0022;
+  }
+  function readStoredSpeed() {
+    try {
+      var stored =
+        window.localStorage && window.localStorage.getItem(LOGO_SPEED_KEY);
+      var value = stored === null ? NaN : Number(stored);
+      if (Number.isFinite(value) && value >= 0 && value <= 100) return value;
+    } catch (e) {
+      // An unavailable store leaves the usual drift in place.
+    }
+    return null;
+  }
+  function readStoredPaused() {
+    try {
+      return (
+        window.localStorage &&
+        window.localStorage.getItem(LOGO_PAUSED_KEY) === "1"
+      );
+    } catch (e) {
+      return false;
+    }
+  }
   var reducedMotion =
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -299,7 +342,7 @@
   document.addEventListener("visibilitychange", function () {
     if (document.hidden) {
       running = false;
-    } else if (!reducedMotion) {
+    } else if (!reducedMotion && !userPaused) {
       running = true;
       requestAnimationFrame(renderFrame);
     }
@@ -313,7 +356,9 @@
     }
 
     // Slow drift: a background should move, not demand attention.
-    if (!reducedMotion) angleY += 0.0022;
+    // LOGO-2: the drift step comes from the speed slider, and a
+    // user pause holds the loop on its last frame.
+    if (!reducedMotion && !userPaused) angleY += speedStep;
 
     glyphBuffer.fill(0);
     colorBuffer.fill(0);
@@ -413,7 +458,7 @@
     }
     ctx.shadowBlur = 0;
 
-    if (running && !reducedMotion) requestAnimationFrame(renderFrame);
+    if (running && !reducedMotion && !userPaused) requestAnimationFrame(renderFrame);
   }
 
   // A saved logo color (LOGO-1) is applied by js/logo-color.js
@@ -429,12 +474,32 @@
     }
   });
 
+  // LOGO-2: speed and pause arrive from js/logo-animation.js.
+  // A pause stops the loop at its tail above; resuming restarts
+  // it only when the tab is visible and motion is allowed, so a
+  // resume while hidden waits for the visibility handler.
+  window.addEventListener("meta-trio-logo-speed", function (event) {
+    var speed = event && event.detail && event.detail.speed;
+    if (typeof speed === "number") applySpeed(speed);
+  });
+  window.addEventListener("meta-trio-logo-paused", function (event) {
+    var paused = event && event.detail && event.detail.paused === true;
+    userPaused = paused;
+    if (!paused && running && !reducedMotion) requestAnimationFrame(renderFrame);
+  });
+
   // Tint from the product the page opened on, then follow switches.
   applyProduct(document.body.dataset.product);
   // A color saved on an earlier visit re-tints before the first
   // frame, so a reload never flashes the product tint first.
   var storedColor = readStoredColor();
   if (storedColor) applyCustomColor(storedColor);
+  // LOGO-2: a saved speed or pause re-applies before the first
+  // frame, so a reload never flashes the usual drift first, and
+  // a saved pause holds the loop on its first still frame.
+  var storedSpeed = readStoredSpeed();
+  if (storedSpeed !== null) applySpeed(storedSpeed);
+  userPaused = readStoredPaused();
   if ("MutationObserver" in window) {
     new MutationObserver(function (mutations) {
       for (var m = 0; m < mutations.length; m++) {

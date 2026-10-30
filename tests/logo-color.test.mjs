@@ -6,9 +6,8 @@
 // its six presets plus a custom picker — and the choice persists
 // in this browser's local storage and re-tints the spinning
 // background live, with Reset returning to the product color.
-// The studio's rotation speed and pause controls stay in the full
-// studio page for now; this slice is color only, and says so in
-// the panel's link note.
+// LOGO-2 later moved the studio's speed and pause controls into
+// the same panel, so the link note now names the large logo only.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -73,7 +72,7 @@ test("Logo panel carries the studio's six presets, a picker, and Reset", () => {
   );
   assert.match(
     html,
-    /<a class="logo-studio-link" href="design\/meta-ascii-logo-studio\.html">Open the full logo studio<\/a>/,
+    /<a class="logo-studio-link" href="design\/meta-ascii-logo-studio\.html">Open the full logo studio<\/a> for the large animated logo\./,
     "Logo panel links to the new studio file for speed and pause",
   );
   assert.match(
@@ -152,8 +151,8 @@ test("controls persist the choice and dispatch it; background applies it", () =>
 test("background animation and reduced-motion rules are untouched", () => {
   assert.match(
     bg,
-    /angleY \+= 0\.0022;/,
-    "background still drifts slowly",
+    /var speedStep = 0\.0022;/,
+    "background still defaults to the usual slow drift (LOGO-2 made the step slider-driven)",
   );
   assert.match(
     bg,

@@ -68,8 +68,13 @@ test("background script is slow, still under reduced motion, paused when hidden"
   );
   assert.match(
     bg,
-    /angleY \+= 0\.0022;/,
-    "logo-background.js drifts slowly, not at studio speed",
+    /var speedStep = 0\.0022;/,
+    "logo-background.js still defaults to a slow drift, not studio speed (LOGO-2 made the step slider-driven)",
+  );
+  assert.match(
+    bg,
+    /if \(!reducedMotion && !userPaused\) angleY \+= speedStep;/,
+    "logo-background.js advances only when motion is allowed and the user has not paused",
   );
   assert.match(
     bg,
