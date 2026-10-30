@@ -114,7 +114,7 @@ impl<B: StoreBackend, G: Generator> Agent<B, G> {
                 return Outcome::Failed;
             }
         };
-        let (mut ok, mut errors) = validate_stub(&assessment);
+        let (mut ok, mut errors) = validate_assessment(&assessment, &product);
         if !ok {
             // Exactly ONE correction retry.
             let correction = errors.join("; ");
@@ -122,7 +122,7 @@ impl<B: StoreBackend, G: Generator> Agent<B, G> {
                 Ok((a2, m2, l2)) => {
                     assessment = a2; model = m2;
                     latency = latency.saturating_add(l2);
-                    let v = validate_stub(&assessment);
+                    let v = validate_assessment(&assessment, &product);
                     ok = v.0; errors = v.1;
                 }
                 Err(e) => {
@@ -157,14 +157,221 @@ impl<B: StoreBackend, G: Generator> Agent<B, G> {
     }
 }
 
-/// Minimal contract check standing in for `validateAssessment` (node).
-/// Real validation shells to js/schema.js in production; tests inject
-/// canned assessments whose category shape is what matters here.
-pub fn validate_stub(assessment: &Value) -> (bool, Vec<String>) {
-    let cat = assessment.get("assessment").and_then(|a| a.get("category")).and_then(Value::as_str);
-    match cat {
-        Some(c) if !c.is_empty() => (true, vec![]),
-        _ => (false, vec!["validateAssessment: missing assessment.category".to_string()]),
+/// Full v2 contract validation — port of `validateAssessment` in
+/// `js/schema.js` (same shapes, same error strings, same strictness:
+/// real calendar dates, present-but-nullable numbers, non-empty
+/// category/description/product/model, string evidence/summary,
+/// string-array uncertainty, boolean requires_human_review).
+/// Extra fields tolerated; nothing fabricated.
+pub fn validate_assessment(value: &Value, expected_product: &str) -> (bool, Vec<String>) {
+    let mut errors: Vec<String> = vec![];
+    let obj = match value.as_object() {
+        Some(o) => o,
+        None => return (false, vec!["response is not a JSON object".to_string()]),
+    };
+
+    if expected_product.is_empty() {
+        errors.push("expected product: missing or invalid (validator requires the requested product)".to_string());
+    } else {
+        match obj.get("product").and_then(Value::as_str) {
+            Some(p) if !p.trim().is_empty() => {
+                if p != expected_product {
+                    errors.push(format!("product: expected \"{expected_product}\", got \"{p}\""));
+                }
+            }
+            _ => errors.push("product: missing or not a non-empty string".to_string()),
+        }
+    }
+
+    match obj.get("timestamp").and_then(Value::as_str) {
+        Some(t) if !t.is_empty() => {
+            if !is_valid_iso8601(t) {
+                errors.push("timestamp: not a parseable ISO-8601 date".to_string());
+            }
+        }
+        _ => errors.push("timestamp: missing or not a string".to_string()),
+    }
+
+    match obj.get("observations") {
+        Some(Value::Array(items)) => {
+            for (i, obs) in items.iter().enumerate() {
+                let prefix = format!("observations[{i}]");
+                let o = match obs.as_object() {
+                    Some(o) => o,
+                    None => {
+                        errors.push(format!("{prefix}: not an object"));
+                        continue;
+                    }
+                };
+                match o.get("category").and_then(Value::as_str) {
+                    Some(c) if !c.trim().is_empty() => {}
+                    _ => errors.push(format!("{prefix}.category: missing or not a non-empty string")),
+                }
+                match o.get("description").and_then(Value::as_str) {
+                    Some(d) if !d.trim().is_empty() => {}
+                    _ => errors.push(format!("{prefix}.description: missing or not a non-empty string")),
+                }
+                if !matches!(o.get("evidence"), Some(Value::String(_))) {
+                    errors.push(format!("{prefix}.evidence: missing or not a string"));
+                }
+                check_nullable_number(o, "confidence", &format!("{prefix}.confidence"), &mut errors, Some(0.0), Some(1.0));
+            }
+        }
+        _ => errors.push("observations: missing or not an array".to_string()),
+    }
+
+    match obj.get("assessment") {
+        Some(Value::Object(a)) => {
+            match a.get("category").and_then(Value::as_str) {
+                Some(c) if !c.trim().is_empty() => {}
+                _ => errors.push("assessment.category: missing or not a non-empty string".to_string()),
+            }
+            if !matches!(a.get("summary"), Some(Value::String(_))) {
+                errors.push("assessment.summary: missing or not a string".to_string());
+            }
+            match a.get("uncertainty") {
+                Some(Value::Array(items)) => {
+                    for (i, item) in items.iter().enumerate() {
+                        if !matches!(item, Value::String(_)) {
+                            errors.push(format!("assessment.uncertainty[{i}]: not a string"));
+                        }
+                    }
+                }
+                _ => errors.push("assessment.uncertainty: missing or not an array".to_string()),
+            }
+            if !matches!(a.get("requires_human_review"), Some(Value::Bool(_))) {
+                errors.push("assessment.requires_human_review: missing or not a boolean".to_string());
+            }
+        }
+        _ => errors.push("assessment: missing or not an object".to_string()),
+    }
+
+    match obj.get("processing") {
+        Some(Value::Object(p)) => {
+            match p.get("model").and_then(Value::as_str) {
+                Some(m) if !m.trim().is_empty() => {}
+                _ => errors.push("processing.model: missing or not a non-empty string".to_string()),
+            }
+            check_nullable_number(p, "latency_ms", "processing.latency_ms", &mut errors, Some(0.0), None);
+        }
+        _ => errors.push("processing: missing or not an object".to_string()),
+    }
+
+    if errors.is_empty() {
+        (true, vec![])
+    } else {
+        (false, errors)
+    }
+}
+
+fn check_nullable_number(
+    obj: &serde_json::Map<String, Value>,
+    key: &str,
+    field: &str,
+    errors: &mut Vec<String>,
+    min: Option<f64>,
+    max: Option<f64>,
+) {
+    let v = match obj.get(key) {
+        None => {
+            errors.push(format!("{field}: missing (must be present, null when unreported)"));
+            return;
+        }
+        Some(Value::Null) => return,
+        Some(Value::Number(n)) => n.as_f64().unwrap(),
+        Some(_) => {
+            errors.push(format!("{field}: must be null or a number"));
+            return;
+        }
+    };
+    if !v.is_finite() {
+        errors.push(format!("{field}: must be null or a number"));
+        return;
+    }
+    if let Some(lo) = min {
+        if v < lo {
+            errors.push(format!("{field}: must not be below {lo}"));
+            return;
+        }
+    }
+    if let Some(hi) = max {
+        if v > hi {
+            errors.push(format!("{field}: out of range {lo}..{hi}", lo = min.unwrap_or(0.0)));
+        }
+    }
+}
+
+/// Strict ISO-8601 with T separator, timezone, and real calendar dates.
+/// Mirrors `isValidIso8601` in js/schema.js: `YYYY-MM-DDTHH:MM`,
+/// optional `:SS[.frac]`, then `Z` or a numeric offset. Rejects
+/// free-form dates and impossible calendar dates.
+fn is_valid_iso8601(s: &str) -> bool {
+    let (date, time) = match s.split_once('T') {
+        Some(t) => t,
+        None => return false,
+    };
+    if date.len() != 10 || date.as_bytes()[4] != b'-' || date.as_bytes()[7] != b'-' {
+        return false;
+    }
+    let num = |a: &str| a.parse::<i32>().ok();
+    let (y, mo, da) = match (num(&date[0..4]), num(&date[5..7]), num(&date[8..10])) {
+        (Some(y), Some(mo), Some(da)) => (y, mo as u32, da as u32),
+        _ => return false,
+    };
+    if !(1..=12).contains(&mo) || da < 1 || da > days_in_month(y, mo) {
+        return false;
+    }
+    if time.len() < 5 || time.as_bytes()[2] != b':' {
+        return false;
+    }
+    let (h, mi) = match (num(&time[0..2]), num(&time[3..5])) {
+        (Some(h), Some(mi)) => (h, mi),
+        _ => return false,
+    };
+    if h > 23 || mi > 59 {
+        return false;
+    }
+    let mut rest = &time[5..];
+    if rest.starts_with(':') {
+        if rest.len() < 3 {
+            return false;
+        }
+        match rest[1..3].parse::<i32>() {
+            Ok(se) if se <= 59 => {}
+            _ => return false,
+        }
+        rest = &rest[3..];
+        if rest.starts_with('.') {
+            let frac: String = rest[1..].chars().take_while(|c| c.is_ascii_digit()).collect();
+            if frac.is_empty() {
+                return false;
+            }
+            rest = &rest[1 + frac.len()..];
+        }
+    }
+    if rest == "Z" {
+        return true;
+    }
+    let b = rest.as_bytes();
+    if b.len() < 3 || (b[0] != b'+' && b[0] != b'-') {
+        return false;
+    }
+    let digits: String = rest[1..].chars().filter(|c| *c != ':').collect();
+    if digits.len() != 4 || !digits.bytes().all(|c| c.is_ascii_digit()) {
+        return false;
+    }
+    let (oh, om) = (digits[0..2].parse::<i32>().unwrap(), digits[2..4].parse::<i32>().unwrap());
+    oh <= 23 && om <= 59
+}
+
+fn days_in_month(y: i32, mo: u32) -> u32 {
+    match mo {
+        2 => {
+            let leap = y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
+            if leap { 29 } else { 28 }
+        }
+        4 | 6 | 9 | 11 => 30,
+        _ => 31,
     }
 }
 
@@ -219,5 +426,43 @@ mod tests {
             gen: Scripted(vec![(serde_json::json!({"not":"c"}), "m".into(), 10), (canned(), "muse-spark-1.3".into(), 20)], vec![]) };
         assert_eq!(a.serve_job("trio-b"), Outcome::Done);
         assert_eq!(a.gen.1.len(), 2);
+    }
+
+    #[test]
+    fn full_contract_vectors() {
+        // Valid canned assessment passes with its envelope product.
+        assert!(validate_assessment(&canned(), "ignis").0);
+        // Product mismatch.
+        let (_, e) = validate_assessment(&canned(), "vigiles");
+        assert!(e.iter().any(|x| x.contains("expected \"vigiles\"")), "{e:?}");
+        // Missing keys named, not silently passed.
+        let (_, e) = validate_assessment(&serde_json::json!({}), "ignis");
+        assert!(e.iter().any(|x| x.contains("product: missing")), "{e:?}");
+        assert!(e.iter().any(|x| x.contains("observations: missing")), "{e:?}");
+        // Bad timestamp (impossible date).
+        let mut bad = canned();
+        bad["timestamp"] = serde_json::json!("2026-02-30T06:00:00Z");
+        let (_, e) = validate_assessment(&bad, "ignis");
+        assert!(e.iter().any(|x| x.contains("not a parseable ISO-8601")), "{e:?}");
+        // Confidence out of range.
+        let mut bad = canned();
+        bad["observations"][0]["confidence"] = serde_json::json!(2);
+        let (_, e) = validate_assessment(&bad, "ignis");
+        assert!(e.iter().any(|x| x.contains("confidence")), "{e:?}");
+        // Missing latency_ms key (null is fine, absence is not).
+        let mut bad = canned();
+        bad["processing"].as_object_mut().unwrap().remove("latency_ms");
+        let (_, e) = validate_assessment(&bad, "ignis");
+        assert!(e.iter().any(|x| x.contains("latency_ms: missing")), "{e:?}");
+        // Uncertainty item must be a string.
+        let mut bad = canned();
+        bad["assessment"]["uncertainty"] = serde_json::json!([3]);
+        let (_, e) = validate_assessment(&bad, "ignis");
+        assert!(e.iter().any(|x| x.contains("uncertainty[0]")), "{e:?}");
+        // requires_human_review must be boolean.
+        let mut bad = canned();
+        bad["assessment"]["requires_human_review"] = serde_json::json!("yes");
+        let (_, e) = validate_assessment(&bad, "ignis");
+        assert!(e.iter().any(|x| x.contains("requires_human_review")), "{e:?}");
     }
 }
