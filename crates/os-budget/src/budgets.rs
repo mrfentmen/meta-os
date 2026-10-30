@@ -1,4 +1,3 @@
-successfully downloaded text file (SHA: f727f6a5658b0bc49a5b9843e8c21b150cfab045)
 //! Per-lane and per-process budget config (OS-085, Milo).
 //! (`os/intel/budgets.py`).
 //!
