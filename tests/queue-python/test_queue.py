@@ -238,6 +238,76 @@ class StubbedRoundTripTests(unittest.TestCase):
         self.assertIn("validateAssessment", result["error"])
 
 
+class SelfCorrectionTests(unittest.TestCase):
+    """The bounded self-correction retry in trio_agent.serve_job:
+    a first output that fails validateAssessment triggers exactly
+    ONE retry carrying the validation errors as a correction; a
+    valid first output means exactly one generation call. Stubbed
+    generation throughout — no live calls."""
+
+    def _serve_scripted(self, db_name, outputs):
+        store = trio_store.LocalSqliteStore(os.path.join(_TMP, db_name))
+        jobs = trio_store.JobStore(store)
+        env = build_job_via_node()
+        jid, _ = jobs.submit(env)
+        calls = []
+        scripted = list(outputs)
+
+        def stub_generate(product, image_path, timestamp, correction=None):
+            calls.append({"product": product, "correction": correction})
+            assessment, model, latency = scripted[len(calls) - 1]
+            return assessment, model, latency
+
+        agent = Agent("test-agent", 60, SCHEMA, jobs=jobs)
+        agent.generate = stub_generate
+        return jid, jobs, agent.serve_once(), calls
+
+    def test_invalid_then_valid_retries_once_with_correction(self):
+        jid, jobs, report, calls = self._serve_scripted(
+            "retry-ok.db",
+            [({"not": "a contract"}, "m", 10),
+             (canned_assessment(PRODUCT, TIMESTAMP), "muse-spark-1.3",
+              20)])
+        self.assertEqual(report["done"], [jid])
+        self.assertEqual(len(calls), 2)  # exactly one retry
+        self.assertIsNone(calls[0]["correction"])
+        # The retry carried the first output's validation errors.
+        self.assertIsInstance(calls[1]["correction"], str)
+        self.assertTrue(calls[1]["correction"])
+        result = jobs.get_result(jid)
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(
+            result["assessment"]["assessment"]["category"],
+            "steam or fog")
+        # Latency accounts for both counted calls (10 + 20).
+        self.assertEqual(result["latency_ms"], 30)
+        self.assertEqual(result["model"], "muse-spark-1.3")
+        self.assertIsNone(result["error"])
+
+    def test_invalid_twice_fails_with_exactly_two_calls(self):
+        jid, jobs, report, calls = self._serve_scripted(
+            "retry-fail.db",
+            [({"not": "a contract"}, "m", 10),
+             ({"still": "not a contract"}, "m", 20)])
+        self.assertEqual(report["failed"], [jid])
+        self.assertEqual(len(calls), 2)  # no third call, ever
+        result = jobs.get_result(jid)
+        self.assertEqual(result["status"], "failed")
+        self.assertIsNone(result["assessment"])
+        self.assertIn("validateAssessment", result["error"])
+        self.assertIn("correction retry", result["error"])
+
+    def test_valid_first_output_is_exactly_one_call(self):
+        jid, jobs, report, calls = self._serve_scripted(
+            "retry-none.db",
+            [(canned_assessment(PRODUCT, TIMESTAMP), "muse-spark-1.3",
+              5)])
+        self.assertEqual(report["done"], [jid])
+        self.assertEqual(len(calls), 1)
+        self.assertIsNone(calls[0]["correction"])
+        self.assertEqual(jobs.get_result(jid)["latency_ms"], 5)
+
+
 class HttpServiceTests(unittest.TestCase):
     PORT = 18935
 

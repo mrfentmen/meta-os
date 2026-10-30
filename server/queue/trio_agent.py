@@ -19,7 +19,16 @@ TRIO_SPARK_VIA_HELPER=1). Nothing here invents an assessment:
     the job's product and timestamp;
   * validate the model's output with the repo's own
     validateAssessment (node, ../../js/schema.js) — an invalid
-    assessment is NEVER written as a result;
+    assessment is NEVER written as a result. On a validation failure
+    the agent makes exactly ONE bounded self-correction retry: a
+    second generation call whose prompt carries the validation
+    errors as a correction (spark_gen.py), through the same
+    guardrail — a second counted call, never a free one. If the
+    retry validates, its output is the result (unannotated: the
+    contract object stays purely the model's corrected output; the
+    retry is visible only in the agent log and in latency_ms, which
+    sums both calls). If the retry also fails validation, the job
+    lands as status "failed" exactly as a first failure does;
   * write the ruled result envelope to trio:{jid}:result:
         {job_id, status: "ok"|"failed", assessment|null, error,
          model, latency_ms, completed_at}
@@ -158,11 +167,37 @@ class Agent:
 
     # -- generation via the pluggable Spark transport --------------------
 
-    def generate(self, product, image_path, timestamp):
+    def generate(self, product, image_path, timestamp, correction=None):
         """(assessment_dict, model, latency_ms) from spark_gen.
-        Raises on any failure; the caller turns that into a failed
-        result envelope — never a written answer."""
-        return spark_gen.generate(product, image_path, timestamp)
+        `correction`, when given, carries the validateAssessment
+        errors a previous reply failed (the bounded self-correction
+        retry). Raises on any failure; the caller turns that into a
+        failed result envelope — never a written answer."""
+        return spark_gen.generate(product, image_path, timestamp,
+                                  correction=correction)
+
+    def _call_generate(self, product, image_path, timestamp,
+                       correction=None):
+        """One generation call through the generate seam. With no
+        correction this is the plain 3-argument call, exactly as
+        before the retry existed. With a correction, the call passes
+        it as a keyword — unless the seam rejects that keyword
+        (tests stub `generate` with plain 3-argument callables), in
+        which case the retry still happens and the stub is called
+        without the correction; the production transport takes the
+        keyword and is unaffected. A TypeError raised INSIDE a real
+        transport (its message never names an unexpected 'correction'
+        keyword) is re-raised, not retried blind."""
+        if correction is None:
+            return self.generate(product, image_path, timestamp)
+        try:
+            return self.generate(product, image_path, timestamp,
+                                 correction=correction)
+        except TypeError as e:
+            if "unexpected keyword argument" not in str(e) or \
+                    "correction" not in str(e):
+                raise
+            return self.generate(product, image_path, timestamp)
 
     # -- serving -----------------------------------------------------------
 
@@ -231,14 +266,36 @@ class Agent:
                 tf.write(raw)
                 image_path = tf.name
             try:
-                assessment, model, latency_ms = self.generate(
+                assessment, model, latency_ms = self._call_generate(
                     product, image_path, timestamp)
+                ok, errors = self.validate(assessment, product)
+                if not ok:
+                    # Bounded self-correction: exactly ONE retry,
+                    # with the validation errors fed back as the
+                    # correction. The retry is a second, counted
+                    # generation call through the same guardrail;
+                    # there is never a third.
+                    _log(f"{jid}: model output failed validation "
+                         f"({'; '.join(errors[:5])}); one correction "
+                         f"retry")
+                    assessment, model, retry_latency = \
+                        self._call_generate(
+                            product, image_path, timestamp,
+                            correction="; ".join(errors[:5]))
+                    if isinstance(latency_ms, (int, float)) and \
+                            isinstance(retry_latency, (int, float)):
+                        latency_ms = latency_ms + retry_latency
+                    elif retry_latency is not None:
+                        latency_ms = retry_latency
+                    ok, errors = self.validate(assessment, product)
+                    if ok:
+                        _log(f"{jid}: correction retry validated")
             finally:
                 os.unlink(image_path)
-            ok, errors = self.validate(assessment, product)
             if not ok:
                 return self._finish_failed(
-                    jid, "model output failed validateAssessment: "
+                    jid, "model output failed validateAssessment "
+                    "(after one correction retry): "
                     + "; ".join(errors[:5]),
                     model=model, latency_ms=latency_ms, product=product)
             result = {

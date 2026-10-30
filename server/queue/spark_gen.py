@@ -86,12 +86,16 @@ def _message_content(data):
     return None
 
 
-def build_prompt(product, timestamp):
+def build_prompt(product, timestamp, correction=None):
     """buildSparkPrompt() from server/model.mjs, verbatim lines, fed
-    by the js/products.js profile for this product."""
+    by the js/products.js profile for this product. When `correction`
+    is given (the resident agent's bounded self-correction retry), it
+    carries the validateAssessment errors the previous reply failed;
+    they are appended as a final instruction to return corrected
+    JSON only."""
     p = trio_repo.product_profile(product)
     categories = ", ".join(p["categories"])
-    return "\n".join([
+    lines = [
         f"You are the visual assessment model for {p['displayName']} "
         f"({p['department']}).",
         "Look at the attached image and return JSON ONLY, no prose, no "
@@ -114,12 +118,20 @@ def build_prompt(product, timestamp):
         "awareness only: never dispatch, never claim certainty beyond "
         "what is visible. When unsure, use indeterminate and set "
         "requires_human_review to true.",
-    ])
+    ]
+    if correction:
+        lines += [
+            "CORRECTION: a previous reply for this same frame failed "
+            "these contract checks: " + str(correction),
+            "Return corrected JSON only, matching the shape above "
+            "exactly. Do not repeat the failed checks.",
+        ]
+    return "\n".join(lines)
 
 
 # -- transport (a): direct, SPARK_API_KEY from the environment ----------
 
-def _generate_direct(product, image_bytes, timestamp):
+def _generate_direct(product, image_bytes, timestamp, correction=None):
     key = os.environ.get("SPARK_API_KEY")
     if not key:
         raise RuntimeError(
@@ -135,7 +147,7 @@ def _generate_direct(product, image_bytes, timestamp):
             "role": "user",
             "content": [
                 {"type": "text",
-                 "text": build_prompt(product, timestamp)},
+                 "text": build_prompt(product, timestamp, correction)},
                 {"type": "image_url", "image_url": {"url": data_url}},
             ],
         }],
@@ -172,7 +184,17 @@ def _generate_direct(product, image_bytes, timestamp):
 
 # -- transport (b): DEV helper subprocess (guardrail lives there) -------
 
-def _generate_via_helper(product, image_path, timestamp):
+def _generate_via_helper(product, image_path, timestamp, correction=None):
+    if correction:
+        # The helper's fixed CLI (spark_call.py assess) takes only
+        # --product/--image/--timestamp: there is no channel for the
+        # correction text on this transport. The retry still happens
+        # (a counted second call through the helper's own guardrail);
+        # it re-sends the standard prompt. The correction text itself
+        # reaches the model only on the direct transport above.
+        print("spark_gen: correction retry on the DEV helper transport "
+              "re-sends the standard prompt (helper CLI has no "
+              "correction channel)", file=sys.stderr)
     env = dict(os.environ)
     env["PYTHONPATH"] = "/opt/muse/skills/custom-connector-setup/bin"
     p = subprocess.run(
@@ -195,13 +217,17 @@ def _generate_via_helper(product, image_path, timestamp):
 
 # -- entry point ----------------------------------------------------------
 
-def generate(product, image_path, timestamp):
+def generate(product, image_path, timestamp, correction=None):
     """(assessment, model, latency_ms) for one frame. Raises on any
-    failure; never fabricates an assessment."""
+    failure; never fabricates an assessment. `correction`, when
+    given, is the bounded self-correction text (the validateAssessment
+    errors a previous reply failed); each call — first or retry —
+    passes through the active transport's guardrail and is counted."""
     if via_helper():
-        return _generate_via_helper(product, image_path, timestamp)
+        return _generate_via_helper(product, image_path, timestamp,
+                                    correction)
     with open(image_path, "rb") as f:
         image_bytes = f.read()
     if image_bytes[0:2] != b"\xff\xd8":
         raise RuntimeError("image is not a JPEG (magic bytes missing)")
-    return _generate_direct(product, image_bytes, timestamp)
+    return _generate_direct(product, image_bytes, timestamp, correction)
