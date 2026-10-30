@@ -143,14 +143,15 @@ pub fn run(watchdog: &dyn Watchdog, records: &dyn AlertRecords) -> DrillOutcome 
         Ok(record) => (true, record, String::new()),
         Err(exc) => (false, Value::obj(vec![]), exc),
     };
+    let record_detail = if build_detail.is_empty() {
+        format!("got {}", record.py_repr())
+    } else {
+        build_detail.clone()
+    };
     c.check(
         "8 alert validates as a WDG-010 store record",
         built && record.get("id").as_str() == Some(&format!("system-failure:{}", UNIT)),
-        if build_detail.is_empty() {
-            &format!("got {}", record.py_repr())
-        } else {
-            &build_detail
-        },
+        &record_detail,
     );
     c.check(
         "9 system-failure severity is critical in the alert itself (not via the snapshot-detector table: journal watch is not a DETECTORS member, so the WDG-024 table lock in test_intel_watchdog.py must keep covering exactly the snapshot kinds)",

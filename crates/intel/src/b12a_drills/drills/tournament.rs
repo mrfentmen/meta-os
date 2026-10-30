@@ -62,7 +62,7 @@ pub fn run_tournament(runner: &dyn DrillRunner, write_log: bool, root: &Path) ->
             ("seconds", Value::Float(seconds)),
             (
                 "pass_line",
-                pass_line.clone().map(Value::s).unwrap_or(Value::Null),
+                pass_line.clone().map(|line| Value::s(&line)).unwrap_or(Value::Null),
             ),
             ("output", Value::s(&out)),
         ]));

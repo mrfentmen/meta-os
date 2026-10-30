@@ -391,7 +391,7 @@ pub fn run(abrun_source: &str) -> DrillOutcome {
                     .unwrap_or(Value::Null);
                 let (kind, detail, _) =
                     abrun::attribute_stall(&stall_fixture, &images_fixture.get(version));
-                if (kind.as_str(), detail.as_str()) != ("worker-failure", "worker died") {
+                if kind.as_str() != "worker-failure" || detail.as_deref() != Some("worker died") {
                     failure = Some(format!("job-c {} not worker-failure", version));
                     break;
                 }

@@ -182,10 +182,10 @@ pub fn run_self_check_with<W: Watchdog>(
     snapshot: &Value,
     now: Option<i64>,
     room: &str,
-    expected: Option<&Value>,
+    expected_override: Option<&Value>,
     detectors: Option<&[super::deps::Detector]>,
 ) -> Value {
-    let expected = match expected {
+    let expected = match expected_override {
         Some(e) => e.clone(),
         None => expected(),
     };

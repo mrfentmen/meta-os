@@ -311,7 +311,7 @@ pub fn run_loop(
             ));
         }
         let resolved = watchdog.resolve_alerts_for_job(deps, &job_id, Some(deps.now()));
-        if resolved.len() != 1 || resolved[0] != record.get("id") {
+        if resolved.len() != 1 || resolved[0] != record.get("id").py_str() {
             return Err(format!("resolved {:?}", resolved));
         }
         let reread = deps

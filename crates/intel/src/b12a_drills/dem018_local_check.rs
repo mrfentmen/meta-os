@@ -38,14 +38,15 @@ pub fn execute<R: CmdRunner>(runner: &R) -> (i32, Vec<String>) {
         .copied()
         .filter(|path| !std::path::Path::new(path).is_file())
         .collect();
+    let assets_detail = if missing.is_empty() {
+        "12/12".to_string()
+    } else {
+        format!("missing: {}", missing.join(", "))
+    };
     log.check(
         "all 12 expected assets present",
         missing.is_empty(),
-        if missing.is_empty() {
-            "12/12"
-        } else {
-            &format!("missing: {}", missing.join(", "))
-        },
+        &assets_detail,
     );
     let mut peaks: Vec<(&str, f64)> = Vec::new();
     for path in ASSETS {
