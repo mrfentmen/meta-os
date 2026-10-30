@@ -2247,6 +2247,63 @@ export class SessionLog {
       ignis: shareEntryOfFailedWindow("ignis", entrySpanMsByProduct.ignis),
       sanitas: shareEntryOfFailedWindow("sanitas", entrySpanMsByProduct.sanitas),
     };
+    // DETAIL-72: the per-product failed-span shares of
+    // the global ok window
+    // (failedSpanShareOfOkWindowByProduct): each
+    // product's DETAIL-20 failed span over the
+    // session's global DETAIL-22 ok span — the
+    // by-product split DETAIL-65's global share
+    // implies but does not state, and the cross-span
+    // companion to DETAIL-50's failed-span shares of
+    // the global failed window, so a session where
+    // Vigiles failures stretch across twice the whole
+    // success window while Ignis failures barely
+    // outlast it reads that at a glance even when
+    // Vigiles failures are a small slice of all
+    // failures. Derived only from the DETAIL-20
+    // spans and the global ok span, not a new rule:
+    // only failures move the numerator's endpoints,
+    // so successes move neither a bucket nor the
+    // numerator, and a success with an unknown or
+    // missing product stretches the global ok window
+    // without moving any bucket, diluting every
+    // share, while a failure with an unknown or
+    // missing product moves no bucket and no
+    // denominator. These are raw ratios, never
+    // clamped, and they do NOT sum to 1: product
+    // failed windows overlap, and the global window
+    // is first-to-last successes across products,
+    // not a sum of product windows — a share above
+    // 1 or below 0 means timestamps ran out of
+    // insertion order, exactly as DETAIL-20's and
+    // DETAIL-22's raw spans do. Null per product
+    // when the session holds no usable ok window at
+    // all (an empty log, a failure-only log, a
+    // single success, or all successes at one
+    // timestamp — a zero global ok span has no
+    // shares to divide, never NaN); null per
+    // product whose own failed span is unknown
+    // (failures recorded but no usable timestamp
+    // pair — never a fabricated window); 0 per
+    // product with no failures once a nonzero ok
+    // window exists, because it covered none of
+    // the window — the deliberate contrast with
+    // DETAIL-20's null, matching DETAIL-48's and
+    // DETAIL-50's 0-once-a-window-exists rule —
+    // and 0 per single-failure product, whose
+    // zero-length window covers none of a nonzero
+    // ok window.
+    const shareFailedOfOkWindow = (product, span) => {
+      if (okSpanMs === null || okSpanMs === 0) return null;
+      if (failedCountByProduct[product] === 0) return 0;
+      if (span === null) return null;
+      return span / okSpanMs;
+    };
+    const failedSpanShareOfOkWindowByProduct = {
+      vigiles: shareFailedOfOkWindow("vigiles", failedSpanMsByProduct.vigiles),
+      ignis: shareFailedOfOkWindow("ignis", failedSpanMsByProduct.ignis),
+      sanitas: shareFailedOfOkWindow("sanitas", failedSpanMsByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -2720,6 +2777,22 @@ export class SessionLog {
       // unknown- or missing-product entry moves no
       // bucket.
       entrySpanShareOfFailedWindowByProduct,
+      // DETAIL-72: the per-product failed-span shares
+      // of the global ok window
+      // (failedSpanShareOfOkWindowByProduct): each
+      // product's DETAIL-20 failed span over the
+      // session's global DETAIL-22 ok span — the
+      // by-product split of DETAIL-65's global share.
+      // Null per product with no usable global ok
+      // window, or with failures but no usable failed
+      // timestamp pair; 0 per product with no
+      // failures once a nonzero ok window exists, and
+      // 0 per single-failure product. An unknown- or
+      // missing-product success stretches the global
+      // window without moving any bucket; an
+      // unknown- or missing-product failure moves no
+      // bucket and no denominator.
+      failedSpanShareOfOkWindowByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and

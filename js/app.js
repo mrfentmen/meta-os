@@ -127,6 +127,7 @@ const els = {
   logStatsEntrySpanShareOfOwnFailedWindowByProduct: $("log-stats-entry-span-share-of-own-failed-window-by-product"),
   logStatsEntrySpanShareOfOkWindowByProduct: $("log-stats-entry-span-share-of-ok-window-by-product"),
   logStatsEntrySpanShareOfFailedWindowByProduct: $("log-stats-entry-span-share-of-failed-window-by-product"),
+  logStatsFailedSpanShareOfOkWindowByProduct: $("log-stats-failed-span-share-of-ok-window-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1126,6 +1127,21 @@ function updateLogStats() {
   // out of insertion order.
   els.logStatsEntrySpanShareOfFailedWindowByProduct.textContent =
     `Entry-span share of failure window by product: Vigiles ${stats.entrySpanShareOfFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfFailedWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindowByProduct.sanitas * 100)}%`}`;
+  // DETAIL-72: the per-product failed-span shares of
+  // the global DETAIL-22 ok window, rendered as whole
+  // percents, or "none" per product with no usable
+  // global ok window or no usable own failed
+  // timestamp pair — the by-product split of
+  // DETAIL-65, so a product whose failures stretch
+  // across twice the whole success window reads 200%
+  // whatever its share of the failures. Successes
+  // move no bucket, only the denominator, and other
+  // products' failures move no share. Raw ratios,
+  // never clamped: above 100% is the normal case,
+  // below 100% or below 0% means timestamps ran
+  // out of insertion order.
+  els.logStatsFailedSpanShareOfOkWindowByProduct.textContent =
+    `Failure-span share of success window by product: Vigiles ${stats.failedSpanShareOfOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.failedSpanShareOfOkWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindowByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
