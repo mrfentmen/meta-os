@@ -25,7 +25,7 @@ const model = readFileSync(
 const web = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
 
 test("web: submitAssessment takes the scenario label as a parameter, captured at sample/tap time", () => {
-  assert.match(web, /async function submitAssessment\(product, timestamp, image, scenarioLabel\)/);
+  assert.match(web, /async function submitAssessment\(product, timestamp, image, scenarioLabel, source\)/);
   // Success and failure log entries use the parameter, never a fresh read.
   assert.match(web, /status: "ok",\n\s+response: assessment,\n\s+scenarioLabel,/);
   assert.match(web, /status,\n\s+error: err\.message,\n\s+scenarioLabel,/);
@@ -35,10 +35,10 @@ test("web: submitAssessment takes the scenario label as a parameter, captured at
     web,
     /async function runSample\(\) \{\n\s+const product = currentProductId;\n\s+const timestamp = new Date\(\)\.toISOString\(\);\n\s+\/\/ Captured with the product, before any capture or request: a\n\s+\/\/ scenario change mid-sample must not relabel this sample's entry\.\n\s+const scenarioLabel = currentScenarioLabel\(\);/,
   );
-  assert.match(web, /await submitAssessment\(product, timestamp, image, scenarioLabel\);/);
+  assert.match(web, /await submitAssessment\(product, timestamp, image, scenarioLabel, "live-camera"\);/);
   // Still-image and video handlers capture at tap time and pass it on.
-  assert.match(web, /await submitAssessment\(currentProductId, new Date\(\)\.toISOString\(\), stillImageDataUrl, scenarioLabel\);/);
-  assert.match(web, /await submitAssessment\(currentProductId, timestamp, image, scenarioLabel\);/);
+  assert.match(web, /await submitAssessment\(currentProductId, new Date\(\)\.toISOString\(\), stillImageDataUrl, scenarioLabel, "still-image"\);/);
+  assert.match(web, /await submitAssessment\(currentProductId, timestamp, image, scenarioLabel, "recorded-video"\);/);
 });
 
 test("native: submitAssessment takes the scenario label as a parameter", () => {

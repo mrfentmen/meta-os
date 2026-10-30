@@ -2899,7 +2899,7 @@ export class SessionLog {
     };
   }
 
-  record({ requestTimestamp, product = null, latencyMs = null, status, response = null, error = null, scenarioLabel = null }) {
+  record({ requestTimestamp, product = null, latencyMs = null, status, response = null, error = null, scenarioLabel = null, source = null }) {
     if (!LOG_STATUSES.includes(status)) {
       throw new RangeError(`unknown log status: ${status}`);
     }
@@ -2912,6 +2912,13 @@ export class SessionLog {
       latency_ms: latencyMs,
       status,
       scenario_label: scenarioLabel,
+      // IGNIS-ONEOFONE-9: the input source the submit path stamped
+      // at request time ("live-camera", "still-image", or
+      // "recorded-video"), null for entries recorded before this
+      // field existed or restored from an older export. Never
+      // inferred after the fact: a null source reads as unknown
+      // in the footage-source panel, never guessed into a bucket.
+      source,
       response,
       error,
     };

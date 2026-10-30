@@ -957,7 +957,7 @@ test("camera: a live frame capture failure lands in history and backend status, 
   assert.match(app, /async function runSample\(\) \{[\s\S]*?error: message,\n\s+scenarioLabel,/);
   assert.match(app, /async function runSample\(\) \{[\s\S]*?setBackendStatus\("error", message\);/);
   assert.match(app, /async function runSample\(\) \{[\s\S]*?addHistoryItem\(\{\n\s+title: "Analysis request failed",\n\s+timestamp,\n\s+body: message,\n\s+kind: "error",/);
-  assert.match(app, /async function runSample\(\) \{[\s\S]*?throw err;\n\s+\}\n\s+await submitAssessment\(product, timestamp, image, scenarioLabel\);/);
+  assert.match(app, /async function runSample\(\) \{[\s\S]*?throw err;\n\s+\}\n\s+await submitAssessment\(product, timestamp, image, scenarioLabel, "live-camera"\);/);
   const swift = readFileSync(new URL("../native/Sources/MetaTrio/ViewModels/AppModel.swift", import.meta.url), "utf8");
   assert.match(swift, /private func runSample\(\) async throws \{[\s\S]*?let message = "Frame capture failed: /);
   assert.match(swift, /private func runSample\(\) async throws \{[\s\S]*?backendStatus = \.error\(message\)/);
@@ -1025,9 +1025,9 @@ test("client: absolute http(s) endpoint still reaches fetch, and the health chec
 
 test("camera: a no-request failure leaves the last round trip alone and logs a null latency, matching the native client", () => {
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
-  assert.match(app, /async function submitAssessment\(product, timestamp, image, scenarioLabel\) \{[\s\S]*?const noRequest = err instanceof AssessError && err\.noRequest;/);
-  assert.match(app, /async function submitAssessment\(product, timestamp, image, scenarioLabel\) \{[\s\S]*?const latencyMs = noRequest \? null : Math\.round\(performance\.now\(\) - started\);/);
-  assert.match(app, /async function submitAssessment\(product, timestamp, image, scenarioLabel\) \{[\s\S]*?if \(latencyMs !== null\) \{\n\s+updateLastRoundTrip\(latencyMs\);\n\s+\}/);
+  assert.match(app, /async function submitAssessment\(product, timestamp, image, scenarioLabel, source\) \{[\s\S]*?const noRequest = err instanceof AssessError && err\.noRequest;/);
+  assert.match(app, /async function submitAssessment\(product, timestamp, image, scenarioLabel, source\) \{[\s\S]*?const latencyMs = noRequest \? null : Math\.round\(performance\.now\(\) - started\);/);
+  assert.match(app, /async function submitAssessment\(product, timestamp, image, scenarioLabel, source\) \{[\s\S]*?if \(latencyMs !== null\) \{\n\s+updateLastRoundTrip\(latencyMs\);\n\s+\}/);
   const swift = readFileSync(new URL("../native/Sources/MetaTrio/Services/AssessClient.swift", import.meta.url), "utf8");
   assert.match(swift, /throw AssessError\(kind: \.network, message: "Endpoint is not a valid http\(s\) URL: \\\(endpoint\)", latencyMs: nil\)/);
 });
@@ -1209,7 +1209,7 @@ test("config: web sampling interval clamps to 1–60 like the native Stepper, in
 test("reset: a request outstanding across Reset logs but does not repaint the cleared view, matching the native app", () => {
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
   assert.match(app, /let viewGeneration = 0;/);
-  assert.match(app, /async function submitAssessment\(product, timestamp, image, scenarioLabel\) \{\n\s+const endpoint = currentEndpoint\(\);\n\s+const generation = viewGeneration;/);
+  assert.match(app, /async function submitAssessment\(product, timestamp, image, scenarioLabel, source\) \{\n\s+const endpoint = currentEndpoint\(\);\n\s+const generation = viewGeneration;/);
   assert.match(app, /els\.btnReset\.addEventListener\("click", \(\) => \{\n\s+\/\/ Bump the view generation first[\s\S]*?\n\s+viewGeneration \+= 1;/);
   // Both settle paths log unconditionally and gate only the display.
   assert.match(app, /if \(generation === viewGeneration\) \{\n\s+updateLastRoundTrip\(latencyMs\);\n\s+setBackendStatus\("connected"/);

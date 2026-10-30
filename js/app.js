@@ -18,6 +18,7 @@ import { ignisUncertaintyDisclosure } from "./ignis-uncertainty.js";
 import { ignisReviewTriage } from "./ignis-review-triage.js";
 import { ignisObservationCategories } from "./ignis-observation-categories.js";
 import { ignisModelAttribution } from "./ignis-model-attribution.js";
+import { ignisFootageSource } from "./ignis-footage-source.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -145,6 +146,7 @@ const els = {
   ignisReviewTriage: $("ignis-review-triage"),
   ignisObservationCategories: $("ignis-observation-categories"),
   ignisModelAttribution: $("ignis-model-attribution"),
+  ignisFootageSource: $("ignis-footage-source"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1261,6 +1263,17 @@ function updateLogStats() {
     .map((model) => `${model} ${modelAttr.byModel[model]}`);
   els.ignisModelAttribution.textContent =
     [`Assessments ${modelAttr.total}`, ...modelParts, `Unattributed ${modelAttr.unattributed}`].join(" · ");
+  // IGNIS-ONEOFONE-9: the recorded-footage mode in honest form —
+  // the recorded ok Ignis assessments split by the input source
+  // each entry itself was stamped with at submit time. Recorded
+  // video is the FDNY prerecorded-footage workflow made visible;
+  // unknown covers entries recorded before the stamp existed and
+  // is never guessed into a bucket. A held session stays zeros,
+  // and the panel itself is hidden under Vigiles and Sanitas by
+  // CSS, so this line only ever shows under Ignis.
+  const footage = ignisFootageSource(log.entries());
+  els.ignisFootageSource.textContent =
+    `Assessments ${footage.total} · Live camera ${footage.liveCamera} · Still image ${footage.stillImage} · Recorded video ${footage.recordedVideo} · Unknown source ${footage.unknown}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
@@ -1713,7 +1726,12 @@ function addHistoryItem({ title, timestamp, body, kind, assessment = null, produ
 // the product: reading it here after the request returned would let a
 // scenario change made mid-request relabel that request's log entry
 // with ground truth it was never assessed under.
-async function submitAssessment(product, timestamp, image, scenarioLabel) {
+// IGNIS-ONEOFONE-9: `source` is the input path that genuinely
+// knows where the image came from — "live-camera" for a sampled
+// live frame, "still-image" for an uploaded still, "recorded-video"
+// for a frame captured from an uploaded video — stamped onto the
+// log entry at submit time, never inferred after the fact.
+async function submitAssessment(product, timestamp, image, scenarioLabel, source) {
   const endpoint = currentEndpoint();
   const generation = viewGeneration;
   showInFlight();
@@ -1731,6 +1749,7 @@ async function submitAssessment(product, timestamp, image, scenarioLabel) {
       status: "ok",
       response: assessment,
       scenarioLabel,
+      source,
     });
     // A Reset while this request was out clears the view; the settling
     // request must not put its result back on screen. The log entry
@@ -1777,6 +1796,7 @@ async function submitAssessment(product, timestamp, image, scenarioLabel) {
       status,
       error: err.message,
       scenarioLabel,
+      source,
     });
     // Same Reset rule as the success path: the log entry stands, but a
     // request that settled after a Reset must not repaint the cleared
@@ -1835,6 +1855,7 @@ async function runSample() {
       status: "invalid_response",
       error: message,
       scenarioLabel,
+      source: "live-camera",
     });
     updateLogStats();
     setBackendStatus("error", message);
@@ -1846,7 +1867,7 @@ async function runSample() {
     });
     throw err;
   }
-  await submitAssessment(product, timestamp, image, scenarioLabel);
+  await submitAssessment(product, timestamp, image, scenarioLabel, "live-camera");
 }
 
 // Still-image input state: the chosen file's data URL lives in memory
@@ -2023,7 +2044,7 @@ els.btnImageAssess.addEventListener("click", async () => {
   // while this request is out must not relabel its log entry.
   const scenarioLabel = currentScenarioLabel();
   try {
-    await submitAssessment(currentProductId, new Date().toISOString(), stillImageDataUrl, scenarioLabel);
+    await submitAssessment(currentProductId, new Date().toISOString(), stillImageDataUrl, scenarioLabel, "still-image");
   } catch {
     // submitAssessment already rendered and logged the failure.
   } finally {
@@ -2165,6 +2186,7 @@ els.btnVideoAssess.addEventListener("click", async () => {
       status: "invalid_response",
       error: message,
       scenarioLabel,
+      source: "recorded-video",
     });
     updateLogStats();
     setBackendStatus("error", message);
@@ -2183,7 +2205,7 @@ els.btnVideoAssess.addEventListener("click", async () => {
     return;
   }
   try {
-    await submitAssessment(currentProductId, timestamp, image, scenarioLabel);
+    await submitAssessment(currentProductId, timestamp, image, scenarioLabel, "recorded-video");
   } catch {
     // submitAssessment already rendered and logged the failure.
   } finally {

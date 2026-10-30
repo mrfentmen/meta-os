@@ -22,7 +22,7 @@ const model = readFileSync(
 const web = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
 
 test("web: submitAssessment takes the product as a parameter, captured at sample/tap time", () => {
-  assert.match(web, /async function submitAssessment\(product, timestamp, image, scenarioLabel\)/);
+  assert.match(web, /async function submitAssessment\(product, timestamp, image, scenarioLabel, source\)/);
   assert.match(web, /const product = currentProductId;\n  const timestamp = new Date\(\)\.toISOString\(\)/);
 });
 
