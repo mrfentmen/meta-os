@@ -17,7 +17,7 @@ macro_rules! case {
 }
 
 pub mod test_boss_trigger;
-case!(test_bus_rename, ["rename display"], ["live names registry"]);
+pub mod test_bus_rename;
 case!(test_bustools_parity, ["B24 poll/store parity"], ["relay_common transport"]);
 case!(test_clip, ["clipboard fallback", "paste verify"], ["live clipboard tools"]);
 case!(test_fdny_par_clock, ["par clock"], []);
