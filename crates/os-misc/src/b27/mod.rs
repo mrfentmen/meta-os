@@ -38,3 +38,9 @@ pub const T019_FILES: &[&str] = &[
     "os/worlds/mta/PACK.md",
     "os/worlds/mta/pack.json",
 ];
+
+/// T020 verify-carried: nypd pack (byte-identical, left in place).
+pub const T020_FILES: &[&str] = &[
+    "os/worlds/nypd/PACK.md",
+    "os/worlds/nypd/pack.json",
+];
