@@ -84,7 +84,7 @@ Per-product prompt profiles (categories + limitations) are derived from
 `js/products.js` in `model.mjs` (`PRODUCT_PROFILES`), so the server and
 the clients cannot drift.
 
-## OS queue path (Trio side, steps 1-2 — envelope + submit + result fetch, not yet wired in)
+## OS queue path (Trio side, steps 1-3 — envelope + submit + result fetch + poll + wiring)
 
 Del's direction, 2026-10-30 (relayed by Pax): the OS operates the Trio
 — one submission, Best Agentic aim. The Trio server submits assessments
@@ -93,7 +93,7 @@ with Spark; the direct Spark path above stays as fallback; apps keep
 calling `/api/assess` unchanged. Hard cutoff Nov 2: the queue round trip
 is verified live by then, or the clean Trio ships alone.
 
-`server/queue.mjs` is step 1 of Rowan's server queue transport lane:
+`server/queue.mjs` is Rowan's server queue transport lane:
 
 - `buildQueueJob(input)` turns a validated assess input into a
   versioned job envelope (`version: 1`, `kind: "trio-assessment"`):
@@ -111,29 +111,45 @@ is verified live by then, or the clean Trio ships alone.
 
 Step 2 adds `fetchQueueResult(jobId, env, deps)`: one result fetch
 through an injected transport, returning `pending`, `done` (assessment
-verbatim, NOT validated here — the wiring step must run it through
+verbatim, NOT validated here — assess.mjs runs it through
 `validateAssessment` before it is ever sent), or `failed` (the agent's
 error string when it has one), with the same layered refusals
 (disabled / not configured / fetch failure) and malformed envelopes
-failing as typed `QueueError`s. The result envelope shape is PROPOSED,
-not yet agreed: version 1, kind `"trio-assessment-result"`, the job id
-echoed back, status `pending` | `done` | `failed`.
+failing as typed `QueueError`s. The result shape is the one Pax
+settled 2026-10-30 (room-1 ruling): `{ job_id, status: "ok" |
+"failed", assessment: <v2 contract object> | null, error: string |
+null, model, latency_ms, completed_at }`, keyed
+`{job_ns}:{jid}:result` with job_ns `"trio"` on the OS side; an ok
+result carries ONLY an assessment that already passed
+`validateAssessment` on the agent side. The reader still accepts the
+step-2 proposed shape (version 1, kind `"trio-assessment-result"`,
+`jobId`, status `pending` | `done` | `failed`) and normalizes both,
+and accepts a `pending` status in either shape. The Trio job is NOT
+forced into the OS spark-complete envelope.
 
-Deliberately not in this step: wiring into `handleAssess`, and the
-poll loop (repeat fetch until done/failed, then fall back to the
-direct Spark path). A submit returns a job id, not an assessment, and
-`/api/assess` must still return a v2 assessment object — so the
-proposed result shape is agreed with Pax's resident-agent end before
-anything is wired in. Until then the direct Spark path remains the only
-live path, and this module changes no request behaviour. The queue
-service itself is a named external service, never inside this repo: its
-URL comes only from `TRIO_QUEUE_URL`, server-side, and no key material
-is ever put in a job envelope, a commit, or a log.
+Step 3 wires the queue into `handleAssess` (`server/assess.mjs`):
+when `TRIO_QUEUE_ENABLED=1`, a valid request first builds, submits,
+and polls (`pollQueueResult`, bounded — 30 attempts x 1s by default)
+the queue; a done queue assessment is validated exactly like a model
+reply, and any queue failure — submit, fetch, poll timeout, or a
+failed result — falls back to the direct Spark path and is logged
+(`deps.log`, else `console.error`), never faked in contract fields.
+A done queue assessment that fails contract validation is a 502, not
+a silent fallback. When the queue is disabled, the direct path runs
+alone, unchanged. Production transports are `httpQueuePost` /
+`httpQueueGet`: POST `{TRIO_QUEUE_URL}/jobs`, GET
+`{TRIO_QUEUE_URL}/jobs/:id/result` (a 404 before a result exists
+reads as pending). The queue service itself is a named external
+service, never inside this repo: its URL comes only from
+`TRIO_QUEUE_URL`, server-side, and no key material is ever put in a
+job envelope, a commit, or a log. What is deliberately NOT in this
+step: a live round trip against Pax's resident-agent end — that
+verification is Pax's next item, before the Nov 2 cutoff.
 
 | Variable | Meaning |
 | --- | --- |
-| `TRIO_QUEUE_ENABLED` | `1` enables the queue submit adapter. Leave unset: the queue path refuses as disabled. |
-| `TRIO_QUEUE_URL` | Queue submit endpoint, operator-configured. No URL → the adapter refuses as not configured. |
+| `TRIO_QUEUE_ENABLED` | `1` enables the queue path in `/api/assess`. Leave unset: the queue path is skipped and the direct path runs alone. |
+| `TRIO_QUEUE_URL` | Queue service base URL, operator-configured (transports append `/jobs` and `/jobs/:id/result`). No URL → the queue attempt refuses as not configured and falls back to the direct path. |
 
 ## Held-state round trip: what the user actually sees
 

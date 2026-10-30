@@ -1,5 +1,5 @@
 // Core of POST /api/assess (Rowan's lane): strict request validation,
-// one model-adapter call, and strict validation of whatever comes back
+// one assessment source, and strict validation of whatever comes back
 // against the frozen v2 contract (js/schema.js) before it is sent.
 //
 // Request (from js/client.js): JSON object
@@ -8,13 +8,35 @@
 //     image: "data:image/jpeg;base64,..." }
 //
 // Success: HTTP 200 with the v2 assessment object, unchanged from the
-// model after validation. Failure: HTTP status + {"error": "..."} — the
-// contract's error shape, which both clients already surface honestly.
-// This module never invents an assessment: no model, no assessment.
+// source after validation. Failure: HTTP status + {"error": "..."} —
+// the contract's error shape, which both clients already surface
+// honestly. This module never invents an assessment: no model, no
+// assessment.
+//
+// Assessment source order (QUEUE-TRANSPORT-3, Pax ruling 2026-10-30):
+// when TRIO_QUEUE_ENABLED=1, the queue path runs first — build the
+// job, submit it, poll the agreed result shape until done/failed —
+// and a done queue assessment is validated exactly like a model one.
+// Any queue failure (submit, fetch, poll timeout, or a failed result)
+// falls back to the direct Spark path and is logged (deps.log, or
+// console.error by default) — the fallback is visible in server logs,
+// never faked in contract fields. When the queue is disabled, or
+// deps.queue === false, the direct path runs alone, unchanged. A
+// queue assessment that fails contract validation is a 502, like an
+// off-contract model reply — it is not silently replaced by a direct
+// call, because that would hide a broken agent contract.
 
 import { validateAssessment } from "../js/schema.js";
 import { isProductId } from "../js/products.js";
 import { assessWithModel, ModelError } from "./model.mjs";
+import {
+  buildQueueJob,
+  httpQueueGet,
+  httpQueuePost,
+  pollQueueResult,
+  queueConfig,
+  submitQueueJob,
+} from "./queue.mjs";
 
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // decoded JPEG cap
 
@@ -97,7 +119,13 @@ export function validateAssessRequest(payload) {
 }
 
 // deps.assessModel is injectable for tests; production uses the real
-// adapter from model.mjs. Returns { status, body } ready to serialize.
+// adapter from model.mjs. deps.queue controls the queue attempt:
+// undefined = default transports, honoring TRIO_QUEUE_ENABLED;
+// false = never attempt the queue; an object may carry queuePost /
+// queueGet / fetch (HTTP transport injection), pollIntervalMs,
+// maxAttempts, and sleep for tests. deps.log receives fallback
+// lines (default console.error). Returns { status, body } ready to
+// serialize.
 export async function handleAssess(payload, deps = {}) {
   const assessModel = deps.assessModel ?? assessWithModel;
   const env = deps.env ?? process.env;
@@ -108,17 +136,53 @@ export async function handleAssess(payload, deps = {}) {
   }
 
   let output;
-  try {
-    output = await assessModel(req.value, env);
-  } catch (err) {
-    if (err instanceof ModelError) {
-      const status = err.code === "model_call_failed" ? 502 : 503;
-      return { status, body: { error: err.message } };
-    }
-    return {
-      status: 502,
-      body: { error: `Model call failed: ${err && err.message ? err.message : String(err)}` },
+  let fromQueue = false;
+  if (deps.queue !== false && queueConfig(env).enabled) {
+    const log = deps.log ?? console.error;
+    const q = deps.queue ?? {};
+    const queueDeps = {
+      queuePost:
+        q.queuePost ??
+        (q.fetch ? (url, job) => httpQueuePost(url, job, { fetch: q.fetch }) : httpQueuePost),
+      queueGet:
+        q.queueGet ??
+        (q.fetch ? (url, jobId) => httpQueueGet(url, jobId, { fetch: q.fetch }) : httpQueueGet),
+      pollIntervalMs: q.pollIntervalMs,
+      maxAttempts: q.maxAttempts,
+      sleep: q.sleep,
     };
+    try {
+      const job = buildQueueJob(req.value);
+      const { jobId } = await submitQueueJob(job, env, queueDeps);
+      const result = await pollQueueResult(jobId, env, queueDeps);
+      if (result.status === "done") {
+        output = result.assessment;
+        fromQueue = true;
+      } else {
+        log(
+          `queue fallback: queue result failed for job ${jobId}` +
+            `${result.error ? `: ${result.error}` : ""}; falling back to the direct Spark path`,
+        );
+      }
+    } catch (err) {
+      const detail = err && err.message ? err.message : String(err);
+      log(`queue fallback: ${detail}; falling back to the direct Spark path`);
+    }
+  }
+
+  if (!fromQueue) {
+    try {
+      output = await assessModel(req.value, env);
+    } catch (err) {
+      if (err instanceof ModelError) {
+        const status = err.code === "model_call_failed" ? 502 : 503;
+        return { status, body: { error: err.message } };
+      }
+      return {
+        status: 502,
+        body: { error: `Model call failed: ${err && err.message ? err.message : String(err)}` },
+      };
+    }
   }
 
   const check = validateAssessment(output, req.value.product);
