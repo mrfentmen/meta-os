@@ -357,17 +357,25 @@ never mixed with the client measurement.
 
 ## What is NOT connected yet
 
-- **No live model assessment yet.** Agent 2's `/api/assess` server exists
-  (`server/server.mjs`), but live model calls are held per Del's ruling
-  (Spark stays off until the build is complete and Del green-lights the
-  test phase). Verified 2026-10-28: the server answers `/api/health`
-  with `live_enabled: false`, and a valid assess request returns HTTP
-  503 with the real held message ("Live model calls are held: Spark
-  stays off until the build is complete and Del green-lights the test
-  phase."). Until live calls are enabled, every analysis request ends
-  in that honest held error and no assessment renders. That is the
-  intended behavior — not a bug. The full live round trip (a real frame
-  returning a valid v2 assessment) is still unproven.
+- **No live model assessment from the UI yet.** Agent 2's `/api/assess`
+  server exists (`server/server.mjs`). Live model calls were held, and
+  that held state is verified history: 2026-10-28, the server answered
+  `/api/health` with `live_enabled: false`, and a valid assess request
+  returned HTTP 503 with the real held message ("Live model calls are
+  held: Spark stays off until the build is complete and Del
+  green-lights the test phase."). On a server without the key, a
+  request still ends in that honest held error and no assessment
+  renders. That is the intended behavior — not a bug.
+  Update 2026-10-30 00:23 EDT (Del's green light via Pax on the bus):
+  the Spark test phase is LIVE, on a $75 test budget. Del puts
+  SPARK_API_KEY in the server env on the Mac himself — never on the
+  bus, never committed. The OS-queue round trip already has live
+  proof from Pax. What is still unproven is a live assessment driven
+  from the web console or the native app UI on real hardware — the
+  full live round trip (a real frame returning a valid v2 assessment)
+  is still unproven, and this sandbox still makes no live calls: no
+  key here. See `docs/HARDWARE_VERIFICATION.md` section 4 for the
+  same status and the checks that stay to run.
 - No evaluation harness consumes the exported log yet (Agent 3's lane).
 - Camera behavior is verified only up to page load and module execution in
   headless Chromium: this sandbox has no camera device, so a live
