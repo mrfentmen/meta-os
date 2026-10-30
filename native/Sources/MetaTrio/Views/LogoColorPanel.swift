@@ -15,6 +15,20 @@ import SwiftUI
 // the large logo stays in the web studio now. No Swift toolchain
 // exists in this sandbox, so this is checked by inspection and
 // by the static tests in tests/native-logo-animation.test.mjs.
+// LOGO-NATIVE-3 (Del direction, Oct 30): the Logo panel's title
+// joins the other five panels on PanelHeading (ContentView.swift):
+// until now it was a plain 15pt bold Text, so under Ignis, Vigiles,
+// or Medicus it missed the console heading treatment the web
+// .panel h2 carries for that product — Ignis/Vigiles uppercase
+// mono 15pt bold with 1.8pt tracking and a 3pt accent tick,
+// Medicus uppercase plain 15pt bold with 1.2pt tracking and no
+// tick. PanelHeading already implements all three branches, so
+// this slice only wires the Logo title into it, gated by the
+// selected product exactly like the other panel titles; the
+// original title stays the accessibility label, so VoiceOver
+// still hears "Logo", not the shouted capitals. Presets, picker,
+// value lines, slider, pause button, and the large-logo note are
+// untouched.
 
 private struct LogoColorPanel: View {
     @AppStorage("meta-trio-logo-color") private var customHex: String = ""
@@ -58,8 +72,7 @@ private struct LogoColorPanel: View {
     var body: some View {
         GroupBox {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Logo")
-                    .font(.system(size: 15, weight: .bold))
+                PanelHeading(title: "Logo", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles, isMedicus: model.selectedProduct == .medicus)
                 HStack(spacing: 10) {
                     ForEach(LogoColor.presets, id: \.hex) { preset in
                         Button {
