@@ -64,14 +64,93 @@
   var currentGlow = GLOWS.vigiles;
   var currentSpecular = SPECULARS.vigiles;
 
+  // LOGO-1 (Del direction, Oct 30): a user-picked logo color
+  // overrides the product tint. The studio's own palette build
+  // (design/meta-ascii-logo-studio.html) anchors a 9-step ramp
+  // on the chosen color: shadows mixed toward near-black,
+  // highlights toward white, so the hue survives at every
+  // brightness. The override lives only in this browser's local
+  // storage (key below); nothing is sent anywhere, and Reset in
+  // js/logo-color.js clears it back to the product tint.
+  var customColor = null;
+  var LOGO_COLOR_KEY = "meta-trio-logo-color";
+  function hexToRgb(hex) {
+    var clean = String(hex).replace("#", "");
+    return {
+      r: parseInt(clean.slice(0, 2), 16),
+      g: parseInt(clean.slice(2, 4), 16),
+      b: parseInt(clean.slice(4, 6), 16),
+    };
+  }
+  function rgbToHex(rgb) {
+    return (
+      "#" +
+      [rgb.r, rgb.g, rgb.b]
+        .map(function (value) {
+          return Math.round(value).toString(16).padStart(2, "0");
+        })
+        .join("")
+    );
+  }
+  function mixHex(firstHex, secondHex, amountSecond) {
+    var a = hexToRgb(firstHex);
+    var b = hexToRgb(secondHex);
+    return rgbToHex({
+      r: a.r + (b.r - a.r) * amountSecond,
+      g: a.g + (b.g - a.g) * amountSecond,
+      b: a.b + (b.b - a.b) * amountSecond,
+    });
+  }
+  function buildPalette(baseHex) {
+    return [
+      mixHex(baseHex, "#020817", 0.88),
+      mixHex(baseHex, "#020817", 0.72),
+      mixHex(baseHex, "#020817", 0.53),
+      mixHex(baseHex, "#020817", 0.31),
+      baseHex,
+      mixHex(baseHex, "#ffffff", 0.18),
+      mixHex(baseHex, "#ffffff", 0.38),
+      mixHex(baseHex, "#ffffff", 0.62),
+      mixHex(baseHex, "#ffffff", 0.9),
+    ];
+  }
+  function applyCustomColor(hex) {
+    var normalized = String(hex).toLowerCase();
+    var rgb = hexToRgb(normalized);
+    customColor = normalized;
+    currentPalette = buildPalette(normalized);
+    currentGlow = "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", 0.9)";
+    currentSpecular = mixHex(normalized, "#ffffff", 0.9);
+  }
+  function readStoredColor() {
+    try {
+      var stored =
+        window.localStorage && window.localStorage.getItem(LOGO_COLOR_KEY);
+      if (typeof stored === "string" && /^#[0-9a-f]{6}$/i.test(stored)) {
+        return stored.toLowerCase();
+      }
+    } catch (e) {
+      // An unavailable store leaves the product tint in place.
+    }
+    return null;
+  }
+
   // The app sets document.body.dataset.product on every product
   // switch (js/app.js), so watch it and re-tint the loop live.
+  // A user-picked color wins over a product switch: the switch
+  // still records the product, but the palette stays custom
+  // until Reset clears it.
   function applyProduct(product) {
     if (!PALETTES[product]) product = "vigiles";
     currentProduct = product;
+    if (customColor) return;
     currentPalette = PALETTES[product];
     currentGlow = GLOWS[product];
     currentSpecular = SPECULARS[product];
+  }
+  function clearCustomColor() {
+    customColor = null;
+    applyProduct(currentProduct);
   }
   var CELL_COUNT = WIDTH * HEIGHT;
   var glyphBuffer = new Uint8Array(CELL_COUNT);
@@ -337,8 +416,25 @@
     if (running && !reducedMotion) requestAnimationFrame(renderFrame);
   }
 
+  // A saved logo color (LOGO-1) is applied by js/logo-color.js
+  // through this event; the background itself only applies it,
+  // never writes storage on an event. An unknown or missing
+  // color means Reset: back to the product tint.
+  window.addEventListener("meta-trio-logo-color", function (event) {
+    var color = event && event.detail && event.detail.color;
+    if (typeof color === "string" && /^#[0-9a-f]{6}$/i.test(color)) {
+      applyCustomColor(color);
+    } else {
+      clearCustomColor();
+    }
+  });
+
   // Tint from the product the page opened on, then follow switches.
   applyProduct(document.body.dataset.product);
+  // A color saved on an earlier visit re-tints before the first
+  // frame, so a reload never flashes the product tint first.
+  var storedColor = readStoredColor();
+  if (storedColor) applyCustomColor(storedColor);
   if ("MutationObserver" in window) {
     new MutationObserver(function (mutations) {
       for (var m = 0; m < mutations.length; m++) {

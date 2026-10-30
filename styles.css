@@ -228,6 +228,36 @@ button:disabled {
   filter: brightness(1.12);
 }
 
+/* LOGO-1 (Del direction, Oct 30): the Logo panel's color controls.
+   Swatches are the studio's six presets; the selected one gets a
+   white ring, matching the studio's is-selected treatment. The
+   swatch color itself comes from the inline --swatch variable, so
+   the stylesheet never hardcodes a preset. */
+.logo-color-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+
+.logo-swatch {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--swatch);
+  cursor: pointer;
+}
+
+.logo-swatch:hover {
+  transform: translateY(-1px) scale(1.08);
+}
+
+.logo-swatch.is-selected {
+  border-color: #f5f9ff;
+}
+
 /* Product switcher: three real radio options, styled as a segmented row. */
 .product-switch {
   display: grid;

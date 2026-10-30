@@ -77,6 +77,26 @@
     <p class="note">Switching products applies to the next sampled frame. Earlier log entries keep the product they were assessed under.</p>
   </section>
 
+  <section class="panel" aria-label="Logo">
+    <h2>Logo</h2>
+    <p class="note">The spinning ASCII Meta loop behind these panels. Pick a color to re-tint it — the choice is saved in this browser and comes back on reload. Reset returns it to the selected product's color.</p>
+    <div class="logo-color-options" role="group" aria-label="Logo color">
+      <button class="logo-swatch" type="button" data-logo-color="#1877f2" style="--swatch:#1877f2" aria-label="Meta blue" title="Meta blue" aria-pressed="false"></button>
+      <button class="logo-swatch" type="button" data-logo-color="#00c8ff" style="--swatch:#00c8ff" aria-label="Cyan" title="Cyan" aria-pressed="false"></button>
+      <button class="logo-swatch" type="button" data-logo-color="#8b5cf6" style="--swatch:#8b5cf6" aria-label="Violet" title="Violet" aria-pressed="false"></button>
+      <button class="logo-swatch" type="button" data-logo-color="#ff4f9a" style="--swatch:#ff4f9a" aria-label="Pink" title="Pink" aria-pressed="false"></button>
+      <button class="logo-swatch" type="button" data-logo-color="#20d6a3" style="--swatch:#20d6a3" aria-label="Emerald" title="Emerald" aria-pressed="false"></button>
+      <button class="logo-swatch" type="button" data-logo-color="#ffbd4a" style="--swatch:#ffbd4a" aria-label="Gold" title="Gold" aria-pressed="false"></button>
+    </div>
+    <label for="logo-color-picker">Custom logo color</label>
+    <input id="logo-color-picker" type="color" value="#1877f2" aria-label="Choose a custom logo color">
+    <p id="logo-color-value" class="note mono">Logo color: product color</p>
+    <div class="controls">
+      <button id="logo-color-reset" type="button">Reset to product color</button>
+    </div>
+    <p class="note"><a class="logo-studio-link" href="design/meta-ascii-logo-studio.html">Open the full logo studio</a> for the large animated logo, rotation speed, and pause controls.</p>
+  </section>
+
   <section class="panel" aria-label="Still image input">
     <h2>Still image</h2>
     <p class="note">For prerecorded or photographed scenes — the input Ignis and Medicus demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.</p>
@@ -317,5 +337,6 @@
 
 <script type="module" src="js/app.js"></script>
 <script src="js/logo-background.js"></script>
+<script src="js/logo-color.js"></script>
 </body>
 </html>
