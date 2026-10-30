@@ -157,4 +157,87 @@ pub trait Watchdog {
         job_id: &str,
         now: Option<i64>,
     ) -> Vec<String>;
+    /// `watchdog.tick(snapshot, now, polish_client=client)` —
+    /// the Spark polish pass over template explanations
+    /// (INT-008 stage 5 ticks with and without it).
+    fn tick_with_polish(
+        &self,
+        snapshot: &Value,
+        now: Option<i64>,
+        polish: &dyn SparkClient,
+    ) -> Vec<Value>;
+    /// `watchdog.tick(snapshot, now, emit=callback)` — every
+    /// alert also rides the emit callback (INT-010 stage 4).
+    fn tick_emit(
+        &self,
+        snapshot: &Value,
+        now: Option<i64>,
+        emit: &mut dyn FnMut(&Value),
+    ) -> Vec<Value>;
+    /// `watchdog.format_announcement(alert)` — the WDG-015
+    /// announcement line for one alert, when it has one.
+    fn format_announcement(&self, alert: &Value) -> Option<String>;
+}
+
+/// `intel.spark_client` (B11) — the Spark client surface the
+/// INT-008 drill exercises over a dead endpoint.
+pub trait SparkClient {
+    /// `SparkClient.complete(prompt, lane_feature=...)`;
+    /// Err carries the SparkError message.
+    fn complete(&self, prompt: &str, lane_feature: &str) -> Result<String, String>;
+    /// `client.spent_usd` — the spend ledger total.
+    fn spent_usd(&self) -> f64;
+}
+
+/// `intel.brief` (B10) — the compose/generate surface the
+/// INT-008 drill calls directly (the e2e loops reach the same
+/// module through the Integration seam).
+pub trait BriefSurface {
+    /// `brief.compose_brief(snapshot, kind, client, now)`.
+    fn compose_brief(
+        &self,
+        snapshot: &Value,
+        kind: &str,
+        client: &dyn SparkClient,
+        now: Option<i64>,
+    ) -> String;
+    /// `brief.compose_spark_brief(snapshot, kind, client)`.
+    fn compose_spark_brief(
+        &self,
+        snapshot: &Value,
+        kind: &str,
+        client: &dyn SparkClient,
+    ) -> String;
+    /// `brief.brief_failure_line(reason)` — the canned line.
+    fn brief_failure_line(&self, reason: &str) -> String;
+    /// `brief.generate_brief(snapshot, room, kind, now,
+    /// dry_run, client)` -> (text, record).
+    fn generate_brief(
+        &self,
+        snapshot: &Value,
+        room: &str,
+        kind: &str,
+        now: Option<i64>,
+        dry_run: bool,
+        client: &dyn SparkClient,
+    ) -> (String, Value);
+}
+
+/// `intel.dispatch` (B10) — the plan-from-Spark surface.
+pub trait DispatchSurface {
+    /// `dispatch.plan_from_spark(goal, complete)` -> (result,
+    /// stderr): the source prints the endpoint-down warning to
+    /// stderr inside the call; the seam returns it.
+    fn plan_from_spark(
+        &self,
+        goal: &str,
+        complete: &dyn Fn(&str) -> Result<String, String>,
+    ) -> (Value, String);
+}
+
+/// `intel.store` (B09) — the WDG-010 record builder the
+/// INT-010 drill validates a detector dict through.
+pub trait AlertRecords {
+    /// `store.build_alert_record(alert, room=...)`.
+    fn build_alert_record(&self, alert: &Value, room: &str) -> Value;
 }
