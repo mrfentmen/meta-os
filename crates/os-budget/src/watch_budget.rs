@@ -32,7 +32,7 @@ fn render_warning(lane: &str, spent: i64, cap: i64, remaining: i64, warn_percent
     // Templates from intel/explanations.py ("budget-warning"),
     // the same strings the suite asserts substrings of.
     let explanation = format!(
-        "The {lane} lane has spent {spent} of its {cap} budget ({remaining} remaining): it is past the {warn_percent}%% warning threshold, so the next claims could hit the cap and stop the lane silently."
+        "The {lane} lane has spent {spent} of its {cap} budget ({remaining} remaining): it is past the {warn_percent}% warning threshold, so the next claims could hit the cap and stop the lane silently."
     );
     let suggested_fix = format!(
         "Slow new {lane} claims, raise the lane cap, or let the lane finish its current work before posting more — at cap, new claims are held and the job stays open."
