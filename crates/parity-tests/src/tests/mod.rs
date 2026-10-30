@@ -18,7 +18,7 @@ macro_rules! case {
 
 pub mod test_boss_trigger;
 pub mod test_bus_rename;
-case!(test_bustools_parity, ["B24 poll/store parity"], ["relay_common transport"]);
+pub mod test_bustools_parity;
 case!(test_clip, ["clipboard fallback", "paste verify"], ["live clipboard tools"]);
 case!(test_fdny_par_clock, ["par clock"], []);
 case!(test_os021_update, ["update apply", "rollback swap"], []);
@@ -29,7 +29,7 @@ case!(test_os083_artifact_store, ["deposit manifest"], []);
 case!(test_os094_job_artifacts, ["attach dedupe"], []);
 case!(test_os102_launch_run, ["verify-before-spawn", "tamper refusal"], []);
 case!(test_os128_disk_audit, ["cold reader leak"], []);
-case!(test_os_base, ["base layout"], []);
+pub mod test_os_base;
 case!(test_os_boot_harness, ["harness"], ["live boot image"]);
 case!(test_os_boot_selfcheck, ["selfcheck"], ["live boot image"]);
 case!(test_os_boot_status, ["status"], ["live boot image"]);
