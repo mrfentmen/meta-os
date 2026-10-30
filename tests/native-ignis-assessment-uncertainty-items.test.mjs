@@ -59,7 +59,7 @@ test("native uncertainty items: web .uncertainty rule is muted", () => {
 test("native uncertainty items: heading and empty note stay muted, no accent", () => {
   assert.match(
     uncertaintyFn,
-    /Text\("Uncertainty"\)\s+\.font\(\.system\(size: 13, weight: \.bold\)\)\s+\.textCase\(\.uppercase\)\s+\.tracking\(0\.65\)\s+\.foregroundStyle\(\.secondary\)/,
+    /Text\("Uncertainty"\)\s+\.font\(\.system\(size: 13, weight: \.bold\)\)\s+\.textCase\(\.uppercase\)\s+\.tracking\(isIgnisAssessment \? 1\.04 : 0\.65\)\s+\.foregroundStyle\(\.secondary\)/,
     "UI-12 heading still muted",
   );
   assert.match(

@@ -109,6 +109,14 @@ struct AssessmentView: View {
         .shadow(color: .black.opacity(0.35), radius: 12, x: 0, y: 8)
     }
 
+    /// Whether this card's own assessment is an Ignis one, following
+    /// the accentColor precedent below: the card renders by its
+    /// assessment's own product, never by the selected product.
+    /// An unknown product key is not Ignis rather than guessing.
+    private var isIgnisAssessment: Bool {
+        ProductID(rawValue: response.product) == .ignis
+    }
+
     /// Panel accent from the assessment's own product, mirroring the
     /// TimelineView row-accent mapping. An unknown product key falls
     /// back to the system accent rather than guessing a product.
@@ -381,10 +389,20 @@ struct AssessmentView: View {
             // untouched: the web panel renders observations as a bare
             // list with no heading at all, so there is no web
             // counterpart to mirror there.
+            // OPS-CONSOLE-4: on an Ignis assessment the tracking
+            // widens to the web OPS-CONSOLE-3 subhead value, 0.08em
+            // of 13pt (1.04pt); every other product keeps the UI-12
+            // 0.65pt. Size, weight, case, and color are untouched,
+            // and the gate is the card's own product (see
+            // isIgnisAssessment), not the selected product — the
+            // card already renders by its own product, so a
+            // redisplayed Ignis assessment keeps its console
+            // subhead under any selection, exactly as its red rule
+            // already does.
             Text("Uncertainty")
                 .font(.system(size: 13, weight: .bold))
                 .textCase(.uppercase)
-                .tracking(0.65)
+                .tracking(isIgnisAssessment ? 1.04 : 0.65)
                 .foregroundStyle(.secondary)
                 .accessibilityAddTraits(.isHeader)
             if response.assessment.uncertainty.isEmpty {

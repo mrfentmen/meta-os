@@ -76,8 +76,8 @@ test("native review flag: exactly one 0.6pt tracking, subhead tracking untouched
   assert.equal(trackings.length, 1, "exactly one 0.6pt tracking in the file");
   assert.match(
     assessment,
-    /\.tracking\(0\.65\)/,
-    "Uncertainty subhead keeps its own 0.65pt tracking (UI-12)",
+    /\.tracking\(isIgnisAssessment \? 1\.04 : 0\.65\)/,
+    "Uncertainty subhead keeps its 0.65pt non-Ignis tracking (UI-12) and widens to 1.04pt on Ignis (OPS-CONSOLE-4)",
   );
   const observationsFn = assessment.slice(
     assessment.indexOf("private var observationsSection"),

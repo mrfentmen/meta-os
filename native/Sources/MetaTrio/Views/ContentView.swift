@@ -100,10 +100,30 @@ struct ContentView: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             if let assessment = model.displayedAssessment {
+                // OPS-CONSOLE-4: on Ignis the readout viewport
+                // carries the web OPS-CONSOLE-3 mono-block frame —
+                // a 1px Ignis-red (#d92b2b) stroke at 0.4 over a
+                // dark 0.25 fill — so the Latest panel's readout
+                // reads as a console window on the Mac exactly as
+                // it does on the web. The frame follows the
+                // selected product (the PanelHeading precedent);
+                // the card inside keeps its own UI-5 rule, border,
+                // and wash, and the waiting, error, and
+                // no-assessment placeholders sit outside this
+                // ScrollView and are untouched. Off Ignis the
+                // viewport is exactly as before: a clear
+                // background and no stroke.
                 ScrollView {
                     AssessmentView(response: assessment)
                 }
                 .frame(maxHeight: 320)
+                .background(model.selectedProduct == .ignis ? Color.black.opacity(0.25) : Color.clear)
+                .overlay {
+                    if model.selectedProduct == .ignis {
+                        Rectangle()
+                            .stroke(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255).opacity(0.4), lineWidth: 1)
+                    }
+                }
             } else if model.requestInFlight {
                 // UI-24: Latest-panel placeholders at 13pt mono, the
                 // native counterpart to the web #latest-assessment
