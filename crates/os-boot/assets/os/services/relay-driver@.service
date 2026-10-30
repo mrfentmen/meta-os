@@ -1,0 +1,64 @@
+# relay-driver@.service - OS-054 (Pax): the agent driver template.
+#
+# One instance per driver run: relay-driver@<jobid>.service runs
+# one signed job through os/drivers/run_driver.py, which drives
+# the Muse Code CLI (os/drivers/muse_driver.py) against the spec
+# in the instance env file and prints the contract artifacts
+# record as JSON. The instance name IS the job id, so no
+# per-instance unit file is ever written.
+#
+# Per-instance env file: /etc/metaos/driver-%i.env (required: a
+# missing file means the unit has no spec to run). It carries:
+#   MUSE_DRIVER_SPEC_FILE - path to the job spec JSON (written
+#     by the overseer handoff; the handoff program is OS-055 work)
+#   MUSE_DRIVER_WORKDIR   - workdir the agent works in
+#   MUSE_DRIVER_BINARY    - optional CLI path (default: muse)
+# The image-wide secrets file is required: without
+# /etc/metaos/secrets.env (OS-012 firstboot output) the unit
+# does not start, via ConditionPathExists. The driver itself
+# takes no secret: it enforces signature presence only, and
+# cryptographic verification stays at jobs.py verify_job claim
+# time, so no keyring enters the agent process.
+#
+# Slice: relay-drivers.slice (OS-056): per process cgroup limits
+# shared with the worker fleet, so one runaway driver cannot eat
+# the bus, queue, or dashboard budget.
+#
+# Ordering: After relay-jobs.service, because the driver works a
+# job from the queue and the queue service runs the lease sweep
+# at boot.
+#
+# Two acceptance blockers, stated not hidden. A live driver run
+# on the test image is NOT met here:
+#   1. No `muse` binary ships in this repo and none exists on a
+#      dev machine; the driver was proven against a fixture
+#      stand-in executable only (tests/test_os_driver_muse.py).
+#      Until a machine with the real CLI runs a job, this
+#      template starts a driver that fails cleanly with
+#      "muse binary not found" instead of doing work.
+#   2. The overseer handoff that writes the spec file and
+#      consumes the artifacts JSON is OS-055 work. Until it
+#      lands, enable an instance only with a hand written spec
+#      file and workdir, never in production.
+# Instances are therefore NOT auto-enabled by build-image.sh.
+# systemd-analyze verify on this file is a syntax check only;
+# a live run on the test image is still owed.
+[Unit]
+Description=Meta OS agent driver %i (Muse Code driver, one job)
+After=network-online.target relay-jobs.service
+Wants=network-online.target
+ConditionPathExists=/etc/metaos/secrets.env
+PartOf=relay.target
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+EnvironmentFile=/etc/metaos/secrets.env
+EnvironmentFile=/etc/metaos/driver-%i.env
+Slice=relay-drivers.slice
+ExecStart=/usr/bin/python3 /opt/relay/os/drivers/run_driver.py --spec-file ${MUSE_DRIVER_SPEC_FILE} --workdir ${MUSE_DRIVER_WORKDIR} --binary ${MUSE_DRIVER_BINARY}
+Restart=no
+
+[Install]
+WantedBy=relay.target

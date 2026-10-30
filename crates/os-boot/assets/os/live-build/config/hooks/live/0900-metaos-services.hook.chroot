@@ -1,0 +1,45 @@
+#!/bin/sh
+# os/live-build/config/hooks/live/0900-metaos-services.hook.chroot
+#
+# OS-008 hook, runs inside the live-build chroot at build time.
+# The units, firstboot program, and tools arrive via
+# config/includes.chroot/, staged by os/build-live.sh from this
+# repo's os/services/, os/firstboot/, and os/bin/ (single source
+# of truth: no unit copy lives in this tree).
+#
+# This hook only enables. It wires exactly the units
+# os/build-image.sh wires into relay.target.wants, plus
+# metaos-firstboot into multi-user.target.wants, and makes the
+# staged tools executable. OS-016 enables relay-watchdog.service,
+# relay-brief.service, and relay-watchman.service (OS-118) and relay-uplink.service (OS-093) here
+# alongside the rest of the target set, and OS-059 adds
+# relay-mcp-gateway.service once its bake lands (the gateway
+# files themselves are staged by os/build-live.sh, same
+# allowlist and stamp as the debootstrap route). The one unit that stays
+# unenabled is the worker template
+# relay-worker@.service: instances are enabled per nick only
+# (OS-017), never as a bare template.
+set -e
+mkdir -p /etc/systemd/system/relay.target.wants
+mkdir -p /etc/systemd/system/multi-user.target.wants
+for u in relay-dashboard.service relay-bus.service relay-jobs.service relay-overseer.timer relay-ready.service relay-overseer.service relay-watchdog.service relay-brief.service relay-watchman.service relay-uplink.service relay-mcp-gateway.service relay-memory.service; do
+  ln -sf "/etc/systemd/system/$u" "/etc/systemd/system/relay.target.wants/$u"
+done
+ln -sf /etc/systemd/system/metaos-firstboot.service /etc/systemd/system/multi-user.target.wants/metaos-firstboot.service
+chmod 755 /usr/local/bin/metaos-firstboot /usr/local/bin/metaos-boot-checklist /usr/local/bin/metaos-update
+# OS-083: the artifact store root staged by os/build-live.sh
+# belongs to the relay user, like the gateway dir on the other
+# routes; the store repo itself is created on first deposit.
+mkdir -p /var/lib/metaos/artifacts
+chown relay:relay /var/lib/metaos/artifacts
+# OS-078: the memory store root staged by os/build-live.sh
+# belongs to the relay user the same way; the agents/ and
+# shared/ namespaces are created at boot by
+# relay-memory.service, not staged.
+mkdir -p /var/lib/metaos/memory
+chown relay:relay /var/lib/metaos/memory
+# OS-065: the skills collection root staged by os/build-live.sh
+# belongs to the relay user the same way; no skill content is
+# staged, only the marker.
+mkdir -p /var/lib/metaos/skills
+chown relay:relay /var/lib/metaos/skills

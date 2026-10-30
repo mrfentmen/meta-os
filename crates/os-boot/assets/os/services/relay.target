@@ -1,0 +1,34 @@
+# relay.target - OS-016: the Meta OS crew target.
+#
+# Grouping: reaching this target pulls the crew units the OS-016
+# wording names: dashboard, bus, jobs, overseer (timer; the
+# service itself is symlinked into relay.target.wants by the
+# image builds), watchdog, brief, and the ready gate, plus
+# metaos-firstboot (which itself is wanted by multi-user.target
+# and runs only while no secrets env exists yet), plus the
+# watchman (OS-118), grouped here with the same standing as
+# the other units, plus the gateway daemon (OS-059), which
+# joins the target only once its bake lands (OS-058
+# deliberately deferred it; OS-059 wires it in), plus the
+# memory service ensure step (OS-078), a oneshot that
+# guarantees the memory store namespaces exist at boot.
+# The watchman is deliberately NOT in the
+# ready gate's checked set: the gate checks dashboard and
+# watchdog always (plus the secrets-gated units once secrets
+# exist), and the watchman's health is the watchdog's OS-122
+# crew-dark beat, not a gate line; adding it to the gate is
+# owed follow-up, not silently present.
+#
+# Workers are grouped differently on purpose: relay-worker@.service
+# is a template, so no bare template is wanted here. Instances
+# are enabled per nick explicitly (OS-017), never auto-enabled,
+# until the handler program and the mos.py DM-secret env path
+# land. That exclusion is stated in the OS-016 record, not hidden.
+[Unit]
+Description=Meta OS crew target (relay.target, OS-016)
+Documentation=file:/opt/relay/README.md
+Wants=multi-user.target
+After=multi-user.target network-online.target
+Wants=metaos-firstboot.service
+Wants=relay-dashboard.service relay-bus.service relay-jobs.service relay-overseer.timer relay-ready.service
+Wants=relay-watchdog.service relay-brief.service relay-watchman.service relay-uplink.service relay-mcp-gateway.service relay-memory.service

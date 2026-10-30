@@ -1,0 +1,50 @@
+# relay-drivers.slice - OS-056 (Milo): the cgroup slice for relay driver
+# processes.
+#
+# Driver processes are first-class citizens of the system, identical in
+# standing to relay-worker@ instances (plan/META_OS.md, driver section):
+# each driver runs as a systemd unit in this slice, under the OS-034
+# supervision contract (systemd owns process death; the watchdog owns
+# silent-but-alive stalls) and under per-process cgroup limits.
+#
+# The slice is separate from relay-workers.slice on purpose: a runaway
+# driver must not eat the worker slice budget, and a runaway worker
+# must not starve the drivers. Both slices share the OS-035 starting
+# defaults until driver profiles are measured:
+#   CPUQuota=100%  one CPU-equivalent per driver, so a wedged driver
+#                  cannot take every CPU the bus, queue, and
+#                  dashboard need on a small multi-CPU machine.
+#   MemoryMax=1G   a runaway leak is capped before it threatens the box.
+#
+# Wiring: the per-driver template unit (one instance per driver, the
+# driver runner program itself is not landed yet) sets
+# Slice=relay-drivers.slice. The slice needs no [Install] section:
+# systemd creates it on demand when the first driver instance joins
+# it, and drops it when the last member leaves.
+#
+# Basis, stated plainly: the repo load numbers are wall-clock tick
+# timings, not driver memory or CPU profiles, so these are
+# conservative starting defaults, not tuned measurements. The tuning
+# pass against measured driver RSS and CPU on the test image is
+# still owed, and it replaces these values here and in META_OS.md
+# when it lands.
+#
+# Honest gaps, same pattern as OS-033 and OS-035: a driver process
+# appearing in this slice on a booted test image is NOT proven here.
+# There is no test image in this repo, no driver runner program
+# exists yet for a template unit to start, and this dev VM exposes
+# no cpu or memory cgroup controller, so live enforcement cannot
+# run here. The drill intel/drills/driver_supervision.py checks
+# this file and systemd-analyze verify, then proves the other half
+# of OS-056 that fixtures can prove: driver heartbeats feed the
+# existing WDG stall detectors unchanged (a driver nick gone from
+# presence with a claimed job yields exactly the same
+# presence-stall alert a worker would, and the tick never mutates
+# the job, so systemd alone owns any restart).
+[Unit]
+Description=Meta OS relay driver slice
+Before=slices.target
+
+[Slice]
+CPUQuota=100%
+MemoryMax=1G

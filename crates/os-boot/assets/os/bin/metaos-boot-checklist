@@ -1,0 +1,92 @@
+#!/bin/sh
+# Meta OS boot checklist + ready gate (OS-016, OS-043 v1: console/journal).
+# Reports REAL unit states - a unit that is off is reported off, with the
+# reason when it is the expected pre-firstboot state.
+#
+# Gate rule (OS-016 first light): /run/metaos/ready is written only
+# when every gateable unit is up. The gateable set is the units
+# that stay active or stay armed:
+#   always: dashboard, watchdog (the watchdog carries no OS-012
+#     secrets gate, so it runs before firstboot too).
+#   once secrets exist: bus, overseer timer, plus the jobs sweep
+#     result (see below).
+# Deliberately NOT gated, with reasons:
+#   - bus, jobs, overseer timer before firstboot: their units carry
+#     the OS-012 ConditionPathExists gate, so systemd honestly
+#     skips them on an unconfigured boot; gating on them would
+#     make the marker unreachable before firstboot.
+#   - jobs sweep and overseer tick by is-active: both are oneshot
+#     units with no RemainAfterExit, so is-active reads inactive
+#     after a clean run. The jobs sweep is instead gated on its
+#     Result (success means the boot sweep completed; the ready
+#     unit orders After the jobs unit, so the sweep has finished
+#     by the time this script runs). The overseer tick is not
+#     gated at all: its timer first fires 2 minutes after boot,
+#     so no tick has run when the gate runs; the timer being
+#     armed is the gateable signal.
+#   - relay-brief.service: it runs After=relay-ready.service by
+#     design, so the gate cannot wait on it.
+#   - worker instances: no instance is auto-enabled (OS-017), so
+#     there is no worker unit the gate can require yet.
+#   - the watchman: no unit file exists yet (OS-118).
+# When the gate blocks, the marker is NOT written and the blocked
+# lines are printed; the marker absence is the signal. The script
+# still exits 0: this is a report, not a boot failure.
+set -u
+VERSION="unknown"
+[ -f /etc/metaos-version ] && VERSION=$(cat /etc/metaos-version)
+SECRETS=no
+[ -f /etc/metaos/secrets.env ] && SECRETS=yes
+
+state() {
+    systemctl is-active "$1" 2>/dev/null || echo "inactive"
+}
+
+result() {
+    systemctl show "$1" -p Result --value 2>/dev/null || echo "unknown"
+}
+
+echo ""
+echo "================ Meta OS boot checklist ================"
+echo " version:        $VERSION"
+GATE_OK=1
+BLOCKED=""
+DASH=$(state relay-dashboard.service)
+echo " dashboard:      $DASH  (http://$(hostname):8080/)"
+[ "$DASH" = "active" ] || { GATE_OK=0; BLOCKED="$BLOCKED dashboard"; }
+WD=$(state relay-watchdog.service)
+echo " watchdog:       $WD"
+[ "$WD" = "active" ] || { GATE_OK=0; BLOCKED="$BLOCKED watchdog"; }
+if [ "$SECRETS" = "yes" ]; then
+    BUS=$(state relay-bus.service)
+    echo " bus watcher:    $BUS"
+    [ "$BUS" = "active" ] || { GATE_OK=0; BLOCKED="$BLOCKED bus"; }
+    JOBS_RESULT=$(result relay-jobs.service)
+    echo " jobs sweep:     result=$JOBS_RESULT (oneshot, completed at boot)"
+    [ "$JOBS_RESULT" = "success" ] || { GATE_OK=0; BLOCKED="$BLOCKED jobs"; }
+    TIMER=$(state relay-overseer.timer)
+    echo " overseer timer: $TIMER"
+    [ "$TIMER" = "active" ] || { GATE_OK=0; BLOCKED="$BLOCKED overseer-timer"; }
+else
+    echo " bus watcher:    not configured - run 'sudo metaos-firstboot'"
+    echo " jobs sweep:     not configured - run 'sudo metaos-firstboot'"
+    echo " overseer timer: not configured - run 'sudo metaos-firstboot'"
+    JOBS_RESULT="not-configured"
+fi
+echo "========================================================="
+
+if [ "$GATE_OK" = "1" ]; then
+    mkdir -p /run/metaos
+    {
+        echo "version=$VERSION"
+        echo "dashboard=active"
+        echo "watchdog=active"
+        echo "secrets_configured=$SECRETS"
+        echo "jobs_result=$JOBS_RESULT"
+        echo "ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    } > /run/metaos/ready
+    echo "metaos: ready gate written to /run/metaos/ready"
+else
+    echo "metaos: ready gate BLOCKED, not ready:$BLOCKED; marker not written"
+fi
+exit 0
