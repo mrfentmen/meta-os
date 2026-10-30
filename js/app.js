@@ -117,6 +117,7 @@ const els = {
   logStatsFailedSpanShareOfOwnEntryWindowByProduct: $("log-stats-failed-span-share-of-own-entry-window-by-product"),
   logStatsOkSpanShareOfOwnEntryWindowByProduct: $("log-stats-ok-span-share-of-own-entry-window-by-product"),
   logStatsOkShareOfOwnEntriesByProduct: $("log-stats-ok-share-of-own-entries-by-product"),
+  logStatsFailedSpanShareOfOwnOkWindowByProduct: $("log-stats-failed-span-share-of-own-ok-window-by-product"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -956,6 +957,23 @@ function updateLogStats() {
   // entries move no share.
   els.logStatsOkShareOfOwnEntriesByProduct.textContent =
     `Success share of that product's own entries by product: Vigiles ${stats.okShareOfOwnEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfOwnEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareOfOwnEntriesByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.sanitas * 100)}%`}`;
+  // DETAIL-62: the per-product failure-span-share-
+  // of-that-product's-own-success-window line re-bases
+  // DETAIL-20's per-product failed spans on each
+  // product's own DETAIL-21 ok span, rendered as whole
+  // percents, or "none" per product with no usable own
+  // success window or no usable failed timestamp pair
+  // — the cross-span slice DETAIL-59/60's own-entry
+  // shares imply but do not state, so a product whose
+  // failures stretch across half of everything it
+  // succeeded across reads 50% whatever its share of
+  // the session. A product with successes but no
+  // failures reads 0%, never "none", and other
+  // products' entries move no share. Raw ratios, never
+  // clamped: above 100% or below 0% means timestamps
+  // ran out of insertion order.
+  els.logStatsFailedSpanShareOfOwnOkWindowByProduct.textContent =
+    `Failure-span share of that product's own success window by product: Vigiles ${stats.failedSpanShareOfOwnOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfOwnOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnOkWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.failedSpanShareOfOwnOkWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnOkWindowByProduct.sanitas * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
