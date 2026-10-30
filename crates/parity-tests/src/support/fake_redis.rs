@@ -12,7 +12,7 @@ struct StrVal {
     expire_at: Option<f64>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct FakeUpstash {
     pub strings: HashMap<String, StrVal>,
     pub hashes: HashMap<String, HashMap<String, String>>,
@@ -26,8 +26,13 @@ pub struct FakeUpstash {
 impl FakeUpstash {
     pub fn new() -> Self {
         Self {
+            strings: HashMap::new(),
+            hashes: HashMap::new(),
+            sets: HashMap::new(),
+            lists: HashMap::new(),
+            zsets: HashMap::new(),
             now_t: 1_700_000_000.0,
-            ..Default::default()
+            pushes: Vec::new(),
         }
     }
 
