@@ -21,6 +21,7 @@ import { ignisModelAttribution } from "./ignis-model-attribution.js";
 import { ignisFootageSource } from "./ignis-footage-source.js";
 import { ignisScenarioBreakdown } from "./ignis-scenario-breakdown.js";
 import { ignisReviewBySource } from "./ignis-review-source.js";
+import { ignisReviewByModel } from "./ignis-review-model.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -151,6 +152,7 @@ const els = {
   ignisFootageSource: $("ignis-footage-source"),
   ignisScenarioBreakdown: $("ignis-scenario-breakdown"),
   ignisReviewSource: $("ignis-review-source"),
+  ignisReviewModel: $("ignis-review-model"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1303,6 +1305,23 @@ function updateLogStats() {
   const reviewSource = ignisReviewBySource(log.entries());
   els.ignisReviewSource.textContent =
     `Awaiting review ${reviewSource.totalFlagged} · Live camera ${reviewSource.liveCamera} · Still image ${reviewSource.stillImage} · Recorded video ${reviewSource.recordedVideo} · Unknown source ${reviewSource.unknownSource}`;
+  // IGNIS-ONEOFONE-12: the review queue by model in honest form —
+  // the flagged queue ONEOFONE-3 counts, split by the model string
+  // ONEOFONE-8 reads on each assessment itself. Model names are
+  // open-ended, so the line lists them sorted for a stable read,
+  // with unattributed last. Clear and unknown-flag entries are
+  // not awaiting review and read nowhere here; a flagged entry
+  // with no usable model string still counts in the total and in
+  // unattributed, so the queue never hides an entry behind a
+  // missing model. A held session stays zeros, and the panel
+  // itself is hidden under Vigiles and Medicus by CSS, so this
+  // line only ever shows under Ignis.
+  const reviewModel = ignisReviewByModel(log.entries());
+  const reviewModelParts = Object.keys(reviewModel.byModel)
+    .sort()
+    .map((model) => `${model} ${reviewModel.byModel[model]}`);
+  els.ignisReviewModel.textContent =
+    [`Awaiting review ${reviewModel.totalFlagged}`, ...reviewModelParts, `Unattributed ${reviewModel.unattributed}`].join(" · ");
 }
 
 // Native parity: the native timeline's empty state says analysis is
