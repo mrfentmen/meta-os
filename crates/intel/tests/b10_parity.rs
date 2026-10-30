@@ -197,3 +197,59 @@ fn job(id: &str, title: &str, status: &str, claim: &str, note: &str) -> sections
     let s = sections::derive_sections(&snap);
     assert_eq!(s.watch_items, ["ALERT-X: first line".to_string()]);
 }
+
+// ---- B10 T190 continued: brief window line + message parts (BRF-013) ----
+// Mirrors os/intel/brief.py `_window_line` / `_message_parts` directly;
+// no Python unit test pins these two helpers, so the cases below pin
+// the Python behavior itself (dict window, string window, start point,
+// unstated; dict message, bus string, plain string).
+
+use intel::b10_brief::window::{message_parts, window_line, RawMessage, SourceWindow, WindowHours, WindowInput};
+
+#[test] fn test_intel_brief_window_line_dict_window() {
+    let input = WindowInput {
+        source_window: Some(SourceWindow::Dict {
+            max_messages: Some(500),
+            max_hours: Some(WindowHours::Float(24.0)),
+            messages_kept: Some(120),
+            messages_dropped: Some(380),
+        }),
+        window_start: None,
+    };
+    assert_eq!(
+        window_line(&input),
+        "Window: last 500 messages or last 24 hours, 120 kept, 380 dropped"
+    );
+}
+
+#[test] fn test_intel_brief_window_line_string_start_unstated() {
+    let stated = WindowInput {
+        source_window: Some(SourceWindow::Text("yesterday".into())),
+        window_start: None,
+    };
+    assert_eq!(window_line(&stated), "Window: yesterday");
+    let truncated = WindowInput {
+        source_window: None,
+        window_start: Some("2026-10-26 08:00".into()),
+    };
+    assert!(window_line(&truncated).contains("Earlier history is not in this window"));
+    assert_eq!(
+        window_line(&WindowInput::default()),
+        "Window: not stated in this snapshot"
+    );
+}
+
+#[test] fn test_intel_brief_message_parts_forms() {
+    assert_eq!(
+        message_parts(&RawMessage::Dict { nick: "pax".into(), text: "hi".into() }),
+        ("pax".to_string(), "hi".to_string())
+    );
+    assert_eq!(
+        message_parts(&RawMessage::Text("milo: DONE: x".into())),
+        ("milo".to_string(), "DONE: x".to_string())
+    );
+    assert_eq!(
+        message_parts(&RawMessage::Text("plain hello".into())),
+        (String::new(), "plain hello".to_string())
+    );
+}
