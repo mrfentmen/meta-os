@@ -12,7 +12,9 @@ is the why and how; `batches/*.md` are the per-batch specs;
   clean). Gate 2 for the skeleton (the boss's Mac) is still open.
 - This doc supersedes the earlier lane postings and paste sets as the
   assignment source. Del's word for starting: Buffy reads
-  **§ Buffy**; the OpenCode fleet reads **§ OpenCode**.
+  **§ Buffy**, Rowan reads **§ Rowan**, Milo reads **§ Milo**, Hana
+  reads **§ Hana**; the OpenCode fleet reads **§ OpenCode**
+  (reinforcement only — it holds no batches of its own).
 
 ## Shared rules
 
@@ -117,19 +119,133 @@ compile — your batches go through Milo (gate 1), then the boss's Mac
 you are running on the boss's Mac, compile locally as you go; the
 control window's clean build is still the final word before PORTED.
 
+## Rowan
+
+Rowan — this section is yours, complete and self-contained. Work the
+batches **in the order listed**. Exact source files: the batch's entry
+in `BATCHES.md`; full spec: `batches/B##.md`.
+
+**Existing claims stand:** B02–B05 are already claimed and in flight
+on OpenCode branches. Those claims are not reassigned by this doc —
+the work finishes where it started, and you are owner of record for
+their review and merge (see § OpenCode).
+
+1. **B01 — Queue core** — crate `crates/queue-core` — 3 files.
+   Sources and spec: `BATCHES.md` §B01, `batches/B01.md`.
+2. **B02 — Queue store (Upstash store + repo layer)** — crate
+   `crates/queue-store` — 2 files. Sources and spec: `BATCHES.md`
+   §B02, `batches/B02.md`.
+3. **B03 — Guardrail + Spark transport** — crate `crates/guardrail`
+   — 2 files. Sources and spec: `BATCHES.md` §B03, `batches/B03.md`.
+4. **B04 — Agent runtime (trio agent)** — crate
+   `crates/agent-runtime` — 1 file. Sources and spec: `BATCHES.md`
+   §B04, `batches/B04.md`.
+5. **B05 — Assess server (Node service)** — crate
+   `crates/assess-server` — 5 files. Sources and spec: `BATCHES.md`
+   §B05, `batches/B05.md`.
+6. **B06 — Stack wiring (run-stack)** — crate `crates/stack` — 1
+   file. Sources and spec: `BATCHES.md` §B06, `batches/B06.md`
+   (closes the wave; it wires the services the other waves produce).
+7. **B07 — Integration assist** — no crate of its own, 0 source
+   files. Sources and spec: `BATCHES.md` §B07, `batches/B07.md`. The
+   checklist (full-workspace build, byte-for-byte contract seam
+   check, cross-crate test pass, compile-error triage under the stall
+   rule, fallback-integrity diff) runs at **every wave close** and
+   whenever two PORTED batches first meet. Seam fixes land in the
+   crate that owns the contract — never by copy-pasting a type into
+   the consuming crate.
+
+Status is reported where the work was claimed: the crew bus (room 1)
+for crew work. One line per batch, in the format given in each spec
+(`batches/B##.md`).
+
+## Milo
+
+Milo — this section is yours, complete and self-contained. Work the
+batches **in the order listed**. Exact source files: the batch's entry
+in `BATCHES.md`; full spec: `batches/B##.md`.
+
+**Standing duty — compile gate 1:** Milo's VM is gate 1 for
+crew-pushed work; the boss's Mac is gate 2 and the final word.
+Nothing counts as compiled from the Pax sandbox (rustc cannot write
+output there).
+
+1. **B16 — Jobs service** — crate `crates/os-jobs` — 6 files.
+   Sources and spec: `BATCHES.md` §B16, `batches/B16.md`.
+2. **B17 — Memory service** — crate `crates/os-memory` — 3 files.
+   Sources and spec: `BATCHES.md` §B17, `batches/B17.md`.
+3. **B18 — Identity & capabilities service** — crate
+   `crates/os-identity` — 1 file. Sources and spec: `BATCHES.md`
+   §B18, `batches/B18.md`.
+4. **B19 — Workspace & artifact store** — crate
+   `crates/os-workspace` — 2 files. Sources and spec: `BATCHES.md`
+   §B19, `batches/B19.md`.
+5. **B20 — Budget & resource policy** — crate `crates/os-budget` —
+   13 files. Sources and spec: `BATCHES.md` §B20, `batches/B20.md`.
+6. **B21 — Supervisor & watchdog** — crate `crates/os-supervisor` —
+   39 files. Sources and spec: `BATCHES.md` §B21, `batches/B21.md`.
+7. **B22 — Worker runtime & drivers** — crate `crates/os-worker` —
+   19 files. Sources and spec: `BATCHES.md` §B22, `batches/B22.md`.
+8. **B23 — Boot glue & deployment** — crate `crates/os-boot` — 46
+   files. Sources and spec: `BATCHES.md` §B23, `batches/B23.md`.
+
+Status is reported where the work was claimed: the crew bus (room 1)
+for crew work. One line per batch, in the format given in each spec
+(`batches/B##.md`).
+
+## Hana
+
+Hana — this section is yours, complete and self-contained. Work the
+batches **in the order listed**. Exact source files: the batch's entry
+in `BATCHES.md`; full spec: `batches/B##.md`. B09–B14 land in the
+shared crate `crates/intel` — keep each batch's modules in its own
+module subtree; the claim holder coordinates the `lib.rs` wiring.
+
+1. **B08 — Nuntius relay** — crate `crates/relay` — 3 files. Sources
+   and spec: `BATCHES.md` §B08, `batches/B08.md`.
+2. **B09 — Intel core & capability registry** — crate `crates/intel`
+   — 70 files. Sources and spec: `BATCHES.md` §B09, `batches/B09.md`.
+3. **B10 — Briefings & dispatch** — crate `crates/intel` — 43 files.
+   Sources and spec: `BATCHES.md` §B10, `batches/B10.md`.
+4. **B11 — Intel Spark client & mind images** — crate `crates/intel`
+   — 8 files. Sources and spec: `BATCHES.md` §B11, `batches/B11.md`.
+5. **B12a — Evals & drills — drill and check code (port)** — crate
+   `crates/intel` — 39 files. Sources and spec: `BATCHES.md` §B12a,
+   `batches/B12a.md`.
+6. **B12b — Evals & drills — eval records A–L (CARRIED, fixtures —
+   carry + verify, do not port)** — crate `crates/intel` — 50 files.
+   Sources and spec: `BATCHES.md` §B12b, `batches/B12b.md`.
+7. **B12c — Evals & drills — eval records P–W + SAM set (CARRIED,
+   fixtures — carry + verify, do not port)** — crate `crates/intel`
+   — 49 files. Sources and spec: `BATCHES.md` §B12c,
+   `batches/B12c.md`.
+8. **B13 — Examples & devpack** — crate `crates/intel` — 23 files.
+   Sources and spec: `BATCHES.md` §B13, `batches/B13.md`.
+9. **B14 — Trust & launch (remaining intel)** — crate `crates/intel`
+   — 4 files. Sources and spec: `BATCHES.md` §B14, `batches/B14.md`.
+10. **B15 — Dashboard backend contract** — crate `crates/dashboard`
+    — 31 files. Sources and spec: `BATCHES.md` §B15,
+    `batches/B15.md`.
+
+Status is reported where the work was claimed: the crew bus (room 1)
+for crew work. One line per batch, in the format given in each spec
+(`batches/B##.md`).
+
 ## OpenCode
 
-Fleet — this section is yours: batches B01–B23 plus B07 integration,
-grouped by the plan's waves. Every batch is one claim line: batch,
-crate, file count, spec. Full source lists are in `BATCHES.md`; the
-cold-executable spec for each batch is `batches/B##.md` — read it
-before writing code.
+**Reinforcement only — this section holds no batches of its own.**
+The named sections above (§ Buffy, § Rowan, § Milo, § Hana) own every
+batch B01–B31 (B12 split as B12a/B12b/B12c). Fleet — you work a batch
+or a task (from `SUPER_PROMPT.md`) out of a named section only on
+Del's direct say, or when that section's owner confirms their queue
+is clear.
 
 **Fleet protocol:**
 
-- One agent per batch. **Claim = create and push branch
-  `batch/B##` BEFORE writing any code.** First claim wins; a batch
-  whose branch exists is taken. No branch, no work.
+- **Claim = create and push branch `batch/B##` BEFORE writing any
+  code** — or, for a single task, post a `TAKE T###` line on the bus
+  (room 1). First claim wins; a batch whose branch exists is taken.
+  No branch, no work.
 - One git worktree per agent — never two agents in one worktree.
 - Agents compile locally on the Mac as they go (`cargo build -p
   <crate>` / `cargo test -p <crate>` from the spec).
@@ -140,49 +256,12 @@ before writing code.
 - Merges happen **only from the control window**, after
   `cargo build` + `cargo test` pass on the branch. Never force-push;
   read the tip before merging.
-- Crew agents may also claim from this section by the same branch
-  rule — a claim is a claim regardless of who makes it (a crew claim
-  also gets announced on the bus, room 1).
-
-### Wave 1 — the assess path
-
-- **B01** Queue core — `crates/queue-core` — 3 files — `batches/B01.md`
-- **B02** Queue store (Upstash store + repo layer) — `crates/queue-store` — 2 files — `batches/B02.md`
-- **B03** Guardrail + Spark transport — `crates/guardrail` — 2 files — `batches/B03.md`
-- **B04** Agent runtime (trio agent) — `crates/agent-runtime` — 1 file — `batches/B04.md`
-- **B05** Assess server (Node service) — `crates/assess-server` — 5 files — `batches/B05.md`
-
-### Wave 2 — relay + stack
-
-- **B08** Nuntius relay — `crates/relay` — 3 files — `batches/B08.md`
-- **B06** Stack wiring (run-stack) — `crates/stack` — 1 file — `batches/B06.md` (closes the wave; it wires the services the other waves produce)
-
-### Wave 3 — OS services
-
-- **B16** Jobs service — `crates/os-jobs` — 6 files — `batches/B16.md`
-- **B17** Memory service — `crates/os-memory` — 3 files — `batches/B17.md`
-- **B18** Identity & capabilities service — `crates/os-identity` — 1 file — `batches/B18.md`
-- **B19** Workspace & artifact store — `crates/os-workspace` — 2 files — `batches/B19.md`
-- **B20** Budget & resource policy — `crates/os-budget` — 13 files — `batches/B20.md`
-- **B21** Supervisor & watchdog — `crates/os-supervisor` — 39 files — `batches/B21.md`
-- **B22** Worker runtime & drivers — `crates/os-worker` — 19 files — `batches/B22.md`
-- **B23** Boot glue & deployment — `crates/os-boot` — 46 files — `batches/B23.md`
-
-### Wave 4 — intel + dashboard
-
-- **B09** Intel core & capability registry — `crates/intel` — 70 files — `batches/B09.md`
-- **B10** Briefings & dispatch — `crates/intel` — 43 files — `batches/B10.md`
-- **B11** Intel Spark client & mind images — `crates/intel` — 8 files — `batches/B11.md`
-- **B12a** Evals & drills — drill and check code (**port**) — `crates/intel` — 39 files — `batches/B12a.md`
-- **B12b** Evals & drills — eval records A–L (**CARRIED**, fixtures — carry + verify, do not port) — `crates/intel` — 50 files — `batches/B12b.md`
-- **B12c** Evals & drills — eval records P–W + SAM set (**CARRIED**, fixtures — carry + verify, do not port) — `crates/intel` — 49 files — `batches/B12c.md`
-- **B13** Examples & devpack — `crates/intel` — 23 files — `batches/B13.md`
-- **B14** Trust & launch (remaining intel) — `crates/intel` — 4 files — `batches/B14.md`
-- **B15** Dashboard backend contract — `crates/dashboard` — 31 files — `batches/B15.md`
-
-### B07 — integration (closes every wave)
-
-- **B07** Integration assist — no crate of its own, 0 source files — `batches/B07.md`. The checklist (full-workspace build, byte-for-byte contract seam check, cross-crate test pass, compile-error triage under the stall rule, fallback-integrity diff) runs at **every wave close** and whenever two PORTED batches first meet. Claimed per wave by the same branch rule (`batch/B07`), or run directly from the control window. Seam fixes land in the crate that owns the contract — never by copy-pasting a type into the consuming crate.
+- A finished fleet batch or task is reported to the section owner
+  (and in the control window).
+- **Existing claims STAND:** B02–B05 are already claimed and in
+  flight on OpenCode branches. Those claims are not revoked or
+  reassigned by this doc — the work finishes where it started, and
+  Rowan is owner of record for their review and merge.
 
 ## Status legend & reporting
 

@@ -1,9 +1,11 @@
 # SUPER PROMPT — Meta OS Rust rebuild, deep task queue
 
-This is the deep task queue under `TASKS.md`. **TASKS.md still governs WHO**: its
-§ Buffy and § OpenCode sections own the blocks below, and its claim rules apply
-(crew: bus line in room 1; fleet: branch `batch/B##` pushed before coding —
-first claim wins). This file is the WHAT at task granularity: 259 file-level
+This is the deep task queue under `TASKS.md`. **TASKS.md governs WHO**: its
+named sections — § Rowan, § Milo, § Hana, § Buffy — own the blocks below, one
+named owner per block, and its claim rules apply (crew: bus line in room 1;
+fleet: branch `batch/B##` pushed before coding — first claim wins). The
+OpenCode fleet holds no block of its own in this file: it is reinforcement
+only (see the fleet note after the named blocks). This file is the WHAT at task granularity: 259 file-level
 tasks decomposed from `BATCHES.md`'s 591-file inventory. Every inventory file
 is named in exactly one task; data/docs/asset files appear only in verify-carried
 or embed tasks, never as ports.
@@ -13,7 +15,7 @@ How to work this queue:
 - Claim a task by its id before starting: `TAKE T###` where your section's claim
   rule requires it (bus line for crew, your batch branch for the fleet). One task,
   one owner. If a task id is taken, take the next one.
-- Work tasks in id order within your block unless a task's own text names a
+- Work tasks in id order within your section unless a task's own text names a
   dependency (harness before cases in B31; tests before the code they pin where
   a batch lists both).
 - The Python/Node source is the spec: port behavior, never redesign. Frozen
@@ -116,13 +118,15 @@ B31 builds the parity harness, then ports its 31 cases one by one.
 - T061 [B31] Port test file(s) `os/tests/test_worlds_pack.py` into `crates/parity-tests` tests (same name roots, same fixtures) — done when: `cargo test -p parity-tests` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
 - T062 [B31] Run the full parity suite in `crates/parity-tests` and produce the per-batch parity table — done when: every ported case is reported pass/fail and every case needing the excluded `relay_common`/viewer code is named exclusion-blocked, none dropped
 
-## Block OPENCODE (B01–B23 + B07 — the fleet claim pool in TASKS.md)
+## Block ROWAN (B01–B07 — Rowan's section in TASKS.md)
 
-Fleet: claim by batch branch per TASKS.md; inside a claimed batch, tasks are
-worked in id order (test ports first, then modules, then compile-fix and
-parity close-out). Crate-owner first-claim tags are on each batch header —
-the crate owner wires that crate's `lib.rs`. B07 integration tasks close
-the queue and run at every wave close.
+Rowan: this is your queue — the assess path and its wiring. Work the batches
+in the order listed: queue core and store, the guardrail and Spark transport,
+the agent runtime, the assess server, then the stack wiring (B06) that closes
+the wave. B07 integration is also yours: its tasks run at every wave close.
+**Existing claims stand:** B02–B05 are already claimed and in flight on
+OpenCode branches — the work finishes where it started, and you are owner of
+record for their review and merge (see the fleet note below).
 
 ### [B01] crate `crates/queue-core` — first claim: Rowan
 
@@ -130,23 +134,27 @@ the queue and run at every wave close.
 - T064 [B01] Compile-fix `crates/queue-core` for [B01]: work through `cargo build -p queue-core` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T065 [B01] Parity-run [B01]: run `cargo test -p queue-core` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
 - T066 [B01] Write `crates/queue-core` crate docs from `server/queue/README.md`, `server/queue/.gitignore` — done when: crate-level docs cover the source doc's contract points and `cargo doc -p queue-core` builds
+
 ### [B02] crate `crates/queue-store` — first claim: Rowan
 
 - T067 [B02] Port `server/queue/trio_repo.py` into `crates/queue-store` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T068 [B02] Port `server/queue/trio_store.py` into `crates/queue-store` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T069 [B02] Compile-fix `crates/queue-store` for [B02]: work through `cargo build -p queue-store` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T070 [B02] Parity-run [B02]: run `cargo test -p queue-store` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
+
 ### [B03] crate `crates/guardrail` — first claim: Rowan
 
 - T071 [B03] Port `server/queue/spark_gen.py` into `crates/guardrail` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T072 [B03] Port `server/queue/spark_guardrail.py` into `crates/guardrail` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T073 [B03] Compile-fix `crates/guardrail` for [B03]: work through `cargo build -p guardrail` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T074 [B03] Parity-run [B03]: run `cargo test -p guardrail` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
+
 ### [B04] crate `crates/agent-runtime` — first claim: Rowan
 
 - T075 [B04] Port `server/queue/trio_agent.py` into `crates/agent-runtime` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T076 [B04] Compile-fix `crates/agent-runtime` for [B04]: work through `cargo build -p agent-runtime` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T077 [B04] Parity-run [B04]: run `cargo test -p agent-runtime` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
+
 ### [B05] crate `crates/assess-server` — first claim: Rowan
 
 - T078 [B05] Port `server/assess.mjs` into `crates/assess-server` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
@@ -156,17 +164,39 @@ the queue and run at every wave close.
 - T082 [B05] Compile-fix `crates/assess-server` for [B05]: work through `cargo build -p assess-server` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T083 [B05] Parity-run [B05]: run `cargo test -p assess-server` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
 - T084 [B05] Write `crates/assess-server` crate docs from `server/README.md` — done when: crate-level docs cover the source doc's contract points and `cargo doc -p assess-server` builds
-### [B08] crate `crates/relay` — first claim: Hana
 
-- T085 [B08] Port test file(s) `relay/relay.test.mjs` into `crates/relay` tests (same name roots, same fixtures) — done when: `cargo test -p relay` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
-- T086 [B08] Port `relay/relay.mjs` into `crates/relay` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
-- T087 [B08] Compile-fix `crates/relay` for [B08]: work through `cargo build -p relay` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
-- T088 [B08] Parity-run [B08]: run `cargo test -p relay` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
-- T089 [B08] Write `crates/relay` crate docs from `relay/README.md` — done when: crate-level docs cover the source doc's contract points and `cargo doc -p relay` builds
 ### [B06] crate `crates/stack` — first claim: Rowan
 
 - T090 [B06] Port `run-stack.sh` into `crates/stack` (the Rust stack composition: relay, queue service, agent, assess server, same order and env as the script) — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T091 [B06] Compile + parity close-out for [B06] (`crates/stack`): clear `cargo build -p stack` errors from this batch's port tasks, then run `cargo test -p stack` against the batch's Python/Node cases — done when: build is clean at gate 1 and every non-passing case is grouped by error class or named exclusion-blocked in the batch report
+
+### [B07] crate `crates/—` — first claim: —
+
+- T246 [B07] Workspace wiring audit: check every crate's `lib.rs` exports against the BATCHES.md module map and confirm shared types live only in their owning crates — done when: the audit lists zero duplicated contract types across crates
+- T247 [B07] Full-workspace build seam pass: run `cargo build` for the whole workspace and fix seam errors (types, trait bounds, duplicate definitions) in the crate that owns the contract — done when: the workspace build is clean at gate 1 or every remaining seam is filed against its owning batch
+- T248 [B07] Contract check — job kind: verify the Rust queue emits and accepts only job kind `trio-assessment` v1, byte-for-byte — done when: a check against `tests/queue-python/test_queue.py` cases passes for kind handling
+- T249 [B07] Contract check — job id: verify job ids are computed as `trio-<sha256(product + "\0" + timestamp + "\0" + frame bytes)[:32]>` and are deterministic across a re-run — done when: the same inputs produce the same id twice and no second Spark call is billed
+- T250 [B07] Contract check — result key + body: verify results land under `trio:{jid}:result` with body `{job_id, status, assessment, error, model, latency_ms, completed_at}` and `status: "ok"` carries only validateAssessment-passed assessments — done when: a written result reads back byte-identical in shape
+- T251 [B07] Contract check — /api/assess: verify the Rust assess server answers POST /api/assess on port 8080 in the v2 contract shape, tries the queue first under TRIO_QUEUE_ENABLED=1 (bounded 30x1s poll), and returns 502 — never a silent fallback — on an invalid queue answer — done when: all three behaviors are exercised against the running Rust stack
+- T252 [B07] Contract check — queue semantics: verify claim = SET NX lease with heartbeat and each result is written exactly once — done when: a double-claim attempt and a duplicate-result write are both rejected in a live check
+- T253 [B07] Guardrail audit: trace every Spark call site in the Rust queue/agent and confirm each one passes through the $75-cap guardrail counter — done when: the audit lists every call site with its counter path and finds zero uncounted sites
+- T254 [B07] Cross-crate test pass: run `cargo test` for the full workspace and triage every failure to its owning batch — done when: each failure is filed against one batch with its error class; B07 does not rewrite another batch's port
+- T255 [B07] Compile-error triage for the wave: collect gate errors from all batches, group by error class, apply the stall rule (same class three rounds = park, blocker written into the batch spec) — done when: every open error belongs to a named batch and parked batches carry written blockers
+- T256 [B07] Fallback integrity diff: `git diff` the wave's start tip against the current tip for every Python/Node original in the wave's batches — done when: the diff proves zero originals edited or deleted
+- T257 [B07] Stack composition check: start the Rust relay, queue service, agent, and assess server together in run-stack order — done when: all four processes are up and the assess server reaches the queue
+- T258 [B07] Live round trip, step 1: enqueue the steam-frame assessment job through the Rust stack (the same frame the Python stack judged "steam or fog") — done when: the job is claimed by the Rust agent and a result is written under its result key
+- T259 [B07] Live round trip, step 2 + PORTED ledger: read back the round-trip result body and the guardrail spend delta (exactly the calls made, no more), then record the wave's per-batch states — done when: the result matches the v2 shape and the ledger lists every batch in the wave as PORTED, PARKED, or still DRAFT with its gate states
+
+## Block MILO (B16–B23 — Milo's section in TASKS.md)
+
+Milo: this is your queue — the OS services, in the order listed. B16–B23 land
+in their own service crates (`os-jobs`, `os-memory`, `os-identity`,
+`os-workspace`, `os-budget`, `os-supervisor`, `os-worker`, `os-boot`).
+**Standing duty (framing, not a task id): compile gate 1.** Milo's VM is
+gate 1 for crew-pushed work — every crew batch, yours included, compiles and
+passes parity there before it counts; the boss's Mac is gate 2 and the
+final word.
+
 ### [B16] crate `crates/os-jobs` — first claim: Milo
 
 - T092 [B16] Port test file(s) `os/tests/test_claims.py`, `os/tests/test_intel_brief_environment_jobs.py`, `os/tests/test_jobs.py`, `os/tests/test_jobs_req.py`, `os/tests/test_os_jobs_unit.py` into `crates/os-jobs` tests (same name roots, same fixtures) — done when: `cargo test -p os-jobs` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
@@ -174,22 +204,26 @@ the queue and run at every wave close.
 - T094 [B16] Compile-fix `crates/os-jobs` for [B16]: work through `cargo build -p os-jobs` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T095 [B16] Parity-run [B16]: run `cargo test -p os-jobs` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
 - T096 [B16] Write `crates/os-jobs` crate docs from this batch's source modules — done when: every public module carries doc comments matching the source's documented behavior and `cargo doc -p os-jobs` builds
+
 ### [B17] crate `crates/os-memory` — first claim: Milo
 
 - T097 [B17] Port test file(s) `os/tests/test_intel_brief_memory_depth_caller.py`, `os/tests/test_os078_memory.py` into `crates/os-memory` tests (same name roots, same fixtures) — done when: `cargo test -p os-memory` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
 - T098 [B17] Port `os/mos/memory.py` into `crates/os-memory` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T099 [B17] Compile + parity close-out for [B17] (`crates/os-memory`): clear `cargo build -p os-memory` errors from this batch's port tasks, then run `cargo test -p os-memory` against the batch's Python/Node cases — done when: build is clean at gate 1 and every non-passing case is grouped by error class or named exclusion-blocked in the batch report
 - T100 [B17] Write `crates/os-memory` crate docs from this batch's source modules — done when: every public module carries doc comments matching the source's documented behavior and `cargo doc -p os-memory` builds
+
 ### [B18] crate `crates/os-identity` — first claim: Milo
 
 - T101 [B18] Port `os/mos/capabilities.py` into `crates/os-identity` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T102 [B18] Compile + parity close-out for [B18] (`crates/os-identity`): clear `cargo build -p os-identity` errors from this batch's port tasks, then run `cargo test -p os-identity` against the batch's Python/Node cases — done when: build is clean at gate 1 and every non-passing case is grouped by error class or named exclusion-blocked in the batch report
+
 ### [B19] crate `crates/os-workspace` — first claim: Milo
 
 - T103 [B19] Port `os/mos/artifact_store.py` into `crates/os-workspace` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T104 [B19] Port `os/mos/gitops.py` into `crates/os-workspace` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T105 [B19] Compile + parity close-out for [B19] (`crates/os-workspace`): clear `cargo build -p os-workspace` errors from this batch's port tasks, then run `cargo test -p os-workspace` against the batch's Python/Node cases — done when: build is clean at gate 1 and every non-passing case is grouped by error class or named exclusion-blocked in the batch report
 - T106 [B19] Write `crates/os-workspace` crate docs from this batch's source modules — done when: every public module carries doc comments matching the source's documented behavior and `cargo doc -p os-workspace` builds
+
 ### [B20] crate `crates/os-budget` — first claim: Milo
 
 - T107 [B20] Port test file(s) `os/tests/test_intel_brief_cost.py`, `os/tests/test_intel_brief_environment_budget.py`, `os/tests/test_intel_brief_memory_budget_caller.py`, `os/tests/test_intel_budget_forecast.py`, `os/tests/test_intel_budget_gate.py` into `crates/os-budget` tests (same name roots, same fixtures) — done when: `cargo test -p os-budget` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
@@ -202,6 +236,7 @@ the queue and run at every wave close.
 - T114 [B20] Compile-fix `crates/os-budget` for [B20]: work through `cargo build -p os-budget` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T115 [B20] Parity-run [B20]: run `cargo test -p os-budget` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
 - T116 [B20] Write `crates/os-budget` crate docs from this batch's source modules — done when: every public module carries doc comments matching the source's documented behavior and `cargo doc -p os-budget` builds
+
 ### [B21] crate `crates/os-supervisor` — first claim: Milo
 
 - T117 [B21] Port test file(s) `os/tests/test_intel_e2e_watchdog_surfaces.py`, `os/tests/test_intel_watchdog.py`, `os/tests/test_intel_watchdog_load.py`, `os/tests/test_intel_watchdog_service.py`, `os/tests/test_intel_watchman_boot.py` into `crates/os-supervisor` tests (same name roots, same fixtures) — done when: `cargo test -p os-supervisor` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
@@ -224,6 +259,7 @@ the queue and run at every wave close.
 - T134 [B21] Compile-fix `crates/os-supervisor` for [B21]: work through `cargo build -p os-supervisor` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T135 [B21] Parity-run [B21]: run `cargo test -p os-supervisor` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
 - T136 [B21] Write `crates/os-supervisor` crate docs from this batch's source modules — done when: every public module carries doc comments matching the source's documented behavior and `cargo doc -p os-supervisor` builds
+
 ### [B22] crate `crates/os-worker` — first claim: Milo
 
 - T137 [B22] Port test file(s) `os/tests/test_intel_dispatch_worker.py`, `os/tests/test_intel_drill_kill_worker.py`, `os/tests/test_intel_driver_heartbeat_bridge.py`, `os/tests/test_intel_driver_stall.py`, `os/tests/test_intel_driver_supervision.py` into `crates/os-worker` tests (same name roots, same fixtures) — done when: `cargo test -p os-worker` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
@@ -239,6 +275,7 @@ the queue and run at every wave close.
 - T147 [B22] Compile-fix `crates/os-worker` for [B22]: work through `cargo build -p os-worker` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T148 [B22] Parity-run [B22]: run `cargo test -p os-worker` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
 - T149 [B22] Write `crates/os-worker` crate docs from this batch's source modules — done when: every public module carries doc comments matching the source's documented behavior and `cargo doc -p os-worker` builds
+
 ### [B23] crate `crates/os-boot` — first claim: Milo
 
 - T150 [B23] Port test file(s) `os/tests/test_mos_acceptance.py`, `os/tests/test_mos_capabilities.py`, `os/tests/test_mos_flow.py`, `os/tests/test_mos_gitops.py` into `crates/os-boot` tests (same name roots, same fixtures) — done when: `cargo test -p os-boot` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
@@ -251,6 +288,24 @@ the queue and run at every wave close.
 - T157 [B23] Compile-fix `crates/os-boot` for [B23]: work through `cargo build -p os-boot` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T158 [B23] Parity-run [B23]: run `cargo test -p os-boot` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
 - T159 [B23] Write `crates/os-boot` crate docs from this batch's source modules — done when: every public module carries doc comments matching the source's documented behavior and `cargo doc -p os-boot` builds
+
+## Block HANA (B08–B15 — Hana's section in TASKS.md)
+
+Hana: this is your queue — the Nuntius relay (B08) and the intel batches, in
+the order listed. B09–B14 share the `intel` crate (keep each batch's modules
+in its own subtree, per the shared rules in TASKS.md); B15 is the dashboard
+backend contract. Inside B12: B12a is drill and check code — **port** it;
+B12b/B12c are eval records — **CARRIED**, verify-carried tasks only, never
+ports.
+
+### [B08] crate `crates/relay` — first claim: Hana
+
+- T085 [B08] Port test file(s) `relay/relay.test.mjs` into `crates/relay` tests (same name roots, same fixtures) — done when: `cargo test -p relay` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
+- T086 [B08] Port `relay/relay.mjs` into `crates/relay` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
+- T087 [B08] Compile-fix `crates/relay` for [B08]: work through `cargo build -p relay` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
+- T088 [B08] Parity-run [B08]: run `cargo test -p relay` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
+- T089 [B08] Write `crates/relay` crate docs from `relay/README.md` — done when: crate-level docs cover the source doc's contract points and `cargo doc -p relay` builds
+
 ### [B09] crate `crates/intel` — first claim: Hana
 
 - T160 [B09] Port test file(s) `os/tests/test_intel_abrun.py`, `os/tests/test_intel_attempt_gate.py`, `os/tests/test_intel_baton_pass.py`, `os/tests/test_intel_capability.py`, `os/tests/test_intel_capability_files.py` into `crates/intel` tests (same name roots, same fixtures) — done when: `cargo test -p intel` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
@@ -276,6 +331,7 @@ the queue and run at every wave close.
 - T180 [B09] Compile-fix `crates/intel` for [B09]: work through `cargo build -p intel` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T181 [B09] Parity-run [B09]: run `cargo test -p intel` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
 - T182 [B09] Write `crates/intel` crate docs from `os/intel/README.md` — done when: crate-level docs cover the source doc's contract points and `cargo doc -p intel` builds
+
 ### [B10] crate `crates/intel` — first claim: Hana
 
 - T183 [B10] Port test file(s) `os/tests/test_intel_brief.py`, `os/tests/test_intel_brief_announce.py`, `os/tests/test_intel_brief_blocked_contacts_caller.py`, `os/tests/test_intel_brief_boot_environment.py`, `os/tests/test_intel_brief_cold_start.py` into `crates/intel` tests (same name roots, same fixtures) — done when: `cargo test -p intel` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
@@ -294,6 +350,7 @@ the queue and run at every wave close.
 - T196 [B10] Embed `os/intel/prompts/brief_onjoin_v2.md`, `os/intel/prompts/dispatch.md`, `os/intel/prompts/dispatch_v2.md` byte-identical into `crates/intel` as prompt templates — done when: checksum compare against the sources passes for every file
 - T197 [B10] Compile-fix `crates/intel` for [B10]: work through `cargo build -p intel` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T198 [B10] Parity-run [B10]: run `cargo test -p intel` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
+
 ### [B11] crate `crates/intel` — first claim: Hana
 
 - T199 [B11] Port test file(s) `os/tests/test_intel_spark_agent.py`, `os/tests/test_intel_spark_client.py`, `os/tests/test_intel_spark_down.py` into `crates/intel` tests (same name roots, same fixtures) — done when: `cargo test -p intel` runs them green against the ported modules, or each failing case is recorded exclusion-blocked
@@ -304,6 +361,7 @@ the queue and run at every wave close.
 - T204 [B11] Port `os/intel/spark_client.py` into `crates/intel` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T205 [B11] Compile-fix `crates/intel` for [B11]: work through `cargo build -p intel` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T206 [B11] Parity-run [B11]: run `cargo test -p intel` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
+
 ### [B12a] crate `crates/intel` — first claim: Hana
 
 - T207 [B12a] Port `os/intel/abrun.py`, `os/intel/boot_audio_check.py`, `os/intel/boot_selfcheck.py`, `os/intel/dem018_local_check.py`, `os/intel/e2e1.py` into `crates/intel` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
@@ -317,17 +375,20 @@ the queue and run at every wave close.
 - T215 [B12a] Port `os/intel/drills/trust_negative.py`, `os/intel/drills/wake.py` into `crates/intel` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
 - T216 [B12a] Compile-fix `crates/intel` for [B12a]: work through `cargo build -p intel` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T217 [B12a] Parity-run [B12a]: run `cargo test -p intel` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
+
 ### [B12b] crate `crates/intel` — first claim: Hana
 
 - T218 [B12b] Verify-carried `os/intel/evals/README.md`, `os/intel/evals/ab_run.md`, `os/intel/evals/attempt_gate.log`, `os/intel/evals/attempt_gate.md`, `os/intel/evals/baton_pass.log`, `os/intel/evals/baton_pass.md`, `os/intel/evals/boot_audio.md`, `os/intel/evals/boot_selfcheck.log`, `os/intel/evals/boot_selfcheck.md`, `os/intel/evals/boot_status.md`, `os/intel/evals/brief_rubric.md`, `os/intel/evals/budget_forecast.md`, `os/intel/evals/budget_gate.log`, `os/intel/evals/budget_gate.md`, `os/intel/evals/capability_refusal.log`, `os/intel/evals/capability_refusal.md`, `os/intel/evals/cgroup_limits.log` (B12b eval records (fixtures for the intel crate)) — done when: every file is inventoried and byte-identical to its source; the batch report lists them CARRIED
 - T219 [B12b] Verify-carried `os/intel/evals/cgroup_limits.md`, `os/intel/evals/cost.log`, `os/intel/evals/cost.md`, `os/intel/evals/dem018_local.md`, `os/intel/evals/demo_catch_time.log`, `os/intel/evals/demo_catch_time.md`, `os/intel/evals/demo_operator_card.md`, `os/intel/evals/demo_silent_failure.log`, `os/intel/evals/demo_silent_failure.md`, `os/intel/evals/demo_thresholds_dropin.log`, `os/intel/evals/demo_thresholds_dropin.md`, `os/intel/evals/dispatch_adversarial.md`, `os/intel/evals/dispatch_golden.md`, `os/intel/evals/drill_tournament.log`, `os/intel/evals/drill_tournament.md`, `os/intel/evals/driver_heartbeat_bridge.log`, `os/intel/evals/driver_heartbeat_bridge.md` (B12b eval records (fixtures for the intel crate)) — done when: every file is inventoried and byte-identical to its source; the batch report lists them CARRIED
 - T220 [B12b] Verify-carried `os/intel/evals/driver_stall.log`, `os/intel/evals/driver_stall.md`, `os/intel/evals/driver_supervision.log`, `os/intel/evals/driver_supervision.md`, `os/intel/evals/e2e1.log`, `os/intel/evals/e2e2.log`, `os/intel/evals/e2e3.log`, `os/intel/evals/e2e_watchdog_surfaces.log`, `os/intel/evals/final_mix.md`, `os/intel/evals/fnd029.md`, `os/intel/evals/int012_git_workflow.md`, `os/intel/evals/journal_watch.log`, `os/intel/evals/journal_watch.md`, `os/intel/evals/load.log`, `os/intel/evals/load.md`, `os/intel/evals/log.md` (B12b eval records (fixtures for the intel crate)) — done when: every file is inventoried and byte-identical to its source; the batch report lists them CARRIED
+
 ### [B12c] crate `crates/intel` — first claim: Hana
 
 - T221 [B12c] Verify-carried `os/intel/evals/power_cut.log`, `os/intel/evals/power_cut.md`, `os/intel/evals/redis_down.log`, `os/intel/evals/redis_down.md`, `os/intel/evals/restart_contract.log`, `os/intel/evals/restart_contract.md`, `os/intel/evals/security_pass.log`, `os/intel/evals/security_pass.md`, `os/intel/evals/self_repair_ladder.log`, `os/intel/evals/self_repair_ladder.md`, `os/intel/evals/soak_review.log`, `os/intel/evals/soak_review.md`, `os/intel/evals/spark_down.log`, `os/intel/evals/spark_down.md` (B12c eval records (fixtures for the intel crate)) — done when: every file is inventoried and byte-identical to its source; the batch report lists them CARRIED
 - T222 [B12c] Verify-carried `os/intel/evals/spoof_dispatch.log`, `os/intel/evals/spoof_dispatch.md`, `os/intel/evals/timer_sweep.log`, `os/intel/evals/timer_sweep.md`, `os/intel/evals/trust_enforcement.log`, `os/intel/evals/trust_enforcement.md`, `os/intel/evals/trust_negative.log`, `os/intel/evals/trust_negative.md`, `os/intel/evals/wake.log`, `os/intel/evals/wake.md`, `os/intel/evals/watchdog_load.log`, `os/intel/evals/watchdog_load.md`, `os/intel/evals/watchdog_tuning.md`, `os/intel/evals/watchman_boot.log` (B12c eval records (fixtures for the intel crate)) — done when: every file is inventoried and byte-identical to its source; the batch report lists them CARRIED
 - T223 [B12c] Verify-carried `os/intel/evals/watchman_boot.md`, `os/intel/evals/watchman_bridge.md`, `os/intel/evals/watchman_bridge_tick.md`, `os/intel/evals/watchman_cycle.log`, `os/intel/evals/watchman_cycle.md`, `os/intel/evals/watchman_loop.log`, `os/intel/evals/watchman_loop.md`, `os/intel/evals/watchman_runner.log`, `os/intel/evals/watchman_runner.md`, `os/intel/evals/watchman_service.md`, `os/intel/evals/watchman_service_cli.md`, `os/intel/evals/watchman_service_unit.md`, `os/intel/evals/watchman_watch.log`, `os/intel/evals/watchman_watch.md` (B12c eval records (fixtures for the intel crate)) — done when: every file is inventoried and byte-identical to its source; the batch report lists them CARRIED
 - T224 [B12c] Verify-carried `os/intel/evals/sam/README.md`, `os/intel/evals/sam/alerts-firing-desktop.png`, `os/intel/evals/sam/alerts-firing-phone.png`, `os/intel/evals/sam/alerts-quiet-desktop.png`, `os/intel/evals/sam/alerts-quiet-phone.png`, `os/intel/evals/sam/pairs.json`, `os/intel/evals/sam_pairs.md` (B12c SAM eval set (fixtures; checker code is in B12a)) — done when: every file is inventoried and byte-identical to its source; the batch report lists them CARRIED
+
 ### [B13] crate `crates/intel` — first claim: Hana
 
 - T225 [B13] Port `os/intel/devpack.py` into `crates/intel` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
@@ -336,6 +397,7 @@ the queue and run at every wave close.
 - T228 [B13] Embed `os/intel/examples/mind-images/pax-default/skills/coordinate/SKILL.md`, `os/intel/examples/mind-images/pax-default/skills/dispatch/SKILL.md`, `os/intel/examples/skills/fixture-brief/SKILL.md`, `os/intel/examples/skills/fixture-brief/template.md`, `os/intel/examples/skills/fixture-ledger/SKILL.md`, `os/intel/examples/skills/fixture-ledger/notes.md`, `os/intel/examples/skills/not-a-skill/notes.md` byte-identical into `crates/intel` as example fixtures — done when: checksum compare against the sources passes for every file
 - T229 [B13] Compile-fix `crates/intel` for [B13]: work through `cargo build -p intel` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T230 [B13] Parity-run [B13]: run `cargo test -p intel` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
+
 ### [B14] crate `crates/intel` — first claim: Hana
 
 - T231 [B14] Port `os/intel/launch_run.py`, `os/intel/timer_sweep.py` into `crates/intel` — done when: the module is in the workspace build and behavior matches the source; state left: UNCOMPILED until gate 1 passes
@@ -343,6 +405,7 @@ the queue and run at every wave close.
 - T233 [B14] Verify-carried `os/intel/metaos-demo.env` (B14 demo fixture) — done when: the file is inventoried and byte-identical to its source; its contents are never printed, logged, or copied into code
 - T234 [B14] Compile-fix `crates/intel` for [B14]: work through `cargo build -p intel` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T235 [B14] Parity-run [B14]: run `cargo test -p intel` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
+
 ### [B15] crate `crates/dashboard` — first claim: Hana
 
 - T236 [B15] Implement the dashboard backend contract from `os/docs/DASHBOARD_SPEC.md` + `os/docs/DASHBOARD_SMOKE_CHECKLIST.md` in `crates/dashboard` — done when: the contract surface the spec describes exists in the crate and the batch's ported tests run against it; the web viewer itself is excluded, do not invent one; state left: UNCOMPILED until gate 1 passes
@@ -355,22 +418,20 @@ the queue and run at every wave close.
 - T243 [B15] Compile-fix `crates/dashboard` for [B15]: work through `cargo build -p dashboard` errors from this batch's port tasks — done when: the build is clean at gate 1, or remaining errors are grouped by class in the batch report under the stall rule
 - T244 [B15] Parity-run [B15]: run `cargo test -p dashboard` against this batch's Python/Node test cases — done when: the pass count matches the portable cases and every non-portable case is named exclusion-blocked in the batch report
 - T245 [B15] Write `crates/dashboard` crate docs from this batch's source modules — done when: every public module carries doc comments matching the source's documented behavior and `cargo doc -p dashboard` builds
-### [B07] crate `crates/—` — first claim: —
 
-- T246 [B07] Workspace wiring audit: check every crate's `lib.rs` exports against the BATCHES.md module map and confirm shared types live only in their owning crates — done when: the audit lists zero duplicated contract types across crates
-- T247 [B07] Full-workspace build seam pass: run `cargo build` for the whole workspace and fix seam errors (types, trait bounds, duplicate definitions) in the crate that owns the contract — done when: the workspace build is clean at gate 1 or every remaining seam is filed against its owning batch
-- T248 [B07] Contract check — job kind: verify the Rust queue emits and accepts only job kind `trio-assessment` v1, byte-for-byte — done when: a check against `tests/queue-python/test_queue.py` cases passes for kind handling
-- T249 [B07] Contract check — job id: verify job ids are computed as `trio-<sha256(product + "\0" + timestamp + "\0" + frame bytes)[:32]>` and are deterministic across a re-run — done when: the same inputs produce the same id twice and no second Spark call is billed
-- T250 [B07] Contract check — result key + body: verify results land under `trio:{jid}:result` with body `{job_id, status, assessment, error, model, latency_ms, completed_at}` and `status: "ok"` carries only validateAssessment-passed assessments — done when: a written result reads back byte-identical in shape
-- T251 [B07] Contract check — /api/assess: verify the Rust assess server answers POST /api/assess on port 8080 in the v2 contract shape, tries the queue first under TRIO_QUEUE_ENABLED=1 (bounded 30x1s poll), and returns 502 — never a silent fallback — on an invalid queue answer — done when: all three behaviors are exercised against the running Rust stack
-- T252 [B07] Contract check — queue semantics: verify claim = SET NX lease with heartbeat and each result is written exactly once — done when: a double-claim attempt and a duplicate-result write are both rejected in a live check
-- T253 [B07] Guardrail audit: trace every Spark call site in the Rust queue/agent and confirm each one passes through the $75-cap guardrail counter — done when: the audit lists every call site with its counter path and finds zero uncounted sites
-- T254 [B07] Cross-crate test pass: run `cargo test` for the full workspace and triage every failure to its owning batch — done when: each failure is filed against one batch with its error class; B07 does not rewrite another batch's port
-- T255 [B07] Compile-error triage for the wave: collect gate errors from all batches, group by error class, apply the stall rule (same class three rounds = park, blocker written into the batch spec) — done when: every open error belongs to a named batch and parked batches carry written blockers
-- T256 [B07] Fallback integrity diff: `git diff` the wave's start tip against the current tip for every Python/Node original in the wave's batches — done when: the diff proves zero originals edited or deleted
-- T257 [B07] Stack composition check: start the Rust relay, queue service, agent, and assess server together in run-stack order — done when: all four processes are up and the assess server reaches the queue
-- T258 [B07] Live round trip, step 1: enqueue the steam-frame assessment job through the Rust stack (the same frame the Python stack judged "steam or fog") — done when: the job is claimed by the Rust agent and a result is written under its result key
-- T259 [B07] Live round trip, step 2 + PORTED ledger: read back the round-trip result body and the guardrail spend delta (exactly the calls made, no more), then record the wave's per-batch states — done when: the result matches the v2 shape and the ledger lists every batch in the wave as PORTED, PARKED, or still DRAFT with its gate states
+## OpenCode fleet — reinforcement (no task block)
+
+Fleet: there is no fleet block in this queue. The four named sections above
+own every task. You work tasks from a named section only on Del's direct say,
+or when that section's owner confirms their queue is clear. **Claim = branch
+`batch/B##` pushed before coding, or a `TAKE T###` line on the bus (room 1)**
+— first claim wins, one task one owner. A finished fleet task is reported to
+the section owner, in the `T### done — <state>` format below.
+
+**Existing claims STAND:** B02–B05 are already claimed and in flight on
+OpenCode branches. Those claims are not revoked or reassigned by this
+restructure — the work finishes where it started, and Rowan is owner of
+record for their review and merge.
 
 ## State legend & reporting
 
