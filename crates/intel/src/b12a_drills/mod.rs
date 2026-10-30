@@ -11,11 +11,19 @@
 //! network/Redis/bus; `run()` executes the named phases in order and
 //! returns a [`DrillReport`]; the `PASS` line prints on success.
 //! Eval records (`.md`/`.log`/`.png`) are B12b/B12c fixtures, not code.
+//!
+//! Port layout: plain-dict fixture data rides on [`value::Value`];
+//! sibling-module surfaces owned by other batches (watchdog,
+//! gate, store, brief, …) are the traits in [`deps`] — the same
+//! seams the Python sources reach through patchable module
+//! attributes. The subprocess check scripts share [`audiocheck`].
 
 pub mod abrun;
+pub mod audiocheck;
 pub mod boot_audio_check;
 pub mod boot_selfcheck;
 pub mod dem018_local_check;
+pub mod deps;
 pub mod drills;
 pub mod e2e1;
 pub mod e2e2;
@@ -26,9 +34,11 @@ pub mod redis_down_drill;
 pub mod sam_check;
 pub mod sam_render;
 pub mod security_pass;
+pub mod sha256;
 pub mod soak_review;
 pub mod spark_down_drill;
 pub mod spoof_dispatch_drill;
+pub mod value;
 pub mod watchdog_tuning;
 
 /// One named phase outcome.
