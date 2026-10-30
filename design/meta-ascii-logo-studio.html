@@ -141,6 +141,19 @@
       box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.85);
     }
 
+    .back-link {
+      display: block;
+      margin-top: 4px;
+      color: var(--accent-light);
+      font-size: 12px;
+      text-decoration: none;
+    }
+
+    .back-link:hover,
+    .back-link:focus-visible {
+      text-decoration: underline;
+    }
+
     .stage {
       position: relative;
       display: grid;
@@ -475,6 +488,7 @@
         <div>
           <p class="eyebrow">Interactive object / 001</p>
           <h1 class="brand-title">Meta Loop <span style="color:#7487a5;font-weight:450">/ ASCII Studio</span></h1>
+          <a class="back-link" href="../index.html">← Back to console</a>
         </div>
       </div>
       <div class="top-meta" aria-live="polite">

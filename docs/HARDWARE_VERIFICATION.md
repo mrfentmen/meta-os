@@ -192,6 +192,12 @@ Web console (phone or Mac browser):
    reload the console — the studio's choices come back in the
    panel. With nothing saved, the studio keeps its own defaults
    (Meta blue, 30%, playing).
+10. Studio back link: in the full studio, tap Back to console
+    under the studio title — the console opens in the same tab,
+    with the saved color, speed, and pause state still applied.
+    (The shipped root studio, logo-studio.html, has no back link;
+    it is the verbatim v2 file and is not the studio the console
+    links to.)
 
 Native Mac app (MetaTrio):
 
