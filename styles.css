@@ -1077,6 +1077,12 @@ body[data-product="ignis"] .ignis-review-uncertainty-panel {
 body[data-product="ignis"] .ignis-review-observation-count-panel {
   display: block;
 }
+.ignis-review-latency-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-latency-panel {
+  display: block;
+}
 
 /* OPS-CONSOLE-3 (Del UI direction, Oct 29): second web-first
    dispatch/ops-console piece for Ignis, extending OPS-CONSOLE-1's

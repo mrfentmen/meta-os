@@ -365,6 +365,12 @@
     <p id="ignis-review-observation-count" class="note mono">Awaiting review 0 · No observations 0 · One observation 0 · Two or three 0 · Four or more 0 · Unrecorded 0</p>
   </section>
 
+  <section class="panel ignis-review-latency-panel" aria-label="Ignis review queue by reported latency">
+    <h2>Review queue by reported latency</h2>
+    <p class="note">How long the flagged work waited on the server, honestly: the recorded ok Ignis assessments already awaiting human review, split by the server-reported processing latency the response itself carried — under one second, one to five seconds, five seconds or more, or unreported where no usable latency value exists to read. This panel never judges whether a slow flagged assessment is more or less trustworthy, never re-scores anything, and never claims a fast flagged assessment is reliable because it returned quickly. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p>
+    <p id="ignis-review-latency" class="note mono">Awaiting review 0 · Under 1s 0 · 1–5s 0 · 5s or more 0 · Unreported 0</p>
+  </section>
+
   <section class="panel" aria-label="Contacts">
     <h2>Contacts</h2>
     <p class="note">Human review directory for the selected product. Contacts are stored only in this browser. Nothing here sends or notifies anyone: reaching out is always a human action, never automatic.</p>

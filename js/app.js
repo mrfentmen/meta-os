@@ -29,6 +29,7 @@ import { ignisReviewByObservationCategory } from "./ignis-review-observation-cat
 import { ignisReviewByEvidence } from "./ignis-review-evidence.js";
 import { ignisReviewByUncertainty } from "./ignis-review-uncertainty.js";
 import { ignisReviewByObservationCount } from "./ignis-review-observation-count.js";
+import { ignisReviewByLatency } from "./ignis-review-latency.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -167,6 +168,7 @@ const els = {
   ignisReviewEvidence: $("ignis-review-evidence"),
   ignisReviewUncertainty: $("ignis-review-uncertainty"),
   ignisReviewObservationCount: $("ignis-review-observation-count"),
+  ignisReviewLatency: $("ignis-review-latency"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1427,6 +1429,16 @@ function updateLogStats() {
   const reviewObservationCount = ignisReviewByObservationCount(log.entries());
   els.ignisReviewObservationCount.textContent =
     `Awaiting review ${reviewObservationCount.totalFlagged} · No observations ${reviewObservationCount.none} · One observation ${reviewObservationCount.one} · Two or three ${reviewObservationCount.twoOrThree} · Four or more ${reviewObservationCount.fourOrMore} · Unrecorded ${reviewObservationCount.unrecorded}`;
+  // IGNIS-ONEOFONE-20: the flagged queue's own reported latency,
+  // banded on the same flagged entries ONEOFONE-19 counts — a
+  // flagged entry with a null, missing, non-finite, or negative
+  // latency counts as unreported, never a silent zero. A held
+  // session stays zeros, and the panel itself is hidden under
+  // Vigiles and Medicus by CSS, so this line only ever shows
+  // under Ignis.
+  const reviewLatency = ignisReviewByLatency(log.entries());
+  els.ignisReviewLatency.textContent =
+    `Awaiting review ${reviewLatency.totalFlagged} · Under 1s ${reviewLatency.under1s} · 1–5s ${reviewLatency.oneTo5s} · 5s or more ${reviewLatency.fiveOrMore} · Unreported ${reviewLatency.unreported}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
