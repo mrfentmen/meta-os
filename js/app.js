@@ -25,6 +25,7 @@ import { ignisReviewByModel } from "./ignis-review-model.js";
 import { ignisReviewAuditTrail } from "./ignis-review-audit-trail.js";
 import { ignisReviewByConfidence } from "./ignis-review-confidence.js";
 import { ignisReviewByScenario } from "./ignis-review-scenario.js";
+import { ignisReviewByObservationCategory } from "./ignis-review-observation-category.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -159,6 +160,7 @@ const els = {
   ignisReviewAuditTrail: $("ignis-review-audit-trail"),
   ignisReviewConfidence: $("ignis-review-confidence"),
   ignisReviewScenario: $("ignis-review-scenario"),
+  ignisReviewObservationCategory: $("ignis-review-observation-category"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1370,6 +1372,19 @@ function updateLogStats() {
     .map((label) => `${label} ${reviewScenario.byScenario[label]}`);
   els.ignisReviewScenario.textContent =
     [`Awaiting review ${reviewScenario.totalFlagged}`, ...reviewScenarioParts, `Unlabeled ${reviewScenario.unlabeled}`].join(" · ");
+  // IGNIS-ONEOFONE-16: the review queue by observation category
+  // in honest form — the observations inside the flagged queue
+  // ONEOFONE-3 counts, bucketed by the category each observation
+  // itself carried (ONEOFONE-7's categories, queue-scoped).
+  // Clear and unknown-flag entries are not awaiting review and
+  // read nowhere here; a flagged entry with no observations
+  // contributes nothing, and a non-contract category counts in
+  // the total only, never inventing a bucket. A held session
+  // stays zeros, and the panel itself is hidden under Vigiles
+  // and Medicus by CSS, so this line only ever shows under Ignis.
+  const reviewObservationCategory = ignisReviewByObservationCategory(log.entries());
+  els.ignisReviewObservationCategory.textContent =
+    `Flagged observations ${reviewObservationCategory.total} · Visible smoke ${reviewObservationCategory.visibleSmoke} · Visible flame ${reviewObservationCategory.visibleFlame} · Steam or fog ${reviewObservationCategory.steamOrFog} · Flame-like lighting ${reviewObservationCategory.flameLikeLighting} · Obscured or distant ${reviewObservationCategory.obscuredOrDistant} · No hazard ${reviewObservationCategory.noHazard} · Indeterminate ${reviewObservationCategory.indeterminate}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
