@@ -12,7 +12,12 @@ struct ContentView: View {
     @EnvironmentObject var model: AppModel
 
     var body: some View {
-        VStack(spacing: 0) {
+        // LOGO-NATIVE-1: the ASCII loop sits behind the panels, the
+        // native counterpart to the web logo background. Panels keep
+        // their own fills, so the loop ghosts through the gaps only.
+        ZStack(alignment: .topLeading) {
+            LogoLoopView(model: model)
+            VStack(spacing: 0) {
             HeaderView(model: model)
             Divider()
             HSplitView {
@@ -50,6 +55,7 @@ struct ContentView: View {
                 .padding(.vertical, 6)
         }
         .frame(minWidth: 1020, minHeight: 660)
+        }
     }
 
     private var leftColumn: some View {
@@ -59,6 +65,7 @@ struct ContentView: View {
                 StillImagePanel(model: model)
                 VideoPanel(model: model)
                 SettingsPanel(model: model)
+                LogoColorPanel(model: model)
             }
             .padding(12)
         }
