@@ -11,6 +11,4 @@ hmac = "0.12"
 hex = "0.4"
 rand = "0.8"
 tempfile = "3"
-
-[dev-dependencies]
 os-misc = { path = "../os-misc" }
