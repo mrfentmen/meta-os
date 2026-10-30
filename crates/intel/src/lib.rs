@@ -308,4 +308,5 @@
 //! the spec — port behavior, do not redesign. See BATCHES.md for the
 //! compile gates and the parity rule.
 
+pub mod b09_core;
 pub mod b10_brief;

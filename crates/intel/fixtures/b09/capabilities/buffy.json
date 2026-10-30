@@ -1,0 +1,9 @@
+{
+  "identity": "buffy",
+  "bus_post": false,
+  "spend": false,
+  "network": true,
+  "write_paths": [
+    "crew/buffy/"
+  ]
+}
