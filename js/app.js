@@ -30,6 +30,7 @@ import { ignisReviewByEvidence } from "./ignis-review-evidence.js";
 import { ignisReviewByUncertainty } from "./ignis-review-uncertainty.js";
 import { ignisReviewByObservationCount } from "./ignis-review-observation-count.js";
 import { ignisReviewByLatency } from "./ignis-review-latency.js";
+import { ignisReviewBySummary } from "./ignis-review-summary.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -169,6 +170,7 @@ const els = {
   ignisReviewUncertainty: $("ignis-review-uncertainty"),
   ignisReviewObservationCount: $("ignis-review-observation-count"),
   ignisReviewLatency: $("ignis-review-latency"),
+  ignisReviewSummary: $("ignis-review-summary"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1439,6 +1441,17 @@ function updateLogStats() {
   const reviewLatency = ignisReviewByLatency(log.entries());
   els.ignisReviewLatency.textContent =
     `Awaiting review ${reviewLatency.totalFlagged} · Under 1s ${reviewLatency.under1s} · 1–5s ${reviewLatency.oneTo5s} · 5s or more ${reviewLatency.fiveOrMore} · Unreported ${reviewLatency.unreported}`;
+  // IGNIS-ONEOFONE-21: the flagged queue's own summary
+  // completeness, banded on the same flagged entries ONEOFONE-20
+  // counts — a flagged entry with a missing, null, or non-string
+  // summary counts as unrecorded, never a silent empty, and a
+  // whitespace-only string counts as empty, never as a summary.
+  // A held session stays zeros, and the panel itself is hidden
+  // under Vigiles and Medicus by CSS, so this line only ever
+  // shows under Ignis.
+  const reviewSummary = ignisReviewBySummary(log.entries());
+  els.ignisReviewSummary.textContent =
+    `Awaiting review ${reviewSummary.totalFlagged} · With summary ${reviewSummary.withSummary} · Empty summary ${reviewSummary.emptySummary} · Unrecorded ${reviewSummary.unrecorded}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
