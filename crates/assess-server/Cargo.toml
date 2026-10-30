@@ -13,3 +13,8 @@ serde_json = "1"
 sha2 = "0.10"
 hex = "0.4"
 base64 = "0.22"
+ureq = { version = "2", default-features = false, features = ["tls", "json"] }
+queue-store = { path = "../queue-store" }
+guardrail = { path = "../guardrail" }
+queue-core = { path = "../queue-core" }
+agent-runtime = { path = "../agent-runtime" }
