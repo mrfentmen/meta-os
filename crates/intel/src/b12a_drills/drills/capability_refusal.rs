@@ -307,7 +307,26 @@ pub fn run(
             .check_action(Some(&grants.get("milo")), "bus_post", None, None)
             .unwrap_or(Value::Null);
         let alert = capability.refusal_alert(&decision, NOW);
-        let record = records.build_alert_record(&alert, "fixture-room", Some(NOW));
+        // The source lets a ValueError from build_alert_record
+        // escape the phase (a crash, exit 1); the port records
+        // the four record checks as failed with the error as
+        // detail instead — same verdict, no traceback.
+        let record = match records.build_alert_record(&alert, "fixture-room", Some(NOW)) {
+            Ok(record) => record,
+            Err(exc) => {
+                for name in [
+                    "record-kind",
+                    "record-status-open",
+                    "record-id-is-dedupe",
+                    "record-explanation-names",
+                ] {
+                    c.check(name, false, &exc);
+                }
+                phases.push(PhaseResult::fail("alert-record", ""));
+                lines.extend(c.lines);
+                return finish(phases, lines);
+            }
+        };
         c.check(
             "record-kind",
             record.get("kind").as_str() == Some("capability-refusal"),
@@ -361,6 +380,10 @@ pub fn run(
         passed,
         phases.len()
     ));
+    finish(phases, lines)
+}
+
+fn finish(phases: Vec<PhaseResult>, lines: Vec<String>) -> DrillOutcome {
     DrillOutcome {
         report: DrillReport::new("capability_refusal", phases),
         lines,

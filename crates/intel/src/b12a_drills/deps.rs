@@ -41,6 +41,10 @@ fn env_int(name: &str, default: i64, minimum: i64) -> i64 {
         Ok(v) => v,
         Err(_) => return default,
     };
+    parse_env_int(&raw, default, minimum)
+}
+
+fn parse_env_int(raw: &str, default: i64, minimum: i64) -> i64 {
     let raw = raw.trim();
     if raw.is_empty() {
         return default;
@@ -48,6 +52,13 @@ fn env_int(name: &str, default: i64, minimum: i64) -> i64 {
     match raw.parse::<i64>() {
         Ok(value) if value >= minimum => value,
         _ => default,
+    }
+}
+
+fn env_int_map(vars: &[(String, String)], name: &str, default: i64, minimum: i64) -> i64 {
+    match vars.iter().find(|(n, _)| n == name) {
+        Some((_, v)) => parse_env_int(v, default, minimum),
+        None => default,
     }
 }
 
@@ -65,6 +76,63 @@ impl Thresholds {
             tick_max_messages: 1000,
             watchman_stale_minutes: 5,
             timer_sweep_interval_seconds: 300,
+            lease_default_seconds: 1800,
+        }
+    }
+
+    /// Thresholds resolved from an explicit env map — the
+    /// demo_thresholds_dropin step-2 seat (the source resolves
+    /// the real thresholds import in a subprocess with exactly
+    /// these vars). Same names, defaults, and minimums as
+    /// `from_env`.
+    pub fn from_env_map(vars: &[(String, String)]) -> Self {
+        Thresholds {
+            stall_minutes: env_int_map(vars, "WATCHDOG_STALL_MINUTES", 10, 0),
+            progress_stall_minutes: env_int_map(
+                vars,
+                "WATCHDOG_PROGRESS_STALL_MINUTES",
+                10,
+                0,
+            ),
+            lease_risk_window_minutes: env_int_map(
+                vars,
+                "WATCHDOG_LEASE_RISK_WINDOW_MINUTES",
+                5,
+                0,
+            ),
+            lease_risk_quiet_minutes: env_int_map(
+                vars,
+                "WATCHDOG_LEASE_RISK_QUIET_MINUTES",
+                2,
+                0,
+            ),
+            alert_dedupe_cooldown_minutes: env_int_map(
+                vars,
+                "WATCHDOG_ALERT_DEDUPE_COOLDOWN_MINUTES",
+                30,
+                0,
+            ),
+            silent_room_minutes: env_int_map(vars, "WATCHDOG_SILENT_ROOM_MINUTES", 60, 0),
+            watchdog_beat_ttl_seconds: env_int_map(
+                vars,
+                "WATCHDOG_BEAT_TTL_SECONDS",
+                300,
+                1,
+            ),
+            tick_page_size: env_int_map(vars, "WATCHDOG_TICK_PAGE_SIZE", 1000, 1),
+            tick_max_messages: env_int_map(vars, "WATCHDOG_TICK_MAX_MESSAGES", 1000, 1),
+            watchman_stale_minutes: env_int_map(
+                vars,
+                "WATCHDOG_WATCHMAN_STALE_MINUTES",
+                5,
+                0,
+            ),
+            timer_sweep_interval_seconds: env_int_map(
+                vars,
+                "WATCHDOG_TIMER_SWEEP_INTERVAL_SECONDS",
+                300,
+                1,
+            ),
             lease_default_seconds: 1800,
         }
     }
@@ -177,6 +245,138 @@ pub trait Watchdog {
     /// `watchdog.format_announcement(alert)` — the WDG-015
     /// announcement line for one alert, when it has one.
     fn format_announcement(&self, alert: &Value) -> Option<String>;
+    /// `watchdog.journal_watch_tick(journal_text, now, emit)` —
+    /// one journal-watch loop iteration over journalctl JSON
+    /// lines (OS-037); SYSTEM alerts for relay-unit failures.
+    fn journal_watch_tick(
+        &self,
+        journal_text: &str,
+        now: Option<i64>,
+        emit: Option<&mut dyn FnMut(&Value)>,
+    ) -> Vec<Value>;
+    /// `watchdog.restart_event_note(nick, job_id, now,
+    /// downtime_seconds=None)` — the worker-restart event note
+    /// (OS-034): an info record, never an announcement.
+    fn restart_event_note(
+        &self,
+        nick: &str,
+        job_id: &str,
+        now: i64,
+        downtime_seconds: Option<i64>,
+    ) -> Value;
+    /// `watchdog.detect_progress_stall(snapshot, now)` — the
+    /// WDG-003 detector on its own.
+    fn detect_progress_stall(&self, snapshot: &Value, now: Option<i64>) -> Vec<Value>;
+    /// `watchdog.detect_presence_stall(snapshot, now)` — the
+    /// WDG-002 detector on its own.
+    fn detect_presence_stall(&self, snapshot: &Value, now: Option<i64>) -> Vec<Value>;
+}
+
+/// The `intel.timer_sweep` surface (B14): the timer fallback
+/// sweep's decision layer — computes the claim set a correct
+/// sweep must produce; wakes nobody itself.
+pub trait TimerSweep {
+    /// `timer_sweep.sweep_cycle(jobs, now, watchman_alive,
+    /// sweep_interval_seconds=..., last_sweep_at=...,
+    /// sweep_ledger=..., local_agents=...)` -> the cycle note.
+    /// `watchman_alive` None is the unknown state: hold.
+    fn sweep_cycle(
+        &self,
+        jobs: &Value,
+        now: i64,
+        watchman_alive: Option<bool>,
+        sweep_interval_seconds: i64,
+        last_sweep_at: Option<i64>,
+        sweep_ledger: &[String],
+        local_agents: &[String],
+    ) -> Value;
+    /// `timer_sweep.sweep_brief_lines(note)`.
+    fn sweep_brief_lines(&self, note: &Value) -> Vec<String>;
+}
+
+/// The `jobs._sign_job_v2` surface (B16): HMAC-SHA256 v2 job
+/// signing. Secrets travel as hex of the raw digest bytes.
+pub trait JobsSign {
+    /// `jobs._sign_job_v2(secret, job_id, sig_kid, fields,
+    /// spec)` — fields in the signed order (title, accept,
+    /// branch, base, room, created_at, expires_at, nonce).
+    fn sign_job_v2(
+        &self,
+        secret_hex: &str,
+        job_id: &str,
+        sig_kid: &str,
+        fields: &Value,
+        spec: &str,
+    ) -> String;
+}
+
+/// The `intel.trust` surface (B14): signature verification,
+/// claim decisions, and the refusal journal tick.
+pub trait Trust {
+    /// `trust.verify_signature(job, keyring, now)` -> "OK" /
+    /// "BAD" / "EXPIRED" / "UNSIGNED" / ... (the module's
+    /// result vocabulary).
+    fn verify_signature(
+        &self,
+        job: &Value,
+        keyring: &[(String, String)],
+        now: i64,
+    ) -> String;
+    /// `trust.claim_decision(job, trust_config, verify_result)`.
+    fn claim_decision(&self, job: &Value, trust: &Value, verify_result: &str) -> Value;
+    /// `trust.trust_tick(snapshot, journal, now, keyring=...)`
+    /// — one refusal record per newly refused job.
+    fn trust_tick(
+        &self,
+        snapshot: &Value,
+        journal: &[Value],
+        now: i64,
+        keyring: &[(String, String)],
+    ) -> Vec<Value>;
+    /// `trust.refusal_note(job, decision)` — None when the
+    /// decision is not a refusal.
+    fn refusal_note(&self, job: &Value, decision: &Value) -> Option<String>;
+    /// `trust.trust_brief_lines(records)`.
+    fn trust_brief_lines(&self, records: &[Value]) -> Vec<String>;
+    /// `trust.trust_events(records)` — the federation events.
+    fn trust_events(&self, records: &[Value]) -> Vec<Value>;
+}
+
+/// The `intel.wake` surface (B10): judges fixture job and
+/// agent records and composes the wake bundle; never starts
+/// a real session.
+pub trait Wake {
+    /// `wake.wake_tick(jobs, agents, journal, now)` — one
+    /// wake record per newly woken (job, agent) pair.
+    /// Malformed entries yield nothing and never crash.
+    fn wake_tick(
+        &self,
+        jobs: &Value,
+        agents: &Value,
+        journal: &[Value],
+        now: i64,
+    ) -> Vec<Value>;
+    /// `wake.brief_lines(records)`.
+    fn brief_lines(&self, records: &[Value]) -> Vec<String>;
+}
+
+/// The `intel.ladder` surface (B09): the self-repair ladder —
+/// selects the rung from snapshot facts and journals the
+/// decision; it never performs the rung and never mutates
+/// the snapshot.
+pub trait Ladder {
+    /// `ladder.ladder_tick(snapshot, alerts, journal, now)` —
+    /// new ladder-action records for stalls not already
+    /// journaled.
+    fn ladder_tick(
+        &self,
+        snapshot: &Value,
+        alerts: &[Value],
+        journal: &[Value],
+        now: Option<i64>,
+    ) -> Vec<Value>;
+    /// `ladder.ladder_brief_lines(records)` — the brief lines.
+    fn ladder_brief_lines(&self, records: &[Value]) -> Vec<String>;
 }
 
 /// `intel.spark_client` (B11) — the Spark client surface the
@@ -221,6 +421,9 @@ pub trait BriefSurface {
         dry_run: bool,
         client: &dyn SparkClient,
     ) -> (String, Value);
+    /// `brief.recovery_line(recovery)` — the OS-127 boot-brief
+    /// recovery line the power-cut drill reconciles through.
+    fn recovery_line(&self, recovery: &Value) -> String;
 }
 
 /// `intel.dispatch` (B10) — the plan-from-Spark surface.
@@ -238,8 +441,15 @@ pub trait DispatchSurface {
 /// `intel.store` (B09) — the WDG-010 record builder the
 /// INT-010 drill validates a detector dict through.
 pub trait AlertRecords {
-    /// `store.build_alert_record(alert, room=..., now=...)`.
-    fn build_alert_record(&self, alert: &Value, room: &str, now: Option<i64>) -> Value;
+    /// `store.build_alert_record(alert, room=..., now=...)` —
+    /// Err carries the ValueError message when the alert does
+    /// not validate into a WDG-010 record.
+    fn build_alert_record(
+        &self,
+        alert: &Value,
+        room: &str,
+        now: Option<i64>,
+    ) -> Result<Value, String>;
 }
 
 /// `intel.store` (B09) — the boot status line builder the
