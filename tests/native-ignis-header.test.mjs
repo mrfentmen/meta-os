@@ -7,7 +7,7 @@
 // identity row, gated on the selected product being Ignis, and the
 // limitations box gets an accent leading rule — red on Ignis — matching
 // the web .limitations border-left in --accent, which R1 already turned
-// red for Ignis. On the web, the Ignis panel mirrors the Sanitas M3
+// red for Ignis. On the web, the Ignis panel mirrors the Medicus M3
 // panel treatment in Ignis red #d92b2b, scoped to
 // body[data-product="ignis"] only. No Swift toolchain exists in this
 // sandbox, so these are static checks on the shipped Swift and CSS.
@@ -67,6 +67,6 @@ test("web: Ignis panel carries a red gradient, scoped to Ignis only", () => {
   assert.doesNotMatch(
     css,
     /body\[data-product="ignis"\] \.panel \{[^}]*#5da864/,
-    "Ignis panel gradient uses no Sanitas green",
+    "Ignis panel gradient uses no Medicus green",
   );
 });

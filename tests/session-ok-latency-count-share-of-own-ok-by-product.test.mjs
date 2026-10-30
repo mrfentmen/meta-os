@@ -58,7 +58,7 @@ test("empty log: the per-product shares are null", () => {
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -68,7 +68,7 @@ test("a single success reads 1 for its product, null for the others", () => {
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: null,
     ignis: 1,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -86,7 +86,7 @@ test("the shares divide by each product's own ok total, not the global ok total"
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: 1,
     ignis: 0,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -95,11 +95,11 @@ test("a latency-less success sits in its own denominator but moves no bucket", (
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", null);
   recordOk(log, "ignis", 200);
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: 0.5,
     ignis: 1,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -107,13 +107,13 @@ test("the shares equal the DETAIL-36 counts over each product's own ok count", (
   const log = new SessionLog();
   recordOk(log, "vigiles", 40);
   recordOk(log, "ignis", 60);
-  recordOk(log, "sanitas", null);
-  recordFailed(log, "sanitas");
+  recordOk(log, "medicus", null);
+  recordFailed(log, "medicus");
   const stats = log.stats();
   assert.deepEqual(stats.okLatencyCountShareOfOwnOkByProduct, {
     vigiles: 1,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
   assert.equal(
     stats.okLatencyCountShareOfOwnOkByProduct.vigiles,
@@ -137,19 +137,19 @@ test("an unknown-product success moves no bucket and no denominator", () => {
   assert.deepEqual(stats.okLatencyCountShareOfOwnOkByProduct, {
     vigiles: 1,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
   assert.equal(stats.okLatencyCountShareOfOkByProduct.vigiles, 0.5);
 });
 
 test("a missing-product success moves no bucket and no denominator", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   recordOk(log, null, null);
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: 1,
+    medicus: 1,
   });
 });
 
@@ -160,7 +160,7 @@ test("a failure-only log reads null, not 0", () => {
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -171,7 +171,7 @@ test("a failure carrying a latency value never counts as a measurement", () => {
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: null,
     ignis: 1,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -179,14 +179,14 @@ test("an ok entry with no finite latency is skipped as a measurement but counts 
   const log = new SessionLog();
   recordOk(log, "vigiles", Number.NaN);
   recordOk(log, "ignis", 200);
-  recordOk(log, "sanitas", null);
+  recordOk(log, "medicus", null);
   // DETAIL-52 for the same log would read 0, 1/3, 0;
   // here each share divides by its own product's single
   // success, so Ignis reads 1 and the others read 0.
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -197,7 +197,7 @@ test("a success-only log with no finite latency reads 0 per product with success
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -206,7 +206,7 @@ test("zero-millisecond successes still count as measurements", () => {
   recordOk(log, "vigiles", 0);
   recordOk(log, "ignis", 0);
   const shares = log.stats().okLatencyCountShareOfOwnOkByProduct;
-  assert.deepEqual(shares, { vigiles: 1, ignis: 1, sanitas: null });
+  assert.deepEqual(shares, { vigiles: 1, ignis: 1, medicus: null });
   assert.equal(Number.isNaN(shares.vigiles), false);
 });
 
@@ -217,7 +217,7 @@ test("the shares follow clear: back to null", () => {
   assert.deepEqual(log.stats().okLatencyCountShareOfOwnOkByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -226,7 +226,7 @@ test("web wiring: updateLogStats renders the ok-latency-count-share-of-own-ok-by
   assert.match(app, /logStatsOkLatencyCountShareOfOwnOkByProduct: \$\("log-stats-ok-latency-count-share-of-own-ok-by-product"\)/);
   assert.match(
     app,
-    /Successful latency-measurement share of that product's own successes by product: Vigiles \$\{stats\.okLatencyCountShareOfOwnOkByProduct\.vigiles === null \? "none" : `\$\{Math\.round\(stats\.okLatencyCountShareOfOwnOkByProduct\.vigiles \* 100\)\}%`\} · Ignis \$\{stats\.okLatencyCountShareOfOwnOkByProduct\.ignis === null \? "none" : `\$\{Math\.round\(stats\.okLatencyCountShareOfOwnOkByProduct\.ignis \* 100\)\}%`\} · Sanitas \$\{stats\.okLatencyCountShareOfOwnOkByProduct\.sanitas === null \? "none" : `\$\{Math\.round\(stats\.okLatencyCountShareOfOwnOkByProduct\.sanitas \* 100\)\}%`\}/,
+    /Successful latency-measurement share of that product's own successes by product: Vigiles \$\{stats\.okLatencyCountShareOfOwnOkByProduct\.vigiles === null \? "none" : `\$\{Math\.round\(stats\.okLatencyCountShareOfOwnOkByProduct\.vigiles \* 100\)\}%`\} · Ignis \$\{stats\.okLatencyCountShareOfOwnOkByProduct\.ignis === null \? "none" : `\$\{Math\.round\(stats\.okLatencyCountShareOfOwnOkByProduct\.ignis \* 100\)\}%`\} · Medicus \$\{stats\.okLatencyCountShareOfOwnOkByProduct\.medicus === null \? "none" : `\$\{Math\.round\(stats\.okLatencyCountShareOfOwnOkByProduct\.medicus \* 100\)\}%`\}/,
     "updateLogStats sets the ok-latency-count-share-of-own-ok-by-product line from stats()",
   );
 });
@@ -235,7 +235,7 @@ test("web wiring: session-log panel holds the ok-latency-count-share-of-own-ok-b
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-ok-latency-count-share-of-own-ok-by-product" class="note mono">Successful latency-measurement share of that product's own successes by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-ok-latency-count-share-of-own-ok-by-product" class="note mono">Successful latency-measurement share of that product's own successes by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

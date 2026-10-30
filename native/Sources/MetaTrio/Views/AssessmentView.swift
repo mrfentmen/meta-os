@@ -77,7 +77,7 @@ struct AssessmentView: View {
         .clipShape(RoundedRectangle(cornerRadius: 8))
         // UI-9: product-accent panel border, the native counterpart
         // to the web theme panels' border-color of rgba(accent, 0.5)
-        // — Ignis red and Sanitas green in their theme blocks. The
+        // — Ignis red and Medicus green in their theme blocks. The
         // stroke sits after the clip so the full 1pt line follows
         // the rounded edge instead of being cut to a half line by
         // it, and it uses the same assessment-own accent as the

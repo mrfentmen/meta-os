@@ -1,12 +1,12 @@
-# Meta Sanitas fixture run report
+# Meta Medicus fixture run report
 
-Measured by `node eval/sanitas/run.mjs` on 2026-10-28, from
-`eval/sanitas/scenarios.json` (20 labeled scenarios, ground truth
+Measured by `node eval/medicus/run.mjs` on 2026-10-30, from
+`eval/medicus/scenarios.json` (20 labeled scenarios, ground truth
 authored before any source ran). This is a FIXTURE run: both sources
 are local stand-ins, not models. No number here describes live model
 performance, and none may be quoted as such.
 
-## Stub source (`sanitas-stub-fixture`)
+## Stub source (`medicus-stub-fixture`)
 
 - Sample size: 20 scenarios
 - Confusion (alert): TP=6 FP=3 TN=10 FN=1
@@ -20,11 +20,11 @@ performance, and none may be quoted as such.
 - Errors: 0
 
 Known stub misses (documented in `stub.mjs` before the run):
-SAN-002 predicted indeterminate (miss); SAN-010, SAN-012, SAN-014
-predicted waste accumulation (false alarms on confusable negatives);
-SAN-016 and SAN-019 predicted clean area (wrong category, no alert).
+MED-002 predicted indeterminate (miss); MED-010, MED-012, MED-013
+predicted person on ground (false alarms on confusable negatives);
+MED-016 and MED-019 predicted normal activity (wrong category, no alert).
 
-## Baseline source (`sanitas-baseline-always-clean`)
+## Baseline source (`medicus-baseline-always-normal`)
 
 - Sample size: 20 scenarios
 - Confusion (alert): TP=0 FP=0 TN=13 FN=7
@@ -32,14 +32,14 @@ SAN-016 and SAN-019 predicted clean area (wrong category, no alert).
 - Recall: 0.000
 - False-positive rate: 0.000
 - False-negative rate: 1.000
-- Category accuracy: 0.150
+- Category accuracy: 0.400
 - Latency (harness wall clock): mean 0.0 ms, median 0 ms, max 0 ms
 - Errors: 0
 
 ## Comparison
 
 On the same ground truth and harness, the stub beats the baseline on
-recall (0.857 vs 0.000) and category accuracy (0.700 vs 0.150), while
+recall (0.857 vs 0.000) and category accuracy (0.700 vs 0.400), while
 the baseline's precision is vacuous (it never predicts an alert).
 A future real source must beat the baseline on recall and category
 accuracy to claim value; beating it on precision alone proves

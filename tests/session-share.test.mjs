@@ -56,7 +56,7 @@ test("shares divide by the session total: 2 ok and 1 failure read 2/3 and 1/3", 
 test("a session with only successes reads 1 and 0, never none", () => {
   const log = new SessionLog();
   recordAt(log, "vigiles", "ok");
-  recordAt(log, "sanitas", "ok");
+  recordAt(log, "medicus", "ok");
   const stats = log.stats();
   assert.equal(stats.okShare, 1);
   assert.equal(stats.failedShare, 0);
@@ -81,7 +81,7 @@ test("entries with an unknown product still count in the global shares", () => {
   assert.deepEqual(stats.okShareByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
   assert.equal(stats.total, 2);
 });

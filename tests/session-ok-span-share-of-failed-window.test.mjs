@@ -109,7 +109,7 @@ test("the share is the ok span over the failed span, above 1 included", () => {
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T11:00:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T12:30:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:30:00.000Z", "medicus");
   recordOkAt(log, "2026-10-29T13:00:00.000Z", "vigiles");
   // Ok span 11:00 to 13:00 = 7200000 ms; failed span
   // 12:00 to 12:30 = 1800000 ms, so the share is 4 —
@@ -124,7 +124,7 @@ test("the share below 1: a short ok span against a long failed window", () => {
   recordAt(log, "2026-10-29T11:00:00.000Z", "vigiles");
   recordOkAt(log, "2026-10-29T12:00:00.000Z", "ignis");
   recordOkAt(log, "2026-10-29T12:10:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T13:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T13:00:00.000Z", "medicus");
   // Ok span 600000 ms over failed span 7200000 ms.
   assert.equal(log.stats().okSpanShareOfFailedWindow, 600000 / 7200000);
 });
@@ -143,11 +143,11 @@ test("an unknown-product success moves the numerator, unlike DETAIL-53", () => {
   assert.equal(log.stats().okSpanShareOfFailedWindow, 600000 / 1800000);
   // DETAIL-53 reads 0 per product with no successes
   // once a nonzero global entry window exists, so
-  // Ignis and Sanitas read 0 here, not null.
+  // Ignis and Medicus read 0 here, not null.
   assert.deepEqual(log.stats().okSpanShareOfEntryWindowByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -212,7 +212,7 @@ test("the share equals the DETAIL-22 span over the DETAIL-23 span", () => {
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T11:00:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordOkAt(log, "2026-10-29T12:10:00.000Z", "sanitas");
+  recordOkAt(log, "2026-10-29T12:10:00.000Z", "medicus");
   recordAt(log, "2026-10-29T12:30:00.000Z", "vigiles");
   const stats = log.stats();
   assert.equal(stats.okSpanShareOfFailedWindow, stats.okSpanMs / stats.failedSpanMs);

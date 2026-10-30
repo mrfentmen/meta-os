@@ -32,7 +32,7 @@ function recordAt(log, timestamp, product, status = "ok") {
   });
 }
 
-const NULLS = { vigiles: null, ignis: null, sanitas: null };
+const NULLS = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product first success is null, not a fabricated timestamp", () => {
   const log = new SessionLog();
@@ -48,16 +48,16 @@ test("first success per product is the earliest recorded ok entry, by insertion 
   assert.deepEqual(log.stats().firstOkAtByProduct, {
     vigiles: "2026-10-29T12:00:00.000Z",
     ignis: "2026-10-29T12:01:00.000Z",
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("a later ok entry never overwrites the first, even with an earlier timestamp string", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
-  assert.equal(log.stats().firstOkAtByProduct.sanitas, "2026-10-29T12:05:00.000Z");
-  assert.equal(log.stats().lastOkAtByProduct.sanitas, "2026-10-29T12:00:00.000Z");
+  recordAt(log, "2026-10-29T12:05:00.000Z", "medicus");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
+  assert.equal(log.stats().firstOkAtByProduct.medicus, "2026-10-29T12:05:00.000Z");
+  assert.equal(log.stats().lastOkAtByProduct.medicus, "2026-10-29T12:00:00.000Z");
 });
 
 test("failures never move a first-success bucket", () => {
@@ -107,11 +107,11 @@ test("an ok entry without a usable timestamp leaves the bucket open for a later 
 test("a product with no success in a non-empty session reads null", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
-  recordAt(log, "2026-10-29T12:03:00.000Z", "sanitas", "network_error");
+  recordAt(log, "2026-10-29T12:03:00.000Z", "medicus", "network_error");
   assert.deepEqual(log.stats().firstOkAtByProduct, {
     vigiles: "2026-10-29T12:00:00.000Z",
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -128,7 +128,7 @@ test("web wiring: updateLogStats renders the per-product first-success line from
   assert.match(app, /logStatsFirstOkByProduct: \$\("log-stats-first-ok-by-product"\)/);
   assert.match(
     app,
-    /First success by product: Vigiles \$\{stats\.firstOkAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.firstOkAtByProduct\.ignis \?\? "none"\} · Sanitas \$\{stats\.firstOkAtByProduct\.sanitas \?\? "none"\}/,
+    /First success by product: Vigiles \$\{stats\.firstOkAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.firstOkAtByProduct\.ignis \?\? "none"\} · Medicus \$\{stats\.firstOkAtByProduct\.medicus \?\? "none"\}/,
     "updateLogStats sets the per-product first-success line from stats()",
   );
 });
@@ -137,7 +137,7 @@ test("web wiring: session-log panel holds the per-product first-success stats el
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-first-ok-by-product" class="note mono">First success by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-first-ok-by-product" class="note mono">First success by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

@@ -27,7 +27,7 @@ import { readFileSync } from "node:fs";
 import { SessionLog } from "../js/log.js";
 
 const NULL_CAUSES = { network_error: null, http_error: null, invalid_response: null };
-const NULL_WITHIN = { vigiles: NULL_CAUSES, ignis: NULL_CAUSES, sanitas: NULL_CAUSES };
+const NULL_WITHIN = { vigiles: NULL_CAUSES, ignis: NULL_CAUSES, medicus: NULL_CAUSES };
 
 function recordFailed(log, product, status = "network_error") {
   return log.record({
@@ -60,7 +60,7 @@ test("a single failure reads 1 in its own cause and 0 elsewhere for that product
   assert.deepEqual(log.stats().failedShareByStatusWithinProduct, {
     vigiles: NULL_CAUSES,
     ignis: { network_error: 0, http_error: 1, invalid_response: 0 },
-    sanitas: NULL_CAUSES,
+    medicus: NULL_CAUSES,
   });
 });
 
@@ -75,19 +75,19 @@ test("mixed causes within one product divide by that product's failed total, not
   assert.deepEqual(log.stats().failedShareByStatusWithinProduct, {
     vigiles: { network_error: 0.5, http_error: 0.25, invalid_response: 0.25 },
     ignis: { network_error: 1, http_error: 0, invalid_response: 0 },
-    sanitas: NULL_CAUSES,
+    medicus: NULL_CAUSES,
   });
 });
 
 test("all three causes read thirds of that product's failures", () => {
   const log = new SessionLog();
-  recordFailed(log, "sanitas", "network_error");
-  recordFailed(log, "sanitas", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "network_error");
+  recordFailed(log, "medicus", "http_error");
+  recordFailed(log, "medicus", "invalid_response");
   assert.deepEqual(log.stats().failedShareByStatusWithinProduct, {
     vigiles: NULL_CAUSES,
     ignis: NULL_CAUSES,
-    sanitas: { network_error: 1 / 3, http_error: 1 / 3, invalid_response: 1 / 3 },
+    medicus: { network_error: 1 / 3, http_error: 1 / 3, invalid_response: 1 / 3 },
   });
 });
 
@@ -110,18 +110,18 @@ test("a failure with an unknown product moves no cell and no denominator", () =>
   assert.deepEqual(log.stats().failedShareByStatusWithinProduct, {
     vigiles: { network_error: 1, http_error: 0, invalid_response: 0 },
     ignis: NULL_CAUSES,
-    sanitas: NULL_CAUSES,
+    medicus: NULL_CAUSES,
   });
 });
 
 test("a failure with a missing product moves no cell and no denominator", () => {
   const log = new SessionLog();
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   recordFailed(log, null, "http_error");
   assert.deepEqual(log.stats().failedShareByStatusWithinProduct, {
     vigiles: NULL_CAUSES,
     ignis: NULL_CAUSES,
-    sanitas: { network_error: 0, http_error: 0, invalid_response: 1 },
+    medicus: { network_error: 0, http_error: 0, invalid_response: 1 },
   });
 });
 
@@ -135,7 +135,7 @@ test("successes never move a cell, and a success-only log reads null", () => {
   assert.deepEqual(log.stats().failedShareByStatusWithinProduct, {
     vigiles: NULL_CAUSES,
     ignis: { network_error: 1, http_error: 0, invalid_response: 0 },
-    sanitas: NULL_CAUSES,
+    medicus: NULL_CAUSES,
   });
 });
 
@@ -146,7 +146,7 @@ test("a cause with no failures reads 0 for a failing product but null for a fail
   assert.equal(shares.ignis.network_error, 0);
   assert.equal(shares.ignis.invalid_response, 0);
   assert.deepEqual(shares.vigiles, NULL_CAUSES);
-  assert.deepEqual(shares.sanitas, NULL_CAUSES);
+  assert.deepEqual(shares.medicus, NULL_CAUSES);
 });
 
 test("shares follow clear: back to null", () => {
@@ -170,7 +170,7 @@ test("web wiring: session-log panel holds the failed-share-by-status-within-prod
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failed-share-by-status-within-product" class="note mono">Failure-cause share of that product's failures: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Sanitas Network none, HTTP none, Invalid response none<\/p>/,
+    /<p id="log-stats-failed-share-by-status-within-product" class="note mono">Failure-cause share of that product's failures: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Medicus Network none, HTTP none, Invalid response none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

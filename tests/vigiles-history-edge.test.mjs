@@ -2,7 +2,7 @@
 //   node --test tests/vigiles-history-edge.test.mjs
 //
 // HANA Agent1: the Vigiles history edge, completing the product-accent
-// set M3 (Sanitas) and IGNIS-UI-3 (Ignis) started. A Vigiles entry's
+// set M3 (Medicus) and IGNIS-UI-3 (Ignis) started. A Vigiles entry's
 // edge uses the Vigiles product accent #4f7ec2, not its status color,
 // matching the native timeline rows, which carry their own product's
 // accent for all three products (UI-4). Without it the web Vigiles
@@ -34,7 +34,7 @@ test("web: Vigiles history entries carry the Vigiles accent edge", () => {
 test("web: Vigiles history edge uses a fixed accent, not the selection accent", () => {
   // --accent follows the currently selected product, so a rule built on
   // it would re-tint every Vigiles entry whenever the user switches
-  // products. The Sanitas and Ignis rules use fixed hex for the same
+  // products. The Medicus and Ignis rules use fixed hex for the same
   // reason; the Vigiles rule must too.
   const rule = css.match(
     /\.history-item\.history-product-vigiles \{[^}]*\}/,
@@ -43,12 +43,12 @@ test("web: Vigiles history edge uses a fixed accent, not the selection accent", 
   assert.doesNotMatch(rule[0], /var\(--accent\)/);
 });
 
-test("web: Sanitas and Ignis history edges are untouched by the Vigiles branch", () => {
-  const sanitas = css.match(
-    /\.history-item\.history-product-sanitas \{[^}]*\}/,
+test("web: Medicus and Ignis history edges are untouched by the Vigiles branch", () => {
+  const medicus = css.match(
+    /\.history-item\.history-product-medicus \{[^}]*\}/,
   );
-  assert.ok(sanitas, "Sanitas history edge rule still exists");
-  assert.match(sanitas[0], /border-left-color: #5da864/);
+  assert.ok(medicus, "Medicus history edge rule still exists");
+  assert.match(medicus[0], /border-left-color: #5da864/);
   const ignis = css.match(
     /\.history-item\.history-product-ignis \{[^}]*\}/,
   );
@@ -56,8 +56,8 @@ test("web: Sanitas and Ignis history edges are untouched by the Vigiles branch",
   assert.match(ignis[0], /border-left-color: #d92b2b/);
   assert.match(
     appJs,
-    /if \(entryProduct === "sanitas"\) \{\s+item\.classList\.add\("history-product-sanitas"\);/,
-    "Sanitas branch still first",
+    /if \(entryProduct === "medicus"\) \{\s+item\.classList\.add\("history-product-medicus"\);/,
+    "Medicus branch still first",
   );
   assert.match(
     appJs,

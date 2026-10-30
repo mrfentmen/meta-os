@@ -42,7 +42,7 @@ function parseNativeConfigs() {
     "utf8",
   );
   const configs = {};
-  for (const id of ["vigiles", "ignis", "sanitas"]) {
+  for (const id of ["vigiles", "ignis", "medicus"]) {
     const start = swift.indexOf(`static let ${id} = ProductConfig(`);
     assert.notEqual(start, -1, `native config is missing ${id}`);
     const end = swift.indexOf("\n    )", start);
@@ -65,7 +65,7 @@ function parseNativeConfigs() {
 const native = parseNativeConfigs();
 
 test("web and native list the same products in the same order", () => {
-  assert.deepEqual(PRODUCT_IDS, ["vigiles", "ignis", "sanitas"]);
+  assert.deepEqual(PRODUCT_IDS, ["vigiles", "ignis", "medicus"]);
   assert.deepEqual(Object.keys(native), PRODUCT_IDS);
 });
 

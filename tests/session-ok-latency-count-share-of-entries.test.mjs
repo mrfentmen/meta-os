@@ -73,7 +73,7 @@ test("the share divides by the entry total, not the measurement count", () => {
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", 100);
   recordOk(log, "ignis", 300);
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   recordFailed(log, "vigiles");
   recordFailed(log, "ignis", "http_error");
   // Four measurements over 6 entries — DETAIL-45's
@@ -88,7 +88,7 @@ test("a latency-less success sits in the denominator but moves no measurement", 
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", null);
   recordOk(log, "ignis", 200);
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   // DETAIL-41's global ok share here would be 3/4;
   // the latency-count share is 2/4.
   assert.equal(log.stats().okLatencyCountShareOfEntries, 0.5);
@@ -98,7 +98,7 @@ test("the share equals the sum of DETAIL-47's shares when every usable-latency s
   const log = new SessionLog();
   recordOk(log, "vigiles", 40);
   recordOk(log, "ignis", 60);
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   const stats = log.stats();
   const sum = Object.values(stats.okLatencyCountShareOfEntriesByProduct).reduce((a, b) => a + b, 0);
   assert.equal(stats.okLatencyCountShareOfEntries, 2 / 3);
@@ -118,13 +118,13 @@ test("an unknown-product success moves the global share but no DETAIL-47 bucket"
 
 test("a missing-product success moves the global share but no DETAIL-47 bucket", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   recordOk(log, null, 300);
   assert.equal(log.stats().okLatencyCountShareOfEntries, 1);
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0.5,
+    medicus: 0.5,
   });
 });
 
@@ -148,7 +148,7 @@ test("an ok entry with no finite latency is skipped as a measurement but counts 
   const log = new SessionLog();
   recordOk(log, "vigiles", Number.NaN);
   recordOk(log, "ignis", 200);
-  recordOk(log, "sanitas", null);
+  recordOk(log, "medicus", null);
   // DETAIL-45 for the same log would read 1; here the
   // entry total is 3, so the share is 1/3.
   assert.equal(log.stats().okLatencyCountShareOfEntries, 1 / 3);

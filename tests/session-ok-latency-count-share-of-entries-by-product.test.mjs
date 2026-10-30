@@ -36,7 +36,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SessionLog } from "../js/log.js";
 
-const NULL_SHARES = { vigiles: null, ignis: null, sanitas: null };
+const NULL_SHARES = { vigiles: null, ignis: null, medicus: null };
 
 function recordOk(log, product, latencyMs = 100) {
   return log.record({
@@ -69,7 +69,7 @@ test("a single success reads 1 for its product and 0 elsewhere", () => {
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -78,7 +78,7 @@ test("shares divide by the entry total, not the measurement count", () => {
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", 100);
   recordOk(log, "ignis", 300);
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   recordFailed(log, "vigiles");
   recordFailed(log, "ignis", "http_error");
   // Measurement counts 2/1/1 over 6 entries — DETAIL-45's
@@ -87,7 +87,7 @@ test("shares divide by the entry total, not the measurement count", () => {
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 1 / 3,
     ignis: 1 / 6,
-    sanitas: 1 / 6,
+    medicus: 1 / 6,
   });
 });
 
@@ -96,13 +96,13 @@ test("a latency-less success sits in the denominator but moves no bucket", () =>
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", null);
   recordOk(log, "ignis", 200);
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   // DETAIL-41's ok-count shares here would be vigiles 1/2;
   // the latency-count shares are vigiles 1/4, ignis 1/4.
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0.25,
     ignis: 0.25,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -110,7 +110,7 @@ test("shares sum to the global usable-latency-count share when every usable-late
   const log = new SessionLog();
   recordOk(log, "vigiles", 40);
   recordOk(log, "ignis", 60);
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   const shares = log.stats().okLatencyCountShareOfEntriesByProduct;
   const sum = Object.values(shares).reduce((a, b) => a + b, 0);
   assert.equal(sum, 2 / 3);
@@ -124,18 +124,18 @@ test("a success with an unknown product moves no bucket but sits in the total", 
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0.5,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
 test("a success with a missing product moves no bucket but sits in the total", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   recordOk(log, null, 300);
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0.5,
+    medicus: 0.5,
   });
 });
 
@@ -146,13 +146,13 @@ test("failures never move a share, and a failure-only log reads 0, not null", ()
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
   recordOk(log, "ignis", 200);
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 1 / 3,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -163,7 +163,7 @@ test("a failure carrying a latency value never counts as a measurement", () => {
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 0.5,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -171,13 +171,13 @@ test("an ok entry with no finite latency is skipped as a measurement but counts 
   const log = new SessionLog();
   recordOk(log, "vigiles", Number.NaN);
   recordOk(log, "ignis", 200);
-  recordOk(log, "sanitas", null);
+  recordOk(log, "medicus", null);
   // DETAIL-45 for the same log would read ignis 1; here
   // the entry total is 3, so ignis reads 1/3.
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 1 / 3,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -188,7 +188,7 @@ test("a success-only log with no finite latency reads 0, not null", () => {
   assert.deepEqual(log.stats().okLatencyCountShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -197,7 +197,7 @@ test("zero-millisecond successes still count as measurements", () => {
   recordOk(log, "vigiles", 0);
   recordOk(log, "ignis", 0);
   const shares = log.stats().okLatencyCountShareOfEntriesByProduct;
-  assert.deepEqual(shares, { vigiles: 0.5, ignis: 0.5, sanitas: 0 });
+  assert.deepEqual(shares, { vigiles: 0.5, ignis: 0.5, medicus: 0 });
   for (const value of Object.values(shares)) {
     assert.equal(Number.isNaN(value), false);
   }
@@ -224,7 +224,7 @@ test("web wiring: session-log panel holds the ok-latency-count-share-of-entries-
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-ok-latency-count-share-of-entries-by-product" class="note mono">Successful latency-measurement share of all entries by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-ok-latency-count-share-of-entries-by-product" class="note mono">Successful latency-measurement share of all entries by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

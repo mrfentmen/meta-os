@@ -10,7 +10,7 @@ import Foundation
 enum ProductID: String, CaseIterable, Identifiable, Codable {
     case vigiles
     case ignis
-    case sanitas
+    case medicus
 
     var id: String { rawValue }
 
@@ -39,7 +39,7 @@ struct ProductConfig {
         switch product {
         case .vigiles: return vigiles
         case .ignis: return ignis
-        case .sanitas: return sanitas
+        case .medicus: return medicus
         }
     }
 
@@ -101,31 +101,31 @@ struct ProductConfig {
         inputGuidance: "Point the camera at prerecorded footage on another screen or at a safe, controlled visual demonstration. Never a real fire."
     )
 
-    static let sanitas = ProductConfig(
-        product: .sanitas,
-        displayName: "Meta Sanitas",
-        department: "Department of Sanitation-oriented — environmental observation",
-        tagline: "Visible sanitation conditions, recorded for inspection review.",
+    static let medicus = ProductConfig(
+        product: .medicus,
+        displayName: "Meta Medicus",
+        department: "FDNY EMS-oriented — scene awareness",
+        tagline: "Visible EMS scene awareness, recorded for human review.",
         accentColorName: "green",
         categories: [
-            "overflowing bin",
-            "waste accumulation",
-            "blocked pedestrian path",
-            "clean area",
-            "normal collection area",
-            "ambiguous object",
+            "person on ground",
+            "crowd gathered around a person",
+            "vehicle collision scene",
+            "blocked crew access",
+            "person motionless",
+            "normal activity",
             "indeterminate",
         ],
         scenarios: [
-            "An overflowing trash bin",
-            "Waste accumulated on a sidewalk",
-            "A visibly obstructed pedestrian path",
-            "A relatively clean sidewalk",
-            "A normal collection area",
-            "Objects that resemble discarded waste but are not clearly refuse",
+            "A person on the ground",
+            "A crowd gathered around a person",
+            "A vehicle collision scene",
+            "Blocked access for responding crews",
+            "A person motionless",
+            "Normal activity, no incident visible",
             "Poor visibility or ambiguous conditions",
         ],
-        limitations: "Reports visible conditions only. It does not determine that a legal violation has occurred, and never assigns property ownership, intent, or responsibility. No automatic citations or penalties. Location is used only if explicitly provided; this app never invents geographic coordinates.",
-        inputGuidance: "Live camera aimed at the scene under inspection: bins, sidewalks, and collection areas."
+        limitations: "Scene awareness only. It does not diagnose, determine a cause, or recommend treatment. No automatic dispatch. Every assessment requires human verification. Location is used only if explicitly provided; this app never invents geographic coordinates.",
+        inputGuidance: "Live camera aimed at the scene: people and vehicles visible from a safe distance. Never stage an emergency or put anyone at risk to test it; use prerecorded footage or safe visual demonstrations only."
     )
 }

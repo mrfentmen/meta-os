@@ -34,7 +34,7 @@ function recordAt(log, timestamp, product, status = "ok") {
   });
 }
 
-const NULLS = { vigiles: null, ignis: null, sanitas: null };
+const NULLS = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product success span is null, not a fabricated span", () => {
   const log = new SessionLog();
@@ -50,17 +50,17 @@ test("span is last minus first success per product, in whole milliseconds", () =
   assert.deepEqual(log.stats().okSpanMsByProduct, {
     vigiles: 300000,
     ignis: 330500,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("a product with exactly one usable success reads 0, not null", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
   assert.deepEqual(log.stats().okSpanMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -77,19 +77,19 @@ test("failures between successes never move the span", () => {
 test("a product with no success in a non-empty session reads null", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
-  recordAt(log, "2026-10-29T12:03:00.000Z", "sanitas", "network_error");
+  recordAt(log, "2026-10-29T12:03:00.000Z", "medicus", "network_error");
   assert.deepEqual(log.stats().okSpanMsByProduct, {
     vigiles: 0,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("insertion order, not min/max: a later success with an earlier timestamp reads a negative span", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
-  assert.equal(log.stats().okSpanMsByProduct.sanitas, -300000);
+  recordAt(log, "2026-10-29T12:05:00.000Z", "medicus");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
+  assert.equal(log.stats().okSpanMsByProduct.medicus, -300000);
 });
 
 test("a success with an unknown product moves no bucket", () => {
@@ -152,7 +152,7 @@ test("web wiring: session-log panel holds the per-product success-span stats ele
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-ok-span-by-product" class="note mono">Success span by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-ok-span-by-product" class="note mono">Success span by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

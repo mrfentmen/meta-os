@@ -4,10 +4,10 @@ Scenario set, eval adapter, and runner for Meta Ignis
 (FDNY-oriented fire and smoke hazard awareness), under the frozen
 Meta Trio v2 contract (`../js/schema.js`, `FIRST_RESPONSE.md` section 4).
 
-This mirrors the shape of Milo's Meta Sanitas harness
-(`../sanitas/harness.mjs`) for the Ignis product, without touching
+This mirrors the shape of Milo's Meta Medicus harness
+(`../medicus/harness.mjs`) for the Ignis product, without touching
 Milo's files: the same per-scenario record shape, the same metric
-math (imported from the Sanitas harness, which is product-agnostic),
+math (imported from the Medicus harness, which is product-agnostic),
 the same malformed-input containment. Product-specific evaluation
 stays separate, per the trio lock (Rowan owns Meta Ignis).
 
@@ -23,15 +23,15 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   lights in rain.
 - `adapter.mjs` — `validateIgnisScenarios` / `runIgnisEval` /
   `formatIgnisReport` / `assessViaModelAdapter` / `computeMetrics`
-  (re-exported from the Sanitas harness). No dependencies, no network
+  (re-exported from the Medicus harness). No dependencies, no network
   beyond what the server adapter itself gates.
 - `baseline.mjs` — always-no-hazard baseline (`assessBaseline`).
   Predicts "no hazard visible" for every scene, fires no alert,
-  performs no inspection. Mirrors `../sanitas/baseline.mjs`.
+  performs no inspection. Mirrors `../medicus/baseline.mjs`.
 - `stub.mjs` — deterministic fixture source (`assessStub`). NOT a
   model: a table keyed by scenario_id, deliberately imperfect, with
   its misses documented in the file before any run. Mirrors
-  `../sanitas/stub.mjs`.
+  `../medicus/stub.mjs`.
 - `run.mjs` — held-state runner. Prints the report for the wired
   source and says plainly that its numbers describe source
   availability, not model performance. With `--baseline`, runs the
@@ -462,7 +462,7 @@ performance):
 A future real source must beat this baseline on recall and category
 accuracy to claim value. Beating it on precision alone proves
 nothing, since the baseline never fires a false alarm by
-construction — the same bar the Sanitas set applies to its
+construction — the same bar the Medicus set applies to its
 always-clean baseline. The full measured run, including the
 baseline-vs-held distinction, is documented in
 `baseline-run-report.md`, completing the report trio alongside the

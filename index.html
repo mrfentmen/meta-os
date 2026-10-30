@@ -58,10 +58,10 @@
         <span class="product-option-name">Ignis</span>
         <span class="product-option-sub">Fire &amp; smoke</span>
       </label>
-      <label class="product-option" data-product-option="sanitas">
-        <input type="radio" name="product" value="sanitas">
-        <span class="product-option-name">Sanitas</span>
-        <span class="product-option-sub">Sanitation</span>
+      <label class="product-option" data-product-option="medicus">
+        <input type="radio" name="product" value="medicus">
+        <span class="product-option-name">Medicus</span>
+        <span class="product-option-sub">EMS scene awareness</span>
       </label>
     </div>
     <p id="product-department" class="product-department"></p>
@@ -79,7 +79,7 @@
 
   <section class="panel" aria-label="Still image input">
     <h2>Still image</h2>
-    <p class="note">For prerecorded or photographed scenes — the input Ignis and Sanitas demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.</p>
+    <p class="note">For prerecorded or photographed scenes — the input Ignis and Medicus demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.</p>
     <label for="image-input">Choose an image file</label>
     <input id="image-input" type="file" accept="image/*">
     <img id="image-preview" hidden alt="Chosen still image preview">
@@ -140,29 +140,29 @@
   <section class="panel" aria-label="Evaluation session log">
     <h2>Evaluation session log</h2>
     <p id="log-stats" class="note mono">Session log entries: 0</p>
-    <p id="log-stats-by-product" class="note mono">Assessments by product: Vigiles 0 · Ignis 0 · Sanitas 0 · Failed 0</p>
-    <p id="log-stats-failed-by-product" class="note mono">Failed by product: Vigiles 0 · Ignis 0 · Sanitas 0</p>
+    <p id="log-stats-by-product" class="note mono">Assessments by product: Vigiles 0 · Ignis 0 · Medicus 0 · Failed 0</p>
+    <p id="log-stats-failed-by-product" class="note mono">Failed by product: Vigiles 0 · Ignis 0 · Medicus 0</p>
     <p id="log-stats-by-failure" class="note mono">Failures by cause: Network 0 · HTTP 0 · Invalid response 0</p>
     <p id="log-stats-last-ok" class="note mono">Last successful assessment: none</p>
     <p id="log-stats-first-ok" class="note mono">First successful assessment: none</p>
     <p id="log-stats-avg-latency" class="note mono">Average successful latency: none</p>
     <p id="log-stats-latency-range" class="note mono">Fastest/slowest successful latency: none</p>
-    <p id="log-stats-last-ok-by-product" class="note mono">Last success by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-first-ok-by-product" class="note mono">First success by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-last-failed-by-product" class="note mono">Last failure by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-first-failed-by-product" class="note mono">First failure by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-avg-latency-by-product" class="note mono">Average successful latency by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-failures-by-product" class="note mono">Failures by cause by product: Vigiles Network 0, HTTP 0, Invalid response 0 · Ignis Network 0, HTTP 0, Invalid response 0 · Sanitas Network 0, HTTP 0, Invalid response 0</p>
-    <p id="log-stats-latency-range-by-product" class="note mono">Fastest/slowest successful latency by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-share-by-product" class="note mono">Successful share by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-failed-share-by-product" class="note mono">Failed share by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-entry-share-by-product" class="note mono">Session share by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-entry-count-by-product" class="note mono">Entries by product: Vigiles 0 · Ignis 0 · Sanitas 0</p>
-    <p id="log-stats-first-entry-by-product" class="note mono">First entry by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-last-entry-by-product" class="note mono">Last entry by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-entry-span-by-product" class="note mono">Entry span by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-failed-span-by-product" class="note mono">Failure span by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-span-by-product" class="note mono">Success span by product: Vigiles none · Ignis none · Sanitas none</p>
+    <p id="log-stats-last-ok-by-product" class="note mono">Last success by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-first-ok-by-product" class="note mono">First success by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-last-failed-by-product" class="note mono">Last failure by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-first-failed-by-product" class="note mono">First failure by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-avg-latency-by-product" class="note mono">Average successful latency by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-failures-by-product" class="note mono">Failures by cause by product: Vigiles Network 0, HTTP 0, Invalid response 0 · Ignis Network 0, HTTP 0, Invalid response 0 · Medicus Network 0, HTTP 0, Invalid response 0</p>
+    <p id="log-stats-latency-range-by-product" class="note mono">Fastest/slowest successful latency by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-share-by-product" class="note mono">Successful share by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-failed-share-by-product" class="note mono">Failed share by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-entry-share-by-product" class="note mono">Session share by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-entry-count-by-product" class="note mono">Entries by product: Vigiles 0 · Ignis 0 · Medicus 0</p>
+    <p id="log-stats-first-entry-by-product" class="note mono">First entry by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-last-entry-by-product" class="note mono">Last entry by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-entry-span-by-product" class="note mono">Entry span by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-failed-span-by-product" class="note mono">Failure span by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-span-by-product" class="note mono">Success span by product: Vigiles none · Ignis none · Medicus none</p>
     <p id="log-stats-ok-span" class="note mono">Success span: none</p>
     <p id="log-stats-failed-span" class="note mono">Failure span: none</p>
     <p id="log-stats-entry-span" class="note mono">Entry span: none</p>
@@ -171,53 +171,53 @@
     <p id="log-stats-median-latency" class="note mono">Median successful latency: none</p>
     <p id="log-stats-first-entry" class="note mono">First entry: none</p>
     <p id="log-stats-last-entry" class="note mono">Last entry: none</p>
-    <p id="log-stats-median-latency-by-product" class="note mono">Median successful latency by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-failed-share-by-status-by-product" class="note mono">Failure-cause share of all failures by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Sanitas Network none, HTTP none, Invalid response none</p>
+    <p id="log-stats-median-latency-by-product" class="note mono">Median successful latency by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-failed-share-by-status-by-product" class="note mono">Failure-cause share of all failures by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Medicus Network none, HTTP none, Invalid response none</p>
     <p id="log-stats-failed-share-by-status" class="note mono">Failure-cause share of all failures: Network none, HTTP none, Invalid response none</p>
-    <p id="log-stats-failed-share-by-status-within-product" class="note mono">Failure-cause share of that product's failures: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Sanitas Network none, HTTP none, Invalid response none</p>
+    <p id="log-stats-failed-share-by-status-within-product" class="note mono">Failure-cause share of that product's failures: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Medicus Network none, HTTP none, Invalid response none</p>
     <p id="log-stats-first-failed" class="note mono">First failure: none</p>
     <p id="log-stats-last-failed" class="note mono">Last failure: none</p>
-    <p id="log-stats-ok-latency-share-by-product" class="note mono">Successful latency share by product: Vigiles none · Ignis none · Sanitas none</p>
+    <p id="log-stats-ok-latency-share-by-product" class="note mono">Successful latency share by product: Vigiles none · Ignis none · Medicus none</p>
     <p id="log-stats-ok-latency-count" class="note mono">Successful latencies measured: 0</p>
-    <p id="log-stats-ok-latency-count-by-product" class="note mono">Successful latencies measured by product: Vigiles 0 · Ignis 0 · Sanitas 0</p>
-    <p id="log-stats-ok-share-of-ok-by-product" class="note mono">Successful share of successes by product: Vigiles none · Ignis none · Sanitas none</p>
+    <p id="log-stats-ok-latency-count-by-product" class="note mono">Successful latencies measured by product: Vigiles 0 · Ignis 0 · Medicus 0</p>
+    <p id="log-stats-ok-share-of-ok-by-product" class="note mono">Successful share of successes by product: Vigiles none · Ignis none · Medicus none</p>
     <p id="log-stats-ok-latency-sum" class="note mono">Total successful latency: 0 ms</p>
-    <p id="log-stats-ok-latency-sum-by-product" class="note mono">Total successful latency by product: Vigiles 0 ms · Ignis 0 ms · Sanitas 0 ms</p>
-    <p id="log-stats-failed-share-of-failed-by-product" class="note mono">Failed share of failures by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-failed-share-of-entries-by-product" class="note mono">Failed share of all entries by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-share-of-total-by-product" class="note mono">Successful share of all entries by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-failed-share-by-status-of-entries-by-product" class="note mono">Failure-cause share of all entries by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Sanitas Network none, HTTP none, Invalid response none</p>
+    <p id="log-stats-ok-latency-sum-by-product" class="note mono">Total successful latency by product: Vigiles 0 ms · Ignis 0 ms · Medicus 0 ms</p>
+    <p id="log-stats-failed-share-of-failed-by-product" class="note mono">Failed share of failures by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-failed-share-of-entries-by-product" class="note mono">Failed share of all entries by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-share-of-total-by-product" class="note mono">Successful share of all entries by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-failed-share-by-status-of-entries-by-product" class="note mono">Failure-cause share of all entries by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Medicus Network none, HTTP none, Invalid response none</p>
     <p id="log-stats-failed-share-by-status-of-entries" class="note mono">Failure-cause share of all entries: Network none, HTTP none, Invalid response none</p>
-    <p id="log-stats-failed-share-by-status-of-entries-within-product" class="note mono">Failure-cause share of that product's entries by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Sanitas Network none, HTTP none, Invalid response none</p>
-    <p id="log-stats-ok-latency-count-share-by-product" class="note mono">Successful latency-measurement share by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-entry-span-share-by-product" class="note mono">Entry-span share of session window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-latency-count-share-of-entries-by-product" class="note mono">Successful latency-measurement share of all entries by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-span-share-by-product" class="note mono">Success-span share of ok window by product: Vigiles none · Ignis none · Sanitas none</p>
+    <p id="log-stats-failed-share-by-status-of-entries-within-product" class="note mono">Failure-cause share of that product's entries by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Medicus Network none, HTTP none, Invalid response none</p>
+    <p id="log-stats-ok-latency-count-share-by-product" class="note mono">Successful latency-measurement share by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-entry-span-share-by-product" class="note mono">Entry-span share of session window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-latency-count-share-of-entries-by-product" class="note mono">Successful latency-measurement share of all entries by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-span-share-by-product" class="note mono">Success-span share of ok window by product: Vigiles none · Ignis none · Medicus none</p>
     <p id="log-stats-ok-latency-count-share-of-entries" class="note mono">Successful latency-measurement share of all entries: none</p>
-    <p id="log-stats-failed-span-share-by-product" class="note mono">Failure-span share of failed window by product: Vigiles none · Ignis none · Sanitas none</p>
+    <p id="log-stats-failed-span-share-by-product" class="note mono">Failure-span share of failed window by product: Vigiles none · Ignis none · Medicus none</p>
     <p id="log-stats-ok-latency-count-share-of-ok" class="note mono">Successful latency-measurement share of successes: none</p>
-    <p id="log-stats-ok-latency-count-share-of-ok-by-product" class="note mono">Successful latency-measurement share of successes by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-span-share-of-entry-window-by-product" class="note mono">Success-span share of entry window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-latency-count-share-of-own-ok-by-product" class="note mono">Successful latency-measurement share of that product's own successes by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-failed-span-share-of-entry-window-by-product" class="note mono">Failure-span share of entry window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-latency-count-share-of-own-entries-by-product" class="note mono">Successful latency-measurement share of that product's own entries by product: Vigiles none · Ignis none · Sanitas none</p>
+    <p id="log-stats-ok-latency-count-share-of-ok-by-product" class="note mono">Successful latency-measurement share of successes by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-span-share-of-entry-window-by-product" class="note mono">Success-span share of entry window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-latency-count-share-of-own-ok-by-product" class="note mono">Successful latency-measurement share of that product's own successes by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-failed-span-share-of-entry-window-by-product" class="note mono">Failure-span share of entry window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-latency-count-share-of-own-entries-by-product" class="note mono">Successful latency-measurement share of that product's own entries by product: Vigiles none · Ignis none · Medicus none</p>
     <p id="log-stats-failed-span-share-of-entry-window" class="note mono">Failure-span share of entry window: none</p>
     <p id="log-stats-ok-span-share-of-entry-window" class="note mono">Success-span share of entry window: none</p>
-    <p id="log-stats-failed-span-share-of-own-entry-window-by-product" class="note mono">Failure-span share of that product's own entry window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-span-share-of-own-entry-window-by-product" class="note mono">Success-span share of that product's own entry window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-share-of-own-entries-by-product" class="note mono">Success share of that product's own entries by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-failed-span-share-of-own-ok-window-by-product" class="note mono">Failure-span share of that product's own success window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-span-share-of-own-failed-window-by-product" class="note mono">Success-span share of that product's own failure window by product: Vigiles none · Ignis none · Sanitas none</p>
+    <p id="log-stats-failed-span-share-of-own-entry-window-by-product" class="note mono">Failure-span share of that product's own entry window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-span-share-of-own-entry-window-by-product" class="note mono">Success-span share of that product's own entry window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-share-of-own-entries-by-product" class="note mono">Success share of that product's own entries by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-failed-span-share-of-own-ok-window-by-product" class="note mono">Failure-span share of that product's own success window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-span-share-of-own-failed-window-by-product" class="note mono">Success-span share of that product's own failure window by product: Vigiles none · Ignis none · Medicus none</p>
     <p id="log-stats-ok-span-share-of-failed-window" class="note mono">Success-span share of failure window: none</p>
     <p id="log-stats-failed-span-share-of-ok-window" class="note mono">Failure-span share of success window: none</p>
     <p id="log-stats-entry-span-share-of-ok-window" class="note mono">Entry-span share of success window: none</p>
     <p id="log-stats-entry-span-share-of-failed-window" class="note mono">Entry-span share of failure window: none</p>
-    <p id="log-stats-entry-span-share-of-own-ok-window-by-product" class="note mono">Entry-span share of that product's own success window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-entry-span-share-of-own-failed-window-by-product" class="note mono">Entry-span share of that product's own failure window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-entry-span-share-of-ok-window-by-product" class="note mono">Entry-span share of success window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-entry-span-share-of-failed-window-by-product" class="note mono">Entry-span share of failure window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-failed-span-share-of-ok-window-by-product" class="note mono">Failure-span share of success window by product: Vigiles none · Ignis none · Sanitas none</p>
-    <p id="log-stats-ok-span-share-of-failed-window-by-product" class="note mono">Success-span share of failure window by product: Vigiles none · Ignis none · Sanitas none</p>
+    <p id="log-stats-entry-span-share-of-own-ok-window-by-product" class="note mono">Entry-span share of that product's own success window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-entry-span-share-of-own-failed-window-by-product" class="note mono">Entry-span share of that product's own failure window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-entry-span-share-of-ok-window-by-product" class="note mono">Entry-span share of success window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-entry-span-share-of-failed-window-by-product" class="note mono">Entry-span share of failure window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-failed-span-share-of-ok-window-by-product" class="note mono">Failure-span share of success window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-span-share-of-failed-window-by-product" class="note mono">Success-span share of failure window by product: Vigiles none · Ignis none · Medicus none</p>
     <div class="controls">
       <button id="btn-export-log" type="button">Export log (JSON)</button>
       <button id="btn-clear-log" type="button">Clear log</button>

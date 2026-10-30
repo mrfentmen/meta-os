@@ -460,19 +460,19 @@ export class SessionLog {
   // measurement, exactly as in DETAIL-45.
   // Pure read over the entries: no sampling, no model.
   stats() {
-    const byProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
+    const byProduct = { vigiles: 0, ignis: 0, medicus: 0 };
     const failedByStatus = { network_error: 0, http_error: 0, invalid_response: 0 };
     const failedByStatusByProduct = {
       vigiles: { network_error: 0, http_error: 0, invalid_response: 0 },
       ignis: { network_error: 0, http_error: 0, invalid_response: 0 },
-      sanitas: { network_error: 0, http_error: 0, invalid_response: 0 },
+      medicus: { network_error: 0, http_error: 0, invalid_response: 0 },
     };
-    const lastOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
-    const firstOkAtByProduct = { vigiles: null, ignis: null, sanitas: null };
-    const lastFailedAtByProduct = { vigiles: null, ignis: null, sanitas: null };
-    const firstFailedAtByProduct = { vigiles: null, ignis: null, sanitas: null };
-    const firstEntryAtByProduct = { vigiles: null, ignis: null, sanitas: null };
-    const lastEntryAtByProduct = { vigiles: null, ignis: null, sanitas: null };
+    const lastOkAtByProduct = { vigiles: null, ignis: null, medicus: null };
+    const firstOkAtByProduct = { vigiles: null, ignis: null, medicus: null };
+    const lastFailedAtByProduct = { vigiles: null, ignis: null, medicus: null };
+    const firstFailedAtByProduct = { vigiles: null, ignis: null, medicus: null };
+    const firstEntryAtByProduct = { vigiles: null, ignis: null, medicus: null };
+    const lastEntryAtByProduct = { vigiles: null, ignis: null, medicus: null };
     let ok = 0;
     let failed = 0;
     let lastOkAt = null;
@@ -484,16 +484,16 @@ export class SessionLog {
     let latencySum = 0;
     let latencyCount = 0;
     const okLatencies = [];
-    const latencySumByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
-    const latencyCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
-    const okLatenciesByProduct = { vigiles: [], ignis: [], sanitas: [] };
+    const latencySumByProduct = { vigiles: 0, ignis: 0, medicus: 0 };
+    const latencyCountByProduct = { vigiles: 0, ignis: 0, medicus: 0 };
+    const okLatenciesByProduct = { vigiles: [], ignis: [], medicus: [] };
     let minOkLatencyMs = null;
     let maxOkLatencyMs = null;
-    const minOkLatencyMsByProduct = { vigiles: null, ignis: null, sanitas: null };
-    const maxOkLatencyMsByProduct = { vigiles: null, ignis: null, sanitas: null };
-    const okCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
-    const failedCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
-    const entryCountByProduct = { vigiles: 0, ignis: 0, sanitas: 0 };
+    const minOkLatencyMsByProduct = { vigiles: null, ignis: null, medicus: null };
+    const maxOkLatencyMsByProduct = { vigiles: null, ignis: null, medicus: null };
+    const okCountByProduct = { vigiles: 0, ignis: 0, medicus: 0 };
+    const failedCountByProduct = { vigiles: 0, ignis: 0, medicus: 0 };
+    const entryCountByProduct = { vigiles: 0, ignis: 0, medicus: 0 };
     for (const entry of this._entries) {
       // DETAIL-15: the first recorded entry per product, any status,
       // by insertion order — set once, never overwritten, so a later
@@ -633,7 +633,7 @@ export class SessionLog {
     const entrySpanMsByProduct = {
       vigiles: entrySpanMs(firstEntryAtByProduct.vigiles, lastEntryAtByProduct.vigiles),
       ignis: entrySpanMs(firstEntryAtByProduct.ignis, lastEntryAtByProduct.ignis),
-      sanitas: entrySpanMs(firstEntryAtByProduct.sanitas, lastEntryAtByProduct.sanitas),
+      medicus: entrySpanMs(firstEntryAtByProduct.medicus, lastEntryAtByProduct.medicus),
     };
     // DETAIL-20: span between the DETAIL-19 first and DETAIL-7
     // last failure endpoints per product; null when either
@@ -642,7 +642,7 @@ export class SessionLog {
     const failedSpanMsByProduct = {
       vigiles: entrySpanMs(firstFailedAtByProduct.vigiles, lastFailedAtByProduct.vigiles),
       ignis: entrySpanMs(firstFailedAtByProduct.ignis, lastFailedAtByProduct.ignis),
-      sanitas: entrySpanMs(firstFailedAtByProduct.sanitas, lastFailedAtByProduct.sanitas),
+      medicus: entrySpanMs(firstFailedAtByProduct.medicus, lastFailedAtByProduct.medicus),
     };
     // DETAIL-21: span between the DETAIL-18 first and DETAIL-5
     // last success endpoints per product; null when either
@@ -651,7 +651,7 @@ export class SessionLog {
     const okSpanMsByProduct = {
       vigiles: entrySpanMs(firstOkAtByProduct.vigiles, lastOkAtByProduct.vigiles),
       ignis: entrySpanMs(firstOkAtByProduct.ignis, lastOkAtByProduct.ignis),
-      sanitas: entrySpanMs(firstOkAtByProduct.sanitas, lastOkAtByProduct.sanitas),
+      medicus: entrySpanMs(firstOkAtByProduct.medicus, lastOkAtByProduct.medicus),
     };
     // DETAIL-22: the global success span (okSpanMs, null with no
     // usable success pair): the milliseconds between the session's
@@ -758,7 +758,7 @@ export class SessionLog {
     const medianOkLatencyMsByProduct = {
       vigiles: medianOf(okLatenciesByProduct.vigiles),
       ignis: medianOf(okLatenciesByProduct.ignis),
-      sanitas: medianOf(okLatenciesByProduct.sanitas),
+      medicus: medianOf(okLatenciesByProduct.medicus),
     };
     // DETAIL-29: each DETAIL-9 product-cause count over the
     // session failed total, so the cells say what slice of all
@@ -783,10 +783,10 @@ export class SessionLog {
         http_error: shareOfAllFailures(failedByStatusByProduct.ignis.http_error),
         invalid_response: shareOfAllFailures(failedByStatusByProduct.ignis.invalid_response),
       },
-      sanitas: {
-        network_error: shareOfAllFailures(failedByStatusByProduct.sanitas.network_error),
-        http_error: shareOfAllFailures(failedByStatusByProduct.sanitas.http_error),
-        invalid_response: shareOfAllFailures(failedByStatusByProduct.sanitas.invalid_response),
+      medicus: {
+        network_error: shareOfAllFailures(failedByStatusByProduct.medicus.network_error),
+        http_error: shareOfAllFailures(failedByStatusByProduct.medicus.http_error),
+        invalid_response: shareOfAllFailures(failedByStatusByProduct.medicus.invalid_response),
       },
     };
     // DETAIL-31: the global failure-cause shares of all failures
@@ -838,10 +838,10 @@ export class SessionLog {
         http_error: shareOfProductFailures("ignis", failedByStatusByProduct.ignis.http_error),
         invalid_response: shareOfProductFailures("ignis", failedByStatusByProduct.ignis.invalid_response),
       },
-      sanitas: {
-        network_error: shareOfProductFailures("sanitas", failedByStatusByProduct.sanitas.network_error),
-        http_error: shareOfProductFailures("sanitas", failedByStatusByProduct.sanitas.http_error),
-        invalid_response: shareOfProductFailures("sanitas", failedByStatusByProduct.sanitas.invalid_response),
+      medicus: {
+        network_error: shareOfProductFailures("medicus", failedByStatusByProduct.medicus.network_error),
+        http_error: shareOfProductFailures("medicus", failedByStatusByProduct.medicus.http_error),
+        invalid_response: shareOfProductFailures("medicus", failedByStatusByProduct.medicus.invalid_response),
       },
     };
     // DETAIL-35: the per-product successful-latency shares
@@ -869,7 +869,7 @@ export class SessionLog {
     const okLatencyShareByProduct = {
       vigiles: latencyCount === 0 || latencySum === 0 ? null : latencySumByProduct.vigiles / latencySum,
       ignis: latencyCount === 0 || latencySum === 0 ? null : latencySumByProduct.ignis / latencySum,
-      sanitas: latencyCount === 0 || latencySum === 0 ? null : latencySumByProduct.sanitas / latencySum,
+      medicus: latencyCount === 0 || latencySum === 0 ? null : latencySumByProduct.medicus / latencySum,
     };
     // DETAIL-37: the per-product successful-count shares
     // (okShareOfOkByProduct): each product's ok count from
@@ -894,7 +894,7 @@ export class SessionLog {
     const okShareOfOkByProduct = {
       vigiles: shareOfAllOk(okCountByProduct.vigiles),
       ignis: shareOfAllOk(okCountByProduct.ignis),
-      sanitas: shareOfAllOk(okCountByProduct.sanitas),
+      medicus: shareOfAllOk(okCountByProduct.medicus),
     };
     // DETAIL-39: the per-product failed-count shares
     // (failedShareOfFailedByProduct): each product's failed
@@ -920,7 +920,7 @@ export class SessionLog {
     const failedShareOfFailedByProduct = {
       vigiles: shareOfAllFailed(failedCountByProduct.vigiles),
       ignis: shareOfAllFailed(failedCountByProduct.ignis),
-      sanitas: shareOfAllFailed(failedCountByProduct.sanitas),
+      medicus: shareOfAllFailed(failedCountByProduct.medicus),
     };
     // DETAIL-40: the per-product failed shares of all entries
     // (failedShareOfEntriesByProduct): each product's failed
@@ -946,7 +946,7 @@ export class SessionLog {
     const failedShareOfEntriesByProduct = {
       vigiles: shareOfAllEntries(failedCountByProduct.vigiles),
       ignis: shareOfAllEntries(failedCountByProduct.ignis),
-      sanitas: shareOfAllEntries(failedCountByProduct.sanitas),
+      medicus: shareOfAllEntries(failedCountByProduct.medicus),
     };
     // DETAIL-41: the per-product successful-count shares of
     // all entries (okShareOfTotalByProduct): each product's
@@ -977,7 +977,7 @@ export class SessionLog {
     const okShareOfTotalByProduct = {
       vigiles: shareOfAllEntries(okCountByProduct.vigiles),
       ignis: shareOfAllEntries(okCountByProduct.ignis),
-      sanitas: shareOfAllEntries(okCountByProduct.sanitas),
+      medicus: shareOfAllEntries(okCountByProduct.medicus),
     };
     // DETAIL-42: the per-product failure-cause shares of all
     // entries (failedShareByStatusOfEntriesByProduct): each
@@ -1013,10 +1013,10 @@ export class SessionLog {
         http_error: shareOfAllEntries(failedByStatusByProduct.ignis.http_error),
         invalid_response: shareOfAllEntries(failedByStatusByProduct.ignis.invalid_response),
       },
-      sanitas: {
-        network_error: shareOfAllEntries(failedByStatusByProduct.sanitas.network_error),
-        http_error: shareOfAllEntries(failedByStatusByProduct.sanitas.http_error),
-        invalid_response: shareOfAllEntries(failedByStatusByProduct.sanitas.invalid_response),
+      medicus: {
+        network_error: shareOfAllEntries(failedByStatusByProduct.medicus.network_error),
+        http_error: shareOfAllEntries(failedByStatusByProduct.medicus.http_error),
+        invalid_response: shareOfAllEntries(failedByStatusByProduct.medicus.invalid_response),
       },
     };
     // DETAIL-43: the global failure-cause shares of all
@@ -1079,10 +1079,10 @@ export class SessionLog {
         http_error: shareOfProductEntries("ignis", failedByStatusByProduct.ignis.http_error),
         invalid_response: shareOfProductEntries("ignis", failedByStatusByProduct.ignis.invalid_response),
       },
-      sanitas: {
-        network_error: shareOfProductEntries("sanitas", failedByStatusByProduct.sanitas.network_error),
-        http_error: shareOfProductEntries("sanitas", failedByStatusByProduct.sanitas.http_error),
-        invalid_response: shareOfProductEntries("sanitas", failedByStatusByProduct.sanitas.invalid_response),
+      medicus: {
+        network_error: shareOfProductEntries("medicus", failedByStatusByProduct.medicus.network_error),
+        http_error: shareOfProductEntries("medicus", failedByStatusByProduct.medicus.http_error),
+        invalid_response: shareOfProductEntries("medicus", failedByStatusByProduct.medicus.invalid_response),
       },
     };
     // DETAIL-45: the per-product usable-latency-count shares
@@ -1115,7 +1115,7 @@ export class SessionLog {
     const okLatencyCountShareByProduct = {
       vigiles: shareOfAllLatencies(latencyCountByProduct.vigiles),
       ignis: shareOfAllLatencies(latencyCountByProduct.ignis),
-      sanitas: shareOfAllLatencies(latencyCountByProduct.sanitas),
+      medicus: shareOfAllLatencies(latencyCountByProduct.medicus),
     };
     // DETAIL-46: the per-product entry-span shares of the
     // session window (entrySpanShareByProduct): each product's
@@ -1156,7 +1156,7 @@ export class SessionLog {
     const entrySpanShareByProduct = {
       vigiles: shareOfSessionWindow("vigiles", entrySpanMsByProduct.vigiles),
       ignis: shareOfSessionWindow("ignis", entrySpanMsByProduct.ignis),
-      sanitas: shareOfSessionWindow("sanitas", entrySpanMsByProduct.sanitas),
+      medicus: shareOfSessionWindow("medicus", entrySpanMsByProduct.medicus),
     };
     // DETAIL-47: the per-product usable-latency-count shares
     // of all entries (okLatencyCountShareOfEntriesByProduct):
@@ -1167,7 +1167,7 @@ export class SessionLog {
     const okLatencyCountShareOfEntriesByProduct = {
       vigiles: shareOfAllEntries(latencyCountByProduct.vigiles),
       ignis: shareOfAllEntries(latencyCountByProduct.ignis),
-      sanitas: shareOfAllEntries(latencyCountByProduct.sanitas),
+      medicus: shareOfAllEntries(latencyCountByProduct.medicus),
     };
     // DETAIL-48: the per-product ok-span shares of the
     // global ok window (okSpanShareByProduct): each product's
@@ -1213,7 +1213,7 @@ export class SessionLog {
     const okSpanShareByProduct = {
       vigiles: shareOfOkWindow("vigiles", okSpanMsByProduct.vigiles),
       ignis: shareOfOkWindow("ignis", okSpanMsByProduct.ignis),
-      sanitas: shareOfOkWindow("sanitas", okSpanMsByProduct.sanitas),
+      medicus: shareOfOkWindow("medicus", okSpanMsByProduct.medicus),
     };
     // DETAIL-49: the global usable-latency-count share
     // of all entries (okLatencyCountShareOfEntries):
@@ -1273,7 +1273,7 @@ export class SessionLog {
     const failedSpanShareByProduct = {
       vigiles: shareOfFailedWindow("vigiles", failedSpanMsByProduct.vigiles),
       ignis: shareOfFailedWindow("ignis", failedSpanMsByProduct.ignis),
-      sanitas: shareOfFailedWindow("sanitas", failedSpanMsByProduct.sanitas),
+      medicus: shareOfFailedWindow("medicus", failedSpanMsByProduct.medicus),
     };
     // DETAIL-51: the global usable-latency-count share
     // of ok successes (okLatencyCountShareOfOk): the
@@ -1329,7 +1329,7 @@ export class SessionLog {
     const okLatencyCountShareOfOkByProduct = {
       vigiles: shareOfAllOk(latencyCountByProduct.vigiles),
       ignis: shareOfAllOk(latencyCountByProduct.ignis),
-      sanitas: shareOfAllOk(latencyCountByProduct.sanitas),
+      medicus: shareOfAllOk(latencyCountByProduct.medicus),
     };
     // DETAIL-53: the per-product ok-span shares of the
     // global entry window (okSpanShareOfEntryWindowByProduct):
@@ -1373,7 +1373,7 @@ export class SessionLog {
     const okSpanShareOfEntryWindowByProduct = {
       vigiles: shareOfEntryWindow("vigiles", okSpanMsByProduct.vigiles),
       ignis: shareOfEntryWindow("ignis", okSpanMsByProduct.ignis),
-      sanitas: shareOfEntryWindow("sanitas", okSpanMsByProduct.sanitas),
+      medicus: shareOfEntryWindow("medicus", okSpanMsByProduct.medicus),
     };
     // DETAIL-54: the per-product usable-latency-count shares
     // of that product's own ok successes (renumbered
@@ -1406,7 +1406,7 @@ export class SessionLog {
     const okLatencyCountShareOfOwnOkByProduct = {
       vigiles: okCountByProduct.vigiles === 0 ? null : latencyCountByProduct.vigiles / okCountByProduct.vigiles,
       ignis: okCountByProduct.ignis === 0 ? null : latencyCountByProduct.ignis / okCountByProduct.ignis,
-      sanitas: okCountByProduct.sanitas === 0 ? null : latencyCountByProduct.sanitas / okCountByProduct.sanitas,
+      medicus: okCountByProduct.medicus === 0 ? null : latencyCountByProduct.medicus / okCountByProduct.medicus,
     };
     // DETAIL-55: the per-product failed-span shares of
     // the global entry window
@@ -1455,7 +1455,7 @@ export class SessionLog {
     const failedSpanShareOfEntryWindowByProduct = {
       vigiles: shareFailedOfEntryWindow("vigiles", failedSpanMsByProduct.vigiles),
       ignis: shareFailedOfEntryWindow("ignis", failedSpanMsByProduct.ignis),
-      sanitas: shareFailedOfEntryWindow("sanitas", failedSpanMsByProduct.sanitas),
+      medicus: shareFailedOfEntryWindow("medicus", failedSpanMsByProduct.medicus),
     };
     // DETAIL-56 (renumbered after Rowan's distinct DETAIL-55 landed first, both sides kept in the merge):
     // the per-product usable-latency-count shares
@@ -1493,7 +1493,7 @@ export class SessionLog {
     const okLatencyCountShareOfOwnEntriesByProduct = {
       vigiles: entryCountByProduct.vigiles === 0 ? null : latencyCountByProduct.vigiles / entryCountByProduct.vigiles,
       ignis: entryCountByProduct.ignis === 0 ? null : latencyCountByProduct.ignis / entryCountByProduct.ignis,
-      sanitas: entryCountByProduct.sanitas === 0 ? null : latencyCountByProduct.sanitas / entryCountByProduct.sanitas,
+      medicus: entryCountByProduct.medicus === 0 ? null : latencyCountByProduct.medicus / entryCountByProduct.medicus,
     };
     // DETAIL-57: the global failed-span share of the
     // global entry window (failedSpanShareOfEntryWindow):
@@ -1640,7 +1640,7 @@ export class SessionLog {
     const failedSpanShareOfOwnEntryWindowByProduct = {
       vigiles: shareFailedOfOwnEntryWindow("vigiles", failedSpanMsByProduct.vigiles),
       ignis: shareFailedOfOwnEntryWindow("ignis", failedSpanMsByProduct.ignis),
-      sanitas: shareFailedOfOwnEntryWindow("sanitas", failedSpanMsByProduct.sanitas),
+      medicus: shareFailedOfOwnEntryWindow("medicus", failedSpanMsByProduct.medicus),
     };
     // DETAIL-60: the per-product ok-span shares of
     // that product's own entry window
@@ -1695,7 +1695,7 @@ export class SessionLog {
     const okSpanShareOfOwnEntryWindowByProduct = {
       vigiles: shareOkOfOwnEntryWindow("vigiles", okSpanMsByProduct.vigiles),
       ignis: shareOkOfOwnEntryWindow("ignis", okSpanMsByProduct.ignis),
-      sanitas: shareOkOfOwnEntryWindow("sanitas", okSpanMsByProduct.sanitas),
+      medicus: shareOkOfOwnEntryWindow("medicus", okSpanMsByProduct.medicus),
     };
     // DETAIL-61: the per-product ok-count shares of
     // that product's own entries
@@ -1736,7 +1736,7 @@ export class SessionLog {
     const okShareOfOwnEntriesByProduct = {
       vigiles: shareOkOfOwnEntries("vigiles"),
       ignis: shareOkOfOwnEntries("ignis"),
-      sanitas: shareOkOfOwnEntries("sanitas"),
+      medicus: shareOkOfOwnEntries("medicus"),
     };
     // DETAIL-62: the per-product failed-span shares of
     // that product's own success window
@@ -1784,7 +1784,7 @@ export class SessionLog {
     const failedSpanShareOfOwnOkWindowByProduct = {
       vigiles: shareFailedOfOwnOkWindow("vigiles", failedSpanMsByProduct.vigiles),
       ignis: shareFailedOfOwnOkWindow("ignis", failedSpanMsByProduct.ignis),
-      sanitas: shareFailedOfOwnOkWindow("sanitas", failedSpanMsByProduct.sanitas),
+      medicus: shareFailedOfOwnOkWindow("medicus", failedSpanMsByProduct.medicus),
     };
     // DETAIL-63: the per-product ok-span shares of
     // that product's own failure window
@@ -1834,7 +1834,7 @@ export class SessionLog {
     const okSpanShareOfOwnFailedWindowByProduct = {
       vigiles: shareOkOfOwnFailedWindow("vigiles", okSpanMsByProduct.vigiles),
       ignis: shareOkOfOwnFailedWindow("ignis", okSpanMsByProduct.ignis),
-      sanitas: shareOkOfOwnFailedWindow("sanitas", okSpanMsByProduct.sanitas),
+      medicus: shareOkOfOwnFailedWindow("medicus", okSpanMsByProduct.medicus),
     };
     // DETAIL-64: the global ok-span share of the
     // global failed window (okSpanShareOfFailedWindow):
@@ -2081,7 +2081,7 @@ export class SessionLog {
     const entrySpanShareOfOwnOkWindowByProduct = {
       vigiles: shareEntryOfOwnOkWindow("vigiles", entrySpanMsByProduct.vigiles),
       ignis: shareEntryOfOwnOkWindow("ignis", entrySpanMsByProduct.ignis),
-      sanitas: shareEntryOfOwnOkWindow("sanitas", entrySpanMsByProduct.sanitas),
+      medicus: shareEntryOfOwnOkWindow("medicus", entrySpanMsByProduct.medicus),
     };
     // DETAIL-69: the per-product entry-span shares of
     // that product's own failure window
@@ -2134,7 +2134,7 @@ export class SessionLog {
     const entrySpanShareOfOwnFailedWindowByProduct = {
       vigiles: shareEntryOfOwnFailedWindow("vigiles", entrySpanMsByProduct.vigiles),
       ignis: shareEntryOfOwnFailedWindow("ignis", entrySpanMsByProduct.ignis),
-      sanitas: shareEntryOfOwnFailedWindow("sanitas", entrySpanMsByProduct.sanitas),
+      medicus: shareEntryOfOwnFailedWindow("medicus", entrySpanMsByProduct.medicus),
     };
     // DETAIL-70: the per-product entry-span shares of the
     // global ok window (entrySpanShareOfOkWindowByProduct):
@@ -2190,7 +2190,7 @@ export class SessionLog {
     const entrySpanShareOfOkWindowByProduct = {
       vigiles: shareEntryOfOkWindow("vigiles", entrySpanMsByProduct.vigiles),
       ignis: shareEntryOfOkWindow("ignis", entrySpanMsByProduct.ignis),
-      sanitas: shareEntryOfOkWindow("sanitas", entrySpanMsByProduct.sanitas),
+      medicus: shareEntryOfOkWindow("medicus", entrySpanMsByProduct.medicus),
     };
     // DETAIL-71: the per-product entry-span shares of the
     // global failed window (entrySpanShareOfFailedWindowByProduct):
@@ -2245,7 +2245,7 @@ export class SessionLog {
     const entrySpanShareOfFailedWindowByProduct = {
       vigiles: shareEntryOfFailedWindow("vigiles", entrySpanMsByProduct.vigiles),
       ignis: shareEntryOfFailedWindow("ignis", entrySpanMsByProduct.ignis),
-      sanitas: shareEntryOfFailedWindow("sanitas", entrySpanMsByProduct.sanitas),
+      medicus: shareEntryOfFailedWindow("medicus", entrySpanMsByProduct.medicus),
     };
     // DETAIL-72: the per-product failed-span shares of
     // the global ok window
@@ -2302,7 +2302,7 @@ export class SessionLog {
     const failedSpanShareOfOkWindowByProduct = {
       vigiles: shareFailedOfOkWindow("vigiles", failedSpanMsByProduct.vigiles),
       ignis: shareFailedOfOkWindow("ignis", failedSpanMsByProduct.ignis),
-      sanitas: shareFailedOfOkWindow("sanitas", failedSpanMsByProduct.sanitas),
+      medicus: shareFailedOfOkWindow("medicus", failedSpanMsByProduct.medicus),
     };
     // DETAIL-73: the per-product ok-span shares of
     // the global failed window
@@ -2360,7 +2360,7 @@ export class SessionLog {
     const okSpanShareOfFailedWindowByProduct = {
       vigiles: shareOkOfFailedWindow("vigiles", okSpanMsByProduct.vigiles),
       ignis: shareOkOfFailedWindow("ignis", okSpanMsByProduct.ignis),
-      sanitas: shareOkOfFailedWindow("sanitas", okSpanMsByProduct.sanitas),
+      medicus: shareOkOfFailedWindow("medicus", okSpanMsByProduct.medicus),
     };
     return {
       total: this._entries.length,
@@ -2394,7 +2394,7 @@ export class SessionLog {
       avgOkLatencyMsByProduct: {
         vigiles: latencyCountByProduct.vigiles === 0 ? null : latencySumByProduct.vigiles / latencyCountByProduct.vigiles,
         ignis: latencyCountByProduct.ignis === 0 ? null : latencySumByProduct.ignis / latencyCountByProduct.ignis,
-        sanitas: latencyCountByProduct.sanitas === 0 ? null : latencySumByProduct.sanitas / latencyCountByProduct.sanitas,
+        medicus: latencyCountByProduct.medicus === 0 ? null : latencySumByProduct.medicus / latencyCountByProduct.medicus,
       },
       minOkLatencyMs,
       maxOkLatencyMs,
@@ -2405,12 +2405,12 @@ export class SessionLog {
       okShareByProduct: {
         vigiles: entryCountByProduct.vigiles === 0 ? null : okCountByProduct.vigiles / entryCountByProduct.vigiles,
         ignis: entryCountByProduct.ignis === 0 ? null : okCountByProduct.ignis / entryCountByProduct.ignis,
-        sanitas: entryCountByProduct.sanitas === 0 ? null : okCountByProduct.sanitas / entryCountByProduct.sanitas,
+        medicus: entryCountByProduct.medicus === 0 ? null : okCountByProduct.medicus / entryCountByProduct.medicus,
       },
       failedShareByProduct: {
         vigiles: entryCountByProduct.vigiles === 0 ? null : failedCountByProduct.vigiles / entryCountByProduct.vigiles,
         ignis: entryCountByProduct.ignis === 0 ? null : failedCountByProduct.ignis / entryCountByProduct.ignis,
-        sanitas: entryCountByProduct.sanitas === 0 ? null : failedCountByProduct.sanitas / entryCountByProduct.sanitas,
+        medicus: entryCountByProduct.medicus === 0 ? null : failedCountByProduct.medicus / entryCountByProduct.medicus,
       },
       failedShareByStatusByProduct,
       failedShareByStatus,
@@ -2894,7 +2894,7 @@ export class SessionLog {
       entryShareByProduct: {
         vigiles: this._entries.length === 0 ? null : entryCountByProduct.vigiles / this._entries.length,
         ignis: this._entries.length === 0 ? null : entryCountByProduct.ignis / this._entries.length,
-        sanitas: this._entries.length === 0 ? null : entryCountByProduct.sanitas / this._entries.length,
+        medicus: this._entries.length === 0 ? null : entryCountByProduct.medicus / this._entries.length,
       },
     };
   }

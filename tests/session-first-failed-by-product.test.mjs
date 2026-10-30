@@ -32,7 +32,7 @@ function recordAt(log, timestamp, product, status = "network_error") {
   });
 }
 
-const NULLS = { vigiles: null, ignis: null, sanitas: null };
+const NULLS = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product first failure is null, not a fabricated timestamp", () => {
   const log = new SessionLog();
@@ -48,16 +48,16 @@ test("first failure per product is the earliest recorded failure, by insertion o
   assert.deepEqual(log.stats().firstFailedAtByProduct, {
     vigiles: "2026-10-29T12:00:00.000Z",
     ignis: "2026-10-29T12:01:00.000Z",
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("a later failure never overwrites the first, even with an earlier timestamp string", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
-  assert.equal(log.stats().firstFailedAtByProduct.sanitas, "2026-10-29T12:05:00.000Z");
-  assert.equal(log.stats().lastFailedAtByProduct.sanitas, "2026-10-29T12:00:00.000Z");
+  recordAt(log, "2026-10-29T12:05:00.000Z", "medicus");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
+  assert.equal(log.stats().firstFailedAtByProduct.medicus, "2026-10-29T12:05:00.000Z");
+  assert.equal(log.stats().lastFailedAtByProduct.medicus, "2026-10-29T12:00:00.000Z");
 });
 
 test("successes never move a first-failure bucket", () => {
@@ -107,11 +107,11 @@ test("a failure without a usable timestamp leaves the bucket open for a later us
 test("a product with no failure in a non-empty session reads null", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
-  recordAt(log, "2026-10-29T12:03:00.000Z", "sanitas", "ok");
+  recordAt(log, "2026-10-29T12:03:00.000Z", "medicus", "ok");
   assert.deepEqual(log.stats().firstFailedAtByProduct, {
     vigiles: "2026-10-29T12:00:00.000Z",
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -128,7 +128,7 @@ test("web wiring: updateLogStats renders the per-product first-failure line from
   assert.match(app, /logStatsFirstFailedByProduct: \$\("log-stats-first-failed-by-product"\)/);
   assert.match(
     app,
-    /First failure by product: Vigiles \$\{stats\.firstFailedAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.firstFailedAtByProduct\.ignis \?\? "none"\} · Sanitas \$\{stats\.firstFailedAtByProduct\.sanitas \?\? "none"\}/,
+    /First failure by product: Vigiles \$\{stats\.firstFailedAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.firstFailedAtByProduct\.ignis \?\? "none"\} · Medicus \$\{stats\.firstFailedAtByProduct\.medicus \?\? "none"\}/,
     "updateLogStats sets the per-product first-failure line from stats()",
   );
 });
@@ -137,7 +137,7 @@ test("web wiring: session-log panel holds the per-product first-failure stats el
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-first-failed-by-product" class="note mono">First failure by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-first-failed-by-product" class="note mono">First failure by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

@@ -7,8 +7,8 @@
 // Any future assessment source must beat this baseline's recall and
 // category accuracy to claim it adds value; beating it on precision
 // alone proves nothing, since the baseline never fires a false alarm
-// by construction. Mirrors eval/sanitas/baseline.mjs, which predicts
-// "clean area" for the Sanitas product; this file touches no Sanitas
+// by construction. Mirrors eval/medicus/baseline.mjs, which predicts
+// "normal activity" for the Medicus product; this file touches no Medicus
 // file. No network, no model calls, no inspection of the scenario:
 // the scenario argument is accepted only to satisfy the source
 // contract (an async function assess(scenario)).

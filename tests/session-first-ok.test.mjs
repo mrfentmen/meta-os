@@ -41,7 +41,7 @@ test("first success follows insertion order across products, not timestamp order
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:05:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T12:03:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:03:00.000Z", "medicus");
   const stats = log.stats();
   assert.equal(stats.firstOkAt, "2026-10-29T12:05:00.000Z");
   assert.equal(stats.lastOkAt, "2026-10-29T12:03:00.000Z");
@@ -66,7 +66,7 @@ test("a success with an unknown product still opens the global first success", (
   assert.deepEqual(stats.firstOkAtByProduct, {
     vigiles: null,
     ignis: "2026-10-29T12:05:00.000Z",
-    sanitas: null,
+    medicus: null,
   });
   assert.equal(stats.ok, 2);
 });
@@ -102,7 +102,7 @@ test("a timestamp-less first success leaves the endpoint open for a later usable
 
 test("a single usable success opens first and last at the same timestamp", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
   const stats = log.stats();
   assert.equal(stats.firstOkAt, "2026-10-29T12:00:00.000Z");
   assert.equal(stats.lastOkAt, "2026-10-29T12:00:00.000Z");

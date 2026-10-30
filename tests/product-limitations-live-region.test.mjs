@@ -5,7 +5,7 @@
 // carries the safety text that is always in effect for the selected
 // product — Vigiles' "does not establish that a crime has occurred",
 // Ignis' "not a certified fire-detection system … never create a real
-// fire", Sanitas' "does not determine that a legal violation has
+// fire", Medicus' "does not determine that a legal violation has
 // occurred" — and it changes on every product switch, but it used to
 // be plain text with no live region, so a screen-reader user who had
 // just switched products heard the radio's new value and nothing

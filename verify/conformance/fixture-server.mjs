@@ -18,7 +18,7 @@
 
 import http from "node:http";
 
-const PRODUCTS = new Set(["vigiles", "ignis", "sanitas"]);
+const PRODUCTS = new Set(["vigiles", "ignis", "medicus"]);
 
 export function fixtureResponse(product, timestamp) {
   return {

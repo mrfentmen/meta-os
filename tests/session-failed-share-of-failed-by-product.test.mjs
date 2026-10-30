@@ -25,7 +25,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SessionLog } from "../js/log.js";
 
-const NULL_SHARES = { vigiles: null, ignis: null, sanitas: null };
+const NULL_SHARES = { vigiles: null, ignis: null, medicus: null };
 
 function recordOk(log, product, latencyMs = 100) {
   return log.record({
@@ -58,7 +58,7 @@ test("a single failure reads 1 for its product and 0 elsewhere", () => {
   assert.deepEqual(log.stats().failedShareOfFailedByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -67,14 +67,14 @@ test("mixed counts divide by the failed total, not the entry total", () => {
   recordFailed(log, "vigiles");
   recordFailed(log, "vigiles", "http_error");
   recordFailed(log, "ignis");
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   recordOk(log, "ignis");
   recordOk(log, "vigiles");
   // 4 failures, not 6 entries: successes move neither bucket nor denominator.
   assert.deepEqual(log.stats().failedShareOfFailedByProduct, {
     vigiles: 0.5,
     ignis: 0.25,
-    sanitas: 0.25,
+    medicus: 0.25,
   });
 });
 
@@ -82,7 +82,7 @@ test("shares sum to 1 when every failure carries a known product", () => {
   const log = new SessionLog();
   recordFailed(log, "vigiles");
   recordFailed(log, "ignis", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   const shares = log.stats().failedShareOfFailedByProduct;
   const sum = Object.values(shares).reduce((a, b) => a + b, 0);
   assert.equal(sum, 1);
@@ -95,18 +95,18 @@ test("a failure with an unknown product moves no bucket but sits in the total", 
   assert.deepEqual(log.stats().failedShareOfFailedByProduct, {
     vigiles: 0.5,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
 test("a failure with a missing product moves no bucket but sits in the total", () => {
   const log = new SessionLog();
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   recordFailed(log, null);
   assert.deepEqual(log.stats().failedShareOfFailedByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0.5,
+    medicus: 0.5,
   });
 });
 
@@ -119,19 +119,19 @@ test("successes never move a share, and a success-only log reads null", () => {
   assert.deepEqual(log.stats().failedShareOfFailedByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
 test("failures for one product read 1 even beside successes of other products", () => {
   const log = new SessionLog();
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   recordOk(log, "vigiles");
   recordOk(log, "ignis");
   assert.deepEqual(log.stats().failedShareOfFailedByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 1,
+    medicus: 1,
   });
 });
 
@@ -139,11 +139,11 @@ test("every failed status counts alike, unlike the cause splits", () => {
   const log = new SessionLog();
   recordFailed(log, "vigiles", "network_error");
   recordFailed(log, "ignis", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   assert.deepEqual(log.stats().failedShareOfFailedByProduct, {
     vigiles: 1 / 3,
     ignis: 1 / 3,
-    sanitas: 1 / 3,
+    medicus: 1 / 3,
   });
 });
 
@@ -154,7 +154,7 @@ test("a failure carrying a latency value still counts, unlike the latency sums",
   assert.deepEqual(log.stats().failedShareOfFailedByProduct, {
     vigiles: 0.5,
     ignis: 0.5,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -179,7 +179,7 @@ test("web wiring: session-log panel holds the failed-share-of-failed-by-product 
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failed-share-of-failed-by-product" class="note mono">Failed share of failures by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-failed-share-of-failed-by-product" class="note mono">Failed share of failures by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

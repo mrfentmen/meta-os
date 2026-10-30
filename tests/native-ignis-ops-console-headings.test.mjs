@@ -12,7 +12,7 @@
 // one shared PanelHeading: on Ignis it renders uppercased in
 // monospaced 15pt bold with 1.8pt tracking (0.12em of 15pt) and a 3pt
 // Ignis-red (#d92b2b) leading tick with 10pt of room before the
-// text; on Vigiles and Sanitas it renders exactly as before — plain
+// text; on Vigiles and Medicus it renders exactly as before — plain
 // 15pt bold, no tick, no tracking, no case change. The Ignis branch
 // keeps the original title as its accessibility label, so VoiceOver
 // hears the title in its normal case. No Swift toolchain exists in

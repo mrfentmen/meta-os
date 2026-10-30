@@ -31,7 +31,7 @@ test("live health check reports the held model state, not readiness", async () =
   await withServer(async (base) => {
     const health = await checkHealth(`${base}/api/assess`);
     assert.equal(health.ok, true);
-    assert.deepEqual([...health.products].sort(), ["ignis", "sanitas", "vigiles"]);
+    assert.deepEqual([...health.products].sort(), ["ignis", "medicus", "vigiles"]);
     assert.equal(health.model.live_enabled, false);
     assert.equal(health.model.configured, false);
   });

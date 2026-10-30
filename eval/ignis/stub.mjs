@@ -2,8 +2,8 @@
 // NOT a model. A deterministic stand-in table keyed by scenario_id, so
 // the harness can be run and its metric paths exercised with zero
 // network access, zero API key, and zero model calls (Spark stays OFF).
-// Mirrors eval/sanitas/stub.mjs, which does the same for Sanitas;
-// this file touches no Sanitas file.
+// Mirrors eval/medicus/stub.mjs, which does the same for Medicus;
+// this file touches no Medicus file.
 //
 // The table is deliberately imperfect, and the imperfections are listed
 // here so no one mistakes fixture numbers for model performance:

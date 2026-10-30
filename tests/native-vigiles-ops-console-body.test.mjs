@@ -103,7 +103,7 @@ test("native ops-console body: readout viewport frames in Vigiles blue at 0.4 ov
   assert.doesNotMatch(
     readout,
     /93 \/ 255/,
-    "no Sanitas green stroke is added to the readout",
+    "no Medicus green stroke is added to the readout",
   );
 });
 

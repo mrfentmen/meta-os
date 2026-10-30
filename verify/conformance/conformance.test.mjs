@@ -19,7 +19,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { assessFrame, AssessError } from "../../js/client.js";
 
-const PRODUCTS = ["vigiles", "ignis", "sanitas"];
+const PRODUCTS = ["vigiles", "ignis", "medicus"];
 const FIXTURE_PORT = 18099;
 const FIXTURE_URL = `http://localhost:${FIXTURE_PORT}/api/assess`;
 const LIVE_BASE = process.env.ASSESS_BASE_URL || null;

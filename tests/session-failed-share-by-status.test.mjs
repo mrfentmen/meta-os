@@ -67,7 +67,7 @@ test("mixed causes across products divide by the failed total, not by product", 
   recordFailed(log, "vigiles", "network_error");
   recordFailed(log, "vigiles", "network_error");
   recordFailed(log, "ignis", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   assert.deepEqual(log.stats().failedShareByStatus, {
     network_error: 0.5,
     http_error: 0.25,
@@ -79,7 +79,7 @@ test("all three causes read thirds of all failures", () => {
   const log = new SessionLog();
   recordFailed(log, "vigiles", "network_error");
   recordFailed(log, "ignis", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   assert.deepEqual(log.stats().failedShareByStatus, {
     network_error: 1 / 3,
     http_error: 1 / 3,
@@ -91,7 +91,7 @@ test("causes sum to 1 whenever failures exist", () => {
   const log = new SessionLog();
   recordFailed(log, "vigiles", "network_error");
   recordFailed(log, "ignis", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   const shares = log.stats().failedShareByStatus;
   const sum = Object.values(shares).reduce((a, b) => a + b, 0);
   assert.equal(sum, 1);
@@ -113,7 +113,7 @@ test("a failure with an unknown product still moves its cause cell", () => {
 
 test("a failure with a missing product still moves its cause cell", () => {
   const log = new SessionLog();
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   recordFailed(log, null, "http_error");
   assert.deepEqual(log.stats().failedShareByStatus, {
     network_error: 0,

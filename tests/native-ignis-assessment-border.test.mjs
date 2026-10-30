@@ -3,9 +3,9 @@
 //
 // IGNIS-UI-9 (Del UI push, Oct 29): native latest-assessment panel
 // border parity. The web theme panels carry an accent border —
-// Ignis rgba(217, 43, 43, 0.5) and Sanitas rgba(93, 168, 100, 0.5) —
+// Ignis rgba(217, 43, 43, 0.5) and Medicus rgba(93, 168, 100, 0.5) —
 // but the native panel carried no border at all, so under Ignis or
-// Sanitas it read borderless while the web panel carried the tinted
+// Medicus it read borderless while the web panel carried the tinted
 // edge. The fix strokes the outer stack with the assessment's own
 // accent at 0.5, 1pt, on the same 8px rounded rectangle as the UI-7
 // clip, after the clip so the full line follows the rounded edge.
@@ -51,8 +51,8 @@ test("native assessment panel: border strength matches the web theme border-colo
   );
   assert.match(
     css,
-    /body\[data-product="sanitas"\] \.panel \{[^}]*border-color: rgba\(93, 168, 100, 0\.5\)/,
-    "web Sanitas panel border is rgba(93, 168, 100, 0.5)",
+    /body\[data-product="medicus"\] \.panel \{[^}]*border-color: rgba\(93, 168, 100, 0\.5\)/,
+    "web Medicus panel border is rgba(93, 168, 100, 0.5)",
   );
   assert.match(
     bodyFn,

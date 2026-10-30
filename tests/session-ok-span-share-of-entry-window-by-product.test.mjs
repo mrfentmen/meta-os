@@ -38,7 +38,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SessionLog } from "../js/log.js";
 
-const NULL_SHARES = { vigiles: null, ignis: null, sanitas: null };
+const NULL_SHARES = { vigiles: null, ignis: null, medicus: null };
 
 function recordOkAt(log, timestamp, product) {
   return log.record({
@@ -75,7 +75,7 @@ test("all entries at one timestamp read null, not 0", () => {
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
   recordOkAt(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas", "http_error");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus", "http_error");
   assert.deepEqual(log.stats().okSpanShareOfEntryWindowByProduct, NULL_SHARES);
 });
 
@@ -85,10 +85,10 @@ test("mixed windows divide by the global entry window, and a product with no suc
   recordOkAt(log, "2026-10-29T12:01:00.000Z", "ignis");
   recordOkAt(log, "2026-10-29T12:06:30.000Z", "ignis");
   recordOkAt(log, "2026-10-29T12:10:00.000Z", "vigiles");
-  recordAt(log, "2026-10-29T12:20:00.000Z", "sanitas", "http_error");
+  recordAt(log, "2026-10-29T12:20:00.000Z", "medicus", "http_error");
   // Global entry window is 1200000 ms (first recorded
   // entry 12:00 to last recorded entry 12:20); vigiles
-  // ok span covers 600000 of it, ignis 330000. Sanitas
+  // ok span covers 600000 of it, ignis 330000. Medicus
   // recorded no success, so it covered none of the
   // window — 0, not "none". Unlike DETAIL-48, the
   // denominator here is the entry window, so the failure
@@ -96,19 +96,19 @@ test("mixed windows divide by the global entry window, and a product with no suc
   assert.deepEqual(log.stats().okSpanShareOfEntryWindowByProduct, {
     vigiles: 0.5,
     ignis: 0.275,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
 test("a single-success product inside a nonzero entry window reads 0", () => {
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
-  recordOkAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
+  recordOkAt(log, "2026-10-29T12:05:00.000Z", "medicus");
   recordOkAt(log, "2026-10-29T12:10:00.000Z", "vigiles");
   assert.deepEqual(log.stats().okSpanShareOfEntryWindowByProduct, {
     vigiles: 1,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -122,7 +122,7 @@ test("an unknown-product entry stretches the global entry window but moves no bu
   assert.deepEqual(log.stats().okSpanShareOfEntryWindowByProduct, {
     vigiles: 0.5,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -134,7 +134,7 @@ test("a missing-product entry stretches the global entry window but moves no buc
   assert.deepEqual(log.stats().okSpanShareOfEntryWindowByProduct, {
     vigiles: 0,
     ignis: 0.5,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -151,7 +151,7 @@ test("out-of-order timestamps stay raw: shares can exceed 1 and go negative, nev
   assert.deepEqual(log.stats().okSpanShareOfEntryWindowByProduct, {
     vigiles: -1,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -162,12 +162,12 @@ test("a product with successes but no usable timestamp pair reads null, distinct
   recordAt(log, "2026-10-29T12:10:00.000Z", "ignis", "http_error");
   // Vigiles recorded a success but no usable timestamps, so
   // its ok window is unknown — null, never a fabricated
-  // 0 — while ignis and sanitas, with no successes at all,
+  // 0 — while ignis and medicus, with no successes at all,
   // covered none of the window and read 0.
   assert.deepEqual(log.stats().okSpanShareOfEntryWindowByProduct, {
     vigiles: null,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -184,7 +184,7 @@ test("failures stretch the denominator without moving any bucket, unlike DETAIL-
   assert.deepEqual(log.stats().okSpanShareOfEntryWindowByProduct, {
     vigiles: 600000 / 7200000,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -210,7 +210,7 @@ test("web wiring: session-log panel holds the ok-span-share-of-entry-window stat
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-ok-span-share-of-entry-window-by-product" class="note mono">Success-span share of entry window by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-ok-span-share-of-entry-window-by-product" class="note mono">Success-span share of entry window by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

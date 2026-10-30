@@ -1,5 +1,5 @@
-// Tests for the Meta Sanitas evaluation harness (Agent 3).
-// Run: node --test eval/sanitas/harness.test.mjs
+// Tests for the Meta Medicus evaluation harness (Agent 3).
+// Run: node --test eval/medicus/harness.test.mjs
 // (also wired into `npm test`). No network, no model calls.
 
 import { test } from "node:test";
@@ -24,7 +24,7 @@ const scenarios = JSON.parse(readFileSync(join(here, "scenarios.json"), "utf8"))
 
 function fakeAssessment(category) {
   return {
-    product: "sanitas",
+    product: "medicus",
     timestamp: "2026-10-28T12:00:00.000Z",
     observations: [
       { category, description: "test observation", evidence: "test frame", confidence: null },
@@ -41,9 +41,9 @@ function fakeAssessment(category) {
 
 function oneScenario(overrides = {}) {
   return {
-    scenario_id: "SAN-T1",
+    scenario_id: "MED-T1",
     expected_observable_condition: "test condition",
-    ground_truth_label: "overflowing bin",
+    ground_truth_label: "person on ground",
     alert_expected: true,
     ...overrides,
   };
@@ -51,26 +51,26 @@ function oneScenario(overrides = {}) {
 
 // ---------- label loading ----------
 
-test("labels: scenario set loads, ids unique, labels are sanitas categories", () => {
+test("labels: scenario set loads, ids unique, labels are medicus categories", () => {
   assert.equal(validateScenarios(scenarios).length, 0);
   const ids = scenarios.map((s) => s.scenario_id);
   assert.equal(new Set(ids).size, ids.length, "duplicate scenario ids");
   for (const s of scenarios) {
     assert.ok(
-      PRODUCT_BY_ID.sanitas.categories.includes(s.ground_truth_label),
-      `${s.scenario_id} label ${s.ground_truth_label} not a sanitas category`,
+      PRODUCT_BY_ID.medicus.categories.includes(s.ground_truth_label),
+      `${s.scenario_id} label ${s.ground_truth_label} not a medicus category`,
     );
     assert.equal(typeof s.alert_expected, "boolean", `${s.scenario_id} alert_expected`);
   }
   assert.ok(scenarios.length >= 20, "scenario set should cover the directive cases with depth");
   const labels = new Set(scenarios.map((s) => s.ground_truth_label));
   for (const needed of [
-    "overflowing bin",
-    "waste accumulation",
-    "blocked pedestrian path",
-    "clean area",
-    "normal collection area",
-    "ambiguous object",
+    "person on ground",
+    "crowd gathered around a person",
+    "vehicle collision scene",
+    "blocked crew access",
+    "person motionless",
+    "normal activity",
     "indeterminate",
   ]) {
     assert.ok(labels.has(needed), `missing ground-truth label ${needed}`);
@@ -79,9 +79,11 @@ test("labels: scenario set loads, ids unique, labels are sanitas categories", ()
 
 test("labels: alert categories match the directive action set", () => {
   assert.deepEqual([...ALERT_CATEGORIES].sort(), [
-    "blocked pedestrian path",
-    "overflowing bin",
-    "waste accumulation",
+    "blocked crew access",
+    "crowd gathered around a person",
+    "person motionless",
+    "person on ground",
+    "vehicle collision scene",
   ]);
 });
 
@@ -130,10 +132,10 @@ test("metrics: zero denominators give null, not zero or NaN", () => {
 
 test("alert logic: TP, FP, TN, FN and indeterminate all scored correctly", async () => {
   const cases = [
-    { scenario: oneScenario({ ground_truth_label: "overflowing bin", alert_expected: true }), assess: () => fakeAssessment("overflowing bin"), want: { fired: true, correct: true, cat: true } },
-    { scenario: oneScenario({ ground_truth_label: "clean area", alert_expected: false }), assess: () => fakeAssessment("waste accumulation"), want: { fired: true, correct: false, cat: false } },
-    { scenario: oneScenario({ ground_truth_label: "clean area", alert_expected: false }), assess: () => fakeAssessment("clean area"), want: { fired: false, correct: true, cat: true } },
-    { scenario: oneScenario({ ground_truth_label: "overflowing bin", alert_expected: true }), assess: () => fakeAssessment("indeterminate"), want: { fired: false, correct: false, cat: false } },
+    { scenario: oneScenario({ ground_truth_label: "person on ground", alert_expected: true }), assess: () => fakeAssessment("person on ground"), want: { fired: true, correct: true, cat: true } },
+    { scenario: oneScenario({ ground_truth_label: "normal activity", alert_expected: false }), assess: () => fakeAssessment("vehicle collision scene"), want: { fired: true, correct: false, cat: false } },
+    { scenario: oneScenario({ ground_truth_label: "normal activity", alert_expected: false }), assess: () => fakeAssessment("normal activity"), want: { fired: false, correct: true, cat: true } },
+    { scenario: oneScenario({ ground_truth_label: "person on ground", alert_expected: true }), assess: () => fakeAssessment("indeterminate"), want: { fired: false, correct: false, cat: false } },
     { scenario: oneScenario({ ground_truth_label: "indeterminate", alert_expected: false }), assess: () => fakeAssessment("indeterminate"), want: { fired: false, correct: true, cat: true } },
   ];
   for (const c of cases) {
@@ -149,14 +151,14 @@ test("alert logic: TP, FP, TN, FN and indeterminate all scored correctly", async
 
 test("containment: a throwing source and an invalid shape are recorded, the run continues", async () => {
   const set = [
-    oneScenario({ scenario_id: "SAN-A" }),
-    oneScenario({ scenario_id: "SAN-B", ground_truth_label: "clean area", alert_expected: false }),
-    oneScenario({ scenario_id: "SAN-C" }),
+    oneScenario({ scenario_id: "MED-A" }),
+    oneScenario({ scenario_id: "MED-B", ground_truth_label: "normal activity", alert_expected: false }),
+    oneScenario({ scenario_id: "MED-C" }),
   ];
   const assess = async (s) => {
-    if (s.scenario_id === "SAN-A") throw new Error("source exploded");
-    if (s.scenario_id === "SAN-B") return { product: "sanitas", nonsense: true };
-    return fakeAssessment("overflowing bin");
+    if (s.scenario_id === "MED-A") throw new Error("source exploded");
+    if (s.scenario_id === "MED-B") return { product: "medicus", nonsense: true };
+    return fakeAssessment("person on ground");
   };
   const records = await runEval(set, assess);
   assert.equal(records.length, 3);
@@ -172,7 +174,7 @@ test("containment: an invalid scenario set throws before any assessment runs", a
   await assert.rejects(
     runEval([{ ...oneScenario(), ground_truth_label: "bogus" }], async () => {
       called += 1;
-      return fakeAssessment("clean area");
+      return fakeAssessment("normal activity");
     }),
     /invalid scenario set/,
   );
@@ -185,7 +187,7 @@ test("fixtures: stub and baseline answers pass v2 schema validation for every sc
   for (const s of scenarios) {
     for (const assess of [assessStub, assessBaseline]) {
       const out = await assess(s);
-      const result = validateAssessment(out, "sanitas");
+      const result = validateAssessment(out, "medicus");
       assert.equal(result.ok, true, `${s.scenario_id}: ${result.errors.join("; ")}`);
     }
   }

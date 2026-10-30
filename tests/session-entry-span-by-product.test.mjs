@@ -33,7 +33,7 @@ function recordAt(log, timestamp, product, status = "ok") {
   });
 }
 
-const NULLS = { vigiles: null, ignis: null, sanitas: null };
+const NULLS = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product entry span is null, not a fabricated span", () => {
   const log = new SessionLog();
@@ -49,17 +49,17 @@ test("span is last minus first per product, in whole milliseconds", () => {
   assert.deepEqual(log.stats().entrySpanMsByProduct, {
     vigiles: 300000,
     ignis: 330500,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("a product with exactly one usable entry reads 0, not null", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
   assert.deepEqual(log.stats().entrySpanMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -77,15 +77,15 @@ test("a product with no entries in a non-empty session reads null", () => {
   assert.deepEqual(log.stats().entrySpanMsByProduct, {
     vigiles: 180000,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("insertion order, not min/max: a later entry with an earlier timestamp reads a negative span", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
-  assert.equal(log.stats().entrySpanMsByProduct.sanitas, -300000);
+  recordAt(log, "2026-10-29T12:05:00.000Z", "medicus");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
+  assert.equal(log.stats().entrySpanMsByProduct.medicus, -300000);
 });
 
 test("an entry with an unknown product moves no bucket", () => {
@@ -148,7 +148,7 @@ test("web wiring: session-log panel holds the per-product entry-span stats eleme
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-entry-span-by-product" class="note mono">Entry span by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-entry-span-by-product" class="note mono">Entry span by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

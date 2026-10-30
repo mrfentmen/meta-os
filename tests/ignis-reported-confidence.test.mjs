@@ -71,7 +71,7 @@ test("confidence spread: failures, other products, and missing observations move
   const counts = ignisReportedConfidence([
     { status: "failed", product: "ignis", response: { assessment: { observations: [obs(1)] } } },
     ok("vigiles", [obs(1)]),
-    ok("sanitas", [obs(1)]),
+    ok("medicus", [obs(1)]),
     ok("ignis", null),
     { status: "ok", product: "ignis" },
     ok("ignis", [obs(0.6)]),

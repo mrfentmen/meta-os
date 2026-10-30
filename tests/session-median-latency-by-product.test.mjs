@@ -46,7 +46,7 @@ test("empty log: every product bucket is null", () => {
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -57,7 +57,7 @@ test("a single success per product reads its own latency as the median", () => {
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: 300,
     ignis: 100,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -69,7 +69,7 @@ test("an odd count reads the middle value, regardless of insertion order", () =>
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: null,
     ignis: 200,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -82,18 +82,18 @@ test("an even count reads the mean of the two middle values", () => {
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: 250,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("a two-success bucket reads the midpoint, not one end", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas", 101);
-  recordOk(log, "sanitas", 102);
+  recordOk(log, "medicus", 101);
+  recordOk(log, "medicus", 102);
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: 101.5,
+    medicus: 101.5,
   });
 });
 
@@ -105,7 +105,7 @@ test("failures never contribute, even when they carry a latency", () => {
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: null,
     ignis: 150,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -118,7 +118,7 @@ test("ok entries with no finite latency are skipped, not counted as zero", () =>
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: null,
     ignis: 200,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -129,7 +129,7 @@ test("a session with only failures and latency-less successes reads null", () =>
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -140,7 +140,7 @@ test("entries with an unknown or missing product move no bucket", () => {
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
   assert.equal(log.stats().medianOkLatencyMs, 200);
 });
@@ -153,7 +153,7 @@ test("median follows clear: back to null", () => {
   assert.deepEqual(log.stats().medianOkLatencyMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -171,7 +171,7 @@ test("web wiring: session-log panel holds the median-latency-by-product stats el
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-median-latency-by-product" class="note mono">Median successful latency by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-median-latency-by-product" class="note mono">Median successful latency by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

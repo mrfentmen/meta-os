@@ -4,12 +4,12 @@
 // OPS-CONSOLE-3 (Del UI direction, Oct 29): second web-first
 // dispatch/ops-console piece for Ignis, extending OPS-CONSOLE-1's
 // panel headings to the rest of the console surface — the same four
-// elements Milo's Sanitas ops-console pass treated, in Ignis terms:
+// elements Milo's Medicus ops-console pass treated, in Ignis terms:
 // wider subhead tracking, mono status readout, sharper primary
 // buttons, framed latest-assessment readout. Static checks on the
 // shipped CSS, scoped to body[data-product="ignis"] only.
-// Guardrails: no Sanitas green, no Vigiles blue, no Vigiles or
-// Sanitas restyle, no disclosure / limitations / background /
+// Guardrails: no Medicus green, no Vigiles blue, no Vigiles or
+// Medicus restyle, no disclosure / limitations / background /
 // contract / Spark-gate rule, and red never restyles a status color.
 
 import { test } from "node:test";
@@ -62,7 +62,7 @@ test("console: Ignis latest-assessment readout is framed in Ignis red", () => {
 });
 
 test("console: block touches no other product and no guarded surface", () => {
-  assert.doesNotMatch(consoleBlock, /#5da864/, "no Sanitas green");
+  assert.doesNotMatch(consoleBlock, /#5da864/, "no Medicus green");
   assert.doesNotMatch(consoleBlock, /#4f7ec2/, "no Vigiles blue");
   assert.doesNotMatch(
     consoleBlock,
@@ -71,8 +71,8 @@ test("console: block touches no other product and no guarded surface", () => {
   );
   assert.doesNotMatch(
     consoleBlock,
-    /body\[data-product="sanitas"\]/,
-    "no Sanitas restyle",
+    /body\[data-product="medicus"\]/,
+    "no Medicus restyle",
   );
   const rulesOnly = consoleBlock.replace(/\/\*[\s\S]*?\*\//g, "");
   for (const forbidden of [

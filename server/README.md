@@ -2,7 +2,7 @@
 
 Rowan's lane: the server side of the frozen v2 contract
 (`MASTER_DIRECTIVE_V2.md` §9), shared by Meta Vigiles, Meta Ignis, and
-Meta Sanitas. Zero dependencies, no build step — plain Node, like the
+Meta Medicus. Zero dependencies, no build step — plain Node, like the
 rest of the repo.
 
 ## Run it
@@ -30,7 +30,7 @@ from the repo root, so one process runs the whole demo stack locally.
 Request body (exactly what both clients already send):
 
 ```json
-{ "product": "vigiles" | "ignis" | "sanitas",
+{ "product": "vigiles" | "ignis" | "medicus",
   "timestamp": "ISO-8601 with timezone",
   "image": "data:image/jpeg;base64,…" }
 ```
@@ -88,7 +88,7 @@ live against the local server (health `configured: false`,
 
 ### 1. The server's answer
 
-A valid frame for any product (`vigiles`, `ignis`, `sanitas`) gets:
+A valid frame for any product (`vigiles`, `ignis`, `medicus`) gets:
 
 ```http
 HTTP/1.1 503

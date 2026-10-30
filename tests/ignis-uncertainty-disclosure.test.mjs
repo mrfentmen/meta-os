@@ -66,7 +66,7 @@ test("uncertainty disclosure: failures and other products move no bucket", () =>
     { status: "failed", product: "ignis", response: withUncertainty(["x"]) },
     { status: "network_error", product: "ignis", response: withUncertainty(["x"]) },
     ok("vigiles", withUncertainty(["x"])),
-    ok("sanitas", withUncertainty(["x"])),
+    ok("medicus", withUncertainty(["x"])),
     ok("ignis", withUncertainty(["x"])),
   ]);
   assert.deepEqual(counts, {

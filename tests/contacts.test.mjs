@@ -1,5 +1,5 @@
 // Node built-in test runner, no dependencies:  node --test tests/contacts.test.mjs
-// Covers the contacts directory store: Sanitas-first SAMPLE seed,
+// Covers the contacts directory store: Medicus-first SAMPLE seed,
 // per-product listing, add/remove with validation, storage persistence,
 // corrupt-store fallback, and unwritable-store tolerance.
 
@@ -23,12 +23,12 @@ function fakeStorage(initial = {}) {
   };
 }
 
-test("contacts: first run seeds Sanitas SAMPLE contacts only", () => {
+test("contacts: first run seeds Medicus SAMPLE contacts only", () => {
   const store = new ContactsStore({ storage: fakeStorage() });
-  const sanitas = store.list("sanitas");
-  assert.equal(sanitas.length, 2);
-  assert.ok(sanitas.every((entry) => entry.sample === true));
-  assert.ok(sanitas.every((entry) => entry.name.startsWith("SAMPLE")));
+  const medicus = store.list("medicus");
+  assert.equal(medicus.length, 2);
+  assert.ok(medicus.every((entry) => entry.sample === true));
+  assert.ok(medicus.every((entry) => entry.name.startsWith("SAMPLE")));
   assert.deepEqual(store.list("vigiles"), []);
   assert.deepEqual(store.list("ignis"), []);
 });
@@ -37,10 +37,10 @@ test("contacts: seed persists, so a deleted sample stays deleted", () => {
   const storage = fakeStorage();
   const first = new ContactsStore({ storage });
   assert.equal(storage.has(CONTACTS_STORAGE_KEY), true);
-  const [sample] = first.list("sanitas");
+  const [sample] = first.list("medicus");
   assert.equal(first.remove(sample.id), true);
   const reloaded = new ContactsStore({ storage });
-  assert.equal(reloaded.list("sanitas").length, 1);
+  assert.equal(reloaded.list("medicus").length, 1);
 });
 
 test("contacts: add lists by product and marks real entries non-sample", () => {
@@ -48,14 +48,14 @@ test("contacts: add lists by product and marks real entries non-sample", () => {
   const added = store.add({ product: "vigiles", name: "Ada Reviewer", role: "Reviewer", organization: "Review office" });
   assert.equal(added.sample, false);
   assert.equal(store.list("vigiles").length, 1);
-  assert.equal(store.list("sanitas").length, 2);
+  assert.equal(store.list("medicus").length, 2);
   assert.equal(store.list("ignis").length, 0);
 });
 
 test("contacts: add rejects empty fields and unknown products", () => {
   const store = new ContactsStore({ storage: fakeStorage() });
-  assert.throws(() => store.add({ product: "sanitas", name: "  ", role: "R", organization: "O" }), RangeError);
-  assert.throws(() => store.add({ product: "sanitas", name: "N", role: "", organization: "O" }), RangeError);
+  assert.throws(() => store.add({ product: "medicus", name: "  ", role: "R", organization: "O" }), RangeError);
+  assert.throws(() => store.add({ product: "medicus", name: "N", role: "", organization: "O" }), RangeError);
   assert.throws(() => store.add({ product: "nope", name: "N", role: "R", organization: "O" }), RangeError);
 });
 
@@ -68,7 +68,7 @@ test("contacts: remove returns false for unknown ids", () => {
 test("contacts: corrupt or wrong-shaped storage loads empty but usable", () => {
   const corrupt = new ContactsStore({ storage: fakeStorage({ [CONTACTS_STORAGE_KEY]: "{not json" }) });
   assert.equal(corrupt.count, 0);
-  assert.equal(corrupt.add({ product: "sanitas", name: "N", role: "R", organization: "O" }).id, 1);
+  assert.equal(corrupt.add({ product: "medicus", name: "N", role: "R", organization: "O" }).id, 1);
   const wrongShape = new ContactsStore({ storage: fakeStorage({ [CONTACTS_STORAGE_KEY]: JSON.stringify({ id: 1 }) }) });
   assert.equal(wrongShape.count, 0);
 });
@@ -93,6 +93,6 @@ test("contacts: unwritable storage still works in memory", () => {
     },
   };
   const store = new ContactsStore({ storage: broken });
-  assert.equal(store.list("sanitas").length, 2);
-  assert.equal(store.add({ product: "sanitas", name: "N", role: "R", organization: "O" }).sample, false);
+  assert.equal(store.list("medicus").length, 2);
+  assert.equal(store.add({ product: "medicus", name: "N", role: "R", organization: "O" }).sample, false);
 });

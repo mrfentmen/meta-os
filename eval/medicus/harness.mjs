@@ -1,19 +1,20 @@
-// Meta Sanitas evaluation harness (Agent 3).
+// Meta Medicus evaluation harness (Agent 3).
 // No dependencies, no network, no model calls. Runs a labeled scenario
 // set against an assessment source and measures it honestly.
 //
 // Assessment source contract: an async function assess(scenario) that
 // returns one Meta Trio v2 assessment object (js/schema.js) for the
 // scenario, or throws. The harness validates every returned object
-// against the frozen v2 contract with product "sanitas". A source that
+// against the frozen v2 contract with product "medicus". A source that
 // throws or returns an invalid shape is recorded as an error for that
 // scenario only; the run continues (malformed-input containment).
 //
 // Alert definition (fixed, from the scenario labels): an assessment
-// "fires an alert" when its assessment.category is one of the three
-// inspection-action categories below. "ambiguous object" and
-// "indeterminate" never fire an alert; they warrant human review, which
-// is recorded separately and is not scored as an alert.
+// "fires an alert" when its assessment.category is one of the five
+// scene-alert categories below. "normal activity" and
+// "indeterminate" never fire an alert; they warrant human review where
+// confusable or unclear, which is recorded separately and is not
+// scored as an alert.
 //
 // Metrics: precision, recall, false-positive rate, false-negative rate,
 // category accuracy, and end-to-end latency (wall clock of the assess
@@ -25,12 +26,14 @@ import { validateAssessment } from "../../js/schema.js";
 import { PRODUCT_BY_ID } from "../../js/products.js";
 
 export const ALERT_CATEGORIES = [
-  "overflowing bin",
-  "waste accumulation",
-  "blocked pedestrian path",
+  "person on ground",
+  "crowd gathered around a person",
+  "vehicle collision scene",
+  "blocked crew access",
+  "person motionless",
 ];
 
-const SANITAS_CATEGORIES = PRODUCT_BY_ID.sanitas.categories;
+const MEDICUS_CATEGORIES = PRODUCT_BY_ID.medicus.categories;
 
 export function validateScenarios(scenarios) {
   const errors = [];
@@ -54,10 +57,10 @@ export function validateScenarios(scenarios) {
     if (typeof s.expected_observable_condition !== "string" || s.expected_observable_condition.length === 0) {
       errors.push(`${prefix}.expected_observable_condition: missing or not a string`);
     }
-    if (!SANITAS_CATEGORIES.includes(s.ground_truth_label)) {
+    if (!MEDICUS_CATEGORIES.includes(s.ground_truth_label)) {
       errors.push(
-        `${prefix}.ground_truth_label: "${s.ground_truth_label}" is not a sanitas category ` +
-          `(${SANITAS_CATEGORIES.join(", ")})`,
+        `${prefix}.ground_truth_label: "${s.ground_truth_label}" is not a medicus category ` +
+          `(${MEDICUS_CATEGORIES.join(", ")})`,
       );
     }
     if (typeof s.alert_expected !== "boolean") {
@@ -67,12 +70,7 @@ export function validateScenarios(scenarios) {
   return errors;
 }
 
-function median(values) {
-  if (values.length === 0) return null;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-}
+export { computeMetrics } from "../shared/metrics.mjs";
 
 export async function runEval(scenarios, assess) {
   const labelErrors = validateScenarios(scenarios);
@@ -86,7 +84,7 @@ export async function runEval(scenarios, assess) {
     let error = null;
     try {
       assessment = await assess(scenario);
-      const result = validateAssessment(assessment, "sanitas");
+      const result = validateAssessment(assessment, "medicus");
       if (!result.ok) {
         error = `schema validation failed: ${result.errors.join("; ")}`;
         assessment = null;
@@ -139,52 +137,10 @@ export async function runEval(scenarios, assess) {
   return records;
 }
 
-export function computeMetrics(records) {
-  let tp = 0;
-  let fp = 0;
-  let tn = 0;
-  let fn = 0;
-  let categoryCorrect = 0;
-  const latencies = [];
-  const errorIds = [];
-  for (const r of records) {
-    if (r.alert_fired && r.alert_expected) tp += 1;
-    else if (r.alert_fired && !r.alert_expected) fp += 1;
-    else if (!r.alert_fired && !r.alert_expected) tn += 1;
-    else fn += 1;
-    if (r.category_correct) categoryCorrect += 1;
-    if (typeof r.latency_ms === "number") latencies.push(r.latency_ms);
-    if (r.error !== null) errorIds.push(r.scenario_id);
-  }
-  const ratio = (num, den) => (den > 0 ? num / den : null);
-  const mean = latencies.length > 0
-    ? latencies.reduce((a, b) => a + b, 0) / latencies.length
-    : null;
-  return {
-    sample_size: records.length,
-    true_positives: tp,
-    false_positives: fp,
-    true_negatives: tn,
-    false_negatives: fn,
-    precision: ratio(tp, tp + fp),
-    recall: ratio(tp, tp + fn),
-    false_positive_rate: ratio(fp, fp + tn),
-    false_negative_rate: ratio(fn, fn + tp),
-    category_accuracy: records.length > 0 ? categoryCorrect / records.length : null,
-    latency_ms: {
-      n: latencies.length,
-      mean,
-      median: median(latencies),
-      max: latencies.length > 0 ? Math.max(...latencies) : null,
-    },
-    errors: { count: errorIds.length, scenario_ids: errorIds },
-  };
-}
-
 export function formatReport({ source, records, metrics }) {
   const fmt = (v) => (v === null ? "n/a (denominator zero)" : v.toFixed(3));
   const lines = [
-    `Meta Sanitas eval report — source: ${source}`,
+    `Meta Medicus eval report — source: ${source}`,
     `Sample size: ${metrics.sample_size} scenarios`,
     `Confusion (alert): TP=${metrics.true_positives} FP=${metrics.false_positives} ` +
       `TN=${metrics.true_negatives} FN=${metrics.false_negatives}`,

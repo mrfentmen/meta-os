@@ -90,7 +90,7 @@ test("observation categories: failed and other-product entries move no bucket", 
     { status: "failed", product: "ignis", response: { observations: [obs("visible smoke")] } },
     { status: "network_error", product: "ignis", response: { observations: [obs("visible smoke")] } },
     { status: "ok", product: "vigiles", response: { observations: [obs("visible smoke")] } },
-    { status: "ok", product: "sanitas", response: { observations: [obs("visible smoke")] } },
+    { status: "ok", product: "medicus", response: { observations: [obs("visible smoke")] } },
     null,
     entryWith([obs("visible smoke")]),
   ]);

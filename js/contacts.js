@@ -1,5 +1,5 @@
 // Contacts panel (Del direction 2026-10-29: Milo leads contacts,
-// Sanitas first). A human review directory per product: name, role,
+// Medicus first). A human review directory per product: name, role,
 // organization, stored locally in this browser only. Human-initiated
 // only: nothing here sends, notifies, or dispatches anything, and no
 // contact action ever runs on its own. Sample contacts are placeholders,
@@ -10,21 +10,21 @@ import { isProductId } from "./products.js";
 
 export const CONTACTS_STORAGE_KEY = "meta-trio-contacts-v1";
 
-// Seed: Sanitas first, per the direction. Every seeded entry is a
+// Seed: Medicus first, per the direction. Every seeded entry is a
 // SAMPLE placeholder, never a real person or office.
 export const SAMPLE_CONTACTS = [
   {
-    product: "sanitas",
-    name: "SAMPLE — Review Lead",
+    product: "medicus",
+    name: "SAMPLE — EMS Review Lead",
     role: "Human reviewer (sample)",
-    organization: "Sample sanitation review office",
+    organization: "Sample EMS review office",
     sample: true,
   },
   {
-    product: "sanitas",
-    name: "SAMPLE — Field Supervisor",
-    role: "Inspection supervisor (sample)",
-    organization: "Sample sanitation review office",
+    product: "medicus",
+    name: "SAMPLE — EMS Field Supervisor",
+    role: "EMS supervisor (sample)",
+    organization: "Sample EMS review office",
     sample: true,
   },
 ];
@@ -55,7 +55,7 @@ export class ContactsStore {
     this._restore();
   }
 
-  // First run (no saved data at all) seeds the Sanitas SAMPLE contacts
+  // First run (no saved data at all) seeds the Medicus SAMPLE contacts
   // and persists them, so deleting a sample removes it for good instead
   // of it reappearing on reload. A corrupt or wrong-shaped store loads
   // empty but stays usable; a missing or unwritable store keeps the

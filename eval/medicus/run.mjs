@@ -1,13 +1,13 @@
-// Meta Sanitas fixture eval runner (Agent 3).
-// Usage: node eval/sanitas/run.mjs [--out <path>]
-// Runs the Sanitas scenario set against the fixture stub and against
-// the always-clean baseline, prints both reports and the comparison.
+// Meta Medicus fixture eval runner (Agent 3).
+// Usage: node eval/medicus/run.mjs [--out <path>]
+// Runs the Medicus scenario set against the fixture stub and against
+// the always-normal baseline, prints both reports and the comparison.
 // No network, no model calls, no API key. The stub and baseline are
 // fixture sources; their numbers are fixture numbers, not model
 // performance, and the printed report says so.
 //
-// To plug in a real assessment source later (Rowan's /api/assess, once
-// it exists and Del green-lights the test phase), replace the assess
+// To plug in a real assessment source later (Rowan's /api/assess,
+// which exists in-repo, once Del green-lights the test phase), replace the assess
 // function passed to runEval with an adapter around assessFrame from
 // js/client.js. Do not call any live endpoint from this runner until
 // then; Spark stays OFF.
@@ -28,7 +28,7 @@ const outPath = outIndex >= 0 ? process.argv[outIndex + 1] : null;
 const runs = [];
 for (const [source, assess] of [
   ["stub (fixture, not a model)", assessStub],
-  ["baseline always-clean (fixture)", assessBaseline],
+  ["baseline always-normal (fixture)", assessBaseline],
 ]) {
   const records = await runEval(scenarios, assess);
   const metrics = computeMetrics(records);

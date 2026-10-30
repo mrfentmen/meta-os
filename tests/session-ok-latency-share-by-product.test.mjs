@@ -26,7 +26,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SessionLog } from "../js/log.js";
 
-const NULL_SHARES = { vigiles: null, ignis: null, sanitas: null };
+const NULL_SHARES = { vigiles: null, ignis: null, medicus: null };
 
 function recordOk(log, product, latencyMs = 100) {
   return log.record({
@@ -59,7 +59,7 @@ test("a single success reads 1 for its product and 0 elsewhere", () => {
   assert.deepEqual(log.stats().okLatencyShareByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -68,11 +68,11 @@ test("mixed latencies divide by the total latency sum, not the count", () => {
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", 100);
   recordOk(log, "ignis", 300);
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   assert.deepEqual(log.stats().okLatencyShareByProduct, {
     vigiles: 1 / 3,
     ignis: 0.5,
-    sanitas: 1 / 6,
+    medicus: 1 / 6,
   });
 });
 
@@ -80,7 +80,7 @@ test("shares sum to 1 when every usable-latency success carries a known product"
   const log = new SessionLog();
   recordOk(log, "vigiles", 40);
   recordOk(log, "ignis", 60);
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   const shares = log.stats().okLatencyShareByProduct;
   const sum = Object.values(shares).reduce((a, b) => a + b, 0);
   assert.equal(sum, 1);
@@ -93,18 +93,18 @@ test("a success with an unknown product moves no bucket but sits in the total", 
   assert.deepEqual(log.stats().okLatencyShareByProduct, {
     vigiles: 0.5,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
 test("a success with a missing product moves no bucket but sits in the total", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   recordOk(log, null, 300);
   assert.deepEqual(log.stats().okLatencyShareByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0.25,
+    medicus: 0.25,
   });
 });
 
@@ -117,7 +117,7 @@ test("failures never move a share, and a failure-only log reads null", () => {
   assert.deepEqual(log.stats().okLatencyShareByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -125,11 +125,11 @@ test("an ok entry with no finite latency is skipped, not counted as zero", () =>
   const log = new SessionLog();
   recordOk(log, "vigiles", Number.NaN);
   recordOk(log, "ignis", 200);
-  recordOk(log, "sanitas", null);
+  recordOk(log, "medicus", null);
   assert.deepEqual(log.stats().okLatencyShareByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -172,7 +172,7 @@ test("web wiring: session-log panel holds the ok-latency-share-by-product stats 
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-ok-latency-share-by-product" class="note mono">Successful latency share by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-ok-latency-share-by-product" class="note mono">Successful latency share by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

@@ -54,7 +54,7 @@ test("first and last failure follow insertion order across products, not timesta
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:05:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:00:00.000Z", "ignis", "http_error");
-  recordAt(log, "2026-10-29T12:03:00.000Z", "sanitas", "invalid_response");
+  recordAt(log, "2026-10-29T12:03:00.000Z", "medicus", "invalid_response");
   const stats = log.stats();
   assert.equal(stats.firstFailedAt, "2026-10-29T12:05:00.000Z");
   assert.equal(stats.lastFailedAt, "2026-10-29T12:03:00.000Z");
@@ -66,7 +66,7 @@ test("successes never move the first or last failure, before, between, or after 
   recordAt(log, "2026-10-29T12:02:00.000Z", "ignis");
   recordOkAt(log, "2026-10-29T12:04:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:06:00.000Z", "vigiles", "http_error");
-  recordOkAt(log, "2026-10-29T12:08:00.000Z", "sanitas");
+  recordOkAt(log, "2026-10-29T12:08:00.000Z", "medicus");
   const stats = log.stats();
   assert.equal(stats.firstFailedAt, "2026-10-29T12:02:00.000Z");
   assert.equal(stats.lastFailedAt, "2026-10-29T12:06:00.000Z");
@@ -82,7 +82,7 @@ test("a failure with an unknown product still opens and closes the global endpoi
   assert.deepEqual(stats.firstFailedAtByProduct, {
     vigiles: null,
     ignis: "2026-10-29T12:05:00.000Z",
-    sanitas: null,
+    medicus: null,
   });
   assert.equal(stats.failed, 2);
 });
@@ -119,7 +119,7 @@ test("a timestamp-less first failure leaves both endpoints open for later usable
 
 test("a single usable failure opens first and last at the same timestamp, span 0", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas", "http_error");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus", "http_error");
   const stats = log.stats();
   assert.equal(stats.firstFailedAt, "2026-10-29T12:00:00.000Z");
   assert.equal(stats.lastFailedAt, "2026-10-29T12:00:00.000Z");

@@ -34,7 +34,7 @@
   var SCALE = 1.05;
   var GLYPHS = " .,:;irsXA253hMHGS#9B&@";
   // One ramp per product, each built around that product's accent:
-  // Vigiles blue #4f7ec2, Ignis red #d92b2b, Sanitas green #5da864.
+  // Vigiles blue #4f7ec2, Ignis red #d92b2b, Medicus green #5da864.
   var PALETTES = {
     vigiles: [
       "#062258", "#07357f", "#0750bc", "#4f7ec2",
@@ -44,7 +44,7 @@
       "#3d0a08", "#5c1410", "#7f1d18", "#a32424",
       "#d92b2b", "#e85545", "#f07a68", "#ffa08e", "#ffd9d0",
     ],
-    sanitas: [
+    medicus: [
       "#0a2e12", "#123f1c", "#1e5429", "#2f6b3a",
       "#5da864", "#7cc47f", "#9ad69c", "#bfe8c2", "#e6f9e8",
     ],
@@ -52,12 +52,12 @@
   var GLOWS = {
     vigiles: "rgba(91, 220, 255, 0.9)",
     ignis: "rgba(255, 120, 90, 0.9)",
-    sanitas: "rgba(120, 220, 140, 0.9)",
+    medicus: "rgba(120, 220, 140, 0.9)",
   };
   var SPECULARS = {
     vigiles: "#eafcff",
     ignis: "#ffe8e0",
-    sanitas: "#e8fbe9",
+    medicus: "#e8fbe9",
   };
   var currentProduct = "vigiles";
   var currentPalette = PALETTES.vigiles;

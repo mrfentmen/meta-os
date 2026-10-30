@@ -29,8 +29,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SessionLog } from "../js/log.js";
 
-const NULL_SHARES = { vigiles: null, ignis: null, sanitas: null };
-const ZERO_SHARES = { vigiles: 0, ignis: 0, sanitas: 0 };
+const NULL_SHARES = { vigiles: null, ignis: null, medicus: null };
+const ZERO_SHARES = { vigiles: 0, ignis: 0, medicus: 0 };
 
 function recordOk(log, product, latencyMs = 100) {
   return log.record({
@@ -63,7 +63,7 @@ test("a single success reads 1 for its product and 0 elsewhere", () => {
   assert.deepEqual(log.stats().okShareOfTotalByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -72,14 +72,14 @@ test("mixed counts divide by the entry total, not the ok total", () => {
   recordOk(log, "vigiles");
   recordOk(log, "vigiles");
   recordOk(log, "ignis");
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   recordFailed(log, "ignis");
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   // 6 entries, 4 successes: failures sit in the denominator but move no bucket.
   assert.deepEqual(log.stats().okShareOfTotalByProduct, {
     vigiles: 2 / 6,
     ignis: 1 / 6,
-    sanitas: 1 / 6,
+    medicus: 1 / 6,
   });
 });
 
@@ -87,7 +87,7 @@ test("shares sum to the session ok share, and to 1 only for all-known successes"
   const log = new SessionLog();
   recordOk(log, "vigiles");
   recordOk(log, "ignis");
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   const shares = log.stats().okShareOfTotalByProduct;
   const sum = Object.values(shares).reduce((a, b) => a + b, 0);
   assert.equal(sum, 1);
@@ -106,18 +106,18 @@ test("a success with an unknown product moves no bucket but sits in the total", 
   assert.deepEqual(log.stats().okShareOfTotalByProduct, {
     vigiles: 0.5,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
 test("a success with a missing product moves no bucket but sits in the total", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   recordOk(log, null);
   assert.deepEqual(log.stats().okShareOfTotalByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0.5,
+    medicus: 0.5,
   });
 });
 
@@ -130,19 +130,19 @@ test("failures never move a bucket, and a failure-only log reads 0, not null", (
   assert.deepEqual(log.stats().okShareOfTotalByProduct, {
     vigiles: 0,
     ignis: 1 / 3,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
 test("successes for one product read their entry-total share beside other products' failures", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   recordFailed(log, "vigiles");
   recordFailed(log, "ignis");
   assert.deepEqual(log.stats().okShareOfTotalByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 1 / 3,
+    medicus: 1 / 3,
   });
 });
 
@@ -153,7 +153,7 @@ test("an ok entry with no finite latency still counts, unlike the latency sums",
   assert.deepEqual(log.stats().okShareOfTotalByProduct, {
     vigiles: 0.5,
     ignis: 0.5,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -164,7 +164,7 @@ test("a failure carrying a latency value still moves no bucket", () => {
   assert.deepEqual(log.stats().okShareOfTotalByProduct, {
     vigiles: 0,
     ignis: 0.5,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -189,7 +189,7 @@ test("web wiring: session-log panel holds the ok-share-of-total-by-product stats
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-ok-share-of-total-by-product" class="note mono">Successful share of all entries by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-ok-share-of-total-by-product" class="note mono">Successful share of all entries by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

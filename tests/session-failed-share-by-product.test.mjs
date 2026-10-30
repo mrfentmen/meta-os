@@ -40,7 +40,7 @@ function recordFailed(log, product, status = "network_error") {
   });
 }
 
-const NONE = { vigiles: null, ignis: null, sanitas: null };
+const NONE = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product share is null", () => {
   const log = new SessionLog();
@@ -54,11 +54,11 @@ test("shares bucket by their own product", () => {
   recordOk(log, "ignis");
   recordOk(log, "ignis");
   recordFailed(log, "ignis");
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   assert.deepEqual(log.stats().failedShareByProduct, {
     vigiles: 0.5,
     ignis: 1 / 3,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -69,7 +69,7 @@ test("ok entries count in the denominator, never the numerator", () => {
   recordFailed(log, "ignis", "http_error");
   assert.equal(log.stats().failedShareByProduct.ignis, 2 / 3);
   assert.equal(log.stats().failedShareByProduct.vigiles, null);
-  assert.equal(log.stats().failedShareByProduct.sanitas, null);
+  assert.equal(log.stats().failedShareByProduct.medicus, null);
 });
 
 test("a product that only succeeded reads 0, not null", () => {
@@ -78,7 +78,7 @@ test("a product that only succeeded reads 0, not null", () => {
   recordOk(log, "vigiles");
   assert.equal(log.stats().failedShareByProduct.vigiles, 0);
   assert.equal(log.stats().failedShareByProduct.ignis, null);
-  assert.equal(log.stats().failedShareByProduct.sanitas, null);
+  assert.equal(log.stats().failedShareByProduct.medicus, null);
 });
 
 test("a product that only failed reads 1, not null", () => {
@@ -87,7 +87,7 @@ test("a product that only failed reads 1, not null", () => {
   recordFailed(log, "vigiles", "http_error");
   assert.equal(log.stats().failedShareByProduct.vigiles, 1);
   assert.equal(log.stats().failedShareByProduct.ignis, null);
-  assert.equal(log.stats().failedShareByProduct.sanitas, null);
+  assert.equal(log.stats().failedShareByProduct.medicus, null);
 });
 
 test("an ok entry with an unknown product moves no bucket but still counts in the global ok total", () => {
@@ -149,7 +149,7 @@ test("web wiring: session-log panel holds the per-product failed-share stats ele
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failed-share-by-product" class="note mono">Failed share by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-failed-share-by-product" class="note mono">Failed share by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

@@ -43,7 +43,7 @@ test("empty log: every product bucket is null", () => {
   assert.deepEqual(log.stats().avgOkLatencyMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -55,14 +55,14 @@ test("each product's mean is over its own ok latencies only", () => {
   assert.deepEqual(log.stats().avgOkLatencyMsByProduct, {
     vigiles: 200,
     ignis: 50,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("a product with no success stays null while other buckets move", () => {
   const log = new SessionLog();
-  recordOk(log, 100, "sanitas");
-  assert.equal(log.stats().avgOkLatencyMsByProduct.sanitas, 100);
+  recordOk(log, 100, "medicus");
+  assert.equal(log.stats().avgOkLatencyMsByProduct.medicus, 100);
   assert.equal(log.stats().avgOkLatencyMsByProduct.vigiles, null);
   assert.equal(log.stats().avgOkLatencyMsByProduct.ignis, null);
 });
@@ -75,7 +75,7 @@ test("failures never contribute, even with a recorded latency", () => {
   assert.deepEqual(log.stats().avgOkLatencyMsByProduct, {
     vigiles: null,
     ignis: 100,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -86,7 +86,7 @@ test("failures alone leave every bucket null", () => {
   assert.deepEqual(log.stats().avgOkLatencyMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -96,7 +96,7 @@ test("ok entry with an unknown product moves no bucket", () => {
   assert.deepEqual(log.stats().avgOkLatencyMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
   assert.equal(log.stats().avgOkLatencyMs, 100);
 });
@@ -117,7 +117,7 @@ test("avgOkLatencyMsByProduct follows clear: back to null", () => {
   assert.deepEqual(log.stats().avgOkLatencyMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -126,7 +126,7 @@ test("web wiring: updateLogStats renders the per-product average-latency line fr
   assert.match(app, /logStatsAvgLatencyByProduct: \$\("log-stats-avg-latency-by-product"\)/);
   assert.match(
     app,
-    /Average successful latency by product: Vigiles \$\{stats\.avgOkLatencyMsByProduct\.vigiles === null \? "none" : `\$\{Math\.round\(stats\.avgOkLatencyMsByProduct\.vigiles\)\} ms`\} · Ignis \$\{stats\.avgOkLatencyMsByProduct\.ignis === null \? "none" : `\$\{Math\.round\(stats\.avgOkLatencyMsByProduct\.ignis\)\} ms`\} · Sanitas \$\{stats\.avgOkLatencyMsByProduct\.sanitas === null \? "none" : `\$\{Math\.round\(stats\.avgOkLatencyMsByProduct\.sanitas\)\} ms`\}/,
+    /Average successful latency by product: Vigiles \$\{stats\.avgOkLatencyMsByProduct\.vigiles === null \? "none" : `\$\{Math\.round\(stats\.avgOkLatencyMsByProduct\.vigiles\)\} ms`\} · Ignis \$\{stats\.avgOkLatencyMsByProduct\.ignis === null \? "none" : `\$\{Math\.round\(stats\.avgOkLatencyMsByProduct\.ignis\)\} ms`\} · Medicus \$\{stats\.avgOkLatencyMsByProduct\.medicus === null \? "none" : `\$\{Math\.round\(stats\.avgOkLatencyMsByProduct\.medicus\)\} ms`\}/,
     "updateLogStats sets the per-product average-latency line from stats()",
   );
 });
@@ -135,7 +135,7 @@ test("web wiring: session-log panel holds the per-product average-latency stats 
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-avg-latency-by-product" class="note mono">Average successful latency by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-avg-latency-by-product" class="note mono">Average successful latency by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

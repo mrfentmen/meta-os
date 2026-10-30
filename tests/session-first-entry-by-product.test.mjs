@@ -31,7 +31,7 @@ function recordAt(log, timestamp, product, status = "ok") {
   });
 }
 
-const NULLS = { vigiles: null, ignis: null, sanitas: null };
+const NULLS = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product first entry is null, not a fabricated timestamp", () => {
   const log = new SessionLog();
@@ -47,7 +47,7 @@ test("first recorded entry per product wins; later entries never move the bucket
   assert.deepEqual(log.stats().firstEntryAtByProduct, {
     vigiles: "2026-10-29T12:00:00.000Z",
     ignis: "2026-10-29T12:01:00.000Z",
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -64,15 +64,15 @@ test("a product with no entries in a non-empty session reads null", () => {
   assert.deepEqual(log.stats().firstEntryAtByProduct, {
     vigiles: "2026-10-29T12:00:00.000Z",
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("insertion order, not minimum timestamp: a later entry with an earlier timestamp string does not move the bucket", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
-  assert.equal(log.stats().firstEntryAtByProduct.sanitas, "2026-10-29T12:05:00.000Z");
+  recordAt(log, "2026-10-29T12:05:00.000Z", "medicus");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
+  assert.equal(log.stats().firstEntryAtByProduct.medicus, "2026-10-29T12:05:00.000Z");
 });
 
 test("an entry with an unknown product moves no bucket", () => {
@@ -115,7 +115,7 @@ test("web wiring: updateLogStats renders the per-product first-entry line from l
   assert.match(app, /logStatsFirstEntryByProduct: \$\("log-stats-first-entry-by-product"\)/);
   assert.match(
     app,
-    /First entry by product: Vigiles \$\{stats\.firstEntryAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.firstEntryAtByProduct\.ignis \?\? "none"\} · Sanitas \$\{stats\.firstEntryAtByProduct\.sanitas \?\? "none"\}/,
+    /First entry by product: Vigiles \$\{stats\.firstEntryAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.firstEntryAtByProduct\.ignis \?\? "none"\} · Medicus \$\{stats\.firstEntryAtByProduct\.medicus \?\? "none"\}/,
     "updateLogStats sets the per-product first-entry line from stats()",
   );
 });
@@ -124,7 +124,7 @@ test("web wiring: session-log panel holds the per-product first-entry stats elem
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-first-entry-by-product" class="note mono">First entry by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-first-entry-by-product" class="note mono">First entry by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

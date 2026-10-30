@@ -88,7 +88,7 @@ test("review triage: clear, unknown-flag, failed, and other-product entries move
     { status: "failed", product: "ignis", response: { assessment: { requires_human_review: true, category: "visible smoke" } } },
     { status: "network_error", product: "ignis", response: { assessment: { requires_human_review: true, category: "visible smoke" } } },
     { status: "ok", product: "vigiles", response: { assessment: { requires_human_review: true, category: "visible smoke" } } },
-    { status: "ok", product: "sanitas", response: { assessment: { requires_human_review: true, category: "visible smoke" } } },
+    { status: "ok", product: "medicus", response: { assessment: { requires_human_review: true, category: "visible smoke" } } },
     flagged("visible smoke"),
   ]);
   assert.deepEqual(counts, {

@@ -24,7 +24,7 @@ body[data-product="ignis"] {
   --accent: #d92b2b;
 }
 
-body[data-product="sanitas"] {
+body[data-product="medicus"] {
   --accent: #5da864;
 }
 
@@ -299,12 +299,12 @@ button:disabled {
   color: #d92b2b;
 }
 
-.product-option[data-product-option="sanitas"]:has(input:checked) {
+.product-option[data-product-option="medicus"]:has(input:checked) {
   border-color: #5da864;
   box-shadow: inset 0 0 0 1px #5da864;
 }
 
-.product-option[data-product-option="sanitas"]:has(input:checked) .product-option-name {
+.product-option[data-product-option="medicus"]:has(input:checked) .product-option-name {
   color: #5da864;
 }
 
@@ -449,7 +449,7 @@ select {
   color: #d92b2b;
 }
 
-.assessment-product.assessment-product-sanitas {
+.assessment-product.assessment-product-medicus {
   color: #5da864;
 }
 
@@ -506,10 +506,10 @@ select {
   color: var(--err);
 }
 
-/* M3: a Sanitas history entry's edge uses the Sanitas product accent,
-   not its status color. Scoped to Sanitas entries only, regardless of
+/* M3: a Medicus history entry's edge uses the Medicus product accent,
+   not its status color. Scoped to Medicus entries only, regardless of
    which product is currently selected. */
-.history-item.history-product-sanitas {
+.history-item.history-product-medicus {
   border-left-color: #5da864;
 }
 
@@ -526,7 +526,7 @@ select {
    product's accent for all three products (UI-4). Fixed hex, not
    var(--accent): --accent follows the currently selected product, so a
    fixed value is what keeps each entry's edge on its own product under
-   any selection, exactly like the Sanitas and Ignis rules above. */
+   any selection, exactly like the Medicus and Ignis rules above. */
 .history-item.history-product-vigiles {
   border-left-color: #4f7ec2;
 }
@@ -564,50 +564,50 @@ select {
   }
 }
 
-/* Sanitas theme (Del UI push, Oct 29): green identity with futuristic
-   polish, scoped to body[data-product="sanitas"] only. The base theme
+/* Medicus theme (Del UI push, Oct 29): green identity with futuristic
+   polish, scoped to body[data-product="medicus"] only. The base theme
    above stays flat for the other products; this block never restyles
    Vigiles or Ignis. */
 
-body[data-product="sanitas"] .topbar {
+body[data-product="medicus"] .topbar {
   background: linear-gradient(180deg, rgba(93, 168, 100, 0.16), transparent 75%);
   border-bottom-color: var(--accent);
   box-shadow: 0 1px 0 rgba(93, 168, 100, 0.35);
 }
 
-body[data-product="sanitas"] .product-badge {
+body[data-product="medicus"] .product-badge {
   background: linear-gradient(135deg, #7cc184, #3d8a48);
   color: #0d1a0f;
   border-color: transparent;
   box-shadow: 0 0 14px rgba(93, 168, 100, 0.45);
 }
 
-body[data-product="sanitas"] .panel {
+body[data-product="medicus"] .panel {
   background: linear-gradient(180deg, rgba(93, 168, 100, 0.09), var(--panel) 42%);
   border-color: rgba(93, 168, 100, 0.5);
   box-shadow: 0 0 0 1px rgba(93, 168, 100, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-body[data-product="sanitas"] .btn-primary:not(:disabled) {
+body[data-product="medicus"] .btn-primary:not(:disabled) {
   background: linear-gradient(135deg, #79c180, #3f8f4b);
   border-color: #79c180;
   box-shadow: 0 0 14px rgba(93, 168, 100, 0.35);
 }
 
-body[data-product="sanitas"] .chip {
+body[data-product="medicus"] .chip {
   border-color: rgba(93, 168, 100, 0.55);
   background: rgba(93, 168, 100, 0.1);
 }
 
-body[data-product="sanitas"] .product-option[data-product-option="sanitas"]:has(input:checked) {
+body[data-product="medicus"] .product-option[data-product-option="medicus"]:has(input:checked) {
   border-color: #5da864;
   box-shadow: inset 0 0 0 1px #5da864, 0 0 14px rgba(93, 168, 100, 0.35);
 }
 
-/* M1: break the green collision on Sanitas. Identity green #5da864
+/* M1: break the green collision on Medicus. Identity green #5da864
    stays vivid; the success/connected state goes muted sage, so the two
    are distinguishable. History edges are governed by M3, not this rule. */
-body[data-product="sanitas"] .status[data-state="connected"] {
+body[data-product="medicus"] .status[data-state="connected"] {
   color: #7f9c82;
 }
 
@@ -648,9 +648,9 @@ body[data-product="sanitas"] .status[data-state="connected"] {
 }
 
 /* Ignis theme (Del UI push, Oct 29; R2 + UI-3): red identity polish,
-   scoped to body[data-product="ignis"] only. Mirrors the Sanitas theme
+   scoped to body[data-product="ignis"] only. Mirrors the Medicus theme
    block in Ignis red #d92b2b; this block never restyles Vigiles or
-   Sanitas. The native header carries the matching pieces (flame chip,
+   Medicus. The native header carries the matching pieces (flame chip,
    accent limitations rule); the web panel gradient is the web half
    of R2, and UI-3 completes the web theme with the topbar, badge,
    primary button, chips, and switcher glow. */
@@ -701,7 +701,7 @@ body[data-product="ignis"] .product-option[data-product-option="ignis"]:has(inpu
    wash every panel in the SELECTED product's accent
    (body[data-product] .panel), so a past Ignis assessment shown again
    under Vigiles read flat (Vigiles has no panel gradient), and one
-   shown under Sanitas read green. The native panel washes in the
+   shown under Medicus read green. The native panel washes in the
    assessment's own accent at a flat 0.09; the web rules use the same
    0.09-at-the-top gradient shape the theme blocks already use, with
    fixed rgba values per product, so a switch cannot re-tint a shown
@@ -714,7 +714,7 @@ body[data-product="ignis"] .product-option[data-product-option="ignis"]:has(inpu
    accent at 0.5 — the web counterpart to the native UI-9 panel
    border, which strokes the assessment's own accent at 0.5 for all
    three products. Without it, a redisplayed Ignis assessment kept
-   the selected product's border (Sanitas green under Sanitas, the
+   the selected product's border (Medicus green under Medicus, the
    neutral panel border under Vigiles) while its wash and product
    name already read Ignis red. The border uses the same fixed rgba
    values as the wash, so a switch cannot re-tint it either.
@@ -724,7 +724,7 @@ body[data-product="ignis"] .product-option[data-product-option="ignis"]:has(inpu
    assessment under Vigiles read flat (the base .panel carries no
    shadow and Vigiles has no theme panel shadow) while the native
    panel lifted off the page, and a redisplayed assessment under
-   Ignis or Sanitas kept the SELECTED product's faint 1px accent
+   Ignis or Medicus kept the SELECTED product's faint 1px accent
    ring from the theme shadow, a second, wrong-accent edge next to
    its own-accent border. The drop here is the theme shadow's drop
    half only, 0 8px 24px rgba(0, 0, 0, 0.35), product-neutral black
@@ -743,40 +743,40 @@ body .panel.latest-product-ignis {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-body .panel.latest-product-sanitas {
+body .panel.latest-product-medicus {
   background: linear-gradient(180deg, rgba(93, 168, 100, 0.09), var(--panel) 42%);
   border-color: rgba(93, 168, 100, 0.5);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-/* Sanitas ops-console pass (Del UI direction, Oct 29): modern, elite,
+/* Medicus ops-console pass (Del UI direction, Oct 29): modern, elite,
    professional dispatch-console feel, scoped to
-   body[data-product="sanitas"] only. Additive sharpness on top of the
+   body[data-product="medicus"] only. Additive sharpness on top of the
    existing green theme: uppercase section labels, mono status readouts,
    sharper buttons, framed console readouts. Nothing here touches the
    disclosures, the limitations banner, the spinning background, the
    contract, or any Spark gate; Vigiles and Ignis are untouched. */
 
-body[data-product="sanitas"] .panel h2 {
+body[data-product="medicus"] .panel h2 {
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
-body[data-product="sanitas"] .subhead {
+body[data-product="medicus"] .subhead {
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
-body[data-product="sanitas"] .status {
+body[data-product="medicus"] .status {
   font-family: var(--mono);
   letter-spacing: 0.02em;
 }
 
-body[data-product="sanitas"] .btn-primary {
+body[data-product="medicus"] .btn-primary {
   border-radius: 3px;
 }
 
-body[data-product="sanitas"] .mono-block {
+body[data-product="medicus"] .mono-block {
   border: 1px solid rgba(93, 168, 100, 0.4);
   background: rgba(0, 0, 0, 0.25);
 }
@@ -784,7 +784,7 @@ body[data-product="sanitas"] .mono-block {
    modern/elite/professional dispatch/ops-console piece for Ignis.
    Panel headings become console section labels — uppercase mono
    with wide tracking and a red accent tick — scoped to
-   body[data-product="ignis"] only, so Vigiles and Sanitas are
+   body[data-product="ignis"] only, so Vigiles and Medicus are
    untouched. Size and weight deliberately stay at the base 15px/700:
    the base .panel h2 rule still owns those, so native parity holds
    and the existing web-contract tests keep passing. The spinning
@@ -799,7 +799,7 @@ body[data-product="ignis"] .panel h2 {
 }
 /* IGNIS-ONEOFONE-1 (Del's one-of-one bar, Oct 29): the Ignis
    look-alike scoreboard panel shows only under Ignis. It counts
-   recorded assessments, so under Vigiles or Sanitas — where it could
+   recorded assessments, so under Vigiles or Medicus — where it could
    never show that product's data — it stays hidden rather than
    reading zeros for the wrong product. The h2 already carries the
    OPS-CONSOLE-1 console treatment under Ignis; this block only owns
@@ -812,7 +812,7 @@ body[data-product="ignis"] .ignis-scoreboard-panel {
 }
 /* IGNIS-ONEOFONE-2 (Del's one-of-one bar, Oct 29): the Ignis
    reported-confidence panel shows only under Ignis, same rule as
-   the scoreboard above — under Vigiles or Sanitas it could never
+   the scoreboard above — under Vigiles or Medicus it could never
    show that product's data, so it stays hidden rather than reading
    zeros for the wrong product. This block only owns visibility. No
    contract, server, or Spark-gate change. */
@@ -825,7 +825,7 @@ body[data-product="ignis"] .ignis-confidence-panel {
 /* IGNIS-ONEOFONE-3 (Del's one-of-one bar, Oct 29): the Ignis
    review-queue panel shows only under Ignis, same rule as the
    scoreboard and confidence panels above — under Vigiles or
-   Sanitas it could never show that product's data, so it stays
+   Medicus it could never show that product's data, so it stays
    hidden rather than reading zeros for the wrong product. This
    block only owns visibility. No contract, server, or Spark-gate
    change. */
@@ -838,7 +838,7 @@ body[data-product="ignis"] .ignis-review-queue-panel {
 /* IGNIS-ONEOFONE-4 (Del's one-of-one bar, Oct 29): the Ignis
    evidence-transparency panel shows only under Ignis, same rule as
    the scoreboard, confidence, and review-queue panels above — under
-   Vigiles or Sanitas it could never show that product's data, so it
+   Vigiles or Medicus it could never show that product's data, so it
    stays hidden rather than reading zeros for the wrong product.
    This block only owns visibility. No contract, server, or
    Spark-gate change. */
@@ -851,7 +851,7 @@ body[data-product="ignis"] .ignis-evidence-panel {
 /* IGNIS-ONEOFONE-5 (Del's one-of-one bar, Oct 29): the Ignis
    uncertainty-disclosure panel shows only under Ignis, same rule as
    the scoreboard, confidence, review-queue, and evidence panels
-   above — under Vigiles or Sanitas it could never show that
+   above — under Vigiles or Medicus it could never show that
    product's data, so it stays hidden rather than reading zeros for
    the wrong product. This block only owns visibility. No contract,
    server, or Spark-gate change. */
@@ -864,7 +864,7 @@ body[data-product="ignis"] .ignis-uncertainty-panel {
 /* IGNIS-ONEOFONE-6 (Del's one-of-one bar, Oct 29): the Ignis
    review-triage panel shows only under Ignis, same rule as the
    scoreboard, confidence, review-queue, evidence, and uncertainty
-   panels above — under Vigiles or Sanitas it could never show that
+   panels above — under Vigiles or Medicus it could never show that
    product's data, so it stays hidden rather than reading zeros for
    the wrong product. This block only owns visibility. No contract,
    server, or Spark-gate change. */
@@ -877,7 +877,7 @@ body[data-product="ignis"] .ignis-review-triage-panel {
 /* IGNIS-ONEOFONE-7 (Del's one-of-one bar, Oct 29): the Ignis
    observation-classes panel shows only under Ignis, same rule as
    the scoreboard, confidence, review-queue, evidence, uncertainty,
-   and review-triage panels above — under Vigiles or Sanitas it
+   and review-triage panels above — under Vigiles or Medicus it
    could never show that product's data, so it stays hidden rather
    than reading zeros for the wrong product. This block only owns
    visibility. No contract, server, or Spark-gate change. */
@@ -892,7 +892,7 @@ body[data-product="ignis"] .ignis-observation-categories-panel {
    model-attribution panel shows only under Ignis, same rule as
    the scoreboard, confidence, review-queue, evidence, uncertainty,
    review-triage, and observation-classes panels above — under
-   Vigiles or Sanitas it could never show that product's data, so
+   Vigiles or Medicus it could never show that product's data, so
    it stays hidden rather than reading zeros for the wrong product.
    This block only owns visibility. No contract, server, or
    Spark-gate change. */
@@ -906,7 +906,7 @@ body[data-product="ignis"] .ignis-model-attribution-panel {
 /* IGNIS-ONEOFONE-9 (Del's one-of-one bar, Oct 29): the Ignis
    footage-source panel follows the same visibility rule as the
    other Ignis-only panels — hidden unless Ignis is the selected
-   product, so under Vigiles or Sanitas it could never show that
+   product, so under Vigiles or Medicus it could never show that
    product's data, so it stays hidden rather than reading zeros
    for the wrong product. This block only owns visibility. No
    contract, server, or Spark-gate change. */
@@ -948,17 +948,17 @@ body[data-product="ignis"] .ignis-review-source-panel {
 /* OPS-CONSOLE-3 (Del UI direction, Oct 29): second web-first
    dispatch/ops-console piece for Ignis, extending OPS-CONSOLE-1's
    panel headings to the rest of the console surface — the same four
-   elements Milo's Sanitas ops-console pass treated, in Ignis terms.
+   elements Milo's Medicus ops-console pass treated, in Ignis terms.
    Subheads widen from the base 0.05em to 0.08em console tracking
    (still below the h2's 0.12em, so heading hierarchy holds; size,
    weight, and color stay at the base rule). Status lines read in
-   mono with 0.02em tracking, like the Sanitas readout — font and
+   mono with 0.02em tracking, like the Medicus readout — font and
    tracking only, never a color change, so product red stays an
    accent and never becomes a status color. Primary buttons sharpen
-   to a 3px radius, matching the Sanitas console buttons. The
+   to a 3px radius, matching the Medicus console buttons. The
    latest-assessment readout frames in Ignis red at 0.4 over a dark
-   0.25 fill, the Sanitas frame's shape in Ignis red. All scoped to
-   body[data-product="ignis"] only, so Vigiles and Sanitas are
+   0.25 fill, the Medicus frame's shape in Ignis red. All scoped to
+   body[data-product="ignis"] only, so Vigiles and Medicus are
    untouched; disclosures, limitations banner, spinning background,
    contract, and Spark gates are untouched. */
 body[data-product="ignis"] .subhead {
@@ -981,11 +981,11 @@ body[data-product="ignis"] .mono-block {
 
 /* OPS-CONSOLE-6 (Del UI direction, Oct 29): third web-first
    dispatch/ops-console piece, extending the direction Milo's
-   Sanitas pass set and OPS-CONSOLE-1/3 carried to Ignis, to the
+   Medicus pass set and OPS-CONSOLE-1/3 carried to Ignis, to the
    last product without it — Vigiles, in Vigiles blue. Panel
    headings become console section labels — uppercase mono with
    wide tracking and a blue accent tick — scoped to
-   body[data-product="vigiles"] only, so Ignis and Sanitas are
+   body[data-product="vigiles"] only, so Ignis and Medicus are
    untouched. Size and weight deliberately stay at the base
    15px/700: the base .panel h2 rule still owns those, so native
    parity holds and the existing web-contract tests keep passing.
@@ -995,9 +995,9 @@ body[data-product="ignis"] .mono-block {
    mono with 0.02em tracking — font and tracking only, never a
    color change, so product blue stays an accent and never becomes
    a status color. Primary buttons sharpen to a 3px radius,
-   matching the Sanitas and Ignis console buttons. The
+   matching the Medicus and Ignis console buttons. The
    latest-assessment readout frames in Vigiles blue at 0.4 over a
-   dark 0.25 fill, the Sanitas frame's shape in Vigiles blue. The
+   dark 0.25 fill, the Medicus frame's shape in Vigiles blue. The
    spinning ASCII background, disclosures, and limitations banner
    are untouched; contract and Spark gates are untouched. */
 body[data-product="vigiles"] .panel h2 {

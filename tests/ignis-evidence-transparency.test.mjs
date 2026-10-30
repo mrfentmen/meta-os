@@ -69,7 +69,7 @@ test("evidence transparency: failures and other products move no bucket", () => 
     { status: "failed", product: "ignis", response: { observations: [obs("x")] } },
     { status: "network_error", product: "ignis", response: { observations: [obs("x")] } },
     ok("vigiles", { observations: [obs("x")] }),
-    ok("sanitas", { observations: [obs("x")] }),
+    ok("medicus", { observations: [obs("x")] }),
     ok("ignis", { observations: [obs("x")] }),
   ]);
   assert.deepEqual(counts, {

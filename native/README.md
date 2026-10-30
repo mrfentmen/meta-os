@@ -1,4 +1,4 @@
-# MetaTrio — native macOS app (Vigiles · Ignis · Sanitas)
+# MetaTrio — native macOS app (Vigiles · Ignis · Medicus)
 
 One native SwiftUI macOS application hosting all three products behind a
 product switcher, on the shared foundation defined in
@@ -7,7 +7,7 @@ product switcher, on the shared foundation defined in
 - **Meta Vigiles** — NYPD-oriented visual incident awareness (live camera).
 - **Meta Ignis** — FDNY-oriented fire/smoke hazard awareness (camera aimed at
   prerecorded footage or safe demonstrations — never a real fire).
-- **Meta Sanitas** — Department of Sanitation-oriented sanitation observation.
+- **Meta Medicus** — FDNY EMS-oriented scene awareness.
 
 This is a demo-grade prototype: no App Store, no notarization, ad-hoc
 signing only. It compiles and runs on a Mac with Xcode; we iterate by
@@ -21,7 +21,7 @@ rebuilding.
 
 ## What the app does
 
-- Product switcher (Vigiles / Ignis / Sanitas) with per-product identity,
+- Product switcher (Vigiles / Ignis / Medicus) with per-product identity,
   categories, evaluation scenarios, input guidance, and a limitations
   notice that is always on screen. Switching products applies to the
   next sampled frame (web parity): a running analysis keeps running,
@@ -32,7 +32,7 @@ rebuilding.
 - Live camera preview via AVFoundation, with honest states: permission
   denied, no camera, camera error — shown as themselves, never papered over.
 - Still-image input (web parity): an image-only file picker for
-  prerecorded or photographed scenes — the input the Ignis and Sanitas
+  prerecorded or photographed scenes — the input the Ignis and Medicus
   demos use when a live camera is not the source. The chosen image is
   previewed in memory, sent once through the same submit path as a live
   frame (same endpoint, same v2 validation, same timeline entry, same
@@ -99,7 +99,7 @@ rebuilding.
   error when the backend failed, and "No assessment received yet" only
   when nothing has been attempted; the timeline says analysis is running
   instead of looking empty. The assessment header shows the product's
-  display name (Meta Vigiles / Ignis / Sanitas), not the raw contract key.
+  display name (Meta Vigiles / Ignis / Medicus), not the raw contract key.
 - VoiceOver labels matching the web frontend (web parity): the product
   picker, camera preview (with a plain-words camera state), still-image
   and video panels, settings fields, assessment header and observations,
@@ -238,7 +238,7 @@ live in the window, the endpoint is editable at runtime.
   Default: `http://localhost:8080/api/assess`.
 - The server is Agent 2's lane and is **not** part of this folder. It holds
   the Meta API key server-side; the key never enters this app.
-- Request: `POST {"product": "vigiles|ignis|sanitas", "timestamp":
+- Request: `POST {"product": "vigiles|ignis|medicus", "timestamp":
   "<ISO-8601>", "image": "data:image/jpeg;base64,..."}`
 - Response: the v2 assessment JSON above, or `{"error": "..."}`.
 - Health: `GET` the same base with `/api/assess` swapped for

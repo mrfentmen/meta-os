@@ -1,6 +1,6 @@
 // Meta Trio frontend wiring. Connects camera -> sampler -> analysis
 // client -> event display + session log, for whichever of the three
-// products (Vigiles, Ignis, Sanitas) is selected. This module contains no
+// products (Vigiles, Ignis, Medicus) is selected. This module contains no
 // detection logic and no sample data: if the backend is unreachable, the
 // UI shows the error and nothing else.
 
@@ -181,7 +181,7 @@ const log = new SessionLog({
 });
 
 // Contacts directory (Del direction 2026-10-29: Milo leads contacts,
-// Sanitas first). Same local-only storage pattern as the session log:
+// Medicus first). Same local-only storage pattern as the session log:
 // entries survive a reload, and an unavailable store leaves the panel
 // working in memory. Nothing here sends or notifies anyone.
 const contacts = new ContactsStore({
@@ -343,7 +343,7 @@ function updateLogStats() {
   els.logStats.textContent = `Session log entries: ${log.count}`;
   const stats = log.stats();
   els.logStatsByProduct.textContent =
-    `Assessments by product: Vigiles ${stats.byProduct.vigiles} · Ignis ${stats.byProduct.ignis} · Sanitas ${stats.byProduct.sanitas} · Failed ${stats.failed}`;
+    `Assessments by product: Vigiles ${stats.byProduct.vigiles} · Ignis ${stats.byProduct.ignis} · Medicus ${stats.byProduct.medicus} · Failed ${stats.failed}`;
   // DETAIL-34: the failed-by-product line breaks DETAIL-1's
   // global failed total down per product — the failure mirror
   // of the per-product ok counts, and the count behind
@@ -353,7 +353,7 @@ function updateLogStats() {
   // unknown or missing product still counts in DETAIL-1's
   // global total but moves no bucket here.
   els.logStatsFailedByProduct.textContent =
-    `Failed by product: Vigiles ${stats.failedCountByProduct.vigiles} · Ignis ${stats.failedCountByProduct.ignis} · Sanitas ${stats.failedCountByProduct.sanitas}`;
+    `Failed by product: Vigiles ${stats.failedCountByProduct.vigiles} · Ignis ${stats.failedCountByProduct.ignis} · Medicus ${stats.failedCountByProduct.medicus}`;
   // DETAIL-2: the failure line breaks the same failed total down by
   // recorded cause, from the same stats() call — no new data, no
   // sampling, no model. It always renders (zeros included), like the
@@ -404,42 +404,42 @@ function updateLogStats() {
   // other stats lines, so a quiet product never changes the panel's
   // shape, and failures never move a bucket.
   els.logStatsLastOkByProduct.textContent =
-    `Last success by product: Vigiles ${stats.lastOkAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastOkAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastOkAtByProduct.sanitas ?? "none"}`;
+    `Last success by product: Vigiles ${stats.lastOkAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastOkAtByProduct.ignis ?? "none"} · Medicus ${stats.lastOkAtByProduct.medicus ?? "none"}`;
   // DETAIL-18: the per-product first-success line opens DETAIL-5's
   // last-success line — each product's first recorded success by
   // its request timestamp, or "none" per product with no success —
   // same always-renders shape as the other stats lines, and
   // failures never move a bucket.
   els.logStatsFirstOkByProduct.textContent =
-    `First success by product: Vigiles ${stats.firstOkAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstOkAtByProduct.ignis ?? "none"} · Sanitas ${stats.firstOkAtByProduct.sanitas ?? "none"}`;
+    `First success by product: Vigiles ${stats.firstOkAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstOkAtByProduct.ignis ?? "none"} · Medicus ${stats.firstOkAtByProduct.medicus ?? "none"}`;
   // DETAIL-7: the per-product last-failure line mirrors DETAIL-5 on
   // the failure side — each product's most recent recorded failure
   // by its request timestamp, or "none" per product with no failure
   // — same always-renders shape as the other stats lines, and
   // successes never move a bucket.
   els.logStatsLastFailedByProduct.textContent =
-    `Last failure by product: Vigiles ${stats.lastFailedAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastFailedAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastFailedAtByProduct.sanitas ?? "none"}`;
+    `Last failure by product: Vigiles ${stats.lastFailedAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastFailedAtByProduct.ignis ?? "none"} · Medicus ${stats.lastFailedAtByProduct.medicus ?? "none"}`;
   // DETAIL-19: the per-product first-failure line opens DETAIL-7's
   // last-failure line — each product's first recorded failure by
   // its request timestamp, or "none" per product with no failure —
   // same always-renders shape as the other stats lines, and
   // successes never move a bucket.
   els.logStatsFirstFailedByProduct.textContent =
-    `First failure by product: Vigiles ${stats.firstFailedAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstFailedAtByProduct.ignis ?? "none"} · Sanitas ${stats.firstFailedAtByProduct.sanitas ?? "none"}`;
+    `First failure by product: Vigiles ${stats.firstFailedAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstFailedAtByProduct.ignis ?? "none"} · Medicus ${stats.firstFailedAtByProduct.medicus ?? "none"}`;
   // DETAIL-8: the per-product average-latency line splits DETAIL-4's
   // mean per product, rounded to whole milliseconds, or "none" per
   // product with no success carrying a usable latency — same
   // always-renders shape as the other stats lines, and failures
   // never contribute to any bucket.
   els.logStatsAvgLatencyByProduct.textContent =
-    `Average successful latency by product: Vigiles ${stats.avgOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.avgOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.ignis)} ms`} · Sanitas ${stats.avgOkLatencyMsByProduct.sanitas === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.sanitas)} ms`}`;
+    `Average successful latency by product: Vigiles ${stats.avgOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.avgOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.ignis)} ms`} · Medicus ${stats.avgOkLatencyMsByProduct.medicus === null ? "none" : `${Math.round(stats.avgOkLatencyMsByProduct.medicus)} ms`}`;
   // DETAIL-9: the per-product failures-by-cause line splits
   // DETAIL-2's cause breakdown per product, from the same stats()
   // call — same always-renders shape as the other stats lines, so
   // a product with no failure of a cause reads zero, never a
   // missing bucket, and successes never move a bucket.
   els.logStatsFailuresByProduct.textContent =
-    `Failures by cause by product: Vigiles Network ${stats.failedByStatusByProduct.vigiles.network_error}, HTTP ${stats.failedByStatusByProduct.vigiles.http_error}, Invalid response ${stats.failedByStatusByProduct.vigiles.invalid_response} · Ignis Network ${stats.failedByStatusByProduct.ignis.network_error}, HTTP ${stats.failedByStatusByProduct.ignis.http_error}, Invalid response ${stats.failedByStatusByProduct.ignis.invalid_response} · Sanitas Network ${stats.failedByStatusByProduct.sanitas.network_error}, HTTP ${stats.failedByStatusByProduct.sanitas.http_error}, Invalid response ${stats.failedByStatusByProduct.sanitas.invalid_response}`;
+    `Failures by cause by product: Vigiles Network ${stats.failedByStatusByProduct.vigiles.network_error}, HTTP ${stats.failedByStatusByProduct.vigiles.http_error}, Invalid response ${stats.failedByStatusByProduct.vigiles.invalid_response} · Ignis Network ${stats.failedByStatusByProduct.ignis.network_error}, HTTP ${stats.failedByStatusByProduct.ignis.http_error}, Invalid response ${stats.failedByStatusByProduct.ignis.invalid_response} · Medicus Network ${stats.failedByStatusByProduct.medicus.network_error}, HTTP ${stats.failedByStatusByProduct.medicus.http_error}, Invalid response ${stats.failedByStatusByProduct.medicus.invalid_response}`;
   // DETAIL-10: the per-product latency-range line splits DETAIL-6's
   // range per product, rounded to whole milliseconds, or "none" per
   // product with no success carrying a usable latency — same
@@ -447,33 +447,33 @@ function updateLogStats() {
   // never contribute to any bucket. Min null implies max null per
   // bucket by construction, so one check covers both ends.
   els.logStatsLatencyRangeByProduct.textContent =
-    `Fastest/slowest successful latency by product: Vigiles ${stats.minOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.vigiles)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.minOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.ignis)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.ignis)} ms`} · Sanitas ${stats.minOkLatencyMsByProduct.sanitas === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.sanitas)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.sanitas)} ms`}`;
+    `Fastest/slowest successful latency by product: Vigiles ${stats.minOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.vigiles)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.minOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.ignis)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.ignis)} ms`} · Medicus ${stats.minOkLatencyMsByProduct.medicus === null ? "none" : `${Math.round(stats.minOkLatencyMsByProduct.medicus)} ms / ${Math.round(stats.maxOkLatencyMsByProduct.medicus)} ms`}`;
   // DETAIL-11: the per-product successful-share line splits each
   // product's own entries into the share that succeeded, rendered
   // as a whole percent, or "none" per product with no entries —
   // same always-renders shape as the other stats lines, and a
   // product that only failed reads 0%, never "none".
   els.logStatsOkShareByProduct.textContent =
-    `Successful share by product: Vigiles ${stats.okShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareByProduct.ignis === null ? "none" : `${Math.round(stats.okShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareByProduct.sanitas * 100)}%`}`;
+    `Successful share by product: Vigiles ${stats.okShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareByProduct.ignis === null ? "none" : `${Math.round(stats.okShareByProduct.ignis * 100)}%`} · Medicus ${stats.okShareByProduct.medicus === null ? "none" : `${Math.round(stats.okShareByProduct.medicus * 100)}%`}`;
   // DETAIL-12: the mirror line — each product's own entries split
   // into the share that failed, rendered as a whole percent, or
   // "none" per product with no entries. A product that only
   // succeeded reads 0%, never "none".
   els.logStatsFailedShareByProduct.textContent =
-    `Failed share by product: Vigiles ${stats.failedShareByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareByProduct.ignis * 100)}%`} · Sanitas ${stats.failedShareByProduct.sanitas === null ? "none" : `${Math.round(stats.failedShareByProduct.sanitas * 100)}%`}`;
+    `Failed share by product: Vigiles ${stats.failedShareByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareByProduct.ignis * 100)}%`} · Medicus ${stats.failedShareByProduct.medicus === null ? "none" : `${Math.round(stats.failedShareByProduct.medicus * 100)}%`}`;
   // DETAIL-13: the session-mix line — each product's entries as a
   // share of the session total, rendered as a whole percent, or
   // "none" per product only on an empty log. A product with no
   // entries in a non-empty session reads 0%, never "none".
   els.logStatsEntryShareByProduct.textContent =
-    `Session share by product: Vigiles ${stats.entryShareByProduct.vigiles === null ? "none" : `${Math.round(stats.entryShareByProduct.vigiles * 100)}%`} · Ignis ${stats.entryShareByProduct.ignis === null ? "none" : `${Math.round(stats.entryShareByProduct.ignis * 100)}%`} · Sanitas ${stats.entryShareByProduct.sanitas === null ? "none" : `${Math.round(stats.entryShareByProduct.sanitas * 100)}%`}`;
+    `Session share by product: Vigiles ${stats.entryShareByProduct.vigiles === null ? "none" : `${Math.round(stats.entryShareByProduct.vigiles * 100)}%`} · Ignis ${stats.entryShareByProduct.ignis === null ? "none" : `${Math.round(stats.entryShareByProduct.ignis * 100)}%`} · Medicus ${stats.entryShareByProduct.medicus === null ? "none" : `${Math.round(stats.entryShareByProduct.medicus * 100)}%`}`;
   // DETAIL-14: the per-product entry-count line exposes the
   // counts behind DETAIL-13's shares — ok plus failed per
   // product, always-rendered zeros, so a product that only
   // failed still shows its full count here, unlike DETAIL-1's
   // success-only line.
   els.logStatsEntryCountByProduct.textContent =
-    `Entries by product: Vigiles ${stats.entryCountByProduct.vigiles} · Ignis ${stats.entryCountByProduct.ignis} · Sanitas ${stats.entryCountByProduct.sanitas}`;
+    `Entries by product: Vigiles ${stats.entryCountByProduct.vigiles} · Ignis ${stats.entryCountByProduct.ignis} · Medicus ${stats.entryCountByProduct.medicus}`;
   // DETAIL-15: the per-product first-entry line names each
   // product's first recorded entry by its request timestamp, any
   // status — the opening counterpart to DETAIL-5/7's last-success
@@ -482,7 +482,7 @@ function updateLogStats() {
   // other stats lines, so a quiet product never changes the
   // panel's shape.
   els.logStatsFirstEntryByProduct.textContent =
-    `First entry by product: Vigiles ${stats.firstEntryAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstEntryAtByProduct.ignis ?? "none"} · Sanitas ${stats.firstEntryAtByProduct.sanitas ?? "none"}`;
+    `First entry by product: Vigiles ${stats.firstEntryAtByProduct.vigiles ?? "none"} · Ignis ${stats.firstEntryAtByProduct.ignis ?? "none"} · Medicus ${stats.firstEntryAtByProduct.medicus ?? "none"}`;
   // DETAIL-16: the per-product last-entry line names each
   // product's most recent recorded entry by its request timestamp,
   // any status — the closing counterpart to DETAIL-15's first-entry
@@ -490,7 +490,7 @@ function updateLogStats() {
   // timestamp, same always-renders shape as the other stats lines,
   // so a quiet product never changes the panel's shape.
   els.logStatsLastEntryByProduct.textContent =
-    `Last entry by product: Vigiles ${stats.lastEntryAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastEntryAtByProduct.ignis ?? "none"} · Sanitas ${stats.lastEntryAtByProduct.sanitas ?? "none"}`;
+    `Last entry by product: Vigiles ${stats.lastEntryAtByProduct.vigiles ?? "none"} · Ignis ${stats.lastEntryAtByProduct.ignis ?? "none"} · Medicus ${stats.lastEntryAtByProduct.medicus ?? "none"}`;
   // DETAIL-17: the per-product entry-span line names each
   // product's first-to-last recorded stretch in whole
   // milliseconds — the span DETAIL-15/16's endpoints imply but do
@@ -498,7 +498,7 @@ function updateLogStats() {
   // same always-renders shape as the other stats lines, so a
   // quiet product never changes the panel's shape.
   els.logStatsEntrySpanByProduct.textContent =
-    `Entry span by product: Vigiles ${stats.entrySpanMsByProduct.vigiles === null ? "none" : `${stats.entrySpanMsByProduct.vigiles} ms`} · Ignis ${stats.entrySpanMsByProduct.ignis === null ? "none" : `${stats.entrySpanMsByProduct.ignis} ms`} · Sanitas ${stats.entrySpanMsByProduct.sanitas === null ? "none" : `${stats.entrySpanMsByProduct.sanitas} ms`}`;
+    `Entry span by product: Vigiles ${stats.entrySpanMsByProduct.vigiles === null ? "none" : `${stats.entrySpanMsByProduct.vigiles} ms`} · Ignis ${stats.entrySpanMsByProduct.ignis === null ? "none" : `${stats.entrySpanMsByProduct.ignis} ms`} · Medicus ${stats.entrySpanMsByProduct.medicus === null ? "none" : `${stats.entrySpanMsByProduct.medicus} ms`}`;
   // DETAIL-20: the per-product failure-span line names each
   // product's first-to-last recorded failure stretch in whole
   // milliseconds — the span DETAIL-19/7's endpoints imply but do
@@ -506,7 +506,7 @@ function updateLogStats() {
   // same always-renders shape as the other stats lines, so a
   // quiet product never changes the panel's shape.
   els.logStatsFailedSpanByProduct.textContent =
-    `Failure span by product: Vigiles ${stats.failedSpanMsByProduct.vigiles === null ? "none" : `${stats.failedSpanMsByProduct.vigiles} ms`} · Ignis ${stats.failedSpanMsByProduct.ignis === null ? "none" : `${stats.failedSpanMsByProduct.ignis} ms`} · Sanitas ${stats.failedSpanMsByProduct.sanitas === null ? "none" : `${stats.failedSpanMsByProduct.sanitas} ms`}`;
+    `Failure span by product: Vigiles ${stats.failedSpanMsByProduct.vigiles === null ? "none" : `${stats.failedSpanMsByProduct.vigiles} ms`} · Ignis ${stats.failedSpanMsByProduct.ignis === null ? "none" : `${stats.failedSpanMsByProduct.ignis} ms`} · Medicus ${stats.failedSpanMsByProduct.medicus === null ? "none" : `${stats.failedSpanMsByProduct.medicus} ms`}`;
   // DETAIL-21: the per-product success-span line names each
   // product's first-to-last recorded success stretch in whole
   // milliseconds — the span DETAIL-18/5's endpoints imply but do
@@ -514,7 +514,7 @@ function updateLogStats() {
   // same always-renders shape as the other stats lines, so a
   // quiet product never changes the panel's shape.
   els.logStatsOkSpanByProduct.textContent =
-    `Success span by product: Vigiles ${stats.okSpanMsByProduct.vigiles === null ? "none" : `${stats.okSpanMsByProduct.vigiles} ms`} · Ignis ${stats.okSpanMsByProduct.ignis === null ? "none" : `${stats.okSpanMsByProduct.ignis} ms`} · Sanitas ${stats.okSpanMsByProduct.sanitas === null ? "none" : `${stats.okSpanMsByProduct.sanitas} ms`}`;
+    `Success span by product: Vigiles ${stats.okSpanMsByProduct.vigiles === null ? "none" : `${stats.okSpanMsByProduct.vigiles} ms`} · Ignis ${stats.okSpanMsByProduct.ignis === null ? "none" : `${stats.okSpanMsByProduct.ignis} ms`} · Medicus ${stats.okSpanMsByProduct.medicus === null ? "none" : `${stats.okSpanMsByProduct.medicus} ms`}`;
   // DETAIL-22: the global success-span line names the session's
   // first-to-last recorded success stretch in whole milliseconds
   // — the span the per-product DETAIL-21 line implies but does
@@ -588,7 +588,7 @@ function updateLogStats() {
   // same always-renders shape as the other stats lines, so a
   // quiet session never changes the panel's shape.
   els.logStatsMedianLatencyByProduct.textContent =
-    `Median successful latency by product: Vigiles ${stats.medianOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.medianOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.medianOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.medianOkLatencyMsByProduct.ignis)} ms`} · Sanitas ${stats.medianOkLatencyMsByProduct.sanitas === null ? "none" : `${Math.round(stats.medianOkLatencyMsByProduct.sanitas)} ms`}`;
+    `Median successful latency by product: Vigiles ${stats.medianOkLatencyMsByProduct.vigiles === null ? "none" : `${Math.round(stats.medianOkLatencyMsByProduct.vigiles)} ms`} · Ignis ${stats.medianOkLatencyMsByProduct.ignis === null ? "none" : `${Math.round(stats.medianOkLatencyMsByProduct.ignis)} ms`} · Medicus ${stats.medianOkLatencyMsByProduct.medicus === null ? "none" : `${Math.round(stats.medianOkLatencyMsByProduct.medicus)} ms`}`;
   // DETAIL-29: the per-product failure-cause-share line splits
   // DETAIL-9's counts into shares of all failures in the
   // session, rendered as whole percents, or "none" per cell
@@ -597,7 +597,7 @@ function updateLogStats() {
   // as the other stats lines, so a quiet session never changes
   // the panel's shape, and successes never move a cell.
   els.logStatsFailedShareByStatusByProduct.textContent =
-    `Failure-cause share of all failures by product: Vigiles Network ${stats.failedShareByStatusByProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusByProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusByProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusByProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusByProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusByProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.ignis.invalid_response * 100)}%`} · Sanitas Network ${stats.failedShareByStatusByProduct.sanitas.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.sanitas.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusByProduct.sanitas.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.sanitas.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusByProduct.sanitas.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.sanitas.invalid_response * 100)}%`}`;
+    `Failure-cause share of all failures by product: Vigiles Network ${stats.failedShareByStatusByProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusByProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusByProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusByProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusByProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusByProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.ignis.invalid_response * 100)}%`} · Medicus Network ${stats.failedShareByStatusByProduct.medicus.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.medicus.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusByProduct.medicus.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.medicus.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusByProduct.medicus.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusByProduct.medicus.invalid_response * 100)}%`}`;
   // DETAIL-31: the global failure-cause-share line collapses
   // DETAIL-29's nine product-cause cells into three shares of
   // all failures, rendered as whole percents, or "none" per
@@ -616,7 +616,7 @@ function updateLogStats() {
   // lines, so a quiet session never changes the panel's shape,
   // and successes never move a cell.
   els.logStatsFailedShareByStatusWithinProduct.textContent =
-    `Failure-cause share of that product's failures: Vigiles Network ${stats.failedShareByStatusWithinProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusWithinProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusWithinProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusWithinProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusWithinProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusWithinProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.ignis.invalid_response * 100)}%`} · Sanitas Network ${stats.failedShareByStatusWithinProduct.sanitas.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.sanitas.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusWithinProduct.sanitas.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.sanitas.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusWithinProduct.sanitas.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.sanitas.invalid_response * 100)}%`}`;
+    `Failure-cause share of that product's failures: Vigiles Network ${stats.failedShareByStatusWithinProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusWithinProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusWithinProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusWithinProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusWithinProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusWithinProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.ignis.invalid_response * 100)}%`} · Medicus Network ${stats.failedShareByStatusWithinProduct.medicus.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.medicus.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusWithinProduct.medicus.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.medicus.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusWithinProduct.medicus.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusWithinProduct.medicus.invalid_response * 100)}%`}`;
   // DETAIL-32: the global first- and last-failure lines name
   // the endpoints DETAIL-23's failure span already spans —
   // the first and last recorded failure timestamps, any
@@ -646,7 +646,7 @@ function updateLogStats() {
   // quiet session never changes the panel's shape, and
   // failures never move a share.
   els.logStatsOkLatencyShareByProduct.textContent =
-    `Successful latency share by product: Vigiles ${stats.okLatencyShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyShareByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.sanitas * 100)}%`}`;
+    `Successful latency share by product: Vigiles ${stats.okLatencyShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyShareByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.ignis * 100)}%`} · Medicus ${stats.okLatencyShareByProduct.medicus === null ? "none" : `${Math.round(stats.okLatencyShareByProduct.medicus * 100)}%`}`;
   // DETAIL-36: the usable-latency count lines name how many
   // successes carried a usable latency, globally and per
   // product — the count behind DETAIL-4's mean and DETAIL-8's
@@ -663,7 +663,7 @@ function updateLogStats() {
   els.logStatsOkLatencyCount.textContent =
     `Successful latencies measured: ${stats.okLatencyCount}`;
   els.logStatsOkLatencyCountByProduct.textContent =
-    `Successful latencies measured by product: Vigiles ${stats.okLatencyCountByProduct.vigiles} · Ignis ${stats.okLatencyCountByProduct.ignis} · Sanitas ${stats.okLatencyCountByProduct.sanitas}`;
+    `Successful latencies measured by product: Vigiles ${stats.okLatencyCountByProduct.vigiles} · Ignis ${stats.okLatencyCountByProduct.ignis} · Medicus ${stats.okLatencyCountByProduct.medicus}`;
   // DETAIL-37: the per-product successful-count-share line
   // re-bases DETAIL-1's ok counts on the session ok total,
   // rendered as whole percents, or "none" per product with no
@@ -672,7 +672,7 @@ function updateLogStats() {
   // as the other stats lines, so a quiet session never changes
   // the panel's shape, and failures never move a share.
   els.logStatsOkShareOfOkByProduct.textContent =
-    `Successful share of successes by product: Vigiles ${stats.okShareOfOkByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfOkByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfOkByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfOkByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareOfOkByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareOfOkByProduct.sanitas * 100)}%`}`;
+    `Successful share of successes by product: Vigiles ${stats.okShareOfOkByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfOkByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfOkByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfOkByProduct.ignis * 100)}%`} · Medicus ${stats.okShareOfOkByProduct.medicus === null ? "none" : `${Math.round(stats.okShareOfOkByProduct.medicus * 100)}%`}`;
   // DETAIL-38: the usable-latency sum lines name the total
   // measured round-trip time, globally and per product — the
   // total behind DETAIL-4's mean, DETAIL-8's per-product
@@ -690,7 +690,7 @@ function updateLogStats() {
   els.logStatsOkLatencySum.textContent =
     `Total successful latency: ${Math.round(stats.okLatencySum)} ms`;
   els.logStatsOkLatencySumByProduct.textContent =
-    `Total successful latency by product: Vigiles ${Math.round(stats.okLatencySumByProduct.vigiles)} ms · Ignis ${Math.round(stats.okLatencySumByProduct.ignis)} ms · Sanitas ${Math.round(stats.okLatencySumByProduct.sanitas)} ms`;
+    `Total successful latency by product: Vigiles ${Math.round(stats.okLatencySumByProduct.vigiles)} ms · Ignis ${Math.round(stats.okLatencySumByProduct.ignis)} ms · Medicus ${Math.round(stats.okLatencySumByProduct.medicus)} ms`;
   // DETAIL-39: the per-product failed-count-share line
   // re-bases DETAIL-34's failed counts on the session
   // failed total, rendered as whole percents, or "none"
@@ -700,7 +700,7 @@ function updateLogStats() {
   // lines, so a quiet session never changes the panel's
   // shape, and successes never move a share.
   els.logStatsFailedShareOfFailedByProduct.textContent =
-    `Failed share of failures by product: Vigiles ${stats.failedShareOfFailedByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareOfFailedByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.ignis * 100)}%`} · Sanitas ${stats.failedShareOfFailedByProduct.sanitas === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.sanitas * 100)}%`}`;
+    `Failed share of failures by product: Vigiles ${stats.failedShareOfFailedByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareOfFailedByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.ignis * 100)}%`} · Medicus ${stats.failedShareOfFailedByProduct.medicus === null ? "none" : `${Math.round(stats.failedShareOfFailedByProduct.medicus * 100)}%`}`;
   // DETAIL-40: the per-product failed-share-of-all-entries
   // line re-bases DETAIL-34's failed counts on the session
   // entry total, rendered as whole percents, or "none" per
@@ -713,7 +713,7 @@ function updateLogStats() {
   // denominator only). A success-only log reads 0% per
   // product, never "none".
   els.logStatsFailedShareOfEntriesByProduct.textContent =
-    `Failed share of all entries by product: Vigiles ${stats.failedShareOfEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareOfEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareOfEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareOfEntriesByProduct.ignis * 100)}%`} · Sanitas ${stats.failedShareOfEntriesByProduct.sanitas === null ? "none" : `${Math.round(stats.failedShareOfEntriesByProduct.sanitas * 100)}%`}`;
+    `Failed share of all entries by product: Vigiles ${stats.failedShareOfEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.failedShareOfEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.failedShareOfEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.failedShareOfEntriesByProduct.ignis * 100)}%`} · Medicus ${stats.failedShareOfEntriesByProduct.medicus === null ? "none" : `${Math.round(stats.failedShareOfEntriesByProduct.medicus * 100)}%`}`;
   // DETAIL-41: the per-product successful-count-share line
   // re-bases DETAIL-1's ok counts on the session entry
   // total, rendered as whole percents, or "none" per product
@@ -724,7 +724,7 @@ function updateLogStats() {
   // quiet session never changes the panel's shape, and
   // failures sit in the denominator but move no bucket.
   els.logStatsOkShareOfTotalByProduct.textContent =
-    `Successful share of all entries by product: Vigiles ${stats.okShareOfTotalByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfTotalByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfTotalByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfTotalByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareOfTotalByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareOfTotalByProduct.sanitas * 100)}%`}`;
+    `Successful share of all entries by product: Vigiles ${stats.okShareOfTotalByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfTotalByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfTotalByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfTotalByProduct.ignis * 100)}%`} · Medicus ${stats.okShareOfTotalByProduct.medicus === null ? "none" : `${Math.round(stats.okShareOfTotalByProduct.medicus * 100)}%`}`;
   // DETAIL-42: the per-product failure-cause-share-of-all-entries
   // line re-bases DETAIL-9's product-cause counts on the session
   // entry total, rendered as whole percents, or "none" per cell
@@ -736,7 +736,7 @@ function updateLogStats() {
   // never move a cell (they sit in the denominator only). A
   // success-only log reads 0% per cell, never "none".
   els.logStatsFailedShareByStatusOfEntriesByProduct.textContent =
-    `Failure-cause share of all entries by product: Vigiles Network ${stats.failedShareByStatusOfEntriesByProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesByProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesByProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusOfEntriesByProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesByProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesByProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.ignis.invalid_response * 100)}%`} · Sanitas Network ${stats.failedShareByStatusOfEntriesByProduct.sanitas.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.sanitas.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesByProduct.sanitas.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.sanitas.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesByProduct.sanitas.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.sanitas.invalid_response * 100)}%`}`;
+    `Failure-cause share of all entries by product: Vigiles Network ${stats.failedShareByStatusOfEntriesByProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesByProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesByProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusOfEntriesByProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesByProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesByProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.ignis.invalid_response * 100)}%`} · Medicus Network ${stats.failedShareByStatusOfEntriesByProduct.medicus.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.medicus.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesByProduct.medicus.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.medicus.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesByProduct.medicus.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesByProduct.medicus.invalid_response * 100)}%`}`;
   // DETAIL-43: the global failure-cause-share-of-all-entries
   // line collapses DETAIL-42's nine product-cause cells into
   // three shares of all entries, rendered as whole percents,
@@ -759,7 +759,7 @@ function updateLogStats() {
   // split of DETAIL-12's per-product failed-share line.
   // A success-only product reads 0% per cause, never "none".
   els.logStatsFailedShareByStatusOfEntriesWithinProduct.textContent =
-    `Failure-cause share of that product's entries by product: Vigiles Network ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.invalid_response * 100)}%`} · Sanitas Network ${stats.failedShareByStatusOfEntriesWithinProduct.sanitas.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.sanitas.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.sanitas.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.sanitas.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.sanitas.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.sanitas.invalid_response * 100)}%`}`;
+    `Failure-cause share of that product's entries by product: Vigiles Network ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.vigiles.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.vigiles.invalid_response * 100)}%`} · Ignis Network ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.ignis.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.ignis.invalid_response * 100)}%`} · Medicus Network ${stats.failedShareByStatusOfEntriesWithinProduct.medicus.network_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.medicus.network_error * 100)}%`}, HTTP ${stats.failedShareByStatusOfEntriesWithinProduct.medicus.http_error === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.medicus.http_error * 100)}%`}, Invalid response ${stats.failedShareByStatusOfEntriesWithinProduct.medicus.invalid_response === null ? "none" : `${Math.round(stats.failedShareByStatusOfEntriesWithinProduct.medicus.invalid_response * 100)}%`}`;
   // DETAIL-45: the per-product usable-latency-count-share
   // line re-bases DETAIL-36's counts on the session's total
   // usable-latency count, rendered as whole percents, or
@@ -769,7 +769,7 @@ function updateLogStats() {
   // most measurements reads differently from one eating
   // most measured time. Failures never move a share.
   els.logStatsOkLatencyCountShareByProduct.textContent =
-    `Successful latency-measurement share by product: Vigiles ${stats.okLatencyCountShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.sanitas * 100)}%`}`;
+    `Successful latency-measurement share by product: Vigiles ${stats.okLatencyCountShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.ignis * 100)}%`} · Medicus ${stats.okLatencyCountShareByProduct.medicus === null ? "none" : `${Math.round(stats.okLatencyCountShareByProduct.medicus * 100)}%`}`;
   // DETAIL-46: the per-product entry-span-share-of-session-window
   // line re-bases DETAIL-17's per-product entry spans on the
   // session's global entry span, rendered as whole percents,
@@ -780,7 +780,7 @@ function updateLogStats() {
   // ran out of insertion order, and the three shares do not
   // sum to 100% because product windows overlap.
   els.logStatsEntrySpanShareByProduct.textContent =
-    `Entry-span share of session window by product: Vigiles ${stats.entrySpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareByProduct.sanitas * 100)}%`}`;
+    `Entry-span share of session window by product: Vigiles ${stats.entrySpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareByProduct.ignis * 100)}%`} · Medicus ${stats.entrySpanShareByProduct.medicus === null ? "none" : `${Math.round(stats.entrySpanShareByProduct.medicus * 100)}%`}`;
   // DETAIL-47: the per-product usable-latency-count-share-
   // of-all-entries line re-bases DETAIL-36's counts on the
   // session's total entries, rendered as whole percents, or
@@ -793,7 +793,7 @@ function updateLogStats() {
   // never move a share; they sit in the denominator only.
   // A failure-only log reads 0% per product, never "none".
   els.logStatsOkLatencyCountShareOfEntriesByProduct.textContent =
-    `Successful latency-measurement share of all entries by product: Vigiles ${stats.okLatencyCountShareOfEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfEntriesByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareOfEntriesByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareOfEntriesByProduct.sanitas * 100)}%`}`;
+    `Successful latency-measurement share of all entries by product: Vigiles ${stats.okLatencyCountShareOfEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfEntriesByProduct.ignis * 100)}%`} · Medicus ${stats.okLatencyCountShareOfEntriesByProduct.medicus === null ? "none" : `${Math.round(stats.okLatencyCountShareOfEntriesByProduct.medicus * 100)}%`}`;
   // DETAIL-48: the per-product ok-span-share-of-ok-window
   // line re-bases DETAIL-21's per-product ok spans on the
   // session's global ok span, rendered as whole percents,
@@ -805,7 +805,7 @@ function updateLogStats() {
   // shares do not sum to 100% because product ok windows
   // overlap. Failures never move a share.
   els.logStatsOkSpanShareByProduct.textContent =
-    `Success-span share of ok window by product: Vigiles ${stats.okSpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareByProduct.sanitas * 100)}%`}`;
+    `Success-span share of ok window by product: Vigiles ${stats.okSpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareByProduct.ignis * 100)}%`} · Medicus ${stats.okSpanShareByProduct.medicus === null ? "none" : `${Math.round(stats.okSpanShareByProduct.medicus * 100)}%`}`;
   // DETAIL-49: the global usable-latency-count-share-
   // of-all-entries line collapses DETAIL-47's three
   // shares into one, rendered as a whole percent, or
@@ -829,7 +829,7 @@ function updateLogStats() {
   // sum to 100% because product failed windows overlap.
   // Successes never move a share.
   els.logStatsFailedSpanShareByProduct.textContent =
-    `Failure-span share of failed window by product: Vigiles ${stats.failedSpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.ignis * 100)}%`} · Sanitas ${stats.failedSpanShareByProduct.sanitas === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.sanitas * 100)}%`}`;
+    `Failure-span share of failed window by product: Vigiles ${stats.failedSpanShareByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.ignis * 100)}%`} · Medicus ${stats.failedSpanShareByProduct.medicus === null ? "none" : `${Math.round(stats.failedSpanShareByProduct.medicus * 100)}%`}`;
   // DETAIL-51: the global usable-latency-count-share-
   // of-ok-successes line re-bases DETAIL-36's global
   // count on the session's ok total, rendered as a whole
@@ -854,7 +854,7 @@ function updateLogStats() {
   // success-only log with no finite latency reads 0% per
   // product, never "none", and failures move no share.
   els.logStatsOkLatencyCountShareOfOkByProduct.textContent =
-    `Successful latency-measurement share of successes by product: Vigiles ${stats.okLatencyCountShareOfOkByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOkByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfOkByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOkByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareOfOkByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOkByProduct.sanitas * 100)}%`}`;
+    `Successful latency-measurement share of successes by product: Vigiles ${stats.okLatencyCountShareOfOkByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOkByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfOkByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOkByProduct.ignis * 100)}%`} · Medicus ${stats.okLatencyCountShareOfOkByProduct.medicus === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOkByProduct.medicus * 100)}%`}`;
   // DETAIL-53: the per-product ok-span-share-of-entry-
   // window line re-bases DETAIL-21's per-product ok spans
   // on the session's global entry span, rendered as whole
@@ -867,7 +867,7 @@ function updateLogStats() {
   // windows overlap. Failures stretch the denominator
   // without moving any bucket.
   els.logStatsOkSpanShareOfEntryWindowByProduct.textContent =
-    `Success-span share of entry window by product: Vigiles ${stats.okSpanShareOfEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareOfEntryWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindowByProduct.sanitas * 100)}%`}`;
+    `Success-span share of entry window by product: Vigiles ${stats.okSpanShareOfEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindowByProduct.ignis * 100)}%`} · Medicus ${stats.okSpanShareOfEntryWindowByProduct.medicus === null ? "none" : `${Math.round(stats.okSpanShareOfEntryWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-54: the per-product usable-latency-count-share-
   // of-that-product's-own-successes line re-bases
   // DETAIL-36's counts on each product's own ok total,
@@ -880,7 +880,7 @@ function updateLogStats() {
   // latency reads 0%, never "none", and failures move
   // no share.
   els.logStatsOkLatencyCountShareOfOwnOkByProduct.textContent =
-    `Successful latency-measurement share of that product's own successes by product: Vigiles ${stats.okLatencyCountShareOfOwnOkByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnOkByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfOwnOkByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnOkByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareOfOwnOkByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnOkByProduct.sanitas * 100)}%`}`;
+    `Successful latency-measurement share of that product's own successes by product: Vigiles ${stats.okLatencyCountShareOfOwnOkByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnOkByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfOwnOkByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnOkByProduct.ignis * 100)}%`} · Medicus ${stats.okLatencyCountShareOfOwnOkByProduct.medicus === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnOkByProduct.medicus * 100)}%`}`;
   // DETAIL-55: the per-product failed-span-share-of-
   // entry-window line re-bases DETAIL-20's per-product
   // failed spans on the session's global entry span,
@@ -895,7 +895,7 @@ function updateLogStats() {
   // product failed windows overlap. Successes stretch
   // the denominator without moving any bucket.
   els.logStatsFailedSpanShareOfEntryWindowByProduct.textContent =
-    `Failure-span share of entry window by product: Vigiles ${stats.failedSpanShareOfEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfEntryWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.failedSpanShareOfEntryWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.failedSpanShareOfEntryWindowByProduct.sanitas * 100)}%`}`;
+    `Failure-span share of entry window by product: Vigiles ${stats.failedSpanShareOfEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfEntryWindowByProduct.ignis * 100)}%`} · Medicus ${stats.failedSpanShareOfEntryWindowByProduct.medicus === null ? "none" : `${Math.round(stats.failedSpanShareOfEntryWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-56 (renumbered after Rowan's distinct DETAIL-55 landed first): the per-product usable-latency-count-share-
   // of-that-product's-own-entries line re-bases
   // DETAIL-36's counts on each product's own entry total,
@@ -908,7 +908,7 @@ function updateLogStats() {
   // latency reads 0%, never "none", and failures sit in
   // the denominator but move no bucket.
   els.logStatsOkLatencyCountShareOfOwnEntriesByProduct.textContent =
-    `Successful latency-measurement share of that product's own entries by product: Vigiles ${stats.okLatencyCountShareOfOwnEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfOwnEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnEntriesByProduct.ignis * 100)}%`} · Sanitas ${stats.okLatencyCountShareOfOwnEntriesByProduct.sanitas === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnEntriesByProduct.sanitas * 100)}%`}`;
+    `Successful latency-measurement share of that product's own entries by product: Vigiles ${stats.okLatencyCountShareOfOwnEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.okLatencyCountShareOfOwnEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnEntriesByProduct.ignis * 100)}%`} · Medicus ${stats.okLatencyCountShareOfOwnEntriesByProduct.medicus === null ? "none" : `${Math.round(stats.okLatencyCountShareOfOwnEntriesByProduct.medicus * 100)}%`}`;
   // DETAIL-57: the global failure-span-share-of-entry-
   // window line re-bases DETAIL-23's global failed span
   // on the session's global entry span, rendered as a
@@ -958,7 +958,7 @@ function updateLogStats() {
   // ratios, never clamped: above 100% or below 0%
   // means timestamps ran out of insertion order.
   els.logStatsFailedSpanShareOfOwnEntryWindowByProduct.textContent =
-    `Failure-span share of that product's own entry window by product: Vigiles ${stats.failedSpanShareOfOwnEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfOwnEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnEntryWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.failedSpanShareOfOwnEntryWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnEntryWindowByProduct.sanitas * 100)}%`}`;
+    `Failure-span share of that product's own entry window by product: Vigiles ${stats.failedSpanShareOfOwnEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfOwnEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnEntryWindowByProduct.ignis * 100)}%`} · Medicus ${stats.failedSpanShareOfOwnEntryWindowByProduct.medicus === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnEntryWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-60: the per-product success-span-share-of-
   // that-product's-own-entry-window line re-bases
   // DETAIL-21's per-product ok spans on each
@@ -974,7 +974,7 @@ function updateLogStats() {
   // ratios, never clamped: above 100% or below 0%
   // means timestamps ran out of insertion order.
   els.logStatsOkSpanShareOfOwnEntryWindowByProduct.textContent =
-    `Success-span share of that product's own entry window by product: Vigiles ${stats.okSpanShareOfOwnEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfOwnEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfOwnEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfOwnEntryWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareOfOwnEntryWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareOfOwnEntryWindowByProduct.sanitas * 100)}%`}`;
+    `Success-span share of that product's own entry window by product: Vigiles ${stats.okSpanShareOfOwnEntryWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfOwnEntryWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfOwnEntryWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfOwnEntryWindowByProduct.ignis * 100)}%`} · Medicus ${stats.okSpanShareOfOwnEntryWindowByProduct.medicus === null ? "none" : `${Math.round(stats.okSpanShareOfOwnEntryWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-61: the per-product success-share-of-
   // that-product's-own-entries line re-bases
   // DETAIL-1's per-product ok counts on each
@@ -989,7 +989,7 @@ function updateLogStats() {
   // reads 0%, never "none", and other products'
   // entries move no share.
   els.logStatsOkShareOfOwnEntriesByProduct.textContent =
-    `Success share of that product's own entries by product: Vigiles ${stats.okShareOfOwnEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfOwnEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.ignis * 100)}%`} · Sanitas ${stats.okShareOfOwnEntriesByProduct.sanitas === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.sanitas * 100)}%`}`;
+    `Success share of that product's own entries by product: Vigiles ${stats.okShareOfOwnEntriesByProduct.vigiles === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.vigiles * 100)}%`} · Ignis ${stats.okShareOfOwnEntriesByProduct.ignis === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.ignis * 100)}%`} · Medicus ${stats.okShareOfOwnEntriesByProduct.medicus === null ? "none" : `${Math.round(stats.okShareOfOwnEntriesByProduct.medicus * 100)}%`}`;
   // DETAIL-62: the per-product failure-span-share-
   // of-that-product's-own-success-window line re-bases
   // DETAIL-20's per-product failed spans on each
@@ -1006,7 +1006,7 @@ function updateLogStats() {
   // clamped: above 100% or below 0% means timestamps
   // ran out of insertion order.
   els.logStatsFailedSpanShareOfOwnOkWindowByProduct.textContent =
-    `Failure-span share of that product's own success window by product: Vigiles ${stats.failedSpanShareOfOwnOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfOwnOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnOkWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.failedSpanShareOfOwnOkWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnOkWindowByProduct.sanitas * 100)}%`}`;
+    `Failure-span share of that product's own success window by product: Vigiles ${stats.failedSpanShareOfOwnOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfOwnOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnOkWindowByProduct.ignis * 100)}%`} · Medicus ${stats.failedSpanShareOfOwnOkWindowByProduct.medicus === null ? "none" : `${Math.round(stats.failedSpanShareOfOwnOkWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-63: the per-product success-span-share-
   // of-that-product's-own-failure-window line re-bases
   // DETAIL-21's per-product ok spans on each
@@ -1022,7 +1022,7 @@ function updateLogStats() {
   // clamped: above 100% or below 0% means timestamps
   // ran out of insertion order.
   els.logStatsOkSpanShareOfOwnFailedWindowByProduct.textContent =
-    `Success-span share of that product's own failure window by product: Vigiles ${stats.okSpanShareOfOwnFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfOwnFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfOwnFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfOwnFailedWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareOfOwnFailedWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareOfOwnFailedWindowByProduct.sanitas * 100)}%`}`;
+    `Success-span share of that product's own failure window by product: Vigiles ${stats.okSpanShareOfOwnFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfOwnFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfOwnFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfOwnFailedWindowByProduct.ignis * 100)}%`} · Medicus ${stats.okSpanShareOfOwnFailedWindowByProduct.medicus === null ? "none" : `${Math.round(stats.okSpanShareOfOwnFailedWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-64: the global success-span-share-of-
   // failure-window line re-bases DETAIL-22's global
   // ok span on DETAIL-23's global failed span,
@@ -1096,7 +1096,7 @@ function updateLogStats() {
   // 100% or below 0% means timestamps ran out of
   // insertion order.
   els.logStatsEntrySpanShareOfOwnOkWindowByProduct.textContent =
-    `Entry-span share of that product's own success window by product: Vigiles ${stats.entrySpanShareOfOwnOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOwnOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfOwnOkWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.sanitas * 100)}%`}`;
+    `Entry-span share of that product's own success window by product: Vigiles ${stats.entrySpanShareOfOwnOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOwnOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.ignis * 100)}%`} · Medicus ${stats.entrySpanShareOfOwnOkWindowByProduct.medicus === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnOkWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-69: the per-product entry-span-share-
   // of-that-product's-own-failure-window line re-bases
   // DETAIL-17's per-product entry spans on each
@@ -1113,7 +1113,7 @@ function updateLogStats() {
   // 100% or below 0% means timestamps ran out of
   // insertion order.
   els.logStatsEntrySpanShareOfOwnFailedWindowByProduct.textContent =
-    `Entry-span share of that product's own failure window by product: Vigiles ${stats.entrySpanShareOfOwnFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOwnFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfOwnFailedWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.sanitas * 100)}%`}`;
+    `Entry-span share of that product's own failure window by product: Vigiles ${stats.entrySpanShareOfOwnFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOwnFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.ignis * 100)}%`} · Medicus ${stats.entrySpanShareOfOwnFailedWindowByProduct.medicus === null ? "none" : `${Math.round(stats.entrySpanShareOfOwnFailedWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-70: the per-product entry-span-share-
   // of-success-window line re-bases DETAIL-17's
   // per-product entry spans on the session's global
@@ -1131,7 +1131,7 @@ function updateLogStats() {
   // case, below 100% or below 0% means timestamps
   // ran out of insertion order.
   els.logStatsEntrySpanShareOfOkWindowByProduct.textContent =
-    `Entry-span share of success window by product: Vigiles ${stats.entrySpanShareOfOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfOkWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindowByProduct.sanitas * 100)}%`}`;
+    `Entry-span share of success window by product: Vigiles ${stats.entrySpanShareOfOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindowByProduct.ignis * 100)}%`} · Medicus ${stats.entrySpanShareOfOkWindowByProduct.medicus === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-71: the per-product entry-span-share-of-
   // the-global-failure-window line re-bases
   // DETAIL-17's per-product entry spans on the
@@ -1149,7 +1149,7 @@ function updateLogStats() {
   // below 100% or below 0% means timestamps ran
   // out of insertion order.
   els.logStatsEntrySpanShareOfFailedWindowByProduct.textContent =
-    `Entry-span share of failure window by product: Vigiles ${stats.entrySpanShareOfFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.entrySpanShareOfFailedWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindowByProduct.sanitas * 100)}%`}`;
+    `Entry-span share of failure window by product: Vigiles ${stats.entrySpanShareOfFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.entrySpanShareOfFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindowByProduct.ignis * 100)}%`} · Medicus ${stats.entrySpanShareOfFailedWindowByProduct.medicus === null ? "none" : `${Math.round(stats.entrySpanShareOfFailedWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-72: the per-product failed-span shares of
   // the global DETAIL-22 ok window, rendered as whole
   // percents, or "none" per product with no usable
@@ -1164,7 +1164,7 @@ function updateLogStats() {
   // below 100% or below 0% means timestamps ran
   // out of insertion order.
   els.logStatsFailedSpanShareOfOkWindowByProduct.textContent =
-    `Failure-span share of success window by product: Vigiles ${stats.failedSpanShareOfOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.failedSpanShareOfOkWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindowByProduct.sanitas * 100)}%`}`;
+    `Failure-span share of success window by product: Vigiles ${stats.failedSpanShareOfOkWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.failedSpanShareOfOkWindowByProduct.ignis === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindowByProduct.ignis * 100)}%`} · Medicus ${stats.failedSpanShareOfOkWindowByProduct.medicus === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindowByProduct.medicus * 100)}%`}`;
   // DETAIL-73: the per-product ok-span shares of
   // the global DETAIL-23 failed window, rendered as
   // whole percents, or "none" per product with no
@@ -1179,14 +1179,14 @@ function updateLogStats() {
   // below 100% or below 0% means timestamps ran
   // out of insertion order.
   els.logStatsOkSpanShareOfFailedWindowByProduct.textContent =
-    `Success-span share of failure window by product: Vigiles ${stats.okSpanShareOfFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindowByProduct.ignis * 100)}%`} · Sanitas ${stats.okSpanShareOfFailedWindowByProduct.sanitas === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindowByProduct.sanitas * 100)}%`}`;
+    `Success-span share of failure window by product: Vigiles ${stats.okSpanShareOfFailedWindowByProduct.vigiles === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindowByProduct.vigiles * 100)}%`} · Ignis ${stats.okSpanShareOfFailedWindowByProduct.ignis === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindowByProduct.ignis * 100)}%`} · Medicus ${stats.okSpanShareOfFailedWindowByProduct.medicus === null ? "none" : `${Math.round(stats.okSpanShareOfFailedWindowByProduct.medicus * 100)}%`}`;
   // IGNIS-ONEOFONE-1: the look-alike scoreboard re-reads the same
   // log entries updateLogStats already runs on — no new stats field,
   // no new data — and renders the Ignis-only panel from recorded
   // assessments alone. An empty session reads all zeros, a held
   // session (no model calls) stays zeros rather than inventing a
   // reading, and failures never move a bucket. The panel itself is
-  // hidden under Vigiles and Sanitas by CSS, so this line only ever
+  // hidden under Vigiles and Medicus by CSS, so this line only ever
   // shows under Ignis.
   const scoreboard = ignisLookAlikeScoreboard(log.entries());
   els.ignisScoreboard.textContent =
@@ -1197,7 +1197,7 @@ function updateLogStats() {
   // alone. Bands group reported values; they never re-score an
   // assessment or collapse it to alarm / no-alarm. A held session
   // stays zeros, and the panel itself is hidden under Vigiles and
-  // Sanitas by CSS, so this line only ever shows under Ignis.
+  // Medicus by CSS, so this line only ever shows under Ignis.
   const confidence = ignisReportedConfidence(log.entries());
   els.ignisConfidence.textContent =
     `High (≥ 0.8) ${confidence.high} · Medium (≥ 0.5) ${confidence.medium} · Low (< 0.5) ${confidence.low} · Unreported ${confidence.unreported}`;
@@ -1206,7 +1206,7 @@ function updateLogStats() {
   // Ignis-only panel from the requires_human_review flags recorded
   // assessments themselves carried. It never flags anything itself
   // and never notifies anyone. A held session stays zeros, and the
-  // panel itself is hidden under Vigiles and Sanitas by CSS, so
+  // panel itself is hidden under Vigiles and Medicus by CSS, so
   // this line only ever shows under Ignis.
   const reviewQueue = ignisReviewQueue(log.entries());
   els.ignisReviewQueue.textContent =
@@ -1217,7 +1217,7 @@ function updateLogStats() {
   // assessments themselves carried. A filled field never means the
   // assessment is correct; this counts strings only. A held session
   // stays zeros, and the panel itself is hidden under Vigiles and
-  // Sanitas by CSS, so this line only ever shows under Ignis.
+  // Medicus by CSS, so this line only ever shows under Ignis.
   const evidence = ignisEvidenceTransparency(log.entries());
   els.ignisEvidence.textContent =
     `Fully evidenced ${evidence.fullyEvidenced} · Partially evidenced ${evidence.partiallyEvidenced} · No evidence recorded ${evidence.unevidenced} · Not assessable ${evidence.unassessable}`;
@@ -1227,7 +1227,7 @@ function updateLogStats() {
   // assessments themselves carried. Disclosing nothing is never read
   // as reliable; a missing list is never read as none. A held session
   // stays zeros, and the panel itself is hidden under Vigiles and
-  // Sanitas by CSS, so this line only ever shows under Ignis.
+  // Medicus by CSS, so this line only ever shows under Ignis.
   const uncertainty = ignisUncertaintyDisclosure(log.entries());
   els.ignisUncertainty.textContent =
     `Caveats disclosed ${uncertainty.disclosed} · None disclosed ${uncertainty.noneDisclosed} · Uncertainty not recorded ${uncertainty.unrecorded}`;
@@ -1239,7 +1239,7 @@ function updateLogStats() {
   // read nowhere here; a flagged entry with no usable category
   // still counts in the total, so the queue never hides an entry
   // behind a missing class. A held session stays zeros, and the
-  // panel itself is hidden under Vigiles and Sanitas by CSS, so
+  // panel itself is hidden under Vigiles and Medicus by CSS, so
   // this line only ever shows under Ignis.
   const triage = ignisReviewTriage(log.entries());
   els.ignisReviewTriage.textContent =
@@ -1250,7 +1250,7 @@ function updateLogStats() {
   // assessment with several observations contributes several
   // counts; observations with no usable or non-contract class
   // count in the total only. A held session stays zeros, and the
-  // panel itself is hidden under Vigiles and Sanitas by CSS, so
+  // panel itself is hidden under Vigiles and Medicus by CSS, so
   // this line only ever shows under Ignis.
   const obsCats = ignisObservationCategories(log.entries());
   els.ignisObservationCategories.textContent =
@@ -1260,7 +1260,7 @@ function updateLogStats() {
   // names are open-ended, so the line lists them sorted for a
   // stable read, with unattributed last. A held session stays
   // zeros, and the panel itself is hidden under Vigiles and
-  // Sanitas by CSS, so this line only ever shows under Ignis.
+  // Medicus by CSS, so this line only ever shows under Ignis.
   const modelAttr = ignisModelAttribution(log.entries());
   const modelParts = Object.keys(modelAttr.byModel)
     .sort()
@@ -1273,7 +1273,7 @@ function updateLogStats() {
   // video is the FDNY prerecorded-footage workflow made visible;
   // unknown covers entries recorded before the stamp existed and
   // is never guessed into a bucket. A held session stays zeros,
-  // and the panel itself is hidden under Vigiles and Sanitas by
+  // and the panel itself is hidden under Vigiles and Medicus by
   // CSS, so this line only ever shows under Ignis.
   const footage = ignisFootageSource(log.entries());
   els.ignisFootageSource.textContent =
@@ -1487,7 +1487,7 @@ function renderLatest(assessment, earlierNote = null) {
   // UI-6 panel wash. The theme blocks wash every .panel in the
   // selected product's accent, so without this a redisplayed
   // assessment re-tinted on every product switch (flat under Vigiles,
-  // green under Sanitas for an Ignis assessment). The section is
+  // green under Medicus for an Ignis assessment). The section is
   // tagged, not the inner wrap, because the gradient lives on the
   // section; stale classes are removed first so a redisplayed
   // assessment never keeps its predecessor's wash. An unknown product
@@ -1498,12 +1498,12 @@ function renderLatest(assessment, earlierNote = null) {
     latestPanel.classList.remove(
       "latest-product-vigiles",
       "latest-product-ignis",
-      "latest-product-sanitas",
+      "latest-product-medicus",
     );
     const washByProduct = {
       vigiles: "latest-product-vigiles",
       ignis: "latest-product-ignis",
-      sanitas: "latest-product-sanitas",
+      medicus: "latest-product-medicus",
     };
     const wash = washByProduct[assessment.product];
     if (wash) latestPanel.classList.add(wash);
@@ -1545,8 +1545,8 @@ function renderLatest(assessment, earlierNote = null) {
     productEl.classList.add("assessment-product-vigiles");
   } else if (assessment.product === "ignis") {
     productEl.classList.add("assessment-product-ignis");
-  } else if (assessment.product === "sanitas") {
-    productEl.classList.add("assessment-product-sanitas");
+  } else if (assessment.product === "medicus") {
+    productEl.classList.add("assessment-product-medicus");
   }
   productEl.textContent = ` ${product ? product.displayName : assessment.product}`;
   head.appendChild(productEl);
@@ -1684,8 +1684,8 @@ function addHistoryItem({ title, timestamp, body, kind, assessment = null, produ
   els.historyEmpty.hidden = true;
   const item = document.createElement("li");
   item.className = `history-item history-${kind}`;
-  // M3 (Sanitas identity in results): a Sanitas entry's edge uses the
-  // Sanitas product accent, not its status color. Only Sanitas entries
+  // M3 (Medicus identity in results): a Medicus entry's edge uses the
+  // Medicus product accent, not its status color. Only Medicus entries
   // got the product class at first; other products kept their status
   // edges. IGNIS-UI-3 adds the Ignis counterpart: an Ignis entry's
   // edge uses the Ignis product accent, not its status color. HANA
@@ -1696,8 +1696,8 @@ function addHistoryItem({ title, timestamp, body, kind, assessment = null, produ
   // native Vigiles rows showed the blue product edge, so the two
   // surfaces disagreed on exactly the default product's rows.
   const entryProduct = assessment?.product ?? product;
-  if (entryProduct === "sanitas") {
-    item.classList.add("history-product-sanitas");
+  if (entryProduct === "medicus") {
+    item.classList.add("history-product-medicus");
   } else if (entryProduct === "ignis") {
     item.classList.add("history-product-ignis");
   } else if (entryProduct === "vigiles") {
@@ -2407,7 +2407,7 @@ els.btnReset.addEventListener("click", () => {
     resetLatestPanel.classList.remove(
       "latest-product-vigiles",
       "latest-product-ignis",
-      "latest-product-sanitas",
+      "latest-product-medicus",
     );
   }
   els.history.replaceChildren();

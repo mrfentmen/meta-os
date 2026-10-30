@@ -34,7 +34,7 @@ function runSuite(name, cmd, args) {
 }
 
 runSuite("web suite (npm test)", "npm", ["test"]);
-runSuite("sanitas eval harness", "node", ["--test", "eval/sanitas/harness.test.mjs"]);
+runSuite("medicus eval harness", "node", ["--test", "eval/medicus/harness.test.mjs"]);
 runSuite("assess conformance (fixture mode)", "node", [
   "--test",
   "verify/conformance/conformance.test.mjs",
@@ -80,14 +80,14 @@ record(
 function extractSet(text, re) {
   return new Set([...text.matchAll(re)].map((m) => m[1]));
 }
-const expected = new Set(["vigiles", "ignis", "sanitas"]);
+const expected = new Set(["vigiles", "ignis", "medicus"]);
 const jsProducts = extractSet(
   readFileSync(path.join(ROOT, "js", "products.js"), "utf8"),
-  /id:\s*"(vigiles|ignis|sanitas)"/g,
+  /id:\s*"(vigiles|ignis|medicus)"/g,
 );
 const swiftEnum = extractSet(
   readFileSync(path.join(ROOT, "native", "Sources", "MetaTrio", "Models", "ProductConfig.swift"), "utf8"),
-  /case\s+(vigiles|ignis|sanitas)\b/g,
+  /case\s+(vigiles|ignis|medicus)\b/g,
 );
 const sameSet = (a, b) => a.size === b.size && [...a].every((x) => b.has(x));
 record(

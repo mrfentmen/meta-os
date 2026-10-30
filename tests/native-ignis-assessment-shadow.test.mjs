@@ -4,7 +4,7 @@
 // IGNIS-UI-10 (Del UI push, Oct 29): native latest-assessment panel
 // drop-shadow parity. The web theme panels carry a box-shadow of
 // 0 0 0 1px rgba(accent, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35), but
-// the native panel cast no shadow at all, so under Ignis or Sanitas
+// the native panel cast no shadow at all, so under Ignis or Medicus
 // it read flat while the web panel lifted off the page. The fix
 // shadows the outer stack black at 0.35, 8pt down, radius 12, after
 // the UI-9 border overlay. The 1px 0.15 ring is deliberately not
@@ -54,8 +54,8 @@ test("native assessment panel: shadow strength matches the web theme drop shadow
   );
   assert.match(
     css,
-    /body\[data-product="sanitas"\] \.panel \{[^}]*box-shadow: 0 0 0 1px rgba\(93, 168, 100, 0\.15\), 0 8px 24px rgba\(0, 0, 0, 0\.35\)/,
-    "web Sanitas panel shadow is 0 8px 24px rgba(0, 0, 0, 0.35)",
+    /body\[data-product="medicus"\] \.panel \{[^}]*box-shadow: 0 0 0 1px rgba\(93, 168, 100, 0\.15\), 0 8px 24px rgba\(0, 0, 0, 0\.35\)/,
+    "web Medicus panel shadow is 0 8px 24px rgba(0, 0, 0, 0.35)",
   );
   assert.match(
     bodyFn,

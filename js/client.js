@@ -127,7 +127,7 @@ export async function checkHealth(endpoint, fetchFn = (url, opts) => fetch(url, 
   return body;
 }
 
-// payload: { product: "vigiles"|"ignis"|"sanitas", timestamp: string
+// payload: { product: "vigiles"|"ignis"|"medicus", timestamp: string
 // (ISO-8601), image: string (JPEG data URL) }
 // fetchFn is injectable for tests; defaults to the global fetch.
 export async function assessFrame(endpoint, payload, fetchFn = (url, opts) => fetch(url, opts)) {

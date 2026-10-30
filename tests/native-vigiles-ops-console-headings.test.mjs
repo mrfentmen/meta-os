@@ -11,7 +11,7 @@
 // PanelHeading: on Vigiles it renders uppercased in monospaced 15pt
 // bold with 1.8pt tracking (0.12em of 15pt) and a 3pt Vigiles-blue
 // (#4f7ec2) leading tick with 10pt of room before the text; on
-// Sanitas it renders exactly as before — plain 15pt bold, no tick,
+// Medicus it renders exactly as before — plain 15pt bold, no tick,
 // no tracking, no case change. The Vigiles branch keeps the original
 // title as its accessibility label, so VoiceOver hears the title in
 // its normal case. No Swift toolchain exists in this sandbox, so
@@ -83,16 +83,16 @@ test("native PanelHeading: Vigiles branch uses no Ignis red", () => {
   );
 });
 
-test("native PanelHeading: Sanitas still renders the plain 15pt bold title", () => {
+test("native PanelHeading: Medicus still renders the plain 15pt bold title", () => {
   const plain = heading.slice(heading.indexOf("} else {"));
   assert.match(
     plain,
     /Text\(title\)\s+\.font\(\.system\(size: 15, weight: \.bold\)\)/,
     "non-console branch is the same plain 15pt bold title as before",
   );
-  assert.doesNotMatch(plain, /uppercased/, "no case change on Sanitas");
-  assert.doesNotMatch(plain, /tracking/, "no tracking on Sanitas");
-  assert.doesNotMatch(plain, /Rectangle/, "no tick on Sanitas");
+  assert.doesNotMatch(plain, /uppercased/, "no case change on Medicus");
+  assert.doesNotMatch(plain, /tracking/, "no tracking on Medicus");
+  assert.doesNotMatch(plain, /Rectangle/, "no tick on Medicus");
 });
 
 test("native panel titles: all five use PanelHeading gated on Vigiles", () => {

@@ -44,7 +44,7 @@ function recordFailed(log, product, status = "network_error") {
   });
 }
 
-const NONE = { vigiles: null, ignis: null, sanitas: null };
+const NONE = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product share is null", () => {
   const log = new SessionLog();
@@ -58,11 +58,11 @@ test("shares bucket by their own product over the session total", () => {
   recordOk(log, "ignis");
   recordOk(log, "ignis");
   recordFailed(log, "ignis");
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   assert.deepEqual(log.stats().entryShareByProduct, {
     vigiles: 1 / 3,
     ignis: 0.5,
-    sanitas: 1 / 6,
+    medicus: 1 / 6,
   });
 });
 
@@ -74,7 +74,7 @@ test("ok and failed entries both count: the numerator is all of a product's entr
   recordFailed(log, "ignis", "http_error");
   assert.equal(log.stats().entryShareByProduct.ignis, 3 / 4);
   assert.equal(log.stats().entryShareByProduct.vigiles, 1 / 4);
-  assert.equal(log.stats().entryShareByProduct.sanitas, 0);
+  assert.equal(log.stats().entryShareByProduct.medicus, 0);
 });
 
 test("a product with no entries in a non-empty session reads 0, not null", () => {
@@ -83,7 +83,7 @@ test("a product with no entries in a non-empty session reads 0, not null", () =>
   assert.deepEqual(log.stats().entryShareByProduct, {
     vigiles: 1,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -91,9 +91,9 @@ test("shares sum to 1 when every entry carries a known product", () => {
   const log = new SessionLog();
   recordOk(log, "vigiles");
   recordFailed(log, "ignis");
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   const shares = log.stats().entryShareByProduct;
-  assert.equal(shares.vigiles + shares.ignis + shares.sanitas, 1);
+  assert.equal(shares.vigiles + shares.ignis + shares.medicus, 1);
 });
 
 test("an ok entry with an unknown product moves no bucket but still counts in the total", () => {
@@ -102,7 +102,7 @@ test("an ok entry with an unknown product moves no bucket but still counts in th
   assert.deepEqual(log.stats().entryShareByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
   assert.equal(log.stats().ok, 1);
   assert.equal(log.stats().total, 1);
@@ -114,7 +114,7 @@ test("a failed entry with an unknown product moves no bucket but still counts in
   assert.deepEqual(log.stats().entryShareByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
   assert.equal(log.stats().failed, 1);
   assert.equal(log.stats().total, 1);
@@ -139,7 +139,7 @@ test("entries with a missing product move no bucket", () => {
   assert.deepEqual(log.stats().entryShareByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
   assert.equal(log.stats().ok, 1);
   assert.equal(log.stats().failed, 1);
@@ -167,7 +167,7 @@ test("web wiring: session-log panel holds the per-product session-share stats el
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-entry-share-by-product" class="note mono">Session share by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-entry-share-by-product" class="note mono">Session share by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

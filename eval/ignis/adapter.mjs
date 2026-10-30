@@ -1,9 +1,9 @@
 // Meta Ignis evaluation adapter (Rowan's lane).
 //
-// Mirrors the shape of Milo's Meta Sanitas harness (eval/sanitas/
+// Mirrors the shape of Milo's Meta Medicus harness (eval/medicus/
 // harness.mjs) for the Ignis product, without touching Milo's files:
 // the same per-scenario record shape, the same metric math (imported
-// from the Sanitas harness, which is product-agnostic), the same
+// from the Medicus harness, which is product-agnostic), the same
 // malformed-input containment (a source that throws or returns an
 // invalid shape is recorded as an error for that scenario only; the
 // run continues).
@@ -18,7 +18,7 @@
 // "visible flame". "obscured or distant hazard" never fires an alert
 // on its own: a distant or partially hidden hazard warrants human
 // review, recorded separately, not an automatic alert — the same logic
-// the Sanitas set applies to "ambiguous object". "steam or fog" and
+// the Medicus set applies to "indeterminate". "steam or fog" and
 // "flame-like lighting" are confusable negatives and never fire an
 // alert; "no hazard visible" and "indeterminate" never fire either.
 //
@@ -35,7 +35,7 @@
 import { validateAssessment } from "../../js/schema.js";
 import { PRODUCT_BY_ID } from "../../js/products.js";
 import { assessWithModel } from "../../server/model.mjs";
-import { computeMetrics } from "../sanitas/harness.mjs";
+import { computeMetrics } from "../shared/metrics.mjs";
 
 export { computeMetrics };
 
@@ -153,7 +153,7 @@ export async function runIgnisEval(scenarios, assess) {
 
 // The wired assessment source: the real server model adapter, with no
 // frame attached (scenarios are labeled descriptions, not images —
-// same caveat as the Sanitas harness, which runs descriptions against
+// same caveat as the Medicus harness, which runs descriptions against
 // fixtures). The adapter itself enforces the Spark gate, so in every
 // current gate state this throws a typed refusal (held /
 // not_configured / transport_not_wired) and the harness records it as

@@ -44,7 +44,7 @@ function recordOk(log, product) {
 
 test("empty log: every product reads 0", () => {
   const log = new SessionLog();
-  assert.deepEqual(log.stats().failedCountByProduct, { vigiles: 0, ignis: 0, sanitas: 0 });
+  assert.deepEqual(log.stats().failedCountByProduct, { vigiles: 0, ignis: 0, medicus: 0 });
 });
 
 test("failures bucket by their own product, successes never move a bucket", () => {
@@ -54,15 +54,15 @@ test("failures bucket by their own product, successes never move a bucket", () =
   recordFailed(log, "ignis");
   recordOk(log, "vigiles");
   recordOk(log, "ignis");
-  recordOk(log, "sanitas");
-  assert.deepEqual(log.stats().failedCountByProduct, { vigiles: 2, ignis: 1, sanitas: 0 });
+  recordOk(log, "medicus");
+  assert.deepEqual(log.stats().failedCountByProduct, { vigiles: 2, ignis: 1, medicus: 0 });
 });
 
 test("a success-only log reads 0 per product", () => {
   const log = new SessionLog();
   recordOk(log, "vigiles");
-  recordOk(log, "sanitas");
-  assert.deepEqual(log.stats().failedCountByProduct, { vigiles: 0, ignis: 0, sanitas: 0 });
+  recordOk(log, "medicus");
+  assert.deepEqual(log.stats().failedCountByProduct, { vigiles: 0, ignis: 0, medicus: 0 });
 });
 
 test("buckets plus unbucketed failures equal the global failed total", () => {
@@ -81,16 +81,16 @@ test("a failure with an unknown product moves no bucket but counts globally", ()
   recordFailed(log, "vigiles");
   recordFailed(log, "mystery", "http_error");
   const stats = log.stats();
-  assert.deepEqual(stats.failedCountByProduct, { vigiles: 1, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.failedCountByProduct, { vigiles: 1, ignis: 0, medicus: 0 });
   assert.equal(stats.failed, 2);
 });
 
 test("a failure with a missing product moves no bucket but counts globally", () => {
   const log = new SessionLog();
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   recordFailed(log, null, "http_error");
   const stats = log.stats();
-  assert.deepEqual(stats.failedCountByProduct, { vigiles: 0, ignis: 0, sanitas: 1 });
+  assert.deepEqual(stats.failedCountByProduct, { vigiles: 0, ignis: 0, medicus: 1 });
   assert.equal(stats.failed, 2);
 });
 
@@ -101,7 +101,7 @@ test("failed counts agree with the per-product entry and ok counts", () => {
   recordOk(log, "vigiles");
   recordOk(log, "ignis");
   const stats = log.stats();
-  for (const product of ["vigiles", "ignis", "sanitas"]) {
+  for (const product of ["vigiles", "ignis", "medicus"]) {
     assert.equal(
       stats.entryCountByProduct[product],
       stats.byProduct[product] + stats.failedCountByProduct[product],
@@ -113,7 +113,7 @@ test("counts follow clear: back to zero", () => {
   const log = new SessionLog();
   recordFailed(log, "ignis");
   log.clear();
-  assert.deepEqual(log.stats().failedCountByProduct, { vigiles: 0, ignis: 0, sanitas: 0 });
+  assert.deepEqual(log.stats().failedCountByProduct, { vigiles: 0, ignis: 0, medicus: 0 });
 });
 
 test("web wiring: updateLogStats renders the failed-by-product line from log.stats()", () => {
@@ -121,7 +121,7 @@ test("web wiring: updateLogStats renders the failed-by-product line from log.sta
   assert.match(app, /logStatsFailedByProduct: \$\("log-stats-failed-by-product"\)/);
   assert.match(
     app,
-    /Failed by product: Vigiles \$\{stats\.failedCountByProduct\.vigiles\} · Ignis \$\{stats\.failedCountByProduct\.ignis\} · Sanitas \$\{stats\.failedCountByProduct\.sanitas\}/,
+    /Failed by product: Vigiles \$\{stats\.failedCountByProduct\.vigiles\} · Ignis \$\{stats\.failedCountByProduct\.ignis\} · Medicus \$\{stats\.failedCountByProduct\.medicus\}/,
     "updateLogStats sets the failed-by-product line from stats()",
   );
 });
@@ -130,7 +130,7 @@ test("web wiring: session-log panel holds the failed-by-product stats element", 
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failed-by-product" class="note mono">Failed by product: Vigiles 0 · Ignis 0 · Sanitas 0<\/p>/,
+    /<p id="log-stats-failed-by-product" class="note mono">Failed by product: Vigiles 0 · Ignis 0 · Medicus 0<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

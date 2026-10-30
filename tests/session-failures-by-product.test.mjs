@@ -45,7 +45,7 @@ test("empty log: every product bucket is all zeros", () => {
   assert.deepEqual(log.stats().failedByStatusByProduct, {
     vigiles: { ...ZERO },
     ignis: { ...ZERO },
-    sanitas: { ...ZERO },
+    medicus: { ...ZERO },
   });
 });
 
@@ -54,11 +54,11 @@ test("failures bucket by their own product and cause", () => {
   recordFailed(log, "network_error", "ignis");
   recordFailed(log, "network_error", "ignis");
   recordFailed(log, "http_error", "vigiles");
-  recordFailed(log, "invalid_response", "sanitas");
+  recordFailed(log, "invalid_response", "medicus");
   assert.deepEqual(log.stats().failedByStatusByProduct, {
     vigiles: { network_error: 0, http_error: 1, invalid_response: 0 },
     ignis: { network_error: 2, http_error: 0, invalid_response: 0 },
-    sanitas: { network_error: 0, http_error: 0, invalid_response: 1 },
+    medicus: { network_error: 0, http_error: 0, invalid_response: 1 },
   });
 });
 
@@ -70,14 +70,14 @@ test("successes never move a bucket", () => {
   assert.deepEqual(log.stats().failedByStatusByProduct, {
     vigiles: { ...ZERO },
     ignis: { network_error: 0, http_error: 1, invalid_response: 0 },
-    sanitas: { ...ZERO },
+    medicus: { ...ZERO },
   });
 });
 
 test("failures alone still bucket, successes alone leave zeros", () => {
   const log = new SessionLog();
-  recordFailed(log, "network_error", "sanitas");
-  assert.equal(log.stats().failedByStatusByProduct.sanitas.network_error, 1);
+  recordFailed(log, "network_error", "medicus");
+  assert.equal(log.stats().failedByStatusByProduct.medicus.network_error, 1);
   assert.equal(log.stats().failedByStatusByProduct.vigiles.network_error, 0);
   assert.equal(log.stats().failedByStatusByProduct.ignis.network_error, 0);
 });
@@ -88,7 +88,7 @@ test("a failure with an unknown product moves no bucket but still counts globall
   assert.deepEqual(log.stats().failedByStatusByProduct, {
     vigiles: { ...ZERO },
     ignis: { ...ZERO },
-    sanitas: { ...ZERO },
+    medicus: { ...ZERO },
   });
   assert.equal(log.stats().failed, 1);
   assert.equal(log.stats().failedByStatus.http_error, 1);
@@ -106,7 +106,7 @@ test("a failure with a missing product moves no bucket but still counts globally
   assert.deepEqual(log.stats().failedByStatusByProduct, {
     vigiles: { ...ZERO },
     ignis: { ...ZERO },
-    sanitas: { ...ZERO },
+    medicus: { ...ZERO },
   });
   assert.equal(log.stats().failed, 1);
   assert.equal(log.stats().failedByStatus.network_error, 1);
@@ -132,7 +132,7 @@ test("failedByStatusByProduct follows clear: back to zeros", () => {
   assert.deepEqual(log.stats().failedByStatusByProduct, {
     vigiles: { ...ZERO },
     ignis: { ...ZERO },
-    sanitas: { ...ZERO },
+    medicus: { ...ZERO },
   });
 });
 
@@ -141,7 +141,7 @@ test("web wiring: updateLogStats renders the per-product failures-by-cause line 
   assert.match(app, /logStatsFailuresByProduct: \$\("log-stats-failures-by-product"\)/);
   assert.match(
     app,
-    /Failures by cause by product: Vigiles Network \$\{stats\.failedByStatusByProduct\.vigiles\.network_error\}, HTTP \$\{stats\.failedByStatusByProduct\.vigiles\.http_error\}, Invalid response \$\{stats\.failedByStatusByProduct\.vigiles\.invalid_response\} · Ignis Network \$\{stats\.failedByStatusByProduct\.ignis\.network_error\}, HTTP \$\{stats\.failedByStatusByProduct\.ignis\.http_error\}, Invalid response \$\{stats\.failedByStatusByProduct\.ignis\.invalid_response\} · Sanitas Network \$\{stats\.failedByStatusByProduct\.sanitas\.network_error\}, HTTP \$\{stats\.failedByStatusByProduct\.sanitas\.http_error\}, Invalid response \$\{stats\.failedByStatusByProduct\.sanitas\.invalid_response\}/,
+    /Failures by cause by product: Vigiles Network \$\{stats\.failedByStatusByProduct\.vigiles\.network_error\}, HTTP \$\{stats\.failedByStatusByProduct\.vigiles\.http_error\}, Invalid response \$\{stats\.failedByStatusByProduct\.vigiles\.invalid_response\} · Ignis Network \$\{stats\.failedByStatusByProduct\.ignis\.network_error\}, HTTP \$\{stats\.failedByStatusByProduct\.ignis\.http_error\}, Invalid response \$\{stats\.failedByStatusByProduct\.ignis\.invalid_response\} · Medicus Network \$\{stats\.failedByStatusByProduct\.medicus\.network_error\}, HTTP \$\{stats\.failedByStatusByProduct\.medicus\.http_error\}, Invalid response \$\{stats\.failedByStatusByProduct\.medicus\.invalid_response\}/,
     "updateLogStats sets the per-product failures-by-cause line from stats()",
   );
 });
@@ -150,7 +150,7 @@ test("web wiring: session-log panel holds the per-product failures-by-cause stat
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failures-by-product" class="note mono">Failures by cause by product: Vigiles Network 0, HTTP 0, Invalid response 0 · Ignis Network 0, HTTP 0, Invalid response 0 · Sanitas Network 0, HTTP 0, Invalid response 0<\/p>/,
+    /<p id="log-stats-failures-by-product" class="note mono">Failures by cause by product: Vigiles Network 0, HTTP 0, Invalid response 0 · Ignis Network 0, HTTP 0, Invalid response 0 · Medicus Network 0, HTTP 0, Invalid response 0<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

@@ -86,7 +86,7 @@ test("a latency-less success sits in the denominator but moves no measurement", 
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", null);
   recordOk(log, "ignis", 200);
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   assert.equal(log.stats().okLatencyCountShareOfOk, 2 / 3);
 });
 
@@ -94,8 +94,8 @@ test("the share equals the DETAIL-36 count over the ok total", () => {
   const log = new SessionLog();
   recordOk(log, "vigiles", 40);
   recordOk(log, "ignis", 60);
-  recordOk(log, "sanitas", null);
-  recordFailed(log, "sanitas");
+  recordOk(log, "medicus", null);
+  recordFailed(log, "medicus");
   const stats = log.stats();
   assert.equal(stats.okLatencyCountShareOfOk, 2 / 3);
   assert.equal(stats.okLatencyCountShareOfOk, stats.okLatencyCount / stats.ok);
@@ -110,7 +110,7 @@ test("an unknown-product success moves the global share", () => {
 
 test("a missing-product success moves the global share", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   recordOk(log, null, null);
   // One measurement over two successes.
   assert.equal(log.stats().okLatencyCountShareOfOk, 0.5);
@@ -137,7 +137,7 @@ test("an ok entry with no finite latency is skipped as a measurement but counts 
   const log = new SessionLog();
   recordOk(log, "vigiles", Number.NaN);
   recordOk(log, "ignis", 200);
-  recordOk(log, "sanitas", null);
+  recordOk(log, "medicus", null);
   // DETAIL-45 for the same log would read 1; here the
   // ok total is 3, so the share is 1/3.
   assert.equal(log.stats().okLatencyCountShareOfOk, 1 / 3);

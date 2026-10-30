@@ -92,7 +92,7 @@ test("the share is the entry span over the failed span, above 1 included", () =>
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T11:00:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordOkAt(log, "2026-10-29T12:30:00.000Z", "sanitas");
+  recordOkAt(log, "2026-10-29T12:30:00.000Z", "medicus");
   recordAt(log, "2026-10-29T13:00:00.000Z", "vigiles");
   // Entry span 11:00 to 13:00 = 7200000 ms; failed
   // span 12:00 to 13:00 = 3600000 ms, so the share
@@ -196,7 +196,7 @@ test("the share equals the DETAIL-24 span over the DETAIL-23 span", () => {
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T11:00:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordOkAt(log, "2026-10-29T12:10:00.000Z", "sanitas");
+  recordOkAt(log, "2026-10-29T12:10:00.000Z", "medicus");
   recordAt(log, "2026-10-29T12:30:00.000Z", "vigiles");
   const stats = log.stats();
   assert.equal(stats.entrySpanShareOfFailedWindow, stats.entrySpanMs / stats.failedSpanMs);

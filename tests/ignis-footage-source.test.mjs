@@ -82,7 +82,7 @@ test("footage source: failed and other-product entries move no bucket", () => {
     { status: "network_error", product: "ignis", source: "recorded-video" },
     { status: "http_error", product: "ignis", source: "live-camera" },
     { status: "ok", product: "vigiles", source: "recorded-video" },
-    { status: "ok", product: "sanitas", source: "still-image" },
+    { status: "ok", product: "medicus", source: "still-image" },
     null,
     entryWithSource("recorded-video"),
   ]);

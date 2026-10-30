@@ -4,12 +4,12 @@
 // HANA Agent1: the Latest assessment panel's drop shadow — the web
 // counterpart to the native UI-10 panel shadow, which casts black at
 // 0.35, 8pt down, for all three products. The web theme blocks give
-// Ignis and Sanitas panels a shadow of
+// Ignis and Medicus panels a shadow of
 // 0 0 0 1px rgba(accent, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35), but
 // the base .panel carries no shadow and Vigiles has no theme panel
 // shadow, so a shown assessment under Vigiles read flat while the
 // native panel lifted off the page. Worse, a redisplayed assessment
-// under Ignis or Sanitas kept the SELECTED product's faint 1px
+// under Ignis or Medicus kept the SELECTED product's faint 1px
 // accent ring from the theme shadow — a second, wrong-accent edge
 // next to its own-accent border at 0.5. The fix adds the drop half
 // only, 0 8px 24px rgba(0, 0, 0, 0.35), to the existing
@@ -29,16 +29,16 @@ import { readFileSync } from "node:fs";
 
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 
-// The theme rules this must beat sit in the Sanitas and Ignis blocks;
+// The theme rules this must beat sit in the Medicus and Ignis blocks;
 // the shadow rules must come after them to win the specificity tie
 // on source order, exactly like the wash and border rules they extend.
 const lastThemePanel = Math.max(
-  css.lastIndexOf('body[data-product="sanitas"] .panel {'),
+  css.lastIndexOf('body[data-product="medicus"] .panel {'),
   css.lastIndexOf('body[data-product="ignis"] .panel {'),
 );
 assert.ok(lastThemePanel > 0, "theme panel rules exist");
 
-for (const product of ["vigiles", "ignis", "sanitas"]) {
+for (const product of ["vigiles", "ignis", "medicus"]) {
   test(`web: Latest panel shadow for ${product} is the product-neutral drop only`, () => {
     const rule = css.match(
       new RegExp(`body \\.panel\\.latest-product-${product} \\{[^}]*\\}`),
@@ -67,7 +67,7 @@ for (const product of ["vigiles", "ignis", "sanitas"]) {
 }
 
 test("web: Latest panel shadow is identical for all three products", () => {
-  const shadows = ["vigiles", "ignis", "sanitas"].map((product) => {
+  const shadows = ["vigiles", "ignis", "medicus"].map((product) => {
     const rule = css.match(
       new RegExp(`body \\.panel\\.latest-product-${product} \\{[^}]*\\}`),
     );
@@ -77,7 +77,7 @@ test("web: Latest panel shadow is identical for all three products", () => {
     return shadow[0];
   });
   assert.equal(shadows[1], shadows[0], "ignis shadow equals vigiles shadow");
-  assert.equal(shadows[2], shadows[0], "sanitas shadow equals vigiles shadow");
+  assert.equal(shadows[2], shadows[0], "medicus shadow equals vigiles shadow");
 });
 
 test("web: theme panel shadows are unchanged", () => {
@@ -88,8 +88,8 @@ test("web: theme panel shadows are unchanged", () => {
   );
   assert.match(
     css,
-    /body\[data-product="sanitas"\] \.panel \{[^}]*box-shadow: 0 0 0 1px rgba\(93, 168, 100, 0\.15\), 0 8px 24px rgba\(0, 0, 0, 0\.35\)/,
-    "Sanitas theme panel keeps its ring plus drop",
+    /body\[data-product="medicus"\] \.panel \{[^}]*box-shadow: 0 0 0 1px rgba\(93, 168, 100, 0\.15\), 0 8px 24px rgba\(0, 0, 0, 0\.35\)/,
+    "Medicus theme panel keeps its ring plus drop",
   );
 });
 
@@ -97,12 +97,12 @@ test("web: Latest panel wash and border rules are untouched by the shadow", () =
   const washes = {
     vigiles: "rgba(79, 126, 194, 0.09)",
     ignis: "rgba(217, 43, 43, 0.09)",
-    sanitas: "rgba(93, 168, 100, 0.09)",
+    medicus: "rgba(93, 168, 100, 0.09)",
   };
   const borders = {
     vigiles: "rgba(79, 126, 194, 0.5)",
     ignis: "rgba(217, 43, 43, 0.5)",
-    sanitas: "rgba(93, 168, 100, 0.5)",
+    medicus: "rgba(93, 168, 100, 0.5)",
   };
   for (const product of Object.keys(washes)) {
     const rule = css.match(

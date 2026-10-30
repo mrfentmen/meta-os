@@ -38,7 +38,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SessionLog } from "../js/log.js";
 
-const NULL_SHARES = { vigiles: null, ignis: null, sanitas: null };
+const NULL_SHARES = { vigiles: null, ignis: null, medicus: null };
 
 function recordAt(log, timestamp, product, status = "network_error") {
   return log.record({
@@ -75,7 +75,7 @@ test("all failures at one timestamp read null, not 0", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:00:00.000Z", "ignis", "http_error");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas", "invalid_response");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus", "invalid_response");
   assert.deepEqual(log.stats().failedSpanShareByProduct, NULL_SHARES);
 });
 
@@ -94,24 +94,24 @@ test("mixed windows divide by the global failed window, and a product with no fa
   recordAt(log, "2026-10-29T12:10:00.000Z", "vigiles");
   // Global failed window is 600000 ms (first recorded
   // failure 12:00 to last recorded failure 12:10); ignis
-  // covers 330000 of it. Sanitas recorded no failure, so
+  // covers 330000 of it. Medicus recorded no failure, so
   // it covered none of the window — 0, not "none".
   assert.deepEqual(log.stats().failedSpanShareByProduct, {
     vigiles: 1,
     ignis: 0.55,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
 test("a single-failure product inside a nonzero failed window reads 0", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
-  recordAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:05:00.000Z", "medicus");
   recordAt(log, "2026-10-29T12:10:00.000Z", "vigiles");
   assert.deepEqual(log.stats().failedSpanShareByProduct, {
     vigiles: 1,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -125,7 +125,7 @@ test("an unknown-product failure stretches the global failed window but moves no
   assert.deepEqual(log.stats().failedSpanShareByProduct, {
     vigiles: 0.5,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -137,7 +137,7 @@ test("a missing-product failure stretches the global failed window but moves no 
   assert.deepEqual(log.stats().failedSpanShareByProduct, {
     vigiles: 0,
     ignis: 0.5,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -154,7 +154,7 @@ test("out-of-order timestamps stay raw: shares can exceed 1 and go negative, nev
   assert.deepEqual(log.stats().failedSpanShareByProduct, {
     vigiles: -1,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -165,12 +165,12 @@ test("a product with failures but no usable timestamp pair reads null, distinct 
   recordAt(log, "2026-10-29T12:10:00.000Z", "ignis");
   // Vigiles recorded failures but no usable timestamps, so
   // its failed window is unknown — null, never a fabricated
-  // 0 — while sanitas, with no failures at all, covered none
+  // 0 — while medicus, with no failures at all, covered none
   // of the window and reads 0.
   assert.deepEqual(log.stats().failedSpanShareByProduct, {
     vigiles: null,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -186,7 +186,7 @@ test("successes never move a share, even outside the failed window", () => {
   assert.deepEqual(log.stats().failedSpanShareByProduct, {
     vigiles: 1,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -212,7 +212,7 @@ test("web wiring: session-log panel holds the failed-span-share stats element", 
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failed-span-share-by-product" class="note mono">Failure-span share of failed window by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-failed-span-share-by-product" class="note mono">Failure-span share of failed window by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

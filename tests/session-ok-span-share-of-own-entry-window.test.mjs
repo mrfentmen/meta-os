@@ -70,7 +70,7 @@ test("empty log: every product share is null", () => {
   assert.deepEqual(log.stats().okSpanShareOfOwnEntryWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -80,7 +80,7 @@ test("a single entry reads null: a zero own entry span has no share to divide", 
   assert.deepEqual(log.stats().okSpanShareOfOwnEntryWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -92,7 +92,7 @@ test("all of a product's entries at one timestamp read null, not 0", () => {
   assert.deepEqual(log.stats().okSpanShareOfOwnEntryWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -131,7 +131,7 @@ test("no successes once a nonzero own entry window exists reads 0, not null", ()
   const stats = log.stats().okSpanShareOfOwnEntryWindowByProduct;
   assert.equal(stats.vigiles, 0);
   assert.equal(stats.ignis, null);
-  assert.equal(stats.sanitas, null);
+  assert.equal(stats.medicus, null);
 });
 
 test("a single success inside a nonzero own entry window reads 0", () => {
@@ -172,14 +172,14 @@ test("successes with no usable timestamp pair read null, distinct from a no-succ
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:10:00.000Z", "vigiles");
   recordOkAt(log, "", "vigiles");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
-  recordAt(log, "2026-10-29T12:10:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
+  recordAt(log, "2026-10-29T12:10:00.000Z", "medicus");
   const stats = log.stats().okSpanShareOfOwnEntryWindowByProduct;
   // A Vigiles success was recorded but its ok
   // window is unknown — null, never a fabricated 0 —
-  // while Sanitas, with no successes at all, reads 0.
+  // while Medicus, with no successes at all, reads 0.
   assert.equal(stats.vigiles, null);
-  assert.equal(stats.sanitas, 0);
+  assert.equal(stats.medicus, 0);
 });
 
 test("out-of-order timestamps stay raw: the share can go negative, never clamped", () => {
@@ -229,7 +229,7 @@ test("the share follows clear: back to null", () => {
   assert.deepEqual(log.stats().okSpanShareOfOwnEntryWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -247,7 +247,7 @@ test("web wiring: session-log panel holds the ok-span-share-of-own-entry-window 
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-ok-span-share-of-own-entry-window-by-product" class="note mono">Success-span share of that product's own entry window by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-ok-span-share-of-own-entry-window-by-product" class="note mono">Success-span share of that product's own entry window by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

@@ -30,7 +30,7 @@ function recordAt(log, timestamp, product, status = "ok") {
   });
 }
 
-const NULLS = { vigiles: null, ignis: null, sanitas: null };
+const NULLS = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product last entry is null, not a fabricated timestamp", () => {
   const log = new SessionLog();
@@ -46,7 +46,7 @@ test("last recorded entry per product wins; later entries always move the bucket
   assert.deepEqual(log.stats().lastEntryAtByProduct, {
     vigiles: "2026-10-29T12:05:00.000Z",
     ignis: "2026-10-29T12:06:00.000Z",
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -63,15 +63,15 @@ test("a product with no entries in a non-empty session reads null", () => {
   assert.deepEqual(log.stats().lastEntryAtByProduct, {
     vigiles: "2026-10-29T12:00:00.000Z",
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("insertion order, not maximum timestamp: a later entry with an earlier timestamp string still moves the bucket", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
-  assert.equal(log.stats().lastEntryAtByProduct.sanitas, "2026-10-29T12:00:00.000Z");
+  recordAt(log, "2026-10-29T12:05:00.000Z", "medicus");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
+  assert.equal(log.stats().lastEntryAtByProduct.medicus, "2026-10-29T12:00:00.000Z");
 });
 
 test("an entry with an unknown product moves no bucket", () => {
@@ -127,7 +127,7 @@ test("web wiring: updateLogStats renders the per-product last-entry line from lo
   assert.match(app, /logStatsLastEntryByProduct: \$\("log-stats-last-entry-by-product"\)/);
   assert.match(
     app,
-    /Last entry by product: Vigiles \$\{stats\.lastEntryAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.lastEntryAtByProduct\.ignis \?\? "none"\} · Sanitas \$\{stats\.lastEntryAtByProduct\.sanitas \?\? "none"\}/,
+    /Last entry by product: Vigiles \$\{stats\.lastEntryAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.lastEntryAtByProduct\.ignis \?\? "none"\} · Medicus \$\{stats\.lastEntryAtByProduct\.medicus \?\? "none"\}/,
     "updateLogStats sets the per-product last-entry line from stats()",
   );
 });
@@ -136,7 +136,7 @@ test("web wiring: session-log panel holds the per-product last-entry stats eleme
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-last-entry-by-product" class="note mono">Last entry by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-last-entry-by-product" class="note mono">Last entry by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

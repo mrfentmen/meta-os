@@ -39,7 +39,7 @@ function recordFailed(log, product, latencyMs = null) {
   });
 }
 
-const NONE = { vigiles: null, ignis: null, sanitas: null };
+const NONE = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product range is null", () => {
   const log = new SessionLog();
@@ -57,12 +57,12 @@ test("ranges bucket by their own product", () => {
   assert.deepEqual(log.stats().minOkLatencyMsByProduct, {
     vigiles: 100,
     ignis: 50,
-    sanitas: null,
+    medicus: null,
   });
   assert.deepEqual(log.stats().maxOkLatencyMsByProduct, {
     vigiles: 100,
     ignis: 900,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -74,12 +74,12 @@ test("failures never move a bucket, even with a latency recorded", () => {
   assert.deepEqual(log.stats().minOkLatencyMsByProduct, {
     vigiles: null,
     ignis: 100,
-    sanitas: null,
+    medicus: null,
   });
   assert.deepEqual(log.stats().maxOkLatencyMsByProduct, {
     vigiles: null,
     ignis: 100,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -121,9 +121,9 @@ test("an ok entry with a missing product moves no bucket but still moves the glo
 
 test("a single ok entry per product gives min equal to max", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas", 250);
-  assert.equal(log.stats().minOkLatencyMsByProduct.sanitas, 250);
-  assert.equal(log.stats().maxOkLatencyMsByProduct.sanitas, 250);
+  recordOk(log, "medicus", 250);
+  assert.equal(log.stats().minOkLatencyMsByProduct.medicus, 250);
+  assert.equal(log.stats().maxOkLatencyMsByProduct.medicus, 250);
   assert.equal(log.stats().minOkLatencyMsByProduct.vigiles, null);
   assert.equal(log.stats().maxOkLatencyMsByProduct.ignis, null);
 });
@@ -151,7 +151,7 @@ test("web wiring: session-log panel holds the per-product latency-range stats el
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-latency-range-by-product" class="note mono">Fastest\/slowest successful latency by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-latency-range-by-product" class="note mono">Fastest\/slowest successful latency by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

@@ -30,7 +30,7 @@ const intro = content.slice(introStart, introStart + 1200);
 assert.ok(intro.length > 0, "intro block exists");
 
 const introWords =
-  "For prerecorded or photographed scenes — the input Ignis and Sanitas demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.";
+  "For prerecorded or photographed scenes — the input Ignis and Medicus demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.";
 
 test("native still-image intro: web contract — .note at 13px muted", () => {
   const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");

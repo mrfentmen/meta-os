@@ -88,8 +88,8 @@ test("background script is slow, still under reduced motion, paused when hidden"
   );
   assert.match(
     bg,
-    /sanitas: \[[\s\S]*?#5da864/,
-    "logo-background.js carries a Sanitas green palette around #5da864",
+    /medicus: \[[\s\S]*?#5da864/,
+    "logo-background.js carries a Medicus green palette around #5da864",
   );
   assert.match(
     bg,

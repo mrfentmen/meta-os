@@ -34,7 +34,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SessionLog } from "../js/log.js";
 
-const NULL_SHARES = { vigiles: null, ignis: null, sanitas: null };
+const NULL_SHARES = { vigiles: null, ignis: null, medicus: null };
 
 function recordAt(log, timestamp, product, status = "ok") {
   return log.record({
@@ -61,7 +61,7 @@ test("all entries at one timestamp read null, not 0", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
   assert.deepEqual(log.stats().entrySpanShareByProduct, NULL_SHARES);
 });
 
@@ -72,25 +72,25 @@ test("mixed windows divide by the global window, and a product with no entries r
   recordAt(log, "2026-10-29T12:06:30.000Z", "ignis");
   recordAt(log, "2026-10-29T12:10:00.000Z", "vigiles");
   // Global window is 600000 ms (first recorded 12:00 to last
-  // recorded 12:10); ignis covers 330000 of it. Sanitas
+  // recorded 12:10); ignis covers 330000 of it. Medicus
   // recorded nothing, so it covered none of the window — 0,
   // not "none".
   assert.deepEqual(log.stats().entrySpanShareByProduct, {
     vigiles: 1,
     ignis: 0.55,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
 test("a single-entry product inside a nonzero window reads 0", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
-  recordAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:05:00.000Z", "medicus");
   recordAt(log, "2026-10-29T12:10:00.000Z", "vigiles");
   assert.deepEqual(log.stats().entrySpanShareByProduct, {
     vigiles: 1,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -104,7 +104,7 @@ test("an unknown-product entry stretches the global window but moves no bucket",
   assert.deepEqual(log.stats().entrySpanShareByProduct, {
     vigiles: 0.5,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -116,7 +116,7 @@ test("a missing-product entry stretches the global window but moves no bucket", 
   assert.deepEqual(log.stats().entrySpanShareByProduct, {
     vigiles: 0,
     ignis: 0.5,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -132,7 +132,7 @@ test("out-of-order timestamps stay raw: shares can exceed 1 and go negative, nev
   assert.deepEqual(log.stats().entrySpanShareByProduct, {
     vigiles: -1,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -143,12 +143,12 @@ test("a product with entries but no usable timestamp pair reads null, distinct f
   recordAt(log, "2026-10-29T12:10:00.000Z", "ignis");
   // Vigiles recorded entries but no usable timestamps, so its
   // window is unknown — null, never a fabricated 0 — while
-  // sanitas, with no entries at all, covered none of the
+  // medicus, with no entries at all, covered none of the
   // window and reads 0.
   assert.deepEqual(log.stats().entrySpanShareByProduct, {
     vigiles: null,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -159,7 +159,7 @@ test("failures move the endpoints: any status stretches the window", () => {
   assert.deepEqual(log.stats().entrySpanShareByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -185,7 +185,7 @@ test("web wiring: session-log panel holds the entry-span-share stats element", (
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-entry-span-share-by-product" class="note mono">Entry-span share of session window by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-entry-span-share-by-product" class="note mono">Entry-span share of session window by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

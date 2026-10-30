@@ -43,11 +43,11 @@ const flush = () => new Promise((resolve) => setImmediate(resolve));
 // ---------- trio product configs ----------
 
 test("products: exactly the three trio products, in order", () => {
-  assert.deepEqual(PRODUCT_IDS, ["vigiles", "ignis", "sanitas"]);
+  assert.deepEqual(PRODUCT_IDS, ["vigiles", "ignis", "medicus"]);
   assert.equal(PRODUCTS.length, 3);
   assert.equal(PRODUCT_BY_ID.vigiles.displayName, "Meta Vigiles");
   assert.equal(PRODUCT_BY_ID.ignis.displayName, "Meta Ignis");
-  assert.equal(PRODUCT_BY_ID.sanitas.displayName, "Meta Sanitas");
+  assert.equal(PRODUCT_BY_ID.medicus.displayName, "Meta Medicus");
 });
 
 test("products: every product has identity, categories, scenarios, limitations, guidance", () => {
@@ -69,15 +69,15 @@ test("products: every product has identity, categories, scenarios, limitations, 
 test("products: scenario sets differ per product", () => {
   assert.ok(PRODUCT_BY_ID.vigiles.scenarios.includes("A staged argument"));
   assert.ok(PRODUCT_BY_ID.ignis.scenarios.includes("Visible smoke"));
-  assert.ok(PRODUCT_BY_ID.sanitas.scenarios.includes("An overflowing trash bin"));
+  assert.ok(PRODUCT_BY_ID.medicus.scenarios.includes("A person on the ground"));
   assert.ok(!PRODUCT_BY_ID.ignis.scenarios.includes("A staged argument"));
-  assert.ok(!PRODUCT_BY_ID.sanitas.scenarios.includes("Visible smoke"));
+  assert.ok(!PRODUCT_BY_ID.medicus.scenarios.includes("Visible smoke"));
 });
 
 test("products: isProductId accepts only the trio ids", () => {
   assert.equal(isProductId("vigiles"), true);
   assert.equal(isProductId("ignis"), true);
-  assert.equal(isProductId("sanitas"), true);
+  assert.equal(isProductId("medicus"), true);
   assert.equal(isProductId("sentinel"), false);
   assert.equal(isProductId(""), false);
   assert.equal(isProductId(null), false);
@@ -280,11 +280,11 @@ test("client: sends product with the request and returns the validated v2 assess
 test("client: wrong-product response throws AssessError kind=invalid", async () => {
   const fakeFetch = async () => ({ ok: true, status: 200, statusText: "OK", json: async () => validAssessment("vigiles") });
   await assert.rejects(
-    assessFrame("/api/assess", { product: "sanitas", timestamp: "t", image: "i" }, fakeFetch),
+    assessFrame("/api/assess", { product: "medicus", timestamp: "t", image: "i" }, fakeFetch),
     (err) => {
       assert.ok(err instanceof AssessError);
       assert.equal(err.kind, "invalid");
-      assert.match(err.message, /product: expected "sanitas", got "vigiles"/);
+      assert.match(err.message, /product: expected "medicus", got "vigiles"/);
       return true;
     },
   );
@@ -367,7 +367,7 @@ function validHealth() {
   return {
     ok: true,
     service: "meta-trio-assess",
-    products: ["vigiles", "ignis", "sanitas"],
+    products: ["vigiles", "ignis", "medicus"],
     model: { configured: false, live_enabled: false },
   };
 }
@@ -472,8 +472,8 @@ test("log: export has the documented shape, per-entry product, and top-level pro
 test("log: entries keep their own product when the session switches products", () => {
   const log = new SessionLog();
   log.record({ requestTimestamp: "t1", product: "vigiles", latencyMs: 10, status: "ok" });
-  log.record({ requestTimestamp: "t2", product: "sanitas", latencyMs: 12, status: "ok" });
-  assert.deepEqual(log.entries().map((e) => e.product), ["vigiles", "sanitas"]);
+  log.record({ requestTimestamp: "t2", product: "medicus", latencyMs: 12, status: "ok" });
+  assert.deepEqual(log.entries().map((e) => e.product), ["vigiles", "medicus"]);
 });
 
 test("log: entries() returns a copy and clear() resets sequence", () => {
@@ -510,7 +510,7 @@ test("log: with storage, records are saved and restored with sequence intact", (
   assert.deepEqual(reloaded.entries().map((e) => e.seq), [1, 2]);
   assert.equal(reloaded.entries()[0].product, "vigiles");
   assert.equal(reloaded.entries()[1].error, "fetch failed");
-  const next = reloaded.record({ requestTimestamp: "t3", product: "sanitas", latencyMs: 1, status: "ok" });
+  const next = reloaded.record({ requestTimestamp: "t3", product: "medicus", latencyMs: 1, status: "ok" });
   assert.equal(next.seq, 3);
 });
 

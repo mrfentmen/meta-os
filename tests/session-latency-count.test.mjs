@@ -46,7 +46,7 @@ test("empty log: the global count is 0 and every product reads 0", () => {
   const log = new SessionLog();
   const stats = log.stats();
   assert.equal(stats.okLatencyCount, 0);
-  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 0, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 0, ignis: 0, medicus: 0 });
 });
 
 test("ok entries with a usable latency count globally and per product", () => {
@@ -54,10 +54,10 @@ test("ok entries with a usable latency count globally and per product", () => {
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", 200);
   recordOk(log, "ignis", 150);
-  recordOk(log, "sanitas", 120);
+  recordOk(log, "medicus", 120);
   const stats = log.stats();
   assert.equal(stats.okLatencyCount, 4);
-  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 2, ignis: 1, sanitas: 1 });
+  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 2, ignis: 1, medicus: 1 });
 });
 
 test("an ok entry with no usable latency is skipped, never counted as zero", () => {
@@ -65,10 +65,10 @@ test("an ok entry with no usable latency is skipped, never counted as zero", () 
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", null);
   recordOk(log, "ignis", Number.NaN);
-  recordOk(log, "sanitas", Number.POSITIVE_INFINITY);
+  recordOk(log, "medicus", Number.POSITIVE_INFINITY);
   const stats = log.stats();
   assert.equal(stats.okLatencyCount, 1);
-  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 1, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 1, ignis: 0, medicus: 0 });
   assert.equal(stats.avgOkLatencyMs, 100);
 });
 
@@ -79,16 +79,16 @@ test("failures never contribute, even a failure carrying a latency value", () =>
   recordFailed(log, "ignis", "http_error", 75);
   const stats = log.stats();
   assert.equal(stats.okLatencyCount, 1);
-  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 1, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 1, ignis: 0, medicus: 0 });
 });
 
 test("a success-only log with no usable latency reads 0 everywhere", () => {
   const log = new SessionLog();
   recordOk(log, "vigiles", null);
-  recordOk(log, "sanitas", null);
+  recordOk(log, "medicus", null);
   const stats = log.stats();
   assert.equal(stats.okLatencyCount, 0);
-  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 0, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 0, ignis: 0, medicus: 0 });
   assert.equal(stats.avgOkLatencyMs, null);
 });
 
@@ -107,17 +107,17 @@ test("an ok entry with an unknown product counts globally but moves no bucket", 
   recordOk(log, "vigiles", 100);
   recordOk(log, "mystery", 200);
   const stats = log.stats();
-  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 1, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 1, ignis: 0, medicus: 0 });
   assert.equal(stats.okLatencyCount, 2);
   assert.equal(stats.avgOkLatencyMs, 150);
 });
 
 test("an ok entry with a missing product counts globally but moves no bucket", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   recordOk(log, null, 300);
   const stats = log.stats();
-  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 0, ignis: 0, sanitas: 1 });
+  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 0, ignis: 0, medicus: 1 });
   assert.equal(stats.okLatencyCount, 2);
 });
 
@@ -132,8 +132,8 @@ test("counts agree with the means they stand behind", () => {
   assert.equal(stats.avgOkLatencyMs, (100 + 200 + 50) / 3);
   assert.equal(stats.avgOkLatencyMsByProduct.vigiles, 150);
   assert.equal(stats.avgOkLatencyMsByProduct.ignis, 50);
-  assert.equal(stats.avgOkLatencyMsByProduct.sanitas, null);
-  assert.equal(stats.okLatencyCountByProduct.sanitas, 0);
+  assert.equal(stats.avgOkLatencyMsByProduct.medicus, null);
+  assert.equal(stats.okLatencyCountByProduct.medicus, 0);
 });
 
 test("counts follow clear: back to zero", () => {
@@ -142,7 +142,7 @@ test("counts follow clear: back to zero", () => {
   log.clear();
   const stats = log.stats();
   assert.equal(stats.okLatencyCount, 0);
-  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 0, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencyCountByProduct, { vigiles: 0, ignis: 0, medicus: 0 });
 });
 
 test("web wiring: updateLogStats renders the latency-count lines from log.stats()", () => {
@@ -156,7 +156,7 @@ test("web wiring: updateLogStats renders the latency-count lines from log.stats(
   );
   assert.match(
     app,
-    /Successful latencies measured by product: Vigiles \$\{stats\.okLatencyCountByProduct\.vigiles\} · Ignis \$\{stats\.okLatencyCountByProduct\.ignis\} · Sanitas \$\{stats\.okLatencyCountByProduct\.sanitas\}/,
+    /Successful latencies measured by product: Vigiles \$\{stats\.okLatencyCountByProduct\.vigiles\} · Ignis \$\{stats\.okLatencyCountByProduct\.ignis\} · Medicus \$\{stats\.okLatencyCountByProduct\.medicus\}/,
     "updateLogStats sets the per-product latency-count line from stats()",
   );
 });
@@ -170,7 +170,7 @@ test("web wiring: session-log panel holds the latency-count stats elements", () 
   );
   assert.match(
     html,
-    /<p id="log-stats-ok-latency-count-by-product" class="note mono">Successful latencies measured by product: Vigiles 0 · Ignis 0 · Sanitas 0<\/p>/,
+    /<p id="log-stats-ok-latency-count-by-product" class="note mono">Successful latencies measured by product: Vigiles 0 · Ignis 0 · Medicus 0<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

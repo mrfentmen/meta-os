@@ -77,7 +77,7 @@ test("model attribution: failed and other-product entries move no bucket", () =>
     { status: "failed", product: "ignis", response: { processing: { model: "spark-vision-1" } } },
     { status: "network_error", product: "ignis", response: { processing: { model: "spark-vision-1" } } },
     { status: "ok", product: "vigiles", response: { processing: { model: "spark-vision-1" } } },
-    { status: "ok", product: "sanitas", response: { processing: { model: "spark-vision-1" } } },
+    { status: "ok", product: "medicus", response: { processing: { model: "spark-vision-1" } } },
     null,
     entryWithModel("spark-vision-1"),
   ]);

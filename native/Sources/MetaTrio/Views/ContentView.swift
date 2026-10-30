@@ -78,7 +78,7 @@ struct ContentView: View {
             // — are untouched.
             // OPS-CONSOLE-2: panel heading (see PanelHeading) —
             // Ignis and Vigiles render their console treatments,
-            // Sanitas the plain 15pt bold title as before.
+            // Medicus the plain 15pt bold title as before.
             PanelHeading(title: "Latest assessment", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles)
                 .accessibilityAddTraits(.isHeader)
             if let note = model.displayedAssessmentNote {
@@ -122,7 +122,7 @@ struct ContentView: View {
                 // accent. The fill is shared by the two console
                 // products, so it is one condition, not two fills
                 // stacked; the stroke keeps one branch per product
-                // so each accent stays its own color. Sanitas
+                // so each accent stays its own color. Medicus
                 // keeps the clear, unframed viewport it had.
                 ScrollView {
                     AssessmentView(response: assessment)
@@ -205,7 +205,7 @@ struct ContentView: View {
 // monospaced 15pt bold with 1.8pt tracking (0.12em of 15pt) and a 3pt
 // Ignis-red (#d92b2b, the R1 identity red) leading tick with 10pt of
 // room before the text; OPS-CONSOLE-7 adds the same shape on Vigiles
-// in Vigiles blue (#4f7ec2, the web OPS-CONSOLE-6 tick); on Sanitas
+// in Vigiles blue (#4f7ec2, the web OPS-CONSOLE-6 tick); on Medicus
 // it renders exactly as before — plain 15pt bold, no tick, no
 // tracking, no case change — so the console treatment never leaks
 // onto another product. Each console branch keeps the original title
@@ -239,7 +239,7 @@ struct PanelHeading: View {
             // with 1.8pt tracking (0.12em of 15pt) and a 3pt
             // Vigiles-blue (#4f7ec2) leading tick with 10pt of room
             // before the text — the Ignis branch's shape in Vigiles
-            // blue. Sanitas keeps the plain 15pt bold title below,
+            // blue. Medicus keeps the plain 15pt bold title below,
             // so the console treatment never leaks onto it, and the
             // Vigiles branch keeps the original title as its
             // accessibility label, as the Ignis branch does.
@@ -567,7 +567,7 @@ private struct CameraPanel: View {
     // status-line rule (mono at 0.02em, the same value Ignis
     // carries), so the gate widens to Ignis or Vigiles and the
     // two share one widened value, exactly as OPS-CONSOLE-8 did
-    // for the Uncertainty subhead; Sanitas keeps the plain UI-35
+    // for the Uncertainty subhead; Medicus keeps the plain UI-35
     // 13pt treatment, and nothing else in this block changes. Size, color, wrapping, and wording are
     // untouched, and red never becomes a status color — the error
     // lines stay red, only their face and tracking change. The
@@ -660,7 +660,7 @@ private struct StillImagePanel: View {
             // is the only change: the muted color, the wrapping,
             // and the wording are untouched, and the panel title
             // keeps its headline size.
-            Text("For prerecorded or photographed scenes — the input Ignis and Sanitas demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.")
+            Text("For prerecorded or photographed scenes — the input Ignis and Medicus demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.")
                 .font(.system(size: 13))
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)

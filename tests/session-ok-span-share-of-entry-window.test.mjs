@@ -77,7 +77,7 @@ test("all entries at one timestamp read null, not 0", () => {
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
   recordOkAt(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
   assert.equal(log.stats().okSpanShareOfEntryWindow, null);
 });
 
@@ -112,7 +112,7 @@ test("a single success inside a nonzero entry window reads 0", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
   recordOkAt(log, "2026-10-29T12:10:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T12:20:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:20:00.000Z", "medicus");
   assert.equal(log.stats().okSpanShareOfEntryWindow, 0);
 });
 
@@ -120,7 +120,7 @@ test("an unknown-product success moves the product-blind numerator, unlike DETAI
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T12:00:00.000Z", "mystery");
   recordOkAt(log, "2026-10-29T12:10:00.000Z", "vigiles");
-  recordAt(log, "2026-10-29T12:20:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:20:00.000Z", "medicus");
   // Global entry window is 1200000 ms; the global ok
   // span covers 600000 of it, and the mystery success
   // opened that span where it moves no DETAIL-53 bucket.
@@ -131,7 +131,7 @@ test("a missing-product success moves the product-blind numerator, unlike DETAIL
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T12:00:00.000Z", null);
   recordOkAt(log, "2026-10-29T12:10:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T12:20:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:20:00.000Z", "medicus");
   assert.equal(log.stats().okSpanShareOfEntryWindow, 0.5);
 });
 
@@ -175,7 +175,7 @@ test("the share equals the DETAIL-22 span over the DETAIL-24 span", () => {
   recordAt(log, "2026-10-29T11:00:00.000Z", "vigiles");
   recordOkAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
   recordOkAt(log, "2026-10-29T12:10:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T13:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T13:00:00.000Z", "medicus");
   const stats = log.stats();
   assert.equal(stats.okSpanShareOfEntryWindow, stats.okSpanMs / stats.entrySpanMs);
 });

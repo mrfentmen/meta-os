@@ -26,7 +26,7 @@ import { SessionLog } from "../js/log.js";
 const NULL_CELLS = {
   vigiles: { network_error: null, http_error: null, invalid_response: null },
   ignis: { network_error: null, http_error: null, invalid_response: null },
-  sanitas: { network_error: null, http_error: null, invalid_response: null },
+  medicus: { network_error: null, http_error: null, invalid_response: null },
 };
 
 function recordFailed(log, product, status = "network_error") {
@@ -60,7 +60,7 @@ test("a single failure reads 1 in its own cell and 0 everywhere else", () => {
   assert.deepEqual(log.stats().failedShareByStatusByProduct, {
     vigiles: { network_error: 0, http_error: 0, invalid_response: 0 },
     ignis: { network_error: 0, http_error: 1, invalid_response: 0 },
-    sanitas: { network_error: 0, http_error: 0, invalid_response: 0 },
+    medicus: { network_error: 0, http_error: 0, invalid_response: 0 },
   });
 });
 
@@ -69,11 +69,11 @@ test("mixed causes and products divide by the failed total, not by product", () 
   recordFailed(log, "vigiles", "network_error");
   recordFailed(log, "vigiles", "http_error");
   recordFailed(log, "ignis", "network_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   assert.deepEqual(log.stats().failedShareByStatusByProduct, {
     vigiles: { network_error: 1 / 4, http_error: 1 / 4, invalid_response: 0 },
     ignis: { network_error: 1 / 4, http_error: 0, invalid_response: 0 },
-    sanitas: { network_error: 0, http_error: 0, invalid_response: 1 / 4 },
+    medicus: { network_error: 0, http_error: 0, invalid_response: 1 / 4 },
   });
 });
 
@@ -85,7 +85,7 @@ test("all three causes for one product read thirds of all failures", () => {
   assert.deepEqual(log.stats().failedShareByStatusByProduct, {
     vigiles: { network_error: 1 / 3, http_error: 1 / 3, invalid_response: 1 / 3 },
     ignis: { network_error: 0, http_error: 0, invalid_response: 0 },
-    sanitas: { network_error: 0, http_error: 0, invalid_response: 0 },
+    medicus: { network_error: 0, http_error: 0, invalid_response: 0 },
   });
 });
 
@@ -93,7 +93,7 @@ test("cells sum to 1 when every failure carries a known product", () => {
   const log = new SessionLog();
   recordFailed(log, "vigiles", "network_error");
   recordFailed(log, "ignis", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   const shares = log.stats().failedShareByStatusByProduct;
   const sum = Object.values(shares).flatMap((byStatus) => Object.values(byStatus)).reduce((a, b) => a + b, 0);
   assert.equal(sum, 1);
@@ -106,7 +106,7 @@ test("a failure with an unknown product sits in the denominator but moves no cel
   assert.deepEqual(log.stats().failedShareByStatusByProduct, {
     vigiles: { network_error: 0.5, http_error: 0, invalid_response: 0 },
     ignis: { network_error: 0, http_error: 0, invalid_response: 0 },
-    sanitas: { network_error: 0, http_error: 0, invalid_response: 0 },
+    medicus: { network_error: 0, http_error: 0, invalid_response: 0 },
   });
   const shares = log.stats().failedShareByStatusByProduct;
   const sum = Object.values(shares).flatMap((byStatus) => Object.values(byStatus)).reduce((a, b) => a + b, 0);
@@ -115,12 +115,12 @@ test("a failure with an unknown product sits in the denominator but moves no cel
 
 test("a failure with a missing product sits in the denominator but moves no cell", () => {
   const log = new SessionLog();
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   recordFailed(log, null, "invalid_response");
   assert.deepEqual(log.stats().failedShareByStatusByProduct, {
     vigiles: { network_error: 0, http_error: 0, invalid_response: 0 },
     ignis: { network_error: 0, http_error: 0, invalid_response: 0 },
-    sanitas: { network_error: 0, http_error: 0, invalid_response: 0.5 },
+    medicus: { network_error: 0, http_error: 0, invalid_response: 0.5 },
   });
 });
 
@@ -134,7 +134,7 @@ test("successes never move a cell, and a success-only log reads null", () => {
   assert.deepEqual(log.stats().failedShareByStatusByProduct, {
     vigiles: { network_error: 0, http_error: 0, invalid_response: 0 },
     ignis: { network_error: 1, http_error: 0, invalid_response: 0 },
-    sanitas: { network_error: 0, http_error: 0, invalid_response: 0 },
+    medicus: { network_error: 0, http_error: 0, invalid_response: 0 },
   });
 });
 
@@ -146,7 +146,7 @@ test("a product with no failures reads 0, never null, once failures exist", () =
     http_error: 0,
     invalid_response: 0,
   });
-  assert.deepEqual(log.stats().failedShareByStatusByProduct.sanitas, {
+  assert.deepEqual(log.stats().failedShareByStatusByProduct.medicus, {
     network_error: 0,
     http_error: 0,
     invalid_response: 0,
@@ -174,7 +174,7 @@ test("web wiring: session-log panel holds the failed-share-by-status-by-product 
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failed-share-by-status-by-product" class="note mono">Failure-cause share of all failures by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Sanitas Network none, HTTP none, Invalid response none<\/p>/,
+    /<p id="log-stats-failed-share-by-status-by-product" class="note mono">Failure-cause share of all failures by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Medicus Network none, HTTP none, Invalid response none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

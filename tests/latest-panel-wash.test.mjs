@@ -7,7 +7,7 @@
 // every .panel in the SELECTED product's accent
 // (body[data-product] .panel), so a past Ignis assessment shown again
 // under Vigiles read flat (Vigiles has no panel gradient), and one
-// shown under Sanitas read green, while the native panel washed in
+// shown under Medicus read green, while the native panel washed in
 // the assessment's own accent at 0.09. The fix tags the Latest panel
 // section in renderLatest with a latest-product-<product> class whose
 // rule uses the same 0.09-at-the-top gradient shape with a fixed
@@ -30,14 +30,14 @@ assert.ok(render.length > 0, "renderLatest exists");
 const washes = {
   vigiles: "rgba(79, 126, 194, 0.09)",
   ignis: "rgba(217, 43, 43, 0.09)",
-  sanitas: "rgba(93, 168, 100, 0.09)",
+  medicus: "rgba(93, 168, 100, 0.09)",
 };
 
-// The theme rules this must beat sit in the Sanitas and Ignis blocks;
+// The theme rules this must beat sit in the Medicus and Ignis blocks;
 // the wash rules must come after them to win the specificity tie on
 // source order.
 const lastThemePanel = Math.max(
-  css.lastIndexOf('body[data-product="sanitas"] .panel {'),
+  css.lastIndexOf('body[data-product="medicus"] .panel {'),
   css.lastIndexOf('body[data-product="ignis"] .panel {'),
 );
 assert.ok(lastThemePanel > 0, "theme panel rules exist");
@@ -84,16 +84,16 @@ for (const [product, rgba] of Object.entries(washes)) {
 test("web: renderLatest clears a predecessor's wash before tagging the new one", () => {
   assert.match(
     render,
-    /latestPanel\.classList\.remove\(\s+"latest-product-vigiles",\s+"latest-product-ignis",\s+"latest-product-sanitas",\s+\);/,
+    /latestPanel\.classList\.remove\(\s+"latest-product-vigiles",\s+"latest-product-ignis",\s+"latest-product-medicus",\s+\);/,
     "stale wash classes are removed so a redisplayed assessment never keeps its predecessor's tint",
   );
 });
 
 test("web: only the three known products get a wash class (no invented color)", () => {
-  const keys = render.match(/^\s+(vigiles|ignis|sanitas): "latest-product-[a-z]+",/gm) || [];
+  const keys = render.match(/^\s+(vigiles|ignis|medicus): "latest-product-[a-z]+",/gm) || [];
   assert.deepEqual(keys.map((k) => k.trim()).sort(), [
     'ignis: "latest-product-ignis",',
-    'sanitas: "latest-product-sanitas",',
+    'medicus: "latest-product-medicus",',
     'vigiles: "latest-product-vigiles",',
   ]);
 });
@@ -101,17 +101,17 @@ test("web: only the three known products get a wash class (no invented color)", 
 test("web: Reset clears the Latest panel wash class", () => {
   assert.match(
     appJs,
-    /resetLatestPanel\.classList\.remove\(\s+"latest-product-vigiles",\s+"latest-product-ignis",\s+"latest-product-sanitas",\s+\);/,
+    /resetLatestPanel\.classList\.remove\(\s+"latest-product-vigiles",\s+"latest-product-ignis",\s+"latest-product-medicus",\s+\);/,
     "the cleared panel does not keep the last assessment's product tint",
   );
 });
 
 test("web: the selection panel gradients are untouched", () => {
-  const sanitas = css.match(
-    /body\[data-product="sanitas"\] \.panel \{[^}]*\}/,
+  const medicus = css.match(
+    /body\[data-product="medicus"\] \.panel \{[^}]*\}/,
   );
-  assert.ok(sanitas, "Sanitas selection panel rule still exists");
-  assert.match(sanitas[0], /rgba\(93, 168, 100, 0\.09\)/);
+  assert.ok(medicus, "Medicus selection panel rule still exists");
+  assert.match(medicus[0], /rgba\(93, 168, 100, 0\.09\)/);
   const ignis = css.match(/body\[data-product="ignis"\] \.panel \{[^}]*\}/);
   assert.ok(ignis, "Ignis selection panel rule still exists");
   assert.match(ignis[0], /rgba\(217, 43, 43, 0\.09\)/);

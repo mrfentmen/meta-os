@@ -34,7 +34,7 @@ function recordAt(log, timestamp, product, status = "network_error") {
   });
 }
 
-const NULLS = { vigiles: null, ignis: null, sanitas: null };
+const NULLS = { vigiles: null, ignis: null, medicus: null };
 
 test("empty log: every product failure span is null, not a fabricated span", () => {
   const log = new SessionLog();
@@ -50,17 +50,17 @@ test("span is last minus first failure per product, in whole milliseconds", () =
   assert.deepEqual(log.stats().failedSpanMsByProduct, {
     vigiles: 300000,
     ignis: 330500,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("a product with exactly one usable failure reads 0, not null", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
   assert.deepEqual(log.stats().failedSpanMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -77,19 +77,19 @@ test("successes between failures never move the span", () => {
 test("a product with no failure in a non-empty session reads null", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
-  recordAt(log, "2026-10-29T12:03:00.000Z", "sanitas", "ok");
+  recordAt(log, "2026-10-29T12:03:00.000Z", "medicus", "ok");
   assert.deepEqual(log.stats().failedSpanMsByProduct, {
     vigiles: 0,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
 test("insertion order, not min/max: a later failure with an earlier timestamp reads a negative span", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:05:00.000Z", "sanitas");
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
-  assert.equal(log.stats().failedSpanMsByProduct.sanitas, -300000);
+  recordAt(log, "2026-10-29T12:05:00.000Z", "medicus");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
+  assert.equal(log.stats().failedSpanMsByProduct.medicus, -300000);
 });
 
 test("a failure with an unknown product moves no bucket", () => {
@@ -152,7 +152,7 @@ test("web wiring: session-log panel holds the per-product failure-span stats ele
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failed-span-by-product" class="note mono">Failure span by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-failed-span-by-product" class="note mono">Failure span by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

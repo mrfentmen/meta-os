@@ -3,7 +3,7 @@
 Camera interface and analysis client for the Meta Trio visual
 event-assessment prototype (Meta Global AI Developer Hackathon 2026, Indie —
 Push the Frontier): Meta Vigiles (incident awareness), Meta Ignis (fire and
-smoke), and Meta Sanitas (sanitation), sharing one frontend. This is the
+smoke), and Meta Medicus (EMS scene awareness), sharing one frontend. This is the
 Agent 1 deliverable from `BRIEF.md` and `MASTER_DIRECTIVE_V2.md`: a real,
 working frontend wired to the actual v2 analysis pipeline contract. It
 contains no detection logic and no sample results.
@@ -15,7 +15,7 @@ ES modules for the node test runner; it declares zero dependencies.)
 ## What is built
 
 - **Product switcher** (`js/products.js`, wired in `js/app.js`): Vigiles /
-  Ignis / Sanitas, mirroring the native app's `ProductConfig` — per-product
+  Ignis / Medicus, mirroring the native app's `ProductConfig` — per-product
   display name, department, tagline, reportable categories, evaluation
   scenarios, input guidance, and a limitations notice that stays on screen.
   Switching products applies to the next sampled frame; earlier log entries
@@ -41,7 +41,7 @@ ES modules for the node test runner; it declares zero dependencies.)
   assessment. The UI never invents a result.
 - **Still-image input** (`js/image_input.js`, wired in `js/app.js`): a
   file picker for prerecorded or photographed scenes — the input the
-  Ignis and Sanitas demos use when a live camera is not the source.
+  Ignis and Medicus demos use when a live camera is not the source.
   Choosing an image shows an in-memory preview; "Assess this image"
   sends it once to the same endpoint, under the product selected at that
   moment, through the same client, validation, history entry, and
@@ -131,10 +131,10 @@ carrying their assessment). Current result:
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.
 
-## Evaluation (Agent 3: Sanitas)
+## Evaluation (Agent 3: Medicus)
 
-Meta Sanitas scenario sets, ground truth, and eval harness live in
-`eval/sanitas/` (see its README): 20 labeled scenarios, a fixture
+Meta Medicus scenario sets, ground truth, and eval harness live in
+`eval/medicus/` (see its README): 20 labeled scenarios, a fixture
 stub and an always-clean baseline, and a harness that scores any
 assessment source against the frozen v2 contract and reports
 precision, recall, false-positive and false-negative rates, and
@@ -153,7 +153,7 @@ Request — one per sampled frame:
 
 ```json
 {
-  "product": "vigiles | ignis | sanitas",
+  "product": "vigiles | ignis | medicus",
   "timestamp": "2026-10-28T10:15:00.000Z",
   "image": "data:image/jpeg;base64,..."
 }
@@ -210,7 +210,7 @@ Session log export shape (consumed by the evaluation lane):
 {
   "app": "meta-sentinel-frontend",
   "exported_at": "ISO-8601",
-  "product": "vigiles | ignis | sanitas (active at export time)",
+  "product": "vigiles | ignis | medicus (active at export time)",
   "endpoint": "/api/assess",
   "sampling_interval_seconds": 3,
   "entry_count": 0,
@@ -255,6 +255,6 @@ describe observable evidence and uncertainty; each product's limitations
 notice, shown in the UI at all times, states what its assessments never
 claim (Vigiles: no crime, guilt, or intent findings; Ignis: not a
 certified fire-detection system and never a reason to create a real fire;
-Sanitas: no violation, ownership, or responsibility findings). The app
+Medicus: no violation, ownership, or responsibility findings). The app
 never contacts police or emergency services, never dispatches or cites
 automatically, and performs no face recognition or identity inference.

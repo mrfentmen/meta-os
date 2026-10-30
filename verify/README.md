@@ -13,13 +13,13 @@ node verify/check.mjs
 Runs, in order:
 
 1. The web suite (`npm test` at the repo root).
-2. Milo's Sanitas eval harness tests (`eval/sanitas/harness.test.mjs`).
+2. Milo's Medicus eval harness tests (`eval/medicus/harness.test.mjs`).
 3. The /api/assess conformance suite in fixture mode (below).
 4. A secret scan of the repo tree (key-shaped strings; `check.mjs`
    itself is excluded because it holds the patterns).
 5. A contract-coherence check: the product keys in `js/products.js`
    and the native `ProductID` enum must both be exactly
-   vigiles / ignis / sanitas.
+   vigiles / ignis / medicus.
 6. An informational probe of `http://localhost:8080/api/assess`.
    Nothing answering just means the server is not running right now
    (`node server/server.mjs` starts it); it is reported, never counted

@@ -72,7 +72,7 @@ test("empty log: every product share is null", () => {
   assert.deepEqual(log.stats().entrySpanShareOfOkWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -83,7 +83,7 @@ test("a failure-only log reads null: no success window to divide by", () => {
   assert.deepEqual(log.stats().entrySpanShareOfOkWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -136,7 +136,7 @@ test("a product with no entries reads 0 once a nonzero success window exists", (
   const log = new SessionLog();
   recordOkAt(log, "2026-10-29T12:00:00.000Z", "vigiles");
   recordOkAt(log, "2026-10-29T12:10:00.000Z", "vigiles");
-  assert.equal(log.stats().entrySpanShareOfOkWindowByProduct.sanitas, 0);
+  assert.equal(log.stats().entrySpanShareOfOkWindowByProduct.medicus, 0);
 });
 
 test("a single-entry product reads 0 against a nonzero success window", () => {
@@ -254,7 +254,7 @@ test("the share follows clear: back to null", () => {
   assert.deepEqual(log.stats().entrySpanShareOfOkWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -272,7 +272,7 @@ test("web wiring: session-log panel holds the entry-span-share-of-ok-window stat
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-entry-span-share-of-ok-window-by-product" class="note mono">Entry-span share of success window by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-entry-span-share-of-ok-window-by-product" class="note mono">Entry-span share of success window by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

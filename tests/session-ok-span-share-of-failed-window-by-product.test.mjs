@@ -71,7 +71,7 @@ test("empty log: every product share is null", () => {
   assert.deepEqual(log.stats().okSpanShareOfFailedWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -82,7 +82,7 @@ test("a success-only log reads null: no failure window to divide by", () => {
   assert.deepEqual(log.stats().okSpanShareOfFailedWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -110,7 +110,7 @@ test("a failure-only log reads 0: successes covered none of a nonzero failure wi
   assert.deepEqual(log.stats().okSpanShareOfFailedWindowByProduct, {
     vigiles: 0,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -291,7 +291,7 @@ test("the share follows clear: back to null", () => {
   assert.deepEqual(log.stats().okSpanShareOfFailedWindowByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -309,7 +309,7 @@ test("web wiring: session-log panel holds the ok-span-share-of-failed-window sta
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-ok-span-share-of-failed-window-by-product" class="note mono">Success-span share of failure window by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-ok-span-share-of-failed-window-by-product" class="note mono">Success-span share of failure window by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

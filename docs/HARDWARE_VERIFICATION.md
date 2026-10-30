@@ -25,7 +25,7 @@ Setup: serve the repo root over HTTPS (or `localhost` on the phone via
 USB), because browsers block camera access on plain HTTP pages served
 over a network. Open `index.html`.
 
-1. Page load: product switcher shows Vigiles / Ignis / Sanitas, the
+1. Page load: product switcher shows Vigiles / Ignis / Medicus, the
    Vigiles limitations notice is visible, and the layout fits a narrow
    screen (single column below the 720 px breakpoint, no sideways
    scrolling, buttons reachable with a thumb).
@@ -40,7 +40,7 @@ over a network. Open `index.html`.
    only one camera, either choice still shows that camera — the facing
    is a preference, not a requirement, so no error may appear for
    lacking a second camera.
-4. Product switch while live: switch to Ignis, then Sanitas. The accent
+4. Product switch while live: switch to Ignis, then Medicus. The accent
    color changes (red, then green), the limitations notice changes
    to that product's text, and earlier history entries keep the product
    they were recorded under.

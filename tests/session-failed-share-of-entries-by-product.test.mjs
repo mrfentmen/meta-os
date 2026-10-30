@@ -25,8 +25,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { SessionLog } from "../js/log.js";
 
-const NULL_SHARES = { vigiles: null, ignis: null, sanitas: null };
-const ZERO_SHARES = { vigiles: 0, ignis: 0, sanitas: 0 };
+const NULL_SHARES = { vigiles: null, ignis: null, medicus: null };
+const ZERO_SHARES = { vigiles: 0, ignis: 0, medicus: 0 };
 
 function recordOk(log, product, latencyMs = 100) {
   return log.record({
@@ -59,7 +59,7 @@ test("a single failure reads 1 for its product and 0 elsewhere", () => {
   assert.deepEqual(log.stats().failedShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 1,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -75,7 +75,7 @@ test("mixed counts divide by the entry total, not the failed total", () => {
   assert.deepEqual(log.stats().failedShareOfEntriesByProduct, {
     vigiles: 1 / 6,
     ignis: 1 / 3,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -83,7 +83,7 @@ test("shares sum to the global failed share when every failure carries a known p
   const log = new SessionLog();
   recordOk(log, "vigiles");
   recordFailed(log, "ignis");
-  recordFailed(log, "sanitas");
+  recordFailed(log, "medicus");
   const shares = log.stats().failedShareOfEntriesByProduct;
   const sum = Object.values(shares).reduce((a, b) => a + b, 0);
   assert.equal(sum, log.stats().failedShare);
@@ -100,7 +100,7 @@ test("a failure with an unknown product moves no bucket but sits in the total", 
 
 test("a failure with a missing product moves no bucket but sits in the total", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   recordFailed(log, null);
   assert.deepEqual(log.stats().failedShareOfEntriesByProduct, ZERO_SHARES);
   assert.equal(log.stats().failedShare, 0.5);
@@ -115,13 +115,13 @@ test("successes never move a share, and a success-only log reads 0, not null", (
 
 test("failures for one product read their slice beside successes of other products", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   recordFailed(log, "vigiles");
   recordFailed(log, "ignis", "http_error");
   assert.deepEqual(log.stats().failedShareOfEntriesByProduct, {
     vigiles: 1 / 3,
     ignis: 1 / 3,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -134,7 +134,7 @@ test("the failure cause never matters, only the product", () => {
   assert.deepEqual(log.stats().failedShareOfEntriesByProduct, {
     vigiles: 0,
     ignis: 3 / 4,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -159,7 +159,7 @@ test("web wiring: session-log panel holds the failed-share-of-entries-by-product
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failed-share-of-entries-by-product" class="note mono">Failed share of all entries by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-failed-share-of-entries-by-product" class="note mono">Failed share of all entries by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

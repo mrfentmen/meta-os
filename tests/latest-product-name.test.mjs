@@ -30,7 +30,7 @@ assert.ok(render.length > 0, "renderLatest exists");
 const accents = {
   vigiles: "#4f7ec2",
   ignis: "#d92b2b",
-  sanitas: "#5da864",
+  medicus: "#5da864",
 };
 
 for (const [product, hex] of Object.entries(accents)) {
@@ -66,7 +66,7 @@ test("web: an unknown product keeps the base selection accent (no invented color
   const branches = render.match(/assessment\.product === "[a-z]+"/g) || [];
   assert.deepEqual(branches.sort(), [
     'assessment.product === "ignis"',
-    'assessment.product === "sanitas"',
+    'assessment.product === "medicus"',
     'assessment.product === "vigiles"',
   ]);
 });

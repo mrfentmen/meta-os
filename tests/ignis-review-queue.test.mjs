@@ -62,7 +62,7 @@ test("review queue: failures and other products move no bucket", () => {
   const counts = ignisReviewQueue([
     { status: "failed", product: "ignis", response: { assessment: { requires_human_review: true } } },
     ok("vigiles", { requires_human_review: true }),
-    ok("sanitas", { requires_human_review: false }),
+    ok("medicus", { requires_human_review: false }),
     ok("ignis", { requires_human_review: false }),
   ]);
   assert.deepEqual(counts, {

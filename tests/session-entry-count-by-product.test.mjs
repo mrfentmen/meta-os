@@ -43,7 +43,7 @@ function recordFailed(log, product, status = "network_error") {
   });
 }
 
-const ZEROS = { vigiles: 0, ignis: 0, sanitas: 0 };
+const ZEROS = { vigiles: 0, ignis: 0, medicus: 0 };
 
 test("empty log: every product count is zero, not null", () => {
   const log = new SessionLog();
@@ -57,11 +57,11 @@ test("counts bucket by their own product, ok plus failed", () => {
   recordOk(log, "ignis");
   recordOk(log, "ignis");
   recordFailed(log, "ignis");
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   assert.deepEqual(log.stats().entryCountByProduct, {
     vigiles: 2,
     ignis: 3,
-    sanitas: 1,
+    medicus: 1,
   });
 });
 
@@ -79,7 +79,7 @@ test("a product with no entries in a non-empty session reads 0", () => {
   assert.deepEqual(log.stats().entryCountByProduct, {
     vigiles: 1,
     ignis: 0,
-    sanitas: 0,
+    medicus: 0,
   });
 });
 
@@ -87,9 +87,9 @@ test("counts sum to the total when every entry carries a known product", () => {
   const log = new SessionLog();
   recordOk(log, "vigiles");
   recordFailed(log, "ignis");
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   const counts = log.stats().entryCountByProduct;
-  assert.equal(counts.vigiles + counts.ignis + counts.sanitas, log.stats().total);
+  assert.equal(counts.vigiles + counts.ignis + counts.medicus, log.stats().total);
 });
 
 test("an ok entry with an unknown product moves no bucket but still counts in the total", () => {
@@ -143,7 +143,7 @@ test("web wiring: updateLogStats renders the per-product entry-count line from l
   assert.match(app, /logStatsEntryCountByProduct: \$\("log-stats-entry-count-by-product"\)/);
   assert.match(
     app,
-    /Entries by product: Vigiles \$\{stats\.entryCountByProduct\.vigiles\} · Ignis \$\{stats\.entryCountByProduct\.ignis\} · Sanitas \$\{stats\.entryCountByProduct\.sanitas\}/,
+    /Entries by product: Vigiles \$\{stats\.entryCountByProduct\.vigiles\} · Ignis \$\{stats\.entryCountByProduct\.ignis\} · Medicus \$\{stats\.entryCountByProduct\.medicus\}/,
     "updateLogStats sets the per-product entry-count line from stats()",
   );
 });
@@ -152,7 +152,7 @@ test("web wiring: session-log panel holds the per-product entry-count stats elem
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-entry-count-by-product" class="note mono">Entries by product: Vigiles 0 · Ignis 0 · Sanitas 0<\/p>/,
+    /<p id="log-stats-entry-count-by-product" class="note mono">Entries by product: Vigiles 0 · Ignis 0 · Medicus 0<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

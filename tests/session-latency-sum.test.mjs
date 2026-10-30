@@ -48,7 +48,7 @@ test("empty log: the global sum is 0 and every product reads 0", () => {
   const log = new SessionLog();
   const stats = log.stats();
   assert.equal(stats.okLatencySum, 0);
-  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 0, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 0, ignis: 0, medicus: 0 });
 });
 
 test("ok entries with a usable latency sum globally and per product", () => {
@@ -56,10 +56,10 @@ test("ok entries with a usable latency sum globally and per product", () => {
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", 200);
   recordOk(log, "ignis", 150);
-  recordOk(log, "sanitas", 120);
+  recordOk(log, "medicus", 120);
   const stats = log.stats();
   assert.equal(stats.okLatencySum, 570);
-  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 300, ignis: 150, sanitas: 120 });
+  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 300, ignis: 150, medicus: 120 });
 });
 
 test("an ok entry with no usable latency is skipped, never summed as zero", () => {
@@ -67,10 +67,10 @@ test("an ok entry with no usable latency is skipped, never summed as zero", () =
   recordOk(log, "vigiles", 100);
   recordOk(log, "vigiles", null);
   recordOk(log, "ignis", Number.NaN);
-  recordOk(log, "sanitas", Number.POSITIVE_INFINITY);
+  recordOk(log, "medicus", Number.POSITIVE_INFINITY);
   const stats = log.stats();
   assert.equal(stats.okLatencySum, 100);
-  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 100, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 100, ignis: 0, medicus: 0 });
   assert.equal(stats.avgOkLatencyMs, 100);
 });
 
@@ -81,16 +81,16 @@ test("failures never contribute, even a failure carrying a latency value", () =>
   recordFailed(log, "ignis", "http_error", 75);
   const stats = log.stats();
   assert.equal(stats.okLatencySum, 100);
-  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 100, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 100, ignis: 0, medicus: 0 });
 });
 
 test("a success-only log with no usable latency reads 0 everywhere", () => {
   const log = new SessionLog();
   recordOk(log, "vigiles", null);
-  recordOk(log, "sanitas", null);
+  recordOk(log, "medicus", null);
   const stats = log.stats();
   assert.equal(stats.okLatencySum, 0);
-  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 0, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 0, ignis: 0, medicus: 0 });
   assert.equal(stats.avgOkLatencyMs, null);
 });
 
@@ -109,17 +109,17 @@ test("an ok entry with an unknown product sums globally but moves no bucket", ()
   recordOk(log, "vigiles", 100);
   recordOk(log, "mystery", 200);
   const stats = log.stats();
-  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 100, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 100, ignis: 0, medicus: 0 });
   assert.equal(stats.okLatencySum, 300);
   assert.equal(stats.avgOkLatencyMs, 150);
 });
 
 test("an ok entry with a missing product sums globally but moves no bucket", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas", 100);
+  recordOk(log, "medicus", 100);
   recordOk(log, null, 300);
   const stats = log.stats();
-  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 0, ignis: 0, sanitas: 100 });
+  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 0, ignis: 0, medicus: 100 });
   assert.equal(stats.okLatencySum, 400);
 });
 
@@ -134,10 +134,10 @@ test("sums agree with the means and shares they stand behind", () => {
   assert.equal(stats.avgOkLatencyMs, 350 / 3);
   assert.equal(stats.avgOkLatencyMsByProduct.vigiles, 150);
   assert.equal(stats.avgOkLatencyMsByProduct.ignis, 50);
-  assert.equal(stats.okLatencySumByProduct.sanitas, 0);
+  assert.equal(stats.okLatencySumByProduct.medicus, 0);
   assert.equal(stats.okLatencyShareByProduct.vigiles, 300 / 350);
   assert.equal(stats.okLatencyShareByProduct.ignis, 50 / 350);
-  assert.equal(stats.okLatencyShareByProduct.sanitas, 0);
+  assert.equal(stats.okLatencyShareByProduct.medicus, 0);
 });
 
 test("sums follow clear: back to zero", () => {
@@ -146,7 +146,7 @@ test("sums follow clear: back to zero", () => {
   log.clear();
   const stats = log.stats();
   assert.equal(stats.okLatencySum, 0);
-  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 0, ignis: 0, sanitas: 0 });
+  assert.deepEqual(stats.okLatencySumByProduct, { vigiles: 0, ignis: 0, medicus: 0 });
 });
 
 test("web wiring: updateLogStats renders the latency-sum lines from log.stats()", () => {
@@ -160,7 +160,7 @@ test("web wiring: updateLogStats renders the latency-sum lines from log.stats()"
   );
   assert.match(
     app,
-    /Total successful latency by product: Vigiles \$\{Math\.round\(stats\.okLatencySumByProduct\.vigiles\)\} ms · Ignis \$\{Math\.round\(stats\.okLatencySumByProduct\.ignis\)\} ms · Sanitas \$\{Math\.round\(stats\.okLatencySumByProduct\.sanitas\)\} ms/,
+    /Total successful latency by product: Vigiles \$\{Math\.round\(stats\.okLatencySumByProduct\.vigiles\)\} ms · Ignis \$\{Math\.round\(stats\.okLatencySumByProduct\.ignis\)\} ms · Medicus \$\{Math\.round\(stats\.okLatencySumByProduct\.medicus\)\} ms/,
     "updateLogStats sets the per-product latency-sum line from stats()",
   );
 });
@@ -174,7 +174,7 @@ test("web wiring: session-log panel holds the latency-sum stats elements", () =>
   );
   assert.match(
     html,
-    /<p id="log-stats-ok-latency-sum-by-product" class="note mono">Total successful latency by product: Vigiles 0 ms · Ignis 0 ms · Sanitas 0 ms<\/p>/,
+    /<p id="log-stats-ok-latency-sum-by-product" class="note mono">Total successful latency by product: Vigiles 0 ms · Ignis 0 ms · Medicus 0 ms<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

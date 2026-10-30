@@ -2,7 +2,7 @@
 //   node --test tests/ignis-web-theme.test.mjs
 //
 // IGNIS-UI-3 (Del UI push, Oct 29): complete the Ignis web theme to
-// mirror the Sanitas theme block, in Ignis red #d92b2b, scoped to
+// mirror the Medicus theme block, in Ignis red #d92b2b, scoped to
 // body[data-product="ignis"] only. R2 landed only the panel gradient;
 // UI-3 adds the topbar, product badge, primary button, chips, and
 // switcher glow, plus the Ignis history edge (the M3 counterpart: an
@@ -73,9 +73,9 @@ test("web: Ignis history entries carry the Ignis accent edge", () => {
   );
 });
 
-test("web: Ignis theme uses no Sanitas green and never restyles Vigiles", () => {
+test("web: Ignis theme uses no Medicus green and never restyles Vigiles", () => {
   const ignisBlock = css.slice(css.indexOf("/* Ignis theme"));
-  assert.doesNotMatch(ignisBlock, /#5da864/, "no Sanitas green in Ignis theme");
+  assert.doesNotMatch(ignisBlock, /#5da864/, "no Medicus green in Ignis theme");
   assert.doesNotMatch(
     css,
     /body\[data-product="vigiles"\][^{]*\{[^}]*linear-gradient/,

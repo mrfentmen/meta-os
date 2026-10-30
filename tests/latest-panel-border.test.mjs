@@ -6,7 +6,7 @@
 // counterpart to the native UI-9 panel border. The theme blocks
 // border every .panel in the SELECTED product's accent
 // (body[data-product] .panel), so a past Ignis assessment shown again
-// under Sanitas kept a Sanitas-green border, and one shown under
+// under Medicus kept a Medicus-green border, and one shown under
 // Vigiles kept the neutral panel border, while its wash and product
 // name already read Ignis red and the native panel strokes its own
 // accent at 0.5. The fix adds a border-color at 0.5 to the existing
@@ -16,7 +16,7 @@
 // accent panel border, but the native UI-9 border strokes all three
 // products in their own accent, so the web rule does the same for
 // Vigiles rather than leaving its redisplayed panels border-neutral
-// while Ignis and Sanitas panels carry an accent edge. No Swift
+// while Ignis and Medicus panels carry an accent edge. No Swift
 // toolchain exists in this sandbox, so these are static checks on
 // the shipped CSS.
 
@@ -26,11 +26,11 @@ import { readFileSync } from "node:fs";
 
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 
-// The theme rules this must beat sit in the Sanitas and Ignis blocks;
+// The theme rules this must beat sit in the Medicus and Ignis blocks;
 // the border rules must come after them to win the specificity tie
 // on source order, exactly like the wash rules they extend.
 const lastThemePanel = Math.max(
-  css.lastIndexOf('body[data-product="sanitas"] .panel {'),
+  css.lastIndexOf('body[data-product="medicus"] .panel {'),
   css.lastIndexOf('body[data-product="ignis"] .panel {'),
 );
 assert.ok(lastThemePanel > 0, "theme panel rules exist");
@@ -38,7 +38,7 @@ assert.ok(lastThemePanel > 0, "theme panel rules exist");
 const borders = {
   vigiles: "rgba(79, 126, 194, 0.5)",
   ignis: "rgba(217, 43, 43, 0.5)",
-  sanitas: "rgba(93, 168, 100, 0.5)",
+  medicus: "rgba(93, 168, 100, 0.5)",
 };
 
 for (const [product, rgba] of Object.entries(borders)) {
@@ -65,15 +65,15 @@ for (const [product, rgba] of Object.entries(borders)) {
   });
 }
 
-test("web: Latest panel borders match the theme panel borders for Ignis and Sanitas", () => {
+test("web: Latest panel borders match the theme panel borders for Ignis and Medicus", () => {
   const ignisTheme = css.match(
     /body\[data-product="ignis"\] \.panel \{[^}]*border-color: rgba\(217, 43, 43, 0\.5\)/,
   );
   assert.ok(ignisTheme, "Ignis theme panel border is rgba(217, 43, 43, 0.5)");
-  const sanitasTheme = css.match(
-    /body\[data-product="sanitas"\] \.panel \{[^}]*border-color: rgba\(93, 168, 100, 0\.5\)/,
+  const medicusTheme = css.match(
+    /body\[data-product="medicus"\] \.panel \{[^}]*border-color: rgba\(93, 168, 100, 0\.5\)/,
   );
-  assert.ok(sanitasTheme, "Sanitas theme panel border is rgba(93, 168, 100, 0.5)");
+  assert.ok(medicusTheme, "Medicus theme panel border is rgba(93, 168, 100, 0.5)");
 });
 
 // Superseded in part by the UI-10 shadow slice: these rules now DO

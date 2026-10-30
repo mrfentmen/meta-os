@@ -1,4 +1,4 @@
-# MASTER PROJECT DIRECTIVE: META SENTINEL, META EMBER, AND META SANITAS
+# MASTER PROJECT DIRECTIVE: META SENTINEL, META EMBER, AND META MEDICUS
 
 (From Del, 2026-10-28. Updated directive — expands and supersedes the Sentinel-only brief of the same morning.)
 
@@ -15,7 +15,7 @@ The three products are:
 
 1. Meta Sentinel — NYPD-oriented visual incident awareness and analysis.
 2. Meta Ember — FDNY-oriented fire, smoke, and emergency-scene awareness.
-3. Meta Sanitas — Department of Sanitation-oriented environmental observation, sanitation inspection, and operational support.
+3. Meta Medicus — FDNY EMS-oriented scene awareness, visible-scene observation only, no diagnosis or treatment.
 
 These are distinct applications designed for different departments. They should share an underlying technical foundation wherever practical, while maintaining separate interfaces, workflows, capabilities, and product identities.
 
@@ -181,15 +181,15 @@ Do not automatically dispatch emergency services based on an unverified model ou
 
 Clearly disclose the tested conditions and limitations.
 
-## 5. PRODUCT THREE: META SANITAS
+## 5. PRODUCT THREE: META MEDICUS
 
 ### Purpose
 
-Meta Sanitas is the Department of Sanitation-oriented application.
+Meta Medicus is the FDNY EMS-oriented application.
 
-Its purpose is to investigate how visual AI can assist with sanitation observations and environmental maintenance workflows.
+Its purpose is to investigate how visual AI can assist with EMS scene awareness: what is visibly happening at a scene, recorded for human review.
 
-Potential uses include identifying visible waste accumulation, overflowing public trash bins, illegal dumping indicators, blocked sidewalks, and other visible sanitation concerns.
+Potential uses include noting a person on the ground, a crowd gathered around a person, a vehicle collision scene, blocked access for responding crews, and a person motionless, all as visible-scene observations only.
 
 These are candidate features, not claims that every feature must be completed for the hackathon.
 
@@ -197,30 +197,32 @@ These are candidate features, not claims that every feature must be completed fo
 
 Test examples of:
 
-1. An overflowing trash bin.
-2. Waste accumulated on a sidewalk.
-3. A visibly obstructed pedestrian path.
-4. A relatively clean sidewalk.
-5. A normal collection area.
-6. Objects that resemble discarded waste but are not clearly refuse.
+1. A person on the ground.
+2. A crowd gathered around a person.
+3. A vehicle collision scene.
+4. Blocked access for responding crews.
+5. A person motionless.
+6. Normal activity, no incident visible.
 7. Images with poor visibility or ambiguous conditions.
+8. Look-alikes that must not fire an alert: sleeping on a bench, sunbathing, yoga or stretching, sitting on a curb resting, CPR training manikin.
 
 ### Required capabilities
 
 A. Visual inspection
 
-Analyze an image or supported video input and identify potential sanitation issues.
+Analyze an image or supported video input and describe only what is visibly happening at the scene.
 
 B. Structured observations
 
 Return:
 
-* Observed condition.
-* Potential issue category.
+* Observed scene.
+* Visible-scene category.
 * Visual evidence.
-* Severity assessment, if a defensible rubric exists.
 * Uncertainty.
-* Recommended inspection or review status.
+* Human review status.
+
+No diagnosis, no cause determination, no severity or triage call, and no treatment language anywhere in categories, prompts, UI copy, or demo material.
 
 C. Inspection history
 
@@ -234,9 +236,7 @@ Compare predictions against labeled test examples and measure false alarms and m
 
 ### Important limitations
 
-The model should not claim that a sanitation violation has legally occurred based on an image alone.
-
-Distinguish visible conditions from legal determinations, property ownership, intent, and responsibility.
+Scene awareness only. The model does not diagnose, determine a cause, or recommend treatment. No automatic dispatch. Every assessment requires human verification.
 
 Do not automatically issue citations or penalties.
 
@@ -359,7 +359,7 @@ Own:
 
 * Sentinel event categories and test cases.
 * Ember smoke and fire test cases.
-* Sanitas sanitation test cases.
+* Medicus EMS scene test cases.
 * Ground-truth labels.
 * Evaluation scripts.
 * Performance metrics.
@@ -404,7 +404,7 @@ Use a common assessment format where practical.
 A proposed structure is:
 
 {
-"product": "sentinel | ember | sanitas",
+"product": "sentinel | ember | medicus",
 "timestamp": "ISO-8601 timestamp",
 "observations": [
 {
@@ -505,11 +505,11 @@ Use safe, prerecorded footage or labeled images representing smoke, flames, and 
 
 Show whether the system distinguishes them and how it handles ambiguity.
 
-### Meta Sanitas demonstration
+### Meta Medicus demonstration
 
-Use representative images of overflowing bins, visible waste, blocked paths, and clean environments.
+Use representative images of EMS scenes: a person on the ground, a crowd around a person, a vehicle collision scene, blocked crew access, and normal activity, plus the look-alikes that must not fire an alert.
 
-Show the resulting inspection assessments and the evaluation results.
+Show the resulting scene-awareness assessments and the evaluation results.
 
 Only demonstrate features that actually work.
 
@@ -539,13 +539,13 @@ Visual input → Actual model processing → Validated structured assessment →
 
 Use Meta Sentinel as the first end-to-end integration target because it is the primary product and has the original live-camera concept.
 
-Do not delay the other products unnecessarily: Agent 3 can prepare the Ember and Sanitas test datasets and product-specific logic in parallel.
+Do not delay the other products unnecessarily: Agent 3 can prepare the Ember and Medicus test datasets and product-specific logic in parallel.
 
 Phase 3: Extend to all three products
 
 * Add Sentinel event assessment.
 * Add Ember fire and smoke assessment.
-* Add Sanitas sanitation inspection.
+* Add Medicus EMS scene awareness.
 * Reuse verified infrastructure.
 * Keep product-specific evaluation separate.
 
@@ -594,7 +594,7 @@ Build three specialized, functional public-sector AI applications:
 
 * Meta Sentinel for the NYPD: visual incident awareness and evidence-supported event assessment.
 * Meta Ember for the FDNY: visual fire and smoke hazard awareness.
-* Meta Sanitas for the Department of Sanitation: visual sanitation inspection and environmental maintenance support.
+* Meta Medicus for FDNY EMS: visible-scene awareness only, no diagnosis or treatment.
 
 Share infrastructure intelligently, integrate Meta AI technology meaningfully, and validate each application's real capabilities.
 

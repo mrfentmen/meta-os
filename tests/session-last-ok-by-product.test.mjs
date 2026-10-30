@@ -41,7 +41,7 @@ test("empty log: every product bucket is null", () => {
   assert.deepEqual(log.stats().lastOkAtByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -53,7 +53,7 @@ test("each product's most recent ok entry wins, by record order", () => {
   assert.deepEqual(log.stats().lastOkAtByProduct, {
     vigiles: "2026-10-29T12:05:00.000Z",
     ignis: "2026-10-29T12:10:00.000Z",
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -62,19 +62,19 @@ test("a product with no ok entry stays null while other buckets move", () => {
   recordOk(log, "2026-10-29T12:00:00.000Z", "vigiles");
   assert.equal(log.stats().lastOkAtByProduct.vigiles, "2026-10-29T12:00:00.000Z");
   assert.equal(log.stats().lastOkAtByProduct.ignis, null);
-  assert.equal(log.stats().lastOkAtByProduct.sanitas, null);
+  assert.equal(log.stats().lastOkAtByProduct.medicus, null);
 });
 
 test("failures after the last success never move any bucket", () => {
   const log = new SessionLog();
   recordOk(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordOk(log, "2026-10-29T12:05:00.000Z", "sanitas");
+  recordOk(log, "2026-10-29T12:05:00.000Z", "medicus");
   recordFailed(log, "ignis", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   assert.deepEqual(log.stats().lastOkAtByProduct, {
     vigiles: null,
     ignis: "2026-10-29T12:00:00.000Z",
-    sanitas: "2026-10-29T12:05:00.000Z",
+    medicus: "2026-10-29T12:05:00.000Z",
   });
 });
 
@@ -85,7 +85,7 @@ test("failures alone leave every bucket null", () => {
   assert.deepEqual(log.stats().lastOkAtByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -95,7 +95,7 @@ test("ok entry with an unknown product moves no bucket", () => {
   assert.deepEqual(log.stats().lastOkAtByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -118,7 +118,7 @@ test("lastOkAtByProduct follows clear: back to null", () => {
   assert.deepEqual(log.stats().lastOkAtByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
 });
 
@@ -127,7 +127,7 @@ test("web wiring: updateLogStats renders the per-product last-success line from 
   assert.match(app, /logStatsLastOkByProduct: \$\("log-stats-last-ok-by-product"\)/);
   assert.match(
     app,
-    /Last success by product: Vigiles \$\{stats\.lastOkAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.lastOkAtByProduct\.ignis \?\? "none"\} · Sanitas \$\{stats\.lastOkAtByProduct\.sanitas \?\? "none"\}/,
+    /Last success by product: Vigiles \$\{stats\.lastOkAtByProduct\.vigiles \?\? "none"\} · Ignis \$\{stats\.lastOkAtByProduct\.ignis \?\? "none"\} · Medicus \$\{stats\.lastOkAtByProduct\.medicus \?\? "none"\}/,
     "updateLogStats sets the per-product last-success line from stats()",
   );
 });
@@ -136,7 +136,7 @@ test("web wiring: session-log panel holds the per-product last-success stats ele
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-last-ok-by-product" class="note mono">Last success by product: Vigiles none · Ignis none · Sanitas none<\/p>/,
+    /<p id="log-stats-last-ok-by-product" class="note mono">Last success by product: Vigiles none · Ignis none · Medicus none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

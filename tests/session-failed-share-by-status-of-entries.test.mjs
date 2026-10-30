@@ -86,7 +86,7 @@ test("cells always sum to the global failed share", () => {
   const log = new SessionLog();
   recordOk(log, "vigiles");
   recordFailed(log, "ignis", "network_error");
-  recordFailed(log, "sanitas", "http_error");
+  recordFailed(log, "medicus", "http_error");
   const shares = log.stats().failedShareByStatusOfEntries;
   const sum = Object.values(shares).reduce((a, b) => a + b, 0);
   assert.equal(sum, log.stats().failedShare);
@@ -108,7 +108,7 @@ test("a failure with an unknown product still moves its cause cell", () => {
 
 test("a failure with a missing product still moves its cause cell", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   recordFailed(log, null, "http_error");
   assert.deepEqual(log.stats().failedShareByStatusOfEntries, {
     network_error: 0,
@@ -141,11 +141,11 @@ test("the global cells equal the DETAIL-42 cells summed across products when eve
   recordOk(log, "vigiles");
   recordFailed(log, "ignis", "network_error");
   recordFailed(log, "ignis", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   const stats = log.stats();
   const byProduct = stats.failedShareByStatusOfEntriesByProduct;
   for (const cause of ["network_error", "http_error", "invalid_response"]) {
-    const summed = byProduct.vigiles[cause] + byProduct.ignis[cause] + byProduct.sanitas[cause];
+    const summed = byProduct.vigiles[cause] + byProduct.ignis[cause] + byProduct.medicus[cause];
     assert.equal(summed, stats.failedShareByStatusOfEntries[cause]);
   }
 });

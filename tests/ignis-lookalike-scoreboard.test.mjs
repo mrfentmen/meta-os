@@ -69,7 +69,7 @@ test("scoreboard: failures and other products move no bucket", () => {
     { status: "network_error", product: "ignis", error: "down" },
     { status: "http_error", product: "ignis", error: "500" },
     ok("vigiles", "visible smoke"),
-    ok("sanitas", "steam or fog"),
+    ok("medicus", "steam or fog"),
     { status: "ok", product: "vigiles", response: { assessment: { category: "visible flame" } } },
   ]);
   assert.deepEqual(counts, { ...zero, total: 1, visibleSmoke: 1 });
@@ -111,7 +111,7 @@ test("web: the scoreboard panel shows only under Ignis", () => {
     /body\[data-product="ignis"\] \.ignis-scoreboard-panel \{\s+display: block;\s+\}/,
   );
   assert.doesNotMatch(css, /body\[data-product="vigiles"\] \.ignis-scoreboard-panel/);
-  assert.doesNotMatch(css, /body\[data-product="sanitas"\] \.ignis-scoreboard-panel/);
+  assert.doesNotMatch(css, /body\[data-product="medicus"\] \.ignis-scoreboard-panel/);
   // Scoped to the scoreboard block: OPS-CONSOLE-6 follows it with
   // Vigiles' own console pass (same direction, Vigiles lane), which
   // legitimately carries Vigiles blue and is not a scoreboard color.
@@ -119,7 +119,7 @@ test("web: the scoreboard panel shows only under Ignis", () => {
     css.indexOf("/* IGNIS-ONEOFONE-1"),
     css.indexOf("/* OPS-CONSOLE-6"),
   );
-  assert.doesNotMatch(block, /#5da864/, "no Sanitas green in the scoreboard block");
+  assert.doesNotMatch(block, /#5da864/, "no Medicus green in the scoreboard block");
   assert.doesNotMatch(block, /#4f7ec2/, "no Vigiles blue in the scoreboard block");
 });
 

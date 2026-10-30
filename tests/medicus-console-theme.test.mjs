@@ -1,8 +1,8 @@
 // Node built-in test runner, no dependencies:
-//   node --test tests/sanitas-console-theme.test.mjs
+//   node --test tests/medicus-console-theme.test.mjs
 //
-// Sanitas ops-console pass (Del UI direction, Oct 29): modern, elite,
-// professional dispatch-console feel on the web surface, Sanitas only.
+// Medicus ops-console pass (Del UI direction, Oct 29): modern, elite,
+// professional dispatch-console feel on the web surface, Medicus only.
 // Static checks on the shipped CSS: uppercase section labels, mono
 // status readout, sharper primary buttons, framed console readouts.
 // Guardrail: the console block touches no disclosure, no limitations
@@ -13,42 +13,42 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
-const marker = "/* Sanitas ops-console pass";
+const marker = "/* Medicus ops-console pass";
 const consoleBlock = css.slice(css.indexOf(marker));
 assert.notEqual(css.indexOf(marker), -1, "console block exists");
 
-function sanitasRule(selector) {
+function medicusRule(selector) {
   const rule = consoleBlock.match(
-    new RegExp(`body\\[data-product="sanitas"\\] ${selector} \\{[^}]*\\}`),
+    new RegExp(`body\\[data-product="medicus"\\] ${selector} \\{[^}]*\\}`),
   );
-  assert.ok(rule, `Sanitas console rule exists: ${selector}`);
+  assert.ok(rule, `Medicus console rule exists: ${selector}`);
   return rule[0];
 }
 
-test("console: Sanitas panel headers are uppercase with console tracking", () => {
-  const rule = sanitasRule("\\.panel h2");
+test("console: Medicus panel headers are uppercase with console tracking", () => {
+  const rule = medicusRule("\\.panel h2");
   assert.match(rule, /text-transform: uppercase/);
   assert.match(rule, /letter-spacing: 0\.08em/);
 });
 
-test("console: Sanitas subheads are uppercase with console tracking", () => {
-  const rule = sanitasRule("\\.subhead");
+test("console: Medicus subheads are uppercase with console tracking", () => {
+  const rule = medicusRule("\\.subhead");
   assert.match(rule, /text-transform: uppercase/);
   assert.match(rule, /letter-spacing: 0\.06em/);
 });
 
-test("console: Sanitas status line reads in mono", () => {
-  const rule = sanitasRule("\\.status");
+test("console: Medicus status line reads in mono", () => {
+  const rule = medicusRule("\\.status");
   assert.match(rule, /font-family: var\(--mono\)/);
 });
 
-test("console: Sanitas primary buttons are sharper", () => {
-  const rule = sanitasRule("\\.btn-primary");
+test("console: Medicus primary buttons are sharper", () => {
+  const rule = medicusRule("\\.btn-primary");
   assert.match(rule, /border-radius: 3px/);
 });
 
-test("console: Sanitas latest-assessment readout is framed", () => {
-  const rule = sanitasRule("\\.mono-block");
+test("console: Medicus latest-assessment readout is framed", () => {
+  const rule = medicusRule("\\.mono-block");
   assert.match(rule, /border: 1px solid rgba\(93, 168, 100, 0\.4\)/);
   assert.match(rule, /background: rgba\(0, 0, 0, 0\.25\)/);
 });

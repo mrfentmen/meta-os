@@ -56,7 +56,7 @@ test("an odd count reads the middle value, regardless of insertion order", () =>
   const log = new SessionLog();
   recordOk(log, "vigiles", 300);
   recordOk(log, "ignis", 100);
-  recordOk(log, "sanitas", 200);
+  recordOk(log, "medicus", 200);
   assert.equal(log.stats().medianOkLatencyMs, 200);
 });
 
@@ -64,7 +64,7 @@ test("an even count reads the mean of the two middle values", () => {
   const log = new SessionLog();
   recordOk(log, "vigiles", 400);
   recordOk(log, "ignis", 100);
-  recordOk(log, "sanitas", 300);
+  recordOk(log, "medicus", 300);
   recordOk(log, "vigiles", 200);
   assert.equal(log.stats().medianOkLatencyMs, 250);
 });

@@ -5,7 +5,7 @@
 //
 // Contract (response to POST { product, timestamp, image }):
 // {
-//   "product": "vigiles" | "ignis" | "sanitas" (must match the request),
+//   "product": "vigiles" | "ignis" | "medicus" (must match the request),
 //   "timestamp": "ISO-8601 timestamp",
 //   "observations": [
 //     { "category": string, "description": string, "evidence": string,

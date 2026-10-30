@@ -41,7 +41,7 @@ test("endpoints follow insertion order across products, not timestamp order", ()
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:05:00.000Z", "vigiles");
   recordAt(log, "2026-10-29T12:00:00.000Z", "ignis");
-  recordAt(log, "2026-10-29T12:03:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:03:00.000Z", "medicus");
   const stats = log.stats();
   assert.equal(stats.firstEntryAt, "2026-10-29T12:05:00.000Z");
   assert.equal(stats.lastEntryAt, "2026-10-29T12:03:00.000Z");
@@ -67,12 +67,12 @@ test("entries with an unknown product still open and close the global endpoints"
   assert.deepEqual(stats.firstEntryAtByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
   assert.deepEqual(stats.lastEntryAtByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
   assert.equal(stats.total, 2);
 });
@@ -114,7 +114,7 @@ test("a timestamp-less first entry leaves the endpoints open for a later usable 
 
 test("a single usable entry opens and closes both endpoints at the same timestamp", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
   const stats = log.stats();
   assert.equal(stats.firstEntryAt, "2026-10-29T12:00:00.000Z");
   assert.equal(stats.lastEntryAt, "2026-10-29T12:00:00.000Z");

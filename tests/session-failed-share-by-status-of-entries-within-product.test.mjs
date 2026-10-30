@@ -30,7 +30,7 @@ import { SessionLog } from "../js/log.js";
 
 const NULL_CELL = { network_error: null, http_error: null, invalid_response: null };
 const ZERO_CELL = { network_error: 0, http_error: 0, invalid_response: 0 };
-const NULL_SHARES = { vigiles: NULL_CELL, ignis: NULL_CELL, sanitas: NULL_CELL };
+const NULL_SHARES = { vigiles: NULL_CELL, ignis: NULL_CELL, medicus: NULL_CELL };
 
 function recordOk(log, product, latencyMs = 100) {
   return log.record({
@@ -63,7 +63,7 @@ test("a single failure reads 1 in its own cell; products with no entries read nu
   assert.deepEqual(log.stats().failedShareByStatusOfEntriesWithinProduct, {
     vigiles: NULL_CELL,
     ignis: { network_error: 0, http_error: 1, invalid_response: 0 },
-    sanitas: NULL_CELL,
+    medicus: NULL_CELL,
   });
 });
 
@@ -80,7 +80,7 @@ test("mixed counts divide by the product's own entry total, not the session tota
   assert.deepEqual(log.stats().failedShareByStatusOfEntriesWithinProduct, {
     vigiles: { network_error: 1 / 3, http_error: 0, invalid_response: 0 },
     ignis: { network_error: 0, http_error: 1 / 3, invalid_response: 1 / 3 },
-    sanitas: NULL_CELL,
+    medicus: NULL_CELL,
   });
 });
 
@@ -89,14 +89,14 @@ test("a product's three cause cells sum to its DETAIL-12 failed share", () => {
   recordOk(log, "vigiles");
   recordFailed(log, "ignis", "network_error");
   recordFailed(log, "ignis", "http_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "invalid_response");
   const stats = log.stats();
   const ignisCells = stats.failedShareByStatusOfEntriesWithinProduct.ignis;
   const ignisSum = ignisCells.network_error + ignisCells.http_error + ignisCells.invalid_response;
   assert.equal(ignisSum, stats.failedShareByProduct.ignis);
-  const sanitasCells = stats.failedShareByStatusOfEntriesWithinProduct.sanitas;
-  const sanitasSum = sanitasCells.network_error + sanitasCells.http_error + sanitasCells.invalid_response;
-  assert.equal(sanitasSum, stats.failedShareByProduct.sanitas);
+  const medicusCells = stats.failedShareByStatusOfEntriesWithinProduct.medicus;
+  const medicusSum = medicusCells.network_error + medicusCells.http_error + medicusCells.invalid_response;
+  assert.equal(medicusSum, stats.failedShareByProduct.medicus);
 });
 
 test("a failure with an unknown product moves no cell and no denominator", () => {
@@ -109,19 +109,19 @@ test("a failure with an unknown product moves no cell and no denominator", () =>
   assert.deepEqual(log.stats().failedShareByStatusOfEntriesWithinProduct, {
     vigiles: ZERO_CELL,
     ignis: NULL_CELL,
-    sanitas: NULL_CELL,
+    medicus: NULL_CELL,
   });
   assert.equal(log.stats().failedShare, 0.5);
 });
 
 test("a failure with a missing product moves no cell and no denominator", () => {
   const log = new SessionLog();
-  recordOk(log, "sanitas");
+  recordOk(log, "medicus");
   recordFailed(log, null, "http_error");
   assert.deepEqual(log.stats().failedShareByStatusOfEntriesWithinProduct, {
     vigiles: NULL_CELL,
     ignis: NULL_CELL,
-    sanitas: ZERO_CELL,
+    medicus: ZERO_CELL,
   });
   assert.equal(log.stats().failedShare, 0.5);
 });
@@ -142,18 +142,18 @@ test("successes sit in the denominator but move no cell, and a success-only prod
   assert.deepEqual(log.stats().failedShareByStatusOfEntriesWithinProduct, {
     vigiles: ZERO_CELL,
     ignis: ZERO_CELL,
-    sanitas: NULL_CELL,
+    medicus: NULL_CELL,
   });
 });
 
 test("a failure-only product divides by its own failure count", () => {
   const log = new SessionLog();
-  recordFailed(log, "sanitas", "network_error");
-  recordFailed(log, "sanitas", "invalid_response");
+  recordFailed(log, "medicus", "network_error");
+  recordFailed(log, "medicus", "invalid_response");
   assert.deepEqual(log.stats().failedShareByStatusOfEntriesWithinProduct, {
     vigiles: NULL_CELL,
     ignis: NULL_CELL,
-    sanitas: { network_error: 0.5, http_error: 0, invalid_response: 0.5 },
+    medicus: { network_error: 0.5, http_error: 0, invalid_response: 0.5 },
   });
 });
 
@@ -178,7 +178,7 @@ test("web wiring: session-log panel holds the failure-cause-share-of-that-produc
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   assert.match(
     html,
-    /<p id="log-stats-failed-share-by-status-of-entries-within-product" class="note mono">Failure-cause share of that product's entries by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Sanitas Network none, HTTP none, Invalid response none<\/p>/,
+    /<p id="log-stats-failed-share-by-status-of-entries-within-product" class="note mono">Failure-cause share of that product's entries by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Medicus Network none, HTTP none, Invalid response none<\/p>/,
     "static placeholder matches the empty-log rendering exactly",
   );
 });

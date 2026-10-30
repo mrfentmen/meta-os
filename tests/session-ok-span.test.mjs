@@ -56,7 +56,7 @@ test("span is last minus first success across products, in whole milliseconds", 
 
 test("a session with exactly one usable success reads 0, not null", () => {
   const log = new SessionLog();
-  recordAt(log, "2026-10-29T12:00:00.000Z", "sanitas");
+  recordAt(log, "2026-10-29T12:00:00.000Z", "medicus");
   assert.equal(log.stats().okSpanMs, 0);
 });
 
@@ -73,7 +73,7 @@ test("failures between successes never move the span", () => {
 test("a session with no success reads null even when failures exist", () => {
   const log = new SessionLog();
   recordAt(log, "2026-10-29T12:00:00.000Z", "vigiles", "network_error");
-  recordAt(log, "2026-10-29T12:03:00.000Z", "sanitas", "http_error");
+  recordAt(log, "2026-10-29T12:03:00.000Z", "medicus", "http_error");
   assert.equal(log.stats().okSpanMs, null);
 });
 
@@ -85,7 +85,7 @@ test("successes with an unknown product still open and close the global span", (
   assert.deepEqual(log.stats().okSpanMsByProduct, {
     vigiles: null,
     ignis: null,
-    sanitas: null,
+    medicus: null,
   });
   assert.equal(log.stats().total, 2);
 });

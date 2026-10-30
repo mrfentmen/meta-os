@@ -50,18 +50,18 @@ test("web: Ignis console headings keep base size and weight for native parity", 
 });
 
 test("web: console headings touch Ignis only, never another product", () => {
-  // Sanitas legitimately carries its own panel-heading rule from
-  // Milo's Sanitas ops-console pass, and Vigiles legitimately
+  // Medicus legitimately carries its own panel-heading rule from
+  // Milo's Medicus ops-console pass, and Vigiles legitimately
   // carries its own from OPS-CONSOLE-6 (same direction, their
   // lanes); the Ignis rule must not itself restyle any other
   // product, and the Ignis block must not carry their colors.
   const rule = ignisPanelH2Rule();
-  assert.doesNotMatch(rule, /#5da864/, "Ignis rule carries no Sanitas green");
+  assert.doesNotMatch(rule, /#5da864/, "Ignis rule carries no Medicus green");
   assert.doesNotMatch(rule, /#4f7ec2/, "Ignis rule carries no Vigiles blue");
   const block = css.slice(
     css.indexOf("/* OPS-CONSOLE-1"),
     css.indexOf("/* OPS-CONSOLE-6"),
   );
-  assert.doesNotMatch(block, /#5da864/, "no Sanitas green in the console block");
+  assert.doesNotMatch(block, /#5da864/, "no Medicus green in the console block");
   assert.doesNotMatch(block, /#4f7ec2/, "no Vigiles blue in the console block");
 });

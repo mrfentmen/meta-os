@@ -3,7 +3,7 @@
 // against the frozen v2 contract (js/schema.js) before it is sent.
 //
 // Request (from js/client.js): JSON object
-//   { product: "vigiles"|"ignis"|"sanitas",
+//   { product: "vigiles"|"ignis"|"medicus",
 //     timestamp: ISO-8601 string,
 //     image: "data:image/jpeg;base64,..." }
 //
@@ -77,7 +77,7 @@ export function validateAssessRequest(payload) {
     return { ok: false, errors: ["request body is not a JSON object"] };
   }
   if (!isProductId(payload.product)) {
-    errors.push('product: must be one of "vigiles", "ignis", "sanitas"');
+    errors.push('product: must be one of "vigiles", "ignis", "medicus"');
   }
   if (!isValidIso8601(payload.timestamp)) {
     errors.push("timestamp: must be a valid ISO-8601 timestamp with timezone");
