@@ -68,17 +68,27 @@ pub trait Integration {
     fn build_previous_session(&self, record: &Value, jobs: &[Value]) -> Option<Value>;
     /// `brief.previous_session_digest(prev)`.
     fn previous_session_digest(&self, prev: &Value) -> Option<String>;
-    /// `brief.generate_brief(snapshot, kind=..., nick=...)` -> record.
-    fn generate_brief(&self, snapshot: &Value, kind: &str) -> Value;
+    /// `brief.generate_brief(snapshot, room, kind=..., nick=..., now=...)`
+    /// -> (text, stored record).
+    fn generate_brief(
+        &self,
+        snapshot: &Value,
+        room: &str,
+        kind: &str,
+        nick: Option<&str>,
+        now: Option<i64>,
+    ) -> (String, Value);
     /// `brief.detect_new_nicks(snapshot)`.
     fn detect_new_nicks(&self, snapshot: &Value) -> Vec<String>;
+    /// `brief.offer_onjoin_brief(snapshot, room, now=...)` -> offers.
+    fn offer_onjoin_brief(&self, snapshot: &Value, room: &str, now: Option<i64>) -> Vec<Value>;
     /// `brief.list_briefs(room)`.
     fn list_briefs(&self, room: &str) -> Vec<Value>;
-    /// Read a stored brief back by id (the store seat).
-    fn get_brief(&self, brief_id: &str) -> Option<Value>;
-    /// `store.write_alert(alert)` -> the stored WDG-010 record.
-    fn write_alert(&self, alert: &Value) -> Value;
-    /// Read a stored alert back by id; None when absent.
+    /// `brief.get_brief(room, ts)` — stored briefs read back by ts.
+    fn get_brief(&self, room: &str, ts: i64) -> Option<Value>;
+    /// `store.write_alert(alert, room=...)` -> the stored WDG-010 record.
+    fn write_alert(&self, alert: &Value, room: &str) -> Value;
+    /// `store.get_alert(alert_id)`; None when absent.
     fn read_alert(&self, alert_id: &str) -> Option<Value>;
     /// The harness clock (`time.time` under the fake, or wall).
     fn now(&self) -> i64;

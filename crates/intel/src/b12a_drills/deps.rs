@@ -146,4 +146,15 @@ pub trait Watchdog {
     ) -> Vec<Value>;
     /// `watchdog.announcements_for(alerts)`.
     fn announcements_for(&self, alerts: &[Value]) -> Vec<String>;
+    /// `watchdog.resolve_alerts_for_job(jobs, job_id, now)` —
+    /// flip this job's open alert records to resolved when the
+    /// underlying job state cleared; returns the resolved ids.
+    /// The jobs surface is the e2e seam (in the source the jobs
+    /// module itself rides in this seat).
+    fn resolve_alerts_for_job(
+        &self,
+        jobs: &dyn super::e2e1::Integration,
+        job_id: &str,
+        now: Option<i64>,
+    ) -> Vec<String>;
 }
