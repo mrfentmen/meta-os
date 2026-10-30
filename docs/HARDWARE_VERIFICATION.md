@@ -121,19 +121,30 @@ open MetaTrio.app
    and confirm the app shows the real connection error, not a fake
    result.
 
-## 4. Live backend round trip (server exists, live calls HELD)
+## 4. Live backend round trip (server exists; Spark test phase LIVE since 2026-10-30)
 
-Agent 2's `/api/assess` server exists (`server/server.mjs`), but live
-model calls are held per Del's ruling (Spark stays off until the build
-is complete and Del green-lights the test phase). The held-state round
-trip is verified: 2026-10-28, the server answered `/api/health` with
-`live_enabled: false`, and a valid assess request returned HTTP 503
-with the real held message. The frontends surface that message honestly
-and render no assessment. Until live calls are enabled, repeat checks
-1–3 against the held server only to confirm the honest-error path; the
-live-model checks below stay blocked. Once live calls are enabled,
-repeat checks 1–3 with the endpoint pointed at it, for one product at
-a time:
+Agent 2's `/api/assess` server exists (`server/server.mjs`). Live
+model calls were held until Del green-lit the test phase, and that
+green light has now come: 2026-10-30 00:23 EDT, Del via Pax on the
+bus. The held-state round trip is verified: 2026-10-28, the server
+answered `/api/health` with `live_enabled: false`, and a valid assess
+request returned HTTP 503 with the real held message. The frontends
+surface that message honestly and render no assessment. That record
+stands as history; what follows is the current state.
+
+Update 2026-10-30 (Hana, from Pax's official bus post): the Spark
+test phase is LIVE, on a $75 test budget. Del puts SPARK_API_KEY in
+the server env on the Mac himself — never on the bus, never
+committed. The OS-queue round trip already has live proof from Pax:
+a steam frame through the queue service and resident agent, validated
+before any result write, idempotent with no re-bill. What is still
+unproven is a live assessment driven from the web console or the
+native app UI on real hardware — checks 1–3 below stay to run with a
+live backend, on the Mac that holds the key. The sandbox still makes
+no live calls: no key here. Until a live backend is pointed at,
+repeat checks 1–3 against the held server only to confirm the
+honest-error path. With a live backend, repeat checks 1–3 with the
+endpoint pointed at it, for one product at a time:
 
 1. A real frame returns a valid v2 assessment: it renders with product,
    category, observations, evidence, confidence (or "not reported"),
@@ -143,6 +154,51 @@ a time:
    listed, and nothing renders as a detection.
 3. The client-measured round-trip latency appears separately from the
    server-reported `processing.latency_ms`; the two are never mixed.
+
+## 5. Logo panel (web and native, no camera needed)
+
+The console's Logo panel (Del direction, Oct 30) needs no camera, so
+these checks can run before the camera checks. They cover the web
+panel and the native Mac panel together: same six presets, same
+custom picker, same Reset, same speed slider, same pause button,
+same storage keys (`meta-trio-logo-color`, `meta-trio-logo-speed`,
+`meta-trio-logo-paused`).
+
+Web console (phone or Mac browser):
+
+1. Presets: tap each of the six swatches in turn — Meta blue, Cyan,
+   Violet, Pink, Emerald, Gold. The spinning loop behind the panels
+   re-tints live to that color, and the chosen swatch shows its ring.
+2. Custom picker: pick a color that is not a preset. The loop
+   re-tints, and the value line shows the hex in capitals.
+3. Reset: tap Reset to product color. The loop returns to the
+   selected product's tint (Vigiles blue, Ignis red, Medicus green),
+   and the value line reads "Logo color: product color".
+4. Speed: drag the slider to 0% — the loop stands still. Drag it to
+   100% — the loop runs clearly faster than at 25%. The value line
+   shows the percent.
+5. Pause: tap Pause logo — the loop holds its last frame. Tap Resume
+   logo — the loop continues from that frame, not from the start.
+6. Persistence: reload the page. The saved color, speed, and pause
+   state come back before the first frame — no flash of the product
+   tint or the usual drift first.
+7. Reduced motion: with Reduce Motion on, the loop renders one still
+   frame.
+8. Studio link: tap "Open the full logo studio" in the Logo panel.
+   The large animated logo studio page opens.
+
+Native Mac app (MetaTrio):
+
+1. Run the same preset, picker, Reset, speed, and pause steps in the
+   Logo panel. Quit and relaunch the app: the choices come back,
+   exactly like the web reload check.
+2. Hover a swatch: its name appears. With VoiceOver on, the chosen
+   preset is announced as selected, and the pause button announces
+   Paused or Playing.
+3. With Reduce Motion on, the loop renders one still frame.
+4. The note under the panel says the large logo stays in the web
+   studio. There is no studio link to tap in the native app — confirm
+   the note reads that way, and do not expect a link.
 
 ## Results log
 
@@ -159,8 +215,14 @@ and any fix that followed). Until then, this file's status is:
   compiled — no Swift toolchain in the sandbox)
 - Native app build and camera: NOT RUN (no Swift toolchain in the
   sandbox; source reviewed by inspection only)
-- Live backend round trip: BLOCKED on live calls (server exists, live
-  calls held per Del's ruling); held-state round trip VERIFIED
-  2026-10-28 (`/api/health` reports `live_enabled: false`, assess
-  returns HTTP 503 with the real held message, frontends show it and
-  render no assessment)
+- Live backend round trip: TEST PHASE LIVE since 2026-10-30 00:23 EDT
+  (Del's green light via Pax, $75 budget, key on the Mac only);
+  queue round trip proven live by Pax; a live assessment driven
+  from the web or native UI is still NOT RUN. Held-state round trip
+  VERIFIED 2026-10-28 (`/api/health` reports `live_enabled: false`,
+  assess returns HTTP 503 with the real held message, frontends show
+  it and render no assessment)
+- Logo panel (web and native): NOT RUN on real hardware (checks
+  added 2026-10-30; web unit tests cover the color, speed, and pause
+  logic, native Swift reviewed by inspection only, no Swift toolchain
+  in the sandbox)
