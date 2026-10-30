@@ -12,7 +12,7 @@ struct StrVal {
     expire_at: Option<f64>,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct FakeUpstash {
     pub strings: HashMap<String, StrVal>,
     pub hashes: HashMap<String, HashMap<String, String>>,
