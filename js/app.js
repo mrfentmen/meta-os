@@ -121,6 +121,7 @@ const els = {
   logStatsOkSpanShareOfOwnFailedWindowByProduct: $("log-stats-ok-span-share-of-own-failed-window-by-product"),
   logStatsOkSpanShareOfFailedWindow: $("log-stats-ok-span-share-of-failed-window"),
   logStatsFailedSpanShareOfOkWindow: $("log-stats-failed-span-share-of-ok-window"),
+  logStatsEntrySpanShareOfOkWindow: $("log-stats-entry-span-share-of-ok-window"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1022,6 +1023,20 @@ function updateLogStats() {
   // insertion order.
   els.logStatsFailedSpanShareOfOkWindow.textContent =
     `Failure-span share of success window: ${stats.failedSpanShareOfOkWindow === null ? "none" : `${Math.round(stats.failedSpanShareOfOkWindow * 100)}%`}`;
+  // DETAIL-66: the global entry-span-share-of-
+  // success-window line re-bases DETAIL-24's global
+  // entry span on DETAIL-22's global ok span,
+  // rendered as a whole percent, or "none" with no
+  // usable ok window — the recording window read
+  // against the success window, the inverse
+  // direction of DETAIL-57's line. Above 100% is
+  // the normal case (the recording outlasts its
+  // successes); exactly 100% means every entry was
+  // a success spanning the whole recording. Raw
+  // ratio, never clamped: below 100% or below 0%
+  // means timestamps ran out of insertion order.
+  els.logStatsEntrySpanShareOfOkWindow.textContent =
+    `Entry-span share of success window: ${stats.entrySpanShareOfOkWindow === null ? "none" : `${Math.round(stats.entrySpanShareOfOkWindow * 100)}%`}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is

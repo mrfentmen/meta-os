@@ -1933,6 +1933,53 @@ export class SessionLog {
           : failedSpanMs === null
             ? null
             : failedSpanMs / okSpanMs;
+    // DETAIL-66: the global entry-span share of the
+    // global ok window (entrySpanShareOfOkWindow):
+    // the session's DETAIL-24 global entry span over
+    // its DETAIL-22 global ok span — the recording
+    // window read against the success window, so a
+    // session whose recording ran four times as
+    // long as its successes reads that at a glance,
+    // where DETAIL-57's ok-span share of the entry
+    // window states the same relation from the
+    // other side. Derived only from the two global
+    // spans, not a new rule. Both spans are
+    // product-blind, unlike DETAIL-53's and
+    // DETAIL-55's buckets: an entry of any status
+    // with an unknown or missing product still
+    // opens and closes the global entry span, and a
+    // success with an unknown or missing product
+    // still opens and closes the global ok span, so
+    // either moves this share where it moves no
+    // by-product bucket. This is a raw ratio, never
+    // clamped: a share above 1 is the normal case
+    // (the recording outlasts its successes), a
+    // share of exactly 1 means every entry was a
+    // success spanning the whole recording, and a
+    // share below 1 or below 0 means timestamps ran
+    // out of insertion order, exactly as DETAIL-22's
+    // and DETAIL-24's raw spans do. Null when the
+    // session holds no usable ok window at all (an
+    // empty log, a single success, or all successes
+    // at one timestamp — a zero ok span has no
+    // share to divide, never NaN); null when
+    // successes were recorded but the global ok span
+    // is unknown (no usable timestamp pair — never
+    // a fabricated window). No 0 case exists: once
+    // a nonzero ok window exists, the entries that
+    // carry it already stretch the entry span to at
+    // least that window, so the ratio is never 0
+    // from a real log — a 0 would mean a fabricated
+    // entry span, and this field never fabricates
+    // one (the null entry-span guard below covers
+    // only the defensive case, which cannot occur
+    // while an ok window exists).
+    const entrySpanShareOfOkWindow =
+      okSpanMs === null || okSpanMs === 0
+        ? null
+        : globalEntrySpanMs === null
+          ? null
+          : globalEntrySpanMs / okSpanMs;
     return {
       total: this._entries.length,
       ok,
@@ -2326,6 +2373,16 @@ export class SessionLog {
       // a nonzero ok window exists. Both spans are
       // product-blind, unlike DETAIL-53/55.
       failedSpanShareOfOkWindow,
+      // DETAIL-66: the global entry-span share of the
+      // global ok window
+      // (entrySpanShareOfOkWindow): the DETAIL-24
+      // global entry span over the DETAIL-22 global
+      // ok span — the recording window read against
+      // the success window, the inverse direction of
+      // DETAIL-57. Null with no usable ok window.
+      // Both spans are product-blind, unlike
+      // DETAIL-53/55.
+      entrySpanShareOfOkWindow,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
