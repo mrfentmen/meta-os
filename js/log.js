@@ -1980,6 +1980,50 @@ export class SessionLog {
         : globalEntrySpanMs === null
           ? null
           : globalEntrySpanMs / okSpanMs;
+    // DETAIL-67: the global entry-span share of the
+    // global failed window (entrySpanShareOfFailedWindow):
+    // the session's DETAIL-24 global entry span over
+    // its DETAIL-23 global failed span — the mirror
+    // of DETAIL-66, the recording window read
+    // against the failure window, so a session whose
+    // recording ran four times as long as its
+    // failures reads that at a glance, where
+    // DETAIL-57's failed-span share of the entry
+    // window states the same relation from the
+    // other side. Derived only from the two global
+    // spans, not a new rule. Both spans are
+    // product-blind, unlike DETAIL-53's and
+    // DETAIL-55's buckets: an entry of any status
+    // with an unknown or missing product still
+    // opens and closes the global entry span, and a
+    // failure with an unknown or missing product
+    // still opens and closes the global failed span,
+    // so either moves this share where it moves no
+    // by-product bucket — matching DETAIL-66's
+    // product-blind globals. This is a raw ratio,
+    // never clamped: a share above 1 is the normal
+    // case (the recording outlasts its failures), a
+    // share of exactly 1 means every entry was a
+    // failure spanning the whole recording, and a
+    // share below 1 or below 0 means timestamps ran
+    // out of insertion order, exactly as DETAIL-23's
+    // and DETAIL-24's raw spans do. Null when the
+    // session holds no usable failed window at all
+    // (an empty log, a single failure, or all
+    // failures at one timestamp — a zero failed span
+    // has no share to divide, never NaN); null when
+    // failures were recorded but the global entry
+    // span is unknown (no usable timestamp pair —
+    // never a fabricated window); 0 when the first
+    // and last entries share one timestamp while
+    // failures stretch across a nonzero failed
+    // window — the out-of-order reading, kept raw.
+    const entrySpanShareOfFailedWindow =
+      failedSpanMs === null || failedSpanMs === 0
+        ? null
+        : globalEntrySpanMs === null
+          ? null
+          : globalEntrySpanMs / failedSpanMs;
     return {
       total: this._entries.length,
       ok,
@@ -2383,6 +2427,18 @@ export class SessionLog {
       // Both spans are product-blind, unlike
       // DETAIL-53/55.
       entrySpanShareOfOkWindow,
+      // DETAIL-67: the global entry-span share of
+      // the global failed window
+      // (entrySpanShareOfFailedWindow): the DETAIL-24
+      // global entry span over the DETAIL-23 global
+      // failed span — the mirror of DETAIL-66, the
+      // inverse direction of DETAIL-57. Null with
+      // no usable failed window, or with no usable
+      // entry span; 0 when the first and last
+      // entries share one timestamp against a
+      // nonzero failed window. Both spans are
+      // product-blind, unlike DETAIL-53/55.
+      entrySpanShareOfFailedWindow,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
