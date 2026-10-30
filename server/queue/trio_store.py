@@ -4,7 +4,10 @@ Mirrors meta-os jobs.py on top of the same transport jobs.py uses:
 Upstash Redis REST (GET command paths for small values, POST bodies
 for big ones), reached through the dynamic-credential surrogate for
 connector custom.upstash — the credential value is never read,
-printed, or logged here.
+printed, or logged here. The store host is deployment configuration,
+resolved at runtime (the TRIO_UPSTASH_HOST env var, or the REST URL
+carried on the credential record when it has one) — it is never
+hardcoded in this repo.
 
 Key layout (namespace overridable via TRIO_JOB_NS, default "trio"):
   <NS>:<jid>        hash: status/product/claim/claimed_at/lease_until/…
@@ -36,13 +39,76 @@ import urllib.request
 
 sys.path.insert(0, "/opt/muse/skills/custom-connector-setup/bin")
 from dynamic_credentials import (  # noqa: E402
-    add_surrogate_to_request, read_json_response)
+    add_surrogate_to_request, dynamic_credential_entry, read_json_response)
 
 NS = os.environ.get("TRIO_JOB_NS", "trio")
 RESULT_PREFIX = "trio"  # result keys are trio:<jid>:result (bus 424)
 AGENT_CREDENTIAL = "custom.upstash"
-UPSTASH_HOST = "upright-mosquito-285786.upstash.io"
-BASE_URL = os.environ.get("RELAY_URL", f"https://{UPSTASH_HOST}").rstrip("/")
+
+
+class TrioStoreConfigError(RuntimeError):
+    """The Upstash store host could not be resolved from configuration.
+
+    Raised when neither TRIO_UPSTASH_HOST nor the custom.upstash
+    credential record supplies the store host. The host is deployment
+    configuration and is never hardcoded in this repo.
+    """
+
+
+_HOST_ENTRY_FIELDS = ("rest_url", "url", "base_url", "host", "hostname")
+
+
+def _host_from_credential():
+    """Best-effort: derive the store host from the credential record.
+
+    The custom.upstash credential is resolved through the same
+    dynamic-credential entry the REST token comes from. If that record
+    carries a REST URL (or a host) in its metadata, parse the host out
+    of it. The token surrogate itself is never inspected — only
+    URL-shaped metadata fields are read. Returns None when the record
+    carries no URL (its current shape: token only).
+    """
+    try:
+        entry = dynamic_credential_entry(AGENT_CREDENTIAL,
+                                         entry_name="access_token")
+    except Exception:
+        return None
+    for field in _HOST_ENTRY_FIELDS:
+        value = entry.get(field)
+        if not isinstance(value, str) or not value.strip():
+            continue
+        candidate = value.strip()
+        host = urllib.parse.urlparse(
+            candidate if "://" in candidate else f"https://{candidate}"
+        ).hostname
+        if host:
+            return host
+    return None
+
+
+def resolve_upstash_host():
+    """Resolve the Upstash store host at runtime; never hardcoded.
+
+    Order: (1) the TRIO_UPSTASH_HOST env var (a bare host, or a full
+    REST URL whose host is taken); (2) the custom.upstash credential
+    record, when it carries a REST URL. Raises TrioStoreConfigError
+    naming the missing configuration when neither source supplies a
+    host — there is deliberately no hardcoded fallback.
+    """
+    env = os.environ.get("TRIO_UPSTASH_HOST", "").strip()
+    if env:
+        host = urllib.parse.urlparse(
+            env if "://" in env else f"https://{env}").hostname
+        if host:
+            return host
+    host = _host_from_credential()
+    if host:
+        return host
+    raise TrioStoreConfigError(
+        "Upstash store host is not configured: set TRIO_UPSTASH_HOST "
+        "to the store host (or its full REST URL), or store the REST "
+        "URL on the custom.upstash credential record. The host is "
+        "deployment configuration and is never hardcoded.")
 
 
 def job_key(jid):
@@ -78,13 +144,32 @@ class UpstashStore:
 
     name = "upstash-redis"
 
+    def __init__(self):
+        # Host resolution is lazy (construction time, never import
+        # time): RELAY_URL, when set, is a full base-URL override and
+        # wins; otherwise the host comes from resolve_upstash_host()
+        # (TRIO_UPSTASH_HOST env, then the credential record's REST
+        # URL) and the base URL is built from it.
+        base = os.environ.get("RELAY_URL", "").strip()
+        if base:
+            self.base_url = base.rstrip("/")
+            self.host = urllib.parse.urlparse(self.base_url).hostname
+            if not self.host:
+                raise TrioStoreConfigError(
+                    "RELAY_URL is set but has no parseable host; set it "
+                    "to the full store base URL, or unset it and set "
+                    "TRIO_UPSTASH_HOST instead.")
+        else:
+            self.host = resolve_upstash_host()
+            self.base_url = f"https://{self.host}"
+
     def _call(self, path, data=None, method="GET"):
-        req = urllib.request.Request(BASE_URL + "/" + path, data=data,
+        req = urllib.request.Request(self.base_url + "/" + path, data=data,
                                      method=method)
         req.add_header("User-Agent", "trio-queue")
         add_surrogate_to_request(req, AGENT_CREDENTIAL,
                                  entry_name="access_token",
-                                 allowed_hosts=[UPSTASH_HOST])
+                                 allowed_hosts=[self.host])
         last = "no attempts"
         for _ in range(3):
             try:
@@ -93,12 +178,12 @@ class UpstashStore:
             except Exception as e:  # transport retry, like relay_common
                 last = str(e)[:160]
                 time.sleep(1)
-                req = urllib.request.Request(BASE_URL + "/" + path,
+                req = urllib.request.Request(self.base_url + "/" + path,
                                              data=data, method=method)
                 req.add_header("User-Agent", "trio-queue")
                 add_surrogate_to_request(req, AGENT_CREDENTIAL,
                                          entry_name="access_token",
-                                         allowed_hosts=[UPSTASH_HOST])
+                                         allowed_hosts=[self.host])
         raise RuntimeError(f"upstash call failed ({path.split('/')[0]}): {last}")
 
     def ping(self):

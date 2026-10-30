@@ -23,6 +23,19 @@ The key lives only in that shell's environment. Never in a file, a
 commit, an envelope, or a log. With the key set, the resident agent
 uses the production direct transport to Muse Spark.
 
+In the same terminal, set the queue store host:
+
+```sh
+export TRIO_UPSTASH_HOST=<the Upstash store host>
+```
+
+The host is deployment configuration: the queue resolves it at
+runtime from this variable (or from the REST URL stored on the
+`custom.upstash` credential record) and it is never hardcoded in the
+repo. Without it, the queue service and agent cannot reach the Redis
+store and start on the labelled local SQLite fallback instead
+(single-machine only — the startup line and `/health` say so).
+
 (The app server's built-in *direct* fallback also reads this key, and
 additionally sits behind the `ASSESS_LIVE_MODEL=1` gate — the queue
 path below is the primary route and does not need that gate. Open the

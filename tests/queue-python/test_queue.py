@@ -19,6 +19,8 @@ import sys
 import tempfile
 import time
 import unittest
+import unittest.mock
+import urllib.parse
 import urllib.request
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -552,6 +554,138 @@ class RelayNotifyHookTests(unittest.TestCase):
             lambda p, i, t: (canned_assessment(p, t), "muse-spark-1.3", 7))
         self.assertEqual(report["done"], [jid])
         self.assertEqual(jobs.get_result(jid)["status"], "ok")
+
+
+class _FakeRest:
+    """In-memory stand-in for the Upstash REST command paths."""
+
+    def __init__(self):
+        self.kv = {}
+        self.hashes = {}
+        self.zsets = {}
+
+    def call(self, path, data=None, method="GET"):
+        parts = [urllib.parse.unquote(p) for p in path.split("/")]
+        cmd = parts[0]
+        if cmd == "ping":
+            return "PONG"
+        if cmd == "set" and method == "POST":
+            self.kv[parts[1]] = (
+                data.decode() if isinstance(data, bytes) else data)
+            return "OK"
+        if cmd == "set":
+            key, value, mode = parts[1], parts[2], parts[3]
+            if mode == "NX" and key in self.kv:
+                return None
+            if mode == "XX" and key not in self.kv:
+                return None
+            self.kv[key] = value
+            return "OK"
+        if cmd == "get":
+            return self.kv.get(parts[1])
+        if cmd == "del":
+            n = 0
+            for key in parts[1:]:
+                if self.kv.pop(key, None) is not None:
+                    n += 1
+                self.hashes.pop(key, None)
+                self.zsets.pop(key, None)
+            return n
+        if cmd == "hset":
+            h = self.hashes.setdefault(parts[1], {})
+            pairs = parts[2:]
+            for i in range(0, len(pairs), 2):
+                h[pairs[i]] = pairs[i + 1]
+            return len(pairs) // 2
+        if cmd == "hgetall":
+            out = []
+            for f, v in self.hashes.get(parts[1], {}).items():
+                out += [f, v]
+            return out
+        if cmd == "zadd":
+            self.zsets.setdefault(parts[1], {})[parts[3]] = int(parts[2])
+            return 1
+        if cmd == "zrange":
+            z = self.zsets.get(parts[1], {})
+            return [m for m, _ in sorted(z.items(), key=lambda kv: kv[1])]
+        raise AssertionError(f"unexpected REST path: {path}")
+
+
+class HostResolutionTests(unittest.TestCase):
+    """The Upstash host is runtime configuration, never hardcoded.
+
+    Resolution order under test: TRIO_UPSTASH_HOST env first, then a
+    REST URL carried on the credential record; with neither, a typed
+    TrioStoreConfigError names the missing configuration. Every host
+    below is an obvious fake (example.invalid) — no real host appears
+    in this file.
+    """
+
+    FAKE_HOST = "fake-store.example.invalid"
+
+    def test_env_host_wins(self):
+        with unittest.mock.patch.dict(
+                os.environ, {"TRIO_UPSTASH_HOST": self.FAKE_HOST}):
+            self.assertEqual(trio_store.resolve_upstash_host(),
+                             self.FAKE_HOST)
+
+    def test_env_full_url_yields_its_host(self):
+        with unittest.mock.patch.dict(
+                os.environ,
+                {"TRIO_UPSTASH_HOST": f"https://{self.FAKE_HOST}/"}):
+            self.assertEqual(trio_store.resolve_upstash_host(),
+                             self.FAKE_HOST)
+
+    def test_credential_rest_url_derivation(self):
+        entry = {"name": "access_token", "surrogate": "hsurr:test",
+                 "placement": "bearer_header",
+                 "rest_url": f"https://{self.FAKE_HOST}"}
+        with unittest.mock.patch.dict(os.environ, {}):
+            os.environ.pop("TRIO_UPSTASH_HOST", None)
+            with unittest.mock.patch.object(
+                    trio_store, "dynamic_credential_entry",
+                    return_value=entry):
+                self.assertEqual(trio_store.resolve_upstash_host(),
+                                 self.FAKE_HOST)
+
+    def test_unconfigured_raises_typed_error(self):
+        # The credential record's current shape: token only, no URL.
+        token_only = {"name": "access_token", "surrogate": "hsurr:test",
+                      "placement": "bearer_header"}
+        with unittest.mock.patch.dict(os.environ, {}):
+            os.environ.pop("TRIO_UPSTASH_HOST", None)
+            with unittest.mock.patch.object(
+                    trio_store, "dynamic_credential_entry",
+                    return_value=token_only):
+                with self.assertRaises(
+                        trio_store.TrioStoreConfigError) as cm:
+                    trio_store.resolve_upstash_host()
+        self.assertIn("TRIO_UPSTASH_HOST", str(cm.exception))
+
+    def test_store_from_env_full_round_trip(self):
+        """UpstashStore built from TRIO_UPSTASH_HOST with its REST
+        surface stubbed in memory; a full JobStore round trip —
+        submit, list, claim, result, finish — runs over it offline."""
+        with unittest.mock.patch.dict(
+                os.environ, {"TRIO_UPSTASH_HOST": self.FAKE_HOST}):
+            os.environ.pop("RELAY_URL", None)
+            store = trio_store.UpstashStore()
+        self.assertEqual(store.host, self.FAKE_HOST)
+        self.assertEqual(store.base_url, f"https://{self.FAKE_HOST}")
+        store._call = _FakeRest().call
+        jobs = trio_store.JobStore(store)
+        env = {"id": "trio-hosttest", "kind": "trio-assessment",
+               "version": 1, "product": "ignis",
+               "timestamp": "2026-10-30T06:00:00.000Z"}
+        jid, created = jobs.submit(env)
+        self.assertTrue(created)
+        self.assertEqual(jobs.open_job_ids(), [jid])
+        self.assertTrue(jobs.claim(jid, "tester", 60))
+        self.assertFalse(jobs.claim(jid, "other", 60))
+        jobs.put_result({"job_id": jid, "status": "ok"})
+        self.assertEqual(jobs.get_result(jid)["status"], "ok")
+        jobs.finish(jid, "done")
+        self.assertEqual(jobs.job_fields(jid)["status"], "done")
 
 
 if __name__ == "__main__":

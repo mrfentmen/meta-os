@@ -73,7 +73,8 @@ output is NEVER written as an assessment — it lands as
 | `TRIO_JOB_NS` | service + agent | Job namespace in the store. Default `trio`; proofs use a scratch namespace (result keys are always `trio:{jid}:result`). |
 | `TRIO_STORE` | service + agent | `local` forces the labelled SQLite fallback (tests/dev). |
 | `TRIO_LOCAL_DB` | service + agent | Path of the fallback SQLite file (default beside the modules; gitignored). |
-| `RELAY_URL` | `trio_store.py` | Store base URL override (default the Upstash host). |
+| `TRIO_UPSTASH_HOST` | `trio_store.py` | The Upstash store host (a bare host, or the full REST URL). Required for the Redis path: the host is deployment configuration, resolved at runtime from this variable or from the REST URL stored on the `custom.upstash` credential record — it is never hardcoded in the repo. When neither source supplies it, store construction reports the missing configuration and the labelled SQLite fallback engages. |
+| `RELAY_URL` | `trio_store.py` | Full store base URL override (wins over `TRIO_UPSTASH_HOST`). |
 
 Spend guardrail: the direct transport counts every call in
 `spark_guardrail_state.json` beside `spark_gen.py` (gitignored),
