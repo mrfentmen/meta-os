@@ -15,9 +15,15 @@
 //! test_dashboard_intel_focus, test_dashboard_os043,
 //! test_dashboard_os084, test_dashboard_palette,
 //! test_dashboard_performance, test_dashboard_readonly_token,
-//! test_dashboard_screenshots, test_dashboard_smoke_checklist,
+//! test_dashboard_screenshots,
 //! test_dashboard_str005, test_dashboard_today_counters,
 //! test_intel_brief_dashboard_consistency.
+//! Split (T242): test_dashboard_smoke_checklist — 5 cases ported below
+//! against the carried checklist/spec fixtures (structure, pass
+//! criteria, deploy gates, run procedure, spec mention); the other 5
+//! viewer cases (bus/index identity, panel ids, demo/deep-link
+//! markers, mobile CSS, intel-module timers) stay exclusion-blocked:
+//! they read the fold-excluded bus.html / index.html.
 //! Directly ported (docs/backend-only):
 //! test_dashboard_rollback_int031, test_dashboard_deploy_runbook
 //! (runbook carried byte-identical under fixtures/).
@@ -111,4 +117,83 @@ use dashboard::contract::*;
     for forbidden in ["api_token", "CF_API_TOKEN", "Bearer "] {
         assert!(!text.contains(forbidden), "credential leak: {forbidden}");
     }
+}
+
+// T242 partial — test_dashboard_smoke_checklist.py, portable half.
+// The 5 cases below assert only against the carried fixtures
+// (DASHBOARD_SMOKE_CHECKLIST.md, DASHBOARD_SPEC.md — both
+// byte-identical to os/docs/). The other 5 cases read the
+// fold-excluded bus.html / index.html and stay exclusion-blocked.
+
+fn smoke_checklist() -> &'static str {
+    include_str!("../fixtures/DASHBOARD_SMOKE_CHECKLIST.md")
+}
+
+fn smoke_check_numbers() -> Vec<u32> {
+    smoke_checklist()
+        .lines()
+        .filter_map(|line| {
+            let rest = line.strip_prefix("## Check ")?;
+            let digits: String =
+                rest.chars().take_while(|c| c.is_ascii_digit()).collect();
+            digits.parse().ok()
+        })
+        .collect()
+}
+
+fn smoke_check_sections() -> Vec<String> {
+    let mut sections: Vec<String> = Vec::new();
+    let mut current: Option<String> = None;
+    for line in smoke_checklist().lines() {
+        if line.starts_with("## Check ") {
+            if let Some(done) = current.take() {
+                sections.push(done);
+            }
+            current = Some(String::new());
+        } else if let Some(sec) = current.as_mut() {
+            sec.push_str(line);
+            sec.push('\n');
+        }
+    }
+    if let Some(done) = current.take() {
+        sections.push(done);
+    }
+    sections
+}
+
+#[test] fn test_dashboard_smoke_checklist_exactly_ten_checks() {
+    assert_eq!(
+        smoke_check_numbers(),
+        vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    );
+}
+
+#[test] fn test_dashboard_smoke_checklist_every_check_names_pass_criteria() {
+    let sections = smoke_check_sections();
+    assert_eq!(sections.len(), 10);
+    for (i, sec) in sections.iter().enumerate() {
+        assert!(sec.contains("- Pass:"), "check {} has no pass criteria", i + 1);
+    }
+}
+
+#[test] fn test_dashboard_smoke_checklist_covers_deploy_gates() {
+    let text = smoke_checklist();
+    for needle in ["intel-crew", "intel-brief", "intel-dispatch",
+        "intel-alerts", "?demo=1", "#intel/brief/",
+        "#intel/alert/", "390px", "read-only", "setInterval"] {
+        assert!(text.contains(needle), "checklist never mentions {needle}");
+    }
+}
+
+#[test] fn test_dashboard_smoke_checklist_run_procedure_and_log() {
+    let text = smoke_checklist();
+    assert!(text.contains("Run procedure"));
+    assert!(text.contains("Run log"));
+    assert!(text.contains("Any fail: stop"));
+}
+
+#[test] fn test_dashboard_smoke_checklist_spec_documents_it() {
+    let spec = include_str!("../fixtures/DASHBOARD_SPEC.md");
+    assert!(spec.contains("DSH-029"));
+    assert!(spec.contains("DASHBOARD_SMOKE_CHECKLIST.md"));
 }
