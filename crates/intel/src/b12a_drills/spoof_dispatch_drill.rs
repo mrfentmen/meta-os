@@ -12,7 +12,7 @@ pub fn fresh_keyring_line(id: &str) -> String {
 
 pub fn valid_keyring_line(line: &str) -> bool {
     let parts: Vec<&str> = line.split(':').collect();
-    parts.len() == 3 && parts[0] == "key" && !parts[1]..is_empty()
+    parts.len() == 3 && parts[0] == "key" && !parts[1].is_empty()
         && parts[2].chars().all(|c| c.is_ascii_hexdigit()) && parts[2].len() >= 8
 }
 
