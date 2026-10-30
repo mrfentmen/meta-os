@@ -15,6 +15,7 @@ import { ignisReportedConfidence } from "./ignis-confidence.js";
 import { ignisReviewQueue } from "./ignis-review-queue.js";
 import { ignisEvidenceTransparency } from "./ignis-evidence.js";
 import { ignisUncertaintyDisclosure } from "./ignis-uncertainty.js";
+import { ignisReviewTriage } from "./ignis-review-triage.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -139,6 +140,7 @@ const els = {
   ignisReviewQueue: $("ignis-review-queue"),
   ignisEvidence: $("ignis-evidence"),
   ignisUncertainty: $("ignis-uncertainty"),
+  ignisReviewTriage: $("ignis-review-triage"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1219,6 +1221,19 @@ function updateLogStats() {
   const uncertainty = ignisUncertaintyDisclosure(log.entries());
   els.ignisUncertainty.textContent =
     `Caveats disclosed ${uncertainty.disclosed} · None disclosed ${uncertainty.noneDisclosed} · Uncertainty not recorded ${uncertainty.unrecorded}`;
+  // IGNIS-ONEOFONE-6: the review-triage panel re-reads the same
+  // log entries — no new stats field, no new data — and renders
+  // the Ignis-only panel from the flagged queue ONEOFONE-3 counts,
+  // split by the category each flagged assessment itself carried.
+  // Clear and unknown-flag entries are not awaiting review and
+  // read nowhere here; a flagged entry with no usable category
+  // still counts in the total, so the queue never hides an entry
+  // behind a missing class. A held session stays zeros, and the
+  // panel itself is hidden under Vigiles and Sanitas by CSS, so
+  // this line only ever shows under Ignis.
+  const triage = ignisReviewTriage(log.entries());
+  els.ignisReviewTriage.textContent =
+    `Awaiting review ${triage.total} · Smoke ${triage.visibleSmoke} · Flame ${triage.visibleFlame} · Steam or fog ${triage.steamOrFog} · Flame-like lighting ${triage.flameLikeLighting} · Obscured or distant ${triage.obscuredOrDistant} · No hazard ${triage.noHazard} · Indeterminate ${triage.indeterminate}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
