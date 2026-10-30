@@ -1,21 +1,28 @@
-//! Crate `os-budget` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-budget` — Meta OS Rust rebuild, batch B20 (Milo).
 //!
-//! Batch B20 — Budget & resource policy. Owner: Milo.
-//! Source files this batch ports:
-//! - `os/intel/brief_cost_check.py`
-//! - `os/intel/budgets.py`
-//! - `os/intel/cost_check.py`
-//! - `os/intel/drills/budget_forecast.py`
-//! - `os/intel/drills/budget_gate.py`
-//! - `os/intel/drills/cgroup_limits.py`
-//! - `os/mos/disk_audit.py`
-//! - `os/tests/test_intel_brief_cost.py`
-//! - `os/tests/test_intel_brief_environment_budget.py`
-//! - `os/tests/test_intel_brief_memory_budget_caller.py`
-//! - `os/tests/test_intel_budget_forecast.py`
-//! - `os/tests/test_intel_budget_gate.py`
-//! - `os/tests/test_intel_cost.py`
+//! Budget & resource policy:
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! - `os/intel/brief_cost_check.py` (BRF-027; cost math and table
+//!   shape — exact token measurements ride Hana's `intel` crate,
+//!   named as carried in [`cost`])
+//! - `os/intel/budgets.py` (OS-085)
+//! - `os/intel/cost_check.py` (INT-007; same measurement caveat)
+//! - `os/intel/drills/budget_forecast.py`, `budget_gate.py`,
+//!   `cgroup_limits.py`
+//! - `os/mos/disk_audit.py` (OS-128)
+//!
+//! The Python/Node originals stay the live fallback until this
+//! batch is PORTED — nothing here edits them. Budget behavior
+//! that canonically lives in Hana's `intel` crate (`forecast.py`,
+//! the brief composers, the watchdog tick) is carried here only
+//! as the budget-side behavior B20's own tests pin, with the
+//! canonical home named in each module.
+
+pub mod brief_budget;
+pub mod budgets;
+pub mod cost;
+pub mod disk_audit;
+pub mod drills;
+pub mod forecast;
+pub mod stores;
+pub mod watch_budget;
