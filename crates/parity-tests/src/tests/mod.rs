@@ -21,7 +21,7 @@ pub mod test_bus_rename;
 pub mod test_bustools_parity;
 pub mod test_clip;
 pub mod test_fdny_par_clock;
-case!(test_os021_update, ["update apply", "rollback swap"], []);
+pub mod test_os021_update;
 pub mod test_os058_gateway_unit;
 case!(test_os059_gateway_bake, ["bake marker"], []);
 case!(test_os065_skills_loader, ["mount verify"], []);
