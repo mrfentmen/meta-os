@@ -26,6 +26,7 @@ pub mod dem018_local_check;
 pub mod deps;
 pub mod drills;
 pub mod e2e1;
+pub mod fixtures;
 pub mod e2e2;
 pub mod e2e3;
 pub mod final_mix_check;

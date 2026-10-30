@@ -329,7 +329,7 @@ pub fn run_drill(
                 announcement
             ));
         }
-        let record = records.build_alert_record(&alert, "main");
+        let record = records.build_alert_record(&alert, "main", None);
         if record.get("id").as_str() != Some("rejected-dispatch:1:BAD") {
             return Err(format!("record id is {:?}", record.get("id").py_repr()));
         }

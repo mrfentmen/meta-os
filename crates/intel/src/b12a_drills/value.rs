@@ -65,6 +65,13 @@ impl Value {
         }
     }
 
+    /// `dict.pop(key, None)` — remove a key when present.
+    pub fn remove(&mut self, key: &str) {
+        if let Value::Map(pairs) = self {
+            pairs.retain(|(k, _)| k != key);
+        }
+    }
+
     pub fn as_map(&self) -> Option<&Vec<(String, Value)>> {
         match self {
             Value::Map(pairs) => Some(pairs),

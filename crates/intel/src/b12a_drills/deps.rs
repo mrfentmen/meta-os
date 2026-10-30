@@ -238,8 +238,51 @@ pub trait DispatchSurface {
 /// `intel.store` (B09) — the WDG-010 record builder the
 /// INT-010 drill validates a detector dict through.
 pub trait AlertRecords {
-    /// `store.build_alert_record(alert, room=...)`.
-    fn build_alert_record(&self, alert: &Value, room: &str) -> Value;
+    /// `store.build_alert_record(alert, room=..., now=...)`.
+    fn build_alert_record(&self, alert: &Value, room: &str, now: Option<i64>) -> Value;
+}
+
+/// `intel.store` (B09) — the boot status line builder the
+/// OS-041 drill exercises.
+pub trait BootStatus {
+    /// `store.build_boot_status(units, workers, alerts, ts=...)`.
+    fn build_boot_status(
+        &self,
+        units: &Value,
+        workers: &Value,
+        alerts: &Value,
+        ts: i64,
+    ) -> Value;
+    /// `store.boot_status_is_stale(record, now=...)`.
+    fn boot_status_is_stale(&self, record: &Value, now: i64) -> bool;
+}
+
+/// `intel.capability` (B09) — the grant checker the OS-081
+/// drill exercises.
+pub trait Capability {
+    /// `capability.check_action(grant, action, subject,
+    /// identity)` — grant is None when no grant is on file.
+    fn check_action(
+        &self,
+        grant: Option<&Value>,
+        action: &str,
+        subject: Option<&str>,
+        identity: Option<&str>,
+    ) -> Option<Value>;
+    /// `capability.refusal_alert(decision, now=...)`.
+    fn refusal_alert(&self, decision: &Value, now: i64) -> Value;
+    /// `capability.refusal_note(decision)`.
+    fn refusal_note(&self, decision: &Value) -> String;
+    /// `capability.capability_tick(attempts, grants, journal, now)`.
+    fn capability_tick(
+        &self,
+        attempts: &Value,
+        grants: &Value,
+        journal: &[Value],
+        now: i64,
+    ) -> Vec<Value>;
+    /// `capability.brief_lines(records)`.
+    fn brief_lines(&self, records: &[Value]) -> Vec<String>;
 }
 
 /// `intel.gate` (B09) — the attempt-budget judgment the
