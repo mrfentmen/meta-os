@@ -277,6 +277,9 @@ automatically, and performs no face recognition or identity inference.
   queue service).
 - **`design/`** — design artifacts, including the ASCII logo studio.
 - **`docs/`** — supporting documents (hardware verification checklist).
+- **`os/`** — the Meta OS tree: the OS services, job queue, and dashboard
+  the Trio runs on, built during the event. (The bootable OS image is not
+  part of this repository.)
 - **Root briefs** — `BRIEF.md`, `MASTER_DIRECTIVE_V2.md`, and
   `MEDICUS_PIVOT_SPEC.md` define the build.
 
