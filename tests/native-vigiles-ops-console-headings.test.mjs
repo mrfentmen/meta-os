@@ -10,9 +10,9 @@
 // web panels did. The fix adds a Vigiles branch to the shared
 // PanelHeading: on Vigiles it renders uppercased in monospaced 15pt
 // bold with 1.8pt tracking (0.12em of 15pt) and a 3pt Vigiles-blue
-// (#4f7ec2) leading tick with 10pt of room before the text; on
-// Medicus it renders exactly as before — plain 15pt bold, no tick,
-// no tracking, no case change. The Vigiles branch keeps the original
+// (#4f7ec2) leading tick with 10pt of room before the text; Medicus
+// takes its own OPS-CONSOLE-10 branch, and the final else is only a
+// defensive fallback. The Vigiles branch keeps the original
 // title as its accessibility label, so VoiceOver hears the title in
 // its normal case. No Swift toolchain exists in this sandbox, so
 // these are static checks on the shipped Swift and CSS.
@@ -83,16 +83,16 @@ test("native PanelHeading: Vigiles branch uses no Ignis red", () => {
   );
 });
 
-test("native PanelHeading: Medicus still renders the plain 15pt bold title", () => {
+test("native PanelHeading: ungated fallback still renders the plain 15pt bold title", () => {
   const plain = heading.slice(heading.indexOf("} else {"));
   assert.match(
     plain,
     /Text\(title\)\s+\.font\(\.system\(size: 15, weight: \.bold\)\)/,
-    "non-console branch is the same plain 15pt bold title as before",
+    "fallback branch is the same plain 15pt bold title as before",
   );
-  assert.doesNotMatch(plain, /uppercased/, "no case change on Medicus");
-  assert.doesNotMatch(plain, /tracking/, "no tracking on Medicus");
-  assert.doesNotMatch(plain, /Rectangle/, "no tick on Medicus");
+  assert.doesNotMatch(plain, /uppercased/, "no case change on the fallback");
+  assert.doesNotMatch(plain, /tracking/, "no tracking on the fallback");
+  assert.doesNotMatch(plain, /Rectangle/, "no tick on the fallback");
 });
 
 test("native panel titles: all five use PanelHeading gated on Vigiles", () => {
@@ -105,14 +105,14 @@ test("native panel titles: all five use PanelHeading gated on Vigiles", () => {
     assert.match(
       contentView,
       new RegExp(
-        `PanelHeading\\(title: "${title}", isIgnis: model\\.selectedProduct == \\.ignis, isVigiles: model\\.selectedProduct == \\.vigiles\\)`,
+        `PanelHeading\\(title: "${title}", isIgnis: model\\.selectedProduct == \\.ignis, isVigiles: model\\.selectedProduct == \\.vigiles, isMedicus: model\\.selectedProduct == \\.medicus\\)`,
       ),
       `${title} uses PanelHeading gated on the Vigiles product`,
     );
   }
   assert.match(
     timelineView,
-    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)/,
+    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)/,
     "Event timeline uses PanelHeading gated on the Vigiles product",
   );
 });

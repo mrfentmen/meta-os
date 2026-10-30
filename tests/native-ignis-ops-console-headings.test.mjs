@@ -12,8 +12,9 @@
 // one shared PanelHeading: on Ignis it renders uppercased in
 // monospaced 15pt bold with 1.8pt tracking (0.12em of 15pt) and a 3pt
 // Ignis-red (#d92b2b) leading tick with 10pt of room before the
-// text; on Vigiles and Medicus it renders exactly as before — plain
-// 15pt bold, no tick, no tracking, no case change. The Ignis branch
+// text; Vigiles takes its own OPS-CONSOLE-7 branch and Medicus its
+// own OPS-CONSOLE-10 branch, and the final else is only a defensive
+// fallback. The Ignis branch
 // keeps the original title as its accessibility label, so VoiceOver
 // hears the title in its normal case. No Swift toolchain exists in
 // this sandbox, so these are static checks on the shipped Swift and
@@ -74,16 +75,16 @@ test("native PanelHeading: Ignis branch keeps the original title for VoiceOver",
   );
 });
 
-test("native PanelHeading: other products render the plain 15pt bold title", () => {
+test("native PanelHeading: ungated fallback still renders the plain 15pt bold title", () => {
   const plain = heading.slice(heading.indexOf("} else {"));
   assert.match(
     plain,
     /Text\(title\)\s+\.font\(\.system\(size: 15, weight: \.bold\)\)/,
-    "non-Ignis branch is the same plain 15pt bold title as before",
+    "fallback branch is the same plain 15pt bold title as before",
   );
-  assert.doesNotMatch(plain, /uppercased/, "no case change off Ignis");
-  assert.doesNotMatch(plain, /tracking/, "no tracking off Ignis");
-  assert.doesNotMatch(plain, /Rectangle/, "no tick off Ignis");
+  assert.doesNotMatch(plain, /uppercased/, "no case change on the fallback");
+  assert.doesNotMatch(plain, /tracking/, "no tracking on the fallback");
+  assert.doesNotMatch(plain, /Rectangle/, "no tick on the fallback");
 });
 
 test("native panel titles: all five use PanelHeading gated on Ignis", () => {
@@ -96,14 +97,14 @@ test("native panel titles: all five use PanelHeading gated on Ignis", () => {
     assert.match(
       contentView,
       new RegExp(
-        `PanelHeading\\(title: "${title}", isIgnis: model\\.selectedProduct == \\.ignis, isVigiles: model\\.selectedProduct == \\.vigiles\\)`,
+        `PanelHeading\\(title: "${title}", isIgnis: model\\.selectedProduct == \\.ignis, isVigiles: model\\.selectedProduct == \\.vigiles, isMedicus: model\\.selectedProduct == \\.medicus\\)`,
       ),
       `${title} uses PanelHeading gated on the Ignis product`,
     );
   }
   assert.match(
     timelineView,
-    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)/,
+    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)/,
     "Event timeline uses PanelHeading gated on the Ignis product",
   );
 });
@@ -111,12 +112,12 @@ test("native panel titles: all five use PanelHeading gated on Ignis", () => {
 test("native panel titles: Latest and Timeline keep their header traits", () => {
   assert.match(
     contentView,
-    /PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    /PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
     "Latest heading keeps its header trait",
   );
   assert.match(
     timelineView,
-    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
     "Timeline heading keeps its header trait",
   );
 });

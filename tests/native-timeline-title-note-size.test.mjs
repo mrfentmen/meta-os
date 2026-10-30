@@ -62,7 +62,7 @@ test("native timeline title: PanelHeading with Ignis gate, header trait kept", (
   // keeps the call-site wiring: the Ignis gate and the header trait.
   assert.match(
     title,
-    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)/,
+    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)/,
     "title uses PanelHeading gated on Ignis",
   );
   assert.doesNotMatch(title, /\.font\(\.headline\)/, "no headline left on title");

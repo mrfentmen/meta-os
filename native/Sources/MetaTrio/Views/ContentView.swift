@@ -78,8 +78,8 @@ struct ContentView: View {
             // — are untouched.
             // OPS-CONSOLE-2: panel heading (see PanelHeading) —
             // Ignis and Vigiles render their console treatments,
-            // Medicus the plain 15pt bold title as before.
-            PanelHeading(title: "Latest assessment", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles)
+            // Medicus its own OPS-CONSOLE-10 treatment.
+            PanelHeading(title: "Latest assessment", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles, isMedicus: model.selectedProduct == .medicus)
                 .accessibilityAddTraits(.isHeader)
             if let note = model.displayedAssessmentNote {
                 // UI-21: Latest-panel notes at 13pt, the native
@@ -205,11 +205,15 @@ struct ContentView: View {
 // monospaced 15pt bold with 1.8pt tracking (0.12em of 15pt) and a 3pt
 // Ignis-red (#d92b2b, the R1 identity red) leading tick with 10pt of
 // room before the text; OPS-CONSOLE-7 adds the same shape on Vigiles
-// in Vigiles blue (#4f7ec2, the web OPS-CONSOLE-6 tick); on Medicus
-// it renders exactly as before — plain 15pt bold, no tick, no
-// tracking, no case change — so the console treatment never leaks
-// onto another product. Each console branch keeps the original title
-// as its accessibility label, so VoiceOver hears "Latest
+// in Vigiles blue (#4f7ec2, the web OPS-CONSOLE-6 tick); OPS-CONSOLE-10
+// adds the Medicus branch below: the web Medicus rule is uppercase
+// with 0.08em tracking and nothing else — no mono face, no tick — so
+// the native Medicus title renders uppercased in plain 15pt bold with
+// 1.2pt tracking (0.08em of 15pt), deliberately softer than the
+// Ignis/Vigiles console branches and with no tick to carry. The final
+// else is now only a defensive fallback: all three products are gated,
+// so no product renders it in practice. Each console branch keeps the
+// original title as its accessibility label, so VoiceOver hears "Latest
 // assessment", not the shouted capitals it shows. Call sites keep
 // their own header traits: Latest and Timeline
 // add .isHeader after the heading, exactly where the trait lived
@@ -221,6 +225,7 @@ struct PanelHeading: View {
     let title: String
     let isIgnis: Bool
     let isVigiles: Bool
+    let isMedicus: Bool
 
     var body: some View {
         if isIgnis {
@@ -239,9 +244,8 @@ struct PanelHeading: View {
             // with 1.8pt tracking (0.12em of 15pt) and a 3pt
             // Vigiles-blue (#4f7ec2) leading tick with 10pt of room
             // before the text — the Ignis branch's shape in Vigiles
-            // blue. Medicus keeps the plain 15pt bold title below,
-            // so the console treatment never leaks onto it, and the
-            // Vigiles branch keeps the original title as its
+            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,
+            // and the Vigiles branch keeps the original title as its
             // accessibility label, as the Ignis branch does.
             HStack(alignment: .top, spacing: 10) {
                 Rectangle()
@@ -252,6 +256,21 @@ struct PanelHeading: View {
                     .tracking(1.8)
             }
             .accessibilityLabel(title)
+        } else if isMedicus {
+            // OPS-CONSOLE-10: Medicus renders the web Medicus
+            // ops-console rule — uppercased plain 15pt bold with
+            // 1.2pt tracking (0.08em of 15pt). The web rule sets no
+            // mono face and no left border, so this branch carries
+            // neither: no mono face, no tick shape, and no
+            // green restyle of anything else. Size and weight stay
+            // 15pt bold, and the original title stays the
+            // accessibility label, as the Ignis and Vigiles branches
+            // do. Body, status, and button treatments are later
+            // slices; this slice is headings only.
+            Text(title.uppercased())
+                .font(.system(size: 15, weight: .bold))
+                .tracking(1.2)
+                .accessibilityLabel(title)
         } else {
             Text(title)
                 .font(.system(size: 15, weight: .bold))
@@ -650,7 +669,7 @@ private struct StillImagePanel: View {
             // matched their own 15px web rules. The size and
             // weight are the only change: the wording is untouched.
             // OPS-CONSOLE-2: panel heading (see PanelHeading).
-            PanelHeading(title: "Still image", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles)
+            PanelHeading(title: "Still image", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles, isMedicus: model.selectedProduct == .medicus)
             // UI-25: still-image intro note at 13pt, the native
             // counterpart to the web .note rule (13px, muted).
             // Until now the intro used .caption (12pt), so it read
@@ -741,7 +760,7 @@ private struct VideoPanel: View {
             // 15px web rules. The size and weight are the only
             // change: the wording is untouched.
             // OPS-CONSOLE-2: panel heading (see PanelHeading).
-            PanelHeading(title: "Prerecorded video", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles)
+            PanelHeading(title: "Prerecorded video", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles, isMedicus: model.selectedProduct == .medicus)
             // UI-26: video intro note at 13pt, the native
             // counterpart to the web .note rule (13px, muted).
             // Until now the intro used .caption (12pt), so it read
@@ -956,7 +975,7 @@ private struct SettingsPanel: View {
             // change: the "Settings" wording, the GroupBox box, and
             // every field inside are untouched.
             // OPS-CONSOLE-2: panel heading (see PanelHeading).
-            PanelHeading(title: "Settings", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles)
+            PanelHeading(title: "Settings", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles, isMedicus: model.selectedProduct == .medicus)
         }
     }
 }

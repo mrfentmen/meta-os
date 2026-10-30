@@ -52,7 +52,7 @@ test("native latest title: PanelHeading with Ignis gate, header trait kept", () 
   // keeps the call-site wiring: the Ignis gate and the header trait.
   assert.match(
     rightColumn,
-    /\/\/ UI-22[\s\S]*?PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    /\/\/ UI-22[\s\S]*?PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
     "Latest title uses PanelHeading gated on Ignis, keeping its header trait",
   );
 });
