@@ -748,3 +748,35 @@ body .panel.latest-product-sanitas {
   border-color: rgba(93, 168, 100, 0.5);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
+
+/* Sanitas ops-console pass (Del UI direction, Oct 29): modern, elite,
+   professional dispatch-console feel, scoped to
+   body[data-product="sanitas"] only. Additive sharpness on top of the
+   existing green theme: uppercase section labels, mono status readouts,
+   sharper buttons, framed console readouts. Nothing here touches the
+   disclosures, the limitations banner, the spinning background, the
+   contract, or any Spark gate; Vigiles and Ignis are untouched. */
+
+body[data-product="sanitas"] .panel h2 {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+body[data-product="sanitas"] .subhead {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+body[data-product="sanitas"] .status {
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+body[data-product="sanitas"] .btn-primary {
+  border-radius: 3px;
+}
+
+body[data-product="sanitas"] .mono-block {
+  border: 1px solid rgba(93, 168, 100, 0.4);
+  background: rgba(0, 0, 0, 0.25);
+}
