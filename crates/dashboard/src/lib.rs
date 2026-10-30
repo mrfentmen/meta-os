@@ -54,4 +54,8 @@
 //! `crates/dashboard/tests/b15_parity.rs`, never faked green. See
 //! `batches/B15.md` for the compile gates and the parity rule.
 
+/// The dashboard backend contract: brief payloads, staleness, alerts
+/// feed and lifecycle, deep links, demo mode, today counters, error
+/// states, the readonly-token posture, rollback pins, and the §7
+/// crew-board rules. See [`contract`] for the section refs.
 pub mod contract;

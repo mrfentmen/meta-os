@@ -31,6 +31,10 @@ pub const BRIEF_STALE_SECONDS: i64 = 7200;
 /// Visual-check verdicts (STR-004 ground truth).
 pub const VERDICTS: &[&str] = &["build ok", "build broken", "unclear"];
 
+/// BRF-042 brief payload record: `id` is `brief:<room>:<ts>`, `kind`
+/// is one of [`BRIEF_KINDS`], `generated_at` is the brief timestamp,
+/// `age_seconds` is its age at render, and `template` marks a
+/// template brief (never shown as if Spark wrote it).
 #[derive(Debug, Clone, PartialEq)]
 pub struct BriefPayload {
     pub id: String,
@@ -61,10 +65,13 @@ pub fn template_marker(template: bool) -> Option<&'static str> {
     template.then_some("TEMPLATE")
 }
 
+/// BRF-043 staleness: stale at age >= [`BRIEF_STALE_SECONDS`] (2h).
 pub fn is_stale(age_seconds: i64) -> bool {
     age_seconds >= BRIEF_STALE_SECONDS
 }
 
+/// BRF-043 stale label: `None` while fresh, otherwise
+/// `"<age> old — regenerate for current state"`.
 pub fn stale_label(age_seconds: i64) -> Option<String> {
     if !is_stale(age_seconds) {
         return None;
@@ -136,6 +143,8 @@ pub fn default_open(section: &str) -> bool {
 pub const BRIEF_SECTION_ORDER: &[&str] =
     &["decisions", "in_flight", "owners", "blocked", "watch_items"];
 
+/// DSH-031 / INT-025 display title for a Brief section key, in
+/// [`BRIEF_SECTION_ORDER`]; `None` for an unknown section key.
 pub fn brief_section_title(section: &str) -> Option<&'static str> {
     match section {
         "decisions" => Some("Decisions"),
@@ -147,6 +156,8 @@ pub fn brief_section_title(section: &str) -> Option<&'static str> {
     }
 }
 
+/// DSH-013 alerts-feed card: id, creation timestamp, and whether
+/// the alert is resolved (resolved cards collapse to the count).
 #[derive(Debug, Clone, PartialEq)]
 pub struct AlertCard {
     pub id: String,
@@ -172,6 +183,9 @@ pub enum DeepLink {
     Alert(String),
 }
 
+/// DSH-022 deep-link parse: `#intel/brief/<id>` and
+/// `#intel/alert/<id>` resolve; anything else, and an empty id,
+/// parses to nothing.
 pub fn parse_deep_link(hash: &str) -> Option<DeepLink> {
     let h = hash.strip_prefix('#')?;
     let rest = h.strip_prefix("intel/")?;
@@ -204,6 +218,8 @@ pub fn demo_mode_on(query: &str) -> bool {
     })
 }
 
+/// DSH-032 today counters record: jobs done, briefs, alerts fired,
+/// and alerts resolved, as rendered in the "today" line.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TodayCounts {
     pub jobs_done: usize,
@@ -239,12 +255,17 @@ pub fn same_day(a: i64, b: i64) -> bool {
     a.div_euclid(86400) == b.div_euclid(86400)
 }
 
+/// DSH-032 job record for record-level counting: only status
+/// `"done"` with a same-day `done_at` counts as done today.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TodayJob {
     pub status: String,
     pub done_at: Option<i64>,
 }
 
+/// DSH-032 alert record for record-level counting: a same-day
+/// `created_at` counts as fired, a same-day `resolved_at` as
+/// resolved, independently of each other.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TodayAlert {
     pub created_at: Option<i64>,
@@ -313,6 +334,8 @@ pub enum SourceError {
     Unreachable,
 }
 
+/// DSH-021 error-row text for a panel: a rejected token names the
+/// token row; any other read failure names the paused bus store.
 pub fn error_row(panel: &str, err: &SourceError) -> String {
     match err {
         SourceError::TokenRejected => {
@@ -347,6 +370,10 @@ pub const ROLLBACK_STEPS: &[&str] = &[
     "muse-relay-live",
 ];
 
+/// INT-031 rollback-runbook check: the runbook must name every
+/// [`ROLLBACK_STEPS`] step, plus the valid-target rule, the
+/// preview-invalid rule, the official docs citation, and an explicit
+/// previous production deployment id.
 pub fn rollback_runbook_ok(runbook: &str) -> Result<(), String> {
     for step in ROLLBACK_STEPS {
         if !runbook.contains(step) {
@@ -474,6 +501,10 @@ pub struct AttemptsBadge {
     pub class: String,
 }
 
+/// DSH-024 attempts badge: parses `attempts`/`max_attempts` as
+/// integers (absent, blank, or non-numeric -> no badge) and picks
+/// the pill class — neutral below max-1, warn at max-1, danger at
+/// max and over.
 pub fn attempts_badge(
     attempts: Option<&str>,
     max_attempts: Option<&str>,
@@ -757,6 +788,9 @@ pub struct RenameLogEntry {
 }
 
 impl RenameLogEntry {
+    /// Keyless rename log JSON: `{"v":1,"cmd":"rename","args":{"nick":…,
+    /// "display":…},"actor":…}` with [`py_str_json`] string encoding
+    /// and no `sig` key.
     pub fn to_json(&self) -> String {
         format!(
             "{{\"v\":1,\"cmd\":\"rename\",\"args\":{{\"nick\":{},\"display\":{}}},\"actor\":{}}}",
@@ -776,6 +810,8 @@ pub struct NamesHashEntry {
 }
 
 impl NamesHashEntry {
+    /// Name-registry JSON: `{"display":…,"set_by":…,"set_at":…}` with
+    /// [`py_str_json`] string encoding.
     pub fn to_json(&self) -> String {
         format!(
             "{{\"display\":{},\"set_by\":{},\"set_at\":{}}}",
@@ -796,6 +832,8 @@ pub struct NamesHistoryEntry {
 }
 
 impl NamesHistoryEntry {
+    /// Name-history JSON: `{"nick":…,"display":…,"set_by":…,"set_at":…}`
+    /// with [`py_str_json`] string encoding.
     pub fn to_json(&self) -> String {
         format!(
             "{{\"nick\":{},\"display\":{},\"set_by\":{},\"set_at\":{}}}",
