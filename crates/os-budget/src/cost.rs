@@ -145,7 +145,7 @@ pub fn render(rows: &[CostRow], summary: &CostTotals, rate_in: f64, rate_out: f6
     let mut lines = vec![
         "INT-007 demo-day Spark cost check".to_string(),
         format!(
-"rates: in ${rate_in}/Mtok ({}), out ${rate_out}/Mtok ({}) -- client defaults are planning placeholders, NOT pricing facts (see module docstring)",
+            "rates: in ${rate_in}/Mtok ({}), out ${rate_out}/Mtok ({}) -- client defaults are planning placeholders, NOT pricing facts (see module docstring)",
             sources.0, sources.1
         ),
         "transport note: primary agent transport carries no API cost; totals below are the HTTP fallback case".to_string(),
@@ -173,11 +173,11 @@ pub fn render(rows: &[CostRow], summary: &CostTotals, rate_in: f64, rate_out: f6
         format!("worst demo day: ${:.4}", summary.worst_usd),
         format!("worst with boot brief: ${:.4}", summary.worst_with_boot_usd),
         format!(
-"reserved half (GOV-001): ${:.2}; headroom: ${:.4}",
+            "reserved half (GOV-001): ${:.2}; headroom: ${:.4}",
             summary.reserved_half_usd, summary.headroom_vs_reserved_usd
         ),
         format!(
-"credit: ${:.2}; real rates would have to exceed placeholder rates by {}x before the reserved half is breached",
+            "credit: ${:.2}; real rates would have to exceed placeholder rates by {}x before the reserved half is breached",
             summary.credit_usd, summary.breakeven_multiplier_vs_reserved
         ),
         (if summary.passed { "PASS" } else { "FAIL" }).to_string(),
