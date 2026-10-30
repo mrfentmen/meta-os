@@ -1,0 +1,4 @@
+# Local runtime state for the queue service/agent — never committed.
+spark_guardrail_state.json
+trio-queue-local.db
+__pycache__/
