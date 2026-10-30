@@ -1,0 +1,19 @@
+[Unit]
+Description=Meta OS boot checklist + ready gate (OS-016)
+# The gate orders after every unit it checks, so the checklist
+# never runs before a checked unit has started: dashboard, bus,
+# jobs (oneshot sweep, completed before this unit starts),
+# overseer timer (armed, not a run), watchdog, and firstboot.
+# relay-brief.service is deliberately NOT in this list: the brief
+# runs After=relay-ready.service by design (boot sequence step 6),
+# so the gate cannot wait on a unit that waits on the gate.
+After=relay-dashboard.service relay-bus.service relay-jobs.service relay-overseer.timer relay-watchdog.service metaos-firstboot.service
+PartOf=relay.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/metaos-boot-checklist
+
+[Install]
+WantedBy=relay.target

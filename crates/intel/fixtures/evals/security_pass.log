@@ -1,0 +1,8 @@
+fixture intel/spark_down_drill.py:91 credential-assignment
+fixture intel/evals/dispatch_adversarial.md:158 github-token
+fixture intel/evals/dispatch_adversarial.md:171 github-token
+fixture tests/test_intel_brief.py:277 bearer-token
+fixture tests/test_intel_spark_down.py:41 credential-assignment
+fixture tests/test_intel_spark_down.py:50 credential-assignment
+fixture tests/test_relay_intel_config.py:57 credential-assignment
+scanned 244 files, 0 findings, 7 fixtures

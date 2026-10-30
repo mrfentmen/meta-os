@@ -1,0 +1,36 @@
+# relay-brief.service - OS-049 (Hana): the boot brief unit.
+#
+# Oneshot, run once per boot after the relay-ready gate. It
+# generates the boot brief (morning format extended with
+# carried-over state, OS-048) into the brief store through the
+# CLI boot path: python3 intel.py brief --boot --room main.
+#
+# Ordering note, stated plainly: the boot sequence (META_OS.md
+# step 6) puts the boot brief AFTER the relay-ready gate, so
+# this unit runs After=relay-ready.service. The ready gate's
+# unit set is therefore the pre-brief units, not this unit
+# itself: the gate cannot wait on a unit that waits on the
+# gate. The ready gate (OS-016, Pax) and the image install
+# path (os/services, OS-011) are not in this repo yet; this
+# file is Hana's unit only, written to the service-map shape
+# (relay user, /opt/relay checkout, oneshot, no restart).
+#
+# Spark path, stated plainly: the unit's ExecStart runs the
+# CLI boot path, which today composes a template brief
+# (BRF-008, marked TEMPLATE) because the CLI passes no Spark
+# client and live Spark transport is blocked. When transport
+# lands and the CLI boot path passes a client, the same unit
+# produces a Spark-composed brief with the template fallback;
+# no unit change is needed for that switch.
+[Unit]
+Description=Meta OS boot brief
+After=relay-ready.service
+
+[Service]
+Type=oneshot
+User=relay
+WorkingDirectory=/opt/relay
+ExecStart=/usr/bin/python3 /opt/relay/intel.py brief --boot --room main
+
+[Install]
+WantedBy=relay.target

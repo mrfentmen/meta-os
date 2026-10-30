@@ -1,0 +1,21 @@
+[Unit]
+Description=Meta OS first boot: collect secrets, generate local job-signing keyring (OS-012)
+# Runs only while no secrets env exists yet. The script itself times out
+# its console prompt after 60s so an unattended boot never wedges here;
+# it can be re-run any time with: sudo metaos-firstboot
+ConditionPathExists=!/etc/metaos/secrets.env
+After=multi-user.target
+Before=relay-bus.service relay-jobs.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/metaos-firstboot
+StandardInput=tty
+StandardOutput=inherit
+StandardError=inherit
+TTYPath=/dev/console
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

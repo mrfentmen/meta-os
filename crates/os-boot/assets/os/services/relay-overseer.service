@@ -1,0 +1,19 @@
+[Unit]
+Description=Meta OS overseer tick (mos.py tick: sweep, prune, verify done jobs)
+After=network-online.target relay-bus.service relay-jobs.service
+Wants=network-online.target relay-bus.service relay-jobs.service
+ConditionPathExists=/etc/metaos/secrets.env
+PartOf=relay.target
+
+[Service]
+Type=oneshot
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay
+EnvironmentFile=/etc/metaos/secrets.env
+Environment=MUSE_RELAY_NICK=metaos
+Environment=MUSE_RELAY_TOKEN_FILE=/etc/metaos/token
+ExecStart=/usr/bin/python3 /opt/relay/mos.py tick
+
+[Install]
+WantedBy=relay.target

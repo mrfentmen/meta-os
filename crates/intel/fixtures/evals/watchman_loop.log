@@ -1,0 +1,8 @@
+PASS phase 1: ring reads ALIVE bell, quiet reads UNKNOWN
+PASS phase 2: failed runs age the prior into one dark episode with one fail-closed escalation
+PASS phase 2b: open dark episode stays silent on repeat
+PASS phase 2c: fresh ring recovers the dark machine
+PASS phase 3: junk stdout line counted, good events kept
+PASS phase 4: unseen machine's failed run is diagnostics only
+PASS phase 5: runs, priors, and journal unchanged
+ALL PASS (5 phases)

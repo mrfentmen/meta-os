@@ -42,6 +42,27 @@
 //! - `os/tests/test_intel_watchman_watch.py`
 //! - `os/tests/test_os_watchman.py`
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! B21 ported (gate 1): the modules below implement the batch.
+//! Layout mirrors the source tree: root modules are `os/intel/*` and
+//! `os/mos/*` plus `os/os/watchman/relay_watchman.py`; `drills` holds
+//! `os/intel/drills/*`. Cross-module seams (thresholds embedded in
+//! watchdog.rs, trait seams for out-of-batch modules) are noted in
+//! each module's docs. See batches/B21.md for the parity rule.
+
+// Supervisor & watchdog modules (B21). Order follows the watchman chain:
+// watch -> bridge -> loop -> cycle -> runner -> service, boot standalone.
+pub mod thresholds;
+pub mod watchdog;
+pub mod watchdog_load_check;
+pub mod e2e_watchdog_surfaces;
+pub mod reconcile;
+pub mod overseer;
+pub mod relay_watchman;
+pub mod watchman_watch;
+pub mod watchman_bridge;
+pub mod watchman_loop;
+pub mod watchman_cycle;
+pub mod watchman_runner;
+pub mod watchman_service;
+pub mod watchman_boot;
+pub mod drills;

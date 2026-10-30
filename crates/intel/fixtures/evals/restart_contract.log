@@ -1,0 +1,10 @@
+PASS: A0 mid-restart gap ticks zero alerts (age under threshold)
+PASS: A1 restarted worker ticks zero alerts
+PASS: A2 restart note validates as an info record
+PASS: A3 restart note never announces
+PASS: A4 note names the systemd restart, not a stall
+PASS: A-control un-restarted death yields one presence-stall
+PASS: B1 wedged worker yields exactly one progress-stall
+PASS: B2 stall alert names nick, job, and age
+PASS: B3 wedged case builds no restart note and systemd takes no action (process alive)
+RESULT: PASS

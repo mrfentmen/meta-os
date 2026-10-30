@@ -1,0 +1,13 @@
+INT-002 end-to-end test 1
+goal: Probe the snapshot path, then report the result in the brief.
+plan: hand-authored fixture (no live Spark call; see module docstring)
+queue: in-memory fake surface, namespace muse-bus:int-job, room build-int
+
+[PASS] dry-run: rendered probe -> report in posting order; job list empty before and after
+[PASS] approve: validated plan, order probe -> report, no clamps
+[PASS] post: dispatch dsp-1793102900-1: probe -> 1, report -> 2, signed=False with the unsigned warning
+[PASS] worker probe: probe claimed, progressed, done as worker-a; show reads {'probe': 'done', 'report': 'open'}
+[PASS] worker report: report claimed, progressed, done as worker-a; show reads {'probe': 'done', 'report': 'done'}
+[PASS] brief: snapshot carries both jobs done; boot brief reports: Previous session: last brief 2026-10-27 08:08 ET, 2 jobs completed (Write the e2e probe note; Record the probe result in the e2e log), 0 open threads
+
+INT-002: PASS (all stages)

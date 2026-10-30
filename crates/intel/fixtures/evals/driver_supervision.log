@@ -1,0 +1,11 @@
+file: CPUQuota=100% (expected 100%)
+file: MemoryMax=1G (expected 1G)
+file: PASS
+verify: exit=0
+verify: PASS
+detector: driver stall names driver-audio/d1, severity critical, age 10m: PASS
+detector: present driver yields no alert: PASS
+detector: fresh driver job yields no alert: PASS
+detector: watchdog.py has no driver special-casing: PASS
+contract: tick alerts but leaves job claimed with driver: PASS
+driver_supervision drill: PASS

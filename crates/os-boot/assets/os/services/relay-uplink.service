@@ -1,0 +1,46 @@
+# relay-uplink.service - OS-093 (Pax): the order door as a system service.
+#
+# Runs os/uplink/relay_uplink.py --loop as the relay user, ordered
+# after network-online.target (the door needs the network the
+# cloud bus lives on) and after relay-jobs.service (the queue
+# the intake records belong to is up before any order lands).
+# Restart=on-failure: systemd owns process death here, per the
+# OS-034 contract; the watchdog owns the uplink going silent,
+# never process death, so the two never double-act.
+#
+# Snapshot interface, stated plainly: this first light reads
+# orders and connection state from JSON files under /run/metaos/,
+# written by the queue side. The live cloud reader (the Upstash
+# room the order arrives in, the same fields tick() already
+# takes) is owed follow-up before this unit is claimed live on
+# a booted image; until then a missing orders file reads as an
+# empty cycle, never a crash and never a phantom intake, and
+# the unit's own loop keeps ticking. The program makes no model
+# calls, holds no session, posts nothing to the bus, moves no
+# claim, and never auto-posts past the DSP-007 approval gate:
+# an intake record waits for the dispatch path.
+#
+# Zero-credential image rule (OS-012): this unit only runs
+# once firstboot has written the secrets env file. Without
+# it systemd skips the unit and the boot continues honestly
+# unconfigured. No secret is on the command line: the signing
+# key travels only as a file path, never as a flag value.
+[Unit]
+Description=Meta OS uplink (order door for Dale's phone orders)
+After=network-online.target relay-jobs.service
+Wants=network-online.target
+ConditionPathExists=/etc/metaos/secrets.env
+PartOf=relay.target
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay
+EnvironmentFile=/etc/metaos/secrets.env
+ExecStart=/usr/bin/python3 /opt/relay/os/uplink/relay_uplink.py --loop --orders-file /run/metaos/uplink-orders.json --state-file /run/metaos/uplink-state.json --key-file /etc/metaos/signing.key --interval 10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=relay.target

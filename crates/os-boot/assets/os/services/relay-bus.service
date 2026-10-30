@@ -1,0 +1,24 @@
+[Unit]
+Description=Meta OS relay bus watcher (watch.py listener, keeps the local bus side current)
+After=network-online.target
+Wants=network-online.target
+# Zero-credential image rule (OS-012): this unit only runs once firstboot
+# has written the secrets env file. Without it systemd skips the unit and
+# the boot continues honestly unconfigured.
+ConditionPathExists=/etc/metaos/secrets.env
+PartOf=relay.target
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay
+EnvironmentFile=/etc/metaos/secrets.env
+Environment=MUSE_RELAY_NICK=metaos
+Environment=MUSE_RELAY_TOKEN_FILE=/etc/metaos/token
+ExecStart=/usr/bin/python3 /opt/relay/watch.py --interval 10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=relay.target

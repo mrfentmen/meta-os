@@ -1,0 +1,68 @@
+# relay-worker@.service - OS-017 (Pax): the worker fleet template.
+#
+# One instance per crew nick: relay-worker@pax.service runs the
+# mos/worker.py claim/work loop as nick pax. The instance name IS
+# the nick (Environment=MUSE_RELAY_NICK=%i, and relay_common reads
+# the nick from MUSE_RELAY_NICK), so no per-instance unit file is
+# ever written: enable an instance, never edit this template.
+#
+# Per-instance env file: /etc/metaos/worker-%i.env (optional: the
+# leading dash means a missing file is not an error). It carries
+# MUSE_RELAY_CAPS (comma-separated, e.g. python,testing) and
+# MUSE_RELAY_ROLES, expanded into the ExecStart flags below.
+# The image-wide secrets file is required: without
+# /etc/metaos/secrets.env (OS-012 firstboot output) the unit does
+# not start, via ConditionPathExists.
+#
+# Slice: relay-workers.slice (OS-035, Milo): CPUQuota=100%,
+# MemoryMax=1G per worker, so one runaway cannot eat the bus,
+# queue, or dashboard budget.
+#
+# Ordering: After relay-jobs.service, because the worker claims
+# from the job queue and the queue service runs the lease sweep
+# at boot; a worker starting before the sweep could claim a job
+# whose dead lease the sweep was about to free.
+#
+# Two acceptance blockers, stated not hidden. The "two instances
+# side by side claim disjoint jobs" acceptance is NOT met here:
+#   1. mos.py worker loop mode exits 2 by design: the loop's
+#      handler is the calling agent ("worker loop: agent-driven"),
+#      and no stock handler program ships in this repo. Until a
+#      handler program lands, an instance registers and heartbeats
+#      but does no work on its own.
+#   2. The DM secret has no environment path: mos.py worker takes
+#      --dm on the command line only, and a worker with an empty
+#      secret polls zero DMs (mos/worker.py poll_dms returns []
+#      without one). This template deliberately puts no secret on
+#      its command line (ps-visible), so it passes no --dm at all;
+#      a mos.py env fallback for the DM secret is the follow-up
+#      that unblocks real claiming.
+# Instances are therefore NOT auto-enabled by build-image.sh:
+# enabling one before those two land would start a worker that
+# registers but never claims. Enable explicitly once they land:
+#   systemctl enable relay-worker@<nick>.service
+# systemd-analyze verify on this file is a syntax check only;
+# a live two-instance run on the test image is still owed.
+[Unit]
+Description=Meta OS relay worker %i (mos.py worker loop, per-nick instance)
+After=network-online.target relay-jobs.service
+Wants=network-online.target
+ConditionPathExists=/etc/metaos/secrets.env
+PartOf=relay.target
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay
+EnvironmentFile=/etc/metaos/secrets.env
+EnvironmentFile=-/etc/metaos/worker-%i.env
+Environment=MUSE_RELAY_NICK=%i
+Environment=MUSE_RELAY_TOKEN_FILE=/etc/metaos/token
+Slice=relay-workers.slice
+ExecStart=/usr/bin/python3 /opt/relay/mos.py worker --caps ${MUSE_RELAY_CAPS} --roles ${MUSE_RELAY_ROLES}
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=relay.target

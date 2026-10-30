@@ -1,0 +1,29 @@
+#!/bin/sh
+# os/live-build/auto/config -- OS-008 fallback pipeline config.
+#
+# Read by `lb config` when run from os/live-build/. Sets the
+# live-build configuration for the Meta OS fallback ISO: Debian 12
+# bookworm amd64, iso-hybrid binary image, live session only (no
+# installer on the ISO; the fallback boots to the crew session,
+# it does not install). The package list lives in
+# config/package-lists/metaos.list.chroot; the units, firstboot
+# program, and tools arrive via config/includes.chroot/, staged
+# by os/build-live.sh from this repo's os/services/,
+# os/firstboot/, and os/bin/ at build time (single source of
+# truth: no unit copy lives in this tree).
+#
+# UNPROVEN: no live-build run has happened from this config. The
+# sandbox has no lb binary, so `lb config` has not run either.
+# Until a build host runs os/build-live.sh end to end and the ISO
+# boots in QEMU, this is config plus wrapper plus structural
+# tests, not a proven build.
+set -e
+lb config noauto \
+  --distribution bookworm \
+  --architectures amd64 \
+  --binary-images iso-hybrid \
+  --apt-indices false \
+  --bootappend-live "boot=live components quiet splash" \
+  --iso-application "Meta OS" \
+  --iso-volume "METAOS" \
+  "${@}"

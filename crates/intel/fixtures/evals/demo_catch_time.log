@@ -1,0 +1,4 @@
+demo_catch_time measurement: rehearsal (tick phase +0s): catch 5s after cue, alert presence-stall milo/7, last progress 65s ago, 2 ticks
+demo_catch_time measurement: rehearsal (tick phase +2s): catch 2s after cue, alert presence-stall milo/7, last progress 62s ago, 1 ticks
+demo_catch_time measurement: rehearsal (tick phase +4s): catch 4s after cue, alert presence-stall milo/7, last progress 64s ago, 1 ticks
+demo_catch_time measurement: PASS — 3/3 rehearsals under 90s (catches: 5s, 2s, 4s)

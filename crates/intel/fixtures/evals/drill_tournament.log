@@ -1,0 +1,26 @@
+INT-021 drill tournament: kill_worker, collision, dead_dep, back to back in one session
+PASS: kill_worker (WDG-020) -- exit 0, kill_worker drill: PASS, 0.04s
+PASS: collision (WDG-021) -- exit 0, collision drill: PASS, 0.04s
+PASS: dead_dep (WDG-022) -- exit 0, dead-dep drill: PASS, 0.04s
+INT-021: PASS -- 3/3 drills passed, total 0.13s (limit 360s)
+
+--- kill_worker (WDG-020), 0.04s ---
+kill_worker drill: phase 1: healthy worker yields zero alerts
+kill_worker drill: phase 2: presence-stall alert names pax/7, age 841s; announcement line held, not posted
+kill_worker drill: phase 3: unexpired lease stays claimed (no early requeue)
+kill_worker drill: phase 4: lease expiry requeues job; re-tick yields zero alerts, job open for the next worker
+kill_worker drill: PASS
+
+--- collision (WDG-021), 0.04s ---
+collision drill: phase 1: disjoint claims yield zero alerts
+collision drill: phase 2: critical collision alert names jobs 1/2 on intel/store.py; announcement line held, not posted
+collision drill: phase 3: while both jobs stay claimed, the same collision alert keeps firing (same dedupe key)
+collision drill: phase 4: after one job finishes (no branch), the collision alert stops firing
+collision drill: PASS
+
+--- dead_dep (WDG-022), 0.04s ---
+dead-dep drill: phase 1: posted A and B(deps A) with A live yield zero alerts
+dead-dep drill: phase 2: critical dead-dep alert names job 2 blocked on dep 1 for reason 'needs Pax sign-off on the key shape' verbatim; announcement line held, not posted
+dead-dep drill: phase 3: while A stays blocked, the same dead-dep alert keeps firing (same dedupe key)
+dead-dep drill: phase 4: after A is unblocked, the dead-dep alert stops firing
+dead-dep drill: PASS

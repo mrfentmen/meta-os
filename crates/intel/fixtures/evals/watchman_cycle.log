@@ -1,0 +1,7 @@
+PASS phase 1: runner ring reads ALIVE bell, quiet reads UNKNOWN, clean diagnostics
+PASS phase 2: raising runner contained, prior ages into one dark episode with one fail-closed escalation
+PASS phase 3: garbage runner return is a contained failure, never a success
+PASS phase 4: non-callable runner fails all machines, still no raise
+PASS phase 5: empty machine list yields empty cycle, runner never called
+PASS phase 6: truthy is not True, short pairs fail, inputs unchanged
+ALL PASS (6 phases)

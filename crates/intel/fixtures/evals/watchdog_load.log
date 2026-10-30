@@ -1,0 +1,14 @@
+INT-023 watchdog under load
+room: 2000 messages, queue: 200 jobs (50 claimed: 25 silent, 25 stuck, 150 open)
+queue: in-memory fake surface, namespace muse-bus:int-job, caps muse-bus:int-cap, room build-int
+clock: fake clock advanced 61 minutes past the stall thresholds, claim leases, and presence TTL; tick 2 runs 5 minutes later, inside the 30-minute dedupe cooldown; timings are perf_counter wall times
+alerts: template text (no Spark client passed to any tick); store records stay standing after tick 3 because tick silence is not WDG-014 resolution
+
+[PASS] seed queue: 200 jobs posted, 50 claimed (25 silent, 25 stuck), 150 left open, clock advanced 3660s
+[PASS] seed room: 2000 messages on the room list, seeded directly after the bus_trim-capped announcements
+[PASS] tick 1 stalled load: tick 1: 50 alerts ({'presence-stall': 25, 'progress-stall': 25}), 50 records stored, in 0.002s
+[PASS] tick 2 dedupe: tick 2: 50 detector alerts, store still 50 records, last_seen advanced to tick-2 time, in 0.003s
+[PASS] tick 3 cleared: tick 3: zero alerts after recovery, store still holds 50 tick-1 records, in 0.002s
+[PASS] budgets: ticks 0.002s, 0.003s, 0.002s, total 0.007s, all inside budget
+
+INT-023: PASS (all stages)
