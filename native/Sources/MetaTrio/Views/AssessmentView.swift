@@ -125,6 +125,14 @@ struct AssessmentView: View {
         ProductID(rawValue: response.product) == .vigiles
     }
 
+    /// Whether this card's own assessment is a Medicus one, on the
+    /// same precedent: the card renders by its assessment's own
+    /// product, never by the selected product. An unknown product
+    /// key is not Medicus rather than guessing.
+    private var isMedicusAssessment: Bool {
+        ProductID(rawValue: response.product) == .medicus
+    }
+
     /// Panel accent from the assessment's own product, mirroring the
     /// TimelineView row-accent mapping. An unknown product key falls
     /// back to the system accent rather than guessing a product.
@@ -412,10 +420,16 @@ struct AssessmentView: View {
             // (1.04pt) — the web Vigiles subhead rule is identical
             // to the Ignis one, so the two gates share one widened
             // value and every other product keeps the UI-12 0.65pt.
+            // OPS-CONSOLE-11: a Medicus assessment widens by its
+            // own web Medicus subhead value, 0.06em of 13pt
+            // (0.78pt) — the web Medicus rule is narrower than
+            // the Ignis/Vigiles 0.08em, so Medicus takes its own
+            // middle value rather than sharing the 1.04pt, and
+            // only an unknown product keeps the UI-12 0.65pt.
             Text("Uncertainty")
                 .font(.system(size: 13, weight: .bold))
                 .textCase(.uppercase)
-                .tracking((isIgnisAssessment || isVigilesAssessment) ? 1.04 : 0.65)
+                .tracking((isIgnisAssessment || isVigilesAssessment) ? 1.04 : (isMedicusAssessment ? 0.78 : 0.65))
                 .foregroundStyle(.secondary)
                 .accessibilityAddTraits(.isHeader)
             if response.assessment.uncertainty.isEmpty {

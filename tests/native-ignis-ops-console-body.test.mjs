@@ -70,8 +70,8 @@ test("native ops-console body: web contract — OPS-CONSOLE-3 subhead and mono-b
 test("native ops-console body: Uncertainty subhead widens to 1.04pt on Ignis, keeps 0.65pt elsewhere", () => {
   assert.match(
     uncertaintyHead,
-    /Text\("Uncertainty"\)\s+\.font\(\.system\(size: 13, weight: \.bold\)\)\s+\.textCase\(\.uppercase\)\s+\.tracking\(\(isIgnisAssessment \|\| isVigilesAssessment\) \? 1\.04 : 0\.65\)\s+\.foregroundStyle\(\.secondary\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
-    "Uncertainty heading is 13pt bold uppercase secondary with header trait, tracking 1.04pt on Ignis or Vigiles (OPS-CONSOLE-8 shares the widened value) and 0.65pt off both",
+    /Text\("Uncertainty"\)\s+\.font\(\.system\(size: 13, weight: \.bold\)\)\s+\.textCase\(\.uppercase\)\s+\.tracking\(\(isIgnisAssessment \|\| isVigilesAssessment\) \? 1\.04 : \(isMedicusAssessment \? 0\.78 : 0\.65\)\)\s+\.foregroundStyle\(\.secondary\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    "Uncertainty heading is 13pt bold uppercase secondary with header trait, tracking 1.04pt on Ignis or Vigiles (OPS-CONSOLE-8 shares the widened value), 0.78pt on Medicus (OPS-CONSOLE-11), and 0.65pt off all three",
   );
   assert.match(
     assessmentView,
@@ -88,8 +88,8 @@ test("native ops-console body: Uncertainty subhead widens to 1.04pt on Ignis, ke
 test("native ops-console body: readout viewport frames in Ignis red at 0.4 over dark 0.25 on Ignis only", () => {
   assert.match(
     readout,
-    /ScrollView \{\s+AssessmentView\(response: assessment\)\s+\}\s+\.frame\(maxHeight: 320\)\s+\.background\(\(model\.selectedProduct == \.ignis \|\| model\.selectedProduct == \.vigiles\) \? Color\.black\.opacity\(0\.25\) : Color\.clear\)/,
-    "readout ScrollView keeps its 320pt cap and gains a dark 0.25 fill on Ignis (and Vigiles, OPS-CONSOLE-8, sharing one fill), clear elsewhere",
+    /ScrollView \{\s+AssessmentView\(response: assessment\)\s+\}\s+\.frame\(maxHeight: 320\)\s+\.background\(\(model\.selectedProduct == \.ignis \|\| model\.selectedProduct == \.vigiles \|\| model\.selectedProduct == \.medicus\) \? Color\.black\.opacity\(0\.25\) : Color\.clear\)/,
+    "readout ScrollView keeps its 320pt cap and gains a dark 0.25 fill on Ignis, Vigiles (OPS-CONSOLE-8), and Medicus (OPS-CONSOLE-11, sharing one fill), clear elsewhere",
   );
   assert.match(
     readout,

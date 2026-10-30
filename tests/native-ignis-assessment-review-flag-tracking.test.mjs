@@ -76,8 +76,8 @@ test("native review flag: exactly one 0.6pt tracking, subhead tracking untouched
   assert.equal(trackings.length, 1, "exactly one 0.6pt tracking in the file");
   assert.match(
     assessment,
-    /\.tracking\(\(isIgnisAssessment \|\| isVigilesAssessment\) \? 1\.04 : 0\.65\)/,
-    "Uncertainty subhead keeps its 0.65pt non-console tracking (UI-12) and widens to 1.04pt on Ignis (OPS-CONSOLE-4) or Vigiles (OPS-CONSOLE-8)",
+    /\.tracking\(\(isIgnisAssessment \|\| isVigilesAssessment\) \? 1\.04 : \(isMedicusAssessment \? 0\.78 : 0\.65\)\)/,
+    "Uncertainty subhead keeps its 0.65pt non-console tracking (UI-12) and widens to 1.04pt on Ignis (OPS-CONSOLE-4) or Vigiles (OPS-CONSOLE-8), 0.78pt on Medicus (OPS-CONSOLE-11)",
   );
   const observationsFn = assessment.slice(
     assessment.indexOf("private var observationsSection"),

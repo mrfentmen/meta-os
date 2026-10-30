@@ -123,12 +123,26 @@ struct ContentView: View {
                 // products, so it is one condition, not two fills
                 // stacked; the stroke keeps one branch per product
                 // so each accent stays its own color. Medicus
-                // keeps the clear, unframed viewport it had.
+                // gains its own frame in the OPS-CONSOLE-11
+                // follow-up below.
+                // OPS-CONSOLE-11: on Medicus the same viewport
+                // carries the web Medicus mono-block frame — a 1px
+                // Medicus-green (#5da864) stroke at 0.4 over the
+                // same dark 0.25 fill — so the Latest panel's
+                // readout reads as a console window on Medicus
+                // exactly as it does on Ignis and Vigiles, each in
+                // its own accent. The fill is shared by all three
+                // console products, so it stays one condition, not
+                // three fills stacked; the stroke keeps one branch
+                // per product so each accent stays its own color.
+                // The Medicus subhead value differs from the
+                // Ignis/Vigiles one (see AssessmentView), but the
+                // frame values match theirs exactly.
                 ScrollView {
                     AssessmentView(response: assessment)
                 }
                 .frame(maxHeight: 320)
-                .background((model.selectedProduct == .ignis || model.selectedProduct == .vigiles) ? Color.black.opacity(0.25) : Color.clear)
+                .background((model.selectedProduct == .ignis || model.selectedProduct == .vigiles || model.selectedProduct == .medicus) ? Color.black.opacity(0.25) : Color.clear)
                 .overlay {
                     if model.selectedProduct == .ignis {
                         Rectangle()
@@ -137,6 +151,10 @@ struct ContentView: View {
                     if model.selectedProduct == .vigiles {
                         Rectangle()
                             .stroke(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255).opacity(0.4), lineWidth: 1)
+                    }
+                    if model.selectedProduct == .medicus {
+                        Rectangle()
+                            .stroke(Color(red: 93 / 255, green: 168 / 255, blue: 100 / 255).opacity(0.4), lineWidth: 1)
                     }
                 }
             } else if model.requestInFlight {

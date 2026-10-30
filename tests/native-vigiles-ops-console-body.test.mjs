@@ -74,8 +74,8 @@ test("native ops-console body: web contract — OPS-CONSOLE-6 subhead and mono-b
 test("native ops-console body: Uncertainty subhead widens to 1.04pt on Vigiles, keeps 0.65pt elsewhere", () => {
   assert.match(
     uncertaintyHead,
-    /Text\("Uncertainty"\)\s+\.font\(\.system\(size: 13, weight: \.bold\)\)\s+\.textCase\(\.uppercase\)\s+\.tracking\(\(isIgnisAssessment \|\| isVigilesAssessment\) \? 1\.04 : 0\.65\)\s+\.foregroundStyle\(\.secondary\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
-    "Uncertainty heading is 13pt bold uppercase secondary with header trait, tracking 1.04pt on Ignis or Vigiles and 0.65pt off both",
+    /Text\("Uncertainty"\)\s+\.font\(\.system\(size: 13, weight: \.bold\)\)\s+\.textCase\(\.uppercase\)\s+\.tracking\(\(isIgnisAssessment \|\| isVigilesAssessment\) \? 1\.04 : \(isMedicusAssessment \? 0\.78 : 0\.65\)\)\s+\.foregroundStyle\(\.secondary\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    "Uncertainty heading is 13pt bold uppercase secondary with header trait, tracking 1.04pt on Ignis or Vigiles, 0.78pt on Medicus (OPS-CONSOLE-11), and 0.65pt off all three",
   );
   assert.match(
     assessmentView,
@@ -92,18 +92,13 @@ test("native ops-console body: Uncertainty subhead widens to 1.04pt on Vigiles, 
 test("native ops-console body: readout viewport frames in Vigiles blue at 0.4 over dark 0.25 on Vigiles only", () => {
   assert.match(
     readout,
-    /ScrollView \{\s+AssessmentView\(response: assessment\)\s+\}\s+\.frame\(maxHeight: 320\)\s+\.background\(\(model\.selectedProduct == \.ignis \|\| model\.selectedProduct == \.vigiles\) \? Color\.black\.opacity\(0\.25\) : Color\.clear\)/,
-    "readout ScrollView keeps its 320pt cap and gains a dark 0.25 fill on Ignis or Vigiles, clear elsewhere",
+    /ScrollView \{\s+AssessmentView\(response: assessment\)\s+\}\s+\.frame\(maxHeight: 320\)\s+\.background\(\(model\.selectedProduct == \.ignis \|\| model\.selectedProduct == \.vigiles \|\| model\.selectedProduct == \.medicus\) \? Color\.black\.opacity\(0\.25\) : Color\.clear\)/,
+    "readout ScrollView keeps its 320pt cap and gains a dark 0.25 fill on Ignis, Vigiles, or Medicus (OPS-CONSOLE-11, sharing one fill), clear elsewhere",
   );
   assert.match(
     readout,
-    /\.overlay \{\s+if model\.selectedProduct == \.ignis \{\s+Rectangle\(\)\s+\.stroke\(Color\(red: 217 \/ 255, green: 43 \/ 255, blue: 43 \/ 255\)\.opacity\(0\.4\), lineWidth: 1\)\s+\}\s+if model\.selectedProduct == \.vigiles \{\s+Rectangle\(\)\s+\.stroke\(Color\(red: 79 \/ 255, green: 126 \/ 255, blue: 194 \/ 255\)\.opacity\(0\.4\), lineWidth: 1\)/,
-    "readout ScrollView keeps its 1pt Ignis-red 0.4 stroke and gains a 1pt Vigiles-blue 0.4 stroke on Vigiles",
-  );
-  assert.doesNotMatch(
-    readout,
-    /93 \/ 255/,
-    "no Medicus green stroke is added to the readout",
+    /\.overlay \{\s+if model\.selectedProduct == \.ignis \{\s+Rectangle\(\)\s+\.stroke\(Color\(red: 217 \/ 255, green: 43 \/ 255, blue: 43 \/ 255\)\.opacity\(0\.4\), lineWidth: 1\)\s+\}\s+if model\.selectedProduct == \.vigiles \{\s+Rectangle\(\)\s+\.stroke\(Color\(red: 79 \/ 255, green: 126 \/ 255, blue: 194 \/ 255\)\.opacity\(0\.4\), lineWidth: 1\)\s+\}\s+if model\.selectedProduct == \.medicus \{\s+Rectangle\(\)\s+\.stroke\(Color\(red: 93 \/ 255, green: 168 \/ 255, blue: 100 \/ 255\)\.opacity\(0\.4\), lineWidth: 1\)/,
+    "readout ScrollView keeps its 1pt Ignis-red and Vigiles-blue 0.4 strokes and gains a 1pt Medicus-green 0.4 stroke on Medicus (OPS-CONSOLE-11, the placeholder this test used to guard)",
   );
 });
 
@@ -121,7 +116,7 @@ test("native ops-console body: placeholders and card treatment untouched", () =>
   assert.equal(
     (readout.match(/opacity\(0\.25\)/g) || []).length,
     1,
-    "exactly one dark 0.25 fill in the readout — Ignis and Vigiles share it, none is stacked",
+    "exactly one dark 0.25 fill in the readout — Ignis, Vigiles, and Medicus share it, none is stacked",
   );
 });
 
