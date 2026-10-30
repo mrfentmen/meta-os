@@ -2192,6 +2192,61 @@ export class SessionLog {
       ignis: shareEntryOfOkWindow("ignis", entrySpanMsByProduct.ignis),
       sanitas: shareEntryOfOkWindow("sanitas", entrySpanMsByProduct.sanitas),
     };
+    // DETAIL-71: the per-product entry-span shares of the
+    // global failed window (entrySpanShareOfFailedWindowByProduct):
+    // each product's DETAIL-17 entry span over the
+    // session's global DETAIL-23 failed span — the
+    // failed-side mirror of DETAIL-70, and the
+    // global-window mirror of DETAIL-69's own-failed
+    // shares, so a session where Vigiles recorded
+    // across twice the whole failure window while
+    // Ignis barely outlasts it reads that at a
+    // glance even when Vigiles failures are a small
+    // slice of all failures. Derived only from the
+    // DETAIL-17 spans and the global failed span,
+    // not a new rule: any status of that product
+    // moves its numerator, so a success-only product
+    // still covers the window its successes stretched
+    // across, while only failures move the
+    // denominator's endpoints, and a failure with an
+    // unknown or missing product stretches the global
+    // window without moving any bucket, diluting
+    // every share, and an entry with an unknown or
+    // missing product moves no bucket. These are raw
+    // ratios, never clamped, and they do NOT sum to
+    // 1: product entry windows overlap, and the
+    // global window is first-to-last failures across
+    // products, not a sum of product windows — a share
+    // above 1 or below 0 means timestamps ran out of
+    // insertion order, exactly as DETAIL-17's and
+    // DETAIL-23's raw spans do. Null per product
+    // when the session holds no usable failed window
+    // at all (an empty log, a success-only log, a
+    // single failure, or all failures at one
+    // timestamp — a zero global failed span has no
+    // shares to divide, never NaN); null per
+    // product whose own entry span is unknown
+    // (entries recorded but no usable timestamp
+    // pair — never a fabricated window); 0 per
+    // product with no entries once a nonzero failed
+    // window exists, because it covered none of
+    // the window — the deliberate contrast with
+    // DETAIL-17's null, matching DETAIL-70's and
+    // DETAIL-48's 0-once-a-window-exists rule —
+    // and 0 per single-entry product, whose
+    // zero-length window covers none of a nonzero
+    // failed window.
+    const shareEntryOfFailedWindow = (product, span) => {
+      if (failedSpanMs === null || failedSpanMs === 0) return null;
+      if (entryCountByProduct[product] === 0) return 0;
+      if (span === null) return null;
+      return span / failedSpanMs;
+    };
+    const entrySpanShareOfFailedWindowByProduct = {
+      vigiles: shareEntryOfFailedWindow("vigiles", entrySpanMsByProduct.vigiles),
+      ignis: shareEntryOfFailedWindow("ignis", entrySpanMsByProduct.ignis),
+      sanitas: shareEntryOfFailedWindow("sanitas", entrySpanMsByProduct.sanitas),
+    };
     return {
       total: this._entries.length,
       ok,
@@ -2650,6 +2705,21 @@ export class SessionLog {
       // unknown- or missing-product entry moves no
       // bucket.
       entrySpanShareOfOkWindowByProduct,
+      // DETAIL-71: the per-product entry-span shares
+      // of the global failed window
+      // (entrySpanShareOfFailedWindowByProduct): each
+      // product's DETAIL-17 entry span over the
+      // session's global DETAIL-23 failed span. Null
+      // per product with no usable global failed
+      // window, or with entries but no usable entry
+      // timestamp pair; 0 per product with no entries
+      // once a nonzero failed window exists, and 0 per
+      // single-entry product. An unknown- or
+      // missing-product failure stretches the global
+      // window without moving any bucket; an
+      // unknown- or missing-product entry moves no
+      // bucket.
+      entrySpanShareOfFailedWindowByProduct,
       // DETAIL-38: the usable-latency sums (okLatencySum /
       // okLatencySumByProduct): the total behind DETAIL-4's
       // global mean, DETAIL-8's per-product means, and
