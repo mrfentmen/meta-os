@@ -16,6 +16,7 @@ import { ignisReviewQueue } from "./ignis-review-queue.js";
 import { ignisEvidenceTransparency } from "./ignis-evidence.js";
 import { ignisUncertaintyDisclosure } from "./ignis-uncertainty.js";
 import { ignisReviewTriage } from "./ignis-review-triage.js";
+import { ignisObservationCategories } from "./ignis-observation-categories.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -141,6 +142,7 @@ const els = {
   ignisEvidence: $("ignis-evidence"),
   ignisUncertainty: $("ignis-uncertainty"),
   ignisReviewTriage: $("ignis-review-triage"),
+  ignisObservationCategories: $("ignis-observation-categories"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1234,6 +1236,17 @@ function updateLogStats() {
   const triage = ignisReviewTriage(log.entries());
   els.ignisReviewTriage.textContent =
     `Awaiting review ${triage.total} · Smoke ${triage.visibleSmoke} · Flame ${triage.visibleFlame} · Steam or fog ${triage.steamOrFog} · Flame-like lighting ${triage.flameLikeLighting} · Obscured or distant ${triage.obscuredOrDistant} · No hazard ${triage.noHazard} · Indeterminate ${triage.indeterminate}`;
+  // IGNIS-ONEOFONE-7: same honest read as the triage line above,
+  // one level down — the observation classes inside recorded ok
+  // Ignis assessments, not the assessments' own verdicts. An
+  // assessment with several observations contributes several
+  // counts; observations with no usable or non-contract class
+  // count in the total only. A held session stays zeros, and the
+  // panel itself is hidden under Vigiles and Sanitas by CSS, so
+  // this line only ever shows under Ignis.
+  const obsCats = ignisObservationCategories(log.entries());
+  els.ignisObservationCategories.textContent =
+    `Observations ${obsCats.total} · Smoke ${obsCats.visibleSmoke} · Flame ${obsCats.visibleFlame} · Steam or fog ${obsCats.steamOrFog} · Flame-like lighting ${obsCats.flameLikeLighting} · Obscured or distant ${obsCats.obscuredOrDistant} · No hazard ${obsCats.noHazard} · Indeterminate ${obsCats.indeterminate}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
