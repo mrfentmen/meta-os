@@ -330,6 +330,150 @@ pub fn system_state_lines(state: &SystemState) -> Vec<String> {
     vec![drivers_line, tools_line, apps_line]
 }
 
+/// OS-127: the recovery input for a boot brief: the jobs the lease
+/// sweep recovered at this boot, the sweep's own recovered count to
+/// reconcile against, and any job records the sweep found corrupted.
+/// `None` means the Python record lacked that key or it was not a
+/// list / not an int — never padded, never guessed.
+#[derive(Debug, Clone, PartialEq)]
+pub struct RecoveryRecord {
+    pub corrupted: Option<Vec<CorruptedEntry>>,
+    pub recovered: Option<Vec<RecoveredEntry>>,
+    pub sweep_count: Option<i64>,
+}
+
+/// One entry of a recovery record's `corrupted` list, as Python
+/// reads it: a dict (id and/or title, either possibly absent) or a
+/// plain string, or anything else (which names nothing).
+#[derive(Debug, Clone, PartialEq)]
+pub enum CorruptedEntry {
+    Job { id: String, title: String },
+    Plain(String),
+    Other,
+}
+
+/// One entry of a recovery record's `recovered` list: a usable job
+/// record (non-empty id and title) or an unreadable one. The caller
+/// marks entries unreadable; a record that is not a dict, or has an
+/// empty id or title, is unreadable in Python, never skipped.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RecoveredEntry {
+    Job { id: String, title: String, baton_step: BatonStep },
+    Unreadable,
+}
+
+/// A recovered job's baton step, as Python reads it: an int step, a
+/// non-empty string step verbatim, or anything else (not reported).
+/// An empty string step counts as not reported, matching Python's
+/// `isinstance(step, str) and step` check.
+#[derive(Debug, Clone, PartialEq)]
+pub enum BatonStep {
+    Number(i64),
+    Text(String),
+    Missing,
+}
+
+/// OS-127: the one in-flight-jobs-recovered line for a boot brief.
+///
+/// The line is reconciled, not merely counted: a clean count is
+/// rendered only when the sweep count equals the number of recovered
+/// job records, and only then are the titles and baton steps named.
+/// Any other shape says recovery is incomplete instead of a false
+/// all-clear: a sweep count that disagrees with the record count, a
+/// record with no sweep count to reconcile against, a corrupted job
+/// (named, so the reader knows which job did not recover cleanly),
+/// or an unreadable recovered record. A clean shutdown is a
+/// reconciled record with zero recovered jobs, and it reads zero
+/// recovered plainly. The line is not a bullet line, so the BRF-007
+/// budget trim never drops it ahead of a watch item, and it is
+/// redacted by the composer, not here.
+///
+/// `None` means the snapshot carries no recovery record at all.
+pub fn recovery_line(record: Option<&RecoveryRecord>) -> String {
+    const PREFIX: &str = "In-flight jobs recovered at this boot: ";
+    let record = match record {
+        None => return format!("{PREFIX}not reported in this snapshot"),
+        Some(r) => r,
+    };
+    if let Some(corrupted) = &record.corrupted {
+        if !corrupted.is_empty() {
+            let mut names: Vec<String> = Vec::new();
+            for job in corrupted {
+                match job {
+                    CorruptedEntry::Job { id, title } => {
+                        if !id.is_empty() && !title.is_empty() {
+                            names.push(format!("job {id} {title}"));
+                        } else if !id.is_empty() {
+                            names.push(format!("job {id}"));
+                        } else if !title.is_empty() {
+                            names.push(title.clone());
+                        }
+                    }
+                    CorruptedEntry::Plain(s) => {
+                        if !s.is_empty() {
+                            names.push(s.clone());
+                        }
+                    }
+                    CorruptedEntry::Other => {}
+                }
+            }
+            if !names.is_empty() {
+                let listed: Vec<String> = names
+                    .iter()
+                    .map(|n| format!("{n} has a corrupted record"))
+                    .collect();
+                return format!("{PREFIX}recovery incomplete, {}", listed.join("; "));
+            }
+            return format!(
+                "{PREFIX}recovery incomplete, a corrupted job record could not be named"
+            );
+        }
+    }
+    let recovered: &[RecoveredEntry] = record.recovered.as_deref().unwrap_or(&[]);
+    let mut usable: Vec<(&str, &str, &BatonStep)> = Vec::new();
+    let mut unreadable = false;
+    for job in recovered {
+        match job {
+            RecoveredEntry::Job { id, title, baton_step } => {
+                usable.push((id.as_str(), title.as_str(), baton_step))
+            }
+            RecoveredEntry::Unreadable => unreadable = true,
+        }
+    }
+    if unreadable {
+        return format!("{PREFIX}recovery incomplete, a recovered job record is unreadable");
+    }
+    let sweep = match record.sweep_count {
+        None => {
+            return format!(
+                "{PREFIX}recovery incomplete, no lease sweep count to reconcile against"
+            )
+        }
+        Some(s) => s,
+    };
+    if sweep != usable.len() as i64 {
+        return format!(
+            "{PREFIX}recovery incomplete, the lease sweep reports {sweep} recovered but {} job records were recovered",
+            usable.len()
+        );
+    }
+    if usable.is_empty() {
+        return format!("{PREFIX}0 recovered");
+    }
+    let parts: Vec<String> = usable
+        .iter()
+        .map(|(id, title, step)| {
+            let step_text = match step {
+                BatonStep::Number(n) => format!("baton step {n}"),
+                BatonStep::Text(s) if !s.is_empty() => s.clone(),
+                _ => "step not reported".to_string(),
+            };
+            format!("job {id} {title} (resumed at {step_text})")
+        })
+        .collect();
+    format!("{PREFIX}{} recovered: {}", usable.len(), parts.join("; "))
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -468,5 +612,74 @@ mod tests {
         assert_eq!(trim_to_budget(t, 100), t);
         assert_eq!(trim_to_budget("a b c d e f", 3), "a b (trimmed)");
         assert_eq!(trim_to_budget("one two three", 3), "one two three");
+    }
+
+    #[test]
+    fn recovery_line_reconciles_or_says_incomplete() {
+        assert_eq!(
+            recovery_line(None),
+            "In-flight jobs recovered at this boot: not reported in this snapshot"
+        );
+        let clean_zero = RecoveryRecord { corrupted: None, recovered: Some(vec![]), sweep_count: Some(0) };
+        assert_eq!(recovery_line(Some(&clean_zero)), "In-flight jobs recovered at this boot: 0 recovered");
+        let clean_two = RecoveryRecord {
+            corrupted: None,
+            recovered: Some(vec![
+                RecoveredEntry::Job { id: "T1".into(), title: "Alpha".into(), baton_step: BatonStep::Number(3) },
+                RecoveredEntry::Job { id: "T2".into(), title: "Beta".into(), baton_step: BatonStep::Text("checkpoint".into()) },
+                RecoveredEntry::Job { id: "T3".into(), title: "Gamma".into(), baton_step: BatonStep::Missing },
+            ]),
+            sweep_count: Some(3),
+        };
+        assert_eq!(
+            recovery_line(Some(&clean_two)),
+            "In-flight jobs recovered at this boot: 3 recovered: job T1 Alpha (resumed at baton step 3); job T2 Beta (resumed at checkpoint); job T3 Gamma (resumed at step not reported)"
+        );
+        let corrupted = RecoveryRecord {
+            corrupted: Some(vec![
+                CorruptedEntry::Job { id: "T9".into(), title: "Delta".into() },
+                CorruptedEntry::Plain("old job".into()),
+            ]),
+            recovered: None,
+            sweep_count: None,
+        };
+        assert_eq!(
+            recovery_line(Some(&corrupted)),
+            "In-flight jobs recovered at this boot: recovery incomplete, job T9 Delta has a corrupted record; old job has a corrupted record"
+        );
+        let unnameable = RecoveryRecord {
+            corrupted: Some(vec![CorruptedEntry::Other, CorruptedEntry::Job { id: String::new(), title: String::new() }]),
+            recovered: None,
+            sweep_count: None,
+        };
+        assert_eq!(
+            recovery_line(Some(&unnameable)),
+            "In-flight jobs recovered at this boot: recovery incomplete, a corrupted job record could not be named"
+        );
+        let unreadable = RecoveryRecord {
+            corrupted: None,
+            recovered: Some(vec![RecoveredEntry::Unreadable]),
+            sweep_count: Some(1),
+        };
+        assert_eq!(
+            recovery_line(Some(&unreadable)),
+            "In-flight jobs recovered at this boot: recovery incomplete, a recovered job record is unreadable"
+        );
+        let no_sweep = RecoveryRecord { corrupted: None, recovered: Some(vec![]), sweep_count: None };
+        assert_eq!(
+            recovery_line(Some(&no_sweep)),
+            "In-flight jobs recovered at this boot: recovery incomplete, no lease sweep count to reconcile against"
+        );
+        let mismatch = RecoveryRecord {
+            corrupted: None,
+            recovered: Some(vec![
+                RecoveredEntry::Job { id: "T1".into(), title: "Alpha".into(), baton_step: BatonStep::Missing },
+            ]),
+            sweep_count: Some(2),
+        };
+        assert_eq!(
+            recovery_line(Some(&mismatch)),
+            "In-flight jobs recovered at this boot: recovery incomplete, the lease sweep reports 2 recovered but 1 job records were recovered"
+        );
     }
 }
