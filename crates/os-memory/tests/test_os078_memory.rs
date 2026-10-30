@@ -149,6 +149,8 @@ fn corrupt_journal_line_raises() {
         f.write_all(b"this is not json\n").unwrap();
     }
     let err = read(&root, "pax", "k.md", None).unwrap_err();
+    // The unparseable line still fails first (read stops at the
+    // first bad line, exactly like the Python reader).
     assert!(err.to_string().contains("does not parse"), "{err}");
     // A journal whose only bad line is a shape mismatch raises the
     // shape error instead.
