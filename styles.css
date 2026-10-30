@@ -780,3 +780,20 @@ body[data-product="sanitas"] .mono-block {
   border: 1px solid rgba(93, 168, 100, 0.4);
   background: rgba(0, 0, 0, 0.25);
 }
+/* OPS-CONSOLE-1 (Del UI direction, Oct 29): first web-first
+   modern/elite/professional dispatch/ops-console piece for Ignis.
+   Panel headings become console section labels — uppercase mono
+   with wide tracking and a red accent tick — scoped to
+   body[data-product="ignis"] only, so Vigiles and Sanitas are
+   untouched. Size and weight deliberately stay at the base 15px/700:
+   the base .panel h2 rule still owns those, so native parity holds
+   and the existing web-contract tests keep passing. The spinning
+   ASCII background, disclosures, and limitations banner are
+   untouched; product red is an accent only, never a status color. */
+body[data-product="ignis"] .panel h2 {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-left: 3px solid #d92b2b;
+  padding-left: 10px;
+}
