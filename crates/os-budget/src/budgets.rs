@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: f727f6a5658b0bc49a5b9843e8c21b150cfab045)
 //! Per-lane and per-process budget config (OS-085, Milo).
 //! (`os/intel/budgets.py`).
 //!
@@ -46,7 +47,8 @@ pub fn spend_ratio(spent: i64, cap: i64) -> Option<f64> {
 }
 
 /// `true` when spent has reached the warning threshold but not
-/// cap. The warning band is `[warn_percent, 100%)` of cap: at cap the
+/// cap. The warning band is `[warn_percent, 100%)` of cap: at cap
+/// the lane is held, not warned.
 pub fn at_warning(spent: i64, cap: i64, warn_percent: u64) -> bool {
     match spend_ratio(spent, cap) {
         None => false,
@@ -126,7 +128,7 @@ pub fn hold_entry(lane: &str, spent: i64, cap: i64) -> serde_json::Value {
 }
 
 /// Value-level gate wrappers: the Python functions accept
-/// `None`/strings/bools (all unusable — no warning, no hold,
+/// `None`/strings/bools (all unusable → no warning, no hold,
 /// claims allowed). JSON `true` is unusable like Python's
 /// explicit bool guard; floats are unusable like Python's
 /// int-only rule.
