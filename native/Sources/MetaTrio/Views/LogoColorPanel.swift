@@ -43,6 +43,20 @@ import SwiftUI
 // value, not a trait — the trait is only where it fits, the
 // preset choice. Heading, presets, picker, value lines, slider,
 // pause label, and the large-logo note are untouched.
+// LOGO-NATIVE-5 (Del direction, Oct 30): the Logo panel gains
+// its intro note, the native counterpart to the web panel's
+// opening paragraph. Until now the native panel jumped straight
+// from its heading to the swatches, while every other native
+// panel carries its intro note at 13pt — so a Mac user met the
+// color, speed, and pause controls with no sentence saying what
+// the loop is or that the choices persist. The note carries the
+// web paragraph's meaning in Mac words: the choices are saved on
+// this Mac (the panel's @AppStorage values) and come back on
+// relaunch, and Reset returns the color to the selected product's
+// color. It renders at 13pt muted with wrapping, the same note
+// treatment the still-image and video intros carry. Heading,
+// presets, picker, value lines, slider, pause button, and the
+// large-logo note are untouched.
 
 private struct LogoColorPanel: View {
     @AppStorage("meta-trio-logo-color") private var customHex: String = ""
@@ -87,6 +101,10 @@ private struct LogoColorPanel: View {
         GroupBox {
             VStack(alignment: .leading, spacing: 10) {
                 PanelHeading(title: "Logo", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles, isMedicus: model.selectedProduct == .medicus)
+                Text("The spinning ASCII Meta loop behind these panels. Pick a color to re-tint it, set its rotation speed, or pause it — the choices are saved on this Mac and come back on relaunch. Reset returns the color to the selected product's color.")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 10) {
                     ForEach(LogoColor.presets, id: \.hex) { preset in
                         Button {
