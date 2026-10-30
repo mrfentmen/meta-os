@@ -84,6 +84,46 @@ Per-product prompt profiles (categories + limitations) are derived from
 `js/products.js` in `model.mjs` (`PRODUCT_PROFILES`), so the server and
 the clients cannot drift.
 
+## OS queue path (Trio side, step 1 — envelope + submit, not yet wired in)
+
+Del's direction, 2026-10-30 (relayed by Pax): the OS operates the Trio
+— one submission, Best Agentic aim. The Trio server submits assessments
+as jobs to the OS job queue; a resident agent claims and answers them
+with Spark; the direct Spark path above stays as fallback; apps keep
+calling `/api/assess` unchanged. Hard cutoff Nov 2: the queue round trip
+is verified live by then, or the clean Trio ships alone.
+
+`server/queue.mjs` is step 1 of Rowan's server queue transport lane:
+
+- `buildQueueJob(input)` turns a validated assess input into a
+  versioned job envelope (`version: 1`, `kind: "trio-assessment"`):
+  product, timestamp, the frame as the same JPEG data URL the clients
+  send, its byte length, its SHA-256, and a deterministic id from
+  product + timestamp + frame bytes (a resubmitted frame is the same
+  job, and the audit trail can name it). A job is a submission, not an
+  answer — no assessment is invented here.
+- `submitQueueJob(job, env, deps)` posts the envelope to the queue URL
+  through an injected transport and echoes the filed job id, refusing
+  in layers like the model adapter: queue disabled
+  (`TRIO_QUEUE_ENABLED` not `1`), queue URL not configured
+  (`TRIO_QUEUE_URL` unset), malformed job, or submit failure — every
+  refusal a typed `QueueError`, never a fabricated job id.
+
+Deliberately not in this step: wiring into `handleAssess`, and the
+claim/result poll. A submit returns a job id, not an assessment, and
+`/api/assess` must still return a v2 assessment object — so the
+result-retrieval shape is agreed with Pax's resident-agent end before
+anything is wired in. Until then the direct Spark path remains the only
+live path, and this module changes no request behaviour. The queue
+service itself is a named external service, never inside this repo: its
+URL comes only from `TRIO_QUEUE_URL`, server-side, and no key material
+is ever put in a job envelope, a commit, or a log.
+
+| Variable | Meaning |
+| --- | --- |
+| `TRIO_QUEUE_ENABLED` | `1` enables the queue submit adapter. Leave unset: the queue path refuses as disabled. |
+| `TRIO_QUEUE_URL` | Queue submit endpoint, operator-configured. No URL → the adapter refuses as not configured. |
+
 ## Held-state round trip: what the user actually sees
 
 While the Spark rule holds, the server answers every valid assess request
@@ -165,4 +205,9 @@ held state, bad JSON, wrong methods, and static serving; plus
 `tests/server-spark-transport.test.mjs`, which exercises the Spark
 transport through an injected stub fetch (request shape, fenced-JSON
 unwrap, non-200 / non-JSON / empty-content failures, and the
-fetch-never-called refusal states). No test fires a live call.
+fetch-never-called refusal states); plus
+`tests/server-queue-transport.test.mjs`, which exercises the queue
+envelope and submit adapter through an injected stub queuePost
+(envelope fields and deterministic id, disabled / not-configured
+refusals before any transport call, filed-id echo, and submit-failure
+states). No test fires a live call.
