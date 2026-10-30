@@ -1,309 +1,72 @@
-//! Crate `intel` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `intel` — Relay Intelligence (batch B09 docs, owner: Hana).
 //!
-//! Batch B09 — Intel core & capability registry. Owner: Hana.
-//! Source files this batch ports:
-//! - `os/intel.py`
-//! - `os/intel/README.md`
-//! - `os/intel/__init__.py`
-//! - `os/intel/capabilities/buffy.json`
-//! - `os/intel/capabilities/hana.json`
-//! - `os/intel/capabilities/milo.json`
-//! - `os/intel/capabilities/pax.json`
-//! - `os/intel/capabilities/rowan.json`
-//! - `os/intel/capability.py`
-//! - `os/intel/capability_files.py`
-//! - `os/intel/explanations.py`
-//! - `os/intel/gate.py`
-//! - `os/intel/ingest.py`
-//! - `os/intel/integration.py`
-//! - `os/intel/join.py`
-//! - `os/intel/ladder.py`
-//! - `os/intel/store.py`
-//! - `os/tests/test_intel_abrun.py`
-//! - `os/tests/test_intel_attempt_gate.py`
-//! - `os/tests/test_intel_baton_pass.py`
-//! - `os/tests/test_intel_capability.py`
-//! - `os/tests/test_intel_capability_files.py`
-//! - `os/tests/test_intel_cli.py`
-//! - `os/tests/test_intel_cursor.py`
-//! - `os/tests/test_intel_dem014_final_mix.py`
-//! - `os/tests/test_intel_dem018_local.py`
-//! - `os/tests/test_intel_demo_ambient.py`
-//! - `os/tests/test_intel_demo_caption.py`
-//! - `os/tests/test_intel_demo_goal.py`
-//! - `os/tests/test_intel_demo_operator_card.py`
-//! - `os/tests/test_intel_devpack.py`
-//! - `os/tests/test_intel_dispatch.py`
-//! - `os/tests/test_intel_dispatch_announce.py`
-//! - `os/tests/test_intel_dispatch_fallback.py`
-//! - `os/tests/test_intel_dispatch_readme.py`
-//! - `os/tests/test_intel_dispatch_req.py`
-//! - `os/tests/test_intel_dispatch_show.py`
-//! - `os/tests/test_intel_dispatch_templates.py`
-//! - `os/tests/test_intel_drill_collision.py`
-//! - `os/tests/test_intel_drill_dead_dep.py`
-//! - `os/tests/test_intel_drill_demo_catch_time.py`
-//! - `os/tests/test_intel_drill_demo_silent_failure.py`
-//! - `os/tests/test_intel_drill_tournament.py`
-//! - `os/tests/test_intel_e2e1.py`
-//! - `os/tests/test_intel_e2e2.py`
-//! - `os/tests/test_intel_e2e3.py`
-//! - `os/tests/test_intel_explanations.py`
-//! - `os/tests/test_intel_fnd029.py`
-//! - `os/tests/test_intel_git_workflow.py`
-//! - `os/tests/test_intel_integration.py`
-//! - `os/tests/test_intel_load.py`
-//! - `os/tests/test_intel_mind_image.py`
-//! - `os/tests/test_intel_mind_loader.py`
-//! - `os/tests/test_intel_notify.py`
-//! - `os/tests/test_intel_os039_boot_audio.py`
-//! - `os/tests/test_intel_push.py`
-//! - `os/tests/test_intel_redis_down.py`
-//! - `os/tests/test_intel_restart_contract.py`
-//! - `os/tests/test_intel_sam_eval.py`
-//! - `os/tests/test_intel_security_pass.py`
-//! - `os/tests/test_intel_self_repair_ladder.py`
-//! - `os/tests/test_intel_snapshot.py`
-//! - `os/tests/test_intel_soak_review.py`
-//! - `os/tests/test_intel_spoof_dispatch.py`
-//! - `os/tests/test_intel_store.py`
-//! - `os/tests/test_intel_timer_sweep.py`
-//! - `os/tests/test_intel_trust.py`
-//! - `os/tests/test_intel_trust_negative.py`
-//! - `os/tests/test_intel_wake.py`
-//! - `os/tests/test_relay_intel_config.py`
+//! Port of the Meta OS `os/intel/` package: the intel wire formats,
+//! record schemas, and the core registry modules. The Python originals
+//! stay the live fallback until this batch is PORTED (both gates +
+//! parity). Later batches (B10–B14) extend this crate in their own
+//! module subtrees; this header documents the shared contract points
+//! from `os/intel/README.md`.
 //!
-//! Batch B10 — Briefings & dispatch. Owner: Hana.
-//! Source files this batch ports:
-//! - `os/intel/alerts.py`
-//! - `os/intel/baton.py`
-//! - `os/intel/brief.py`
-//! - `os/intel/dispatch.py`
-//! - `os/intel/forecast.py`
-//! - `os/intel/notify.py`
-//! - `os/intel/prompts/README.md`
-//! - `os/intel/prompts/brief_boot.md`
-//! - `os/intel/prompts/brief_morning.md`
-//! - `os/intel/prompts/brief_morning_v2.md`
-//! - `os/intel/prompts/brief_ondemand.md`
-//! - `os/intel/prompts/brief_onjoin.md`
-//! - `os/intel/prompts/brief_onjoin_v2.md`
-//! - `os/intel/prompts/dispatch.md`
-//! - `os/intel/prompts/dispatch_v2.md`
-//! - `os/intel/push.py`
-//! - `os/intel/wake.py`
-//! - `os/tests/test_intel_brief.py`
-//! - `os/tests/test_intel_brief_announce.py`
-//! - `os/tests/test_intel_brief_blocked_contacts_caller.py`
-//! - `os/tests/test_intel_brief_boot_environment.py`
-//! - `os/tests/test_intel_brief_cold_start.py`
-//! - `os/tests/test_intel_brief_daily_caller.py`
-//! - `os/tests/test_intel_brief_demo_morning.py`
-//! - `os/tests/test_intel_brief_e2e_score.py`
-//! - `os/tests/test_intel_brief_environment_bus.py`
-//! - `os/tests/test_intel_brief_environment_record.py`
-//! - `os/tests/test_intel_brief_environment_repo.py`
-//! - `os/tests/test_intel_brief_federation_caller.py`
-//! - `os/tests/test_intel_brief_held_decisions_caller.py`
-//! - `os/tests/test_intel_brief_held_sources.py`
-//! - `os/tests/test_intel_brief_onjoin_template.py`
-//! - `os/tests/test_intel_brief_previous_brief_caller.py`
-//! - `os/tests/test_intel_brief_previous_session_caller.py`
-//! - `os/tests/test_intel_brief_priority_caller.py`
-//! - `os/tests/test_intel_brief_priority_contacts.py`
-//! - `os/tests/test_intel_brief_prompt_v2.py`
-//! - `os/tests/test_intel_brief_prompt_version.py`
-//! - `os/tests/test_intel_brief_prompt_wiring.py`
-//! - `os/tests/test_intel_brief_recovery_caller.py`
-//! - `os/tests/test_intel_brief_screenshots.py`
-//! - `os/tests/test_intel_brief_since_last.py`
-//! - `os/tests/test_intel_brief_system_state_caller.py`
+//! ## Wire format freeze (FND-020)
 //!
-//! Batch B11 — Intel Spark client & mind images. Owner: Hana.
-//! Source files this batch ports:
-//! - `os/intel/mind_image.py`
-//! - `os/intel/mind_loader.py`
-//! - `os/intel/skills_loader.py`
-//! - `os/intel/spark_agent.py`
-//! - `os/intel/spark_client.py`
-//! - `os/tests/test_intel_spark_agent.py`
-//! - `os/tests/test_intel_spark_client.py`
-//! - `os/tests/test_intel_spark_down.py`
+//! Intel announcement lines are one-line bus messages that point at a
+//! record. They are never the record itself: the full text lives in
+//! the store (see [`b09_core::store`] key layout), the line carries
+//! only the id and the fields a reader needs to triage without a
+//! lookup. Wire announcements are best-effort chat lines; store state
+//! is the source of truth.
 //!
-//! Batch B12 — Evals & drills. Owner: Hana.
-//! Source files this batch ports:
-//! - `os/intel/abrun.py`
-//! - `os/intel/boot_audio_check.py`
-//! - `os/intel/boot_selfcheck.py`
-//! - `os/intel/dem018_local_check.py`
-//! - `os/intel/drills/__init__.py`
-//! - `os/intel/drills/ab_run.py`
-//! - `os/intel/drills/attempt_gate.py`
-//! - `os/intel/drills/baton_pass.py`
-//! - `os/intel/drills/boot_selfcheck.py`
-//! - `os/intel/drills/boot_status.py`
-//! - `os/intel/drills/capability_refusal.py`
-//! - `os/intel/drills/collision.py`
-//! - `os/intel/drills/dead_dep.py`
-//! - `os/intel/drills/demo_catch_time.py`
-//! - `os/intel/drills/demo_silent_failure.py`
-//! - `os/intel/drills/demo_thresholds_dropin.py`
-//! - `os/intel/drills/journal_watch.py`
-//! - `os/intel/drills/power_cut.py`
-//! - `os/intel/drills/restart_contract.py`
-//! - `os/intel/drills/self_repair_ladder.py`
-//! - `os/intel/drills/soak_review.py`
-//! - `os/intel/drills/timer_sweep.py`
-//! - `os/intel/drills/tournament.py`
-//! - `os/intel/drills/trust_enforcement.py`
-//! - `os/intel/drills/trust_negative.py`
-//! - `os/intel/drills/wake.py`
-//! - `os/intel/e2e1.py`
-//! - `os/intel/e2e2.py`
-//! - `os/intel/e2e3.py`
-//! - `os/intel/evals/README.md`
-//! - `os/intel/evals/ab_run.md`
-//! - `os/intel/evals/attempt_gate.log`
-//! - `os/intel/evals/attempt_gate.md`
-//! - `os/intel/evals/baton_pass.log`
-//! - `os/intel/evals/baton_pass.md`
-//! - `os/intel/evals/boot_audio.md`
-//! - `os/intel/evals/boot_selfcheck.log`
-//! - `os/intel/evals/boot_selfcheck.md`
-//! - `os/intel/evals/boot_status.md`
-//! - `os/intel/evals/brief_rubric.md`
-//! - `os/intel/evals/budget_forecast.md`
-//! - `os/intel/evals/budget_gate.log`
-//! - `os/intel/evals/budget_gate.md`
-//! - `os/intel/evals/capability_refusal.log`
-//! - `os/intel/evals/capability_refusal.md`
-//! - `os/intel/evals/cgroup_limits.log`
-//! - `os/intel/evals/cgroup_limits.md`
-//! - `os/intel/evals/cost.log`
-//! - `os/intel/evals/cost.md`
-//! - `os/intel/evals/dem018_local.md`
-//! - `os/intel/evals/demo_catch_time.log`
-//! - `os/intel/evals/demo_catch_time.md`
-//! - `os/intel/evals/demo_operator_card.md`
-//! - `os/intel/evals/demo_silent_failure.log`
-//! - `os/intel/evals/demo_silent_failure.md`
-//! - `os/intel/evals/demo_thresholds_dropin.log`
-//! - `os/intel/evals/demo_thresholds_dropin.md`
-//! - `os/intel/evals/dispatch_adversarial.md`
-//! - `os/intel/evals/dispatch_golden.md`
-//! - `os/intel/evals/drill_tournament.log`
-//! - `os/intel/evals/drill_tournament.md`
-//! - `os/intel/evals/driver_heartbeat_bridge.log`
-//! - `os/intel/evals/driver_heartbeat_bridge.md`
-//! - `os/intel/evals/driver_stall.log`
-//! - `os/intel/evals/driver_stall.md`
-//! - `os/intel/evals/driver_supervision.log`
-//! - `os/intel/evals/driver_supervision.md`
-//! - `os/intel/evals/e2e1.log`
-//! - `os/intel/evals/e2e2.log`
-//! - `os/intel/evals/e2e3.log`
-//! - `os/intel/evals/e2e_watchdog_surfaces.log`
-//! - `os/intel/evals/final_mix.md`
-//! - `os/intel/evals/fnd029.md`
-//! - `os/intel/evals/int012_git_workflow.md`
-//! - `os/intel/evals/journal_watch.log`
-//! - `os/intel/evals/journal_watch.md`
-//! - `os/intel/evals/load.log`
-//! - `os/intel/evals/load.md`
-//! - `os/intel/evals/log.md`
-//! - `os/intel/evals/power_cut.log`
-//! - `os/intel/evals/power_cut.md`
-//! - `os/intel/evals/redis_down.log`
-//! - `os/intel/evals/redis_down.md`
-//! - `os/intel/evals/restart_contract.log`
-//! - `os/intel/evals/restart_contract.md`
-//! - `os/intel/evals/sam/README.md`
-//! - `os/intel/evals/sam/alerts-firing-desktop.png`
-//! - `os/intel/evals/sam/alerts-firing-phone.png`
-//! - `os/intel/evals/sam/alerts-quiet-desktop.png`
-//! - `os/intel/evals/sam/alerts-quiet-phone.png`
-//! - `os/intel/evals/sam/pairs.json`
-//! - `os/intel/evals/sam_pairs.md`
-//! - `os/intel/evals/security_pass.log`
-//! - `os/intel/evals/security_pass.md`
-//! - `os/intel/evals/self_repair_ladder.log`
-//! - `os/intel/evals/self_repair_ladder.md`
-//! - `os/intel/evals/soak_review.log`
-//! - `os/intel/evals/soak_review.md`
-//! - `os/intel/evals/spark_down.log`
-//! - `os/intel/evals/spark_down.md`
-//! - `os/intel/evals/spoof_dispatch.log`
-//! - `os/intel/evals/spoof_dispatch.md`
-//! - `os/intel/evals/timer_sweep.log`
-//! - `os/intel/evals/timer_sweep.md`
-//! - `os/intel/evals/trust_enforcement.log`
-//! - `os/intel/evals/trust_enforcement.md`
-//! - `os/intel/evals/trust_negative.log`
-//! - `os/intel/evals/trust_negative.md`
-//! - `os/intel/evals/wake.log`
-//! - `os/intel/evals/wake.md`
-//! - `os/intel/evals/watchdog_load.log`
-//! - `os/intel/evals/watchdog_load.md`
-//! - `os/intel/evals/watchdog_tuning.md`
-//! - `os/intel/evals/watchdog_tuning.py`
-//! - `os/intel/evals/watchman_boot.log`
-//! - `os/intel/evals/watchman_boot.md`
-//! - `os/intel/evals/watchman_bridge.md`
-//! - `os/intel/evals/watchman_bridge_tick.md`
-//! - `os/intel/evals/watchman_cycle.log`
-//! - `os/intel/evals/watchman_cycle.md`
-//! - `os/intel/evals/watchman_loop.log`
-//! - `os/intel/evals/watchman_loop.md`
-//! - `os/intel/evals/watchman_runner.log`
-//! - `os/intel/evals/watchman_runner.md`
-//! - `os/intel/evals/watchman_service.md`
-//! - `os/intel/evals/watchman_service_cli.md`
-//! - `os/intel/evals/watchman_service_unit.md`
-//! - `os/intel/evals/watchman_watch.log`
-//! - `os/intel/evals/watchman_watch.md`
-//! - `os/intel/final_mix_check.py`
-//! - `os/intel/load_check.py`
-//! - `os/intel/redis_down_drill.py`
-//! - `os/intel/sam_check.py`
-//! - `os/intel/sam_render.py`
-//! - `os/intel/security_pass.py`
-//! - `os/intel/soak_review.py`
-//! - `os/intel/spark_down_drill.py`
-//! - `os/intel/spoof_dispatch_drill.py`
+//! Rules for every intel line:
+//! - Exactly one line. No newline, no trailing free text beyond the
+//!   shape. A line that does not match its shape exactly is not an
+//!   intel line; parsers ignore it.
+//! - No secrets, no spec text, no job titles, no credential-shaped
+//!   strings. A line names a record; it never quotes one.
+//! - Ids contain no spaces. Readers split a line on spaces: the
+//!   first token is the prefixed id, the remaining tokens are the
+//!   shape's fixed fields in order.
+//! - A frozen shape changes only with a new dated note, never a
+//!   silent edit. Lanes already parsing a shape must keep working
+//!   across any change, or the change does not land.
 //!
-//! Batch B13 — Examples & devpack. Owner: Hana.
-//! Source files this batch ports:
-//! - `os/intel/devpack.py`
-//! - `os/intel/devpack/README.md`
-//! - `os/intel/devpack/alerts.json`
-//! - `os/intel/devpack/brief.json`
-//! - `os/intel/devpack/crew_board.json`
-//! - `os/intel/devpack/plan_preview.json`
-//! - `os/intel/examples/mind-images/pax-default/brief.json`
-//! - `os/intel/examples/mind-images/pax-default/changelog.md`
-//! - `os/intel/examples/mind-images/pax-default/constitution.md`
-//! - `os/intel/examples/mind-images/pax-default/gateway-catalog.json`
-//! - `os/intel/examples/mind-images/pax-default/grants.json`
-//! - `os/intel/examples/mind-images/pax-default/manifest.json`
-//! - `os/intel/examples/mind-images/pax-default/memory/own/NOTE.md`
-//! - `os/intel/examples/mind-images/pax-default/memory/shared/NOTE.md`
-//! - `os/intel/examples/mind-images/pax-default/skills/coordinate/SKILL.md`
-//! - `os/intel/examples/mind-images/pax-default/skills/dispatch/SKILL.md`
-//! - `os/intel/examples/skills/fixture-brief/SKILL.md`
-//! - `os/intel/examples/skills/fixture-brief/template.md`
-//! - `os/intel/examples/skills/fixture-ledger/SKILL.md`
-//! - `os/intel/examples/skills/fixture-ledger/notes.md`
-//! - `os/intel/examples/skills/not-a-skill/notes.md`
-//! - `os/intel/notes/hana-source-map.md`
-//! - `os/intel/notes/milo-reuse-audit.md`
+//! ## Announcement shapes
 //!
-//! Batch B14 — Trust & launch (remaining intel). Owner: Hana.
-//! Source files this batch ports:
-//! - `os/intel/launch_run.py`
-//! - `os/intel/metaos-demo.env`
-//! - `os/intel/timer_sweep.py`
-//! - `os/intel/trust.py`
+//! - `BRIEF:<room>:<ts> <kind>` — a brief was stored. `<kind>` is one
+//!   of `morning`, `onjoin`, `ondemand`. The `<ts>` matches the `<ts>`
+//!   in the store key `muse-bus:intel:brief:<room>:<ts>`. The line
+//!   carries no section text; sections live only in the stored brief
+//!   record.
+//! - `ALERT:<id> <severity> <kind>` — a critical alert was raised.
+//!   `<severity>` is `critical` or `warning`; only critical alerts
+//!   are announced. Warnings accumulate silently for the brief and
+//!   the dashboard and never produce a line. The line carries no
+//!   explanation text and no suggested fix.
+//! - `DISPATCH:<id> -> <n> jobs` — a plan was posted. `<n>` is the
+//!   number of jobs actually posted, not the number planned. The line
+//!   carries no job titles, no file lists, no specs.
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! ## Posting gate (GOV-002)
+//!
+//! No intel announcement line is posted until the owner approves
+//! posting. Lanes build against these shapes now; the posting call
+//! sites stay gated.
+//!
+//! ## Module map (B09 — `b09_core` subtree)
+//!
+//! - `os/intel.py` -> [`b09_core::cli`]
+//! - `os/intel/__init__.py` -> [`b09_core::init`]
+//! - `os/intel/capability.py` -> [`b09_core::capability`]
+//! - `os/intel/capability_files.py` -> [`b09_core::capability_files`]
+//! - `os/intel/explanations.py` -> [`b09_core::explanations`]
+//! - `os/intel/gate.py` -> [`b09_core::gate`]
+//! - `os/intel/ingest.py` -> [`b09_core::ingest`]
+//! - `os/intel/integration.py` -> [`b09_core::integration`]
+//! - `os/intel/join.py` -> [`b09_core::join`]
+//! - `os/intel/ladder.py` -> [`b09_core::ladder`]
+//! - `os/intel/store.py` -> [`b09_core::store`]
+//!
+//! Fixtures carried byte-for-byte under `crates/intel/fixtures/b09/`:
+//! the five crew capability grants (`capabilities/*.json`) plus the
+//! fixtures README. Checksums verified against the sources (T179).
+
+pub mod b09_core;
