@@ -1,0 +1,27 @@
+# Meta OS — Rust rebuild workspace (B00 skeleton, Pax).
+# One member crate per batch area; see BATCHES.md for the batch map.
+# Skeleton only: crates contain doc comments, no logic yet.
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/agent-runtime",
+    "crates/assess-server",
+    "crates/dashboard",
+    "crates/guardrail",
+    "crates/intel",
+    "crates/os-boot",
+    "crates/os-budget",
+    "crates/os-identity",
+    "crates/os-jobs",
+    "crates/os-memory",
+    "crates/os-misc",
+    "crates/os-supervisor",
+    "crates/os-worker",
+    "crates/os-workspace",
+    "crates/parity-tests",
+    "crates/queue-core",
+    "crates/queue-store",
+    "crates/relay",
+    "crates/stack",
+]
