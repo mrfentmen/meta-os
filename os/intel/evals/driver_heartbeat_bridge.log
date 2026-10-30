@@ -1,0 +1,12 @@
+template: Slice=relay-drivers.slice (expected relay-drivers.slice)
+template: slice values CPUQuota=100%, MemoryMax=1G: PASS
+template: systemd-analyze verify exit=0
+template: PASS
+driver: 2 records, line PROGRESS:d1 <note>, job_id and numeric ts: PASS
+bridge: heartbeat ts becomes last_progress_at, input untouched: PASS
+bridge: fresh heartbeat yields no stall alert: PASS
+bridge: stale present heartbeat yields exactly one progress-stall naming driver-audio/d1: PASS
+bridge: stale absent heartbeat yields exactly one presence-stall: PASS
+contract: tick alerts but leaves job claimed: PASS
+contract: watchdog.py has no driver special-casing: PASS
+driver_heartbeat_bridge drill: PASS

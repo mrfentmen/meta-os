@@ -1,0 +1,16 @@
+[Unit]
+Description=Meta OS mission-control dashboard (static viewer: bus.html / crew-board.html)
+After=network.target
+PartOf=relay.target
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay
+ExecStart=/usr/bin/python3 -m http.server 8080 --bind 0.0.0.0 --directory /opt/relay
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=relay.target

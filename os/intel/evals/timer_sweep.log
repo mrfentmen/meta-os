@@ -1,0 +1,21 @@
+PASS first tick runs with dead watchman -- claims=[]
+PASS job posted at 100 claimed at tick 300 -- claims=['job-early']
+PASS claim delay inside one interval -- delay=200
+PASS job posted at 550 claimed at tick 600 -- claims=['job-late']
+PASS second claim delay inside one interval -- delay=50
+PASS future job never claimed early
+PASS repeat sweeps with dead watchman claim nothing new -- claims=[]
+PASS claimed job never re-claimed
+PASS done job never claimed
+PASS outsider job never claimed
+PASS unaddressed job never claimed
+PASS healthy watchman: sweep claims nothing -- claims=[]
+PASS healthy watchman: repeated sweeps zero duplicates
+PASS unknown watchman: sweep holds, claims nothing
+PASS tick before interval does not run
+PASS duplicate input claimed once
+PASS inputs never mutated
+PASS no Dale contact in note
+PASS no push import in module
+PASS brief lines name claims and next sweep
+20 PASS, 0 FAIL

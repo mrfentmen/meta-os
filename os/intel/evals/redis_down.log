@@ -1,0 +1,15 @@
+PASS precondition: RuntimeError: request failed after 4 attempts: curl rc=7 (real curl failure, dead port)
+PASS snapshot: exit 2, RELAY_ERROR, no traceback, empty stdout
+PASS brief-store: exit 2, RELAY_ERROR, no traceback, empty stdout
+PASS brief-dry-run: exit 0, TEMPLATE brief, store-free by dry run
+PASS brief-list: exit 2, RELAY_ERROR, no traceback, empty stdout
+PASS brief-show: exit 2, RELAY_ERROR, no traceback, empty stdout
+PASS dispatch-show: exit 2, RELAY_ERROR, no traceback, empty stdout
+PASS dispatch-undo: exit 2, RELAY_ERROR, no traceback, empty stdout
+PASS dispatch-posting: exit 2, RELAY_ERROR, no traceback, empty stdout
+PASS dispatch-dry-run: exit 0, plan renders, pure validation, no store touch
+PASS alerts-show: exit 2, RELAY_ERROR, no traceback, empty stdout
+PASS alerts-query: exit 2, RELAY_ERROR, no traceback, empty stdout
+PASS watch: exit 2, RELAY_ERROR UNIMPLEMENTED: pre-existing stub, not a Redis failure
+PASS watchdog-engine: tick pure: 1 alert(s) incl. progress-stall with no store; write_alert raises RuntimeError, caught, not silent
+drill PASSED: 14/14 stages

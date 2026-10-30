@@ -1,0 +1,9 @@
+room-setup: outsider machine joined the room, trusted control job claimable: PASS
+hostile-post: outsider job refused, reason untrusted signer: PASS
+spoofed-repost: spoofed-nick re-post refused, reason signature absent, nick never authority: PASS
+signed-spoof: spoofed nick with an outsider signature refused too, reason untrusted signer: PASS
+test-window: 3 ticks x 3 trusted agents, zero claims of hostile jobs, exactly 2 refusal records, later ticks silent: PASS
+surfaced: both refusals on the brief and the federation feed, naming the outsider machine: PASS
+room-clean: no claim, progress note, or artifact for any hostile job; control job still claimable: PASS
+no-push: refusal is journal only, no push path, no live bus, no keyring file read: PASS
+trust_negative: ALL PHASES PASS

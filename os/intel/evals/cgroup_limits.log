@@ -1,0 +1,9 @@
+file: CPUQuota=100% (expected 100%)
+file: MemoryMax=1G (expected 1G)
+file: PASS
+verify: exit=0
+verify: PASS
+gate: controllers present: (none)
+gate: missing controllers: ['cpu', 'memory']
+gate: ENVIRONMENT-BLOCKED: live enforcement cannot run on this host
+RESULT: file+verify PASS, enforcement ENVIRONMENT-BLOCKED (exit 2)

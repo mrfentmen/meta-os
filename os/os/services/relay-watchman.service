@@ -1,0 +1,45 @@
+# relay-watchman.service - OS-118 (Pax): the watchman as a system service.
+#
+# Runs os/watchman/relay_watchman.py --loop as the relay user,
+# ordered after relay-jobs.service (the boot lease sweep runs
+# before any bell rings, so a job requeued by the sweep is a
+# fact the watchman sees on its first cycle, not a race).
+# Restart=on-failure: systemd owns process death here, per the
+# OS-034 contract: the watchdog owns the watchman going
+# silent (OS-122 crew-dark), never process death, so the two
+# never double-act on the same failure.
+#
+# Snapshot interface, stated plainly: this first light reads
+# jobs and agent heartbeats from JSON snapshot files under
+# /run/metaos/, written by the queue side. The live-queue
+# reader (jobs.py list --json plus presence heartbeats, same
+# fields the tick() core already takes) is owed follow-up
+# before this unit is claimed live on a booted image; until
+# then a missing snapshot reads as an empty cycle, never a
+# crash and never a phantom ring, and the unit's own loop
+# keeps ticking. The program makes no model calls, holds no
+# session, posts nothing to the bus, and moves no claim.
+#
+# Zero-credential image rule (OS-012): this unit only runs
+# once firstboot has written the secrets env file. Without
+# it systemd skips the unit and the boot continues honestly
+# unconfigured. No secret is on the command line.
+[Unit]
+Description=Meta OS watchman (job queue bell for sleeping agents)
+After=relay-jobs.service
+Wants=network-online.target
+ConditionPathExists=/etc/metaos/secrets.env
+PartOf=relay.target
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay
+EnvironmentFile=/etc/metaos/secrets.env
+ExecStart=/usr/bin/python3 /opt/relay/os/watchman/relay_watchman.py --loop --jobs-file /run/metaos/watchman-jobs.json --agents-file /run/metaos/watchman-agents.json --state-file /run/metaos/watchman-state.json --interval 10
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=relay.target

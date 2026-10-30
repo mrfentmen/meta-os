@@ -1,0 +1,43 @@
+# os/packages.txt - Meta OS package manifest (OS-010, first light).
+#
+# FROZEN HERE: the package name set. Every image route (the
+# debootstrap build-image.sh route, the Packer OS-007 route, the
+# live-build OS-008 route) installs exactly this set, and the
+# live-build package list must match it entry for entry
+# (tests/test_os_manifest.py pins the match).
+#
+# NOT PINNED HERE: versions. No version appears in this file, by
+# design: writing bookworm versions without a built image to read
+# them from would be a guess, not a pin. The pin step, owed to a
+# build host run, diffs this list against a built image's dpkg -l
+# output, records each installed version, and flags any installed
+# package missing from this list as an unpinned extra. Until that
+# diff is recorded, quote this file as a name list only, never as
+# a pinned manifest.
+#
+# Proven block: the set the debootstrap route actually installed
+# in the 2026-10-26 boot (OS-006 list).
+systemd
+systemd-sysv
+udev
+dbus
+linux-image-amd64
+initramfs-tools
+python3
+curl
+ca-certificates
+iproute2
+git
+#
+# Spec block: the META_OS.md spec set as real Debian names.
+# python3-venv is the spec's "python3 + venv": the venv module the
+# stack bake needs if a requirements file ever lands (OS-011).
+# The other five are the spec extras (OS-008 mapping).
+# openssh-server ships present but disabled by default; enabling
+# it is a runtime decision, not a build default.
+python3-venv
+redis-tools
+chromium
+fonts-dejavu
+openssh-server
+qemu-guest-agent

@@ -1,0 +1,72 @@
+{
+  "caps": {
+    "milo": {
+      "caps": "watchdog",
+      "host": "host-c",
+      "max_jobs": "1",
+      "roles": "watcher",
+      "updated": "1793101200"
+    },
+    "pax": {
+      "caps": "brief,dispatch",
+      "host": "host-a",
+      "max_jobs": "1",
+      "roles": "builder",
+      "updated": "1793101200"
+    },
+    "rowan": {
+      "caps": "viewer",
+      "host": "host-b",
+      "max_jobs": "1",
+      "roles": "builder",
+      "updated": "1793101200"
+    }
+  },
+  "jobs": [
+    {
+      "artifacts": [],
+      "attempts": 0,
+      "claim": "milo",
+      "deps": "",
+      "files": "intel/status.py",
+      "id": "1",
+      "last_progress_at": 1793101200,
+      "lease_until": 1793103000,
+      "req": "",
+      "status": "claimed",
+      "title": "intel status module"
+    },
+    {
+      "artifacts": [],
+      "attempts": 0,
+      "claim": null,
+      "deps": "1",
+      "files": "tests/test_intel_status.py",
+      "id": "2",
+      "last_progress_at": null,
+      "lease_until": null,
+      "req": "",
+      "status": "open",
+      "title": "status module tests"
+    },
+    {
+      "artifacts": [],
+      "attempts": 0,
+      "claim": null,
+      "deps": "",
+      "files": "bus.html",
+      "id": "3",
+      "last_progress_at": null,
+      "lease_until": null,
+      "req": "",
+      "status": "blocked",
+      "title": "viewer panel stub"
+    }
+  ],
+  "presence": [
+    "milo",
+    "pax",
+    "rowan"
+  ],
+  "room": "build-relay-intel"
+}

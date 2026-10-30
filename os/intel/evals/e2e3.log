@@ -1,0 +1,35 @@
+INT-004 end-to-end test 3
+blocked job: Ship the e2e3 release note (files: intel/e2e3_release.txt)
+stall job: Fix the e2e3 stall note (files: intel/e2e3_note.txt)
+queue: in-memory fake surface, namespace muse-bus:int-job, caps muse-bus:int-cap, room build-int
+clock: fake clock advanced, never wall-waited; presence TTL 120s, stall window 10 minutes
+brief: template path (no live Spark call; GOV-001 leaves live transport blocked); fresh nick newbie
+
+[PASS] drill setup: jobs 1 (release note) and 2 (stall note) posted, both open
+[PASS] blocked item: job 1 blocked by worker-b, claim released, BLOCKED announcement on the room list
+[PASS] stall and alert: presence-stall alert for worker-a/2 stored as presence-stall:worker-a:2, age 661s; announcement line held
+[PASS] fresh nick joins: newbie joined, offered an onjoin brief, none generated yet
+[PASS] on-join brief: onjoin brief (92 words) names blocked job 1 and alert presence-stall:worker-a:2, stored and retrievable
+[PASS] no auto-post: room message list unchanged across the brief step, no ALERT line posted
+
+On-join brief text:
+TEMPLATE
+Window: last 500 messages or last 24 hours, 6 kept, 0 dropped
+
+Decisions
+- blocked: 1 waiting on the outside review, no reply yet
+
+In flight
+- 2 Fix the e2e3 stall note (claimed)
+
+Owners
+- worker-a: Fix the e2e3 stall note
+
+Blocked and why
+- 1 Ship the e2e3 release note: 
+
+Watch items
+Watchdog: 1 critical, 0 warning, 0 info open — top alert: presence-stall:worker-a:2
+- presence-stall:worker-a:2: worker-a holds claimed job 2 but has been absent from presence for over 10 minutes with no progress on it for 11 minutes.
+
+INT-004: PASS (all stages)

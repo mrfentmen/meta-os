@@ -1,0 +1,19 @@
+[Unit]
+Description=Meta OS job queue boot pass (jobs.py sweep: expire dead claims/leases)
+After=network-online.target relay-bus.service
+Wants=network-online.target
+ConditionPathExists=/etc/metaos/secrets.env
+PartOf=relay.target
+
+[Service]
+Type=oneshot
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay
+EnvironmentFile=/etc/metaos/secrets.env
+Environment=MUSE_RELAY_NICK=metaos
+Environment=MUSE_RELAY_TOKEN_FILE=/etc/metaos/token
+ExecStart=/usr/bin/python3 /opt/relay/jobs.py sweep
+
+[Install]
+WantedBy=relay.target

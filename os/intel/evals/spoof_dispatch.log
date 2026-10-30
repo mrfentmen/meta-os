@@ -1,0 +1,10 @@
+INT-010 spoofed-dispatch drill: BAD signature refused, REJECTED alert visible, watchdog notes the refused job
+Store: suite in-memory fake, job namespace muse-bus:tjob; keyring: fresh random secret per run, removed after the run
+Clock: 10000 (fixed, so the drill is repeatable)
+[PASS] fixture: signed job 1 posted (v2, overseer), verify OK before tamper
+[PASS] tamper: spec rewritten in store, shipped verifier says BAD
+[PASS] claim-refused: claim refused (exit 1, signature BAD), job stays open, bus line: 'worker: REJECTED:1 BAD signed_by=overseer rejected_by=worker'
+[PASS] watchdog: one critical rejected-dispatch alert, emit received, ALERT line formed, WDG-010 record valid (id = dedupe key, subjects = job)
+[PASS] negatives: clean: none; malformed: none; duplicates: one; dict-shaped EXPIRED: one
+[PASS] unsigned-allowed: unsigned job claims with a warning, no rejected alert
+RESULT: PASS, refusal chain holds end to end

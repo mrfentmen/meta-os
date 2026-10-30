@@ -1,0 +1,40 @@
+# relay-workers.slice - OS-035 (Milo): the cgroup slice for relay worker
+# instances.
+#
+# Limits (starting defaults, recorded in plan/META_OS.md):
+#   CPUQuota=100%  one CPU-equivalent per worker, so a runaway worker
+#                  cannot take every CPU the bus, queue, and dashboard
+#                  need on a small multi-CPU machine.
+#   MemoryMax=1G   a runaway leak is capped before it threatens the box.
+#
+# Wiring: relay-worker@.service (Pax OS-017, worker fleet units) sets
+# Slice=relay-workers.slice. The slice needs no [Install] section:
+# systemd creates it on demand when the first worker instance joins
+# it, and drops it when the last member leaves.
+#
+# Basis, stated plainly: the load numbers in the repo (Pax INT-006:
+# snapshot, brief, and tick timings over a 200-job queue; Milo
+# INT-023: watchdog tick timings under a failing 200-job queue)
+# are wall-clock timings, not worker memory or CPU profiles, so
+# they bound tick cost but do not tune these values. These are
+# conservative starting defaults; the tuning pass against measured
+# worker RSS and CPU on the test image is still owed, and the tuned
+# values replace these in this file and in META_OS.md when it lands.
+#
+# Honest gaps, same pattern as OS-033 and OS-034: live enforcement
+# (a runaway worker throttled on the test image while the bus stays
+# responsive) is NOT proven here. There is no test image in this
+# repo, relay-worker@.service is not landed yet, and this dev VM
+# cannot enforce cgroup limits at all: its cgroup v2 hierarchy
+# exposes no cpu or memory controller (cgroup.controllers is
+# empty, subtree_control writes fail), and transient scopes do not
+# stay tracked here. The drill intel/drills/cgroup_limits.py
+# checks this file and systemd-analyze verify, then reports the
+# host block instead of faking an enforcement pass.
+[Unit]
+Description=Meta OS relay worker slice
+Before=slices.target
+
+[Slice]
+CPUQuota=100%
+MemoryMax=1G

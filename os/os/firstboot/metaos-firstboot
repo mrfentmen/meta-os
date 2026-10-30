@@ -1,0 +1,99 @@
+#!/bin/sh
+# Meta OS firstboot (OS-012): the image ships with ZERO credentials.
+# This script collects the secrets the crew needs, once, on the console:
+#   - MUSE_RELAY_URL   : the Upstash Redis REST endpoint for the bus
+#   - the bus token     : written to /etc/metaos/token (chmod 600)
+#   - META_MODEL_API_KEY: optional Muse Spark key (blank = agent transport only)
+# It also generates the local job-signing keyring (/etc/metaos/job-secret,
+# kid "default", chmod 600). Secrets live ONLY in /etc/metaos (chmod 600
+# files) - never in the image, never in a repo, never on the bus.
+#
+# The console prompt times out after 60 seconds so an unattended boot is
+# never wedged here; setup can be finished later with: sudo metaos-firstboot
+set -u
+ENV_FILE=/etc/metaos/secrets.env
+TOKEN_FILE=/etc/metaos/token
+KEYRING=/etc/metaos/job-secret
+
+if [ -f "$ENV_FILE" ]; then
+    echo "metaos-firstboot: $ENV_FILE already exists, nothing to do."
+    exit 0
+fi
+
+# Only prompt on a real console; otherwise defer quietly.
+if [ ! -t 0 ]; then
+    echo "metaos-firstboot: no console attached; run 'sudo metaos-firstboot' to finish setup."
+    exit 0
+fi
+
+echo ""
+echo "==============================================================="
+echo " Meta OS first boot setup"
+echo " Enter the bus connection details. Nothing is stored anywhere"
+echo " except /etc/metaos on this machine (chmod 600)."
+echo " (Prompt times out in 60s - setup can be finished later with"
+echo "  'sudo metaos-firstboot'.)"
+echo "==============================================================="
+
+printf "Upstash REST URL (MUSE_RELAY_URL): "
+if ! read -t 60 RELAY_URL; then
+    echo ""
+    echo "metaos-firstboot: no answer - skipping. Run 'sudo metaos-firstboot' when ready."
+    exit 0
+fi
+if [ -z "${RELAY_URL:-}" ]; then
+    echo "metaos-firstboot: empty URL - skipping. Run 'sudo metaos-firstboot' when ready."
+    exit 0
+fi
+
+printf "Bus token (input hidden): "
+stty -echo 2>/dev/null || true
+read -t 120 RELAY_TOKEN || RELAY_TOKEN=""
+stty echo 2>/dev/null || true
+echo ""
+if [ -z "${RELAY_TOKEN:-}" ]; then
+    echo "metaos-firstboot: empty token - skipping. Run 'sudo metaos-firstboot' when ready."
+    exit 0
+fi
+
+printf "Muse Spark API key (optional, blank = agent transport only, input hidden): "
+stty -echo 2>/dev/null || true
+read -t 120 SPARK_KEY || SPARK_KEY=""
+stty echo 2>/dev/null || true
+echo ""
+
+mkdir -p /etc/metaos
+umask 077
+{
+    echo "MUSE_RELAY_URL=$RELAY_URL"
+    if [ -n "${SPARK_KEY:-}" ]; then
+        echo "META_MODEL_API_KEY=$SPARK_KEY"
+    fi
+} > "$ENV_FILE"
+printf '%s' "$RELAY_TOKEN" > "$TOKEN_FILE"
+# Local job-signing keyring: one "kid:secret" line, generated on this machine.
+SECRET=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')
+echo "default:$SECRET" > "$KEYRING"
+chmod 600 "$ENV_FILE" "$TOKEN_FILE" "$KEYRING"
+
+# Room step beside OS-012 (OS-110): the machine name the join
+# announcement carries. Blank skips it; join reads this file as the
+# default --machine, and the room address/key resolve from the files
+# above, so the join on the image is one command:
+#   python3 /opt/relay/intel/join.py --post
+printf "Machine name for the room announcement (blank = skip): "
+if read -t 60 MACHINE_NAME; then
+    if [ -n "${MACHINE_NAME:-}" ]; then
+        printf '%s' "$MACHINE_NAME" > /etc/metaos/machine
+        chmod 600 /etc/metaos/machine
+        echo "metaos-firstboot: machine name stored; join with:"
+        echo "  python3 /opt/relay/intel/join.py --post"
+        echo "  (or without --post to print the announcement only)"
+    fi
+fi
+
+echo "metaos-firstboot: secrets stored in /etc/metaos (chmod 600)."
+echo "metaos-firstboot: starting crew services..."
+systemctl start relay-bus.service relay-jobs.service relay-overseer.timer 2>/dev/null || true
+echo "metaos-firstboot: done. Dashboard: http://$(hostname):8080/"
+exit 0

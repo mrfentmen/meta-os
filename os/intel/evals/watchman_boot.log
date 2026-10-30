@@ -1,0 +1,16 @@
+PASS arrival rings -- rings=['job-arrive-1', 'job-arrive-2', 'job-lease-dead']
+PASS pre-window open job does not ring
+PASS post-boot open job does not ring
+PASS live lease does not ring
+PASS done job never rings
+PASS malformed records never ring and never crash
+PASS duplicate input rings once
+PASS second boot cycle rings nothing new
+PASS corrupted stored counter changes nothing -- rings=['job-arrive-1', 'job-arrive-2', 'job-lease-dead']
+PASS sweep reconciliation agrees -- note counts=3/2/1
+PASS sweep mismatch named, never fudged -- mismatch={'missing': ['job-lease-dead'], 'extra': ['job-stranger']}
+PASS inputs never mutated
+PASS no Dale contact in note
+PASS no push import in module
+PASS brief lines name rings and reconciliation
+15 PASS, 0 FAIL

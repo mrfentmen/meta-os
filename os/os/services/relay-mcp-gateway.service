@@ -1,0 +1,53 @@
+# relay-mcp-gateway.service - OS-058 (Pax): the MCP gateway as a system daemon.
+#
+# Runs Dale's MCP gateway (~/workspace/mcp-gateway: gateway.py, Streamable
+# HTTP on 127.0.0.1:8931/mcp per its backends.json) as the relay user under
+# relay.target, so every agent process on the machine reaches the tool
+# estate through the gateway's one local endpoint instead of each process
+# wiring its own tools. MCP servers are the OS's system libraries
+# (META_OS.md, "MCP as a system service").
+#
+# Ordering: After network-online.target, because downstream gateway
+# servers fetch over the network; Wants network-online.target so the
+# ordering means something. Restart=on-failure: systemd owns process
+# death here, per the OS-034 contract.
+#
+# Zero-credential image rule (OS-012): EnvironmentFile is the firstboot
+# output /etc/metaos/secrets.env, and ConditionPathExists on the same
+# file means systemd skips the unit on an unconfigured boot instead of
+# starting a gateway whose keyed servers have no keys. No secret is on
+# the command line; the gateway passes only the proxy/CA env its
+# children need.
+#
+# OS-059 bake landed: the three image routes bake gateway.py plus
+# backends.json beside /opt/relay and enable this unit under
+# relay.target, so the ExecStart path exists on a machine built
+# from this tree. Still NOT proven here: service active at boot,
+# a worker plus driver call through the local endpoint, and a
+# booted image at all (there is no test image in this repo).
+# Two bake gaps stay open and are stated in the OS-059 README
+# section, not hidden: the gateway Python deps (mcp, starlette,
+# uvicorn) have no venv or pip step in this bake, and the
+# downstream server runtimes are not baked, so only the
+# backends whose runtimes the image carries will come up;
+# the gateway skips the rest with a log line and keeps serving.
+# systemd-analyze verify on this file is a syntax check only.
+[Unit]
+Description=Meta OS MCP gateway daemon (system libraries for agent processes)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/metaos/secrets.env
+PartOf=relay.target
+
+[Service]
+Type=simple
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay/mcp-gateway
+EnvironmentFile=/etc/metaos/secrets.env
+ExecStart=/usr/bin/python3 /opt/relay/mcp-gateway/gateway.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=relay.target
