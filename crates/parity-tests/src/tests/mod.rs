@@ -37,7 +37,7 @@ pub mod test_os_bus_unit;
 case!(test_os_journal_watch, ["journal watch"], ["live journald"]);
 case!(test_os_livebuild, ["livebuild config"], ["live build"]);
 case!(test_os_manifest, ["manifest"], []);
-case!(test_os_overseer_unit, ["overseer"], []);
+pub mod test_os_overseer_unit;
 case!(test_os_packer, ["packer template"], ["live packer build"]);
 case!(test_os_power_cut, ["power cut drill"], ["live image"]);
 case!(test_os_stackbake, ["stack bake"], []);
