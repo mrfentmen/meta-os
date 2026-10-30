@@ -27,6 +27,7 @@ import { ignisReviewByConfidence } from "./ignis-review-confidence.js";
 import { ignisReviewByScenario } from "./ignis-review-scenario.js";
 import { ignisReviewByObservationCategory } from "./ignis-review-observation-category.js";
 import { ignisReviewByEvidence } from "./ignis-review-evidence.js";
+import { ignisReviewByUncertainty } from "./ignis-review-uncertainty.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -163,6 +164,7 @@ const els = {
   ignisReviewScenario: $("ignis-review-scenario"),
   ignisReviewObservationCategory: $("ignis-review-observation-category"),
   ignisReviewEvidence: $("ignis-review-evidence"),
+  ignisReviewUncertainty: $("ignis-review-uncertainty"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1400,6 +1402,20 @@ function updateLogStats() {
   const reviewEvidence = ignisReviewByEvidence(log.entries());
   els.ignisReviewEvidence.textContent =
     `Awaiting review ${reviewEvidence.totalFlagged} · Fully evidenced ${reviewEvidence.fullyEvidenced} · Partially evidenced ${reviewEvidence.partiallyEvidenced} · Unevidenced ${reviewEvidence.unevidenced} · Unassessable ${reviewEvidence.unassessable}`;
+
+  // IGNIS-ONEOFONE-18: the review queue by uncertainty
+  // disclosure in honest form — the flagged queue ONEOFONE-3
+  // counts, bucketed by whether the assessment itself disclosed
+  // caveats (ONEOFONE-5's disclosure read, queue-scoped). Clear
+  // and unknown-flag entries are not awaiting review and read
+  // nowhere here; a flagged entry with no uncertainty array
+  // counts as unrecorded, never a silent none disclosed. A held
+  // session stays zeros, and the panel itself is hidden under
+  // Vigiles and Medicus by CSS, so this line only ever shows
+  // under Ignis.
+  const reviewUncertainty = ignisReviewByUncertainty(log.entries());
+  els.ignisReviewUncertainty.textContent =
+    `Awaiting review ${reviewUncertainty.totalFlagged} · Disclosed ${reviewUncertainty.disclosed} · None disclosed ${reviewUncertainty.noneDisclosed} · Unrecorded ${reviewUncertainty.unrecorded}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
