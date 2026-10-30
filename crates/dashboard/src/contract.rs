@@ -272,6 +272,307 @@ pub fn rollback_runbook_ok(runbook: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// §7 crew-board rules (DSH-023, DSH-024, DSH-025, OS-084 artifact
+/// part) + the keyless signing builders (test_crewboard_signing).
+/// The card/detail HTML rendering itself lives in the fold-excluded
+/// `crew-board.html` and stays exclusion-blocked; what is ported here
+/// is the rule each renderer applies, checked against the exact
+/// fixture values of the five `test_crewboard_*.py` files.
+
+/// Escape `&`, `<`, `>` for HTML text/attribute rendering, `&` first
+/// (so an input `&amp;` becomes `&amp;amp;`, as the fixtures show).
+pub fn html_escape(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            _ => out.push(c),
+        }
+    }
+    out
+}
+
+/// Percent-encode an alert id for the §8 hash route, as the ribbon
+/// fixtures show: `alert:1` -> `alert%3A1`, `alert:<x>` ->
+/// `alert%3A%3Cx%3E`. Alphanumerics and `-_.~` pass through.
+pub fn route_encode_id(id: &str) -> String {
+    let mut out = String::new();
+    for b in id.bytes() {
+        let c = b as char;
+        if c.is_ascii_alphanumeric() || matches!(c, '-' | '_' | '.' | '~') {
+            out.push(c);
+        } else {
+            out.push_str(&format!("%{b:02X}"));
+        }
+    }
+    out
+}
+
+/// One §6 alert record, as the ribbon fixtures carry it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CrewAlert {
+    pub id: Option<String>,
+    pub kind: String,
+    pub severity: String,
+    pub status: Option<String>,
+    pub resolved_at: Option<i64>,
+    pub subjects: Vec<String>,
+}
+
+/// The ribbon a job card carries, if any: escaped kind text plus the
+/// §8 hash-route link, or no link when the alert has no id.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Ribbon {
+    pub text: String,
+    pub href: Option<String>,
+}
+
+fn subject_names_job(subject: &str, job_id: &str) -> bool {
+    let s = subject.trim();
+    if s == job_id {
+        return true;
+    }
+    // The store names jobs bare ("42"); the spec §6 example names
+    // them "job 42" — both forms match, case-insensitively.
+    let lower = s.to_ascii_lowercase();
+    if let Some(rest) = lower.strip_prefix("job ") {
+        return rest.trim() == job_id;
+    }
+    false
+}
+
+/// DSH-025: the first open critical alert naming the job wins.
+/// Warning/info alerts never ribbon; resolved alerts (status
+/// `resolved`, or a legacy `resolved_at`) never ribbon; an
+/// acknowledged alert is still outstanding, so it keeps its ribbon.
+pub fn alert_ribbon(job_id: &str, alerts: &[CrewAlert]) -> Option<Ribbon> {
+    for a in alerts {
+        if a.severity.to_ascii_lowercase() != "critical" {
+            continue;
+        }
+        if a.status.as_deref() == Some("resolved") || a.resolved_at.is_some() {
+            continue;
+        }
+        if !a.subjects.iter().any(|s| subject_names_job(s, job_id)) {
+            continue;
+        }
+        return Some(Ribbon {
+            text: format!("critical alert: {}", html_escape(&a.kind)),
+            href: a
+                .id
+                .as_ref()
+                .map(|id| format!("bus.html#intel/alert/{}", route_encode_id(id))),
+        });
+    }
+    None
+}
+
+/// DSH-024 attempts badge: text `attempts a/m`, neutral below
+/// max-1, amber at max-1, red at max and over. Absent when either
+/// field is absent, blank, or non-numeric.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AttemptsBadge {
+    pub text: String,
+    pub class: String,
+}
+
+pub fn attempts_badge(
+    attempts: Option<&str>,
+    max_attempts: Option<&str>,
+) -> Option<AttemptsBadge> {
+    let a: i64 = attempts?.trim().parse().ok()?;
+    let m: i64 = max_attempts?.trim().parse().ok()?;
+    let class = if a >= m {
+        "pill attempts danger"
+    } else if a == m - 1 {
+        "pill attempts warn"
+    } else {
+        "pill attempts"
+    };
+    Some(AttemptsBadge {
+        text: format!("attempts {a}/{m}"),
+        class: class.to_string(),
+    })
+}
+
+/// DSH-023 files line: comma-split, blank tokens dropped, each file
+/// name HTML-escaped. Absent (old jobs, blank fields) -> None.
+pub fn files_line(files: Option<&str>) -> Option<String> {
+    let parts: Vec<String> = files?
+        .split(',')
+        .map(|t| t.trim())
+        .filter(|t| !t.is_empty())
+        .map(html_escape)
+        .collect();
+    if parts.is_empty() {
+        None
+    } else {
+        Some(format!("files: {}", parts.join(", ")))
+    }
+}
+
+/// DSH-023 deps line: comma-split, blank tokens dropped, each dep
+/// rendered `#n`. Absent (old jobs, blank fields) -> None.
+pub fn deps_line(deps: Option<&str>) -> Option<String> {
+    let parts: Vec<&str> = deps?
+        .split(',')
+        .map(|t| t.trim())
+        .filter(|t| !t.is_empty())
+        .collect();
+    if parts.is_empty() {
+        None
+    } else {
+        Some(format!(
+            "deps: {}",
+            parts
+                .iter()
+                .map(|t| format!("#{t}"))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ))
+    }
+}
+
+/// One OS-083 attach() artifact entry, as the OS-084 fixtures carry it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Artifact {
+    pub path: Option<String>,
+    pub reference: String,
+    pub version: i64,
+    pub sha256: String,
+}
+
+/// A rendered artifact link: escaped store-relative path, file name
+/// plus version as the label, reference as the title.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ArtifactLink {
+    pub href: String,
+    pub label: String,
+    pub title: String,
+}
+
+/// OS-084 artifact part: absolute, escaping (`..` segment),
+/// empty-segment, or missing paths are dropped, never linked.
+pub fn artifact_link(a: &Artifact) -> Option<ArtifactLink> {
+    let path = a.path.as_deref()?;
+    if path.starts_with('/') {
+        return None;
+    }
+    let segments: Vec<&str> = path.split('/').collect();
+    if segments.iter().any(|s| s.is_empty() || *s == "..") {
+        return None;
+    }
+    let name = segments.last()?;
+    Some(ArtifactLink {
+        href: html_escape(path),
+        label: format!("{} v{}", html_escape(name), a.version),
+        title: html_escape(&a.reference),
+    })
+}
+
+/// JSON string encoding with `ensure_ascii=True`, as `pyStr` in the
+/// signing test must match Python's `json.dumps(case, ensure_ascii=True)`:
+/// ASCII passes through (DEL included), non-ASCII becomes `\uXXXX`,
+/// astral characters become surrogate pairs.
+pub fn py_str_json(s: &str) -> String {
+    let mut out = String::from("\"");
+    for c in s.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            '\u{08}' => out.push_str("\\b"),
+            '\u{0C}' => out.push_str("\\f"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c if (c as u32) <= 0x7f => out.push(c),
+            c if (c as u32) <= 0xFFFF => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => {
+                let v = c as u32 - 0x10000;
+                out.push_str(&format!(
+                    "\\u{:04x}\\u{:04x}",
+                    0xD800 + (v >> 10),
+                    0xDC00 + (v & 0x3FF)
+                ));
+            }
+        }
+    }
+    out.push('"');
+    out
+}
+
+/// Nonce shape from the signing test: exactly 16 lowercase hex chars.
+/// Nonce generation itself is random in the viewer; only the shape
+/// rule is ported here.
+pub fn is_nonce_hex(s: &str) -> bool {
+    s.len() == 16
+        && s.bytes()
+            .all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+}
+
+/// Keyless rename log entry (signing test): v=1, cmd=rename, args,
+/// actor — and no `sig` key, since renames are keyless now.
+#[derive(Debug, Clone, PartialEq)]
+pub struct RenameLogEntry {
+    pub actor: String,
+    pub nick: String,
+    pub display: String,
+}
+
+impl RenameLogEntry {
+    pub fn to_json(&self) -> String {
+        format!(
+            "{{\"v\":1,\"cmd\":\"rename\",\"args\":{{\"nick\":{},\"display\":{}}},\"actor\":{}}}",
+            py_str_json(&self.nick),
+            py_str_json(&self.display),
+            py_str_json(&self.actor)
+        )
+    }
+}
+
+/// Name-registry entry written by a keyless rename.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NamesHashEntry {
+    pub display: String,
+    pub set_by: String,
+    pub set_at: i64,
+}
+
+impl NamesHashEntry {
+    pub fn to_json(&self) -> String {
+        format!(
+            "{{\"display\":{},\"set_by\":{},\"set_at\":{}}}",
+            py_str_json(&self.display),
+            py_str_json(&self.set_by),
+            self.set_at
+        )
+    }
+}
+
+/// Name-history entry written by a keyless rename.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NamesHistoryEntry {
+    pub nick: String,
+    pub display: String,
+    pub set_by: String,
+    pub set_at: i64,
+}
+
+impl NamesHistoryEntry {
+    pub fn to_json(&self) -> String {
+        format!(
+            "{{\"nick\":{},\"display\":{},\"set_by\":{},\"set_at\":{}}}",
+            py_str_json(&self.nick),
+            py_str_json(&self.display),
+            py_str_json(&self.set_by),
+            self.set_at
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

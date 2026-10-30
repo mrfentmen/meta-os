@@ -4,9 +4,14 @@
 //! `crew-board.html` / `index.html`, live Node drivers, real
 //! browsers, or the missing submission-assets — marked here, never
 //! faked green):
-//! test_crewboard_alert_ribbon, test_crewboard_attempts,
-//! test_crewboard_files_deps, test_crewboard_os084_artifacts,
-//! test_crewboard_signing (also needs B26 `admin.py`),
+//! Split (T237, tests/b15_crewboard.rs): test_crewboard_alert_ribbon,
+//! test_crewboard_attempts, test_crewboard_files_deps,
+//! test_crewboard_os084_artifacts, test_crewboard_signing — the §7
+//! rule halves and the signing-builder halves are ported there; the
+//! card/detail HTML rendering halves (Node driver over the
+//! fold-excluded crew-board.html), the OS-084 JSON-string-field
+//! parse, the live attach() cross-check, and the signing
+//! `admin.py` verify cross-check stay exclusion-blocked.
 //! test_dashboard_alert_lifecycle,
 //! test_dashboard_bus_index_identity,
 //! test_dashboard_palette, test_dashboard_screenshots,

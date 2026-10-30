@@ -42,6 +42,12 @@
 //! runbook pins. The spec docs themselves are carried byte-identical under
 //! `crates/dashboard/fixtures/` and checked by the parity tests.
 //!
+//! §7 crew-board rules (DSH-023 files/deps, DSH-024 attempts badge,
+//! DSH-025 alert ribbon, OS-084 artifact links) and the keyless
+//! signing entry builders live in [`contract`] too; the card/detail
+//! HTML rendering of those rules stays exclusion-blocked with the
+//! fold-excluded viewer.
+//!
 //! Deliberately absent: the web viewer. It was fold-excluded from the
 //! cleaned tree and is not a Rust target, so viewer/Node/browser-dependent
 //! parity cases are recorded exclusion-blocked in
