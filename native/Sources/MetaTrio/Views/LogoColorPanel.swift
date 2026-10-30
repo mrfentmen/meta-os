@@ -29,6 +29,20 @@ import SwiftUI
 // still hears "Logo", not the shouted capitals. Presets, picker,
 // value lines, slider, pause button, and the large-logo note are
 // untouched.
+// LOGO-NATIVE-4 (Del direction, Oct 30): VoiceOver state parity
+// for the web LOGO-1/LOGO-2 aria-pressed states. The web swatches
+// toggle aria-pressed and the web pause button toggles
+// aria-pressed, but the native panel only showed the state
+// visually — a white ring on the chosen swatch, a changed pause
+// label — so VoiceOver never heard which preset was chosen or
+// whether the loop was paused. Now the chosen preset carries the
+// isSelected trait, gated by the same saved-hex match as its
+// ring, and the pause button carries a Paused/Playing value, so
+// the spoken state follows the stored state exactly. SwiftUI has
+// no pressed trait for a plain Button, so the pause state is a
+// value, not a trait — the trait is only where it fits, the
+// preset choice. Heading, presets, picker, value lines, slider,
+// pause label, and the large-logo note are untouched.
 
 private struct LogoColorPanel: View {
     @AppStorage("meta-trio-logo-color") private var customHex: String = ""
@@ -91,6 +105,7 @@ private struct LogoColorPanel: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(preset.name)
+                        .accessibilityAddTraits(customHex.lowercased() == preset.hex ? .isSelected : [])
                     }
                 }
                 ColorPicker("Custom logo color", selection: pickerBinding)
@@ -116,6 +131,7 @@ private struct LogoColorPanel: View {
                 Button(paused ? "Resume logo" : "Pause logo") {
                     paused.toggle()
                 }
+                .accessibilityValue(paused ? "Paused" : "Playing")
                 Text("Large logo stays in the web studio.")
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
