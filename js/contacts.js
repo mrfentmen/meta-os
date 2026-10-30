@@ -15,8 +15,8 @@ export const CONTACTS_STORAGE_KEY = "meta-trio-contacts-v1";
 export const SAMPLE_CONTACTS = [
   {
     product: "medicus",
-    name: "SAMPLE — EMS Review Lead",
-    role: "Human reviewer (sample)",
+    name: "SAMPLE — EMS Duty Officer",
+    role: "Duty officer (sample)",
     organization: "Sample EMS review office",
     sample: true,
   },

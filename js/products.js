@@ -69,8 +69,8 @@ export const PRODUCTS = [
   {
     id: "medicus",
     displayName: "Meta Medicus",
-    department: "FDNY EMS-oriented — scene awareness",
-    tagline: "Visible EMS scene awareness, recorded for human review.",
+    department: "FDNY EMS-oriented — medical incident scene awareness",
+    tagline: "Visible scene indicators for EMS crews, for human review.",
     accent: "#5da864",
     categories: [
       "person on ground",
@@ -91,7 +91,7 @@ export const PRODUCTS = [
       "Poor visibility or ambiguous conditions",
     ],
     limitations:
-      "Scene awareness only. It does not diagnose, determine a cause, or recommend treatment. No automatic dispatch. Every assessment requires human verification. Location is used only if explicitly provided; this app never invents geographic coordinates.",
+      "Scene awareness only. It does not diagnose any condition, guess a cause, assess severity, or recommend treatment. A person who appears motionless may simply be resting. No automatic dispatch. Every assessment requires human verification. Location is used only if explicitly provided; this app never invents geographic coordinates.",
     inputGuidance:
       "Live camera aimed at the scene: people and vehicles visible from a safe distance. Never stage an emergency or put anyone at risk to test it; use prerecorded footage or safe visual demonstrations only.",
   },
