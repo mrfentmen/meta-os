@@ -9,7 +9,7 @@
 //! test_dashboard_accessibility, test_dashboard_alert_lifecycle,
 //! test_dashboard_brief_sections, test_dashboard_bus_index_identity,
 //! test_dashboard_cross_browser, test_dashboard_deep_links,
-//! test_dashboard_demo_mode, test_dashboard_deploy_runbook,
+//! test_dashboard_demo_mode,
 //! test_dashboard_dsh038, test_dashboard_dsp039,
 //! test_dashboard_error_states, test_dashboard_help,
 //! test_dashboard_intel_focus, test_dashboard_os043,
@@ -19,7 +19,8 @@
 //! test_dashboard_str005, test_dashboard_today_counters,
 //! test_intel_brief_dashboard_consistency.
 //! Directly ported (docs/backend-only):
-//! test_dashboard_rollback_int031.
+//! test_dashboard_rollback_int031, test_dashboard_deploy_runbook
+//! (runbook carried byte-identical under fixtures/).
 
 use dashboard::contract::*;
 
@@ -80,4 +81,34 @@ use dashboard::contract::*;
 #[test] fn test_dashboard_spec_docs_carried() {
     assert!(include_str!("../fixtures/DASHBOARD_SPEC.md").contains("BRF-042"));
     assert!(include_str!("../fixtures/DASHBOARD_SMOKE_CHECKLIST.md").len() > 0);
+}
+
+// DOC-018 deploy runbook, ported from
+// os/tests/test_dashboard_deploy_runbook.py (fixture carried
+// byte-identical; sha256 3f339c3b…96a17 at carry time).
+#[test] fn test_dashboard_deploy_runbook_sections_and_gates() {
+    let text = include_str!("../fixtures/DEPLOY_RUNBOOK.md");
+    assert!(!text.is_empty());
+    for section in ["Build marker", "Deploy", "Verify", "Rollback"] {
+        assert!(text.contains(section), "missing section: {section}");
+    }
+    assert!(text.contains("https://muse-relay-live.pages.dev"));
+    assert!(text.contains("muse-relay-live"));
+    assert!(text.contains("DASHBOARD_SMOKE_CHECKLIST.md"));
+    assert!(text.contains("cmp bus.html index.html"));
+    assert!(text.contains("DSH-039")); // Pax review gate
+    assert!(text.contains("rendered-visible"));
+}
+
+#[test] fn test_dashboard_deploy_runbook_honest_limits() {
+    let text = include_str!("../fixtures/DEPLOY_RUNBOOK.md");
+    // No deploy command is pinned — the runbook says so plainly.
+    assert!(text.contains("does\n**not** pin a command"));
+    // Rollback is documented but unconfirmed until INT-031.
+    assert!(text.contains("INT-031"));
+    assert!(text.contains("unconfirmed"));
+    // No credential is recorded in the runbook.
+    for forbidden in ["api_token", "CF_API_TOKEN", "Bearer "] {
+        assert!(!text.contains(forbidden), "credential leak: {forbidden}");
+    }
 }
