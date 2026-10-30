@@ -68,5 +68,17 @@
 //! Fixtures carried byte-for-byte under `crates/intel/fixtures/b09/`:
 //! the five crew capability grants (`capabilities/*.json`) plus the
 //! fixtures README. Checksums verified against the sources (T179).
+//!
+//! ## Module map (B10 — `b10_brief` subtree)
+//!
+//! - `os/intel/alerts.py` -> [`b10_brief::alerts`]
+//! - `os/intel/baton.py` -> [`b10_brief::baton`]
+//! - `os/intel/brief.py` -> [`b10_brief::brief`]
+//! - `os/intel/dispatch.py` -> [`b10_brief::dispatch`]
+//! - `os/intel/forecast.py` -> [`b10_brief::forecast`]
+//! - `os/intel/notify.py` -> [`b10_brief::notify`]
+//! - `os/intel/push.py` -> [`b10_brief::push`]
+//! - `os/intel/wake.py` -> [`b10_brief::wake`]
 
 pub mod b09_core;
+pub mod b10_brief;
