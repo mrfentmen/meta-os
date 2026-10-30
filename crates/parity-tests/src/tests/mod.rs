@@ -26,7 +26,7 @@ pub mod test_os058_gateway_unit;
 pub mod test_os059_gateway_bake;
 pub mod test_os065_skills_loader;
 pub mod test_os083_artifact_store;
-case!(test_os094_job_artifacts, ["attach dedupe"], []);
+pub mod test_os094_job_artifacts;
 case!(test_os102_launch_run, ["verify-before-spawn", "tamper refusal"], []);
 case!(test_os128_disk_audit, ["cold reader leak"], []);
 pub mod test_os_base;
