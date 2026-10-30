@@ -1,6 +1,6 @@
 //! Budget forecasting + preemption (OS-091, Milo).
 //! (`os/intel/forecast.py` behavior as pinned by B20's drill and
-//! tests).
+//! tests.)
 //!
 //! Canonical home of `intel/forecast.py` is Hana's `intel` crate
 //! (B10). This module ports exactly the forecast math, the
