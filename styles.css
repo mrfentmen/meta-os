@@ -810,3 +810,37 @@ body[data-product="ignis"] .panel h2 {
 body[data-product="ignis"] .ignis-scoreboard-panel {
   display: block;
 }
+
+/* OPS-CONSOLE-3 (Del UI direction, Oct 29): second web-first
+   dispatch/ops-console piece for Ignis, extending OPS-CONSOLE-1's
+   panel headings to the rest of the console surface — the same four
+   elements Milo's Sanitas ops-console pass treated, in Ignis terms.
+   Subheads widen from the base 0.05em to 0.08em console tracking
+   (still below the h2's 0.12em, so heading hierarchy holds; size,
+   weight, and color stay at the base rule). Status lines read in
+   mono with 0.02em tracking, like the Sanitas readout — font and
+   tracking only, never a color change, so product red stays an
+   accent and never becomes a status color. Primary buttons sharpen
+   to a 3px radius, matching the Sanitas console buttons. The
+   latest-assessment readout frames in Ignis red at 0.4 over a dark
+   0.25 fill, the Sanitas frame's shape in Ignis red. All scoped to
+   body[data-product="ignis"] only, so Vigiles and Sanitas are
+   untouched; disclosures, limitations banner, spinning background,
+   contract, and Spark gates are untouched. */
+body[data-product="ignis"] .subhead {
+  letter-spacing: 0.08em;
+}
+
+body[data-product="ignis"] .status {
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+body[data-product="ignis"] .btn-primary {
+  border-radius: 3px;
+}
+
+body[data-product="ignis"] .mono-block {
+  border: 1px solid rgba(217, 43, 43, 0.4);
+  background: rgba(0, 0, 0, 0.25);
+}
