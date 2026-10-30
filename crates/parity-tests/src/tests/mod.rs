@@ -23,7 +23,7 @@ pub mod test_clip;
 pub mod test_fdny_par_clock;
 pub mod test_os021_update;
 pub mod test_os058_gateway_unit;
-case!(test_os059_gateway_bake, ["bake marker"], []);
+pub mod test_os059_gateway_bake;
 case!(test_os065_skills_loader, ["mount verify"], []);
 case!(test_os083_artifact_store, ["deposit manifest"], []);
 case!(test_os094_job_artifacts, ["attach dedupe"], []);
