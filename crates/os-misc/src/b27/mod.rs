@@ -30,3 +30,11 @@ pub const T018_FILES: &[&str] = &[
     "os/worlds/fdny/PACK.md",
     "os/worlds/fdny/pack.json",
 ];
+
+/// T019 verify-carried: hospital + mta packs (byte-identical, left in place).
+pub const T019_FILES: &[&str] = &[
+    "os/worlds/hospital/PACK.md",
+    "os/worlds/hospital/pack.json",
+    "os/worlds/mta/PACK.md",
+    "os/worlds/mta/pack.json",
+];
