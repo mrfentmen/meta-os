@@ -2682,3 +2682,18 @@ updateSamplingDisclosure();
 restoreHistoryFromLog();
 updateLogStats();
 refreshButtons();
+
+// Command view bridge (js/command-map.js): the map-first Command
+// view samples watched public test-feed cameras through the exact
+// same pipeline as every other input path — submitAssessment above,
+// with its contract validation, session-log recording, history item,
+// and latest-result rendering all unchanged. The bridge only exposes
+// what the Command view needs: submit through that pipeline, read
+// the active product, and read the configured endpoint. It adds no
+// second assessment path and changes no existing behavior.
+window.MetaTrioCommand = {
+  submitAssessment: (product, timestamp, image, scenarioLabel, source) =>
+    submitAssessment(product, timestamp, image, scenarioLabel, source),
+  currentProductId: () => currentProductId,
+  currentEndpoint: () => currentEndpoint(),
+};

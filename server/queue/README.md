@@ -38,6 +38,17 @@ POST /api/assess                         POST /jobs                 polls the jo
    Idempotency is load-bearing: if a result already exists for the
    deterministic job id, generation is skipped — a resubmitted frame
    is never re-billed.
+4. **Agent crew (patrol)** — `python3 patrol.py [--interval 20]`
+   (or `--once`). The Meta Imperium crew front
+   (`docs/AGENT_CREW.md`): cycles the public camera list, files
+   snapshots as jobs on this same queue, and runs review →
+   records → investigation → response for whatever flags
+   (`crew.py`, records in `crew_records.py`, shared core in
+   `crew_common.py`). Its response step dispatches ONLY to this
+   service's SIMULATED endpoint (`POST /dispatch-simulated`,
+   loopback-checked in `crew.py` — no real emergency service is
+   ever contacted). Patrol and the resident agent must both run
+   for crew checks to be answered.
 
 ## The wire shape (ruled final)
 
@@ -75,6 +86,9 @@ output is NEVER written as an assessment — it lands as
 | `TRIO_LOCAL_DB` | service + agent | Path of the fallback SQLite file (default beside the modules; gitignored). |
 | `TRIO_UPSTASH_HOST` | `trio_store.py` | The Upstash store host (a bare host, or the full REST URL). Required for the Redis path: the host is deployment configuration, resolved at runtime from this variable or from the REST URL stored on the `custom.upstash` credential record — it is never hardcoded in the repo. When neither source supplies it, store construction reports the missing configuration and the labelled SQLite fallback engages. |
 | `RELAY_URL` | `trio_store.py` | Full store base URL override (wins over `TRIO_UPSTASH_HOST`). |
+| `TRIO_CREW_DATA_DIR` | crew + app server | Where the crew's records live (incidents, event feed, dispatch log, patrol heartbeat). Default `server/queue/crew-data/` (gitignored). The app server's `GET /api/crew/status` reads the same directory. |
+| `TRIO_CREW_DISPATCH_URL` | `crew.py` | The SIMULATED dispatch endpoint the crew's response step sends to. Default `http://127.0.0.1:8935/dispatch-simulated`. Refused unless the host is loopback — there is no configuration that points dispatch at a real endpoint. |
+| `TRIO_CREW_BUDGET_RESERVE_USD` | `patrol.py` | Budget reserve for the patrol governor: at or below this much remaining test budget, patrol pauses and files nothing. Default 5. |
 
 Spend guardrail: the direct transport counts every call in
 `spark_guardrail_state.json` beside `spark_gen.py` (gitignored),
@@ -95,8 +109,14 @@ Covers: envelope build/verify against the real `buildQueueJob`
 (incl. byteLength/SHA-256 tamper refusals), the guardrail stop,
 the exact result-envelope shape, a stubbed-generation round trip
 with idempotent no-rebill, the direct transport's request shape
-with a stubbed HTTP layer, and the HTTP service end to end on the
-SQLite fallback. 17 tests.
+with a stubbed HTTP layer, the HTTP service end to end on the
+SQLite fallback — and (`test_crew.py`) the agent crew: envelope
+identity, flag tables loaded from the real `js/command-flag.js`,
+review cleared/confirmed/inconclusive, the investigation bound,
+the brief through the real `validateAssessment`, append-only
+records, patrol ordering/priority/budget-pause, the loopback
+dispatch guard, and the SIMULATED dispatch route end to end.
+50 tests.
 
 ## Status (honest labels, 2026-10-30)
 

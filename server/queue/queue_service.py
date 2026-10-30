@@ -25,6 +25,11 @@ proof, and queue.mjs normalizes client-side).
   GET /health              -> {"ok": true, "store": ..., ...}; when the
                            store is the local SQLite FALLBACK that fact
                            is stated in the response, not hidden.
+  POST /dispatch-simulated the agent crew's SIMULATED dispatch endpoint
+                           (docs/AGENT_CREW.md): accepts only packages
+                           labelled "simulated": true, logs them to the
+                           crew dispatch log, returns a receipt. It
+                           contacts nothing outside this stack.
 
 Storage: the OS jobs store semantics in trio_store.py (Upstash Redis
 via the credential surrogate; namespace from TRIO_JOB_NS, default
@@ -42,6 +47,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import crew_records  # noqa: E402
 import trio_repo  # noqa: E402
 import trio_store  # noqa: E402
 
@@ -124,7 +130,54 @@ class Handler(BaseHTTPRequestHandler):
             return
         self._send(404, {"error": "not found"})
 
+    def _dispatch_simulated(self):
+        """POST /dispatch-simulated — the agent crew's SIMULATED
+        dispatch endpoint (docs/AGENT_CREW.md). It accepts ONLY a
+        package that labels itself simulated, appends it to the
+        crew's dispatch log (crew_records), and returns a receipt.
+        It contacts nothing: no real emergency service, no external
+        system — the route exists so the response pipeline can be
+        exercised end to end inside this stack, and its name, its
+        log, and its receipt all say SIMULATED."""
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = 0
+        raw = self.rfile.read(length) if length > 0 else b""
+        try:
+            package = json.loads(raw.decode("utf-8"))
+        except Exception:
+            self._send(400, {"error": "request body is not JSON"})
+            return
+        if not isinstance(package, dict) or \
+                package.get("simulated") is not True:
+            self._send(400, {
+                "error": "refused: this endpoint accepts only "
+                         "packages labelled \"simulated\": true"})
+            return
+        from datetime import datetime, timezone
+        received_at = datetime.now(timezone.utc).isoformat(
+            timespec="milliseconds").replace("+00:00", "Z")
+        receipt_id = "sim-" + hashlib.sha256(
+            json.dumps(package, sort_keys=True).encode()
+        ).hexdigest()[:16]
+        record = dict(package)
+        record["receipt_id"] = receipt_id
+        record["received_at"] = received_at
+        crew_records.CrewRecords().append_dispatch(record)
+        self._send(201, {
+            "receipt_id": receipt_id,
+            "simulated": True,
+            "received_at": received_at,
+            "note": "SIMULATED dispatch endpoint — the package was "
+                    "logged inside this stack; no real emergency "
+                    "service or external system was contacted.",
+        })
+
     def do_POST(self):
+        if self.path == "/dispatch-simulated":
+            self._dispatch_simulated()
+            return
         if self.path != "/jobs":
             self._send(404, {"error": "not found"})
             return

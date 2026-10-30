@@ -11,6 +11,8 @@
 //   POST /api/assess   the v2 assessment endpoint (see assess.mjs)
 //   GET  /api/health   { ok, service, products, model: {configured,
 //                      live_enabled} } — never exposes the key itself
+//   GET  /api/crew/status  read-only agent-crew status for the
+//                      Command view's loop feed (see crew-status.mjs)
 //   GET  /<static>     index.html, styles.css, js/* from the repo root
 //
 // Environment: SPARK_API_KEY (key slot, server-side only),
@@ -24,6 +26,7 @@ import { fileURLToPath } from "node:url";
 
 import { handleAssess } from "./assess.mjs";
 import { modelStatus } from "./model.mjs";
+import { readCrewStatus } from "./crew-status.mjs";
 import { PRODUCT_IDS } from "../js/products.js";
 
 const MAX_BODY_BYTES = 12 * 1024 * 1024; // JSON envelope cap (image cap is in assess.mjs)
@@ -137,6 +140,19 @@ export function createAssessServer(deps = {}) {
           products: PRODUCT_IDS,
           model: modelStatus(env),
         });
+        return;
+      }
+      if (url.pathname === "/api/crew/status") {
+        if (req.method !== "GET") {
+          sendJson(res, 405, { error: "method not allowed: use GET" });
+          return;
+        }
+        // Read-only projection of the agent crew's records (patrol
+        // heartbeat, event feed, incidents, simulated dispatch log)
+        // for the Command view's loop feed. deps.crewStatus is the
+        // test seam; production reads the crew data directory.
+        const read = deps.crewStatus ?? readCrewStatus;
+        sendJson(res, 200, await read());
         return;
       }
       if (url.pathname.startsWith("/api/")) {

@@ -3,19 +3,141 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Meta Trio — Visual Event Assessment Prototype</title>
+<title>Meta Imperium — Visual Event Assessment Prototype</title>
+<link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body data-product="vigiles">
 <canvas id="logo-background" aria-hidden="true"></canvas>
 <header class="topbar">
   <div class="brand">
-    <h1>Meta Trio</h1>
+    <h1>Meta Imperium</h1>
     <p id="product-badge" class="product-badge">Meta Vigiles</p>
     <a class="logo-studio-link" href="design/meta-ascii-logo-studio.html">Logo studio</a>
   </div>
   <p id="backend-status" class="status" data-state="unknown" aria-live="polite">Model backend status unknown. Start analysis to contact the endpoint.</p>
+  <div class="view-switch" role="group" aria-label="View">
+    <button id="btn-view-command" type="button" aria-pressed="true">Command</button>
+    <button id="btn-view-console" type="button" aria-pressed="false">Console</button>
+  </div>
+  <span id="console-clock" class="console-clock" aria-hidden="true"></span>
 </header>
+
+<section id="command-view" class="command-view" aria-label="Command view — New York City camera map">
+  <div id="cmd-map" class="cmd-map" aria-label="Map of New York City traffic cameras"></div>
+  <p id="cmd-map-note" class="cmd-map-note" hidden></p>
+
+  <div class="cmd-float cmd-topbar">
+    <div class="cmd-topbar-left">
+      <p class="cmd-wordmark">IMPERIUM COMMAND <span class="cmd-wordmark-sub">Meta Imperium · New York City</span></p>
+      <p id="cmd-list-source" class="cmd-source mono" aria-live="polite">Loading camera list…</p>
+      <p class="cmd-honesty">Public NYC DOT traffic cameras used as TEST feeds. Only watched cameras are ever sampled. A red pin means a division's latest assessment flagged that camera for human review — it is not an incident detection.</p>
+      <div class="cmd-products" role="group" aria-label="Active product">
+        <button type="button" class="cmd-product-chip" data-cmd-product="vigiles" aria-pressed="true">Vigiles</button>
+        <button type="button" class="cmd-product-chip" data-cmd-product="ignis" aria-pressed="false">Ignis</button>
+        <button type="button" class="cmd-product-chip" data-cmd-product="medicus" aria-pressed="false">Medicus</button>
+      </div>
+    </div>
+    <div class="cmd-modes" role="group" aria-label="Map mode">
+      <button type="button" class="cmd-mode-btn" data-cmd-mode="city" aria-pressed="true">City</button>
+      <button type="button" class="cmd-mode-btn" data-cmd-mode="tactical" aria-pressed="false">Tactical</button>
+      <button type="button" class="cmd-mode-btn" data-cmd-mode="incident" aria-pressed="false">Incident</button>
+      <button type="button" id="cmd-ai-focus" class="cmd-ai-focus">AI Focus</button>
+    </div>
+    <div class="cmd-readouts" aria-label="Command counts">
+      <div class="cmd-readout"><span id="cmd-count-online" class="cmd-readout-num">–</span><span class="cmd-readout-label">Cameras online</span></div>
+      <div class="cmd-readout"><span id="cmd-count-watching" class="cmd-readout-num">0</span><span class="cmd-readout-label">Watching</span></div>
+      <div class="cmd-readout"><span id="cmd-count-flagged" class="cmd-readout-num">0</span><span class="cmd-readout-label">Flagged</span></div>
+    </div>
+  </div>
+
+  <aside class="cmd-float cmd-rail-left" aria-label="Incident queue and camera list">
+    <h3 class="cmd-h">Incident queue</h3>
+    <p class="note">One queue for all three divisions — flags raised by Vigiles, Ignis, and Medicus land here together, newest first, each tagged with the division that raised it. Selecting an entry views the camera and marks the entry seen — its pin pulse slows.</p>
+    <p id="cmd-alerts-empty" class="note">No cameras flagged yet.</p>
+    <ul id="cmd-alerts" class="cmd-alerts"></ul>
+    <h3 class="cmd-h">Cameras</h3>
+    <label for="cmd-search">Filter cameras</label>
+    <input id="cmd-search" type="search" placeholder="Name or borough" autocomplete="off">
+    <p class="note">Watch list max 6 — only watched cameras are sampled. Ctrl+K searches cameras and incidents.</p>
+    <div id="cmd-camera-list" class="cmd-camera-list"></div>
+    <h3 class="cmd-h">Loop feed</h3>
+    <p class="note">The agent crew — patrol, review, investigation, records, response — works the camera list on its own loop (docs/AGENT_CREW.md). Dispatch from this system is SIMULATED: packages are logged inside this stack, and no real emergency service is ever contacted.</p>
+    <p id="cmd-loop-status" class="note mono">Loop feed — waiting for the crew status endpoint…</p>
+    <ul id="cmd-loop-feed" class="cmd-loop-feed"></ul>
+  </aside>
+
+  <aside class="cmd-float cmd-rail-right" aria-label="Inspector and system status">
+    <h3 class="cmd-h">Inspector</h3>
+    <p id="cmd-insp-name" class="cmd-insp-name">No camera selected</p>
+    <p id="cmd-insp-meta" class="note mono"></p>
+    <img id="cmd-viewer-img" class="cmd-viewer-img" alt="Selected camera live snapshot" hidden>
+    <p id="cmd-viewer-updated" class="note mono"></p>
+    <div class="controls">
+      <button id="cmd-watch-toggle" type="button" disabled>Watch this camera</button>
+      <button id="cmd-assess-now" type="button" class="btn-primary" disabled>Assess this frame now</button>
+    </div>
+    <div class="controls">
+      <button id="cmd-sample-toggle" type="button" disabled>Start watch sampling</button>
+      <button id="cmd-mark-reviewed" type="button" disabled>Mark reviewed</button>
+    </div>
+    <p id="cmd-viewer-status" class="note" aria-live="polite"></p>
+    <div id="cmd-assessment" class="cmd-result" hidden></div>
+    <ol id="cmd-stepper" class="cmd-stepper" aria-label="Assessment pipeline status"></ol>
+    <p id="cmd-stepper-note" class="note"></p>
+    <h3 class="cmd-h">System</h3>
+    <div class="cmd-system">
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Backend</span><span id="cmd-sys-backend" class="cmd-sys-value mono">—</span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Endpoint</span><span id="cmd-sys-endpoint" class="cmd-sys-value mono">—</span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Product</span><span id="cmd-sys-product" class="cmd-sys-value mono">—</span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Sampler</span><span id="cmd-sys-sampler" class="cmd-sys-value mono">—</span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Model</span><span id="cmd-sys-model" class="cmd-sys-value mono">—</span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Latency</span><span id="cmd-sys-latency" class="cmd-sys-value mono">—</span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Log entries</span><span id="cmd-sys-log" class="cmd-sys-value mono">—</span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Samples sent</span><span id="cmd-sys-samples" class="cmd-sys-value mono">0</span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Feed / assess errors</span><span id="cmd-sys-errors" class="cmd-sys-value mono">0</span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Watched</span><span id="cmd-sys-watched" class="cmd-sys-value mono">0 / 6</span></div>
+      <div class="cmd-bar" aria-hidden="true"><span id="cmd-bar-watched"></span></div>
+      <div class="cmd-sys-row"><span class="cmd-sys-label">Flagged</span><span id="cmd-sys-flagged" class="cmd-sys-value mono">0 of 0 watched</span></div>
+      <div class="cmd-bar cmd-bar--flag" aria-hidden="true"><span id="cmd-bar-flagged"></span></div>
+    </div>
+  </aside>
+
+  <div class="cmd-float cmd-wall-panel">
+    <p class="cmd-wall-title">Camera wall <span class="note">— watched cameras, plus verified Los Angeles Caltrans test feeds (display only — not on the NYC map, never assessed)</span></p>
+    <div id="cmd-wall" class="cmd-wall"></div>
+  </div>
+
+  <div id="cmd-pin-card" class="cmd-pin-card" hidden>
+    <button id="cmd-pin-card-close" type="button" class="cmd-pin-card-close" aria-label="Close camera card">×</button>
+    <img id="cmd-pin-card-img" alt="Camera snapshot preview">
+    <p id="cmd-pin-card-name" class="cmd-pin-card-name"></p>
+    <p id="cmd-pin-card-meta" class="note mono"></p>
+    <p id="cmd-pin-card-chip" class="cmd-chip">Not assessed yet</p>
+    <p id="cmd-pin-card-div" class="cmd-div-tag" hidden></p>
+    <div class="controls">
+      <button id="cmd-pin-card-watch" type="button">Watch</button>
+      <button id="cmd-pin-card-focus" type="button" class="btn-primary">Focus</button>
+    </div>
+  </div>
+
+  <div class="cmd-activity" aria-label="Session activity">
+    <span class="cmd-activity-label">Session activity</span>
+    <span id="cmd-activity-text" class="mono">—</span>
+    <span id="cmd-activity-count" class="cmd-activity-count mono"></span>
+  </div>
+
+  <div id="cmd-search-overlay" class="cmd-search-overlay" hidden>
+    <div class="cmd-search-box">
+      <label for="cmd-ksearch">Search cameras and incidents</label>
+      <input id="cmd-ksearch" type="search" placeholder="Camera name, borough, or incident category" autocomplete="off">
+      <ul id="cmd-kresults" class="cmd-kresults"></ul>
+      <p class="note">Enter focuses the top result. Esc closes.</p>
+    </div>
+  </div>
+
+  <canvas id="cmd-capture-canvas" hidden></canvas>
+</section>
 
 <main>
   <section class="panel" aria-label="Camera">
@@ -31,7 +153,7 @@
       <option value="user" selected>Front-facing (selfie view)</option>
       <option value="environment">Rear-facing (point the phone at the scene)</option>
     </select>
-    <p class="note">A preference, not a requirement: a device with only one camera uses that camera either way. Changing it while the camera is live restarts the stream; if the restart fails, the camera is left off and the error shows here, like a failed Start.</p>
+    <details class="note-details"><summary>About camera facing</summary><p class="note">A preference, not a requirement: a device with only one camera uses that camera either way. Changing it while the camera is live restarts the stream; if the restart fails, the camera is left off and the error shows here, like a failed Start.</p></details>
     <p id="analysis-active" class="note" aria-live="polite" aria-atomic="true" hidden>Analysis active — sampling one frame every 3 seconds.</p>
     <div class="controls">
       <button id="btn-camera-start" type="button" class="btn-primary">Start camera</button>
@@ -68,18 +190,18 @@
     <p id="product-tagline" class="product-tagline"></p>
     <h3 class="subhead">Categories this product can report</h3>
     <ul id="product-categories" class="chips"></ul>
-    <h3 class="subhead">How to supply input</h3>
+    <details class="about-details"><summary>About &amp; limitations</summary><h3 class="subhead">How to supply input</h3>
     <p id="product-guidance" class="note"></p>
     <div class="limitations">
       <h3 class="subhead">Limitations — always in effect</h3>
       <p id="product-limitations" class="note" aria-live="polite" aria-atomic="true"></p>
     </div>
-    <p class="note">Switching products applies to the next sampled frame. Earlier log entries keep the product they were assessed under.</p>
+    <p class="note">Switching products applies to the next sampled frame. Earlier log entries keep the product they were assessed under.</p></details>
   </section>
 
   <section class="panel" aria-label="Logo">
     <h2>Logo</h2>
-    <p class="note">The spinning ASCII Meta loop behind these panels. Pick a color to re-tint it, set its rotation speed, or pause it — the choices are saved in this browser and come back on reload. Reset returns the color to the selected product's color.</p>
+    <details class="note-details"><summary>About the logo</summary><p class="note">The spinning ASCII Meta loop behind these panels. Pick a color to re-tint it, set its rotation speed, or pause it — the choices are saved in this browser and come back on reload. Reset returns the color to the selected product's color.</p></details>
     <div class="logo-color-options" role="group" aria-label="Logo color">
       <button class="logo-swatch" type="button" data-logo-color="#1877f2" style="--swatch:#1877f2" aria-label="Meta blue" title="Meta blue" aria-pressed="false"></button>
       <button class="logo-swatch" type="button" data-logo-color="#00c8ff" style="--swatch:#00c8ff" aria-label="Cyan" title="Cyan" aria-pressed="false"></button>
@@ -105,7 +227,7 @@
 
   <section class="panel" aria-label="Still image input">
     <h2>Still image</h2>
-    <p class="note">For prerecorded or photographed scenes — the input Ignis and Medicus demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.</p>
+    <details class="note-details"><summary>About this input</summary><p class="note">For prerecorded or photographed scenes — the input Ignis and Medicus demos use when a live camera is not the source. The image is sent once to the assessment endpoint, under the product selected above, and is logged exactly like a live frame. It is not stored by this app.</p></details>
     <label for="image-input">Choose an image file</label>
     <input id="image-input" type="file" accept="image/*">
     <img id="image-preview" hidden alt="Chosen still image preview">
@@ -120,7 +242,7 @@
 
   <section class="panel" aria-label="Prerecorded video input">
     <h2>Prerecorded video</h2>
-    <p class="note">For a recorded clip when neither a live camera nor a still image is the source. Play the clip, pause on the frame you want assessed, and tap “Assess this frame”: only that one frame is sent to the assessment endpoint, under the product selected above, and logged exactly like a live frame. The whole video is never sent, and it is not stored by this app.</p>
+    <details class="note-details"><summary>About this input</summary><p class="note">For a recorded clip when neither a live camera nor a still image is the source. Play the clip, pause on the frame you want assessed, and tap “Assess this frame”: only that one frame is sent to the assessment endpoint, under the product selected above, and logged exactly like a live frame. The whole video is never sent, and it is not stored by this app.</p></details>
     <label for="video-input">Choose a video file</label>
     <input id="video-input" type="file" accept="video/*">
     <video id="video-preview" controls playsinline muted hidden></video>
@@ -166,7 +288,7 @@
   <section class="panel" aria-label="Evaluation session log">
     <h2>Evaluation session log</h2>
     <p id="log-stats" class="note mono">Session log entries: 0</p>
-    <p id="log-stats-by-product" class="note mono">Assessments by product: Vigiles 0 · Ignis 0 · Medicus 0 · Failed 0</p>
+    <details class="stats-details"><summary>Full session statistics</summary><p id="log-stats-by-product" class="note mono">Assessments by product: Vigiles 0 · Ignis 0 · Medicus 0 · Failed 0</p>
     <p id="log-stats-failed-by-product" class="note mono">Failed by product: Vigiles 0 · Ignis 0 · Medicus 0</p>
     <p id="log-stats-by-failure" class="note mono">Failures by cause: Network 0 · HTTP 0 · Invalid response 0</p>
     <p id="log-stats-last-ok" class="note mono">Last successful assessment: none</p>
@@ -243,7 +365,7 @@
     <p id="log-stats-entry-span-share-of-ok-window-by-product" class="note mono">Entry-span share of success window by product: Vigiles none · Ignis none · Medicus none</p>
     <p id="log-stats-entry-span-share-of-failed-window-by-product" class="note mono">Entry-span share of failure window by product: Vigiles none · Ignis none · Medicus none</p>
     <p id="log-stats-failed-span-share-of-ok-window-by-product" class="note mono">Failure-span share of success window by product: Vigiles none · Ignis none · Medicus none</p>
-    <p id="log-stats-ok-span-share-of-failed-window-by-product" class="note mono">Success-span share of failure window by product: Vigiles none · Ignis none · Medicus none</p>
+    <p id="log-stats-ok-span-share-of-failed-window-by-product" class="note mono">Success-span share of failure window by product: Vigiles none · Ignis none · Medicus none</p></details>
     <div class="controls">
       <button id="btn-export-log" type="button">Export log (JSON)</button>
       <button id="btn-clear-log" type="button">Clear log</button>
@@ -253,127 +375,127 @@
 
   <section class="panel ignis-scoreboard-panel" aria-label="Ignis look-alike scoreboard">
     <h2>Look-alike scoreboard</h2>
-    <p class="note">Ignis false-alarm watch: how many recorded Ignis assessments returned a look-alike class versus a hazard class. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Ignis false-alarm watch: how many recorded Ignis assessments returned a look-alike class versus a hazard class. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-scoreboard" class="note mono">Look-alikes — Steam or fog 0 · Flame-like lighting 0 | Hazards — Visible smoke 0 · Visible flame 0 | Other — Obscured or distant hazard 0 · No hazard visible 0 · Indeterminate 0</p>
   </section>
 
   <section class="panel ignis-confidence-panel" aria-label="Ignis reported-confidence spread">
     <h2>Reported-confidence spread</h2>
-    <p class="note">Calibrated uncertainty, honestly: the confidence values recorded Ignis assessments themselves reported on their observations, grouped high / medium / low — not collapsed to alarm or no-alarm. Bands group reported values only; nothing here re-scores an assessment or makes a detection decision. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Calibrated uncertainty, honestly: the confidence values recorded Ignis assessments themselves reported on their observations, grouped high / medium / low — not collapsed to alarm or no-alarm. Bands group reported values only; nothing here re-scores an assessment or makes a detection decision. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-confidence" class="note mono">High (≥ 0.8) 0 · Medium (≥ 0.5) 0 · Low (&lt; 0.5) 0 · Unreported 0</p>
   </section>
 
   <section class="panel ignis-review-queue-panel" aria-label="Ignis review queue">
     <h2>Review queue</h2>
-    <p class="note">Duty-officer queue, honestly: how many recorded Ignis assessments carried a human-review request themselves, how many explicitly did not, and how many carry no usable flag. This panel never flags anything itself and never notifies anyone — reaching out is always a human action. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Duty-officer queue, honestly: how many recorded Ignis assessments carried a human-review request themselves, how many explicitly did not, and how many carry no usable flag. This panel never flags anything itself and never notifies anyone — reaching out is always a human action. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-queue" class="note mono">Flagged for human review 0 · Clear 0 · Flag not recorded 0</p>
   </section>
 
   <section class="panel ignis-evidence-panel" aria-label="Ignis evidence transparency">
     <h2>Evidence transparency</h2>
-    <p class="note">Transparent eval, honestly: how many recorded Ignis assessments carry evidence a reviewer can actually inspect on every observation, on some, on none, or carry no usable observations at all. A filled evidence field never means the assessment is correct — this counts recorded strings only. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Transparent eval, honestly: how many recorded Ignis assessments carry evidence a reviewer can actually inspect on every observation, on some, on none, or carry no usable observations at all. A filled evidence field never means the assessment is correct — this counts recorded strings only. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-evidence" class="note mono">Fully evidenced 0 · Partially evidenced 0 · No evidence recorded 0 · Not assessable 0</p>
   </section>
 
   <section class="panel ignis-uncertainty-panel" aria-label="Ignis uncertainty disclosure">
     <h2>Uncertainty disclosure</h2>
-    <p class="note">Calibrated uncertainty, honestly: how many recorded Ignis assessments disclosed caveats themselves, how many stated none, and how many carry no usable uncertainty list. Disclosing nothing never means an assessment is reliable — this counts recorded caveat lists only. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Calibrated uncertainty, honestly: how many recorded Ignis assessments disclosed caveats themselves, how many stated none, and how many carry no usable uncertainty list. Disclosing nothing never means an assessment is reliable — this counts recorded caveat lists only. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-uncertainty" class="note mono">Caveats disclosed 0 · None disclosed 0 · Uncertainty not recorded 0</p>
   </section>
 
   <section class="panel ignis-review-triage-panel" aria-label="Ignis review triage">
     <h2>Review triage</h2>
-    <p class="note">Duty-officer triage, honestly: the flagged-for-review Ignis assessments from the review queue, split by the hazard class each assessment itself returned — so the officer sees which classes are awaiting verification, not one undifferentiated count. Clear and unflagged assessments read nowhere here, and a flagged assessment with no usable class still counts in the total. This panel never flags anything itself and never notifies anyone — reaching out is always a human action. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Duty-officer triage, honestly: the flagged-for-review Ignis assessments from the review queue, split by the hazard class each assessment itself returned — so the officer sees which classes are awaiting verification, not one undifferentiated count. Clear and unflagged assessments read nowhere here, and a flagged assessment with no usable class still counts in the total. This panel never flags anything itself and never notifies anyone — reaching out is always a human action. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-triage" class="note mono">Awaiting review 0 · Smoke 0 · Flame 0 · Steam or fog 0 · Flame-like lighting 0 · Obscured or distant 0 · No hazard 0 · Indeterminate 0</p>
   </section>
 
   <section class="panel ignis-observation-categories-panel" aria-label="Ignis observation classes">
     <h2>Observation classes</h2>
-    <p class="note">The detail behind each verdict, honestly: the classes on the observations inside recorded Ignis assessments — what the model actually listed, observation by observation. An assessment with several observations contributes several counts, and an observation with no usable or non-contract class counts in the total only. This panel never re-scores anything and never judges whether an observation is right. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">The detail behind each verdict, honestly: the classes on the observations inside recorded Ignis assessments — what the model actually listed, observation by observation. An assessment with several observations contributes several counts, and an observation with no usable or non-contract class counts in the total only. This panel never re-scores anything and never judges whether an observation is right. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-observation-categories" class="note mono">Observations 0 · Smoke 0 · Flame 0 · Steam or fog 0 · Flame-like lighting 0 · Obscured or distant 0 · No hazard 0 · Indeterminate 0</p>
   </section>
 
   <section class="panel ignis-model-attribution-panel" aria-label="Ignis model attribution">
     <h2>Model attribution</h2>
-    <p class="note">Which model produced which verdicts, honestly: the recorded ok Ignis assessments split by the model string each assessment itself reported in its processing record — so a duty officer can see whether one model or several produced the verdicts on screen, without this panel ever naming a model the log did not record. An assessment with no usable model string counts as unattributed, never as a guessed model. This panel never judges whether a model was right. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Which model produced which verdicts, honestly: the recorded ok Ignis assessments split by the model string each assessment itself reported in its processing record — so a duty officer can see whether one model or several produced the verdicts on screen, without this panel ever naming a model the log did not record. An assessment with no usable model string counts as unattributed, never as a guessed model. This panel never judges whether a model was right. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-model-attribution" class="note mono">Assessments 0 · Unattributed 0</p>
   </section>
 
   <section class="panel ignis-footage-source-panel" aria-label="Ignis footage source">
     <h2>Footage source</h2>
-    <p class="note">Recorded-footage mode, honestly: the recorded ok Ignis assessments split by the input source each entry was stamped with when its request was made — live camera, still image, or recorded video. Recorded video is the prerecorded-footage workflow made visible: footage assessed after the fact, never a live feed relabeled as recorded. An entry with no usable source stamp (recorded before the stamp existed, or restored from an older export) counts as unknown source, never guessed into a bucket. This panel never claims a source the log does not record. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Recorded-footage mode, honestly: the recorded ok Ignis assessments split by the input source each entry was stamped with when its request was made — live camera, still image, or recorded video. Recorded video is the prerecorded-footage workflow made visible: footage assessed after the fact, never a live feed relabeled as recorded. An entry with no usable source stamp (recorded before the stamp existed, or restored from an older export) counts as unknown source, never guessed into a bucket. This panel never claims a source the log does not record. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-footage-source" class="note mono">Assessments 0 · Live camera 0 · Still image 0 · Recorded video 0 · Unknown source 0</p>
   </section>
 
   <section class="panel ignis-scenario-breakdown-panel" aria-label="Ignis scenario breakdown">
     <h2>Scenario breakdown</h2>
-    <p class="note">Which staged scenarios the verdicts came from, honestly: the recorded ok Ignis assessments split by the scenario label the operator selected (or typed as a custom label) when each request was made — so a duty officer can see whether the session covered look-alike scenarios like steam or fog, or only clear smoke. An entry with no usable scenario label counts as unlabeled, never guessed into a scenario. This panel never assigns a scenario the log did not record, and never judges whether a label was right. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Which staged scenarios the verdicts came from, honestly: the recorded ok Ignis assessments split by the scenario label the operator selected (or typed as a custom label) when each request was made — so a duty officer can see whether the session covered look-alike scenarios like steam or fog, or only clear smoke. An entry with no usable scenario label counts as unlabeled, never guessed into a scenario. This panel never assigns a scenario the log did not record, and never judges whether a label was right. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-scenario-breakdown" class="note mono">Assessments 0 · Unlabeled 0</p>
   </section>
 
   <section class="panel ignis-review-source-panel" aria-label="Ignis review queue by source">
     <h2>Review queue by source</h2>
-    <p class="note">Where the flagged work came from, honestly: the recorded ok Ignis assessments already awaiting human review, split by the input source each entry was stamped with when its request was made — live camera, still image, or recorded video. A duty officer can see whether one input path is producing most of the queue without this panel ever flagging anything itself. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no usable source stamp counts as unknown source, never guessed into a bucket. This panel never judges whether a flag was right. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Where the flagged work came from, honestly: the recorded ok Ignis assessments already awaiting human review, split by the input source each entry was stamped with when its request was made — live camera, still image, or recorded video. A duty officer can see whether one input path is producing most of the queue without this panel ever flagging anything itself. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no usable source stamp counts as unknown source, never guessed into a bucket. This panel never judges whether a flag was right. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-source" class="note mono">Awaiting review 0 · Live camera 0 · Still image 0 · Recorded video 0 · Unknown source 0</p>
   </section>
 
   <section class="panel ignis-review-model-panel" aria-label="Ignis review queue by model">
     <h2>Review queue by model</h2>
-    <p class="note">Which model produced the flagged work, honestly: the recorded ok Ignis assessments already awaiting human review, split by the model string each assessment itself reported — so a duty officer can see whether one model is producing most of the queue without this panel ever flagging anything itself. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no usable model string counts as unattributed, never given a model name it did not report. This panel never judges whether a flag was right. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Which model produced the flagged work, honestly: the recorded ok Ignis assessments already awaiting human review, split by the model string each assessment itself reported — so a duty officer can see whether one model is producing most of the queue without this panel ever flagging anything itself. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no usable model string counts as unattributed, never given a model name it did not report. This panel never judges whether a flag was right. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-model" class="note mono">Awaiting review 0 · Unattributed 0</p>
   </section>
 
   <section class="panel ignis-review-audit-trail-panel" aria-label="Ignis review audit trail">
     <h2>Review audit trail</h2>
-    <p class="note">How traceable the flagged work is, honestly: the recorded ok Ignis assessments already awaiting human review, bucketed by how complete the provenance trail each entry itself carries — request timestamp, reported model, supplied scenario label, stamped input source. Full trail means all four are recorded; partial means one to three; no trail means none — a gap is never filled in from elsewhere, so a duty officer can see how many queued items can actually be traced back. Clear and unknown-flag entries are not awaiting review and read nowhere here. This panel never judges whether a flag was right. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">How traceable the flagged work is, honestly: the recorded ok Ignis assessments already awaiting human review, bucketed by how complete the provenance trail each entry itself carries — request timestamp, reported model, supplied scenario label, stamped input source. Full trail means all four are recorded; partial means one to three; no trail means none — a gap is never filled in from elsewhere, so a duty officer can see how many queued items can actually be traced back. Clear and unknown-flag entries are not awaiting review and read nowhere here. This panel never judges whether a flag was right. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-audit-trail" class="note mono">Awaiting review 0 · Full trail 0 · Partial trail 0 · No trail 0</p>
   </section>
 
   <section class="panel ignis-review-confidence-panel" aria-label="Ignis review queue by reported confidence">
     <h2>Review queue by reported confidence</h2>
-    <p class="note">How strongly the flagged work was reported, honestly: the observations on the recorded ok Ignis assessments already awaiting human review, banded by the confidence each observation itself reported — high (≥ 0.8), medium (≥ 0.5), low (&lt; 0.5), or unreported (null, missing, or not a number). A duty officer sees whether the queue rests on high reported confidence or on thin readings, without this panel ever re-scoring anything or judging whether a flag was right. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no observations contributes nothing. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">How strongly the flagged work was reported, honestly: the observations on the recorded ok Ignis assessments already awaiting human review, banded by the confidence each observation itself reported — high (≥ 0.8), medium (≥ 0.5), low (&lt; 0.5), or unreported (null, missing, or not a number). A duty officer sees whether the queue rests on high reported confidence or on thin readings, without this panel ever re-scoring anything or judging whether a flag was right. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no observations contributes nothing. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-confidence" class="note mono">Flagged observations 0 · High (≥ 0.8) 0 · Medium (≥ 0.5) 0 · Low (&lt; 0.5) 0 · Unreported 0</p>
   </section>
 
   <section class="panel ignis-review-scenario-panel" aria-label="Ignis review queue by scenario label">
     <h2>Review queue by scenario label</h2>
-    <p class="note">Which staged scenarios the flagged work came from, honestly: the recorded ok Ignis assessments already awaiting human review, split by the scenario label each entry itself recorded at submit time — so a duty officer can see whether one scenario is producing most of the queue without this panel ever flagging anything itself or guessing a label. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no usable label counts as unlabeled, never given a scenario it did not record. This panel never judges whether a flag was right. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Which staged scenarios the flagged work came from, honestly: the recorded ok Ignis assessments already awaiting human review, split by the scenario label each entry itself recorded at submit time — so a duty officer can see whether one scenario is producing most of the queue without this panel ever flagging anything itself or guessing a label. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no usable label counts as unlabeled, never given a scenario it did not record. This panel never judges whether a flag was right. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-scenario" class="note mono">Awaiting review 0 · Unlabeled 0</p>
   </section>
 
   <section class="panel ignis-review-observation-category-panel" aria-label="Ignis review queue by observation category">
     <h2>Review queue by observation category</h2>
-    <p class="note">Which observation classes the flagged work rests on, honestly: the observations inside the recorded ok Ignis assessments already awaiting human review, bucketed by the category each observation itself carried — so a duty officer can see whether the queue rests on smoke observations or on steam-or-fog look-alikes without this panel ever re-scoring anything or judging whether a flag was right. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no observations contributes nothing, and a non-contract category counts in the total only, never inventing a bucket. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">Which observation classes the flagged work rests on, honestly: the observations inside the recorded ok Ignis assessments already awaiting human review, bucketed by the category each observation itself carried — so a duty officer can see whether the queue rests on smoke observations or on steam-or-fog look-alikes without this panel ever re-scoring anything or judging whether a flag was right. Clear and unknown-flag entries are not awaiting review and read nowhere here; a flagged entry with no observations contributes nothing, and a non-contract category counts in the total only, never inventing a bucket. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-observation-category" class="note mono">Flagged observations 0 · Visible smoke 0 · Visible flame 0 · Steam or fog 0 · Flame-like lighting 0 · Obscured or distant 0 · No hazard 0 · Indeterminate 0</p>
   </section>
 
   <section class="panel ignis-review-evidence-panel" aria-label="Ignis review queue by evidence completeness">
     <h2>Review queue by evidence completeness</h2>
-    <p class="note">How much of the flagged work a duty officer can actually inspect, honestly: the recorded ok Ignis assessments already awaiting human review, split by whether their observations carry evidence — fully evidenced, partially evidenced, unevidenced, or unassessable where no observations array exists to read. This panel never judges whether the evidence is good, never re-scores anything, and never claims a flagged assessment is correct because its evidence field is filled in. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">How much of the flagged work a duty officer can actually inspect, honestly: the recorded ok Ignis assessments already awaiting human review, split by whether their observations carry evidence — fully evidenced, partially evidenced, unevidenced, or unassessable where no observations array exists to read. This panel never judges whether the evidence is good, never re-scores anything, and never claims a flagged assessment is correct because its evidence field is filled in. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-evidence" class="note mono">Awaiting review 0 · Fully evidenced 0 · Partially evidenced 0 · Unevidenced 0 · Unassessable 0</p>
   </section>
 
   <section class="panel ignis-review-uncertainty-panel" aria-label="Ignis review queue by uncertainty disclosure">
     <h2>Review queue by uncertainty disclosure</h2>
-    <p class="note">How much of the flagged work arrived with its own caveats attached, honestly: the recorded ok Ignis assessments already awaiting human review, split by whether the assessment itself disclosed uncertainty — disclosed, none disclosed, or unrecorded where no uncertainty array exists to read. This panel never judges whether the caveats are sufficient, never re-scores anything, and never claims a flagged assessment is reliable because it disclosed nothing. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">How much of the flagged work arrived with its own caveats attached, honestly: the recorded ok Ignis assessments already awaiting human review, split by whether the assessment itself disclosed uncertainty — disclosed, none disclosed, or unrecorded where no uncertainty array exists to read. This panel never judges whether the caveats are sufficient, never re-scores anything, and never claims a flagged assessment is reliable because it disclosed nothing. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-uncertainty" class="note mono">Awaiting review 0 · Disclosed 0 · None disclosed 0 · Unrecorded 0</p>
   </section>
 
   <section class="panel ignis-review-observation-count-panel" aria-label="Ignis review queue by observation count">
     <h2>Review queue by observation count</h2>
-    <p class="note">How much recorded seeing sits behind each flagged item, honestly: the recorded ok Ignis assessments already awaiting human review, split by how many observations the response itself recorded — none, one, two or three, four or more, or unrecorded where no observations array exists to read. This panel never judges whether the observations are good, never re-scores anything, and never claims a flagged assessment is reliable because it listed more. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">How much recorded seeing sits behind each flagged item, honestly: the recorded ok Ignis assessments already awaiting human review, split by how many observations the response itself recorded — none, one, two or three, four or more, or unrecorded where no observations array exists to read. This panel never judges whether the observations are good, never re-scores anything, and never claims a flagged assessment is reliable because it listed more. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-observation-count" class="note mono">Awaiting review 0 · No observations 0 · One observation 0 · Two or three 0 · Four or more 0 · Unrecorded 0</p>
   </section>
 
   <section class="panel ignis-review-latency-panel" aria-label="Ignis review queue by reported latency">
     <h2>Review queue by reported latency</h2>
-    <p class="note">How long the flagged work waited on the server, honestly: the recorded ok Ignis assessments already awaiting human review, split by the server-reported processing latency the response itself carried — under one second, one to five seconds, five seconds or more, or unreported where no usable latency value exists to read. This panel never judges whether a slow flagged assessment is more or less trustworthy, never re-scores anything, and never claims a fast flagged assessment is reliable because it returned quickly. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">How long the flagged work waited on the server, honestly: the recorded ok Ignis assessments already awaiting human review, split by the server-reported processing latency the response itself carried — under one second, one to five seconds, five seconds or more, or unreported where no usable latency value exists to read. This panel never judges whether a slow flagged assessment is more or less trustworthy, never re-scores anything, and never claims a fast flagged assessment is reliable because it returned quickly. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-latency" class="note mono">Awaiting review 0 · Under 1s 0 · 1–5s 0 · 5s or more 0 · Unreported 0</p>
   </section>
 
   <section class="panel ignis-review-summary-panel" aria-label="Ignis review queue by summary completeness">
     <h2>Review queue by summary completeness</h2>
-    <p class="note">How much of the flagged work arrives with something to read, honestly: the recorded ok Ignis assessments already awaiting human review, split by whether the assessment itself carried a summary with content, an empty or whitespace-only summary, or no usable summary string at all. This panel never judges whether a summary is accurate, never re-scores anything, and never claims a flagged assessment with a summary is reliable because it wrote one down. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p>
+    <details class="note-details"><summary>About this panel</summary><p class="note">How much of the flagged work arrives with something to read, honestly: the recorded ok Ignis assessments already awaiting human review, split by whether the assessment itself carried a summary with content, an empty or whitespace-only summary, or no usable summary string at all. This panel never judges whether a summary is accurate, never re-scores anything, and never claims a flagged assessment with a summary is reliable because it wrote one down. Clear and unknown-flag entries are not awaiting review and read nowhere here. Supplementary awareness only — never a primary-detection or code status.</p></details>
     <p id="ignis-review-summary" class="note mono">Awaiting review 0 · With summary 0 · Empty summary 0 · Unrecorded 0</p>
   </section>
 
@@ -405,5 +527,8 @@
 <script src="js/logo-background.js"></script>
 <script src="js/logo-color.js"></script>
 <script src="js/logo-animation.js"></script>
+<script src="js/console-clock.js"></script>
+<script src="vendor/maplibre/maplibre-gl.js"></script>
+<script type="module" src="js/command-map.js"></script>
 </body>
 </html>
