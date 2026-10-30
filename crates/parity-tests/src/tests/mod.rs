@@ -43,7 +43,7 @@ case!(test_os_power_cut, ["three runs pass", "recovers job and reports", "contro
 pub mod test_os_stackbake;
 pub mod test_os_target_unit;
 pub mod test_os_tree;
-case!(test_os_uplink, ["uplink"], ["live uplink"]);
+pub mod test_os_uplink;
 case!(test_pomodoro, ["pomodoro parse", "schedule"], []);
 case!(test_status, ["status shape"], []);
 pub mod test_worlds_pack;
