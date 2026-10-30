@@ -316,13 +316,28 @@ fn test_dashboard_alert_lifecycle_resolved_refuses_ack() {
 fn test_dashboard_alert_lifecycle_resolve_unblocks_header() {
     let mut alerts = lifecycle_fixtures();
     assert_eq!(unresolved_critical_count(&alerts), 1);
-    let r = resolve_alert(&mut alerts, "alert:1", 1700003800);
-    assert!(matches!(r, LifecycleResult::Resolved(_)));
+    assert_eq!(
+        resolve_alert(&mut alerts, "alert:1", 1700003800),
+        LifecycleResult::Resolved(LifecycleAlert {
+            id: "alert:1".into(),
+            severity: "critical".into(),
+            status: Some("resolved".into()),
+            acknowledged_at: None,
+            acknowledged_by: None,
+            resolved_at: Some(1700003800),
+        })
+    );
     // The resolved critical leaves the header count; the
     // acknowledged warning was never in it.
     assert_eq!(unresolved_critical_count(&alerts), 0);
     // The resolved record keeps no ack stamp (it was never acked).
     assert_eq!(alerts[0].acknowledged_at, None);
+    // End-state rows mirror the driver's rowsAfter exactly:
+    // resolved, acknowledged, resolved. (The "2 resolved" collapse
+    // count itself is HTML rendering and stays exclusion-blocked.)
+    let rows: Vec<&str> =
+        alerts.iter().map(alert_lifecycle_status).collect();
+    assert_eq!(rows, vec!["resolved", "acknowledged", "resolved"]);
 }
 
 #[test]
