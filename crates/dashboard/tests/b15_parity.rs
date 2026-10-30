@@ -1,23 +1,29 @@
 //! B15 parity — backend-contract checks (one per portable case).
 //!
 //! Exclusion-blocked (need the fold-excluded viewer `bus.html` /
-//! `crew-board.html` / `index.html`, live Node drivers, or real
-//! browsers — marked here, never faked green):
+//! `crew-board.html` / `index.html`, live Node drivers, real
+//! browsers, or the missing submission-assets — marked here, never
+//! faked green):
 //! test_crewboard_alert_ribbon, test_crewboard_attempts,
 //! test_crewboard_files_deps, test_crewboard_os084_artifacts,
 //! test_crewboard_signing (also needs B26 `admin.py`),
 //! test_dashboard_alert_lifecycle,
-//! test_dashboard_brief_sections, test_dashboard_bus_index_identity,
-//! test_dashboard_cross_browser, test_dashboard_deep_links,
-//! test_dashboard_demo_mode,
-//! test_dashboard_dsh038, test_dashboard_dsp039,
-//! test_dashboard_error_states, test_dashboard_help,
-//! test_dashboard_intel_focus, test_dashboard_os043,
-//! test_dashboard_os084, test_dashboard_palette,
-//! test_dashboard_performance, test_dashboard_readonly_token,
-//! test_dashboard_screenshots,
-//! test_dashboard_str005, test_dashboard_today_counters,
+//! test_dashboard_bus_index_identity,
+//! test_dashboard_palette, test_dashboard_screenshots,
 //! test_intel_brief_dashboard_consistency.
+//! Split — spec-note halves ported in tests/b15_spec_notes.rs, the
+//! viewer/Node halves below stay exclusion-blocked:
+//! test_dashboard_brief_sections (viewer half),
+//! test_dashboard_cross_browser — FULLY ported (all 3 cases are
+//! log cases, carried as fixtures/DSH-035-CROSS-BROWSER-CHECK.md),
+//! test_dashboard_deep_links, test_dashboard_demo_mode,
+//! test_dashboard_dsh038 — FULLY ported on the spec side (all 5
+//! spec cases; the 5 viewer cases stay blocked),
+//! test_dashboard_dsp039, test_dashboard_error_states,
+//! test_dashboard_help, test_dashboard_intel_focus,
+//! test_dashboard_os043, test_dashboard_os084,
+//! test_dashboard_performance, test_dashboard_readonly_token,
+//! test_dashboard_str005, test_dashboard_today_counters.
 //! Split (T238): test_dashboard_accessibility — 2 cases ported below
 //! against the carried spec fixture + the DSH-018 palette values
 //! (contrast math, spec contrast notes); the other 4 cases
