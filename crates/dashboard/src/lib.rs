@@ -37,3 +37,5 @@
 //! Skeleton only: no logic yet. The Python/Node sources listed above are
 //! the spec — port behavior, do not redesign. See BATCHES.md for the
 //! compile gates and the parity rule.
+
+pub mod contract;
