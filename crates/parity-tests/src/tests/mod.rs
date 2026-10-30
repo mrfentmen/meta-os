@@ -35,7 +35,7 @@ case!(test_os_boot_selfcheck, ["drill green record", "seeded fixture counts", "r
 case!(test_os_boot_status, ["drill green record", "down unit counted", "latest alert wins", "non dict skipped", "stale boundary 30/31", "key shape round trip"], ["intel boot_status drill + store absent on main (Hana unmerged)"]);
 pub mod test_os_bus_unit;
 case!(test_os_journal_watch, ["systemd failure fires", "err priority fires", "healthy relay silent", "gateway failure alert", "memory failure alert", "non relay silent", "unparseable skipped", "keyed entries accepted", "group by unit", "no nick/job", "critical severity", "not snapshot", "tick writes alert", "retick cooldown", "cli reports alert", "cli quiet zero", "cli missing file"], ["intel journal watch port absent on main (Hana unmerged)"]);
-case!(test_os_livebuild, ["livebuild config"], ["live build"]);
+pub mod test_os_livebuild;
 case!(test_os_manifest, ["manifest"], []);
 pub mod test_os_overseer_unit;
 case!(test_os_packer, ["packer template"], ["live packer build"]);
