@@ -17,6 +17,7 @@
 //! - §9 error/empty states (DSH-021, per-source, independent panels)
 //! - readonly token (GOV-002 posting off), OS-043 boot checklist,
 //!   OS-084 banner, INT-031 rollback pins, smoke checklist
+//! - DSH-019 accessibility: DSH-018 palette WCAG contrast ratios
 
 /// Brief kinds (BRF-042 / FND-032): exactly morning | onjoin | ondemand.
 pub const BRIEF_KINDS: &[&str] = &["morning", "onjoin", "ondemand"];
@@ -74,6 +75,39 @@ fn human_age(secs: i64) -> String {
     } else {
         format!("{} h {} min", secs / 3600, (secs % 3600) / 60)
     }
+}
+
+/// DSH-018 palette foregrounds (DSH-019 accessibility audit).
+pub const PALETTE_FOREGROUNDS: &[(&str, &str)] = &[
+    ("critical", "#f85149"),
+    ("warning", "#d29922"),
+    ("info", "#58a6ff"),
+    ("muted", "#8b949e"),
+    ("working", "#3fb950"),
+    ("body", "#c9d1d9"),
+];
+
+/// Panel backgrounds the DSH-018 foregrounds render on.
+pub const PALETTE_BACKGROUNDS: &[&str] = &["#0d1117", "#161b22"];
+
+/// WCAG relative luminance of a `#rrggbb` color, mirroring the
+/// `test_dashboard_accessibility.py` audit math exactly.
+pub fn wcag_luminance(hex: &str) -> f64 {
+    let channel = |i: usize| -> f64 {
+        let v = u8::from_str_radix(&hex[i..i + 2], 16).unwrap_or(0) as f64 / 255.0;
+        if v <= 0.03928 {
+            v / 12.92
+        } else {
+            ((v + 0.055) / 1.055).powf(2.4)
+        }
+    };
+    0.2126 * channel(1) + 0.7152 * channel(3) + 0.0722 * channel(5)
+}
+
+/// WCAG contrast ratio between two `#rrggbb` colors.
+pub fn wcag_contrast_ratio(fg: &str, bg: &str) -> f64 {
+    let (a, b) = (wcag_luminance(fg), wcag_luminance(bg));
+    (a.max(b) + 0.05) / (a.min(b) + 0.05)
 }
 
 /// Unknown verdicts render verbatim with `?`, never mapped.

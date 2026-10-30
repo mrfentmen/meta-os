@@ -6,7 +6,7 @@
 //! test_crewboard_alert_ribbon, test_crewboard_attempts,
 //! test_crewboard_files_deps, test_crewboard_os084_artifacts,
 //! test_crewboard_signing (also needs B26 `admin.py`),
-//! test_dashboard_accessibility, test_dashboard_alert_lifecycle,
+//! test_dashboard_alert_lifecycle,
 //! test_dashboard_brief_sections, test_dashboard_bus_index_identity,
 //! test_dashboard_cross_browser, test_dashboard_deep_links,
 //! test_dashboard_demo_mode,
@@ -18,6 +18,12 @@
 //! test_dashboard_screenshots,
 //! test_dashboard_str005, test_dashboard_today_counters,
 //! test_intel_brief_dashboard_consistency.
+//! Split (T238): test_dashboard_accessibility — 2 cases ported below
+//! against the carried spec fixture + the DSH-018 palette values
+//! (contrast math, spec contrast notes); the other 4 cases
+//! (bus/index identity, intel button labels, severity icon pairing,
+//! crew-state text) read the fold-excluded bus.html and stay
+//! exclusion-blocked.
 //! Split (T242): test_dashboard_smoke_checklist — 5 cases ported below
 //! against the carried checklist/spec fixtures (structure, pass
 //! criteria, deploy gates, run procedure, spec mention); the other 5
@@ -196,4 +202,39 @@ fn smoke_check_sections() -> Vec<String> {
     let spec = include_str!("../fixtures/DASHBOARD_SPEC.md");
     assert!(spec.contains("DSH-029"));
     assert!(spec.contains("DASHBOARD_SMOKE_CHECKLIST.md"));
+}
+
+// T238 partial — test_dashboard_accessibility.py, portable half.
+// The 2 cases below need no viewer file: the contrast math runs on
+// the hardcoded DSH-018 palette, and the notes check runs against
+// the carried DASHBOARD_SPEC.md fixture (byte-identical to os/docs/).
+// The other 4 cases read fold-excluded bus.html and stay
+// exclusion-blocked (see the file header).
+
+#[test]
+fn test_dashboard_accessibility_palette_contrast_meets_aa() {
+    for (name, fg) in PALETTE_FOREGROUNDS {
+        for bg in PALETTE_BACKGROUNDS {
+            let ratio = wcag_contrast_ratio(fg, bg);
+            assert!(
+                ratio >= 4.5,
+                "{name} {fg} on {bg} fails WCAG AA: {ratio:.2}"
+            );
+        }
+    }
+    // Pin the audit math itself, not just the pass bar.
+    let critical_page = wcag_contrast_ratio("#f85149", "#0d1117");
+    let critical_panel = wcag_contrast_ratio("#f85149", "#161b22");
+    assert!((critical_page - 5.65).abs() < 0.01, "critical/page: {critical_page}");
+    assert!((critical_panel - 5.16).abs() < 0.01, "critical/panel: {critical_panel}");
+}
+
+#[test]
+fn test_dashboard_accessibility_spec_carries_contrast_notes() {
+    let spec = include_str!("../fixtures/DASHBOARD_SPEC.md");
+    assert!(spec.contains("Accessibility (DSH-019)"));
+    for hex in ["#f85149", "#d29922", "#58a6ff", "#8b949e"] {
+        assert!(spec.contains(hex), "spec contrast notes missing {hex}");
+    }
+    assert!(spec.contains("4.5"), "spec contrast notes must state the AA bar");
 }
