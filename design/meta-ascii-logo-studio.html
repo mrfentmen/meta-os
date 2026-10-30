@@ -570,6 +570,20 @@
     const statusDot = document.getElementById('status-dot');
     const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
 
+    // STUDIO-REDUCED-MOTION (Hana Agent1): the console's loop
+    // behind the panels renders one still frame under Reduce
+    // Motion (js/logo-background.js), but this studio kept
+    // spinning — its CSS only killed transitions, while
+    // renderFrame kept looping and advancing the angles. Now
+    // the studio matches the console: under Reduce Motion it
+    // renders one still frame and stops the loop, and repaints
+    // that one frame only when the user changes something by
+    // hand (a drag, an arrow key, a color), so a color choice
+    // still shows up without the loop ever restarting.
+    const reducedMotion =
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     // STUDIO-PERSIST (Del direction Oct 30; Hana Agent1): this studio
     // shares the console Logo panel's storage keys
     // (meta-trio-logo-color, meta-trio-logo-speed,
@@ -777,9 +791,19 @@
     }
 
     if ('ResizeObserver' in window) {
-      new ResizeObserver(resizeCanvas).observe(canvas);
+      // Under Reduce Motion the loop is stopped, so a resize
+      // that clears the canvas must repaint the one still frame
+      // itself — otherwise the logo would vanish until the user
+      // drags or picks a color.
+      new ResizeObserver(() => {
+        resizeCanvas();
+        if (reducedMotion) renderFrame();
+      }).observe(canvas);
     }
-    window.addEventListener('resize', resizeCanvas, { passive: true });
+    window.addEventListener('resize', () => {
+      resizeCanvas();
+      if (reducedMotion) renderFrame();
+    }, { passive: true });
 
     function resetRotation() {
       angleX = -0.045;
@@ -846,6 +870,10 @@
       dragVelocityY = dx * 0.0017;
       dragVelocityX = dy * 0.0017;
       lastPointer = { x: event.clientX, y: event.clientY };
+      // Under Reduce Motion there is no loop to pick the drag
+      // up, so repaint the one frame at the dragged angles —
+      // a hand-turned still, not autoplay.
+      if (reducedMotion) renderFrame();
     });
 
     function stopDragging() { isDragging = false; }
@@ -860,6 +888,9 @@
       else if (event.key === 'ArrowUp') { angleX -= step; event.preventDefault(); }
       else if (event.key === 'ArrowDown') { angleX += step; event.preventDefault(); }
       else if (event.code === 'Space') { setPaused(!isPaused); saveStored(LOGO_PAUSED_KEY, isPaused ? '1' : '0'); event.preventDefault(); }
+      // Under Reduce Motion an arrow-key turn has no loop to
+      // show it, so repaint the one frame at the new angles.
+      if (reducedMotion) renderFrame();
     });
 
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -932,6 +963,9 @@
       if (markPaths[1]) markPaths[1].setAttribute('stroke', normalized);
       statusDot.style.background = isPaused ? '#6f809d' : mixHex(normalized, '#ffffff', 0.42);
       statusDot.style.boxShadow = isPaused ? 'none' : `0 0 10px rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.85)`;
+      // Under Reduce Motion there is no loop to repaint the
+      // re-tinted logo, so repaint the one still frame here.
+      if (reducedMotion) renderFrame();
     }
 
     colorPicker.addEventListener('input', event => {
@@ -948,7 +982,7 @@
     function renderFrame(timestamp = 0) {
       if (!viewWidth || !viewHeight) resizeCanvas();
       if (!viewWidth || !viewHeight) {
-        requestAnimationFrame(renderFrame);
+        if (!reducedMotion) requestAnimationFrame(renderFrame);
         return;
       }
 
@@ -957,7 +991,7 @@
         : 1;
       previousFrameTime = timestamp;
 
-      if (!isDragging && !isPaused) {
+      if (!isDragging && !isPaused && !reducedMotion) {
         angleY += Number(speedSlider.value) * 0.0003 * frameScale;
         angleX += dragVelocityX * frameScale;
         angleY += dragVelocityY * frameScale;
@@ -1065,7 +1099,9 @@
       }
       ctx.shadowBlur = 0;
 
-      requestAnimationFrame(renderFrame);
+      // Under Reduce Motion this was the one still frame: do
+      // not schedule another, or the loop would restart itself.
+      if (!reducedMotion) requestAnimationFrame(renderFrame);
     }
 
     // Restore the console's saved choices before the first frame, so

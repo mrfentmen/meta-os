@@ -205,6 +205,13 @@ Web console (phone or Mac browser):
     30%, playing, not the pre-Reset choices. Reload the console
     — its Logo panel reads "Logo color: product color" again,
     because the two pages share the saved keys.
+12. Studio reduced motion: with Reduce Motion on, open the
+    full studio — the large logo renders one still frame, like
+    the console loop in check 7, not a spinning loop. Drag it
+    — it turns by hand and holds the new angle. Pick a color
+    — the still frame re-tints. (The shipped root studio,
+    logo-studio.html, is the verbatim v2 file and is not the
+    studio the console links to.)
 
 Native Mac app (MetaTrio):
 
