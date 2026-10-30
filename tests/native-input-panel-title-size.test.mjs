@@ -27,8 +27,8 @@ function blockAfter(marker, length = 500) {
   return content.slice(start, start + length);
 }
 
-const stillTitle = blockAfter('Text("Still image")');
-const videoTitle = blockAfter('Text("Prerecorded video")');
+const stillTitle = blockAfter('PanelHeading(title: "Still image"');
+const videoTitle = blockAfter('PanelHeading(title: "Prerecorded video"');
 
 test("native input-panel titles: web contract — .panel h2 at 15px weight 700", () => {
   const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
@@ -42,25 +42,28 @@ test("native input-panel titles: web contract — .panel h2 at 15px weight 700",
   assert.match(html, /<h2>Prerecorded video<\/h2>/, "web video panel has h2 title");
 });
 
-test("native still-image title: takes 15pt bold, no headline left", () => {
+test("native still-image title: PanelHeading with Ignis gate, no headline left", () => {
+  // OPS-CONSOLE-2 moved the title into the shared PanelHeading; the
+  // 15pt bold itself now lives in PanelHeading's non-Ignis branch
+  // (covered by native-ignis-ops-console-headings).
   assert.match(
     stillTitle,
-    /\.font\(\.system\(size: 15, weight: \.bold\)\)/,
-    "still-image title takes 15pt bold",
+    /PanelHeading\(title: "Still image", isIgnis: model\.selectedProduct == \.ignis\)/,
+    "still-image title uses PanelHeading gated on Ignis",
   );
   assert.doesNotMatch(stillTitle, /\.font\(\.headline\)/, "no headline left on still-image title");
 });
 
-test("native video title: takes 15pt bold, no headline left", () => {
+test("native video title: PanelHeading with Ignis gate, no headline left", () => {
   assert.match(
     videoTitle,
-    /\.font\(\.system\(size: 15, weight: \.bold\)\)/,
-    "video title takes 15pt bold",
+    /PanelHeading\(title: "Prerecorded video", isIgnis: model\.selectedProduct == \.ignis\)/,
+    "video title uses PanelHeading gated on Ignis",
   );
   assert.doesNotMatch(videoTitle, /\.font\(\.headline\)/, "no headline left on video title");
 });
 
 test("native input-panel titles: wording unchanged", () => {
-  assert.match(stillTitle, /Text\("Still image"\)/, "still-image wording kept");
-  assert.match(videoTitle, /Text\("Prerecorded video"\)/, "video wording kept");
+  assert.match(stillTitle, /PanelHeading\(title: "Still image"/, "still-image wording kept");
+  assert.match(videoTitle, /PanelHeading\(title: "Prerecorded video"/, "video wording kept");
 });

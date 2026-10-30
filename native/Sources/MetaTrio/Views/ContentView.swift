@@ -76,8 +76,10 @@ struct ContentView: View {
             // the header trait, and the 10pt column spacing — the
             // native counterpart to the web h2's 10px bottom margin
             // — are untouched.
-            Text("Latest assessment")
-                .font(.system(size: 15, weight: .bold))
+            // OPS-CONSOLE-2: panel heading (see PanelHeading) —
+            // Ignis renders the console treatment, other products
+            // the plain 15pt bold title as before.
+            PanelHeading(title: "Latest assessment", isIgnis: model.selectedProduct == .ignis)
                 .accessibilityAddTraits(.isHeader)
             if let note = model.displayedAssessmentNote {
                 // UI-21: Latest-panel notes at 13pt, the native
@@ -158,6 +160,45 @@ struct ContentView: View {
         }
         .padding(12)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+}
+
+// OPS-CONSOLE-2: shared panel heading, the native counterpart to
+// the web OPS-CONSOLE-1 rule (body[data-product="ignis"] .panel h2:
+// uppercase mono, 0.12em tracking, a 3px red left border, 10px left
+// padding, 15px/700 kept). On Ignis the title renders uppercased in
+// monospaced 15pt bold with 1.8pt tracking (0.12em of 15pt) and a 3pt
+// Ignis-red (#d92b2b, the R1 identity red) leading tick with 10pt of
+// room before the text; on Vigiles and Sanitas it renders exactly as
+// before — plain 15pt bold, no tick, no tracking, no case change — so
+// the console treatment never leaks onto another product. The Ignis
+// branch keeps the original title as its accessibility label, so
+// VoiceOver hears "Latest assessment", not the shouted capitals it
+// shows. Call sites keep their own header traits: Latest and Timeline
+// add .isHeader after the heading, exactly where the trait lived
+// before. The five panel titles (Latest, Event timeline, Still image,
+// Prerecorded video, Settings) all use this heading; the camera panel
+// carries no title and the assessment internals are not panel
+// headings, so both are untouched.
+struct PanelHeading: View {
+    let title: String
+    let isIgnis: Bool
+
+    var body: some View {
+        if isIgnis {
+            HStack(alignment: .top, spacing: 10) {
+                Rectangle()
+                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))
+                    .frame(width: 3)
+                Text(title.uppercased())
+                    .font(.system(size: 15, weight: .bold, design: .monospaced))
+                    .tracking(1.8)
+            }
+            .accessibilityLabel(title)
+        } else {
+            Text(title)
+                .font(.system(size: 15, weight: .bold))
+        }
     }
 }
 
@@ -506,8 +547,8 @@ private struct StillImagePanel: View {
             // (UI-23) and the timeline title (UI-34) already
             // matched their own 15px web rules. The size and
             // weight are the only change: the wording is untouched.
-            Text("Still image")
-                .font(.system(size: 15, weight: .bold))
+            // OPS-CONSOLE-2: panel heading (see PanelHeading).
+            PanelHeading(title: "Still image", isIgnis: model.selectedProduct == .ignis)
             // UI-25: still-image intro note at 13pt, the native
             // counterpart to the web .note rule (13px, muted).
             // Until now the intro used .caption (12pt), so it read
@@ -597,8 +638,8 @@ private struct VideoPanel: View {
             // still-image title above already matched their own
             // 15px web rules. The size and weight are the only
             // change: the wording is untouched.
-            Text("Prerecorded video")
-                .font(.system(size: 15, weight: .bold))
+            // OPS-CONSOLE-2: panel heading (see PanelHeading).
+            PanelHeading(title: "Prerecorded video", isIgnis: model.selectedProduct == .ignis)
             // UI-26: video intro note at 13pt, the native
             // counterpart to the web .note rule (13px, muted).
             // Until now the intro used .caption (12pt), so it read
@@ -812,8 +853,8 @@ private struct SettingsPanel: View {
             // bold web rules. The size and weight are the only
             // change: the "Settings" wording, the GroupBox box, and
             // every field inside are untouched.
-            Text("Settings")
-                .font(.system(size: 15, weight: .bold))
+            // OPS-CONSOLE-2: panel heading (see PanelHeading).
+            PanelHeading(title: "Settings", isIgnis: model.selectedProduct == .ignis)
         }
     }
 }

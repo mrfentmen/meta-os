@@ -31,7 +31,7 @@ function blockAfter(marker, length = 500) {
   return timeline.slice(start, start + length);
 }
 
-const title = blockAfter('Text("Event timeline")');
+const title = blockAfter('PanelHeading(title: "Event timeline"');
 const note = blockAfter(
   'Text("Tap an assessment row to view that assessment again',
   600,
@@ -55,11 +55,15 @@ test("native timeline note: web contract — .note at 13px muted", () => {
   );
 });
 
-test("native timeline title: takes 15pt bold, keeps header trait", () => {
+test("native timeline title: PanelHeading with Ignis gate, header trait kept", () => {
+  // OPS-CONSOLE-2 moved the title into the shared PanelHeading; the
+  // 15pt bold itself now lives in PanelHeading's non-Ignis branch
+  // (covered by native-ignis-ops-console-headings), and this test
+  // keeps the call-site wiring: the Ignis gate and the header trait.
   assert.match(
     title,
-    /\.font\(\.system\(size: 15, weight: \.bold\)\)/,
-    "title takes 15pt bold",
+    /PanelHeading\(title: "Event timeline", isIgnis: model\.selectedProduct == \.ignis\)/,
+    "title uses PanelHeading gated on Ignis",
   );
   assert.doesNotMatch(title, /\.font\(\.headline\)/, "no headline left on title");
   assert.match(

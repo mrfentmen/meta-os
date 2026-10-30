@@ -33,7 +33,7 @@ function blockAfter(marker, length = 400) {
   return content.slice(start, start + length);
 }
 
-const title = blockAfter('Text("Settings")');
+const title = blockAfter('PanelHeading(title: "Settings"');
 
 test("native Settings title: web contract — panel h2 at 15px bold", () => {
   const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
@@ -50,11 +50,14 @@ test("native Settings title: web contract — panel h2 at 15px bold", () => {
   );
 });
 
-test("native Settings title: takes 15pt bold, keeps its wording", () => {
+test("native Settings title: PanelHeading with Ignis gate, keeps its wording", () => {
+  // OPS-CONSOLE-2 moved the title into the shared PanelHeading; the
+  // 15pt bold itself now lives in PanelHeading's non-Ignis branch
+  // (covered by native-ignis-ops-console-headings).
   assert.match(
     title,
-    /\.font\(\.system\(size: 15, weight: \.bold\)\)/,
-    "Settings title takes 15pt bold",
+    /PanelHeading\(title: "Settings", isIgnis: model\.selectedProduct == \.ignis\)/,
+    "Settings title uses PanelHeading gated on Ignis",
   );
   assert.doesNotMatch(
     content,
@@ -71,8 +74,8 @@ test("native Settings title: still a GroupBox label over the same panel", () => 
   );
   assert.match(
     content,
-    /label: \{[\s\S]*?Text\("Settings"\)/,
-    "Settings text is the GroupBox label",
+    /label: \{[\s\S]*?PanelHeading\(title: "Settings"/,
+    "Settings heading is the GroupBox label",
   );
 });
 

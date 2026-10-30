@@ -17,8 +17,10 @@ struct TimelineView: View {
             // (UI-23) already matched its own 15px web rule. The
             // size and weight are the only changes: the wording and
             // the header trait are untouched.
-            Text("Event timeline")
-                .font(.system(size: 15, weight: .bold))
+            // OPS-CONSOLE-2: panel heading (see PanelHeading in
+            // ContentView) — Ignis renders the console treatment,
+            // other products the plain 15pt bold title as before.
+            PanelHeading(title: "Event timeline", isIgnis: model.selectedProduct == .ignis)
                 .accessibilityAddTraits(.isHeader)
             // Web parity: the web history panel carries this note, and
             // without it nothing in the native panel says the rows can

@@ -45,11 +45,15 @@ test("native latest title: web contract — .panel h2 at 15px weight 700", () =>
   );
 });
 
-test("native latest title: title at 15pt bold with header trait", () => {
+test("native latest title: PanelHeading with Ignis gate, header trait kept", () => {
+  // OPS-CONSOLE-2 moved the title into the shared PanelHeading; the
+  // 15pt bold itself now lives in PanelHeading's non-Ignis branch
+  // (covered by native-ignis-ops-console-headings), and this test
+  // keeps the call-site wiring: the Ignis gate and the header trait.
   assert.match(
     rightColumn,
-    /\/\/ UI-22[\s\S]*?Text\("Latest assessment"\)\s+\.font\(\.system\(size: 15, weight: \.bold\)\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
-    "Latest title takes the 15pt bold font, keeping its header trait",
+    /\/\/ UI-22[\s\S]*?PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    "Latest title uses PanelHeading gated on Ignis, keeping its header trait",
   );
 });
 
