@@ -1,0 +1,7 @@
+PASS phase 1: real --once rings once, then dedupes
+PASS phase 2: cycle through real runs, bell only where the watchman rang
+PASS phase 3: hanging watchman killed at timeout, failed run, loop unhung
+PASS phase 4: nonzero exit discards partial stdout
+PASS phase 5: missing program, bad argv, bad machine, raising command_for all contained
+PASS phase 6: failed run carries the prior bell, old restart stripped, inputs unchanged
+ALL PASS (6 phases)

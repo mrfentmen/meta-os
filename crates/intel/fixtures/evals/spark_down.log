@@ -1,0 +1,10 @@
+INT-008 Spark-down drill: endpoint is down for all features
+Endpoint: http://127.0.0.1:9/spark-down-drill (closed localhost port, real HTTP transport)
+Snapshot: 2 messages, 2 jobs (1 stalled claimed, 1 blocked), clock 10000
+[PASS] precondition: SparkError: Spark endpoint unreachable: [Errno 111] Connection refused (0 real calls completed)
+[PASS] brief: template brief 54 words, blocked job named, spark-only path returns the canned line verbatim
+[PASS] brief-record: dry-run record model is template for template text
+[PASS] dispatch: FALLBACK plan, one job, raw goal in spec, endpoint called once, nothing posted, $0 spent
+[PASS] watchdog: 1 alert(s) incl. progress-stall, template explanations identical with down polish
+[PASS] cli: CLI brief --morning exits 0 with a template brief
+RESULT: PASS, every fallback engaged, nothing crashed

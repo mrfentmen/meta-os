@@ -1,0 +1,6 @@
+nudge: present worker pax, stale job 7 -> rung nudge, journal + brief line agree: PASS
+restart: absent worker pax, job 7 stays claimed, rung restart journaled, systemd note is info: PASS
+reassign: walk-on ghost holding job 9 -> rung reassign, baton carries progress + files exactly, claim moves to hana with no repeated work: PASS
+idempotent: second tick over the same stall journals nothing new: PASS
+no-dale: journal holds only ladder-action records, push ledger empty, snapshot unchanged: PASS
+self_repair_ladder: ALL PHASES PASS

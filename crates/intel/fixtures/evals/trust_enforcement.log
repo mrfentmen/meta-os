@@ -1,0 +1,10 @@
+trusted: trusted v2 job claimable, driver badge dropped and named: PASS
+unsigned: refused, reason signature absent: PASS
+untrusted: correctly signed by an untrusted kid refused, reason untrusted signer: PASS
+transplant: signature lifted from job 9 refused on job 10, reason signature bad: PASS
+expired: refused, reason signature expired: PASS
+legacy: v1 job refused, reason legacy v1 signature, v2 required: PASS
+spoofed-nick: familiar nick, untrusted signature refused: PASS
+tick: 2 refusal records, trusted job silent, second tick silent, inputs immutable, brief and federation events render: PASS
+no-push: refusal is journal only, no push path, Dale contacted at no step: PASS
+trust_enforcement: ALL PHASES PASS
