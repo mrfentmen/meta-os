@@ -812,6 +812,15 @@
       dragVelocityY = 0;
     }
 
+    // STUDIO-STATUS (Hana Agent1): the top status must say what
+    // the logo is really doing. Until now it read LIVE RENDER
+    // even under Reduce Motion, when the logo is one still
+    // frame, and a color change re-lit its glow dot the same
+    // way — so a Reduce Motion user was told the render was
+    // live while STUDIO-REDUCED-MOTION had stopped the loop.
+    // Paused still wins over both, then the still frame, then
+    // the live render; the still dot keeps its accent color
+    // but loses the glow, so it does not promise motion.
     function setPaused(nextPaused) {
       isPaused = nextPaused;
       pauseButton.setAttribute('aria-pressed', String(isPaused));
@@ -819,9 +828,9 @@
       pauseIcon.innerHTML = isPaused
         ? '<path d="m8 5 11 7-11 7z" fill="currentColor" stroke="none"/>'
         : '<path d="M8 5v14M16 5v14"/>';
-      statusLabel.textContent = isPaused ? 'RENDER PAUSED' : 'LIVE RENDER';
+      statusLabel.textContent = isPaused ? 'RENDER PAUSED' : (reducedMotion ? 'STILL FRAME' : 'LIVE RENDER');
       statusDot.style.background = isPaused ? '#6f809d' : mixHex(colorPicker.value, '#ffffff', 0.42);
-      statusDot.style.boxShadow = isPaused ? 'none' : `0 0 10px rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.85)`;
+      statusDot.style.boxShadow = (isPaused || reducedMotion) ? 'none' : `0 0 10px rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.85)`;
     }
 
     speedSlider.addEventListener('input', () => {
@@ -962,7 +971,7 @@
       if (markPaths[0]) markPaths[0].setAttribute('stroke', mixHex(normalized, '#ffffff', 0.36));
       if (markPaths[1]) markPaths[1].setAttribute('stroke', normalized);
       statusDot.style.background = isPaused ? '#6f809d' : mixHex(normalized, '#ffffff', 0.42);
-      statusDot.style.boxShadow = isPaused ? 'none' : `0 0 10px rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.85)`;
+      statusDot.style.boxShadow = (isPaused || reducedMotion) ? 'none' : `0 0 10px rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.85)`;
       // Under Reduce Motion there is no loop to repaint the
       // re-tinted logo, so repaint the one still frame here.
       if (reducedMotion) renderFrame();
@@ -1113,7 +1122,12 @@
       speedSlider.value = String(savedSpeed);
       speedValue.textContent = `${savedSpeed}%`;
     }
-    if (storedPaused()) setPaused(true);
+    // STUDIO-STATUS: refresh the status on load either way, not
+    // only when a pause was saved — otherwise a Reduce Motion
+    // open keeps the page's static LIVE RENDER label over a
+    // still frame. setPaused(false) leaves the Pause label,
+    // icon, and live label exactly as the page ships them.
+    setPaused(storedPaused());
     resizeCanvas();
     renderFrame();
   </script>

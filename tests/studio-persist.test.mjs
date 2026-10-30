@@ -54,8 +54,8 @@ test("studio restores saved choices before the first frame", () => {
   );
   assert.match(
     studio,
-    /if \(storedPaused\(\)\) setPaused\(true\);/,
-    "saved pause state is applied at startup",
+    /setPaused\(storedPaused\(\)\);/,
+    "saved pause state is applied at startup (STUDIO-STATUS form: setPaused runs either way, so a Reduce Motion open also refreshes the status)",
   );
   const startup = studio.indexOf("setAccentColor(savedColor");
   const firstFrame = studio.indexOf("renderFrame();", startup);

@@ -209,9 +209,10 @@ Web console (phone or Mac browser):
     full studio — the large logo renders one still frame, like
     the console loop in check 7, not a spinning loop. Drag it
     — it turns by hand and holds the new angle. Pick a color
-    — the still frame re-tints. (The shipped root studio,
-    logo-studio.html, is the verbatim v2 file and is not the
-    studio the console links to.)
+    — the still frame re-tints. The top status reads STILL
+    FRAME, not LIVE RENDER, and its dot carries no glow.
+    (The shipped root studio, logo-studio.html, is the verbatim
+    v2 file and is not the studio the console links to.)
 
 Native Mac app (MetaTrio):
 
