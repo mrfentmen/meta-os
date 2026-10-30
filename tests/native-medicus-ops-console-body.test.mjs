@@ -120,7 +120,7 @@ test("native ops-console body: placeholders and card treatment untouched", () =>
   );
 });
 
-test("native ops-console body: Observations heading gains nothing; camera state lines stay two-gate until the Medicus status follow-up", () => {
+test("native ops-console body: Observations heading gains nothing; camera state lines gain the Medicus status treatment (OPS-CONSOLE-12)", () => {
   const observationsFn = assessmentView.slice(
     assessmentView.indexOf("private var observationsSection"),
     assessmentView.indexOf("private var uncertaintySection"),
@@ -132,7 +132,7 @@ test("native ops-console body: Observations heading gains nothing; camera state 
   );
   assert.match(
     contentView,
-    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13, design: \(isIgnisSelected \|\| isVigilesSelected\) \? \.monospaced : \.default\)\)\s+\.tracking\(\(isIgnisSelected \|\| isVigilesSelected\) \? 0\.26 : 0\)/,
-    "camera state lines still carry only the two-gate Ignis/Vigiles conditional mono face and tracking at 13pt — Medicus status is the follow-up slice, not this one",
+    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13, design: \(isIgnisSelected \|\| isVigilesSelected \|\| isMedicusSelected\) \? \.monospaced : \.default\)\)\s+\.tracking\(\(isIgnisSelected \|\| isVigilesSelected \|\| isMedicusSelected\) \? 0\.26 : 0\)/,
+    "camera state lines now carry the three-gate Ignis/Vigiles/Medicus conditional mono face and tracking at 13pt — Medicus status lands in OPS-CONSOLE-12",
   );
 });

@@ -614,6 +614,17 @@ private struct CameraPanel: View {
     // primary buttons, is still NOT in this slice: macOS system
     // buttons own their corner radius, so that stays for a
     // follow-up slice rather than being forced here.
+    //
+    // OPS-CONSOLE-12: Medicus shares the web Medicus
+    // status-line rule (mono at 0.02em, the same value Ignis
+    // and Vigiles carry), so the gate widens to Ignis, Vigiles,
+    // or Medicus and the three share one widened value, exactly
+    // as OPS-CONSOLE-11 did for the readout frame; the
+    // OPS-CONSOLE-9 "Medicus keeps the plain treatment" note is
+    // now replaced. Size, color, wrapping, and wording are
+    // untouched, the neighboring notes and banner gain nothing,
+    // and the sharper-buttons element still stays out: macOS
+    // system buttons own their corner radius.
     /// Whether the camera panel is showing under Ignis, following
     /// the PanelHeading precedent: the panel renders by the
     /// selected product.
@@ -627,44 +638,51 @@ private struct CameraPanel: View {
         model.selectedProduct == .vigiles
     }
 
+    /// Whether the camera panel is showing under Medicus, on the
+    /// same PanelHeading precedent as the Ignis and Vigiles gates
+    /// above.
+    private var isMedicusSelected: Bool {
+        model.selectedProduct == .medicus
+    }
+
     @ViewBuilder
     private var stateText: some View {
         switch camera.state {
         case .idle:
             Text("Camera is off.")
-                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected) ? .monospaced : .default))
-                .tracking((isIgnisSelected || isVigilesSelected) ? 0.26 : 0)
+                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected || isMedicusSelected) ? .monospaced : .default))
+                .tracking((isIgnisSelected || isVigilesSelected || isMedicusSelected) ? 0.26 : 0)
                 .foregroundStyle(.secondary)
         case .requestingPermission:
             Text("Waiting for camera permission…")
-                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected) ? .monospaced : .default))
-                .tracking((isIgnisSelected || isVigilesSelected) ? 0.26 : 0)
+                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected || isMedicusSelected) ? .monospaced : .default))
+                .tracking((isIgnisSelected || isVigilesSelected || isMedicusSelected) ? 0.26 : 0)
                 .foregroundStyle(.secondary)
         case .running:
             Text("Camera is live. No frames are sent anywhere until analysis is started.")
-                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected) ? .monospaced : .default))
-                .tracking((isIgnisSelected || isVigilesSelected) ? 0.26 : 0)
+                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected || isMedicusSelected) ? .monospaced : .default))
+                .tracking((isIgnisSelected || isVigilesSelected || isMedicusSelected) ? 0.26 : 0)
                 .foregroundStyle(.secondary)
         case .stopped:
             Text("Camera stopped.")
-                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected) ? .monospaced : .default))
-                .tracking((isIgnisSelected || isVigilesSelected) ? 0.26 : 0)
+                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected || isMedicusSelected) ? .monospaced : .default))
+                .tracking((isIgnisSelected || isVigilesSelected || isMedicusSelected) ? 0.26 : 0)
                 .foregroundStyle(.secondary)
         case .denied:
             Text("Camera permission denied. Grant access in System Settings → Privacy & Security → Camera, then start the camera again.")
-                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected) ? .monospaced : .default))
-                .tracking((isIgnisSelected || isVigilesSelected) ? 0.26 : 0)
+                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected || isMedicusSelected) ? .monospaced : .default))
+                .tracking((isIgnisSelected || isVigilesSelected || isMedicusSelected) ? 0.26 : 0)
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
         case .noCamera:
             Text("No camera was found on this Mac.")
-                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected) ? .monospaced : .default))
-                .tracking((isIgnisSelected || isVigilesSelected) ? 0.26 : 0)
+                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected || isMedicusSelected) ? .monospaced : .default))
+                .tracking((isIgnisSelected || isVigilesSelected || isMedicusSelected) ? 0.26 : 0)
                 .foregroundStyle(.red)
         case .failed(let message):
             Text("Camera error: \(message)")
-                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected) ? .monospaced : .default))
-                .tracking((isIgnisSelected || isVigilesSelected) ? 0.26 : 0)
+                .font(.system(size: 13, design: (isIgnisSelected || isVigilesSelected || isMedicusSelected) ? .monospaced : .default))
+                .tracking((isIgnisSelected || isVigilesSelected || isMedicusSelected) ? 0.26 : 0)
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
         }

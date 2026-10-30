@@ -68,27 +68,27 @@ test("native ops-console status: gate reads the selected product, PanelHeading p
   );
 });
 
-test("native ops-console status: all seven state lines take mono at 0.26pt on Ignis or Vigiles, plain 13pt off them", () => {
+test("native ops-console status: all seven state lines take mono at 0.26pt on Ignis, Vigiles, or Medicus, plain 13pt off them", () => {
   for (const line of stateLines) {
     const block = blockAfter(line);
     assert.match(
       block,
-      /\.font\(\.system\(size: 13, design: \(isIgnisSelected \|\| isVigilesSelected\) \? \.monospaced : \.default\)\)/,
+      /\.font\(\.system\(size: 13, design: \(isIgnisSelected \|\| isVigilesSelected \|\| isMedicusSelected\) \? \.monospaced : \.default\)\)/,
       `${line} keeps 13pt and gains the conditional mono face`,
     );
     assert.match(
       block,
-      /\.tracking\(\(isIgnisSelected \|\| isVigilesSelected\) \? 0\.26 : 0\)/,
-      `${line} gains 0.26pt tracking on Ignis or Vigiles, none off them`,
+      /\.tracking\(\(isIgnisSelected \|\| isVigilesSelected \|\| isMedicusSelected\) \? 0\.26 : 0\)/,
+      `${line} gains 0.26pt tracking on Ignis, Vigiles, or Medicus, none off them`,
     );
   }
   assert.equal(
-    (stateText.match(/design: \(isIgnisSelected \|\| isVigilesSelected\) \? \.monospaced : \.default/g) || []).length,
+    (stateText.match(/design: \(isIgnisSelected \|\| isVigilesSelected \|\| isMedicusSelected\) \? \.monospaced : \.default/g) || []).length,
     7,
     "exactly the seven state lines carry the conditional face",
   );
   assert.equal(
-    (stateText.match(/tracking\(\(isIgnisSelected \|\| isVigilesSelected\) \? 0\.26 : 0\)/g) || []).length,
+    (stateText.match(/tracking\(\(isIgnisSelected \|\| isVigilesSelected \|\| isMedicusSelected\) \? 0\.26 : 0\)/g) || []).length,
     7,
     "exactly the seven state lines carry the conditional tracking",
   );

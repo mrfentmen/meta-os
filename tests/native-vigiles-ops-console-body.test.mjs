@@ -132,11 +132,12 @@ test("native ops-console body: Observations heading gains nothing; camera state 
   );
   // OPS-CONSOLE-9 landed: the camera state lines now carry the
   // two-gate conditional mono face and tracking, so Vigiles reads
-  // as a console line exactly as Ignis does. The full treatment
-  // is covered by native-vigiles-ops-console-status.test.mjs.
+  // as a console line exactly as Ignis does. OPS-CONSOLE-12
+  // widened the gate to all three products. The full treatment
+  // is covered by native-medicus-ops-console-status.test.mjs.
   assert.match(
     contentView,
-    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13, design: \(isIgnisSelected \|\| isVigilesSelected\) \? \.monospaced : \.default\)\)\s+\.tracking\(\(isIgnisSelected \|\| isVigilesSelected\) \? 0\.26 : 0\)/,
-    "camera state lines carry the OPS-CONSOLE-9 two-gate conditional mono face and tracking at 13pt",
+    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13, design: \(isIgnisSelected \|\| isVigilesSelected \|\| isMedicusSelected\) \? \.monospaced : \.default\)\)\s+\.tracking\(\(isIgnisSelected \|\| isVigilesSelected \|\| isMedicusSelected\) \? 0\.26 : 0\)/,
+    "camera state lines carry the OPS-CONSOLE-12 three-gate conditional mono face and tracking at 13pt",
   );
 });
