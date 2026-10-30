@@ -258,3 +258,27 @@ certified fire-detection system and never a reason to create a real fire;
 Medicus: no violation, ownership, or responsibility findings). The app
 never contacts police or emergency services, never dispatches or cites
 automatically, and performs no face recognition or identity inference.
+
+## Repository map
+
+- **Web console** — `index.html`, `js/`, `styles.css`: the dependency-free
+  static frontend described above (camera, frame sampler, analysis client).
+- **`native/`** — MetaTrio, the native Swift/SwiftUI macOS app, sharing the
+  same frozen v2 contract.
+- **`server/`** — the Node server behind the `/api/assess` endpoint, with the
+  direct Spark transport in `server/model.mjs`.
+- **`server/queue/`** — the OS job-queue service and resident agent
+  (`queue_service.py`, `trio_agent.py`): assessments can instead be answered
+  through the job queue, with the result written to `trio:{job_id}:result`.
+- **`eval/` + `test-footage/`** — the per-product evaluation sets and the
+  licensed Wikimedia Commons frame pack used to test them (sources and
+  licenses in `test-footage/MANIFEST.md`).
+- **`tests/`** — the Node test suites (plus `tests/queue-python/` for the
+  queue service).
+- **`design/`** — design artifacts, including the ASCII logo studio.
+- **`docs/`** — supporting documents (hardware verification checklist).
+- **Root briefs** — `BRIEF.md`, `MASTER_DIRECTIVE_V2.md`, and
+  `MEDICUS_PIVOT_SPEC.md` define the build.
+
+Crew coordination happens on muse-relay, a pre-existing external message-bus
+service that is not part of this repository.
