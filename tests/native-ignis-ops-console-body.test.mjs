@@ -22,11 +22,13 @@
 // border, and wash are untouched, and the waiting, error, and
 // no-assessment placeholders — which sit outside the ScrollView —
 // are untouched. The other two OPS-CONSOLE-3 elements are NOT in
-// this slice: camera status lines keep their UI-35 13pt contract and
-// macOS system buttons own their corner radius, so both stay for a
-// follow-up slice rather than being forced here. No Swift toolchain
-// exists in this sandbox, so these are static checks on the shipped
-// Swift and CSS.
+// this slice: camera status lines kept their UI-35 13pt contract
+// here and gained their status-line treatment in the OPS-CONSOLE-5
+// follow-up (see native-ignis-ops-console-status.test.mjs), while
+// macOS system buttons own their corner radius, so that element
+// stays for a follow-up slice rather than being forced here. No
+// Swift toolchain exists in this sandbox, so these are static
+// checks on the shipped Swift and CSS.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -114,7 +116,7 @@ test("native ops-console body: placeholders and card treatment untouched", () =>
   );
 });
 
-test("native ops-console body: Observations heading and camera state lines gain nothing", () => {
+test("native ops-console body: Observations heading gains nothing; camera state lines moved to OPS-CONSOLE-5", () => {
   const observationsFn = assessmentView.slice(
     assessmentView.indexOf("private var observationsSection"),
     assessmentView.indexOf("private var uncertaintySection"),
@@ -124,9 +126,14 @@ test("native ops-console body: Observations heading and camera state lines gain 
     /isIgnisAssessment/,
     "Observations heading gains no Ignis treatment",
   );
+  // OPS-CONSOLE-5 rewired this assertion: the state lines kept
+  // their UI-35 13pt size and gained the conditional mono face
+  // and 0.26pt tracking there, so the plain-font form this test
+  // used to assert no longer exists. The full treatment is
+  // covered by native-ignis-ops-console-status.test.mjs.
   assert.match(
     contentView,
-    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13\)\)/,
-    "camera state lines keep their UI-35 13pt contract — status-line treatment is a follow-up slice, not this one",
+    /Text\("Camera is off\."\)\s+\.font\(\.system\(size: 13, design: isIgnisSelected \? \.monospaced : \.default\)\)\s+\.tracking\(isIgnisSelected \? 0\.26 : 0\)/,
+    "camera state lines now carry the OPS-CONSOLE-5 conditional mono face and tracking at 13pt",
   );
 });

@@ -515,37 +515,69 @@ private struct CameraPanel: View {
     // 13px web rules. The size is the only change: the muted
     // color, the red error color, the wrapping on the denied
     // and failed lines, and the wording are untouched.
+    //
+    // OPS-CONSOLE-5: on Ignis the state lines also carry the web
+    // OPS-CONSOLE-3 status-line treatment — the mono face and
+    // 0.02em tracking (0.26pt at 13pt) of the web .status rule —
+    // so the camera panel reads as a console line on the Mac
+    // exactly as it does on the web. The gate is the selected
+    // product (the PanelHeading precedent: the camera panel is
+    // product-contextual, not assessment-owned, so there is no
+    // card product to consult); off Ignis the lines are exactly
+    // as UI-35 left them. Size, color, wrapping, and wording are
+    // untouched, and red never becomes a status color — the error
+    // lines stay red, only their face and tracking change. The
+    // facing note (UI-28), the guidance note (UI-29), and the
+    // ANALYSIS ACTIVE banner (UI-45) are not status lines and
+    // gain nothing. The fourth OPS-CONSOLE-3 element, sharper
+    // primary buttons, is still NOT in this slice: macOS system
+    // buttons own their corner radius, so that stays for a
+    // follow-up slice rather than being forced here.
+    /// Whether the camera panel is showing under Ignis, following
+    /// the PanelHeading precedent: the panel renders by the
+    /// selected product.
+    private var isIgnisSelected: Bool {
+        model.selectedProduct == .ignis
+    }
+
     @ViewBuilder
     private var stateText: some View {
         switch camera.state {
         case .idle:
             Text("Camera is off.")
-                .font(.system(size: 13))
+                .font(.system(size: 13, design: isIgnisSelected ? .monospaced : .default))
+                .tracking(isIgnisSelected ? 0.26 : 0)
                 .foregroundStyle(.secondary)
         case .requestingPermission:
             Text("Waiting for camera permission…")
-                .font(.system(size: 13))
+                .font(.system(size: 13, design: isIgnisSelected ? .monospaced : .default))
+                .tracking(isIgnisSelected ? 0.26 : 0)
                 .foregroundStyle(.secondary)
         case .running:
             Text("Camera is live. No frames are sent anywhere until analysis is started.")
-                .font(.system(size: 13))
+                .font(.system(size: 13, design: isIgnisSelected ? .monospaced : .default))
+                .tracking(isIgnisSelected ? 0.26 : 0)
                 .foregroundStyle(.secondary)
         case .stopped:
             Text("Camera stopped.")
-                .font(.system(size: 13))
+                .font(.system(size: 13, design: isIgnisSelected ? .monospaced : .default))
+                .tracking(isIgnisSelected ? 0.26 : 0)
                 .foregroundStyle(.secondary)
         case .denied:
             Text("Camera permission denied. Grant access in System Settings → Privacy & Security → Camera, then start the camera again.")
-                .font(.system(size: 13))
+                .font(.system(size: 13, design: isIgnisSelected ? .monospaced : .default))
+                .tracking(isIgnisSelected ? 0.26 : 0)
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
         case .noCamera:
             Text("No camera was found on this Mac.")
-                .font(.system(size: 13))
+                .font(.system(size: 13, design: isIgnisSelected ? .monospaced : .default))
+                .tracking(isIgnisSelected ? 0.26 : 0)
                 .foregroundStyle(.red)
         case .failed(let message):
             Text("Camera error: \(message)")
-                .font(.system(size: 13))
+                .font(.system(size: 13, design: isIgnisSelected ? .monospaced : .default))
+                .tracking(isIgnisSelected ? 0.26 : 0)
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
         }

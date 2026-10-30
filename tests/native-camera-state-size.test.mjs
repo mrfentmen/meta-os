@@ -12,7 +12,11 @@
 // (UI-29) already matched their own 13px web rules. The fix gives
 // all seven state lines a 13pt system font, keeping their muted
 // color, the errors' red, the denied and failed lines' wrapping,
-// and their wording. No Swift toolchain exists in this sandbox, so
+// and their wording. OPS-CONSOLE-5 later gave the lines a
+// conditional mono face and 0.26pt tracking on Ignis (see
+// native-ignis-ops-console-status.test.mjs); the size assertions
+// below were rewired to the conditional font call, and 13pt itself
+// is unchanged. No Swift toolchain exists in this sandbox, so
 // these are static checks on the shipped Swift.
 
 import { test } from "node:test";
@@ -27,7 +31,7 @@ const content = readFileSync(
   "utf8",
 );
 
-function blockAfter(marker, length = 300) {
+function blockAfter(marker, length = 450) {
   const start = content.indexOf(marker);
   assert.ok(start >= 0, `${marker} exists`);
   return content.slice(start, start + length);
@@ -61,14 +65,14 @@ test("native camera state: web camera-state carries the note class", () => {
 
 test("native camera state: off, waiting, live, and stopped lines take 13pt", () => {
   for (const [name, block] of [["off", idle], ["waiting", waiting], ["live", running], ["stopped", stopped]]) {
-    assert.match(block, /\.font\(\.system\(size: 13\)\)/, `${name} line takes 13pt`);
+    assert.match(block, /\.font\(\.system\(size: 13, design: isIgnisSelected \? \.monospaced : \.default\)\)/, `${name} line takes 13pt`);
     assert.match(block, /\.foregroundStyle\(\.secondary\)/, `${name} line keeps muted color`);
   }
 });
 
 test("native camera state: denied, no-camera, and failed lines take 13pt", () => {
   for (const [name, block] of [["denied", denied], ["no-camera", noCamera], ["failed", failed]]) {
-    assert.match(block, /\.font\(\.system\(size: 13\)\)/, `${name} line takes 13pt`);
+    assert.match(block, /\.font\(\.system\(size: 13, design: isIgnisSelected \? \.monospaced : \.default\)\)/, `${name} line takes 13pt`);
     assert.match(block, /\.foregroundStyle\(\.red\)/, `${name} line keeps its red color`);
   }
   assert.match(
