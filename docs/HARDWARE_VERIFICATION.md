@@ -186,6 +186,12 @@ Web console (phone or Mac browser):
    frame.
 8. Studio link: tap "Open the full logo studio" in the Logo panel.
    The large animated logo studio page opens.
+9. Studio persistence: in the console pick a color, a speed, and
+   Pause, then open the full studio — it opens in that color, at
+   that speed, paused. Change the color or speed in the studio,
+   reload the console — the studio's choices come back in the
+   panel. With nothing saved, the studio keeps its own defaults
+   (Meta blue, 30%, playing).
 
 Native Mac app (MetaTrio):
 

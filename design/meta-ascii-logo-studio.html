@@ -556,6 +556,36 @@
     const statusDot = document.getElementById('status-dot');
     const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
 
+    // STUDIO-PERSIST (Del direction Oct 30; Hana Agent1): this studio
+    // shares the console Logo panel's storage keys
+    // (meta-trio-logo-color, meta-trio-logo-speed,
+    // meta-trio-logo-paused), so a choice made in the console
+    // carries into the studio and a choice made here carries back.
+    // Nothing saved means the studio keeps its own defaults (Meta
+    // blue, 30%, playing); an invalid saved value is ignored, never
+    // trusted. A failed store leaves the page working in memory for
+    // this visit only, the console's pattern.
+    const LOGO_COLOR_KEY = 'meta-trio-logo-color';
+    const LOGO_SPEED_KEY = 'meta-trio-logo-speed';
+    const LOGO_PAUSED_KEY = 'meta-trio-logo-paused';
+    function readStored(key) {
+      try { return window.localStorage && window.localStorage.getItem(key); }
+      catch (e) { return null; }
+    }
+    function saveStored(key, value) {
+      try { if (window.localStorage) window.localStorage.setItem(key, value); }
+      catch (e) { /* Store unavailable: this visit only. */ }
+    }
+    function storedColor() {
+      const value = readStored(LOGO_COLOR_KEY);
+      return /^#[0-9a-f]{6}$/i.test(value || '') ? value.toLowerCase() : null;
+    }
+    function storedSpeed() {
+      const parsed = Number(readStored(LOGO_SPEED_KEY));
+      return Number.isFinite(parsed) ? Math.max(0, Math.min(100, Math.round(parsed))) : null;
+    }
+    function storedPaused() { return readStored(LOGO_PAUSED_KEY) === '1'; }
+
     // A wide ASCII grid creates a cleaner silhouette without losing the character-art look.
     const WIDTH = 124;
     const HEIGHT = 52;
@@ -754,12 +784,17 @@
 
     speedSlider.addEventListener('input', () => {
       speedValue.textContent = `${speedSlider.value}%`;
+      saveStored(LOGO_SPEED_KEY, speedSlider.value);
     });
 
-    pauseButton.addEventListener('click', () => setPaused(!isPaused));
+    pauseButton.addEventListener('click', () => {
+      setPaused(!isPaused);
+      saveStored(LOGO_PAUSED_KEY, isPaused ? '1' : '0');
+    });
     document.getElementById('reset-button').addEventListener('click', () => {
       resetRotation();
       setPaused(false);
+      saveStored(LOGO_PAUSED_KEY, '0');
     });
 
     scene.addEventListener('pointerdown', (event) => {
@@ -794,7 +829,7 @@
       else if (event.key === 'ArrowRight') { angleY += step; event.preventDefault(); }
       else if (event.key === 'ArrowUp') { angleX -= step; event.preventDefault(); }
       else if (event.key === 'ArrowDown') { angleX += step; event.preventDefault(); }
-      else if (event.code === 'Space') { setPaused(!isPaused); event.preventDefault(); }
+      else if (event.code === 'Space') { setPaused(!isPaused); saveStored(LOGO_PAUSED_KEY, isPaused ? '1' : '0'); event.preventDefault(); }
     });
 
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
@@ -869,9 +904,15 @@
       statusDot.style.boxShadow = isPaused ? 'none' : `0 0 10px rgba(${accentRgb.r}, ${accentRgb.g}, ${accentRgb.b}, 0.85)`;
     }
 
-    colorPicker.addEventListener('input', event => setAccentColor(event.target.value));
+    colorPicker.addEventListener('input', event => {
+      setAccentColor(event.target.value);
+      saveStored(LOGO_COLOR_KEY, colorPicker.value);
+    });
     colorSwatches.forEach(swatch => {
-      swatch.addEventListener('click', () => setAccentColor(swatch.dataset.color));
+      swatch.addEventListener('click', () => {
+        setAccentColor(swatch.dataset.color);
+        saveStored(LOGO_COLOR_KEY, colorPicker.value);
+      });
     });
 
     function renderFrame(timestamp = 0) {
@@ -997,7 +1038,16 @@
       requestAnimationFrame(renderFrame);
     }
 
-    setAccentColor(DEFAULT_ACCENT);
+    // Restore the console's saved choices before the first frame, so
+    // the studio never flashes its defaults over a saved choice.
+    const savedColor = storedColor();
+    setAccentColor(savedColor || DEFAULT_ACCENT);
+    const savedSpeed = storedSpeed();
+    if (savedSpeed !== null) {
+      speedSlider.value = String(savedSpeed);
+      speedValue.textContent = `${savedSpeed}%`;
+    }
+    if (storedPaused()) setPaused(true);
     resizeCanvas();
     renderFrame();
   </script>
