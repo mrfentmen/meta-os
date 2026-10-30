@@ -17,6 +17,7 @@ import { ignisEvidenceTransparency } from "./ignis-evidence.js";
 import { ignisUncertaintyDisclosure } from "./ignis-uncertainty.js";
 import { ignisReviewTriage } from "./ignis-review-triage.js";
 import { ignisObservationCategories } from "./ignis-observation-categories.js";
+import { ignisModelAttribution } from "./ignis-model-attribution.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -143,6 +144,7 @@ const els = {
   ignisUncertainty: $("ignis-uncertainty"),
   ignisReviewTriage: $("ignis-review-triage"),
   ignisObservationCategories: $("ignis-observation-categories"),
+  ignisModelAttribution: $("ignis-model-attribution"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1247,6 +1249,18 @@ function updateLogStats() {
   const obsCats = ignisObservationCategories(log.entries());
   els.ignisObservationCategories.textContent =
     `Observations ${obsCats.total} · Smoke ${obsCats.visibleSmoke} · Flame ${obsCats.visibleFlame} · Steam or fog ${obsCats.steamOrFog} · Flame-like lighting ${obsCats.flameLikeLighting} · Obscured or distant ${obsCats.obscuredOrDistant} · No hazard ${obsCats.noHazard} · Indeterminate ${obsCats.indeterminate}`;
+  // IGNIS-ONEOFONE-8: the model each recorded ok Ignis assessment
+  // itself reported, bucketed by its exact reported string — model
+  // names are open-ended, so the line lists them sorted for a
+  // stable read, with unattributed last. A held session stays
+  // zeros, and the panel itself is hidden under Vigiles and
+  // Sanitas by CSS, so this line only ever shows under Ignis.
+  const modelAttr = ignisModelAttribution(log.entries());
+  const modelParts = Object.keys(modelAttr.byModel)
+    .sort()
+    .map((model) => `${model} ${modelAttr.byModel[model]}`);
+  els.ignisModelAttribution.textContent =
+    [`Assessments ${modelAttr.total}`, ...modelParts, `Unattributed ${modelAttr.unattributed}`].join(" · ");
 }
 
 // Native parity: the native timeline's empty state says analysis is

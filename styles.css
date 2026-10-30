@@ -888,6 +888,21 @@ body[data-product="ignis"] .ignis-observation-categories-panel {
   display: block;
 }
 
+/* IGNIS-ONEOFONE-8 (Del's one-of-one bar, Oct 29): the Ignis
+   model-attribution panel shows only under Ignis, same rule as
+   the scoreboard, confidence, review-queue, evidence, uncertainty,
+   review-triage, and observation-classes panels above — under
+   Vigiles or Sanitas it could never show that product's data, so
+   it stays hidden rather than reading zeros for the wrong product.
+   This block only owns visibility. No contract, server, or
+   Spark-gate change. */
+.ignis-model-attribution-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-model-attribution-panel {
+  display: block;
+}
+
 /* OPS-CONSOLE-3 (Del UI direction, Oct 29): second web-first
    dispatch/ops-console piece for Ignis, extending OPS-CONSOLE-1's
    panel headings to the rest of the console surface — the same four
