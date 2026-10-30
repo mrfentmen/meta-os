@@ -223,6 +223,113 @@ pub fn brief_exceeds_budget(text: &str, budget: usize) -> bool {
     text.len() > budget
 }
 
+/// OS-051: a previous-session record carried on a boot snapshot.
+pub struct PreviousSession {
+    pub last_brief_at: String,
+    pub jobs_completed: Vec<String>,
+    pub open_threads: Vec<String>,
+}
+
+/// OS-051: the one-line previous-session digest for a boot brief.
+///
+/// Returns None when there is no record or no last-brief time — a
+/// boot brief with no previous-session record says nothing about a
+/// previous session, never invents one. Empty titles are dropped;
+/// the parenthesised title lists are dropped when a list is empty.
+pub fn previous_session_digest(record: Option<&PreviousSession>) -> Option<String> {
+    let record = record?;
+    if record.last_brief_at.trim().is_empty() {
+        return None;
+    }
+    let completed: Vec<&str> = record
+        .jobs_completed
+        .iter()
+        .map(String::as_str)
+        .filter(|t| !t.is_empty())
+        .collect();
+    let threads: Vec<&str> = record
+        .open_threads
+        .iter()
+        .map(String::as_str)
+        .filter(|t| !t.is_empty())
+        .collect();
+    let mut completed_part = format!(
+        "{} job{} completed",
+        completed.len(),
+        if completed.len() == 1 { "" } else { "s" }
+    );
+    if !completed.is_empty() {
+        completed_part.push_str(&format!(" ({})", completed.join("; ")));
+    }
+    let mut threads_part = format!(
+        "{} open thread{}",
+        threads.len(),
+        if threads.len() == 1 { "" } else { "s" }
+    );
+    if !threads.is_empty() {
+        threads_part.push_str(&format!(" ({})", threads.join("; ")));
+    }
+    Some(format!(
+        "Previous session: last brief {}, {}, {}",
+        record.last_brief_at, completed_part, threads_part
+    ))
+}
+
+/// OS-062: the system-state input for a boot brief.
+///
+/// `None` fields mean "not reported in this snapshot"; a present
+/// but empty list means "none reported" — never padded, never
+/// guessed. A down gateway is reported as down, never omitted.
+pub struct SystemState {
+    pub drivers: Option<Vec<String>>,
+    pub gateway_healthy: Option<bool>,
+    pub skill_apps: Option<Vec<String>>,
+}
+
+/// OS-062: the three drivers + tools + apps lines, in that order,
+/// one line each. These are not bullet lines, so the BRF-007
+/// budget trim never drops them ahead of a watch item.
+pub fn system_state_lines(state: &SystemState) -> Vec<String> {
+    let drivers_line = match &state.drivers {
+        None => "Drivers: not reported in this snapshot".to_string(),
+        Some(drivers) => {
+            let names: Vec<&str> = drivers
+                .iter()
+                .map(String::as_str)
+                .filter(|n| !n.is_empty())
+                .collect();
+            if names.is_empty() {
+                "Drivers: no drivers reported".to_string()
+            } else {
+                format!("Drivers: {} available", names.join(", "))
+            }
+        }
+    };
+    let tools_line = match state.gateway_healthy {
+        Some(true) => "Tools: MCP gateway healthy".to_string(),
+        Some(false) => {
+            "Tools: MCP gateway down, so agents cannot reach their tools through it".to_string()
+        }
+        None => "Tools: MCP gateway health not reported in this snapshot".to_string(),
+    };
+    let apps_line = match &state.skill_apps {
+        None => "Skill apps: not reported in this snapshot".to_string(),
+        Some(apps) => {
+            let names: Vec<&str> = apps
+                .iter()
+                .map(String::as_str)
+                .filter(|n| !n.is_empty())
+                .collect();
+            if names.is_empty() {
+                "Skill apps: no skill apps mounted".to_string()
+            } else {
+                format!("Skill apps: {} mounted", names.join(", "))
+            }
+        }
+    };
+    vec![drivers_line, tools_line, apps_line]
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -288,6 +395,70 @@ mod tests {
         assert_eq!(brief_budget("ondemand"), Some(300));
         assert_eq!(brief_budget("daily"), None);
         assert_eq!(BRIEF_REGENERATION_WINDOW_SECONDS, 300);
+    }
+
+    #[test]
+    fn previous_session_digest_lines() {
+        let rec = PreviousSession {
+            last_brief_at: "2026-10-30 08:00 ET".into(),
+            jobs_completed: vec!["A".into(), "B".into()],
+            open_threads: vec!["C".into()],
+        };
+        assert_eq!(
+            previous_session_digest(Some(&rec)).unwrap(),
+            "Previous session: last brief 2026-10-30 08:00 ET, 2 jobs completed (A; B), 1 open thread (C)"
+        );
+        let empty = PreviousSession {
+            last_brief_at: "2026-10-30 08:00 ET".into(),
+            jobs_completed: vec![],
+            open_threads: vec![],
+        };
+        assert_eq!(
+            previous_session_digest(Some(&empty)).unwrap(),
+            "Previous session: last brief 2026-10-30 08:00 ET, 0 jobs completed, 0 open threads"
+        );
+        assert_eq!(previous_session_digest(None), None);
+        let no_time = PreviousSession { last_brief_at: String::new(), jobs_completed: vec![], open_threads: vec![] };
+        assert_eq!(previous_session_digest(Some(&no_time)), None);
+    }
+
+    #[test]
+    fn system_state_lines_report_missing_down_and_empty() {
+        let full = SystemState {
+            drivers: Some(vec!["d1".into(), "d2".into()]),
+            gateway_healthy: Some(true),
+            skill_apps: Some(vec!["app".into()]),
+        };
+        assert_eq!(
+            system_state_lines(&full),
+            vec![
+                "Drivers: d1, d2 available",
+                "Tools: MCP gateway healthy",
+                "Skill apps: app mounted",
+            ]
+        );
+        let missing = SystemState { drivers: None, gateway_healthy: None, skill_apps: None };
+        assert_eq!(
+            system_state_lines(&missing),
+            vec![
+                "Drivers: not reported in this snapshot",
+                "Tools: MCP gateway health not reported in this snapshot",
+                "Skill apps: not reported in this snapshot",
+            ]
+        );
+        let down_empty = SystemState {
+            drivers: Some(vec![]),
+            gateway_healthy: Some(false),
+            skill_apps: Some(vec![]),
+        };
+        assert_eq!(
+            system_state_lines(&down_empty),
+            vec![
+                "Drivers: no drivers reported",
+                "Tools: MCP gateway down, so agents cannot reach their tools through it",
+                "Skill apps: no skill apps mounted",
+            ]
+        );
     }
 
     #[test]
