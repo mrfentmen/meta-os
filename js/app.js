@@ -22,6 +22,7 @@ import { ignisFootageSource } from "./ignis-footage-source.js";
 import { ignisScenarioBreakdown } from "./ignis-scenario-breakdown.js";
 import { ignisReviewBySource } from "./ignis-review-source.js";
 import { ignisReviewByModel } from "./ignis-review-model.js";
+import { ignisReviewAuditTrail } from "./ignis-review-audit-trail.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
@@ -153,6 +154,7 @@ const els = {
   ignisScenarioBreakdown: $("ignis-scenario-breakdown"),
   ignisReviewSource: $("ignis-review-source"),
   ignisReviewModel: $("ignis-review-model"),
+  ignisReviewAuditTrail: $("ignis-review-audit-trail"),
   contactsList: $("contacts-list"),
   contactsEmpty: $("contacts-empty"),
   contactName: $("contact-name"),
@@ -1322,6 +1324,21 @@ function updateLogStats() {
     .map((model) => `${model} ${reviewModel.byModel[model]}`);
   els.ignisReviewModel.textContent =
     [`Awaiting review ${reviewModel.totalFlagged}`, ...reviewModelParts, `Unattributed ${reviewModel.unattributed}`].join(" · ");
+  // IGNIS-ONEOFONE-13: the review audit trail in honest form —
+  // the flagged queue ONEOFONE-3 counts, bucketed by how complete
+  // the provenance trail each entry itself carries is: request
+  // timestamp, reported model, supplied scenario label, stamped
+  // input source. Full means all four usable, no trail means
+  // none, partial means one to three — a gap is never filled in
+  // from elsewhere, so a duty officer can see how many queued
+  // items can actually be traced back. Clear and unknown-flag
+  // entries are not awaiting review and read nowhere here; a
+  // held session stays zeros, and the panel itself is hidden
+  // under Vigiles and Medicus by CSS, so this line only ever
+  // shows under Ignis.
+  const reviewAuditTrail = ignisReviewAuditTrail(log.entries());
+  els.ignisReviewAuditTrail.textContent =
+    `Awaiting review ${reviewAuditTrail.totalFlagged} · Full trail ${reviewAuditTrail.fullTrail} · Partial trail ${reviewAuditTrail.partialTrail} · No trail ${reviewAuditTrail.noTrail}`;
 }
 
 // Native parity: the native timeline's empty state says analysis is
