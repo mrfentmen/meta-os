@@ -32,6 +32,7 @@
 
 import { CAMERA_API_URL, CAMERA_PROXY_URL, FALLBACK_CAMERAS, WALL_FEEDS } from "./camera-fallback.js";
 import {
+  HANDOFF_IDLE_MS,
   MAX_WATCHED,
   WatchList,
   IncidentQueue,
@@ -45,6 +46,7 @@ import {
   nextWatchedId,
   normalizeCamera,
   pulseModeFor,
+  resolveHandoff,
 } from "./command-flag.js";
 import { PRODUCT_BY_ID } from "./products.js";
 import { loopFeedItems, loopStatusText } from "./command-loop.js";
@@ -148,6 +150,8 @@ const state = {
   gridDots: new Map(),
   wallTiles: [], // { img, base, label }
   bridge: null,
+  userInteracting: false, // map input in progress; handoff must not move the view
+  handoffTimer: null, // idle timer clearing userInteracting
 };
 
 function cacheBust(url) {
@@ -185,6 +189,18 @@ function pushActivity(text) {
   if (state.activity.length > 40) state.activity.length = 40;
   state.activityIdx = 0;
   renderActivity();
+}
+
+// Handoff guard: any direct map input marks the operator as busy so
+// a fresh flag can only suggest, never move the view — until input
+// has been quiet for HANDOFF_IDLE_MS.
+function noteUserInteraction() {
+  state.userInteracting = true;
+  if (state.handoffTimer !== null) clearTimeout(state.handoffTimer);
+  state.handoffTimer = setTimeout(() => {
+    state.userInteracting = false;
+    state.handoffTimer = null;
+  }, HANDOFF_IDLE_MS);
 }
 
 // ---------------------------------------------------------------- bridge
@@ -960,7 +976,7 @@ async function assessCamera(id) {
   // Vigiles raised, and the camera stays flagged while ANY
   // division's flag stands (one system, three divisions).
   const prevDivFlagged = prev.flagByProduct?.[product] ?? false;
-  const { flagged } = applyAssessmentToFlag(prevDivFlagged, product, category);
+  const { flagged, changed } = applyAssessmentToFlag(prevDivFlagged, product, category);
   const flagByProduct = { ...(prev.flagByProduct ?? {}), [product]: flagged };
   state.camState.set(id, {
     flagged: Object.values(flagByProduct).some(Boolean),
@@ -986,6 +1002,30 @@ async function assessCamera(id) {
       pushActivity(
         `Flag raised — ${divisionShortName(product)} · ${cam.name} — ${category} (${incident.priority})`,
       );
+    }
+    // Nearest-camera handoff, rising edge only: give the operator a
+    // second angle on the incident for free. An idle operator gets
+    // the view moved; a busy one gets a suggestion on the incident
+    // instead — the view is never yanked mid-interaction.
+    if (changed && incident) {
+      const handoff = resolveHandoff({
+        cameras: state.cameras,
+        flaggedCameraId: id,
+        risingEdge: true,
+        userInteracting: state.userInteracting,
+      });
+      if (handoff.action === "show" && handoff.camera) {
+        selectCamera(handoff.camera.id, { pan: true, openCard: true });
+        pushActivity(
+          `Also showing nearest camera — ${handoff.camera.name} (${Math.round(handoff.distanceMeters)} m away)`,
+        );
+      } else if (handoff.action === "suggest" && handoff.camera) {
+        incident.handoff = {
+          cameraId: handoff.camera.id,
+          distanceMeters: Math.round(handoff.distanceMeters),
+        };
+        renderAlerts();
+      }
     }
   } else if (prevDivFlagged) {
     state.queue.clearForCamera(id, product);
@@ -1098,6 +1138,29 @@ function renderAlerts() {
     const stateTag = incident.cleared ? "CLEARED" : incident.seen ? "SEEN" : "UNSEEN";
     meta.textContent = `${incident.priority.toUpperCase()} · ${fmtTime(incident.timestamp)} · ${stateTag}`;
     body.append(title, divTag, detail, meta);
+    // Handoff suggestion from a rising edge that arrived while the
+    // operator was interacting: a one-tap second angle. The camera
+    // must still exist in the loaded list, otherwise the suggestion
+    // is dropped instead of pointing at a stale id.
+    const handoffCam =
+      incident.handoff && state.byId.get(incident.handoff.cameraId);
+    if (handoffCam) {
+      const also = document.createElement("button");
+      also.type = "button";
+      also.className = "cmd-alert-handoff";
+      also.textContent = `Also view: ${handoffCam.name} (${incident.handoff.distanceMeters} m)`;
+      also.setAttribute(
+        "aria-label",
+        `Also view nearest camera ${handoffCam.name}, ${incident.handoff.distanceMeters} meters away`,
+      );
+      also.addEventListener("click", (event) => {
+        event.stopPropagation();
+        delete incident.handoff;
+        selectCamera(handoffCam.id, { pan: true, openCard: true });
+        renderAlerts();
+      });
+      body.append(also);
+    }
     btn.append(thumb, body);
     btn.addEventListener("click", () => {
       state.queue.markSeen(incident.id);
@@ -1453,6 +1516,9 @@ function setView(view) {
 function init() {
   setView("command");
   initMap();
+  for (const kind of ["pointerdown", "wheel", "touchstart"]) {
+    els.map.addEventListener(kind, noteUserInteraction, { passive: true });
+  }
   void loadCameras();
   renderWall();
   renderAlerts();
