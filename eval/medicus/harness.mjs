@@ -14,7 +14,15 @@
 // scene-alert categories below. "normal activity" and
 // "indeterminate" never fire an alert; they warrant human review where
 // confusable or unclear, which is recorded separately and is not
-// scored as an alert.
+// scored as an alert. NOTE (2026-10-31): the product taxonomy in
+// js/products.js has since grown EMS scene-type categories (person
+// down in roadway, person slumped in vehicle, person in or near
+// water, person trapped or pinned, bystander aid in progress,
+// multi-person incident scene, blood visible at scene). This harness
+// is a FROZEN benchmark: its scenario set and this alert definition
+// predate that growth and are unchanged, so a scene-type answer
+// scores here as a category miss, not as a product error. Extending
+// the benchmark is a separate lane.
 //
 // Metrics: precision, recall, false-positive rate, false-negative rate,
 // category accuracy, and end-to-end latency (wall clock of the assess
