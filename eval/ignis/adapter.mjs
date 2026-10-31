@@ -15,7 +15,15 @@
 //
 // Alert definition (fixed, from the scenario labels): an assessment
 // "fires an alert" when its assessment.category is "visible smoke" or
-// "visible flame". "obscured or distant hazard" never fires an alert
+// "visible flame". NOTE (2026-10-31): the product taxonomy in
+// js/products.js has since grown fire-type and smoke-type categories
+// (electrical / gas / cooking-oil / metal / battery indicators,
+// vehicle fire, structure fire, smoldering, dark smoke, brown
+// smoke). This harness is a FROZEN benchmark: its scenario set and
+// this alert definition predate that growth and are unchanged, so
+// a type-category answer scores here as a category miss, not as a
+// product error. Extending the benchmark is a separate lane.
+// "obscured or distant hazard" never fires an alert
 // on its own: a distant or partially hidden hazard warrants human
 // review, recorded separately, not an automatic alert — the same logic
 // the Medicus set applies to "indeterminate". "steam or fog" and

@@ -20,7 +20,10 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   visible, steam or fog, flame-like lighting, obscured or distant
   hazard, and indeterminate — plus confusable negatives: steam from a
   vent, morning fog, sunset glow on windows, orange neon, vehicle
-  lights in rain.
+  lights in rain. (The product taxonomy in `js/products.js` grew
+  fire-type and smoke-type categories on 2026-10-31; this scenario
+  set is a frozen benchmark and predates them — see the note in
+  `adapter.mjs`.)
 - `adapter.mjs` — `validateIgnisScenarios` / `runIgnisEval` /
   `formatIgnisReport` / `assessViaModelAdapter` / `computeMetrics`
   (re-exported from the Medicus harness). No dependencies, no network
