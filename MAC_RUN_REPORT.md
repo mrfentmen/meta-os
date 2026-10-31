@@ -145,3 +145,90 @@ formerly-blocked items above are now fixed on main.
 - DOT live list in-app (needs same-origin proxy or CORS-enabled API).
 - Real Upstash path (needs TRIO_UPSTASH_HOST; all queue runs here were labeled local fallback).
 - Gate-1 recheck of B12a (Milo) and boss Mac gate-2 for merged batches beyond the workspace-green shown here.
+
+---
+
+# Addendum 2 — round-2 work (OPENCODE_MAC_PROMPT_2.md)
+
+## 1. Vendor check: VERIFIED, no action needed
+
+Fresh checkout at a229f9a: `vendor/maplibre/maplibre-gl.js` is
+803,086 bytes, `vendor/maplibre/maplibre-gl.css` is 65,534 bytes.
+The round-1 59-line stub was a bad checkout, not the repo — nothing
+vendored was touched.
+
+## 2. run-stack.sh: VERIFIED end-to-end
+
+Clean start after the on-main bash-3.2 fix: relay :8787, queue
+:8935 (local SQLite fallback, labeled), resident agent, app :8080
+(`GET /api/health` ok, `GET /api/crew/status` responds,
+`simulated_dispatch:true`).
+
+## 3. Browser verification: PARTIAL (list live, rest limited)
+
+- VERIFIED: camera list loads live through the same-origin
+  `/api/cameras` proxy — page shows "974 CAMERAS ONLINE" (not the
+  offline subset).
+- NOT VERIFIED: 3D map with extrusions (headless Chrome renders the
+  GL canvas as garbage — no GPU to confirm; no fallback message, so
+  maplibre initializes, but pixels prove nothing), camera snapshots
+  on pins/wall, building popup, camera ring + inspector (no click
+  tooling available; no console tool, so no console errors could be
+  read — reported as a limit, not as success).
+
+## 4. Native app: BUILD FIXED and VERIFIED launching; camera blocked
+
+- Fixed 4 defects on branch `native-fix`, merged to main: deployment
+  target macOS 13 → 14 (`foregroundStyle` needs 14);
+  disambiguated `SwiftUI.TimelineView(.animation)` from the
+  project's own `TimelineView` struct; un-privated
+  `LogoColorPanel` (was invisible to ContentView); un-privated
+  `PreviewContainerView` so its `NSViewRepresentable` witnesses
+  match (the compiler's first `fileprivate` suggestion was wrong —
+  witnesses must match the type's own access).
+- `swift build`: clean. `bash Scripts/make-app.sh`: assembles
+  `MetaTrio.app`. App launches and renders the full UI (product
+  switcher, camera panel, LATEST ASSESSMENT, EVENT TIMELINE —
+  screenshot verified). The earlier `xcrun PlatformPath` lines are
+  non-fatal stderr noise; the `LogoColorPanel`/`animation` errors
+  were cascade from the shadowing + privacy defects.
+- BLOCKED beyond launch: starting the camera needs GUI interaction
+  (three genuine attempts — direct click by label failed -1728,
+  accessibility names come back empty, app menus are standard-only)
+  and almost certainly a human TCC camera grant. Boss action: open
+  the app, click Start Camera, grant the camera permission. Live
+  in-app assessment blocked on the same step.
+
+## 5. Flagged path: honest no-flag result within ceiling
+
+- 15 live checks over the NYCTMC list (batch run, no patrol loop):
+  15 baseline, 0 flagged, 0 feed errors, 0 job errors.
+- Each check = one real Spark assessment through queue + agent
+  (plus 2 bounded self-correction retries on medicus
+  `requires_human_review` validation — the new js/schema.js rule
+  firing live, then passing on retry).
+- Spend: ledger 5 calls/$0.005241 → 18 calls/$0.106533 total
+  (+$0.101292 this task, ceiling was $1.00 — stopped for
+  no-flag, not for spend).
+- One full baseline round trip earlier: QBB @ Crescent St →
+  `trio-6acfdfce` → `normal activity`, validated, returned,
+  LOOP FEED + crew-data records written, simulated dispatch only.
+- Therefore: **flagged path not exercised live** — 15 assessments
+  run (+1 baseline round trip), $0.106533 total spend, zero flags.
+  No flag staged, no outcome fabricated.
+- Bonus live proof along the way: queue-invalid → HTTP 502 (no
+  silent fallback), queue-down → 503 + logged fallback, both
+  against the real running stack.
+
+## 6. Still unverified (nothing below is claimed)
+
+- Native camera load + in-app live assessment (needs human: click
+  Start Camera, grant TCC, then run one analysis).
+- 3D map extrusions + snapshot/ring/popup (needs GPU browser +
+  click tooling, or human eyes).
+- DOT live list inside the page beyond the count line (proxy
+  verified, page fetch verified by count; per-camera images not
+  opened — needs watched-camera interaction).
+- Real Upstash path (no key material invented).
+- Gate-1 recheck of B12a (Milo) and any boss gate-2 beyond the
+  green runs stated here.
