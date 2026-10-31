@@ -94,6 +94,11 @@ test("transport: prompt echoes the request product and timestamp and names the p
   assert.match(prompt, /steam or fog/);
   assert.match(prompt, /flame-like lighting/);
   assert.match(prompt, /Not a certified fire-detection system/);
+  // The visible-marks instruction rides in the same prompt: people
+  // get appearance observations, marks get the "Visible marks:"
+  // prefix the crew's evidence extraction collects.
+  assert.match(prompt, /Visible marks:/);
+  assert.match(prompt, /tattoos, scars, birthmarks, or blood/);
 });
 
 test("transport: fenced JSON content is unwrapped, not rejected", async () => {

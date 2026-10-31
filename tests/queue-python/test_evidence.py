@@ -198,7 +198,8 @@ class EventGateTests(unittest.TestCase):
             ["a person in a red jacket", "a person in a red jacket",
              "second description"],
             [{"ref": "evidence/i/flag.jpg", "kind": "flag-frame"},
-             {"ref": "evidence/i/crop.jpg", "kind": "face-crop"}])
+             {"ref": "evidence/i/crop.jpg", "kind": "face-crop"}],
+            visible_marks=["tattoo on the left cheek"])
         self.assertEqual(set(bolo.keys()), set(evidence.BOLO_KEYS))
         for key in bolo.keys():
             for banned in ("name", "identity", "match", "template",
@@ -209,8 +210,85 @@ class EventGateTests(unittest.TestCase):
         self.assertEqual(
             bolo["person_descriptions"],
             ["a person in a red jacket", "second description"])
+        self.assertEqual(bolo["visible_marks"],
+                         ["tattoo on the left cheek"])
         self.assertEqual(bolo["face_crops"], 1)
         self.assertEqual(bolo["frame_files"], ["evidence/i/flag.jpg"])
+
+
+class MarksAssessor:
+    """A scripted assessor whose vigiles readings also carry a
+    "Visible marks:" observation — the shape the real assessment
+    prompt now instructs Spark to return when a person has visible
+    tattoos, scars, or blood."""
+
+    def __init__(self, script, marks):
+        self.inner = ScriptedAssessor(script)
+        self.marks = marks
+
+    def __call__(self, product, frame, timestamp):
+        result = self.inner(product, frame, timestamp)
+        if product == "vigiles" and result.get("status") == "ok":
+            result["assessment"]["observations"].append({
+                "category": "possible altercation",
+                "description": f"Visible marks: {self.marks}",
+                "evidence": "face and upper body, center of frame",
+                "confidence": None,
+            })
+        return result
+
+
+class VisibleMarksTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="trio-evidence-")
+
+    def test_extract_pulls_only_prefixed_descriptions(self):
+        observations = [
+            {"description": "a person in a red jacket"},
+            {"description": "Visible marks: tattoo on the left "
+                            "cheek; blood at the hairline"},
+            {"description": "visible marks: scar on the chin"},
+            {"description": "Visible marks:"},
+            {"description": "Visible marks: tattoo on the left "
+                            "cheek; blood at the hairline"},
+            {"description": None},
+            {"category": "possible altercation"},
+            "not a dict",
+        ]
+        self.assertEqual(
+            evidence.extract_visible_marks(observations),
+            ["tattoo on the left cheek; blood at the hairline",
+             "scar on the chin"])
+
+    def test_extract_caps_at_max_marks(self):
+        observations = [
+            {"description": f"Visible marks: mark {i}"}
+            for i in range(evidence.MAX_MARKS + 3)]
+        self.assertEqual(
+            len(evidence.extract_visible_marks(observations)),
+            evidence.MAX_MARKS)
+
+    def test_confirmed_flag_bolo_carries_the_recorded_marks(self):
+        assessor = MarksAssessor(
+            {"vigiles": ["possible altercation"],
+             "ignis": ["no hazard visible"],
+             "medicus": ["normal activity"]},
+            "tattoo on the left cheek; blood at the hairline")
+        crew_obj, records, dispatched = make_crew(self.tmp, assessor)
+        outcome = crew_obj.check_camera(CAM_A, "vigiles")
+        self.assertEqual(outcome["outcome"], "dispatched-simulated")
+        bolo = dispatched[0]["person_evidence"]
+        # Patrol, review, and the vigiles neighbour readings all
+        # recorded the same marks; the BOLO lists them once.
+        self.assertEqual(
+            bolo["visible_marks"],
+            ["tattoo on the left cheek; blood at the hairline"])
+        record = records.get_incident(outcome["incident_id"])
+        bolo_steps = [s for s in record["timeline"]
+                      if s["step"] == "bolo"]
+        self.assertEqual(
+            bolo_steps[0]["bolo"]["visible_marks"],
+            ["tattoo on the left cheek; blood at the hairline"])
 
 
 class FaceCropTests(unittest.TestCase):

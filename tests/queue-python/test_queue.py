@@ -440,6 +440,9 @@ class DirectTransportStubTests(unittest.TestCase):
         parts = body["messages"][0]["content"]
         self.assertEqual(parts[0]["type"], "text")
         self.assertIn("steam or fog", parts[0]["text"])
+        # The visible-marks instruction (mirrors buildSparkPrompt):
+        # marks are reported as "Visible marks:" observations.
+        self.assertIn("Visible marks:", parts[0]["text"])
         self.assertEqual(parts[1]["type"], "image_url")
         self.assertTrue(parts[1]["image_url"]["url"].startswith(
             "data:image/jpeg;base64,"))

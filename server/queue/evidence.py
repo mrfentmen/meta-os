@@ -16,9 +16,14 @@ review pipeline. What gets captured, per flagged incident:
     anywhere in this module's output, by construction;
   * a BOLO block for the response package: the flagged category,
     the camera, the recorded person descriptions from the crew's
-    own assessments, the evidence file references, and the face
-    crop count. Direction of travel is None: it is not determined
-    from still frames, and this module does not invent it.
+    own assessments, the visible marks those assessments recorded
+    (tattoos, scars, birthmarks, blood — visible appearance only,
+    extracted from the assessments' own "Visible marks:"
+    observations by extract_visible_marks below; the model does
+    the seeing, this module only collects what it said), the
+    evidence file references, and the face crop count. Direction
+    of travel is None: it is not determined from still frames,
+    and this module does not invent it.
 
 Detector honesty: the production detector is OpenCV's Haar
 cascade when (and only when) cv2 is importable in the runtime.
@@ -35,13 +40,21 @@ import io
 MAX_FACES = 4
 MIN_FACE_PX = 48
 
+# Visible marks (Del, 2026-10-31): the assessment prompt instructs
+# the model to report tattoos, scars, birthmarks, and blood visible
+# on a person as an observation whose description begins with this
+# prefix. Extraction is a prefix match over the model's own words —
+# it collects, it never detects or invents.
+MARKS_PREFIX = "Visible marks:"
+MAX_MARKS = 6
+
 # The BOLO's exact key set. A test pins this list: a new key is a
 # deliberate schema change, and an identity-shaped key (a name, an
 # id, a match) must never appear here.
 BOLO_KEYS = ("division", "category", "camera_name", "area",
              "flagged_at", "frame_files", "face_crops",
-             "person_descriptions", "direction_of_travel",
-             "direction_note")
+             "person_descriptions", "visible_marks",
+             "direction_of_travel", "direction_note")
 
 
 def detect_face_boxes(jpeg_bytes, detector=None):
@@ -118,18 +131,49 @@ def crop_jpeg(jpeg_bytes, box, pad_ratio=0.35):
     return out.getvalue()
 
 
-def build_bolo(record, descriptions, evidence_files):
+def extract_visible_marks(observations):
+    """The visible marks the crew's assessments recorded, pulled
+    from their observations: a description beginning with
+    MARKS_PREFIX (the prompt's own labelling convention) contributes
+    the text after the prefix. Deduped, order kept, capped at
+    MAX_MARKS. Anything else — a non-dict observation, a missing or
+    non-string description, a bare prefix with nothing after it —
+    contributes nothing. This function reads the model's recorded
+    words only; it looks at no image and invents no mark."""
+    marks = []
+    for obs in observations or []:
+        if not isinstance(obs, dict):
+            continue
+        text = obs.get("description")
+        if not isinstance(text, str):
+            continue
+        stripped = text.strip()
+        if not stripped.lower().startswith(MARKS_PREFIX.lower()):
+            continue
+        mark = stripped[len(MARKS_PREFIX):].strip()
+        if mark and mark not in marks:
+            marks.append(mark)
+    return marks[:MAX_MARKS]
+
+
+def build_bolo(record, descriptions, evidence_files,
+               visible_marks=None):
     """The person-evidence block carried by the response package
     and filed on the incident record. Built ONLY from what the
     crew itself recorded: the flag's category and camera, the
     observation descriptions its assessments returned (deduped,
-    order kept, capped), and the evidence files it captured. The
+    order kept, capped), the visible marks extracted from those
+    same observations, and the evidence files it captured. The
     key set is exactly BOLO_KEYS — observation and evidence only,
     no identity field exists to fill."""
     seen = []
     for text in descriptions:
         if isinstance(text, str) and text and text not in seen:
             seen.append(text)
+    marks = []
+    for text in visible_marks or []:
+        if isinstance(text, str) and text and text not in marks:
+            marks.append(text)
     files = evidence_files or []
     return {
         "division": record.get("division"),
@@ -143,6 +187,7 @@ def build_bolo(record, descriptions, evidence_files):
         "face_crops": sum(1 for f in files
                           if f.get("kind") == "face-crop"),
         "person_descriptions": seen[:6],
+        "visible_marks": marks[:MAX_MARKS],
         "direction_of_travel": None,
         "direction_note": "Not determined from still frames.",
     }

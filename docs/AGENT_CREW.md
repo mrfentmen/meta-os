@@ -89,9 +89,14 @@ document says so in plain terms.
    detection reports `unavailable` and no crops are produced —
    never a guessed box. At response time the package gains a
    **BOLO** block (`person_evidence`): the flagged category, the
-   camera, the person descriptions from the crew's own recorded
-   assessments, the evidence file references, and the face-crop
-   count. Direction of travel is null — it is not determined from
+   camera, the person descriptions and the visible marks from the
+   crew's own recorded assessments, the evidence file references,
+   and the face-crop count. Visible marks (tattoos, scars,
+   birthmarks, blood on the face or body) are recorded by the
+   assessments themselves — the shared prompt instructs a
+   `Visible marks:` observation — and collected into the block's
+   `visible_marks` list by prefix extraction over the model's own
+   words: visible appearance only, never an identity. Direction of travel is null — it is not determined from
    still frames, and the block says so. An incident the review
    closes as a false positive has its evidence files **deleted**
    (`crew_records.purge_evidence`): the record keeps the flag

@@ -30,7 +30,9 @@ code. The stages the decisions choose between:
             detector finds a face (detection only: locating a face
             in a frame — no matching, no template, no identity),
             and a BOLO block in the response package built from
-            the crew's own recorded descriptions. An incident the
+            the crew's own recorded descriptions, including the
+            visible marks its assessments recorded (tattoos,
+            scars, blood — visible appearance only). An incident the
             review closes as a false positive has its evidence
             files DELETED, the deletion itself recorded
             (crew_records.purge_evidence).
@@ -547,14 +549,16 @@ class Crew:
         # EVIDENCE — the BOLO: person evidence built only from
         # what the crew recorded (its own assessments' descriptions
         # and the files it captured for this incident).
-        descriptions = []
+        observations = []
         for result in results:
             for obs in _observations_of(result):
                 if isinstance(obs, dict):
-                    descriptions.append(obs.get("description"))
+                    observations.append(obs)
+        descriptions = [obs.get("description") for obs in observations]
         bolo = evidence.build_bolo(
             record, descriptions,
-            (record.get("evidence") or {}).get("files"))
+            (record.get("evidence") or {}).get("files"),
+            visible_marks=evidence.extract_visible_marks(observations))
         package = {
             "simulated": True,
             "kind": "imperium-dispatch-package",
