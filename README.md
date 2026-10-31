@@ -39,6 +39,43 @@ Dependency-free static web app: plain HTML/CSS/JS, ES modules, no build
 step, no npm packages. (`package.json` exists only to mark the project as
 ES modules for the node test runner; it declares zero dependencies.)
 
+## Meta AI tooling — Muse Spark 1.3
+
+Every assessment in this system is produced by **Muse Spark 1.3**
+(model id `muse-spark-1.3`), served by the **Meta Model API** at
+`https://api.meta.ai/v1`. There is no other model in the loop: the
+orchestrator and supervisor are deterministic code and make zero
+model calls.
+
+- **Where Spark is called.** The assessment endpoint
+  (`server/server.mjs`) answers each sampled frame through one of
+  two real transports: the job-queue path in `server/queue/`,
+  where a resident agent answers `trio-assessment` jobs —
+  preferred when the queue is enabled — and the direct transport
+  in `server/model.mjs`, the fallback. Per-division prompt
+  profiles (Vigiles / Ignis / Medicus) shape each request, and the
+  agent crew's patrol, review, and investigation stages are
+  further Spark assessments filed through the same queue and
+  guardrail.
+- **Budget guardrail.** Every Spark call passes a hard spend
+  guardrail (a $75 test cap for the event), implemented in the
+  queue agent and mirrored in `server/budget.mjs`. At the cap,
+  further calls are refused, not retried.
+- **Validation.** Model output is never trusted as returned: it
+  must validate against the frozen v2 contract (below) on the
+  server and again in the client, or it is rejected as an error.
+  On the direct transport, one bounded self-correction retry
+  feeds the validation errors back to the model.
+- **Verified live.** On 2026-10-30 the full loop ran against the
+  real API: a live NYC DOT camera snapshot went through the
+  queue, was answered by Muse Spark 1.3 under the guardrail
+  (443 input / 1,103 output tokens, ~6.4 s), and validated as a
+  v2-contract assessment.
+- **Configuration.** The API key is supplied as `SPARK_API_KEY`.
+  Without it the stack starts in a labelled NOT CONFIGURED
+  offline mode and the UI shows its disconnected state — it
+  never fabricates an assessment.
+
 ## What is built
 
 - **Product switcher** (`js/products.js`, wired in `js/app.js`): Vigiles /
