@@ -1,6 +1,6 @@
 //! B10 parity — one test per assigned Python test root (26 files).
 
-use intel::b10_brief::{alerts, baton, brief, dispatch, forecast, notify, push, wake};
+use intel::b10_brief::{alerts, baton, brief, dispatch, forecast, notify, push, sections, wake};
 use intel::b10_brief::baton::BatonSpec;
 use intel::b10_brief::brief::BriefRecord;
 use intel::b10_brief::dispatch::{Plan, PlanJob};
@@ -105,4 +105,270 @@ fn dj(status: &str) -> push::JobView {
 }
 #[test] fn test_intel_brief_system_state_caller_confidence() {
     assert_eq!(forecast::confidence_for(2), "low");
+}
+
+// ---- B10 T190 partial: brief section derivation (INT-025 fixtures) ----
+// Fixture values from test_intel_brief_dashboard_consistency.py: the
+// busy/stall/quiet snapshots. The panel half of that file stays
+// exclusion-blocked (Node driver over the fold-excluded bus.html);
+// these tests pin the record half only.
+
+fn msg(nick: &str, text: &str) -> sections::SnapMessage {
+    sections::SnapMessage { nick: nick.into(), text: text.into() }
+}
+
+fn job(id: &str, title: &str, status: &str, claim: &str, note: &str) -> sections::SnapJob {
+    sections::SnapJob {
+        id: id.into(), title: title.into(), status: status.into(),
+        claim: claim.into(), note: note.into(),
+        last_progress_at: None, claimed_at: None,
+    }
+}
+
+#[test] fn test_intel_brief_sections_busy_fixture_values() {
+    let snap = sections::Snapshot {
+        messages: vec![
+            msg("pax", "DECISION: freeze the wire format today"),
+            msg("milo", "DONE: watchdog loop runs on the stall fixture"),
+            msg("rowan", "BLOCKED: brief panel needs the frozen payload contract"),
+        ],
+        jobs: vec![
+            job("3", "brief panel", "claimed", "pax", "working"),
+            job("5", "dispatch poster", "open", "", ""),
+            job("7", "spark client", "blocked", "", "waiting on the real Spark endpoint, not a fake one"),
+            job("9", "watchdog loop", "done", "", "finished"),
+        ],
+        alerts: vec![],
+    };
+    let s = sections::derive_sections(&snap);
+    assert_eq!(s.decisions, [
+        "decision: freeze the wire format today".to_string(),
+        "done: watchdog loop runs on the stall fixture".to_string(),
+        "blocked: brief panel needs the frozen payload contract".to_string(),
+    ]);
+    assert_eq!(s.in_flight, ["3 brief panel".to_string(), "5 dispatch poster".to_string()]);
+    assert_eq!(s.owners, ["pax: brief panel".to_string()]);
+    assert_eq!(s.blocked, ["7 spark client: waiting on the real Spark endpoint, not a fake one".to_string()]);
+    assert_eq!(s.watch_items, Vec::<String>::new());
+}
+
+#[test] fn test_intel_brief_sections_stall_fixture_values() {
+    let snap = sections::Snapshot {
+        messages: vec![msg("milo", "DECISION: restart the watchdog loop")],
+        jobs: vec![job("11", "watchdog loop", "blocked", "", "no beat in 20 minutes")],
+        alerts: vec![sections::SnapAlert {
+            id: "ALERT-STALL-1".into(),
+            summary: "watchdog loop silent for 20 minutes".into(),
+            explanation: "".into(),
+        }],
+    };
+    let s = sections::derive_sections(&snap);
+    assert_eq!(s.decisions, ["decision: restart the watchdog loop".to_string()]);
+    assert_eq!(s.in_flight, Vec::<String>::new());
+    assert_eq!(s.owners, Vec::<String>::new());
+    assert_eq!(s.blocked, ["11 watchdog loop: no beat in 20 minutes".to_string()]);
+    assert_eq!(s.watch_items, ["ALERT-STALL-1: watchdog loop silent for 20 minutes".to_string()]);
+}
+
+#[test] fn test_intel_brief_sections_quiet_snapshot_is_empty() {
+    let snap = sections::Snapshot {
+        messages: vec![msg("pax", "morning, checking in")],
+        jobs: vec![],
+        alerts: vec![],
+    };
+    let s = sections::derive_sections(&snap);
+    assert!(s.decisions.is_empty());
+    assert!(s.in_flight.is_empty());
+    assert!(s.owners.is_empty());
+    assert!(s.blocked.is_empty());
+    assert!(s.watch_items.is_empty());
+}
+
+#[test] fn test_intel_brief_sections_watch_item_falls_back_to_explanation() {
+    let snap = sections::Snapshot {
+        messages: vec![],
+        jobs: vec![],
+        alerts: vec![sections::SnapAlert {
+            id: "ALERT-X".into(),
+            summary: "".into(),
+            explanation: "first line\nsecond line".into(),
+        }],
+    };
+    let s = sections::derive_sections(&snap);
+    assert_eq!(s.watch_items, ["ALERT-X: first line".to_string()]);
+}
+
+// ---- B10 T190 continued: brief window line + message parts (BRF-013) ----
+// Mirrors os/intel/brief.py `_window_line` / `_message_parts` directly;
+// no Python unit test pins these two helpers, so the cases below pin
+// the Python behavior itself (dict window, string window, start point,
+// unstated; dict message, bus string, plain string).
+
+use intel::b10_brief::window::{message_parts, window_line, RawMessage, SourceWindow, WindowHours, WindowInput};
+
+#[test] fn test_intel_brief_window_line_dict_window() {
+    let input = WindowInput {
+        source_window: Some(SourceWindow::Dict {
+            max_messages: Some(500),
+            max_hours: Some(WindowHours::Float(24.0)),
+            messages_kept: Some(120),
+            messages_dropped: Some(380),
+        }),
+        window_start: None,
+    };
+    assert_eq!(
+        window_line(&input),
+        "Window: last 500 messages or last 24 hours, 120 kept, 380 dropped"
+    );
+}
+
+#[test] fn test_intel_brief_window_line_string_start_unstated() {
+    let stated = WindowInput {
+        source_window: Some(SourceWindow::Text("yesterday".into())),
+        window_start: None,
+    };
+    assert_eq!(window_line(&stated), "Window: yesterday");
+    let truncated = WindowInput {
+        source_window: None,
+        window_start: Some("2026-10-26 08:00".into()),
+    };
+    assert!(window_line(&truncated).contains("Earlier history is not in this window"));
+    assert_eq!(
+        window_line(&WindowInput::default()),
+        "Window: not stated in this snapshot"
+    );
+}
+
+// ---- B10 T190 continued: brief constants, canned failure lines,
+// trim-to-budget (BRF-007/026/028) ----
+// Mirrors os/intel/brief.py BRIEF_SECTIONS / BRIEF_KINDS /
+// BRIEF_BUDGETS / BRIEF_REGENERATION_WINDOW_SECONDS /
+// BRIEF_FAILURE_COPY / _trim_to_budget directly.
+
+#[test] fn test_intel_brief_failure_copy_kinds() {
+    assert_eq!(
+        brief::failure_copy_for_kind("unavailable").unwrap(),
+        "No brief is available right now. Try again in a few minutes."
+    );
+    assert_eq!(
+        brief::failure_copy_for_kind("spark_down").unwrap(),
+        "The brief writer is down, so no fresh brief could be written. Try again later."
+    );
+    assert_eq!(
+        brief::failure_copy_for_kind("no_data").unwrap(),
+        "No brief yet, this room has no activity to brief on."
+    );
+    assert!(brief::failure_copy_for_kind("invented").is_err());
+}
+
+#[test] fn test_intel_brief_constants_and_budgets() {
+    assert_eq!(
+        brief::BRIEF_SECTIONS,
+        ["Decisions", "In flight", "Owners", "Blocked and why", "Watch items"]
+    );
+    assert_eq!(brief::BRIEF_KINDS, ["morning", "onjoin", "ondemand"]);
+    assert_eq!(brief::BRIEF_REGENERATION_WINDOW_SECONDS, 300);
+    assert_eq!(brief::brief_budget("morning"), Some(220));
+    assert_eq!(brief::brief_budget("onjoin"), Some(150));
+    assert_eq!(brief::brief_budget("ondemand"), Some(300));
+    assert_eq!(brief::brief_budget("bogus"), None);
+}
+
+#[test] fn test_intel_brief_trim_to_budget() {
+    let t = "Window: x\n## Watch items\n- one two\n- three four\n- five six";
+    assert_eq!(brief::trim_to_budget(t, 5), "Window: x\n## Watch items");
+    assert_eq!(brief::trim_to_budget("a b c d e f", 3), "a b (trimmed)");
+    assert_eq!(brief::trim_to_budget("one two three", 3), "one two three");
+}
+
+#[test] fn test_intel_brief_message_parts_forms() {
+    assert_eq!(
+        message_parts(&RawMessage::Dict { nick: "pax".into(), text: "hi".into() }),
+        ("pax".to_string(), "hi".to_string())
+    );
+    assert_eq!(
+        message_parts(&RawMessage::Text("milo: DONE: x".into())),
+        ("milo".to_string(), "DONE: x".to_string())
+    );
+    assert_eq!(
+        message_parts(&RawMessage::Text("plain hello".into())),
+        (String::new(), "plain hello".to_string())
+    );
+}
+
+// ---- B10 T190 continued: brief prompt path + load (BRF-007/019) ----
+// Mirrors os/intel/brief.py brief_prompt_path / load_brief_prompt
+// against the carried fixtures in crates/intel/fixtures/b10/prompts
+// (test_intel_brief_prompt_wiring.py + test_intel_brief_prompt_version.py).
+// The generate_brief halves that feed the prompt to a Spark client
+// stay with the B11 client trait; only path/load are ported here.
+
+#[test]
+fn test_intel_brief_prompt_each_kind_loads_its_v1_file() {
+    let dir = "fixtures/b10/prompts";
+    for (kind, heading, file) in [
+        ("morning", "Morning brief prompt", "brief_morning.md"),
+        ("onjoin", "On-join brief prompt", "brief_onjoin.md"),
+        ("ondemand", "On-demand brief prompt", "brief_ondemand.md"),
+    ] {
+        let text = brief::load_brief_prompt(kind, Some(dir), "v1");
+        assert!(text.contains(heading), "{kind} must load its v1 file");
+        let path = brief::brief_prompt_path(kind, Some(dir), "v1").unwrap();
+        assert!(path.ends_with(file), "{kind} path must end in {file}");
+        assert_eq!(path.rsplit('/').next().unwrap(), file);
+    }
+}
+
+#[test]
+fn test_intel_brief_prompt_v1_default_and_v2_files() {
+    // Default dir (None) is the carried fixtures dir, like Python's
+    // default prompts dir next to brief.py.
+    let v1 = brief::load_brief_prompt("morning", None, "v1");
+    assert!(v1.contains("Morning brief prompt"));
+    assert!(v1.contains("v1 (BRF-001)"));
+    let v2 = brief::load_brief_prompt("morning", None, "v2");
+    assert!(v2.contains("Morning brief prompt"));
+    assert!(v2.contains("v2 (BRF-019)"));
+    let onjoin_v2 = brief::load_brief_prompt("onjoin", None, "v2");
+    assert!(onjoin_v2.contains("On-join brief prompt"));
+    assert!(onjoin_v2.contains("v2 (BRF-019)"));
+    assert_eq!(
+        brief::brief_prompt_path("morning", None, "v2")
+            .unwrap()
+            .rsplit('/')
+            .next()
+            .unwrap(),
+        "brief_morning_v2.md"
+    );
+    assert_eq!(
+        brief::brief_prompt_path("onjoin", None, "v2")
+            .unwrap()
+            .rsplit('/')
+            .next()
+            .unwrap(),
+        "brief_onjoin_v2.md"
+    );
+}
+
+#[test]
+fn test_intel_brief_prompt_v2_ondemand_loads_nothing_no_fallback() {
+    // Ondemand has no v2 file: the caller gets "", not a silent
+    // v1 text under a v2 label.
+    assert_eq!(brief::load_brief_prompt("ondemand", None, "v2"), "");
+    assert_eq!(brief::brief_prompt_path("ondemand", None, "v2"), None);
+}
+
+#[test]
+fn test_intel_brief_prompt_unknown_kind_version_and_missing_dir() {
+    assert_eq!(brief::load_brief_prompt("morning", None, "v3"), "");
+    assert_eq!(brief::brief_prompt_path("morning", None, "v3"), None);
+    assert_eq!(brief::load_brief_prompt("nope", None, "v2"), "");
+    assert_eq!(brief::brief_prompt_path("nope", None, "v2"), None);
+    assert_eq!(brief::load_brief_prompt("nope", None, "v1"), "");
+    assert_eq!(brief::brief_prompt_path("nope", None, "v1"), None);
+    // A missing directory loads nothing and never raises.
+    assert_eq!(
+        brief::load_brief_prompt("morning", Some("/nonexistent-prompts-dir"), "v1"),
+        ""
+    );
 }
