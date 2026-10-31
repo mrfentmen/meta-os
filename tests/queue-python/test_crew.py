@@ -286,8 +286,10 @@ class CrewPipelineTests(unittest.TestCase):
         # record is kept, not erased).
         self.assertEqual(incident["status"], "closed-false-positive")
         steps = [s["step"] for s in incident["timeline"]]
+        # The evidence-purged step is the false-positive close's
+        # audit of its evidence deletion (evidence.py, 2026-10-31).
         self.assertEqual(steps, ["flag", "decision", "review",
-                                 "decision"])
+                                 "decision", "evidence-purged"])
         decisions = [s["decision"] for s in incident["timeline"]
                      if s["step"] == "decision"]
         self.assertEqual(decisions, ["investigate", "close_candidate"])
@@ -346,7 +348,7 @@ class CrewPipelineTests(unittest.TestCase):
         # 2 cross-lens + 3 neighbours = 5, under the stated cap of 6.
         self.assertEqual(len(inv), 5)
         self.assertLessEqual(len(inv), crew.MAX_INVESTIGATION_CALLS)
-        self.assertEqual(work[-2:], ["brief", "dispatch"])
+        self.assertEqual(work[-3:], ["brief", "bolo", "dispatch"])
         # Total model calls: patrol + review + investigation.
         self.assertEqual(len(assessor.calls), 2 + 5)
         # Review used a DISTINCT timestamp (a distinct job), or the

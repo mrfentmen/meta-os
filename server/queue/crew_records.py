@@ -20,6 +20,18 @@ Everything the agent crew does lands here, append-only:
                     the simulated dispatch endpoint accepted.
   crew-status.json  the patrol heartbeat snapshot (rewritten each
                     cycle — a status, not a record).
+  evidence/         per-incident evidence files (evidence.py):
+                    the assessed frames and face crops of FLAGGED
+                    incidents only — a baseline check saves nothing.
+                    Files enter through attach_evidence, which also
+                    appends the timeline step listing them. The one
+                    deliberate exception to append-only: when an
+                    incident closes as a false positive,
+                    purge_evidence DELETES its evidence files and
+                    records the deletion — a purge receipt replaces
+                    the file list on the record, and the timeline
+                    gains an evidence-purged step, so the deletion
+                    itself is part of the audit trail.
 
 Data directory: TRIO_CREW_DATA_DIR when set, else `crew-data/`
 beside this module. The app server's read-only status endpoint
@@ -117,6 +129,79 @@ class CrewRecords:
                                        "candidate", "under_review",
                                        "investigating", "monitoring",
                                        "response_prepared")]
+
+    # -- evidence files ----------------------------------------------------
+
+    def _evidence_dir(self, incident_id):
+        return os.path.join(self.dir, "evidence", incident_id)
+
+    def save_evidence_file(self, incident_id, name, data):
+        """Write one evidence file for an incident and return its
+        data-dir-relative reference (the string the incident record
+        and the BOLO carry)."""
+        path_dir = self._evidence_dir(incident_id)
+        os.makedirs(path_dir, exist_ok=True)
+        with open(os.path.join(path_dir, name), "wb") as f:
+            f.write(data)
+        return f"evidence/{incident_id}/{name}"
+
+    def attach_evidence(self, incident_id, entries, at):
+        """Grow an incident's evidence file list (record doctrine:
+        grows only) and append the timeline step that audits the
+        addition. Entries are save_evidence_file references with
+        their kind/sha metadata, built by the caller."""
+        with self._lock:
+            incidents = self._load_incidents()
+            record = incidents.get(incident_id)
+            if record is None:
+                raise KeyError(f"no incident {incident_id}")
+            evidence = record.setdefault("evidence", {})
+            evidence.setdefault("files", []).extend(entries)
+            record["timeline"].append({
+                "at": at, "step": "evidence",
+                "files": [e["ref"] for e in entries]})
+            self._save_incidents(incidents)
+            return record
+
+    def purge_evidence(self, incident_id, reason, at):
+        """Delete an incident's evidence files (the false-positive
+        close) and record the deletion: the record's evidence block
+        keeps the flag frame's hash and gains a purge receipt in
+        place of the file list, and the timeline gains an
+        evidence-purged step. Returns the receipt."""
+        with self._lock:
+            incidents = self._load_incidents()
+            record = incidents.get(incident_id)
+            if record is None:
+                raise KeyError(f"no incident {incident_id}")
+            evidence = record.get("evidence") or {}
+            removed = 0
+            base = os.path.abspath(self.dir)
+            for entry in evidence.get("files") or []:
+                target = os.path.abspath(
+                    os.path.join(self.dir, entry.get("ref", "")))
+                if not target.startswith(base + os.sep):
+                    continue  # never delete outside the data dir
+                if os.path.exists(target):
+                    os.remove(target)
+                    removed += 1
+            try:
+                os.rmdir(self._evidence_dir(incident_id))
+            except OSError:
+                pass  # already gone, or not empty: either is fine
+            receipt = {"at": at, "reason": reason,
+                       "files_removed": removed}
+            record["evidence"] = {
+                "frame_sha256": evidence.get("frame_sha256"),
+                "detector": evidence.get("detector"),
+                "files": [],
+                "purged": receipt,
+            }
+            record["timeline"].append({
+                "at": at, "step": "evidence-purged",
+                "reason": reason, "files_removed": removed})
+            self._save_incidents(incidents)
+            return receipt
 
     # -- event feed ------------------------------------------------------
 

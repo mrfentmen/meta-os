@@ -74,6 +74,30 @@ document says so in plain terms.
    decision-maker, in observation language. Nothing states that an
    incident or offense occurred; nothing directs a dispatch.
 
+6. **EVIDENCE** — `server/queue/evidence.py`, wired through
+   `crew.py`. Event-gated person evidence (Del's design,
+   2026-10-31): the system is passive — a baseline patrol check
+   captures nothing. The moment a category flags, the flagging
+   frame is saved verbatim under `crew-data/evidence/<incident>/`,
+   and every investigation frame joins it (cap:
+   `MAX_EVIDENCE_FILES = 12` per incident). Where a real face
+   detector finds a face in a captured frame, a padded crop of the
+   face region is saved with it — detection only (locating a face
+   in a frame): no matching, no template, no identity field exists
+   anywhere in the output. The production detector is OpenCV's
+   Haar cascade when the runtime has cv2; where it does not,
+   detection reports `unavailable` and no crops are produced —
+   never a guessed box. At response time the package gains a
+   **BOLO** block (`person_evidence`): the flagged category, the
+   camera, the person descriptions from the crew's own recorded
+   assessments, the evidence file references, and the face-crop
+   count. Direction of travel is null — it is not determined from
+   still frames, and the block says so. An incident the review
+   closes as a false positive has its evidence files **deleted**
+   (`crew_records.purge_evidence`): the record keeps the flag
+   frame's hash and gains a purge receipt, and the timeline gains
+   an `evidence-purged` step, so the deletion is itself audited.
+
 ## The orchestrator — the sequence is decided, not scripted
 
 `server/queue/orchestrator.py`. The five stages above are the

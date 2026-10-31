@@ -24,6 +24,16 @@ code. The stages the decisions choose between:
             different prompt, and this file does not claim otherwise.
   RECORDS   a surviving flag becomes an incident record
             (crew_records.py) before anything else happens.
+  EVIDENCE  a flagged incident — and only a flagged incident —
+            captures person evidence (evidence.py): the assessed
+            frames saved verbatim, face crops where a real face
+            detector finds a face (detection only: locating a face
+            in a frame — no matching, no template, no identity),
+            and a BOLO block in the response package built from
+            the crew's own recorded descriptions. An incident the
+            review closes as a false positive has its evidence
+            files DELETED, the deletion itself recorded
+            (crew_records.purge_evidence).
   INVESTIGATE
             a reported incident is investigated with a BOUNDED
             number of extra assessments (MAX_INVESTIGATION_CALLS):
@@ -58,6 +68,7 @@ from datetime import datetime, timedelta, timezone
 
 import crew_common
 import crew_records
+import evidence
 import orchestrator
 import trio_store
 
@@ -67,6 +78,10 @@ import trio_store
 # exactly one and is never exceeded).
 MAX_INVESTIGATION_CALLS = 6
 NEIGHBOUR_SAMPLES = 3
+
+# Evidence bound, stated here once: at most this many evidence
+# files (frames + face crops) are kept per incident.
+MAX_EVIDENCE_FILES = 12
 
 DISPATCH_URL_ENV = "TRIO_CREW_DISPATCH_URL"
 DEFAULT_DISPATCH_URL = "http://127.0.0.1:8935/dispatch-simulated"
@@ -277,7 +292,7 @@ class Crew:
     seam too — tests may inject one bound to the same records."""
 
     def __init__(self, records, assess, fetch_snapshot, dispatch,
-                 cameras=(), orchestrator_engine=None):
+                 cameras=(), orchestrator_engine=None, detector=None):
         self.records = records
         self.assess = assess
         self.fetch_snapshot = fetch_snapshot
@@ -285,6 +300,10 @@ class Crew:
         self.cameras = list(cameras)
         self.orchestrator = orchestrator_engine or \
             orchestrator.Orchestrator(records)
+        # Face detector seam (evidence.py): None means the
+        # production detector — OpenCV Haar when the runtime has
+        # cv2, honestly "unavailable" when it does not.
+        self.detector = detector
 
     @classmethod
     def production(cls, records=None, cameras=()):
@@ -348,6 +367,53 @@ class Crew:
         return self._handle_flag(camera, division, frame, result,
                                  category, timestamp)
 
+    # -- evidence capture ----------------------------------------------------
+
+    def _capture_evidence(self, incident_id, kind, frame, camera_id,
+                          existing_count):
+        """EVIDENCE — save one assessed frame verbatim, plus a
+        padded crop per face a real detector finds in it. Returns
+        (entries, detector_name, error): a failure is returned for
+        the caller to record, never hidden, and never breaks the
+        flag pipeline — the incident stands on its assessments
+        either way. Bounded by MAX_EVIDENCE_FILES per incident."""
+        entries = []
+        if existing_count >= MAX_EVIDENCE_FILES:
+            return entries, None, "evidence file cap reached"
+        try:
+            name = evidence.frame_ref_name(kind, camera_id, frame)
+            ref = self.records.save_evidence_file(
+                incident_id, name, frame)
+            entries.append({
+                "ref": ref, "kind": kind,
+                "sha256": hashlib.sha256(frame).hexdigest(),
+                "bytes": len(frame), "camera_id": camera_id})
+        except Exception as e:
+            return entries, None, f"frame save failed: {str(e)[:160]}"
+        detector_name = None
+        try:
+            boxes, detector_name = evidence.detect_face_boxes(
+                frame, detector=self.detector)
+            for box in boxes:
+                if existing_count + len(entries) >= MAX_EVIDENCE_FILES:
+                    break
+                crop = evidence.crop_jpeg(frame, box)
+                if crop is None:
+                    continue
+                crop_name = evidence.frame_ref_name(
+                    "face-crop", camera_id, crop)
+                ref = self.records.save_evidence_file(
+                    incident_id, crop_name, crop)
+                entries.append({
+                    "ref": ref, "kind": "face-crop",
+                    "sha256": hashlib.sha256(crop).hexdigest(),
+                    "bytes": len(crop), "camera_id": camera_id,
+                    "box": box})
+        except Exception as e:
+            return entries, detector_name, \
+                f"face detection failed: {str(e)[:160]}"
+        return entries, detector_name, None
+
     # -- the flag pipeline -------------------------------------------------
 
     def _handle_flag(self, camera, division, frame, first_result,
@@ -356,10 +422,18 @@ class Crew:
         incident_id = "incident-" + hashlib.sha256(
             first_result["job_id"].encode()).hexdigest()[:16]
         evidence_hash = hashlib.sha256(frame).hexdigest()
+        # EVIDENCE — the flag is the gate: this capture runs only
+        # because a category flagged. The flagging frame is filed
+        # before the record is created, and the record carries the
+        # resulting file list from birth.
+        entries, detector_name, capture_error = self._capture_evidence(
+            incident_id, "flag-frame", frame, camera["id"], 0)
         record = {
             "id": incident_id,
             "status": "candidate",
-            "evidence": {"frame_sha256": evidence_hash},
+            "evidence": {"frame_sha256": evidence_hash,
+                         "detector": detector_name,
+                         "files": entries},
             "created_at": crew_common.now_iso(),
             "camera": {"id": camera["id"], "name": camera["name"],
                        "area": camera.get("area"),
@@ -381,6 +455,10 @@ class Crew:
             "summary": _summary_of(first_result),
             "frame_sha256": evidence_hash,
         })
+        if capture_error:
+            self.records.append_timeline(incident_id, {
+                "at": crew_common.now_iso(), "step": "evidence-error",
+                "error": capture_error})
         self.records.append_event({
             "at": crew_common.now_iso(),
             "at_epoch": time.time(), "type": "flag",
@@ -406,6 +484,12 @@ class Crew:
                 record, evidence_hash=evidence_hash)
             name = decision["decision"]
             if name == "close_candidate":
+                # A false positive keeps no person evidence: the
+                # files are deleted and the deletion is recorded
+                # on the incident (purge receipt + timeline step).
+                self.records.purge_evidence(
+                    incident_id, "closed-false-positive",
+                    crew_common.now_iso())
                 return {"outcome": "cleared-by-review",
                         "incident_id": incident_id,
                         "category": category}
@@ -460,6 +544,17 @@ class Crew:
         # prepare_response decision brought us here).
         record = self.records.get_incident(incident_id)
         brief = build_brief(record, results)
+        # EVIDENCE — the BOLO: person evidence built only from
+        # what the crew recorded (its own assessments' descriptions
+        # and the files it captured for this incident).
+        descriptions = []
+        for result in results:
+            for obs in _observations_of(result):
+                if isinstance(obs, dict):
+                    descriptions.append(obs.get("description"))
+        bolo = evidence.build_bolo(
+            record, descriptions,
+            (record.get("evidence") or {}).get("files"))
         package = {
             "simulated": True,
             "kind": "imperium-dispatch-package",
@@ -469,12 +564,16 @@ class Crew:
                            "route) — no real emergency service is "
                            "contacted by this system",
             "brief": brief,
+            "person_evidence": bolo,
             "recommended_actions": recommended_actions(camera, category),
             "requires_human_review": True,
         }
         self.records.append_timeline(incident_id, {
             "at": crew_common.now_iso(), "step": "brief",
             "brief": brief})
+        self.records.append_timeline(incident_id, {
+            "at": crew_common.now_iso(), "step": "bolo",
+            "bolo": bolo})
         try:
             receipt = self.dispatch(package)
             dispatch_step = {
@@ -577,6 +676,7 @@ class Crew:
             entry = {"kind": kind, "camera_id": cam["id"],
                      "camera_name": cam["name"], "division": lens,
                      "at": crew_common.now_iso()}
+            frame = None
             try:
                 frame = self.fetch_snapshot(cam)
                 entry["frame_sha256"] = hashlib.sha256(frame).hexdigest()
@@ -610,6 +710,24 @@ class Crew:
                 "error": entry.get("error"),
                 "status": "investigating" if calls == 1 else None,
             })
+            if frame is not None:
+                # EVIDENCE — investigation frames are evidence too:
+                # filed under the same incident, same cap, with
+                # any failure recorded, never fatal to the step.
+                current = self.records.get_incident(record["id"])
+                count = len(((current.get("evidence") or {})
+                             .get("files")) or [])
+                new_entries, _detector, cap_error = \
+                    self._capture_evidence(
+                        record["id"], "investigation-frame", frame,
+                        cam["id"], count)
+                if new_entries:
+                    self.records.attach_evidence(
+                        record["id"], new_entries, entry["at"])
+                if cap_error:
+                    self.records.append_timeline(record["id"], {
+                        "at": crew_common.now_iso(),
+                        "step": "evidence-error", "error": cap_error})
             return entry
 
         if lenses is not None:
