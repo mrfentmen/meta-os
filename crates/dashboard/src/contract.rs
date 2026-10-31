@@ -12,6 +12,9 @@
 //! - §5 dispatch payloads (DSP-037 preview) + request-only approve
 //!   (DSH-038) + never-auto-post (DSP-040)
 //! - §6 alerts feed order (DSH-013, newest-first, id-stable)
+//! - DSH-014 alert lifecycle rules (WDG-014: open -> acknowledged
+//!   -> resolved, idempotent re-ack/re-resolve, refused ack on
+//!   resolved, unresolved-critical header count, write gate off)
 //! - §8 deep links (DSH-022), demo mode (DSH-028, exact `demo=1`),
 //!   today counters (DSH-032)
 //! - §9 error/empty states (DSH-021, per-source, independent panels)
@@ -28,6 +31,10 @@ pub const BRIEF_STALE_SECONDS: i64 = 7200;
 /// Visual-check verdicts (STR-004 ground truth).
 pub const VERDICTS: &[&str] = &["build ok", "build broken", "unclear"];
 
+/// BRF-042 brief payload record: `id` is `brief:<room>:<ts>`, `kind`
+/// is one of [`BRIEF_KINDS`], `generated_at` is the brief timestamp,
+/// `age_seconds` is its age at render, and `template` marks a
+/// template brief (never shown as if Spark wrote it).
 #[derive(Debug, Clone, PartialEq)]
 pub struct BriefPayload {
     pub id: String,
@@ -58,10 +65,13 @@ pub fn template_marker(template: bool) -> Option<&'static str> {
     template.then_some("TEMPLATE")
 }
 
+/// BRF-043 staleness: stale at age >= [`BRIEF_STALE_SECONDS`] (2h).
 pub fn is_stale(age_seconds: i64) -> bool {
     age_seconds >= BRIEF_STALE_SECONDS
 }
 
+/// BRF-043 stale label: `None` while fresh, otherwise
+/// `"<age> old — regenerate for current state"`.
 pub fn stale_label(age_seconds: i64) -> Option<String> {
     if !is_stale(age_seconds) {
         return None;
@@ -125,6 +135,29 @@ pub fn default_open(section: &str) -> bool {
     section == "blocked"
 }
 
+/// DSH-031 / INT-025: the five Brief sections in render order.
+/// The keys are the record's section keys; the display titles are
+/// what the panel renders in each `<summary>` (pinned by
+/// test_dashboard_brief_sections.py and
+/// test_intel_brief_dashboard_consistency.py).
+pub const BRIEF_SECTION_ORDER: &[&str] =
+    &["decisions", "in_flight", "owners", "blocked", "watch_items"];
+
+/// DSH-031 / INT-025 display title for a Brief section key, in
+/// [`BRIEF_SECTION_ORDER`]; `None` for an unknown section key.
+pub fn brief_section_title(section: &str) -> Option<&'static str> {
+    match section {
+        "decisions" => Some("Decisions"),
+        "in_flight" => Some("In flight"),
+        "owners" => Some("Owners"),
+        "blocked" => Some("Blocked and why"),
+        "watch_items" => Some("Watch items"),
+        _ => None,
+    }
+}
+
+/// DSH-013 alerts-feed card: id, creation timestamp, and whether
+/// the alert is resolved (resolved cards collapse to the count).
 #[derive(Debug, Clone, PartialEq)]
 pub struct AlertCard {
     pub id: String,
@@ -150,6 +183,9 @@ pub enum DeepLink {
     Alert(String),
 }
 
+/// DSH-022 deep-link parse: `#intel/brief/<id>` and
+/// `#intel/alert/<id>` resolve; anything else, and an empty id,
+/// parses to nothing.
 pub fn parse_deep_link(hash: &str) -> Option<DeepLink> {
     let h = hash.strip_prefix('#')?;
     let rest = h.strip_prefix("intel/")?;
@@ -182,6 +218,8 @@ pub fn demo_mode_on(query: &str) -> bool {
     })
 }
 
+/// DSH-032 today counters record: jobs done, briefs, alerts fired,
+/// and alerts resolved, as rendered in the "today" line.
 #[derive(Debug, Clone, PartialEq)]
 pub struct TodayCounts {
     pub jobs_done: usize,
@@ -208,6 +246,85 @@ pub fn today_counts(
     }
 }
 
+/// DSH-032 record-level counting. The viewer used its local date; the
+/// Python fixtures are zone-agnostic by construction (-1h/-2h same day,
+/// -25h previous day in either zone), so the port uses the UTC calendar
+/// day (timestamp / 86400). A record missing the relevant timestamp is
+/// never counted.
+pub fn same_day(a: i64, b: i64) -> bool {
+    a.div_euclid(86400) == b.div_euclid(86400)
+}
+
+/// DSH-032 job record for record-level counting: only status
+/// `"done"` with a same-day `done_at` counts as done today.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TodayJob {
+    pub status: String,
+    pub done_at: Option<i64>,
+}
+
+/// DSH-032 alert record for record-level counting: a same-day
+/// `created_at` counts as fired, a same-day `resolved_at` as
+/// resolved, independently of each other.
+#[derive(Debug, Clone, PartialEq)]
+pub struct TodayAlert {
+    pub created_at: Option<i64>,
+    pub resolved_at: Option<i64>,
+}
+
+/// DSH-032: count from the records the panels already read. Jobs need
+/// status "done" + a same-day `done_at`; briefs count distinct same-day
+/// timestamps across the history window plus the current brief (a brief
+/// that is also the newest history entry counts once); alerts count a
+/// same-day `created_at` as fired and a same-day `resolved_at` as
+/// resolved, independently of each other.
+pub fn count_today_records(
+    jobs: &[TodayJob],
+    history_ts: &[i64],
+    current_brief_ts: Option<i64>,
+    alerts: &[TodayAlert],
+    now: i64,
+) -> TodayCounts {
+    let jobs_done = jobs
+        .iter()
+        .filter(|j| j.status == "done" && j.done_at.map_or(false, |t| same_day(t, now)))
+        .count();
+    let mut brief_day: Vec<i64> = history_ts
+        .iter()
+        .copied()
+        .filter(|t| same_day(*t, now))
+        .collect();
+    if let Some(t) = current_brief_ts {
+        if same_day(t, now) {
+            brief_day.push(t);
+        }
+    }
+    brief_day.sort();
+    brief_day.dedup();
+    let alerts_fired = alerts
+        .iter()
+        .filter(|a| a.created_at.map_or(false, |t| same_day(t, now)))
+        .count();
+    let alerts_resolved = alerts
+        .iter()
+        .filter(|a| a.resolved_at.map_or(false, |t| same_day(t, now)))
+        .count();
+    TodayCounts {
+        jobs_done,
+        briefs: brief_day.len(),
+        alerts_fired,
+        alerts_resolved,
+    }
+}
+
+/// DSH-032 header-strip line, exact wording from the fixture.
+pub fn today_line(c: &TodayCounts) -> String {
+    format!(
+        "today · jobs done {} · briefs {} · alerts fired {} / resolved {}",
+        c.jobs_done, c.briefs, c.alerts_fired, c.alerts_resolved
+    )
+}
+
 /// DSH-021 error rows. A rejected token (401/403) renders the token row;
 /// any other read failure renders unreachable; empty reads are empty
 /// states, never errors; panels degrade independently.
@@ -217,6 +334,8 @@ pub enum SourceError {
     Unreachable,
 }
 
+/// DSH-021 error-row text for a panel: a rejected token names the
+/// token row; any other read failure names the paused bus store.
 pub fn error_row(panel: &str, err: &SourceError) -> String {
     match err {
         SourceError::TokenRejected => {
@@ -251,6 +370,10 @@ pub const ROLLBACK_STEPS: &[&str] = &[
     "muse-relay-live",
 ];
 
+/// INT-031 rollback-runbook check: the runbook must name every
+/// [`ROLLBACK_STEPS`] step, plus the valid-target rule, the
+/// preview-invalid rule, the official docs citation, and an explicit
+/// previous production deployment id.
 pub fn rollback_runbook_ok(runbook: &str) -> Result<(), String> {
     for step in ROLLBACK_STEPS {
         if !runbook.contains(step) {
@@ -378,6 +501,10 @@ pub struct AttemptsBadge {
     pub class: String,
 }
 
+/// DSH-024 attempts badge: parses `attempts`/`max_attempts` as
+/// integers (absent, blank, or non-numeric -> no badge) and picks
+/// the pill class — neutral below max-1, warn at max-1, danger at
+/// max and over.
 pub fn attempts_badge(
     attempts: Option<&str>,
     max_attempts: Option<&str>,
@@ -513,6 +640,144 @@ pub fn is_nonce_hex(s: &str) -> bool {
             .all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
 }
 
+/// DSH-014 alert lifecycle (WDG-014, mirrored from
+/// `os/intel/store.py`): open -> acknowledged -> resolved. The
+/// card HTML rendering and the Node driver halves of
+/// `test_dashboard_alert_lifecycle.py` read the fold-excluded
+/// viewer and stay exclusion-blocked; what is ported here is the
+/// transition rule the driver pins, checked against the same
+/// fixture values (alert:1 open critical, alert:2 acknowledged
+/// warning, alert:3 resolved info).
+
+/// One alert record, lifecycle fields only.
+#[derive(Debug, Clone, PartialEq)]
+pub struct LifecycleAlert {
+    pub id: String,
+    pub severity: String,
+    pub status: Option<String>,
+    pub acknowledged_at: Option<i64>,
+    pub acknowledged_by: Option<String>,
+    pub resolved_at: Option<i64>,
+}
+
+/// WDG-014 status, legacy-safe: an explicit status wins when it is
+/// one of open/acknowledged/resolved; a pre-WDG-014 record derives
+/// it from timestamps (resolved_at -> resolved, acknowledged_at ->
+/// acknowledged, otherwise open).
+pub fn alert_lifecycle_status(a: &LifecycleAlert) -> &'static str {
+    if let Some(s) = a.status.as_deref() {
+        if matches!(s, "open" | "acknowledged" | "resolved") {
+            return match s {
+                "open" => "open",
+                "acknowledged" => "acknowledged",
+                _ => "resolved",
+            };
+        }
+    }
+    if a.resolved_at.is_some() {
+        "resolved"
+    } else if a.acknowledged_at.is_some() {
+        "acknowledged"
+    } else {
+        "open"
+    }
+}
+
+/// Outcome of an ack/resolve attempt, in the driver-visible words
+/// of `test_dashboard_alert_lifecycle.py`.
+#[derive(Debug, Clone, PartialEq)]
+pub enum LifecycleResult {
+    Acknowledged(LifecycleAlert),
+    AlreadyAcknowledged,
+    RefusedResolved,
+    Resolved(LifecycleAlert),
+    AlreadyResolved,
+    NotFound,
+}
+
+fn find_alert_mut<'a>(
+    alerts: &'a mut [LifecycleAlert],
+    id: &str,
+) -> Option<&'a mut LifecycleAlert> {
+    alerts.iter_mut().find(|a| a.id == id)
+}
+
+/// WDG-014 ack: open -> acknowledged, stamping now and by. Re-ack
+/// is idempotent (stamp untouched); acking a resolved alert is
+/// refused; a missing id is not found. Mirrors
+/// `os/intel/store.py::acknowledge_alert` (None -> NotFound,
+/// ValueError on resolved -> RefusedResolved).
+pub fn acknowledge_alert(
+    alerts: &mut [LifecycleAlert],
+    id: &str,
+    now: i64,
+    by: &str,
+) -> LifecycleResult {
+    let Some(a) = find_alert_mut(alerts, id) else {
+        return LifecycleResult::NotFound;
+    };
+    match alert_lifecycle_status(a) {
+        "resolved" => LifecycleResult::RefusedResolved,
+        "acknowledged" => LifecycleResult::AlreadyAcknowledged,
+        _ => {
+            a.status = Some("acknowledged".to_string());
+            a.acknowledged_at = Some(now);
+            a.acknowledged_by = Some(by.to_string());
+            LifecycleResult::Acknowledged(a.clone())
+        }
+    }
+}
+
+/// WDG-014 resolve: open/acknowledged -> resolved, stamping now
+/// and keeping any acknowledged_at/by, so the record shows the
+/// full walk. Re-resolve is idempotent; a missing id is not
+/// found. Mirrors `os/intel/store.py::resolve_alert`.
+pub fn resolve_alert(
+    alerts: &mut [LifecycleAlert],
+    id: &str,
+    now: i64,
+) -> LifecycleResult {
+    let Some(a) = find_alert_mut(alerts, id) else {
+        return LifecycleResult::NotFound;
+    };
+    if alert_lifecycle_status(a) == "resolved" {
+        return LifecycleResult::AlreadyResolved;
+    }
+    a.status = Some("resolved".to_string());
+    a.resolved_at = Some(now);
+    LifecycleResult::Resolved(a.clone())
+}
+
+/// Header critical count (DSH-014): only unresolved criticals
+/// count — a resolved critical leaves the count.
+pub fn unresolved_critical_count(alerts: &[LifecycleAlert]) -> usize {
+    alerts
+        .iter()
+        .filter(|a| {
+            a.severity.to_ascii_lowercase() == "critical"
+                && alert_lifecycle_status(a) != "resolved"
+        })
+        .count()
+}
+
+/// DSH-014 resolved-collapse count: the number behind the
+/// panel's "N resolved" line. The collapse rendering itself is
+/// HTML over the fold-excluded viewer and stays
+/// exclusion-blocked; only the count rule is ported here.
+pub fn resolved_count(alerts: &[LifecycleAlert]) -> usize {
+    alerts
+        .iter()
+        .filter(|a| alert_lifecycle_status(a) == "resolved")
+        .count()
+}
+
+/// DSH-014 / spec §0: the live viewer write is gated off until
+/// Dale's viewer posting decision lands — the buttons ship
+/// disabled with this note, and no live write path exists.
+pub fn alert_write_enabled() -> (bool, &'static str) {
+    (false, "posting is off for this build")
+}
+
 /// Keyless rename log entry (signing test): v=1, cmd=rename, args,
 /// actor — and no `sig` key, since renames are keyless now.
 #[derive(Debug, Clone, PartialEq)]
@@ -523,6 +788,9 @@ pub struct RenameLogEntry {
 }
 
 impl RenameLogEntry {
+    /// Keyless rename log JSON: `{"v":1,"cmd":"rename","args":{"nick":…,
+    /// "display":…},"actor":…}` with [`py_str_json`] string encoding
+    /// and no `sig` key.
     pub fn to_json(&self) -> String {
         format!(
             "{{\"v\":1,\"cmd\":\"rename\",\"args\":{{\"nick\":{},\"display\":{}}},\"actor\":{}}}",
@@ -542,6 +810,8 @@ pub struct NamesHashEntry {
 }
 
 impl NamesHashEntry {
+    /// Name-registry JSON: `{"display":…,"set_by":…,"set_at":…}` with
+    /// [`py_str_json`] string encoding.
     pub fn to_json(&self) -> String {
         format!(
             "{{\"display\":{},\"set_by\":{},\"set_at\":{}}}",
@@ -562,6 +832,8 @@ pub struct NamesHistoryEntry {
 }
 
 impl NamesHistoryEntry {
+    /// Name-history JSON: `{"nick":…,"display":…,"set_by":…,"set_at":…}`
+    /// with [`py_str_json`] string encoding.
     pub fn to_json(&self) -> String {
         format!(
             "{{\"nick\":{},\"display\":{},\"set_by\":{},\"set_at\":{}}}",
@@ -633,5 +905,50 @@ mod tests {
     fn today_briefs_dedupe() {
         let c = today_counts(2, &[1, 1, 2], 3, 1);
         assert_eq!((c.jobs_done, c.briefs), (2, 2));
+    }
+
+    #[test]
+    fn today_records_match_fixture() {
+        // os/tests/test_dashboard_today_counters.py fixture values:
+        // NOW 1793102100 (2026-10-27 07:55 EDT / 11:55 UTC).
+        let now = 1793102100;
+        let today = now - 3600;
+        let today_brief = now - 7200;
+        let yesterday = now - 90000;
+        let jobs = vec![
+            TodayJob { status: "done".into(), done_at: Some(today) },
+            TodayJob { status: "done".into(), done_at: Some(yesterday) },
+            TodayJob { status: "done".into(), done_at: None },
+            TodayJob { status: "open".into(), done_at: None },
+        ];
+        let alerts = vec![
+            TodayAlert { created_at: Some(today), resolved_at: Some(today) },
+            TodayAlert { created_at: Some(today), resolved_at: None },
+            TodayAlert { created_at: Some(yesterday), resolved_at: Some(today) },
+            TodayAlert { created_at: Some(yesterday), resolved_at: None },
+            TodayAlert { created_at: None, resolved_at: Some(today) },
+        ];
+        // Step 1: current brief is also the newest history entry: counts once.
+        let c = count_today_records(
+            &jobs,
+            &[yesterday, today_brief],
+            Some(today_brief),
+            &alerts,
+            now,
+        );
+        assert_eq!(
+            (c.jobs_done, c.briefs, c.alerts_fired, c.alerts_resolved),
+            (1, 1, 2, 3)
+        );
+        assert_eq!(
+            today_line(&c),
+            "today · jobs done 1 · briefs 1 · alerts fired 2 / resolved 3"
+        );
+        // Step 2: a current brief with no history entry still counts once.
+        let c2 = count_today_records(&jobs, &[], Some(today), &alerts, now);
+        assert_eq!(c2.briefs, 1);
+        // Step 3: a yesterday brief counts zero.
+        let c3 = count_today_records(&jobs, &[], Some(yesterday), &alerts, now);
+        assert_eq!(c3.briefs, 0);
     }
 }

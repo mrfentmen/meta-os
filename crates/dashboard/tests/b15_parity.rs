@@ -12,13 +12,23 @@
 //! fold-excluded crew-board.html), the OS-084 JSON-string-field
 //! parse, the live attach() cross-check, and the signing
 //! `admin.py` verify cross-check stay exclusion-blocked.
-//! test_dashboard_alert_lifecycle,
 //! test_dashboard_bus_index_identity,
 //! test_dashboard_palette, test_dashboard_screenshots,
 //! test_intel_brief_dashboard_consistency.
+//! Split (DSH-014, tests/b15_parity.rs below):
+//! test_dashboard_alert_lifecycle — the WDG-014 transition rules
+//! (status derivation, ack/resolve outcomes, unresolved-critical
+//! count, resolved-collapse count, write gate) are ported against
+//! the file's fixture values; the Node-driver halves, the bus/index
+//! identical check, and the HTML rendering halves (resolved
+//! collapse rendering, disabled-button HTML, source-text checks
+//! over bus.html) stay exclusion-blocked: they read the
+//! fold-excluded viewer.
 //! Split — spec-note halves ported in tests/b15_spec_notes.rs, the
 //! viewer/Node halves below stay exclusion-blocked:
-//! test_dashboard_brief_sections (viewer half),
+//! test_dashboard_brief_sections — rule half ported in this file
+//! (DSH-031 default-open map, titles, order); the toggle/HTML
+//! halves stay blocked,
 //! test_dashboard_cross_browser — FULLY ported (all 3 cases are
 //! log cases, carried as fixtures/DSH-035-CROSS-BROWSER-CHECK.md),
 //! test_dashboard_deep_links, test_dashboard_demo_mode,
@@ -28,7 +38,9 @@
 //! test_dashboard_help, test_dashboard_intel_focus,
 //! test_dashboard_os043, test_dashboard_os084,
 //! test_dashboard_performance, test_dashboard_readonly_token,
-//! test_dashboard_str005, test_dashboard_today_counters.
+//! test_dashboard_str005, test_dashboard_today_counters (counting-rule
+//! half ported below against the file's fixture values; the Node-driver
+//! half and the bus/index identical check stay blocked).
 //! Split (T238): test_dashboard_accessibility — 2 cases ported below
 //! against the carried spec fixture + the DSH-018 palette values
 //! (contrast math, spec contrast notes); the other 4 cases
@@ -46,6 +58,32 @@
 //! (runbook carried byte-identical under fixtures/).
 
 use dashboard::contract::*;
+
+#[test] fn test_dashboard_today_counters_record_rules() {
+    // os/tests/test_dashboard_today_counters.py fixture values.
+    let now = 1793102100;
+    let today = now - 3600;
+    let today_brief = now - 7200;
+    let yesterday = now - 90000;
+    let jobs = vec![
+        TodayJob { status: "done".into(), done_at: Some(today) },
+        TodayJob { status: "done".into(), done_at: Some(yesterday) },
+        TodayJob { status: "done".into(), done_at: None },
+        TodayJob { status: "open".into(), done_at: None },
+    ];
+    let alerts = vec![
+        TodayAlert { created_at: Some(today), resolved_at: Some(today) },
+        TodayAlert { created_at: Some(today), resolved_at: None },
+        TodayAlert { created_at: Some(yesterday), resolved_at: Some(today) },
+        TodayAlert { created_at: Some(yesterday), resolved_at: None },
+        TodayAlert { created_at: None, resolved_at: Some(today) },
+    ];
+    let c = count_today_records(&jobs, &[yesterday, today_brief], Some(today_brief), &alerts, now);
+    assert_eq!((c.jobs_done, c.briefs, c.alerts_fired, c.alerts_resolved), (1, 1, 2, 3));
+    assert_eq!(today_line(&c), "today · jobs done 1 · briefs 1 · alerts fired 2 / resolved 3");
+    assert_eq!(count_today_records(&jobs, &[], Some(today), &alerts, now).briefs, 1);
+    assert_eq!(count_today_records(&jobs, &[], Some(yesterday), &alerts, now).briefs, 0);
+}
 
 #[test] fn test_dashboard_rollback_int031_exact_steps() {
     let runbook = "Deployments / All deployments / Rollback to this deployment \
@@ -222,6 +260,159 @@ fn smoke_check_sections() -> Vec<String> {
 // The other 4 cases read fold-excluded bus.html and stay
 // exclusion-blocked (see the file header).
 
+// DSH-014 partial — test_dashboard_alert_lifecycle.py, rule half.
+// Fixture values from the file's Node driver: alert:1 open
+// critical, alert:2 acknowledged warning (acked by pax),
+// alert:3 resolved info. The driver/HTML halves stay blocked
+// (see the file header).
+
+fn lifecycle_fixtures() -> Vec<LifecycleAlert> {
+    vec![
+        LifecycleAlert {
+            id: "alert:1".into(),
+            severity: "critical".into(),
+            status: None,
+            acknowledged_at: None,
+            acknowledged_by: None,
+            resolved_at: None,
+        },
+        LifecycleAlert {
+            id: "alert:2".into(),
+            severity: "warning".into(),
+            status: Some("acknowledged".into()),
+            acknowledged_at: Some(1699999500),
+            acknowledged_by: Some("pax".into()),
+            resolved_at: None,
+        },
+        LifecycleAlert {
+            id: "alert:3".into(),
+            severity: "info".into(),
+            status: None,
+            acknowledged_at: None,
+            acknowledged_by: None,
+            resolved_at: Some(1699998500),
+        },
+    ]
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_feed_rows_carry_wdg014_status() {
+    let alerts = lifecycle_fixtures();
+    let rows: Vec<&str> =
+        alerts.iter().map(alert_lifecycle_status).collect();
+    assert_eq!(rows, vec!["open", "acknowledged", "resolved"]);
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_ack_persists_and_idempotent() {
+    let mut alerts = lifecycle_fixtures();
+    let ack = acknowledge_alert(&mut alerts, "alert:1", 1700003700, "rowan");
+    let row = match ack {
+        LifecycleResult::Acknowledged(row) => row,
+        other => panic!("ack must apply, got {other:?}"),
+    };
+    assert_eq!(row.status.as_deref(), Some("acknowledged"));
+    assert_eq!(row.acknowledged_at, Some(1700003700));
+    assert_eq!(row.acknowledged_by.as_deref(), Some("rowan"));
+    // Re-ack is idempotent, not re-stamped.
+    assert_eq!(
+        acknowledge_alert(&mut alerts, "alert:1", 1700003701, "rowan"),
+        LifecycleResult::AlreadyAcknowledged
+    );
+    assert_eq!(alerts[0].acknowledged_at, Some(1700003700));
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_resolved_refuses_ack() {
+    let mut alerts = lifecycle_fixtures();
+    assert_eq!(
+        acknowledge_alert(&mut alerts, "alert:3", 1700003700, "rowan"),
+        LifecycleResult::RefusedResolved
+    );
+    assert_eq!(
+        resolve_alert(&mut alerts, "alert:3", 1700003700),
+        LifecycleResult::AlreadyResolved
+    );
+    assert_eq!(
+        resolve_alert(&mut alerts, "nope", 1700003700),
+        LifecycleResult::NotFound
+    );
+    assert_eq!(
+        acknowledge_alert(&mut alerts, "nope", 1700003700, "rowan"),
+        LifecycleResult::NotFound
+    );
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_resolve_unblocks_header() {
+    let mut alerts = lifecycle_fixtures();
+    assert_eq!(unresolved_critical_count(&alerts), 1);
+    assert_eq!(
+        resolve_alert(&mut alerts, "alert:1", 1700003800),
+        LifecycleResult::Resolved(LifecycleAlert {
+            id: "alert:1".into(),
+            severity: "critical".into(),
+            status: Some("resolved".into()),
+            acknowledged_at: None,
+            acknowledged_by: None,
+            resolved_at: Some(1700003800),
+        })
+    );
+    // The resolved critical leaves the header count; the
+    // acknowledged warning was never in it.
+    assert_eq!(unresolved_critical_count(&alerts), 0);
+    // The resolved record keeps no ack stamp (it was never acked).
+    assert_eq!(alerts[0].acknowledged_at, None);
+    // End-state rows mirror the driver's rowsAfter exactly:
+    // resolved, acknowledged, resolved. (The "2 resolved" collapse
+    // count itself is HTML rendering and stays exclusion-blocked.)
+    let rows: Vec<&str> =
+        alerts.iter().map(alert_lifecycle_status).collect();
+    assert_eq!(rows, vec!["resolved", "acknowledged", "resolved"]);
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_legacy_record_derives_status() {
+    let legacy = LifecycleAlert {
+        id: "alert:0".into(),
+        severity: "critical".into(),
+        status: None,
+        acknowledged_at: Some(1700001000),
+        acknowledged_by: None,
+        resolved_at: None,
+    };
+    assert_eq!(alert_lifecycle_status(&legacy), "acknowledged");
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_live_write_gate_off() {
+    assert_eq!(
+        alert_write_enabled(),
+        (false, "posting is off for this build")
+    );
+}
+
+#[test]
+fn test_dashboard_alert_lifecycle_resolved_collapse_count() {
+    // Driver's htmlBefore carries "1 resolved" (alert:3 only);
+    // after alert:1 resolves it carries "2 resolved". The HTML
+    // rendering stays blocked; this pins the count behind it.
+    let mut alerts = lifecycle_fixtures();
+    assert_eq!(resolved_count(&alerts), 1);
+    assert_eq!(
+        resolve_alert(&mut alerts, "alert:1", 1700003800),
+        LifecycleResult::Resolved(LifecycleAlert {
+            id: "alert:1".into(),
+            severity: "critical".into(),
+            status: Some("resolved".into()),
+            acknowledged_at: None,
+            acknowledged_by: None,
+            resolved_at: Some(1700003800),
+        })
+    );
+    assert_eq!(resolved_count(&alerts), 2);
+}
+
 #[test]
 fn test_dashboard_accessibility_palette_contrast_meets_aa() {
     for (name, fg) in PALETTE_FOREGROUNDS {
@@ -238,6 +429,46 @@ fn test_dashboard_accessibility_palette_contrast_meets_aa() {
     let critical_panel = wcag_contrast_ratio("#f85149", "#161b22");
     assert!((critical_page - 5.65).abs() < 0.01, "critical/page: {critical_page}");
     assert!((critical_panel - 5.16).abs() < 0.01, "critical/panel: {critical_panel}");
+}
+
+// ---- DSH-031 rule half: test_dashboard_brief_sections.py, ported
+// against the contract (the toggle/HTML halves stay blocked: they
+// drive the fold-excluded viewer through a Node driver). ----
+
+#[test]
+fn test_dashboard_brief_sections_default_open_map() {
+    // Python case: test_blocked_open_rest_closed_by_default.
+    let open: Vec<(&str, bool)> = BRIEF_SECTION_ORDER
+        .iter()
+        .map(|s| (*s, default_open(s)))
+        .collect();
+    assert_eq!(
+        open,
+        [
+            ("decisions", false),
+            ("in_flight", false),
+            ("owners", false),
+            ("blocked", true),
+            ("watch_items", false),
+        ]
+    );
+}
+
+#[test]
+fn test_dashboard_brief_sections_titles_and_order() {
+    // Python cases pin the five <summary> titles and the INT-025
+    // section order (Decisions, In flight, Owners, Blocked and why,
+    // Watch items); items render whole, never truncated (DSH-031),
+    // which the viewer half covers and stays blocked.
+    let titles: Vec<&str> = BRIEF_SECTION_ORDER
+        .iter()
+        .map(|s| brief_section_title(s).expect("known section"))
+        .collect();
+    assert_eq!(
+        titles,
+        ["Decisions", "In flight", "Owners", "Blocked and why", "Watch items"]
+    );
+    assert_eq!(brief_section_title("unknown"), None);
 }
 
 #[test]
