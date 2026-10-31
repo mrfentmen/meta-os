@@ -2,10 +2,10 @@
 
 Runner: OpenCode on the boss's Mac. Fresh worktree at main tip
 c31b277 (`/tmp/meta-os-mac`). No force-pushes. Key file
-(`hackathon key.txt`) searched in repo root, home, Desktop,
-Documents, plus a shallow find — NOT FOUND. Per the work order, no
-key was invented and no other key on the machine was used: live
-Spark steps are BLOCKED below, everything else was run.
+(`~/Desktop/hackathon key.txt`, 28 lines, key is line 1 alone)
+appeared on the Desktop mid-run; it was used for exactly one live
+round trip (§5) and the key material was destroyed afterwards. The
+key was never printed, logged, committed, or written into the repo.
 
 ## 1. Gate 2 — Rust workspace
 
@@ -62,8 +62,8 @@ Spark steps are BLOCKED below, everything else was run.
   `model.configured=false`).
 - `GET /api/crew/status` responds:
   `available:false, reason:"no crew records yet"`,
-  `simulated_dispatch:true`. No crew records exist because no
-  patrol has run (blocked on the key — see §5).
+  `simulated_dispatch:true`. At that point no crew records existed
+  because no patrol had run yet (see §5 for the live run).
 - Command view loads ("Meta Imperium — Visual Event Assessment
   Prototype"). 3D map does NOT render: the page falls back to
   "schematic pin grid" because the vendored
@@ -80,23 +80,33 @@ Spark steps are BLOCKED below, everything else was run.
   cross-origin fetch is blocked. A same-origin proxy would fix it;
   that is a feature change, out of scope — recorded as found.
 
-## 5. Live patrol round trip: BLOCKED, not run
+## 5. Live patrol round trip: VERIFIED (one round, then stopped)
 
-No `hackathon key.txt` anywhere on this machine (searched repo
-root, home, Desktop, Documents, plus shallow find). Per the work
-order I did not invent a key and did not substitute any other key
-found on this Mac. Consequences:
-- No guarded Spark call was made. Guardrail ledger total for my
-  runs: **$0.00** (ledger file `server/queue/spark_guardrail_state.json`
-  holds 4 zero-token, zero-cost entries timestamped 2026-10-31T01:29Z
-  from before this run; my runs added no spend and no entries — the
-  file is runtime state, untracked, and I did not commit it).
-- No dispatch was attempted, real or simulated.
-- Step 4's queue/assess liveness was still proven without Spark:
-  live Rust assess server + stub queue over real HTTP returned
-  HTTP 200 for a valid queued answer and HTTP 502 (logged fallback)
-  for an invalid one; held-model path returns 503. (Proven during
-  the B05 gap closure on the finish branch.)
+Key file appeared on the Desktop mid-run (`~/Desktop/hackathon key.txt`,
+28 lines: the key is line 1 alone — an earlier attempt that glued all
+lines together failed with HTTP 401, so I stopped, confirmed the layout
+with the boss, and used line 1 only). Key material lived only in process
+env and one mode-600 temp file, both destroyed after the run; the key
+was never printed, logged, committed, or written into the repo.
+
+- Real snapshot fetched from live NYCTMC (QBB @ Crescent St, Queens).
+- Queued as `trio-assessment` job `trio-6acfdfce7dd6d60ae3d8519cb40fea0a`.
+- Guarded Spark call answered: ledger went 4 calls → 5 calls,
+  +$0.005241 (443 in / 1103 out tokens, 6375 ms, model
+  muse-spark-1.3). Exactly one billable call, as ordered.
+- Answer validated and came back: agent `done — normal activity`,
+  patrol outcome `baseline`, category `normal activity`.
+- Result envelope on the queue reads back in the v2 contract shape
+  (`job_id`, `status: ok`, full assessment + observations +
+  processing).
+- LOOP FEED: relay room `main` carries the run's NOTIFY lines
+  (info: completed normal activity; plus the earlier 401-failure
+  warning from the glued-key attempt — honest history, kept).
+  crew-data has `crew-status.json` (patrol running, nyctmc-live) +
+  `events.jsonl` (patrol-check baseline with category + job id).
+- Simulated-only dispatch preserved: crew status reports
+  `simulated_dispatch: true`; nothing real was contacted.
+- Stack stopped immediately afterwards; key material scrubbed.
 
 ## 6. Native app: FAILED to build (exact errors, fresh clone)
 
@@ -116,8 +126,6 @@ native-code change).
 
 ## Still unverified (nothing below is claimed)
 
-- Live patrol round trip + LOOP FEED + crew-data records (needs key).
-- Guarded-spend increment on a real call (needs key).
 - Native camera load + native live assessment (needs a build that compiles).
 - 3D CARTO map with extrusions (needs the real maplibre vendor build).
 - DOT live list in-app (needs same-origin proxy or CORS-enabled API).
