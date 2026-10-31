@@ -14,6 +14,8 @@ import {
   HANDOFF_RADIUS_METERS,
   nearestOtherCamera,
   resolveHandoff,
+  shouldFollowTracked,
+  worldSnapshot,
 } from "../js/command-flag.js";
 
 const midtown = { id: "a", name: "A", latitude: 40.75, longitude: -73.99, isOnline: "true" };
@@ -101,4 +103,41 @@ test("resolveHandoff reports a stable reason when it does nothing", () => {
 test("handoff constants are sane", () => {
   assert.equal(HANDOFF_RADIUS_METERS, 600);
   assert.ok(HANDOFF_IDLE_MS >= 1000);
+});
+
+test("shouldFollowTracked only follows fresh results hands-off", () => {
+  assert.equal(shouldFollowTracked({ isTracked: true, hasNewResult: true, userInteracting: false }), true);
+  assert.equal(shouldFollowTracked({ isTracked: true, hasNewResult: true, userInteracting: true }), false);
+  assert.equal(shouldFollowTracked({ isTracked: true, hasNewResult: false, userInteracting: false }), false);
+  assert.equal(shouldFollowTracked({ isTracked: false, hasNewResult: true, userInteracting: false }), false);
+  assert.equal(shouldFollowTracked({}), false);
+});
+
+test("worldSnapshot is bounded and JSON-clean", () => {
+  const incidents = Array.from({ length: 60 }, (_, i) => ({
+    cameraId: `cam-${i}`,
+    productId: "vigiles",
+    category: "person down",
+    priority: "high",
+    timestamp: "2024-05-01T12:00:00Z",
+    open: true,
+  }));
+  const snap = worldSnapshot({
+    cameras: [{ isOnline: true }, { isOnline: false }, null],
+    watchedIds: ["a", "b", 42],
+    incidents,
+    focusedCameraId: "a",
+    at: "2024-05-01T12:00:00Z",
+  });
+  assert.equal(snap.version, 1);
+  assert.deepEqual(snap.counts, { online: 1, watched: 2, flagged: 50 });
+  assert.equal(snap.focusedCameraId, "a");
+  assert.equal(snap.flagged.length, 50);
+  assert.equal(snap.truncated, true);
+  assert.equal(snap.flagged[0].cameraId, "cam-0");
+  JSON.stringify(snap);
+  const empty = worldSnapshot();
+  assert.deepEqual(empty.counts, { online: 0, watched: 0, flagged: 0 });
+  assert.equal(empty.truncated, false);
+  assert.equal(empty.focusedCameraId, null);
 });

@@ -1411,6 +1411,7 @@ body[data-view="command"] > main { display: none; }
 .cmd-honesty { margin: 2px 0 7px; max-width: 580px; font-size: 10.5px; line-height: 1.45; color: rgba(210, 230, 240, 0.6); }
 .cmd-products { display: flex; gap: 6px; }
 .cmd-modes { display: flex; gap: 6px; align-items: center; }
+.cmd-layers { display: flex; gap: 6px; align-items: center; }
 .cmd-mode-btn {
   font-family: var(--mono);
   font-size: 11px;
@@ -1518,6 +1519,21 @@ body[data-view="command"] > main { display: none; }
   cursor: pointer;
 }
 .cmd-alert-handoff:hover { background: rgba(79, 126, 194, 0.18); }
+.cmd-alert-track {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid var(--cmd-line);
+  border-radius: 20px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.cmd-alert-track[aria-pressed="true"] {
+  border-color: var(--cmd-accent);
+  color: var(--cmd-accent);
+}
 
 .cmd-borough {
   font-family: var(--mono);

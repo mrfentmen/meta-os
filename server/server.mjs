@@ -15,6 +15,11 @@
 //                      Command view's loop feed (see crew-status.mjs)
 //   GET  /api/cameras  same-origin proxy for the NYCTMC camera list
 //                      (see cameras.mjs)
+//   GET  /api/fires   same-origin proxy for the NASA FIRMS active-fire
+//                      list (see fires.mjs; 503 without FIRMS_MAP_KEY)
+//   GET  /api/weather/radar/:z/:x/:y.png
+//                      same-origin proxy for IEM NEXRAD radar tiles
+//                      (see weather.mjs; no key needed)
 //   GET  /<static>     index.html, styles.css, js/* from the repo root
 //
 // Environment: SPARK_API_KEY (key slot, server-side only),
@@ -30,6 +35,8 @@ import { handleAssess } from "./assess.mjs";
 import { modelStatus } from "./model.mjs";
 import { readCrewStatus } from "./crew-status.mjs";
 import { fetchCameraList } from "./cameras.mjs";
+import { fetchRadarTile } from "./weather.mjs";
+import { readFiresCached } from "./fires.mjs";
 import { PRODUCT_IDS } from "../js/products.js";
 
 const MAX_BODY_BYTES = 12 * 1024 * 1024; // JSON envelope cap (image cap is in assess.mjs)
@@ -41,6 +48,16 @@ const CONTENT_TYPES = {
   ".mjs": "text/javascript; charset=utf-8",
   ".json": "application/json; charset=utf-8",
 };
+
+function sendBytes(res, status, contentType, bytes) {
+  res.writeHead(status, {
+    "Content-Type": contentType,
+    "Content-Length": bytes.length,
+    "Access-Control-Allow-Origin": "*",
+    "Cache-Control": "public, max-age=300",
+  });
+  res.end(bytes);
+}
 
 function sendJson(res, status, body) {
   const text = JSON.stringify(body);
@@ -179,7 +196,55 @@ export function createAssessServer(deps = {}) {
         }
         return;
       }
-      if (url.pathname.startsWith("/api/")) {
+      if (url.pathname === "/api/fires") {
+      if (req.method !== "GET") {
+        sendJson(res, 405, { error: "method not allowed: use GET" });
+        return;
+      }
+      // Same-origin proxy for the NASA FIRMS active-fire list: the
+      // MAP_KEY must never reach the browser (see fires.mjs).
+      // deps.readFires is the test seam; production reads through
+      // the 15-minute server cache. No key configured is a 503 —
+      // the app shows "fire data unavailable", never fake hotspots.
+      const reader = deps.readFires ?? (() => readFiresCached(fetch));
+      try {
+        sendJson(res, 200, await reader());
+      } catch (err) {
+        if (err && err.code === "no-key") {
+          sendJson(res, 503, { error: err.message, fires: [], stale: false });
+        } else {
+          sendJson(res, 502, {
+            error: `fire list unavailable: ${err && err.message ? err.message : String(err)}`,
+          });
+        }
+      }
+      return;
+    }
+    const radarMatch = /^\/api\/weather\/radar\/([^/]+)\/([^/]+)\/([^/]+)\.png$/.exec(url.pathname);
+    if (radarMatch) {
+      if (req.method !== "GET") {
+        sendJson(res, 405, { error: "method not allowed: use GET" });
+        return;
+      }
+      // Same-origin proxy for Iowa State IEM NEXRAD radar tiles so
+      // the browser never hits a third party directly. deps.tile
+      // is the test seam; x/y/z are validated before any fetch.
+      const fetchTile = deps.fetchRadarTile ?? ((z, x, y) => fetchRadarTile(fetch, z, x, y));
+      try {
+        const tile = await fetchTile(radarMatch[1], radarMatch[2], radarMatch[3]);
+        sendBytes(res, tile.status, tile.contentType, tile.bytes);
+      } catch (err) {
+        if (err && err.code === "bad-tile") {
+          sendJson(res, 400, { error: err.message });
+        } else {
+          sendJson(res, 502, {
+            error: `radar tile unavailable: ${err && err.message ? err.message : String(err)}`,
+          });
+        }
+      }
+      return;
+    }
+    if (url.pathname.startsWith("/api/")) {
         sendJson(res, 404, { error: `unknown route: ${url.pathname}` });
         return;
       }
@@ -201,7 +266,7 @@ if (isMain) {
   server.listen(port, () => {
     const status = modelStatus();
     console.log(`meta-trio-assess listening on http://localhost:${port}`);
-    console.log(`POST /api/assess  GET /api/health  GET /api/cameras  static web app on /`);
+    console.log(`POST /api/assess  GET /api/health  GET /api/cameras  GET /api/fires  GET /api/weather/radar/:z/:x/:y.png  static web app on /`);
     console.log(
       `model: key ${status.configured ? "configured" : "NOT configured"}, live calls ${status.live_enabled ? "ENABLED (test phase)" : "held (Spark rule)"}`,
     );

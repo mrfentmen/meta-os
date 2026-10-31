@@ -23,6 +23,8 @@ from the repo root, so one process runs the whole demo stack locally.
 | --- | --- |
 | `POST /api/assess` | One frame in, one v2 assessment out (below). |
 | `GET /api/health` | `{ ok, service, products, model: { configured, live_enabled } }`. Never exposes key material. |
+| `GET /api/fires` | NASA FIRMS trailing-24 h hotspots, cached 15 min. 503 without `FIRMS_MAP_KEY`. |
+| `GET /api/weather/radar/:z/:x/:y.png` | Proxied IEM NEXRAD radar tile (PNG). 400 on out-of-range tiles. |
 | `GET /…` | Static web frontend (`index.html`, `styles.css`, `js/`). |
 
 ## The contract
@@ -78,6 +80,7 @@ Configuration is environment-only, server-side:
 | --- | --- |
 | `SPARK_API_KEY` | The model key slot. Never in a request, a commit, or a log. |
 | `ASSESS_LIVE_MODEL` | `1` opens the test-phase gate. Leave unset during the build. |
+| `FIRMS_MAP_KEY` | NASA FIRMS map key (free). Without it `/api/fires` answers 503 and the map offers no fire layer. Never in a request, a commit, or a log. |
 | `PORT` | Listen port, default `8080`. |
 
 Per-product prompt profiles (categories + limitations) are derived from

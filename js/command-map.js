@@ -47,7 +47,17 @@ import {
   normalizeCamera,
   pulseModeFor,
   resolveHandoff,
+  shouldFollowTracked,
 } from "./command-flag.js";
+import {
+  FIRMS_REFRESH_MS,
+  RADAR_ATTRIBUTION,
+  RADAR_OPACITY,
+  RADAR_TILE_TEMPLATE,
+  fireColorFor,
+  fireRadiusPixels,
+  firesToGeoJson,
+} from "./command-layers.js";
 import { PRODUCT_BY_ID } from "./products.js";
 import { loopFeedItems, loopStatusText } from "./command-loop.js";
 import { FrameSampler } from "./sampler.js";
@@ -89,6 +99,8 @@ const els = {
   pinCardFocus: $("cmd-pin-card-focus"),
   pinCardClose: $("cmd-pin-card-close"),
   aiFocus: $("cmd-ai-focus"),
+  layerFires: $("cmd-layer-fires"),
+  layerRadar: $("cmd-layer-radar"),
   activityText: $("cmd-activity-text"),
   activityCount: $("cmd-activity-count"),
   loopStatus: $("cmd-loop-status"),
@@ -152,6 +164,9 @@ const state = {
   bridge: null,
   userInteracting: false, // map input in progress; handoff must not move the view
   handoffTimer: null, // idle timer clearing userInteracting
+  tracking: null, // { cameraId, incidentId } — explicit follow, cleared on user select/clear
+  layers: { fires: false, radar: false },
+  firesTimer: null, // refresh interval while the fires layer is on
 };
 
 function cacheBust(url) {
@@ -524,6 +539,197 @@ function syncRingColor(productId, force = false) {
   state.map.setPaintProperty("cmd-selection-fill", "fill-color", color);
   state.map.setPaintProperty("cmd-selection-line", "line-color", color);
   state.ringProduct = productId;
+}
+
+// ---- Data layers: Fires (NASA FIRMS hotspots) + Radar (IEM NEXRAD)
+// Toggleable, independent of the City/Tactical/Incident modes. Fires
+// refresh every FIRMS_REFRESH_MS while on; radar tiles are a live
+// snapshot per toggle-on (toggle off and on again to refresh).
+
+function firstSymbolLayerId() {
+  const layers = state.map.getStyle()?.layers ?? [];
+  return layers.find((layer) => layer.type === "symbol")?.id;
+}
+
+function setLayerButton(name, on) {
+  const btn = name === "fires" ? els.layerFires : els.layerRadar;
+  if (btn) btn.setAttribute("aria-pressed", String(on));
+}
+
+async function refreshFires({ announce = true } = {}) {
+  let data;
+  try {
+    const res = await fetch("/api/fires", { cache: "no-store" });
+    if (res.status === 503) {
+      if (announce) {
+        pushActivity("Fires layer unavailable — server has no FIRMS key.");
+        setStatus("Fire data unavailable — server has no FIRMS key.");
+      }
+      return false;
+    }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (err) {
+    if (announce) {
+      pushActivity(`Fire list failed — ${err.message}.`);
+      setStatus(`Fire list failed: ${err.message}`);
+    }
+    return false;
+  }
+  const fires = Array.isArray(data.fires) ? data.fires : [];
+  const geojson = firesToGeoJson(fires);
+  for (const feature of geojson.features) {
+    const props = feature.properties;
+    feature.properties = {
+      ...props,
+      radius: fireRadiusPixels(props.frp),
+      color: fireColorFor(props.confidence, props.daynight),
+    };
+  }
+  const src = state.map.getSource("cmd-fires");
+  if (src && src.setData) src.setData(geojson);
+  if (announce) {
+    pushActivity(
+      data.stale
+        ? `Fires refreshed (cached) — ${fires.length} hotspots, trailing 24 h.`
+        : `Fires refreshed — ${fires.length} hotspots, trailing 24 h (NASA FIRMS).`,
+    );
+  }
+  return true;
+}
+
+async function setFiresLayer(on) {
+  if (on && !state.map) {
+    setStatus("3D map unavailable — the fires layer needs the map.");
+    setLayerButton("fires", false);
+    return;
+  }
+  if (on && !state.mapLoaded) {
+    setStatus("Map still loading — try the Fires toggle again in a moment.");
+    setLayerButton("fires", false);
+    return;
+  }
+  state.layers.fires = on;
+  setLayerButton("fires", on);
+  if (!on) {
+    if (state.firesTimer !== null) {
+      clearInterval(state.firesTimer);
+      state.firesTimer = null;
+    }
+    // off() with no listener removes every click handler on the
+    // layer, so re-enabling never stacks duplicate popups.
+    state.map.off("click", "cmd-fires-circles");
+    if (state.map.getLayer("cmd-fires-circles")) state.map.removeLayer("cmd-fires-circles");
+    if (state.map.getSource("cmd-fires")) state.map.removeSource("cmd-fires");
+    return;
+  }
+  if (!state.map.getSource("cmd-fires")) {
+    state.map.addSource("cmd-fires", {
+      type: "geojson",
+      data: { type: "FeatureCollection", features: [] },
+      attribution: "Hotspots: NASA FIRMS (satellite detections, not confirmed fires)",
+    });
+    const before = firstSymbolLayerId();
+    state.map.addLayer(
+      {
+        id: "cmd-fires-circles",
+        type: "circle",
+        source: "cmd-fires",
+        paint: {
+          "circle-radius": ["number", ["get", "radius"], 4],
+          "circle-color": ["string", ["get", "color"], "#ffa63d"],
+          "circle-opacity": 0.85,
+          "circle-stroke-width": 1,
+          "circle-stroke-color": "#1a0e08",
+        },
+      },
+      before,
+    );
+    state.map.on("click", "cmd-fires-circles", (event) => {
+      const feature = event.features?.[0];
+      if (!feature) return;
+      const props = feature.properties ?? {};
+      const box = document.createElement("div");
+      box.className = "cmd-building-popup";
+      const title = document.createElement("h4");
+      title.textContent = "Satellite hotspot — not a confirmed fire";
+      box.appendChild(title);
+      const lines = [
+        `Acquired ${props.acquired ?? "unknown time"}`,
+        `Confidence ${props.confidence ?? "?"} · ${props.daynight === "D" ? "day" : props.daynight === "N" ? "night" : "unknown pass"}`,
+        `Brightness ${props.brightness ?? "?"} K${props.frp != null ? ` · FRP ${props.frp} MW` : ""}`,
+        `Satellite ${props.satellite || "unknown"}`,
+      ];
+      for (const text of lines) {
+        const p = document.createElement("p");
+        p.className = "mono";
+        p.textContent = text;
+        box.appendChild(p);
+      }
+      state.popup?.remove();
+      state.popup = new window.maplibregl.Popup({ closeOnClick: true, maxWidth: "300px" })
+        .setLngLat(event.lngLat)
+        .setDOMContent(box)
+        .addTo(state.map);
+    });
+  }
+  const ok = await refreshFires();
+  if (!ok) {
+    state.layers.fires = false;
+    setLayerButton("fires", false);
+    if (state.map.getLayer("cmd-fires-circles")) state.map.removeLayer("cmd-fires-circles");
+    if (state.map.getSource("cmd-fires")) state.map.removeSource("cmd-fires");
+    return;
+  }
+  state.firesTimer = setInterval(() => {
+    if (state.layers.fires) void refreshFires({ announce: false });
+  }, FIRMS_REFRESH_MS);
+}
+
+function setRadarLayer(on) {
+  if (on && !state.map) {
+    setStatus("3D map unavailable — the radar layer needs the map.");
+    setLayerButton("radar", false);
+    return;
+  }
+  if (on && !state.mapLoaded) {
+    setStatus("Map still loading — try the Radar toggle again in a moment.");
+    setLayerButton("radar", false);
+    return;
+  }
+  state.layers.radar = on;
+  setLayerButton("radar", on);
+  if (!on) {
+    if (state.map.getLayer("cmd-radar")) state.map.removeLayer("cmd-radar");
+    if (state.map.getSource("cmd-radar")) state.map.removeSource("cmd-radar");
+    return;
+  }
+  if (!state.map.getSource("cmd-radar")) {
+    state.map.addSource("cmd-radar", {
+      type: "raster",
+      tiles: [RADAR_TILE_TEMPLATE],
+      tileSize: 256,
+      attribution: RADAR_ATTRIBUTION,
+    });
+    const before = firstSymbolLayerId();
+    state.map.addLayer(
+      {
+        id: "cmd-radar",
+        type: "raster",
+        source: "cmd-radar",
+        paint: { "raster-opacity": RADAR_OPACITY },
+      },
+      before,
+    );
+  } else {
+    state.map.setLayoutProperty("cmd-radar", "visibility", "visible");
+  }
+  pushActivity("Radar layer on — IEM NEXRAD reflectivity.");
+}
+
+function toggleLayer(name) {
+  if (name === "fires") void setFiresLayer(!state.layers.fires);
+  else if (name === "radar") setRadarLayer(!state.layers.radar);
 }
 
 function renderPins() {
@@ -1029,9 +1235,25 @@ async function assessCamera(id) {
     }
   } else if (prevDivFlagged) {
     state.queue.clearForCamera(id, product);
+    if (state.tracking && state.tracking.cameraId === id && state.queue.openIncidentsForCamera(id).length === 0) {
+      state.tracking = null;
+      pushActivity(`Stopped tracking — ${cam.name} cleared.`);
+    }
     pushActivity(
       `Flag cleared — ${divisionShortName(product)} · ${cam.name} — baseline result (${category})`,
     );
+  }
+  // Tracked-camera follow: a fresh result on the tracked camera keeps
+  // the view on it — unless the operator is interacting with the map.
+  if (
+    shouldFollowTracked({
+      isTracked: Boolean(state.tracking && state.tracking.cameraId === id),
+      hasNewResult: flagged,
+      userInteracting: state.userInteracting,
+    }) &&
+    state.map
+  ) {
+    selectCamera(id, { pan: true });
   }
   setStatus(
     flagged
@@ -1169,6 +1391,34 @@ function renderAlerts() {
       refreshPin(incident.cameraId);
     });
     li.appendChild(btn);
+    // Explicit follow: one tracked incident at a time. The map keeps
+    // the view on its camera as fresh assessments land (hands off the
+    // controls while the operator interacts), and tracking drops when
+    // the incident clears. A separate button — never nested inside the
+    // row button — so it stays valid HTML and keyboardable.
+    const trackingThis = Boolean(state.tracking && state.tracking.incidentId === incident.id);
+    const trackBtn = document.createElement("button");
+    trackBtn.type = "button";
+    trackBtn.className = "cmd-alert-track";
+    trackBtn.setAttribute("aria-pressed", String(trackingThis));
+    trackBtn.textContent = trackingThis ? "● Tracking" : "Track";
+    trackBtn.setAttribute(
+      "aria-label",
+      `${trackingThis ? "Stop tracking" : "Track"} ${cam.name}`,
+    );
+    trackBtn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      if (state.tracking && state.tracking.incidentId === incident.id) {
+        state.tracking = null;
+        pushActivity(`Stopped tracking — ${cam.name}.`);
+      } else {
+        state.tracking = { cameraId: incident.cameraId, incidentId: incident.id };
+        selectCamera(incident.cameraId, { pan: true, openCard: true });
+        pushActivity(`Tracking — ${cam.name}; the view follows new assessments until you take over or it clears.`);
+      }
+      renderAlerts();
+    });
+    li.appendChild(trackBtn);
     els.alerts.appendChild(li);
   }
   if (items.length > 30) {
@@ -1593,6 +1843,8 @@ function init() {
     btn.addEventListener("click", () => setMode(btn.dataset.cmdMode));
   });
   els.aiFocus.addEventListener("click", aiFocus);
+  if (els.layerFires) els.layerFires.addEventListener("click", () => toggleLayer("fires"));
+  if (els.layerRadar) els.layerRadar.addEventListener("click", () => toggleLayer("radar"));
 
   document.addEventListener("keydown", (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {

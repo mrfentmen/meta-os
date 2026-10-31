@@ -375,7 +375,6 @@ export function nearestOtherCamera(cameras, flaggedCameraId, options = {}) {
 // clears it after this long without input, so a handoff never yanks
 // the view mid-drag.
 export const HANDOFF_IDLE_MS = 5000;
-
 // Decide what a fresh flag should do, without touching the UI.
 // risingEdge must be the `changed` half of applyAssessmentToFlag:
 // only a baseline -> flagged transition may move the view.
@@ -479,4 +478,51 @@ export function filterCameras(cameras, query) {
       ((typeof camera.name === "string" && camera.name.toLowerCase().includes(q)) ||
         (typeof camera.area === "string" && camera.area.toLowerCase().includes(q))),
   );
+}
+
+// ---- Tracked incident ------------------------------------------------
+// One incident at a time can be tracked: the map keeps the view on
+// its camera as new assessments land, until the operator takes over
+// or the incident clears. All decisions are pure; the map owns the
+// timer and the actual pan.
+
+// Follow only on a genuinely new result for the tracked camera while
+// the operator is hands-off. Anything else leaves the view alone.
+export function shouldFollowTracked({ isTracked, hasNewResult, userInteracting }) {
+  return Boolean(isTracked && hasNewResult && !userInteracting);
+}
+
+// ---- Bounded world snapshot ------------------------------------------
+// A fixed-shape, capped summary of the command view for anything that
+// needs context without the whole world: model prompts, logging, or
+// a future assistant. Bounding is the contract: flagged is capped at
+// WORLD_SNAPSHOT_MAX_FLAGGED with truncated: true when clipped, and
+// only plain JSON values are ever included.
+export const WORLD_SNAPSHOT_MAX_FLAGGED = 50;
+export const WORLD_SNAPSHOT_VERSION = 1;
+
+export function worldSnapshot({ cameras = [], watchedIds = [], incidents = [], focusedCameraId = null, at = null } = {}) {
+  const online = Array.isArray(cameras) ? cameras.filter((cam) => cam && cam.isOnline).length : 0;
+  const watched = Array.isArray(watchedIds) ? watchedIds.filter((id) => typeof id === "string") : [];
+  const open = Array.isArray(incidents) ? incidents.filter((entry) => entry && entry.open !== false && !entry.cleared) : [];
+  const flagged = open.slice(0, WORLD_SNAPSHOT_MAX_FLAGGED).map((entry) => ({
+    cameraId: typeof entry.cameraId === "string" ? entry.cameraId : null,
+    productId: typeof entry.productId === "string" ? entry.productId : null,
+    category: typeof entry.category === "string" ? entry.category : null,
+    priority: typeof entry.priority === "string" ? entry.priority : null,
+    timestamp: typeof entry.timestamp === "string" ? entry.timestamp : null,
+  }));
+  return {
+    version: WORLD_SNAPSHOT_VERSION,
+    updatedAt: typeof at === "string" && at.length > 0 ? at : new Date().toISOString(),
+    counts: {
+      online,
+      watched: watched.length,
+      flagged: flagged.length,
+    },
+    focusedCameraId: typeof focusedCameraId === "string" ? focusedCameraId : null,
+    watched,
+    flagged,
+    truncated: open.length > flagged.length,
+  };
 }
