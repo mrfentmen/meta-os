@@ -5,7 +5,7 @@ import SwiftUI
 // The layer renders the session directly, so the preview is live whenever
 // the session is running, independent of SwiftUI state updates.
 
-private final class PreviewContainerView: NSView {
+final class PreviewContainerView: NSView {
     override func layout() {
         super.layout()
         layer?.frame = bounds

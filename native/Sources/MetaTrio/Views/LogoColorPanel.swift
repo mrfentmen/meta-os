@@ -71,7 +71,7 @@ import SwiftUI
 // button, pause spoken state, and the large-logo note are
 // untouched.
 
-private struct LogoColorPanel: View {
+struct LogoColorPanel: View {
     @AppStorage("meta-trio-logo-color") private var customHex: String = ""
     @AppStorage("meta-trio-logo-speed") private var speedPercent: Int = 25
     @AppStorage("meta-trio-logo-paused") private var paused: Bool = false

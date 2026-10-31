@@ -77,7 +77,7 @@ struct LogoLoopView: View {
     }
 
     var body: some View {
-        TimelineView(.animation) { timeline in
+        SwiftUI.TimelineView(.animation) { timeline in
             let phase = phase(at: timeline.date)
             VStack(spacing: 0) {
                 ForEach(0..<14, id: \.self) { row in
