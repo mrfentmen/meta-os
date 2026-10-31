@@ -287,3 +287,66 @@ The planned live batch over dataset frames (MIVIA negatives / UCF Fighting / ACC
 was NOT run: no dataset downloads landed, so there were no such frames to test.
 Guardrail status at the end of this session: 8 calls all-time, $0.05069 cumulative of
 the $75 test budget — unchanged by this session (zero calls made).
+
+## YouTube / Pexels eval frames added 2026-10-31
+
+Scope note: everything above this section is public Wikimedia Commons footage (see the
+header). The six frames below come from YouTube and Pexels instead — YouTube frames are
+standard-license uploads used here as single stills for internal model testing only (fair
+use; do NOT redistribute the frames or re-upload the videos). The Pexels frame is under the
+free Pexels License. All six descriptions were visually verified against the extracted
+frames this session. Raw clips are NOT in git (two exceed GitHub's 100 MB file cap and the
+set totals ~410 MB); they are kept on local disk only. Re-extract with:
+`ffmpeg -ss <timestamp> -i <video> -frames:v 1 [-vf scale=1280:-1] -q:v 3 frames/<name>`.
+
+### vigiles-rifle-1.jpg
+- Product: Vigiles — Expected class: person holding rifle (REPLICA — airsoft, not a firearm)
+- Scene: First-person airsoft gameplay: the player's hands holding an ICS M16 replica rifle,
+  barrel pointing across a grass field at wooden barricades. Burned-in game HUD text in the
+  top corners ("Primary: ICS M16", "Status: Healthy") and a channel watermark bottom-right —
+  the model must key on the rifle, not the text.
+- Source video: https://www.youtube.com/watch?v=e9YRGSKWEEg (TheAirsoftTech, airsoft gameplay) @ 0:30
+- License: standard YouTube license — internal testing only, do not redistribute.
+
+### vigiles-knife-1.jpg
+- Product: Vigiles — Expected class: person holding knife (TRAINING blade, blue plastic)
+- Scene: Indoor training gym: an instructor in a red shirt holds a blue training knife in his
+  right hand beside a striking dummy, explaining a drill to a trainee. Bright gym, padded walls.
+- Source video: https://www.youtube.com/watch?v=W8CA48ooSCA (knife-defense training demos) @ 14:00
+- License: standard YouTube license — internal testing only, do not redistribute.
+
+### ignis-house-fire-1.jpg
+- Product: Ignis — Expected class: visible flame (with heavy smoke)
+- Scene: A detached house fully engulfed in orange flames with a massive black smoke column,
+  daytime, lawn in the foreground — a donated-home training burn at its peak.
+- Source video: https://www.youtube.com/watch?v=ptGa3rn_73k (Cedar Rapids live-fire training) @ 0:28
+- License: standard YouTube license — internal testing only, do not redistribute.
+
+### ignis-firefighter-1.jpg
+- Product: Ignis — Expected class: firefighter activity in smoke (no open flame in frame)
+- Scene: A firefighter in full gear climbing a ladder into a smoke-filled window of a training
+  building, daylight. Tests that crew-plus-smoke scenes read as fire-context, not false negatives.
+- Source video: https://www.youtube.com/watch?v=TB6AMLOicGo (Spokane Valley Fire Dept POV burn) @ 14:09
+- License: standard YouTube license — internal testing only, do not redistribute.
+
+### ignis-smoke-glow-1.jpg
+- Product: Ignis — Expected class: smoke with fire glow (no open flame in frame)
+- Scene: Helmet-cam inside the training burn: dense smoke with a deep red-orange fire glow
+  filling the frame. Tests glow-through-smoke detection.
+- Source video: https://www.youtube.com/watch?v=TB6AMLOicGo (Spokane Valley Fire Dept POV burn) @ 4:43
+- License: standard YouTube license — internal testing only, do not redistribute.
+
+### vigiles-fireworks-1.jpg
+- Product: Vigiles — Expected class: normal activity (CONTROL — fireworks are NOT gunfire)
+- Scene: Night sky with white firework bursts and two orange ascending trails. The key
+  false-alarm control: a flash in the sky the model must NOT flag as a shooting.
+- Source video: https://www.pexels.com/video/vibrant-fireworks-display-in-night-sky-34425749/ (Jay Y) @ 0:07.5, downscaled to 1280px
+- License: Pexels License (free to use).
+
+### Deliberately NOT included (verified duds)
+- Movie clip https://www.youtube.com/watch?v=D5fl6WBXOkU ("Old Man & the Gun" TV spot): sampled
+  three timestamps — all dialogue scenes (face close-up, car, sheriff on phone), no weapon in any
+  frame. Rejected as a gun positive; clip kept locally only.
+- Bodycam https://www.youtube.com/watch?v=cR9Q7kJaZbM (Lost Knife Road OIS, ~39 min): roughly half
+  the runtime is narrative text cards and establishing shots; no weapon visible in sampled frames.
+  Kept locally for later targeted mining, no frame pushed.
