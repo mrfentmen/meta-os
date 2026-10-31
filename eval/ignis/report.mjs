@@ -2334,12 +2334,28 @@ export function computeCategoryRates(records) {
     .sort((a, b) => (a.truth < b.truth ? -1 : a.truth > b.truth ? 1 : 0));
 }
 
-// Alert categories for the Ignis product (from scenarios.json and
-// adapter.mjs: only visible smoke and visible flame fire an alert).
+// Alert categories for the Ignis product (from scenarios-current.json
+// and adapter.mjs: the current taxonomy's alert categories — visible
+// smoke, visible flame, and the fire-type and smoke-type categories).
 // Confusable negatives are the non-alert categories a source most
 // plausibly mistakes for an alert: steam or fog for smoke, flame-like
-// lighting for flame.
-export const IGNIS_ALERT_CATEGORIES = ["visible smoke", "visible flame"];
+// lighting for flame. The frozen benchmark's two-category set
+// classifies every old record identically, so legacy runs render the
+// same breakdowns.
+export const IGNIS_ALERT_CATEGORIES = [
+  "visible smoke",
+  "visible flame",
+  "electrical fire indicators",
+  "gas fire indicators",
+  "cooking oil fire indicators",
+  "metal fire indicators",
+  "battery fire indicators",
+  "vehicle fire",
+  "structure fire",
+  "smoldering fire",
+  "dark smoke",
+  "brown smoke",
+];
 export const CONFUSABLE_NEGATIVE_CATEGORIES = ["steam or fog", "flame-like lighting"];
 const ERROR_PREDICTED = "ERROR";
 

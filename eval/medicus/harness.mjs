@@ -9,20 +9,20 @@
 // throws or returns an invalid shape is recorded as an error for that
 // scenario only; the run continues (malformed-input containment).
 //
-// Alert definition (fixed, from the scenario labels): an assessment
-// "fires an alert" when its assessment.category is one of the five
-// scene-alert categories below. "normal activity" and
-// "indeterminate" never fire an alert; they warrant human review where
-// confusable or unclear, which is recorded separately and is not
-// scored as an alert. NOTE (2026-10-31): the product taxonomy in
-// js/products.js has since grown EMS scene-type categories (person
-// down in roadway, person slumped in vehicle, person in or near
-// water, person trapped or pinned, bystander aid in progress,
-// multi-person incident scene, blood visible at scene). This harness
-// is a FROZEN benchmark: its scenario set and this alert definition
-// predate that growth and are unchanged, so a scene-type answer
-// scores here as a category miss, not as a product error. Extending
-// the benchmark is a separate lane.
+// Alert definition (default: the current js/products.js taxonomy): an
+// assessment "fires an alert" when its assessment.category is one of
+// ALERT_CATEGORIES below — the five original scene-alert categories
+// plus the EMS scene-type categories the taxonomy grew on 2026-10-31
+// (person down in roadway, person slumped in vehicle, person in or
+// near water, person trapped or pinned, bystander aid in progress,
+// multi-person incident scene, blood visible at scene). "normal
+// activity" and "indeterminate" never fire an alert; they warrant
+// human review where confusable or unclear, which is recorded
+// separately and is not scored as an alert. The frozen benchmark
+// (scenarios.json, 20 scenarios, alert only for the five original
+// categories) still runs as legacy: pass { alertCategories:
+// ALERT_CATEGORIES_LEGACY } to runEval, or run the runner with
+// --legacy.
 //
 // Metrics: precision, recall, false-positive rate, false-negative rate,
 // category accuracy, and end-to-end latency (wall clock of the assess
@@ -34,6 +34,24 @@ import { validateAssessment } from "../../js/schema.js";
 import { PRODUCT_BY_ID } from "../../js/products.js";
 
 export const ALERT_CATEGORIES = [
+  "person on ground",
+  "crowd gathered around a person",
+  "vehicle collision scene",
+  "blocked crew access",
+  "person motionless",
+  "person down in roadway",
+  "person slumped in vehicle",
+  "person in or near water",
+  "person trapped or pinned",
+  "bystander aid in progress",
+  "multi-person incident scene",
+  "blood visible at scene",
+];
+
+// Frozen-benchmark alert set (pre-2026-10-31 taxonomy): only the five
+// original scene-alert categories fire an alert. Legacy runs only;
+// the default is ALERT_CATEGORIES above.
+export const ALERT_CATEGORIES_LEGACY = [
   "person on ground",
   "crowd gathered around a person",
   "vehicle collision scene",
@@ -80,7 +98,8 @@ export function validateScenarios(scenarios) {
 
 export { computeMetrics } from "../shared/metrics.mjs";
 
-export async function runEval(scenarios, assess) {
+export async function runEval(scenarios, assess, options = {}) {
+  const alertCategories = options.alertCategories ?? ALERT_CATEGORIES;
   const labelErrors = validateScenarios(scenarios);
   if (labelErrors.length > 0) {
     throw new Error(`invalid scenario set: ${labelErrors.join("; ")}`);
@@ -121,7 +140,7 @@ export async function runEval(scenarios, assess) {
       continue;
     }
     const actualCategory = assessment.assessment.category;
-    const alertFired = ALERT_CATEGORIES.includes(actualCategory);
+    const alertFired = alertCategories.includes(actualCategory);
     const firstEvidence =
       Array.isArray(assessment.observations) && assessment.observations.length > 0
         ? assessment.observations[0].evidence

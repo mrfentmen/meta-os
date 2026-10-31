@@ -4,6 +4,12 @@ Scenario set, eval adapter, and runner for Meta Ignis
 (FDNY-oriented fire and smoke hazard awareness), under the frozen
 Meta Trio v2 contract (`../js/schema.js`, `FIRST_RESPONSE.md` section 4).
 
+Default set: the current `js/products.js` taxonomy (17 categories,
+12 alert categories) in `scenarios-current.json` (30 scenarios).
+The frozen benchmark (`scenarios.json`, 20 scenarios, alert only for
+visible smoke / visible flame) still runs as legacy with
+`run.mjs --legacy`.
+
 This mirrors the shape of Milo's Meta Medicus harness
 (`../medicus/harness.mjs`) for the Ignis product, without touching
 Milo's files: the same per-scenario record shape, the same metric
@@ -13,21 +19,29 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
 
 ## Files
 
-- `scenarios.json` — 20 labeled scenarios with ground truth. Labels
-  were authored in this file before any assessment source ran against
-  them; the adapter reads it read-only and never mutates it. Covers
-  all seven ignis categories: visible smoke, visible flame, no hazard
-  visible, steam or fog, flame-like lighting, obscured or distant
-  hazard, and indeterminate — plus confusable negatives: steam from a
-  vent, morning fog, sunset glow on windows, orange neon, vehicle
-  lights in rain. (The product taxonomy in `js/products.js` grew
-  fire-type and smoke-type categories on 2026-10-31; this scenario
-  set is a frozen benchmark and predates them — see the note in
-  `adapter.mjs`.)
+- `scenarios-current.json` — the default set: 30 labeled scenarios
+  with ground truth, covering all 17 ignis categories in
+  `js/products.js` (the frozen 20 plus one scenario per fire-type
+  and smoke-type category: electrical / gas / cooking-oil / metal /
+  battery indicators, vehicle fire, structure fire, smoldering fire,
+  dark smoke, brown smoke). Labels were authored in this file before
+  any assessment source ran against them; the adapter reads it
+  read-only and never mutates it.
+- `scenarios.json` — the frozen benchmark: 20 labeled scenarios
+  with ground truth, covering the seven original ignis categories
+  (visible smoke, visible flame, no hazard visible, steam or fog,
+  flame-like lighting, obscured or distant hazard, indeterminate)
+  plus confusable negatives: steam from a vent, morning fog, sunset
+  glow on windows, orange neon, vehicle lights in rain. Still
+  runnable as legacy with `run.mjs --legacy`.
 - `adapter.mjs` — `validateIgnisScenarios` / `runIgnisEval` /
   `formatIgnisReport` / `assessViaModelAdapter` / `computeMetrics`
   (re-exported from the Medicus harness). No dependencies, no network
-  beyond what the server adapter itself gates.
+  beyond what the server adapter itself gates. Both functions take an
+  optional `{ alertCategories }`: the default is the current
+  taxonomy's 12 alert categories; pass
+  `IGNIS_ALERT_CATEGORIES_LEGACY` for the frozen two-category
+  definition.
 - `baseline.mjs` — always-no-hazard baseline (`assessBaseline`).
   Predicts "no hazard visible" for every scene, fires no alert,
   performs no inspection. Mirrors `../medicus/baseline.mjs`.
@@ -37,8 +51,11 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   `../medicus/stub.mjs`.
 - `run.mjs` — held-state runner. Prints the report for the wired
   source and says plainly that its numbers describe source
-  availability, not model performance. With `--baseline`, runs the
-  same scenario set against the baseline instead. With `--stub`,
+  availability, not model performance. Default set is
+  `scenarios-current.json`; with `--legacy`, runs the frozen
+  `scenarios.json` set with the frozen alert definition instead.
+  With `--baseline`, runs the same scenario set against the baseline
+  instead. With `--stub`,
   runs the same scenario set against the fixture stub, then the
   baseline, and prints the stub-vs-baseline comparison. With
   `--out <path>`, writes the run JSON; its source/generated labels
@@ -400,16 +417,21 @@ stays separate, per the trio lock (Rowan owns Meta Ignis).
   malformed-input containment, the held-state refusal, and the
   baseline's exact full-set numbers.
 - `fixture-run-report.md` — the measured output of the last fixture
-  run (`run.mjs --stub`), labeled as a fixture run.
+  run on the frozen legacy set (`run.mjs --legacy --stub`), labeled
+  as a fixture run.
 - `held-state-run-report.md` — the measured output of the last
-  held-state run (`run.mjs` with no flag), labeled as a held-state
+  held-state run on the frozen legacy set (`run.mjs --legacy` with no
+  other flag), labeled as a held-state
   run: every scenario records the server adapter's refusal, and its
   numbers describe source availability, not model performance.
 - `baseline-run-report.md` — the measured output of the last
-  baseline run (`run.mjs --baseline`), labeled as a baseline run:
+  baseline run on the frozen legacy set (`run.mjs --legacy
+  --baseline`), labeled as a baseline run:
   the always-no-hazard source's scores, which are the bar a real
   source must beat, not model performance. With the fixture and
-  held-state reports, this completes the report trio.
+  held-state reports, this completes the report trio. The trio
+  documents the frozen set; a current-set run renders to its own file
+  the same way, never as an edit to the trio.
 
 ## The contract the adapter reads
 
@@ -425,13 +447,20 @@ One v2 assessment object per scenario, product `"ignis"`:
 }
 ```
 
-An assessment "fires an alert" when `assessment.category` is
-`visible smoke` or `visible flame`. `obscured or distant hazard`
+An assessment "fires an alert" when `assessment.category` is one of
+the current taxonomy's 12 alert categories: `visible smoke`,
+`visible flame`, `electrical fire indicators`, `gas fire indicators`,
+`cooking oil fire indicators`, `metal fire indicators`,
+`battery fire indicators`, `vehicle fire`, `structure fire`,
+`smoldering fire`, `dark smoke`, `brown smoke`.
+`obscured or distant hazard`
 never fires an alert on its own — a distant or partially hidden
 hazard warrants human review, recorded separately — and neither do
 `steam or fog`, `flame-like lighting`, `no hazard visible`, or
 `indeterminate`. The label validator enforces this: a scenario whose
 `alert_expected` contradicts the alert definition is rejected, not run.
+Under the legacy frozen definition only `visible smoke` and
+`visible flame` fire an alert.
 Per-scenario records carry: scenario ID, expected condition,
 ground-truth label, actual output, alert fired, alert correct,
 evidence reference, latency (harness wall clock, never a reported
@@ -450,17 +479,20 @@ change, no new wiring, and no fabricated assessment in between.
 
 ## The baseline, and the bar it sets
 
-`node eval/ignis/run.mjs --baseline` runs the 20 labeled scenarios
-against `assessBaseline` and measures, honestly, what a do-nothing
-source scores. Measured 2026-10-28 (fixture numbers, not model
-performance):
+`node eval/ignis/run.mjs --baseline` runs the 30 labeled scenarios
+of the current set against `assessBaseline` and measures, honestly,
+what a do-nothing source scores. Measured 2026-10-31 (fixture
+numbers, not model performance):
 
-- Sample size: 20 scenarios
-- Confusion (alert): TP=0 FP=0 TN=15 FN=5
+- Sample size: 30 scenarios
+- Confusion (alert): TP=0 FP=0 TN=15 FN=15
 - Precision: n/a (no alert ever predicted; denominator zero)
 - Recall: 0.000, false-positive rate: 0.000, false-negative rate: 1.000
-- Category accuracy: 0.150 (the 3 "no hazard visible" scenarios only)
+- Category accuracy: 0.100 (the 3 "no hazard visible" scenarios only)
 - Errors: 0
+
+On the frozen legacy set (`run.mjs --legacy --baseline`, 20
+scenarios): TP=0 FP=0 TN=15 FN=5, category accuracy 0.150.
 
 A future real source must beat this baseline on recall and category
 accuracy to claim value. Beating it on precision alone proves
@@ -473,35 +505,44 @@ fixture and held-state reports.
 
 ## The stub, and the comparison it enables
 
-`node eval/ignis/run.mjs --stub` runs the 20 labeled scenarios
-against `assessStub` and then the baseline on the same set.
-Measured 2026-10-28 (fixture numbers, not model performance):
+`node eval/ignis/run.mjs --stub` runs the 30 labeled scenarios
+of the current set against `assessStub` and then the baseline on the
+same set. Measured 2026-10-31 (fixture numbers, not model
+performance):
 
-- Stub: TP=4 FP=3 TN=12 FN=1, precision 0.571, recall 0.800,
-  false-positive rate 0.200, false-negative rate 0.200,
-  category accuracy 0.700, errors 0
-- Baseline: TP=0 FP=0 TN=15 FN=5, precision n/a, recall 0.000,
+- Stub: TP=14 FP=3 TN=12 FN=1, precision 0.824, recall 0.933,
+  false-positive rate 0.200, false-negative rate 0.067,
+  category accuracy 0.800, errors 0
+- Baseline: TP=0 FP=0 TN=15 FN=15, precision n/a, recall 0.000,
   false-positive rate 0.000, false-negative rate 1.000,
-  category accuracy 0.150, errors 0
+  category accuracy 0.100, errors 0
 
 Documented stub misses: IGN-003 predicted indeterminate (a missed
 alert); IGN-007, IGN-010, IGN-018 predicted an alert category on a
 confusable negative (false alarms); IGN-012 and IGN-015 predicted a
-wrong non-alert category. The stub beats the baseline on recall
-(0.800 vs 0.000) and category accuracy (0.700 vs 0.150) — the
+wrong non-alert category. The current-set scenarios (IGN-021..030)
+are all answered with their labeled category. The stub beats the
+baseline on recall
+(0.933 vs 0.000) and category accuracy (0.800 vs 0.100) — the
 comparison exercises the harness on a source that sometimes alerts
 and sometimes misses, which the do-nothing baseline cannot do.
-Neither number describes a model.
+Neither number describes a model. On the frozen legacy set
+(`run.mjs --legacy --stub`): stub TP=4 FP=3 TN=12 FN=1, precision
+0.571, recall 0.800, category accuracy 0.700; baseline TP=0 FP=0
+TN=15 FN=5, category accuracy 0.150.
 
 ## The held-state run, and why it is not the baseline
 
-`node eval/ignis/run.mjs` (no flag) runs the 20 labeled scenarios
-against the real server model adapter. Measured 2026-10-28 (held
-numbers, not model performance):
+`node eval/ignis/run.mjs` (no flag) runs the 30 labeled scenarios
+of the current set against the real server model adapter. Measured
+2026-10-31 (held numbers, not model performance):
 
-- Held: TP=0 FP=0 TN=15 FN=5, precision n/a, recall 0.000,
+- Held: TP=0 FP=0 TN=15 FN=15, precision n/a, recall 0.000,
   false-positive rate 0.000, false-negative rate 1.000,
-  category accuracy 0.000, errors 20 (every scenario, same refusal)
+  category accuracy 0.000, errors 30 (every scenario, same refusal)
+
+On the frozen legacy set (`run.mjs --legacy`): TP=0 FP=0 TN=15
+FN=5, category accuracy 0.000, errors 20.
 
 The confusion counts match the baseline's, but the runs are not
 equivalent: the baseline predicts "no hazard visible" everywhere
@@ -516,6 +557,7 @@ of fabricating assessments; it proves nothing about detection.
 node eval/ignis/run.mjs
 node eval/ignis/run.mjs --baseline
 node eval/ignis/run.mjs --stub
+node eval/ignis/run.mjs --legacy --stub   # frozen benchmark set
 node eval/ignis/run.mjs --out eval/ignis/last-run.json
 npm test   # runs the whole repo suite, including eval/ignis/adapter.test.mjs and report.test.mjs
 ```
