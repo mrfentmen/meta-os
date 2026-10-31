@@ -15,14 +15,18 @@ One pluggable module, two transports, chosen by environment:
       through spark_guardrail ($75 hard stop). The key value is never
       printed, logged, or written anywhere by this module.
 
-  (b) DEV (TRIO_SPARK_VIA_HELPER=1): delegate to the connector
-      helper ~/workspace/custom-connectors/custom.meta-model-api/bin/
+  (b) DEV ONLY, EXPLICIT OPT-IN (TRIO_SPARK_VIA_HELPER=1 set by
+      hand — never auto-selected, and run-stack.sh no longer sets
+      it): delegate to the connector helper
+      ~/workspace/custom-connectors/custom.meta-model-api/bin/
       spark_call.py `assess`, which reaches the vaulted key through
-      the credential surrogate. This is the only transport reachable
-      from the Pax sandbox (the raw key never enters it), and it is
-      the path the 2026-10-30 live proofs ran on. The helper's own
-      guardrail_state.json counts those calls; this module's
-      guardrail is not double-applied on that path.
+      the credential surrogate. The helper lives OUTSIDE this
+      repository, so this route is not part of a standalone run;
+      it exists for the Pax sandbox (the raw key never enters it),
+      and it is the path the 2026-10-30 live proofs ran on. The
+      helper's own guardrail_state.json counts those calls; this
+      module's guardrail is not double-applied on that path. The
+      production path is (a): SPARK_API_KEY in the environment.
 
 generate() returns (assessment_dict, model_reported, latency_ms) and
 raises on any failure — callers turn that into a failed result
@@ -185,6 +189,14 @@ def _generate_direct(product, image_bytes, timestamp, correction=None):
 # -- transport (b): DEV helper subprocess (guardrail lives there) -------
 
 def _generate_via_helper(product, image_path, timestamp, correction=None):
+    if not os.path.exists(SPARK_CALL):
+        raise RuntimeError(
+            "DEV helper transport is an explicit dev-only opt-in "
+            "(TRIO_SPARK_VIA_HELPER=1), not a default: the helper at "
+            f"{SPARK_CALL} lives outside this repository and is not "
+            "present here. For a standalone run, set SPARK_API_KEY "
+            "in the environment and use the production direct "
+            "transport instead.")
     if correction:
         # The helper's fixed CLI (spark_call.py assess) takes only
         # --product/--image/--timestamp: there is no channel for the

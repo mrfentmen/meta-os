@@ -107,10 +107,16 @@ class CrewRecords:
 
     def open_incidents(self):
         """Incidents still live for patrol prioritization: anything
-        not closed by review or by a simulated dispatch."""
+        not closed as a false positive, dispatched (simulated), or
+        stopped. The legacy statuses from the fixed-pipeline era
+        (flagged / reported) count as live alongside the
+        orchestrator lifecycle's (candidate / under_review /
+        investigating / monitoring / response_prepared)."""
         return [r for r in self.list_incidents()
                 if r.get("status") in ("flagged", "reported",
-                                       "investigating")]
+                                       "candidate", "under_review",
+                                       "investigating", "monitoring",
+                                       "response_prepared")]
 
     # -- event feed ------------------------------------------------------
 

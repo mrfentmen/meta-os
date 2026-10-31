@@ -280,10 +280,19 @@ class CrewPipelineTests(unittest.TestCase):
         self.assertEqual(len(assessor.calls), 2)  # patrol + review only
         self.assertEqual(dispatched, [])
         incident = records.list_incidents()[0]
-        self.assertEqual(incident["status"], "cleared-by-review")
+        # Orchestrator lifecycle: the review's look-alike verdict
+        # earns a close_candidate decision, recorded on the
+        # timeline; the incident closes as a false positive (the
+        # record is kept, not erased).
+        self.assertEqual(incident["status"], "closed-false-positive")
         steps = [s["step"] for s in incident["timeline"]]
-        self.assertEqual(steps, ["flag", "review"])
-        review_step = incident["timeline"][1]
+        self.assertEqual(steps, ["flag", "decision", "review",
+                                 "decision"])
+        decisions = [s["decision"] for s in incident["timeline"]
+                     if s["step"] == "decision"]
+        self.assertEqual(decisions, ["investigate", "close_candidate"])
+        review_step = [s for s in incident["timeline"]
+                       if s["step"] == "review"][0]
         self.assertEqual(review_step["verdict"], "cleared")
         self.assertEqual(review_step["category"], "normal activity")
 
@@ -296,9 +305,17 @@ class CrewPipelineTests(unittest.TestCase):
         self.assertEqual(len(assessor.calls), 2)
         self.assertEqual(dispatched, [])
         incident = records.list_incidents()[0]
-        self.assertEqual(incident["status"], "flagged")
-        self.assertEqual(incident["timeline"][1]["verdict"],
-                         "inconclusive")
+        # Orchestrator lifecycle: an inconclusive review earns a
+        # continue_monitoring decision — the incident stays open
+        # in monitoring, unconfirmed, with no further spend.
+        self.assertEqual(incident["status"], "monitoring")
+        review_step = [s for s in incident["timeline"]
+                       if s["step"] == "review"][0]
+        self.assertEqual(review_step["verdict"], "inconclusive")
+        decisions = [s["decision"] for s in incident["timeline"]
+                     if s["step"] == "decision"]
+        self.assertEqual(decisions,
+                         ["investigate", "continue_monitoring"])
 
     def test_confirmed_flag_full_pipeline_and_bound(self):
         assessor = ScriptedAssessor({
@@ -313,15 +330,23 @@ class CrewPipelineTests(unittest.TestCase):
         incident = records.list_incidents()[0]
         self.assertEqual(incident["status"], "dispatched-simulated")
         steps = [s["step"] for s in incident["timeline"]]
-        self.assertEqual(steps[0], "flag")
-        self.assertEqual(steps[1], "review")
-        self.assertEqual(steps[2], "reported")
+        # Orchestrator decisions interleave the work steps: the
+        # sequence of work is the one the fixed pipeline ran, but
+        # each stage was chosen by a recorded decision.
+        work = [s for s in steps if s != "decision"]
+        self.assertEqual(work[0], "flag")
+        self.assertEqual(work[1], "review")
+        self.assertEqual(work[2], "reported")
+        decisions = [s["decision"] for s in incident["timeline"]
+                     if s["step"] == "decision"]
+        self.assertEqual(decisions, ["investigate", "investigate",
+                                     "prepare_response"])
         inv = [s for s in incident["timeline"]
                if s["step"] == "investigation"]
         # 2 cross-lens + 3 neighbours = 5, under the stated cap of 6.
         self.assertEqual(len(inv), 5)
         self.assertLessEqual(len(inv), crew.MAX_INVESTIGATION_CALLS)
-        self.assertEqual(steps[-2:], ["brief", "dispatch"])
+        self.assertEqual(work[-2:], ["brief", "dispatch"])
         # Total model calls: patrol + review + investigation.
         self.assertEqual(len(assessor.calls), 2 + 5)
         # Review used a DISTINCT timestamp (a distinct job), or the

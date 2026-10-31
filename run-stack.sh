@@ -13,11 +13,17 @@
 # stops all four processes via the trap below.
 #
 # Generation transport: if SPARK_API_KEY is already in the environment
-# the agent uses the production direct transport. Otherwise the stack
-# falls back to the DEV helper transport (TRIO_SPARK_VIA_HELPER=1) and
-# says so loudly. TRIO_JOB_NS, if exported before running this script,
-# is inherited by the queue service and the agent (proofs use a
-# scratch namespace; the default is "trio").
+# the agent uses the production direct transport (the documented
+# production path). The DEV helper transport is NEVER auto-selected:
+# it is used only when TRIO_SPARK_VIA_HELPER=1 was exported by hand,
+# because the helper lives outside this repository. With no key and
+# no explicit helper opt-in, the stack still starts, in a clearly
+# labelled NOT CONFIGURED / offline mode: queue, relay, and UI run,
+# but generation is honestly unavailable (assessments fail as
+# not_configured) until SPARK_API_KEY is set. TRIO_JOB_NS, if
+# exported before running this script, is inherited by the queue
+# service and the agent (proofs use a scratch namespace; the default
+# is "trio").
 
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -32,11 +38,15 @@ APP_BASE="http://127.0.0.1:${APP_PORT}"
 if [ -n "${SPARK_API_KEY:-}" ]; then
   unset TRIO_SPARK_VIA_HELPER
   echo "Generation transport: production direct (SPARK_API_KEY present)."
+elif [ "${TRIO_SPARK_VIA_HELPER:-}" = "1" ]; then
+  echo "Generation transport: DEV helper (TRIO_SPARK_VIA_HELPER=1 was set"
+  echo "         explicitly). Dev-only opt-in; the helper lives outside"
+  echo "         this repository and is not part of a standalone run."
 else
-  export TRIO_SPARK_VIA_HELPER=1
-  echo "WARNING: SPARK_API_KEY is not set — using the DEV helper transport"
-  echo "         (TRIO_SPARK_VIA_HELPER=1). Sandbox/development only; the"
-  echo "         production run sets SPARK_API_KEY in the environment."
+  echo "WARNING: SPARK_API_KEY is not set — generation is NOT CONFIGURED."
+  echo "         Starting in offline mode: relay, queue, and UI run, but"
+  echo "         assessments are unavailable until SPARK_API_KEY is set"
+  echo "         in the environment (the production direct path)."
 fi
 
 PIDS=()

@@ -44,11 +44,30 @@ POST /api/assess                         POST /jobs                 polls the jo
    snapshots as jobs on this same queue, and runs review →
    records → investigation → response for whatever flags
    (`crew.py`, records in `crew_records.py`, shared core in
-   `crew_common.py`). Its response step dispatches ONLY to this
+   `crew_common.py`). The sequence is not scripted: after a flag,
+   the deterministic orchestrator (`orchestrator.py` — no model
+   calls, $0) is consulted after every result and decides the
+   next step (investigate / reconcile / close_candidate /
+   prepare_response / continue_monitoring / stop), enforcing
+   per-incident limits in code (max 8 actions, 12 model calls,
+   $0.50, plus a same-evidence loop guard); every decision is
+   appended to the incident timeline and the event feed. Its
+   response step dispatches ONLY to this
    service's SIMULATED endpoint (`POST /dispatch-simulated`,
    loopback-checked in `crew.py` — no real emergency service is
    ever contacted). Patrol and the resident agent must both run
    for crew checks to be answered.
+5. **Autonomous supervisor** — `python3 supervisor.py --once`.
+   A deterministic monitor (no model calls, $0 spend) that reads
+   the crew records + guardrail status and evaluates whether the
+   system is behaving correctly: stale patrol, stuck incidents,
+   repeated review disagreement, repeated job failures (a
+   repeatedly failing feed is paused via `paused-feeds.json`,
+   which patrol honours), spend approaching the cap, and
+   orchestrator re-investigation loops. Its interventions are
+   appended to the same event feed and incident timelines; it
+   files no assessments, dispatches nothing, and never overrides
+   the budget or safety policy.
 
 ## The wire shape (ruled final)
 
@@ -115,8 +134,16 @@ identity, flag tables loaded from the real `js/command-flag.js`,
 review cleared/confirmed/inconclusive, the investigation bound,
 the brief through the real `validateAssessment`, append-only
 records, patrol ordering/priority/budget-pause, the loopback
-dispatch guard, and the SIMULATED dispatch route end to end.
-50 tests.
+dispatch guard, and the SIMULATED dispatch route end to end —
+and (`test_supervisor.py`) the autonomous supervisor: every
+detector firing and not firing, pause_feed excluding a camera
+from patrol's cycle, and the no-spend/no-assessment invariant —
+and (`test_orchestrator.py`) the orchestrator: the decision
+contract shape, look-alike closure, response gating on review
+survival + investigation, every stop condition (actions, model
+calls, cost, guardrail exhaustion) refusing further spend, the
+same-evidence loop guard, and decisions appended to the timeline.
+90 tests.
 
 ## Status (honest labels, 2026-10-30)
 
@@ -135,6 +162,9 @@ dispatch guard, and the SIMULATED dispatch route end to end.
   stubbed-HTTP unit test, but it has never run against the real API
   with a real key: the sandbox holds no raw key by design. It
   becomes verified when it runs on Del's Mac.
-- **Not yet done:** wiring `/api/assess` to submit/poll through
-  this service (Rowan's `server/queue.mjs` step), and running the
-  service + agent as standing processes instead of by hand.
+- **`/api/assess` queue wiring — DONE.** The app server submits
+  and polls through this service when the queue is enabled
+  (`server/queue.mjs` + `server/assess.mjs` try the queue first;
+  the direct path in `server/model.mjs` is the fallback). Not yet
+  done: running the service + agent as standing processes
+  instead of by hand.

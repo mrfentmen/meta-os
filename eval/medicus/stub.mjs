@@ -83,7 +83,11 @@ export async function assessStub(scenario) {
   } else if (CORRECT[scenario.scenario_id]) {
     [category, summary] = CORRECT[scenario.scenario_id];
     uncertainty = category === "indeterminate" ? ["Cannot determine the condition from this frame."] : [];
-    review = category === "indeterminate";
+    // Medicus rule (js/products.js): EVERY Medicus assessment
+    // requires human verification, and the validator enforces it
+    // (2026-10-30) — fixture answers therefore carry review=true,
+    // as the TABLE entries above already did.
+    review = true;
   } else {
     throw new Error(`stub has no fixture for scenario ${scenario.scenario_id}`);
   }

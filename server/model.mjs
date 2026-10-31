@@ -20,11 +20,20 @@
 //      Del puts SPARK_API_KEY in the server environment on the Mac
 //      himself — it is never sent over the bus or committed.
 //
+//   4. Every direct call — including one made after server/assess.mjs
+//      falls back from a failed queue attempt — passes the shared
+//      spend guardrail first (server/budget.mjs, the Node mirror of
+//      server/queue/spark_guardrail.py, same $75 ledger). The budget
+//      is checked before the call and recorded after it; a reached
+//      cap or an unreadable ledger fails closed with a ModelError
+//      and no call is sent.
+//
 // In every state this adapter either returns a real model response or
 // throws a typed ModelError. It never fabricates an assessment. Tests
 // inject a stub fetch via deps; no test ever fires a live call.
 
 import { PRODUCTS, PRODUCT_BY_ID } from "../js/products.js";
+import { checkBudget, recordBudgetCall } from "./budget.mjs";
 
 export class ModelError extends Error {
   constructor(code, message) {
@@ -147,6 +156,16 @@ export async function assessWithModel(input, env = process.env, deps = {}) {
       "No model API key is configured on the server. Set SPARK_API_KEY in the server environment.",
     );
   }
+  // Spend guardrail, checked before ANY direct Spark call on this
+  // path. deps.budgetPath overrides the ledger location (tests);
+  // undefined uses the shared default — the same file the Python
+  // queue guardrail counts in.
+  const budgetPath = deps.budgetPath;
+  try {
+    checkBudget(budgetPath);
+  } catch (err) {
+    throw new ModelError("model_call_failed", err && err.message ? err.message : String(err));
+  }
   const fetchFn = deps.fetch ?? globalThis.fetch;
   if (typeof fetchFn !== "function") {
     throw new ModelError("model_call_failed", "No fetch implementation is available for the Spark transport.");
@@ -161,6 +180,7 @@ export async function assessWithModel(input, env = process.env, deps = {}) {
     throw new ModelError("model_call_failed", "No image bytes were supplied for the Spark transport.");
   }
   const imageUrl = `data:image/jpeg;base64,${imageBytes.toString("base64")}`;
+  const startedAt = Date.now();
   let res;
   try {
     res = await fetchFn(SPARK_ENDPOINT, {
@@ -198,6 +218,25 @@ export async function assessWithModel(input, env = process.env, deps = {}) {
     data = await res.json();
   } catch {
     throw new ModelError("model_call_failed", "Spark response was not JSON.");
+  }
+  // The call completed and is billable: count it in the shared
+  // guardrail ledger, mirroring spark_gen.py, which records on
+  // payload receipt, before content checks. A ledger that cannot
+  // be written fails the request rather than letting spend go
+  // uncounted.
+  try {
+    recordBudgetCall(
+      `assess:${input.product}`,
+      data && data.model ? data.model : SPARK_MODEL,
+      data ? data.usage : undefined,
+      Date.now() - startedAt,
+      budgetPath,
+    );
+  } catch (err) {
+    throw new ModelError(
+      "model_call_failed",
+      `Budget ledger record failed: ${err && err.message ? err.message : String(err)}`,
+    );
   }
   const content = messageContent(data);
   if (typeof content !== "string" || content.trim().length === 0) {

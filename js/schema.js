@@ -33,6 +33,18 @@
 //   `processing.model` must be non-empty strings.
 // - `observations` and `uncertainty` may be empty arrays.
 // - Extra fields are tolerated; nothing here fabricates a value.
+// - Category membership IS enforced (2026-10-30): the assessment
+//   category and every observation category must belong to the
+//   selected product's own category list in js/products.js — the
+//   prompts already promise this; the validator now holds the line
+//   instead of accepting any non-empty string.
+// - Medicus human review IS enforced (2026-10-30): a Medicus
+//   assessment with requires_human_review === false is rejected.
+//   The Medicus config (js/products.js) states every assessment
+//   requires human verification; previously the validator only
+//   checked the field was a boolean.
+
+import { PRODUCT_BY_ID } from "./products.js";
 
 function isPlainObject(v) {
   return typeof v === "object" && v !== null && !Array.isArray(v);
@@ -131,6 +143,19 @@ export function validateAssessment(value, expectedProduct) {
     return { ok: false, errors: ["response is not a JSON object"] };
   }
 
+  // The product whose rules govern this assessment: the requested
+  // product when it is a known one, else the response's own product
+  // when that is known. The permitted categories come from
+  // js/products.js — the same source the prompts are built from,
+  // never a second hand-typed list here.
+  const productId =
+    typeof expectedProduct === "string" && Object.hasOwn(PRODUCT_BY_ID, expectedProduct)
+      ? expectedProduct
+      : typeof value.product === "string" && Object.hasOwn(PRODUCT_BY_ID, value.product)
+        ? value.product
+        : null;
+  const permittedCategories = productId ? new Set(PRODUCT_BY_ID[productId].categories) : null;
+
   if (typeof expectedProduct !== "string" || expectedProduct.length === 0) {
     errors.push("expected product: missing or invalid (validator requires the requested product)");
   } else if (!isNonEmptyString(value.product)) {
@@ -156,6 +181,10 @@ export function validateAssessment(value, expectedProduct) {
       }
       if (!isNonEmptyString(obs.category)) {
         errors.push(`${prefix}.category: missing or not a non-empty string`);
+      } else if (permittedCategories && !permittedCategories.has(obs.category)) {
+        errors.push(
+          `${prefix}.category: "${obs.category}" is not a permitted category for product "${productId}"`,
+        );
       }
       if (!isNonEmptyString(obs.description)) {
         errors.push(`${prefix}.description: missing or not a non-empty string`);
@@ -173,6 +202,10 @@ export function validateAssessment(value, expectedProduct) {
     const a = value.assessment;
     if (!isNonEmptyString(a.category)) {
       errors.push("assessment.category: missing or not a non-empty string");
+    } else if (permittedCategories && !permittedCategories.has(a.category)) {
+      errors.push(
+        `assessment.category: "${a.category}" is not a permitted category for product "${productId}"`,
+      );
     }
     if (typeof a.summary !== "string") {
       errors.push("assessment.summary: missing or not a string");
@@ -188,6 +221,10 @@ export function validateAssessment(value, expectedProduct) {
     }
     if (typeof a.requires_human_review !== "boolean") {
       errors.push("assessment.requires_human_review: missing or not a boolean");
+    } else if (productId === "medicus" && a.requires_human_review !== true) {
+      errors.push(
+        "assessment.requires_human_review: must be true for medicus — every Medicus assessment requires human verification",
+      );
     }
   }
 

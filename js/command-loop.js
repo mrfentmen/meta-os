@@ -50,6 +50,8 @@ export function loopEventText(event) {
       return `Review — ${cam}: inconclusive — flag stays for human review`;
     case "incident":
       return `Incident REPORTED — ${cam} · ${div}: ${event.category ?? ""} (${event.priority ?? "low"} priority)`;
+    case "orchestrator":
+      return `Orchestrator — ${cam} · ${div}: ${event.decision ?? "decision"} (${event.actions ?? 0} actions) — ${event.reason ?? ""}`.trim();
     case "investigation":
       return `Investigation — ${cam}: ${event.calls ?? 0} extra checks, ${event.flags_found ?? 0} further flags`;
     case "dispatch":

@@ -58,6 +58,16 @@ test("incident, investigation, and dispatch lines — dispatch says SIMULATED", 
   );
 });
 
+test("orchestrator decisions render as decisions with their reason", () => {
+  const line = loopEventText({
+    type: "orchestrator", agent: "orchestrator", camera_name: "X", division: "ignis",
+    decision: "investigate", actions: 1,
+    reason: "flagged category is outside the ignis baseline set and no independent review has been recorded yet",
+  });
+  assert.match(line, /Orchestrator — X · Ignis: investigate \(1 actions\)/);
+  assert.match(line, /no independent review/);
+});
+
 test("unknown event types are skipped, never rendered as guesses", () => {
   assert.equal(loopEventText({ type: "something-else" }), null);
   assert.equal(loopEventText(null), null);

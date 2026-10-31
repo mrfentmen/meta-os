@@ -74,6 +74,40 @@ document says so in plain terms.
    decision-maker, in observation language. Nothing states that an
    incident or offense occurred; nothing directs a dispatch.
 
+## The orchestrator — the sequence is decided, not scripted
+
+`server/queue/orchestrator.py`. The five stages above are the
+crew's *capabilities*, not a fixed order of execution. After a
+flag, `crew.py` consults the orchestrator after **every** result
+lands, and the orchestrator — a deterministic decision engine that
+makes no model calls and spends nothing — returns the next
+decision from the incident's current record:
+
+| Decision | Meaning |
+| --- | --- |
+| `investigate` | Order the next evidence step (review of a fresh flag; investigation of a confirmed one) |
+| `reconcile` | Assessments conflict, or a lens is missing from the investigation record — order a re-review or the missing lens |
+| `close_candidate` | Review returned a baseline (look-alike) category — close as a false positive; the record is kept, never erased |
+| `prepare_response` | Flag + review survived + investigation done — build the brief, submit to the simulated endpoint |
+| `continue_monitoring` | Evidence insufficient (inconclusive review, loop guard) — incident stays open, nothing spent |
+| `stop` | A stop condition hit, or the lifecycle is complete |
+
+Each decision is a contract
+(`{incident_id, decision, reason, actions, stop_conditions}`) and
+is appended to the incident's timeline and to `events.jsonl`
+(rendered in the loop feed as `Orchestrator — …`).
+
+**Limits are enforced in the orchestrator's code, not in any
+prompt:** `max_actions` 8, `max_model_calls` 12, `max_cost_usd`
+$0.50 *per incident*, counted from the incident's own timeline,
+plus the shared $75 guardrail status — a decision that would
+breach any of them is refused as `stop`, with the reason naming
+the limit. A loop guard refuses to investigate the same evidence
+frame hash a third time. Incident lifecycle statuses:
+`candidate → under_review → investigating → response_prepared →
+dispatched-simulated`, or `closed-false-positive` / `monitoring`
+/ `stopped`. Tests: `tests/queue-python/test_orchestrator.py`.
+
 ## The dispatch boundary — read this before demoing
 
 The response step "dispatches" the package **only** to the stack's

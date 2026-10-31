@@ -1,6 +1,12 @@
-"""crew.py — the Meta Imperium agent crew orchestrator.
+"""crew.py — the Meta Imperium agent crew.
 
-One patrol check runs the crew's pipeline (docs/AGENT_CREW.md):
+One patrol check runs the crew (docs/AGENT_CREW.md). Since the
+orchestrator landed (orchestrator.py), the crew is NOT a fixed
+pipeline: after a flag, every next step is chosen by the
+orchestrator's deterministic decision engine from the incident's
+current record — review, then a fresh decision, then investigation,
+then a fresh decision, then response — with its limits enforced in
+code. The stages the decisions choose between:
 
   PATROL    a snapshot from one camera is filed as a trio-assessment
             job on the existing queue and answered by the resident
@@ -52,6 +58,7 @@ from datetime import datetime, timedelta, timezone
 
 import crew_common
 import crew_records
+import orchestrator
 import trio_store
 
 # Investigation bound, stated here once: at most this many extra
@@ -219,6 +226,18 @@ def build_brief(record, results):
     requires_human_review — always true."""
     observations = []
     for result in results:
+        # The brief is a single-product v2 contract (the origin
+        # division's), and js/schema.js enforces that product's
+        # permitted categories on every observation it carries —
+        # so the brief carries the origin division's observations
+        # only. Cross-division investigation findings stay on the
+        # incident timeline, where they belong, and in the
+        # recommended actions; they are not dropped from the
+        # record, only from this one-product document.
+        product = ((result.get("assessment") or {}).get("product")
+                   if isinstance(result, dict) else None)
+        if product is not None and product != record["division"]:
+            continue
         observations.extend(_observations_of(result))
     uncertainty = []
     for result in results:
@@ -253,16 +272,19 @@ def build_brief(record, results):
 
 
 class Crew:
-    """The pipeline for one patrol check. Seams are injected;
-    production wiring is Crew.production()."""
+    """The crew for one patrol check. Seams are injected;
+    production wiring is Crew.production(). The orchestrator is a
+    seam too — tests may inject one bound to the same records."""
 
     def __init__(self, records, assess, fetch_snapshot, dispatch,
-                 cameras=()):
+                 cameras=(), orchestrator_engine=None):
         self.records = records
         self.assess = assess
         self.fetch_snapshot = fetch_snapshot
         self.dispatch = dispatch
         self.cameras = list(cameras)
+        self.orchestrator = orchestrator_engine or \
+            orchestrator.Orchestrator(records)
 
     @classmethod
     def production(cls, records=None, cameras=()):
@@ -333,9 +355,11 @@ class Crew:
         priority = crew_common.priority_for_category(division, category)
         incident_id = "incident-" + hashlib.sha256(
             first_result["job_id"].encode()).hexdigest()[:16]
+        evidence_hash = hashlib.sha256(frame).hexdigest()
         record = {
             "id": incident_id,
-            "status": "flagged",
+            "status": "candidate",
+            "evidence": {"frame_sha256": evidence_hash},
             "created_at": crew_common.now_iso(),
             "camera": {"id": camera["id"], "name": camera["name"],
                        "area": camera.get("area"),
@@ -355,6 +379,7 @@ class Crew:
             "model": first_result.get("model"),
             "latency_ms": first_result.get("latency_ms"),
             "summary": _summary_of(first_result),
+            "frame_sha256": evidence_hash,
         })
         self.records.append_event({
             "at": crew_common.now_iso(),
@@ -364,72 +389,75 @@ class Crew:
             "division": division, "category": category,
             "priority": priority})
 
-        # REVIEW — independent second assessment of the same frame.
-        # Its timestamp must differ from the patrol job's filing
-        # timestamp: same product + timestamp + frame would rebuild
-        # the SAME deterministic job id and the "second reading"
-        # would silently be the first one's stored result.
-        review_ts = _distinct_timestamp(crew_common.now_iso(),
-                                        first_timestamp)
-        try:
-            review = self.assess(division, frame, review_ts)
-        except Exception as e:
-            review = {"status": "failed", "error": str(e)[:200],
-                      "job_id": None}
-        review_category = _category_of(review)
-        if review.get("status") == "ok" and review_category is not None \
-                and not crew_common.is_flagged_category(division,
-                                                        review_category):
-            verdict = "cleared"
-        elif review.get("status") == "ok" and review_category is not None:
-            verdict = "confirmed"
-        else:
-            verdict = "inconclusive"
-        self.records.append_timeline(incident_id, {
-            "at": crew_common.now_iso(), "step": "review",
-            "verdict": verdict, "category": review_category,
-            "job_id": review.get("job_id"),
-            "model": review.get("model"),
-            "latency_ms": review.get("latency_ms"),
-            "error": review.get("error"),
-            "summary": _summary_of(review),
-            "status": "cleared-by-review" if verdict == "cleared"
-                      else None,
-        })
-        self.records.append_event({
-            "at": crew_common.now_iso(), "type": "review",
-            "incident_id": incident_id, "camera_id": camera["id"],
-            "camera_name": camera["name"], "division": division,
-            "verdict": verdict, "category": review_category})
-        if verdict == "cleared":
-            return {"outcome": "cleared-by-review",
-                    "incident_id": incident_id, "category": category}
-        if verdict == "inconclusive":
-            # The flag is neither confirmed nor cleared. It stays on
-            # the record as flagged (human review is exactly the
-            # fallback the contract names); no investigation or
-            # dispatch is spent on an unconfirmed flag.
-            return {"outcome": "flagged-unconfirmed",
-                    "incident_id": incident_id, "category": category}
-
-        # REPORTED.
-        self.records.append_timeline(incident_id, {
-            "at": crew_common.now_iso(), "step": "reported",
-            "status": "reported"})
-        self.records.append_event({
-            "at": crew_common.now_iso(), "type": "incident",
-            "incident_id": incident_id, "camera_id": camera["id"],
-            "camera_name": camera["name"], "area": camera.get("area"),
-            "division": division, "category": category,
-            "priority": priority, "status": "reported"})
-
-        # INVESTIGATION — bounded extra calls.
-        investigation = self._investigate(
-            self.records.get_incident(incident_id), camera, division)
-        results = [first_result, review] + \
-            [e["result"] for e in investigation if e.get("result")]
-
-        # RESPONSE — brief + SIMULATED dispatch.
+        # ORCHESTRATOR LOOP — from here the sequence is chosen,
+        # not scripted: the orchestrator is consulted after every
+        # result lands and returns the NEXT decision from the
+        # incident's current record (review first, typically — but
+        # that is its decision, re-made at every step, not a
+        # hardcoded order). Cleared flags close as false positives
+        # (the orchestrator's call, on the record); inconclusive
+        # ones hold in monitoring with no further spend; limit
+        # breaches stop the incident where it stands.
+        results = [first_result]
+        reported = False
+        while True:
+            record = self.records.get_incident(incident_id)
+            decision = self.orchestrator.step(
+                record, evidence_hash=evidence_hash)
+            name = decision["decision"]
+            if name == "close_candidate":
+                return {"outcome": "cleared-by-review",
+                        "incident_id": incident_id,
+                        "category": category}
+            if name == "continue_monitoring":
+                # The flag is neither confirmed nor cleared. It
+                # stays on the record, open in monitoring (human
+                # review is exactly the fallback the contract
+                # names); no investigation or dispatch is spent on
+                # an unconfirmed flag.
+                return {"outcome": "flagged-unconfirmed",
+                        "incident_id": incident_id,
+                        "category": category}
+            if name == "stop":
+                return {"outcome": "stopped",
+                        "incident_id": incident_id,
+                        "category": category,
+                        "reason": decision["reason"]}
+            if name == "prepare_response":
+                break
+            # investigate / reconcile: execute the ordered actions,
+            # then loop back and let the orchestrator replan from
+            # the new state.
+            for action in decision["actions"]:
+                agent = action.get("agent")
+                if agent == "review":
+                    review, verdict = self._run_review(
+                        incident_id, camera, division, frame,
+                        first_timestamp)
+                    if review.get("status") == "ok":
+                        results.append(review)
+                    if verdict == "confirmed" and not reported:
+                        reported = True
+                        self._mark_reported(incident_id, camera,
+                                            division, category,
+                                            priority)
+                elif agent == "investigation":
+                    lenses = None
+                    if name == "reconcile":
+                        # Execute the reconcile order itself: only
+                        # the lens the orchestrator found missing.
+                        missing = orchestrator.missing_lenses(
+                            self.records.get_incident(incident_id))
+                        lenses = tuple(missing) or None
+                    investigation = self._investigate(
+                        self.records.get_incident(incident_id),
+                        camera, division, lenses=lenses)
+                    results += [e["result"] for e in investigation
+                                if e.get("result")]
+                elif agent == "response":
+                    break
+        # RESPONSE — brief + SIMULATED dispatch (the orchestrator's
+        # prepare_response decision brought us here).
         record = self.records.get_incident(incident_id)
         brief = build_brief(record, results)
         package = {
@@ -473,9 +501,67 @@ class Crew:
         return {"outcome": outcome, "incident_id": incident_id,
                 "category": category}
 
+    # -- review and reported (executed on the orchestrator's word) --------
+
+    def _run_review(self, incident_id, camera, division, frame,
+                    first_timestamp):
+        """REVIEW — independent second assessment of the same frame.
+        Its timestamp must differ from the patrol job's filing
+        timestamp: same product + timestamp + frame would rebuild
+        the SAME deterministic job id and the "second reading"
+        would silently be the first one's stored result. Appends
+        the review step + event; returns (review, verdict). The
+        step carries no status — the orchestrator's next decision
+        moves the lifecycle (close / investigate / monitoring)."""
+        review_ts = _distinct_timestamp(crew_common.now_iso(),
+                                        first_timestamp)
+        try:
+            review = self.assess(division, frame, review_ts)
+        except Exception as e:
+            review = {"status": "failed", "error": str(e)[:200],
+                      "job_id": None}
+        review_category = _category_of(review)
+        if review.get("status") == "ok" and review_category is not None \
+                and not crew_common.is_flagged_category(division,
+                                                        review_category):
+            verdict = "cleared"
+        elif review.get("status") == "ok" and review_category is not None:
+            verdict = "confirmed"
+        else:
+            verdict = "inconclusive"
+        self.records.append_timeline(incident_id, {
+            "at": crew_common.now_iso(), "step": "review",
+            "verdict": verdict, "category": review_category,
+            "job_id": review.get("job_id"),
+            "model": review.get("model"),
+            "latency_ms": review.get("latency_ms"),
+            "error": review.get("error"),
+            "summary": _summary_of(review),
+            "status": None,
+        })
+        self.records.append_event({
+            "at": crew_common.now_iso(), "type": "review",
+            "incident_id": incident_id, "camera_id": camera["id"],
+            "camera_name": camera["name"], "division": division,
+            "verdict": verdict, "category": review_category})
+        return review, verdict
+
+    def _mark_reported(self, incident_id, camera, division, category,
+                       priority):
+        """A review-confirmed flag is a reported incident."""
+        self.records.append_timeline(incident_id, {
+            "at": crew_common.now_iso(), "step": "reported",
+            "status": "reported"})
+        self.records.append_event({
+            "at": crew_common.now_iso(), "type": "incident",
+            "incident_id": incident_id, "camera_id": camera["id"],
+            "camera_name": camera["name"], "area": camera.get("area"),
+            "division": division, "category": category,
+            "priority": priority, "status": "reported"})
+
     # -- investigation -----------------------------------------------------
 
-    def _investigate(self, record, camera, division):
+    def _investigate(self, record, camera, division, lenses=None):
         """Bounded: cross-division lenses on the incident camera,
         then nearest neighbours under the origin division, until
         MAX_INVESTIGATION_CALLS extra assessments are spent. Every
@@ -493,6 +579,7 @@ class Crew:
                      "at": crew_common.now_iso()}
             try:
                 frame = self.fetch_snapshot(cam)
+                entry["frame_sha256"] = hashlib.sha256(frame).hexdigest()
                 result = self.assess(lens, frame,
                                      crew_common.now_iso())
                 cat = _category_of(result)
@@ -516,6 +603,7 @@ class Crew:
                 "camera_name": cam["name"], "division": lens,
                 "category": entry["category"],
                 "flagged": entry["flagged"],
+                "frame_sha256": entry.get("frame_sha256"),
                 "job_id": entry.get("job_id"),
                 "model": entry.get("model"),
                 "latency_ms": entry.get("latency_ms"),
@@ -524,16 +612,24 @@ class Crew:
             })
             return entry
 
-        for lens in others:
-            if calls >= MAX_INVESTIGATION_CALLS:
-                break
-            attempt("cross-lens", camera, lens)
-        for near in crew_common.nearest_cameras(
-                self.cameras, camera, limit=NEIGHBOUR_SAMPLES,
-                exclude_id=camera["id"]):
-            if calls >= MAX_INVESTIGATION_CALLS:
-                break
-            attempt("neighbour", near["camera"], division)
+        if lenses is not None:
+            # A reconcile order: only the named lens/lenses, on the
+            # incident camera — not a fresh full investigation.
+            for lens in lenses:
+                if calls >= MAX_INVESTIGATION_CALLS:
+                    break
+                attempt("cross-lens", camera, lens)
+        else:
+            for lens in others:
+                if calls >= MAX_INVESTIGATION_CALLS:
+                    break
+                attempt("cross-lens", camera, lens)
+            for near in crew_common.nearest_cameras(
+                    self.cameras, camera, limit=NEIGHBOUR_SAMPLES,
+                    exclude_id=camera["id"]):
+                if calls >= MAX_INVESTIGATION_CALLS:
+                    break
+                attempt("neighbour", near["camera"], division)
         self.records.append_event({
             "at": crew_common.now_iso(), "type": "investigation",
             "incident_id": record["id"], "camera_id": camera["id"],

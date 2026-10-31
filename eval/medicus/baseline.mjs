@@ -17,7 +17,12 @@ export async function assessBaseline(_scenario) {
       category: "normal activity",
       summary: "Baseline predicts normal activity for every scene; it performs no scene review.",
       uncertainty: ["Baseline performs no scene review."],
-      requires_human_review: false,
+      // Medicus rule (js/products.js): every Medicus assessment
+      // requires human verification, the baseline's included —
+      // the validator enforces it (2026-10-30). This flags the
+      // baseline's output FOR verification; the baseline still
+      // performs no review itself and never fires an alert.
+      requires_human_review: true,
     },
     processing: { model: "medicus-baseline-always-normal", latency_ms: null },
   };

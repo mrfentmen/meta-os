@@ -1,12 +1,39 @@
-# Meta Trio — Frontend
+# Meta Imperium — running on Meta OS
 
-Camera interface and analysis client for the Meta Trio visual
-event-assessment prototype (Meta Global AI Developer Hackathon 2026, Indie —
-Push the Frontier): Meta Vigiles (incident awareness), Meta Ignis (fire and
-smoke), and Meta Medicus (EMS scene awareness), sharing one frontend. This is the
-Agent 1 deliverable from `BRIEF.md` and `MASTER_DIRECTIVE_V2.md`: a real,
-working frontend wired to the actual v2 analysis pipeline contract. It
-contains no detection logic and no sample results.
+The settled hierarchy for everything in this repository:
+
+- **Meta OS** — the platform: the operating system and agent
+  infrastructure underneath (job queue, resident agents,
+  supervision, memory) in `os/` and the services this system runs
+  on.
+- **Meta Imperium** — the system built on Meta OS: an autonomous,
+  multi-agent situational-awareness system.
+- **Vigiles, Ignis, Medicus** — Imperium's three operational
+  divisions: Vigiles (police visual incident awareness), Ignis
+  (fire and smoke), Medicus (EMS scene awareness only — visible
+  scene categories, never diagnosis, cause, severity, or
+  treatment).
+- **Meta Nuntius** — the relay: Imperium's communications and
+  monitoring interface, implemented in `relay/` in this repo.
+
+Meta Imperium is an autonomous, multi-agent situational-awareness
+system operating on Meta OS. It continuously monitors configured
+public test feeds, identifies potentially relevant visible events,
+independently investigates observations, coordinates specialized AI
+divisions, reconciles conflicting evidence, maintains an auditable
+incident history, and autonomously submits structured reports to a
+simulated dispatch environment. Its operations are governed by
+enforceable safety, evidence, and resource constraints.
+
+This README documents the web console — the frontend deliverable
+from `BRIEF.md` and `MASTER_DIRECTIVE_V2.md` (built under the
+working name Meta Trio): a real, working camera interface and
+analysis client for the three divisions, sharing one frontend,
+wired to the actual v2 analysis pipeline contract. It contains no
+detection logic and no sample results. The full stack — assessment
+server, queue, resident agent, patrol, and the agent crew — lives
+in `server/` and `server/queue/` and is summarised in the
+repository map at the bottom; `RUNBOOK.md` is the launch sequence.
 
 Dependency-free static web app: plain HTML/CSS/JS, ES modules, no build
 step, no npm packages. (`package.json` exists only to mark the project as
@@ -47,9 +74,9 @@ ES modules for the node test runner; it declares zero dependencies.)
   moment, through the same client, validation, history entry, and
   session-log entry as a live frame. It needs no camera, accepts
   `image/*` files only, and stores nothing: the preview and the data URL
-  live in memory and are cleared by Reset. Until the backend exists, a
-  still-image request fails exactly like a live frame — honest error,
-  no assessment.
+  live in memory and are cleared by Reset. If the backend is
+  unreachable, a still-image request fails exactly like a live
+  frame — honest error, no assessment.
 - **Event display**: latest validated assessment (product, assessment
   category, timestamp, observations with category, description, evidence,
   and confidence or "not reported", uncertainty list, human-review flag,
@@ -93,7 +120,7 @@ only, never frames.
 Any static file server works:
 
 ```sh
-cd meta-sentinel
+cd meta-os
 python3 -m http.server 8000
 # open http://localhost:8000
 ```
@@ -139,8 +166,10 @@ stub and an always-clean baseline, and a harness that scores any
 assessment source against the frozen v2 contract and reports
 precision, recall, false-positive and false-negative rates, and
 latency. `npm test` runs the harness tests alongside the UI tests.
-Spark stays OFF: the harness runs fully on fixtures until Del
-green-lights the test phase.
+The harness itself runs fully on fixtures (offline, no spend);
+live-model assessments are served by the backend in `server/` and
+`server/queue/`, not by this harness — fixture results are never
+presented as live model performance.
 
 ## The /api/assess contract (v2, shared with the native app)
 
@@ -164,8 +193,8 @@ Request — one per sampled frame:
 - `timestamp`: ISO-8601, the moment the frame was sampled.
 - `image`: the sampled frame as a JPEG data URL.
 
-Response — the v2 assessment shape (Agent 2 owns the backend
-implementation). The server returns exactly this shape or an
+Response — the v2 assessment shape (backend implemented in
+`server/`). The server returns exactly this shape or an
 `{"error": "..."}` object, which the client reports as a failure:
 
 ```json
@@ -235,13 +264,16 @@ when no request was made (frame capture failed first), never a fake 0.
 The server-reported `processing.latency_ms` lives inside `response` and is
 never mixed with the client measurement.
 
-## What is NOT connected yet
+## What is connected, and what still needs real hardware
 
-- **No model backend exists.** Nothing implements `/api/assess` yet; that
-  is Agent 2's lane (Meta model integration). Until it lands, every
-  analysis request fails and the UI's disconnected state is what you will
-  see. That is the intended, honest behavior — not a bug.
-- No evaluation harness consumes the exported log yet (Agent 3's lane).
+- **The model backend exists.** `server/server.mjs` implements
+  `/api/assess`; with the queue enabled it submits and polls
+  through the queue service in `server/queue/`, where the resident
+  agent answers with real Muse Spark assessments under the $75
+  guardrail, and the direct Spark transport in `server/model.mjs`
+  is the fallback. If the backend is not running, the UI shows its
+  disconnected state and invents nothing — that behavior is
+  unchanged, and it is what you will see from a bare static server.
 - Camera behavior is verified only up to page load and module execution in
   headless Chromium: this sandbox has no camera device, so a live
   `getUserMedia` capture, real frame encoding from a device, and phone
@@ -278,10 +310,32 @@ automatically, and performs no face recognition or identity inference.
 - **`design/`** — design artifacts, including the ASCII logo studio.
 - **`docs/`** — supporting documents (hardware verification checklist).
 - **`os/`** — the Meta OS tree: the OS services, job queue, and dashboard
-  the Trio runs on, built during the event. (The bootable OS image is not
+  Imperium runs on, built during the event. (The bootable OS image is not
   part of this repository.)
+- **`relay/`** — Meta Nuntius, the in-repo relay (zero-dependency
+  Node service + viewer) that `run-stack.sh` starts; it is
+  Imperium's own communications and monitoring interface.
+- **`crates/`** — the Rust workspace: the port of Meta OS and the
+  division services to Rust, in progress (see the runtime note
+  below).
 - **Root briefs** — `BRIEF.md`, `MASTER_DIRECTIVE_V2.md`, and
   `MEDICUS_PIVOT_SPEC.md` define the build.
 
-Crew coordination happens on muse-relay, a pre-existing external message-bus
-service that is not part of this repository.
+Crew coordination during the build happened on muse-relay, a
+pre-existing external message-bus service that is not part of
+this repository; Meta Nuntius above is the product's own relay,
+not that build-time bus.
+
+## Runtime — what actually executes the demo
+
+The demo runtime is the **Python/Node stack**: the Node app
+server (`server/server.mjs`), the Python queue service and
+resident agent (`server/queue/`), the Python agent crew
+(patrol, orchestrator, supervisor), and the static web console.
+That is the code `run-stack.sh` starts and the code the demo
+runs on. The Rust workspace under `crates/` is a **port in
+progress**: it is compiled and gate-verified separately (crew
+VM gate 1, then the Mac gate 2) and is **not** what the demo
+executes. Where a Rust crate and a Python/Node component cover
+the same ground, the Python/Node component is the running one
+until the port is declared PORTED at both gates.

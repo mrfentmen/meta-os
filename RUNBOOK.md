@@ -1,13 +1,17 @@
-# RUNBOOK — loading up the Meta Trio stack
+# RUNBOOK — loading up the Meta Imperium stack
 
-One command starts the whole demo stack. This is the sequence for
+One command starts the whole demo stack: Meta Imperium (the
+autonomous situational-awareness system) on Meta OS, served by
+the Python/Node runtime in this repo (the Rust workspace under
+`crates/` is a port in progress and is not what the demo runs —
+see the root README's runtime note). This is the sequence for
 Del's Mac; everything below runs locally on that machine.
 
 ## 1. Get the code
 
 ```sh
-git clone https://github.com/mrfentmen/meta-sentinel.git
-cd meta-sentinel
+git clone https://github.com/mrfentmen/meta-os.git
+cd meta-os
 # (or, on an existing checkout: git pull)
 ```
 

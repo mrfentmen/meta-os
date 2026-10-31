@@ -33,7 +33,10 @@ function fakeAssessment(category) {
       category,
       summary: "test summary",
       uncertainty: [],
-      requires_human_review: false,
+      // Medicus rule (2026-10-30): every Medicus assessment
+      // requires human verification; the validator enforces it,
+      // so a valid fake Medicus answer carries true here.
+      requires_human_review: true,
     },
     processing: { model: "test", latency_ms: null },
   };

@@ -17,22 +17,53 @@ import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from
 import { isSupportedVideoFile, captureVideoFrame } from "../js/video_input.js";
 
 function validAssessment(product = "vigiles") {
+  // Per-product shapes (updated 2026-10-30): the validator now
+  // enforces category membership in the product's own list and
+  // Medicus requires_human_review === true, so each product's
+  // fixture uses one of its OWN categories, and the Medicus
+  // fixture carries review: true. The old single vigiles-shaped
+  // fixture for all three products pinned the pre-enforcement
+  // behavior and no longer validates for ignis or medicus.
+  const shapes = {
+    vigiles: {
+      category: "energetic movement",
+      description: "person raising both arms",
+      evidence: "both arms above shoulder height in frame",
+      summary: "One person with raised arms; no contact with another person is visible.",
+      review: false,
+    },
+    ignis: {
+      category: "visible smoke",
+      description: "grey plume rising above the roofline",
+      evidence: "upper third of frame",
+      summary: "Visible smoke; no flame in frame.",
+      review: true,
+    },
+    medicus: {
+      category: "person on ground",
+      description: "person lying on the sidewalk",
+      evidence: "center of frame",
+      summary: "A person is on the ground; the cause is not visible.",
+      review: true,
+    },
+  };
+  const s = shapes[product] ?? shapes.vigiles;
   return {
     product,
     timestamp: "2026-10-28T10:15:00.000Z",
     observations: [
       {
-        category: "energetic movement",
-        description: "person raising both arms",
-        evidence: "both arms above shoulder height in frame",
+        category: s.category,
+        description: s.description,
+        evidence: s.evidence,
         confidence: 0.72,
       },
     ],
     assessment: {
-      category: "energetic movement",
-      summary: "One person with raised arms; no contact with another person is visible.",
+      category: s.category,
+      summary: s.summary,
       uncertainty: ["Cannot determine intent or what happened before this frame."],
-      requires_human_review: false,
+      requires_human_review: s.review,
     },
     processing: { model: "meta-model-test", latency_ms: 812 },
   };

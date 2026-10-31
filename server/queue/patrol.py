@@ -28,6 +28,11 @@ decides WHERE to look next and WHEN to stop spending:
     guardrail independently refuses calls — patrol's governor is an
     additional stop, not the only one.
 
+  * Supervisor pauses: the autonomous supervisor (supervisor.py)
+    can pause a repeatedly failing feed by listing its camera id
+    in paused-feeds.json in the crew data dir; paused cameras are
+    skipped in the cycle and named in the heartbeat.
+
 State is written every cycle to crew_records (crew-status.json), so
 the Command view's loop feed and the status endpoint always show
 what patrol is actually doing — including when the camera list came
@@ -37,6 +42,7 @@ Run: python3 patrol.py [--interval 20] [--once] [--max-checks N]
 Stdlib only.
 """
 import argparse
+import json
 import os
 import sys
 import time
@@ -51,6 +57,25 @@ DIVISIONS = ("vigiles", "ignis", "medicus")
 PRIORITY_RADIUS_M = 1500.0
 RECENT_FLAG_WINDOW_S = 3600
 DEFAULT_BUDGET_RESERVE_USD = 5.0
+
+# The autonomous supervisor (supervisor.py) pauses a repeatedly
+# failing feed by writing its camera id to this file in the crew
+# data dir; patrol skips paused cameras (see run_cycle).
+PAUSED_FEEDS_FILE = "paused-feeds.json"
+
+
+def paused_camera_ids(directory):
+    """Camera ids the supervisor has paused, read fresh from the
+    crew data dir. Absent/unreadable file = nothing paused — a
+    torn file never wedges patrol."""
+    try:
+        with open(os.path.join(directory, PAUSED_FEEDS_FILE)) as f:
+            data = json.load(f)
+    except Exception:
+        return set()
+    if isinstance(data, list):
+        return {c for c in data if isinstance(c, str)}
+    return set()
 
 
 def _log(msg):
@@ -181,12 +206,19 @@ class Patrol:
                 "state": "running"})
         incidents = self.records.open_incidents()
         events = self.records.recent_events(200)
-        priority = compute_priority_ids(self.cameras, incidents,
+        paused = paused_camera_ids(self.records.dir)
+        available = [c for c in self.cameras
+                     if c["id"] not in paused]
+        priority = compute_priority_ids(available, incidents,
                                         events, time.time())
-        order = patrol_order(self.cameras, priority, self._last_id)
+        order = patrol_order(available, priority, self._last_id)
         if not order:
-            self._write_status("idle", reason="no cameras loaded",
-                               extra={"guardrail": budget})
+            self._write_status(
+                "idle",
+                reason="no cameras available (none loaded, or all "
+                       "paused by the supervisor)",
+                extra={"guardrail": budget,
+                       "paused_cameras": sorted(paused)})
             return {"outcome": "no-cameras"}
         camera = order[0]
         division = self.divisions[self._visits % len(self.divisions)]
@@ -207,6 +239,7 @@ class Patrol:
                 self._counts["reported"] += 1
         self._write_status("running", extra={
             "guardrail": budget,
+            "paused_cameras": sorted(paused),
             "last_check": {"camera_id": camera["id"],
                            "camera_name": camera["name"],
                            "division": division, "outcome": o}})
