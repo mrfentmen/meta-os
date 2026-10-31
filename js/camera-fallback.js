@@ -5,7 +5,8 @@
 // 12 per borough, every entry online ("isOnline":"true") at extraction
 // time. Field values are copied exactly from the API output — names,
 // coordinates, and ids are never invented or rounded. At runtime the
-// app tries the live API first; this subset ships so the map, list,
+// app tries the live API first (through the app server's same-origin
+// proxy, then directly); this subset ships so the map, list,
 // and pins still work offline, and the UI says "offline camera list"
 // whenever this fallback is the source.
 //
@@ -15,6 +16,13 @@
 // a camera after an operator adds it to the watch list.
 
 export const CAMERA_API_URL = "https://webcams.nyctmc.org/api/cameras";
+
+// Same-origin proxy for the list above, served by the app server
+// (GET /api/cameras, server/cameras.mjs): the NYCTMC API sends no
+// Access-Control-Allow-Origin header, so browsers cannot fetch it
+// directly. The app tries this proxy first, then the direct URL,
+// then FALLBACK_CAMERAS below.
+export const CAMERA_PROXY_URL = "/api/cameras";
 
 export const FALLBACK_CAMERAS = [
   // ---- Manhattan (12) ----

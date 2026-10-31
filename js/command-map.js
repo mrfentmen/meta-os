@@ -30,7 +30,7 @@
 // selected camera (snapshot captured, request returned, result
 // recorded, operator marked reviewed in this session).
 
-import { CAMERA_API_URL, FALLBACK_CAMERAS, WALL_FEEDS } from "./camera-fallback.js";
+import { CAMERA_API_URL, CAMERA_PROXY_URL, FALLBACK_CAMERAS, WALL_FEEDS } from "./camera-fallback.js";
 import {
   MAX_WATCHED,
   WatchList,
@@ -206,19 +206,27 @@ async function getBridge() {
 async function loadCameras() {
   let list = null;
   let live = false;
-  try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 8000);
-    const res = await fetch(CAMERA_API_URL, { signal: ctrl.signal, cache: "no-store" });
-    clearTimeout(timer);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const raw = await res.json();
-    if (Array.isArray(raw)) {
-      list = raw.map(normalizeCamera).filter(Boolean).filter(isCameraOnline);
+  // The NYCTMC API sends no Access-Control-Allow-Origin header, so a
+  // direct browser fetch is blocked by CORS: try the app server's
+  // same-origin proxy first, then the direct API (still useful where
+  // CORS is not enforced), and only then the offline subset below.
+  for (const source of [CAMERA_PROXY_URL, CAMERA_API_URL]) {
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(source, { signal: ctrl.signal, cache: "no-store" });
+      clearTimeout(timer);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const raw = await res.json();
+      if (Array.isArray(raw)) {
+        list = raw.map(normalizeCamera).filter(Boolean).filter(isCameraOnline);
+      }
+      live = Array.isArray(list) && list.length > 0;
+    } catch {
+      live = false;
     }
-    live = Array.isArray(list) && list.length > 0;
-  } catch {
-    live = false;
+    if (live) break;
+    list = null;
   }
   if (!live) {
     list = FALLBACK_CAMERAS.map(normalizeCamera).filter(Boolean);

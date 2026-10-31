@@ -13,6 +13,8 @@
 //                      live_enabled} } — never exposes the key itself
 //   GET  /api/crew/status  read-only agent-crew status for the
 //                      Command view's loop feed (see crew-status.mjs)
+//   GET  /api/cameras  same-origin proxy for the NYCTMC camera list
+//                      (see cameras.mjs)
 //   GET  /<static>     index.html, styles.css, js/* from the repo root
 //
 // Environment: SPARK_API_KEY (key slot, server-side only),
@@ -27,6 +29,7 @@ import { fileURLToPath } from "node:url";
 import { handleAssess } from "./assess.mjs";
 import { modelStatus } from "./model.mjs";
 import { readCrewStatus } from "./crew-status.mjs";
+import { fetchCameraList } from "./cameras.mjs";
 import { PRODUCT_IDS } from "../js/products.js";
 
 const MAX_BODY_BYTES = 12 * 1024 * 1024; // JSON envelope cap (image cap is in assess.mjs)
@@ -155,6 +158,27 @@ export function createAssessServer(deps = {}) {
         sendJson(res, 200, await read());
         return;
       }
+      if (url.pathname === "/api/cameras") {
+        if (req.method !== "GET") {
+          sendJson(res, 405, { error: "method not allowed: use GET" });
+          return;
+        }
+        // Same-origin proxy for the NYCTMC camera list: the upstream
+        // API sends no Access-Control-Allow-Origin, so the browser
+        // cannot fetch it directly (see cameras.mjs). deps.cameraList
+        // is the test seam; production fetches the list server-side.
+        // An upstream failure is a 502 — the app then tries the direct
+        // URL and finally its built-in offline subset.
+        const fetchList = deps.cameraList ?? fetchCameraList;
+        try {
+          sendJson(res, 200, await fetchList());
+        } catch (err) {
+          sendJson(res, 502, {
+            error: `camera list unavailable: ${err && err.message ? err.message : String(err)}`,
+          });
+        }
+        return;
+      }
       if (url.pathname.startsWith("/api/")) {
         sendJson(res, 404, { error: `unknown route: ${url.pathname}` });
         return;
@@ -177,7 +201,7 @@ if (isMain) {
   server.listen(port, () => {
     const status = modelStatus();
     console.log(`meta-trio-assess listening on http://localhost:${port}`);
-    console.log(`POST /api/assess  GET /api/health  static web app on /`);
+    console.log(`POST /api/assess  GET /api/health  GET /api/cameras  static web app on /`);
     console.log(
       `model: key ${status.configured ? "configured" : "NOT configured"}, live calls ${status.live_enabled ? "ENABLED (test phase)" : "held (Spark rule)"}`,
     );

@@ -10,6 +10,7 @@ import assert from "node:assert/strict";
 
 import { assessFrame, checkHealth, AssessError } from "../js/client.js";
 import { createAssessServer } from "../server/server.mjs";
+import { fetchCameraList } from "../server/cameras.mjs";
 
 // Minimal bytes carrying the JPEG magic prefix; the server validates the
 // envelope, not the picture — interpreting pixels is the model's job.
@@ -72,6 +73,61 @@ test("live assess request with a bad product surfaces the real 400", async () =>
       },
     );
   });
+});
+
+async function withDeps(deps, fn) {
+  const server = createAssessServer(deps);
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  try {
+    await fn(base);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
+test("GET /api/cameras serves the upstream camera list same-origin", async () => {
+  const upstream = [
+    {
+      id: "cam-1", name: "1 Ave @ 84 St", latitude: 40.7755, longitude: -73.9502,
+      area: "Manhattan", isOnline: "true",
+      imageUrl: "https://webcams.nyctmc.org/api/cameras/cam-1/image",
+    },
+  ];
+  await withDeps({ env: {}, cameraList: async () => upstream }, async (base) => {
+    const res = await fetch(`${base}/api/cameras`);
+    assert.equal(res.status, 200);
+    assert.deepEqual(await res.json(), upstream);
+  });
+});
+
+test("GET /api/cameras answers 502 when the upstream list is unavailable", async () => {
+  const down = async () => {
+    throw new Error("upstream down");
+  };
+  await withDeps({ env: {}, cameraList: down }, async (base) => {
+    const res = await fetch(`${base}/api/cameras`);
+    assert.equal(res.status, 502);
+    const body = await res.json();
+    assert.match(body.error, /upstream down/);
+  });
+});
+
+test("POST /api/cameras is refused with 405", async () => {
+  await withDeps({ env: {}, cameraList: async () => [] }, async (base) => {
+    const res = await fetch(`${base}/api/cameras`, { method: "POST" });
+    assert.equal(res.status, 405);
+  });
+});
+
+test("fetchCameraList returns the upstream array and rejects bad answers", async () => {
+  const list = [{ id: "cam-1" }];
+  const okFetch = async () => ({ ok: true, json: async () => list });
+  assert.deepEqual(await fetchCameraList(okFetch), list);
+  const httpFetch = async () => ({ ok: false, status: 503, json: async () => [] });
+  await assert.rejects(fetchCameraList(httpFetch), /HTTP 503/);
+  const shapeFetch = async () => ({ ok: true, json: async () => ({ nope: true }) });
+  await assert.rejects(fetchCameraList(shapeFetch), /did not return a JSON array/);
 });
 
 test("live server serves the actual web frontend entry point", async () => {
