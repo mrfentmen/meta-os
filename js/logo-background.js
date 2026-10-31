@@ -27,11 +27,17 @@
   var RIBBON_WIDTH = 3.65;
   var RIBBON_THICKNESS = 0.72;
   var X_PROJECTION = 0.99;
+  // Y_PROJECTION is not a constant: it equals X_PROJECTION
+  // times the canvas aspect and is recomputed on every resize
+  // (see resizeCanvas). The studio's 1.76 is only correct on a
+  // 16:9 canvas; fixed at 1.76, the loop stretches vertically
+  // in any other window shape. 1.76 stays as the pre-resize
+  // default so the first frame is sane.
   var Y_PROJECTION = 1.76;
-  // Slightly oversized: the panels cover the middle of the page,
-  // and the panels are see-through, so the loop ghosts through
-  // them at a size that still reads as one loop, not a crop.
-  var SCALE = 1.05;
+  // Sized so the whole loop fits inside the viewport with
+  // margin: the panels are see-through, so the loop ghosts
+  // through them as one complete loop, never a crop.
+  var SCALE = 0.9;
   var GLYPHS = " .,:;irsXA253hMHGS#9B&@";
   // One ramp per product, each built around that product's accent:
   // Vigiles blue #4f7ec2, Ignis red #d92b2b, Medicus green #5da864.
@@ -330,6 +336,7 @@
     }
     viewWidth = rect.width;
     viewHeight = rect.height;
+    Y_PROJECTION = X_PROJECTION * (viewWidth / viewHeight);
   }
 
   if ("ResizeObserver" in window) {

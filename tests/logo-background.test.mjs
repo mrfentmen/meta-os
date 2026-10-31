@@ -40,7 +40,7 @@ test("stylesheet pins the background behind content, dim, untouchable", () => {
   );
   assert.match(
     css,
-    /--panel: rgba\(29, 32, 38, 0\.8\);/,
+    /--panel: rgba\(29, 32, 38, 0\.68\);/,
     "panels are see-through so the loop ghosts through them",
   );
   assert.match(
@@ -78,8 +78,8 @@ test("background script is slow, still under reduced motion, paused when hidden"
   );
   assert.match(
     bg,
-    /var SCALE = 1\.05;/,
-    "logo-background.js is a little smaller than the first background size",
+    /var SCALE = 0\.9;/,
+    "logo-background.js sizes the loop to fit whole inside the viewport (LOGO-3)",
   );
   assert.match(
     bg,
