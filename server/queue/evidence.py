@@ -131,15 +131,33 @@ def crop_jpeg(jpeg_bytes, box, pad_ratio=0.35):
     return out.getvalue()
 
 
+def _is_absence_report(mark):
+    """True when a marks line reports that NO mark could be seen
+    ("no tattoos, scars ... clearly visible", "none discernible at
+    this resolution"). Measured on the 2026-10-31 eval batch: on
+    low-resolution CCTV the model files these absence reports under
+    the same MARKS_PREFIX as real marks. An absence is not a mark
+    and never belongs in a BOLO's visible_marks list."""
+    low = mark.lower()
+    if low.startswith(("no ", "none", "not ")):
+        return True
+    return any(p in low for p in (
+        "none discernible", "not discernible", "no tattoos",
+        "no scars", "no birthmarks", "no blood", "no visible",
+        "no distinct"))
+
+
 def extract_visible_marks(observations):
     """The visible marks the crew's assessments recorded, pulled
     from their observations: a description beginning with
     MARKS_PREFIX (the prompt's own labelling convention) contributes
     the text after the prefix. Deduped, order kept, capped at
-    MAX_MARKS. Anything else — a non-dict observation, a missing or
-    non-string description, a bare prefix with nothing after it —
-    contributes nothing. This function reads the model's recorded
-    words only; it looks at no image and invents no mark."""
+    MAX_MARKS. Absence reports ("Visible marks: none discernible
+    ...") contribute nothing — see _is_absence_report. Anything
+    else — a non-dict observation, a missing or non-string
+    description, a bare prefix with nothing after it — contributes
+    nothing. This function reads the model's recorded words only;
+    it looks at no image and invents no mark."""
     marks = []
     for obs in observations or []:
         if not isinstance(obs, dict):
@@ -151,7 +169,7 @@ def extract_visible_marks(observations):
         if not stripped.lower().startswith(MARKS_PREFIX.lower()):
             continue
         mark = stripped[len(MARKS_PREFIX):].strip()
-        if mark and mark not in marks:
+        if mark and not _is_absence_report(mark) and mark not in marks:
             marks.append(mark)
     return marks[:MAX_MARKS]
 

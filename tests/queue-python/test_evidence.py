@@ -260,6 +260,32 @@ class VisibleMarksTests(unittest.TestCase):
             ["tattoo on the left cheek; blood at the hairline",
              "scar on the chin"])
 
+    def test_extract_skips_absence_reports(self):
+        # The 2026-10-31 eval batch: on low-resolution frames the
+        # model files "no mark could be seen" lines under the same
+        # prefix. Absences are not marks and must not reach a BOLO.
+        observations = [
+            {"description": "Visible marks: no tattoos, scars, "
+                            "birthmarks, or blood clearly visible "
+                            "on any person in this low-resolution "
+                            "frame"},
+            {"description": "Visible marks: none discernible on "
+                            "any person; tattoos, scars, birthmarks, "
+                            "or blood not visible due to low "
+                            "resolution and distance"},
+            {"description": "Visible marks: no distinct tattoos, "
+                            "scars, birthmarks, or blood discernible "
+                            "on any visible person"},
+            {"description": "Visible marks: blood visible on the "
+                            "forehead"},
+            {"description": "Visible marks: tattoo on the left "
+                            "cheek; blood at the hairline"},
+        ]
+        self.assertEqual(
+            evidence.extract_visible_marks(observations),
+            ["blood visible on the forehead",
+             "tattoo on the left cheek; blood at the hairline"])
+
     def test_extract_caps_at_max_marks(self):
         observations = [
             {"description": f"Visible marks: mark {i}"}
