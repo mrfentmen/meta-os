@@ -124,6 +124,20 @@ independent of the Rust merges (no `native/` file was touched by
 any fleet branch). No fix attempted (out of scope; would be a
 native-code change).
 
+## Addendum (post-report landing)
+
+After this report's first push, control landed two commits that
+resolve two findings above — verified here, not just noted:
+- `9cd59e5` fixes `run-stack.sh` for macOS bash 3.2 (portable
+  last-element expansion instead of `${PIDS[-1]}`).
+- `2128ef8` adds a same-origin NYCTMC proxy (`GET /api/cameras`,
+  `server/cameras.mjs`; view tries proxy, then direct, then the
+  offline subset). Verified live from this Mac: the proxied
+  endpoint returns the live camera list (first record QBB @
+  Crescent St, Queens).
+Nothing in this report's VERIFIED claims changes; the two
+formerly-blocked items above are now fixed on main.
+
 ## Still unverified (nothing below is claimed)
 
 - Native camera load + native live assessment (needs a build that compiles).
