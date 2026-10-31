@@ -84,7 +84,7 @@ echo "Starting resident agent (TRIO_RELAY_URL=${RELAY_BASE}) ..."
 (cd server/queue && TRIO_RELAY_URL="$RELAY_BASE" python3 trio_agent.py) &
 PIDS+=($!)
 sleep 1
-kill -0 "${PIDS[-1]}" 2>/dev/null || { echo "FAILED: resident agent exited" >&2; exit 1; }
+kill -0 "${PIDS[$((${#PIDS[@]}-1))]}" 2>/dev/null || { echo "FAILED: resident agent exited" >&2; exit 1; }
 echo "up: resident agent"
 
 echo "Starting Trio app server on ${APP_BASE} (queue path on) ..."
