@@ -14,3 +14,10 @@ python3 os/worlds/musica/runtime/compose.py --replay \
 ```
 
 The replayed file's sha256 must match the log entry's sha256.
+
+Audio policy: keeper and normalised audio is committed only for
+the first catalogue (hn029), to keep the repo lean. Later
+sessions (including the 100-take overnight run) keep audio as
+reproducible working output: the take log plus the replay command
+above reproduces any take byte-identically, and the catalogue
+points at those reproducible files.

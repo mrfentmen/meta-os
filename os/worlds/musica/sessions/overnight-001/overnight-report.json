@@ -1,0 +1,14 @@
+{
+  "brief_id": "chipsynth",
+  "catalogue_delta": 85,
+  "catalogue_tracks": 85,
+  "clones": 0,
+  "elapsed_s": 76.6,
+  "keeper_rejects": 15,
+  "keepers": 85,
+  "reject_rate": 0.15,
+  "rejects": 15,
+  "rights_violations": 0,
+  "session_id": "overnight-001",
+  "takes": 100
+}

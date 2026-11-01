@@ -55,12 +55,15 @@ def render_board(session_dir):
     now_playing = ""
     if keepers:
         first = keepers[0]
+        keeper_audio = "keepers/%s.wav" % first["take_id"]
+        if not os.path.exists(os.path.join(session_dir, keeper_audio)):
+            keeper_audio = first["file"]
         now_playing = (
             "<h2>Now playing</h2>"
             "<p>%s</p>"
             "<audio controls src=\"%s\"></audio>"
             % (_esc("%s %s" % (first["brief_id"], first["take_id"])),
-               _esc("keepers/%s.wav" % first["take_id"])))
+               _esc(keeper_audio)))
     else:
         now_playing = ("<h2>Now playing</h2>"
                        "<p>No keepers yet in this session.</p>")

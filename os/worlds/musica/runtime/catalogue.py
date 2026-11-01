@@ -22,8 +22,15 @@ from take_log import read_log  # noqa: E402
 OWN_LICENCE = "own — generated in-studio by Meta Musica; no third-party material"
 
 
-def build_catalogue(session_dir, studio_name="Meta Musica"):
-    """Export keepers to catalogue.json. Returns the catalogue dict."""
+def build_catalogue(session_dir, studio_name="Meta Musica", copy=True):
+    """Export keepers to catalogue.json. Returns the catalogue dict.
+
+    With copy=True (default) keeper audio is copied to keepers/
+    inside the session dir. With copy=False the catalogue points
+    at the take's original file (used for large sessions, where
+    the audio is reproducible from the log and copying would
+    bloat the repo).
+    """
     import datetime
     log_path = os.path.join(session_dir, "take_log.jsonl")
     takes = read_log(log_path)
@@ -33,17 +40,21 @@ def build_catalogue(session_dir, studio_name="Meta Musica"):
     for take in takes:
         if take["verdict"] != "keeper":
             continue
-        src = os.path.join(session_dir, take["file"])
-        name = "%s.wav" % take["take_id"]
-        dst = os.path.join(keepers_dir, name)
-        if os.path.exists(src):
-            shutil.copyfile(src, dst)
+        if copy:
+            src = os.path.join(session_dir, take["file"])
+            name = "%s.wav" % take["take_id"]
+            dst = os.path.join(keepers_dir, name)
+            if os.path.exists(src):
+                shutil.copyfile(src, dst)
+            file_ref = "keepers/%s" % name
+        else:
+            file_ref = take["file"]
         tracks.append({
             "take_id": take["take_id"],
             "session_id": take["session_id"],
             "title": "%s %s" % (take["brief_id"], take["take_id"]),
             "brief_id": take["brief_id"],
-            "file": "keepers/%s" % name,
+            "file": file_ref,
             "duration_s": take["duration_s"],
             "sha256": take["sha256"],
             "licence": OWN_LICENCE,
@@ -70,8 +81,10 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Musica catalogue export")
     parser.add_argument("session_dir")
     parser.add_argument("--studio", default="Meta Musica")
+    parser.add_argument("--no-copy", action="store_true")
     args = parser.parse_args(argv)
-    catalogue = build_catalogue(args.session_dir, args.studio)
+    catalogue = build_catalogue(args.session_dir, args.studio,
+                                copy=not args.no_copy)
     print("catalogue tracks=%d" % len(catalogue["tracks"]))
     return 0
 
