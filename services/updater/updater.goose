@@ -410,3 +410,213 @@ fn upd_plan(m: Manifest&, active_slot: i64) -> Plan, i64 {
     p.version_len = v;
     return p, CODE_OK;
 }
+// ---------------------------------------------------------------------------
+// B-L1-36: the rollback record
+// ---------------------------------------------------------------------------
+//
+// The A/B rule only works if something remembers WHICH slot booted successfully. That
+// memory has to survive a crash mid-update, which means it has to be on storage, in a
+// fixed layout, with a checksum -- a half-written record read as valid is worse than no
+// record at all, because it sends the next boot to a slot nobody tested.
+//
+// Layout of the 512-byte record block (offsets in bytes):
+//
+//     0    magic   "MOSU"       4 bytes: not our block -> refuse, never guess
+//     4    format  u32          1; bump in the same commit that changes a field
+//     8    state   u32          R_PENDING / R_CONFIRMED / R_ROLLED_BACK
+//     12   slot    u32          SLOT_A / SLOT_B
+//     16   version 16 bytes     NUL padded
+//     32   files   u32
+//     36   bytes   u32          total bytes written for this update
+//     40   applied_ms u64       uptime when the update was applied
+//     48   seq     u32          monotonically increasing; higher seq is newer
+//     52   crc     u32          CRC32 over bytes 0..52 of the block
+//     ..   zero fill to 512
+//
+// WHY THE CHECKSUM IS OVER THE HEADER ONLY
+// ----------------------------------------
+// The payload area is reserved. Checksumming bytes nobody writes would make an upgrade
+// that starts using them invalidate every old record. Over the fields we define, a torn
+// write is caught and a future field is free.
+
+let UPD_REC_MAGIC0: u8 = 0x4D;      // 'M'
+let UPD_REC_MAGIC1: u8 = 0x4F;      // 'O'
+let UPD_REC_MAGIC2: u8 = 0x53;      // 'S'
+let UPD_REC_MAGIC3: u8 = 0x55;      // 'U'
+let UPD_REC_FORMAT: i64 = 1;
+let UPD_REC_BYTES: i64 = 512;
+let UPD_REC_HDR: i64 = 52;
+let UPD_REC_KEEP: i64 = 4;          // in-memory history depth
+
+let R_PENDING: i64 = 0;             // written, not yet booted successfully
+let R_CONFIRMED: i64 = 1;           // that slot booted and reported healthy
+let R_ROLLED_BACK: i64 = 2;         // we came back from it
+
+struct UpdRecord {
+    seq: i64,
+    state: i64,
+    slot: i64,
+    version: u8[..16],
+    version_len: i64,
+    files: i64,
+    bytes: i64,
+    applied_ms: i64,
+}
+
+var rec_history: UpdRecord[..4];
+var rec_count: i64 = 0;
+var rec_next_seq: i64 = 1;
+
+fn upd_record_make(plan: Plan&, now_ms: i64) -> UpdRecord {
+    var r: UpdRecord;
+    r.seq = rec_next_seq;
+    rec_next_seq++;
+    r.state = R_PENDING;             // never CONFIRMED by the writer: only a boot can say that
+    r.slot = plan.target_slot;
+    r.files = plan.files;
+    r.bytes = plan.bytes;
+    r.applied_ms = now_ms;
+    var i: i64 = 0;
+    while i < plan.version_len && i < 16 {
+        r.version[i] = plan.version[i];
+        i++;
+    }
+    r.version_len = i;
+    return r;
+}
+
+// Encode into a caller block. Returns bytes written (UPD_REC_BYTES) or -1.
+fn upd_record_encode(r: UpdRecord&, block: u8[..512]&) -> i64 {
+    if block.len < UPD_REC_BYTES { return -1; }
+    var i: i64 = 0;
+    while i < UPD_REC_BYTES {
+        block[i] = 0;
+        i++;
+    }
+    block[0] = UPD_REC_MAGIC0;
+    block[1] = UPD_REC_MAGIC1;
+    block[2] = UPD_REC_MAGIC2;
+    block[3] = UPD_REC_MAGIC3;
+    put_u32(block, 4, UPD_REC_FORMAT);
+    put_u32(block, 8, r.state);
+    put_u32(block, 12, r.slot);
+    var v: i64 = 0;
+    while v < r.version_len && v < 16 {
+        block[16 + v] = r.version[v];
+        v++;
+    }
+    put_u32(block, 32, r.files);
+    put_u32(block, 36, r.bytes);
+    put_u64(block, 40, r.applied_ms);
+    put_u32(block, 48, r.seq);
+
+    let crc = crc32(block[..UPD_REC_HDR]);
+    put_u32(block, 52, crc as i64);
+    return UPD_REC_BYTES;
+}
+
+// Decode a block. Every check has a reason, and all of them are refusals rather than
+// repairs: a repaired record is a guess about which slot is safe to boot.
+fn upd_record_decode(block: const u8[:], out: UpdRecord&) -> i64 {
+    if block.len < UPD_REC_BYTES { return E_CORRUPT; }
+    if block[0] != UPD_REC_MAGIC0 || block[1] != UPD_REC_MAGIC1 {
+        return E_CORRUPT;                              // not our block
+    }
+    if block[2] != UPD_REC_MAGIC2 || block[3] != UPD_REC_MAGIC3 {
+        return E_CORRUPT;
+    }
+    let format = get_u32(block, 4);
+    if format != UPD_REC_FORMAT { return E_UNSUPPORTED; }   // newer format: do not guess
+    let stored = get_u32(block, 52);
+    let actual = crc32(block[..UPD_REC_HDR]);
+    if stored != (actual as i64) { return E_CORRUPT; }      // torn write
+
+    out.state = get_u32(block, 8);
+    out.slot = get_u32(block, 12);
+    if out.slot != SLOT_A && out.slot != SLOT_B { return E_CORRUPT; }
+    if out.state != R_PENDING && out.state != R_CONFIRMED && out.state != R_ROLLED_BACK {
+        return E_CORRUPT;
+    }
+    out.files = get_u32(block, 32);
+    out.bytes = get_u32(block, 36);
+    out.applied_ms = get_u64(block, 40);
+    out.seq = get_u32(block, 48);
+
+    var v: i64 = 0;
+    while v < 16 && block[16 + v] != 0 {
+        out.version[v] = block[16 + v];
+        v++;
+    }
+    out.version_len = v;
+    return CODE_OK;
+}
+
+fn upd_record_push(r: UpdRecord&) {
+    if rec_count < UPD_REC_KEEP {
+        rec_history[rec_count] = r;
+        rec_count++;
+        return;
+    }
+    // Shift down: the history is small and shifts once per update, not per boot.
+    var i: i64 = 1;
+    while i < UPD_REC_KEEP {
+        rec_history[i - 1] = rec_history[i];
+        i++;
+    }
+    rec_history[UPD_REC_KEEP - 1] = r;
+}
+
+// Confirm the slot that just booted. Called ONCE per boot, after the services report
+// healthy -- a confirmation written before health is a lie the next boot believes.
+fn upd_record_confirm(slot: i64, now_ms: i64) -> i64 {
+    var r: UpdRecord;
+    r.seq = rec_next_seq;
+    rec_next_seq++;
+    r.state = R_CONFIRMED;
+    r.slot = slot;
+    r.files = 0;
+    r.bytes = 0;
+    r.applied_ms = now_ms;
+    r.version_len = 0;
+    upd_record_push(r);
+    return CODE_OK;
+}
+
+// Which slot is the safe one to boot?
+//
+// The newest CONFIRMED record wins. With no confirmed record at all the answer is
+// SLOT_NONE, and the caller must not invent one: "probably A" is how a machine with a
+// broken fallback boots the broken slot forever.
+fn upd_record_safe_slot() -> i64 {
+    var best_seq: i64 = -1;
+    var best_slot: i64 = SLOT_NONE;
+    var i: i64 = 0;
+    while i < rec_count {
+        if rec_history[i].state == R_CONFIRMED && rec_history[i].seq > best_seq {
+            best_seq = rec_history[i].seq;
+            best_slot = rec_history[i].slot;
+        }
+        i++;
+    }
+    return best_slot;
+}
+
+fn put_u32(block: u8[..512]&, at: i64, v: i64) {
+    block[at] = ((v >> 24) & 0xFF) as u8;
+    block[at + 1] = ((v >> 16) & 0xFF) as u8;
+    block[at + 2] = ((v >> 8) & 0xFF) as u8;
+    block[at + 3] = (v & 0xFF) as u8;
+}
+
+fn put_u64(block: u8[..512]&, at: i64, v: i64) {
+    put_u32(block, at, (v >> 32) & 0xFFFFFFFF);
+    put_u32(block, at + 4, v & 0xFFFFFFFF);
+}
+
+fn get_u32(block: const u8[:], at: i64) -> i64 {
+    return (block[at] as i64 * 16777216) + (block[at + 1] as i64 * 65536) + (block[at + 2] as i64 * 256) + (block[at + 3] as i64);
+}
+
+fn get_u64(block: const u8[:], at: i64) -> i64 {
+    return (get_u32(block, at) * 4294967296) + get_u32(block, at + 4);
+}
