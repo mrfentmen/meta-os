@@ -5066,6 +5066,35 @@ try {
       return res.outcome;
     } catch (e) { return "error"; }
   }
+  // HN-004: resolve locally. Same pure transition as the live path
+  // (resolveAlertRecord), but the result lands in the device-local
+  // overlay and in state.alerts, not the store. Returns the
+  // transition outcome ("resolved" | "already-resolved" |
+  // "not-found" | "error"). Never "gated". Resolving collapses the
+  // card into the resolved count and unblocks the crew row, exactly
+  // as the live path does, because both read state.alerts.
+  function resolveAlertLocal(alertId, nowSec) {
+    try {
+      var i = findAlertIndex(alertId);
+      if (i < 0) return "not-found";
+      var now = (typeof nowSec === "number")
+        ? Math.floor(nowSec) : Math.floor(Date.now() / 1000);
+      var res = resolveAlertRecord(state.alerts[i], now);
+      if (res.outcome === "resolved") {
+        var map = alertLocalRead();
+        map[alertId] = {
+          status: res.record.status,
+          acknowledged_at: res.record.acknowledged_at,
+          acked_by: res.record.acked_by,
+          resolved_at: res.record.resolved_at
+        };
+        alertLocalWrite(map);
+        state.alerts[i] = res.record;
+        renderCrew(); renderAlerts();
+      }
+      return res.outcome;
+    } catch (e) { return "error"; }
+  }
 
   function alertRows(nowMs) {
     var now = (typeof nowMs === "number") ? nowMs : Date.now();
@@ -5142,15 +5171,14 @@ try {
       html += '<div class="trow">Suggested fix: ' +
         U.esc(r.suggested_fix) + "</div>";
     }
-    // DSH-014: lifecycle buttons. HN-003: Acknowledge is local now
-    // (stored on this device only), so it is enabled whenever its
-    // transition applies (disabled once acknowledged or resolved).
-    // Resolve stays gated until HN-004 wires its local path, and
-    // disabled once resolved; a disabled button fires nothing. The
-    // local note renders once per panel in renderAlerts, not once
-    // per card.
+    // DSH-014: lifecycle buttons. HN-003/004: Acknowledge and
+    // Resolve are local now (stored on this device only), so each
+    // is enabled whenever its transition applies (ack disabled once
+    // acknowledged or resolved, resolve disabled once resolved); a
+    // disabled button fires nothing. The local note renders once
+    // per panel in renderAlerts, not once per card.
     var ackDisabled = (r.status === "acknowledged" || r.resolved);
-    var resDisabled = ALERT_WRITE_ENABLED ? r.resolved : true;
+    var resDisabled = r.resolved;
     html += '<div class="trow"><button' +
       (ackDisabled ? " disabled" : "") +
       ' data-intel-alert-ack="' + U.esc(r.id) +
@@ -5279,8 +5307,8 @@ try {
         (resolvedCount ? '<div class="trow">' + resolvedCount +
           " resolved</div>" : "") +
         (ALERT_WRITE_ENABLED ? "" :
-          '<div class="trow">Acknowledge is stored on this device ' +
-          "only, not posted.</div>");
+          '<div class="trow">Acknowledge / Resolve are stored on ' +
+          "this device only, not posted.</div>");
       try {
         var ackBtns = body.querySelectorAll ?
           body.querySelectorAll("[data-intel-alert-ack]") : null;
@@ -5297,6 +5325,23 @@ try {
                 });
               }
             })(ackBtns[ai]);
+          }
+        }
+        var resBtns = body.querySelectorAll ?
+          body.querySelectorAll("[data-intel-alert-resolve]") : null;
+        if (resBtns) {
+          for (var ri = 0; ri < resBtns.length; ri++) {
+            (function (el) {
+              if (el && el.addEventListener) {
+                el.addEventListener("click", function () {
+                  try {
+                    var id = el.getAttribute ?
+                      el.getAttribute("data-intel-alert-resolve") : null;
+                    if (id) resolveAlertLocal(id);
+                  } catch (e) {}
+                });
+              }
+            })(resBtns[ri]);
           }
         }
       } catch (e) {}
@@ -5664,8 +5709,8 @@ try {
         '<div class="trow"><b>Alerts:</b> alert records ' +
         "(muse-bus:intel:alert:&lt;id&gt;), newest first; severity " +
         "shown as color + icon + text, never color alone. " +
-        "Acknowledge is stored on this device only, not posted; " +
-        "Resolve is still gated. Empty state follows the watchdog beat " +
+        "Acknowledge / Resolve are stored on this device only, not " +
+        "posted. Empty state follows the watchdog beat " +
         "(muse-bus:intel:wd:beat): 'All quiet' when fresh, " +
         "'Watchdog silent' when stale.</div>" +
         '<div class="trow"><b>Read-only safe:</b> with a read-only ' +
@@ -5911,6 +5956,10 @@ try {
       // module eval (a reload) with the same backing object.
       acknowledgeAlertLocal: function (id, nowSec) {
         return acknowledgeAlertLocal(id, nowSec);
+      },
+      // HN-004: local resolve driver (same never-"gated" contract).
+      resolveAlertLocal: function (id, nowSec) {
+        return resolveAlertLocal(id, nowSec);
       },
       setAlertLocalStore: function (store) {
         alertLocalBackend = store || null;

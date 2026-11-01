@@ -185,8 +185,8 @@ class DashboardAlertAckLocalTest(unittest.TestCase):
         html = data["htmlBefore"]
         self.assertIn('data-intel-alert-ack="alert:1">Acknowledge</button>',
                       html)
-        self.assertIn("Acknowledge is stored on this device only, "
-                      "not posted.", html)
+        self.assertIn("Acknowledge / Resolve are stored on this device "
+                      "only, not posted.", html)
 
     def test_local_ack_transitions_and_stamps(self):
         data = _run_driver("hooks")

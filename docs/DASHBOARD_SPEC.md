@@ -61,12 +61,12 @@ spec lives here.
   with HTTP 403; all four panels rendered busy (2 crew rows, 2 jobs,
   latest brief, 1 open alert, fresh beat), zero write commands were
   attempted, zero rejections fired, no panel raised a token error,
-  and alert Resolve rendered disabled, with the live ack/resolve
-  drivers returning `gated` and the alert untouched. Brief me now
-  rendered enabled: it refreshes the latest brief from the live store
-  and never posts. Dispatch Post rendered enabled as simulated-only
-  (HN-002, no write). Alert Acknowledge rendered enabled and stored
-  locally on the device (HN-003, not posted).
+  with the live ack/resolve drivers returning `gated` and the
+  shared alert untouched. Brief me now rendered enabled: it refreshes
+  the latest brief from the live store and never posts. Dispatch Post
+  rendered enabled as simulated-only (HN-002, no write). Alert
+  Acknowledge and Resolve rendered enabled and stored locally on the
+  device (HN-003/004, not posted).
 - **Nothing posts without Dale's word** (GOV-002 as ruled 2026-10-24;
   DSH-009/DSH-011 gates): the bus is not touched by this build except a
   fix or an OS-required upgrade. Viewer write paths ship
