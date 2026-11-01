@@ -1,45 +1,51 @@
-# `display` — Layer 4 service
+# display — virtual consoles over one framebuffer
 
-**Status: NOT BUILT.** No source yet. Filled by **B-L1-27**.
+Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
+service 11.
 
-This README is the entry from `services/README_TEMPLATE.md`, unfilled. Every
-section below is deliberately empty rather than optimistic: a section that says
-nothing is honest, a section that guesses is not.
+## The problem it solves
 
-## What it does
+One display, three users: the person typing, the boot log, and (later) the agent's
+structured view. Sharing one cursor means they overwrite each other, and somebody
+reads a command prompt in the middle of a kernel log. So: four consoles, each with
+its own text model, one visible.
 
-text grid, cursor, attributes. Not written yet.
+## Real, and not
 
-## Contract
+**Real:** wrapping, newline/CR, scrolling into history, per-console cursor and
+history, switching with a defined repaint.
 
-- **Entry:** none yet. Will be `export "svc_entry" fn service_main(...) -> i32`
-  per `os-build/layer1/SERVICE_CONTRACT.md` §2.
-- **Kernel surface:** none declared yet. Requirements it will place on Layers 1–3
-  are listed in `os-build/layer1/BOUNDARIES.md`.
-- **Needs from Layers 1–3:** see `services/MANIFEST.md`, row for `display`.
-- **Offers to Layers 5–6:** see `services/MANIFEST.md`; nothing may rely on it yet.
+**Not real yet:** painting. `disp_paint` emits the visible console through
+`sys_write_console`, and a kernel that appends at a cursor cannot address a row — so
+the first paint after a switch starts wherever the kernel is. A true in-place
+repaint needs cursor positioning (B-L1-107's escape handling plus a kernel that
+honours it). Recorded as requirement A12 rather than faked.
 
-## Dependencies
+## Layout
 
-- **Libraries:** not yet decided — B-L1-15's gap audit narrows the candidates.
-- **Services:** not yet decided.
-- **Data it owns:** not yet decided.
+| Name | Value | Why |
+|---|---|---|
+| `VCON_MAX` | 4 | console, boot log, agent view, one spare |
+| `LINE_MAX` | 128 | characters before wrapping; wider than a real terminal so a wrapped boot line stays one line |
+| `SCROLL_MAX` | 256 | history lines kept per console |
+| screen | `u8[..2048]` per console | `rows × cols`, bytes only |
+| history | `u8[..32768]` per console | byte ring; `hist_start`/`hist_used`/`hist_lines` |
 
-## Failure behaviour
+History is a byte ring rather than a ring of line records: a console scrolls by the
+line, and a ring of bytes would have to rediscover where lines start — the same
+bookkeeping in a worse place.
 
-Not yet designed. When it is, the codes come from `common/err` and a failure is
-always a log record, never a silence.
+## Switching
 
-## Verification
+`disp_switch_key(scancode, mods)` returns `Ctrl+Alt+F1..F4` as data, the convention
+nobody has to be taught. `disp_switch(v)` repaints as part of the switch, so
+"switch" and "draw the new one" cannot become two steps somebody forgets.
 
-Nothing to verify: no source.
+## Deliberately absent
 
-## Not verified
+No direct framebuffer writes (the kernel owns it; two writers means two cursors), no
+colours (the K2 console has none, and attributes nothing renders are a promise this
+service cannot keep), no scrollback paging (needs the same positioning as the
+repaint).
 
-Everything. There is no Goose toolchain on this machine
-(`goose__toolchain_status` → `NOT FOUND`), so even a finished service cannot pass
-WRITTEN into COMPILED here.
-
-## Deviations
-
-None — nothing has been written to deviate from.
+Not compiled, not run.
