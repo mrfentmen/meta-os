@@ -628,3 +628,18 @@ running report was updated per section, never skipped.
   stated, not pretended).
 - OS-240: STOP. No end-to-end test beyond this file. No new
   sections. The cybersecurity program stays parked.
+
+### OS-230 one-hour soak — DONE (clean run)
+- 3651 consecutive `uptime Ns ticks N` lines, ticks 1→365100,
+  zero gaps over 60.85 minutes, then a clean SIGTERM shutdown.
+  Log: os-build/logs/soak.txt (95 KB).
+- The single fault line in the log is the crasher task's
+  deliberate null read at boot (`task killed`) — expected,
+  once, kernel and console carried on for the full hour after.
+- Two earlier attempts died to MY tooling, not the kernel:
+  attempt 1 (1017 lines, no errors) killed by my own pkill
+  crossfire from parallel boot jobs; attempt 2 (2504 lines, no
+  errors) killed when two soak jobs shared one PID file. Both
+  failures are process hygiene on the Mac, both fixed by
+  isolated image copies + PID-file-only kills (attempt 3 is
+  the clean run above). Recorded, not hidden.
