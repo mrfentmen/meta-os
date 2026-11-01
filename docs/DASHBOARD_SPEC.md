@@ -100,6 +100,15 @@ existing panels:
 Plus extensions to the separate `crew-board.html` page (§7), demo mode
 (§8), deep links (§8), and per-panel error/empty states (§9).
 
+**Start screen (HN-008):** before anything else, the first screen is
+a product start: the product name, the systems it connects (bus
+relay, crew board, jobs, brief, dispatch, alerts, watchdog), a status
+line (`not connected` until Connect succeeds), and an Enter button.
+The credential inputs (URL, token, room, nick) and Connect live
+behind Enter in `#credentials` (hidden until Enter reveals them);
+Enter hides the start screen and focuses the URL input. In demo mode
+the start screen is hidden (the presentation shows panels).
+
 ## 2. Header strip (DSH-016)
 
 One line, always visible when any intel panel is open:

@@ -159,6 +159,7 @@
   body.demo-mode #panels { font-size: 17px; }
   body.demo-mode header input#url, body.demo-mode header input#token,
   body.demo-mode #hint { display: none; }
+  body.demo-mode #start-screen { display: none; }
   /* DSH-034 intel focus mode (demo mode only, toggled by the 'i'
      key — see below): the chat log hides and the intel panels take
      the full width, so the demo shot is panels-only. Pressing 'i'
@@ -192,13 +193,21 @@
 <link rel="apple-touch-icon" href="/icon-180.png">
 </head>
 <body>
+<section id="start-screen">
+  <div class="trow"><b>muse-relay</b></div>
+  <div class="trow">Systems: bus relay, crew board, jobs, brief, dispatch, alerts, watchdog</div>
+  <div class="trow" id="start-status">Status: not connected</div>
+  <div class="trow"><button id="start-enter">Enter</button></div>
+</section>
 <header>
   <h1>muse-relay</h1>
+  <div id="credentials" hidden>
   <input id="url" type="text" placeholder="https://…upstash.io" autocomplete="off">
   <input id="token" type="password" placeholder="REST token" autocomplete="off">
   <input id="room" class="room" type="text" placeholder="room (blank = main)">
   <input id="mynick" class="room" type="text" placeholder="your nick">
   <button id="go">Connect</button>
+  </div>
   <button id="notifyBtn" title="Get a browser notification when someone @-mentions your nick">Notify me</button>
   <span id="status">not connected</span>
   <span id="typingbar"></span>
@@ -207,8 +216,8 @@
 <div id="topicbar" hidden></div>
 <div id="main">
 <div id="log"><div id="searchbar" hidden><input id="q" type="text" placeholder="search loaded history…" autocomplete="off"><span id="qcount"></span></div><div id="hint">
-  Enter your Upstash <code>REST URL</code> and <code>REST token</code> to watch
-  the bus live. They are kept in this browser's <code>localStorage</code> only —
+  Click Enter above, then enter your Upstash <code>REST URL</code> and
+  <code>REST token</code> to watch the bus live. They are kept in this browser's <code>localStorage</code> only —
   nothing is sent anywhere except your Upstash instance, and nothing is
   committed to the repo. Once connected, a compose bar appears at the bottom:
   type a message and hit Send to post it to the bus under your nick.
@@ -421,6 +430,25 @@ async function poll() {
     pollInFlight = false;
   }
 }
+
+// HN-008: start screen. Credentials live behind Enter: the
+// credential inputs start hidden; Enter reveals them, hides the
+// start panel, and focuses the URL input. The start panel is the
+// first screen (product, systems, status, enter), not a raw
+// credential form.
+(function () {
+  var enter = $("start-enter");
+  if (enter && enter.addEventListener) {
+    enter.addEventListener("click", function () {
+      var creds = $("credentials");
+      if (creds) creds.hidden = false;
+      var start = $("start-screen");
+      if (start) start.hidden = true;
+      var url = $("url");
+      if (url && url.focus) url.focus();
+    });
+  }
+})();
 
 $("go").addEventListener("click", () => {
   if (!$("url").value.trim() || !$("token").value) {
