@@ -1,50 +1,24 @@
-# `example` — Layer 4
+# example — `tickerd`, the template service (B-L1-94)
 
-**Status: WRITTEN** (not COMPILED). Source exists; nothing in it has been compiled or run.
+The pattern a new service copies: one export (`svc_entry`, C ABI), BootInfo
+validated first, config through `common/cfg` with named defaults, registration
+with the supervisor by handle, fixed buffers cleared explicitly, records built
+whole and written once, error codes from `common/err`, heartbeat after work, a
+status function that writes into the caller's buffer.
+
+**Status: WRITTEN. Not COMPILED, not RUN.** The checklist at the bottom of
+`example.goose` has the last two lines unticked for exactly that reason.
 
 ## What it does
 
-A worked example of a service built to the contract: the shape to copy.
+Reads `/etc/tickerd.conf` (`[tickerd]` / `interval_ms` / `enabled`), registers
+itself, beats every interval, writes one `tick N at Tms crc=…` record per tick
+into a 4-record ring, and stops on request.
 
-## Contract
+## What the template deliberately does not do
 
-- **Entry:** none. A worked example of a service built to the contract: the shape to copy.
-- **Kernel surface:** none. This unit reaches the kernel only through other services.
-- **Needs from Layers 1–3:** see `os-build/layer1/BOUNDARIES.md`; the binding milestone is K6 for anything that calls a syscall, and nothing here needs K2/K3 directly unless the kernel surface line above says so.
-- **Offers to Layers 5–6:** the functions listed below in the source. Nothing may rely on them until the layer is COMPILED.
+No allocation, no threads, no shared mutable state, no blocking call without a
+budget, no `exit()` mid-run. Those absences are the template's content: services
+that break them are the ones the supervisor cannot reason about.
 
-## Dependencies
-
-- **Libraries:** none
-- **Services:** none resolved by name from this unit; the caller resolves names through the supervisor's registry (B-L1-22).
-- **Data it owns:** None.
-
-## Failure behaviour
-
-- Not yet written; see the note in the file.
-- Missing dependency at start-up: refuses to start (non-zero exit), rather than running with a hole it cannot report.
-- Every failure path returns a code from `common/err` or a trailing `false`; none of them is silent.
-
-## Verification
-
-Checked against the Goose docs served by the language MCP (goose-mcp@1.1.0 `lookup_symbol` / `overview`):
-
-| Symbol / form | Source |
-|---|---|
-| struct with typed fields | `tutorial` §3, `samples/01_tour.goose` |
-| fixed arrays `T[..N]`, `u8[..N]` | `samples/03_strings.goose` |
-| growable builder `u8[>..]`, `.push`, `.len` | `samples/03_strings.goose` |
-| `while` / `if` / `return` | `list_keywords` |
-| trailing-bool and multi-value returns | `samples/04_errors.goose` |
-| reference parameter `T&` | `reference` #46 |
-| bitwise `&` `|` `~` `<<` `>>` | `list_keywords` |
-
-## Not verified
-
-- Compilation. There is no Goose toolchain on this machine.
-- Execution. No assertion in this unit has run; the test programs in `services/tests/` are where it will be exercised.
-- Any kernel behaviour assumed: the syscall shapes in `common/sys/sys.goose` are this layer's request, not a published kernel interface.
-
-## Deviations
-
-- See the note above: this directory does not hold the implementation.
+The same checklist lives in `os-build/layer1/GUIDE.md` (B-L1-135).

@@ -1,50 +1,31 @@
-# `shell` — Layer 4
+# shell — the command shell (B-L1-87..93)
 
-**Status: WRITTEN** (not COMPILED). Source exists; nothing in it has been compiled or run.
+Two entry points: `sh_exec(line, out, cap)` runs one line into a buffer (testable,
+no console), and `sh_run()` is the REPL that owns the keyboard. Everything worth
+testing lives in the first.
 
-## What it does
+**Status: WRITTEN. Not COMPILED, not RUN.** `sh_run` has never read a key.
 
-The user-facing shell: line parsing, builtins, scripts, and its test program.
+## Builtins
 
-## Contract
-
-- **Entry:** none. The user-facing shell: line parsing, builtins, scripts, and its test program.
-- **Kernel surface:** none. This unit reaches the kernel only through other services.
-- **Needs from Layers 1–3:** see `os-build/layer1/BOUNDARIES.md`; the binding milestone is K6 for anything that calls a syscall, and nothing here needs K2/K3 directly unless the kernel surface line above says so.
-- **Offers to Layers 5–6:** the functions listed below in the source. Nothing may rely on them until the layer is COMPILED.
-
-## Dependencies
-
-- **Libraries:** none
-- **Services:** none resolved by name from this unit; the caller resolves names through the supervisor's registry (B-L1-22).
-- **Data it owns:** None; it acts through services.
-
-## Failure behaviour
-
-- Not yet written.
-- Missing dependency at start-up: refuses to start (non-zero exit), rather than running with a hole it cannot report.
-- Every failure path returns a code from `common/err` or a trailing `false`; none of them is silent.
-
-## Verification
-
-Checked against the Goose docs served by the language MCP (goose-mcp@1.1.0 `lookup_symbol` / `overview`):
-
-| Symbol / form | Source |
+| Group | Commands |
 |---|---|
-| struct with typed fields | `tutorial` §3, `samples/01_tour.goose` |
-| fixed arrays `T[..N]`, `u8[..N]` | `samples/03_strings.goose` |
-| growable builder `u8[>..]`, `.push`, `.len` | `samples/03_strings.goose` |
-| `while` / `if` / `return` | `list_keywords` |
-| trailing-bool and multi-value returns | `samples/04_errors.goose` |
-| reference parameter `T&` | `reference` #46 |
-| bitwise `&` `|` `~` `<<` `>>` | `list_keywords` |
+| system (B-L1-89) | `ps` (supervisor table), `uptime` (clock), `log` (loss counters), `audit` (bytes), `time`, `help`, `exit` |
+| files (B-L1-90) | `ls`, `cat`, `cp`, `rm`, `mkdir`, `cd`, `pwd` over MOSFS01 |
+| scripts (B-L1-92) | one command per line, `#` comments, **stop on the first error** with the line number |
 
-## Not verified
+`echo` is a builtin. There are no external programs to run.
 
-- Compilation. There is no Goose toolchain on this machine.
-- Execution. No assertion in this unit has run; the test programs in `services/tests/` are where it will be exercised.
-- Any kernel behaviour assumed: the syscall shapes in `common/sys/sys.goose` are this layer's request, not a published kernel interface.
+## What is refused, out loud
 
-## Deviations
+`|`, `>`, `<`, `;`, `&` return `E_UNSUPPORTED` instead of being passed through
+as arguments. No globs, no variables, no `~`, no history file, no tab
+completion, no `su`. Each refusal is in `shell.goose`'s header with the reason.
 
-- See the note above: this directory does not hold the implementation.
+## Known gap, stated rather than implied
+
+`log` prints **loss counters**, not a record tail: this layer has no log *reader*
+yet. The builtin says so on its second line, because an empty `log tail` looks
+exactly like an empty log.
+
+Tests: `services/tests/t66_shell.goose` (argument parser, builtins and a script in one session).

@@ -493,3 +493,34 @@ fn sup_restart_ready(slot: i64) -> i64 {
 // sys.goose the moment K6 fixes the spawn signature (requirement A1/A9 in
 // BOUNDARIES.md). Until then the supervisor's table works, and the two calls that
 // would act on it do not exist.
+
+// ---------------------------------------------------------------------------
+// Read-only accessors for the shell (B-L1-89)
+// ---------------------------------------------------------------------------
+//
+// `ps` needs to walk the table, and the table is `var` module state. Handing the shell a
+// slot index and a set of getters keeps the array private: a shell that could write `table`
+// would be a shell that can un-register a service nobody asked it to touch.
+
+fn sup_slot_count() -> i64 {
+    return table_len;
+}
+
+fn sup_slot_name(i: i64) -> const u8[:] {
+    return entry_name_slice(i);
+}
+
+fn sup_slot_state_name(i: i64) -> const u8[:] {
+    if i < 0 || i >= table_len { return "unknown"; }
+    return state_name(table[i].state);
+}
+
+fn sup_slot_restarts(i: i64) -> i64 {
+    if i < 0 || i >= table_len { return -1; }
+    return table[i].restarts;
+}
+
+fn sup_slot_enabled(i: i64) -> bool {
+    if i < 0 || i >= table_len { return false; }
+    return table[i].enabled;
+}
