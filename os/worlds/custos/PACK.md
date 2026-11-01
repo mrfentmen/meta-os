@@ -1,0 +1,49 @@
+# Meta Custos world pack: machine infrastructure watch
+
+Status: **PARTIAL.** The patrol loop runtime is built and pinning-tested; the watchers are not yet a standing service. The manifest (`pack.json`, checked by `worlds/validate_pack.py`) and this document are the definitions; no runtime code in this pack runs a real operations room, touches a real responder, or changes any machine it watches.
+
+## Runtime status (what runs, honestly)
+
+| Part | Status | Proven | Not proven |
+|---|---|---|---|
+| `worlds/custos/runtime/patrol.py`: the patrol loop | BUILT, pinning-tested (tests/custos/) | Pure core on injected signals: certificate tier boundaries (expired / expiring / normal), KEV feed matching against the configured inventory with cross-patrol dedupe, exposure classification for undeclared sensitive ports, yellow observations produce ZERO escalation calls, red observations escalate only to the labelled SIMULATED endpoint, one record per observation plus a patrol summary. Plus one live feed patrol: the real CISA KEV feed (1,766 entries) matched against the example inventory produced 5 real records, committed under `runs/` | Not yet run on a booted Meta OS image, not a systemd unit, never run inside a real operations room; host probes (cert, liveness, exposure) are pinned on injected signals only — the development machine has no direct network path to watched hosts, so they have never run live |
+| kev-watch, cert-watch, service-watch as standing watchers | SPEC only | Nothing | No standing service exists; the patrol loop is invoked per patrol |
+
+## Purpose
+
+Machines fail quietly at night: a certificate lapses, a service stops answering, a database port ends up exposed, a vulnerability in the installed stack lands on the known-exploited list. Each of those is a real, observable machine state, and each is usually discovered late by a human who was asleep.
+
+Custos is the night watch pointed at that problem: Imperium's machinery — watchers, a sealed record, yellow/red tiers — aimed at infrastructure instead of camera scenes. It patrols on a clock, classifies only what it actually observes, and writes every observation down.
+
+## What it watches
+
+- **Known-exploited vulnerabilities.** The CISA KEV feed, matched against the installation's configured software inventory. A match records that the inventory names a listed product. It is an exposure record, never a claim that an exploit happened.
+- **Certificate expiry.** The certificate each watched host actually presents, in days remaining: baseline normal, expiring inside the configured warning window, or expired.
+- **Service liveness.** Whether each watched host's service port answers at all.
+- **Anomalous exposure.** Whether a sensitive port (database, cache, search, shell) answers on a watched host without being declared expected for that host.
+
+## Categories and tiers
+
+Every observation lands in exactly one of six categories:
+
+| Category | Tier | What happens |
+|---|---|---|
+| baseline normal | none | Recorded. Nothing else. |
+| certificate expiring | yellow | Record + flag only. Zero escalation calls. |
+| anomalous exposure | yellow | Record + flag only. Zero escalation calls. |
+| certificate expired | red | Escalation chain runs. |
+| known-exploited vulnerability present | red | Escalation chain runs. |
+| service down | red | Escalation chain runs. |
+
+In stage 1 the escalation chain is real bookkeeping that ends at a **labelled SIMULATED endpoint**: the steps (record, notify, page, ticket) are written to the patrol record with `endpoint: "SIMULATED"`, and no real responder, vendor, or service is ever contacted. Yellow means a human reads it in the morning; red means the record says, in so many words, that a page *would* have gone out.
+
+## Privacy
+
+The patrol record is local: hostnames, certificate details, match detail, and probe results never leave the installation. The only thing that may cross the bus is the escalation summary — red counts by category and the patrol timestamp, never hostnames, addresses, certificate contents, or vulnerability detail (the manifest's `never_carries` list is the contract, and the validator enforces its presence).
+
+## What it never does
+
+- Never patches, restarts, reconfigures, or otherwise changes a watched machine.
+- Never scans or probes a host it was not given in its configuration.
+- Never invents an observation: a feed it cannot fetch or a host it cannot probe is recorded as an error in the patrol summary, not as data.
+- Never escalates a yellow observation, and never escalates anything to a real endpoint in stage 1.

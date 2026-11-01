@@ -142,3 +142,23 @@ export const PRODUCT_IDS = PRODUCTS.map((p) => p.id);
 export function isProductId(value) {
   return typeof value === "string" && Object.hasOwn(PRODUCT_BY_ID, value);
 }
+
+// World packs (Meta OS institutions) register here, NOT in PRODUCTS.
+// PRODUCTS is the Trio camera-product list, guarded by the
+// product-parity test (web must equal native, exactly three camera
+// products). A machine watch is not a camera product: it has no
+// observation categories and must never appear in the camera picker,
+// so Custos registers as a world entry with its own shape and
+// status, and the Trio list stays exactly vigiles / ignis / medicus.
+export const WORLD_PRODUCTS = [
+  {
+    id: "custos",
+    displayName: "Meta Custos",
+    department: "Machine infrastructure watch — the night watch for machines",
+    tagline: "A patrol that watches certificates, services, and known-exploited vulnerabilities while humans sleep.",
+    accent: "#587b8f",
+    status: "stage-1",
+    pack: "os/worlds/custos",
+    runtime: "os/worlds/custos/runtime/patrol.py",
+  },
+];
