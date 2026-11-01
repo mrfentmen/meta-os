@@ -19,10 +19,19 @@ The night watch for machines. One patrol:
      reads the TLS certificate the host actually presents (expiry),
      and probes a small set of sensitive ports the installation did
      not declare expected (anomalous exposure).
-  3. Classifies every observation into the pack's six categories:
+  2b. For every live host: fetches the security headers the host
+     actually serves (HSTS, CSP, X-Frame-Options, X-Content-Type-
+     Options, Referrer-Policy) and scores them. A host missing any
+     of them becomes a "security headers missing" record (yellow)
+     carrying the missing list; a host serving all five is
+     baseline normal. This is an audit only: the patrol never
+     auto-fixes a header, never rewrites a config, never touches
+     the watched host beyond reading its response headers.
+  3. Classifies every observation into the pack's categories:
      baseline normal, certificate expiring, certificate expired,
      known-exploited vulnerability present, service down,
-     anomalous exposure.
+     anomalous exposure, certificate issued, security headers
+     missing.
   4. Appends one record per observation to the patrol record (JSONL),
      plus one patrol-summary record per patrol.
 
@@ -39,8 +48,9 @@ signal that cannot be fetched or probed is recorded as an error in
 the patrol summary, never as data.
 
 Pure classification core plus a thin CLI, no model calls. The signal
-functions (feed fetch, certificate probe, port probe) are injectable
-so the pinning tests run on recorded signal shapes with no network.
+functions (feed fetch, certificate probe, port probe, headers
+fetch) are injectable so the pinning tests run on recorded signal
+shapes with no network.
 
 CLI:
     patrol.py run --config hosts.json --records patrol.jsonl \
@@ -74,8 +84,16 @@ DEFAULT_CT_URL_TEMPLATE = "https://crt.sh/?q=%25.{domain}&output=json"
 DEFAULT_CERT_WARN_DAYS = 21
 DEFAULT_SENSITIVE_PORTS = [22, 3306, 5432, 6379, 9200, 27017]
 PROBE_TIMEOUT = 5.0
+HEADER_TIMEOUT = 10.0
 KEV_TIMEOUT = 30.0
 CT_TIMEOUT = 30.0
+SECURITY_HEADERS = (
+    "strict-transport-security",
+    "content-security-policy",
+    "x-frame-options",
+    "x-content-type-options",
+    "referrer-policy",
+)
 
 CATEGORIES = (
     "baseline normal",
@@ -85,6 +103,7 @@ CATEGORIES = (
     "service down",
     "anomalous exposure",
     "certificate issued",
+    "security headers missing",
 )
 
 # Category -> tier. Yellow stops at record + flag (zero escalation
@@ -95,6 +114,7 @@ TIER_BY_CATEGORY = {
     "certificate expiring": "yellow",
     "anomalous exposure": "yellow",
     "certificate issued": "yellow",
+    "security headers missing": "yellow",
     "certificate expired": "red",
     "known-exploited vulnerability present": "red",
     "service down": "red",
@@ -145,6 +165,28 @@ def classify_exposure(open_ports, expected_ports, service_port):
     """Sensitive ports that answered without being declared expected."""
     expected = set(expected_ports or ()) | {service_port}
     return [p for p in open_ports if p not in expected]
+
+
+def header_audit(headers):
+    """(present, missing) security headers, in SECURITY_HEADERS order.
+
+    Header names are matched case-insensitively; values are never
+    judged here — presence is the audit, the value is the operator's
+    call. A header present with an empty value counts as present:
+    the patrol records what the host serves, it does not grade
+    policy strength.
+    """
+    served = {str(k).strip().lower() for k in (headers or {})}
+    present = [h for h in SECURITY_HEADERS if h in served]
+    missing = [h for h in SECURITY_HEADERS if h not in served]
+    return present, missing
+
+
+def classify_headers(missing):
+    """Header-audit category: clean is baseline, any gap is yellow."""
+    if missing:
+        return "security headers missing"
+    return "baseline normal"
 
 
 def make_record(now, source, host, category, detail):
@@ -238,11 +280,33 @@ def probe_cert(host, port, timeout=PROBE_TIMEOUT):
     return int(delta.total_seconds() // 86400)
 
 
+def fetch_headers(host, port, timeout=HEADER_TIMEOUT):
+    """Response headers the host actually serves, keys lowercased.
+
+    A HEAD request, https on 443 and http elsewhere. An HTTP error
+    still carries headers, so it is read, not raised: a 405 on HEAD
+    is a served response, not a failed probe. Anything else that
+    fails (no route, timeout, TLS error) raises, and the patrol
+    records it as a summary error, never as data.
+    """
+    scheme = "https" if int(port) == 443 else "http"
+    url = "%s://%s:%d/" % (scheme, host, int(port))
+    req = urllib.request.Request(url, method="HEAD",
+                                 headers={"User-Agent": "meta-custos/0.1"})
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            raw = resp.headers
+    except urllib.error.HTTPError as exc:
+        raw = exc.headers
+    return {str(k).lower(): str(v) for k, v in raw.items()}
+
+
 # ---------------------------------------------------------------------
 # The patrol.
 
 def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
-               seen_cve=None, fetch_ct_fn=None, seen_ct=None):
+               seen_cve=None, fetch_ct_fn=None, seen_ct=None,
+               fetch_headers_fn=None):
     """One patrol. Returns (records, seen_cve, seen_ct).
 
     Every observation is classified and recorded. Yellow records are
@@ -331,6 +395,21 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
             records.append(make_record(
                 now, "cert", host, classify_certificate(days, warn_days),
                 {"port": port, "days_left": days, "warn_days": warn_days}))
+        # 2b. Security-headers audit, live hosts only: a failed
+        # fetch is a summary error, never data, never a fix.
+        headers_fetch = fetch_headers_fn or fetch_headers
+        try:
+            served = headers_fetch(host, port)
+        except Exception as exc:
+            errors.append("headers fetch failed for %s:%d: %s"
+                          % (host, port, exc))
+        else:
+            present, missing = header_audit(served)
+            records.append(make_record(
+                now, "headers", host, classify_headers(missing),
+                {"port": port, "score": len(present),
+                 "max_score": len(SECURITY_HEADERS),
+                 "present": present, "missing": missing}))
         open_sensitive = [p for p in sensitive
                           if p != port and probe_port_fn(host, p)]
         for p in classify_exposure(open_sensitive,
