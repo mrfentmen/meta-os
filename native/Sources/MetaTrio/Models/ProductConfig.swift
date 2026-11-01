@@ -11,6 +11,7 @@ enum ProductID: String, CaseIterable, Identifiable, Codable {
     case vigiles
     case ignis
     case medicus
+    case scienceLab = "science-lab"
 
     var id: String { rawValue }
 
@@ -40,6 +41,7 @@ struct ProductConfig {
         case .vigiles: return vigiles
         case .ignis: return ignis
         case .medicus: return medicus
+        case .scienceLab: return scienceLab
         }
     }
 
@@ -165,5 +167,35 @@ struct ProductConfig {
         ],
         limitations: "Scene awareness only. It does not diagnose any condition, guess a cause, assess severity, or recommend treatment. A person who appears motionless may simply be resting. No automatic dispatch. Every assessment requires human verification. Location is used only if explicitly provided; this app never invents geographic coordinates.",
         inputGuidance: "Live camera aimed at the scene: people and vehicles visible from a safe distance. Never stage an emergency or put anyone at risk to test it; use prerecorded footage or safe visual demonstrations only."
+    )
+
+    // HN-077 Swift mirror: science-lab config, strings byte-identical to
+    // the web entry in js/products.js (accent #7c5cbf, carried here as
+    // the color name "purple" — the parity test maps it to that hex).
+    static let scienceLab = ProductConfig(
+        product: .scienceLab,
+        displayName: "Meta Science Lab",
+        department: "Research-oriented — autonomous scientific discovery",
+        tagline: "Competing hypotheses, structured computation, and independent verification — every claim labelled with its evidence level.",
+        accentColorName: "purple",
+        categories: [
+            "level 0: idea",
+            "level 1: evidence supported",
+            "level 2: computationally tested",
+            "level 3: independently reproduced",
+            "level 4: experimentally validated",
+            "level 5: independently replicated",
+            "level 6: established application",
+        ],
+        scenarios: [
+            "Reproducing a published computational result end to end (the stage 1 gate)",
+            "A hypothesis filed without a disproof condition is refused",
+            "A finding the verifier cannot reproduce is vetoed and stays at its level",
+            "A failed run is kept in the record, not deleted",
+            "An empty literature search is not treated as proof of novelty",
+            "A docking-style prediction is labelled a prediction, never a discovery",
+        ],
+        limitations: "Partial build: the pack, its record schemas, and the Hortus breeding engine are built and recorded — Hortus runs are verifier-gated, its scorer was calibrated against real manufacturer datasheets, and its champion stands at rung 2 of 4 — but the lab is not yet a running discovery system and makes no discovery claims; the stage 1 reproduction gate has not been run. Every claim carries an evidence level from 0 to 6 and may never be shown above the level its record holds. Levels 4 to 6 require physical experiments by qualified humans and are unreachable by this system alone. Model agreement is not evidence; only retrieved sources, structured computation, and independent re-execution move a claim up the ladder. Failed hypotheses and failed runs are kept, never deleted. No autonomous synthesis, biological engineering, or human or animal experimentation pathways exist in this system; hazardous applications are blocked, not routed.",
+        inputGuidance: "State a research problem or choose a staged scenario. The lab works from retrieved original sources and signed, structured compute jobs — never from a bare prompt, and never with unrestricted terminal access."
     )
 }
