@@ -11,7 +11,8 @@ wanted an operating system. That was the whole point.
 - Layer 0, the KERNEL: Rust. Ours, from zero, no_std. Boots the
   machine, owns memory, scheduling, interrupts, drivers. Directory:
   `kernel/` in this repo.
-- Layer 1, the SYSTEM SERVICES: Go. Ours. The daemons and services
+- Layer 1, the SYSTEM SERVICES: Goose. Ours. (Goose is its own
+  language, the boss's word 2026-11-01, not Go.) The daemons and services
   that run the machine on top of the kernel: service supervision,
   updater, networking, the agent runtime host.
 - Layer 2, the AGENT AND APP LAYER: Lobster. Ours. The scripting
@@ -46,7 +47,7 @@ wanted an operating system. That was the whole point.
 - K3: interrupts, timer, keyboard input.
 - K4: memory management, paging, heap.
 - K5: tasks and scheduling, first context switch.
-- K6: system calls, first userspace program, the Go services layer
+- K6: system calls, first userspace program, the Goose services layer
   gets its first process.
 
 ## Honest scope
