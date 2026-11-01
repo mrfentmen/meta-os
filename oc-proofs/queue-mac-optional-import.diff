@@ -1,0 +1,50 @@
+--- a/server/queue/trio_store.py	2026-11-01 05:26:11
++++ b/server/queue/trio_store.py	2026-11-01 05:26:23
+@@ -37,10 +37,31 @@
+ import urllib.parse
+ import urllib.request
+ 
+-sys.path.insert(0, "/opt/muse/skills/custom-connector-setup/bin")
+-from dynamic_credentials import (  # noqa: E402
+-    add_surrogate_to_request, dynamic_credential_entry, read_json_response)
++try:
++    sys.path.insert(0, "/opt/muse/skills/custom-connector-setup/bin")
++    from dynamic_credentials import (  # noqa: E402
++        add_surrogate_to_request, dynamic_credential_entry,
++        read_json_response)
++    _HAVE_DYNAMIC_CREDENTIALS = True
++except ImportError:
++    # Plain checkouts (Mac, judges, CI without the connector skill) have
++    # no dynamic_credentials module. The names below stay defined (as
++    # stubs that raise the module's own config error) so that imports,
++    # collection, and mock.patch-based tests keep working; env-based
++    # host resolution is unaffected. No behavior change where the
++    # module exists.
++    _HAVE_DYNAMIC_CREDENTIALS = False
+ 
++    def _missing_dynamic_credentials(*args, **kwargs):
++        raise TrioStoreConfigError(
++            "dynamic_credentials is not available on this machine "
++            "(connector skill path missing); set TRIO_UPSTASH_HOST or "
++            "use a local relay via RELAY_URL.")
++
++    add_surrogate_to_request = _missing_dynamic_credentials
++    dynamic_credential_entry = _missing_dynamic_credentials
++    read_json_response = _missing_dynamic_credentials
++
+ NS = os.environ.get("TRIO_JOB_NS", "trio")
+ RESULT_PREFIX = "trio"  # result keys are trio:<jid>:result (bus 424)
+ AGENT_CREDENTIAL = "custom.upstash"
+@@ -68,6 +89,12 @@
+     URL-shaped metadata fields are read. Returns None when the record
+     carries no URL (its current shape: token only).
+     """
++    if dynamic_credential_entry is _missing_dynamic_credentials:
++        # No credential record can exist without the module; the stub
++        # would only raise. Returning None keeps env-first resolution
++        # working. (Tests patch dynamic_credential_entry itself, which
++        # replaces the stub and flows through the try below.)
++        return None
+     try:
+         entry = dynamic_credential_entry(AGENT_CREDENTIAL,
+                                          entry_name="access_token")

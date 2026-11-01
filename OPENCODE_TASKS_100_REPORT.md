@@ -36,7 +36,64 @@ officina 49 OK; worlds packs 9 of 9 OK; OS loop harness 12 of 12.
   AI Focus flies to the newest one"). Proof: oc-proofs/oc-009-ai-focus.png.
   Side note: the live NYCTMC list loaded (972 cameras online) and the
   Fires/Radar layer buttons are present.
-- OC-010 this section of the report.
+## Section A: close the rung-3 gaps (NB-001 to NB-010)
+
+- NB-001 DONE. Solver + runner copied into repo hortus-rung3/ with README
+  (run commands). Files: solver.py, run.py, nb_batch.py, README.md,
+  RUNG3_REPORT.md, RUNG3_CLOSEOUT.md, run-output.txt, oc-031-refine.txt.
+- NB-002 DONE from the pushed code (oc-proofs/nb-002-verify.txt):
+  analytic 181.659 W/m at stated h=55.8 W/m2K; sim 180.139 (0.84%) and
+  180.916 (0.41%) on halving dy; balance 2e-3 both. h stated as ordered.
+- NB-003 DONE. The 8 s vs 1.0 s mismatch explained: both numbers were real
+  timings of the same reference case at different code versions. The 8 s
+  figure dates from the cold-start solver (zero initial field, ~20k SOR
+  sweeps to crawl the transient). The shipped log's 1.0 s (re-timed 3x
+  just now: 1.0/1.0/1.0 s, 1417 iters) is the same case after the analytic
+  initial-guess fix, which starts SOR at the near-exact answer. Flat-h=50
+  on the same grid takes 0.9 s (1399 iters) — h barely matters here; the
+  init was the whole story.
+- NB-004 DONE. Organism 8175 (40 / 60.0 / 0.745 / base 1.400, same
+  footprint): 735.5 W vs rung-1 733.8 W vs reference 18.3 W. Calibration
+  moved the number 0.2% — thermally tied. Caveat: 80k-iter cap reached,
+  balance 3.0e-3 vs 2e-3 rule (same slow-mode story as the old fine run).
+- NB-005 DONE with the warning printed in the output line itself:
+  organism 78901 (48 / 100.0 / 0.405 / 1.000): 713.0 W, HEIGHT 100 mm
+  OUTSIDE the calibrated geometry range — extrapolation, not a result.
+- NB-006 DONE — the 2e-3 rule now passes on the fine grid. Finding: SOR
+  omega 1.7→1.9 converges 3.5x faster to the same answer (coarse: 33,435
+  vs 9,966 iters). Fine grid at omega 1.9: 734.4 W, balance 2.0e-3 at
+  42,395 iters, 215 s, conv=True (oc-proofs/nb-006-fine.txt). Same omega
+  kept everywhere would have saved hours; logged for the record.
+- NB-007 DONE. Solver vs closed-form table (same 100 mm footprint, analytic
+  = N-fin formula + base convection at full theta — an overestimate by
+  construction, stated):
+  ref 18.3 vs 17.1 (+7.0%, +1.2 W abs) | champ1 735.8 vs 746.7 (-1.4%) |
+  mid 146.9 vs 145.9 (+0.7%) | tall 1012.7 vs 1030.7 (-1.7%) |
+  stubby 8.6 vs 8.2 (+5.1%, +0.4 W abs).
+  Worst relative errors sit on the two smallest absolute numbers, where
+  the analytic's full-theta base term dominates. Full lines in
+  hortus-rung3/nb007-table.txt.
+- NB-008 DONE. Timing table written into hortus-rung3/README.md (coarse
+  and fine per case; evolution price: tens of seconds per dense design).
+- NB-009 DONE. Champion coarse case 3x: 183.545700 W/m, 9966 iters,
+  byte-identical all three (oc-proofs/nb-009-determinism.txt).
+- NB-010 DONE. hortus-rung3/RUNG3_CLOSEOUT.md: proves, gaps, exact commands.
+
+## Section B: queue suite + clean-clone proof (NB-011 to NB-020)
+
+- NB-011 DONE. Exact collection error text in oc-proofs/queue-mac-diagnosis.md.
+- NB-012 DONE. One paragraph in the same file: unconditional import of a
+  sandbox-absolute path (/opt/muse/skills/...), missing on plain Macs.
+- NB-013 DONE. Fix delivered as oc-proofs/queue-mac-optional-import.diff
+  (v2: optional import + raisable stubs + identity check; _call guard via
+  stub). Never applied to server/.
+- NB-014 DONE. Throwaway worktree of origin/main, patch applied, suite run:
+  110 passed, 0 failed (v1 of the patch scored 108+2 — two tests mock the
+  old import layout, fixed by keeping the names as stubs). Throwaway
+  deleted; real checkout untouched (verified: worktree list clean).
+- NB-015 DONE. Same-risk grep in the diagnosis file: only spark_gen.py
+  references the path (subprocess env, runtime-only, no collection risk).
+- NB-016..NB-020 NOT DONE — clean-clone proof not started. Next up.
 
 ## Section 3: Hortus rung 3 simulation (OC-026 to OC-035)
 
