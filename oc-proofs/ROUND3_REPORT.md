@@ -137,3 +137,32 @@
   ~1-min window of localhost-refused mid-run, self-recovered, no crash.
 - NB-077: TZ-independent (no wall-clock timestamps in the served API).
 - NB-078/079 BLOCKED: no sudo, no fault-injection path. Recorded.
+
+## Section F — Molecules, expansion (NC-061..NC-072) — DONE
+
+- NC-061 DONE. 6 more compounds via the same pipeline (toluene, acetone,
+  methanol, urea, theobromine, naphthalene); CIDs in SOURCES.md. Caught
+  and fixed a wrong CID on methanol (962→887, PubChem-verified); added a
+  cid-consistency test so it cannot regress.
+- NC-062 DONE. 12 fresh stills (6 x bs/sf) in labs/molecules/shots/.
+- NC-063 DONE. Double-bond audit, observed live: every order-2 bond in
+  all 11 compounds renders exactly 2 cylinders (caffeine 4, aspirin 5,
+  toluene 3, acetone 1, urea 1, theobromine 4, naphthalene 5; rest 0).
+  Table matches data counts exactly.
+- NC-064 DONE. Naphthalene face-on: two fused rings render closed.
+- NC-065 DONE. Tests 13/13 (11 compounds + meta + cid): counts, bond
+  endpoints, CPK membership, valence sanity, cid consistency.
+- NC-066 DONE. All 11 formulas rechecked against JSON tallies — match,
+  no SOURCES fix needed.
+- NC-067 DONE. Measure drill, tool values vs SDF geometry: water O-H
+  0.97/0.969, urea C=O 1.23/1.229, naphthalene fused C-C 1.42/1.415.
+  Caffeine/ethanol SDF references computed (1.228, 1.514) but tool
+  clicks would not land after a view change; marked as reference-only
+  (identical pipeline to the three verified).
+- NC-068 DONE. Data-driven legend overlay (from the EL color table),
+  shot over caffeine with labels.
+- NC-069 DONE. nc-069-legend-labels.png.
+- NC-070 DONE. oc-proofs/nc-070-naphthalene-10s.mp4 (10.0 s, stitched).
+- NC-071 DONE. Honest WebGL fallback added + tested via ?force2d=1:
+  message + text list, no blank canvas (shot).
+- NC-072: this summary.

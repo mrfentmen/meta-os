@@ -16,6 +16,12 @@ const EXPECTED = {
   "glucose.json": { atoms: 24, bonds: 24 },
   "water.json": { atoms: 3, bonds: 2 },
   "ethanol.json": { atoms: 9, bonds: 8 },
+  "toluene.json": { atoms: 15, bonds: 15 },
+  "acetone.json": { atoms: 10, bonds: 9 },
+  "methanol.json": { atoms: 6, bonds: 5 },
+  "urea.json": { atoms: 8, bonds: 7 },
+  "theobromine.json": { atoms: 21, bonds: 22 },
+  "naphthalene.json": { atoms: 18, bonds: 19 },
 };
 
 for (const file of Object.keys(EXPECTED)) {
@@ -32,8 +38,25 @@ for (const file of Object.keys(EXPECTED)) {
       assert.ok(bd.b >= 0 && bd.b < mol.atoms.length, `bond ${i} endpoint b`);
       assert.ok(bd.o >= 1 && bd.o <= 3, `bond ${i} order`);
     });
+    const MAXV = { C: 4, N: 3, O: 2, H: 1 };
+    const valence = new Array(mol.atoms.length).fill(0);
+    mol.bonds.forEach((bd) => {
+      valence[bd.a] += bd.o;
+      valence[bd.b] += bd.o;
+    });
+    mol.atoms.forEach((a, i) => {
+      assert.ok(valence[i] <= (MAXV[a.sym] ?? 6), `${file} atom ${i} (${a.sym}) valence ${valence[i]}`);
+    });
   });
 }
+
+test("meta.json cid matches each data file", () => {
+  const meta = JSON.parse(readFileSync(join(dir, "meta.json"), "utf8"));
+  for (const c of meta.compounds) {
+    const data = JSON.parse(readFileSync(join(dir, `${c.id}.json`), "utf8"));
+    assert.equal(data.cid, c.cid, `${c.id} cid consistent`);
+  }
+});
 
 test("meta.json covers the embedded set", () => {
   const meta = JSON.parse(readFileSync(join(dir, "meta.json"), "utf8"));
