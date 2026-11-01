@@ -100,22 +100,71 @@ DIVISIONS = ("vigiles", "ignis", "medicus")
 TERMINAL_STATUSES = ("dispatched-simulated", "closed-false-positive",
                      "cleared-by-review", "stopped", "yellow-review")
 
-# Two-tier mapping for the tier gate: the priority mapping's
-# values collapse to two tiers. A priority outside this table
-# (none exists in the current category sets) maps to None and is
-# not gated — the gate fails open to the existing chain rather
-# than inventing a tier.
+# Two-tier mapping for the tier gate. Boss ruling (room 1 msg 502,
+# display-wins): the DISPLAY tier table is authoritative wherever
+# it speaks; the priority mapping is only a fallback where the
+# display table is silent. A category in neither table maps to
+# None and is not gated — the gate fails open to the existing
+# chain rather than inventing a tier.
 TIER_BY_PRIORITY = {"high": "red", "medium": "yellow", "low": "yellow"}
+
+# Display tier table, mirrored verbatim from
+# hana/crew-ui-evidence:js/command-loop.js FLAG_TIERS (Del's
+# Oct 31 two-tier ruling: small things yellow, big things red).
+# Category strings are the js/products.js taxonomy strings.
+DISPLAY_TIERS = {
+    "vigiles": {
+        "yellow": ["energetic movement", "ambiguous gesture",
+                   "staged verbal dispute"],
+        "red": ["physical contact", "person down",
+                "possible altercation"],
+    },
+    "ignis": {
+        "yellow": ["visible smoke", "smoldering fire",
+                   "obscured or distant hazard",
+                   "electrical fire indicators",
+                   "gas fire indicators",
+                   "cooking oil fire indicators",
+                   "metal fire indicators",
+                   "battery fire indicators"],
+        "red": ["visible flame", "vehicle fire", "structure fire",
+                "dark smoke", "brown smoke"],
+    },
+    "medicus": {
+        "yellow": ["crowd gathered around a person",
+                   "blocked crew access",
+                   "person slumped in vehicle",
+                   "bystander aid in progress"],
+        "red": ["person on ground", "person down in roadway",
+                "person motionless", "person in or near water",
+                "person trapped or pinned", "blood visible at scene",
+                "vehicle collision scene",
+                "multi-person incident scene"],
+    },
+}
 
 
 def tier_for(division, category):
     """The two-tier tier of a flagged category, or None when the
-    category does not flag (no priority to map from). The tier
-    comes from the existing priority mapping, never from a stored
-    field on the record — decide() recomputes it from
+    category has no tier. The DISPLAY table wins wherever it
+    speaks (boss ruling, room 1 msg 502); the priority mapping
+    is only a fallback where the display table is silent, and
+    only for categories actually listed in it — a category in
+    neither table stays ungated. The tier never comes from a
+    stored field on the record — decide() recomputes it from
     (division, category) on every call."""
+    if isinstance(category, str):
+        tiers = DISPLAY_TIERS.get(division)
+        if tiers:
+            cat = category.strip().lower()
+            if cat in tiers["yellow"]:
+                return "yellow"
+            if cat in tiers["red"]:
+                return "red"
     priority = crew_common.priority_for_category(division, category)
     if priority is None:
+        return None
+    if category not in crew_common.category_priorities().get(division, {}):
         return None
     return TIER_BY_PRIORITY.get(priority)
 ACTION_STEPS = ("review", "investigation", "brief", "dispatch")

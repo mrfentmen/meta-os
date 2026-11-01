@@ -317,8 +317,10 @@ class TierGateTests(unittest.TestCase):
     """Two-tier gate (Oct 31 ruling): a yellow-tier flag is
     recorded for human review and nothing further is spent on it;
     red runs the full chain unchanged. The tier comes from the
-    priority mapping (crew_common.priority_for_category): high is
-    red, medium/low is yellow.
+    DISPLAY table (boss ruling, room 1 msg 502, display-wins);
+    the priority mapping is only a fallback where the display
+    table is silent, and a category in neither table stays
+    ungated.
 
     NOTE on the record() helper: it always stores priority
     "high". The gate ignores that stored field and recomputes
@@ -391,15 +393,47 @@ class TierGateTests(unittest.TestCase):
         self.assertEqual(
             orchestrator.tier_for("medicus", "person on ground"),
             "red")
-        # Priority wins over the display tier table: the display
-        # table lists ignis "visible smoke" as yellow, but its
-        # priority is high, so the pipeline treats it as red.
-        # (See the tier-gate report for the full disagreement
-        # list; this pin makes the resolution explicit.)
+        # Display wins over priority (boss ruling, room 1 msg 502):
+        # the display table lists ignis "visible smoke" as yellow
+        # while its priority is high, so the pipeline treats it as
+        # yellow. Same for the other display/priority disagreements.
         self.assertEqual(
-            orchestrator.tier_for("ignis", "visible smoke"), "red")
+            orchestrator.tier_for("ignis", "visible smoke"), "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("ignis",
+                                  "electrical fire indicators"),
+            "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("ignis", "gas fire indicators"),
+            "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("ignis",
+                                  "battery fire indicators"),
+            "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("ignis", "brown smoke"), "red")
         self.assertIsNone(
             orchestrator.tier_for("vigiles", "normal activity"))
+
+    def test_tier_for_full_display_table(self):
+        # Every entry of the ported display table resolves to its
+        # display tier, in every division — not just the disputed
+        # categories.
+        for division, tiers in orchestrator.DISPLAY_TIERS.items():
+            for tier, categories in tiers.items():
+                for category in categories:
+                    self.assertEqual(
+                        orchestrator.tier_for(division, category),
+                        tier, (division, category))
+
+    def test_tier_for_neither_table_is_ungated(self):
+        # A category in neither the display table nor the
+        # priority map stays ungated (fail open), even though the
+        # priority helper defaults unlisted flagged categories to
+        # "low" — that default must not invent a tier.
+        self.assertIsNone(
+            orchestrator.tier_for("vigiles",
+                                  "definitely not a category"))
 
 
 class TierGateRecordingTests(unittest.TestCase):
