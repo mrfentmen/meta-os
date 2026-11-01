@@ -302,6 +302,108 @@ Why: K5's scheduler decisions are written, but no task can run
 until these four adapter points are answered. Until then, K5 stays
 unwired and no context switch or scheduled task is claimed to work.
 
+## Update 2026-11-01 ~09:35 EST — K6 drafted, Q12 opened
+
+Boss layer order 2026-11-01 ~08:18 (same order as the R2 note above)
+assigns Rowan the Layer 2 kernel-core modules unwired with real
+behavior. `kernel/src/syscalls.rs` (K6: syscall dispatch for the six
+v0 calls, first userspace process shape, start block, failure-final
+end records, written against Pax's `os-build/layer1/K6_SERVICE_SHAPE.md`
+DESIGNED shape and what the K2/K3/K4/K5 drafts expose) landed on
+`rowan/kernel` in the same commit as this note. UNWIRED into
+`main.rs`, UNCOMPILED, no boot claim, no trap claimed to have been
+taken, no userspace program claimed to have run — same status as
+R2/R3/K4/K5. Started after Milo gate-1 GREEN on K5 (`rowan/kernel` @
+`4c48fab`, room 1 2026-11-01 ~09:28), the same queue rule K5 followed
+after K4's gate; K4+K5 are now on main (tip `83e6c3a` this run).
+
+What did NOT change: `kernel/Cargo.lock` is still absent on main
+(checked this run, absent from the live main tree), there is still
+no K1 boot log and no `os-build` branch, so Q1 is still unanswered
+and Q12 below is still open. The K6 module therefore imports no
+bootloader type, no `x86_64` crate type, and no K2/K3/K4/K5 type:
+its syscall numbers are Pax's DRAFT numbers from the shape document
+(six calls, no more), its framebuffer geometry mirrors K2's local
+`FramebufferInfo` fields without importing them, and its trap entry,
+privilege transition, user-buffer copy, binary format, and BootInfo
+pointer convention are all left to the R5 wiring commit, which must
+answer them from the Q1-resolved build, not from this file. R5 still
+wires ONE module per commit, onto the proven tree only, after a K1
+boot log exists.
+
+Open at the Pax merge gate for K6: Q12 below (syscall transport +
+privilege transition + user-copy rules + binary loading + start-block
+convention). Milo gate-1 on the K6 commit is invited on the same
+review-only basis as R1/R2/R3/K4/K5: source-level verification, not
+a compile, trap, or boot verdict. Note for the gate: the shape
+document's syscall numbers are DRAFT — if Pax revises them, this
+module's constants change in a follow-up commit, not silently.
+
+## Q12 — Syscall entry, privilege transition, user copy, binary loading (BLOCKS R5 wiring of K6)
+
+`kernel/src/syscalls.rs` (K6, drafted unwired) defines the six-call
+dispatch, the start block, and the failure-final end record. It
+asserts none of the machine facts below; the R5 wiring commit must
+answer them from the Q1-resolved build, not from this file.
+
+Needed, at the Q1-resolved toolchain / bootloader version:
+- Syscall transport: interrupt vector or the `syscall` instruction
+  — which one the Mac build uses. This is the handler-ABI question
+  already open as Q9, answered here for syscalls specifically: if an
+  interrupt vector, which vector, and how the trap frame carries the
+  syscall number, the scalar argument, and the user buffer address
+  and length; if the `syscall` instruction, the `STAR`/`LSTAR`
+  setup, the entry point's source location, and how the number and
+  arguments arrive in registers.
+- Privilege transition: how a service runs in userspace and returns
+  to the kernel — code and data segment selectors for userspace,
+  the kernel stack the trap switches to, how the user stack pointer
+  is saved and restored, and how flags are handled across the
+  transition (which bits the entry may set, which it must carry
+  verbatim). `UserTaskStart` deliberately carries no privilege
+  level, no selector, and no kernel-stack address until these are
+  answered.
+- User-buffer copy rules: how the R5 trap entry validates and
+  copies the write buffer before calling `dispatch` — what address
+  range counts as a valid user buffer against the K4 mappings, what
+  happens on a bad user address (which `EndState` the service gets,
+  and what is logged), and how writes longer than this module's
+  4096-byte per-call cap are chunked (the module faults them; the
+  chunking policy for a service that needs more is the wiring's
+  answer, not an assumption here).
+- Binary loading: how the Goose C-compiled freestanding service
+  binary is loaded as a K5 task — its format, where its entry
+  address comes from, which K4 `FrameAllocator` frames back its
+  stack and how those frames are kept out of the heap buffer and
+  out of other services' stacks, and the register or memory
+  convention that carries the `BootInfoBlock` pointer at start
+  (shape item 2, OPEN). `UserTaskStart` takes entry, stack top,
+  and BootInfo address as plain values and never guesses them.
+- Tick source: confirmation that syscall 4 reads the K3 `ticks()`
+  counter, and the PIT rate actually programmed by `pit_set_hz`,
+  so the `tick_rate_hz` the start block carries matches the rate
+  the counter ticks at. A mismatched rate makes every tick count
+  lie about time.
+- Console instance: which K2 `FramebufferConsole` instance the
+  `write_console` call drives, and how its writes interleave with
+  the kernel's own console writes (one console, or a lock — stated,
+  not assumed).
+- Key semantics: confirmation that `read_key` returns raw K3
+  scancode bytes with no decoding at K6, and that the `NO_KEY`
+  empty-ring sentinel (`u64::MAX`) is returned to userspace
+  unchanged rather than translated. Scancode decoding, if any, is
+  a later layer's job, not K6's.
+- Number stability: the six numbers in this module are Pax's DRAFT
+  numbers from `os-build/layer1/K6_SERVICE_SHAPE.md` item 3. If
+  Pax revises them, the module constants and this question are
+  revised together in a follow-up commit; a service built against
+  other numbers is not silently compatible.
+
+Why: K6's dispatch, start block, and end records are written, but
+no service can trap, run, or exit until these eight adapter points
+are answered. Until then, K6 stays unwired and no syscall, no
+userspace program, and no service exit is claimed to work.
+
 ## What this file is not
 
 - Not a design doc: it asks, it does not decide.
