@@ -1,0 +1,7 @@
+2026-11-01T17:48:16Z heartbeat supervisor-start
+2026-11-01T17:48:16Z heartbeat service-start
+2026-11-01T17:48:24Z heartbeat service-stop rc=137
+2026-11-01T17:48:24Z heartbeat restart-in-2s
+2026-11-01T17:48:26Z heartbeat service-start
+2026-11-01T17:48:46Z heartbeat service-stop rc=0
+2026-11-01T17:48:46Z heartbeat ordered-stop

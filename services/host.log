@@ -1,0 +1,6 @@
+{"tool":"list"}
+{"tool":"echo","args":{"text":"t"}}
+{"tool":"nope"}
+{"tool":"list"}
+{"tool":"echo","args":{"text":"t"}}
+{"tool":"nope"}

@@ -285,3 +285,79 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
 - OS-147..150: trim / kernel-native / prerequisites / update
   rule in the manifest. DONE.
 - OS-151/152: this block. DONE.
+
+## Section K — Goose services layer (OS-153..OS-166) — DONE
+
+- OS-153: research note (goose.md) from goose-mcp 1.1.0 + the live
+  toolchain. DONE.
+- OS-154: Goose built on this Mac 2026-11-01 (shallow clone of
+  aardappel/goose, cmake Release + GOOSE_BUILTIN_LIBS=all):
+  compiler b781587, runtime 3901ec457ba9, Apple clang 15.0.0.
+  `goose run` (in-process via bundled TinyCC) and `goose build`
+  (93 KB native hello binary) both proven. DONE.
+- OS-155: hello service prints + exits, both paths. DONE.
+- OS-156: heartbeat daemon appends a line per second, stops clean
+  on the STOP sentinel (4 beats in the drill + clean exit line).
+  No signal/exit API in the stdlib — sentinel stop is the stated
+  workaround. DONE.
+- OS-157: supervisor contract note (goose-supervisor.md). DONE.
+- OS-158: IPC contract note (goose-ipc.md): stdio JSON-lines on
+  the dev carrier, syscall channel design for K6. DONE.
+- OS-159: echo service over the contract (stdio lines). DONE.
+- OS-160: supervisor appends start/stop/crash to records.log.
+  DONE (drill log shows start + rc=137 + restart lines).
+- OS-161: kill -9'd the daemon mid-run (pid 46321); supervisor
+  restarted it (pid 46330) and logged `service-stop rc=137` +
+  `restart-in-2s`. DONE.
+- OS-162: updater compares CURRENT vs RELEASED, stages into
+  side-B + records. Network check NOT BUILT (no endpoint owned —
+  the task's own escape clause). DONE with the stated gap.
+- OS-163: MCP host (host.goose): list → one tool, echo call →
+  answer, unknown → refusal, every call in host.log. DONE.
+- OS-164: runner script (no user test convention found — stated).
+  7/7 green (one harness bug fixed: the `> ` prompt prefix).
+  DONE (run-goose-tests.sh).
+- OS-165: services/ layout (hello, heartbeat, echo, mcp-host,
+  updater + supervisor.sh + runner, each with README line below).
+  DONE.
+- OS-166: this summary. Workarounds used: sentinel stop (no
+  signals), runner script (no test framework), shell supervisor
+  (no process control), local-only updater (no network API).
+
+### services/ READMEs (one line each, OS-165)
+- hello: prints once, exits. The language smoke test.
+- heartbeat: one file-append per second until STOP appears.
+- echo: stdio line echo, the IPC contract demo.
+- mcp-host: one-tool JSON host over stdio; Lobster calls it.
+- updater: version compare + side-B staging + record.
+
+## Section L — Lobster agent layer (OS-167..OS-180) — DONE
+
+- OS-167: research note (lobster.md) from lobster-mcp 1.1.0. DONE.
+- OS-168: Lobster built on this Mac 2026-11-01 (shallow clone of
+  aardappel/lobster @ 6c1389c, `cd dev && cmake + make -j8`,
+  binary at bin/lobster). DONE.
+- OS-169: hello script prints. DONE.
+- OS-170: agent-call.lobster calls the Goose MCP host live via
+  launch_subprocess stdin/stdout: list → tools, echo → result,
+  exit 0. Requests live in req-*.json because Lobster literals
+  cannot hold JSON braces (stated workaround). DONE.
+- OS-171: identity — own note readable, cross-home + escape
+  REFUSED (first draft leaked: whitelist checked filename but
+  not owner; fixed by binding caller identity). DONE.
+- OS-172: memory write → exit → run → read-back. DONE.
+- OS-173: bus send → recv + drain, message intact. DONE.
+- OS-174: scheduled wakes twice, +2 s apart, memory read. The
+  busy-wait stands in for a missing sleep builtin (stated).
+  DONE.
+- OS-175: budget 3 calls spent, 4th refused + recorded. DONE.
+- OS-176: shim reads the live repo SCOREBOARD and prints it.
+  DONE.
+- OS-177: failures/ museum (hash-comment draft + its errors).
+  DONE.
+- OS-178: lobster/ layout (scripts + homes + bus + failures).
+  DONE.
+- OS-179: lobster/README.md one-page guide. DONE.
+- OS-180: this summary. Workarounds used: file-based requests
+  (no brace literals), busy-wait sleep (no sleep builtin),
+  convention-level isolation (runtime enforcement later).
