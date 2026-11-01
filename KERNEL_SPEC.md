@@ -6,6 +6,16 @@ never substitute). That spec is dead as of the boss's direct order on
 written by us. The boss's words: he did not want programs on Debian, he
 wanted an operating system. That was the whole point.
 
+## Who it is for
+
+The operating system is built for agents and for users. Agents are
+first class citizens of this OS: they live in it, work in it, hold
+memory, tools, and jobs in it, the same way users live in a desktop
+OS. Users run it and direct it. That dual nature is the whole point
+of Meta OS, and it settles design questions when the two pull apart:
+an OS feature that only makes sense for humans, with no way for an
+agent to live in it, is not finished.
+
 ## The shape: a layered operating system, three languages
 
 - Layer 0, the KERNEL: Rust. Ours, from zero, no_std. Boots the
@@ -21,6 +31,12 @@ wanted an operating system. That was the whole point.
   Python and JavaScript code, the Rust service crates) is PROGRAMS.
   Programs are applications that will run on the OS. They are not the
   OS and must never be described as the OS.
+- The program lineup grows by the boss's order (2026-11-01): a
+  cybersecurity and IT program joins it, same class as the other
+  programs, built into the OS as a bundled first class program, with
+  agents doing the security and IT work. Its name and the exact jobs
+  its agents do are the boss's to define; nothing about its scope is
+  settled until he says it.
 
 ## Standing rules
 
