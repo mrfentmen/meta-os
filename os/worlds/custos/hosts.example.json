@@ -40,5 +40,8 @@
  ],
  "ct_domains": [
   "letsencrypt.org"
+ ],
+ "dns_domains": [
+  "letsencrypt.org"
  ]
 }

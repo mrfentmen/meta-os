@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="/icon-180.png">
 </head>
 <body data-product="vigiles">
+<p id="demo-banner" class="demo-banner" role="status" hidden>Demo data — nothing here is live. Staged and simulated inputs only.</p>
 <canvas id="logo-background" aria-hidden="true"></canvas>
 <header class="topbar">
   <div class="brand">
@@ -60,13 +61,18 @@
   <aside class="cmd-float cmd-rail-left" aria-label="Incident queue and camera list">
     <h3 class="cmd-h">Incident queue</h3>
     <p class="note">One queue for all three divisions — flags raised by Vigiles, Ignis, and Medicus land here together, newest first, each tagged with the division that raised it. Selecting an entry views the camera and marks the entry seen — its pin pulse slows.</p>
-    <p id="cmd-alerts-empty" class="note">No cameras flagged yet.</p>
+    <p id="cmd-alerts-empty" class="note empty-state">No cameras flagged yet. This queue holds flags from all three divisions. It fills when a watched camera's assessment flags it for human review.</p>
     <ul id="cmd-alerts" class="cmd-alerts"></ul>
     <h3 class="cmd-h">Cameras</h3>
     <label for="cmd-search">Filter cameras</label>
     <input id="cmd-search" type="search" placeholder="Name or borough" autocomplete="off">
     <p class="note">Watch list max 6 — only watched cameras are sampled. Ctrl+K searches cameras and incidents.</p>
+    <div class="controls">
+      <button id="cmd-search-open" type="button">Search cameras</button>
+      <button id="cmd-help-open" type="button">Keyboard shortcuts</button>
+    </div>
     <div id="cmd-camera-list" class="cmd-camera-list"></div>
+    <p id="cmd-ribbon" class="cmd-ribbon" role="status" hidden></p>
     <h3 class="cmd-h">Loop feed</h3>
     <p class="note">The agent crew — patrol, review, investigation, records, response — works the camera list on its own loop (docs/AGENT_CREW.md). Dispatch from this system is SIMULATED: packages are logged inside this stack, and no real emergency service is ever contacted.</p>
     <p id="cmd-loop-status" class="note mono">Loop feed — waiting for the crew status endpoint…</p>
@@ -76,7 +82,7 @@
   <aside class="cmd-float cmd-rail-right" aria-label="Inspector and system status">
     <h3 class="cmd-h">Inspector</h3>
     <p id="cmd-insp-name" class="cmd-insp-name">No camera selected</p>
-    <p id="cmd-insp-meta" class="note mono"></p>
+    <p id="cmd-insp-meta" class="note mono empty-state">Choose a camera from the list or the map. The inspector shows its live snapshot, status, and latest assessment here.</p>
     <img id="cmd-viewer-img" class="cmd-viewer-img" alt="Selected camera live snapshot" hidden>
     <p id="cmd-viewer-updated" class="note mono"></p>
     <div class="controls">
@@ -139,6 +145,19 @@
       <input id="cmd-ksearch" type="search" placeholder="Camera name, borough, or incident category" autocomplete="off">
       <ul id="cmd-kresults" class="cmd-kresults"></ul>
       <p class="note">Enter focuses the top result. Esc closes.</p>
+    </div>
+  </div>
+
+  <div id="cmd-help-overlay" class="cmd-search-overlay" hidden>
+    <div class="cmd-search-box">
+      <h3 class="cmd-h">Keyboard shortcuts</h3>
+      <ul class="cmd-help-list">
+        <li><kbd>Ctrl</kbd> + <kbd>K</kbd> or <kbd>Cmd</kbd> + <kbd>K</kbd> — Open or close camera search</li>
+        <li><kbd>Esc</kbd> — Close search or this help</li>
+        <li><kbd>Enter</kbd> — In search, focus the top result</li>
+      </ul>
+      <p class="note">Everything else in this view is a visible button — there are no other keyboard-only features.</p>
+      <div class="controls"><button id="cmd-help-close" type="button">Close</button></div>
     </div>
   </div>
 
@@ -294,6 +313,7 @@
   <section class="panel" aria-label="Evaluation session log">
     <h2>Evaluation session log</h2>
     <p id="log-stats" class="note mono">Session log entries: 0</p>
+    <p id="log-empty" class="note empty-state">No session entries yet. This log fills as frames are assessed or requests fail.</p>
     <details class="stats-details"><summary>Full session statistics</summary><p id="log-stats-by-product" class="note mono">Assessments by product: Vigiles 0 · Ignis 0 · Medicus 0 · Failed 0</p>
     <p id="log-stats-failed-by-product" class="note mono">Failed by product: Vigiles 0 · Ignis 0 · Medicus 0</p>
     <p id="log-stats-by-failure" class="note mono">Failures by cause: Network 0 · HTTP 0 · Invalid response 0</p>
