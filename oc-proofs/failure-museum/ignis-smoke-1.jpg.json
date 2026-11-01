@@ -1,0 +1,40 @@
+{
+ "frame": "ignis-smoke-1.jpg",
+ "note": "called OBSCURED/DISTANT on a clear smoke column \u2014 hedging past the visible",
+ "category": "obscured or distant hazard",
+ "observations": [
+  {
+   "category": "visible smoke",
+   "description": "Large expansive smoke plume rising and spreading over distant mountains",
+   "evidence": "center to right horizon above mountain ridgeline",
+   "confidence": 0.9
+  },
+  {
+   "category": "brown smoke",
+   "description": "Tan-brown coloration in upper portion of distant smoke plume",
+   "evidence": "upper right portion of plume in sky",
+   "confidence": 0.85
+  },
+  {
+   "category": "dark smoke",
+   "description": "Dark gray dense smoke at base of plume near mountain horizon",
+   "evidence": "left-center base of plume just above mountains",
+   "confidence": 0.85
+  },
+  {
+   "category": "obscured or distant hazard",
+   "description": "Source of smoke is distant and obscured with no flame visible from suburban street foreground",
+   "evidence": "mountain ridgeline in background, foreground street and houses clear",
+   "confidence": 0.9
+  }
+ ],
+ "assessment": {
+  "category": "obscured or distant hazard",
+  "summary": "Large distant smoke plume visible over mountains from suburban street, source obscured with no flame visible.",
+  "uncertainty": [
+   "exact source and fire type unclear",
+   "distance and scale cannot be determined from image"
+  ],
+  "requires_human_review": true
+ }
+}

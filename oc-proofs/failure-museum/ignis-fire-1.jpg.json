@@ -1,0 +1,40 @@
+{
+ "frame": "ignis-fire-1.jpg",
+ "note": "called STRUCTURE fire on a house fire \u2014 right family, wrong specificity; adjudicate whether specificity counts as miss",
+ "category": "structure fire",
+ "observations": [
+  {
+   "category": "structure fire",
+   "description": "Small single-story wooden structure with fire involvement at roof and walls",
+   "evidence": "center of frame",
+   "confidence": 0.95
+  },
+  {
+   "category": "dark smoke",
+   "description": "Large dense dark smoke plume rising and spreading above the structure",
+   "evidence": "upper half and center of frame above roof",
+   "confidence": 0.95
+  },
+  {
+   "category": "visible flame",
+   "description": "Bright flames along left side of structure and along roofline",
+   "evidence": "left side and center along roof edge",
+   "confidence": 0.9
+  },
+  {
+   "category": "indeterminate",
+   "description": "One person at far left edge wearing dark clothing, build unclear due to distance, holding what appears to be a hose stream toward fire; no visible marks discernible",
+   "evidence": "far left edge of frame",
+   "confidence": 0.6
+  }
+ ],
+ "assessment": {
+  "category": "structure fire",
+  "summary": "Small structure with active flames along roof and side producing a large dark smoke plume, consistent with active structure fire.",
+  "uncertainty": [
+   "Black-and-white image appears archival so current live status unknown",
+   "Interior extent and fuel type not visible"
+  ],
+  "requires_human_review": true
+ }
+}

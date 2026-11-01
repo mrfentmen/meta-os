@@ -1,0 +1,33 @@
+{
+ "frame": "ignis-house-fire-1.jpg",
+ "note": "called STRUCTURE fire on the training burn \u2014 same specificity question as fire-1",
+ "category": "structure fire",
+ "observations": [
+  {
+   "category": "visible flame",
+   "description": "large intense bright orange-yellow fireball flames",
+   "evidence": "center and center-right of frame",
+   "confidence": 0.98
+  },
+  {
+   "category": "dark smoke",
+   "description": "dense thick black smoke rising above the flames",
+   "evidence": "upper and upper-right portion of frame",
+   "confidence": 0.97
+  },
+  {
+   "category": "structure fire",
+   "description": "building siding immediately adjacent to intense flames",
+   "evidence": "left side of frame next to flames",
+   "confidence": 0.9
+  }
+ ],
+ "assessment": {
+  "category": "structure fire",
+  "summary": "Large intense flames with dense dark smoke immediately adjacent to a building indicating an active structure fire.",
+  "uncertainty": [
+   "exact extent of structural involvement obscured by flames and smoke"
+  ],
+  "requires_human_review": true
+ }
+}

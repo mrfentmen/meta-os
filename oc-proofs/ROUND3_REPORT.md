@@ -337,3 +337,31 @@
 - Budget trip, restart (1-commit proof), reconstruct, purge, clock,
   disk, memory: all recorded in endurance.md.
 - NC-128 offline: still blocked (no sudo). NC-136: this summary.
+
+## Section R — Live Spark testing (NC-201..NC-216) — DONE, $0.92 of $20
+
+- NC-201: ledger opened at 16 calls / $0.00 (historic $0 entries).
+- NC-202: 21 repo frames inventoried (6/9/6 by division; positives,
+  look-alikes, controls per MANIFEST).
+- NC-203/204/205: 21 passes — 12 MATCH, 2 HELD, 4 MISS, 3 UNASSESSED
+  (15 consecutive transport 502s on curb/sunbathing/yoga; images decode
+  clean; cause undetermined, no response body logged).
+- NC-206: oc-proofs/WORKSHEET.md, 21 lines, no verdicts changed.
+- NC-207: prompt mirror, 10 frames x both builders: 8/10 identical
+  categories (altercation + bench differ by sampling, both defensible).
+  Builders behave the same.
+- NC-208: 10-incident live soak: 10/10 assessed, every incident
+  $0.007–0.014 (cap $0.50 holds 35x over), no dispatch touched.
+- NC-209: refusal verbatim on local copy: "GUARDRAIL STOP: estimated
+  test spend $75.1250 has reached the $75.00 test budget. No call sent."
+- NC-210: 6 Visible-marks lines, all negations a human can verify as
+  absent; flagged list: EMPTY.
+- NC-211: schema 18/18 valid, 0 invalid (3 unassessed excluded openly).
+- NC-212: 92 entries sum $0.924069 vs counter $0.924071 — drift
+  $0.000002 (per-entry round6). Explained, not flagged.
+- NC-213: server latency_ms null on all outputs (not measured
+  server-side — stated gap); client-side 4.7–11.1 s over the 10 soak
+  calls. Internal until Pax approves.
+- NC-214: oc-proofs/failure-museum/ (5 worst + notes).
+- NC-215: cap never approached ($0.92 of $20). Not triggered.
+- NC-216: round TOTAL live spend: $0.92.
