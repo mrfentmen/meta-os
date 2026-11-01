@@ -38,6 +38,7 @@
 //   places on the disk.
 
 import common.err.err;
+import common.hash.hash;   // sha256 + equal_constant_time for verification (B-L1-35)
 
 let MF_MAX_FILES: i64 = 8;
 let MF_PATH_MAX: i64 = 32;
@@ -265,4 +266,147 @@ fn match_lit(text: u8[:], s: i64, e: i64, lit: const u8[:]) -> bool {
         i++;
     }
     return true;
+}
+
+// ---------------------------------------------------------------------------
+// B-L1-35: verification and the apply plan
+// ---------------------------------------------------------------------------
+//
+// Verification answers one question per file: are these the bytes the manifest named.
+// Two checks, in this order:
+//
+//   1. SIZE first. It is free, and it distinguishes the two failures a person actually
+//      needs to tell apart -- "the transfer stopped" (wrong size, wrong hash) from "the
+//      bytes changed" (right size, wrong hash).
+//   2. SHA-256, compared with the constant-time helper from common/hash. Comparing
+//      digests with an early-exit compare leaks how many leading bytes matched, which is
+//      exactly the information needed to forge a digest one byte at a time.
+//
+// What verification does NOT do: it does not check a signature. There is no key, no
+// trusted root and no chain yet (B-L1-123). A hash tells you the bytes match the
+// manifest; it says nothing about who wrote the manifest. Saying so here is the only
+// honest position until B-L1-123 lands.
+
+let SLOT_NONE: i64 = -1;
+
+fn upd_verify_file(m: Manifest&, idx: i64, content: u8[:]) -> i64 {
+    if idx < 0 || idx >= m.count { return E_INVAL; }
+    if content.len != m.files[idx].size { return E_VERIFY; }     // truncated or padded
+
+    var digest: u8[>..] = [];
+    if !sha256(content, digest, 32) { return E_VERIFY; }
+    if digest.len != MF_DIGEST_BYTES { return E_VERIFY; }
+    if !equal_constant_time(digest[..], m.files[idx].digest[..]) { return E_VERIFY; }
+    return CODE_OK;
+}
+
+// Verify every file against the content supplied for it. `contents` is indexed by the
+// same position as `m.files`: a verifier that matched files by name would have to build a
+// lookup, and a name lookup is where "the file that is not in the list" gets skipped.
+// Verify every file against the content supplied for it. Contents are indexed by the
+// same position as `m.files`: a verifier that matched by name would need a lookup, and a
+// name lookup is where "the file that is not in the list" gets skipped.
+//
+// Returns (verified_count, code). A failure returns the count verified so far with the
+// failing code -- partial information the caller needs to say which file failed.
+//
+// The content table is bytes plus a length per slot rather than an array of slices:
+// slices of different lengths are different types and cannot share an array element.
+
+let UPD_CONTENT_MAX: i64 = 4096;
+
+struct ContentSet {
+    slots: u8[..32768],          // 8 x 4096
+    len: i64[..8],
+}
+
+fn content_get(cs: ContentSet&, idx: i64, out: u8[..4096]&) -> i64 {
+    if idx < 0 || idx >= MF_MAX_FILES { return -1; }
+    let n = cs.len[idx];
+    if n <= 0 { return -1; }
+    let base = idx * UPD_CONTENT_MAX;
+    var i: i64 = 0;
+    while i < n {
+        out[i] = cs.slots[base + i];
+        i++;
+    }
+    return n;
+}
+
+fn upd_verify_all(m: Manifest&, cs: ContentSet&) -> i64, i64 {
+    var buf: u8[..4096];
+    var verified: i64 = 0;
+    var i: i64 = 0;
+    while i < m.count {
+        let n = content_get(cs, i, buf);
+        if n < 0 { return verified, E_VERIFY; }
+        let code = upd_verify_file(m, i, buf[..n]);
+        if code != CODE_OK { return verified, code; }
+        verified++;
+        i++;
+    }
+    return verified, CODE_OK;
+}
+
+// The A/B rule (OS-114): an update installs into the slot that is NOT running and takes
+// effect on the next boot. That is what makes a failed update recoverable -- the running
+// system was never touched, so "roll back" is "boot the other slot".
+//
+// The plan is data, and it refuses to exist when the premises are wrong:
+//   - the manifest's target slot must not be the active slot (installing over the running
+//     system removes the ability to fall back);
+//   - there must be at least one file, each with a positive size.
+//
+// It does NOT check free space: the storage contract (B-L1-25) has no "how much room in
+// this slot" query, so a plan claiming to have checked would be lying. The apply step
+// (B-L1-74, once storage is bound) is where that check belongs, and this note says so.
+
+let UPD_APPLY_NONE: i64 = 0;      // nothing to do
+let UPD_APPLY_SLOT: i64 = 1;      // write the files into the inactive slot
+let UPD_APPLY_REBOOT: i64 = 2;    // slot written; activation is a reboot
+
+struct Plan {
+    action: i64,
+    target_slot: i64,
+    active_slot: i64,
+    files: i64,
+    bytes: i64,
+    version: u8[..16],
+    version_len: i64,
+}
+
+fn upd_plan(m: Manifest&, active_slot: i64) -> Plan, i64 {
+    var p: Plan;
+    p.action = UPD_APPLY_NONE;
+    p.target_slot = SLOT_NONE;
+    p.active_slot = active_slot;
+    p.files = 0;
+    p.bytes = 0;
+    p.version_len = 0;
+
+    if active_slot != SLOT_A && active_slot != SLOT_B { return p, E_INVAL; }
+    if m.slot != SLOT_A && m.slot != SLOT_B { return p, E_BAD_MANIFEST; }
+    if m.slot == active_slot { return p, E_STATE; }      // would overwrite the running system
+    if m.count <= 0 { return p, E_BAD_MANIFEST; }
+
+    var total: i64 = 0;
+    var i: i64 = 0;
+    while i < m.count {
+        if m.files[i].size <= 0 { return p, E_BAD_MANIFEST; }
+        total = total + m.files[i].size;
+        if total < 0 { return p, E_BAD_MANIFEST; }       // overflow
+        i++;
+    }
+
+    p.action = UPD_APPLY_SLOT;
+    p.target_slot = m.slot;
+    p.files = m.count;
+    p.bytes = total;
+    var v: i64 = 0;
+    while v < m.version_len && v < MF_VERSION_MAX {
+        p.version[v] = m.version[v];
+        v++;
+    }
+    p.version_len = v;
+    return p, CODE_OK;
 }
