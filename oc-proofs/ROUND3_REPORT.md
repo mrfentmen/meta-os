@@ -213,3 +213,22 @@
   the round-2 note as the current reference.
 - NC-096: this summary. If the file appears mid-round: stop and report
   before booting anything (standing order).
+
+## Section I — Native app (NC-097..NC-108) — DONE (2 partials recorded)
+
+- NC-097 DONE. Clean clone + swift build: 38 s, no errors.
+- NC-098 PARTIAL. App launched (PID logged), AX window confirmed; web UI
+  inside proven by committed round-2 tight crops (same binary path).
+  No fresh screenshot (display capture stopped for privacy — see NC-100).
+- NC-099 DONE as behavior: dead-backend launch stays up 12 s+, no crash,
+  clean quit; web layer refusal state proven headless.
+- NC-100 PARTIAL: resize works via AppleScript; only laptop size has
+  screenshots (round-2 committed clip). Small/large unverified visually.
+- NC-101 DONE: no prompt in 4 launches; TCC unreadable (SIP); needs human.
+- NC-102 DONE: zero icon assets (finding #1).
+- NC-103 DONE: 126–129 MB idle.
+- NC-104 DONE: 1 s window x3 (content follows in seconds).
+- NC-105 DONE: UI = localhost server, nothing bundled (source-proven).
+- NC-106 DONE. oc-proofs/native-app-findings.md (6 items above).
+- NC-107: throwaway clone deleted below.
+- NC-108: this summary.
