@@ -1,3 +1,6 @@
+//! SINGLE-CPU SOUNDNESS (OS-086 ledger): every static-mut access below is justified there;
+//! the lint below only silences the compiler's general warning for this proven-single-CPU kernel.
+#![allow(static_mut_refs)]
 //! Meta OS kernel, Section D (K4): memory wiring (OS-045..OS-060).
 //!
 //! Converts the bootloader's memory map into `memory.rs` regions,
@@ -31,11 +34,15 @@ static mut REGIONS: [MemoryRegion; 64] = [MemoryRegion {
 static mut HEAP: Option<Heap> = None;
 static mut MAP: Option<MemoryMap<'static>> = None;
 static mut MAPPER: Option<Mapper<'static, PhysMem>> = None;
+/// The bootloader's physical-memory offset, latched at init for
+/// latecomers (the userspace loader runs long after `mem_init`).
+static mut PHYS_OFFSET: u64 = 0;
 
 /// Page-table access through the bootloader's full-physical mapping.
 #[derive(Clone, Copy)]
-struct PhysMem {
-    offset: u64,
+pub struct PhysMem {
+    /// The bootloader's physical-memory offset (virtual = phys + this).
+    pub offset: u64,
 }
 
 impl TableMemory for PhysMem {
@@ -86,7 +93,9 @@ fn cr3() -> u64 {
     value
 }
 
-fn invlpg(addr: u64) {
+/// Invalidate one translation. Wiring (unmap/new map) calls this;
+/// the mapper itself never touches the TLB (see `unmap_page`).
+pub fn invlpg(addr: u64) {
     unsafe {
         core::arch::asm!("invlpg [{}]", in(reg) addr,
             options(nostack, preserves_flags));
@@ -187,7 +196,7 @@ pub unsafe fn mem_init(boot_info: &'static bootloader::BootInfo) {
     let mut mapper = Mapper::new(root, PhysMem { offset }, allocator);
     assert!(mapper.translate(virt).is_none());
     mapper
-        .map_page(virt, frame, ENTRY_WRITABLE | ENTRY_NO_EXECUTE)
+        .map_page(virt, frame, ENTRY_WRITABLE | ENTRY_NO_EXECUTE, false)
         .expect("mem: probe map failed");
     invlpg(PROBE_VADDR);
     assert!(mapper.translate(virt).is_some());
@@ -232,5 +241,52 @@ pub unsafe fn mem_init(boot_info: &'static bootloader::BootInfo) {
     }
 
     MAPPER = Some(mapper);
+    PHYS_OFFSET = offset;
     println!("mem summary: K4 up");
+}
+
+/// The bootloader's physical-memory offset (for direct phys reads).
+pub fn phys_offset() -> u64 {
+    unsafe { PHYS_OFFSET }
+}
+
+/// Run `f` with the live mapper and a `PhysMem` reader. `None` when
+/// memory is not up yet (never in practice: userspace starts after
+/// `mem_init`, but the loader refuses instead of assuming).
+pub fn with_mapper<R>(
+    f: impl FnOnce(&mut Mapper<'static, PhysMem>, PhysMem) -> R,
+) -> Option<R> {
+    unsafe {
+        let mapper = (*core::ptr::addr_of_mut!(MAPPER)).as_mut()?;
+        let mem = PhysMem { offset: PHYS_OFFSET };
+        Some(f(mapper, mem))
+    }
+}
+
+/// True when every page of `[start, start+len)` is currently mapped.
+/// Used to validate userspace buffers (OS-080): an unmapped byte
+/// refuses the call instead of faulting the kernel.
+pub fn is_mapped_range(start: u64, len: u64) -> bool {
+    if len == 0 || len > 4096 {
+        return false;
+    }
+    let mut page = start & !0xFFF;
+    let end = start.saturating_add(len);
+    unsafe {
+        match MAPPER.as_ref() {
+            Some(mapper) => {
+                while page < end {
+                    if mapper.translate(VirtAddr(page)).is_none() {
+                        return false;
+                    }
+                    page = match page.checked_add(4096) {
+                        Some(p) => p,
+                        None => return false,
+                    };
+                }
+                true
+            }
+            None => false,
+        }
+    }
 }

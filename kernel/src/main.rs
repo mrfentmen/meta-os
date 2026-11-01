@@ -44,6 +44,7 @@ mod memory;
 mod sched;
 mod tasks;
 mod traps;
+mod user;
 mod vga;
 
 use core::panic::PanicInfo;

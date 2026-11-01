@@ -582,6 +582,15 @@ impl<'a, T: TableMemory> Mapper<'a, T> {
         self.root
     }
 
+    /// Hand out one usable frame from the backing allocator.
+    /// Mac-build addition (opencode/os-build, OS-078): the userspace
+    /// loader needs frames without owning the allocator; the mapper
+    /// is the only owner, so the method lives here. Delegates
+    /// directly; no policy, no caching.
+    pub fn allocate_frame(&mut self) -> Option<PhysAddr> {
+        self.allocator.allocate()
+    }
+
     /// Covered frames still free in the backing allocator.
     pub fn free_frames(&self) -> usize {
         self.allocator.free_frames()
@@ -622,11 +631,17 @@ impl<'a, T: TableMemory> Mapper<'a, T> {
     /// every failure path (see `MapError` for the one exception:
     /// empty intermediate tables may stay linked after
     /// `OutOfFrames`).
+    ///
+    /// Mac-build addition (opencode/os-build, OS-079): `user`
+    /// marks USER (U/S) on the leaf AND every intermediate table
+    /// created for it — ring-3 code faults without the bit at any
+    /// level (found live: first userspace entry faulted 0x15).
     pub fn map_page(
         &mut self,
         virt: VirtAddr,
         frame: PhysAddr,
         flags: u64,
+        user: bool,
     ) -> Result<(), MapError> {
         if !virt.is_page_aligned() || !frame.is_page_aligned() {
             return Err(MapError::UnalignedAddress);
@@ -648,8 +663,13 @@ impl<'a, T: TableMemory> Mapper<'a, T> {
                 for i in 0..ENTRIES_PER_TABLE {
                     self.mem.write_entry(new_table, i, 0);
                 }
+                let table_flags = if user {
+                    ENTRY_PRESENT | ENTRY_WRITABLE | ENTRY_USER
+                } else {
+                    ENTRY_PRESENT | ENTRY_WRITABLE
+                };
                 let entry_value =
-                    PageTableEntry::new(new_table, ENTRY_PRESENT | ENTRY_WRITABLE).raw();
+                    PageTableEntry::new(new_table, table_flags).raw();
                 self.mem.write_entry(table, index, entry_value);
                 table = new_table;
             }
@@ -658,7 +678,12 @@ impl<'a, T: TableMemory> Mapper<'a, T> {
         if leaf.is_present() {
             return Err(MapError::AlreadyMapped);
         }
-        let entry_value = PageTableEntry::new(frame, flags | ENTRY_PRESENT).raw();
+        let leaf_flags = if user {
+            flags | ENTRY_PRESENT | ENTRY_USER
+        } else {
+            flags | ENTRY_PRESENT
+        };
+        let entry_value = PageTableEntry::new(frame, leaf_flags).raw();
         self.mem.write_entry(table, virt.p1_index(), entry_value);
         Ok(())
     }

@@ -78,3 +78,21 @@
 - `Box::leak` stacks: 16 KiB heap boxes, never freed in K5 (no reap
   yet); leaking is documented, not a silent loss — K6 reaps.
 - `SCHED`/`SLOTS`/`CTXS` roots via `addr_of_mut!`, never references.
+
+## kernel/src/user.rs + traps vector 128 (Section F)
+
+- `load_elf`: ELF header/segment reads are bounds-checked
+  (`get(..)`); mapping writes go through translated phys addresses;
+  RELA writes likewise (entry revalidated after).
+- `enter_userspace`: 5-push iretq frame (SS/SP/FLAGS/CS/IP, RPL 3);
+  `nostack` is accurate only because the frame is consumed by
+  `iretq` itself; `noreturn` true. TSS.rsp0 set to the entering
+  task's own kernel stack top just before.
+- `syscall_handler`: saved-register offsets (-24..-56) match
+  `trap_common`'s push order exactly (9 regs, vector, error);
+  return value written to the saved rax slot. Handler runs on the
+  task's own kernel stack (rsp0), so scheduler switches are
+  task-context switches, never stack transplants.
+- Gate 128 is DPL 3 (0xEE); all other gates stay 0x8E.
+- Page-fault CPL check: ring-3 faults exit the task instead of
+  returning into it (no re-fault loop by design).

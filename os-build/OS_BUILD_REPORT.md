@@ -195,3 +195,32 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
   Fix: wake on every scheduling decision (yield/sleep/exit).
 - K1–K3 re-proven in the same boot (alive + banner + uptime 7s).
 - OS-074: this summary. Pushing.
+
+## Section F — K6 syscalls and first userspace (OS-075..OS-088) — DONE
+
+- OS-075: `os-build/research/syscalls.md` — five calls on int 0x80,
+  numbers + convention + why not syscall/sysret yet. DONE.
+- OS-076: ring transition via iretq with the task's own kstack as
+  rsp0 (no separate kernel stack, no resume patching). DONE.
+- OS-077: three static userspace programs; build flow documented
+  (per-binary BASE via sed-generated link script; the Section N
+  script owns the order — a nested cargo in build.rs proved
+  unreliable and was deleted). DONE.
+- OS-078: ELF loader (LOAD mapping, BSS zeroing, RELA RELATIVE
+  processing). Two live bugs fixed: (1) unmapped user stacks —
+  kernel .bss is supervisor-only, stacks now allocated as USER
+  pages; (2) zeroed GOT slots jumped to address 0 —.RELRO/RELAs
+  must be applied even at identity base. DONE.
+- OS-079: int 0x80 chosen (IDT already proven); syscall/sysret
+  deferred, named. DONE.
+- OS-080/081: `HELLO FROM USERSPACE` + `user exit code 0`. DONE.
+- OS-082: K6-boot.txt (one boot proves everything). DONE.
+- OS-083: sleeper write/sleep(100)/write. DONE.
+- OS-084: `user bad syscall 99 refused`, program sees -1. DONE.
+- OS-085: crasher reads zero → `user page-fault ... task killed`,
+  kernel + console + sleeper carry on. DONE.
+- Gate list (OS-087): write PROVEN, exit PROVEN, sleep PROVEN,
+  getpid PROVEN (`pid 5`), yield PROVEN (`yielded and back`).
+  No rounding up: 5/5 with log lines each.
+- OS-086: unsafe ledger extended (above). DONE.
+- OS-088: this summary. Pushing.

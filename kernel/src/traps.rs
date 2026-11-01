@@ -62,6 +62,7 @@ trap_gate!(trap_13, 13, cpu);
 trap_gate!(trap_14, 14, cpu);
 trap_gate!(trap_32, 32, dummy);
 trap_gate!(trap_33, 33, dummy);
+trap_gate!(trap_128, 128, dummy);
 
 // Common entry: stack on arrival (top first) is
 //   [vector][error][rip][cs][rflags][rsp][ss]
@@ -114,6 +115,7 @@ extern "C" {
     fn trap_14();
     fn trap_32();
     fn trap_33();
+    fn trap_128();
 }
 
 fn trap_addr(vector: u8) -> u64 {
@@ -130,6 +132,7 @@ fn trap_addr(vector: u8) -> u64 {
         14 => trap_14,
         32 => trap_32,
         33 => trap_33,
+        128 => trap_128,
         _ => unreachable!(),
     };
     f as usize as u64
@@ -153,6 +156,8 @@ pub extern "C" fn dispatch_trampoline(
 
 /// Install one gate per wired vector (present 64-bit interrupt gate;
 /// double fault on IST stack 0) and round-trip-check every address.
+/// Vector 128 (`int 0x80`, the syscall gate) is DPL 3 (0xEE) so ring 3
+/// can enter; all others are ring 0 only (0x8E).
 pub fn install() {
     for vector in VECTORS {
         let ist = if vector == 8 { 1 } else { 0 };
@@ -162,6 +167,11 @@ pub fn install() {
         );
         debug_assert!(idt_get(vector).handler_addr() == trap_addr(vector));
     }
+    idt_set(
+        128,
+        IdtEntry::new(trap_addr(128), CODE_SELECTOR, 0, 0xEE),
+    );
+    debug_assert!(idt_get(128).handler_addr() == trap_addr(128));
 }
 
 /// True only for vectors the CPU pushes an error code for; the

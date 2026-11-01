@@ -1,3 +1,6 @@
+//! SINGLE-CPU SOUNDNESS (OS-086 ledger): every static-mut access below is justified there;
+//! the lint below only silences the compiler's general warning for this proven-single-CPU kernel.
+#![allow(static_mut_refs)]
 //! Meta OS kernel, Section E (K5): cooperative scheduler wiring.
 //!
 //! Rowan's `tasks.rs` owns Task/Context/Stack and the scheduling
@@ -32,6 +35,9 @@ static mut ENTRIES: [(TaskId, fn()); MAX_TASKS] =
 static mut SLEEPS: [(TaskId, u64); MAX_TASKS] =
     [(TaskId::new(0), u64::MAX); MAX_TASKS];
 static mut NTABLE: usize = 0;
+/// Kernel stack tops parallel to IDS (base + 16 KiB, set at spawn).
+/// `enter_userspace` loads the current task's top into TSS.rsp0.
+static mut KSTACK_TOPS: [u64; MAX_TASKS] = [0; MAX_TASKS];
 /// The task currently on the CPU (single CPU, no preemption).
 static mut CUR: TaskId = TaskId::new(0);
 /// Scheduler's own context (kernel_main's stack): tasks yield back
@@ -224,10 +230,21 @@ pub unsafe fn spawn_task(entry: fn(), quantum: u32) -> Option<TaskId> {
     let i = NTABLE;
     CTXS[i] = ctx;
     IDS[i] = id;
+    KSTACK_TOPS[i] = top;
     ENTRIES[i] = (id, entry);
     SLEEPS[i] = (id, u64::MAX);
     NTABLE += 1;
     Some(id)
+}
+
+/// Id of the task on the CPU now (0 = scheduler context).
+pub fn current_id() -> TaskId {
+    unsafe { CUR }
+}
+
+/// Kernel stack top of the current task (for TSS.rsp0 on ring entry).
+pub fn current_kstack_top() -> Option<u64> {
+    unsafe { find_row(CUR).map(|i| KSTACK_TOPS[i]) }
 }
 
 /// Create the scheduler over the static slot table. Call once.
@@ -354,12 +371,17 @@ fn decode_scancode(scancode: u8) -> Option<char> {
     Some(ch)
 }
 
-/// Spawn A, B, C and the console task, then run. Called once from
-/// `kernel_main` after `mem_init` (tasks need the heap for stacks).
+/// Spawn A, B, C, the console task and the three userspace programs,
+/// then run. Called once from `kernel_main` after `mem_init` (tasks
+/// need the heap for stacks, userspace needs the mapper).
 pub unsafe fn start_demo_tasks() -> ! {
+    interrupts::register_handler(128, crate::user::syscall_handler);
     spawn_task(task_a, u32::MAX).expect("sched: spawn A");
     spawn_task(task_b, u32::MAX).expect("sched: spawn B");
     spawn_task(task_c, u32::MAX).expect("sched: spawn C");
+    spawn_task(crate::user::task_hello, u32::MAX).expect("sched: spawn hello");
+    spawn_task(crate::user::task_sleeper, u32::MAX).expect("sched: spawn sleeper");
+    spawn_task(crate::user::task_crasher, u32::MAX).expect("sched: spawn crasher");
     spawn_task(console_task, u32::MAX).expect("sched: spawn console");
     run();
 }
