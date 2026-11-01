@@ -1822,6 +1822,15 @@ body[data-view="command"] > main { display: none; }
   main { overflow-x: clip; padding: 8px; }
   .maplibregl-ctrl button { min-height: 44px; min-width: 44px; }
 }
+
+/* HN-017 reduced motion: CSS pulses and bar transitions stop for
+   viewers who asked for reduced motion. The ASCII canvas stops
+   itself (js/logo-background.js gates its animation frame), and
+   the wall interval is gated in js/command-map.js init. */
+@media (prefers-reduced-motion: reduce) {
+  .cmd-pin--fast, .cmd-pin--slow, .cmd-step--current .cmd-step-dot { animation: none; }
+  .cmd-bar span { transition: none; }
+}
 /* OPS-CONSOLE-1 (Del UI direction, Oct 29): first web-first
    modern/elite/professional dispatch/ops-console piece for Ignis.
    Panel headings become console section labels — uppercase mono

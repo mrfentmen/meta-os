@@ -61,6 +61,7 @@ import {
 import { PRODUCT_BY_ID } from "./products.js";
 import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier } from "./command-loop.js";
 import { createDelayedIndicator, errorClassFor } from "./loading.js";
+import { prefersReducedMotion } from "./motion.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
 
@@ -1953,7 +1954,11 @@ function init() {
     if (event.target === els.helpOverlay) els.helpOverlay.hidden = true;
   });
 
-  setInterval(refreshWallSrcs, 15000);
+  // Reduced motion (HN-017): the wall does not auto-cycle its
+  // snapshots when the viewer asked for reduced motion. It still
+  // loads once, and reselecting a camera refreshes it. The loop
+  // feed keeps polling — live data, not animation.
+  if (!prefersReducedMotion()) setInterval(refreshWallSrcs, 15000);
   refreshLoopFeed();
   setInterval(refreshLoopFeed, 5000);
   setInterval(() => {
