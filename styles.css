@@ -2229,6 +2229,20 @@ main > .panel {
   margin-right: 8px;
 }
 
+/* HN-022 demo-mode banner: sticky, so it stays at the top of
+   the viewport in both views while scrolling; yellow on near-
+   black text measures ~7.5, past AA. */
+.demo-banner {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  background: #c9a227;
+  color: #14161a;
+  font-weight: 700;
+  text-align: center;
+  padding: 8px;
+  margin: 0;
+}
 /* HN-018 contrast pass (WCAG AA, measured in tests/contrast.test.mjs):
    brand hexes stay pinned (tests + logo palettes assert them), so
    only TEXT colors move — to lighter variants of the same hue.

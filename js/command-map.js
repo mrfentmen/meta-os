@@ -62,6 +62,7 @@ import { PRODUCT_BY_ID } from "./products.js";
 import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier } from "./command-loop.js";
 import { createDelayedIndicator, errorClassFor } from "./loading.js";
 import { prefersReducedMotion } from "./motion.js";
+import { isDemoMode } from "./demo.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
 
@@ -108,6 +109,7 @@ const els = {
   loopStatus: $("cmd-loop-status"),
   loopFeed: $("cmd-loop-feed"),
   ribbon: $("cmd-ribbon"),
+  demoBanner: $("demo-banner"),
   overlay: $("cmd-search-overlay"),
   ksearch: $("cmd-ksearch"),
   kresults: $("cmd-kresults"),
@@ -1863,6 +1865,9 @@ function setView(view) {
 // ---------------------------------------------------------------- init
 
 function init() {
+  // HN-022: ?demo=1 shows the persistent demo banner in both
+  // views (it is body-level and sticky); anything else stays live.
+  if (isDemoMode(window.location.search)) els.demoBanner.hidden = false;
   setView("command");
   initMap();
   for (const kind of ["pointerdown", "wheel", "touchstart"]) {
