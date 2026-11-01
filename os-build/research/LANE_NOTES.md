@@ -49,13 +49,13 @@ as an MCP.
 
 | Task | File | State |
 |---|---|---|
-| B1 tools manifest research | `os-build/research/tools-candidates.md` | done. Nine Section J categories, five candidates each, license gated. |
+| B1 tools manifest research | `os-build/research/tools-candidates.md` | done. Ten Section J categories, five candidates each, license gated. |
 | B2 other distros notes | `os-build/research/distros/` (8 files: nixos, arch, alpine, steamos, chromeos, redoxos, serenityos, haiku) | done. One system per file, borrowable idea plus license position, GPL marked. |
 | B3 Goose and Lobster ecosystem watch | `os-build/research/ecosystem-watch.md` | done. Dated links, install requirements, name collision, MCP absence, open questions handed to their owners. |
 
 ### Report line
 
-`B1-B3 RESEARCH  files=10  code=none  gate1=na  gate2=na  sources=checked-2026-11-01  mcp=not-wired(none-exists)`
+`B1-B3 RESEARCH  files=11  code=none  gate1=na  gate2=na  sources=checked-2026-11-01  mcp=not-wired(none-exists)`
 
 ## Findings that move another lane's work
 

@@ -1,6 +1,10 @@
 # Tools manifest research — five candidates per Section J category
 
 Lane: Buffy, research and tools. Task B1. Written 2026-11-01.
+
+Ten categories, not nine: OS-133 names nine (languages, compilers, editors,
+networking, disks, media, security research, agent tooling, debugging) and
+OS-139 adds text and data. All ten are here.
 Status: RESEARCH. Nothing here is installed, compiled or run. No claim of a
 working toolset is made by this file.
 
@@ -196,18 +200,40 @@ server**, verified 2026-11-01. Goose ships an LSP (`goose lsp`) and a VS Code
 extension instead, which is better than an MCP for coding and useless for
 agents calling tools. Details and links in `ecosystem-watch.md`.
 
+## 10. Debugging
+
+Section J (OS-133). The kernel is the hard part, and this category is where a
+kernel bug gets found. Today the honest answer for debugging *our* kernel is
+QEMU's gdbstub: boot with `-s -S`, attach the debugger, step the kernel. There
+is no in-kernel debugger and there will not be one before K4.
+
+| Tool | Source | License | Gate | Why this slot |
+|---|---|---|---|---|
+| LLDB | apt `lldb` | Apache-2.0 WITH LLVM-exception | GREEN | The debugger that matches clang, talks to QEMU's gdbstub, and is permissive. This is the one Rowan should learn for the kernel. |
+| GDB | apt `gdb` | GPL-3.0 | AMBER | Most kernel tutorials assume it, so it is the compatibility answer. Separate program. |
+| strace | apt `strace` | LGPL-2.1-or-later | AMBER | Syscall truth for the carrier and for the services layer. Useless against our own kernel until K6 gives syscalls a meaning. |
+| valgrind | apt `valgrind` | GPL-2.0 | AMBER | Memory errors in the C that Goose and Lobster generate. Runs the program, never links into ours. |
+| perf | apt `linux-perf` | GPL-2.0 | AMBER | Only if a number is disputed. The kernel is not ours to profile until it exists. |
+
+Past the cap: `rr` (record and replay, the best tool here for a nondeterministic
+boot, but its license is a custom permissive one and **this lane did not verify
+it**, so it is listed and not gated), `ltrace` (GPL-2.0).
+
 ## What this list implies for the manifest
 
-1. Seven of the nine categories are GREEN-dominated. The copyleft load is
+1. Eight of the ten categories are GREEN-dominated. The copyleft load is
    concentrated in disk tools, build tools and one scanner, all of which are
    separate programs on the carrier.
 2. The one RED is `nmap` (NPSL). It should be the only RED in
    `TOOLS_MANIFEST.md`, and OS-147's trim pass should have to argue for it.
-3. Three rows carry a shipping condition rather than a license problem:
+3. The debugger story is settled by one decision: LLDB plus QEMU's gdbstub,
+   with GDB only when a tutorial assumes it. Write that into the K2 notes
+   before somebody adds print statements to the framebuffer code.
+4. Three rows carry a shipping condition rather than a license problem:
    `ffmpeg` (needs an LGPL-only build before it ships), VS Code (ship the OSS
    build, not Microsoft's binary), and `sqlite3` (fine, but the *format* we put
    in it is a design decision, not a tool decision).
-4. Nothing here is inside the kernel. When OS-148 marks what the KERNEL image
+5. Nothing here is inside the kernel. When OS-148 marks what the KERNEL image
    eventually carries natively, the honest answer today is: none of it. A
    `no_std` kernel that has not reached K4 cannot host a userland tool, and the
    permissive ones we would want first (`zstd`, `sqlite`, `ripgrep`) are all
