@@ -3814,9 +3814,10 @@ try {
   // state label still reads, dimmed. Alert subjects use the spec §6
   // shape; the watchdog's pre-store nick field is accepted too.
   // DSH-013 renders the feed from state.alerts; the live alert
-  // read is still harness-fed (setAlerts) because intel/store.py
-  // defines no alert index key to read — see the DSH-013 note at
-  // renderAlerts. Blocked-by-alert activates on those records.
+  // read is collectAlerts (HN-009, keys scan + mget); setAlerts
+  // remains as harness ingest for tests. No alert index key exists
+  // yet — see the DSH-013 note at renderAlerts. Blocked-by-alert
+  // activates on those records.
   var STATE_STYLE = { working: "#3fb950", idle: "#8b949e",
     blocked: "#f85149" };
 
@@ -4854,12 +4855,11 @@ try {
   // else #8b949e muted. Milo's WDG-011 severity mapping names these
   // severities; no mapping module has landed yet, so the colors here
   // are the existing-palette equivalents, not a new mapping.
-  // Live gap, stated plainly: intel/store.py defines alert keys
-  // (muse-bus:intel:alert:<id>) but no alert index/list key, so
-  // there is no live read to call without inventing a scan — the
-  // feed renders harness-fed records (setAlerts) until Pax/Milo land
-  // an alert index, exactly as DSH-012's tracker is harness-fed
-  // until DSP-008 lands. Ack/resolve land with DSH-014 below: the
+  // HN-009: the live read is a keys scan (muse-bus:intel:alert:*)
+  // + mget, the same shape collectBoot uses — no new backend, just
+  // the existing store read. setAlerts remains as harness ingest
+  // for tests. When Pax/Milo land an alert index, collectAlerts
+  // should switch to it; until then the scan is the read. Ack/resolve land with DSH-014 below: the
   // WDG-014 lifecycle shape (open -> acknowledged -> resolved) is
   // wired as pure transitions + buttons; the LIVE write stays gated
   // off per spec §0 (see ALERT_WRITE_ENABLED), while HN-003/004
@@ -5378,6 +5378,58 @@ try {
     } catch (e) { /* rendering must never throw */ }
   }
 
+  // HN-009: live alert read. No alert index key exists, so the
+  // panel scans the alert key prefix (the same /keys/ shape the
+  // directory panel and collectBoot already use) and mgets the
+  // records; sortedAlerts renders newest first. An empty key list
+  // is not an error: zero alerts renders the honest beat-driven
+  // empty state, not harness data. Unparseable records and records
+  // without an id are skipped, never rendered. A failed read keeps
+  // the last good alerts (the next poll retries); there is no
+  // alerts panel-error slot, so no error banner is invented.
+  // Runs on connect + the core poll cycle, like the other collects.
+  async function collectAlerts() {
+    try {
+      var ks = await U.api("/keys/" +
+        encodeURIComponent("muse-bus:intel:alert:*"));
+      var list = (ks && ks.result) || [];
+      if (typeof list === "string") list = [list];
+      list = list.filter(function (k) { return typeof k === "string"; });
+      if (!list.length) {
+        state.alerts = [];
+        renderCrew(); renderAlerts(); return;
+      }
+      var mg = await U.api("/mget/" +
+        list.map(function (k) { return encodeURIComponent(k); }).join("/"));
+      var vals = (mg && mg.result) || [];
+      var rows = [];
+      for (var i = 0; i < vals.length; i++) {
+        var v = vals[i];
+        if (v == null) continue;
+        var rec = null;
+        if (typeof v === "string") {
+          try { rec = JSON.parse(v); } catch (e) { rec = null; }
+        } else if (typeof v === "object") rec = v;
+        if (!rec || typeof rec !== "object" || !rec.id) continue;
+        rows.push({
+          id: rec.id || "", kind: rec.kind || "",
+          severity: rec.severity || "",
+          subjects: splitList(rec.subjects),
+          nick: rec.nick || "",
+          explanation: rec.explanation || "",
+          suggested_fix: rec.suggested_fix || "",
+          created_at: numOrNull(rec.created_at),
+          resolved_at: numOrNull(rec.resolved_at),
+          status: rec.status || "",
+          acknowledged_at: numOrNull(rec.acknowledged_at),
+          acked_by: rec.acked_by || ""
+        });
+      }
+      state.alerts = applyAlertLocalOverlay(rows);
+      renderCrew(); renderAlerts();
+    } catch (e) { /* keep last good alerts; next poll retries */ }
+  }
+
   // --- Boot checklist (OS-043, plan/META_OS.md) -------------------------
   // While services start, the dashboard shell shows bus, queue,
   // supervisor, watchdog, and brief flipping live as units report
@@ -5735,8 +5787,9 @@ try {
         "The tracker " +
         "follows posted jobs with live status.</div>" +
         '<div class="trow"><b>Alerts:</b> alert records ' +
-        "(muse-bus:intel:alert:&lt;id&gt;), newest first; severity " +
-        "shown as color + icon + text, never color alone. " +
+        "(muse-bus:intel:alert:&lt;id&gt;), newest first, read live " +
+        "with a keys scan; severity shown as color + icon + text, " +
+        "never color alone. " +
         "Acknowledge / Resolve are stored on this device only, not " +
         "posted. Empty state follows the watchdog beat " +
         "(muse-bus:intel:wd:beat): 'All quiet' when fresh, " +
@@ -5764,7 +5817,7 @@ try {
 
   try {
     H.connect.push(function () {
-      try { applyDeepLink(); renderAll(); collectCrew(); collectJobs(); collectBrief(); collectBeat(); collectBoot(); } catch (e) {}
+      try { applyDeepLink(); renderAll(); collectCrew(); collectJobs(); collectBrief(); collectBeat(); collectBoot(); collectAlerts(); } catch (e) {}
     });
     H.poll.push(function () {
       try {
@@ -5784,6 +5837,7 @@ try {
         collectBrief(); // fresh latest brief on traffic, same poll cycle
         collectBeat();  // fresh beat on traffic, same poll cycle (DSH-015, no own timer)
         collectBoot();  // fresh boot status on traffic, same poll cycle (OS-043, no own timer)
+        collectAlerts();  // fresh alerts on traffic, same poll cycle (HN-009, no own timer)
       } catch (e) {}
     });
     // DSH-022: a hash change re-renders immediately instead of
@@ -5927,6 +5981,8 @@ try {
       // DSH-020: drive the capped job read in the harness; the
       // driver stubs U.api with N index ids and counts HGETALLs.
       collectJobsForTest: function () { return collectJobs(); },
+      // HN-009: drive the live alert read against the stubbed api.
+      collectAlertsForTest: function () { return collectAlerts(); },
       // DSH-021: per-source error state as rendered (null = healthy
       // per source), and drivers for the crew/brief/beat reads so
       // the harness can fail one source and watch only its panel

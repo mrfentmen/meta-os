@@ -445,6 +445,13 @@ by the watchdog via `intel/store.py` (WDG-010). One payload per alert:
   "acked_by": null }
 ```
 
+**Live read (HN-009):** the panel scans `muse-bus:intel:alert:*`
+with `/keys/` and fetches the records with `/mget/` (the same shape
+as the boot status read); no alert index key exists yet, so the scan
+is the read until Pax/Milo land one. Zero keys renders the honest
+beat-driven empty state, not harness data. `setAlerts` remains as
+harness ingest for tests.
+
 **Feed rendering (DSH-013):** newest first; severity shown as **color +
 icon + text label** — severity is never carried by color alone
 (DSH-019). Severity colors come from Milo's alert mapping (WDG-011
@@ -462,9 +469,10 @@ capability chips are text in bordered spans. The one red span in the
 panels, the lease countdown, is emphasis only: its text already says
 `lease expired` or the remaining `lease M:SS`, so the meaning survives
 without the color. Every intel button carries a visible text label —
-`Brief me now`, `Plan`, `Post N jobs`, `Reject plan` — never an
-icon-only button; the disabled ones sit next to the plain explanation
-`Posting is off for this build.` Contrast, WCAG ratios of the DSH-018
+`Brief me now`, `Plan`, `Post N jobs (simulated)`, `Reject plan`,
+`Acknowledge`, `Resolve` — never an icon-only button; a button
+disabled by state (acknowledged/resolved, frozen plan) sits under its
+panel's plain note. Contrast, WCAG ratios of the DSH-018
 palette foregrounds against the page background `#0d1117` and the panel
 background `#161b22`, computed at implementation time: critical
 `#f85149` 5.65 / 5.16, warning `#d29922` 7.50 / 6.85, info `#58a6ff`
