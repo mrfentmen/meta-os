@@ -66,6 +66,10 @@
     <label for="cmd-search">Filter cameras</label>
     <input id="cmd-search" type="search" placeholder="Name or borough" autocomplete="off">
     <p class="note">Watch list max 6 — only watched cameras are sampled. Ctrl+K searches cameras and incidents.</p>
+    <div class="controls">
+      <button id="cmd-search-open" type="button">Search cameras</button>
+      <button id="cmd-help-open" type="button">Keyboard shortcuts</button>
+    </div>
     <div id="cmd-camera-list" class="cmd-camera-list"></div>
     <p id="cmd-ribbon" class="cmd-ribbon" role="status" hidden></p>
     <h3 class="cmd-h">Loop feed</h3>
@@ -140,6 +144,19 @@
       <input id="cmd-ksearch" type="search" placeholder="Camera name, borough, or incident category" autocomplete="off">
       <ul id="cmd-kresults" class="cmd-kresults"></ul>
       <p class="note">Enter focuses the top result. Esc closes.</p>
+    </div>
+  </div>
+
+  <div id="cmd-help-overlay" class="cmd-search-overlay" hidden>
+    <div class="cmd-search-box">
+      <h3 class="cmd-h">Keyboard shortcuts</h3>
+      <ul class="cmd-help-list">
+        <li><kbd>Ctrl</kbd> + <kbd>K</kbd> or <kbd>Cmd</kbd> + <kbd>K</kbd> — Open or close camera search</li>
+        <li><kbd>Esc</kbd> — Close search or this help</li>
+        <li><kbd>Enter</kbd> — In search, focus the top result</li>
+      </ul>
+      <p class="note">Everything else in this view is a visible button — there are no other keyboard-only features.</p>
+      <div class="controls"><button id="cmd-help-close" type="button">Close</button></div>
     </div>
   </div>
 

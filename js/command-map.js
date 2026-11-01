@@ -110,6 +110,10 @@ const els = {
   overlay: $("cmd-search-overlay"),
   ksearch: $("cmd-ksearch"),
   kresults: $("cmd-kresults"),
+  searchOpen: $("cmd-search-open"),
+  helpOverlay: $("cmd-help-overlay"),
+  helpOpen: $("cmd-help-open"),
+  helpClose: $("cmd-help-close"),
   captureCanvas: $("cmd-capture-canvas"),
   sysBackend: $("cmd-sys-backend"),
   sysEndpoint: $("cmd-sys-endpoint"),
@@ -1917,6 +1921,8 @@ function init() {
       else closeSearch();
     } else if (event.key === "Escape" && !els.overlay.hidden) {
       closeSearch();
+    } else if (event.key === "Escape" && els.helpOverlay && !els.helpOverlay.hidden) {
+      els.helpOverlay.hidden = true;
     }
   });
   els.ksearch.addEventListener("input", renderKResults);
@@ -1929,6 +1935,22 @@ function init() {
   });
   els.overlay.addEventListener("click", (event) => {
     if (event.target === els.overlay) closeSearch();
+  });
+
+  // Keyboard map (HN-015): search and shortcuts are visible
+  // buttons too, never keyboard-only. The help overlay lists every
+  // keyboard feature in the view — the search three — and closes
+  // by button, by backdrop click, or by Esc.
+  if (els.searchOpen) els.searchOpen.addEventListener("click", openSearch);
+  if (els.helpOpen) els.helpOpen.addEventListener("click", () => {
+    els.helpOverlay.hidden = false;
+    els.helpClose.focus();
+  });
+  if (els.helpClose) els.helpClose.addEventListener("click", () => {
+    els.helpOverlay.hidden = true;
+  });
+  if (els.helpOverlay) els.helpOverlay.addEventListener("click", (event) => {
+    if (event.target === els.helpOverlay) els.helpOverlay.hidden = true;
   });
 
   setInterval(refreshWallSrcs, 15000);

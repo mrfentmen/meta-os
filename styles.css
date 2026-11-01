@@ -1763,6 +1763,8 @@ body[data-view="command"] > main { display: none; }
 }
 .cmd-kresult:hover { border-color: var(--cmd-line); }
 .cmd-kresult-sub { font-size: 10px; opacity: 0.65; }
+.cmd-help-list { margin: 8px 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.cmd-help-list kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--cmd-line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; background: rgba(83, 200, 255, 0.08); }
 
 /* Loop feed: the agent crew's recorded activity (patrol checks,
    review verdicts, incident reports, SIMULATED dispatch receipts),
