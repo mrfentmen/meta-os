@@ -63,6 +63,7 @@ import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbo
 import { createDelayedIndicator, errorClassFor } from "./loading.js";
 import { prefersReducedMotion } from "./motion.js";
 import { isDemoMode } from "./demo.js";
+import { saveSelection, loadSelection, resolveSelection } from "./restore.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
 
@@ -152,6 +153,7 @@ const state = {
   onlineCount: 0,
   query: "",
   focusedId: null,
+  restored: false, // HN-023: session restore attempted once per load
   searchReturnFocus: null, // HN-019: element to refocus when search closes
   helpReturnFocus: null, // HN-019: element to refocus when help closes
   pinReturnFocus: null, // HN-019: element to refocus when the pin card closes
@@ -888,6 +890,17 @@ function selectCamera(id, { pan = false, openCard = false } = {}) {
   if (!cam) return;
   const previous = state.focusedId;
   state.focusedId = id;
+  // HN-023: persist the selection pointer (records, not memory).
+  // On reload, maybeRestore validates it against the fresh
+  // camera list and crew incidents before reselecting.
+  const entry = state.camState.get(id);
+  const open = state.queue.openForCamera(id);
+  saveSelection(localStorage, {
+    cameraId: id,
+    category: open?.category ?? entry?.lastCategory ?? null,
+    priority: open?.priority ?? null,
+    at: Date.now(),
+  });
   els.inspName.textContent = cam.name;
   els.inspMeta.textContent = `${cam.area} · ${cam.latitude.toFixed(5)}, ${cam.longitude.toFixed(5)} · NYC DOT test feed`;
   els.viewerImg.hidden = false;
@@ -1587,6 +1600,26 @@ function renderActivity() {
 // (crew not running on this stack, or the page is hosted without
 // the app server), the panel says so and keeps polling — it never
 // invents crew activity.
+// HN-023: restore the saved selection once per load. Skipped
+// when the operator already picked a camera (their live choice
+// wins over the saved pointer) and while cameras are still
+// loading (the next poll retries). A stale pointer restores
+// nothing — resolveSelection returns null for unknown cameras.
+function maybeRestore(payload) {
+  if (state.restored) return;
+  if (state.focusedId) {
+    state.restored = true;
+    return;
+  }
+  if (state.cameras.length === 0) return;
+  const saved = loadSelection(localStorage);
+  state.restored = true;
+  if (!saved) return;
+  const resolved = resolveSelection(saved, state.cameras.map((c) => c.id), payload?.incidents);
+  if (!resolved) return;
+  selectCamera(resolved.cameraId);
+}
+
 async function refreshLoopFeed() {
   // Loading line (HN-013): replaces the stale status only if the
   // poll is still pending past 300 ms.
@@ -1640,6 +1673,11 @@ async function refreshLoopFeed() {
       els.ribbon.hidden = true;
     }
   }
+  // Session restore (HN-023): once per load, on the first
+  // successful crew fetch, reselect the saved camera — validated
+  // against the loaded cameras and this payload's incidents, so
+  // the restored view renders from fresh records, not stale memory.
+  maybeRestore(payload);
   // Events first, then the crew's incidents with their recorded
   // evidence, BOLO + visible marks, and yellow/red tier — the
   // projection the endpoint carries but the feed used to drop.
