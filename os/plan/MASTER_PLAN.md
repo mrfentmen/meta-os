@@ -245,15 +245,15 @@ Repo: `~/workspace/repos/muse-relay` (GitHub `Mrfentmen/muse-relay`). The bus st
 - **BRF-038** [BUFFY] Transcribe three real (anonymized, Dale-approved only) historical bus days into fixture format — HELD until Dale approves using real history
   - Acceptance: Either fixtures exist with Dale's recorded approval, or task closed as not used; no real history touched without approval
 - **BRF-039** [PAX] Review Hana's brief record schema against dashboard payload needs with Rowan; freeze by end of Day 2 ★
-  - Acceptance: Freeze note in intel/README.md with date; dashboard mock uses the frozen fields
-- **BRF-040** [PAX] Verify brief fallback path end to end on the live-shape stack (fake Redis + FakeTransport failure injection)
+  - Acceptance: Freeze note in intel/README.md with date; dashboard panel uses the frozen fields
+- **BRF-040** [PAX] Verify brief fallback path end to end on the live-shape stack (local fallback store + real transport failure case)
   - Acceptance: Fallback brief produced and stored; status CODE-INSPECTED notes plus test output recorded
 - **BRF-041** [PAX] Sign off brief eval results before demo lock: rubric pass rate recorded in MASTER_PLAN progress notes
   - Acceptance: Pass rate written down with brief ids; failures either fixed or listed as known limits
 - **BRF-042** [ROWAN] Define brief panel payload contract with Hana (fields the viewer receives per brief)
   - Acceptance: Contract listed in dashboard spec; panel renders from a static example payload
 - **BRF-043** [ROWAN] Render brief age/staleness in payload examples so the panel design accounts for it from day one
-  - Acceptance: Example payloads include fresh and stale briefs; panel mock shows both states
+  - Acceptance: Example payloads include fresh and stale briefs; panel preview shows both states
 
 ### DISPATCH (40 tasks)
 
@@ -330,13 +330,13 @@ Repo: `~/workspace/repos/muse-relay` (GitHub `Mrfentmen/muse-relay`). The bus st
 - **DSP-036** [BUFFY] Keep a dispatch regression log: every prompt version x golden set result, dated
   - Acceptance: Log current through the final prompt version before demo freeze
 - **DSP-037** [ROWAN] Define dispatch box payload: goal in, plan preview out (jobs, files, deps graph summary, budgets), approve action shape ★
-  - Acceptance: Payload contract in dashboard spec; static example renders in panel mock
-- **DSP-038** [ROWAN] Render plan dependency order as an indented list (no graph library) in the preview mock
-  - Acceptance: Mock shows diamond plan in correct topological reading order
+  - Acceptance: Payload contract in dashboard spec; static example renders in the panel preview
+- **DSP-038** [ROWAN] Render plan dependency order as an indented list (no graph library) in the panel preview
+  - Acceptance: Preview shows diamond plan in correct topological reading order
 - **DSP-039** [ROWAN] Design approval affordance states: idle, planning, plan-ready, posting, posted, rejected — with exact button labels
-  - Acceptance: State list in dashboard spec; mock cycles all six states
+  - Acceptance: State list in dashboard spec; the panel renders only the states that exist in it (posting and posted are not panel states)
 - **DSP-040** [ROWAN] Ensure dispatch box never implies auto-posting: label copy states a human approves every plan
-  - Acceptance: Copy present in mock and spec; Pax reviews wording
+  - Acceptance: Copy present in panel and spec; Pax reviews wording
 
 ### WATCHDOG (46 tasks)
 
@@ -456,7 +456,7 @@ Repo: `~/workspace/repos/muse-relay` (GitHub `Mrfentmen/muse-relay`). The bus st
 - **DSH-010** [ROWAN] Dispatch panel: goal input + Plan button rendering PAX's plan-preview payload (jobs, files, deps order, budgets) ★
   - Acceptance: Preview renders the golden diamond plan readably on desktop and phone widths
 - **DSH-011** [ROWAN] Dispatch panel: approve/reject buttons wired to the dispatch approval shape; approve requires the human confirm step (native confirm + explicit 'Post N jobs' label) ★
-  - Acceptance: Approve flow in mock posts nothing; real wiring gated behind Pax integration task
+  - Acceptance: The panel holds no approve action; posting is CLI only, per the DSH-038 decision
 - **DSH-012** [ROWAN] Dispatch panel: posted-plan tracker — after posting, panel lists real job ids with live status pulled from job reads
   - Acceptance: Tracker on posted fixture plan matches jobs list output
 - **DSH-013** [ROWAN] Alerts panel: live alert feed (severity color per Milo's mapping, kind, subjects, age, explanation, suggested fix) ★
@@ -508,7 +508,7 @@ Repo: `~/workspace/repos/muse-relay` (GitHub `Mrfentmen/muse-relay`). The bus st
 - **DSH-036** [ROWAN] Freeze dashboard feature set at demo freeze; after freeze only bugfixes with Pax sign-off
   - Acceptance: Freeze noted in SCHEDULE log; post-freeze changes list exists (empty or signed)
 - **DSH-037** [PAX] Provide Rowan a static payload dev pack: example JSON for brief, plan preview, alerts feed, crew board — generated from real fixtures ★
-  - Acceptance: Dev pack in repo under intel/examples/; Rowan builds mocks without waiting on live services
+  - Acceptance: Dev pack in repo under intel/examples/; Rowan builds the panel against the pack without waiting on live services
 - **DSH-038** [PAX] Define the viewer's write path for dispatch approve (how a browser action becomes a signed jobs post) or rule it out and make dashboard dispatch request-only (human runs intel.py) — decide and document by Day 3 ★
   - Acceptance: Decision + rationale in DASHBOARD_SPEC.md; implementation matches the decision
 - **DSH-039** [PAX] Review every dashboard deploy batch before it goes to muse-relay-live (diff read + smoke checklist result)
