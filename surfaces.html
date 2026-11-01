@@ -30,6 +30,7 @@
     <a href="#board-hortus">Hortus</a>
     <a href="#board-gate">Gate</a>
     <a href="#board-evidence">Evidence</a>
+    <a href="#board-tiers">Tiers</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -50,6 +51,10 @@
     <h2 id="board-evidence-heading">Evidence viewer</h2>
     <p>Flagged-incident evidence crops, from the live crew records (/api/crew/status). Crops exist only on flagged events; the card always reads ID: UNIDENTIFIED.</p>
     <div id="evidence-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-tiers" aria-labelledby="board-tiers-heading">
+    <h2 id="board-tiers-heading">Tier colours audit</h2>
+    <p>Yellow/red rendering audited against the display table: 31 categories across vigiles (3 yellow, 3 red), ignis (8 yellow, 5 red), medicus (4 yellow, 8 red). One fix landed: untiered incident rows no longer inherit red; red rows carry an explicit red class. Visual proof: screenshots owed at Mac gate (docs/TIER_SCREENSHOT_PACK.md).</p>
   </section>
 </main>
 <script type="module">

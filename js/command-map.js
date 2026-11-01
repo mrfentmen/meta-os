@@ -59,7 +59,7 @@ import {
   firesToGeoJson,
 } from "./command-layers.js";
 import { PRODUCT_BY_ID } from "./products.js";
-import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier } from "./command-loop.js";
+import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier, loopItemTierClass } from "./command-loop.js";
 import { createDelayedIndicator, errorClassFor } from "./loading.js";
 import { prefersReducedMotion } from "./motion.js";
 import { isDemoMode } from "./demo.js";
@@ -1694,8 +1694,7 @@ async function refreshLoopFeed() {
   }
   for (const item of items) {
     const li = document.createElement("li");
-    li.className = `cmd-loop-item cmd-loop-item--${item.type}` +
-      (item.tier === "yellow" ? " cmd-loop-item--incident-yellow" : "");
+    li.className = `cmd-loop-item cmd-loop-item--${item.type}` + loopItemTierClass(item.tier);
     const when = document.createElement("span");
     when.className = "cmd-loop-when mono";
     when.textContent = item.at ? fmtTime(new Date(item.at)) : "";
