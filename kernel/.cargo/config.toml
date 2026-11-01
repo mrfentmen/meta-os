@@ -4,6 +4,10 @@ build-std-features = ["compiler-builtins-mem"]
 
 [build]
 target = "x86_64-unknown-none"
+# bootloader 0.9.35's ELF segment mapper panics on static-PIE kernels
+# ("PageAlreadyMapped" in stage 2, seen 2026-11-01 on rustc 1.99.1,
+# whose default for this target is PIE). Force a static kernel.
+rustflags = ["-C", "relocation-model=static"]
 
 [target.'cfg(target_os = "none")']
 runner = "bootimage runner"
