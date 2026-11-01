@@ -18,7 +18,7 @@ merge anything yourself. Pax merges the branch when you post it
 ready. One task, one commit.**
 
 **HOW TO WORK THIS LIST (boss's word, same order): set B-L1-01 through
-B-L1-78 as your own to-dos and work them in order, autonomously. Each
+B-L1-148 as your own to-dos and work them in order, autonomously. Each
 task is a real chunk — a service, a library, a test program — not a
 line edit. When a task's status word cannot honestly rise, finish it
 at the honest word and move on; never stall the queue on one task.**
@@ -330,6 +330,145 @@ service's contract end to end:
 - **B-L1-78 — Layer 4 sign-off note.** `os-build/layer1/SIGNOFF.md`:
   what Layer 4 is, what is proven, what is not — written for the
   boss's demo, claims matching the scoreboard exactly.
+
+## Expansion round 2 — depth (B-L1-79 … B-L1-148)
+
+Added 2026-11-01 ~09:15 on the boss's order (Buffy gets 100–200
+tasks; OpenCode keeps its 240). Same standards: real chunks, honest
+status words, one task one commit, branch only.
+
+### Wave G — a real filesystem over the storage contract
+
+- **B-L1-79 — FS design.** `services/fs/DESIGN.md`: layout over the
+  B-L1-25 block contract (superblock, allocation table, directory
+  blocks, file records), sized for fixed buffers, crash behavior
+  stated honestly.
+- **B-L1-80 — FS core.** Format + mount + block allocation source.
+- **B-L1-81 — FS files.** Create/open/read/write/truncate/close.
+- **B-L1-82 — FS directories.** Create/list/rename/remove entries.
+- **B-L1-83 — FS paths.** Path parsing + resolution over B-L1-82,
+  with the hostile cases (.., //, trailing slashes) handled.
+- **B-L1-84 — FS on the RAM backend.** Integration over B-L1-25's
+  backend; persistence limits stated in the README (volatile).
+- **B-L1-85 — Test program: FS round trip** (format, files, dirs,
+  paths, remount).
+- **B-L1-86 — FS checker.** An fsck-style consistency checker
+  program over a mounted image: orphan blocks, bad links, counts.
+
+### Wave H — the command shell service
+
+- **B-L1-87 — Shell core.** REPL over the console service: prompt,
+  line intake via B-L1-17, command dispatch table.
+- **B-L1-88 — Argument parser library.** Quoting, escapes, argv
+  over fixed buffers, shared by shell + services.
+- **B-L1-89 — Builtins I: system.** ps / services / status from the
+  registry + supervisor (B-L1-20/22), uptime from B-L1-19.
+- **B-L1-90 — Builtins II: files.** ls / cat / cp / rm over the FS
+  (Wave G).
+- **B-L1-91 — Builtins III: records.** log tail (B-L1-18), audit
+  query (B-L1-42), time set/show (B-L1-19).
+- **B-L1-92 — Shell scripts.** Execute command files line by line
+  from the FS, with honest stop-on-error behavior.
+- **B-L1-93 — Test program: shell session** (builtins + a script).
+- **B-L1-94 — Example service.** A complete template service using
+  every common library, the pattern future services copy.
+
+### Wave I — protocol depth (against the B-L1-29 packet interface)
+
+- **B-L1-95 — IP packet module.** Header build/parse + checksums.
+- **B-L1-96 — ARP.** Request/reply + a small cache table.
+- **B-L1-97 — ICMP echo.** Ping out and ping answer.
+- **B-L1-98 — UDP.** Datagram send/receive over B-L1-95.
+- **B-L1-99 — TCP I.** Connection state machine: handshake + data.
+- **B-L1-100 — TCP II.** Retransmit timers + orderly close.
+- **B-L1-101 — Socket binding.** B-L1-33's contract implemented over
+  UDP/TCP (B-L1-98/99), the point network services stop being
+  interface-only.
+- **B-L1-102 — Test peer: DHCP server** (exercises B-L1-31 fully).
+- **B-L1-103 — Test peer: NTP server** (exercises B-L1-37).
+- **B-L1-104 — Network config persistence** over the FS (Wave G):
+  save/load B-L1-30's model.
+- **B-L1-105 — Loopback harness v2.** Two-interface packet pair with
+  loss/reorder knobs as data, for protocol test programs.
+- **B-L1-106 — Test programs: protocol pack** (ARP/ICMP/UDP/TCP
+  over B-L1-105, incl. a retransmit case).
+
+### Wave J — service depth, round 2
+
+- **B-L1-107 — Console escape handling.** ANSI subset in/out over
+  B-L1-17 (cursor, clear, attributes as data).
+- **B-L1-108 — Log rotation + export.** Rotation over the FS,
+  export as one file per service per day-shape record.
+- **B-L1-109 — Supervisor dependency ordering.** Start/stop in the
+  B-L1-64 graph order, with failure halting dependents honestly.
+- **B-L1-110 — Time: calendar + zones.** Leap math, civil date
+  conversion, a timezone offset table as data.
+- **B-L1-111 — Input: more keymaps + compose.** Two more layouts +
+  dead-key compose table, same machinery as B-L1-26.
+- **B-L1-112 — Display text helpers.** Word wrap, clipping, and
+  scroll regions over the framebuffer contract.
+- **B-L1-113 — Device hot-plug events.** Add/remove event model in
+  the device manager (B-L1-24) with subscriber notification.
+- **B-L1-114 — Session login flow.** Name + token prompt flow over
+  the console service; the token check is against the session
+  table (B-L1-43), stated as local-only, not a security boundary
+  claim.
+- **B-L1-115 — Audit retention.** Compaction + retention policy
+  over the audit store (B-L1-41), chain integrity preserved.
+- **B-L1-116 — Agent quotas.** Per-agent call-rate + storage quotas
+  as data + checks in the host (B-L1-38/40).
+- **B-L1-117 — Agent message channel.** Agent-to-agent messages via
+  the registry, queued in ring storage, delivery states honest.
+- **B-L1-118 — Call-matrix auditor.** A program that walks the
+  B-L1-44 matrix against the link map (B-L1-63) and reports drift.
+- **B-L1-119 — Service SDK.** The template + checklist a new
+  service starts from, generated from B-L1-94's pattern.
+- **B-L1-120 — JSON subset library.** Parse + write the JSON subset
+  the updater and config formats actually use; strict errors.
+- **B-L1-121 — Encoding libraries.** Base64 + UTF-8 validation over
+  fixed buffers.
+- **B-L1-122 — Updater delta manifests.** Component-level deltas in
+  the manifest format (B-L1-34 extension), plan output unchanged in
+  kind (a plan, never a self-apply).
+- **B-L1-123 — Updater signature interface.** The verification
+  interface + manifest signing format design; implementation
+  status stays DESIGNED until a verified primitive lands — no
+  hand-rolled crypto claims.
+- **B-L1-124 — Health metrics.** Standard counters/gauges every
+  service reports through the watchdog (B-L1-23): calls, errors,
+  uptime, queue depth.
+
+### Wave K — hardening, guides, closeout round 2
+
+- **B-L1-125 … B-L1-134 — Parser hardening test programs**, one per
+  parser, hostile inputs as checked-in data with expected honest
+  failures: config (125), JSON (126), DNS (127), DHCP (128), FS
+  paths (129), shell args (130), update manifest (131), keymap
+  tables (132), log records (133), BootInfo (134).
+- **B-L1-135 — Programmer's guide.** `os-build/layer1/GUIDE.md`:
+  how to write a Layer 4 service, every rule traced to a landed
+  pattern in this build-out.
+- **B-L1-136 — Size audit.** Per-service fixed-buffer and table
+  sizes reviewed against need; oversizing cut, undersizing flagged.
+- **B-L1-137 — Error registry final.** B-L1-12's codes audited
+  against every service's actual use; drift fixed in source.
+- **B-L1-138 — Link map round 2.** B-L1-63 regenerated after Waves
+  G–J; drift vs round 1 listed.
+- **B-L1-139 — Boot order data test.** B-L1-64's graph proven
+  acyclic + complete by a checker program over the manifest data.
+- **B-L1-140 — Failure plan re-trace.** B-L1-65 re-verified row by
+  row against current sources.
+- **B-L1-141 — Demo state pack.** The exact commands + expected
+  outputs for a guided Layer 4 tour (shell session over test
+  programs), text only, claims matching the scoreboard.
+- **B-L1-142 … B-L1-145 — Gap libraries 4–7.** The next four gaps
+  from STDLIB_GAPS.md (B-L1-15) in audit order, one task each.
+- **B-L1-146 — Source audit round 2.** Full `goose__*` symbol
+  re-check across all services incl. Waves G–J.
+- **B-L1-147 — Manifest + report refresh.** Every status word in
+  MANIFEST.md and BUFFY_REPORT.md made true for the full 148.
+- **B-L1-148 — Final ready post.** The room-1 post that the branch,
+  all 148 tasks accounted for, is ready for Pax to merge.
 
 ## Done means
 
