@@ -110,7 +110,11 @@ def render_studio_board(musica_dir):
     a rights column, plus session history, all from records only."""
     sessions_dir = os.path.join(musica_dir, "sessions")
     sections = []
-    for session_id in sorted(os.listdir(sessions_dir)):
+    if os.path.isdir(sessions_dir):
+        session_ids = sorted(os.listdir(sessions_dir))
+    else:
+        session_ids = []
+    for session_id in session_ids:
         sdir = os.path.join(sessions_dir, session_id)
         if not os.path.isdir(sdir):
             continue
@@ -169,7 +173,10 @@ def render_studio_board(musica_dir):
         "<h1>Meta Musica studio board</h1>"
         "<p>Catalogue browser: every session's tracks with their "
         "rights column, from session records only.</p>"
-        "%s</body></html>" % "".join(sections))
+        "%s</body></html>"
+        % ("".join(sections) or
+           "<p>No sessions yet. Run the composition loop to start "
+           "the first session; this board will show it here.</p>"))
 
 
 def main(argv=None):
@@ -188,6 +195,7 @@ def main(argv=None):
         print("studio board written: %s" % out)
         return 0
     out = args.out or os.path.join(args.session_dir, "board.html")
+    os.makedirs(os.path.dirname(os.path.abspath(out)), exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(render_board(args.session_dir))
     print("board written: %s" % out)
