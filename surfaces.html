@@ -34,6 +34,7 @@
     <a href="#board-bolo">BOLO</a>
     <a href="#board-timeline">Timeline</a>
     <a href="#board-cameras">Cameras</a>
+    <a href="#board-receipt">Receipt</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -73,9 +74,14 @@
     <h2 id="board-cameras-heading">Camera wall labels</h2>
     <p>Every wall row and the pin card show their source + LIVE/TEST state in the UI itself: NYCTMC live → LIVE, offline subset → TEST. The pin card used to hardcode "test feed" for every feed, including live ones.</p>
   </section>
+  <section class="board-section" id="board-receipt" aria-labelledby="board-receipt-heading">
+    <h2 id="board-receipt-heading">Dispatch receipt</h2>
+    <p>The sim- receipt on the incident after a staged dispatch, via /api/crew/status, labelled SIMULATED in the view.</p>
+    <div id="receipt-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -108,12 +114,18 @@
     document.getElementById("timeline-content").innerHTML = withTimeline
       ? timelineView(withTimeline)
       : `<p class="empty-state">No timeline in the live crew records.</p>`;
+    const withReceipt = (crew?.incidents ?? []).find((i) => typeof i.receipt_id === "string" && i.receipt_id.length > 0) ?? null;
+    document.getElementById("receipt-content").innerHTML = withReceipt
+      ? receiptView(withReceipt)
+      : `<p class="empty-state">No dispatch receipt in the live crew records.</p>`;
   } catch {
     document.getElementById("evidence-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;
     document.getElementById("bolo-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;
     document.getElementById("timeline-content").innerHTML =
+      `<p class="empty-state">Crew records unavailable.</p>`;
+    document.getElementById("receipt-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;
   }
 </script>

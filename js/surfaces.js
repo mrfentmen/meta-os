@@ -211,3 +211,20 @@ export function timelineView(incident) {
   }).join("");
   return `<ol class="records-timeline">${items}</ol>`;
 }
+
+// HN-064 Dispatch receipt view: the sim- receipt shown on the
+// incident after a staged dispatch, labelled SIMULATED in the view.
+// Format follows the loop feed's dispatch line (js/command-loop.js):
+// package logged, receipt id, and the plain statement that no real
+// service was contacted. No receipt exists before a dispatch, so none
+// is shown then.
+export function receiptView(incident) {
+  const receipt = incident?.receipt_id;
+  if (typeof receipt !== "string" || receipt.length === 0) {
+    return `<p class="empty-state">No dispatch receipt for this incident.</p>`;
+  }
+  return `<div class="dispatch-receipt">`
+    + `<span class="dispatch-receipt-label">Dispatch (SIMULATED)</span> `
+    + `<span class="dispatch-receipt-id">receipt ${escapeHtml(receipt)}</span> `
+    + `<span class="dispatch-receipt-note">Package logged — no real service contacted.</span></div>`;
+}
