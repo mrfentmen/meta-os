@@ -1,0 +1,40 @@
+{
+ "frame": "vigiles-knife-1.jpg",
+ "note": "called NORMAL on a visible training blade \u2014 held where a human sees an object; replica status may explain it",
+ "category": "normal activity",
+ "observations": [
+  {
+   "category": "normal activity",
+   "description": "Dark mannequin-like figure on the left wearing a white t-shirt with dark graphic, standing upright facing right",
+   "evidence": "left side of frame",
+   "confidence": 0.9
+  },
+  {
+   "category": "normal activity",
+   "description": "Bald light-skinned man of larger build in the center wearing a red graphic t-shirt and tan pants, holding a blue stick-like object in right hand with left hand raised palm outward",
+   "evidence": "center of frame",
+   "confidence": 0.95
+  },
+  {
+   "category": "normal activity",
+   "description": "Short-haired light-skinned man of medium build on the right wearing a white t-shirt, right hand near mouth and left hand lowered at side",
+   "evidence": "right side of frame",
+   "confidence": 0.95
+  },
+  {
+   "category": "normal activity",
+   "description": "Visible marks: no distinct tattoos, scars, birthmarks, or blood clearly visible on the faces or arms of the two men",
+   "evidence": "center and right side of frame",
+   "confidence": 0.8
+  }
+ ],
+ "assessment": {
+  "category": "normal activity",
+  "summary": "Two men standing and gesturing in an indoor padded training area with a training dummy nearby; no physical contact or person down is visible.",
+  "uncertainty": [
+   "low resolution makes small marks on clothing unclear",
+   "purpose of blue object cannot be confirmed from image alone"
+  ],
+  "requires_human_review": false
+ }
+}

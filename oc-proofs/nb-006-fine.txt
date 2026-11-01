@@ -1,0 +1,2 @@
+NB-006 FINE omega=1.9: 734.4 W bal=2.0e-03 iters=42395 conv=True 214.6s
+EXIT:0

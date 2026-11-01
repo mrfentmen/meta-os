@@ -1,0 +1,2 @@
+REFINED champion: 735.9 W (base-grid 733.8 W), move 0.28% bal 6.5e-03 iters 80000 407.8 s
+EXIT:0

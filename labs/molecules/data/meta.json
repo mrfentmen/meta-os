@@ -1,0 +1,92 @@
+{
+ "compounds": [
+  {
+   "id": "caffeine",
+   "name": "Caffeine",
+   "cid": 2519,
+   "formula": "C8H10N4O2",
+   "weight": 194.19,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/2519"
+  },
+  {
+   "id": "aspirin",
+   "name": "Aspirin",
+   "cid": 2244,
+   "formula": "C9H8O4",
+   "weight": 180.16,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/2244"
+  },
+  {
+   "id": "glucose",
+   "name": "Glucose",
+   "cid": 5793,
+   "formula": "C6H12O6",
+   "weight": 180.16,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/5793"
+  },
+  {
+   "id": "water",
+   "name": "Water",
+   "cid": 962,
+   "formula": "H2O",
+   "weight": 18.015,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/962"
+  },
+  {
+   "id": "ethanol",
+   "name": "Ethanol",
+   "cid": 702,
+   "formula": "C2H6O",
+   "weight": 46.07,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/702"
+  },
+  {
+   "id": "toluene",
+   "name": "Toluene",
+   "cid": 2768,
+   "formula": "C7H8",
+   "weight": 92.14,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/2768"
+  },
+  {
+   "id": "acetone",
+   "name": "Acetone",
+   "cid": 180,
+   "formula": "C3H6O",
+   "weight": 58.08,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/180"
+  },
+  {
+   "id": "methanol",
+   "name": "Methanol",
+   "cid": 887,
+   "formula": "CH4O",
+   "weight": 32.042,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/887"
+  },
+  {
+   "id": "urea",
+   "name": "Urea",
+   "cid": 1176,
+   "formula": "CH4N2O",
+   "weight": 60.056,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/1176"
+  },
+  {
+   "id": "theobromine",
+   "name": "Theobromine",
+   "cid": 5429,
+   "formula": "C7H8N4O2",
+   "weight": 180.16,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/5429"
+  },
+  {
+   "id": "naphthalene",
+   "name": "Naphthalene",
+   "cid": 931,
+   "formula": "C10H8",
+   "weight": 128.17,
+   "url": "https://pubchem.ncbi.nlm.nih.gov/compound/931"
+  }
+ ]
+}

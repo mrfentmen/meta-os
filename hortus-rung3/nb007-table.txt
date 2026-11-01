@@ -1,0 +1,15 @@
+NB-004 8175: sim=735.5 W analytic=746.7 W diff=-1.5% h=55.9 fin=0.7447mm bal=3.0e-03 iters=80000 176.9s (rung-2 calibrated; base 1.400 vs rung-1 1.494)
+NB-005 78901: sim=713.0 W analytic=723.4 W diff=-1.4% h=58.4 fin=0.4051mm bal=2.0e-03 iters=39840 79.8s (HEIGHT 100mm OUTSIDE calibrated range)
+NB-007a ref: sim=18.3 W analytic=17.1 W diff=+7.0% h=12.3 fin=2.0000mm bal=2.0e-03 iters=233 0.0s 
+NB-007b champ1: sim=735.8 W analytic=746.7 W diff=-1.4% h=55.9 fin=0.7447mm bal=3.4e-03 iters=80000 175.6s 
+NB-007c mid: sim=146.9 W analytic=145.9 W diff=+0.7% h=24.5 fin=1.0000mm bal=2.0e-03 iters=1300 0.2s 
+NB-007d tall: sim=1012.7 W analytic=1030.7 W diff=-1.7% h=77.4 fin=0.4000mm bal=2.0e-03 iters=23843 38.2s 
+NB-007e stubby: sim=8.6 W analytic=8.2 W diff=+5.1% h=5.8 fin=3.0000mm bal=2.0e-03 iters=843 0.4s 
+NB-004 8175: sim=735.5 W analytic=746.7 W diff=-1.5% h=55.9 fin=0.7447mm bal=3.0e-03 iters=80000 176.9s (rung-2 calibrated; base 1.400 vs rung-1 1.494)
+NB-005 78901: sim=713.0 W analytic=723.4 W diff=-1.4% h=58.4 fin=0.4051mm bal=2.0e-03 iters=39840 79.8s (HEIGHT 100mm OUTSIDE calibrated range)
+NB-007a ref: sim=18.3 W analytic=17.1 W diff=+7.0% h=12.3 fin=2.0000mm bal=2.0e-03 iters=233 0.0s 
+NB-007b champ1: sim=735.8 W analytic=746.7 W diff=-1.4% h=55.9 fin=0.7447mm bal=3.4e-03 iters=80000 175.6s 
+NB-007c mid: sim=146.9 W analytic=145.9 W diff=+0.7% h=24.5 fin=1.0000mm bal=2.0e-03 iters=1300 0.2s 
+NB-007d tall: sim=1012.7 W analytic=1030.7 W diff=-1.7% h=77.4 fin=0.4000mm bal=2.0e-03 iters=23843 38.2s 
+NB-007e stubby: sim=8.6 W analytic=8.2 W diff=+5.1% h=5.8 fin=3.0000mm bal=2.0e-03 iters=843 0.4s 
+EXIT:0

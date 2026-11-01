@@ -1,0 +1,11 @@
+incident 1 vigiles-normal-1.jpg cap-ok=True incident-spend=$0.0095 cat=normal activity client_ms=8283
+incident 2 ignis-steam-1.jpg cap-ok=True incident-spend=$0.0090 cat=steam or fog client_ms=5386
+incident 3 medicus-bench-1.jpg cap-ok=True incident-spend=$0.0085 cat=person motionless client_ms=7565
+incident 4 vigiles-fireworks-1.jpg cap-ok=True incident-spend=$0.0069 cat=indeterminate client_ms=4667
+incident 5 ignis-fog-1.jpg cap-ok=True incident-spend=$0.0107 cat=steam or fog client_ms=8021
+incident 6 medicus-ground-1.jpg cap-ok=True incident-spend=$0.0102 cat=person on ground client_ms=7356
+incident 7 vigiles-crowd-1.jpg cap-ok=True incident-spend=$0.0081 cat=normal activity client_ms=6252
+incident 8 ignis-dust-1.jpg cap-ok=True incident-spend=$0.0079 cat=indeterminate client_ms=5307
+incident 9 medicus-collision-1.jpg cap-ok=True incident-spend=$0.0134 cat=vehicle collision scene client_ms=10256
+incident 10 vigiles-altercation-1.jpg cap-ok=True incident-spend=$0.0141 cat=indeterminate client_ms=11108
+EXIT:0
