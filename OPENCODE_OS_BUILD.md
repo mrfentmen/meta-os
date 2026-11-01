@@ -68,7 +68,7 @@ make it better, improve it where it lacks. In practice:
 - OS-005: Produce the bootable image with cargo bootimage. Record
   the image path and size.
 - OS-006: Boot it in QEMU with serial output captured to a file.
-- OS-007: The capture must contain the line META OS KERNEL - alive
+- OS-007: The capture must contain the line META OS KERNEL - alive (K1)
   (K1). Save it as os-build/logs/K1-boot.txt. If it does not, that
   failure is the report.
 - OS-008: Boot it 3 times. All 3 logs identical in the alive line.
