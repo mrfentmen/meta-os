@@ -60,7 +60,7 @@ import {
 } from "./command-layers.js";
 import { PRODUCT_BY_ID } from "./products.js";
 import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier } from "./command-loop.js";
-import { createDelayedIndicator } from "./loading.js";
+import { createDelayedIndicator, errorClassFor } from "./loading.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
 
@@ -1588,10 +1588,28 @@ async function refreshLoopFeed() {
     const res = await fetch("/api/crew/status", { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     payload = await res.json();
-  } catch {
+  } catch (err) {
     loading.settle();
     els.loopStatus.textContent = loopStatusText({ unreachable: true });
     if (els.ribbon) els.ribbon.hidden = true;
+    // Error state (HN-014): a retry control plus the REAL error
+    // class (network / http / invalid) — never a generic failure
+    // line, and never a fabricated status. Success clears the row.
+    const li = document.createElement("li");
+    li.className = "note";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "cmd-retry";
+    const kind = errorClassFor(err);
+    retry.textContent = `Retry (error: ${kind})`;
+    retry.setAttribute("aria-label", `Retry loading crew status, last error ${kind}`);
+    retry.addEventListener("click", () => {
+      li.remove();
+      refreshLoopFeed();
+    });
+    li.appendChild(retry);
+    els.loopFeed.textContent = "";
+    els.loopFeed.appendChild(li);
     return;
   }
   loading.settle();
