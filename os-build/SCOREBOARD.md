@@ -13,132 +13,145 @@ honest: DESIGNED / DRAFT / WRITTEN / GATED / MERGED / NOT STARTED, and
 or "booted". Updated on every gate-1 verdict and every Pax merge.
 Merges go through Pax only; this branch never merges itself.
 
+v4 base: main 445daf8, verified 2026-11-01 ~17:45 EST via ls-remote
+plus a local fetch plus Rowan's 17:42 API-verified pump, all three
+agreeing on 445daf8. Main was moving fast during the 17:36-17:38
+landing run (eb7653f -> 83ddfb2 -> a4df8cf -> be83e7e -> 445daf8);
+v4 is branched off the settled tip 445daf8, not off any mid-run tip.
+
 ## L1 — Boot (Rowan)
 
-- Status: MERGED, PROVEN ON MAIN, NOT BOOT-REPRODUCED HERE.
-- Evidence: K1 hand-back MERGED via Pax to main (b343df9
-  lockfile + logs + report, 8431a79 static
-  relocation-model, 5dcb4cc entry_point BootInfo shared ref;
-  proof string untouched; all now part of main 1591489). All
-  4 boot logs on main (`os-build/logs/K1-boot*.txt`) contain
-  'META OS KERNEL - alive (K1)', no panic, SeaBIOS header =
-  real QEMU output per Pax's pre-merge verification. Q1
-  ANSWERED: `kernel/Cargo.lock` (bootloader 0.9.35) is now on
-  main. `opencode/os-build` has since advanced past d8f043e
-  to b131e7a (tip only, not verified here, unmerged,
-  OpenCode lane — monitor only).
-- Unverified: QEMU boot NOT re-run on this VM (Mac-built
-  image) and the kernel crate NOT compiled here — the merge
-  is Pax-verified, not reproduced here. `kernel/src/main.rs`
-  on main now carries the R5 interrupts wiring (see L3);
-  K2-K6 modules remain unwired.
+- Status: MERGED, PROVEN ON MAIN per Pax's merge verification,
+  NOT BOOT-REPRODUCED HERE.
+- Evidence: Pax hand-combined merge eb7653f (opencode/os-build
+  sections E-Q, OS-061..240 + soak) is on main. Live kernel entry =
+  OpenCode modular wiring (`kernel/src/main.rs` + gdt.rs, traps.rs,
+  sched.rs, user.rs, vga.rs, mem.rs, per `kernel/r5-reference/README.md`
+  on main). K1-K6 boot logs are on main (`os-build/logs/K1-boot*.txt`,
+  K2-boot.txt, K3-boot.txt, K4-boot.txt, K5-boot.txt, K6-boot.txt);
+  the K1 proof string 'META OS KERNEL - alive (K1)' is present in
+  K1-boot.txt (checked here, 1 occurrence) and the K6 log carries a
+  SeaBIOS header (checked here) = real QEMU output. Pax-verified on
+  the combined tree: node fail set = known 56-name baseline,
+  custos 125/125, officina 49/49, queue 110/110, hortus 14/14,
+  secret scan 0.
+- Unverified: Mac compile + QEMU boot of the merged tree (Mac lane,
+  per Pax). No boot re-run on this VM.
 
 ## L2 — Kernel core (Rowan)
 
-- Status: PARTIAL — merged pieces unwired, nothing booted.
-- Evidence: K2 framebuffer console (`kernel/src/framebuffer.rs`,
-  576 lines) merged 6c29370, Milo gate-1 GREEN (standalone rustc
-  1.99.1 clean, 0 warnings, NOT wired into main.rs, NOT a
-  kernel-crate compile or boot verdict). K4 memory module
-  (`kernel/src/memory.rs`, 979 lines: bitmap frame allocator,
-  page-table mapper, heap) MERGED via Pax (main 83e6c3a era, Pax
-  merge-everything run), Milo gate-1 GREEN (same standalone-rustc
-  caveat). K5 task scheduler skeleton (`kernel/src/tasks.rs`,
-  UNWIRED) MERGED via Pax, Milo gate-1 GREEN 09:25 (standalone
-  rustc clean, own host harness ALL PASS). K6 syscall module
-  (`kernel/src/syscalls.rs`, 484 lines, UNWIRED, six-call dispatch)
-  MERGED via Pax as 4bf2367, Milo gate-1 GREEN 09:40 (standalone
-  rustc clean, own host harness ALL PASS, main.rs untouched).
-  `kernel/src/` on main 1591489 now holds framebuffer.rs,
-  interrupts.rs, main.rs (now with R5 wiring, see L3),
-  memory.rs, syscalls.rs, tasks.rs.
+- Status: MERGED (modules on main, live entry = modular wiring).
+- Evidence: `kernel/src/` on main 445daf8 holds framebuffer.rs,
+  gdt.rs, interrupts.rs, main.rs, mem.rs, memory.rs, sched.rs,
+  syscalls.rs, tasks.rs, traps.rs, user.rs, vga.rs (checked via
+  ls-tree). K2-K6 pieces arrived via the Pax eb7653f merge
+  (sections E-Q: OS-061..240 plus the OS-230 soak, 3651 ticks,
+  zero gaps, clean shutdown per the opencode/os-build line).
   `rowan/kernel` tip is still 3ea9e70: a request file only
-  (`kernel/NEXT_TASKS_REQUEST.md`), no code change. Rowan's
-  next block per Pax's merge note: harden K2-K6 (Layer 0 queue
-  empty, no K7 invented — spec milestones end at K6).
-- Unverified: kernel-crate compile, any boot. Q12 wiring facts
-  in MAC_QUESTIONS still open as a caveat for K6 wiring.
+  (`kernel/NEXT_TASKS_REQUEST.md`), no code change. Rowan's next
+  block awaits Pax's next Layer 0 assignment; no K7 invented —
+  spec milestones end at K6.
+- Unverified: kernel-crate compile and any boot NOT re-run here.
+  The v3 Q12 wiring caveat now sits under the merged modular
+  wiring; whether Q12 itself is closed is Pax's call, not verified
+  here.
 
 ## L3 — Drivers (Rowan)
 
-- Status: PARTIAL — R5 wiring merged, module still unwired.
-- Evidence: K3 interrupts (`kernel/src/interrupts.rs`, 493 lines:
-  IDT, PIC remap/EOI, PIT channel 0, PS/2 keyboard ring buffer)
-  merged 6c29370, Milo gate-1 GREEN (standalone rustc clean,
-  core only, no alloc, NOT wired into main.rs). R5 interrupts
-  wiring MERGED via Pax (f34b122, `rowan/kernel-r5` @ 1b4ac5f,
-  main.rs only: 256 asm trampolines, one 0x8E gate per vector,
-  install sequence cli / PIC 32-40 / PIT 100 Hz / lidt / sti,
-  install_interrupts() called from kernel_main), Milo gate-1
-  GREEN (full kernel-crate cargo check clean for
-  x86_64-unknown-none, rustfmt clean — NOT boot-proven, no
-  trap has run). Framebuffer stays UNWIRED per Pax's call: no
-  bootloader upgrade off proven 0.9.35, no VGA mode-13 in R5
-  scope; framebuffer parks as OpenCode Section B follow-up
-  under Q5.
+- Status: MERGED, with R5 SUPERSEDED (preserved, not deleted).
+- Evidence: `kernel/src/interrupts.rs` on main; Rowan's R5 main.rs
+  preserved verbatim at `kernel/r5-reference/main.rs` + README
+  (checked present), superseded as the live entry by the modular
+  wiring per Pax's merge note, not deleted. `kernel/src/framebuffer.rs`
+  is present on main; whether it is wired into the live entry is
+  NOT verified here — Pax's merge note names the modular set and
+  framebuffer is not listed among it, so the v3 "UNWIRED per Pax's
+  call" note stands until Pax says otherwise.
 - Unverified: any boot, any trap run, any further driver.
 
 ## L4 — System services, Goose (Buffy)
 
-- Status: DESIGNED, NOT BUILT.
-- Evidence: K6 service shape DESIGNED on main
-  (`os-build/layer1/K6_SERVICE_SHAPE.md`, 91dbbf5; Goose facts
-  verified against goose-mcp 1.1.0, syscall v0 draft, Q1/Q5/Q9 left
-  OPEN). Work order expanded to 78 tasks on main (b4783d5, boss order
-  2026-11-01 ~09:12), then to 148 tasks (B-L1-01..148, Pax expansion
-  round 2, main 166e4420; branch `buffy/layer1-goose-services` only,
-  never main, Pax merges).
-- Unverified / absent: still no `buffy/layer1-goose-services` branch
-  on the remote (only `buffy/research` @ 41e4b4c), no Goose service
-  source, no compile. Standing gap tasks in the work order wait on
-  K6/Layer 3 landings.
+- Status: MERGED via the OpenCode line (Pax eb7653f),
+  NOT RE-VERIFIED HERE.
+- Evidence: sections K+L (OS-153..180) in the merged line: goose
+  services + lobster agents, cross-language MCP call live and 7/7
+  goose tests per the commit record. The 148-task work order
+  (B-L1-01..148) is still the standing shape. No Goose service
+  branch from Buffy is on the remote (only `buffy/research` @
+  41e4b4c); the merged services arrived via the OpenCode line,
+  not a buffy/* branch. Buffy still standing by per Pax.
+- Unverified / absent: goose tests NOT re-run here; Mac compile
+  and QEMU boot of the merged tree still open (Mac lane).
 
 ## L5 — Agent runtime, Lobster (Milo)
 
-- Status: DRAFT.
+- Status: DRAFT (model) + MERGED agent pieces.
 - Evidence: agent process model `os-build/layer2/AGENT_PROCESS_MODEL.md`
-  on `milo/layer2-agent-process-model` @ da054e3 (identity, lifecycle,
-  Layer 4-services-only capabilities, audit-trail records; Lobster
-  section grounded in a live lobster-mcp 1.1.0 check on this VM).
-  DESIGNED step (a) done. The model is now also ON MAIN (merged via
-  Pax 9eadb0a together with scoreboard v0, docs only).
-- Unverified / pending: (b) Pax K6-shape review, (c) Hana shell-view
-  confirm — neither arrived as of this entry. Nothing here is built
-  until K6 exists (K6 syscalls are now on main but UNWIRED).
+  on main (merged via Pax 9eadb0a, docs only). Lobster agents in
+  sections K+L merged via Pax eb7653f per the commit record
+  (see L4). ML-L2-01 still DRAFT: (b) Pax K6-shape review and
+  (c) Hana shell-view confirm have NOT arrived as of this entry.
+- Unverified / pending: nothing here is built beyond the merged
+  pieces until the K6-shape review and shell-view confirm land;
+  no agent runtime test re-run here.
 
 ## L6 — Shell and apps, Lobster (Hana)
 
-- Status: SPEC-ONLY, with fixes queued.
-- Evidence: shell spec pack MERGED via Pax (83e6c3a: shell-spec,
+- Status: MERGED pieces + IN BUILD (board shell wiring).
+- Evidence: shell spec pack on main (83e6c3a era: shell-spec,
   home-surface, shell-formats md+json, walkthroughs, lane-notes;
   os-shell-formats 7/7 pass). `hana/ui-fix-list` @ 57bee07 gate-1
-  GREEN stands (npm 1879, zero regression vs main); Pax's 10:08 call
-  CLOSED the item as gated-and-in-main — no re-gate, no merge of
-  the old branch as-is (its substance is byte-identical on main,
-  main has moved ahead). Pax's latest merge note (main
-  1591489) again lists uifix as NOT merged / awaiting Milo
-  gate-1, which conflicts with that 10:08 closure — the merge
-  call is Pax's, and no re-gate is run from this branch.
-  HN-077 Swift mirror merged 78f9a4f
-  (Milo gate-1 GREEN: 2107 tests, 2044 pass, 63 fail, 0 new
-  failures, 3 mirror tests pass). Ui-wave-bus merged via Pax
-  (853b721, 54 files); its 21 bus/index identity-test failures are
-  known-stale on main by design (index.html is now the OS app, not
-  the viewer copy) and stay a Del lane call, untouched. Hana is
-  awaiting Pax's next dispatch (HANA_LAYER2_TASKS.md), no new lane
-  started.
-- Unverified: Swift compile itself is Mac-only, still owed. No shell
-  runs against real OS state (none exists yet).
+  GREEN stands (npm 1879, zero regression vs main); its substance
+  is in main via Pax's 8-branch merge 55f6881 — no re-gate, no
+  merge of the old branch as-is. Ui-wave-2 merged via Pax
+  (HN-011..025). Ui-wave-bus merged via Pax (853b721, 54 files);
+  its 21 bus/index identity-test failures are known-stale on main
+  by design (index.html is now the OS app, not the viewer copy)
+  and stay a Del lane call, untouched. Board/ landed on main
+  445daf8: board.mjs (zero-dep service, rooms, POST/GET messages,
+  NOTIFY, JSONL persistence), board.html viewer, board.test.mjs,
+  board/README.md. It mirrors the Nuntius line protocol (relay/)
+  with its own code and its own board: notify prefix; relay/ and
+  the crew bus are untouched. Board tests re-run HERE: 9/9 pass
+  (node --test, this VM); Pax re-ran 9/9 himself. Site: site/
+  added 83ddfb2, live at meta-os.pages.dev, repo homepage
+  repointed to it.
+- NOT done: wiring board into the OS shell UI, public deploy
+  (per Pax). Unverified: Swift compile itself is Mac-only, still
+  owed. No shell run against real OS state.
 
 ## L7 — Programs
 
-- Status: NOT STARTED.
-- Evidence: no work order, branch, or artifact on main or the remote
-  as of this entry.
-- Unverified: everything.
+- Status: PARTIAL — merged pieces on main, further work PARKED
+  under Pax HOLD / OS-first order.
+- Evidence: `os/worlds/` on main holds custos, musica, officina
+  (plus dep, doe, dsny, ems, fdny, hospital, mta, nypd,
+  science-lab). Custos patrol service merged via Pax (RW-003/RW-004
+  combines); Pax-verified on the eb7653f tree: custos 125/125.
+  Officina stages 1+2a in main, officina 49/49 per Pax's
+  verification. Musica pack files on main (Hana HN-026..032 era).
+  Parked: no new program branch is landing under the current Pax
+  HOLD; Rowan statuses cite Custos parked; Buffy standing by.
+- Unverified: program counts are Pax-verified, NOT re-run here.
+  FROZEN lanes (META OPUS, META MERCATUS, META NUMMUS, META ACTA)
+  are not OS layers and do not appear here; their parked states
+  stand.
 
 ## Changelog
 
+- 2026-11-01 ~17:45 EST (v4): refresh on
+  `milo/layer2-scoreboard-v4` off main 445daf8, per Pax's
+  "SCOREBOARD v4 refresh is yours when ready." Main 1591489 ->
+  445daf8: opencode/os-build sections E-Q (OS-061..240 + soak)
+  hand-combined via Pax eb7653f; live kernel entry now the
+  modular wiring, R5 preserved verbatim at kernel/r5-reference/;
+  site/ live at meta-os.pages.dev; board/ Layer 6 messaging board
+  landed (tests 9/9 here and by Pax); L4/L5 gain the merged
+  goose/lobster sections K+L; L7 moves NOT STARTED -> PARTIAL
+  (Custos, Officina, Musica pieces on main, further work parked
+  under Pax HOLD). Mac compile + QEMU boot of the merged tree
+  still unverified (Mac lane). Merges via Pax only; this branch
+  never merges itself.
 - 2026-11-01 ~10:50 EST (v3): refresh on the NEW branch
   `milo/layer2-scoreboard-v3` off main 1591489, per Pax's
   rebase request on v2 @ befbe6a. This branch is used instead
