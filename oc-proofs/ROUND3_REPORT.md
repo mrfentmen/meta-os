@@ -188,3 +188,28 @@
 - NC-082 DONE. Suite 6/6 (guard, purge, fuzz, contract, tier, schema).
 - NC-083 DONE. 4 fresh stills (bolo, timeline, cannot-do, print).
 - NC-084: this summary.
+
+## Section H — UTM readiness, no image yet (NC-085..NC-096) — DONE (readiness only)
+
+- NC-085 DONE. oc-proofs/utm/VM_SPEC.md (x86_64, modern CPU not qemu64,
+  4 GB RAM, .img attach, serial + log on, shared network).
+- NC-086 DONE. oc-proofs/utm/create-vm.sh (builds, never starts;
+  dry-parsed OK; honestly stops before inventing utmctl flags).
+- NC-087/088 DONE. oc-proofs/utm/boot-check.sh reports-only script;
+  against no VM it exits 3 with "no VM named … — nothing to check"
+  (verified, no hang).
+- NC-089 DONE. oc-proofs/utm/FIRSTBOOT.md from the image lane's own
+  docs: token at /etc/metaos/token, STOP-file behavior, 60 s timeout.
+- NC-090 DONE. UTM 5.0.8 + utmctl 5.0.8 on this Mac (in VM_SPEC.md).
+- NC-091 DONE. 736 GiB free; ~723 GiB headroom past the 13 GiB need.
+- NC-092 DONE. Intake procedure with the recorded sha256
+  (c22df0ae…7c91c5); golden base chmod 444.
+- NC-093 DONE. Serial log file supported on UTM 5.0.8; in the spec.
+- NC-094 DONE. Rollback note (delete VM, re-copy golden, re-verify).
+- NC-095 DONE. Round-2 report claims superseded: (1) "no image
+  anywhere" still true — re-verified whole-disk; (2) UTM "installed"?
+  round 2 only assumed it — now verified 5.0.8 present; (3) the ttyS0
+  question stays open (needs the boot); everything else in H replaces
+  the round-2 note as the current reference.
+- NC-096: this summary. If the file appears mid-round: stop and report
+  before booting anything (standing order).
