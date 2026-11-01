@@ -27,6 +27,8 @@ A take record:
     records "not_configured" and no call is sent)
   human_verdict: null, or an object {pick, timestamp} from the
     blind A/B harness (HN-039)
+  measurement: optional, added by the keeper pass (HN-030):
+    {duration_s, rms_dbfs, silence_ratio, repetition}
 """
 
 import hashlib
