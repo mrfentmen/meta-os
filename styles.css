@@ -1751,6 +1751,7 @@ body[data-view="command"] > main { display: none; }
 }
 .cmd-loop-when { flex: 0 0 auto; font-size: 10px; opacity: 0.6; padding-top: 1px; }
 .cmd-loop-item--flag, .cmd-loop-item--incident { color: #ffb3ab; }
+.cmd-loop-item--incident-yellow { color: #ffe27a; }
 .cmd-loop-item--dispatch { color: #ffd9a8; }
 .cmd-loop-item--patrol-status { color: #ffe27a; }
 

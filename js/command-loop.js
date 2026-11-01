@@ -17,6 +17,100 @@ export function divisionLabel(productId) {
   return DIVISION_LABEL[productId] ?? productId ?? "—";
 }
 
+// Two-tier flag indication (Del's ruling, Oct 31, via Pax): small
+// things get a YELLOW indication, big things are RED, baselines get
+// none. YELLOW = recorded + shown for human review, no investigation,
+// no dispatch. RED = the full flag chain (review, investigation,
+// response). The category strings are the js/products.js taxonomy
+// strings, matched exactly (lowercased); a category in neither list
+// — including baselines like "normal activity" — gets no tier, never
+// a guessed one. Rendering only: the crew/harness owns flagging.
+const FLAG_TIERS = {
+  vigiles: {
+    yellow: ["energetic movement", "ambiguous gesture", "staged verbal dispute"],
+    red: ["physical contact", "person down", "possible altercation"],
+  },
+  ignis: {
+    yellow: ["visible smoke", "smoldering fire", "obscured or distant hazard",
+      "electrical fire indicators", "gas fire indicators",
+      "cooking oil fire indicators", "metal fire indicators",
+      "battery fire indicators"],
+    red: ["visible flame", "vehicle fire", "structure fire", "dark smoke", "brown smoke"],
+  },
+  medicus: {
+    yellow: ["crowd gathered around a person", "blocked crew access",
+      "person slumped in vehicle", "bystander aid in progress"],
+    red: ["person on ground", "person down in roadway", "person motionless",
+      "person in or near water", "person trapped or pinned",
+      "blood visible at scene", "vehicle collision scene",
+      "multi-person incident scene"],
+  },
+};
+
+export function flagTier(division, category) {
+  const tiers = FLAG_TIERS[division];
+  if (!tiers || typeof category !== "string") return null;
+  const cat = category.trim().toLowerCase();
+  if (tiers.yellow.includes(cat)) return "yellow";
+  if (tiers.red.includes(cat)) return "red";
+  return null;
+}
+
+// One line for one projected crew incident (GET /api/crew/status
+// incidents: server/crew-status.mjs). Surfaces what the crew
+// recorded and the UI previously dropped: the BOLO block with its
+// visible marks, the evidence file counts, and a purge receipt.
+// Face crops appear only as a count — never an image, never an
+// identity (standing rule: no face-identification work). Absent
+// parts stay absent: no BOLO, no evidence, no tier segment.
+export function loopIncidentText(incident) {
+  if (!incident || typeof incident !== "object") return null;
+  const cam = incident.camera_name ?? incident.camera_id ?? "camera";
+  const div = divisionLabel(incident.division);
+  let text = `Incident — ${cam} · ${div}: ${incident.category ?? ""} (${incident.status ?? "unknown"})`.trim();
+  const tier = flagTier(incident.division, incident.category);
+  if (tier === "yellow") {
+    text += " · YELLOW — recorded for human review, no investigation, no dispatch";
+  } else if (tier === "red") {
+    text += " · RED — full flag chain";
+  }
+  const bolo = incident.bolo;
+  if (bolo && typeof bolo === "object") {
+    const marks = Array.isArray(bolo.visible_marks) ? bolo.visible_marks.filter((m) => typeof m === "string" && m) : [];
+    const descriptions = Array.isArray(bolo.person_descriptions) ? bolo.person_descriptions.length : 0;
+    text += ` · BOLO: ${marks.length ? marks.join("; ") : "no visible marks recorded"}`;
+    if (descriptions) text += ` · ${descriptions} person description${descriptions === 1 ? "" : "s"}`;
+    if (typeof bolo.direction_note === "string" && bolo.direction_note) {
+      text += ` · direction: ${bolo.direction_note}`;
+    }
+  }
+  if (incident.evidence_purged) {
+    text += " · evidence files purged on false-positive close — no person evidence kept";
+  } else if (incident.evidence && typeof incident.evidence === "object") {
+    text += ` · evidence: ${incident.evidence.files ?? 0} files (${incident.evidence.frames ?? 0} frames, ${incident.evidence.face_crops ?? 0} face crops)`;
+  }
+  return text;
+}
+
+// Incident lines from a status payload: newest first (the endpoint
+// already orders them), capped. Unknown/malformed records drop out.
+export function loopIncidentItems(payload, limit = 20) {
+  const incidents = Array.isArray(payload?.incidents) ? payload.incidents : [];
+  const items = [];
+  for (const incident of incidents) {
+    const text = loopIncidentText(incident);
+    if (text === null) continue;
+    items.push({
+      at: incident.created_at ?? null,
+      type: "incident",
+      tier: flagTier(incident.division, incident.category),
+      text,
+    });
+    if (items.length >= limit) break;
+  }
+  return items;
+}
+
 // One feed line for one crew event, or null for an event type the
 // feed does not render (unknown types are skipped, never guessed).
 export function loopEventText(event) {

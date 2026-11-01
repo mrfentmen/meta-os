@@ -47,7 +47,7 @@ import {
   pulseModeFor,
 } from "./command-flag.js";
 import { PRODUCT_BY_ID } from "./products.js";
-import { loopFeedItems, loopStatusText } from "./command-loop.js";
+import { loopFeedItems, loopIncidentItems, loopStatusText } from "./command-loop.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
 
@@ -1255,7 +1255,10 @@ async function refreshLoopFeed() {
     return;
   }
   els.loopStatus.textContent = loopStatusText(payload);
-  const items = loopFeedItems(payload, 12);
+  // Events first, then the crew's incidents with their recorded
+  // evidence, BOLO + visible marks, and yellow/red tier — the
+  // projection the endpoint carries but the feed used to drop.
+  const items = [...loopFeedItems(payload, 12), ...loopIncidentItems(payload)];
   els.loopFeed.textContent = "";
   if (items.length === 0) {
     const li = document.createElement("li");
@@ -1266,7 +1269,8 @@ async function refreshLoopFeed() {
   }
   for (const item of items) {
     const li = document.createElement("li");
-    li.className = `cmd-loop-item cmd-loop-item--${item.type}`;
+    li.className = `cmd-loop-item cmd-loop-item--${item.type}` +
+      (item.tier === "yellow" ? " cmd-loop-item--incident-yellow" : "");
     const when = document.createElement("span");
     when.className = "cmd-loop-when mono";
     when.textContent = item.at ? fmtTime(new Date(item.at)) : "";
