@@ -37,3 +37,73 @@ officina 49 OK; worlds packs 9 of 9 OK; OS loop harness 12 of 12.
   Side note: the live NYCTMC list loaded (972 cameras online) and the
   Fires/Radar layer buttons are present.
 - OC-010 this section of the report.
+
+## Section 3: Hortus rung 3 simulation (OC-026 to OC-035)
+
+Work lives in ~/workspace/hackathon/demo-stack/hortus-rung3/ (own local git
+repo, commit 556bd41; repo untouched per the prompt). Status per task:
+- OC-026 DONE. Read OPENCODE_PROMPT_HORTUS_RUNG3.md (all 76 lines), followed it.
+- OC-027 DONE. Own finite-difference solver, stdlib only (no numpy on this
+  Mac): solver.py, one periodic fin cell, red-black SOR, energy-balance stop rule.
+- OC-028 DONE. Single fin vs closed-form 1D formula (adiabatic tip, exact):
+  0.84% error at dy=0.50 mm, 0.41% at dy=0.25 mm — halving the grid halves the
+  error. Balance 2e-3. Two real bugs caught by verification (heat counted
+  through air cells; grid rounding the fin narrow) and fixed.
+- OC-029 DONE. Champion (40 fins, 60.0 mm, 0.745 mm, 1.494 mm base, assumed
+  100x100 mm footprint): 733.8 W at dT=50 K forced air (685.6 W with flat h=50).
+- OC-030 DONE. Reference (10/10/2/5 mm): 18.3 W (74.0 W with flat h=50).
+  Ranking never wavers: champion wins 9x–40x under every assumption set.
+- OC-031 DONE. Grid doubled once (dx 0.0926→0.0463 mm, dy 0.5→0.25 mm):
+  champion moves from 733.8 W to 735.9 W (+0.28%). Record: hortus-rung3 repo,
+  oc-031-refine.txt (note: 80k iters, balance 6.5e-3 vs 2e-3 rule — value
+  stable, strict criterion unmet; reported, not hidden).
+- OC-032 BLOCKED, not faked: the rung-2 calibrated champion ("organism 8175")
+  exists nowhere reachable. The number 8175 appears in this checkout only as
+  digits inside an officina float and inside the task text itself. Rung 2 is
+  built separately per the prompt and was never pushed. No geometry invented.
+- OC-033 DONE. Assumptions all stated in RUNG3_REPORT.md; ~42 s per dense
+  scoring call on one core (finalists only, never in-loop).
+- OC-034 DONE. RUNG3_REPORT.md written with honest verdict: fit for finalist
+  judging, needs one physical or commercial-solver cross-check before
+  selection trusts it.
+- OC-035 not applicable: the solver succeeded.
+
+## Section 4: Meta Scientia 3D compounds (OC-036 to OC-050)
+
+- OC-036 DONE. design/meta-scientia-molecules.html + vendored three.js r152
+  (design/vendor/three.min.js). Note: the task's "already vendored film
+  pattern" does not exist in this tree (no film dir, no three.js) — vendored
+  fresh from unpkg instead (633,338 bytes), same offline result.
+- OC-037 DONE. Caffeine, aspirin, glucose 3D SDFs from PubChem PUG REST
+  (record_type=3d), saved raw in design/molecules/ with CIDs 2519/2244/5793.
+- OC-038 DONE. Ball and stick with element colors; proof oc-038-caffeine-ballstick.png.
+- OC-039 DONE. Space-filling toggle (vdW radii, bonds hidden); proof
+  oc-039-benzene-spacefill.png.
+- OC-040 DONE. Drag rotates (proof oc-040 was retaken as hover set), wheel
+  zooms (code), auto-rotate stops on first drag (verified: toggle off after
+  drag test).
+- OC-041 DONE. Hover raycast tooltip ("O atom 1 at (0.47, 2.57, 0.00) A") +
+  toggleable atom labels; proof oc-041-hover-labels.png.
+- OC-042 DONE. Picker with all 8 compounds, loaded from local files; network
+  log shows every request is 127.0.0.1, nothing external.
+- OC-043 DONE. Five ESOL molecules via RDKit 2025.09.2 (ETKDGv3 seed 42 +
+  MMFF), in the picker, labelled generated-not-measured everywhere. Caveat:
+  the exact five "gate set" rows are not in this checkout (scaffold branch
+  never pushed), so these are five canonical ESOL members — README says so.
+- OC-044 DONE. Formula + weight come from molecules/meta.json, rendered
+  verbatim ("C8H10N4O2 — 194.19 g/mol").
+- OC-045 DONE as standalone page. There is no Scientia board surface in the
+  app to place it on (checked: no scientia board exists), and index.html was
+  deliberately not touched. Screenshots are of the page itself.
+- OC-046 DONE. oc-046-rotation-10s.mp4: 10.0 s, rotation plus a mid-clip
+  picker switch to glucose. Method honestly stated: 20 timed screenshots at
+  2 fps stitched with ffmpeg (no screen recorder on a headless Mac); every
+  pixel is the real page. Mid-frame verified viewable.
+- OC-047 DONE. Malformed input shows "Could not load that structure: ... —
+  Nothing was drawn — no fake molecule substituted." (verified twice: test
+  button and once from a real code bug, which is also fixed).
+- OC-048 DONE. design/molecules/README.md: PubChem vs RDKit provenance,
+  RDKit version/seed, vendored three.js version/bytes, the ESOL caveat.
+- OC-049 DONE. Network log on the page: only 127.0.0.1 requests (page, three,
+  meta.json, SDFs). Works offline.
+- OC-050 this section of the report.
