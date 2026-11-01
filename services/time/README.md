@@ -1,6 +1,7 @@
 # `time` — Layer 4, service 3
 
 **Status: WRITTEN.** Not COMPILED — `goose__toolchain_status` → `NOT FOUND`.
+B-L1-04 wrote the clock core; B-L1-19 added the deadline and budget surface.
 
 ## What it does
 
@@ -62,3 +63,35 @@ layer a hard spin, which is why it is requirement R6.
 Compilation (no toolchain), and the one assumption this file makes about the
 kernel: that `sys_ticks` is monotonic and cheap enough to poll. Neither is
 proven by anything in this repo today.
+
+## B-L1-19: deadlines and budgets
+
+The core converts and sleeps. What services schedule against is this:
+
+| Type / function | Does |
+|---|---|
+| `Clock { hz }` / `clock_init` | carries the tick rate once; a nonsense rate is replaced, not propagated |
+| `Deadline { at }` / `clock_after(c, ms)` | an **absolute** tick instant |
+| `deadline_expired` / `deadline_remaining` / `remaining_ms` | remaining time, **clamped at zero** |
+| `clock_wait(c, d)` | wait to the deadline; `false` if the clock stalled |
+| `Budget` / `clock_budget` / `budget_left` / `budget_expired` | a total time for a multi-step operation |
+| `ticks_to_us` | sub-tick resolution, rounded down |
+| `clock_ok(c)` | is the clock advancing at all — call once at start-up |
+
+**Why deadlines are absolute.** A duration passed down a chain of helpers restarts
+at every hop, and a 50 ms timeout becomes 300 ms. An absolute instant is computed
+once and compared everywhere.
+
+**Why remaining time is clamped at zero.** A negative "remaining" subtracted from a
+budget silently *adds* time on a slow path.
+
+**Why budgets pass the remainder to each step.** Each step getting the original
+20 ms is how a six-step operation takes two minutes.
+
+## Still absent, deliberately
+
+- **No calendar or time zones** — B-L1-110.
+- **No settable clock.** Monotonic only; wall-clock correction is an offset held by
+  the time sync client (B-L1-37), never a change to this counter.
+- **No timer service.** Waking another process needs K5 and the IPC transport
+  (Q-B-L1-2); a wake list here would be fiction.

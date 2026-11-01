@@ -2,7 +2,8 @@
 //
 // Layer 4, service 3: the monotonic clock.
 //
-// Status: WRITTEN (not COMPILED). Verified through goose-mcp@1.1.0
+// Status: WRITTEN (not COMPILED). B-L1-04 wrote the clock core; B-L1-19 adds the
+// deadline and wait surface every other service schedules against. Verified through goose-mcp@1.1.0
 // (aardappel/goose @ b781587): extern fn (spec#40), export fn (spec#41),
 // while/return/fn keywords (list_keywords), trailing-bool (samples/04_errors),
 // i64 arithmetic and top-level globals (reference#5).
@@ -129,3 +130,143 @@ export "svc_entry" fn service_main() -> i32 {
 
     return 0;
 }
+
+// ---------------------------------------------------------------------------
+// B-L1-19: the full time surface
+// ---------------------------------------------------------------------------
+//
+// The core above converts and sleeps. This section is what services actually
+// schedule against: a Clock that carries the rate once, deadlines that are
+// absolute tick values, and waits that cannot silently overrun.
+//
+// WHY DEADLINES ARE ABSOLUTE TICKS, NOT DURATIONS
+// -----------------------------------------------
+// A duration handed around ("wait 50 ms") restarts every time it is passed to
+// another function, and a chain of helpers turns a 50 ms timeout into 300 ms. An
+// absolute deadline is computed once, at the call site, and every downstream
+// check compares against the same instant.
+
+struct Clock {
+    hz: i64,
+}
+
+struct Deadline {
+    at: i64,        // absolute tick count
+}
+
+fn clock_init(hz: i64) -> Clock {
+    // A clock with a nonsense rate is refused at construction rather than
+    // producing silent nonsense at every later conversion.
+    if hz <= 0 { return Clock { hz: 1000 }; }
+    return Clock { hz: hz };
+}
+
+fn clock_now(c: Clock&) -> i64 {
+    return sys_ticks();
+}
+
+fn clock_uptime_ms(c: Clock&) -> i64 {
+    let ms, ok = ticks_to_ms(sys_ticks(), c.hz);
+    if !ok { return 0; }
+    return ms;
+}
+
+// Absolute deadline, `ms` from now. `ms == 0` means "already due".
+fn clock_after(c: Clock&, ms: i64) -> Deadline {
+    let d = ms_to_ticks(ms, c.hz);
+    return Deadline { at: sys_ticks() + d };
+}
+
+fn clock_deadline_in(c: Clock&, ms: i64) -> Deadline {
+    return clock_after(c, ms);
+}
+
+fn deadline_expired(d: Deadline&, now: i64) -> bool {
+    return elapsed(now, d.at) >= 0;
+}
+
+// Ticks left, never negative: a caller that subtracts a negative remaining time
+// from a budget would silently gain time on a slow path.
+fn deadline_remaining(d: Deadline&, now: i64) -> i64 {
+    let left = d.at - now;
+    if left < 0 { return 0; }
+    return left;
+}
+
+fn deadline_remaining_ms(d: Deadline&, c: Clock&) -> i64 {
+    let t = deadline_remaining(d, sys_ticks());
+    let ms, ok = ticks_to_ms(t, c.hz);
+    if !ok { return 0; }
+    return ms;
+}
+
+// Wait until a deadline. Returns false if the clock stalled (the same stall
+// detector as sleep_ticks) so a caller can distinguish "woke up" from "the
+// scheduler never gave us the CPU again".
+fn clock_wait(c: Clock&, d: Deadline&) -> bool {
+    let now = sys_ticks();
+    if deadline_expired(d, now) { return true; }
+    let left = deadline_remaining(d, now);
+    return sleep_ticks(left);
+}
+
+// A budget for one operation: start it, then ask how much is left for each step.
+//
+//     var budget = clock_budget(c, 20);            // 20 ms for the whole thing
+//     step_one(clock_budget_left(budget, c));      // each step gets what remains
+//
+// Passing the *remaining* time into each step is what keeps a sequence inside its
+// total, instead of each step getting the full original 20 ms.
+struct Budget {
+    start: i64,
+    total: i64,     // ticks
+}
+
+fn clock_budget(c: Clock&, ms: i64) -> Budget {
+    return Budget { start: sys_ticks(), total: ms_to_ticks(ms, c.hz) };
+}
+
+fn clock_budget_left(b: Budget&, c: Clock&) -> i64 {
+    let used = elapsed(sys_ticks(), b.start);
+    let left = b.total - used;
+    if left < 0 { return 0; }
+    let ms, ok = ticks_to_ms(left, c.hz);
+    if !ok { return 0; }
+    return ms;
+}
+
+fn clock_budget_expired(b: Budget&) -> bool {
+    return elapsed(sys_ticks(), b.start) >= b.total;
+}
+
+// Sub-millisecond resolution, for the few paths that measure something shorter
+// than a tick. Rounds down; a caller that needs exactness works in ticks.
+fn ticks_to_us(ticks: i64, hz: i64) -> i64, bool {
+    if hz <= 0 { return 0, false; }
+    return (ticks * 1000000) / hz, true;
+}
+
+// Is the clock usable at all? Every service calls this once at start-up: a clock
+// that does not advance makes every timeout in the layer infinite, which is far
+// worse than refusing to start.
+fn clock_ok(c: Clock&) -> bool {
+    let a = sys_ticks();
+    var spins: i64 = 0;
+    while spins < 1000 {
+        sys_yield();
+        if sys_ticks() != a { return true; }
+        spins++;
+    }
+    return false;
+}
+
+// ---------------------------------------------------------------------------
+// Deliberately absent
+// ---------------------------------------------------------------------------
+//
+// - No calendar, no time zones, no epoch conversion: B-L1-110. A service that
+//   needs a date asks that task's code, not this one.
+// - No settable clock. `time` is monotonic; wall-clock adjustment belongs to the
+//   time sync client (B-L1-37) which will hold an offset, not move this counter.
+// - No timer service yet: waking another process on a deadline needs the kernel
+//   (K5) and the IPC transport (Q-B-L1-2). A wake list here would be a fiction.
