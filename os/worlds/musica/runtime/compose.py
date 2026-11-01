@@ -34,6 +34,8 @@ import wave
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from take_log import append_take, read_log, sha256_file  # noqa: E402
+from spark_assist import (  # noqa: E402
+    build_lyric_prompt, build_structure_prompt, request_assist)
 
 SAMPLE_RATE = 22050
 
@@ -164,7 +166,7 @@ def replay_take(log_path, take_id, out_path):
 
 
 def run_session(session_dir, brief_id, brief_text, params, takes,
-                seed_base, resume=False):
+                seed_base, resume=False, spark_mode=None):
     """Run takes 1..N, appending each to the take log as rendered.
 
     With resume=True an existing log is continued after its last
@@ -172,8 +174,12 @@ def run_session(session_dir, brief_id, brief_text, params, takes,
     silently overwrite a session). A take killed between render and
     log-append leaves an orphaned WAV; resume re-renders that take
     number deterministically (same seed, same bytes) and logs it
-    once, so no take is lost or duplicated. Returns the new take
-    records.
+    once, so no take is lost or duplicated.
+
+    spark_mode is None, "structure", or "lyrics" (HN-034): each take
+    records a Spark assist attempt in its spark_assist field. In
+    this sandbox every attempt records held/not_configured and no
+    call is sent. Returns the new take records.
     """
     os.makedirs(session_dir, exist_ok=True)
     log_path = os.path.join(session_dir, "take_log.jsonl")
@@ -190,6 +196,13 @@ def run_session(session_dir, brief_id, brief_text, params, takes,
         rel = "takes/%s.wav" % take_id
         out_path = os.path.join(session_dir, rel)
         duration, digest = render_take(params, seed, out_path)
+        spark = None
+        if spark_mode == "structure":
+            spark = request_assist(build_structure_prompt(
+                brief_id, brief_text, params["bars"]))
+        elif spark_mode == "lyrics":
+            spark = request_assist(build_lyric_prompt(
+                brief_text, params["bars"]))
         record = {
             "take_id": take_id,
             "session_id": session_id,
@@ -204,7 +217,7 @@ def run_session(session_dir, brief_id, brief_text, params, takes,
             "sha256": digest,
             "verdict": "pending",
             "reason": "",
-            "spark_assist": None,
+            "spark_assist": spark,
             "human_verdict": None,
         }
         append_take(log_path, record)
@@ -235,6 +248,8 @@ def main(argv=None):
     parser.add_argument("--takes", type=int, default=12)
     parser.add_argument("--seed-base", type=int, default=1000)
     parser.add_argument("--resume", action="store_true")
+    parser.add_argument("--spark-assist", default=None,
+                        choices=[None, "structure", "lyrics"])
     parser.add_argument("--replay", nargs=3, metavar=("LOG", "TAKE", "OUT"))
     args = parser.parse_args(argv)
     if args.replay:
@@ -248,7 +263,8 @@ def main(argv=None):
                        args.brief_text or ("%s brief: %.0f bpm %s %s"
                                            % (args.brief_id, args.tempo,
                                               args.key, args.mode)),
-                       params, args.takes, args.seed_base, args.resume)
+                       params, args.takes, args.seed_base, args.resume,
+                       args.spark_assist)
     for record in made:
         print("%s seed=%d duration=%.3f sha256=%s"
               % (record["take_id"], record["seed"], record["duration_s"],
