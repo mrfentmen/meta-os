@@ -440,11 +440,26 @@ status words, one task one commit, branch only.
 
 ### Wave K — hardening, guides, closeout round 2
 
-- **B-L1-125 … B-L1-134 — Parser hardening test programs**, one per
-  parser, hostile inputs as checked-in data with expected honest
-  failures: config (125), JSON (126), DNS (127), DHCP (128), FS
-  paths (129), shell args (130), update manifest (131), keymap
-  tables (132), log records (133), BootInfo (134).
+- **B-L1-125 — Parser hardening: config parser (B-L1-13).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
+- **B-L1-126 — Parser hardening: JSON library (B-L1-120).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
+- **B-L1-127 — Parser hardening: DNS resolver (B-L1-32).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
+- **B-L1-128 — Parser hardening: DHCP client (B-L1-31).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
+- **B-L1-129 — Parser hardening: FS paths (B-L1-83).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
+- **B-L1-130 — Parser hardening: shell argument parser (B-L1-88).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
+- **B-L1-131 — Parser hardening: update manifest (B-L1-34).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
+- **B-L1-132 — Parser hardening: keymap tables (B-L1-26).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
+- **B-L1-133 — Parser hardening: log records (B-L1-28).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
+- **B-L1-134 — Parser hardening: BootInfo block (B-L1-08).** Hostile inputs as
+  checked-in data, expected honest failures stated per input.
 - **B-L1-135 — Programmer's guide.** `os-build/layer1/GUIDE.md`:
   how to write a Layer 4 service, every rule traced to a landed
   pattern in this build-out.
@@ -461,8 +476,14 @@ status words, one task one commit, branch only.
 - **B-L1-141 — Demo state pack.** The exact commands + expected
   outputs for a guided Layer 4 tour (shell session over test
   programs), text only, claims matching the scoreboard.
-- **B-L1-142 … B-L1-145 — Gap libraries 4–7.** The next four gaps
-  from STDLIB_GAPS.md (B-L1-15) in audit order, one task each.
+- **B-L1-142 — Gap library 4.** The next gap from
+  STDLIB_GAPS.md (B-L1-15) in audit order, as a common module.
+- **B-L1-143 — Gap library 5.** The next gap from
+  STDLIB_GAPS.md (B-L1-15) in audit order, as a common module.
+- **B-L1-144 — Gap library 6.** The next gap from
+  STDLIB_GAPS.md (B-L1-15) in audit order, as a common module.
+- **B-L1-145 — Gap library 7.** The next gap from
+  STDLIB_GAPS.md (B-L1-15) in audit order, as a common module.
 - **B-L1-146 — Source audit round 2.** Full `goose__*` symbol
   re-check across all services incl. Waves G–J.
 - **B-L1-147 — Manifest + report refresh.** Every status word in
