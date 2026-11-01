@@ -228,3 +228,17 @@ export function receiptView(incident) {
     + `<span class="dispatch-receipt-id">receipt ${escapeHtml(receipt)}</span> `
     + `<span class="dispatch-receipt-note">Package logged — no real service contacted.</span></div>`;
 }
+
+// HN-065 Cost ticker: the incident view shows calls spent and
+// dollars spent from the ledger. Input is the budget ledger state
+// (server/budget.mjs shape: {calls, est_cost_usd, log}). A missing
+// ledger is a fresh ledger (calls 0, $0.00) — the budget module's
+// own rule, not an invention. The page re-fetches on an interval so
+// the ticker updates as the chain runs.
+export function costTicker(state) {
+  const calls = Number.isFinite(Number(state?.calls)) ? Number(state.calls) : 0;
+  const dollars = Number.isFinite(Number(state?.est_cost_usd)) ? Number(state.est_cost_usd) : 0;
+  return `<div class="cost-ticker">`
+    + `<span class="cost-calls">${calls} calls spent</span> `
+    + `<span class="cost-dollars">$${dollars.toFixed(2)} spent</span></div>`;
+}

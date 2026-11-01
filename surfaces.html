@@ -35,6 +35,7 @@
     <a href="#board-timeline">Timeline</a>
     <a href="#board-cameras">Cameras</a>
     <a href="#board-receipt">Receipt</a>
+    <a href="#board-costs">Costs</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -79,9 +80,14 @@
     <p>The sim- receipt on the incident after a staged dispatch, via /api/crew/status, labelled SIMULATED in the view.</p>
     <div id="receipt-content" aria-live="polite">Loading…</div>
   </section>
+  <section class="board-section" id="board-costs" aria-labelledby="board-costs-heading">
+    <h2 id="board-costs-heading">Cost ticker</h2>
+    <p>Calls spent and dollars spent from the budget ledger (server/queue/spark_guardrail_state.json), refreshed as the chain runs.</p>
+    <div id="cost-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView, costTicker } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -118,6 +124,18 @@
     document.getElementById("receipt-content").innerHTML = withReceipt
       ? receiptView(withReceipt)
       : `<p class="empty-state">No dispatch receipt in the live crew records.</p>`;
+    // HN-065: refresh the ticker as the chain runs.
+    async function refreshCosts() {
+      try {
+        const res = await fetch("server/queue/spark_guardrail_state.json");
+        const ledger = res.ok ? await res.json() : null;
+        document.getElementById("cost-content").innerHTML = costTicker(ledger);
+      } catch {
+        document.getElementById("cost-content").innerHTML = costTicker(null);
+      }
+    }
+    await refreshCosts();
+    setInterval(refreshCosts, 15000);
   } catch {
     document.getElementById("evidence-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;
@@ -127,6 +145,7 @@
       `<p class="empty-state">Crew records unavailable.</p>`;
     document.getElementById("receipt-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;
+    document.getElementById("cost-content").innerHTML = costTicker(null);
   }
 </script>
 </body>
