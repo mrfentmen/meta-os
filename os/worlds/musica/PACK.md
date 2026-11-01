@@ -1,11 +1,14 @@
 # Meta Musica world pack: the studio that never closes
 
-Status: **SPEC, NOT BUILT.** This pack is a definition: a manifest
-(`pack.json`, checked by `worlds/validate_pack.py`) and this
-document. No runtime code in this pack composes real music yet.
-The runtime lands in the later HN tasks of this lane (loop, keeper
-rules, catalogue, studio board), and this document's status moves
-only as fast as that evidence (HN-045 truth pass).
+Status: **PARTIAL.** The loop, keeper bar, variation check,
+catalogue, rights log, normalisation, studio board, failure
+museum, prompt library, listening harness, and overnight pipeline
+are built and run on real sessions (see Proven below). Spark
+assisted composition is NOT live (builders only, no key, no calls
+from this sandbox), duet mode is scoping only, and the board
+pages are static HTML whose audio playback is not yet verified in
+a browser. This document's status moves only as fast as that
+evidence.
 
 ## Purpose
 
@@ -54,7 +57,39 @@ never moves money or rights it does not hold.
 
 ## Proven / unproven (updated at HN-045)
 
-- Proven: pack manifest validates green (HN-026).
-- Unproven: everything else — the loop, the keeper bar, the
-  catalogue, the board, Spark assist, and the overnight run are
-  all still to land in this lane.
+Proven:
+
+- Pack manifest validates green (HN-026) and the registry lists
+  it (HN-026, updated here to PARTIAL).
+- The loop renders real deterministic audio: hn029 (12 takes),
+  three brief sessions (4 takes each), and overnight-001 (100
+  takes, 85 keepers, 15 rejects, 0 clones, 76.6 s).
+- The keeper bar measures and discriminates: length, loudness,
+  silence, bar-fingerprint repetition, thresholds from real takes.
+- The variation check is calibrated: distinct-seed keepers score
+  at most 0.9242, a gain-changed clone 0.9997, threshold 0.98.
+- The catalogue exports keepers with licence + provenance; the
+  rights log passes hn029 11/11 and rejects empty rights lines.
+- Catalogue tracks normalise to -16 LUFS, before/after measured
+  per track, all hn029 tracks within tolerance.
+- The studio board (v1 session board, v2 studio-wide browser),
+  failure museum, and prompt library all read records only.
+- The A/B harness is blind by construction (anonymised files)
+  and records picks as human verdicts in the take log.
+- Session persistence is proven by live kill + resume with no
+  lost takes and contiguous ids.
+- Spark assist builders (structure/lyric) follow the repo
+  contract; every attempt is recorded; no live call is made
+  from this sandbox.
+
+Unproven:
+
+- Spark-assisted composition live: builders only, no key here,
+  no calls sent, no model reply ever recorded as sent.
+- Board audio playback in a real browser (no browser in this
+  sandbox; the pages are static HTML).
+- A Swift mirror musica case (noted at HN-027, not built;
+  the Trio Swift mirror is unaffected).
+- Duet mode (HN-044 scoping only, no code).
+- Catalogue audio for sessions after hn029 is reproducible from
+  the log, not committed (repo-lean policy, sessions README).

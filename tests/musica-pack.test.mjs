@@ -18,14 +18,21 @@ test("musica pack validates green", () => {
   assert.match(out, /musica\/pack\.json: OK/);
 });
 
-test("musica pack status is honest spec at HN-026", () => {
+test("musica pack status is honest partial at HN-045", () => {
   const pack = JSON.parse(readFileSync(join(root, "os/worlds/musica/pack.json"), "utf8"));
   assert.equal(pack.pack, "musica");
-  assert.equal(pack.status, "spec");
+  assert.equal(pack.status, "partial");
   assert.equal(pack.version, "0.1.0");
+});
+
+test("musica PACK.md states proven and unproven honestly", () => {
+  const doc = readFileSync(join(root, "os/worlds/musica/PACK.md"), "utf8");
+  assert.match(doc, /PARTIAL/);
+  assert.match(doc, /overnight-001 \(100\n  takes, 85 keepers, 15 rejects/);
+  assert.match(doc, /Spark-assisted composition live/);
 });
 
 test("worlds registry lists musica", () => {
   const readme = readFileSync(join(root, "os/worlds/README.md"), "utf8");
-  assert.match(readme, /\| musica \| Music studio \| SPEC/);
+  assert.match(readme, /\| musica \| Music studio \| PARTIAL/);
 });
