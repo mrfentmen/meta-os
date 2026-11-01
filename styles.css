@@ -1799,6 +1799,29 @@ body[data-view="command"] > main { display: none; }
   .cmd-activity { position: static; }
   .cmd-pin-card { position: absolute; }
 }
+
+/* HN-016 mobile pass (390 px): the 1150 px rules already stack the
+   floats; this block finishes the phone width — the camera wall
+   stacks vertically instead of scrolling sideways, every tap target
+   reaches 44 px, and nothing overflows the viewport width. Layout
+   is asserted by rule tests; a real-device 390 px check stays owed
+   at gate (no browser runs in this sandbox). */
+@media (max-width: 480px) {
+  .command-view { overflow-x: clip; }
+  .cmd-map { height: 300px; }
+  .cmd-wall { flex-direction: column; overflow-x: visible; }
+  .cmd-tile { flex: 1 1 auto; }
+  .cmd-tile img { height: auto; aspect-ratio: 16 / 9; }
+  .command-view button,
+  .command-view input,
+  .command-view select { min-height: 44px; }
+  .command-view .cmd-sys-value { overflow-wrap: anywhere; }
+  main button,
+  main input,
+  main select { min-height: 44px; }
+  main { overflow-x: clip; padding: 8px; }
+  .maplibregl-ctrl button { min-height: 44px; min-width: 44px; }
+}
 /* OPS-CONSOLE-1 (Del UI direction, Oct 29): first web-first
    modern/elite/professional dispatch/ops-console piece for Ignis.
    Panel headings become console section labels — uppercase mono
