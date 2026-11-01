@@ -105,11 +105,21 @@ domain absent from the map is enumerated but never graded.
 dns_domains defaults to ct_domains when absent: the watched-domain
 list is the DNS watch list unless the config says otherwise. A
 snapshot is {"A": [...], "AAAA": [...], "MX": [...], "TXT": [...]}.
+
+Alert dedup (RW-008): when the config sets `dedup_window_seconds`
+and the caller supplies a dedup state dict, identical alert findings
+(yellow/red only, never baseline normal) inside that window in
+seconds collapse into one record with a count — see runtime/dedup.py
+for the exact identity rule and the state shape. With either the
+window or the state missing, dedup is off and every patrol records
+what it finds, exactly as before.
 """
 
 import argparse
 import ipaddress
 import json
+
+import dedup
 import os
 import socket
 import ssl
@@ -558,7 +568,7 @@ def fetch_headers(host, port, timeout=HEADER_TIMEOUT):
 def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                seen_cve=None, fetch_ct_fn=None, seen_ct=None,
                fetch_headers_fn=None, fetch_dns_fn=None, seen_dns=None,
-               resolve_subdomain_fn=None):
+               resolve_subdomain_fn=None, seen_dedup=None):
     """One patrol. Returns (records, seen_cve, seen_ct).
 
     Every observation is classified and recorded. Yellow records are
@@ -571,6 +581,12 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     caller reads it back after the call and persists it. A domain
     missing from it is a first sighting: the snapshot is stored
     and no record is written.
+
+    seen_dedup is the alert-dedup state dict (dedup.py), also
+    updated IN PLACE and persisted by the caller. Dedup only runs
+    when BOTH this dict is supplied and the config sets
+    `dedup_window_seconds` to a non-negative number; an invalid
+    window is a summary error and dedup is off for that patrol.
     """
     records = []
     seen = set(seen_cve or ())
@@ -763,6 +779,29 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                                        "anomalous exposure",
                                        {"port": p}))
 
+    # 2c. Alert dedup (RW-008): identical alert findings inside the
+    # configured window collapse into one record with a count.
+    # Baseline normal records are history, not alerts, and pass
+    # through untouched. This runs before escalations so a
+    # suppressed red repeat produces no duplicate escalation: the
+    # first occurrence already ran the chain.
+    dedup_collapsed = 0
+    dedup_suppressed = 0
+    dedup_counts = {}
+    dedup_window = None
+    if seen_dedup is not None and \
+            config.get("dedup_window_seconds") is not None:
+        try:
+            dedup_window = float(config.get("dedup_window_seconds"))
+            if dedup_window < 0:
+                raise ValueError("negative dedup window")
+        except (TypeError, ValueError) as exc:
+            errors.append("dedup window invalid: %s" % exc)
+            dedup_window = None
+        if dedup_window is not None:
+            records, dedup_collapsed, dedup_suppressed, dedup_counts = \
+                dedup.apply_dedup(records, seen_dedup, now, dedup_window)
+
     # 3. Escalations: red only, built in exactly one place.
     escalations = [escalate(r, now) for r in records
                    if r["tier"] == "red"]
@@ -784,6 +823,10 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
         "observations": counts,
         "escalations": len(escalations),
         "errors": errors,
+        "dedup_collapsed": dedup_collapsed,
+        "dedup_suppressed": dedup_suppressed,
+        "dedup_counts": dedup_counts,
+        "dedup_window_seconds": dedup_window,
     })
     return records, seen, seen_ids
 
@@ -807,12 +850,32 @@ def load_state(path):
     return set(), set(), {}
 
 
-def save_state(path, seen_cve, seen_ct, seen_dns=None):
+def load_dedup_state(path):
+    """The alert-dedup state dict from a state file, or {}.
+
+    Kept separate from load_state on purpose: load_state's
+    3-tuple return is pinned by existing callers. State files
+    written before RW-008 lack seen_dedup and load as empty, so
+    the next patrol records findings normally instead of
+    suppressing anything on an unreadable baseline.
+    """
+    if path and os.path.isfile(path):
+        with open(path) as f:
+            data = json.load(f)
+        seen_dedup = data.get("seen_dedup", {})
+        return dict(seen_dedup) if isinstance(seen_dedup, dict) else {}
+    return {}
+
+
+def save_state(path, seen_cve, seen_ct, seen_dns=None, seen_dedup=None):
     if path:
         with open(path, "w") as f:
-            json.dump({"seen_cve": sorted(seen_cve),
-                       "seen_ct": sorted(seen_ct),
-                       "seen_dns": seen_dns or {}}, f, indent=1)
+            data = {"seen_cve": sorted(seen_cve),
+                    "seen_ct": sorted(seen_ct),
+                    "seen_dns": seen_dns or {}}
+            if seen_dedup is not None:
+                data["seen_dedup"] = seen_dedup
+            json.dump(data, f, indent=1)
 
 
 def main(argv=None):
@@ -862,11 +925,13 @@ def main(argv=None):
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     seen, seen_ct, seen_dns = load_state(args.state)
+    seen_dedup = load_dedup_state(args.state)
     records, seen, seen_ct = run_patrol(config, now, fetch_fn, probe_cert,
                                         probe_port, seen, fetch_ct_fn,
                                         seen_ct, fetch_dns_fn=fetch_dns_fn,
-                                        seen_dns=seen_dns)
-    save_state(args.state, seen, seen_ct, seen_dns)
+                                        seen_dns=seen_dns,
+                                        seen_dedup=seen_dedup)
+    save_state(args.state, seen, seen_ct, seen_dns, seen_dedup)
 
     lines = "".join(json.dumps(r, sort_keys=True) + "\n" for r in records)
     if args.records:
