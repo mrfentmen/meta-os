@@ -250,3 +250,21 @@
 - NC-121/122: mid-frames viewed (10/10 good), durations tabled exact.
 - NC-123: content check per clip (above); one re-shoot logged.
 - NC-124: this summary.
+
+## Section L — Performance and repo hygiene (NC-137..NC-148) — DONE
+
+- NC-137 DONE. App home loads x5: 168/185/187/200/306 ms, median 187 ms
+  (headless Chromium, cache-warm navigations).
+- NC-138 DONE. Camera-wall time-to-cards x3: 127/130/142 ms
+  (selector-wait method, stated).
+- NC-139 DONE. Cargo release --workspace on throwaway clone: 28 s wall,
+  EXIT 0 (clone deleted after).
+- NC-140 DONE. Node suite wall: 2 s on this Mac (1999/1943/56) vs Pax's
+  ~33 s sandbox baseline. Difference noted as measured; the sandbox
+  number likely includes clone+install or slower hardware — cannot
+  measure from here, not explained further.
+- NC-141..146 DONE. oc-proofs/hygiene.md: .glb is 2.2 MB not 63 MB and
+  referenced only by the task text; LFS buys nothing (max 2.6 MB);
+  one dup set (three.min.js x3, deliberate); labs 4.2 / proofs 12 /
+  footage 9.4 MB; no junk files.
+- NC-147 DONE (hygiene.md). NC-148: this summary.
