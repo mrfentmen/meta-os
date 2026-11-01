@@ -6,16 +6,19 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { join, dirname } from "node:path";
+import { tmpdir as osTmp } from "node:os";
+import { writeFileSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { validateAssessment } from "../../../js/schema.js";
+import { guardNoName } from "../bolo-guard.mjs";
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 test("tier counter reports 3 yellow and 2 red on the sample", () => {
   const out = execFileSync("node", [join(dir, "tier-counter.mjs"), join(dir, "sample-records.jsonl")], { encoding: "utf8" });
-  assert.match(out, /records: 6/);
-  assert.match(out, /yellow: 3/);
-  assert.match(out, /red: 2/);
+  assert.match(out, /records: 12/);
+  assert.match(out, /yellow: 5/);
+  assert.match(out, /red: 4/);
 });
 
 function fakeAssessment(product, category) {
@@ -48,4 +51,43 @@ test("schema spot-check: 20 generated samples validate", () => {
     }
   }
   assert.equal(n, 20);
+});
+
+test("NC-074 guard refuses a smuggled name, accepts clean records", () => {
+  assert.throws(() => guardNoName({ description: "x", name: "John Doe" }), /refused/);
+  assert.equal(guardNoName({ description: "x", identity: "UNIDENTIFIED" }), true);
+  assert.equal(guardNoName({ description: "x" }), true);
+});
+
+test("NC-075 purge on a copy: byte counts and no gaps", () => {
+  const out = execFileSync("node", [join(dir, "purge-copy.mjs"),
+    join(dir, "sample-records.jsonl"), join(osTmp(), "purge-test.jsonl"),
+    "SIM-2026-11-01-002", "SIM-2026-11-01-009"], { encoding: "utf8" });
+  assert.match(out, /purged=2/);
+  assert.match(out, /gaps=false/);
+});
+
+test("NC-076 fuzz exact proportions", () => {
+  const lines = [];
+  for (let i = 0; i < 200; i++) {
+    const tier = i < 80 ? "yellow" : i < 150 ? "red" : "none";
+    lines.push(JSON.stringify({ incident: { id: "F" + i, tier } }));
+  }
+  const fp = join(osTmp(), "fuzz-test.jsonl");
+  writeFileSync(fp, lines.join("\n") + "\n");
+  const out = execFileSync("node", [join(dir, "tier-counter.mjs"), fp], { encoding: "utf8" });
+  assert.match(out, /yellow: 80/);
+  assert.match(out, /red: 70/);
+  assert.match(out, /none: 50/);
+});
+
+test("NC-081 every sample record carries the incident contract", () => {
+  const recs = readFileSync(join(dir, "sample-records.jsonl"), "utf8").split("\n").filter((l) => l.trim()).map(JSON.parse);
+  assert.ok(recs.length >= 12, "12+ samples");
+  for (const r of recs) {
+    for (const k of ["id", "product", "category", "tier", "timestamp", "description", "identity"]) {
+      assert.ok(r.incident[k] !== undefined, `${r.incident.id} has ${k}`);
+    }
+    assert.equal(r.incident.identity, "UNIDENTIFIED");
+  }
 });

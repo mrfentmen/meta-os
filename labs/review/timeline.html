@@ -18,7 +18,10 @@
 </head>
 <body>
 <header><h1>LABS · RECORDS TIMELINE</h1><p>Load a records JSONL file (one record per line). Steps render in timestamp order: patrol → review → investigate → dispatch.</p></header>
-<div id="bar"><input type="file" id="file" accept=".jsonl,.json,.txt"><button id="btn-sample">Load sample file</button></div>
+<div id="bar"><input type="file" id="file" accept=".jsonl,.json,.txt"><button id="btn-sample">Load sample file</button>
+<span role="group" aria-label="Division filter" style="margin-left:8px">
+<button data-div="all" aria-pressed="true">All</button><button data-div="vigiles" aria-pressed="false">Vigiles</button><button data-div="ignis" aria-pressed="false">Ignis</button><button data-div="medicus" aria-pressed="false">Medicus</button>
+</span></div>
 <div id="err" role="alert"></div>
 <ol id="tl"></ol>
 <script>
@@ -28,10 +31,19 @@ const EMBEDDED_SAMPLE = "{\"incident\":{\"id\":\"SIM-2026-11-01-001\",\"simulate
 
 // Step order is fixed by the pipeline and rendered by timestamp, not by trust.
 const STEPS = ["patrol", "review", "investigate", "dispatch"];
+let DIVFILTER = "all";
+document.querySelectorAll("[data-div]").forEach((b) => b.addEventListener("click", () => {
+  DIVFILTER = b.dataset.div;
+  document.querySelectorAll("[data-div]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  if (LAST) draw(LAST);
+}));
+let LAST = null;
 function draw(records) {
+  LAST = records;
   const tl = document.getElementById("tl");
   tl.innerHTML = "";
   records
+    .filter((r) => DIVFILTER === "all" || ((r.incident || r).product === DIVFILTER))
     .slice()
     .sort((a, b) => String((a.incident || a).timestamp).localeCompare(String((b.incident || b).timestamp)))
     .forEach((r) => {

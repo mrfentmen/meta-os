@@ -15,6 +15,12 @@
   #card h2 { margin: 0 0 8px; font-size: 16px; letter-spacing: 0.1em; }
   #card p { margin: 4px 0; font-size: 13px; }
   #card .id { color: #f0b0b0; font-weight: bold; }
+  @media print {
+    body { background: #fff; color: #000; }
+    #card { border-color: #000; background: #fff; color: #000; }
+    #card .id { color: #000; }
+    #in, #bar, footer { display: none; }
+  }
   #err { display: none; margin: 10px 16px; color: #f0b0b0; font-size: 12px; }
 </style>
 </head>
@@ -31,10 +37,12 @@
   <p>Division: <span id="c-div"></span> · Camera: <span id="c-cam"></span> · <span id="c-time"></span></p>
 </div>
 <footer>Rule: the card shows the recorded description and visible marks, and the ID line reads UNIDENTIFIED. There is deliberately no name field.</footer>
-<script>
+<script type="module">
+import { guardNoName } from "./bolo-guard.mjs";
 const $ = (id) => document.getElementById(id);
 function render(obj) {
   const inc = obj.incident || obj;
+  guardNoName(inc);
   if (!inc || typeof inc.description !== "string") throw new Error("no incident.description string found");
   $("c-cat").textContent = inc.category || "unknown";
   $("c-tier").textContent = (inc.tier || "none").toUpperCase();

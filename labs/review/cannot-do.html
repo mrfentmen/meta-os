@@ -25,6 +25,14 @@ for (const p of PRODUCTS) {
   li.textContent = (p.displayName || p.id) + ": " + (p.limitations || "no statement");
   ul.appendChild(li);
 }
+for (const [text] of [
+  ["Proven in round-2/3 work: Custos tests show no live DNS proof — DNS results are observational, never verdicts."],
+  ["Proven in round-2/3 work: no UTM boot without the image file — absence of a boot is reported, never simulated."],
+]) {
+  const li = document.createElement("li");
+  li.textContent = text;
+  ul.appendChild(li);
+}
 </script>
 </body>
 </html>

@@ -166,3 +166,25 @@
 - NC-071 DONE. Honest WebGL fallback added + tested via ?force2d=1:
   message + text list, no blank canvas (shot).
 - NC-072: this summary.
+
+## Section G — Review tools, expansion (NC-073..NC-084) — DONE
+
+- NC-073 DONE. 6 new samples (007/008 yellow, 009/010 red, 011/012 normal;
+  categories from js/products.js read-only): 12 records total.
+- NC-074 DONE. BOLO refuses name-smuggling records (bolo-guard.mjs,
+  shared with the page + tests). Before: silently ignored names (code
+  inspection); after: loud refusal + test.
+- NC-075 DONE. purge-copy.mjs on interleaved kept/purged:
+  purged=4, byte counts printed, gaps=false.
+- NC-076 DONE. 200-record fuzz, exact 80/70/50 match.
+- NC-077 DONE. Division filter on timeline + 3 fresh shots.
+- NC-078 DONE. cannot-do gains the 2 proven limits (DNS observational,
+  no UTM boot without image).
+- NC-079 DONE. @media print stylesheet; CDP-emulated print screenshot
+  shows white page, UNIDENTIFIED, no chrome.
+- NC-080 DONE. Grep over samples: no real names/addresses/plates.
+- NC-081 DONE. All 12 records carry the incident contract (UNIDENTIFIED
+  throughout).
+- NC-082 DONE. Suite 6/6 (guard, purge, fuzz, contract, tier, schema).
+- NC-083 DONE. 4 fresh stills (bolo, timeline, cannot-do, print).
+- NC-084: this summary.
