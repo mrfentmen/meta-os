@@ -23,6 +23,7 @@
 // honestly until the kernel publishes those two numbers.
 
 import common.boot.boot;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

@@ -62,6 +62,8 @@ let E_READ_ONLY: i64 = 2004;
 // 3xxx: network (dhcp, dns, sockets, timesync)
 let E_NO_LINK: i64 = 3001;
 let E_NO_ADDRESS: i64 = 3002;
+let E_NO_MASK: i64 = 3006;   // a DHCP offer with no subnet mask: refused, never guessed
+          //   (3006 so the network block keeps its grouping; 3002-3005 were taken)
 let E_RESOLVE: i64 = 3003;
 let E_REFUSED: i64 = 3004;
 let E_UNREACHABLE: i64 = 3005;

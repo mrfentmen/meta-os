@@ -28,7 +28,7 @@
 // handle.
 
 import common.err.err;
-import common.netcfg.netcfg;
+import netcfg.netcfg;
 
 let SK_MAX: i64 = 16;
 let SK_GEN_MAX: i64 = 255;

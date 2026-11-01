@@ -36,7 +36,7 @@
 //   This file is pure: bytes in, bytes out.
 
 import common.err.err;
-import common.netcfg.netcfg;
+import netcfg.netcfg;
 
 let DNS_PORT: i64 = 53;
 let DNS_NAME_MAX: i64 = 255;        // the format's own limit, not a choice

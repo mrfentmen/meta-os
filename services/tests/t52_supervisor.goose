@@ -23,6 +23,7 @@
 // holds the generation it was issued for.
 
 import supervisor.supervisor;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

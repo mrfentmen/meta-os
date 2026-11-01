@@ -19,6 +19,7 @@
 
 import logd.logd;
 import logfmt.logfmt;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

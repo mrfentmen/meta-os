@@ -22,6 +22,7 @@
 // dangerous kind of lie in this repo.
 
 import audit.audit;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

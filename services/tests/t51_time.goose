@@ -17,6 +17,7 @@
 // remaining after it has been exceeded.
 
 import time.time;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

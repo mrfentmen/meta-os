@@ -32,6 +32,7 @@
 // before it believes anything.
 
 import common.err.err;
+import netcfg.netcfg;   // Ipv4, ip4(), ip4_mask_contiguous: the model, not a copy of it
 
 let DHCP_SERVER_PORT: i64 = 67;
 let DHCP_CLIENT_PORT: i64 = 68;

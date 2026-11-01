@@ -22,6 +22,7 @@
 
 import bootlog.bootlog;
 import console.console;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

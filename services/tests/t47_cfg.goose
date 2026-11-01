@@ -16,6 +16,7 @@
 // implementation.
 
 import common.cfg.cfg;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

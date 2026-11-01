@@ -20,6 +20,7 @@
 
 import updater.updater;
 import common.hash.hash;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

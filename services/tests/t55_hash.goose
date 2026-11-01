@@ -23,6 +23,7 @@
 // a test and fails in production.
 
 import common.hash.hash;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

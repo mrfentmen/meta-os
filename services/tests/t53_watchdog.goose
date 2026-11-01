@@ -22,6 +22,7 @@
 //     would report every service in the layer at once.
 
 import watchdog.watchdog;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

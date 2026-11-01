@@ -19,6 +19,7 @@
 //   - a different block stays untouched, so a backend that ignores the LBA fails here.
 
 import storage.storage;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

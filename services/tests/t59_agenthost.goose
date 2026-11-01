@@ -22,6 +22,7 @@
 // CREATED cannot be stopped as if it were running, and a terminal state cannot resume.
 
 import agenthost.agenthost;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;

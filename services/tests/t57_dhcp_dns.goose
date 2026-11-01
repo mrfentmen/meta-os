@@ -21,6 +21,7 @@
 import dhcp.dhcp;
 import dns.dns;
 import netcfg.netcfg;
+import common.fmt.fmt;
 import common.sys.sys;
 
 var t_pass: i64 = 0;
