@@ -1,0 +1,31 @@
+--- a/server/queue/spark_gen.py	2026-11-01 06:57:13
++++ b/server/queue/spark_gen.py	2026-11-01 06:57:13
+@@ -49,6 +49,10 @@
+ SPARK_CALL = os.path.expanduser(
+     "~/workspace/custom-connectors/custom.meta-model-api/bin/spark_call.py")
+ MODEL_FALLBACK = SPARK_MODEL
++# Absolute sandbox path for the connector skill's importable helpers.
++# Made conditional below: on machines without the skill the directory
++# simply is not added instead of shadowing PYTHONPATH with a dead entry.
++CONNECTOR_SKILL_BIN = "/opt/muse/skills/custom-connector-setup/bin"
+ 
+ 
+ def via_helper():
+@@ -217,7 +221,16 @@
+               "re-sends the standard prompt (helper CLI has no "
+               "correction channel)", file=sys.stderr)
+     env = dict(os.environ)
+-    env["PYTHONPATH"] = "/opt/muse/skills/custom-connector-setup/bin"
++    if os.path.isdir(CONNECTOR_SKILL_BIN):
++        old_py_path = env.get("PYTHONPATH")
++        env["PYTHONPATH"] = (
++            CONNECTOR_SKILL_BIN + (os.pathsep + old_py_path if old_py_path else "")
++        )
++    # else: directory absent (plain checkout). _generate_via_helper
++    # already refuses to run without SPARK_CALL, which lives next to
++    # the skill; leaving PYTHONPATH alone avoids pointing the
++    # subprocess at a nonexistent directory and preserves any existing
++    # PYTHONPATH the caller set.
+     p = subprocess.run(
+         [sys.executable, SPARK_CALL, "assess", "--product", product,
+          "--image", image_path, "--timestamp", timestamp],

@@ -1,0 +1,34 @@
+{
+ "frame": "ignis-fire-2.jpg",
+ "note": "called VEHICLE fire on a house fire \u2014 wrong scene type entirely",
+ "category": "vehicle fire",
+ "observations": [
+  {
+   "category": "visible flame",
+   "description": "Intense orange-yellow flames engulfing front hood, front wheel and windshield base of sedan",
+   "evidence": "left-center of frame over front of black car",
+   "confidence": 0.99
+  },
+  {
+   "category": "dark smoke",
+   "description": "Dense dark gray to black smoke column rising upward from the flames",
+   "evidence": "center-top of frame rising above front of vehicle",
+   "confidence": 0.98
+  },
+  {
+   "category": "vehicle fire",
+   "description": "Black four-door sedan stopped on asphalt shoulder with front end fully involved in fire",
+   "evidence": "middle of frame spanning left to right beside guardrail",
+   "confidence": 0.99
+  }
+ ],
+ "assessment": {
+  "category": "vehicle fire",
+  "summary": "Front of a black sedan stopped on a roadway is fully involved in flames producing dense dark smoke.",
+  "uncertainty": [
+   "Ignition cause not visible",
+   "Occupant status inside vehicle not visible"
+  ],
+  "requires_human_review": true
+ }
+}

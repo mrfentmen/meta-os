@@ -1,0 +1,119 @@
+{
+  "label": "PREP RUN \u2014 not the gate. The stage-1 gate requires the Independent Verifier to re-run from the archived inputs as a separate step.",
+  "dataset": {
+    "file": "delaney/delaney-processed.csv",
+    "sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189",
+    "rows_total": 1128,
+    "rows_processed": 1128,
+    "rows_skipped_unparseable": []
+  },
+  "descriptors": "RDKit: MolWt=Descriptors.MolWt, MolLogP=Crippen Wildman-Crippen (paper used Daylight CLOGP 4.72), NumRotatableBonds=Lipinski, AromaticProportion=aromatic heavy atoms / heavy atoms",
+  "paper_equation_applied": {
+    "coefficients": {
+      "intercept": 0.16,
+      "clogP": -0.63,
+      "MWT": -0.0062,
+      "RB": 0.066,
+      "AP": -0.74
+    },
+    "provenance": "Paper PDF opened and read 2026-11-01 (moreisdifferent.com mirror of the publisher text); equation wording corroborated by two further independent sources the same day.",
+    "stats_on_this_set": {
+      "n": 1128,
+      "r2": 0.7247613093988003,
+      "rmse": 1.0993724206558086,
+      "mae": 0.8438906219086839
+    }
+  },
+  "fitted_model_NOT_delaney": {
+    "coefficients": {
+      "intercept": 0.2548675017971513,
+      "MolLogP": -0.7453884764105448,
+      "MolWt": -0.006534495591064725,
+      "NumRotatableBonds": 0.0025562295247788056,
+      "AromaticProportion": -0.42238746997463367
+    },
+    "note": "Ordinary least squares fit on THIS 1,128-compound set with RDKit descriptors. Fitted here; not the paper's coefficients.",
+    "stats_on_this_set": {
+      "n": 1128,
+      "r2": 0.7679810335701904,
+      "rmse": 1.0093733642718377,
+      "mae": 0.7765287986937199
+    }
+  },
+  "paper_reported_stats_for_comparison": {
+    "training": {
+      "n": 2874,
+      "r2": 0.72,
+      "se": 0.97
+    },
+    "blind_test": {
+      "n": 528,
+      "r2": 0.55,
+      "se": 0.96,
+      "aae": 0.83
+    },
+    "method_note": "Paper's clogP is Daylight CLOGP 4.72; this runner uses RDKit Wildman-Crippen MolLogP. Paper stats are for its 2,874-compound training set / 528-compound blind set, not for this 1,128-compound processed set."
+  },
+  "worst_paper_equation_misses": [
+    {
+      "id": "Tetradecane",
+      "measured": -7.96,
+      "predicted": -3.939704800000004,
+      "abs_error": 4.020295199999996
+    },
+    {
+      "id": "1-Octadecanol",
+      "measured": -8.4,
+      "predicted": -4.392432200000004,
+      "abs_error": 4.007567799999997
+    },
+    {
+      "id": "Hexadecane",
+      "measured": -8.4,
+      "predicted": -4.473165600000003,
+      "abs_error": 3.926834399999997
+    },
+    {
+      "id": "uric acid",
+      "measured": -3.93,
+      "predicted": -0.32395839999999976,
+      "abs_error": 3.6060416
+    },
+    {
+      "id": "vamidothion",
+      "measured": 1.1440000000000001,
+      "predicted": -2.3460925999999995,
+      "abs_error": 3.4900925999999997
+    },
+    {
+      "id": "alloxantin",
+      "measured": -1.99,
+      "predicted": 1.488054799999999,
+      "abs_error": 3.478054799999999
+    },
+    {
+      "id": "bromadiolone",
+      "measured": -4.445,
+      "predicted": -7.831697800000004,
+      "abs_error": 3.386697800000004
+    },
+    {
+      "id": "Benzo(b)fluorene",
+      "measured": -8.04,
+      "predicted": -4.656355188235295,
+      "abs_error": 3.3836448117647038
+    },
+    {
+      "id": "Napthacene",
+      "measured": -8.6,
+      "predicted": -5.2375288000000015,
+      "abs_error": 3.362471199999998
+    },
+    {
+      "id": "Nonane",
+      "measured": -5.88,
+      "predicted": -2.6060528000000014,
+      "abs_error": 3.2739471999999985
+    }
+  ]
+}

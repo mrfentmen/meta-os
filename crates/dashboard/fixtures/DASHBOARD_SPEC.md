@@ -396,13 +396,13 @@ no flip task that enables one later.
 
 - Must: keep `Post N jobs` disabled with the explanation "posting is
   off for this build" in every `plan-ready` render; keep
-  `DISPATCH_POST_ENABLED` false; keep the mock approval shape as
-  preview-only data that posts nothing.
+  `DISPATCH_POST_ENABLED` false; the panel is read-only: it renders the plan and
+  holds no approve action and no posting path of its own.
 - Must not: attach a live click handler to `Post N jobs`, call U.api
   for a post from the approve flow, or store a keyring path, a secret,
   or a write token anywhere the panel can read it.
-- The mock note in the panel says the flow is request-only and names
-  the CLI post command, so a human who approves in mock is told
+- A note in the panel says the flow is request-only and names
+  the CLI post command, so a human reading a plan is told
   exactly where the real post happens.
 
 **What would reopen this:** only a Dale decision, plus a server-side

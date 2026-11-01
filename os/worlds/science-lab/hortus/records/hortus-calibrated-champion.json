@@ -1,0 +1,57 @@
+{
+ "champion_genome": [
+  40.0,
+  60.0,
+  0.745014,
+  1.400435
+ ],
+ "champion_id": 8175,
+ "evidence_level_cap": 2,
+ "final_best_score": 53.13207925207047,
+ "first_best_score": 27.60911294723148,
+ "is_prediction": true,
+ "level_text": "champion under calibrated scorer (validation error +-6.3% RMS, 5.8% mean absolute, on 4 held-out datasheet parts never used in fitting) - rung 2 of 4; not simulation-verified, not fabricated/measured",
+ "model": "hortus-toy-fin-v1+calh-0.355161",
+ "run_log": "hortus-calibrated-run.jsonl",
+ "scorer_calibration": {
+  "fitted_on": "calibration subset of calibration/datasheet_parts.json",
+  "h_multiplier": 0.355161,
+  "report": "calibration/CALIBRATION.md"
+ },
+ "verifier": {
+  "champion_status": "verified-candidate",
+  "checks": [
+   {
+    "beat_reference": true,
+    "champion_heat_w": 137.71364557676262,
+    "env": "heldout-forced-air-calibrated",
+    "feasible": true,
+    "mass_ok": true,
+    "passed": true,
+    "reference_heat_w": 18.890079106714264,
+    "spacing_ok": true
+   },
+   {
+    "beat_reference": true,
+    "champion_heat_w": 44.649182161337784,
+    "env": "heldout-still-air-hot-calibrated",
+    "feasible": true,
+    "mass_ok": true,
+    "passed": true,
+    "reference_heat_w": 5.612757531480019,
+    "spacing_ok": true
+   },
+   {
+    "beat_reference": true,
+    "champion_heat_w": 62.32143621759738,
+    "env": "heldout-other-alloy-calibrated",
+    "feasible": true,
+    "mass_ok": true,
+    "passed": true,
+    "reference_heat_w": 8.289976112974943,
+    "spacing_ok": true
+   }
+  ],
+  "passed": true
+ }
+}

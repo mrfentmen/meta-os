@@ -1,0 +1,4 @@
+analytic (h=55.8): 181.659 W/m
+dy=0.50mm sim=180.139 err=0.84% bal=2.0e-03 iters=20323 38.3s
+dy=0.25mm sim=180.916 err=0.41% bal=2.0e-03 iters=15993 60.2s
+EXIT:0

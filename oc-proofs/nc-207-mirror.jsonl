@@ -1,0 +1,11 @@
+{"frame": "vigiles-altercation-1.jpg", "path": "queue", "category": "possible altercation", "model": "muse-spark-1.3", "latency_ms": 9954}
+{"frame": "vigiles-knife-1.jpg", "path": "queue", "category": "normal activity", "model": "muse-spark-1.3", "latency_ms": 8422}
+{"frame": "vigiles-normal-1.jpg", "path": "queue", "category": "normal activity", "model": "muse-spark-1.3", "latency_ms": 5577}
+{"frame": "ignis-fire-1.jpg", "path": "queue", "category": "structure fire", "model": "muse-spark-1.3", "latency_ms": 11503}
+{"frame": "ignis-fog-1.jpg", "path": "queue", "category": "steam or fog", "model": "muse-spark-1.3", "latency_ms": 9482}
+{"frame": "ignis-house-fire-1.jpg", "path": "queue", "category": "structure fire", "model": "muse-spark-1.3", "latency_ms": 5685}
+{"frame": "ignis-smoke-1.jpg", "path": "queue", "category": "obscured or distant hazard", "model": "muse-spark-1.3", "latency_ms": 7415}
+{"frame": "ignis-steam-1.jpg", "path": "queue", "category": "steam or fog", "model": "muse-spark-1.3", "latency_ms": 3864}
+{"frame": "medicus-bench-1.jpg", "path": "queue", "category": "person motionless", "model": "muse-spark-1.3", "latency_ms": 9243}
+{"frame": "medicus-ground-1.jpg", "path": "queue", "category": "person on ground", "model": "muse-spark-1.3", "latency_ms": 7400}
+EXIT:0

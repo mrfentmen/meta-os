@@ -18,15 +18,25 @@ agent to live in it, is not finished.
 
 ## The shape: a layered operating system, three languages
 
-- Layer 0, the KERNEL: Rust. Ours, from zero, no_std. Boots the
-  machine, owns memory, scheduling, interrupts, drivers. Directory:
-  `kernel/` in this repo.
-- Layer 1, the SYSTEM SERVICES: Goose. Ours. (Goose is its own
-  language, the boss's word 2026-11-01, not Go.) The daemons and services
-  that run the machine on top of the kernel: service supervision,
-  updater, networking, the agent runtime host.
-- Layer 2, the AGENT AND APP LAYER: Lobster. Ours. The scripting
-  layer agents and applications live in, on top of the services.
+Amended 2026-11-01 ~09:02 on the boss's word: SEVEN layers (the
+first version of this section drew three). `os-build/LAYERS.md` is the
+index. The K1-K6 milestones below are build steps, not layers.
+
+- Layer 1, BOOT: the bootloader hands the machine to the kernel.
+- Layer 2, the KERNEL CORE: Rust. Ours, from zero, no_std. Owns
+  memory, scheduling, interrupts. Directory: `kernel/` in this repo.
+- Layer 3, DRIVERS: Rust, in `kernel/` alongside the core. The
+  modules that talk to hardware: framebuffer console, keyboard, timer.
+- Layer 4, the SYSTEM SERVICES: Goose. Ours. (Goose is its own
+  language, the boss's word 2026-11-01, not Go.) The daemons and
+  services that run the machine on top of the kernel: service
+  supervision, updater, networking.
+- Layer 5, the AGENT RUNTIME: Lobster. Ours. Where agent processes
+  live: identity, lifecycle, capabilities, audit records.
+- Layer 6, the SHELL AND APPS: Lobster. Ours. The home surface and
+  the app side that users and agents touch, on top of the services.
+- Layer 7, PROGRAMS: the applications that run on the OS (next
+  bullet). Programs are not the OS.
 - Everything already in this repo (Imperium, Custos, Officina, the
   Python and JavaScript code, the Rust service crates) is PROGRAMS.
   Programs are applications that will run on the OS. They are not the
@@ -53,12 +63,18 @@ agent to live in it, is not finished.
    ahead of new features, same rhythm as the service ports.
 5. The old stock-kernel spec text is retained in git history only.
    Do not resurrect it.
+6. NO MOCKS (boss's order 2026-11-01): nothing fake anywhere in the
+   OS. No mocked networks or services, no fixture data in shipped
+   surfaces, no stub presented as working. Test data lives inside
+   tests only and never ships. What is not real is NOT BUILT,
+   stated in those words. An honest empty state beats invented
+   data, every time.
 
 ## Milestones
 
 - K1 (started 2026-11-01): kernel crate skeleton in `kernel/`. Boots
-  under the rust-osdev bootloader, prints META OS KERNEL alive on the
-  serial port, halts cleanly. Proof: QEMU serial log.
+  under the rust-osdev bootloader, prints `META OS KERNEL - alive (K1)`
+  on the serial port, halts cleanly. Proof: QEMU serial log.
 - K2: framebuffer console, the kernel draws its own text.
 - K3: interrupts, timer, keyboard input.
 - K4: memory management, paging, heap.

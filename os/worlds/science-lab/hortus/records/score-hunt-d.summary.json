@@ -1,0 +1,91 @@
+{
+ "champion_genome": [
+  40.0,
+  32.989044,
+  0.4,
+  1.0
+ ],
+ "champion_id": 19131,
+ "curve": {
+  "best_at_generation": {
+   "1000": 30.638400345111485,
+   "1500": 30.638400345111485,
+   "300": 30.523730444331985
+  },
+  "generations_recorded": 1501,
+  "last_improvement_generation": 415
+ },
+ "experiment": "D",
+ "final_best_score": 30.638400345111485,
+ "final_mean_score": 6.509648366095124,
+ "first_best_score": 7.978171652163166,
+ "gene_bounds": [
+  [
+   2.0,
+   40.0
+  ],
+  [
+   4.0,
+   60.0
+  ],
+  [
+   0.4,
+   4.0
+  ],
+  [
+   1.0,
+   8.0
+  ]
+ ],
+ "generations": 1500,
+ "population_size": 48,
+ "run_log": "hortus-hunt-d-copper-run.jsonl",
+ "seed": 20261102,
+ "title": "copper (condition lever)",
+ "train_env": {
+  "delta_t_k": 40.0,
+  "h_w_per_m2k": 3.55161,
+  "k_w_per_mk": 398.0,
+  "margin_spacing_m": 0.0018,
+  "mass_cap_kg": 0.45,
+  "min_spacing_m": 0.001,
+  "name": "train-nominal-calibrated-copper",
+  "rho_kg_per_m3": 8960.0
+ },
+ "verifier": {
+  "champion_status": "rejected",
+  "checks": [
+   {
+    "beat_reference": true,
+    "champion_heat_w": 83.4744782093329,
+    "env": "heldout-forced-air-calibrated-copper",
+    "feasible": false,
+    "mass_ok": false,
+    "passed": false,
+    "reference_heat_w": 18.971615650014467,
+    "spacing_ok": true
+   },
+   {
+    "beat_reference": true,
+    "champion_heat_w": 25.439658889854538,
+    "env": "heldout-still-air-hot-calibrated-copper",
+    "feasible": false,
+    "mass_ok": false,
+    "passed": false,
+    "reference_heat_w": 5.61800325791658,
+    "spacing_ok": true
+   },
+   {
+    "beat_reference": true,
+    "champion_heat_w": 37.305796021759704,
+    "env": "heldout-other-alloy-calibrated-copper",
+    "feasible": false,
+    "mass_ok": false,
+    "passed": false,
+    "reference_heat_w": 8.326614882418273,
+    "spacing_ok": true
+   }
+  ],
+  "passed": false
+ }
+}

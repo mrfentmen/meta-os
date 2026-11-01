@@ -1,5 +1,13 @@
 {
+ "cadence": {
+  "ct": "1h",
+  "dns": "6h",
+  "hosts": "15m",
+  "kev": "24h",
+  "subdomain": "6h"
+ },
  "cert_warn_days": 21,
+ "dedup_window_seconds": 86400,
  "kev_age_red_days": 30,
  "hosts": [
   {
@@ -39,6 +47,7 @@
   9200,
   27017
  ],
+ "false_positive_review": "os/worlds/custos/runs/false-positive-review.jsonl",
  "ct_domains": [
   "letsencrypt.org"
  ],

@@ -1,0 +1,77 @@
+{
+  "fresh": {
+    "age_seconds": 900,
+    "as_of": 1793102100,
+    "generated_at": 1793101200,
+    "kind": "morning",
+    "model": "template",
+    "room": "build-relay-intel",
+    "screenshot_refs": [],
+    "sections": {
+      "Blocked and why": [
+        "3 viewer panel stub: waiting on the Spark endpoint decision"
+      ],
+      "Decisions": [
+        "decision: ship the brief panel first",
+        "done: watchdog loop runs on the stall fixture",
+        "blocked: dispatch needs the Spark endpoint"
+      ],
+      "In flight": [
+        "1 intel status module",
+        "2 status module tests"
+      ],
+      "Owners": [
+        "milo: intel status module"
+      ],
+      "Watch items": [
+        "alert:presence-stall:milo:1: milo stalled on job 1"
+      ]
+    },
+    "source_window": {
+      "max_hours": 24,
+      "max_messages": 500,
+      "messages_dropped": 0,
+      "messages_kept": 4
+    },
+    "spend_id": null,
+    "text": "TEMPLATE\nWindow: last 500 messages or last 24 hours, 4 kept, 0 dropped\n\nDecisions\n- decision: ship the brief panel first\n- done: watchdog loop runs on the stall fixture\n- blocked: dispatch needs the Spark endpoint\n\nIn flight\n- 1 intel status module (claimed)\n- 2 status module tests (open)\n\nOwners\n- milo: intel status module\n\nBlocked and why\n- 3 viewer panel stub: waiting on the Spark endpoint decision\n\nWatch items\n- alert:presence-stall:milo:1: milo stalled on job 1\n"
+  },
+  "room": "build-relay-intel",
+  "stale": {
+    "age_seconds": 12600,
+    "as_of": 1793102100,
+    "generated_at": 1793089500,
+    "kind": "morning",
+    "model": "template",
+    "room": "build-relay-intel",
+    "screenshot_refs": [],
+    "sections": {
+      "Blocked and why": [
+        "3 viewer panel stub: waiting on the Spark endpoint decision"
+      ],
+      "Decisions": [
+        "decision: ship the brief panel first",
+        "done: watchdog loop runs on the stall fixture",
+        "blocked: dispatch needs the Spark endpoint"
+      ],
+      "In flight": [
+        "1 intel status module",
+        "2 status module tests"
+      ],
+      "Owners": [
+        "milo: intel status module"
+      ],
+      "Watch items": [
+        "alert:presence-stall:milo:1: milo stalled on job 1"
+      ]
+    },
+    "source_window": {
+      "max_hours": 24,
+      "max_messages": 500,
+      "messages_dropped": 0,
+      "messages_kept": 4
+    },
+    "spend_id": null,
+    "text": "TEMPLATE\nWindow: last 500 messages or last 24 hours, 4 kept, 0 dropped\n\nDecisions\n- decision: ship the brief panel first\n- done: watchdog loop runs on the stall fixture\n- blocked: dispatch needs the Spark endpoint\n\nIn flight\n- 1 intel status module (claimed)\n- 2 status module tests (open)\n\nOwners\n- milo: intel status module\n\nBlocked and why\n- 3 viewer panel stub: waiting on the Spark endpoint decision\n\nWatch items\n- alert:presence-stall:milo:1: milo stalled on job 1\n"
+  }
+}

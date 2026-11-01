@@ -1,0 +1,20 @@
+{
+ "incident": {
+  "id": "SIM-2026-11-01-003",
+  "simulated": true,
+  "product": "ignis",
+  "category": "visible flame",
+  "tier": "red",
+  "timestamp": "2026-11-01T10:09:00Z",
+  "camera": "I-5 @ Slauson Ave",
+  "description": "Flames from a roadside brush patch beside the freeway.",
+  "visible_marks": [],
+  "identity": "UNIDENTIFIED"
+ },
+ "evidence": {
+  "frames": [
+   "SIM-frame-003.jpg"
+  ],
+  "face_boxes": []
+ }
+}

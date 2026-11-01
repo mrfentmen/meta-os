@@ -1,0 +1,1 @@
+{"daily_cap_usd":5.0,"note":"Musica's own daily Spark spend cap, inside the shared $75 test budget. Del sets the Mac server key; this cap is the loop's own guard. A cap hit stops the session gracefully (budget_stop in session.json), never an error."}

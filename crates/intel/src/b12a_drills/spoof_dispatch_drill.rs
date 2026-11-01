@@ -11,9 +11,9 @@
 //! duplicate, and dict-shaped EXPIRED lines. Unsigned jobs
 //! still claim with a warning, by design.
 //!
-//! Seams: the jobs CLI + suite fake store ride [`SpoofSurface`]
-//! (in the source, `unittest.mock` patches relay_common/jobs
-//! onto tests/fake_redis.FakeUpstash — that fake and
+//! Seams: the jobs CLI + the suite's in-memory store ride
+//! [`SpoofSurface`] (in the source, relay_common/jobs are patched
+//! onto the suite's in-memory store — that store and
 //! relay_common are test-harness modules outside the cleaned
 //! os/intel tree, so the surface is a trait here, with the
 //! same call shapes). The keyring holds a fresh random

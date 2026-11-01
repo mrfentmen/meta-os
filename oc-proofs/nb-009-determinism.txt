@@ -1,0 +1,5 @@
+run 1: 183.545700 W/m 9966 iters
+run 2: 183.545700 W/m 9966 iters
+run 3: 183.545700 W/m 9966 iters
+IDENTICAL
+EXIT:0

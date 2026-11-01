@@ -111,6 +111,15 @@ enum LogoColor {
                 "#0a2e12", "#123f1c", "#1e5429", "#2f6b3a",
                 "#5da864", "#7cc47f", "#9ad69c", "#bfe8c2", "#e6f9e8",
             ]
+        case .scienceLab:
+            // HN-077: the web has no science-lab PALETTES entry yet (the
+            // web background falls back to vigiles for unknown products),
+            // so there is no verbatim palette to copy. This ramp is
+            // derived from the science-lab accent #7c5cbf with the same
+            // web buildPalette algorithm used for custom colors — a real
+            // derived ramp, not a copied web palette. Replace it with the
+            // verbatim palette when the web gains a science-lab entry.
+            return buildPalette(baseHex: "#7c5cbf")
         }
         return hexes.compactMap { color(fromHex: $0) }
     }

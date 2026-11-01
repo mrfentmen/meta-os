@@ -56,7 +56,7 @@ class TestPackManifest(unittest.TestCase):
         for kind in ("certificate-expiring", "certificate-expired",
                      "known-exploited-vulnerability-present",
                      "service-down", "anomalous-exposure",
-                     "certificate-issued"):
+                     "certificate-issued", "tls-configuration-drift"):
             self.assertIn(kind, kinds)
 
     def test_warning_is_yellow_critical_is_red(self):
@@ -67,7 +67,8 @@ class TestPackManifest(unittest.TestCase):
                 continue
             if alert["kind"] in ("certificate-expiring",
                                  "anomalous-exposure",
-                                 "certificate-issued"):
+                                 "certificate-issued",
+                                 "tls-configuration-drift"):
                 self.assertEqual(alert["severity"], "warning")
             else:
                 self.assertEqual(alert["severity"], "critical")

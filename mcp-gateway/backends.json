@@ -1,0 +1,463 @@
+{
+ "backends": [
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/open-library-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "openlibrary"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/archive-org-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "archiveorg"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/commoncrawl-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "commoncrawl"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/openalex-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "openalex"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/cisa-kev-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "cisakev"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/osv-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "osv"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/ietf-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "ietf"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/federal-register-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "fedreg"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/gbif-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "gbif"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/spdx-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "spdx"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/repo-forensics-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "env": {
+    "REPO_FORENSICS_ROOT": "/home/hatch/workspace"
+   },
+   "prefix": "repoforensics"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/secret-hygiene-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "env": {
+    "SECRET_HYGIENE_ROOT": "/home/hatch/workspace"
+   },
+   "prefix": "secrethygiene"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/openapi-scout-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "openapiscout"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/release-notes-forge-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "env": {
+    "RELEASE_NOTES_ROOT": "/home/hatch/workspace"
+   },
+   "prefix": "releasenotes"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/api-deprecation-radar-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "deprecationradar"
+  },
+  {
+   "args": [
+    "/home/hatch/workspace/mcp-servers/incident-timeline-mcp/dist/index.js"
+   ],
+   "command": "node",
+   "prefix": "incidenttimeline"
+  },
+  {
+   "prefix": "fs",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_official/node_modules/@modelcontextprotocol/server-filesystem/dist/index.js",
+    "/home/hatch/workspace"
+   ]
+  },
+  {
+   "prefix": "memory",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_official/node_modules/@modelcontextprotocol/server-memory/dist/index.js"
+   ],
+   "env": {
+    "MEMORY_FILE_PATH": "/home/hatch/workspace/mcp-gateway/memory.json"
+   }
+  },
+  {
+   "prefix": "think",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_official/node_modules/@modelcontextprotocol/server-sequential-thinking/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "everything",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_official/node_modules/@modelcontextprotocol/server-everything/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "context7",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_official/node_modules/@upstash/context7-mcp/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "shell",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_official/node_modules/@mkusaka/mcp-shell-server/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "fetch",
+   "command": "/home/hatch/workspace/mcp-servers/_official/pyvenv/bin/mcp-server-fetch",
+   "args": [],
+   "env": {
+    "no_proxy": "localhost,127.0.0.1,::1,198.19.0.1,198.19.0.2,fd8b:4f84:7d32:99::1,fd8b:4f84:7d32:99::2",
+    "NO_PROXY": "localhost,127.0.0.1,::1,198.19.0.1,198.19.0.2,fd8b:4f84:7d32:99::1,fd8b:4f84:7d32:99::2"
+   }
+  },
+  {
+   "prefix": "time",
+   "command": "/home/hatch/workspace/mcp-servers/_official/pyvenv/bin/mcp-server-time",
+   "args": []
+  },
+  {
+   "prefix": "sqlite",
+   "command": "/home/hatch/workspace/mcp-servers/_official/pyvenv/bin/mcp-server-sqlite",
+   "args": [
+    "--db-path",
+    "/home/hatch/workspace/mcp-gateway/mcp-sqlite.db"
+   ]
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/build-cache-mcp/dist/index.js"
+   ],
+   "prefix": "buildcache"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/config-weather-mcp/dist/index.js"
+   ],
+   "prefix": "configweather"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/contract-diff-mcp/dist/index.js"
+   ],
+   "prefix": "contractdiff"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/dependency-license-change-mcp/dist/index.js"
+   ],
+   "prefix": "dependencylicensechange"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/env-contract-mcp/dist/index.js"
+   ],
+   "prefix": "envcontract"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/evidence-diff-mcp/dist/index.js"
+   ],
+   "prefix": "evidencediff"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/flaky-history-mcp/dist/index.js"
+   ],
+   "prefix": "flakyhistory"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/git-reflog-archaeologist-mcp/dist/index.js"
+   ],
+   "prefix": "gitreflogarchaeologist"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/license-boundary-mcp/dist/index.js"
+   ],
+   "prefix": "licenseboundary"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/lockstep-mcp/dist/index.js"
+   ],
+   "prefix": "lockstep"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/migration-map-mcp/dist/index.js"
+   ],
+   "prefix": "migrationmap"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/musicbrainz-mcp/dist/index.js"
+   ],
+   "prefix": "musicbrainz"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/nyc311-mcp/dist/index.js"
+   ],
+   "prefix": "nyc311"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/runtime-support-mcp/dist/index.js"
+   ],
+   "prefix": "runtimesupport"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/schema-compatibility-mcp/dist/index.js"
+   ],
+   "prefix": "schemacompatibility"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/schema-sieve-mcp/dist/index.js"
+   ],
+   "prefix": "schemasieve"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/screenplaywriter-mcp/dist/index.js"
+   ],
+   "prefix": "screenplaywriter"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/space-weather-mcp/dist/index.js"
+   ],
+   "prefix": "spaceweather"
+  },
+  {
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/test-shape-mcp/dist/index.js"
+   ],
+   "prefix": "testshape"
+  },
+  {
+   "prefix": "playwright",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/node_modules/@playwright/mcp/cli.js",
+    "--headless",
+    "--executable-path",
+    "/home/hatch/.cache/ms-playwright/chromium-1243/chrome-linux/chrome",
+    "--no-sandbox"
+   ]
+  },
+  {
+   "prefix": "github",
+   "command": "/home/hatch/workspace/mcp-gateway/bin/github-mcp.sh",
+   "args": []
+  },
+  {
+   "prefix": "ghgrep",
+   "command": "/home/hatch/workspace/mcp-gateway/.venv/bin/python",
+   "args": [
+    "/home/hatch/workspace/mcp-gateway/bin/http_bridge.py",
+    "https://mcp.grep.app/"
+   ]
+  },
+  {
+   "prefix": "firecrawl",
+   "command": "/home/hatch/workspace/mcp-gateway/.venv/bin/python",
+   "args": [
+    "/home/hatch/workspace/mcp-gateway/bin/http_bridge.py",
+    "https://mcp.firecrawl.dev/v2/mcp"
+   ]
+  },
+  {
+   "prefix": "mcpterminal",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/node_modules/mcp-server-terminal/cli.js"
+   ]
+  },
+  {
+   "prefix": "uitoolkit",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/ui-toolkit-mcp/index.js"
+   ]
+  },
+  {
+   "prefix": "websitebuilder",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/website-builder-mcp/server.js"
+   ]
+  },
+  {
+   "prefix": "wikidata",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/wikidata-mcp/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "wayback",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/wayback-mcp/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "unicode",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/unicode-mcp/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "unicodesecurity",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/unicode-security-mcp/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "wikisource",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/wikisource-mcp/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "worktreeorbit",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/worktree-orbit-mcp/dist/index.js"
+   ],
+   "env": {
+    "WORKTREE_ORBIT_ROOT": "/home/hatch/workspace"
+   }
+  },
+  {
+   "prefix": "tides",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_thirdparty/tides-mcp/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "rustdocs",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-gateway/servers/docs-rs-mcp/node_modules/@nuskey8/docs-rs-mcp/build/index.js"
+   ]
+  },
+  {
+   "prefix": "goose",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_del/goose/node_modules/goose-mcp/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "lobster",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_del/lobster/node_modules/lobster-mcp/dist/index.js"
+   ]
+  },
+  {
+   "prefix": "browser",
+   "command": "node",
+   "args": [
+    "/home/hatch/workspace/mcp-servers/_del/browser/node_modules/@mrfentmen/browser-mcp/dist/index.js"
+   ],
+   "env": {
+    "CHROME_PATH": "/home/hatch/workspace/mcp-servers/_del/browser/chrome-wrapper.sh"
+   }
+  }
+ ],
+ "port": 8931
+}

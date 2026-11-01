@@ -1,0 +1,14 @@
+== 1. verification: single fin vs analytic (adiabatic tip) ==
+dy=0.50 mm  sim=180.139 W/m  analytic=181.659 W/m  err=0.84%  fin modelled=0.7475 mm  balance=2.0e-03  iters=20323  38.7s
+dy=0.25 mm  sim=180.916 W/m  analytic=181.659 W/m  err=0.41%  fin modelled=0.7475 mm  balance=2.0e-03  iters=15993  61.7s
+
+== 2. scoring: champion vs reference (forced air, dT=50 K) ==
+champion: pitch=2.500 mm spacing=1.755 mm Re=468 h=55.9 W/m2K
+  -> 733.8 W at dT=50 K  (fin modelled=0.7407 mm, balance 2.0e-03, 33452 iters, 1041 cells, 41.7 s per scoring call)
+reference: pitch=10.000 mm spacing=8.000 mm Re=2133 h=12.3 W/m2K
+  -> 18.3 W at dT=50 K  (fin modelled=2.0000 mm, balance 2.0e-03, 1417 iters, 700 cells, 1.0 s per scoring call)
+
+== sensitivity: uniform h=50 W/m2K for both ==
+champion: -> 685.6 W  (44.6 s/call)
+reference: -> 74.0 W  (0.9 s/call)
+EXIT:0

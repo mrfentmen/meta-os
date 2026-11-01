@@ -65,6 +65,14 @@ def fake_headers(_host, _port):
     return {h: "present" for h in patrol.SECURITY_HEADERS}
 
 
+
+def fake_tls(_host, _port):
+    # RW-002 (merged 2026-11-01): the TLS posture signal, injected
+    # like every other probe in this file so the patrol tests never
+    # touch the network. A strong posture: baseline normal, zero
+    # side effects on the pre-RW-002 assertions in this file.
+    return {"version": "TLSv1.3", "cipher": "TLS_AES_256_GCM_SHA384"}
+
 def fake_port_factory(open_map):
     def probe(host, port):
         return open_map.get((host, port), False)
@@ -134,7 +142,7 @@ class TestPatrol(unittest.TestCase):
         records, seen, _ct = patrol.run_patrol(
             fake_config(), NOW, fetch, fake_cert,
             fake_port_factory(open_map), seen,
-            fetch_headers_fn=fake_headers)
+            fetch_headers_fn=fake_headers, probe_tls_fn=fake_tls)
         return records, seen
 
     def test_full_patrol_categories_tiers_and_escalations(self):
@@ -186,7 +194,7 @@ class TestPatrol(unittest.TestCase):
         open_map = {("up.example", 443): True, ("up.example", 22): True}
         records, _seen, _ct = patrol.run_patrol(
             config, NOW, fake_fetch, fake_cert,
-            fake_port_factory(open_map), fetch_headers_fn=fake_headers)
+            fake_port_factory(open_map), fetch_headers_fn=fake_headers, probe_tls_fn=fake_tls)
         self.assertEqual([r for r in observations(records)
                           if r["category"] == "anomalous exposure"], [])
 
@@ -196,7 +204,7 @@ class TestPatrol(unittest.TestCase):
         records, _seen, _ct = patrol.run_patrol(
             fake_config(), NOW, fake_fetch, no_cert,
             fake_port_factory({("up.example", 443): True}),
-            fetch_headers_fn=fake_headers)
+            fetch_headers_fn=fake_headers, probe_tls_fn=fake_tls)
         self.assertEqual([r for r in observations(records)
                           if r["source"] == "cert"], [])
         summary = records[-1]

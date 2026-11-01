@@ -1,0 +1,21 @@
+{"frame": "vigiles-altercation-1.jpg", "product": "vigiles", "http": 200, "category": "staged verbal dispute", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "vigiles-crowd-1.jpg", "product": "vigiles", "http": 200, "category": "normal activity", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "vigiles-fireworks-1.jpg", "product": "vigiles", "http": 200, "category": "indeterminate", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "vigiles-knife-1.jpg", "product": "vigiles", "http": 200, "category": "normal activity", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "vigiles-normal-1.jpg", "product": "vigiles", "http": 200, "category": "normal activity", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "vigiles-rifle-1.jpg", "product": "vigiles", "http": 200, "category": "normal activity", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "ignis-dust-1.jpg", "product": "ignis", "http": 200, "category": "indeterminate", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "ignis-fire-1.jpg", "product": "ignis", "http": 200, "category": "structure fire", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "ignis-fire-2.jpg", "product": "ignis", "http": 200, "category": "vehicle fire", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "ignis-firefighter-1.jpg", "product": "ignis", "http": 200, "category": "visible smoke", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "ignis-fog-1.jpg", "product": "ignis", "http": 200, "category": "steam or fog", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "ignis-house-fire-1.jpg", "product": "ignis", "http": 200, "category": "structure fire", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "ignis-smoke-1.jpg", "product": "ignis", "http": 200, "category": "obscured or distant hazard", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "ignis-smoke-glow-1.jpg", "product": "ignis", "http": 200, "category": "indeterminate", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "ignis-steam-1.jpg", "product": "ignis", "http": 200, "category": "steam or fog", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "medicus-bench-1.jpg", "product": "medicus", "http": 200, "category": "indeterminate", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "medicus-collision-1.jpg", "product": "medicus", "http": 200, "category": "vehicle collision scene", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "medicus-curb-1.jpg", "product": "medicus", "error": "HTTP Error 502: Bad Gateway"}
+{"frame": "medicus-ground-1.jpg", "product": "medicus", "http": 200, "category": "person on ground", "flagged": null, "processing": {"model": "muse-spark-1.3", "latency_ms": null}}
+{"frame": "medicus-sunbathing-1.jpg", "product": "medicus", "error": "HTTP Error 502: Bad Gateway"}
+{"frame": "medicus-yoga-1.jpg", "product": "medicus", "error": "HTTP Error 502: Bad Gateway"}

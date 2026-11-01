@@ -5,8 +5,11 @@ going to sleep; this file is the work until he wakes and after.
 
 READ FIRST: `KERNEL_SPEC.md` at the repo root. It is the law for this
 build. Short version: Meta OS is a layered operating system with its
-OWN kernel. Layer 0 kernel in Rust (`kernel/`). Layer 1 system
-services in Goose. Layer 2 agent and app layer in Lobster. The OS is
+OWN kernel, in SEVEN layers (boss's renumber 2026-11-01 ~09:02;
+`os-build/LAYERS.md` is the index): Layers 1–3 boot, kernel core, and
+drivers in Rust (`kernel/`). Layer 4 system services in Goose.
+Layer 5 agent runtime and Layer 6 shell/apps in Lobster. Layer 7 is
+the programs. The OS is
 built for agents and for users. Everything else in this repo is
 programs. Programs are not the OS.
 
@@ -43,6 +46,12 @@ make it better, improve it where it lacks. In practice:
   this project (rustdocs). For Goose and Lobster, find the docs and
   tooling, wire what exists, and write down what does not exist yet
   instead of pretending.
+- NO MOCKS, boss's order 2026-11-01: nothing fake ships in this OS.
+  No mocked networks or services, no fixture data in any shipped
+  surface, no stub or skeleton presented as working. Test data
+  lives inside tests only, is named as test data, and never ships.
+  A component that is not real yet is NOT BUILT in the report.
+  An honest empty state beats invented data, every time.
 - Protected: do not edit the crew's merged program code (server/,
   js/, os/worlds/, crates/) from this file. Your ground is kernel/,
   services/, lobster/, os-build/, and docs you create there.
@@ -62,7 +71,7 @@ make it better, improve it where it lacks. In practice:
 - OS-005: Produce the bootable image with cargo bootimage. Record
   the image path and size.
 - OS-006: Boot it in QEMU with serial output captured to a file.
-- OS-007: The capture must contain the line META OS KERNEL - alive
+- OS-007: The capture must contain the line META OS KERNEL - alive (K1)
   (K1). Save it as os-build/logs/K1-boot.txt. If it does not, that
   failure is the report.
 - OS-008: Boot it 3 times. All 3 logs identical in the alive line.
@@ -350,7 +359,7 @@ make it better, improve it where it lacks. In practice:
   and the exact steps.
 - OS-155: Hello service: a Goose program that prints and exits.
   Build log in the report.
-- OS-156: A Goose daemon skeleton: starts, writes a heartbeat line
+- OS-156: The smallest real Goose daemon: starts, writes a heartbeat line
   to a file every second, stops cleanly on signal.
 - OS-157: The supervisor contract: who starts services, who
   restarts them, where their records live. Design note.
@@ -365,8 +374,10 @@ make it better, improve it where it lacks. In practice:
   behavior is logged and matches the contract, or the contract is
   corrected.
 - OS-162: The updater service in Goose: checks, stages, and the
-  A/B rule from OS-114. Skeleton with the network mocked.
-- OS-163: The MCP host skeleton in Goose: starts, lists one tool,
+  A/B rule from OS-114. The network check is real, against a real
+  endpoint. Where no real endpoint exists yet, that part is
+  NOT BUILT, never mocked.
+- OS-163: The MCP host in Goose, smallest real version: starts, lists one tool,
   answers one call, all logged.
 - OS-164: Tests for OS-156, OS-159, OS-163 in Goose's own test way,
   or a runner script if the language lacks one (state which).
@@ -408,8 +419,12 @@ make it better, improve it where it lacks. In practice:
 
 - OS-181: Inventory: which MCP servers exist for Rust development
   (docs, crates, diagnostics). Verify each by opening its page.
-- OS-182: Wire the Rust docs MCP the way this project already does
-  (rustdocs pattern) into the OpenCode config; smoke call logged.
+- OS-182: Create the Rust docs MCP wiring in this repo and wire it
+  into the OpenCode config; smoke call logged. Note (Buffy's lane
+  finding, 2026-11-01): no MCP config exists in this repo yet —
+  the rustdocs pattern lives in Pax's gateway, not in the repo.
+  This task creates the repo artifact; do not describe it as
+  already existing.
 - OS-183: Find Goose language help: docs MCP if one exists, else
   the best docs source, wired as a local skill note with a smoke
   check. State plainly which case it is.

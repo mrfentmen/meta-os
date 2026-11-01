@@ -1,0 +1,83 @@
+{
+  "target_lufs": -16.0,
+  "tolerance_lufs": 1.0,
+  "tracks": [
+    {
+      "after_lufs": -16.19,
+      "before_lufs": -15.12,
+      "take_id": "take-001",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -15.87,
+      "before_lufs": -15.65,
+      "take_id": "take-002",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -16.2,
+      "before_lufs": -15.18,
+      "take_id": "take-003",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -16.26,
+      "before_lufs": -15.66,
+      "take_id": "take-005",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -16.22,
+      "before_lufs": -15.91,
+      "take_id": "take-006",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -16.07,
+      "before_lufs": -15.59,
+      "take_id": "take-007",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -16.08,
+      "before_lufs": -15.59,
+      "take_id": "take-008",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -15.82,
+      "before_lufs": -14.97,
+      "take_id": "take-009",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -15.9,
+      "before_lufs": -15.88,
+      "take_id": "take-010",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -16.17,
+      "before_lufs": -15.95,
+      "take_id": "take-011",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    },
+    {
+      "after_lufs": -15.99,
+      "before_lufs": -15.08,
+      "take_id": "take-012",
+      "target_lufs": -16.0,
+      "within_tolerance": true
+    }
+  ]
+}

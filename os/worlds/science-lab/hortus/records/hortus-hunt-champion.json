@@ -1,0 +1,84 @@
+{
+ "baseline_final_best_score": 53.13207925207047,
+ "champion_genome": [
+  48.525062,
+  100.0,
+  0.404613,
+  1.0
+ ],
+ "champion_id": 78901,
+ "evidence_level_cap": 2,
+ "experiment": "score-hunt B - wider genome (design lever)",
+ "final_best_score": 86.22663660548614,
+ "first_best_score": 64.631411684431,
+ "gain_vs_baseline": 33.09455735341567,
+ "gain_vs_baseline_pct": 62.28733717799313,
+ "gene_bounds": [
+  [
+   2.0,
+   60.0
+  ],
+  [
+   4.0,
+   100.0
+  ],
+  [
+   0.4,
+   4.0
+  ],
+  [
+   1.0,
+   3.0
+  ]
+ ],
+ "generations": 1500,
+ "is_prediction": true,
+ "level_text": "champion under calibrated scorer (validation error +-6.3% RMS, 5.8% mean absolute, on 4 held-out datasheet parts never used in fitting) - rung 2 of 4; not simulation-verified, not fabricated/measured. Score-hunt experiment B champion (2026-11-01): evolved in a widened search space - fin count up to 60, fin height up to 100 mm, base thickness 1.0-3.0 mm - under the same calibrated scorer and gate; the design gains come from the wider space, not from any scorer change.",
+ "model": "hortus-toy-fin-v1+calh-0.355161+huntB",
+ "population_size": 64,
+ "report": "records/SCORE_HUNT.md",
+ "run_log": "hortus-hunt-b-wide-run.jsonl",
+ "scorer_calibration": {
+  "fitted_on": "calibration subset of calibration/datasheet_parts.json",
+  "h_multiplier": 0.355161,
+  "report": "calibration/CALIBRATION.md"
+ },
+ "seed": 20261102,
+ "supersedes_as_best_hortus_champion": "hortus-calibrated-champion.json",
+ "verifier": {
+  "champion_status": "verified-candidate",
+  "checks": [
+   {
+    "beat_reference": true,
+    "champion_heat_w": 195.87955712907927,
+    "env": "heldout-forced-air-calibrated",
+    "feasible": true,
+    "mass_ok": true,
+    "passed": true,
+    "reference_heat_w": 18.890079106714264,
+    "spacing_ok": true
+   },
+   {
+    "beat_reference": true,
+    "champion_heat_w": 81.1499695648403,
+    "env": "heldout-still-air-hot-calibrated",
+    "feasible": true,
+    "mass_ok": true,
+    "passed": true,
+    "reference_heat_w": 5.612757531480019,
+    "spacing_ok": true
+   },
+   {
+    "beat_reference": true,
+    "champion_heat_w": 95.26741195756347,
+    "env": "heldout-other-alloy-calibrated",
+    "feasible": true,
+    "mass_ok": true,
+    "passed": true,
+    "reference_heat_w": 8.289976112974943,
+    "spacing_ok": true
+   }
+  ],
+  "passed": true
+ }
+}
