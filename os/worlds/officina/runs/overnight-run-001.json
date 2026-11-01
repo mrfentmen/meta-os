@@ -1,0 +1,4500 @@
+{
+  "artefact_class": "heatsink-fin-geometry",
+  "n_variants": 240,
+  "seed": 20261101,
+  "conditions": {
+    "h_w_m2k": 10.0,
+    "t_base_c": 80.0,
+    "t_amb_c": 25.0
+  },
+  "accept_r_c_per_w": 2.0,
+  "jobs": [
+    {
+      "job_id": 1,
+      "params": {
+        "fin_height_mm": 30.771759772195615,
+        "fin_thickness_mm": 0.7894451089726011,
+        "fin_count": 16,
+        "base_thickness_mm": 2.3583962185006295
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.0296900011423875,
+      "failure_reason": null
+    },
+    {
+      "job_id": 2,
+      "params": {
+        "fin_height_mm": 6.519082052744194,
+        "fin_thickness_mm": 2.128133453786037,
+        "fin_count": 12,
+        "base_thickness_mm": 3.9761009570334878
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 11.060794374877602,
+      "failure_reason": null
+    },
+    {
+      "job_id": 3,
+      "params": {
+        "fin_height_mm": 9.972415273074505,
+        "fin_thickness_mm": 2.9110824719132324,
+        "fin_count": 30,
+        "base_thickness_mm": 7.043863468049189
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.5692068300285604,
+      "failure_reason": "fin gap -1.287 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 4,
+      "params": {
+        "fin_height_mm": 22.09910842168476,
+        "fin_thickness_mm": 0.8407628444909114,
+        "fin_count": 23,
+        "base_thickness_mm": 2.0080910781129138
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.9446849588152304,
+      "failure_reason": null
+    },
+    {
+      "job_id": 5,
+      "params": {
+        "fin_height_mm": 5.922634208288708,
+        "fin_thickness_mm": 1.4699629080163674,
+        "fin_count": 19,
+        "base_thickness_mm": 2.040944945516107
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 8.098598367119612,
+      "failure_reason": null
+    },
+    {
+      "job_id": 6,
+      "params": {
+        "fin_height_mm": 11.525714352258262,
+        "fin_thickness_mm": 2.458534994677386,
+        "fin_count": 7,
+        "base_thickness_mm": 5.775815784782473
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 10.316334119815638,
+      "failure_reason": null
+    },
+    {
+      "job_id": 7,
+      "params": {
+        "fin_height_mm": 36.881190314831684,
+        "fin_thickness_mm": 1.1177776713486653,
+        "fin_count": 13,
+        "base_thickness_mm": 3.953185175360451
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.0873527346290004,
+      "failure_reason": null
+    },
+    {
+      "job_id": 8,
+      "params": {
+        "fin_height_mm": 6.021122898729947,
+        "fin_thickness_mm": 2.4111137509154337,
+        "fin_count": 17,
+        "base_thickness_mm": 3.7858796421104834
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 9.362016047244863,
+      "failure_reason": "fin gap 0.563 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 9,
+      "params": {
+        "fin_height_mm": 13.707505509821567,
+        "fin_thickness_mm": 2.883521513364097,
+        "fin_count": 17,
+        "base_thickness_mm": 5.094168829084911
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.291383059020362,
+      "failure_reason": "fin gap 0.061 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 10,
+      "params": {
+        "fin_height_mm": 26.0362781744374,
+        "fin_thickness_mm": 1.6177254737212627,
+        "fin_count": 9,
+        "base_thickness_mm": 4.005141972747731
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.017598954902513,
+      "failure_reason": null
+    },
+    {
+      "job_id": 11,
+      "params": {
+        "fin_height_mm": 22.04093752779737,
+        "fin_thickness_mm": 0.9609928931456991,
+        "fin_count": 26,
+        "base_thickness_mm": 4.744599660093579
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.7351090289432771,
+      "failure_reason": null
+    },
+    {
+      "job_id": 12,
+      "params": {
+        "fin_height_mm": 18.17143063776016,
+        "fin_thickness_mm": 0.8566493963722983,
+        "fin_count": 21,
+        "base_thickness_mm": 6.93580727843903
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.545224308517231,
+      "failure_reason": null
+    },
+    {
+      "job_id": 13,
+      "params": {
+        "fin_height_mm": 22.055389599638723,
+        "fin_thickness_mm": 1.9637807688973228,
+        "fin_count": 27,
+        "base_thickness_mm": 7.308211354000187
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.6971203635003467,
+      "failure_reason": "fin gap -0.116 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 14,
+      "params": {
+        "fin_height_mm": 29.849030968051675,
+        "fin_thickness_mm": 0.5101538876128532,
+        "fin_count": 7,
+        "base_thickness_mm": 6.118680409317731
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.523919564798131,
+      "failure_reason": null
+    },
+    {
+      "job_id": 15,
+      "params": {
+        "fin_height_mm": 33.78379431633409,
+        "fin_thickness_mm": 1.841485737806615,
+        "fin_count": 22,
+        "base_thickness_mm": 4.821386525470661
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3635867112014248,
+      "failure_reason": "fin gap 0.452 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 16,
+      "params": {
+        "fin_height_mm": 21.92938146192755,
+        "fin_thickness_mm": 0.9455177667967822,
+        "fin_count": 10,
+        "base_thickness_mm": 6.699284308842348
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.237114698648114,
+      "failure_reason": null
+    },
+    {
+      "job_id": 17,
+      "params": {
+        "fin_height_mm": 6.284895992546549,
+        "fin_thickness_mm": 2.124203824869502,
+        "fin_count": 13,
+        "base_thickness_mm": 4.362102880011001
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 10.770412915959156,
+      "failure_reason": null
+    },
+    {
+      "job_id": 18,
+      "params": {
+        "fin_height_mm": 23.370796777047758,
+        "fin_thickness_mm": 1.5448597128828365,
+        "fin_count": 28,
+        "base_thickness_mm": 5.866522684991121
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.537674414994827,
+      "failure_reason": "fin gap 0.250 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 19,
+      "params": {
+        "fin_height_mm": 7.059094378971303,
+        "fin_thickness_mm": 0.9573250608969864,
+        "fin_count": 13,
+        "base_thickness_mm": 7.3399575219047515
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 9.058743301490845,
+      "failure_reason": null
+    },
+    {
+      "job_id": 20,
+      "params": {
+        "fin_height_mm": 16.323846098075144,
+        "fin_thickness_mm": 1.910381855437114,
+        "fin_count": 15,
+        "base_thickness_mm": 6.69565723891621
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.930429066225949,
+      "failure_reason": null
+    },
+    {
+      "job_id": 21,
+      "params": {
+        "fin_height_mm": 21.449609305879388,
+        "fin_thickness_mm": 2.680714820206762,
+        "fin_count": 9,
+        "base_thickness_mm": 7.133906351095308
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.880120673646162,
+      "failure_reason": null
+    },
+    {
+      "job_id": 22,
+      "params": {
+        "fin_height_mm": 18.478428191341735,
+        "fin_thickness_mm": 1.396190781082977,
+        "fin_count": 28,
+        "base_thickness_mm": 6.547902981030536
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.9276243460573408,
+      "failure_reason": "fin gap 0.404 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 23,
+      "params": {
+        "fin_height_mm": 24.04573966024277,
+        "fin_thickness_mm": 0.8134085506722867,
+        "fin_count": 24,
+        "base_thickness_mm": 2.6990448015602633
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.726053500884789,
+      "failure_reason": null
+    },
+    {
+      "job_id": 24,
+      "params": {
+        "fin_height_mm": 23.130457583289225,
+        "fin_thickness_mm": 2.957487760293126,
+        "fin_count": 27,
+        "base_thickness_mm": 5.114602790860901
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.6503067748199889,
+      "failure_reason": "fin gap -1.148 mm below minimum 1.000 mm; volume 105137.4 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 25,
+      "params": {
+        "fin_height_mm": 10.480921591026945,
+        "fin_thickness_mm": 2.5363894278897705,
+        "fin_count": 25,
+        "base_thickness_mm": 2.4850176705727227
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.922341540177642,
+      "failure_reason": "fin gap -0.559 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 26,
+      "params": {
+        "fin_height_mm": 27.136596417901185,
+        "fin_thickness_mm": 1.7044387440903228,
+        "fin_count": 20,
+        "base_thickness_mm": 2.9965977209271975
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.840981773530486,
+      "failure_reason": "fin gap 0.837 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 27,
+      "params": {
+        "fin_height_mm": 7.407744786109905,
+        "fin_thickness_mm": 2.026197945559531,
+        "fin_count": 12,
+        "base_thickness_mm": 4.019921814899825
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 9.836948512312146,
+      "failure_reason": null
+    },
+    {
+      "job_id": 28,
+      "params": {
+        "fin_height_mm": 21.486631138708603,
+        "fin_thickness_mm": 1.920506326740949,
+        "fin_count": 9,
+        "base_thickness_mm": 5.538843014114896
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.8021588019762635,
+      "failure_reason": null
+    },
+    {
+      "job_id": 29,
+      "params": {
+        "fin_height_mm": 26.36897127471013,
+        "fin_thickness_mm": 0.509255091291947,
+        "fin_count": 28,
+        "base_thickness_mm": 4.396865218044571
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.3791668441828777,
+      "failure_reason": null
+    },
+    {
+      "job_id": 30,
+      "params": {
+        "fin_height_mm": 10.779171523714053,
+        "fin_thickness_mm": 1.9627516365131172,
+        "fin_count": 29,
+        "base_thickness_mm": 6.316334600256265
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.2411162906967883,
+      "failure_reason": "fin gap -0.247 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 31,
+      "params": {
+        "fin_height_mm": 38.84611918004497,
+        "fin_thickness_mm": 2.928642762080996,
+        "fin_count": 23,
+        "base_thickness_mm": 4.919893444998664
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1492864534571778,
+      "failure_reason": "fin gap -0.789 mm below minimum 1.000 mm; volume 143131.1 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 32,
+      "params": {
+        "fin_height_mm": 14.110364353824354,
+        "fin_thickness_mm": 2.6494693954967428,
+        "fin_count": 18,
+        "base_thickness_mm": 7.6711908350721725
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.9289265566589595,
+      "failure_reason": "fin gap 0.136 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 33,
+      "params": {
+        "fin_height_mm": 23.029729652592028,
+        "fin_thickness_mm": 0.8558828880584936,
+        "fin_count": 24,
+        "base_thickness_mm": 2.231739015693623
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.7967271006867158,
+      "failure_reason": null
+    },
+    {
+      "job_id": 34,
+      "params": {
+        "fin_height_mm": 35.35045067405176,
+        "fin_thickness_mm": 1.0022242278023974,
+        "fin_count": 5,
+        "base_thickness_mm": 4.351075069557655
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.197182438804201,
+      "failure_reason": null
+    },
+    {
+      "job_id": 35,
+      "params": {
+        "fin_height_mm": 5.179402034279252,
+        "fin_thickness_mm": 2.223851613755853,
+        "fin_count": 27,
+        "base_thickness_mm": 4.806517246670137
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 7.420212800074304,
+      "failure_reason": "fin gap -0.386 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 36,
+      "params": {
+        "fin_height_mm": 10.149631446245424,
+        "fin_thickness_mm": 2.5448256745255278,
+        "fin_count": 21,
+        "base_thickness_mm": 7.045381487339368
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.736161542801336,
+      "failure_reason": "fin gap -0.172 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 37,
+      "params": {
+        "fin_height_mm": 27.012378208331835,
+        "fin_thickness_mm": 2.124199683479614,
+        "fin_count": 24,
+        "base_thickness_mm": 6.750196935444636
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5608892389508913,
+      "failure_reason": "fin gap -0.043 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 38,
+      "params": {
+        "fin_height_mm": 37.62126494030897,
+        "fin_thickness_mm": 0.8069783289012001,
+        "fin_count": 7,
+        "base_thickness_mm": 7.720509786018052
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.6837134415806374,
+      "failure_reason": null
+    },
+    {
+      "job_id": 39,
+      "params": {
+        "fin_height_mm": 18.398337423428245,
+        "fin_thickness_mm": 0.6893067506046969,
+        "fin_count": 11,
+        "base_thickness_mm": 3.8647717007924483
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.536808052601452,
+      "failure_reason": null
+    },
+    {
+      "job_id": 40,
+      "params": {
+        "fin_height_mm": 25.979583166517973,
+        "fin_thickness_mm": 2.092759359805259,
+        "fin_count": 9,
+        "base_thickness_mm": 3.280914397688349
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.048959997260854,
+      "failure_reason": null
+    },
+    {
+      "job_id": 41,
+      "params": {
+        "fin_height_mm": 10.141608349418288,
+        "fin_thickness_mm": 0.6299999186382439,
+        "fin_count": 30,
+        "base_thickness_mm": 4.317209334470629
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.1427450583347927,
+      "failure_reason": null
+    },
+    {
+      "job_id": 42,
+      "params": {
+        "fin_height_mm": 11.094201366099526,
+        "fin_thickness_mm": 1.6839231155797916,
+        "fin_count": 16,
+        "base_thickness_mm": 6.7233297709514535
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.30180226687894,
+      "failure_reason": null
+    },
+    {
+      "job_id": 43,
+      "params": {
+        "fin_height_mm": 5.805023348542084,
+        "fin_thickness_mm": 2.5137252753049344,
+        "fin_count": 5,
+        "base_thickness_mm": 7.896552630602929
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 20.951993012733492,
+      "failure_reason": null
+    },
+    {
+      "job_id": 44,
+      "params": {
+        "fin_height_mm": 16.12309735813551,
+        "fin_thickness_mm": 2.0834742966440025,
+        "fin_count": 27,
+        "base_thickness_mm": 2.2164799348135524
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.3232098986481007,
+      "failure_reason": "fin gap -0.241 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 45,
+      "params": {
+        "fin_height_mm": 10.917527565444235,
+        "fin_thickness_mm": 1.41360972398461,
+        "fin_count": 22,
+        "base_thickness_mm": 5.89662402739764
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.01639555996992,
+      "failure_reason": "fin gap 0.900 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 46,
+      "params": {
+        "fin_height_mm": 36.29287934549482,
+        "fin_thickness_mm": 1.9965452085190964,
+        "fin_count": 18,
+        "base_thickness_mm": 4.914530718632162
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5464579836891061,
+      "failure_reason": "fin gap 0.827 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 47,
+      "params": {
+        "fin_height_mm": 5.932885117458739,
+        "fin_thickness_mm": 0.6424884414232177,
+        "fin_count": 9,
+        "base_thickness_mm": 5.042553594628176
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 13.260869170711251,
+      "failure_reason": null
+    },
+    {
+      "job_id": 48,
+      "params": {
+        "fin_height_mm": 7.261664811572542,
+        "fin_thickness_mm": 2.6577889446337015,
+        "fin_count": 13,
+        "base_thickness_mm": 2.895927814730789
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 9.797663373514183,
+      "failure_reason": null
+    },
+    {
+      "job_id": 49,
+      "params": {
+        "fin_height_mm": 21.928336554951766,
+        "fin_thickness_mm": 2.1126605949889106,
+        "fin_count": 28,
+        "base_thickness_mm": 4.3174356375499725
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.653134291394439,
+      "failure_reason": "fin gap -0.339 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 50,
+      "params": {
+        "fin_height_mm": 24.28306068496143,
+        "fin_thickness_mm": 1.943188419041238,
+        "fin_count": 23,
+        "base_thickness_mm": 7.919963706189627
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.799478302260167,
+      "failure_reason": "fin gap 0.241 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 51,
+      "params": {
+        "fin_height_mm": 39.98690745308085,
+        "fin_thickness_mm": 1.4640835729593435,
+        "fin_count": 18,
+        "base_thickness_mm": 4.498832543355009
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.4142894497305467,
+      "failure_reason": null
+    },
+    {
+      "job_id": 52,
+      "params": {
+        "fin_height_mm": 37.676185950300415,
+        "fin_thickness_mm": 2.496547056677796,
+        "fin_count": 29,
+        "base_thickness_mm": 5.002208971895158
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.9419344670075981,
+      "failure_reason": "fin gap -0.800 mm below minimum 1.000 mm; volume 148893.1 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 53,
+      "params": {
+        "fin_height_mm": 30.76023511363897,
+        "fin_thickness_mm": 2.7493519471258625,
+        "fin_count": 29,
+        "base_thickness_mm": 7.0243422981104215
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1529639565304488,
+      "failure_reason": "fin gap -1.062 mm below minimum 1.000 mm; volume 140188.4 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 54,
+      "params": {
+        "fin_height_mm": 30.07997804974259,
+        "fin_thickness_mm": 0.54146190753686,
+        "fin_count": 29,
+        "base_thickness_mm": 4.002666502283235
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.183482596088573,
+      "failure_reason": null
+    },
+    {
+      "job_id": 55,
+      "params": {
+        "fin_height_mm": 22.38452378227208,
+        "fin_thickness_mm": 1.517521002409085,
+        "fin_count": 14,
+        "base_thickness_mm": 3.8791757552763118
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.082248863491493,
+      "failure_reason": null
+    },
+    {
+      "job_id": 56,
+      "params": {
+        "fin_height_mm": 10.790624298553062,
+        "fin_thickness_mm": 1.8078226657603909,
+        "fin_count": 25,
+        "base_thickness_mm": 5.752366761161494
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.681828172216875,
+      "failure_reason": "fin gap 0.200 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 57,
+      "params": {
+        "fin_height_mm": 33.73991091662124,
+        "fin_thickness_mm": 2.689998340427201,
+        "fin_count": 9,
+        "base_thickness_mm": 4.009529329871382
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.2005833659825824,
+      "failure_reason": null
+    },
+    {
+      "job_id": 58,
+      "params": {
+        "fin_height_mm": 6.964943064284924,
+        "fin_thickness_mm": 1.2883335081922902,
+        "fin_count": 22,
+        "base_thickness_mm": 4.073600545447545
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.102408511130137,
+      "failure_reason": null
+    },
+    {
+      "job_id": 59,
+      "params": {
+        "fin_height_mm": 32.66059150130376,
+        "fin_thickness_mm": 1.2762101492269045,
+        "fin_count": 22,
+        "base_thickness_mm": 4.06009052861625
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.4073005158736835,
+      "failure_reason": null
+    },
+    {
+      "job_id": 60,
+      "params": {
+        "fin_height_mm": 13.630665186776667,
+        "fin_thickness_mm": 2.445752143578605,
+        "fin_count": 8,
+        "base_thickness_mm": 6.041190381651296
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 8.064924718405688,
+      "failure_reason": null
+    },
+    {
+      "job_id": 61,
+      "params": {
+        "fin_height_mm": 29.702224264718083,
+        "fin_thickness_mm": 1.9188552702705288,
+        "fin_count": 29,
+        "base_thickness_mm": 3.226202105477462
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1821879406307145,
+      "failure_reason": "fin gap -0.202 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 62,
+      "params": {
+        "fin_height_mm": 6.219623969114267,
+        "fin_thickness_mm": 2.072843390962773,
+        "fin_count": 14,
+        "base_thickness_mm": 7.756445683099003
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 10.25514548756333,
+      "failure_reason": null
+    },
+    {
+      "job_id": 63,
+      "params": {
+        "fin_height_mm": 30.08152426396733,
+        "fin_thickness_mm": 1.5010327643120527,
+        "fin_count": 30,
+        "base_thickness_mm": 4.585816163195407
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1265772162361036,
+      "failure_reason": "fin gap 0.171 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 64,
+      "params": {
+        "fin_height_mm": 25.541764987237165,
+        "fin_thickness_mm": 0.6206589844336856,
+        "fin_count": 30,
+        "base_thickness_mm": 4.2319084451054305
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.3213841351477773,
+      "failure_reason": null
+    },
+    {
+      "job_id": 65,
+      "params": {
+        "fin_height_mm": 18.611320502355664,
+        "fin_thickness_mm": 0.8216637382191573,
+        "fin_count": 8,
+        "base_thickness_mm": 3.8220062487151543
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.931347464175841,
+      "failure_reason": null
+    },
+    {
+      "job_id": 66,
+      "params": {
+        "fin_height_mm": 17.488051137781103,
+        "fin_thickness_mm": 1.0210551356912752,
+        "fin_count": 18,
+        "base_thickness_mm": 2.90720518843376
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.052832640603665,
+      "failure_reason": null
+    },
+    {
+      "job_id": 67,
+      "params": {
+        "fin_height_mm": 30.64307785045913,
+        "fin_thickness_mm": 2.6549324451053744,
+        "fin_count": 5,
+        "base_thickness_mm": 4.5200006758294435
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.887901706035012,
+      "failure_reason": null
+    },
+    {
+      "job_id": 68,
+      "params": {
+        "fin_height_mm": 15.742080636957473,
+        "fin_thickness_mm": 0.9676649094029822,
+        "fin_count": 5,
+        "base_thickness_mm": 3.361152189466527
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 9.936189195018141,
+      "failure_reason": null
+    },
+    {
+      "job_id": 69,
+      "params": {
+        "fin_height_mm": 9.471708587866553,
+        "fin_thickness_mm": 1.9011352680627642,
+        "fin_count": 23,
+        "base_thickness_mm": 7.313268115650709
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.532012136966195,
+      "failure_reason": "fin gap 0.285 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 70,
+      "params": {
+        "fin_height_mm": 17.620540888398217,
+        "fin_thickness_mm": 1.1394574179469845,
+        "fin_count": 17,
+        "base_thickness_mm": 4.440868462855084
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.202691797769456,
+      "failure_reason": null
+    },
+    {
+      "job_id": 71,
+      "params": {
+        "fin_height_mm": 16.773154022157303,
+        "fin_thickness_mm": 0.8036698316883929,
+        "fin_count": 21,
+        "base_thickness_mm": 3.910507523756002
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.7409142406758282,
+      "failure_reason": null
+    },
+    {
+      "job_id": 72,
+      "params": {
+        "fin_height_mm": 24.644750732413907,
+        "fin_thickness_mm": 2.388360148982671,
+        "fin_count": 8,
+        "base_thickness_mm": 6.065502599952136
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.739558992331417,
+      "failure_reason": null
+    },
+    {
+      "job_id": 73,
+      "params": {
+        "fin_height_mm": 32.09182412193649,
+        "fin_thickness_mm": 1.4432986202018885,
+        "fin_count": 19,
+        "base_thickness_mm": 4.249966519667427
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.6467215385639389,
+      "failure_reason": null
+    },
+    {
+      "job_id": 74,
+      "params": {
+        "fin_height_mm": 13.095218319201175,
+        "fin_thickness_mm": 2.236800333650815,
+        "fin_count": 25,
+        "base_thickness_mm": 2.639044598475997
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.090171154931065,
+      "failure_reason": "fin gap -0.247 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 75,
+      "params": {
+        "fin_height_mm": 33.873072103651424,
+        "fin_thickness_mm": 2.743353208175351,
+        "fin_count": 19,
+        "base_thickness_mm": 7.6279466828922855
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5775025656848989,
+      "failure_reason": "fin gap -0.118 mm below minimum 1.000 mm; volume 107349.4 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 76,
+      "params": {
+        "fin_height_mm": 5.038388775839211,
+        "fin_thickness_mm": 2.2699537771030593,
+        "fin_count": 4,
+        "base_thickness_mm": 7.033818618875002
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 24.62670758382884,
+      "failure_reason": null
+    },
+    {
+      "job_id": 77,
+      "params": {
+        "fin_height_mm": 35.96819436406924,
+        "fin_thickness_mm": 1.2888901343270254,
+        "fin_count": 9,
+        "base_thickness_mm": 6.2409911647998335
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.005302448606834,
+      "failure_reason": null
+    },
+    {
+      "job_id": 78,
+      "params": {
+        "fin_height_mm": 13.760483202408542,
+        "fin_thickness_mm": 2.3143927443399854,
+        "fin_count": 19,
+        "base_thickness_mm": 3.614506840075093
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.791195467730345,
+      "failure_reason": "fin gap 0.335 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 79,
+      "params": {
+        "fin_height_mm": 21.69604660314037,
+        "fin_thickness_mm": 2.3576110232391283,
+        "fin_count": 17,
+        "base_thickness_mm": 4.930097984746597
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.692393101658156,
+      "failure_reason": "fin gap 0.620 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 80,
+      "params": {
+        "fin_height_mm": 26.193826514360477,
+        "fin_thickness_mm": 2.8916494104620747,
+        "fin_count": 14,
+        "base_thickness_mm": 4.720632886867513
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.712465200125603,
+      "failure_reason": "fin gap 0.732 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 81,
+      "params": {
+        "fin_height_mm": 11.017458252115937,
+        "fin_thickness_mm": 1.5748560671458385,
+        "fin_count": 18,
+        "base_thickness_mm": 7.320970635546217
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.792831087697729,
+      "failure_reason": null
+    },
+    {
+      "job_id": 82,
+      "params": {
+        "fin_height_mm": 11.699927615169962,
+        "fin_thickness_mm": 1.1379209861383255,
+        "fin_count": 28,
+        "base_thickness_mm": 4.944499038014461
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.9815904041150585,
+      "failure_reason": "fin gap 0.672 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 83,
+      "params": {
+        "fin_height_mm": 13.211880988936036,
+        "fin_thickness_mm": 2.2582956215226435,
+        "fin_count": 22,
+        "base_thickness_mm": 7.872725489180697
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.4471857380179047,
+      "failure_reason": "fin gap 0.015 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 84,
+      "params": {
+        "fin_height_mm": 22.712661745450003,
+        "fin_thickness_mm": 2.8599646322643237,
+        "fin_count": 12,
+        "base_thickness_mm": 7.890482884540838
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.5867416420493656,
+      "failure_reason": null
+    },
+    {
+      "job_id": 85,
+      "params": {
+        "fin_height_mm": 13.228936729567716,
+        "fin_thickness_mm": 0.8668049114000829,
+        "fin_count": 25,
+        "base_thickness_mm": 3.8917514750233493
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.917715570049447,
+      "failure_reason": null
+    },
+    {
+      "job_id": 86,
+      "params": {
+        "fin_height_mm": 8.579975647791093,
+        "fin_thickness_mm": 2.616380259233769,
+        "fin_count": 6,
+        "base_thickness_mm": 4.494819591925763
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 14.580732460954742,
+      "failure_reason": null
+    },
+    {
+      "job_id": 87,
+      "params": {
+        "fin_height_mm": 33.382007698959484,
+        "fin_thickness_mm": 0.9923781487679544,
+        "fin_count": 6,
+        "base_thickness_mm": 6.6255391078708525
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.6445172727604085,
+      "failure_reason": null
+    },
+    {
+      "job_id": 88,
+      "params": {
+        "fin_height_mm": 9.687176830891204,
+        "fin_thickness_mm": 1.7547304115679856,
+        "fin_count": 22,
+        "base_thickness_mm": 4.792286788346408
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.57779076802399,
+      "failure_reason": "fin gap 0.543 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 89,
+      "params": {
+        "fin_height_mm": 21.078298738217836,
+        "fin_thickness_mm": 0.6640542250854099,
+        "fin_count": 6,
+        "base_thickness_mm": 5.316955921106873
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.812180455995839,
+      "failure_reason": null
+    },
+    {
+      "job_id": 90,
+      "params": {
+        "fin_height_mm": 24.09930530105946,
+        "fin_thickness_mm": 2.4666928560519246,
+        "fin_count": 30,
+        "base_thickness_mm": 5.17373611814566
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4174476348284937,
+      "failure_reason": "fin gap -0.828 mm below minimum 1.000 mm; volume 102102.7 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 91,
+      "params": {
+        "fin_height_mm": 30.52031937342119,
+        "fin_thickness_mm": 2.5323636001096785,
+        "fin_count": 12,
+        "base_thickness_mm": 3.073572918022828
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.6901202287976584,
+      "failure_reason": null
+    },
+    {
+      "job_id": 92,
+      "params": {
+        "fin_height_mm": 18.131901579459658,
+        "fin_thickness_mm": 2.2463218705394135,
+        "fin_count": 18,
+        "base_thickness_mm": 3.2357561533915487
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.033863267038689,
+      "failure_reason": "fin gap 0.563 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 93,
+      "params": {
+        "fin_height_mm": 16.53043015841981,
+        "fin_thickness_mm": 1.9338366721549645,
+        "fin_count": 17,
+        "base_thickness_mm": 7.706328824964129
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.46866377762483,
+      "failure_reason": null
+    },
+    {
+      "job_id": 94,
+      "params": {
+        "fin_height_mm": 7.821995849963453,
+        "fin_thickness_mm": 1.925525416487903,
+        "fin_count": 18,
+        "base_thickness_mm": 7.423032739992392
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 6.742138729793682,
+      "failure_reason": "fin gap 0.902 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 95,
+      "params": {
+        "fin_height_mm": 27.90617494650276,
+        "fin_thickness_mm": 2.5516642202445508,
+        "fin_count": 23,
+        "base_thickness_mm": 3.1992983898398064
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5842775064595371,
+      "failure_reason": "fin gap -0.395 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 96,
+      "params": {
+        "fin_height_mm": 38.204848204774336,
+        "fin_thickness_mm": 2.7400691357345583,
+        "fin_count": 20,
+        "base_thickness_mm": 7.509341786681858
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3355965539253347,
+      "failure_reason": "fin gap -0.253 mm below minimum 1.000 mm; volume 123457.3 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 97,
+      "params": {
+        "fin_height_mm": 33.14999660035135,
+        "fin_thickness_mm": 2.31703013734168,
+        "fin_count": 20,
+        "base_thickness_mm": 6.057493079731372
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5272084361466438,
+      "failure_reason": "fin gap 0.193 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 98,
+      "params": {
+        "fin_height_mm": 29.595295969464228,
+        "fin_thickness_mm": 0.5555365608304901,
+        "fin_count": 19,
+        "base_thickness_mm": 2.4472649003192757
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.802218425904241,
+      "failure_reason": null
+    },
+    {
+      "job_id": 99,
+      "params": {
+        "fin_height_mm": 6.055230746666464,
+        "fin_thickness_mm": 1.0293279357795435,
+        "fin_count": 6,
+        "base_thickness_mm": 4.429642012989277
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 17.181725415876205,
+      "failure_reason": null
+    },
+    {
+      "job_id": 100,
+      "params": {
+        "fin_height_mm": 18.304323635536903,
+        "fin_thickness_mm": 1.8570671027600016,
+        "fin_count": 24,
+        "base_thickness_mm": 6.127597642405357
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.275522671153139,
+      "failure_reason": "fin gap 0.236 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 101,
+      "params": {
+        "fin_height_mm": 39.23889159703326,
+        "fin_thickness_mm": 1.5791607090688558,
+        "fin_count": 29,
+        "base_thickness_mm": 3.945781643021995
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.904755384942452,
+      "failure_reason": "fin gap 0.150 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 102,
+      "params": {
+        "fin_height_mm": 32.622752740416885,
+        "fin_thickness_mm": 1.6550595866323352,
+        "fin_count": 27,
+        "base_thickness_mm": 6.264835428294496
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1553978417308308,
+      "failure_reason": "fin gap 0.204 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 103,
+      "params": {
+        "fin_height_mm": 36.716908521288566,
+        "fin_thickness_mm": 0.5113528476637594,
+        "fin_count": 7,
+        "base_thickness_mm": 4.101546988860816
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.8425163825014597,
+      "failure_reason": null
+    },
+    {
+      "job_id": 104,
+      "params": {
+        "fin_height_mm": 38.29049981651153,
+        "fin_thickness_mm": 1.4983211834125851,
+        "fin_count": 27,
+        "base_thickness_mm": 3.6360931953067013
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.9931212177569376,
+      "failure_reason": "fin gap 0.367 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 105,
+      "params": {
+        "fin_height_mm": 17.161075850836085,
+        "fin_thickness_mm": 1.502232969303479,
+        "fin_count": 24,
+        "base_thickness_mm": 7.331401657501959
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.4024996294215044,
+      "failure_reason": "fin gap 0.606 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 106,
+      "params": {
+        "fin_height_mm": 8.981130557215435,
+        "fin_thickness_mm": 1.3162350522974111,
+        "fin_count": 8,
+        "base_thickness_mm": 4.87548247820471
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 10.935982461934746,
+      "failure_reason": null
+    },
+    {
+      "job_id": 107,
+      "params": {
+        "fin_height_mm": 20.53253219856792,
+        "fin_thickness_mm": 1.3110414941684145,
+        "fin_count": 8,
+        "base_thickness_mm": 3.6441435604891055
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.484872529268714,
+      "failure_reason": null
+    },
+    {
+      "job_id": 108,
+      "params": {
+        "fin_height_mm": 27.68325607928195,
+        "fin_thickness_mm": 2.709132103245695,
+        "fin_count": 16,
+        "base_thickness_mm": 2.7866924971380196
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.261272794782672,
+      "failure_reason": "fin gap 0.444 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 109,
+      "params": {
+        "fin_height_mm": 23.417094901182047,
+        "fin_thickness_mm": 2.168147391566224,
+        "fin_count": 26,
+        "base_thickness_mm": 6.903492378352746
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.6647250805502725,
+      "failure_reason": "fin gap -0.255 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 110,
+      "params": {
+        "fin_height_mm": 8.06625129128761,
+        "fin_thickness_mm": 2.592816861772301,
+        "fin_count": 15,
+        "base_thickness_mm": 6.953644875126638
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 7.90832665723804,
+      "failure_reason": "fin gap 0.793 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 111,
+      "params": {
+        "fin_height_mm": 33.28039376448095,
+        "fin_thickness_mm": 2.736085544071726,
+        "fin_count": 4,
+        "base_thickness_mm": 2.7523779609492625
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.625843395844557,
+      "failure_reason": null
+    },
+    {
+      "job_id": 112,
+      "params": {
+        "fin_height_mm": 14.769560847656617,
+        "fin_thickness_mm": 0.9509043898211262,
+        "fin_count": 24,
+        "base_thickness_mm": 4.108502978478652
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.736444998259726,
+      "failure_reason": null
+    },
+    {
+      "job_id": 113,
+      "params": {
+        "fin_height_mm": 11.103688835864855,
+        "fin_thickness_mm": 2.5866851604478156,
+        "fin_count": 8,
+        "base_thickness_mm": 4.86850688126349
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 9.676295458707799,
+      "failure_reason": null
+    },
+    {
+      "job_id": 114,
+      "params": {
+        "fin_height_mm": 15.092549900980792,
+        "fin_thickness_mm": 1.7766570568668372,
+        "fin_count": 23,
+        "base_thickness_mm": 3.8630528891266542
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.8550466940872523,
+      "failure_reason": "fin gap 0.415 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 115,
+      "params": {
+        "fin_height_mm": 24.31285019295293,
+        "fin_thickness_mm": 0.7476581271818392,
+        "fin_count": 9,
+        "base_thickness_mm": 7.7965337746046295
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.255437051228078,
+      "failure_reason": null
+    },
+    {
+      "job_id": 116,
+      "params": {
+        "fin_height_mm": 36.25885450737762,
+        "fin_thickness_mm": 0.9012720573602224,
+        "fin_count": 28,
+        "base_thickness_mm": 4.576053042141804
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0182666774762579,
+      "failure_reason": "fin gap 0.917 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 117,
+      "params": {
+        "fin_height_mm": 5.140050443903244,
+        "fin_thickness_mm": 2.273488098423331,
+        "fin_count": 8,
+        "base_thickness_mm": 6.795781930919735
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 17.540499848450633,
+      "failure_reason": null
+    },
+    {
+      "job_id": 118,
+      "params": {
+        "fin_height_mm": 9.747851648522843,
+        "fin_thickness_mm": 0.6060895801280415,
+        "fin_count": 17,
+        "base_thickness_mm": 5.5351639887064525
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.413541038897188,
+      "failure_reason": null
+    },
+    {
+      "job_id": 119,
+      "params": {
+        "fin_height_mm": 32.19028405683497,
+        "fin_thickness_mm": 2.105499446909888,
+        "fin_count": 24,
+        "base_thickness_mm": 6.606745588310837
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3154969163268626,
+      "failure_reason": "fin gap -0.023 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 120,
+      "params": {
+        "fin_height_mm": 22.318819816301872,
+        "fin_thickness_mm": 2.469232779549778,
+        "fin_count": 10,
+        "base_thickness_mm": 6.239481252951908
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.266407274510707,
+      "failure_reason": null
+    },
+    {
+      "job_id": 121,
+      "params": {
+        "fin_height_mm": 13.589792106090904,
+        "fin_thickness_mm": 1.2968652645556653,
+        "fin_count": 4,
+        "base_thickness_mm": 2.1277321679616
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 13.069318208496906,
+      "failure_reason": null
+    },
+    {
+      "job_id": 122,
+      "params": {
+        "fin_height_mm": 36.241120779718905,
+        "fin_thickness_mm": 1.1306659528800607,
+        "fin_count": 26,
+        "base_thickness_mm": 2.6352292794435126
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0887108357289381,
+      "failure_reason": "fin gap 0.824 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 123,
+      "params": {
+        "fin_height_mm": 9.986865592462637,
+        "fin_thickness_mm": 1.3220857465712028,
+        "fin_count": 5,
+        "base_thickness_mm": 5.470706608908127
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 13.984651031954497,
+      "failure_reason": null
+    },
+    {
+      "job_id": 124,
+      "params": {
+        "fin_height_mm": 26.390992259301857,
+        "fin_thickness_mm": 1.326923653955355,
+        "fin_count": 10,
+        "base_thickness_mm": 5.959770212052945
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.5989230817144184,
+      "failure_reason": null
+    },
+    {
+      "job_id": 125,
+      "params": {
+        "fin_height_mm": 15.37790786073264,
+        "fin_thickness_mm": 0.9771271380110037,
+        "fin_count": 13,
+        "base_thickness_mm": 6.378366036127219
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.608235556240436,
+      "failure_reason": null
+    },
+    {
+      "job_id": 126,
+      "params": {
+        "fin_height_mm": 12.0894849684285,
+        "fin_thickness_mm": 2.0524762505357117,
+        "fin_count": 23,
+        "base_thickness_mm": 5.256107048908916
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.586639154633664,
+      "failure_reason": "fin gap 0.127 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 127,
+      "params": {
+        "fin_height_mm": 17.24394544546864,
+        "fin_thickness_mm": 1.702010833593921,
+        "fin_count": 24,
+        "base_thickness_mm": 3.6494824038609983
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.4032964511233477,
+      "failure_reason": "fin gap 0.398 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 128,
+      "params": {
+        "fin_height_mm": 16.540002165733362,
+        "fin_thickness_mm": 2.6165739682284306,
+        "fin_count": 6,
+        "base_thickness_mm": 4.235001413854896
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 8.616660979948481,
+      "failure_reason": null
+    },
+    {
+      "job_id": 129,
+      "params": {
+        "fin_height_mm": 19.09159387315651,
+        "fin_thickness_mm": 1.544621877308599,
+        "fin_count": 13,
+        "base_thickness_mm": 3.8560577104695706
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.827553991942524,
+      "failure_reason": null
+    },
+    {
+      "job_id": 130,
+      "params": {
+        "fin_height_mm": 39.620414441287615,
+        "fin_thickness_mm": 0.9711081604772818,
+        "fin_count": 26,
+        "base_thickness_mm": 2.165885667134914
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0085066876915796,
+      "failure_reason": "fin gap 0.990 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 131,
+      "params": {
+        "fin_height_mm": 14.906656711974794,
+        "fin_thickness_mm": 0.9801041493629699,
+        "fin_count": 9,
+        "base_thickness_mm": 5.9984786697072545
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.503263196531971,
+      "failure_reason": null
+    },
+    {
+      "job_id": 132,
+      "params": {
+        "fin_height_mm": 20.6800512602914,
+        "fin_thickness_mm": 0.7640566771207167,
+        "fin_count": 27,
+        "base_thickness_mm": 5.64839901288755
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.7758828249455696,
+      "failure_reason": null
+    },
+    {
+      "job_id": 133,
+      "params": {
+        "fin_height_mm": 11.264704566056636,
+        "fin_thickness_mm": 0.7645559888460536,
+        "fin_count": 30,
+        "base_thickness_mm": 2.9249913910256886
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.8599167465614688,
+      "failure_reason": "fin gap 0.933 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 134,
+      "params": {
+        "fin_height_mm": 38.44436898980032,
+        "fin_thickness_mm": 0.8521698369993995,
+        "fin_count": 22,
+        "base_thickness_mm": 7.0163030116953395
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.2244089918655299,
+      "failure_reason": null
+    },
+    {
+      "job_id": 135,
+      "params": {
+        "fin_height_mm": 36.69077380269283,
+        "fin_thickness_mm": 0.9692124748911188,
+        "fin_count": 11,
+        "base_thickness_mm": 3.6387671724661
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.463211290247526,
+      "failure_reason": null
+    },
+    {
+      "job_id": 136,
+      "params": {
+        "fin_height_mm": 16.46237141926215,
+        "fin_thickness_mm": 0.5447382517586864,
+        "fin_count": 16,
+        "base_thickness_mm": 5.06705907325106
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.5732194869709133,
+      "failure_reason": null
+    },
+    {
+      "job_id": 137,
+      "params": {
+        "fin_height_mm": 36.95251427988599,
+        "fin_thickness_mm": 1.7453480602861755,
+        "fin_count": 19,
+        "base_thickness_mm": 4.421685557057906
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4426208296981906,
+      "failure_reason": "fin gap 0.935 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 138,
+      "params": {
+        "fin_height_mm": 16.199957799861142,
+        "fin_thickness_mm": 1.155862920326343,
+        "fin_count": 17,
+        "base_thickness_mm": 6.279967571605668
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.465497845555832,
+      "failure_reason": null
+    },
+    {
+      "job_id": 139,
+      "params": {
+        "fin_height_mm": 13.245257401221576,
+        "fin_thickness_mm": 2.784866822193311,
+        "fin_count": 11,
+        "base_thickness_mm": 5.58655663462179
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.448147144323301,
+      "failure_reason": null
+    },
+    {
+      "job_id": 140,
+      "params": {
+        "fin_height_mm": 26.38698089997012,
+        "fin_thickness_mm": 2.3696852389530223,
+        "fin_count": 21,
+        "base_thickness_mm": 2.7741134466796735
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.8214601727548108,
+      "failure_reason": "fin gap 0.012 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 141,
+      "params": {
+        "fin_height_mm": 19.366512607015785,
+        "fin_thickness_mm": 2.6418684173700564,
+        "fin_count": 16,
+        "base_thickness_mm": 7.863799478857149
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.201982289002461,
+      "failure_reason": "fin gap 0.515 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 142,
+      "params": {
+        "fin_height_mm": 37.07068796117645,
+        "fin_thickness_mm": 2.612979479350455,
+        "fin_count": 22,
+        "base_thickness_mm": 7.421815323349318
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.2529065450795236,
+      "failure_reason": "fin gap -0.356 mm below minimum 1.000 mm; volume 125106.0 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 143,
+      "params": {
+        "fin_height_mm": 27.964923316746674,
+        "fin_thickness_mm": 1.1678531366733818,
+        "fin_count": 29,
+        "base_thickness_mm": 7.673071133619313
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.2471348285078905,
+      "failure_reason": "fin gap 0.576 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 144,
+      "params": {
+        "fin_height_mm": 12.256910930529223,
+        "fin_thickness_mm": 2.094341014935329,
+        "fin_count": 11,
+        "base_thickness_mm": 6.198023013024872
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.757053235111979,
+      "failure_reason": null
+    },
+    {
+      "job_id": 145,
+      "params": {
+        "fin_height_mm": 31.29000273948398,
+        "fin_thickness_mm": 1.6894241718473595,
+        "fin_count": 22,
+        "base_thickness_mm": 2.4467089739069356
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4660396794873873,
+      "failure_reason": "fin gap 0.611 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 146,
+      "params": {
+        "fin_height_mm": 11.581517696922567,
+        "fin_thickness_mm": 2.3779661881369143,
+        "fin_count": 14,
+        "base_thickness_mm": 6.469463763601018
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.875485007969063,
+      "failure_reason": null
+    },
+    {
+      "job_id": 147,
+      "params": {
+        "fin_height_mm": 27.134844336188813,
+        "fin_thickness_mm": 2.093250031567753,
+        "fin_count": 21,
+        "base_thickness_mm": 3.4877099875040782
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.7654664515694747,
+      "failure_reason": "fin gap 0.302 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 148,
+      "params": {
+        "fin_height_mm": 21.961993777782915,
+        "fin_thickness_mm": 2.5588294814990253,
+        "fin_count": 17,
+        "base_thickness_mm": 2.8081532523700217
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.6714259868276415,
+      "failure_reason": "fin gap 0.406 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 149,
+      "params": {
+        "fin_height_mm": 16.065600468259696,
+        "fin_thickness_mm": 2.7865245353176853,
+        "fin_count": 30,
+        "base_thickness_mm": 7.849222293039243
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.1564570698670815,
+      "failure_reason": "fin gap -1.158 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 150,
+      "params": {
+        "fin_height_mm": 28.065662377324266,
+        "fin_thickness_mm": 2.731918411803817,
+        "fin_count": 22,
+        "base_thickness_mm": 7.289871740631014
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.648346806749137,
+      "failure_reason": "fin gap -0.481 mm below minimum 1.000 mm; volume 102565.1 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 151,
+      "params": {
+        "fin_height_mm": 15.13753767031856,
+        "fin_thickness_mm": 1.5814330877026825,
+        "fin_count": 9,
+        "base_thickness_mm": 3.948133318027436
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.515378147214756,
+      "failure_reason": null
+    },
+    {
+      "job_id": 152,
+      "params": {
+        "fin_height_mm": 18.73907667420922,
+        "fin_thickness_mm": 1.416371850109083,
+        "fin_count": 28,
+        "base_thickness_mm": 2.432630090887649
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.902315759757756,
+      "failure_reason": "fin gap 0.383 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 153,
+      "params": {
+        "fin_height_mm": 27.45326899023549,
+        "fin_thickness_mm": 2.255260173901733,
+        "fin_count": 18,
+        "base_thickness_mm": 5.112443919185552
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.026095505273694,
+      "failure_reason": "fin gap 0.553 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 154,
+      "params": {
+        "fin_height_mm": 39.30683510660198,
+        "fin_thickness_mm": 1.8826029114249274,
+        "fin_count": 15,
+        "base_thickness_mm": 5.639767486148469
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.7087145611981938,
+      "failure_reason": null
+    },
+    {
+      "job_id": 155,
+      "params": {
+        "fin_height_mm": 13.434092668997835,
+        "fin_thickness_mm": 0.8750245877880759,
+        "fin_count": 10,
+        "base_thickness_mm": 6.296777498116777
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.4904751286176126,
+      "failure_reason": null
+    },
+    {
+      "job_id": 156,
+      "params": {
+        "fin_height_mm": 9.764267317005007,
+        "fin_thickness_mm": 0.6740383837015663,
+        "fin_count": 10,
+        "base_thickness_mm": 4.450621574301695
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 8.41568084233378,
+      "failure_reason": null
+    },
+    {
+      "job_id": 157,
+      "params": {
+        "fin_height_mm": 6.66695270336831,
+        "fin_thickness_mm": 1.6156684822560714,
+        "fin_count": 12,
+        "base_thickness_mm": 2.7096700538141603
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 10.500019039773607,
+      "failure_reason": null
+    },
+    {
+      "job_id": 158,
+      "params": {
+        "fin_height_mm": 31.97568477140206,
+        "fin_thickness_mm": 1.9395085775874659,
+        "fin_count": 9,
+        "base_thickness_mm": 2.985889561669612
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.3420316857465857,
+      "failure_reason": null
+    },
+    {
+      "job_id": 159,
+      "params": {
+        "fin_height_mm": 19.415285141074342,
+        "fin_thickness_mm": 2.807929663739492,
+        "fin_count": 25,
+        "base_thickness_mm": 4.685479157075268
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.113382968626202,
+      "failure_reason": "fin gap -0.842 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 160,
+      "params": {
+        "fin_height_mm": 21.125180727848907,
+        "fin_thickness_mm": 1.844841472392274,
+        "fin_count": 30,
+        "base_thickness_mm": 2.9508822123385317
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.597077199653907,
+      "failure_reason": "fin gap -0.184 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 161,
+      "params": {
+        "fin_height_mm": 29.031934693173913,
+        "fin_thickness_mm": 0.6291689052546143,
+        "fin_count": 12,
+        "base_thickness_mm": 2.336060970018454
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.8154389133109854,
+      "failure_reason": null
+    },
+    {
+      "job_id": 162,
+      "params": {
+        "fin_height_mm": 6.32404781655539,
+        "fin_thickness_mm": 1.9940546283410803,
+        "fin_count": 27,
+        "base_thickness_mm": 3.6047648958922895
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 5.927040351090962,
+      "failure_reason": "fin gap -0.148 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 163,
+      "params": {
+        "fin_height_mm": 19.725096537372522,
+        "fin_thickness_mm": 1.810847854412707,
+        "fin_count": 21,
+        "base_thickness_mm": 5.515495736462832
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.3961115026000273,
+      "failure_reason": "fin gap 0.599 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 164,
+      "params": {
+        "fin_height_mm": 26.23251949583374,
+        "fin_thickness_mm": 0.967015637696049,
+        "fin_count": 28,
+        "base_thickness_mm": 2.3154119709481527
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3709270674533007,
+      "failure_reason": "fin gap 0.849 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 165,
+      "params": {
+        "fin_height_mm": 39.44837053996028,
+        "fin_thickness_mm": 0.8477083869791925,
+        "fin_count": 13,
+        "base_thickness_mm": 2.1135465237607614
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.985118003605393,
+      "failure_reason": null
+    },
+    {
+      "job_id": 166,
+      "params": {
+        "fin_height_mm": 7.185806826779526,
+        "fin_thickness_mm": 1.4147643341354073,
+        "fin_count": 20,
+        "base_thickness_mm": 6.048172858111359
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.476761286200797,
+      "failure_reason": null
+    },
+    {
+      "job_id": 167,
+      "params": {
+        "fin_height_mm": 5.111102562155137,
+        "fin_thickness_mm": 2.0660631006131043,
+        "fin_count": 22,
+        "base_thickness_mm": 2.4576169142303472
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 8.720574109047181,
+      "failure_reason": "fin gap 0.217 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 168,
+      "params": {
+        "fin_height_mm": 8.413492650916533,
+        "fin_thickness_mm": 1.0811361616135198,
+        "fin_count": 16,
+        "base_thickness_mm": 3.1629537896727262
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.636541527522192,
+      "failure_reason": null
+    },
+    {
+      "job_id": 169,
+      "params": {
+        "fin_height_mm": 37.77776989213458,
+        "fin_thickness_mm": 1.8889358608699987,
+        "fin_count": 29,
+        "base_thickness_mm": 2.594916414141114
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.9371910366501782,
+      "failure_reason": "fin gap -0.171 mm below minimum 1.000 mm; volume 109959.0 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 170,
+      "params": {
+        "fin_height_mm": 23.135725623465873,
+        "fin_thickness_mm": 1.0233778719820088,
+        "fin_count": 9,
+        "base_thickness_mm": 5.53695142938682
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.441572907194282,
+      "failure_reason": null
+    },
+    {
+      "job_id": 171,
+      "params": {
+        "fin_height_mm": 25.302555761175906,
+        "fin_thickness_mm": 1.3453195225567187,
+        "fin_count": 30,
+        "base_thickness_mm": 5.389526192623087
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3291446437186831,
+      "failure_reason": "fin gap 0.332 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 172,
+      "params": {
+        "fin_height_mm": 17.370017602572897,
+        "fin_thickness_mm": 2.043654708928459,
+        "fin_count": 6,
+        "base_thickness_mm": 7.441784344490893
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 8.157163859843406,
+      "failure_reason": null
+    },
+    {
+      "job_id": 173,
+      "params": {
+        "fin_height_mm": 37.46519068004574,
+        "fin_thickness_mm": 2.384259406499209,
+        "fin_count": 27,
+        "base_thickness_mm": 3.648971494405706
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0147740341150304,
+      "failure_reason": "fin gap -0.553 mm below minimum 1.000 mm; volume 129713.5 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 174,
+      "params": {
+        "fin_height_mm": 33.38431884947189,
+        "fin_thickness_mm": 2.294374314353622,
+        "fin_count": 23,
+        "base_thickness_mm": 4.337653740851497
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3252931358263629,
+      "failure_reason": "fin gap -0.126 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 175,
+      "params": {
+        "fin_height_mm": 38.536342788634755,
+        "fin_thickness_mm": 1.7513151794260775,
+        "fin_count": 27,
+        "base_thickness_mm": 7.82224601021048
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.9861302042754676,
+      "failure_reason": "fin gap 0.104 mm below minimum 1.000 mm; volume 110666.1 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 176,
+      "params": {
+        "fin_height_mm": 10.013842854109907,
+        "fin_thickness_mm": 1.0953284371858643,
+        "fin_count": 7,
+        "base_thickness_mm": 2.7681686515813078
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 10.982337237119452,
+      "failure_reason": null
+    },
+    {
+      "job_id": 177,
+      "params": {
+        "fin_height_mm": 38.0266760693571,
+        "fin_thickness_mm": 1.24591922349498,
+        "fin_count": 12,
+        "base_thickness_mm": 6.854617742438908
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.1864261261556077,
+      "failure_reason": null
+    },
+    {
+      "job_id": 178,
+      "params": {
+        "fin_height_mm": 13.149122343244953,
+        "fin_thickness_mm": 1.670205946539748,
+        "fin_count": 15,
+        "base_thickness_mm": 7.559154168607585
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.783568299146518,
+      "failure_reason": null
+    },
+    {
+      "job_id": 179,
+      "params": {
+        "fin_height_mm": 6.4766893336689995,
+        "fin_thickness_mm": 2.95012777723058,
+        "fin_count": 25,
+        "base_thickness_mm": 7.943886432059897
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 6.668186714849862,
+      "failure_reason": "fin gap -0.990 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 180,
+      "params": {
+        "fin_height_mm": 6.494782927033544,
+        "fin_thickness_mm": 0.5411241727698769,
+        "fin_count": 19,
+        "base_thickness_mm": 3.0661925159438477
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.995535326064422,
+      "failure_reason": null
+    },
+    {
+      "job_id": 181,
+      "params": {
+        "fin_height_mm": 9.39220853810442,
+        "fin_thickness_mm": 1.4432594312953748,
+        "fin_count": 4,
+        "base_thickness_mm": 7.793506763794097
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 16.776322794304136,
+      "failure_reason": null
+    },
+    {
+      "job_id": 182,
+      "params": {
+        "fin_height_mm": 6.002047956052221,
+        "fin_thickness_mm": 1.2034826538889454,
+        "fin_count": 16,
+        "base_thickness_mm": 5.636015715294759
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 8.983795140345295,
+      "failure_reason": null
+    },
+    {
+      "job_id": 183,
+      "params": {
+        "fin_height_mm": 12.38864861898471,
+        "fin_thickness_mm": 2.3445074430580095,
+        "fin_count": 17,
+        "base_thickness_mm": 3.785282358914963
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.646160093704369,
+      "failure_reason": "fin gap 0.634 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 184,
+      "params": {
+        "fin_height_mm": 12.767117705214407,
+        "fin_thickness_mm": 1.2594969265793678,
+        "fin_count": 9,
+        "base_thickness_mm": 3.5052353359827046
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 7.476347004929356,
+      "failure_reason": null
+    },
+    {
+      "job_id": 185,
+      "params": {
+        "fin_height_mm": 7.016111217977132,
+        "fin_thickness_mm": 2.7307672357812267,
+        "fin_count": 6,
+        "base_thickness_mm": 7.840945086772299
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 16.983780773476237,
+      "failure_reason": null
+    },
+    {
+      "job_id": 186,
+      "params": {
+        "fin_height_mm": 31.20332361060635,
+        "fin_thickness_mm": 1.539913199559538,
+        "fin_count": 29,
+        "base_thickness_mm": 6.170334282219333
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1243417547032497,
+      "failure_reason": "fin gap 0.191 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 187,
+      "params": {
+        "fin_height_mm": 24.934468444006697,
+        "fin_thickness_mm": 1.8091797687572726,
+        "fin_count": 12,
+        "base_thickness_mm": 5.373993752751253
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.2251939191187855,
+      "failure_reason": null
+    },
+    {
+      "job_id": 188,
+      "params": {
+        "fin_height_mm": 38.98749686493424,
+        "fin_thickness_mm": 2.3242986554360696,
+        "fin_count": 7,
+        "base_thickness_mm": 5.298198388343281
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.519668066340945,
+      "failure_reason": null
+    },
+    {
+      "job_id": 189,
+      "params": {
+        "fin_height_mm": 33.26456111252601,
+        "fin_thickness_mm": 1.2343227475142946,
+        "fin_count": 20,
+        "base_thickness_mm": 2.3186619474682453
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.5169723256131622,
+      "failure_reason": null
+    },
+    {
+      "job_id": 190,
+      "params": {
+        "fin_height_mm": 28.746233092136734,
+        "fin_thickness_mm": 2.237057035592344,
+        "fin_count": 4,
+        "base_thickness_mm": 3.366538413864272
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 7.454388449711057,
+      "failure_reason": null
+    },
+    {
+      "job_id": 191,
+      "params": {
+        "fin_height_mm": 9.801456955200553,
+        "fin_thickness_mm": 0.5973253676083743,
+        "fin_count": 10,
+        "base_thickness_mm": 5.790245541903767
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 8.366905822445464,
+      "failure_reason": null
+    },
+    {
+      "job_id": 192,
+      "params": {
+        "fin_height_mm": 15.53867697421104,
+        "fin_thickness_mm": 1.4782685635228723,
+        "fin_count": 24,
+        "base_thickness_mm": 7.665582883965602
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.6439589048595034,
+      "failure_reason": "fin gap 0.631 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 193,
+      "params": {
+        "fin_height_mm": 25.900570733110516,
+        "fin_thickness_mm": 2.1865825079418904,
+        "fin_count": 11,
+        "base_thickness_mm": 4.417309753827845
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.3890132462455895,
+      "failure_reason": null
+    },
+    {
+      "job_id": 194,
+      "params": {
+        "fin_height_mm": 31.289809795443624,
+        "fin_thickness_mm": 1.1721315334144793,
+        "fin_count": 17,
+        "base_thickness_mm": 5.205480703901558
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.876275955154693,
+      "failure_reason": null
+    },
+    {
+      "job_id": 195,
+      "params": {
+        "fin_height_mm": 34.99192060776399,
+        "fin_thickness_mm": 1.3768119277903732,
+        "fin_count": 10,
+        "base_thickness_mm": 5.142202983816466
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.79131269660783,
+      "failure_reason": null
+    },
+    {
+      "job_id": 196,
+      "params": {
+        "fin_height_mm": 21.40462122102023,
+        "fin_thickness_mm": 1.2251691232139055,
+        "fin_count": 9,
+        "base_thickness_mm": 3.7561189593646853
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.766006218275322,
+      "failure_reason": null
+    },
+    {
+      "job_id": 197,
+      "params": {
+        "fin_height_mm": 11.749734379201467,
+        "fin_thickness_mm": 1.9330448296914486,
+        "fin_count": 11,
+        "base_thickness_mm": 3.1489650633511754
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.977588944277313,
+      "failure_reason": null
+    },
+    {
+      "job_id": 198,
+      "params": {
+        "fin_height_mm": 32.528958484235766,
+        "fin_thickness_mm": 1.2923719111745489,
+        "fin_count": 19,
+        "base_thickness_mm": 6.896587803307819
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.6264771237397506,
+      "failure_reason": null
+    },
+    {
+      "job_id": 199,
+      "params": {
+        "fin_height_mm": 33.939366976215126,
+        "fin_thickness_mm": 2.513813487699381,
+        "fin_count": 19,
+        "base_thickness_mm": 3.9065497486277234
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5710269132806949,
+      "failure_reason": "fin gap 0.124 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 200,
+      "params": {
+        "fin_height_mm": 27.942863778287183,
+        "fin_thickness_mm": 1.6652086755906201,
+        "fin_count": 26,
+        "base_thickness_mm": 4.874205605266127
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3908447756027302,
+      "failure_reason": "fin gap 0.268 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 201,
+      "params": {
+        "fin_height_mm": 34.58390101808849,
+        "fin_thickness_mm": 1.209716656518033,
+        "fin_count": 11,
+        "base_thickness_mm": 3.4562432532426977
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.5840327189221957,
+      "failure_reason": null
+    },
+    {
+      "job_id": 202,
+      "params": {
+        "fin_height_mm": 20.767646298720187,
+        "fin_thickness_mm": 2.927809088882175,
+        "fin_count": 22,
+        "base_thickness_mm": 5.231465301960582
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.23460653167658,
+      "failure_reason": "fin gap -0.686 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 203,
+      "params": {
+        "fin_height_mm": 16.582638466031547,
+        "fin_thickness_mm": 1.1714488647177381,
+        "fin_count": 8,
+        "base_thickness_mm": 7.006221990458842
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 6.580168154744179,
+      "failure_reason": null
+    },
+    {
+      "job_id": 204,
+      "params": {
+        "fin_height_mm": 31.325297118812188,
+        "fin_thickness_mm": 1.4672568050243282,
+        "fin_count": 11,
+        "base_thickness_mm": 7.059157413671619
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.8232263609062507,
+      "failure_reason": null
+    },
+    {
+      "job_id": 205,
+      "params": {
+        "fin_height_mm": 28.419207897863203,
+        "fin_thickness_mm": 1.8899284479286909,
+        "fin_count": 15,
+        "base_thickness_mm": 2.6101927044082425
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.31864423198293,
+      "failure_reason": null
+    },
+    {
+      "job_id": 206,
+      "params": {
+        "fin_height_mm": 20.30888202702007,
+        "fin_thickness_mm": 1.760795979376855,
+        "fin_count": 18,
+        "base_thickness_mm": 4.388589528343166
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.688509931973214,
+      "failure_reason": null
+    },
+    {
+      "job_id": 207,
+      "params": {
+        "fin_height_mm": 5.975258181246627,
+        "fin_thickness_mm": 0.5413654303056412,
+        "fin_count": 6,
+        "base_thickness_mm": 3.9719545002696552
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 16.905954279229633,
+      "failure_reason": null
+    },
+    {
+      "job_id": 208,
+      "params": {
+        "fin_height_mm": 7.124134536399674,
+        "fin_thickness_mm": 2.1730048198492042,
+        "fin_count": 18,
+        "base_thickness_mm": 4.261672247159049
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 7.486146919290576,
+      "failure_reason": "fin gap 0.640 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 209,
+      "params": {
+        "fin_height_mm": 27.942821188263903,
+        "fin_thickness_mm": 2.7155455516880473,
+        "fin_count": 13,
+        "base_thickness_mm": 5.10356886995751
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.7229655718469274,
+      "failure_reason": null
+    },
+    {
+      "job_id": 210,
+      "params": {
+        "fin_height_mm": 39.183783929600665,
+        "fin_thickness_mm": 0.6998690623827173,
+        "fin_count": 30,
+        "base_thickness_mm": 6.938943950407581
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 0.8986677147079003,
+      "failure_reason": null
+    },
+    {
+      "job_id": 211,
+      "params": {
+        "fin_height_mm": 31.45247143036252,
+        "fin_thickness_mm": 2.5435204910425115,
+        "fin_count": 9,
+        "base_thickness_mm": 5.935385040868463
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.411809935725278,
+      "failure_reason": null
+    },
+    {
+      "job_id": 212,
+      "params": {
+        "fin_height_mm": 21.00525882854734,
+        "fin_thickness_mm": 2.628278337198527,
+        "fin_count": 11,
+        "base_thickness_mm": 6.580817294408747
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.16061463842653,
+      "failure_reason": null
+    },
+    {
+      "job_id": 213,
+      "params": {
+        "fin_height_mm": 35.13316492956419,
+        "fin_thickness_mm": 1.3404833521659814,
+        "fin_count": 28,
+        "base_thickness_mm": 5.6478300728476345
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0400142776144692,
+      "failure_reason": "fin gap 0.462 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 214,
+      "params": {
+        "fin_height_mm": 23.524093942021253,
+        "fin_thickness_mm": 1.3559265195905703,
+        "fin_count": 30,
+        "base_thickness_mm": 3.0861162882523594
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4261994489008638,
+      "failure_reason": "fin gap 0.321 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 215,
+      "params": {
+        "fin_height_mm": 25.432830130118376,
+        "fin_thickness_mm": 0.7074146198980803,
+        "fin_count": 12,
+        "base_thickness_mm": 2.7668354379296005
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.1527141801725165,
+      "failure_reason": null
+    },
+    {
+      "job_id": 216,
+      "params": {
+        "fin_height_mm": 20.51858203693905,
+        "fin_thickness_mm": 2.8585796470059397,
+        "fin_count": 11,
+        "base_thickness_mm": 7.7378622802200745
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.275196852970785,
+      "failure_reason": null
+    },
+    {
+      "job_id": 217,
+      "params": {
+        "fin_height_mm": 23.98385072993775,
+        "fin_thickness_mm": 2.861220812344001,
+        "fin_count": 29,
+        "base_thickness_mm": 5.442823897016195
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4825093188937353,
+      "failure_reason": "fin gap -1.178 mm below minimum 1.000 mm; volume 113110.5 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 218,
+      "params": {
+        "fin_height_mm": 28.707446513065864,
+        "fin_thickness_mm": 2.1640802129632046,
+        "fin_count": 10,
+        "base_thickness_mm": 4.8651894648769005
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.3585120298131645,
+      "failure_reason": null
+    },
+    {
+      "job_id": 219,
+      "params": {
+        "fin_height_mm": 34.602551011790226,
+        "fin_thickness_mm": 2.345461902854574,
+        "fin_count": 20,
+        "base_thickness_mm": 7.371868826960144
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4655626622806235,
+      "failure_reason": "fin gap 0.163 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 220,
+      "params": {
+        "fin_height_mm": 24.296823185946213,
+        "fin_thickness_mm": 2.976587335889118,
+        "fin_count": 10,
+        "base_thickness_mm": 2.234350377590075
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.975664599183444,
+      "failure_reason": null
+    },
+    {
+      "job_id": 221,
+      "params": {
+        "fin_height_mm": 25.284598879245838,
+        "fin_thickness_mm": 1.4945656385293036,
+        "fin_count": 23,
+        "base_thickness_mm": 7.041468657985013
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.719982385598743,
+      "failure_reason": "fin gap 0.710 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 222,
+      "params": {
+        "fin_height_mm": 7.419504209777065,
+        "fin_thickness_mm": 2.125806461213447,
+        "fin_count": 8,
+        "base_thickness_mm": 3.1651861275057325
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 13.192112195705613,
+      "failure_reason": null
+    },
+    {
+      "job_id": 223,
+      "params": {
+        "fin_height_mm": 15.478456326523101,
+        "fin_thickness_mm": 0.9492111547806212,
+        "fin_count": 30,
+        "base_thickness_mm": 6.539264937130859
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.1216053620766964,
+      "failure_reason": "fin gap 0.742 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 224,
+      "params": {
+        "fin_height_mm": 35.75394223813524,
+        "fin_thickness_mm": 1.3801936653261822,
+        "fin_count": 29,
+        "base_thickness_mm": 3.592254328522785
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.98842592032685,
+      "failure_reason": "fin gap 0.356 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 225,
+      "params": {
+        "fin_height_mm": 22.098282002003497,
+        "fin_thickness_mm": 1.1786251767367026,
+        "fin_count": 20,
+        "base_thickness_mm": 2.8115931190109227
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.22558986660003,
+      "failure_reason": null
+    },
+    {
+      "job_id": 226,
+      "params": {
+        "fin_height_mm": 25.155664887016844,
+        "fin_thickness_mm": 2.259164754766882,
+        "fin_count": 28,
+        "base_thickness_mm": 3.2781014762626053
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4463751524892101,
+      "failure_reason": "fin gap -0.491 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 227,
+      "params": {
+        "fin_height_mm": 34.04069917684595,
+        "fin_thickness_mm": 2.6308795048332834,
+        "fin_count": 21,
+        "base_thickness_mm": 3.8535716051803384
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4241683618985455,
+      "failure_reason": "fin gap -0.262 mm below minimum 1.000 mm; volume 103668.8 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 228,
+      "params": {
+        "fin_height_mm": 27.705958154003493,
+        "fin_thickness_mm": 1.223561623394071,
+        "fin_count": 22,
+        "base_thickness_mm": 4.11054747945937
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.6422160643433594,
+      "failure_reason": null
+    },
+    {
+      "job_id": 229,
+      "params": {
+        "fin_height_mm": 10.56847338788736,
+        "fin_thickness_mm": 2.3697134880296584,
+        "fin_count": 12,
+        "base_thickness_mm": 3.166226895095249
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 7.2775243409756945,
+      "failure_reason": null
+    },
+    {
+      "job_id": 230,
+      "params": {
+        "fin_height_mm": 24.13653220206716,
+        "fin_thickness_mm": 1.667339091676586,
+        "fin_count": 26,
+        "base_thickness_mm": 7.028709656102731
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.602975925864743,
+      "failure_reason": "fin gap 0.266 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 231,
+      "params": {
+        "fin_height_mm": 18.263311222072492,
+        "fin_thickness_mm": 2.3022678356142783,
+        "fin_count": 13,
+        "base_thickness_mm": 5.561429143244114
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.059331553681101,
+      "failure_reason": null
+    },
+    {
+      "job_id": 232,
+      "params": {
+        "fin_height_mm": 16.524934628988866,
+        "fin_thickness_mm": 1.2203015450132486,
+        "fin_count": 9,
+        "base_thickness_mm": 7.930693307239777
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.982288161976599,
+      "failure_reason": null
+    },
+    {
+      "job_id": 233,
+      "params": {
+        "fin_height_mm": 17.528020786924486,
+        "fin_thickness_mm": 1.4668864272752054,
+        "fin_count": 12,
+        "base_thickness_mm": 2.4814875901669335
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 4.442195696277041,
+      "failure_reason": null
+    },
+    {
+      "job_id": 234,
+      "params": {
+        "fin_height_mm": 38.12153225073425,
+        "fin_thickness_mm": 0.8729311528196305,
+        "fin_count": 4,
+        "base_thickness_mm": 7.2063446850174095
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.952806891182371,
+      "failure_reason": null
+    },
+    {
+      "job_id": 235,
+      "params": {
+        "fin_height_mm": 18.480073917469486,
+        "fin_thickness_mm": 2.684523445432463,
+        "fin_count": 26,
+        "base_thickness_mm": 5.0592332197522625
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.1339928170906846,
+      "failure_reason": "fin gap -0.792 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 236,
+      "params": {
+        "fin_height_mm": 32.49467146134228,
+        "fin_thickness_mm": 1.8669375085008557,
+        "fin_count": 13,
+        "base_thickness_mm": 5.102855634452883
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 2.3381220710282897,
+      "failure_reason": null
+    },
+    {
+      "job_id": 237,
+      "params": {
+        "fin_height_mm": 14.732681405321033,
+        "fin_thickness_mm": 1.916083664540981,
+        "fin_count": 11,
+        "base_thickness_mm": 6.763949100438202
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 5.684186905765215,
+      "failure_reason": null
+    },
+    {
+      "job_id": 238,
+      "params": {
+        "fin_height_mm": 14.93407664496603,
+        "fin_thickness_mm": 1.2082187016539723,
+        "fin_count": 7,
+        "base_thickness_mm": 2.373116628082545
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 8.020100468569114,
+      "failure_reason": null
+    },
+    {
+      "job_id": 239,
+      "params": {
+        "fin_height_mm": 10.72677084835665,
+        "fin_thickness_mm": 2.8831770247050486,
+        "fin_count": 15,
+        "base_thickness_mm": 5.608513753126913
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 6.094987884802039,
+      "failure_reason": "fin gap 0.482 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 240,
+      "params": {
+        "fin_height_mm": 18.415975921276917,
+        "fin_thickness_mm": 0.8593757078846871,
+        "fin_count": 13,
+        "base_thickness_mm": 7.4548169404916145
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 3.9093685533617712,
+      "failure_reason": null
+    }
+  ],
+  "failures": [
+    {
+      "job_id": 3,
+      "params": {
+        "fin_height_mm": 9.972415273074505,
+        "fin_thickness_mm": 2.9110824719132324,
+        "fin_count": 30,
+        "base_thickness_mm": 7.043863468049189
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.5692068300285604,
+      "failure_reason": "fin gap -1.287 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 8,
+      "params": {
+        "fin_height_mm": 6.021122898729947,
+        "fin_thickness_mm": 2.4111137509154337,
+        "fin_count": 17,
+        "base_thickness_mm": 3.7858796421104834
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 9.362016047244863,
+      "failure_reason": "fin gap 0.563 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 9,
+      "params": {
+        "fin_height_mm": 13.707505509821567,
+        "fin_thickness_mm": 2.883521513364097,
+        "fin_count": 17,
+        "base_thickness_mm": 5.094168829084911
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.291383059020362,
+      "failure_reason": "fin gap 0.061 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 13,
+      "params": {
+        "fin_height_mm": 22.055389599638723,
+        "fin_thickness_mm": 1.9637807688973228,
+        "fin_count": 27,
+        "base_thickness_mm": 7.308211354000187
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.6971203635003467,
+      "failure_reason": "fin gap -0.116 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 15,
+      "params": {
+        "fin_height_mm": 33.78379431633409,
+        "fin_thickness_mm": 1.841485737806615,
+        "fin_count": 22,
+        "base_thickness_mm": 4.821386525470661
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3635867112014248,
+      "failure_reason": "fin gap 0.452 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 18,
+      "params": {
+        "fin_height_mm": 23.370796777047758,
+        "fin_thickness_mm": 1.5448597128828365,
+        "fin_count": 28,
+        "base_thickness_mm": 5.866522684991121
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.537674414994827,
+      "failure_reason": "fin gap 0.250 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 22,
+      "params": {
+        "fin_height_mm": 18.478428191341735,
+        "fin_thickness_mm": 1.396190781082977,
+        "fin_count": 28,
+        "base_thickness_mm": 6.547902981030536
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.9276243460573408,
+      "failure_reason": "fin gap 0.404 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 24,
+      "params": {
+        "fin_height_mm": 23.130457583289225,
+        "fin_thickness_mm": 2.957487760293126,
+        "fin_count": 27,
+        "base_thickness_mm": 5.114602790860901
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.6503067748199889,
+      "failure_reason": "fin gap -1.148 mm below minimum 1.000 mm; volume 105137.4 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 25,
+      "params": {
+        "fin_height_mm": 10.480921591026945,
+        "fin_thickness_mm": 2.5363894278897705,
+        "fin_count": 25,
+        "base_thickness_mm": 2.4850176705727227
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.922341540177642,
+      "failure_reason": "fin gap -0.559 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 26,
+      "params": {
+        "fin_height_mm": 27.136596417901185,
+        "fin_thickness_mm": 1.7044387440903228,
+        "fin_count": 20,
+        "base_thickness_mm": 2.9965977209271975
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.840981773530486,
+      "failure_reason": "fin gap 0.837 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 30,
+      "params": {
+        "fin_height_mm": 10.779171523714053,
+        "fin_thickness_mm": 1.9627516365131172,
+        "fin_count": 29,
+        "base_thickness_mm": 6.316334600256265
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.2411162906967883,
+      "failure_reason": "fin gap -0.247 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 31,
+      "params": {
+        "fin_height_mm": 38.84611918004497,
+        "fin_thickness_mm": 2.928642762080996,
+        "fin_count": 23,
+        "base_thickness_mm": 4.919893444998664
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1492864534571778,
+      "failure_reason": "fin gap -0.789 mm below minimum 1.000 mm; volume 143131.1 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 32,
+      "params": {
+        "fin_height_mm": 14.110364353824354,
+        "fin_thickness_mm": 2.6494693954967428,
+        "fin_count": 18,
+        "base_thickness_mm": 7.6711908350721725
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.9289265566589595,
+      "failure_reason": "fin gap 0.136 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 35,
+      "params": {
+        "fin_height_mm": 5.179402034279252,
+        "fin_thickness_mm": 2.223851613755853,
+        "fin_count": 27,
+        "base_thickness_mm": 4.806517246670137
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 7.420212800074304,
+      "failure_reason": "fin gap -0.386 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 36,
+      "params": {
+        "fin_height_mm": 10.149631446245424,
+        "fin_thickness_mm": 2.5448256745255278,
+        "fin_count": 21,
+        "base_thickness_mm": 7.045381487339368
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.736161542801336,
+      "failure_reason": "fin gap -0.172 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 37,
+      "params": {
+        "fin_height_mm": 27.012378208331835,
+        "fin_thickness_mm": 2.124199683479614,
+        "fin_count": 24,
+        "base_thickness_mm": 6.750196935444636
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5608892389508913,
+      "failure_reason": "fin gap -0.043 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 44,
+      "params": {
+        "fin_height_mm": 16.12309735813551,
+        "fin_thickness_mm": 2.0834742966440025,
+        "fin_count": 27,
+        "base_thickness_mm": 2.2164799348135524
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.3232098986481007,
+      "failure_reason": "fin gap -0.241 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 45,
+      "params": {
+        "fin_height_mm": 10.917527565444235,
+        "fin_thickness_mm": 1.41360972398461,
+        "fin_count": 22,
+        "base_thickness_mm": 5.89662402739764
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.01639555996992,
+      "failure_reason": "fin gap 0.900 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 46,
+      "params": {
+        "fin_height_mm": 36.29287934549482,
+        "fin_thickness_mm": 1.9965452085190964,
+        "fin_count": 18,
+        "base_thickness_mm": 4.914530718632162
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5464579836891061,
+      "failure_reason": "fin gap 0.827 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 49,
+      "params": {
+        "fin_height_mm": 21.928336554951766,
+        "fin_thickness_mm": 2.1126605949889106,
+        "fin_count": 28,
+        "base_thickness_mm": 4.3174356375499725
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.653134291394439,
+      "failure_reason": "fin gap -0.339 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 50,
+      "params": {
+        "fin_height_mm": 24.28306068496143,
+        "fin_thickness_mm": 1.943188419041238,
+        "fin_count": 23,
+        "base_thickness_mm": 7.919963706189627
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.799478302260167,
+      "failure_reason": "fin gap 0.241 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 52,
+      "params": {
+        "fin_height_mm": 37.676185950300415,
+        "fin_thickness_mm": 2.496547056677796,
+        "fin_count": 29,
+        "base_thickness_mm": 5.002208971895158
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.9419344670075981,
+      "failure_reason": "fin gap -0.800 mm below minimum 1.000 mm; volume 148893.1 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 53,
+      "params": {
+        "fin_height_mm": 30.76023511363897,
+        "fin_thickness_mm": 2.7493519471258625,
+        "fin_count": 29,
+        "base_thickness_mm": 7.0243422981104215
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1529639565304488,
+      "failure_reason": "fin gap -1.062 mm below minimum 1.000 mm; volume 140188.4 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 56,
+      "params": {
+        "fin_height_mm": 10.790624298553062,
+        "fin_thickness_mm": 1.8078226657603909,
+        "fin_count": 25,
+        "base_thickness_mm": 5.752366761161494
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.681828172216875,
+      "failure_reason": "fin gap 0.200 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 61,
+      "params": {
+        "fin_height_mm": 29.702224264718083,
+        "fin_thickness_mm": 1.9188552702705288,
+        "fin_count": 29,
+        "base_thickness_mm": 3.226202105477462
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1821879406307145,
+      "failure_reason": "fin gap -0.202 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 63,
+      "params": {
+        "fin_height_mm": 30.08152426396733,
+        "fin_thickness_mm": 1.5010327643120527,
+        "fin_count": 30,
+        "base_thickness_mm": 4.585816163195407
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1265772162361036,
+      "failure_reason": "fin gap 0.171 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 69,
+      "params": {
+        "fin_height_mm": 9.471708587866553,
+        "fin_thickness_mm": 1.9011352680627642,
+        "fin_count": 23,
+        "base_thickness_mm": 7.313268115650709
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.532012136966195,
+      "failure_reason": "fin gap 0.285 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 74,
+      "params": {
+        "fin_height_mm": 13.095218319201175,
+        "fin_thickness_mm": 2.236800333650815,
+        "fin_count": 25,
+        "base_thickness_mm": 2.639044598475997
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.090171154931065,
+      "failure_reason": "fin gap -0.247 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 75,
+      "params": {
+        "fin_height_mm": 33.873072103651424,
+        "fin_thickness_mm": 2.743353208175351,
+        "fin_count": 19,
+        "base_thickness_mm": 7.6279466828922855
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5775025656848989,
+      "failure_reason": "fin gap -0.118 mm below minimum 1.000 mm; volume 107349.4 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 78,
+      "params": {
+        "fin_height_mm": 13.760483202408542,
+        "fin_thickness_mm": 2.3143927443399854,
+        "fin_count": 19,
+        "base_thickness_mm": 3.614506840075093
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.791195467730345,
+      "failure_reason": "fin gap 0.335 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 79,
+      "params": {
+        "fin_height_mm": 21.69604660314037,
+        "fin_thickness_mm": 2.3576110232391283,
+        "fin_count": 17,
+        "base_thickness_mm": 4.930097984746597
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.692393101658156,
+      "failure_reason": "fin gap 0.620 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 80,
+      "params": {
+        "fin_height_mm": 26.193826514360477,
+        "fin_thickness_mm": 2.8916494104620747,
+        "fin_count": 14,
+        "base_thickness_mm": 4.720632886867513
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.712465200125603,
+      "failure_reason": "fin gap 0.732 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 82,
+      "params": {
+        "fin_height_mm": 11.699927615169962,
+        "fin_thickness_mm": 1.1379209861383255,
+        "fin_count": 28,
+        "base_thickness_mm": 4.944499038014461
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.9815904041150585,
+      "failure_reason": "fin gap 0.672 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 83,
+      "params": {
+        "fin_height_mm": 13.211880988936036,
+        "fin_thickness_mm": 2.2582956215226435,
+        "fin_count": 22,
+        "base_thickness_mm": 7.872725489180697
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.4471857380179047,
+      "failure_reason": "fin gap 0.015 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 88,
+      "params": {
+        "fin_height_mm": 9.687176830891204,
+        "fin_thickness_mm": 1.7547304115679856,
+        "fin_count": 22,
+        "base_thickness_mm": 4.792286788346408
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.57779076802399,
+      "failure_reason": "fin gap 0.543 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 90,
+      "params": {
+        "fin_height_mm": 24.09930530105946,
+        "fin_thickness_mm": 2.4666928560519246,
+        "fin_count": 30,
+        "base_thickness_mm": 5.17373611814566
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4174476348284937,
+      "failure_reason": "fin gap -0.828 mm below minimum 1.000 mm; volume 102102.7 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 92,
+      "params": {
+        "fin_height_mm": 18.131901579459658,
+        "fin_thickness_mm": 2.2463218705394135,
+        "fin_count": 18,
+        "base_thickness_mm": 3.2357561533915487
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.033863267038689,
+      "failure_reason": "fin gap 0.563 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 94,
+      "params": {
+        "fin_height_mm": 7.821995849963453,
+        "fin_thickness_mm": 1.925525416487903,
+        "fin_count": 18,
+        "base_thickness_mm": 7.423032739992392
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 6.742138729793682,
+      "failure_reason": "fin gap 0.902 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 95,
+      "params": {
+        "fin_height_mm": 27.90617494650276,
+        "fin_thickness_mm": 2.5516642202445508,
+        "fin_count": 23,
+        "base_thickness_mm": 3.1992983898398064
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5842775064595371,
+      "failure_reason": "fin gap -0.395 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 96,
+      "params": {
+        "fin_height_mm": 38.204848204774336,
+        "fin_thickness_mm": 2.7400691357345583,
+        "fin_count": 20,
+        "base_thickness_mm": 7.509341786681858
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3355965539253347,
+      "failure_reason": "fin gap -0.253 mm below minimum 1.000 mm; volume 123457.3 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 97,
+      "params": {
+        "fin_height_mm": 33.14999660035135,
+        "fin_thickness_mm": 2.31703013734168,
+        "fin_count": 20,
+        "base_thickness_mm": 6.057493079731372
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5272084361466438,
+      "failure_reason": "fin gap 0.193 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 100,
+      "params": {
+        "fin_height_mm": 18.304323635536903,
+        "fin_thickness_mm": 1.8570671027600016,
+        "fin_count": 24,
+        "base_thickness_mm": 6.127597642405357
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.275522671153139,
+      "failure_reason": "fin gap 0.236 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 101,
+      "params": {
+        "fin_height_mm": 39.23889159703326,
+        "fin_thickness_mm": 1.5791607090688558,
+        "fin_count": 29,
+        "base_thickness_mm": 3.945781643021995
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.904755384942452,
+      "failure_reason": "fin gap 0.150 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 102,
+      "params": {
+        "fin_height_mm": 32.622752740416885,
+        "fin_thickness_mm": 1.6550595866323352,
+        "fin_count": 27,
+        "base_thickness_mm": 6.264835428294496
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1553978417308308,
+      "failure_reason": "fin gap 0.204 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 104,
+      "params": {
+        "fin_height_mm": 38.29049981651153,
+        "fin_thickness_mm": 1.4983211834125851,
+        "fin_count": 27,
+        "base_thickness_mm": 3.6360931953067013
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.9931212177569376,
+      "failure_reason": "fin gap 0.367 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 105,
+      "params": {
+        "fin_height_mm": 17.161075850836085,
+        "fin_thickness_mm": 1.502232969303479,
+        "fin_count": 24,
+        "base_thickness_mm": 7.331401657501959
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.4024996294215044,
+      "failure_reason": "fin gap 0.606 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 108,
+      "params": {
+        "fin_height_mm": 27.68325607928195,
+        "fin_thickness_mm": 2.709132103245695,
+        "fin_count": 16,
+        "base_thickness_mm": 2.7866924971380196
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.261272794782672,
+      "failure_reason": "fin gap 0.444 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 109,
+      "params": {
+        "fin_height_mm": 23.417094901182047,
+        "fin_thickness_mm": 2.168147391566224,
+        "fin_count": 26,
+        "base_thickness_mm": 6.903492378352746
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.6647250805502725,
+      "failure_reason": "fin gap -0.255 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 110,
+      "params": {
+        "fin_height_mm": 8.06625129128761,
+        "fin_thickness_mm": 2.592816861772301,
+        "fin_count": 15,
+        "base_thickness_mm": 6.953644875126638
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 7.90832665723804,
+      "failure_reason": "fin gap 0.793 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 114,
+      "params": {
+        "fin_height_mm": 15.092549900980792,
+        "fin_thickness_mm": 1.7766570568668372,
+        "fin_count": 23,
+        "base_thickness_mm": 3.8630528891266542
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.8550466940872523,
+      "failure_reason": "fin gap 0.415 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 116,
+      "params": {
+        "fin_height_mm": 36.25885450737762,
+        "fin_thickness_mm": 0.9012720573602224,
+        "fin_count": 28,
+        "base_thickness_mm": 4.576053042141804
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0182666774762579,
+      "failure_reason": "fin gap 0.917 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 119,
+      "params": {
+        "fin_height_mm": 32.19028405683497,
+        "fin_thickness_mm": 2.105499446909888,
+        "fin_count": 24,
+        "base_thickness_mm": 6.606745588310837
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3154969163268626,
+      "failure_reason": "fin gap -0.023 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 122,
+      "params": {
+        "fin_height_mm": 36.241120779718905,
+        "fin_thickness_mm": 1.1306659528800607,
+        "fin_count": 26,
+        "base_thickness_mm": 2.6352292794435126
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0887108357289381,
+      "failure_reason": "fin gap 0.824 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 126,
+      "params": {
+        "fin_height_mm": 12.0894849684285,
+        "fin_thickness_mm": 2.0524762505357117,
+        "fin_count": 23,
+        "base_thickness_mm": 5.256107048908916
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.586639154633664,
+      "failure_reason": "fin gap 0.127 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 127,
+      "params": {
+        "fin_height_mm": 17.24394544546864,
+        "fin_thickness_mm": 1.702010833593921,
+        "fin_count": 24,
+        "base_thickness_mm": 3.6494824038609983
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.4032964511233477,
+      "failure_reason": "fin gap 0.398 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 130,
+      "params": {
+        "fin_height_mm": 39.620414441287615,
+        "fin_thickness_mm": 0.9711081604772818,
+        "fin_count": 26,
+        "base_thickness_mm": 2.165885667134914
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0085066876915796,
+      "failure_reason": "fin gap 0.990 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 133,
+      "params": {
+        "fin_height_mm": 11.264704566056636,
+        "fin_thickness_mm": 0.7645559888460536,
+        "fin_count": 30,
+        "base_thickness_mm": 2.9249913910256886
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.8599167465614688,
+      "failure_reason": "fin gap 0.933 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 137,
+      "params": {
+        "fin_height_mm": 36.95251427988599,
+        "fin_thickness_mm": 1.7453480602861755,
+        "fin_count": 19,
+        "base_thickness_mm": 4.421685557057906
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4426208296981906,
+      "failure_reason": "fin gap 0.935 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 140,
+      "params": {
+        "fin_height_mm": 26.38698089997012,
+        "fin_thickness_mm": 2.3696852389530223,
+        "fin_count": 21,
+        "base_thickness_mm": 2.7741134466796735
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.8214601727548108,
+      "failure_reason": "fin gap 0.012 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 141,
+      "params": {
+        "fin_height_mm": 19.366512607015785,
+        "fin_thickness_mm": 2.6418684173700564,
+        "fin_count": 16,
+        "base_thickness_mm": 7.863799478857149
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 3.201982289002461,
+      "failure_reason": "fin gap 0.515 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 142,
+      "params": {
+        "fin_height_mm": 37.07068796117645,
+        "fin_thickness_mm": 2.612979479350455,
+        "fin_count": 22,
+        "base_thickness_mm": 7.421815323349318
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.2529065450795236,
+      "failure_reason": "fin gap -0.356 mm below minimum 1.000 mm; volume 125106.0 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 143,
+      "params": {
+        "fin_height_mm": 27.964923316746674,
+        "fin_thickness_mm": 1.1678531366733818,
+        "fin_count": 29,
+        "base_thickness_mm": 7.673071133619313
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.2471348285078905,
+      "failure_reason": "fin gap 0.576 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 145,
+      "params": {
+        "fin_height_mm": 31.29000273948398,
+        "fin_thickness_mm": 1.6894241718473595,
+        "fin_count": 22,
+        "base_thickness_mm": 2.4467089739069356
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4660396794873873,
+      "failure_reason": "fin gap 0.611 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 147,
+      "params": {
+        "fin_height_mm": 27.134844336188813,
+        "fin_thickness_mm": 2.093250031567753,
+        "fin_count": 21,
+        "base_thickness_mm": 3.4877099875040782
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.7654664515694747,
+      "failure_reason": "fin gap 0.302 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 148,
+      "params": {
+        "fin_height_mm": 21.961993777782915,
+        "fin_thickness_mm": 2.5588294814990253,
+        "fin_count": 17,
+        "base_thickness_mm": 2.8081532523700217
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.6714259868276415,
+      "failure_reason": "fin gap 0.406 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 149,
+      "params": {
+        "fin_height_mm": 16.065600468259696,
+        "fin_thickness_mm": 2.7865245353176853,
+        "fin_count": 30,
+        "base_thickness_mm": 7.849222293039243
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.1564570698670815,
+      "failure_reason": "fin gap -1.158 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 150,
+      "params": {
+        "fin_height_mm": 28.065662377324266,
+        "fin_thickness_mm": 2.731918411803817,
+        "fin_count": 22,
+        "base_thickness_mm": 7.289871740631014
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.648346806749137,
+      "failure_reason": "fin gap -0.481 mm below minimum 1.000 mm; volume 102565.1 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 152,
+      "params": {
+        "fin_height_mm": 18.73907667420922,
+        "fin_thickness_mm": 1.416371850109083,
+        "fin_count": 28,
+        "base_thickness_mm": 2.432630090887649
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.902315759757756,
+      "failure_reason": "fin gap 0.383 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 153,
+      "params": {
+        "fin_height_mm": 27.45326899023549,
+        "fin_thickness_mm": 2.255260173901733,
+        "fin_count": 18,
+        "base_thickness_mm": 5.112443919185552
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.026095505273694,
+      "failure_reason": "fin gap 0.553 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 159,
+      "params": {
+        "fin_height_mm": 19.415285141074342,
+        "fin_thickness_mm": 2.807929663739492,
+        "fin_count": 25,
+        "base_thickness_mm": 4.685479157075268
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.113382968626202,
+      "failure_reason": "fin gap -0.842 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 160,
+      "params": {
+        "fin_height_mm": 21.125180727848907,
+        "fin_thickness_mm": 1.844841472392274,
+        "fin_count": 30,
+        "base_thickness_mm": 2.9508822123385317
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.597077199653907,
+      "failure_reason": "fin gap -0.184 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 162,
+      "params": {
+        "fin_height_mm": 6.32404781655539,
+        "fin_thickness_mm": 1.9940546283410803,
+        "fin_count": 27,
+        "base_thickness_mm": 3.6047648958922895
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 5.927040351090962,
+      "failure_reason": "fin gap -0.148 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 163,
+      "params": {
+        "fin_height_mm": 19.725096537372522,
+        "fin_thickness_mm": 1.810847854412707,
+        "fin_count": 21,
+        "base_thickness_mm": 5.515495736462832
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.3961115026000273,
+      "failure_reason": "fin gap 0.599 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 164,
+      "params": {
+        "fin_height_mm": 26.23251949583374,
+        "fin_thickness_mm": 0.967015637696049,
+        "fin_count": 28,
+        "base_thickness_mm": 2.3154119709481527
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3709270674533007,
+      "failure_reason": "fin gap 0.849 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 167,
+      "params": {
+        "fin_height_mm": 5.111102562155137,
+        "fin_thickness_mm": 2.0660631006131043,
+        "fin_count": 22,
+        "base_thickness_mm": 2.4576169142303472
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 8.720574109047181,
+      "failure_reason": "fin gap 0.217 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 169,
+      "params": {
+        "fin_height_mm": 37.77776989213458,
+        "fin_thickness_mm": 1.8889358608699987,
+        "fin_count": 29,
+        "base_thickness_mm": 2.594916414141114
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.9371910366501782,
+      "failure_reason": "fin gap -0.171 mm below minimum 1.000 mm; volume 109959.0 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 171,
+      "params": {
+        "fin_height_mm": 25.302555761175906,
+        "fin_thickness_mm": 1.3453195225567187,
+        "fin_count": 30,
+        "base_thickness_mm": 5.389526192623087
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3291446437186831,
+      "failure_reason": "fin gap 0.332 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 173,
+      "params": {
+        "fin_height_mm": 37.46519068004574,
+        "fin_thickness_mm": 2.384259406499209,
+        "fin_count": 27,
+        "base_thickness_mm": 3.648971494405706
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0147740341150304,
+      "failure_reason": "fin gap -0.553 mm below minimum 1.000 mm; volume 129713.5 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 174,
+      "params": {
+        "fin_height_mm": 33.38431884947189,
+        "fin_thickness_mm": 2.294374314353622,
+        "fin_count": 23,
+        "base_thickness_mm": 4.337653740851497
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3252931358263629,
+      "failure_reason": "fin gap -0.126 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 175,
+      "params": {
+        "fin_height_mm": 38.536342788634755,
+        "fin_thickness_mm": 1.7513151794260775,
+        "fin_count": 27,
+        "base_thickness_mm": 7.82224601021048
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.9861302042754676,
+      "failure_reason": "fin gap 0.104 mm below minimum 1.000 mm; volume 110666.1 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 179,
+      "params": {
+        "fin_height_mm": 6.4766893336689995,
+        "fin_thickness_mm": 2.95012777723058,
+        "fin_count": 25,
+        "base_thickness_mm": 7.943886432059897
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 6.668186714849862,
+      "failure_reason": "fin gap -0.990 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 183,
+      "params": {
+        "fin_height_mm": 12.38864861898471,
+        "fin_thickness_mm": 2.3445074430580095,
+        "fin_count": 17,
+        "base_thickness_mm": 3.785282358914963
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 4.646160093704369,
+      "failure_reason": "fin gap 0.634 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 186,
+      "params": {
+        "fin_height_mm": 31.20332361060635,
+        "fin_thickness_mm": 1.539913199559538,
+        "fin_count": 29,
+        "base_thickness_mm": 6.170334282219333
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.1243417547032497,
+      "failure_reason": "fin gap 0.191 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 192,
+      "params": {
+        "fin_height_mm": 15.53867697421104,
+        "fin_thickness_mm": 1.4782685635228723,
+        "fin_count": 24,
+        "base_thickness_mm": 7.665582883965602
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.6439589048595034,
+      "failure_reason": "fin gap 0.631 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 199,
+      "params": {
+        "fin_height_mm": 33.939366976215126,
+        "fin_thickness_mm": 2.513813487699381,
+        "fin_count": 19,
+        "base_thickness_mm": 3.9065497486277234
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.5710269132806949,
+      "failure_reason": "fin gap 0.124 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 200,
+      "params": {
+        "fin_height_mm": 27.942863778287183,
+        "fin_thickness_mm": 1.6652086755906201,
+        "fin_count": 26,
+        "base_thickness_mm": 4.874205605266127
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.3908447756027302,
+      "failure_reason": "fin gap 0.268 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 202,
+      "params": {
+        "fin_height_mm": 20.767646298720187,
+        "fin_thickness_mm": 2.927809088882175,
+        "fin_count": 22,
+        "base_thickness_mm": 5.231465301960582
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.23460653167658,
+      "failure_reason": "fin gap -0.686 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 208,
+      "params": {
+        "fin_height_mm": 7.124134536399674,
+        "fin_thickness_mm": 2.1730048198492042,
+        "fin_count": 18,
+        "base_thickness_mm": 4.261672247159049
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 7.486146919290576,
+      "failure_reason": "fin gap 0.640 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 213,
+      "params": {
+        "fin_height_mm": 35.13316492956419,
+        "fin_thickness_mm": 1.3404833521659814,
+        "fin_count": 28,
+        "base_thickness_mm": 5.6478300728476345
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.0400142776144692,
+      "failure_reason": "fin gap 0.462 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 214,
+      "params": {
+        "fin_height_mm": 23.524093942021253,
+        "fin_thickness_mm": 1.3559265195905703,
+        "fin_count": 30,
+        "base_thickness_mm": 3.0861162882523594
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4261994489008638,
+      "failure_reason": "fin gap 0.321 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 217,
+      "params": {
+        "fin_height_mm": 23.98385072993775,
+        "fin_thickness_mm": 2.861220812344001,
+        "fin_count": 29,
+        "base_thickness_mm": 5.442823897016195
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4825093188937353,
+      "failure_reason": "fin gap -1.178 mm below minimum 1.000 mm; volume 113110.5 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 219,
+      "params": {
+        "fin_height_mm": 34.602551011790226,
+        "fin_thickness_mm": 2.345461902854574,
+        "fin_count": 20,
+        "base_thickness_mm": 7.371868826960144
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4655626622806235,
+      "failure_reason": "fin gap 0.163 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 221,
+      "params": {
+        "fin_height_mm": 25.284598879245838,
+        "fin_thickness_mm": 1.4945656385293036,
+        "fin_count": 23,
+        "base_thickness_mm": 7.041468657985013
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.719982385598743,
+      "failure_reason": "fin gap 0.710 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 223,
+      "params": {
+        "fin_height_mm": 15.478456326523101,
+        "fin_thickness_mm": 0.9492111547806212,
+        "fin_count": 30,
+        "base_thickness_mm": 6.539264937130859
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.1216053620766964,
+      "failure_reason": "fin gap 0.742 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 224,
+      "params": {
+        "fin_height_mm": 35.75394223813524,
+        "fin_thickness_mm": 1.3801936653261822,
+        "fin_count": 29,
+        "base_thickness_mm": 3.592254328522785
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 0.98842592032685,
+      "failure_reason": "fin gap 0.356 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 226,
+      "params": {
+        "fin_height_mm": 25.155664887016844,
+        "fin_thickness_mm": 2.259164754766882,
+        "fin_count": 28,
+        "base_thickness_mm": 3.2781014762626053
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4463751524892101,
+      "failure_reason": "fin gap -0.491 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 227,
+      "params": {
+        "fin_height_mm": 34.04069917684595,
+        "fin_thickness_mm": 2.6308795048332834,
+        "fin_count": 21,
+        "base_thickness_mm": 3.8535716051803384
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.4241683618985455,
+      "failure_reason": "fin gap -0.262 mm below minimum 1.000 mm; volume 103668.8 mm^3 above budget 100000.0 mm^3"
+    },
+    {
+      "job_id": 230,
+      "params": {
+        "fin_height_mm": 24.13653220206716,
+        "fin_thickness_mm": 1.667339091676586,
+        "fin_count": 26,
+        "base_thickness_mm": 7.028709656102731
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 1.602975925864743,
+      "failure_reason": "fin gap 0.266 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 235,
+      "params": {
+        "fin_height_mm": 18.480073917469486,
+        "fin_thickness_mm": 2.684523445432463,
+        "fin_count": 26,
+        "base_thickness_mm": 5.0592332197522625
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 2.1339928170906846,
+      "failure_reason": "fin gap -0.792 mm below minimum 1.000 mm"
+    },
+    {
+      "job_id": 239,
+      "params": {
+        "fin_height_mm": 10.72677084835665,
+        "fin_thickness_mm": 2.8831770247050486,
+        "fin_count": 15,
+        "base_thickness_mm": 5.608513753126913
+      },
+      "status": "failed",
+      "score_r_th_c_per_w": 6.094987884802039,
+      "failure_reason": "fin gap 0.482 mm below minimum 1.000 mm"
+    }
+  ],
+  "score_curve_best_so_far": [
+    2.0296900011423875,
+    2.0296900011423875,
+    2.0296900011423875,
+    1.9446849588152304,
+    1.9446849588152304,
+    1.9446849588152304,
+    1.9446849588152304,
+    1.9446849588152304,
+    1.9446849588152304,
+    1.9446849588152304,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.7351090289432771,
+    1.726053500884789,
+    1.726053500884789,
+    1.726053500884789,
+    1.726053500884789,
+    1.726053500884789,
+    1.726053500884789,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.3791668441828777,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    1.183482596088573,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003,
+    0.8986677147079003
+  ],
+  "winners": [
+    {
+      "job_id": 210,
+      "params": {
+        "fin_height_mm": 39.183783929600665,
+        "fin_thickness_mm": 0.6998690623827173,
+        "fin_count": 30,
+        "base_thickness_mm": 6.938943950407581
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 0.8986677147079003,
+      "failure_reason": null
+    },
+    {
+      "job_id": 54,
+      "params": {
+        "fin_height_mm": 30.07997804974259,
+        "fin_thickness_mm": 0.54146190753686,
+        "fin_count": 29,
+        "base_thickness_mm": 4.002666502283235
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.183482596088573,
+      "failure_reason": null
+    },
+    {
+      "job_id": 134,
+      "params": {
+        "fin_height_mm": 38.44436898980032,
+        "fin_thickness_mm": 0.8521698369993995,
+        "fin_count": 22,
+        "base_thickness_mm": 7.0163030116953395
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.2244089918655299,
+      "failure_reason": null
+    },
+    {
+      "job_id": 64,
+      "params": {
+        "fin_height_mm": 25.541764987237165,
+        "fin_thickness_mm": 0.6206589844336856,
+        "fin_count": 30,
+        "base_thickness_mm": 4.2319084451054305
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.3213841351477773,
+      "failure_reason": null
+    },
+    {
+      "job_id": 29,
+      "params": {
+        "fin_height_mm": 26.36897127471013,
+        "fin_thickness_mm": 0.509255091291947,
+        "fin_count": 28,
+        "base_thickness_mm": 4.396865218044571
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.3791668441828777,
+      "failure_reason": null
+    },
+    {
+      "job_id": 59,
+      "params": {
+        "fin_height_mm": 32.66059150130376,
+        "fin_thickness_mm": 1.2762101492269045,
+        "fin_count": 22,
+        "base_thickness_mm": 4.06009052861625
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.4073005158736835,
+      "failure_reason": null
+    },
+    {
+      "job_id": 51,
+      "params": {
+        "fin_height_mm": 39.98690745308085,
+        "fin_thickness_mm": 1.4640835729593435,
+        "fin_count": 18,
+        "base_thickness_mm": 4.498832543355009
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.4142894497305467,
+      "failure_reason": null
+    },
+    {
+      "job_id": 189,
+      "params": {
+        "fin_height_mm": 33.26456111252601,
+        "fin_thickness_mm": 1.2343227475142946,
+        "fin_count": 20,
+        "base_thickness_mm": 2.3186619474682453
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.5169723256131622,
+      "failure_reason": null
+    },
+    {
+      "job_id": 198,
+      "params": {
+        "fin_height_mm": 32.528958484235766,
+        "fin_thickness_mm": 1.2923719111745489,
+        "fin_count": 19,
+        "base_thickness_mm": 6.896587803307819
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.6264771237397506,
+      "failure_reason": null
+    },
+    {
+      "job_id": 228,
+      "params": {
+        "fin_height_mm": 27.705958154003493,
+        "fin_thickness_mm": 1.223561623394071,
+        "fin_count": 22,
+        "base_thickness_mm": 4.11054747945937
+      },
+      "status": "done",
+      "score_r_th_c_per_w": 1.6422160643433594,
+      "failure_reason": null
+    }
+  ],
+  "best": {
+    "job_id": 210,
+    "params": {
+      "fin_height_mm": 39.183783929600665,
+      "fin_thickness_mm": 0.6998690623827173,
+      "fin_count": 30,
+      "base_thickness_mm": 6.938943950407581
+    },
+    "status": "done",
+    "score_r_th_c_per_w": 0.8986677147079003,
+    "failure_reason": null
+  },
+  "proven_best": {
+    "job_id": 54,
+    "params": {
+      "fin_height_mm": 30.07997804974259,
+      "fin_thickness_mm": 0.54146190753686,
+      "fin_count": 29,
+      "base_thickness_mm": 4.002666502283235
+    },
+    "status": "done",
+    "score_r_th_c_per_w": 1.183482596088573,
+    "failure_reason": null
+  },
+  "proven_verification": {
+    "params": {
+      "fin_height_mm": 30.07997804974259,
+      "fin_thickness_mm": 0.54146190753686,
+      "fin_count": 29,
+      "base_thickness_mm": 4.002666502283235
+    },
+    "claimed_r_th_c_per_w": 1.183482596088573,
+    "fresh_r_th_c_per_w": 1.183482596088573,
+    "fresh_agrees": true,
+    "heldout_r_th_c_per_w": 0.8198866060642207,
+    "heldout_feasible": true,
+    "heldout_violations": [],
+    "accept_r_c_per_w": 2.0,
+    "proven": true
+  },
+  "verification_attempts": 2
+}

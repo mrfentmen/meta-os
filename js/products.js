@@ -142,3 +142,23 @@ export const PRODUCT_IDS = PRODUCTS.map((p) => p.id);
 export function isProductId(value) {
   return typeof value === "string" && Object.hasOwn(PRODUCT_BY_ID, value);
 }
+
+// World packs (Meta OS institutions) register here, NOT in PRODUCTS.
+// PRODUCTS is the Trio camera-product list, guarded by the
+// product-parity test (web must equal native, exactly three camera
+// products). A workshop is not a camera product: it has no
+// observation categories and must never appear in the camera picker,
+// so Officina registers as a world entry with its own shape and
+// status, and the Trio list stays exactly vigiles / ignis / medicus.
+export const WORLD_PRODUCTS = [
+  {
+    id: "officina",
+    displayName: "Meta Officina",
+    department: "Invention workshop — agent design iteration",
+    tagline: "An agent that designs, simulates, breaks, and redesigns.",
+    accent: "#b07d2b",
+    status: "stage-1",
+    pack: "os/worlds/officina",
+    runtime: "os/worlds/officina/runtime/design_loop.py",
+  },
+];
