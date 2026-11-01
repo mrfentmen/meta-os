@@ -271,6 +271,12 @@ a SIMULATED receipt (HN-002: local state only, nothing posts) →
 human posts real jobs from the CLI (DSH-038, request-only) → tracker
 follows the posted jobs. Dispatch never auto-posts (DSP-040).
 
+**Plan button (HN-010):** `#intel-plan` shows the actual queued plan
+when one exists (the plan-ready preview, with real job rows); with
+no plan it states plainly "No plan exists yet." No queued-plan store
+key exists yet (no engine), so the panel renders the plan it is
+given and otherwise says none exists — it never invents a plan.
+
 ### 5.1 Request shape (DSP-037)
 
 ```json

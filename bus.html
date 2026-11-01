@@ -4521,10 +4521,12 @@ try {
       if (state.plan) {
         state.dispatchState = "plan-ready";
       } else {
-        // No engine, no preview source: say so plainly, stay idle.
+        // HN-010: no plan exists, say so plainly and stay idle.
         // No timer is used (DSH-020): this resolves synchronously.
-        state.dispatchNote = "No plan preview available yet — the " +
-          "dispatch engine has not landed.";
+        // No queued-plan store key exists yet (no engine), so the
+        // panel renders the plan it is given and otherwise states
+        // plainly that none exists — it never invents a plan.
+        state.dispatchNote = "No plan exists yet.";
         state.dispatchState = "idle";
       }
       renderDispatch();
@@ -4801,11 +4803,10 @@ try {
         if (st === "rejected") {
           html += '<div class="trow">Plan rejected — nothing was ' +
             "posted.</div>";
+        } else if (state.dispatchNote) {
+          html += '<div class="trow">' + U.esc(state.dispatchNote) +
+            "</div>";
         } else {
-          if (state.dispatchNote) {
-            html += '<div class="trow">' + U.esc(state.dispatchNote) +
-              "</div>";
-          }
           html += '<div class="trow">No plan yet.</div>';
         }
         html += '<div class="trow">' + U.esc(NO_POST_LINE) + "</div>" +
