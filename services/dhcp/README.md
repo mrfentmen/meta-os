@@ -1,45 +1,52 @@
-# `dhcp` — Layer 4 service
+# dhcp — the client state machine
 
-**Status: NOT BUILT.** No source yet. Filled by **B-L1-31**.
+Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
+service 15. Speaks the packet interface (B-L1-29); takes time as a parameter.
 
-This README is the entry from `services/README_TEMPLATE.md`, unfilled. Every
-section below is deliberately empty rather than optimistic: a section that says
-nothing is honest, a section that guesses is not.
+## Why time is a parameter
 
-## What it does
+`dhcp_step(client, now_ms, reply_type, offer)` never reads a clock. That is what lets
+B-L1-57 drive a whole lease lifetime — DISCOVER through expiry — in a test program
+without sleeping, and it means the same sequence of inputs always produces the same
+decisions.
 
-DHCP client. Not written yet.
+## States
 
-## Contract
+```
+IDLE ─▶ SELECTING ──OFFER──▶ REQUESTING ──ACK──▶ BOUND
+          │  ▲  ▲                 │               │
+          │  │  └─────NAK─────────┘               │ T1
+          │  └────────expiry────────────────────┐ │
+          │                                     ▼ ▼
+          └──retries exhausted──▶ FAILED     RENEWING ──T2──▶ REBINDING
+```
 
-- **Entry:** none yet. Will be `export "svc_entry" fn service_main(...) -> i32`
-  per `os-build/layer1/SERVICE_CONTRACT.md` §2.
-- **Kernel surface:** none declared yet. Requirements it will place on Layers 1–3
-  are listed in `os-build/layer1/BOUNDARIES.md`.
-- **Needs from Layers 1–3:** see `services/MANIFEST.md`, row for `dhcp`.
-- **Offers to Layers 5–6:** see `services/MANIFEST.md`; nothing may rely on it yet.
+`BOUND` is not terminal: T1 and T2 are option 58/59 when the server offers them,
+otherwise half and ⅞ of the lease. Expiry returns to `SELECTING` — a client that waited
+too long is exactly what DISCOVER is for, not a failure.
 
-## Dependencies
+## What the parser refuses
 
-- **Libraries:** not yet decided — B-L1-15's gap audit narrows the candidates.
-- **Services:** not yet decided.
-- **Data it owns:** not yet decided.
+| Condition | Result |
+|---|---|
+| < 240 bytes, `op != 2`, `htype != 1` or `hlen != 6` | `E_CORRUPT` — never trust `chaddr` without checking `hlen` |
+| magic cookie missing | `E_CORRUPT` — not DHCP whatever it claims |
+| option length runs past the packet | `E_CORRUPT` |
+| `yiaddr` is 0.0.0.0 | `E_NO_ADDRESS` — an offer of nothing is not an offer |
+| lease time 0 | `E_INVAL` — a zero lease renews in a tight loop |
+| **no subnet mask (option 1)** | `E_NO_MASK` — classful guessing is what DHCP exists to end, so the interface stays unconfigured rather than getting a mask nobody chose |
 
-## Failure behaviour
+Unknown options are **skipped**, not refused: the option space is shared with vendors
+and a strict client fails on most real networks.
 
-Not yet designed. When it is, the codes come from `common/err` and a failure is
-always a log record, never a silence.
+## Honest gaps
 
-## Verification
+- **No jitter.** RFC 2131 §4.1 asks for randomised retransmit backoff; this doubles and
+  caps at 64 s. Randomness needs an entropy source the kernel does not have yet. Recorded,
+  not faked with a constant.
+- **No DECLINE / RELEASE / INFORM.** A client that cannot yet tell a server it is leaving
+  says nothing; a malformed RELEASE is worse than silence.
+- **Broadcast flag never set.** Servers that insist on it will not answer a client that
+  cannot receive unicast before it has an address. A compatibility question, noted.
 
-Nothing to verify: no source.
-
-## Not verified
-
-Everything. There is no Goose toolchain on this machine
-(`goose__toolchain_status` → `NOT FOUND`), so even a finished service cannot pass
-WRITTEN into COMPILED here.
-
-## Deviations
-
-None — nothing has been written to deviate from.
+Not compiled, not run.
