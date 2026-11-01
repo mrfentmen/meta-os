@@ -10,7 +10,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 
 const formats = JSON.parse(
   readFileSync(new URL("../os-build/shell-formats.json", import.meta.url), "utf8"),
@@ -72,4 +72,20 @@ test("limits and bad-input strings are exact", () => {
     "ticks <count>",
     "heap <used_kib>/<total_kib> KiB",
   ]);
+});
+
+test("home surface states NOT BUILT and names its real sources", () => {
+  const home = readFileSync(
+    new URL("../os-build/home-surface.md", import.meta.url),
+    "utf8",
+  );
+  assert.ok(home.includes("NOT BUILT"));
+  assert.ok(home.includes("does not exist"));
+  for (const source of ["K2 console", "K5", "K4", "K6"]) {
+    assert.ok(home.includes(source), `missing source marker ${source}`);
+  }
+  const dir = readdirSync(
+    new URL("../os-build/", import.meta.url),
+  );
+  assert.ok(!dir.some((f) => f.endsWith(".html")), "no shipped home surface UI");
 });
