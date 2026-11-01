@@ -232,3 +232,21 @@
 - NC-106 DONE. oc-proofs/native-app-findings.md (6 items above).
 - NC-107: throwaway clone deleted below.
 - NC-108: this summary.
+
+## Section J — Film support (NC-109..NC-124) — DONE
+
+- NC-109/110/111: division deep-dives via labs review pages (timeline
+  filtered + BOLO cards), 20/15/20 s.
+- NC-112: tier explainer 10 s (yellow 001 then red 003, different scenes —
+  stated; no same-scene pair exists in the samples).
+- NC-113: Custos terminal 15 s (6 observed categories + SIMULATED
+  escalations; task text says nine — observed five event categories plus
+  summary/escalation records, tabled).
+- NC-114/115: honest absences filmed (pack facts; worlds listing).
+- NC-116: labs viewer 10 s, re-shot after catching a stale first cut.
+- NC-117: phone 390 px x2, 10 s each.
+- NC-118: 10 poster stills, one per clip.
+- NC-119/120: EDL_3MIN.md, 12 slots, arithmetic sums to exactly 180.0 s.
+- NC-121/122: mid-frames viewed (10/10 good), durations tabled exact.
+- NC-123: content check per clip (above); one re-shoot logged.
+- NC-124: this summary.
