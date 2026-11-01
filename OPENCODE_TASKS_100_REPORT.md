@@ -325,3 +325,25 @@ repo, commit 556bd41; repo untouched per the prompt). Status per task:
   search, zero hits). UTM installed and ready, nothing to boot. Section
   stopped per the task's own instruction. Full note: oc-proofs/utm-boot-report.md.
 - NB-052 to NB-060 not attempted. Unblock needs: the built .img on this Mac.
+
+## Section F (round 2): fresh app footage (NB-061 to NB-070)
+
+- NB-061 DONE. nb-061-home-20s.mp4 (20.0 s): home/command view, slow panel scroll.
+- NB-062 DONE. nb-062-wall-20s.mp4 (20.0 s): camera wall with Caltrans feeds.
+- NB-063 DONE as the task's fallback (no Custos panel in the UI — verified
+  absent from the DOM): terminal patrol run on camera, 20.0 s, real output
+  with the summary line and SIMULATED escalations legible. Rendered from
+  the live run's stdout as terminal frames (headless has no terminal
+  recorder); every pixel is real output, method stated.
+- NB-064 DONE. nb-064-map-layers-10s.mp4 (10.0 s): Fires then Radar clicked
+  on camera (pressed states visible); app answers honestly "no FIRMS key".
+- NB-065 DONE. nb-065-phone-15s.mp4 (15.0 s): 390 px width, stacked layout.
+- NB-066 DONE. All 7 clips ffprobe-exact durations; one mid-frame each
+  viewed, none black/blank.
+- NB-067 DONE. nb-067-nativeapp-10s.mp4 (10.0 s): fresh-built MetaTrio.app
+  window (swift build clean in this tree) running the web UI — real map
+  pins, wall, inspector. App-only crop; no desktop, dock, or other windows
+  in frame. No camera permission prompt appeared (nothing staged).
+- NB-068 DONE. nb-068-readme-30s.mp4 (30.0 s): repo front page scroll.
+- NB-069 Originals only: PNG-to-H.264 first encodes, no zip, no recompression.
+- NB-070 DONE. oc-proofs/footage/FOOTAGE_INDEX.md with the table above.
