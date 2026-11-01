@@ -8,6 +8,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-001.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -16.19,
+        "before_lufs": -15.12,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-001.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1001, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "e738b0bec0ba080b125e84f18186adeed38698263edc6cb64cd7af40e128e3fc",
@@ -19,6 +25,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-002.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -15.87,
+        "before_lufs": -15.65,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-002.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1002, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "036f0b7779910418b87f5b5ec4257b770249003e3068b7c833c8554454536856",
@@ -30,6 +42,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-003.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -16.2,
+        "before_lufs": -15.18,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-003.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1003, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "baf45e721de2a34b592588a2bddb9276d951f57f4d89af1dfc3b3e0c37ad28b0",
@@ -41,6 +59,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-005.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -16.26,
+        "before_lufs": -15.66,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-005.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1005, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "2ae66add097ee1930d77be3f839351eed6616210156853657d03c4d5f28e1762",
@@ -52,6 +76,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-006.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -16.22,
+        "before_lufs": -15.91,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-006.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1006, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "894592ad1275ab247ca0a7f501bf0b0472f9515064dba37b95a6b9de3f4dfe6a",
@@ -63,6 +93,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-007.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -16.07,
+        "before_lufs": -15.59,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-007.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1007, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "e1a46bab6ddfe583481a2e81c54cc257af8c168de05f2ed79ec19c2983399434",
@@ -74,6 +110,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-008.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -16.08,
+        "before_lufs": -15.59,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-008.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1008, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "beac3daf27bb7003a11c6752d29d19bd925b06b83bf0b784ecba58665c3b49ec",
@@ -85,6 +127,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-009.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -15.82,
+        "before_lufs": -14.97,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-009.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1009, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "8d07a0b3201308bcbc1b37b823dcf686a1f901a31adfac961d60ce531ab73620",
@@ -96,6 +144,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-010.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -15.9,
+        "before_lufs": -15.88,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-010.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1010, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "8f420f5ee9f1ccf8ab96de313a6b105f0961cfc28b5f16ec85bf8060a5912782",
@@ -107,6 +161,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-011.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -16.17,
+        "before_lufs": -15.95,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-011.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1011, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "302817d6e264dda00b37d3742b37f2110bed748c2768473bffddb6b1e6a87314",
@@ -118,6 +178,12 @@
       "duration_s": 7.273,
       "file": "keepers/take-012.wav",
       "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material",
+      "loudness": {
+        "after_lufs": -15.99,
+        "before_lufs": -15.08,
+        "target_lufs": -16.0
+      },
+      "normalized_file": "normalized/take-012.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1012, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
       "sha256": "2859d3a8721b72dce6d342f4e2fd7ebd9930e47d6052453d0ccb23bdf0da5c8d",
