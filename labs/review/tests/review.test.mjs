@@ -16,8 +16,8 @@ const dir = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 test("tier counter reports 3 yellow and 2 red on the sample", () => {
   const out = execFileSync("node", [join(dir, "tier-counter.mjs"), join(dir, "sample-records.jsonl")], { encoding: "utf8" });
-  assert.match(out, /records: 12/);
-  assert.match(out, /yellow: 5/);
+  assert.match(out, /records: 13/);
+  assert.match(out, /yellow: 6/);
   assert.match(out, /red: 4/);
 });
 
@@ -83,7 +83,7 @@ test("NC-076 fuzz exact proportions", () => {
 
 test("NC-081 every sample record carries the incident contract", () => {
   const recs = readFileSync(join(dir, "sample-records.jsonl"), "utf8").split("\n").filter((l) => l.trim()).map(JSON.parse);
-  assert.ok(recs.length >= 12, "12+ samples");
+  assert.ok(recs.length >= 13, "13+ samples");
   for (const r of recs) {
     for (const k of ["id", "product", "category", "tier", "timestamp", "description", "identity"]) {
       assert.ok(r.incident[k] !== undefined, `${r.incident.id} has ${k}`);
