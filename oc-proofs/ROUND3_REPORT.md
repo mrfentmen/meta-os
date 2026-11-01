@@ -293,3 +293,15 @@
   re-run reports GAP, no renumber.
 - NC-182 DONE. 19.2 fps extract, 120.3 fps hash.
 - NC-183 DONE (README). NC-184: this summary. Suite 6/6.
+
+## Section P — Input and accessibility (NC-185..NC-194) — DONE (findings only)
+
+- Keyboard: everything reachable + activatable, sane order, no traps;
+  Enter works (AI Focus proven). Mouse: everything clickable. Map
+  canvas is mouse-only (no keyboard pan) — finding.
+- Focus rings visible x3 (shots). Contrast: 10 pairs, all AA or better
+  (worst 5.8 on the honesty note).
+- Reduced motion honored in code. 200% zoom at 390 px clips the
+  view-switch (finding with shot).
+- Landmarks present. Full notes: oc-proofs/input-a11y.md.
+- NC-194: this summary. Fixes belong to Hana; none made.
