@@ -20,6 +20,20 @@ The night watch for machines. One patrol:
      records nothing; any later change becomes a "dns drift"
      record (yellow) carrying the diff: what was added, what was
      removed, per record type.
+  1d. Subdomain exposure sweep (RW-005): enumerates the subdomains
+     of each watched domain from the CT entries fetched this
+     patrol (bounded by the same ct_since floor), resolves each
+     one, and compares its addresses against that domain's
+     configured expected networks (subdomain_expected_networks).
+     A subdomain resolving outside its expected networks becomes
+     a "subdomain unexpected network" record (yellow). This is a
+     state check, not an event: it re-grades the enumerated set
+     every patrol, unlike the certificate-issued event in 1b.
+     A domain with no expected networks configured is not graded
+     (the sweep cannot judge it, and it must not invent a
+     baseline); a wildcard pattern is not a concrete host and is
+     skipped; an unresolvable subdomain is a summary error, never
+     data.
   2. For every watched host: probes the service port (liveness),
      reads the TLS certificate the host actually presents (expiry),
      and probes a small set of sensitive ports the installation did
@@ -36,7 +50,7 @@ The night watch for machines. One patrol:
      baseline normal, certificate expiring, certificate expired,
      known-exploited vulnerability present, service down,
      anomalous exposure, certificate issued, security headers
-     missing, dns drift.
+     missing, dns drift, subdomain unexpected network.
   4. Appends one record per observation to the patrol record (JSONL),
      plus one patrol-summary record per patrol.
 
@@ -53,8 +67,8 @@ signal that cannot be fetched or probed is recorded as an error in
 the patrol summary, never as data.
 
 Pure classification core plus a thin CLI, no model calls. The signal
-functions (feed fetch, certificate probe, port probe, headers
-fetch) are injectable so the pinning tests run on recorded signal
+functions (feed fetch, CT fetch, certificate probe, port probe,
+headers fetch, DNS fetch, subdomain resolver) are injectable so the pinning tests run on recorded signal
 shapes with no network.
 
 CLI:
@@ -70,8 +84,17 @@ Config (JSON):
       "kev_url": "https://www.cisa.gov/.../known_exploited_vulnerabilities.json",
       "sensitive_ports": [22, 3306, 5432, 6379, 9200, 27017],
       "ct_domains": ["example.org"],
-      "dns_domains": ["example.org"]
+      "dns_domains": ["example.org"],
+      "ct_since": "2026-01-01",
+      "subdomain_expected_networks": {
+          "example.org": ["203.0.113.0/24", "2001:db8::/32"]
+      }
     }
+
+Subdomain sweep config notes: subdomain_expected_networks maps a
+watched domain to the CIDR list its subdomains are expected to
+resolve inside. A bare IP is read as a single-host network. A
+domain absent from the map is enumerated but never graded.
 
 dns_domains defaults to ct_domains when absent: the watched-domain
 list is the DNS watch list unless the config says otherwise. A
@@ -79,6 +102,7 @@ snapshot is {"A": [...], "AAAA": [...], "MX": [...], "TXT": [...]}.
 """
 
 import argparse
+import ipaddress
 import json
 import os
 import socket
@@ -118,6 +142,7 @@ CATEGORIES = (
     "certificate issued",
     "security headers missing",
     "dns drift",
+    "subdomain unexpected network",
 )
 
 # Category -> tier. Yellow stops at record + flag (zero escalation
@@ -130,6 +155,7 @@ TIER_BY_CATEGORY = {
     "certificate issued": "yellow",
     "security headers missing": "yellow",
     "dns drift": "yellow",
+    "subdomain unexpected network": "yellow",
     "certificate expired": "red",
     "known-exploited vulnerability present": "red",
     "service down": "red",
@@ -382,6 +408,88 @@ def probe_cert(host, port, timeout=PROBE_TIMEOUT):
     return int(delta.total_seconds() // 86400)
 
 
+def resolve_subdomain(name):
+    """IP addresses a subdomain resolves to, sorted and deduped.
+
+    Raises on resolution failure: the patrol records that as a
+    summary error, never as data. Only names the CT sweep
+    enumerated for a watched domain are ever resolved here.
+    """
+    infos = socket.getaddrinfo(name, None)
+    addresses = sorted({info[4][0] for info in infos})
+    return addresses
+
+
+def extract_subdomains(entries, domain, since=""):
+    """Distinct subdomains of `domain` named in CT entries.
+
+    Names come from common_name and name_value (crt.sh separates
+    multi-name entries with whitespace). The result is lowercased
+    (DNS is case-insensitive) and sorted for a deterministic sweep
+    order. Skipped, by design: the bare domain itself, names that
+    are not subdomains of the watched domain, wildcard patterns
+    ("*.example.org" names no concrete host), and — when `since`
+    is set — entries older than the ct_since floor.
+    """
+    suffix = "." + domain.lower()
+    found = set()
+    for entry in entries or []:
+        not_before = str(entry.get("not_before", "") or "")[:10]
+        if since and not_before and not_before < since:
+            continue
+        # An undated entry has no floor to compare against, so the
+        # floor does not exclude it.
+        raw_names = []
+        for field in ("common_name", "name_value"):
+            value = entry.get(field, "") or ""
+            raw_names.extend(str(value).replace(",", " ").split())
+        for raw in raw_names:
+            name = raw.strip().rstrip(".").lower()
+            if not name or name.startswith("*."):
+                continue
+            if name == domain.lower() or not name.endswith(suffix):
+                continue
+            found.add(name)
+    return sorted(found)
+
+
+def parse_expected_networks(networks):
+    """CIDR networks for a domain's expected addresses.
+
+    A bare IP is read as a single-host network (strict=False).
+    Raises ValueError on the first malformed entry: the patrol
+    records that as a summary error for the domain and grades
+    nothing for it that patrol, rather than guessing.
+    """
+    parsed = []
+    for entry in networks or []:
+        parsed.append(ipaddress.ip_network(str(entry), strict=False))
+    return parsed
+
+
+def classify_subdomain(addresses, networks):
+    """(category, unexpected) for one resolved subdomain.
+
+    An address inside any expected network is expected; anything
+    else — including an address that does not parse as an IP, which
+    cannot be shown inside an expected network — is unexpected.
+    All-expected is baseline normal; any unexpected address is the
+    yellow flag.
+    """
+    unexpected = []
+    for address in addresses or []:
+        try:
+            ip = ipaddress.ip_address(str(address))
+        except ValueError:
+            unexpected.append(str(address))
+            continue
+        if not any(ip in net for net in networks):
+            unexpected.append(str(address))
+    if unexpected:
+        return "subdomain unexpected network", unexpected
+    return "baseline normal", []
+
+
 def fetch_headers(host, port, timeout=HEADER_TIMEOUT):
     """Response headers the host actually serves, keys lowercased.
 
@@ -408,7 +516,8 @@ def fetch_headers(host, port, timeout=HEADER_TIMEOUT):
 
 def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                seen_cve=None, fetch_ct_fn=None, seen_ct=None,
-               fetch_headers_fn=None, fetch_dns_fn=None, seen_dns=None):
+               fetch_headers_fn=None, fetch_dns_fn=None, seen_dns=None,
+               resolve_subdomain_fn=None):
     """One patrol. Returns (records, seen_cve, seen_ct).
 
     Every observation is classified and recorded. Yellow records are
@@ -459,6 +568,7 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     ct_seen_count = 0
     ct_since = config.get("ct_since", "")
     ct_fetch = fetch_ct_fn or fetch_ct
+    ct_entries_by_domain = {}
     for domain in config.get("ct_domains", []):
         try:
             entries = ct_fetch(domain, config.get(
@@ -467,6 +577,7 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
             errors.append("ct fetch failed for %s: %s" % (domain, exc))
             continue
         ct_seen_count += len(entries)
+        ct_entries_by_domain[domain] = list(entries or [])
         for entry in entries:
             ct_id = entry.get("id")
             if ct_id in seen_ids:
@@ -508,6 +619,51 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
             records.append(make_record(now, "dns", domain, "dns drift",
                                        {"added": added,
                                         "removed": removed}))
+
+    # 1d. Subdomain exposure sweep: subdomains enumerated from the
+    # CT entries fetched above, graded against the domain's
+    # configured expected networks. A domain the CT fetch failed
+    # for is skipped (its error is already recorded); a domain
+    # with no expected networks is enumerated but never graded,
+    # so the sweep never invents a baseline for it. The resolver
+    # is injectable so tests never touch DNS.
+    subdomains_checked = 0
+    resolver = resolve_subdomain_fn or resolve_subdomain
+    expected_map = config.get("subdomain_expected_networks", {}) or {}
+    for domain in config.get("ct_domains", []):
+        if domain not in ct_entries_by_domain:
+            continue
+        networks_cfg = expected_map.get(domain)
+        if not networks_cfg:
+            continue
+        try:
+            networks = parse_expected_networks(networks_cfg)
+        except ValueError as exc:
+            errors.append("subdomain networks invalid for %s: %s"
+                          % (domain, exc))
+            continue
+        for sub in extract_subdomains(ct_entries_by_domain[domain],
+                                       domain, ct_since):
+            subdomains_checked += 1
+            try:
+                addresses = resolver(sub)
+            except Exception as exc:
+                errors.append("subdomain resolve failed for %s: %s"
+                              % (sub, exc))
+                continue
+            if not addresses:
+                errors.append("subdomain resolve returned no addresses"
+                              " for %s" % sub)
+                continue
+            addresses = sorted({str(a) for a in addresses})
+            category, unexpected = classify_subdomain(addresses,
+                                                      networks)
+            records.append(make_record(
+                now, "subdomain", sub, category,
+                {"parent_domain": domain,
+                 "addresses": addresses,
+                 "expected_networks": list(networks_cfg),
+                 "unexpected_addresses": unexpected}))
 
     # 2. Per-host checks.
     for host_cfg in config.get("hosts", []):
@@ -565,6 +721,7 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
         "kev_entries_seen": kev_seen_count,
         "ct_entries_seen": ct_seen_count,
         "dns_domains_checked": len(dns_domains),
+        "subdomains_checked": subdomains_checked,
         "observations": counts,
         "escalations": len(escalations),
         "errors": errors,
