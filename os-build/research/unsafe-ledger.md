@@ -25,3 +25,26 @@
 
 - No unsafe blocks execute on this branch; the file is not compiled
   into the K2 image path (module not declared in main.rs).
+
+## kernel/src/gdt.rs (Section C)
+
+- `gdt::init`: writes our 5-slot GDT + TSS (IST[0] = DF stack top),
+  `lgdt`, far return reloading CS to 0x08, data segments to 0x10,
+  `ltr` 0x18. Interrupts must be off; single CPU at K3.
+
+## kernel/src/traps.rs (Section C)
+
+- `global_asm!` trampolines + `trap_common`: pushes are fixed-count
+  (error-or-0, vector, 9 scratch regs); frame pointer math
+  (rsp+72/80/88) matches that layout; 136-byte red-zone skip keeps
+  the `call` 16-aligned; `iretq` drops vector+error.
+- `dispatch_trampoline`: trusts the stub's triple; masked gate means
+  no reentrancy. `trap_addr` match is total over VECTORS.
+- `install` gates: selector 0x08 valid post-`gdt::init`; IST=1 only
+  on vector 8. `debug_assert` round-trips every gate address.
+
+## kernel/src/main.rs (Section C)
+
+- `break-test`/`fault-test` hooks: `int3` and a volatile read of
+  unmapped 0xdeadbeef, feature-gated test builds only (OS-058 style).
+- `hlt` in the echo loop: valid with IF set, wakes on IRQ.

@@ -103,3 +103,38 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
 - OS-027: fallback documented in framebuffer.md: serial + VGA text;
   pixel framebuffer absent, stated, not faked. DONE.
 - OS-028: this summary. Pushing.
+
+## Section C — K3 interrupts, timer, keyboard (OS-029..OS-044) — DONE
+
+- OS-029/030: 256-entry IDT (`traps.rs` R5 wiring over Rowan's
+  `interrupts.rs`); `int3` drill prints
+  `INT exception breakpoint vector 0x3` and RETURNS into the uptime
+  loop. DONE (K3-break.txt).
+- OS-031: double fault on IST stack 0 (own GDT `gdt.rs` + TSS +
+  `ltr`). Proven by `stack-test` overflow drill:
+  `INT exception double-fault vector 0x8`. The first attempt
+  triple-faulted — QEMU `-d int` trace showed #DF delivery raising
+  #SS: plain `repr(C)` pads the TSS so IST[0] sat 4 bytes off
+  (RSP0 is at byte 4, not 8). Fixed with `repr(C, packed(4))` +
+  `write_unaligned` + a 104-byte size assert. DONE (K3-doublefault.txt).
+- OS-032: PIC remap to 32/40, standard ICW sequence. DONE.
+- OS-033/034: PIT 100 Hz exact (ticks 100/200/300...), `uptime Ns`
+  printed each second from the echo loop's `hlt` sleep. DONE.
+- OS-035/036/037: IRQ 1 scancodes into the 64-entry ring;
+  set-1 decode for letters/digits/space/enter (shift NOT handled,
+  stated limit); echo on screen + serial. DONE.
+- OS-038: QMP `send-key` typed `hello123`+Enter; echoed back
+  `\nhello123\n`, releases ignored, 18 IRQ lines. DONE.
+- OS-039: 98 uptime lines (`uptime 98s ticks 9800`), zero stalls,
+  EOI correct on both IRQs. DONE (K3-boot.txt).
+- OS-040: `fault-test` read of 0xdeadbeef prints
+  `addr 0xdeadbeef ... err 0x0`. Gap found and fixed on my branch:
+  Rowan's `print_exception` never read CR2, so the address was
+  missing — his `page_fault_handler` now reads CR2 first (marked
+  Mac-build note). Handler returns, so the test build re-faults in
+  a fast loop (expected; K6 adds kill semantics). DONE (K3-fault.txt).
+- OS-041: unsafe ledger extended (gdt/traps/test hooks). DONE.
+- OS-042: `os-build/research/interrupts.md` vector map. DONE.
+- OS-043: sendkey scripting worked first try; no manual steps
+  needed. DONE (moot).
+- OS-044: this summary. Pushing.
