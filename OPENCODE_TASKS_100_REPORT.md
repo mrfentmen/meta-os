@@ -236,3 +236,37 @@ repo, commit 556bd41; repo untouched per the prompt). Status per task:
   the user's go-ahead for tonight's 8pm run. Sections 6 and 7 blocked on
   missing externals (image file, unpushed branch). Section 8 partial — the
   chain-dependent recordings need the queue fixed first.
+
+## Section C (round 2): Scientia 3D molecules, labs/molecules/ (NB-021 to NB-035)
+
+- NB-021 DONE. labs/molecules/ static page + vendored three.js r152
+  (labs/molecules/vendor/three.min.js, 633,338 bytes, LICENSE file kept).
+  No Three.js copy existed anywhere in the tree, so fresh download was the
+  only option — stated in vendor/LICENSE-three.txt.
+- NB-022 DONE. Caffeine/aspirin/glucose embedded as JSON in labs/molecules/data/
+  (converted from PubChem 3D SDF); CIDs 2519/2244/5793 in SOURCES.md.
+- NB-023 DONE. Ball-and-stick, CPK colors (nb-*-bs.png).
+- NB-024 DONE. Space-filling toggle, vdW radii, bonds hidden (nb-*-sf.png).
+- NB-025 DONE, every control clicked: picker (5/5 load), bs/sf toggle,
+  auto-rotate (on at load, off after drag — verified), labels toggle,
+  drag rotate (orientation change verified), wheel zoom (same handler as
+  the proven design-page viewer), measure toggle. No dead control.
+- NB-026 DONE. Atom labels toggle (element + index sprites; proof
+  nb-labels-drag.png).
+- NB-027 DONE. Double bonds render as twin cylinders from bond-order data
+  (aspirin ring + carbonyls visibly doubled in nb-aspirin-bs.png); comment
+  table is in the code header.
+- NB-028 DONE. Picker for the embedded 5 + Load CID field (live PubChem
+  fetch). CID 962 loads live (3 atoms); garbage input shows the honest
+  error and embedded molecules keep working.
+- NB-029 DONE. 6 PNGs in labs/molecules/shots/ (caffeine/aspirin/glucose x
+  bs/sf), each viewed — none blank. Plus nb-labels-drag.png.
+- NB-030 DONE. Count table in SOURCES.md (JSON counts == SDF counts lines;
+  PubChem records match). Test asserts the same numbers.
+- NB-031 DONE. Water (3/2) + ethanol (9/8) embedded, captioned, tested.
+- NB-032 DONE. Measure: click two atoms, O1-H2 in water = 0.97 A (correct
+  bond length), shown in the meta line.
+- NB-033 DONE. One plain caption line per molecule under the viewer.
+- NB-034 DONE. labs/molecules/tests/validate.test.mjs: 6/6 pass (counts,
+  bond endpoints, CPK membership, meta coverage).
+- NB-035 section report: this list; shots + test named above.

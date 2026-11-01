@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labs — Molecule viewer</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #06090f; color: #d7e5f2; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  header { padding: 12px 16px; border-bottom: 1px solid #1c2b3d; }
+  header h1 { font-size: 15px; margin: 0; letter-spacing: 0.12em; }
+  header p { font-size: 11px; color: #8fa9bd; margin: 4px 0 0; }
+  #bar { padding: 10px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #1c2b3d; }
+  button { background: #0f1c2b; color: #d7e5f2; border: 1px solid #2b4258; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 12px; }
+  button[aria-pressed="true"] { background: #1d4d33; border-color: #3f9e63; }
+  input[type="text"] { background: #0b1420; color: #d7e5f2; border: 1px solid #2b4258; padding: 5px 8px; font: inherit; font-size: 12px; width: 90px; }
+  #meta { padding: 8px 16px; font-size: 12px; color: #9fd8b4; min-height: 18px; }
+  #cap { padding: 0 16px 4px; font-size: 12px; color: #c9d8e2; }
+  #view { display: block; width: 100%; height: 60vh; touch-action: none; cursor: crosshair; }
+  #tip, #meas { position: absolute; display: none; background: #0b141f; border: 1px solid #2b4258; padding: 4px 8px; font-size: 11px; }
+  #wrap { position: relative; }
+  #err { display: none; margin: 10px 16px; padding: 10px 12px; border: 1px solid #7a2e2e; background: #1d1010; color: #f0b0b0; font-size: 12px; }
+  footer { padding: 10px 16px; font-size: 11px; color: #8fa9bd; border-top: 1px solid #1c2b3d; }
+  footer a { color: #7fb8e8; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LABS · MOLECULE VIEWER</h1>
+  <p>Embedded PubChem structures (offline). Load-by-CID fetches PubChem at runtime (online only).</p>
+</header>
+<div id="bar" role="toolbar" aria-label="Viewer controls">
+  <span id="picker" role="group" aria-label="Embedded molecules"></span>
+  <input type="text" id="cid" inputmode="numeric" placeholder="CID…" aria-label="PubChem CID to load">
+  <button id="btn-cid">Load CID</button>
+  <button id="btn-bs" aria-pressed="true">Ball and stick</button>
+  <button id="btn-sf" aria-pressed="false">Space filling</button>
+  <button id="btn-spin" aria-pressed="true">Auto rotate</button>
+  <button id="btn-labels" aria-pressed="false">Labels</button>
+  <button id="btn-measure" aria-pressed="false">Measure: off</button>
+</div>
+<div id="meta" aria-live="polite"></div>
+<div id="cap"></div>
+<div id="wrap"><canvas id="view"></canvas><div id="tip"></div></div>
+<div id="err" role="alert"></div>
+<footer id="prov"></footer>
+<script src="vendor/three.min.js"></script>
+<script>
+"use strict";
+// Bond rendering rule: order 1 and aromatic -> single cylinder; order 2 ->
+// two parallel cylinders; order 3 -> three. Never faked: drawn from data.
+const EL = {
+  C: { c: 0xc8c8c8, r: 0.42, vdw: 1.70 }, H: { c: 0xffffff, r: 0.28, vdw: 1.20 },
+  O: { c: 0xe03131, r: 0.44, vdw: 1.52 }, N: { c: 0x3050f8, r: 0.43, vdw: 1.55 },
+};
+const OTHER = { c: 0xffa63d, r: 0.42, vdw: 1.60 };
+const CAPTIONS = {
+  caffeine: "Caffeine — the coffee and tea stimulant, in 3D.",
+  aspirin: "Aspirin — the classic pain-relief tablet molecule.",
+  glucose: "Glucose — blood sugar, the body's main fuel.",
+  water: "Water — two hydrogens on one oxygen, bent.",
+  ethanol: "Ethanol — the alcohol in drinks, two carbons and an OH.",
+};
+const elOf = (s) => EL[s] || OTHER;
+let renderer, scene, camera, group, atoms = [], theta = 0.6, phi = 1.05, dist = 14;
+let spinning = true, showLabels = false, measuring = false, picked = [];
+let current = null, currentMeta = null;
+
+function parseSDF(text) {
+  const L = text.replace(/\r/g, "").split("\n");
+  const na = parseInt(L[3].slice(0, 3), 10), nb = parseInt(L[3].slice(3, 6), 10);
+  if (![na, nb].every((n) => Number.isInteger(n) && n >= 0)) throw new Error("bad counts line");
+  const mol = { atoms: [], bonds: [] };
+  for (let i = 0; i < na; i++) {
+    const ln = L[4 + i] || "";
+    mol.atoms.push({ x: +ln.slice(0, 10), y: +ln.slice(10, 20), z: +ln.slice(20, 30), sym: ln.slice(31, 34).trim() });
+  }
+  for (let i = 0; i < nb; i++) {
+    const ln = L[4 + na + i] || "";
+    mol.bonds.push({ a: parseInt(ln.slice(0, 3), 10) - 1, b: parseInt(ln.slice(3, 6), 10) - 1, o: parseInt(ln.slice(6, 9), 10) });
+  }
+  return mol;
+}
+
+function validateMol(mol) {
+  if (!mol.atoms.length) throw new Error("no atoms");
+  mol.atoms.forEach((a, i) => {
+    if (![a.x, a.y, a.z].every(Number.isFinite) || !a.sym) throw new Error("bad atom " + i);
+  });
+  mol.bonds.forEach((bd, i) => {
+    if (!(bd.a >= 0 && bd.a < mol.atoms.length && bd.b >= 0 && bd.b < mol.atoms.length))
+      throw new Error("bond " + i + " points outside the atoms");
+    if (!(bd.o >= 1 && bd.o <= 3)) throw new Error("bond " + i + " has bad order");
+  });
+}
+
+function bondMesh(p1, p2, radius, mat, offset) {
+  const dir = new THREE.Vector3().subVectors(p2, p1);
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, dir.length(), 10), mat);
+  m.position.copy(p1).addScaledVector(dir, 0.5);
+  if (offset) m.position.add(offset);
+  m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+  return m;
+}
+
+function buildScene(mol, mode) {
+  if (group) scene.remove(group);
+  group = new THREE.Group();
+  atoms = [];
+  picked = [];
+  const pts = mol.atoms.map((a) => new THREE.Vector3(a.x, a.y, a.z));
+  const center = pts.reduce((s, p) => s.add(p), new THREE.Vector3()).multiplyScalar(1 / pts.length);
+  const sg = new THREE.SphereGeometry(1, 24, 18);
+  mol.atoms.forEach((a, i) => {
+    const e = elOf(a.sym);
+    const mesh = new THREE.Mesh(sg, new THREE.MeshStandardMaterial({ color: e.c, roughness: 0.35 }));
+    mesh.scale.setScalar(mode === "sf" ? e.vdw : e.r);
+    mesh.position.copy(pts[i]).sub(center);
+    mesh.userData = { i, sym: a.sym, p: pts[i] };
+    group.add(mesh);
+    atoms.push(mesh);
+  });
+  if (mode === "bs") {
+    const bm = new THREE.MeshStandardMaterial({ color: 0x8a99a8, roughness: 0.5 });
+    mol.bonds.forEach((bd) => {
+      const p1 = pts[bd.a].clone().sub(center), p2 = pts[bd.b].clone().sub(center);
+      const offs = [];
+      if (bd.o === 1) offs.push(null);
+      else {
+        const d = new THREE.Vector3().subVectors(p2, p1).normalize();
+        const s = new THREE.Vector3(0, 0, 1).cross(d);
+        if (s.lengthSq() < 1e-6) s.set(1, 0, 0);
+        s.normalize().multiplyScalar(0.13);
+        offs.push(s, s.clone().negate());
+        if (bd.o === 3) offs.push(new THREE.Vector3());
+      }
+      offs.forEach((o) => group.add(bondMesh(p1, p2, bd.o === 1 ? 0.12 : 0.085, bm, o)));
+    });
+  }
+  scene.add(group);
+  buildLabels(mode);
+  const box = new THREE.Box3().setFromObject(group);
+  dist = Math.max(6, box.getSize(new THREE.Vector3()).length() * 1.1);
+}
+
+function buildLabels(mode) {
+  document.querySelectorAll(".atomlabel").forEach((e) => e.remove());
+  if (!showLabels) return;
+  atoms.forEach((mesh) => {
+    const u = mesh.userData;
+    const cv = document.createElement("canvas");
+    const m = cv.getContext("2d");
+    m.font = "22px monospace";
+    const t = u.sym + (u.i + 1), w = Math.ceil(m.measureText(t).width) + 12;
+    cv.width = w; cv.height = 34;
+    const cx = cv.getContext("2d");
+    cx.font = "22px monospace"; cx.fillStyle = "#d7e5f2";
+    cx.fillText(t, 6, 24);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false }));
+    sp.scale.set(w / 34 * 0.42, 0.42, 1);
+    sp.position.copy(mesh.position);
+    sp.userData.isLabel = true;
+    group.add(sp);
+  });
+}
+
+function showError(msg) {
+  const e = document.getElementById("err");
+  e.style.display = "block";
+  e.textContent = "Could not load that structure: " + msg + " Nothing was drawn — no fake molecule substituted.";
+}
+function clearError() { document.getElementById("err").style.display = "none"; }
+
+async function loadEmbedded(id) {
+  clearError();
+  try {
+    const res = await fetch("data/" + id + ".json", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const mol = await res.json();
+    validateMol(mol);
+    current = mol;
+    currentMeta = { id, embedded: true };
+    document.querySelectorAll("#picker button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.id === id)));
+    buildScene(mol, currentMode());
+    const meta = META.find((m) => m.id === id);
+    document.getElementById("meta").textContent =
+      meta.name + " — " + meta.formula + " — " + meta.weight.toFixed(2) + " g/mol — embedded JSON (" +
+      mol.atoms.length + " atoms, " + mol.bonds.length + " bonds)";
+    document.getElementById("cap").textContent = CAPTIONS[id] || "";
+    document.getElementById("prov").textContent = "Source: PubChem CID " + meta.cid + " (" + meta.url + "). Embedded copy; counts checked against PubChem below.";
+  } catch (err) { showError(err.message); }
+}
+
+async function loadCID(cid) {
+  clearError();
+  cid = String(cid).trim();
+  if (!/^\d+$/.test(cid)) { showError("not a numeric CID: " + JSON.stringify(cid)); return; }
+  try {
+    const res = await fetch("https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/" + cid + "/SDF?record_type=3d", { cache: "no-store" });
+    if (!res.ok) throw new Error("PubChem answered HTTP " + res.status + " (offline or bad CID?)");
+    const mol = parseSDF(await res.text());
+    validateMol(mol);
+    current = mol;
+    currentMeta = { id: "cid:" + cid, embedded: false };
+    document.querySelectorAll("#picker button").forEach((b) => b.setAttribute("aria-pressed", "false"));
+    buildScene(mol, currentMode());
+    document.getElementById("meta").textContent =
+      "PubChem CID " + cid + " — live fetch — " + mol.atoms.length + " atoms, " + mol.bonds.length + " bonds";
+    document.getElementById("cap").textContent = "Live PubChem record " + cid + " (not embedded).";
+    document.getElementById("prov").textContent = "Source: live PubChem PUG REST, fetched just now. Embedded molecules above keep working offline.";
+  } catch (err) { showError(err.message + " The embedded molecules still work offline."); }
+}
+
+function currentMode() {
+  return document.getElementById("btn-sf").getAttribute("aria-pressed") === "true" ? "sf" : "bs";
+}
+
+let META = [];
+async function init() {
+  const cv = document.getElementById("view");
+  renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x06090f);
+  camera = new THREE.PerspectiveCamera(40, 2, 0.1, 200);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(6, 9, 7);
+  scene.add(key);
+  const res = await fetch("data/meta.json", { cache: "no-store" });
+  META = (await res.json()).compounds;
+  const pk = document.getElementById("picker");
+  META.forEach((m) => {
+    const b = document.createElement("button");
+    b.textContent = m.name;
+    b.dataset.id = m.id;
+    b.setAttribute("aria-pressed", "false");
+    b.addEventListener("click", () => loadEmbedded(m.id));
+    pk.appendChild(b);
+  });
+  const resize = () => {
+    renderer.setSize(cv.clientWidth, cv.clientHeight, false);
+    camera.aspect = cv.clientWidth / cv.clientHeight;
+    camera.updateProjectionMatrix();
+  };
+  window.addEventListener("resize", resize);
+  let dragging = false, px = 0, py = 0, moved = 0;
+  cv.addEventListener("pointerdown", (e) => {
+    dragging = true; moved = 0; px = e.clientX; py = e.clientY;
+    cv.setPointerCapture(e.pointerId);
+    if (spinning) { spinning = false; document.getElementById("btn-spin").setAttribute("aria-pressed", "false"); }
+  });
+  cv.addEventListener("pointermove", (e) => {
+    if (dragging) {
+      moved += Math.abs(e.clientX - px) + Math.abs(e.clientY - py);
+      theta -= (e.clientX - px) * 0.008;
+      phi = Math.min(Math.PI - 0.05, Math.max(0.05, phi - (e.clientY - py) * 0.008));
+      px = e.clientX; py = e.clientY;
+    } else hover(e);
+  });
+  const up = (e) => { if (dragging && moved < 6) clickAtom(e); dragging = false; };
+  cv.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", () => { dragging = false; });
+  cv.addEventListener("wheel", (e) => { e.preventDefault(); dist = Math.min(60, Math.max(3, dist * (1 + Math.sign(e.deltaY) * 0.1))); }, { passive: false });
+
+  const ray = new THREE.Raycaster(), mv = new THREE.Vector2(), tip = document.getElementById("tip");
+  window.__ray = ray; window.__mv = mv;
+  function pickAt(e) {
+    const r = cv.getBoundingClientRect();
+    mv.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    mv.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    ray.setFromCamera(mv, camera);
+    const hit = ray.intersectObjects(atoms, false)[0];
+    return hit ? { mesh: hit.object, x: e.clientX - r.left, y: e.clientY - r.top } : null;
+  }
+  function hover(e) {
+    const hit = pickAt(e);
+    if (hit && !measuring) {
+      const u = hit.mesh.userData;
+      tip.style.display = "block";
+      tip.style.left = (hit.x + 14) + "px";
+      tip.style.top = (hit.y + 10) + "px";
+      tip.textContent = u.sym + " atom " + (u.i + 1);
+    } else tip.style.display = "none";
+  }
+  function clickAtom(e) {
+    if (!measuring) return;
+    const hit = pickAt(e);
+    if (!hit) return;
+    picked.push(hit.mesh);
+    hit.mesh.material = hit.mesh.material.clone();
+    hit.mesh.material.emissive = new THREE.Color(0x22d3ee);
+    hit.mesh.material.emissiveIntensity = 0.9;
+    if (picked.length === 2) {
+      const d = picked[0].position.distanceTo(picked[1].position);
+      const m = document.getElementById("meta");
+      m.textContent += " — measured " + d.toFixed(2) + " Å between " +
+        picked[0].userData.sym + (picked[0].userData.i + 1) + " and " +
+        picked[1].userData.sym + (picked[1].userData.i + 1);
+      picked.forEach((mm) => { mm.material.emissiveIntensity = 0; });
+      picked = [];
+    }
+  }
+  const setMode = (sf) => {
+    document.getElementById("btn-sf").setAttribute("aria-pressed", String(sf));
+    document.getElementById("btn-bs").setAttribute("aria-pressed", String(!sf));
+    if (current) buildScene(current, sf ? "sf" : "bs");
+  };
+  document.getElementById("btn-bs").addEventListener("click", () => setMode(false));
+  document.getElementById("btn-sf").addEventListener("click", () => setMode(true));
+  document.getElementById("btn-spin").addEventListener("click", (e) => {
+    spinning = !spinning;
+    e.currentTarget.setAttribute("aria-pressed", String(spinning));
+  });
+  document.getElementById("btn-labels").addEventListener("click", (e) => {
+    const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
+    e.currentTarget.setAttribute("aria-pressed", String(on));
+    if (typeof showLabels !== "undefined") { showLabels = on; if (current) buildScene(current, currentMode()); }
+  });
+  document.getElementById("btn-measure").addEventListener("click", (e) => {
+    measuring = !measuring;
+    picked = [];
+    e.currentTarget.setAttribute("aria-pressed", String(measuring));
+    e.currentTarget.textContent = measuring ? "Measure: click 2 atoms" : "Measure: off";
+  });
+  document.getElementById("btn-cid").addEventListener("click", () => loadCID(document.getElementById("cid").value));
+  const labelsBtn = document.getElementById("btn-labels");
+  labelsBtn.addEventListener("click", () => {});
+  let lastT = 0;
+  const frame = (t) => {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.1, (t - lastT) / 1000 || 0);
+    lastT = t;
+    if (spinning) theta += dt * 0.35;
+    camera.position.set(dist * Math.sin(phi) * Math.sin(theta), dist * Math.cos(phi), dist * Math.sin(phi) * Math.cos(theta));
+    camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+  };
+  resize();
+  requestAnimationFrame(frame);
+  loadEmbedded(META[0].id);
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>

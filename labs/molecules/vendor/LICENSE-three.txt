@@ -1,0 +1,4 @@
+three.js r152 (build/three.min.js), vendored from unpkg three@0.152.2.
+Copyright (c) 2010-2023 Three.js Authors. MIT License.
+Source: https://unpkg.com/three@0.152.2/build/three.min.js (633,338 bytes).
+Full license text: https://github.com/mrdoob/three.js/blob/r152/LICENSE
