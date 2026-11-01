@@ -105,12 +105,88 @@ def render_board(session_dir):
            len(rejects), now_playing, queue, rows, rights, history))
 
 
+def render_studio_board(musica_dir):
+    """Studio-wide board (HN-041 v2): every session's catalogue with
+    a rights column, plus session history, all from records only."""
+    sessions_dir = os.path.join(musica_dir, "sessions")
+    sections = []
+    for session_id in sorted(os.listdir(sessions_dir)):
+        sdir = os.path.join(sessions_dir, session_id)
+        if not os.path.isdir(sdir):
+            continue
+        session = {}
+        session_path = os.path.join(sdir, "session.json")
+        if os.path.exists(session_path):
+            with open(session_path, encoding="utf-8") as fh:
+                session = json.load(fh)
+        log_path = os.path.join(sdir, "take_log.jsonl")
+        takes = read_log(log_path) if os.path.exists(log_path) else []
+        keepers = sum(1 for t in takes if t["verdict"] == "keeper")
+        rejects = sum(1 for t in takes if t["verdict"] == "reject")
+        catalogue = {}
+        catalogue_path = os.path.join(sdir, "catalogue.json")
+        if os.path.exists(catalogue_path):
+            with open(catalogue_path, encoding="utf-8") as fh:
+                catalogue = json.load(fh)
+        rows = "".join(
+            "<tr><td>%s</td><td>%s</td><td>%s</td></tr>"
+            % (_esc(track["title"]), _esc(track.get("licence", "—")),
+               _esc(track["take_id"]))
+            for track in catalogue.get("tracks", []))
+        rights = {}
+        rights_path = os.path.join(sdir, "rights.json")
+        if os.path.exists(rights_path):
+            with open(rights_path, encoding="utf-8") as fh:
+                rights = json.load(fh)
+        history = []
+        if session.get("keeper_pass"):
+            history.append("Keeper pass: %d keepers, %d rejects."
+                           % (session["keeper_pass"]["keepers"],
+                              session["keeper_pass"]["rejects"]))
+        if session.get("variation_pass"):
+            history.append("Variation pass: %d clones."
+                           % session["variation_pass"]["clones"])
+        if os.path.exists(os.path.join(sdir, "overnight-report.json")):
+            with open(os.path.join(sdir, "overnight-report.json"),
+                      encoding="utf-8") as fh:
+                overnight = json.load(fh)
+            history.append("Overnight: %d takes, reject rate %.4f."
+                           % (overnight["takes"], overnight["reject_rate"]))
+        sections.append(
+            "<h2>Session %s</h2><p>Brief: %s · Takes: %d · Keepers: %d "
+            "· Rejects: %d · Rights: %s passed, %s rejected</p>"
+            "<table><tr><th>Track</th><th>Rights</th><th>Take</th></tr>"
+            "%s</table><p>%s</p>"
+            % (_esc(session_id), _esc(session.get("brief_id", "—")),
+               len(takes), keepers, rejects,
+               rights.get("passed", "—"), len(rights.get("rejected", []))
+               if rights else "—",
+               rows or "<tr><td colspan=\"3\">No catalogue yet.</td></tr>",
+               _esc(" ".join(history) or "No history yet.")))
+    return (
+        "<!DOCTYPE html><html><head><meta charset=\"utf-8\">"
+        "<title>Meta Musica — studio board</title></head><body>"
+        "<h1>Meta Musica studio board</h1>"
+        "<p>Catalogue browser: every session's tracks with their "
+        "rights column, from session records only.</p>"
+        "%s</body></html>" % "".join(sections))
+
+
 def main(argv=None):
     import argparse
     parser = argparse.ArgumentParser(description="Musica studio board")
-    parser.add_argument("session_dir")
+    parser.add_argument("session_dir", nargs="?")
     parser.add_argument("--out", default=None)
+    parser.add_argument("--studio", default=None,
+                        help="render the studio-wide board for a musica dir")
     args = parser.parse_args(argv)
+    if args.studio:
+        out = args.out or os.path.join(args.studio, "board", "board.html")
+        os.makedirs(os.path.dirname(out), exist_ok=True)
+        with open(out, "w", encoding="utf-8") as fh:
+            fh.write(render_studio_board(args.studio))
+        print("studio board written: %s" % out)
+        return 0
     out = args.out or os.path.join(args.session_dir, "board.html")
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(render_board(args.session_dir))
