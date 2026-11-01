@@ -106,4 +106,36 @@ repo, commit 556bd41; repo untouched per the prompt). Status per task:
   RDKit version/seed, vendored three.js version/bytes, the ESOL caveat.
 - OC-049 DONE. Network log on the page: only 127.0.0.1 requests (page, three,
   meta.json, SDFs). Works offline.
-- OC-050 this section of the report.
+## Section 5: Meta Musica 3D notes (OC-051 to OC-065)
+
+- OC-051 DONE. design/meta-musica-notes.html: five long thin dark boxes
+  (16 x 0.03 x 30) into the distance as the staff.
+- OC-052 DONE. Note = squashed-sphere head + cylinder stem + cone flag,
+  all primitives, no external models.
+- OC-053 DONE with the task's own fallback: no Musica take file exists in
+  this checkout (Hana's HN-029 lane not landed), so the ascending/descending
+  C major scale stands in, labelled PLACEHOLDER in the page header and meta
+  line. Not a Musica composition — stated everywhere it appears.
+- OC-054 DONE. Drag orbit + wheel zoom (same hand-rolled controls as the
+  molecule viewer); Side/Top/End preset buttons; proofs oc-060-side/top/end.png.
+- OC-055 DONE. Playhead curtain travels the staff; the current note lifts and
+  glows; meta line names sounding notes. Screenshots show lifted glowing notes.
+- OC-056 DONE. WebAudio sine tones, equal temperament A4=440, scheduled
+  per-note from the same beat clock as the playhead — one shared beatLen().
+- OC-057 DONE. Tempo slider 60–200 bpm drives both (single beatLen source);
+  verified at 200 bpm in the clip (slider visible reading "200 bpm").
+- OC-058 DONE. Note-name labels toggle (canvas sprites), on by default.
+- OC-059 DONE. Second voice below in amber playing a diatonic third under
+  the melody (A3..A4), same rhythm; independent mute toggles.
+- OC-060 DONE. Dark room, cyan/amber accents, no clip art; three angles saved.
+- OC-061 DONE as standalone page. No Musica studio board exists in the app;
+  index.html untouched. Screenshots are of the page itself.
+- OC-062 DONE. oc-062-playback-15s.mp4: 15.0 s, video + AAC audio. Method
+  stated plainly: 30 timed headless screenshots at 2 fps (200 bpm) plus
+  Python-synthesized matching tones (same frequencies, 0.3 s grid, both
+  voices), muxed with ffmpeg. Real pixels, matching tones — not a
+  sample-accurate screen recording; mid-frame proof oc-062-midframe.png.
+- OC-063 DONE. Pause verified (meta flips to "Stopped..."); Restart resets
+  playT (clicked, no error, playhead returns).
+- OC-064 DONE. ~115–120 fps headless Chromium on this Mac (on-page meter).
+- OC-065 this section of the report.
