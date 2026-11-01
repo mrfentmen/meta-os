@@ -1,45 +1,47 @@
-# `logfmt` — Layer 4 service
+# logfmt — the record shape every service logs through
 
-**Status: NOT BUILT.** No source yet. Filled by **B-L1-28**.
+Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
+service 12.
 
-This README is the entry from `services/README_TEMPLATE.md`, unfilled. Every
-section below is deliberately empty rather than optimistic: a section that says
-nothing is honest, a section that guesses is not.
+## Why one format
 
-## What it does
+Three services that each format their own line produce three formats, and the tool
+that reads them must know all three. Worse: when a service formats its own line the
+timestamp and level are typed by the caller, so a warning logged by a helper becomes
+an error and a line written after a sleep carries the time of the call, not of the
+event. Here the record is a struct, time and level are filled in one place, and
+nothing else in the layer logs any other way.
 
-log record formatting. Not written yet.
+## The line
 
-## Contract
+```
+0042.300 W cons     console: 80x25 ready
+^^^^^^^^ ^ ^^^^^^^^ ^^^^^^^^^^^^^^^^^^^
+secs     | tag      message
+        level
+```
 
-- **Entry:** none yet. Will be `export "svc_entry" fn service_main(...) -> i32`
-  per `os-build/layer1/SERVICE_CONTRACT.md` §2.
-- **Kernel surface:** none declared yet. Requirements it will place on Layers 1–3
-  are listed in `os-build/layer1/BOUNDARIES.md`.
-- **Needs from Layers 1–3:** see `services/MANIFEST.md`, row for `logfmt`.
-- **Offers to Layers 5–6:** see `services/MANIFEST.md`; nothing may rely on it yet.
+Fixed width (4-digit seconds, `.` and 3-digit milliseconds, one letter, an 8-wide
+tag column) is what makes a log greppable, sortable and visually aligned without a
+parser. Machine-shaped records are the audit service's job (B-L1-41); this is the
+format for the person reading a boot failure at 3am.
 
-## Dependencies
+Seconds + milliseconds rather than a bare millisecond count: `0042.300` reads as
+"42 s in", where `42300` needs dividing in your head.
 
-- **Libraries:** not yet decided — B-L1-15's gap audit narrows the candidates.
-- **Services:** not yet decided.
-- **Data it owns:** not yet decided.
+## Decisions
 
-## Failure behaviour
+| Decision | Reason |
+|---|---|
+| level is one letter | 40 KB of ring in a 64 KiB budget; `debug` costs 4 bytes per line |
+| unknown level renders `?` | visible, never silent |
+| long messages **truncate with `...`** | dropping the line loses the event entirely; the marker distinguishes "ended" from "was cut" |
+| `logfmt_render` returns -1 rather than a partial line | a truncated render reads as a complete line with the end missing |
+| `logfmt_parse` returns ok=false and fills nothing | a parser that guesses at a damaged line invents data for an audit trail |
+| tag column padded to 8 | keeps the message aligned; `TAG_MAX - 1` reserved for the terminator |
 
-Not yet designed. When it is, the codes come from `common/err` and a failure is
-always a log record, never a silence.
+`logfmt_parse` is strict: 1–9 second digits, exactly `.` and three millisecond
+digits, space, level letter, space, tag (≤7), space, message to newline, no message
+over `MSG_MAX`. Anything else is `false`, not a best guess.
 
-## Verification
-
-Nothing to verify: no source.
-
-## Not verified
-
-Everything. There is no Goose toolchain on this machine
-(`goose__toolchain_status` → `NOT FOUND`), so even a finished service cannot pass
-WRITTEN into COMPILED here.
-
-## Deviations
-
-None — nothing has been written to deviate from.
+Not compiled, not run.
