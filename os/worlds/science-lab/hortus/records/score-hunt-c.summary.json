@@ -1,0 +1,91 @@
+{
+ "champion_genome": [
+  40.0,
+  60.0,
+  0.745114,
+  1.332499
+ ],
+ "champion_id": 4198,
+ "curve": {
+  "best_at_generation": {
+   "1000": 137.7112989977123,
+   "1500": 137.7112989977123,
+   "300": 137.7112989977123
+  },
+  "generations_recorded": 1501,
+  "last_improvement_generation": 91
+ },
+ "experiment": "C",
+ "final_best_score": 137.7112989977123,
+ "final_mean_score": 116.8643845461642,
+ "first_best_score": 78.32132544822288,
+ "gene_bounds": [
+  [
+   2.0,
+   40.0
+  ],
+  [
+   4.0,
+   60.0
+  ],
+  [
+   0.4,
+   4.0
+  ],
+  [
+   1.0,
+   8.0
+  ]
+ ],
+ "generations": 1500,
+ "population_size": 48,
+ "run_log": "hortus-hunt-c-forced-run.jsonl",
+ "seed": 20261102,
+ "title": "forced air (condition lever, EXTRAPOLATED)",
+ "train_env": {
+  "delta_t_k": 40.0,
+  "h_w_per_m2k": 9.944508,
+  "k_w_per_mk": 237.0,
+  "margin_spacing_m": 0.0018,
+  "mass_cap_kg": 0.45,
+  "min_spacing_m": 0.001,
+  "name": "train-forced-air-calibrated-extrapolated",
+  "rho_kg_per_m3": 2700.0
+ },
+ "verifier": {
+  "champion_status": "verified-candidate",
+  "checks": [
+   {
+    "beat_reference": true,
+    "champion_heat_w": 137.71570037068602,
+    "env": "heldout-forced-air-calibrated",
+    "feasible": true,
+    "mass_ok": true,
+    "passed": true,
+    "reference_heat_w": 18.890079106714264,
+    "spacing_ok": true
+   },
+   {
+    "beat_reference": true,
+    "champion_heat_w": 44.64934657937421,
+    "env": "heldout-still-air-hot-calibrated",
+    "feasible": true,
+    "mass_ok": true,
+    "passed": true,
+    "reference_heat_w": 5.612757531480019,
+    "spacing_ok": true
+   },
+   {
+    "beat_reference": true,
+    "champion_heat_w": 62.3221301648769,
+    "env": "heldout-other-alloy-calibrated",
+    "feasible": true,
+    "mass_ok": true,
+    "passed": true,
+    "reference_heat_w": 8.289976112974943,
+    "spacing_ok": true
+   }
+  ],
+  "passed": true
+ }
+}

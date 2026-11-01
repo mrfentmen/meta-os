@@ -133,6 +133,38 @@ export const PRODUCTS = [
     inputGuidance:
       "Live camera aimed at the scene: people and vehicles visible from a safe distance. Never stage an emergency or put anyone at risk to test it; use prerecorded footage or safe visual demonstrations only.",
   },
+  {
+    id: "science-lab",
+    displayName: "Meta Science Lab",
+    department: "Research-oriented — autonomous scientific discovery",
+    tagline: "Competing hypotheses, structured computation, and independent verification — every claim labelled with its evidence level.",
+    accent: "#7c5cbf",
+    // For Science Lab the categories are not scene types; they are the
+    // claim vocabulary of the evidence ladder (LABORATORY section 7).
+    // A finding's level is a field on its record, so the UI can only
+    // ever display a claim at the level the record actually holds.
+    categories: [
+      "level 0: idea",
+      "level 1: evidence supported",
+      "level 2: computationally tested",
+      "level 3: independently reproduced",
+      "level 4: experimentally validated",
+      "level 5: independently replicated",
+      "level 6: established application",
+    ],
+    scenarios: [
+      "Reproducing a published computational result end to end (the stage 1 gate)",
+      "A hypothesis filed without a disproof condition is refused",
+      "A finding the verifier cannot reproduce is vetoed and stays at its level",
+      "A failed run is kept in the record, not deleted",
+      "An empty literature search is not treated as proof of novelty",
+      "A docking-style prediction is labelled a prediction, never a discovery",
+    ],
+    limitations:
+      "Partial build: the pack, its record schemas, and the Hortus breeding engine are built and recorded — Hortus runs are verifier-gated, its scorer was calibrated against real manufacturer datasheets, and its champion stands at rung 2 of 4 — but the lab is not yet a running discovery system and makes no discovery claims; the stage 1 reproduction gate has not been run. Every claim carries an evidence level from 0 to 6 and may never be shown above the level its record holds. Levels 4 to 6 require physical experiments by qualified humans and are unreachable by this system alone. Model agreement is not evidence; only retrieved sources, structured computation, and independent re-execution move a claim up the ladder. Failed hypotheses and failed runs are kept, never deleted. No autonomous synthesis, biological engineering, or human or animal experimentation pathways exist in this system; hazardous applications are blocked, not routed.",
+    inputGuidance:
+      "State a research problem or choose a staged scenario. The lab works from retrieved original sources and signed, structured compute jobs — never from a bare prompt, and never with unrestricted terminal access.",
+  },
 ];
 
 export const PRODUCT_BY_ID = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
