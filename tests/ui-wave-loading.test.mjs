@@ -89,7 +89,7 @@ test("production default delay is 300 ms", () => {
 });
 
 test("camera list and loop feed are wired to the delayed indicator", () => {
-  assert.ok(mapJs.includes('import { createDelayedIndicator } from "./loading.js";'));
+  assert.ok(mapJs.includes('import { createDelayedIndicator, errorClassFor } from "./loading.js";'));
   assert.match(mapJs, /Loading cameras…/);
   assert.match(mapJs, /Loading crew status…/);
   assert.ok(css.includes(".cmd-loading { font-style: italic; }"));

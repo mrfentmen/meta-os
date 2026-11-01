@@ -28,9 +28,9 @@ test("help overlay lists every keyboard shortcut in the view", () => {
 });
 
 test("help overlay opens, focuses close, and closes by button, backdrop, and Esc", () => {
-  assert.match(mapJs, /els\.helpOpen\.addEventListener\("click", \(\) => \{\n\s+els\.helpOverlay\.hidden = false;\n\s+els\.helpClose\.focus\(\);/);
-  assert.match(mapJs, /els\.helpClose\.addEventListener\("click", \(\) => \{\n\s+els\.helpOverlay\.hidden = true;/);
-  assert.match(mapJs, /els\.helpOverlay\.addEventListener\("click", \(event\) => \{\n\s+if \(event\.target === els\.helpOverlay\) els\.helpOverlay\.hidden = true;/);
+  assert.match(mapJs, /els\.helpOpen\.addEventListener\("click", \(\) => \{\n\s+state\.helpReturnFocus = rememberFocus\(\);\n\s+els\.helpOverlay\.hidden = false;\n\s+els\.helpClose\.focus\(\);/);
+  assert.ok(mapJs.includes('if (els.helpClose) els.helpClose.addEventListener("click", closeHelp);'));
+  assert.ok(mapJs.includes("if (event.target === els.helpOverlay) closeHelp();"));
   assert.match(mapJs, /event\.key === "Escape" && els\.helpOverlay && !els\.helpOverlay\.hidden/);
   assert.ok(css.includes(".cmd-help-list kbd {"));
 });

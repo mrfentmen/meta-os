@@ -1225,6 +1225,42 @@ body > .footer {
   }
 }
 
+/* HN-022 demo-mode banner: sticky, so it stays at the top of
+   the viewport in both views while scrolling; yellow on near-
+   black text measures ~7.5, past AA. */
+.demo-banner {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  background: #c9a227;
+  color: #14161a;
+  font-weight: 700;
+  text-align: center;
+  padding: 8px;
+  margin: 0;
+}
+/* HN-018 contrast pass (WCAG AA, measured in tests/contrast.test.mjs):
+   brand hexes stay pinned (tests + logo palettes assert them), so
+   only TEXT colors move — to lighter variants of the same hue.
+   Borders, backgrounds, and gradients are untouched. One pair is
+   measured short and deliberately NOT changed: the Ignis badge /
+   primary gradient's light end (#e54848) with white text measures
+   3.93 — the gradient is pinned by tests/ignis-web-theme.test.mjs
+   and no single text color passes both gradient ends, so that one
+   needs a brand call from the boss, not a silent edit. */
+body[data-product="vigiles"] .product-badge { color: #6a96d8; }
+body[data-product="vigiles"] .logo-studio-link,
+body[data-product="vigiles"] .assessment-product { color: #6a96d8; }
+body[data-product="ignis"] .logo-studio-link,
+body[data-product="ignis"] .assessment-product { color: #e85545; }
+.product-option[data-product-option="vigiles"]:has(input:checked) .product-option-name { color: #6a96d8; }
+.product-option[data-product-option="ignis"]:has(input:checked) .product-option-name { color: #e85545; }
+.status[data-state="error"],
+.camera-indicator,
+.history-error .history-head strong { color: #e07068; }
+body[data-product="vigiles"] .btn-primary:not(:disabled) { color: #02131c; }
+body[data-product="medicus"] .btn-primary:not(:disabled) { color: #02131c; }
+
 /* Medicus ops-console pass (Del UI direction, Oct 29): modern, elite,
    professional dispatch-console feel, scoped to
    body[data-product="medicus"] only. Additive sharpness on top of the
@@ -2228,39 +2264,3 @@ main > .panel {
   vertical-align: middle;
   margin-right: 8px;
 }
-
-/* HN-022 demo-mode banner: sticky, so it stays at the top of
-   the viewport in both views while scrolling; yellow on near-
-   black text measures ~7.5, past AA. */
-.demo-banner {
-  position: sticky;
-  top: 0;
-  z-index: 9999;
-  background: #c9a227;
-  color: #14161a;
-  font-weight: 700;
-  text-align: center;
-  padding: 8px;
-  margin: 0;
-}
-/* HN-018 contrast pass (WCAG AA, measured in tests/contrast.test.mjs):
-   brand hexes stay pinned (tests + logo palettes assert them), so
-   only TEXT colors move — to lighter variants of the same hue.
-   Borders, backgrounds, and gradients are untouched. One pair is
-   measured short and deliberately NOT changed: the Ignis badge /
-   primary gradient's light end (#e54848) with white text measures
-   3.93 — the gradient is pinned by tests/ignis-web-theme.test.mjs
-   and no single text color passes both gradient ends, so that one
-   needs a brand call from the boss, not a silent edit. */
-body[data-product="vigiles"] .product-badge { color: #6a96d8; }
-body[data-product="vigiles"] .logo-studio-link,
-body[data-product="vigiles"] .assessment-product { color: #6a96d8; }
-body[data-product="ignis"] .logo-studio-link,
-body[data-product="ignis"] .assessment-product { color: #e85545; }
-.product-option[data-product-option="vigiles"]:has(input:checked) .product-option-name { color: #6a96d8; }
-.product-option[data-product-option="ignis"]:has(input:checked) .product-option-name { color: #e85545; }
-.status[data-state="error"],
-.camera-indicator,
-.history-error .history-head strong { color: #e07068; }
-body[data-product="vigiles"] .btn-primary:not(:disabled) { color: #02131c; }
-body[data-product="medicus"] .btn-primary:not(:disabled) { color: #02131c; }
