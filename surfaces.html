@@ -36,6 +36,7 @@
     <a href="#board-cameras">Cameras</a>
     <a href="#board-receipt">Receipt</a>
     <a href="#board-costs">Costs</a>
+    <a href="#board-officina">Officina</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -85,9 +86,14 @@
     <p>Calls spent and dollars spent from the budget ledger (server/queue/spark_guardrail_state.json), refreshed as the chain runs.</p>
     <div id="cost-content" aria-live="polite">Loading…</div>
   </section>
+  <section class="board-section" id="board-officina" aria-labelledby="board-officina-heading">
+    <h2 id="board-officina-heading">Officina board</h2>
+    <p>Workshop runs (variants, failures, proven design) rendered from Milo's records (os/worlds/officina/runs/*.json). A run is failed only on recorded failure evidence.</p>
+    <div id="officina-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView, costTicker } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView, costTicker, officinaBoard } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -136,6 +142,22 @@
     }
     await refreshCosts();
     setInterval(refreshCosts, 15000);
+    // HN-066: fetch the known run files (no directory listing is
+    // served); missing files are skipped and the count says so.
+    const officinaFiles = ["forced-airflow-run-001.json", "forced-airflow-best-design.json",
+      "gap-headroom-run-001.json", "gap-headroom-best-design.json",
+      "overnight-run-001.json", "overnight-best-design.json",
+      "rough-words-run-001.json", "rough-words-best-design.json",
+      "volume-repair-run-001.json"];
+    const loaded = [];
+    for (const f of officinaFiles) {
+      try {
+        const res = await fetch(`os/worlds/officina/runs/${f}`);
+        if (res.ok) loaded.push(await res.json());
+      } catch { /* skipped, counted below */ }
+    }
+    document.getElementById("officina-content").innerHTML =
+      `<p>Loaded ${loaded.length} of ${officinaFiles.length} run files.</p>` + officinaBoard(loaded);
   } catch {
     document.getElementById("evidence-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;

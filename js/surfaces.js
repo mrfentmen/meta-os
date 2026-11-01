@@ -242,3 +242,63 @@ export function costTicker(state) {
     + `<span class="cost-calls">${calls} calls spent</span> `
     + `<span class="cost-dollars">$${dollars.toFixed(2)} spent</span></div>`;
 }
+
+// HN-066 Officina board: workshop runs rendered from Milo's records
+// format (os/worlds/officina/runs/*.json). Three shapes exist:
+//   run-001 files: rough_input, brief, rounds_used, final_params,
+//     final_grade, verification, proven, status;
+//   overnight run: artefact_class, n_variants, jobs, failures (each
+//     with a failure_reason), best, proven_best, score curve;
+//   best-design files: artefact_class, best, verification, proven.
+// A run-001 file is marked FAILED only on recorded failure evidence:
+// feasible === false, a non-empty violations list, or
+// fresh_agrees === false. An overnight run lists its variant failures
+// with their reasons (failures are per-variant, not a failed run).
+// A record with null grade/status renders "unknown" — never failed,
+// never proven, never filled in.
+export function officinaBoard(files) {
+  const runs = (Array.isArray(files) ? files : []).filter((f) => f && typeof f === "object");
+  const sections = [];
+  const singleRuns = runs.filter((f) => f.final_params !== undefined || f.rough_input !== undefined);
+  if (singleRuns.length > 0) {
+    const rows = singleRuns.map((r) => {
+      const grade = r.final_grade ?? {};
+      const violations = Array.isArray(grade.violations) ? grade.violations : [];
+      const failed = grade.feasible === false || violations.length > 0 || r.verification?.fresh_agrees === false;
+      const state = failed ? "failed" : (r.status ?? "unknown");
+      const rth = Number.isFinite(Number(grade.r_th_c_per_w)) ? Number(grade.r_th_c_per_w).toFixed(3) : "—";
+      return `<li class="officina-run officina-run--${escapeHtml(state)}">`
+        + `<span class="officina-input">${escapeHtml(r.rough_input ?? r.brief?.artefact_class ?? "—")}</span> `
+        + `<span class="officina-rounds">${r.rounds_used ?? "—"} rounds</span> `
+        + `<span class="officina-grade">R_th ${rth}</span> `
+        + `<span class="officina-state">${escapeHtml(state)}</span></li>`;
+    }).join("");
+    sections.push(`<h3>Runs</h3><ul class="officina-runs">${rows}</ul>`);
+  }
+  const overnight = runs.filter((f) => Number.isFinite(Number(f.n_variants)));
+  for (const o of overnight) {
+    const failures = Array.isArray(o.failures) ? o.failures : [];
+    const failRows = failures.slice(0, 5).map((fl) =>
+      `<li>job ${escapeHtml(fl.job_id ?? "—")}: ${escapeHtml(fl.failure_reason ?? "failed")}</li>`).join("");
+    const bestScore = Number.isFinite(Number(o.best?.score_r_th_c_per_w))
+      ? Number(o.best.score_r_th_c_per_w).toFixed(3) : "—";
+    const provenScore = Number.isFinite(Number(o.proven_best?.score_r_th_c_per_w))
+      ? Number(o.proven_best.score_r_th_c_per_w).toFixed(3) : "—";
+    sections.push(`<h3>Overnight run: ${escapeHtml(o.artefact_class ?? "—")}</h3>`
+      + `<p>${o.n_variants} variants, ${failures.length} failures, best R_th ${bestScore}, proven best R_th ${provenScore}.</p>`
+      + `<ul class="officina-failures">${failRows || "<li>No failures recorded.</li>"}</ul>`);
+  }
+  const designs = runs.filter((f) => f.best !== undefined && f.n_variants === undefined);
+  if (designs.length > 0) {
+    const rows = designs.map((d) => {
+      const params = d.best?.params ?? d.best ?? {};
+      return `<li class="officina-design">`
+        + `<span class="officina-class">${escapeHtml(d.artefact_class ?? "—")}</span> `
+        + `<span class="officina-params">${escapeHtml(JSON.stringify(params))}</span> `
+        + `<span class="officina-proven">${d.proven ? "proven" : "unproven"}</span></li>`;
+    }).join("");
+    sections.push(`<h3>Proven designs</h3><ul class="officina-designs">${rows}</ul>`);
+  }
+  if (sections.length === 0) return `<p class="empty-state">No Officina runs recorded.</p>`;
+  return `<div class="officina-board">${sections.join("")}</div>`;
+}
