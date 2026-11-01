@@ -318,3 +318,10 @@ repo, commit 556bd41; repo untouched per the prompt). Status per task:
 - NB-049 DONE. labs/music3d/tests/validate.test.mjs: 3/3 pass (map covers
   C4..C5 ascending, order matches scale, octave = exactly 2x frequency).
 - NB-050 section report: this list; shots + test named above.
+
+## Section E (round 2): OS image boot in UTM (NB-051 to NB-060) — STOPPED at NB-051
+
+- NB-051 DONE as a negative result: no image file on this Mac (whole-disk
+  search, zero hits). UTM installed and ready, nothing to boot. Section
+  stopped per the task's own instruction. Full note: oc-proofs/utm-boot-report.md.
+- NB-052 to NB-060 not attempted. Unblock needs: the built .img on this Mac.
