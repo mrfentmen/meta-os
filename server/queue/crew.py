@@ -509,6 +509,17 @@ class Crew:
                         "incident_id": incident_id,
                         "category": category,
                         "reason": decision["reason"]}
+            if name == "record_for_review":
+                # Yellow tier: the flag is recorded for human
+                # review and the chain ends here. The
+                # orchestrator ordered no action, so no review,
+                # investigation, or dispatch was spent; the
+                # record's status (yellow-review, carried on the
+                # decision step the orchestrator just recorded)
+                # is the marker.
+                return {"outcome": "flagged-yellow-review",
+                        "incident_id": incident_id,
+                        "category": category}
             if name == "prepare_response":
                 break
             # investigate / reconcile: execute the ordered actions,

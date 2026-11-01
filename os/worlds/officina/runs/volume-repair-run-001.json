@@ -1,0 +1,193 @@
+{
+ "rough_input": "heatsink",
+ "brief": {
+  "artefact_class": "heatsink-fin-geometry",
+  "gradeable": true,
+  "source_text": "heatsink",
+  "summary": "heatsink",
+  "requirements": [],
+  "targets": [
+   {
+    "kind": "target_r_c_per_w",
+    "value": 2.0,
+    "source": "workshop-default"
+   }
+  ],
+  "preferences": [],
+  "unknowns": [
+   {
+    "slot": "power_w",
+    "note": "not stated in the rough words"
+   },
+   {
+    "slot": "footprint_mm",
+    "note": "not stated in the rough words"
+   },
+   {
+    "slot": "target_r",
+    "note": "no target stated; workshop default applied, see targets"
+   },
+   {
+    "slot": "airflow",
+    "note": "no airflow stated; graded at natural convection, held out at forced airflow"
+   }
+  ],
+  "conflicts": [],
+  "parameters": {
+   "fin_height_mm": 48.0,
+   "fin_thickness_mm": 2.5,
+   "fin_count": 12,
+   "base_thickness_mm": 10.0
+  },
+  "bounds": {},
+  "amendments": [
+   {
+    "round": 1,
+    "change": "base_thickness_mm 12.0 -> 11.0",
+    "reason": "volume volume 102000.0 mm^3 above budget 100000.0 mm^3; thinner base cuts volume"
+   },
+   {
+    "round": 2,
+    "change": "base_thickness_mm 11.0 -> 10.0",
+    "reason": "volume volume 101588.0 mm^3 above budget 100000.0 mm^3; thinner base cuts volume"
+   }
+  ],
+  "decision_log": [
+   {
+    "round": 0,
+    "rule": "intake",
+    "decision": "workshop first guess {'fin_height_mm': 48.0, 'fin_thickness_mm': 2.5, 'fin_count': 12, 'base_thickness_mm': 12.0}",
+    "reason": "rough words state no geometry; the loop starts mid-range and improves from graded feedback",
+    "grade_before": null,
+    "params_before": null,
+    "params_after": {
+     "fin_height_mm": 48.0,
+     "fin_thickness_mm": 2.5,
+     "fin_count": 12,
+     "base_thickness_mm": 12.0
+    }
+   },
+   {
+    "round": 1,
+    "rule": "volume repair",
+    "decision": "base_thickness_mm 12.0 -> 11.0",
+    "reason": "volume volume 102000.0 mm^3 above budget 100000.0 mm^3; thinner base cuts volume",
+    "grade_before": {
+     "r_th_c_per_w": 1.7564322874039568,
+     "feasible": false,
+     "violations": [
+      "volume 102000.0 mm^3 above budget 100000.0 mm^3"
+     ],
+     "conditions": {
+      "h_w_m2k": 10.0,
+      "t_base_c": 80.0,
+      "t_amb_c": 25.0
+     }
+    },
+    "params_before": {
+     "fin_height_mm": 48.0,
+     "fin_thickness_mm": 2.5,
+     "fin_count": 12,
+     "base_thickness_mm": 12.0
+    },
+    "params_after": {
+     "fin_height_mm": 48.0,
+     "fin_thickness_mm": 2.5,
+     "fin_count": 12,
+     "base_thickness_mm": 11.0
+    }
+   },
+   {
+    "round": 2,
+    "rule": "held-out feasibility repair",
+    "decision": "base_thickness_mm 11.0 -> 10.0",
+    "reason": "volume volume 101588.0 mm^3 above budget 100000.0 mm^3; thinner base cuts volume",
+    "grade_before": {
+     "r_th_c_per_w": 1.7564322874039568,
+     "feasible": true,
+     "violations": [],
+     "conditions": {
+      "h_w_m2k": 10.0,
+      "t_base_c": 80.0,
+      "t_amb_c": 25.0
+     }
+    },
+    "params_before": {
+     "fin_height_mm": 48.0,
+     "fin_thickness_mm": 2.5,
+     "fin_count": 12,
+     "base_thickness_mm": 11.0
+    },
+    "params_after": {
+     "fin_height_mm": 48.0,
+     "fin_thickness_mm": 2.5,
+     "fin_count": 12,
+     "base_thickness_mm": 10.0
+    }
+   },
+   {
+    "round": 3,
+    "rule": "accept",
+    "decision": "freeze brief; design accepted",
+    "reason": "design-condition R 1.7564 meets target 2.0000 and the held-out gate passed (held-out R 1.2086)",
+    "grade_before": {
+     "r_th_c_per_w": 1.7564322874039568,
+     "feasible": true,
+     "violations": [],
+     "conditions": {
+      "h_w_m2k": 10.0,
+      "t_base_c": 80.0,
+      "t_amb_c": 25.0
+     }
+    },
+    "params_before": {
+     "fin_height_mm": 48.0,
+     "fin_thickness_mm": 2.5,
+     "fin_count": 12,
+     "base_thickness_mm": 10.0
+    },
+    "params_after": {
+     "fin_height_mm": 48.0,
+     "fin_thickness_mm": 2.5,
+     "fin_count": 12,
+     "base_thickness_mm": 10.0
+    }
+   }
+  ]
+ },
+ "rounds_used": 3,
+ "final_params": {
+  "fin_height_mm": 48.0,
+  "fin_thickness_mm": 2.5,
+  "fin_count": 12,
+  "base_thickness_mm": 10.0
+ },
+ "final_grade": {
+  "r_th_c_per_w": 1.7564322874039568,
+  "feasible": true,
+  "violations": [],
+  "conditions": {
+   "h_w_m2k": 10.0,
+   "t_base_c": 80.0,
+   "t_amb_c": 25.0
+  }
+ },
+ "verification": {
+  "params": {
+   "fin_height_mm": 48.0,
+   "fin_thickness_mm": 2.5,
+   "fin_count": 12,
+   "base_thickness_mm": 10.0
+  },
+  "claimed_r_th_c_per_w": 1.7564322874039568,
+  "fresh_r_th_c_per_w": 1.7564322874039568,
+  "fresh_agrees": true,
+  "heldout_r_th_c_per_w": 1.2085843654973885,
+  "heldout_feasible": true,
+  "heldout_violations": [],
+  "accept_r_c_per_w": 2.0,
+  "proven": true
+ },
+ "proven": true,
+ "status": "proven"
+}

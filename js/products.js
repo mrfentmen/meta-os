@@ -150,6 +150,8 @@ export function isProductId(value) {
 // observation categories and must never appear in the camera picker,
 // so Custos registers as a world entry with its own shape and
 // status, and the Trio list stays exactly vigiles / ignis / medicus.
+// A workshop is not a camera product either, so Officina registers
+// the same way.
 export const WORLD_PRODUCTS = [
   {
     id: "custos",
@@ -160,5 +162,15 @@ export const WORLD_PRODUCTS = [
     status: "stage-1",
     pack: "os/worlds/custos",
     runtime: "os/worlds/custos/runtime/patrol.py",
+  },
+  {
+    id: "officina",
+    displayName: "Meta Officina",
+    department: "Invention workshop — agent design iteration",
+    tagline: "An agent that designs, simulates, breaks, and redesigns.",
+    accent: "#b07d2b",
+    status: "stage-1",
+    pack: "os/worlds/officina",
+    runtime: "os/worlds/officina/runtime/design_loop.py",
   },
 ];

@@ -1,4 +1,5 @@
-//! Carried deployment assets (T153–T156): the 39 `os/os/` files are
+//! Carried deployment assets (T153–T156 + Meta Custos stage 2
+//! + metaos-loop): the 47 `os/os/` files are
 //! carried byte-identical under `crates/os-boot/assets/os/`, mirroring
 //! the source layout. They are deployment assets (systemd units, shell
 //! scripts, image-build config, docs), not Rust code — never rewritten,
@@ -74,11 +75,17 @@ pub const CARRIED: &[&str] = &[
     "os/bin/metaos-custos",
     "os/services/metaos-custos.service",
     "os/services/metaos-custos.timer",
+    // metaos-loop (Rowan, 2026-11-01) — the self-development loop:
+    // driver, units, and its operator doc (see os/METAOS_LOOP.md).
+    "os/bin/metaos-loop",
+    "os/services/metaos-loop.service",
+    "os/services/metaos-loop.timer",
+    "os/METAOS_LOOP.md",
 ];
 
 /// Number of carried files (T153 10 + T154 10 + T155 10 + T156 9
-/// + Meta Custos stage 2 4).
-pub const CARRIED_COUNT: usize = 43;
+/// + Meta Custos stage 2 4 + metaos-loop 4).
+pub const CARRIED_COUNT: usize = 47;
 
 /// Resolve the source path for a manifest entry (repo `<repo>/os/<entry>`).
 pub fn source_path(entry: &str) -> std::path::PathBuf {

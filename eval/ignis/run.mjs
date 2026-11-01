@@ -1,6 +1,10 @@
 // Meta Ignis eval runner (Rowan's lane).
-// Usage: node eval/ignis/run.mjs [--out <path>] [--baseline | --stub]
-// Runs the Ignis scenario set against the wired assessment source:
+// Usage: node eval/ignis/run.mjs [--out <path>] [--baseline | --stub] [--legacy]
+// Runs the Ignis scenario set against the wired assessment source.
+// Default set: scenarios-current.json, the current js/products.js
+// taxonomy (17 categories, 12 alert categories). With --legacy, runs
+// the frozen benchmark instead: scenarios.json (20 scenarios) with
+// the frozen alert definition (visible smoke / visible flame only).
 // the real server model adapter (server/model.mjs). While Del's Spark
 // rule holds, every scenario records the held refusal as its error;
 // the printed report says so, and its numbers describe source
@@ -24,6 +28,8 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import {
+  IGNIS_ALERT_CATEGORIES,
+  IGNIS_ALERT_CATEGORIES_LEGACY,
   runIgnisEval,
   computeMetrics,
   formatIgnisReport,
@@ -33,7 +39,11 @@ import { assessBaseline } from "./baseline.mjs";
 import { assessStub } from "./stub.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const scenarios = JSON.parse(readFileSync(join(here, "scenarios.json"), "utf8")).scenarios;
+const useLegacy = process.argv.includes("--legacy");
+const scenarioFile = useLegacy ? "scenarios.json" : "scenarios-current.json";
+const scenarios = JSON.parse(readFileSync(join(here, scenarioFile), "utf8")).scenarios;
+const alertCategories = useLegacy ? IGNIS_ALERT_CATEGORIES_LEGACY : IGNIS_ALERT_CATEGORIES;
+const options = { alertCategories };
 
 const outIndex = process.argv.indexOf("--out");
 const outPath = outIndex >= 0 ? process.argv[outIndex + 1] : null;
@@ -46,7 +56,7 @@ let source = useBaseline
   : useStub
     ? "stub (fixture, not a model)"
     : "server model adapter (held while Spark stays off)";
-const records = await runIgnisEval(scenarios, assess);
+const records = await runIgnisEval(scenarios, assess, options);
 const metrics = computeMetrics(records);
 // Evidence-based labels for the default (wired-source) run: a stale
 // "held" label must never describe a run that returned assessments.
@@ -67,7 +77,7 @@ if (!useBaseline && !useStub) {
 console.log(formatIgnisReport({ source, records, metrics }));
 console.log("");
 if (useStub) {
-  const baselineRecords = await runIgnisEval(scenarios, assessBaseline);
+  const baselineRecords = await runIgnisEval(scenarios, assessBaseline, options);
   const baselineMetrics = computeMetrics(baselineRecords);
   console.log(
     "Comparison (same ground truth, same harness): " +

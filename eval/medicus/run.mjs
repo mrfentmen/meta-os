@@ -1,7 +1,11 @@
 // Meta Medicus fixture eval runner (Agent 3).
-// Usage: node eval/medicus/run.mjs [--out <path>]
+// Usage: node eval/medicus/run.mjs [--out <path>] [--legacy]
 // Runs the Medicus scenario set against the fixture stub and against
 // the always-normal baseline, prints both reports and the comparison.
+// Default set: scenarios-current.json, the current js/products.js
+// taxonomy (14 categories, 12 alert categories). With --legacy, runs
+// the frozen benchmark instead: scenarios.json (20 scenarios) with
+// the frozen alert definition (the five original categories only).
 // No network, no model calls, no API key. The stub and baseline are
 // fixture sources; their numbers are fixture numbers, not model
 // performance, and the printed report says so.
@@ -15,12 +19,22 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { runEval, computeMetrics, formatReport } from "./harness.mjs";
+import {
+  ALERT_CATEGORIES,
+  ALERT_CATEGORIES_LEGACY,
+  runEval,
+  computeMetrics,
+  formatReport,
+} from "./harness.mjs";
 import { assessStub } from "./stub.mjs";
 import { assessBaseline } from "./baseline.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const scenarios = JSON.parse(readFileSync(join(here, "scenarios.json"), "utf8")).scenarios;
+const useLegacy = process.argv.includes("--legacy");
+const scenarioFile = useLegacy ? "scenarios.json" : "scenarios-current.json";
+const scenarios = JSON.parse(readFileSync(join(here, scenarioFile), "utf8")).scenarios;
+const alertCategories = useLegacy ? ALERT_CATEGORIES_LEGACY : ALERT_CATEGORIES;
+const options = { alertCategories };
 
 const outIndex = process.argv.indexOf("--out");
 const outPath = outIndex >= 0 ? process.argv[outIndex + 1] : null;
@@ -30,7 +44,7 @@ for (const [source, assess] of [
   ["stub (fixture, not a model)", assessStub],
   ["baseline always-normal (fixture)", assessBaseline],
 ]) {
-  const records = await runEval(scenarios, assess);
+  const records = await runEval(scenarios, assess, options);
   const metrics = computeMetrics(records);
   console.log(formatReport({ source, records, metrics }));
   console.log("");

@@ -12,6 +12,7 @@ import { dirname, join } from "node:path";
 
 import {
   IGNIS_ALERT_CATEGORIES,
+  IGNIS_ALERT_CATEGORIES_LEGACY,
   validateIgnisScenarios,
   runIgnisEval,
   computeMetrics,
@@ -24,6 +25,9 @@ import { PRODUCT_BY_ID } from "../../js/products.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scenarios = JSON.parse(readFileSync(join(here, "scenarios.json"), "utf8")).scenarios;
+const currentScenarios = JSON.parse(
+  readFileSync(join(here, "scenarios-current.json"), "utf8"),
+).scenarios;
 
 function fakeAssessment(category) {
   return {
@@ -84,8 +88,68 @@ test("labels: scenario set loads, ids unique, labels are ignis categories, alert
   }
 });
 
-test("labels: alert categories are exactly visible smoke and visible flame", () => {
-  assert.deepEqual([...IGNIS_ALERT_CATEGORIES].sort(), ["visible flame", "visible smoke"]);
+test("labels: alert categories are the current taxonomy's twelve alert categories", () => {
+  assert.deepEqual([...IGNIS_ALERT_CATEGORIES].sort(), [
+    "battery fire indicators",
+    "brown smoke",
+    "cooking oil fire indicators",
+    "dark smoke",
+    "electrical fire indicators",
+    "gas fire indicators",
+    "metal fire indicators",
+    "smoldering fire",
+    "structure fire",
+    "vehicle fire",
+    "visible flame",
+    "visible smoke",
+  ]);
+});
+
+test("labels: legacy alert categories are exactly visible smoke and visible flame", () => {
+  assert.deepEqual([...IGNIS_ALERT_CATEGORIES_LEGACY].sort(), ["visible flame", "visible smoke"]);
+});
+
+test("labels: current set loads, covers all 17 ignis categories, alert flags match the current definition", () => {
+  assert.equal(currentScenarios.length, 30);
+  assert.equal(validateIgnisScenarios(currentScenarios).length, 0);
+  const ids = currentScenarios.map((s) => s.scenario_id);
+  assert.equal(new Set(ids).size, ids.length, "duplicate scenario ids");
+  const labels = new Set(currentScenarios.map((s) => s.ground_truth_label));
+  assert.equal(labels.size, PRODUCT_BY_ID.ignis.categories.length);
+  for (const category of PRODUCT_BY_ID.ignis.categories) {
+    assert.ok(labels.has(category), `missing ground-truth label ${category}`);
+  }
+  for (const s of currentScenarios) {
+    assert.equal(
+      s.alert_expected,
+      IGNIS_ALERT_CATEGORIES.includes(s.ground_truth_label),
+      `${s.scenario_id} alert_expected contradicts the current alert definition`,
+    );
+  }
+});
+
+test("legacy option: frozen set validates and scores identically under the legacy alert set", async () => {
+  const legacy = { alertCategories: IGNIS_ALERT_CATEGORIES_LEGACY };
+  assert.equal(validateIgnisScenarios(scenarios, legacy).length, 0);
+  const metrics = computeMetrics(await runIgnisEval(scenarios, assessStub, legacy));
+  assert.equal(metrics.true_positives, 4);
+  assert.equal(metrics.false_positives, 3);
+  assert.equal(metrics.true_negatives, 12);
+  assert.equal(metrics.false_negatives, 1);
+  assert.equal(metrics.category_accuracy, 14 / 20);
+});
+
+test("alert logic: a new-category answer fires under the current set but not under legacy", async () => {
+  const scenario = oneScenario({ ground_truth_label: "vehicle fire", alert_expected: true });
+  assert.equal(validateIgnisScenarios([scenario]).length, 0);
+  assert.ok(
+    validateIgnisScenarios([scenario], { alertCategories: IGNIS_ALERT_CATEGORIES_LEGACY }).length > 0,
+    "vehicle fire with alert_expected true must contradict the legacy definition",
+  );
+  const [current] = await runIgnisEval([scenario], () => fakeAssessment("vehicle fire"));
+  assert.equal(current.alert_fired, true);
+  assert.equal(current.alert_correct, true);
+  assert.equal(current.category_correct, true);
 });
 
 test("labels: invalid sets are rejected, not run", () => {
@@ -287,4 +351,43 @@ test("stub: beats the baseline on recall and category accuracy, on the same harn
   const baselineMetrics = computeMetrics(await runIgnisEval(scenarios, assessBaseline));
   assert.ok(stubMetrics.recall > baselineMetrics.recall);
   assert.ok(stubMetrics.category_accuracy > baselineMetrics.category_accuracy);
+});
+
+test("stub: current-set answers pass v2 schema validation for every scenario", async () => {
+  for (const scenario of currentScenarios) {
+    const answer = await assessStub(scenario);
+    assert.equal(validateAssessment(answer, "ignis").ok, true);
+    assert.equal(answer.processing.model, "ignis-stub-fixture");
+  }
+});
+
+test("stub: current-set metrics are exactly the documented fixture numbers (TP=14 FP=3 TN=12 FN=1, accuracy 24/30)", async () => {
+  const records = await runIgnisEval(currentScenarios, assessStub);
+  assert.equal(records.length, currentScenarios.length);
+  const metrics = computeMetrics(records);
+  assert.equal(metrics.true_positives, 14);
+  assert.equal(metrics.false_positives, 3);
+  assert.equal(metrics.true_negatives, 12);
+  assert.equal(metrics.false_negatives, 1);
+  assert.equal(metrics.precision, 14 / 17);
+  assert.equal(metrics.recall, 14 / 15);
+  assert.equal(metrics.false_positive_rate, 3 / 15);
+  assert.equal(metrics.false_negative_rate, 1 / 15);
+  assert.equal(metrics.category_accuracy, 24 / 30);
+  assert.equal(metrics.errors.count, 0);
+});
+
+test("baseline: current-set metrics are exactly the do-nothing numbers (TP=0 FP=0 TN=15 FN=15, accuracy 3/30)", async () => {
+  const records = await runIgnisEval(currentScenarios, assessBaseline);
+  const metrics = computeMetrics(records);
+  assert.equal(metrics.true_positives, 0);
+  assert.equal(metrics.false_positives, 0);
+  assert.equal(metrics.true_negatives, 15);
+  assert.equal(metrics.false_negatives, 15);
+  assert.equal(metrics.precision, null);
+  assert.equal(metrics.recall, 0);
+  assert.equal(metrics.false_positive_rate, 0);
+  assert.equal(metrics.false_negative_rate, 1);
+  assert.equal(metrics.category_accuracy, 3 / 30);
+  assert.equal(metrics.errors.count, 0);
 });

@@ -1,0 +1,187 @@
+{
+  "rough_input": "heatsink under 1.4 degrees per watt",
+  "brief": {
+    "artefact_class": "heatsink-fin-geometry",
+    "gradeable": true,
+    "source_text": "heatsink under 1.4 degrees per watt",
+    "summary": "heatsink under 1.4 degrees per watt",
+    "requirements": [],
+    "targets": [
+      {
+        "kind": "target_r_c_per_w",
+        "value": 1.4,
+        "source": "stated"
+      }
+    ],
+    "preferences": [],
+    "unknowns": [
+      {
+        "slot": "power_w",
+        "note": "not stated in the rough words"
+      },
+      {
+        "slot": "footprint_mm",
+        "note": "not stated in the rough words"
+      },
+      {
+        "slot": "airflow",
+        "note": "no airflow stated; graded at natural convection, held out at forced airflow"
+      }
+    ],
+    "conflicts": [],
+    "parameters": {
+      "fin_height_mm": 40.0,
+      "fin_thickness_mm": 1.6,
+      "fin_count": 19,
+      "base_thickness_mm": 8.0
+    },
+    "bounds": {},
+    "amendments": [
+      {
+        "round": 1,
+        "change": "fin_thickness_mm 2.0 -> 1.6",
+        "reason": "add fins is blocked (fin gap 0.667 mm below minimum 1.000 mm); thinner fins widen the gap so add fins can fire; two-step R 1.3405 beats current 1.4907"
+      },
+      {
+        "round": 2,
+        "change": "fin_count 17 -> 19",
+        "reason": "feasible R 1.4923 above target 1.4000; add fins improves it to 1.3405 at design conditions"
+      }
+    ],
+    "decision_log": [
+      {
+        "round": 0,
+        "rule": "intake",
+        "decision": "workshop first guess {'fin_height_mm': 40.0, 'fin_thickness_mm': 2.0, 'fin_count': 17, 'base_thickness_mm': 8.0}",
+        "reason": "rough words state no geometry; the loop starts mid-range and improves from graded feedback",
+        "grade_before": null,
+        "params_before": null,
+        "params_after": {
+          "fin_height_mm": 40.0,
+          "fin_thickness_mm": 2.0,
+          "fin_count": 17,
+          "base_thickness_mm": 8.0
+        }
+      },
+      {
+        "round": 1,
+        "rule": "gap headroom",
+        "decision": "fin_thickness_mm 2.0 -> 1.6",
+        "reason": "add fins is blocked (fin gap 0.667 mm below minimum 1.000 mm); thinner fins widen the gap so add fins can fire; two-step R 1.3405 beats current 1.4907",
+        "grade_before": {
+          "r_th_c_per_w": 1.4906587803987617,
+          "feasible": true,
+          "violations": [],
+          "conditions": {
+            "h_w_m2k": 10.0,
+            "t_base_c": 80.0,
+            "t_amb_c": 25.0
+          }
+        },
+        "params_before": {
+          "fin_height_mm": 40.0,
+          "fin_thickness_mm": 2.0,
+          "fin_count": 17,
+          "base_thickness_mm": 8.0
+        },
+        "params_after": {
+          "fin_height_mm": 40.0,
+          "fin_thickness_mm": 1.6,
+          "fin_count": 17,
+          "base_thickness_mm": 8.0
+        }
+      },
+      {
+        "round": 2,
+        "rule": "improve",
+        "decision": "fin_count 17 -> 19",
+        "reason": "feasible R 1.4923 above target 1.4000; add fins improves it to 1.3405 at design conditions",
+        "grade_before": {
+          "r_th_c_per_w": 1.492278113318333,
+          "feasible": true,
+          "violations": [],
+          "conditions": {
+            "h_w_m2k": 10.0,
+            "t_base_c": 80.0,
+            "t_amb_c": 25.0
+          }
+        },
+        "params_before": {
+          "fin_height_mm": 40.0,
+          "fin_thickness_mm": 1.6,
+          "fin_count": 17,
+          "base_thickness_mm": 8.0
+        },
+        "params_after": {
+          "fin_height_mm": 40.0,
+          "fin_thickness_mm": 1.6,
+          "fin_count": 19,
+          "base_thickness_mm": 8.0
+        }
+      },
+      {
+        "round": 3,
+        "rule": "accept",
+        "decision": "freeze brief; design accepted",
+        "reason": "design-condition R 1.3405 meets target 1.4000 and the held-out gate passed (held-out R 0.9230)",
+        "grade_before": {
+          "r_th_c_per_w": 1.3404602579815585,
+          "feasible": true,
+          "violations": [],
+          "conditions": {
+            "h_w_m2k": 10.0,
+            "t_base_c": 80.0,
+            "t_amb_c": 25.0
+          }
+        },
+        "params_before": {
+          "fin_height_mm": 40.0,
+          "fin_thickness_mm": 1.6,
+          "fin_count": 19,
+          "base_thickness_mm": 8.0
+        },
+        "params_after": {
+          "fin_height_mm": 40.0,
+          "fin_thickness_mm": 1.6,
+          "fin_count": 19,
+          "base_thickness_mm": 8.0
+        }
+      }
+    ]
+  },
+  "rounds_used": 3,
+  "final_params": {
+    "fin_height_mm": 40.0,
+    "fin_thickness_mm": 1.6,
+    "fin_count": 19,
+    "base_thickness_mm": 8.0
+  },
+  "final_grade": {
+    "r_th_c_per_w": 1.3404602579815585,
+    "feasible": true,
+    "violations": [],
+    "conditions": {
+      "h_w_m2k": 10.0,
+      "t_base_c": 80.0,
+      "t_amb_c": 25.0
+    }
+  },
+  "verification": {
+    "params": {
+      "fin_height_mm": 40.0,
+      "fin_thickness_mm": 1.6,
+      "fin_count": 19,
+      "base_thickness_mm": 8.0
+    },
+    "claimed_r_th_c_per_w": 1.3404602579815585,
+    "fresh_r_th_c_per_w": 1.3404602579815585,
+    "fresh_agrees": true,
+    "heldout_r_th_c_per_w": 0.9229821029743297,
+    "heldout_feasible": true,
+    "heldout_violations": [],
+    "accept_r_c_per_w": 2.0,
+    "proven": true
+  },
+  "proven": true,
+  "status": "proven"
+}

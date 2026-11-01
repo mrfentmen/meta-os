@@ -10,6 +10,7 @@ import { dirname, join } from "node:path";
 
 import {
   ALERT_CATEGORIES,
+  ALERT_CATEGORIES_LEGACY,
   validateScenarios,
   runEval,
   computeMetrics,
@@ -21,6 +22,9 @@ import { PRODUCT_BY_ID } from "../../js/products.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const scenarios = JSON.parse(readFileSync(join(here, "scenarios.json"), "utf8")).scenarios;
+const currentScenarios = JSON.parse(
+  readFileSync(join(here, "scenarios-current.json"), "utf8"),
+).scenarios;
 
 function fakeAssessment(category) {
   return {
@@ -80,14 +84,64 @@ test("labels: scenario set loads, ids unique, labels are medicus categories", ()
   }
 });
 
-test("labels: alert categories match the directive action set", () => {
+test("labels: alert categories are the current taxonomy's twelve alert categories", () => {
   assert.deepEqual([...ALERT_CATEGORIES].sort(), [
+    "blocked crew access",
+    "blood visible at scene",
+    "bystander aid in progress",
+    "crowd gathered around a person",
+    "multi-person incident scene",
+    "person down in roadway",
+    "person in or near water",
+    "person motionless",
+    "person on ground",
+    "person slumped in vehicle",
+    "person trapped or pinned",
+    "vehicle collision scene",
+  ]);
+});
+
+test("labels: legacy alert categories match the directive action set", () => {
+  assert.deepEqual([...ALERT_CATEGORIES_LEGACY].sort(), [
     "blocked crew access",
     "crowd gathered around a person",
     "person motionless",
     "person on ground",
     "vehicle collision scene",
   ]);
+});
+
+test("labels: current set loads, covers all 14 medicus categories", () => {
+  assert.equal(currentScenarios.length, 27);
+  assert.equal(validateScenarios(currentScenarios).length, 0);
+  const ids = currentScenarios.map((s) => s.scenario_id);
+  assert.equal(new Set(ids).size, ids.length, "duplicate scenario ids");
+  const labels = new Set(currentScenarios.map((s) => s.ground_truth_label));
+  assert.equal(labels.size, PRODUCT_BY_ID.medicus.categories.length);
+  for (const category of PRODUCT_BY_ID.medicus.categories) {
+    assert.ok(labels.has(category), `missing ground-truth label ${category}`);
+  }
+  for (const s of currentScenarios) {
+    assert.equal(
+      s.alert_expected,
+      ALERT_CATEGORIES.includes(s.ground_truth_label),
+      `${s.scenario_id} alert_expected contradicts the current alert definition`,
+    );
+  }
+});
+
+test("alert logic: a new-category answer fires under the current set but not under legacy", async () => {
+  const scenario = oneScenario({ ground_truth_label: "person down in roadway", alert_expected: true });
+  const [current] = await runEval([scenario], () => fakeAssessment("person down in roadway"));
+  assert.equal(current.alert_fired, true);
+  assert.equal(current.alert_correct, true);
+  assert.equal(current.category_correct, true);
+  const [legacy] = await runEval([scenario], () => fakeAssessment("person down in roadway"), {
+    alertCategories: ALERT_CATEGORIES_LEGACY,
+  });
+  assert.equal(legacy.alert_fired, false);
+  assert.equal(legacy.alert_correct, false);
+  assert.equal(legacy.category_correct, true);
 });
 
 test("labels: invalid sets are rejected, not run", () => {
@@ -201,4 +255,55 @@ test("fixtures: runEval does not mutate the scenario objects", async () => {
   const before = JSON.stringify(frozen);
   await runEval(frozen, assessStub);
   assert.equal(JSON.stringify(frozen), before);
+});
+
+test("fixtures: stub and baseline answers pass v2 schema validation for every current scenario", async () => {
+  for (const s of currentScenarios) {
+    for (const assess of [assessStub, assessBaseline]) {
+      const out = await assess(s);
+      const result = validateAssessment(out, "medicus");
+      assert.equal(result.ok, true, `${s.scenario_id}: ${result.errors.join("; ")}`);
+    }
+  }
+});
+
+test("fixtures: current-set stub metrics are exactly the documented fixture numbers (TP=13 FP=3 TN=10 FN=1, accuracy 21/27)", async () => {
+  const records = await runEval(currentScenarios, assessStub);
+  const metrics = computeMetrics(records);
+  assert.equal(metrics.true_positives, 13);
+  assert.equal(metrics.false_positives, 3);
+  assert.equal(metrics.true_negatives, 10);
+  assert.equal(metrics.false_negatives, 1);
+  assert.equal(metrics.precision, 13 / 16);
+  assert.equal(metrics.recall, 13 / 14);
+  assert.equal(metrics.false_positive_rate, 3 / 13);
+  assert.equal(metrics.false_negative_rate, 1 / 14);
+  assert.equal(metrics.category_accuracy, 21 / 27);
+  assert.equal(metrics.errors.count, 0);
+});
+
+test("fixtures: current-set baseline metrics are exactly the do-nothing numbers (TP=0 FP=0 TN=13 FN=14, accuracy 8/27)", async () => {
+  const records = await runEval(currentScenarios, assessBaseline);
+  const metrics = computeMetrics(records);
+  assert.equal(metrics.true_positives, 0);
+  assert.equal(metrics.false_positives, 0);
+  assert.equal(metrics.true_negatives, 13);
+  assert.equal(metrics.false_negatives, 14);
+  assert.equal(metrics.precision, null);
+  assert.equal(metrics.recall, 0);
+  assert.equal(metrics.false_positive_rate, 0);
+  assert.equal(metrics.false_negative_rate, 1);
+  assert.equal(metrics.category_accuracy, 8 / 27);
+  assert.equal(metrics.errors.count, 0);
+});
+
+test("legacy option: frozen set scores identically under the legacy alert set", async () => {
+  const metrics = computeMetrics(
+    await runEval(scenarios, assessStub, { alertCategories: ALERT_CATEGORIES_LEGACY }),
+  );
+  assert.equal(metrics.true_positives, 6);
+  assert.equal(metrics.false_positives, 3);
+  assert.equal(metrics.true_negatives, 10);
+  assert.equal(metrics.false_negatives, 1);
+  assert.equal(metrics.category_accuracy, 14 / 20);
 });

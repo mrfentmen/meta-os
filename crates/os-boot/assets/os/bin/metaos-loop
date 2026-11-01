@@ -1,0 +1,212 @@
+#!/bin/sh
+# metaos-loop: the self-development loop — the agent inside Meta OS working
+# on Meta OS. One cycle per invocation; a systemd timer re-invokes it.
+#
+# Each cycle, in order:
+#   1. STOP file present -> halt immediately, exit 0 (the boss's kill switch).
+#   2. Claim the lock (one cycle at a time; steal it only if the holder died).
+#   3. Daily cycle cap reached -> log and exit 0.
+#   4. Require a git checkout with a CLEAN tree; dirty tree -> log, exit 1.
+#   5. Checkpoint: git tag + record HEAD.
+#   6. Take the first open task from LOOP_TASKS.md (first "- [ ] " line).
+#   7. Run OpenCode headless on it (stdin closed), capped by MAX_MINUTES.
+#   8. STOP file re-check; excluded-paths check; test gate.
+#      Any failure -> reset --hard to the checkpoint, log, exit 1.
+#   9. Green + changed tree -> mark the task done in LOOP_TASKS.md,
+#      commit as the loop identity, push only if METAOS_LOOP_PUSH=1.
+#      NEVER force-push: this script contains no --force anywhere.
+#  10. Append one report line to the loop log; post it to the bus only if
+#      a bus URL + token are configured.
+#
+# Configuration (environment, all optional; see METAOS_LOOP.md):
+#   METAOS_LOOP_REPO        git checkout to work in (default /opt/relay)
+#   METAOS_LOOP_STATE       state dir: lock, counts, logs (default /var/lib/metaos/loop)
+#   METAOS_LOOP_STOP        STOP file path (default $STATE/STOP)
+#   METAOS_LOOP_QUEUE       task queue file (default $REPO/LOOP_TASKS.md)
+#   METAOS_LOOP_OPENCODE    agent binary (default opencode on PATH)
+#   METAOS_LOOP_MAX_MINUTES per-cycle agent cap in minutes (default 60)
+#   METAOS_LOOP_MAX_PER_DAY max cycles per day (default 8)
+#   METAOS_LOOP_TEST_CMD    gate command, run in REPO (default: cargo test
+#                           --workspace if Cargo.toml exists, plus npm test
+#                           if package.json exists; both must pass)
+#   METAOS_LOOP_PUSH        set to 1 to push after a green commit (default off)
+#   METAOS_LOOP_BUS_URL     Upstash REST base URL (optional; no post if unset)
+#   METAOS_LOOP_BUS_TOKEN   bearer token for the bus post (optional)
+#   METAOS_LOOP_BUS_KEY     bus list key (default muse-bus:room:1)
+#
+# Excluded paths (never committed by the loop, even if the agent touches
+# them — the cycle is rolled back instead):
+#   bus-tools/*, tests/test_bus_admin_e2e.py
+
+set -u
+
+REPO="${METAOS_LOOP_REPO:-/opt/relay}"
+STATE="${METAOS_LOOP_STATE:-/var/lib/metaos/loop}"
+STOP_FILE="${METAOS_LOOP_STOP:-$STATE/STOP}"
+QUEUE="${METAOS_LOOP_QUEUE:-$REPO/LOOP_TASKS.md}"
+OPENCODE="${METAOS_LOOP_OPENCODE:-opencode}"
+MAX_MINUTES="${METAOS_LOOP_MAX_MINUTES:-60}"
+MAX_PER_DAY="${METAOS_LOOP_MAX_PER_DAY:-8}"
+PUSH="${METAOS_LOOP_PUSH:-0}"
+BUS_URL="${METAOS_LOOP_BUS_URL:-}"
+BUS_TOKEN="${METAOS_LOOP_BUS_TOKEN:-}"
+BUS_KEY="${METAOS_LOOP_BUS_KEY:-muse-bus:room:1}"
+LOG="$STATE/loop.log"
+LOCKDIR="$STATE/lock"
+DAY="$(date +%Y-%m-%d)"
+COUNT_FILE="$STATE/cycles-$DAY"
+
+log() {
+    # log <result> <detail...> — one line, timestamped.
+    printf '%s %s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$2" >> "$LOG"
+}
+
+fail() {
+    # fail <result> <detail> — log and exit 1 (callers roll back first).
+    log "$1" "$2"
+    exit 1
+}
+
+mkdir -p "$STATE" 2>/dev/null || {
+    echo "metaos-loop: cannot create state dir $STATE" >&2
+    exit 1
+}
+
+# 1. STOP file: halt immediately, no cycle, no lock.
+if [ -e "$STOP_FILE" ]; then
+    log "stopped" "STOP file present at $STOP_FILE; halting"
+    exit 0
+fi
+
+# 2. Lock: one cycle at a time. mkdir is atomic; steal only a dead holder.
+if mkdir "$LOCKDIR" 2>/dev/null; then
+    echo "$$" > "$LOCKDIR/pid"
+else
+    HOLDER="$(cat "$LOCKDIR/pid" 2>/dev/null || echo "?")"
+    if [ "$HOLDER" != "?" ] && kill -0 "$HOLDER" 2>/dev/null; then
+        log "locked" "another cycle holds the lock (pid $HOLDER); exiting"
+        exit 0
+    fi
+    rm -rf "$LOCKDIR"
+    mkdir "$LOCKDIR" 2>/dev/null || { log "locked" "could not claim lock"; exit 0; }
+    echo "$$" > "$LOCKDIR/pid"
+fi
+# shellcheck disable=SC2064
+trap 'rm -rf "$LOCKDIR"' EXIT HUP INT TERM
+
+# 3. Daily cap.
+COUNT=0
+[ -f "$COUNT_FILE" ] && COUNT="$(cat "$COUNT_FILE" 2>/dev/null || echo 0)"
+case "$COUNT" in ''|*[!0-9]*) COUNT=0 ;; esac
+if [ "$COUNT" -ge "$MAX_PER_DAY" ]; then
+    log "capped" "daily cap reached ($COUNT/$MAX_PER_DAY for $DAY)"
+    exit 0
+fi
+
+# 4. Git checkout + clean tree.
+cd "$REPO" 2>/dev/null || fail "no-repo" "cannot cd to $REPO"
+git rev-parse --git-dir >/dev/null 2>&1 || fail "no-repo" "$REPO is not a git checkout"
+if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+    fail "dirty-tree" "tree is not clean; refusing to work on a dirty tree"
+fi
+
+# 5. Checkpoint: tag + recorded HEAD.
+HEAD="$(git rev-parse HEAD)"
+TAG="metaos-loop/cp-$(date +%Y%m%d-%H%M%S)"
+git tag "$TAG" >/dev/null 2>&1 || fail "no-checkpoint" "could not tag checkpoint $TAG"
+printf '%s %s\n' "$TAG" "$HEAD" >> "$STATE/checkpoints"
+
+# 6. Next task: first open "- [ ] " line in the queue.
+TASK="$(grep -m 1 '^- \[ \] ' "$QUEUE" 2>/dev/null | sed 's/^- \[ \] //')"
+if [ -z "$TASK" ]; then
+    log "no-tasks" "queue $QUEUE has no open tasks"
+    exit 0
+fi
+
+reset_to_checkpoint() {
+    # Tree was verified clean at cycle start, so anything untracked now
+    # was created by the agent this cycle: clean -fd is safe here.
+    git reset --hard -q "$HEAD" 2>/dev/null
+    git clean -fdq 2>/dev/null
+    git tag -d "$TAG" >/dev/null 2>&1
+}
+
+rollback() {
+    # rollback <result> <detail> — hard reset to the checkpoint, then fail.
+    reset_to_checkpoint
+    fail "$1" "$2"
+}
+
+# 7. Agent run: headless, stdin closed, capped.
+AGENT_LOG="$STATE/cycle-$(date +%Y%m%d-%H%M%S).log"
+if command -v timeout >/dev/null 2>&1; then
+    timeout "${MAX_MINUTES}m" "$OPENCODE" run --auto "$TASK" < /dev/null > "$AGENT_LOG" 2>&1
+    AGENT_RC=$?
+    [ "$AGENT_RC" -eq 124 ] && rollback "agent-timeout" "agent exceeded ${MAX_MINUTES}m on task: $TASK"
+else
+    "$OPENCODE" run --auto "$TASK" < /dev/null > "$AGENT_LOG" 2>&1
+    AGENT_RC=$?
+fi
+[ "$AGENT_RC" -ne 0 ] && rollback "agent-failed" "agent exited $AGENT_RC on task: $TASK (see $AGENT_LOG)"
+
+# 8a. STOP re-check before anything is committed.
+if [ -e "$STOP_FILE" ]; then
+    reset_to_checkpoint
+    log "stopped" "STOP file appeared mid-cycle; rolled back to $HEAD"
+    exit 0
+fi
+
+# 8b. Excluded paths: the loop never commits these, even if touched.
+CHANGED="$(git status --porcelain 2>/dev/null | awk '{print $NF}')"
+for f in $CHANGED; do
+    case "$f" in
+        bus-tools/*|tests/test_bus_admin_e2e.py)
+            rollback "excluded-touch" "agent touched excluded path $f; rolled back"
+            ;;
+    esac
+done
+
+# 8c. Test gate. Default: every suite the checkout actually has, all green.
+if [ -n "${METAOS_LOOP_TEST_CMD:-}" ]; then
+    ( cd "$REPO" && sh -c "$METAOS_LOOP_TEST_CMD" > "$STATE/gate.log" 2>&1 ) \
+        || rollback "gate-red" "test gate failed (see $STATE/gate.log)"
+else
+    GATE_OK=1
+    if [ -f "$REPO/Cargo.toml" ]; then
+        ( cd "$REPO" && cargo test --workspace > "$STATE/gate.log" 2>&1 ) || GATE_OK=0
+    fi
+    if [ "$GATE_OK" -eq 1 ] && [ -f "$REPO/package.json" ]; then
+        ( cd "$REPO" && npm test >> "$STATE/gate.log" 2>&1 ) || GATE_OK=0
+    fi
+    [ "$GATE_OK" -eq 0 ] && rollback "gate-red" "test gate failed (see $STATE/gate.log)"
+fi
+
+# 9. Green + changed tree -> mark done, commit as the loop identity.
+if [ -z "$(git status --porcelain 2>/dev/null)" ]; then
+    log "no-change" "agent made no change for task: $TASK"
+    exit 0
+fi
+# Mark the task done in the queue (same commit as the agent's change).
+ESCAPED_TASK="$(printf '%s' "$TASK" | sed 's/[\/&]/\\&/g')"
+sed -i "0,/^- \[ \] $ESCAPED_TASK\$/s//- [x] $ESCAPED_TASK/" "$QUEUE" 2>/dev/null \
+    || rollback "queue-mark-failed" "could not mark task done in $QUEUE"
+git add -A
+git -c user.name=metaos-loop -c user.email=metaos-loop@localhost \
+    commit -q -m "metaos-loop: $TASK" || rollback "commit-failed" "commit failed for task: $TASK"
+SHA="$(git rev-parse --short HEAD)"
+if [ "$PUSH" = "1" ]; then
+    # Plain push only. No --force exists in this script, by design.
+    git push 2>"$STATE/push.log" || log "push-failed" "commit $SHA not pushed (see $STATE/push.log)"
+fi
+
+# 10. Report line: count the cycle, log it, post to the bus if configured.
+COUNT=$((COUNT + 1))
+printf '%s\n' "$COUNT" > "$COUNT_FILE"
+LINE="metaos-loop cycle $DAY #$COUNT: $TASK -> $SHA"
+log "committed" "$LINE"
+if [ -n "$BUS_URL" ] && [ -n "$BUS_TOKEN" ] && command -v curl >/dev/null 2>&1; then
+    BODY="$(printf '[\"RPUSH\",\"%s\",\"%s\"]' "$BUS_KEY" "$(printf '%s' "$LINE" | sed 's/\\/\\\\/g; s/"/\\"/g')")"
+    curl -s -o /dev/null -H "Authorization: Bearer $BUS_TOKEN" -d "$BODY" "$BUS_URL" \
+        || log "bus-post-failed" "could not post cycle report to bus"
+fi
+exit 0
