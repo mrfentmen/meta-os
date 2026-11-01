@@ -177,7 +177,7 @@ fn entry_name_slice(slot: i64) -> const u8[:] {
 // different answers and a caller that cannot tell them apart will retry forever.
 fn sup_lookup(name: const u8[:]) -> i64, i64 {
     let slot = sup_find(name);
-    if slot < 0 { return 0, E_NOENT; }
+    if slot < 0 { return 0, E_NOTFOUND; }
     return sup_handle(slot), CODE_OK;
 }
 

@@ -217,7 +217,7 @@ to the maximum would make one slot's handle collide with the next slot's.
 
 | Call | Answers |
 |---|---|
-| `sup_lookup(name)` | handle + code; `E_NOENT` for an unknown name, which is different from a stale handle |
+| `sup_lookup(name)` | handle + code; `E_NOTFOUND` for an unknown name, which is different from a stale handle |
 | `sup_handle(slot)` | handle, or 0 for no such slot |
 | `sup_resolve(handle)` | slot, or -1 if stale |
 | `sup_name_of(handle)` | the name, or `""` for a stale handle — never a guess |
