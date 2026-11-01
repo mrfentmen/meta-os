@@ -40,5 +40,17 @@
  ],
  "ct_domains": [
   "letsencrypt.org"
- ]
+ ],
+ "tls_baseline": {
+  "forbidden_ciphers": [
+   "RC4",
+   "3DES",
+   "DES",
+   "NULL",
+   "EXPORT",
+   "MD5",
+   "RC2"
+  ],
+  "min_version": "TLSv1.2"
+ }
 }

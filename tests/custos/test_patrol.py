@@ -57,6 +57,12 @@ def fake_cert(host, _port):
     return {"up.example": 10}.get(host)  # 10 days left: expiring
 
 
+def fake_tls(_host, _port):
+    # RW-002: the TLS signal, like every other probe in this file,
+    # is injected so no test touches the network.
+    return {"version": "TLSv1.3", "cipher": "TLS_AES_256_GCM_SHA384"}
+
+
 def fake_port_factory(open_map):
     def probe(host, port):
         return open_map.get((host, port), False)
@@ -125,7 +131,7 @@ class TestPatrol(unittest.TestCase):
     def run_fake(self, open_map, fetch=fake_fetch, seen=None):
         records, seen, _ct = patrol.run_patrol(
             fake_config(), NOW, fetch, fake_cert,
-            fake_port_factory(open_map), seen)
+            fake_port_factory(open_map), seen, probe_tls_fn=fake_tls)
         return records, seen
 
     def test_full_patrol_categories_tiers_and_escalations(self):
@@ -177,7 +183,7 @@ class TestPatrol(unittest.TestCase):
         open_map = {("up.example", 443): True, ("up.example", 22): True}
         records, _seen, _ct = patrol.run_patrol(
             config, NOW, fake_fetch, fake_cert,
-            fake_port_factory(open_map))
+            fake_port_factory(open_map), probe_tls_fn=fake_tls)
         self.assertEqual([r for r in observations(records)
                           if r["category"] == "anomalous exposure"], [])
 
@@ -186,7 +192,8 @@ class TestPatrol(unittest.TestCase):
             return None
         records, _seen, _ct = patrol.run_patrol(
             fake_config(), NOW, fake_fetch, no_cert,
-            fake_port_factory({("up.example", 443): True}))
+            fake_port_factory({("up.example", 443): True}),
+            probe_tls_fn=fake_tls)
         self.assertEqual([r for r in observations(records)
                           if r["source"] == "cert"], [])
         summary = records[-1]

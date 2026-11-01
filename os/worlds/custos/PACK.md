@@ -6,7 +6,7 @@ Status: **PARTIAL.** The patrol loop runtime is built and pinning-tested, and st
 
 | Part | Status | Proven | Not proven |
 |---|---|---|---|
-| `worlds/custos/runtime/patrol.py`: the patrol loop | BUILT, pinning-tested (tests/custos/) | Pure core on injected signals: certificate tier boundaries (expired / expiring / normal), KEV feed matching against the configured inventory with cross-patrol dedupe, exposure classification for undeclared sensitive ports, yellow observations produce ZERO escalation calls, red observations escalate only to the labelled SIMULATED endpoint, one record per observation plus a patrol summary, a failed certificate probe or unparseable certificate date is an error in the summary (never data, never a patrol crash). Plus one live feed patrol: the real CISA KEV feed (1,766 entries) matched against the example inventory produced 5 real records, committed under `runs/` | Not yet run on a booted Meta OS image, not a systemd unit, never run inside a real operations room; host probes (cert, liveness, exposure) are pinned on injected signals only — the development machine has no direct network path to watched hosts, so they have never run live |
+| `worlds/custos/runtime/patrol.py`: the patrol loop | BUILT, pinning-tested (tests/custos/) | Pure core on injected signals: certificate tier boundaries (expired / expiring / normal), KEV feed matching against the configured inventory with cross-patrol dedupe, exposure classification for undeclared sensitive ports, yellow observations produce ZERO escalation calls, red observations escalate only to the labelled SIMULATED endpoint, one record per observation plus a patrol summary, a failed certificate probe or unparseable certificate date is an error in the summary (never data, never a patrol crash). Plus one live feed patrol: the real CISA KEV feed (1,766 entries) matched against the example inventory produced 5 real records, committed under `runs/`. Plus TLS grader pins (tests/custos/test_tls.py): a negotiated version below the baseline minimum is a yellow tls configuration drift record, a cipher matching a forbidden substring is drift whatever the version, a meeting posture is a baseline normal record carrying the version and cipher graded, an unrecognized version grades as drift with its reason stated, and a failed TLS probe is a summary error, never data. Live TLS postures are NOT claimed: a raw handshake from the development machine dies in the middlebox, so the grader is pinned on injected postures only | Not yet run on a booted Meta OS image, not a systemd unit, never run inside a real operations room; host probes (cert, liveness, exposure) are pinned on injected signals only — the development machine has no direct network path to watched hosts, so they have never run live |
 | `os/os/bin/metaos-custos` + `metaos-custos.service`/`.timer`: the standing service (stage 2) | BUILT, pinning-tested (tests/custos/) | Driver behaviour on a stub patrol: STOP file halts before anything runs, live lock blocks / stale lock is stolen, missing config is a logged no-op that never calls the patrol, configured run passes the records and seen-state paths under the state dir, patrol failure propagates its exit code. Both image builds install the driver, enable the timer, and create the state root (build wiring reviewed, carried-mirror byte-identical) | Not yet run on a booted Meta OS image; the timer has never fired on real hardware |
 
 ## Purpose
@@ -22,10 +22,11 @@ Custos is the night watch pointed at that problem: Imperium's machinery — watc
 - **Service liveness.** Whether each watched host's service port answers at all.
 - **Anomalous exposure.** Whether a sensitive port (database, cache, search, shell) answers on a watched host without being declared expected for that host.
 - **Newly issued certificates.** Certificate Transparency logs for watched domains: a cert id not yet in the seen-state becomes a certificate-issued record. `ct_since` bounds a first patrol so a domain with years of history does not flood the record.
+- **TLS configuration posture.** Each watched host's negotiated protocol version and cipher suite, graded against the installation's stated TLS baseline (`tls_baseline`: minimum version, forbidden cipher substrings). Drift is a yellow record; a meeting posture is recorded as baseline normal with the version and cipher it was graded on.
 
 ## Categories and tiers
 
-Every observation lands in exactly one of seven categories:
+Every observation lands in exactly one of eight categories:
 
 | Category | Tier | What happens |
 |---|---|---|
@@ -36,6 +37,7 @@ Every observation lands in exactly one of seven categories:
 | known-exploited vulnerability present | red | Escalation chain runs. |
 | service down | red | Escalation chain runs. |
 | certificate issued | yellow | Record + flag only. Zero escalation calls. |
+| tls configuration drift | yellow | Record + flag only. Zero escalation calls. |
 
 In stage 1 the escalation chain is real bookkeeping that ends at a **labelled SIMULATED endpoint**: the steps (record, notify, page, ticket) are written to the patrol record with `endpoint: "SIMULATED"`, and no real responder, vendor, or service is ever contacted. Yellow means a human reads it in the morning; red means the record says, in so many words, that a page *would* have gone out.
 
