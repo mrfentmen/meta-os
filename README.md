@@ -1,224 +1,137 @@
-# Meta Imperium — running on Meta OS
+<p align="center">
+  <img src="docs/assets/banner.png" alt="Meta OS. A platform that never sleeps." width="100%">
+</p>
 
-The settled hierarchy for everything in this repository:
+# Meta OS
 
-- **Meta OS** — the platform: the operating system and agent
-  infrastructure underneath (job queue, resident agents,
-  supervision, memory) in `os/` and the services this system runs
-  on.
-- **Meta Imperium** — the system built on Meta OS: an autonomous,
-  multi-agent situational-awareness system.
-- **Vigiles, Ignis, Medicus** — Imperium's three operational
-  divisions: Vigiles (police visual incident awareness), Ignis
-  (fire and smoke), Medicus (EMS scene awareness only — visible
-  scene categories, never diagnosis, cause, severity, or
-  treatment).
-- **Meta Nuntius** — the relay: Imperium's communications and
-  monitoring interface, implemented in `relay/` in this repo.
+**A platform that never sleeps.**
 
-Meta Imperium is an autonomous, multi-agent situational-awareness
-system operating on Meta OS. It continuously monitors configured
-public test feeds, identifies potentially relevant visible events,
-independently investigates observations, coordinates specialized AI
-divisions, reconciles conflicting evidence, maintains an auditable
-incident history, and autonomously submits structured reports to a
-simulated dispatch environment. Its operations are governed by
-enforceable safety, evidence, and resource constraints.
+[Live crew viewer](https://muse-relay-live.pages.dev) · [Task list](TASKS_V3.md) · [OpenCode tasks](OPENCODE_TASKS_100.md) · [Commit history](https://github.com/Mrfentmen/meta-os/commits/main)
 
-This README documents the web console — the frontend deliverable
-from `BRIEF.md` and `MASTER_DIRECTIVE_V2.md` (built under the
-working name Meta Trio): a real, working camera interface and
-analysis client for the three divisions, sharing one frontend,
-wired to the actual v2 analysis pipeline contract. It contains no
-detection logic and no sample results. The full stack — assessment
-server, queue, resident agent, patrol, and the agent crew — lives
-in `server/` and `server/queue/` and is summarised in the
-repository map at the bottom; `RUNBOOK.md` is the launch sequence.
+![Node tests: 1877 passing](https://img.shields.io/badge/node%20tests-1877%20passing-brightgreen) ![Rust tests: 1412 passing](https://img.shields.io/badge/rust%20tests-1412%20passing-brightgreen) ![Worlds packs: 9 of 9 valid](https://img.shields.io/badge/worlds%20packs-9%20of%209%20valid-blue) ![Status: in active build](https://img.shields.io/badge/status-in%20active%20build-orange)
 
-Dependency-free static web app: plain HTML/CSS/JS, ES modules, no build
-step, no npm packages. (`package.json` exists only to mark the project as
-ES modules for the node test runner; it declares zero dependencies.)
+Built for the **Meta Global AI Developer Hackathon 2026**, Indie track.
 
-## Meta AI tooling — Muse Spark 1.3
+Meta OS is a platform. Systems plug into it, the way departments plug into a city. Each system is a place built for an AI agent to work in: a watch floor, a science lab, a workshop, a studio. The agent lives there, works around the clock, and keeps records of everything it does.
 
-Every assessment in this system is produced by **Muse Spark 1.3**
-(model id `muse-spark-1.3`), served by the **Meta Model API** at
-`https://api.meta.ai/v1`. There is no other model in the loop: the
-orchestrator and supervisor are deterministic code and make zero
-model calls.
+One person directs the build. Del, known as Mrfentmen, makes the calls and does the final testing on his Mac. A crew of AI agents builds the rest in lanes, checks each other's work, and reports what is real and what is not. Nothing in this repo is a mock up presented as finished. Where something is partial, the page says so, in the open.
 
-- **Where Spark is called.** The assessment endpoint
-  (`server/server.mjs`) answers each sampled frame through one of
-  two real transports: the job-queue path in `server/queue/`,
-  where a resident agent answers `trio-assessment` jobs —
-  preferred when the queue is enabled — and the direct transport
-  in `server/model.mjs`, the fallback. Per-division prompt
-  profiles (Vigiles / Ignis / Medicus) shape each request, and the
-  agent crew's patrol, review, and investigation stages are
-  further Spark assessments filed through the same queue and
-  guardrail.
-- **Budget guardrail.** Every Spark call passes a hard spend
-  guardrail (a $75 test cap for the event), implemented in the
-  queue agent and mirrored in `server/budget.mjs`. At the cap,
-  further calls are refused, not retried.
-- **Validation.** Model output is never trusted as returned: it
-  must validate against the frozen v2 contract (below) on the
-  server and again in the client, or it is rejected as an error.
-  On the direct transport, one bounded self-correction retry
-  feeds the validation errors back to the model.
-- **Verified live.** On 2026-10-30 the full loop ran against the
-  real API: a live NYC DOT camera snapshot went through the
-  queue, was answered by Muse Spark 1.3 under the guardrail
-  (443 input / 1,103 output tokens, ~6.4 s), and validated as a
-  v2-contract assessment.
-- **Configuration.** The API key is supplied as `SPARK_API_KEY`.
-  Without it the stack starts in a labelled NOT CONFIGURED
-  offline mode and the UI shows its disconnected state — it
-  never fabricates an assessment.
+## Why Meta OS
 
-## What is built
+- **People sleep. Agents do not.** A human watch officer tires, misses things, and goes home. An agent on a patrol loop keeps the same attention at hour one and hour nine hundred. Meta OS is built around that gap.
+- **Institutions, not apps.** A consumer app waits for a person to open it. An institution runs whether anyone is watching or not. Every system here is an institution with a job, a memory, and rules it cannot break.
+- **The output compounds.** Patrol records, lab results, workshop designs, and studio takes all stay on file. Each day of running makes the next day smarter. Nothing is thrown away, and failures are kept on the record too.
+- **Claims stay honest.** Every system grades its own work against rules it cannot bend. A design is proven only when a separate check says so. A detection is a flag for a human, never a verdict. If a number cannot be shown, it does not get printed.
 
-- **Product switcher** (`js/products.js`, wired in `js/app.js`): Vigiles /
-  Ignis / Medicus, mirroring the native app's `ProductConfig` — per-product
-  display name, department, tagline, reportable categories, evaluation
-  scenarios, input guidance, and a limitations notice that stays on screen.
-  Switching products applies to the next sampled frame; earlier log entries
-  keep the product they were assessed under. The active product also tints
-  the UI accent (blue / red / green).
-- **Camera** (`js/camera.js`, wired in `js/app.js`): `getUserMedia`
-  start/stop/reset, a visible CAMERA LIVE indicator while the stream is
-  active, and honest states for permission denied, no camera found, camera
-  busy, and unsupported browser/context.
-- **Frame sampler** (`js/sampler.js`): while analysis is running, one frame
-  every N seconds (default 3, configurable 1–60 in the UI) is drawn to a
-  canvas and encoded as JPEG. If the previous request has not returned, the
-  tick is skipped and counted — at most one request is ever in flight.
-- **Analysis client** (`js/client.js`): POSTs each frame with its product
-  to the assessment endpoint and validates every response against the v2
-  contract schema (`js/schema.js`), with the same strictness as the native
-  validator. Malformed responses are reported as errors, never rendered as
-  detections.
-- **Honest disconnected state**: if the endpoint is unreachable, returns an
-  HTTP error, returns a server `{"error": ...}` body, or returns an invalid
-  body, the UI shows "Model backend not connected" with the real error,
-  records the failure in the history and the session log, and displays no
-  assessment. The UI never invents a result.
-- **Still-image input** (`js/image_input.js`, wired in `js/app.js`): a
-  file picker for prerecorded or photographed scenes — the input the
-  Ignis and Medicus demos use when a live camera is not the source.
-  Choosing an image shows an in-memory preview; "Assess this image"
-  sends it once to the same endpoint, under the product selected at that
-  moment, through the same client, validation, history entry, and
-  session-log entry as a live frame. It needs no camera, accepts
-  `image/*` files only, and stores nothing: the preview and the data URL
-  live in memory and are cleared by Reset. If the backend is
-  unreachable, a still-image request fails exactly like a live
-  frame — honest error, no assessment.
-- **Event display**: latest validated assessment (product, assessment
-  category, timestamp, observations with category, description, evidence,
-  and confidence or "not reported", uncertainty list, human-review flag,
-  and server model/latency or "not reported"), an event history timeline
-  (failures included, styled distinctly; every assessment entry carries
-  a "Show assessment" button that displays that past assessment again in
-  the Latest assessment panel, labelled as a past result — the web match
-  for the native timeline's selectable rows), a loading indicator while a
-  request is outstanding, and live sampler counters (ticks / sent /
-  skipped / failed).
-- **Accessibility announcements**: the backend-status line and the
-  latest-assessment panel are polite live regions, so a new assessment
-  or a backend failure is announced to screen readers without stealing
-  focus; the event history is deliberately not a live region, so it does
-  not double-announce the same result. The product switcher's radios are
-  visually hidden inputs, so keyboard focus shows as a visible outline on
-  the option label itself.
-- **Evaluation session log** (`js/log.js`): every request is recorded
-  with its request timestamp, product, measured latency, outcome
-  status, and the full validated response or the real error. A scenario
-  dropdown offers the current product's evaluation scenarios, and a custom
-  label field overrides it; the chosen label is written into each entry as
-  ground-truth context for evaluation. Switching products resets the
-  dropdown choice so one product's scenario can never label another
-  product's entries. On load, the saved history and the latest
-  assessment are restored on screen. **Export log (JSON)** downloads the log
-  for the Agent 3 evaluation lane.
+## The systems
 
-## Sampling disclosure
+<p align="center">
+  <img src="docs/assets/systems.png" alt="The six systems of Meta OS" width="100%">
+</p>
 
-Analysis uses **sampled frames, not continuous video**. The UI states the
-configured interval on screen at all times: one frame every N seconds is
-sent to the endpoint, and events between samples are not seen by the
-system. Frames are encoded in memory, sent only to the configured endpoint,
-and are not stored by this app. The session log is kept in the browser's local storage, so it survives
-page reloads until exported or cleared; it holds assessments and errors
-only, never frames.
+| System | What it does | Status today |
+| --- | --- | --- |
+| Meta Imperium | Watches public camera feeds and flags scenes for human review across police, fire, and EMS divisions | Working. The flagship system, and the hackathon submission core |
+| Meta Scientia | A science lab. It forms hypotheses, runs experiments, and grades evidence on a ladder it cannot skip | Part built. The breeding engine and the first gate are ready on a branch and land after the Nov 1 full test |
+| Meta Officina | A workshop. A person describes an invention in rough words and the workshop designs it, tests it, and writes the full pack | Working in main. Stages 1 and 2a are in, with the design loop and a held out proof gate |
+| Meta Custos | A night watch for machines. It patrols certificates, services, and known exploited vulnerabilities | Built and gate checked. It waits on a merge fix where its files overlap the platform files |
+| Meta Musica | A music studio that never closes. It composes, keeps the takes it likes, and learns from the ones it keeps | In build now, with a 3D notes scene on the OpenCode task list |
+| Meta Faber | The loop that improves Meta OS itself, one checked change at a time, with a stop switch and a rollback rule | Working in main |
+| The OS image | A bootable Meta OS disk image with the crew tools baked in and a quiet self update | Built. Boot verified in QEMU with zero failed units |
 
-## Run it
+## Meta Imperium
 
-Any static file server works:
+Imperium is the system that proves the platform. It watches configured public test feeds and works a loop that never waits for a person: patrol, review, investigate, record, respond. The crew inside it is deterministic code around one model. Every assessment comes from Muse Spark 1.3, and the loop itself makes no guesses of its own.
+
+| Division | Watches for | Accent |
+| --- | --- | --- |
+| Vigiles | Visible signs of trouble on streets: disputes, weapons in view, damaged property | Blue |
+| Ignis | Fire and smoke: flames, smoldering, hazard signs across 17 scene categories | Orange |
+| Medicus | EMS scenes only: a person on the ground, a crowd around a person, blocked crew access. Never a diagnosis, never a cause, never a treatment word | Green |
+
+**How a flag works.** A small sign is yellow: recorded, shown to a human, and the chain stops there. A big sign is red: the full chain runs, with an investigation capped in steps and spend, and a response sent only to a clearly labelled simulated dispatch endpoint. Red means flagged for human review. It never means an incident is confirmed.
+
+**Identity rule.** The system describes what a person looks like and never puts a name to a face. Evidence crops are taken only on flagged events, BOLO cards read ID: UNIDENTIFIED, and a false alarm purges its evidence. That line does not move.
+
+**Our own numbers.** We claim our own data and nothing else. In our second evaluation batch, 100 frames went through the live pipeline: 42 matched the expected call, 46 were held back as unsure, and there were 0 real misses. All 11 scored misses turned out to be frames taken before the event began. Category validity was 100 of 100, and Vigiles produced zero false altercations across both batches. On 2026-10-30 a live New York City DOT camera snapshot ran the full loop through the queue and came back as a valid assessment in about 6.4 seconds. One honest limit, stated plainly: the flagged path has not yet fired on a live wild event. It has fired in staged runs, and the film below shows one.
+
+<p align="center">
+  <img src="docs/assets/app-console.jpg" alt="The Imperium command console" width="100%">
+</p>
+
+*The Imperium command console. This frame is from our own screen footage, taken before the backend started, so the console says the model backend is not connected. In that state the app shows no results at all. It never invents one.*
+
+<p align="center">
+  <img src="docs/assets/cctv.png" alt="A staged Medicus scene from the demo film" width="100%">
+</p>
+
+*A staged Medicus scene from the demo film, rendered with mannequins, not people. The card shows the rules in action: ID stays UNIDENTIFIED, and the response line reads EMS NOTIFIED, SIMULATED.*
+
+<p align="center">
+  <img src="docs/assets/city-topdown.jpg" alt="The film city from above" width="100%">
+</p>
+
+*The demo film city from above, built from real New York City open data building footprints. This is a film render and is labelled as one wherever it appears.*
+
+## Muse Spark on the Meta Model API
+
+Every assessment in Imperium is produced by **Muse Spark 1.3** on the Meta Model API. There is no other model in the loop.
+
+| Setting | Value |
+| --- | --- |
+| Base URL | `https://api.meta.ai/v1` |
+| Model | `muse-spark-1.3` |
+| API key | Set as the `SPARK_API_KEY` environment variable. Without it the stack starts in a labelled NOT CONFIGURED mode and shows its disconnected state |
+| Spend guardrail | A hard cap of 75 dollars for the event. At the cap, calls are refused, never retried |
+
+Model output is never trusted as returned. It must validate against the frozen v2 contract on the server and again in the client, or it is rejected as an error.
+
+## Run it locally
+
+You need Node.js 24 and Python 3.
 
 ```sh
-cd meta-os
+# The web console on its own, any static server works
 python3 -m http.server 8000
 # open http://localhost:8000
+
+# The full stack, server and queue and agents
+./run-stack.sh
 ```
 
-Camera access requires a secure context: `localhost` qualifies, as does
-HTTPS. Serving the folder as-is is also how it can later be deployed to a
-static host such as Cloudflare Pages.
+Camera access needs a secure context: `localhost` counts, as does HTTPS.
 
-## Tests
+## Test numbers
 
-Node's built-in test runner, no dependencies:
+Every number below was measured on the current main on 2026-11-01. Recheck any of them with the commands in the next table column.
 
-```sh
-npm test
-# or directly:
-node --test tests/ui.test.mjs
-```
+| Suite | Result | Run it with |
+| --- | --- | --- |
+| Node (app, server, eval harnesses) | 1933 run, 1877 pass, 56 fail | `npm test` |
+| Rust workspace | 1412 pass, 0 fail | `cargo test --workspace` |
+| Python job queue | 110 pass | `python3 -m unittest discover -s tests/queue-python` |
+| Python Officina | 49 pass | `python3 -m unittest discover -s tests/officina` |
+| Worlds packs | 9 of 9 valid | `python3 os/worlds/validate_pack.py` |
+| OS loop harness | 12 of 12 pass | `bash os/os/loop-tests/metaos-loop.test.sh` |
 
-Coverage: trio product configs (ids, identity, categories, scenarios,
-limitations, per-product scenario sets); v2 schema validation accepts a
-valid assessment for each product and rejects 43 malformed shapes (wrong
-product, non-ISO or impossible timestamps, missing/null-rule violations
-for confidence and latency, wrong types including JSON booleans as
-numbers); the sampler skips ticks while a request is in flight, resumes
-after it settles, surfaces errors without wedging, and stops cleanly; the
-client sends the product with every request and maps network/HTTP/invalid
-(including wrong-product and server error-body) failures to typed errors;
-the session log export matches the documented shape with per-entry and
-top-level product; the still-image helpers accept `image/*` files only
-and resolve/reject with the file-reader result; the history re-inspection
-wiring (page note, Show assessment button, live and restored entries
-carrying their assessment). Current result:
-**1875 tests, 1819 pass, 56 fail** (Node v24, measured 2026-11-01 on
-main). The 56 fails are the pre-existing WKWebView-red native tests —
-see `docs/NATIVE_TEST_PREP.md` for the per-test UPDATE vs CARVE-OUT
-classification; the update-vs-carve-out call itself stays the boss's.
+The 56 Node failures are one known set: tests written for the old native SwiftUI screens, which were removed when the native app moved to a web view shell. They say nothing about the running app. Each one is classified as update or carve out in `docs/NATIVE_TEST_PREP.md`, and the crew is working that list now.
 
-Note: `node --test tests/` (directory form) fails in this sandbox's Node
-build; use the file form above.
+## Sampling and honesty
 
-## Evaluation (Agent 3: Medicus)
+Analysis uses sampled frames, not continuous video. The console shows the sampling interval on screen at all times: one frame every N seconds goes to the endpoint, and events between samples are not seen. Frames are encoded in memory, sent only to the configured endpoint, and never stored by the app. Confidence in a result is the model's self report, not measured accuracy, and the interface words it that way.
 
-Meta Medicus scenario sets, ground truth, and eval harness live in
-`eval/medicus/` (see its README): 20 labeled scenarios, a fixture
-stub and an always-clean baseline, and a harness that scores any
-assessment source against the frozen v2 contract and reports
-precision, recall, false-positive and false-negative rates, and
-latency. `npm test` runs the harness tests alongside the UI tests.
-The harness itself runs fully on fixtures (offline, no spend);
-live-model assessments are served by the backend in `server/` and
-`server/queue/`, not by this harness — fixture results are never
-presented as live model performance.
+The rules the whole repo runs on:
 
-## The /api/assess contract (v2, shared with the native app)
+- Simulated things are labelled SIMULATED everywhere they appear.
+- This system never contacts a real emergency service. There is no code path that can.
+- Assessments describe visible evidence and uncertainty. They never name a person.
+- Failed runs and failed designs stay on the record. The record is the product as much as the wins are.
 
-Default endpoint: same-origin `/api/assess` (configurable in the UI).
-This is the unified v2 contract from `MASTER_DIRECTIVE_V2.md` section 9,
-frozen in `FIRST_RESPONSE.md`; the native app's `ContractValidator` is the
-reference implementation and this frontend matches it.
+## The assess contract
 
-Request — one per sampled frame:
+One frozen shape, shared by the web console and the native app. The server returns exactly this shape or an error object, which the client reports as a failure.
+
+Request, one per sampled frame:
 
 ```json
 {
@@ -228,14 +141,7 @@ Request — one per sampled frame:
 }
 ```
 
-- `product`: the product selected in the UI; the server applies the
-  matching prompt profile.
-- `timestamp`: ISO-8601, the moment the frame was sampled.
-- `image`: the sampled frame as a JPEG data URL.
-
-Response — the v2 assessment shape (backend implemented in
-`server/`). The server returns exactly this shape or an
-`{"error": "..."}` object, which the client reports as a failure:
+Response:
 
 ```json
 {
@@ -259,123 +165,63 @@ Response — the v2 assessment shape (backend implemented in
 }
 ```
 
-Validation rules enforced client-side, same strictness as the native
-validator: `product` must be present and must match the product that was
-requested; `timestamp` must be ISO-8601 with a `T` separator, a timezone,
-and a real calendar date; every observation needs a non-empty `category`
-and `description`, a string `evidence`, and a `confidence` key that is
-either null (unreported, never defaulted) or a number in 0..1;
-`assessment.category` must be non-empty, `summary` a string,
-`uncertainty` an array of strings, `requires_human_review` a boolean;
-`processing.model` must be non-empty and `latency_ms` must be present,
-either null or a non-negative number. Booleans are never accepted as
-numbers, and a missing `confidence` or `latency_ms` key is rejected even
-though null is accepted. Extra fields are tolerated. Confidence is the
-model's self-report, not measured accuracy.
+A missing confidence or latency key is rejected even though a null value is accepted. Booleans are never accepted as numbers. Extra fields are tolerated.
 
-Session log export shape (consumed by the evaluation lane):
+## Built with
 
-```json
-{
-  "app": "meta-sentinel-frontend",
-  "exported_at": "ISO-8601",
-  "product": "vigiles | ignis | medicus (active at export time)",
-  "endpoint": "/api/assess",
-  "sampling_interval_seconds": 3,
-  "entry_count": 0,
-  "entries": [
-    {
-      "seq": 1,
-      "recorded_at": "ISO-8601",
-      "request_timestamp": "ISO-8601",
-      "product": "vigiles",
-      "latency_ms": 0,
-      "status": "ok | network_error | http_error | invalid_response",
-      "scenario_label": null,
-      "response": { "...assessment or null..." },
-      "error": null
-    }
-  ]
-}
-```
-
-`latency_ms` in an entry is the client-measured round trip; it is null
-when no request was made (frame capture failed first), never a fake 0.
-The server-reported `processing.latency_ms` lives inside `response` and is
-never mixed with the client measurement.
-
-## What is connected, and what still needs real hardware
-
-- **The model backend exists.** `server/server.mjs` implements
-  `/api/assess`; with the queue enabled it submits and polls
-  through the queue service in `server/queue/`, where the resident
-  agent answers with real Muse Spark assessments under the $75
-  guardrail, and the direct Spark transport in `server/model.mjs`
-  is the fallback. If the backend is not running, the UI shows its
-  disconnected state and invents nothing — that behavior is
-  unchanged, and it is what you will see from a bare static server.
-- Camera behavior is verified only up to page load and module execution in
-  headless Chromium: this sandbox has no camera device, so a live
-  `getUserMedia` capture, real frame encoding from a device, and phone
-  viewport behavior still need a pass on real hardware. The exact
-  checklist for that pass is `docs/HARDWARE_VERIFICATION.md`.
-
-## Scope and safety
-
-Experimental prototype for staged, consenting scenarios only. Assessments
-describe observable evidence and uncertainty; each product's limitations
-notice, shown in the UI at all times, states what its assessments never
-claim (Vigiles: no crime, guilt, or intent findings; Ignis: not a
-certified fire-detection system and never a reason to create a real fire;
-Medicus: no violation, ownership, or responsibility findings). The app
-never contacts police or emergency services, never dispatches or cites
-automatically, and performs no face recognition or identity inference.
+| Piece | Used for |
+| --- | --- |
+| Rust | The operating system core and services port, 1412 tests green |
+| Node.js | The app server, the console tooling, and the test suites |
+| Python | The job queue, the agent crew, and the world packs (Imperium divisions, Scientia, Officina, Custos) |
+| Muse Spark 1.3 | Every model assessment, through the Meta Model API |
+| MapLibre GL | The city map in the console, vendored into the repo |
+| Three.js | The demo film city and scenes, and the coming 3D viewers for Scientia compounds and Musica notes |
+| OpenCV | Face detection for evidence crops on flagged events only. Detection, never identification |
 
 ## Repository map
 
-- **Web console** — `index.html`, `js/`, `styles.css`: the dependency-free
-  static frontend described above (camera, frame sampler, analysis client).
-- **`native/`** — MetaTrio, the native Swift/SwiftUI macOS app, sharing the
-  same frozen v2 contract.
-- **`server/`** — the Node server behind the `/api/assess` endpoint, with the
-  direct Spark transport in `server/model.mjs`.
-- **`server/queue/`** — the OS job-queue service and resident agent
-  (`queue_service.py`, `trio_agent.py`): assessments can instead be answered
-  through the job queue, with the result written to `trio:{job_id}:result`.
-- **`eval/` + `test-footage/`** — the per-product evaluation sets and the
-  licensed Wikimedia Commons frame pack used to test them (sources and
-  licenses in `test-footage/MANIFEST.md`).
-- **`tests/`** — the Node test suites (plus `tests/queue-python/` for the
-  queue service).
-- **`design/`** — design artifacts, including the ASCII logo studio.
-- **`docs/`** — supporting documents (hardware verification checklist).
-- **`os/`** — the Meta OS tree: the OS services, job queue, and dashboard
-  Imperium runs on, built during the event. (The bootable OS image is not
-  part of this repository.)
-- **`relay/`** — Meta Nuntius, the in-repo relay (zero-dependency
-  Node service + viewer) that `run-stack.sh` starts; it is
-  Imperium's own communications and monitoring interface.
-- **`crates/`** — the Rust workspace: the port of Meta OS and the
-  division services to Rust, in progress (see the runtime note
-  below).
-- **Root briefs** — `BRIEF.md`, `MASTER_DIRECTIVE_V2.md`, and
-  `MEDICUS_PIVOT_SPEC.md` define the build.
+| Path | What lives there |
+| --- | --- |
+| `index.html`, `js/`, `styles.css` | The web console: camera, frame sampler, analysis client |
+| `server/` | The Node server behind the assess endpoint, with the direct Spark transport |
+| `server/queue/` | The job queue service and the resident agent crew |
+| `os/` | The Meta OS tree: services, the job queue, the dashboard, and the world packs under `os/worlds/` |
+| `crates/` | The Rust workspace: the port of the OS and services to Rust |
+| `native/` | The macOS app shell that hosts the console in a web view |
+| `relay/` | Meta Nuntius, the product's own relay and viewer |
+| `eval/`, `test-footage/` | The evaluation sets and the frame packs used to test them |
+| `tests/` | The Node and Python test suites |
+| `docs/` | Supporting documents, including the hardware verification checklist |
+| Root documents | `BRIEF.md` and `MASTER_DIRECTIVE_V2.md` define the build. `TASKS_V3.md` holds the crew lanes. `OPENCODE_TASKS_100.md` holds the Mac side tasks |
 
-Crew coordination during the build happened on muse-relay, a
-pre-existing external message-bus service that is not part of
-this repository; Meta Nuntius above is the product's own relay,
-not that build-time bus.
+## Roadmap
 
-## Runtime — what actually executes the demo
+**Now, hackathon week**
 
-The demo runtime is the **Python/Node stack**: the Node app
-server (`server/server.mjs`), the Python queue service and
-resident agent (`server/queue/`), the Python agent crew
-(patrol, orchestrator, supervisor), and the static web console.
-That is the code `run-stack.sh` starts and the code the demo
-runs on. The Rust workspace under `crates/` is a **port in
-progress**: it is compiled and gate-verified separately (crew
-VM gate 1, then the Mac gate 2) and is **not** what the demo
-executes. Where a Rust crate and a Python/Node component cover
-the same ground, the Python/Node component is the running one
-until the port is declared PORTED at both gates.
+- The full end to end test on the director's Mac, then submission
+- The three minute platform film, cut from the shot library
+- The Custos merge fix, so the night watch lands in main
+
+**Next**
+
+- Scientia lands in main, and its first reproduction gate gets a blind second run from a crew verifier
+- The 3D viewers: chemical compounds for Scientia, music notes for Musica
+- The 56 old native tests, updated or carved out one by one
+
+**Later**
+
+- A pass on real hardware: real cameras, a real phone, the image booted on a real machine
+- More departments as world packs, with no changes to the core
+
+## The crew
+
+- **Del (Mrfentmen)** directs. He sets the direction, makes the calls no agent may make, and runs every Mac side proof himself.
+- **Pax** coordinates the build, checks finished work lane by lane, and merges what passes.
+- **Rowan, Hana, and Milo** build in lanes: platform and Custos, interface and Musica and Scientia surfaces, Officina and evaluation.
+- **Buffy** built early Rust batches.
+- **OpenCode** runs on the director's Mac and takes the jobs only a Mac can do: compiling, clicking, booting, recording.
+
+## License
+
+No license file yet. The code is public to read for the hackathon. All rights stay with the author until a license is added.
