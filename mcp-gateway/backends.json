@@ -192,58 +192,9 @@
   {
    "command": "node",
    "args": [
-    "/home/hatch/workspace/mcp-servers/8bitpeoples-mcp/dist/index.js"
-   ],
-   "prefix": "8bitpeoples"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/ai-tomogotchi-mcp/dist/index.js"
-   ],
-   "prefix": "aitomogotchi"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/anime-filler-mcp/dist/index.js"
-   ],
-   "prefix": "animefiller"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/artifact-gauge-mcp/dist/index.js"
-   ],
-   "prefix": "artifactgauge"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/audius-mcp/dist/index.js"
-   ],
-   "prefix": "audius"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/brainrot-mcp/dist/index.js"
-   ],
-   "prefix": "brainrot"
-  },
-  {
-   "command": "node",
-   "args": [
     "/home/hatch/workspace/mcp-servers/build-cache-mcp/dist/index.js"
    ],
    "prefix": "buildcache"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/codepet-mcp/dist/index.js"
-   ],
-   "prefix": "codepet"
   },
   {
    "command": "node",
@@ -269,20 +220,6 @@
   {
    "command": "node",
    "args": [
-    "/home/hatch/workspace/mcp-servers/dnd5e-mcp/dist/index.js"
-   ],
-   "prefix": "dnd5e"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/dwarffortress-mcp/dist/index.js"
-   ],
-   "prefix": "dwarffortress"
-  },
-  {
-   "command": "node",
-   "args": [
     "/home/hatch/workspace/mcp-servers/env-contract-mcp/dist/index.js"
    ],
    "prefix": "envcontract"
@@ -304,51 +241,9 @@
   {
    "command": "node",
    "args": [
-    "/home/hatch/workspace/mcp-servers/fourchan-mcp/dist/index.js"
-   ],
-   "prefix": "fourchan"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/gamebanana-mcp/dist/index.js"
-   ],
-   "prefix": "gamebanana"
-  },
-  {
-   "command": "node",
-   "args": [
     "/home/hatch/workspace/mcp-servers/git-reflog-archaeologist-mcp/dist/index.js"
    ],
    "prefix": "gitreflogarchaeologist"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/gopher-mcp/dist/index.js"
-   ],
-   "prefix": "gopher"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/gw2-mcp/dist/index.js"
-   ],
-   "prefix": "gw2"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/hiddenpalace-mcp/dist/index.js"
-   ],
-   "prefix": "hiddenpalace"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/jisho-mcp/dist/index.js"
-   ],
-   "prefix": "jisho"
   },
   {
    "command": "node",
@@ -360,13 +255,6 @@
   {
    "command": "node",
    "args": [
-    "/home/hatch/workspace/mcp-servers/lichess-mcp/dist/index.js"
-   ],
-   "prefix": "lichess"
-  },
-  {
-   "command": "node",
-   "args": [
     "/home/hatch/workspace/mcp-servers/lockstep-mcp/dist/index.js"
    ],
    "prefix": "lockstep"
@@ -374,23 +262,9 @@
   {
    "command": "node",
    "args": [
-    "/home/hatch/workspace/mcp-servers/mangadex-mcp/dist/index.js"
-   ],
-   "prefix": "mangadex"
-  },
-  {
-   "command": "node",
-   "args": [
     "/home/hatch/workspace/mcp-servers/migration-map-mcp/dist/index.js"
    ],
    "prefix": "migrationmap"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/modrinth-mcp/dist/index.js"
-   ],
-   "prefix": "modrinth"
   },
   {
    "command": "node",
@@ -405,48 +279,6 @@
     "/home/hatch/workspace/mcp-servers/nyc311-mcp/dist/index.js"
    ],
    "prefix": "nyc311"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/open-food-facts-mcp/dist/index.js"
-   ],
-   "prefix": "openfoodfacts"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/osrs-mcp/dist/index.js"
-   ],
-   "prefix": "osrs"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/pokemon-tcg-mcp/dist/index.js"
-   ],
-   "prefix": "pokemontcg"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/police-transparency-mcp/dist/index.js"
-   ],
-   "prefix": "policetransparency"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/radio-browser-mcp/dist/index.js"
-   ],
-   "prefix": "radiobrowser"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/rom-mcp/dist/index.js"
-   ],
-   "prefix": "rom"
   },
   {
    "command": "node",
@@ -479,34 +311,6 @@
   {
    "command": "node",
    "args": [
-    "/home/hatch/workspace/mcp-servers/scryfall-mcp/dist/index.js"
-   ],
-   "prefix": "scryfall"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/segaretro-mcp/dist/index.js"
-   ],
-   "prefix": "segaretro"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/shebang-sherpa-mcp/dist/index.js"
-   ],
-   "prefix": "shebangsherpa"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/smogon-mcp/dist/index.js"
-   ],
-   "prefix": "smogon"
-  },
-  {
-   "command": "node",
-   "args": [
     "/home/hatch/workspace/mcp-servers/space-weather-mcp/dist/index.js"
    ],
    "prefix": "spaceweather"
@@ -514,44 +318,9 @@
   {
    "command": "node",
    "args": [
-    "/home/hatch/workspace/mcp-servers/speedrun-mcp/dist/index.js"
-   ],
-   "prefix": "speedrun"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/steam-mcp/dist/index.js"
-   ],
-   "prefix": "steam"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/telnetbbs-mcp/dist/index.js"
-   ],
-   "prefix": "telnetbbs"
-  },
-  {
-   "command": "node",
-   "args": [
     "/home/hatch/workspace/mcp-servers/test-shape-mcp/dist/index.js"
    ],
    "prefix": "testshape"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/tetriswiki-mcp/dist/index.js"
-   ],
-   "prefix": "tetriswiki"
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/textfiles-mcp/dist/index.js"
-   ],
-   "prefix": "textfiles"
   },
   {
    "prefix": "playwright",
@@ -562,13 +331,6 @@
     "--executable-path",
     "/home/hatch/.cache/ms-playwright/chromium-1243/chrome-linux/chrome",
     "--no-sandbox"
-   ]
-  },
-  {
-   "prefix": "memeimgflip",
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/_thirdparty/node_modules/imgflip-mcp/dist/index.js"
    ]
   },
   {
@@ -642,20 +404,6 @@
    ]
   },
   {
-   "prefix": "vgmdb",
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/_thirdparty/vgmdb-mcp/dist/index.js"
-   ]
-  },
-  {
-   "prefix": "vgresource",
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/_thirdparty/vg-resource-mcp/dist/index.js"
-   ]
-  },
-  {
    "prefix": "wikisource",
    "command": "node",
    "args": [
@@ -678,53 +426,6 @@
    "args": [
     "/home/hatch/workspace/mcp-servers/_thirdparty/tides-mcp/dist/index.js"
    ]
-  },
-  {
-   "prefix": "yugioh",
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/_thirdparty/yugioh-mcp/dist/index.js"
-   ]
-  },
-  {
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/ifdb-mcp/dist/index.js"
-   ],
-   "prefix": "ifdb"
-  },
-  {
-   "prefix": "cheapshark",
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/cheapshark-mcp/dist/index.js"
-   ]
-  },
-  {
-   "prefix": "commons",
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/commons-mcp/dist/index.js"
-   ]
-  },
-  {
-   "prefix": "mobygames",
-   "command": "node",
-   "args": [
-    "/home/hatch/workspace/mcp-servers/mobygames-mcp/dist/index.js"
-   ]
-  },
-  {
-   "prefix": "marketplace",
-   "command": "/home/hatch/workspace/mcp-gateway/.venv/bin/python",
-   "args": [
-    "/home/hatch/workspace/mcp-marketplace/server.py"
-   ]
-  },
-  {
-   "prefix": "printify",
-   "command": "/home/hatch/workspace/mcp-gateway/servers/printify-mcp/launch.sh",
-   "args": []
   },
   {
    "prefix": "rustdocs",
