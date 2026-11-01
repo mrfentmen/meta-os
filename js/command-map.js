@@ -59,7 +59,7 @@ import {
   firesToGeoJson,
 } from "./command-layers.js";
 import { PRODUCT_BY_ID } from "./products.js";
-import { loopFeedItems, loopIncidentItems, loopStatusText } from "./command-loop.js";
+import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier } from "./command-loop.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
 
@@ -105,6 +105,7 @@ const els = {
   activityCount: $("cmd-activity-count"),
   loopStatus: $("cmd-loop-status"),
   loopFeed: $("cmd-loop-feed"),
+  ribbon: $("cmd-ribbon"),
   overlay: $("cmd-search-overlay"),
   ksearch: $("cmd-ksearch"),
   kresults: $("cmd-kresults"),
@@ -1565,9 +1566,24 @@ async function refreshLoopFeed() {
     payload = await res.json();
   } catch {
     els.loopStatus.textContent = loopStatusText({ unreachable: true });
+    if (els.ribbon) els.ribbon.hidden = true;
     return;
   }
   els.loopStatus.textContent = loopStatusText(payload);
+  // Crew-board live ribbon (HN-011): the newest incident from this
+  // same payload — the crew's live store, not a second source.
+  // No incidents recorded means no ribbon, never a placeholder.
+  const ribbon = ribbonIncident(payload);
+  if (els.ribbon) {
+    if (ribbon) {
+      els.ribbon.hidden = false;
+      els.ribbon.textContent = ribbonText(ribbon);
+      const tier = flagTier(ribbon.division, ribbon.category);
+      els.ribbon.className = "cmd-ribbon" + (tier ? ` cmd-ribbon--${tier}` : "");
+    } else {
+      els.ribbon.hidden = true;
+    }
+  }
   // Events first, then the crew's incidents with their recorded
   // evidence, BOLO + visible marks, and yellow/red tier — the
   // projection the endpoint carries but the feed used to drop.
