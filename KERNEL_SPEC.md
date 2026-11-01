@@ -53,6 +53,12 @@ agent to live in it, is not finished.
    ahead of new features, same rhythm as the service ports.
 5. The old stock-kernel spec text is retained in git history only.
    Do not resurrect it.
+6. NO MOCKS (boss's order 2026-11-01): nothing fake anywhere in the
+   OS. No mocked networks or services, no fixture data in shipped
+   surfaces, no stub presented as working. Test data lives inside
+   tests only and never ships. What is not real is NOT BUILT,
+   stated in those words. An honest empty state beats invented
+   data, every time.
 
 ## Milestones
 
