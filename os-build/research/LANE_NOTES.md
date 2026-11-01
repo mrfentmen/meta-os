@@ -38,12 +38,24 @@ today, which is the substitute the rule asks for when no MCP exists.
 | Goose releases / install | releases page and README "Install a release" section | read; platform list and glibc/macOS floors recorded in `ecosystem-watch.md` |
 | MCP availability | searched for an MCP server for both languages | **none exists for either.** Recorded as such, not faked. |
 
-MCP status per the rule's own wording, so it cannot be misread later:
-**Rust: not wired (no server, no config). Goose: not wired (no MCP exists).
-Lobster: not wired (no MCP exists).** The Goose LSP (`goose lsp`) and the VS
-Code extension shipped in the release archive are the real tooling that exists,
-and Section M should treat them as the substitute rather than describing them
-as an MCP.
+MCP status per the rule's own wording, so it cannot be misread later. Updated
+2026-11-01 when the boss ordered the MCPs connected:
+
+- **Rust: WIRED and verified.** `docs-rs` (`@nuskey8/docs-rs-mcp@1.0.1`, MIT).
+  Proven by a direct stdio JSON-RPC conversation: `initialize` OK on protocol
+  2024-11-05, four tools listed, and two real calls returning docs for the
+  `bootloader` crate. One tool, `docs_rs_search_crates`, fails with a 403
+  because the server sends no User-Agent and crates.io refuses those. Full
+  detail and the workaround: `os-build/mcp/WIRING.md`.
+- **Goose: no MCP exists.** Being built by the boss now; the config slot and the
+  smoke procedure are written and waiting in `os-build/mcp/WIRING.md`. Until it
+  lands, the real tooling is `goose lsp`, which is blocked on Goose not being
+  installed on this machine.
+- **Lobster: no MCP, no LSP.** Docs sources only.
+
+Carried forward from the earlier check, still true: **`rustdocs` in the batch
+and OS-build docs is a pattern named in prose, not a wired server**, and no MCP
+config existed in this repo at all until this work added one.
 
 ## Deliverables
 
@@ -55,7 +67,7 @@ as an MCP.
 
 ### Report line
 
-`B1-B3 RESEARCH  files=11  code=none  gate1=na  gate2=na  sources=checked-2026-11-01  mcp=not-wired(none-exists)`
+`B1-B3 RESEARCH  files=11  code=none  gate1=na  gate2=na  sources=checked-2026-11-01  mcp=docs-rs-WIRED(verified) goose=none lobster=none`
 
 ## Findings that move another lane's work
 
