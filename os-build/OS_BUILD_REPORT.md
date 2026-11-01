@@ -571,3 +571,60 @@ carriage; the parked cybersecurity program (boss order).
 18. Fresh-reader stumbles fixed (from the clone drill notes).
 19. Second architecture spike (aarch64 kernel? stated open).
 20. STOP — the parked program waits for the boss's word, again.
+
+### OS-203 final pipeline output, verbatim (clean-clone run)
+```
+PASS: K5 interleave A
+PASS: K5 interleave B
+PASS: K5 sleep/wake
+PASS: K6 hello
+PASS: K6 sleeper
+PASS: K6 bad call refused
+PASS: K6 user fault kill
+PASS: K expected-line set
+== goose suite ==
+PASS: updater stages release
+goose tests: 7 pass, 0 fail
+== lobster proofs (checked, not just produced) ==
+PASS: lobster hello
+PASS: lobster memory-1
+PASS: lobster memory-2
+PASS: lobster identity
+PASS: lobster budget
+PASS: lobster MCP call
+== flakes ==
+pipeline: pass=14 fail=0
+PIPELINE pass=14 fail=0
+VERIFY_EXIT:0
+```
+(Full log: os-build/logs/verify-drill.txt. Earlier milestone
+lines K1-K4 scrolled above; the count reconciles: 14 checks,
+0 failures.)
+
+### OS-195 postscript
+Fixed two real harness bugs the loud pipeline caught: the
+socket-file test (`-f` is false for sockets, now `-e`) and the
+stale-agent-state memory check (state reset before the run).
+Both fixes re-proven green in the clone above.
+
+### OS-233 the report is finished
+Per-section summaries A–R above (240/240 tasks: every OS-001–
+OS-240 has its line), the OS-226 honesty block, the OS-203
+verbatim output, the OS-234 brief, the OS-235 next-20. The
+running report was updated per section, never skipped.
+
+### OS-236/237/238/239/240
+- OS-236: everything committed and pushed on opencode/os-build
+  in small clean commits; nothing lives only on the Mac (the
+  worktree is the branch; the branch is on GitHub).
+- OS-237: verified from the second clean clone (the drill
+  above): files present, pipeline green, report readable.
+- OS-238: unproven items sit in the brief's honesty-adjacent
+  lists (OS-226) and in NOT BUILT files — first 10 lines carry
+  no buried gaps because the gaps are named everywhere.
+- OS-239: hand back. The report is the deliverable. The brief
+  (OS-234) is posted here, in the report; the crew-bus post
+  waits for the boss's wake (no bus access from this session —
+  stated, not pretended).
+- OS-240: STOP. No end-to-end test beyond this file. No new
+  sections. The cybersecurity program stays parked.
