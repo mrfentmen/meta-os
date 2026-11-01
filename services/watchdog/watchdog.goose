@@ -136,7 +136,13 @@ fn wd_beat(handle: i64, now_ms: i64) -> i64 {
 // once. The deadline is simply pushed forward from now.
 let WD_FINE: i64 = 0;
 let WD_SILENT: i64 = 1;    // late, still inside the allowance
-let WD_DEAD: i64 = 2;      // past the allowance; escalate once
+let WD_DEAD: i64 = 2;      // past the allowance, and THIS check is the escalation
+let WD_STILL_DEAD: i64 = 3; // already escalated; still dead, nothing to do about it
+//
+// The split between WD_DEAD and WD_STILL_DEAD is the whole "escalate once" rule made
+// visible in the return value. Returning WD_DEAD on every later check (which this file did
+// first) told the caller nothing about whether it had already acted, and wd_next_dead would
+// hand back the same service forever -- a restart loop with extra steps.
 
 fn wd_check_one(slot: i64, now_ms: i64) -> i64, i64 {
     if slot < 0 || slot >= WD_MAX { return WD_FINE, 0; }
@@ -158,7 +164,7 @@ fn wd_check_one(slot: i64, now_ms: i64) -> i64, i64 {
     watches[slot].deadline_ms = now_ms + period;
 
     if watches[slot].misses <= watches[slot].miss_allow { return WD_SILENT, watches[slot].misses; }
-    if watches[slot].reported { return WD_DEAD, watches[slot].misses; }
+    if watches[slot].reported { return WD_STILL_DEAD, watches[slot].misses; }
     watches[slot].reported = true;
     return WD_DEAD, watches[slot].misses;
 }
@@ -191,7 +197,7 @@ fn wd_count(now_ms: i64) -> i64, i64, i64 {
     while i < WD_MAX {
         if watches[i].handle != 0 {
             let s, misses = wd_check_one(i, now_ms);
-            if s == WD_DEAD { bad++; } else { healthy++; }
+            if s == WD_DEAD || s == WD_STILL_DEAD { bad++; } else { healthy++; }
             lateness = lateness + misses;
         }
         i++;
