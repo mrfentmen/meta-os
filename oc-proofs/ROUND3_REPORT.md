@@ -28,3 +28,20 @@
   (soak-mem.log, nb-076-concurrency.txt) and target/ build output.
   Reason: endurance work in flight; committed at section boundaries only.
 - NC-012: this summary.
+
+## Section B — Queue suite on the Mac, endgame (NC-013..NC-024) — DONE
+
+- NC-013: v3 patch in oc-proofs/queue-mac-optional-import.diff (unapplied).
+- NC-014: throwaway of origin/main: pytest 110/110; unittest 110 OK.
+- NC-015: stub-module run 110/110 — and it caught a real v2 bug (NameError
+  on the importable-module path); v3 fixes it, all three legs green.
+- NC-016/017: queue-sparkgen-optional-path.diff (conditional PYTHONPATH);
+  throwaway with both diffs: 110/110 with and without stub.
+- NC-018/019: table in queue-fix-final.md — 2 fixed, rest harmless/clean.
+- NC-020: oc-proofs/queue-fix-final.md with apply order + proofs.
+- NC-021: the 4 collection-error modules (test_queue, test_crew,
+  test_evidence, test_supervisor) all collect and run under the fix.
+- NC-022: node v24.21.0, python3 3.9.6, pytest 8.4.2 (in final doc).
+- NC-023: throwaway-r3 removed (worktree list verified clean); scratch
+  diff trees and stub module deleted.
+- NC-024: this summary.
