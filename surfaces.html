@@ -32,6 +32,7 @@
     <a href="#board-evidence">Evidence</a>
     <a href="#board-tiers">Tiers</a>
     <a href="#board-bolo">BOLO</a>
+    <a href="#board-timeline">Timeline</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -62,9 +63,14 @@
     <p>Recorded-description card from the live crew records (/api/crew/status). Exactly the BOLO key set, visible marks only, ID: UNIDENTIFIED — no name field exists.</p>
     <div id="bolo-content" aria-live="polite">Loading…</div>
   </section>
+  <section class="board-section" id="board-timeline" aria-labelledby="board-timeline-heading">
+    <h2 id="board-timeline-heading">Records timeline</h2>
+    <p>An incident's life as one timeline from its record file, via /api/crew/status (patrol → review → investigation → dispatch in the normal life).</p>
+    <div id="timeline-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -93,10 +99,16 @@
     document.getElementById("bolo-content").innerHTML = withBolo
       ? boloCard(withBolo.bolo)
       : `<p class="empty-state">No BOLO filed in the live crew records.</p>`;
+    const withTimeline = (crew?.incidents ?? []).find((i) => Array.isArray(i.timeline) && i.timeline.length > 0) ?? null;
+    document.getElementById("timeline-content").innerHTML = withTimeline
+      ? timelineView(withTimeline)
+      : `<p class="empty-state">No timeline in the live crew records.</p>`;
   } catch {
     document.getElementById("evidence-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;
     document.getElementById("bolo-content").innerHTML =
+      `<p class="empty-state">Crew records unavailable.</p>`;
+    document.getElementById("timeline-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;
   }
 </script>

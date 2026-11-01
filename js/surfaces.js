@@ -187,3 +187,27 @@ export function boloCard(bolo) {
   return `<div class="bolo-card"><div class="evidence-id-card">ID: UNIDENTIFIED</div>`
     + `<ul class="bolo-fields">${rows}</ul></div>`;
 }
+
+// HN-062 Records timeline: an incident's life as one timeline from
+// its record file. Steps render in FILE order — the record is the
+// order (patrol → review → investigation → dispatch in the normal
+// life, but a record with different steps renders exactly what it
+// carries). Nothing is reordered, rebuilt, or filled in: a dispatch
+// step shows its receipt, a purge step shows its reason, a step
+// without a time shows no time.
+export function timelineView(incident) {
+  const steps = Array.isArray(incident?.timeline) ? incident.timeline : [];
+  if (steps.length === 0) {
+    return `<p class="empty-state">No timeline recorded for this incident.</p>`;
+  }
+  const items = steps.map((s) => {
+    const parts = [`<span class="timeline-step">${escapeHtml(s?.step ?? "—")}</span>`];
+    if (s?.at) parts.push(`<span class="timeline-at">${escapeHtml(s.at)}</span>`);
+    if (s?.status) parts.push(`<span class="timeline-status">${escapeHtml(s.status)}</span>`);
+    if (s?.receipt_id) parts.push(`<span class="timeline-receipt">receipt ${escapeHtml(s.receipt_id)}</span>`);
+    if (s?.reason) parts.push(`<span class="timeline-reason">${escapeHtml(s.reason)}</span>`);
+    if (s?.step === "bolo") parts.push(`<span class="timeline-note">BOLO filed</span>`);
+    return `<li>${parts.join(" ")}</li>`;
+  }).join("");
+  return `<ol class="records-timeline">${items}</ol>`;
+}
