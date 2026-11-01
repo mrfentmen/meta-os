@@ -1,45 +1,49 @@
-# `input` — Layer 4 service
+# input — scancodes to key events
 
-**Status: NOT BUILT.** No source yet. Filled by **B-L1-26**.
+Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
+service 10.
 
-This README is the entry from `services/README_TEMPLATE.md`, unfilled. Every
-section below is deliberately empty rather than optimistic: a section that says
-nothing is honest, a section that guesses is not.
+## The split
 
-## What it does
+The K3 PS/2 driver fills a ring of raw bytes. It does not know what a key is. This
+service turns bytes into events — which key, pressed or released, with which
+modifiers — and that is where the meaning lives. Scan code set 1 is assumed because
+that is what `kernel/src/interrupts.rs` configures; if the kernel ever switches
+sets, `input_decode` is the only function that changes.
 
-keymap, compose, escape sequences. Not written yet.
+## Keymap as a function, not a table
 
-## Contract
+A 128-entry table needs initialising at start-up, which is a second table to keep in
+step with the first. An if-chain cannot drift: one place says what `0x1E` means. It
+costs a handful of compares per keypress, which at a human typing rate is not a
+cost.
 
-- **Entry:** none yet. Will be `export "svc_entry" fn service_main(...) -> i32`
-  per `os-build/layer1/SERVICE_CONTRACT.md` §2.
-- **Kernel surface:** none declared yet. Requirements it will place on Layers 1–3
-  are listed in `os-build/layer1/BOUNDARIES.md`.
-- **Needs from Layers 1–3:** see `services/MANIFEST.md`, row for `input`.
-- **Offers to Layers 5–6:** see `services/MANIFEST.md`; nothing may rely on it yet.
+Unmapped keys return `0` — "no character", not an error. Arrows and modifiers
+reaching the character function is expected.
 
-## Dependencies
+## Caps is a latch, not a second shift
 
-- **Libraries:** not yet decided — B-L1-15's gap audit narrows the candidates.
-- **Services:** not yet decided.
-- **Data it owns:** not yet decided.
+`MOD_CAPS` flips on press only, and applies to letters via `input_letter`. Folding
+it into `MOD_SHIFT` would turn `1` into `!`, which is not what caps lock does.
 
-## Failure behaviour
+## Repeat is software
 
-Not yet designed. When it is, the codes come from `common/err` and a failure is
-always a log record, never a silence.
+The controller can repeat by itself, but then the delay and rate live in a hardware
+register a user cannot change and a test cannot drive. Here they are data:
+`repeat_delay_ms` (floor 250) and `repeat_rate_ms` (floor 16).
 
-## Verification
+`input_repeat` advances by exactly one rate and never catches up in a burst: a
+console blocked for 500 ms emits **one** repeat, not ten. If modifiers changed
+while the key was held, the repeat uses the new ones — that is what the user is
+looking at.
 
-Nothing to verify: no source.
+## Calls
 
-## Not verified
+| Call | Purpose |
+|---|---|
+| `input_init(delay_ms, rate_ms)` | decoder state, clamped |
+| `input_decode(scancode, now_ms)` | (KeyEvent, got_event) — modifiers update state and emit `ch == 0` events |
+| `input_repeat(now_ms)` | (KeyEvent, got_event) — the held key's next repeat |
+| `input_passthrough(byte)` | bytes that are already characters (serial, scripted input) |
 
-Everything. There is no Goose toolchain on this machine
-(`goose__toolchain_status` → `NOT FOUND`), so even a finished service cannot pass
-WRITTEN into COMPILED here.
-
-## Deviations
-
-None — nothing has been written to deviate from.
+Not compiled, not run.
