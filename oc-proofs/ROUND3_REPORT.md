@@ -305,3 +305,12 @@
   view-switch (finding with shot).
 - Landmarks present. Full notes: oc-proofs/input-a11y.md.
 - NC-194: this summary. Fixes belong to Hana; none made.
+
+## Section M — Safety self-audit (NC-149..NC-160) — DONE, no stop
+
+- Sweeps green: 0 secrets (8 patterns + private-key), 0 bus refs in own
+  dirs, dispatch locked to SIMULATED (loopback-checked validator),
+  no emergency dialing, licenses present, footage sourced, no faces,
+  UNIDENTIFIED enforced, no personal paths in own code.
+- NC-159 not triggered. Full table: oc-proofs/safety-audit.md.
+- NC-160: this summary.
