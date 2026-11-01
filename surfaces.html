@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta Imperium — Boards</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .boards-nav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+  .boards-nav a { color: inherit; }
+  .board-section { margin: 2rem 0; }
+  .empty-state { font-style: italic; }
+  .lab-list { list-style: none; padding: 0; }
+  .lab-row { display: flex; gap: 1rem; padding: 0.25rem 0; }
+  .lab-hypothesis { flex: 2; }
+  .lab-level, .lab-status { flex: 1; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <h1>Meta Imperium</h1>
+    <p class="product-badge">Boards</p>
+    <a class="logo-studio-link" href="index.html">Back to console</a>
+  </div>
+</header>
+<main>
+  <nav class="boards-nav" aria-label="Boards">
+    <a href="#board-lab">Lab</a>
+  </nav>
+  <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
+    <h2 id="board-lab-heading">Lab board</h2>
+    <p>Reads the lab's records when present (os/lab/records.json). No level is ever shown higher than its record's cap.</p>
+    <div id="lab-content" aria-live="polite">Loading…</div>
+  </section>
+</main>
+<script type="module">
+  import { labBoard } from "./js/surfaces.js";
+  const el = document.getElementById("lab-content");
+  try {
+    const res = await fetch("os/lab/records.json");
+    const records = res.ok ? await res.json() : [];
+    el.innerHTML = labBoard(records);
+  } catch {
+    el.innerHTML = labBoard([]);
+  }
+</script>
+</body>
+</html>
