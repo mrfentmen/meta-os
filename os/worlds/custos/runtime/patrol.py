@@ -8,7 +8,12 @@ The night watch for machines. One patrol:
      software inventory. A match is recorded as
      "known-exploited vulnerability present" (red). Presence means the
      inventory names the product; it is never a claim that an exploit
-     was observed.
+     was observed. Matched entries are sorted oldest-first by days
+     since the feed's dateAdded (RW-006 ageing priority): a match
+     listed more than kev_age_red_days ago (default 30) is flagged
+     aged in its record detail and stays red. "Unpatched" here means
+     only that the product is still named in the configured inventory
+     on this patrol; the patrol never verifies patch state on a host.
   1b. Polls Certificate Transparency logs (crt.sh) for the
      configured watched domains. A newly issued cert for a watched
      domain becomes a "certificate issued" record (yellow). Cert ids
@@ -81,6 +86,7 @@ Config (JSON):
                  "expected_ports": [443]}],
       "inventory": ["openssl", "openssh"],
       "cert_warn_days": 21,
+      "kev_age_red_days": 30,
       "kev_url": "https://www.cisa.gov/.../known_exploited_vulnerabilities.json",
       "sensitive_ports": [22, 3306, 5432, 6379, 9200, 27017],
       "ct_domains": ["example.org"],
@@ -117,6 +123,7 @@ DEFAULT_KEV_URL = (
 )
 DEFAULT_CT_URL_TEMPLATE = "https://crt.sh/?q=%25.{domain}&output=json"
 DEFAULT_CERT_WARN_DAYS = 21
+DEFAULT_KEV_AGE_RED_DAYS = 30
 DEFAULT_SENSITIVE_PORTS = [22, 3306, 5432, 6379, 9200, 27017]
 PROBE_TIMEOUT = 5.0
 HEADER_TIMEOUT = 10.0
@@ -200,6 +207,40 @@ def match_kev(entries, inventory):
                 matched.append((entry, item))
                 break
     return matched
+
+
+def kev_age_days(entry, now):
+    """Whole days between a KEV entry's dateAdded and the patrol time.
+
+    dateAdded is a YYYY-MM-DD date in the real feed; a full ISO
+    timestamp is accepted by reading its date part. An unparseable
+    or missing date is None, never an exception: an undated match is
+    still recorded, it simply carries no age and sorts last. A
+    future date (clock skew in the feed) reads as 0 days, never
+    negative: age is time since listing, and a listing cannot be
+    older than it is.
+    """
+    try:
+        raw = str(entry.get("dateAdded") or "")[:10]
+        added = datetime.strptime(raw, "%Y-%m-%d").date()
+        today = datetime.strptime(str(now)[:10], "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
+    return max(0, (today - added).days)
+
+
+def sort_kev_by_age(matched, now):
+    """Matched (entry, item) pairs, oldest listing first.
+
+    Undated entries sort last (their age is unknown, so they never
+    jump a dated one); ties break on CVE id so the order is
+    deterministic regardless of feed order.
+    """
+    def key(pair):
+        entry, _item = pair
+        days = kev_age_days(entry, now)
+        return (days is None, -(days or 0), entry.get("cveID", ""))
+    return sorted(matched, key=key)
 
 
 def classify_exposure(open_ports, expected_ports, service_port):
@@ -546,11 +587,25 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     except Exception as exc:  # feed down: noted, never invented
         errors.append("kev fetch failed: %s" % exc)
     kev_seen_count = len(entries)
-    for entry, item in match_kev(entries, config.get("inventory", [])):
+    # RW-006 ageing priority: matched CVEs are recorded oldest
+    # listing first, and any match listed more than kev_age_red_days
+    # ago (default 30) is flagged aged. The category stays red for
+    # every match (the pack's existing contract); ageing orders the
+    # queue and marks what has sat unpatched longest, it never
+    # downgrades a young match.
+    age_threshold = int(config.get("kev_age_red_days",
+                                   DEFAULT_KEV_AGE_RED_DAYS))
+    kev_aged = 0
+    for entry, item in sort_kev_by_age(
+            match_kev(entries, config.get("inventory", [])), now):
         cve = entry.get("cveID", "")
         if cve in seen:
             continue
         seen.add(cve)
+        days = kev_age_days(entry, now)
+        aged = days is not None and days > age_threshold
+        if aged:
+            kev_aged += 1
         records.append(make_record(now, "kev", None,
                                    "known-exploited vulnerability present",
                                    {"cve": cve,
@@ -558,7 +613,10 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                                     "vendor_product": "%s %s" % (
                                         entry.get("vendorProject", ""),
                                         entry.get("product", "")),
-                                    "date_added": entry.get("dateAdded", "")}))
+                                    "date_added": entry.get("dateAdded", ""),
+                                    "days_since_listing": days,
+                                    "kev_age_red_days": age_threshold,
+                                    "aged": aged}))
 
     # 1b. Certificate Transparency: newly issued certs for watched
     # domains. A cert id already in the seen-state was recorded on
@@ -719,6 +777,7 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
         "ts": now,
         "hosts_checked": len(config.get("hosts", [])),
         "kev_entries_seen": kev_seen_count,
+        "kev_aged_over_threshold": kev_aged,
         "ct_entries_seen": ct_seen_count,
         "dns_domains_checked": len(dns_domains),
         "subdomains_checked": subdomains_checked,
