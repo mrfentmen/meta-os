@@ -1,0 +1,12 @@
+# Hortus rung-1 champion fin geometry (NC-032)
+# Units: mm. Straight-fin heatsink, periodic in x.
+# Boundary conditions (assumed, same as rung-3 scoring):
+#   base bottom: isothermal, ambient + 50 K
+#   exposed faces: convection, forced air 2.0 m/s along channels
+#   cell side walls: symmetry (adiabatic)
+footprint_x_mm = 100.0
+footprint_y_mm = 100.0
+fin_count = 40
+fin_height_mm = 60.0
+fin_thickness_mm = 0.745
+base_thickness_mm = 1.494

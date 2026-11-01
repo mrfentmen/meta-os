@@ -45,3 +45,21 @@
 - NC-023: throwaway-r3 removed (worktree list verified clean); scratch
   diff trees and stub module deleted.
 - NC-024: this summary.
+
+## Section C — Hortus rung 4, preparation only (NC-025..NC-036) — DONE
+
+- NC-025/026/027/028: hortus-rung3/RUNG4_PROTOCOL.md — unit under test,
+  parts (specs only), CSV log template with marked EXAMPLE row, pass/fail
+  rule with the threshold left BLANK for the boss.
+- NC-029: nc-029-prediction-sheet.md — 489.7 / 734.2 / 1025.0 W at h=30 /
+  55.9 / 100; k=167→712.6, k=237→814.0 W. Raw log kept.
+- NC-030: uncertainty table in the protocol, all sizes measured (grid
+  0.4%, stair-step 0.6%, k -3%/+11%, h bracketed, sensors stated).
+- NC-031: COMMERCIAL_COMPARE_PLAN.md — plan only, no accounts/installs.
+- NC-032/033: champion-fin.txt geometry export; fresh-parser re-read
+  diffs IDENTICAL in the same run.
+- NC-034: falsifiability paragraph in the protocol (either sign counts;
+  profile-shape falsifier included).
+- NC-035: h cross-check — protocol central 55.9 matches closeout primary;
+  closeout's flat-50 was sensitivity-only and stays there. No mismatch.
+- NC-036: this summary.
