@@ -31,6 +31,7 @@
     <a href="#board-gate">Gate</a>
     <a href="#board-evidence">Evidence</a>
     <a href="#board-tiers">Tiers</a>
+    <a href="#board-bolo">BOLO</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -56,9 +57,14 @@
     <h2 id="board-tiers-heading">Tier colours audit</h2>
     <p>Yellow/red rendering audited against the display table: 31 categories across vigiles (3 yellow, 3 red), ignis (8 yellow, 5 red), medicus (4 yellow, 8 red). One fix landed: untiered incident rows no longer inherit red; red rows carry an explicit red class. Visual proof: screenshots owed at Mac gate (docs/TIER_SCREENSHOT_PACK.md).</p>
   </section>
+  <section class="board-section" id="board-bolo" aria-labelledby="board-bolo-heading">
+    <h2 id="board-bolo-heading">BOLO card</h2>
+    <p>Recorded-description card from the live crew records (/api/crew/status). Exactly the BOLO key set, visible marks only, ID: UNIDENTIFIED — no name field exists.</p>
+    <div id="bolo-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -83,8 +89,14 @@
     document.getElementById("evidence-content").innerHTML = flagged
       ? evidenceViewer(flagged)
       : `<p class="empty-state">No flagged incident in the live crew records.</p>`;
+    const withBolo = (crew?.incidents ?? []).find((i) => i.bolo) ?? null;
+    document.getElementById("bolo-content").innerHTML = withBolo
+      ? boloCard(withBolo.bolo)
+      : `<p class="empty-state">No BOLO filed in the live crew records.</p>`;
   } catch {
     document.getElementById("evidence-content").innerHTML =
+      `<p class="empty-state">Crew records unavailable.</p>`;
+    document.getElementById("bolo-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;
   }
 </script>

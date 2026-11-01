@@ -159,3 +159,31 @@ export function evidenceViewer(incident) {
     + `<li>${ev.frames ?? 0} flagged/investigation frames</li>`
     + `<li>${ev.face_crops ?? 0} face crops</li></ul>`;
 }
+
+// HN-061 BOLO card: the recorded-description card rendered from a real
+// staged incident record. The key set is exactly BOLO_KEYS
+// (server/queue/evidence.py): division, category, camera_name, area,
+// flagged_at, frame_files, face_crops, person_descriptions,
+// visible_marks, direction_of_travel, direction_note — observation
+// and evidence only. Any key outside that set is DROPPED, never
+// rendered, so no identity-shaped field (a name, an id, a match) can
+// leak through. Visible marks only: person_descriptions render as
+// descriptions, never as a name. The card header always reads
+// ID: UNIDENTIFIED.
+export const BOLO_KEYS = ["division", "category", "camera_name", "area",
+  "flagged_at", "frame_files", "face_crops", "person_descriptions",
+  "visible_marks", "direction_of_travel", "direction_note"];
+
+export function boloCard(bolo) {
+  if (!bolo || typeof bolo !== "object") {
+    return `<p class="empty-state">No BOLO filed.</p>`;
+  }
+  const rows = BOLO_KEYS.filter((k) => bolo[k] !== undefined && bolo[k] !== null)
+    .map((k) => {
+      const v = Array.isArray(bolo[k]) ? bolo[k].join("; ") : bolo[k];
+      return `<li><span class="bolo-key">${escapeHtml(k)}</span>: `
+        + `<span class="bolo-value">${escapeHtml(v)}</span></li>`;
+    }).join("");
+  return `<div class="bolo-card"><div class="evidence-id-card">ID: UNIDENTIFIED</div>`
+    + `<ul class="bolo-fields">${rows}</ul></div>`;
+}
