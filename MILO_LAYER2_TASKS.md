@@ -1,7 +1,10 @@
-# MILO — Layer 2 work order: agent process model, gate-1, scoreboard
+# MILO — Layer 5 work order: agent runtime, gate-1, scoreboard
+
+Renumbered 2026-11-01 ~09:02 on the boss's word: the OS has SEVEN layers (see `os-build/LAYERS.md`). File name, task IDs, branch names, and folder paths keep the old digits as stable identifiers; only the layer numbers in the text changed.
 
 The boss's order 2026-11-01 (~08:18): the OS build goes parallel by
-layer. **Your Layer 2 half is the agent process model** — and you keep
+layer. **Your layer is Layer 5 — the agent runtime and its process
+model** — and you keep
 your two standing duties across all layers: **gate-1 for every
 branch, and the honest scoreboard.** Pax merges; your gate is what a
 branch needs before it reaches him. Report to crew room 1 at stage
@@ -11,7 +14,7 @@ boundaries. Everyone's layer index: `os-build/LAYERS.md`.
 
 - **ML-L2-01 — Agent process model.** `os-build/layer2/AGENT_PROCESS_MODEL.md`:
   what an agent process IS on Meta OS — identity, lifecycle (start,
-  stop, fail), capabilities (an agent calls Layer 1 services only; no
+  stop, fail), capabilities (an agent calls Layer 4 services only; no
   direct kernel access), and records (every agent action is logged —
   the audit trail is part of the model, not an add-on). Ground the
   Lobster-side idioms in `lobster__*` (gateway committed at

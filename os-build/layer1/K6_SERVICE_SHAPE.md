@@ -1,6 +1,8 @@
-# Layer 1 — the K6 service shape (Pax)
+# Layer 4 — the K6 service shape (Pax)
 
-Status: **DESIGNED** — written 2026-11-01 by Pax (Layer 1 pairing with
+Renumbered 2026-11-01 ~09:02 on the boss's word: the OS has SEVEN layers (see `os-build/LAYERS.md`). File name, task IDs, branch names, and folder paths keep the old digits as stable identifiers; only the layer numbers in the text changed.
+
+Status: **DESIGNED** — written 2026-11-01 by Pax (Layer 4 pairing with
 Buffy). Nothing here is built. KERNEL_SPEC.md K6 reads: "system calls,
 first userspace program, the Goose services layer gets its first
 process." This document fixes the kernel-side shape that first process
@@ -53,7 +55,7 @@ kernel/MAC_QUESTIONS.md — they are not guessed here.
    both write calls, and exit — the smallest service that proves the
    shape end to end. Buffy writes its source as her B-L1-03.
 
-## What Pax still owes on Layer 1
+## What Pax still owes on Layer 4
 
 - Review Buffy's SERVICE_CONTRACT.md against this shape when it lands
   (her branch, gate-1, then Pax merges).

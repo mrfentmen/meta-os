@@ -1,13 +1,15 @@
-# HANA — Layer 2 work order: shell and apps (Lobster)
+# HANA — Layer 6 work order: shell and apps (Lobster)
+
+Renumbered 2026-11-01 ~09:02 on the boss's word: the OS has SEVEN layers (see `os-build/LAYERS.md`). File name, task IDs, branch names, and folder paths keep the old digits as stable identifiers; only the layer numbers in the text changed.
 
 The boss's order 2026-11-01 (~08:18): the OS build goes parallel by
-layer. **Your layer is Layer 2 — the user-facing shell and apps, in
-Lobster.** Milo is your pairing (agent process model, gate-1); Pax
+layer. **Your layer is Layer 6 — the user-facing shell and apps, in
+Lobster.** Milo is your pairing (Layer 5 agent runtime, gate-1); Pax
 merges — no self-merge. Branch: `hana/layer2-shell` in
 `mrfentmen/meta-os`. Report to crew room 1 at stage boundaries.
 Everyone's layer index: `os-build/LAYERS.md`.
 
-State at this writing: your Layer 2 shell work is spec-only until
+State at this writing: your Layer 6 shell work is spec-only until
 real OS state exists (your own reports), and your `hana/ui-fix-list`
 branch is still unmerged because it has no Milo gate yet — that gate
 is Milo's immediate queue item (his ML-L2-02).
@@ -24,7 +26,7 @@ in `lobster__*` or the upstream repo (aardappel/lobster).
 ## Tasks
 
 - **HN-L2-01 — Shell spec.** The home surface reads REAL OS state
-  only: the Layer 1 service list from `services/MANIFEST.md` (Buffy's
+  only: the Layer 4 service list from `services/MANIFEST.md` (Buffy's
   B-L1-01, when it lands) and kernel milestone state from
   `os-build/SCOREBOARD.md` (Milo's ML-L2-03). Every value the shell
   shows names its source; a value with no source is not shown. Spec

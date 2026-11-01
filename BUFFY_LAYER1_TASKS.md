@@ -1,18 +1,21 @@
-# BUFFY — Layer 1 work order: Goose system services
+# BUFFY — Layer 4 work order: Goose system services
+
+Renumbered 2026-11-01 ~09:02 on the boss's word: the OS has SEVEN layers (see `os-build/LAYERS.md`). File name, task IDs, branch names, and folder paths keep the old digits as stable identifiers; only the layer numbers in the text changed.
 
 From the boss's order 2026-11-01 (~08:18): the OS build goes parallel
-by layer. **Your layer is Layer 1 — the Goose system services.** Pax is
+by layer. **Your layer is Layer 4 — the Goose system services.** Pax is
 your pairing on this layer (service shape, coordination, and the
-merge). Rowan + OpenCode hold Layer 0 (Rust kernel), Hana + Milo hold
-Layer 2 (Lobster agents/apps). Work in your own branch; **Pax merges
+merge). Rowan + OpenCode hold Layers 1–3 (boot, Rust kernel core,
+drivers), Milo holds Layer 5 (agent runtime), Hana Layer 6 (shell
+and apps), and the programs sit at Layer 7. Work in your own branch; **Pax merges
 when you are done — do not merge your own branch** (boss's merge rule).
 
 Branch: `buffy/layer1-goose-services` in `mrfentmen/meta-os`.
 Report to crew room 1 at every stage boundary.
 
-## What Layer 1 is
+## What Layer 4 is
 
-Meta OS has its own kernel (Layer 0, Rust, `kernel/`). Layer 1 is the
+Meta OS has its own kernel (Layers 1–3, Rust, `kernel/`). Layer 4 is the
 system services that run on it, written in **Goose** — a real language
 by Wouter van Oortmerssen (github.com/aardappel/goose, Apache-2.0):
 memory-safe, no heap, no GC, compiles to C. These services are part of
@@ -38,7 +41,7 @@ them into the local gateway (updated to v1.1.0, 2026-11-01):
   Bundled from aardappel/goose @ b781587: 389 doc sections, 702
   stdlib symbols, 57 keywords, 32 sample programs.
 - `lobster__*` — the same for Lobster, when a service contract touches
-  the Layer 2 boundary.
+  the Layer 5 boundary.
 
 Ground every language claim in these tools or the upstream repo.
 If the gateway is not reachable from your session, the upstream repo
@@ -48,7 +51,7 @@ one you used in your report.
 ## The honest constraint
 
 Services cannot RUN until the kernel reaches K6 (syscalls, first
-userspace, first Goose service process — KERNEL_SPEC.md). So Layer 1
+userspace, first Goose service process — KERNEL_SPEC.md). So Layer 4
 work now is: the architecture, the contracts, and real Goose source
 written against those contracts. Status words, used exactly:
 
@@ -76,16 +79,16 @@ written against those contracts. Status words, used exactly:
   (`os-build/research/tools-candidates.md`), your ecosystem watch,
   and OPENCODE_OS_BUILD.md Section K, write `services/MANIFEST.md`:
   the first Goose services in build order, one line each — name, what
-  it does, what it needs from the kernel (Layer 0), what it offers
+  it does, what it needs from the kernel side (Layers 1–3), what it offers
   the layers above. Mark each DESIGNED / NOT BUILT honestly (all
   start NOT BUILT).
 - **B-L1-02 — The service contract.** `os-build/layer1/SERVICE_CONTRACT.md`:
-  what a Layer 1 service process IS — how it starts, how it is named,
+  what a Layer 4 service process IS — how it starts, how it is named,
   how it talks to the kernel (syscall shape as K6 will need it), how
   services talk to each other (IPC), how one reports health/failure,
   how it stops. Ground the Goose-side idioms in the MCP (samples and
   stdlib sections), and mark every kernel assumption as a requirement
-  on Layer 0, not a fact.
+  on Layers 1–3, not a fact.
 - **B-L1-03 — First service, source.** Pick the simplest service from
   the manifest (a boot log / console service is a good first) and
   write its real Goose source under `services/<name>/`: source files
@@ -95,8 +98,8 @@ written against those contracts. Status words, used exactly:
 - **B-L1-04 — Second service, source.** The next service from the
   manifest (a time or device service), same standard as B-L1-03.
 - **B-L1-05 — Layer boundary notes.** `os-build/layer1/BOUNDARIES.md`:
-  what Layer 1 needs from Layer 0 (for Rowan/OpenCode), and what
-  Layer 1 offers Layer 2 (for Hana/Milo) — each item marked as
+  what Layer 4 needs from Layers 1–3 (for Rowan/OpenCode), and what
+  Layer 4 offers Layers 5–6 (for Milo/Hana) — each item marked as
   contract, requirement, or open question. This is the hand-off sheet
   Pax merges against.
 - **B-L1-06 — Report.** Running report at
