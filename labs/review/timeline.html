@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Labs — records timeline</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #06090f; color: #d7e5f2; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  header { padding: 12px 16px; } header h1 { font-size: 15px; margin: 0; letter-spacing: 0.12em; }
+  header p { font-size: 11px; color: #8fa9bd; }
+  #bar { padding: 10px 16px; display: flex; gap: 8px; align-items: center; }
+  button { background: #0f1c2b; color: #d7e5f2; border: 1px solid #2b4258; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 12px; }
+  #tl { margin: 10px 16px; padding: 0; list-style: none; max-width: 640px; }
+  #tl li { padding: 8px 12px; border-left: 3px solid #2b4258; margin-bottom: 6px; background: #0b1420; font-size: 12px; }
+  #tl li.red { border-color: #e03131; } #tl li.yellow { border-color: #ffa63d; }
+  #err { display: none; margin: 10px 16px; color: #f0b0b0; font-size: 12px; }
+</style>
+</head>
+<body>
+<header><h1>LABS · RECORDS TIMELINE</h1><p>Load a records JSONL file (one record per line). Steps render in timestamp order: patrol → review → investigate → dispatch.</p></header>
+<div id="bar"><input type="file" id="file" accept=".jsonl,.json,.txt"><button id="btn-sample">Load sample file</button></div>
+<div id="err" role="alert"></div>
+<ol id="tl"></ol>
+<script>
+// Embedded copy of sample-records.jsonl (fallback when the static
+// server has no .jsonl MIME entry; server/ is read-only).
+const EMBEDDED_SAMPLE = "{\"incident\":{\"id\":\"SIM-2026-11-01-001\",\"simulated\":true,\"product\":\"medicus\",\"category\":\"person on ground\",\"tier\":\"yellow\",\"timestamp\":\"2026-11-01T10:00:00Z\",\"camera\":\"Canal Street @ Chrystie Street\",\"description\":\"Adult lying flat on the sidewalk, unmoving for the observed minute. Bystanders pass without stopping.\",\"visible_marks\":[\"dark jacket\",\"red cap\"],\"identity\":\"UNIDENTIFIED\"},\"evidence\":{\"frames\":[\"SIM-frame-001.jpg\"],\"face_boxes\":[]}}\n{\"incident\":{\"id\":\"SIM-2026-11-01-002\",\"simulated\":true,\"product\":\"vigiles\",\"category\":\"possible altercation\",\"tier\":\"yellow\",\"timestamp\":\"2026-11-01T10:05:00Z\",\"camera\":\"Times Sq @ 43rd\",\"description\":\"Two people shoving near a kiosk, separated after half a minute.\",\"visible_marks\":[\"yellow vest\"],\"identity\":\"UNIDENTIFIED\"},\"evidence\":{\"frames\":[\"SIM-frame-002.jpg\"],\"face_boxes\":[]}}\n{\"incident\":{\"id\":\"SIM-2026-11-01-003\",\"simulated\":true,\"product\":\"ignis\",\"category\":\"visible flame\",\"tier\":\"red\",\"timestamp\":\"2026-11-01T10:09:00Z\",\"camera\":\"I-5 @ Slauson Ave\",\"description\":\"Flames from a roadside brush patch beside the freeway.\",\"visible_marks\":[],\"identity\":\"UNIDENTIFIED\"},\"evidence\":{\"frames\":[\"SIM-frame-003.jpg\"],\"face_boxes\":[]}}\n{\"incident\":{\"id\":\"SIM-2026-11-01-004\",\"simulated\":true,\"product\":\"vigiles\",\"category\":\"normal activity\",\"tier\":\"none\",\"timestamp\":\"2026-11-01T10:12:00Z\",\"camera\":\"Central Park West @ 65 St\",\"description\":\"Pedestrians crossing normally.\",\"visible_marks\":[],\"identity\":\"UNIDENTIFIED\"},\"evidence\":{\"frames\":[],\"face_boxes\":[]}}\n{\"incident\":{\"id\":\"SIM-2026-11-01-005\",\"simulated\":true,\"product\":\"medicus\",\"category\":\"person on ground\",\"tier\":\"yellow\",\"timestamp\":\"2026-11-01T10:15:00Z\",\"camera\":\"Union Square\",\"description\":\"Person sitting slumped against a planter.\",\"visible_marks\":[\"grey hoodie\"],\"identity\":\"UNIDENTIFIED\"},\"evidence\":{\"frames\":[\"SIM-frame-005.jpg\"],\"face_boxes\":[]}}\n{\"incident\":{\"id\":\"SIM-2026-11-01-006\",\"simulated\":true,\"product\":\"ignis\",\"category\":\"visible flame\",\"tier\":\"red\",\"timestamp\":\"2026-11-01T10:20:00Z\",\"camera\":\"I-5, south of I-10\",\"description\":\"Vehicle fire on the shoulder, heavy smoke.\",\"visible_marks\":[],\"identity\":\"UNIDENTIFIED\"},\"evidence\":{\"frames\":[\"SIM-frame-006.jpg\"],\"face_boxes\":[]}}";
+
+// Step order is fixed by the pipeline and rendered by timestamp, not by trust.
+const STEPS = ["patrol", "review", "investigate", "dispatch"];
+function draw(records) {
+  const tl = document.getElementById("tl");
+  tl.innerHTML = "";
+  records
+    .slice()
+    .sort((a, b) => String((a.incident || a).timestamp).localeCompare(String((b.incident || b).timestamp)))
+    .forEach((r) => {
+      const inc = r.incident || r;
+      const li = document.createElement("li");
+      if (inc.tier === "red") li.className = "red";
+      if (inc.tier === "yellow") li.className = "yellow";
+      const steps = Array.isArray(r.steps) && r.steps.length ? r.steps.join(" → ") : STEPS.join(" → ");
+      li.textContent = (inc.timestamp || "?") + " · " + (inc.id || "?") + " [" + (inc.tier || "none") + "] " + (inc.category || "?") + " — " + steps;
+      tl.appendChild(li);
+    });
+}
+function parse(text) {
+  return text.split("\n").map((l) => l.trim()).filter(Boolean).map((l, i) => {
+    try { return JSON.parse(l); }
+    catch (e) { throw new Error("line " + (i + 1) + " is not JSON: " + e.message); }
+  });
+}
+document.getElementById("btn-sample").addEventListener("click", async () => {
+  const show = (text) => {
+    try {
+      document.getElementById("err").style.display = "none";
+      draw(parse(text));
+    } catch (e) {
+      const m = document.getElementById("err");
+      m.style.display = "block";
+      m.textContent = "Could not parse sample: " + e.message;
+    }
+  };
+  try {
+    const res = await fetch("sample-records.jsonl", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    show(await res.text());
+  } catch (e) {
+    // No .jsonl MIME on the static server (server/ is read-only): fall
+    // back to the copy embedded below. Same bytes as sample-records.jsonl.
+    show(EMBEDDED_SAMPLE);
+  }
+});
+document.getElementById("file").addEventListener("change", (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      document.getElementById("err").style.display = "none";
+      draw(parse(String(rd.result)));
+    } catch (err) {
+      const m = document.getElementById("err");
+      m.style.display = "block";
+      m.textContent = "Could not parse that file: " + err.message;
+    }
+  };
+  rd.readAsText(f);
+});
+</script>
+</body>
+</html>

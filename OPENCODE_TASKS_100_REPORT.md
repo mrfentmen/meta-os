@@ -347,3 +347,27 @@ repo, commit 556bd41; repo untouched per the prompt). Status per task:
 - NB-068 DONE. nb-068-readme-30s.mp4 (30.0 s): repo front page scroll.
 - NB-069 Originals only: PNG-to-H.264 first encodes, no zip, no recompression.
 - NB-070 DONE. oc-proofs/footage/FOOTAGE_INDEX.md with the table above.
+
+## Section H (round 2): read-only review tools, labs/review/ (NB-081 to NB-090)
+
+- NB-081 DONE. labs/review/bolo.html: pasted/sample JSON renders description
+  + visible marks, ID reads UNIDENTIFIED, no name field anywhere (shot).
+- NB-082 DONE. labs/review/timeline.html: file picker + sample button draw
+  all 6 records in timestamp order with tier colors (shot). Sample fetch
+  404s on the static server (no .jsonl MIME; server/ read-only) so the page
+  falls back to an embedded copy of the same bytes — stated in code.
+- NB-083 DONE. Shots: nb-083-bolo.png, nb-083-timeline.png, nb-087-cannot-do.png.
+- NB-084 DONE. Purge drill on a COPY: record 001 marked false positive,
+  evidence entry emptied with purge receipt; real sample-records.jsonl
+  verified untouched. Before/after JSON in oc-proofs/; after-state BOLO
+  shot proves the card still renders with purged evidence.
+- NB-085 DONE. tier-counter.mjs on the sample: 6 records, 3 yellow, 2 red.
+- NB-086 DONE. 20 generated samples validate against js/schema.js (read-only
+  import): 20/20 pass. Building them taught the schema's real rules
+  (medicus always requires human review; ignis baseline is "no hazard
+  visible"), recorded in the test.
+- NB-087 DONE. cannot-do.html renders all three divisions' limits from
+  js/products.js (shot).
+- NB-088 DONE. labs/review/README.md with each command.
+- NB-089 DONE. labs/review/tests/review.test.mjs: 2/2 pass.
+- NB-090 section report: this list.

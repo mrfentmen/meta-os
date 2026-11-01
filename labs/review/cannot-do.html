@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Labs — what this system cannot do</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #06090f; color: #d7e5f2; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  main { max-width: 640px; padding: 16px 20px; }
+  h1 { font-size: 16px; letter-spacing: 0.1em; }
+  li { margin: 8px 0; font-size: 13px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<main>
+<h1>WHAT THIS SYSTEM CANNOT DO</h1>
+<p>Read-only rendering of the product limits. Nothing here changes them.</p>
+<ul id="limits"></ul>
+</main>
+<script type="module">
+import { PRODUCTS } from "../../js/products.js";
+const ul = document.getElementById("limits");
+for (const p of PRODUCTS) {
+  const li = document.createElement("li");
+  li.textContent = (p.displayName || p.id) + ": " + (p.limitations || "no statement");
+  ul.appendChild(li);
+}
+</script>
+</body>
+</html>

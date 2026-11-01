@@ -1,0 +1,24 @@
+{
+ "incident": {
+  "id": "SIM-2026-11-01-001",
+  "simulated": true,
+  "product": "medicus",
+  "category": "person on ground",
+  "tier": "yellow",
+  "timestamp": "2026-11-01T10:00:00Z",
+  "camera": "Canal Street @ Chrystie Street",
+  "description": "Adult lying flat on the sidewalk, unmoving for the observed minute. Bystanders pass without stopping.",
+  "visible_marks": [
+   "dark jacket",
+   "red cap"
+  ],
+  "identity": "UNIDENTIFIED",
+  "false_positive": true
+ },
+ "evidence": {
+  "frames": [],
+  "face_boxes": [],
+  "purged": true,
+  "purge_reason": "false positive close"
+ }
+}
