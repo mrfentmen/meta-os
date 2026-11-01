@@ -45,7 +45,14 @@ check, and returns:
 |---|---|
 | `WD_FINE` | not due yet |
 | `WD_SILENT` | late, still inside `miss_allow` |
-| `WD_DEAD` | past the allowance — escalate, once |
+| `WD_DEAD` | past the allowance — **this check is the escalation** |
+| `WD_STILL_DEAD` | already escalated; still dead, nothing new to do |
+
+The split between `WD_DEAD` and `WD_STILL_DEAD` is the "escalate once" rule made
+visible in the return value. Without it `wd_next_dead` handed back the same
+dead service on every scan — an escalation loop with extra steps — and the
+caller could not tell a new death from one it had already restarted. Found while
+writing the B-L1-53 test.
 
 A clock that moved backwards is treated as fine and the deadline is pushed
 forward from now: a wall-clock adjustment (B-L1-37) must not report every service
