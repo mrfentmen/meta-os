@@ -68,3 +68,38 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
   entry_point shared ref, static relocation model, rust-src + target
   + llvm-tools components. Logs: K1-boot.txt (+ run1/2/3). Next:
   Section B framebuffer. DONE — pushing.
+
+## Section B — K2 text console (OS-013..OS-028) — DONE, with one honest NOT BUILT
+
+- OS-013: `os-build/research/framebuffer.md` written from the
+  vendored 0.9.35 source. Finding: BootInfo has NO framebuffer field
+  (memory_map + recursive_page_table_addr + physical_memory_offset
+  only; `grep -c framebuffer` = 0). This also answers crew Q5: no
+  accessor exists to confirm. Rowan's pixel-console draft stays
+  in-tree, unwired, with no buffer to drive. DONE.
+- OS-014 (adapted): text cells come from VGA hardware at phys
+  0xB8000 via physical_memory_offset, not from BootInfo pixels.
+- OS-015: `VgaConsole::clear` to dark background at boot. DONE.
+- OS-016: pixel grid NOT BUILT — no pixel surface exists under
+  bootloader 0.9.35 (recorded per OS-027; VBE setup is a follow-up
+  beyond this section, named in the next-steps list).
+- OS-017: font = VGA ROM hardware font; nothing embedded, license
+  N/A. DONE (no Terminus table needed on this branch).
+- OS-018/019: `META OS - milestone K2` banner, writer with
+  position/newline/scroll. DONE.
+- OS-020: banner + `META OS KERNEL - alive (K1)` on screen AND
+  serial (screendump + K2-boot.txt). DONE.
+- OS-021: `print!`/`println!` dual-output macros (fmt::Write over
+  serial + console; missing console degrades to serial). DONE.
+- OS-022: panic handler paints red PANIC screen + serial line. DONE.
+- OS-023: `K2-boot.txt` + `K2-console.png` screendump. DONE.
+- OS-024: forced-panic drill via `panic-test` cargo feature:
+  `K2-panic-drill.txt` + red `K2-panic.png`
+  (`panicked at src/main.rs:110:5: K2 forced panic drill`); normal
+  builds unaffected (feature off by default). DONE.
+- OS-025: resolution recorded: 80x25 text cells (VGA mode 3), not a
+  pixel format — no BootInfo geometry to report. DONE.
+- OS-026: `os-build/research/unsafe-ledger.md` started. DONE.
+- OS-027: fallback documented in framebuffer.md: serial + VGA text;
+  pixel framebuffer absent, stated, not faked. DONE.
+- OS-028: this summary. Pushing.

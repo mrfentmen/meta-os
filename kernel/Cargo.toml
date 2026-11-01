@@ -10,6 +10,11 @@ license = "MIT"
 [dependencies]
 bootloader = { version = "0.9", features = ["map_physical_memory"] }
 
+[features]
+# Test-only hook (OS-024/OS-058): boot once with a forced panic to
+# prove the panic screen, then boot normal builds without it.
+panic-test = []
+
 [profile.dev]
 panic = "abort"
 

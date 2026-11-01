@@ -1,18 +1,26 @@
-//! Meta OS kernel, milestone K1.
+//! Meta OS kernel, milestones K1+K2.
 //!
-//! Boots under the rust-osdev bootloader, initialises the COM1 serial
-//! port with raw port IO (no external crates), prints the alive line,
-//! and halts in a spin loop. The QEMU serial log showing that line is
-//! the K1 proof.
+//! K1: boots under the rust-osdev bootloader, prints the alive line on
+//! the serial port, halts in a spin loop. K2: VGA text-mode console
+//! (80x25 at phys 0xB8000 via the bootloader's physical-memory
+//! mapping) mirrors every serial line on screen; the panic handler
+//! paints a red PANIC screen. No pixel framebuffer exists under
+//! bootloader 0.9.35 — see `os-build/research/framebuffer.md`.
 
 #![no_std]
 #![no_main]
 
+mod vga;
+
 use core::panic::PanicInfo;
+use vga::{Color, ColorSpec, VgaConsole, VGA_PHYS_ADDR};
 
 bootloader::entry_point!(kernel_main);
 
 const COM1: u16 = 0x3F8;
+
+/// The boot console. `None` until `kernel_main` maps the VGA buffer.
+static mut CONSOLE: Option<VgaConsole> = None;
 
 fn outb(port: u16, val: u8) {
     unsafe {
@@ -49,17 +57,73 @@ fn serial_write_str(s: &str) {
     }
 }
 
-fn kernel_main(_boot_info: &'static bootloader::BootInfo) -> ! {
+/// `core::fmt::Write` sink for the serial port, so `print!` can
+/// target both outputs through the same `write!` machinery.
+struct SerialPort;
+
+impl core::fmt::Write for SerialPort {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        serial_write_str(s);
+        Ok(())
+    }
+}
+
+/// Dual-output print: serial port AND VGA console (OS-021). A missing
+/// console (before init) degrades to serial only, never to silence.
+macro_rules! print {
+    ($($arg:tt)*) => {{
+        use core::fmt::Write as _;
+        let _ = write!(SerialPort, $($arg)*);
+        // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+        let slot = unsafe { &mut *core::ptr::addr_of_mut!(CONSOLE) };
+        if let Some(console) = slot {
+            let _ = write!(console, $($arg)*);
+        }
+    }};
+}
+
+macro_rules! println {
+    () => {
+        print!("\n")
+    };
+    ($($arg:tt)*) => {
+        print!($($arg)*);
+        print!("\n")
+    };
+}
+
+fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
     serial_init();
-    serial_write_str("META OS KERNEL - alive (K1)\n");
+    let vga_base =
+        (boot_info.physical_memory_offset + VGA_PHYS_ADDR) as *mut u16;
+    // SAFETY: bootloader maps all physical memory at the offset, so the
+    // VGA text buffer address is valid and writable; 80x25 bounds-checked.
+    unsafe {
+        *core::ptr::addr_of_mut!(CONSOLE) = Some(VgaConsole::new(
+            vga_base,
+            ColorSpec(Color::LightGray, Color::Black),
+        ));
+    }
+    println!("META OS - milestone K2");
+    println!("META OS KERNEL - alive (K1)");
+    #[cfg(feature = "panic-test")]
+    panic!("K2 forced panic drill");
     loop {
         core::hint::spin_loop();
     }
 }
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    use core::fmt::Write as _;
     serial_write_str("META OS KERNEL - panic\n");
+    // SAFETY: same single-CPU reasoning as `print!`.
+    let slot = unsafe { &mut *core::ptr::addr_of_mut!(CONSOLE) };
+    if let Some(console) = slot {
+        console.set_colors(ColorSpec(Color::White, Color::Red));
+        console.clear();
+        let _ = write!(console, "META OS KERNEL - PANIC\n{}", info);
+    }
     loop {
         core::hint::spin_loop();
     }
