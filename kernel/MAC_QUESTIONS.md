@@ -203,6 +203,43 @@ Why: R3's `dispatch()` + `InterruptFrame` contract is written, but
 the entry points that call it do not exist yet. Until Q9 is answered,
 R3 stays unwired and no interrupt is claimed to work.
 
+## Q10 — K4 memory wiring (needed before R5 wires memory.rs)
+
+`kernel/src/memory.rs` (K4, drafted unwired) takes a plain
+`MemoryMap` slice, a bitmap, a `TableMemory` implementation, and a
+heap buffer. It asserts none of the bootloader names below; the R5
+wiring commit must answer them from the Q1-resolved build, not from
+this file.
+
+Needed, at the Q1-resolved toolchain / bootloader version:
+- Memory map source: which BootInfo accessor/field carries the
+  physical memory map, and what its region-kind names are — in
+  particular which kinds the R5 adapter may map to `RegionKind::Usable`
+  (and which it must map to `Reserved`/`Other`, never allocated).
+  The adapter must also state its rule for overlapping regions, if
+  the map can report any.
+- Physical-memory access for tables: how the R5 adapter implements
+  `TableMemory` — how it obtains a writable view of a page-table
+  frame at a physical address (the `map_physical_memory` feature's
+  offset: a fixed value, or read from BootInfo, and the exact way
+  the adapter reads it). `memory.rs` never guesses this address.
+- Heap placement: which usable region the kernel heap buffer lives
+  in, where it sits relative to the kernel image, and how that
+  range is kept out of the frame allocator's hands (reserved region,
+  allocator exclusion, or both — stated, not assumed).
+- Root table: how R5 obtains the current top-level table's physical
+  frame address for `Mapper::new` (register read vs BootInfo value,
+  and the exact source). `memory.rs` takes the root as a parameter
+  and never reads it from hardware.
+- Translation-cache invalidation: what mechanism the Mac build uses
+  after `Mapper::unmap_page` (the module documents that R5 must
+  invalidate, and does not do it itself).
+
+Why: K4's frame allocator, mapper, and heap are written, but none
+of them can run until these five adapter points are answered. Until
+then, K4 stays unwired and no mapped page or heap allocation is
+claimed to work.
+
 ## What this file is not
 
 - Not a design doc: it asks, it does not decide.
