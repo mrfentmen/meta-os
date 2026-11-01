@@ -1,0 +1,89 @@
+#!/bin/sh
+# metaos-custos: the standing patrol service driver — Meta Custos run
+# as part of Meta OS. One patrol per invocation; a systemd timer
+# (metaos-custos.timer) re-invokes it. The patrol itself is
+# worlds/custos/runtime/patrol.py in the repo checkout; this driver
+# owns the service concerns around it: the kill switch, the lock,
+# the configured host list, and where the records live.
+#
+# Each run, in order:
+#   1. STOP file present -> halt immediately, exit 0 (the boss's
+#      kill switch, same convention as metaos-loop).
+#   2. Claim the lock (one patrol at a time; steal it only if the
+#      holder died).
+#   3. No config file -> the installation has not configured its
+#      watched hosts yet: log "not configured" and exit 0. The
+#      driver never invents a host list; hosts.example.json in the
+#      pack is an example, never a default.
+#   4. Run one patrol: records append to $STATE/records.jsonl, the
+#      KEV seen-state persists at $STATE/seen.json, one summary line
+#      is appended to $STATE/custos.log.
+#
+# The patrol only observes. It never patches, restarts, or
+# reconfigures a watched machine, and its escalations end at the
+# labelled SIMULATED endpoint (see the pack docs).
+#
+# Configuration (environment, all optional; see METAOS_CUSTOS.md):
+#   METAOS_CUSTOS_REPO    repo checkout (default /opt/relay)
+#   METAOS_CUSTOS_STATE   state dir (default /var/lib/metaos/custos)
+#   METAOS_CUSTOS_STOP    STOP file path (default $STATE/STOP)
+#   METAOS_CUSTOS_CONFIG  watched-hosts config JSON
+#                         (default /etc/metaos/custos.json)
+#   METAOS_CUSTOS_PATROL  patrol command prefix
+#                         (default: python3 $REPO/os/worlds/custos/runtime/patrol.py)
+
+set -u
+
+REPO="${METAOS_CUSTOS_REPO:-/opt/relay}"
+STATE="${METAOS_CUSTOS_STATE:-/var/lib/metaos/custos}"
+STOP_FILE="${METAOS_CUSTOS_STOP:-$STATE/STOP}"
+CONFIG="${METAOS_CUSTOS_CONFIG:-/etc/metaos/custos.json}"
+PATROL="${METAOS_CUSTOS_PATROL:-python3 $REPO/os/worlds/custos/runtime/patrol.py}"
+LOG="$STATE/custos.log"
+LOCKDIR="$STATE/lock"
+
+log() {
+    # log <result> <detail...> — one line, timestamped.
+    mkdir -p "$STATE"
+    printf '%s %s %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$*" >> "$LOG"
+}
+
+# 1. Kill switch.
+if [ -f "$STOP_FILE" ]; then
+    log stopped "STOP file present at $STOP_FILE"
+    exit 0
+fi
+
+# 2. Lock: one patrol at a time.
+mkdir -p "$STATE"
+if ! mkdir "$LOCKDIR" 2>/dev/null; then
+    HOLDER="$(cat "$LOCKDIR/pid" 2>/dev/null || echo '')"
+    if [ -n "$HOLDER" ] && kill -0 "$HOLDER" 2>/dev/null; then
+        log busy "patrol already running (pid $HOLDER)"
+        exit 1
+    fi
+    rm -rf "$LOCKDIR"
+    mkdir "$LOCKDIR" || { log error "cannot claim lock"; exit 1; }
+fi
+echo $$ > "$LOCKDIR/pid"
+trap 'rm -rf "$LOCKDIR"' EXIT INT TERM
+
+# 3. Configured?
+if [ ! -f "$CONFIG" ]; then
+    log not-configured "no config at $CONFIG; nothing watched yet"
+    exit 0
+fi
+
+# 4. One patrol.
+# shellcheck disable=SC2086
+$PATROL run --config "$CONFIG" \
+    --records "$STATE/records.jsonl" \
+    --state "$STATE/seen.json" 2> "$STATE/last-patrol.stderr"
+RC=$?
+SUMMARY="$(tail -n 1 "$STATE/last-patrol.stderr" 2>/dev/null || echo '')"
+if [ "$RC" -eq 0 ]; then
+    log patrol-ok "$SUMMARY"
+else
+    log patrol-failed "exit $RC $SUMMARY"
+fi
+exit "$RC"

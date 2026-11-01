@@ -173,6 +173,19 @@ mkdir -p "$ROOTFS/var/lib/metaos/skills"
 } > "$ROOTFS/var/lib/metaos/skills/.metaos-skills-root"
 chroot "$ROOTFS" chown relay:relay /var/lib/metaos/skills
 
+# ---------- 2f. Meta Custos state root ----------
+# Same empty-plus-marker shape as the stores above: the patrol
+# service (metaos-custos.timer) appends its records, seen-state,
+# and log here at run time. No watched-host config is baked: the
+# installation writes /etc/metaos/custos.json at firstboot, and
+# until it does the driver logs "not configured" and exits 0.
+mkdir -p "$ROOTFS/var/lib/metaos/custos"
+{
+  echo "custos-state-root /var/lib/metaos/custos"
+  echo "patrol records appended by metaos-custos at run time, never baked"
+} > "$ROOTFS/var/lib/metaos/custos/.metaos-custos-root"
+chroot "$ROOTFS" chown relay:relay /var/lib/metaos/custos
+
 # metaos-update expects /opt/relay to be a git checkout; init a local one
 # whose origin records the source repo (no credentials involved).
 # ORDER MATTERS: git init/commit run BEFORE the chown to relay below.
@@ -203,13 +216,13 @@ if [ "${METAOS_DEMO:-0}" = "1" ]; then
   install -m 644 services/relay-watchdog.service.d/demo-thresholds.conf \
     "$ROOTFS/etc/systemd/system/relay-watchdog.service.d/"
 fi
-install -m 755 firstboot/metaos-firstboot bin/metaos-boot-checklist bin/metaos-update bin/metaos-loop \
+install -m 755 firstboot/metaos-firstboot bin/metaos-boot-checklist bin/metaos-update bin/metaos-custos bin/metaos-loop \
   "$ROOTFS/usr/local/bin/"
 install -m 644 README-FIRSTBOOT.md "$ROOTFS/usr/local/share/README-FIRSTBOOT.md" 2>/dev/null || \
   install -m 644 README-FIRSTBOOT.md "$ROOTFS/root/README-FIRSTBOOT.md"
 mkdir -p "$ROOTFS/etc/systemd/system/relay.target.wants" \
          "$ROOTFS/etc/systemd/system/multi-user.target.wants"
-for u in relay-dashboard.service relay-bus.service relay-jobs.service relay-overseer.timer relay-ready.service relay-watchdog.service relay-brief.service relay-watchman.service relay-uplink.service relay-mcp-gateway.service relay-memory.service metaos-loop.timer metaos-firstboot.service; do
+for u in relay-dashboard.service relay-bus.service relay-jobs.service relay-overseer.timer relay-ready.service relay-watchdog.service relay-brief.service relay-watchman.service relay-uplink.service relay-mcp-gateway.service relay-memory.service metaos-custos.timer metaos-loop.timer metaos-firstboot.service; do
   case $u in
     metaos-firstboot.service) ln -sf "/etc/systemd/system/$u" "$ROOTFS/etc/systemd/system/multi-user.target.wants/$u" ;;
     *) ln -sf "/etc/systemd/system/$u" "$ROOTFS/etc/systemd/system/relay.target.wants/$u" ;;

@@ -1,0 +1,44 @@
+{
+ "cert_warn_days": 21,
+ "hosts": [
+  {
+   "expected_ports": [
+    443
+   ],
+   "host": "github.com",
+   "port": 443
+  },
+  {
+   "expected_ports": [
+    443
+   ],
+   "host": "www.cisa.gov",
+   "port": 443
+  },
+  {
+   "expected_ports": [
+    443
+   ],
+   "host": "letsencrypt.org",
+   "port": 443
+  }
+ ],
+ "inventory": [
+  "openssl",
+  "openssh",
+  "apache http server",
+  "nginx"
+ ],
+ "kev_url": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+ "sensitive_ports": [
+  22,
+  3306,
+  5432,
+  6379,
+  9200,
+  27017
+ ],
+ "ct_domains": [
+  "letsencrypt.org"
+ ]
+}
