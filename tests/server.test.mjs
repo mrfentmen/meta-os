@@ -97,11 +97,12 @@ test("model status reports slot state without any key material", () => {
   });
 });
 
-test("product profiles cover all three products with their contract categories", () => {
-  assert.deepEqual(Object.keys(PRODUCT_PROFILES).sort(), ["ignis", "medicus", "vigiles"]);
+test("product profiles cover all four products with their contract categories", () => {
+  assert.deepEqual(Object.keys(PRODUCT_PROFILES).sort(), ["ignis", "medicus", "science-lab", "vigiles"]);
   assert.ok(PRODUCT_PROFILES.ignis.categories.includes("visible flame"));
   assert.ok(PRODUCT_PROFILES.vigiles.categories.includes("person down"));
   assert.ok(PRODUCT_PROFILES.medicus.categories.includes("person on ground"));
+  assert.ok(PRODUCT_PROFILES["science-lab"].categories.includes("level 0: idea"));
 });
 
 test("success path: model output is returned only after contract validation", async () => {
