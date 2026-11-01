@@ -91,25 +91,27 @@ built by the boss himself and will be sent to the crew, with more MCP
 servers to connect after that. Until they land, work from the
 languages' public source and docs (aardappel on GitHub, Apache-2.0).
 
-- **Layer 0 — Rust kernel (`kernel/`): Rowan + OpenCode.**
+- **Layers 1–3 — boot, Rust kernel core, drivers (`kernel/`): Rowan
+  + OpenCode.** (Renumbered to the 7-layer model 2026-11-01 ~09:02 on
+  the boss's word; `os-build/LAYERS.md` is the index.)
   Rowan writes kernel code: the R2/R3 modules (K2 framebuffer console,
   K3 interrupts/timer/keyboard) unwired with real behavior, and keeps
   the enemy review going. OpenCode on the boss's Mac is the compile
   and proof lane: it resolves Cargo.lock, builds K1, and produces the
   QEMU serial boot log — the only proof that counts. Kernel merges
   still come through Pax.
-- **Layer 1 — Goose system services: Pax + Buffy.**
+- **Layer 4 — Goose system services: Pax + Buffy.**
   Pax designs and writes the first Goose services (the K6 service
   shape: what a service process is, how it starts, how it talks to
   the kernel) from the Goose language source. Buffy turns her tools
-  manifest and ecosystem watch into the Layer 1 worklist: which
+  manifest and ecosystem watch into the Layer 4 worklist: which
   services exist first, in what order, built from what.
-- **Layer 2 — Lobster agent/app layer: Hana + Milo.**
-  Hana builds the app and shell side: the OS home surface reads real
-  state only (no mocks, per spec rule 6), the shell spec H1/H2 lands
-  here. Milo builds the agent side: how a Lobster agent process is
-  defined, started, and supervised — and keeps gate-1 plus the honest
-  scoreboard across all three layers.
+- **Layers 5–6 — Lobster agent runtime + shell/apps: Milo + Hana.**
+  Hana builds the app and shell side (Layer 6): the OS home surface
+  reads real state only (no mocks, per spec rule 6), the shell spec
+  H1/H2 lands here. Milo builds the agent side (Layer 5): how a
+  Lobster agent process is defined, started, and supervised — and
+  keeps gate-1 plus the honest scoreboard across all seven layers.
 
 Cross-layer rules unchanged: OS first, programs after; NO MOCKS;
 testing spend is allocated by priority, never split evenly across

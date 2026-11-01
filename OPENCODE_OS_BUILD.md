@@ -5,8 +5,11 @@ going to sleep; this file is the work until he wakes and after.
 
 READ FIRST: `KERNEL_SPEC.md` at the repo root. It is the law for this
 build. Short version: Meta OS is a layered operating system with its
-OWN kernel. Layer 0 kernel in Rust (`kernel/`). Layer 1 system
-services in Goose. Layer 2 agent and app layer in Lobster. The OS is
+OWN kernel, in SEVEN layers (boss's renumber 2026-11-01 ~09:02;
+`os-build/LAYERS.md` is the index): Layers 1–3 boot, kernel core, and
+drivers in Rust (`kernel/`). Layer 4 system services in Goose.
+Layer 5 agent runtime and Layer 6 shell/apps in Lobster. Layer 7 is
+the programs. The OS is
 built for agents and for users. Everything else in this repo is
 programs. Programs are not the OS.
 
