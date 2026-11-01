@@ -2,10 +2,10 @@
 //!
 //! Goal -> dispatch dry-run -> approve -> post -> worker claims
 //! -> done -> brief reports it, as one scripted run. The loop
-//! runs on the in-memory fake surface in the INT-001 namespace,
-//! never the live bus: in Python that surface is assembled with
-//! `unittest.mock.patch` over jobs / relay_common / intel.store
-//! / intel.ingest; here it is the [`Integration`] trait — the
+//! runs on the in-memory test surface in the INT-001 namespace,
+//! never the live bus: in Python that surface is assembled by
+//! patching jobs / relay_common / intel.store / intel.ingest;
+//! here it is the [`Integration`] trait — the
 //! same seam, typed. The stage assertions, fixture plan, and
 //! transcript format are the source's own.
 //!

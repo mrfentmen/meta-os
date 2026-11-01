@@ -84,8 +84,8 @@ passes.
   engine integration (DSH-011). The posted-plan tracker, where a
   plan was posted, lists real job ids with live status (DSH-012).
 - Pass: preview matches the plan payload exactly; no copy, label,
-  or button state suggests a plan posts itself. In the mock, approve
-  posts nothing.
+  or button state suggests a plan posts itself. The panel holds
+  no approve action and posts nothing; posting is CLI only.
 - Why: this is the safety-critical panel — an implied auto-post is
   a spec §0 violation, not a cosmetic bug.
 

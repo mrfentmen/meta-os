@@ -8,7 +8,12 @@ The night watch for machines. One patrol:
      software inventory. A match is recorded as
      "known-exploited vulnerability present" (red). Presence means the
      inventory names the product; it is never a claim that an exploit
-     was observed.
+     was observed. Matched entries are sorted oldest-first by days
+     since the feed's dateAdded (RW-006 ageing priority): a match
+     listed more than kev_age_red_days ago (default 30) is flagged
+     aged in its record detail and stays red. "Unpatched" here means
+     only that the product is still named in the configured inventory
+     on this patrol; the patrol never verifies patch state on a host.
   1b. Polls Certificate Transparency logs (crt.sh) for the
      configured watched domains. A newly issued cert for a watched
      domain becomes a "certificate issued" record (yellow). Cert ids
@@ -20,6 +25,20 @@ The night watch for machines. One patrol:
      records nothing; any later change becomes a "dns drift"
      record (yellow) carrying the diff: what was added, what was
      removed, per record type.
+  1d. Subdomain exposure sweep (RW-005): enumerates the subdomains
+     of each watched domain from the CT entries fetched this
+     patrol (bounded by the same ct_since floor), resolves each
+     one, and compares its addresses against that domain's
+     configured expected networks (subdomain_expected_networks).
+     A subdomain resolving outside its expected networks becomes
+     a "subdomain unexpected network" record (yellow). This is a
+     state check, not an event: it re-grades the enumerated set
+     every patrol, unlike the certificate-issued event in 1b.
+     A domain with no expected networks configured is not graded
+     (the sweep cannot judge it, and it must not invent a
+     baseline); a wildcard pattern is not a concrete host and is
+     skipped; an unresolvable subdomain is a summary error, never
+     data.
   2. For every watched host: probes the service port (liveness),
      reads the TLS certificate the host actually presents (expiry),
      and probes a small set of sensitive ports the installation did
@@ -36,7 +55,11 @@ The night watch for machines. One patrol:
      baseline normal, certificate expiring, certificate expired,
      known-exploited vulnerability present, service down,
      anomalous exposure, certificate issued, security headers
-     missing, dns drift.
+     missing, dns drift, subdomain unexpected network.
+  3b. False-positive log (RW-009): observations matching a dismissal
+     in the review file (same category, host, and finding key, with
+     a recorded reason) become "dismissed" audit records instead of
+     observations, and are never escalated.
   4. Appends one record per observation to the patrol record (JSONL),
      plus one patrol-summary record per patrol.
 
@@ -53,8 +76,8 @@ signal that cannot be fetched or probed is recorded as an error in
 the patrol summary, never as data.
 
 Pure classification core plus a thin CLI, no model calls. The signal
-functions (feed fetch, certificate probe, port probe, headers
-fetch) are injectable so the pinning tests run on recorded signal
+functions (feed fetch, CT fetch, certificate probe, port probe,
+headers fetch, DNS fetch, subdomain resolver) are injectable so the pinning tests run on recorded signal
 shapes with no network.
 
 CLI:
@@ -67,19 +90,55 @@ Config (JSON):
                  "expected_ports": [443]}],
       "inventory": ["openssl", "openssh"],
       "cert_warn_days": 21,
+      "kev_age_red_days": 30,
       "kev_url": "https://www.cisa.gov/.../known_exploited_vulnerabilities.json",
       "sensitive_ports": [22, 3306, 5432, 6379, 9200, 27017],
       "ct_domains": ["example.org"],
-      "dns_domains": ["example.org"]
+      "dns_domains": ["example.org"],
+      "ct_since": "2026-01-01",
+      "subdomain_expected_networks": {
+          "example.org": ["203.0.113.0/24", "2001:db8::/32"]
+      }
     }
+
+Subdomain sweep config notes: subdomain_expected_networks maps a
+watched domain to the CIDR list its subdomains are expected to
+resolve inside. A bare IP is read as a single-host network. A
+domain absent from the map is enumerated but never graded.
 
 dns_domains defaults to ct_domains when absent: the watched-domain
 list is the DNS watch list unless the config says otherwise. A
 snapshot is {"A": [...], "AAAA": [...], "MX": [...], "TXT": [...]}.
+
+Alert dedup (RW-008): when the config sets `dedup_window_seconds`
+and the caller supplies a dedup state dict, identical alert findings
+(yellow/red only, never baseline normal) inside that window in
+seconds collapse into one record with a count — see runtime/dedup.py
+for the exact identity rule and the state shape. With either the
+window or the state missing, dedup is off and every patrol records
+what it finds, exactly as before.
+
+Source filtering (RW-007): run_patrol accepts an optional `sources`
+set naming which of the five patrol sources run this cycle —
+"kev", "ct", "dns", "subdomain", "hosts" (hosts covers liveness,
+certificate, exposure, and the headers audit for live hosts, since
+the audit needs a live host). None means all five, exactly the
+pre-RW-007 behaviour. The scheduler (runtime/scheduler.py) is the
+caller that filters: it runs the patrol with only the sources its
+per-source cadence says are due. The summary reports sources_run
+and sources_skipped so the record shows what a filtered cycle did
+and did not check.
 """
 
 import argparse
+import ipaddress
 import json
+
+import dedup
+try:
+    import false_positives as fp
+except ImportError:  # patrol imported from elsewhere; tests put runtime/ on path
+    fp = None
 import os
 import socket
 import ssl
@@ -93,6 +152,7 @@ DEFAULT_KEV_URL = (
 )
 DEFAULT_CT_URL_TEMPLATE = "https://crt.sh/?q=%25.{domain}&output=json"
 DEFAULT_CERT_WARN_DAYS = 21
+DEFAULT_KEV_AGE_RED_DAYS = 30
 DEFAULT_SENSITIVE_PORTS = [22, 3306, 5432, 6379, 9200, 27017]
 PROBE_TIMEOUT = 5.0
 HEADER_TIMEOUT = 10.0
@@ -108,6 +168,11 @@ SECURITY_HEADERS = (
     "referrer-policy",
 )
 
+# Patrol sources, in run order. The scheduler's cadence config keys
+# are exactly these names; "hosts" covers the whole per-host step
+# (liveness, certificate, exposure, headers audit).
+SCHEDULER_SOURCES = ("kev", "ct", "dns", "subdomain", "hosts")
+
 CATEGORIES = (
     "baseline normal",
     "certificate expiring",
@@ -118,6 +183,7 @@ CATEGORIES = (
     "certificate issued",
     "security headers missing",
     "dns drift",
+    "subdomain unexpected network",
 )
 
 # Category -> tier. Yellow stops at record + flag (zero escalation
@@ -130,6 +196,7 @@ TIER_BY_CATEGORY = {
     "certificate issued": "yellow",
     "security headers missing": "yellow",
     "dns drift": "yellow",
+    "subdomain unexpected network": "yellow",
     "certificate expired": "red",
     "known-exploited vulnerability present": "red",
     "service down": "red",
@@ -174,6 +241,40 @@ def match_kev(entries, inventory):
                 matched.append((entry, item))
                 break
     return matched
+
+
+def kev_age_days(entry, now):
+    """Whole days between a KEV entry's dateAdded and the patrol time.
+
+    dateAdded is a YYYY-MM-DD date in the real feed; a full ISO
+    timestamp is accepted by reading its date part. An unparseable
+    or missing date is None, never an exception: an undated match is
+    still recorded, it simply carries no age and sorts last. A
+    future date (clock skew in the feed) reads as 0 days, never
+    negative: age is time since listing, and a listing cannot be
+    older than it is.
+    """
+    try:
+        raw = str(entry.get("dateAdded") or "")[:10]
+        added = datetime.strptime(raw, "%Y-%m-%d").date()
+        today = datetime.strptime(str(now)[:10], "%Y-%m-%d").date()
+    except (ValueError, TypeError):
+        return None
+    return max(0, (today - added).days)
+
+
+def sort_kev_by_age(matched, now):
+    """Matched (entry, item) pairs, oldest listing first.
+
+    Undated entries sort last (their age is unknown, so they never
+    jump a dated one); ties break on CVE id so the order is
+    deterministic regardless of feed order.
+    """
+    def key(pair):
+        entry, _item = pair
+        days = kev_age_days(entry, now)
+        return (days is None, -(days or 0), entry.get("cveID", ""))
+    return sorted(matched, key=key)
 
 
 def classify_exposure(open_ports, expected_ports, service_port):
@@ -382,6 +483,88 @@ def probe_cert(host, port, timeout=PROBE_TIMEOUT):
     return int(delta.total_seconds() // 86400)
 
 
+def resolve_subdomain(name):
+    """IP addresses a subdomain resolves to, sorted and deduped.
+
+    Raises on resolution failure: the patrol records that as a
+    summary error, never as data. Only names the CT sweep
+    enumerated for a watched domain are ever resolved here.
+    """
+    infos = socket.getaddrinfo(name, None)
+    addresses = sorted({info[4][0] for info in infos})
+    return addresses
+
+
+def extract_subdomains(entries, domain, since=""):
+    """Distinct subdomains of `domain` named in CT entries.
+
+    Names come from common_name and name_value (crt.sh separates
+    multi-name entries with whitespace). The result is lowercased
+    (DNS is case-insensitive) and sorted for a deterministic sweep
+    order. Skipped, by design: the bare domain itself, names that
+    are not subdomains of the watched domain, wildcard patterns
+    ("*.example.org" names no concrete host), and — when `since`
+    is set — entries older than the ct_since floor.
+    """
+    suffix = "." + domain.lower()
+    found = set()
+    for entry in entries or []:
+        not_before = str(entry.get("not_before", "") or "")[:10]
+        if since and not_before and not_before < since:
+            continue
+        # An undated entry has no floor to compare against, so the
+        # floor does not exclude it.
+        raw_names = []
+        for field in ("common_name", "name_value"):
+            value = entry.get(field, "") or ""
+            raw_names.extend(str(value).replace(",", " ").split())
+        for raw in raw_names:
+            name = raw.strip().rstrip(".").lower()
+            if not name or name.startswith("*."):
+                continue
+            if name == domain.lower() or not name.endswith(suffix):
+                continue
+            found.add(name)
+    return sorted(found)
+
+
+def parse_expected_networks(networks):
+    """CIDR networks for a domain's expected addresses.
+
+    A bare IP is read as a single-host network (strict=False).
+    Raises ValueError on the first malformed entry: the patrol
+    records that as a summary error for the domain and grades
+    nothing for it that patrol, rather than guessing.
+    """
+    parsed = []
+    for entry in networks or []:
+        parsed.append(ipaddress.ip_network(str(entry), strict=False))
+    return parsed
+
+
+def classify_subdomain(addresses, networks):
+    """(category, unexpected) for one resolved subdomain.
+
+    An address inside any expected network is expected; anything
+    else — including an address that does not parse as an IP, which
+    cannot be shown inside an expected network — is unexpected.
+    All-expected is baseline normal; any unexpected address is the
+    yellow flag.
+    """
+    unexpected = []
+    for address in addresses or []:
+        try:
+            ip = ipaddress.ip_address(str(address))
+        except ValueError:
+            unexpected.append(str(address))
+            continue
+        if not any(ip in net for net in networks):
+            unexpected.append(str(address))
+    if unexpected:
+        return "subdomain unexpected network", unexpected
+    return "baseline normal", []
+
+
 def fetch_headers(host, port, timeout=HEADER_TIMEOUT):
     """Response headers the host actually serves, keys lowercased.
 
@@ -408,7 +591,9 @@ def fetch_headers(host, port, timeout=HEADER_TIMEOUT):
 
 def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                seen_cve=None, fetch_ct_fn=None, seen_ct=None,
-               fetch_headers_fn=None, fetch_dns_fn=None, seen_dns=None):
+               fetch_headers_fn=None, fetch_dns_fn=None, seen_dns=None,
+               resolve_subdomain_fn=None, seen_dedup=None,
+               dismissals=None, review_errors=None, sources=None):
     """One patrol. Returns (records, seen_cve, seen_ct).
 
     Every observation is classified and recorded. Yellow records are
@@ -421,7 +606,27 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     caller reads it back after the call and persists it. A domain
     missing from it is a first sighting: the snapshot is stored
     and no record is written.
+
+    seen_dedup is the alert-dedup state dict (dedup.py), also
+    updated IN PLACE and persisted by the caller. Dedup only runs
+    when BOTH this dict is supplied and the config sets
+    `dedup_window_seconds` to a non-negative number; an invalid
+    window is a summary error and dedup is off for that patrol.
+
+    sources, when given, is the set of patrol sources to run this
+    cycle (subset of SCHEDULER_SOURCES); anything else is skipped
+    outright — no fetch, no probe, no record — and the summary
+    names it as skipped. An unknown source name raises ValueError
+    before any signal runs.
     """
+    if sources is None:
+        enabled = set(SCHEDULER_SOURCES)
+    else:
+        enabled = set(sources)
+        unknown = sorted(enabled - set(SCHEDULER_SOURCES))
+        if unknown:
+            raise ValueError("unknown patrol source(s): %s"
+                             % ", ".join(unknown))
     records = []
     seen = set(seen_cve or ())
     seen_ids = set(seen_ct or ())
@@ -430,18 +635,35 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     errors = []
 
     # 1. Known-exploited vulnerabilities vs the configured inventory.
+    # Skipped outright when the scheduler says kev is not due: no
+    # fetch, no match, no record.
     kev_seen_count = 0
     entries = []
-    try:
-        entries = fetch_kev_fn(config.get("kev_url", DEFAULT_KEV_URL))
-    except Exception as exc:  # feed down: noted, never invented
-        errors.append("kev fetch failed: %s" % exc)
-    kev_seen_count = len(entries)
-    for entry, item in match_kev(entries, config.get("inventory", [])):
+    if "kev" in enabled:
+        try:
+            entries = fetch_kev_fn(config.get("kev_url", DEFAULT_KEV_URL))
+        except Exception as exc:  # feed down: noted, never invented
+            errors.append("kev fetch failed: %s" % exc)
+        kev_seen_count = len(entries)
+    # RW-006 ageing priority: matched CVEs are recorded oldest
+    # listing first, and any match listed more than kev_age_red_days
+    # ago (default 30) is flagged aged. The category stays red for
+    # every match (the pack's existing contract); ageing orders the
+    # queue and marks what has sat unpatched longest, it never
+    # downgrades a young match.
+    age_threshold = int(config.get("kev_age_red_days",
+                                   DEFAULT_KEV_AGE_RED_DAYS))
+    kev_aged = 0
+    for entry, item in sort_kev_by_age(
+            match_kev(entries, config.get("inventory", [])), now):
         cve = entry.get("cveID", "")
         if cve in seen:
             continue
         seen.add(cve)
+        days = kev_age_days(entry, now)
+        aged = days is not None and days > age_threshold
+        if aged:
+            kev_aged += 1
         records.append(make_record(now, "kev", None,
                                    "known-exploited vulnerability present",
                                    {"cve": cve,
@@ -449,7 +671,10 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                                     "vendor_product": "%s %s" % (
                                         entry.get("vendorProject", ""),
                                         entry.get("product", "")),
-                                    "date_added": entry.get("dateAdded", "")}))
+                                    "date_added": entry.get("dateAdded", ""),
+                                    "days_since_listing": days,
+                                    "kev_age_red_days": age_threshold,
+                                    "aged": aged}))
 
     # 1b. Certificate Transparency: newly issued certs for watched
     # domains. A cert id already in the seen-state was recorded on
@@ -459,7 +684,11 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     ct_seen_count = 0
     ct_since = config.get("ct_since", "")
     ct_fetch = fetch_ct_fn or fetch_ct
-    for domain in config.get("ct_domains", []):
+    ct_entries_by_domain = {}
+    # Skipped outright when ct is not due: no fetch, and the
+    # subdomain sweep below then has no entries to grade.
+    ct_watch = config.get("ct_domains", []) if "ct" in enabled else []
+    for domain in ct_watch:
         try:
             entries = ct_fetch(domain, config.get(
                 "ct_url_template", DEFAULT_CT_URL_TEMPLATE))
@@ -467,6 +696,7 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
             errors.append("ct fetch failed for %s: %s" % (domain, exc))
             continue
         ct_seen_count += len(entries)
+        ct_entries_by_domain[domain] = list(entries or [])
         for entry in entries:
             ct_id = entry.get("id")
             if ct_id in seen_ids:
@@ -490,7 +720,10 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     # baseline. First sighting stores silently; a change is a
     # yellow record carrying the diff; a failed fetch is a summary
     # error, never an empty snapshot.
-    dns_domains = config.get("dns_domains") or config.get("ct_domains", [])
+    # Skipped outright when dns is not due: no resolution, no diff.
+    dns_domains = ((config.get("dns_domains")
+                    or config.get("ct_domains", []))
+                   if "dns" in enabled else [])
     dns_fetch = fetch_dns_fn or resolve_dns
     dns_state = seen_dns if seen_dns is not None else {}
     for domain in dns_domains:
@@ -509,8 +742,60 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                                        {"added": added,
                                         "removed": removed}))
 
-    # 2. Per-host checks.
-    for host_cfg in config.get("hosts", []):
+    # 1d. Subdomain exposure sweep: subdomains enumerated from the
+    # CT entries fetched above, graded against the domain's
+    # configured expected networks. A domain the CT fetch failed
+    # for is skipped (its error is already recorded); a domain
+    # with no expected networks is enumerated but never graded,
+    # so the sweep never invents a baseline for it. The resolver
+    # is injectable so tests never touch DNS.
+    subdomains_checked = 0
+    resolver = resolve_subdomain_fn or resolve_subdomain
+    expected_map = config.get("subdomain_expected_networks", {}) or {}
+    # Skipped outright when subdomain is not due: nothing resolved.
+    # (A direct caller that enables subdomain without ct gets no
+    # entries to grade: the sweep grades this cycle's CT entries.)
+    sub_watch = (config.get("ct_domains", [])
+                 if "subdomain" in enabled else [])
+    for domain in sub_watch:
+        if domain not in ct_entries_by_domain:
+            continue
+        networks_cfg = expected_map.get(domain)
+        if not networks_cfg:
+            continue
+        try:
+            networks = parse_expected_networks(networks_cfg)
+        except ValueError as exc:
+            errors.append("subdomain networks invalid for %s: %s"
+                          % (domain, exc))
+            continue
+        for sub in extract_subdomains(ct_entries_by_domain[domain],
+                                       domain, ct_since):
+            subdomains_checked += 1
+            try:
+                addresses = resolver(sub)
+            except Exception as exc:
+                errors.append("subdomain resolve failed for %s: %s"
+                              % (sub, exc))
+                continue
+            if not addresses:
+                errors.append("subdomain resolve returned no addresses"
+                              " for %s" % sub)
+                continue
+            addresses = sorted({str(a) for a in addresses})
+            category, unexpected = classify_subdomain(addresses,
+                                                      networks)
+            records.append(make_record(
+                now, "subdomain", sub, category,
+                {"parent_domain": domain,
+                 "addresses": addresses,
+                 "expected_networks": list(networks_cfg),
+                 "unexpected_addresses": unexpected}))
+
+    # 2. Per-host checks. Skipped outright when hosts is not due:
+    # no liveness probe, no certificate probe, no headers audit.
+    host_watch = (config.get("hosts", []) if "hosts" in enabled else [])
+    for host_cfg in host_watch:
         host = host_cfg["host"]
         port = int(host_cfg.get("port", 443))
         if not probe_port_fn(host, port):
@@ -549,10 +834,58 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                                        "anomalous exposure",
                                        {"port": p}))
 
+    # 2c. False-positive log (RW-009): dismissals from the review
+    # file suppress the same finding signature, never a whole
+    # category and never a different host. A suppressed finding
+    # becomes a "dismissed" audit record, not an observation, so
+    # it is counted nowhere as an observation and never escalates.
+    # Review-file errors are summary errors and suppress nothing
+    # beyond the valid entries already loaded.
+    if review_errors:
+        errors.extend(review_errors)
+    dismissed_records = []
+    if dismissals and fp is not None:
+        dismissal_map = fp.build_dismissal_map(dismissals)
+        kept = []
+        for record in records:
+            dismissed, reason = fp.is_dismissed(record, dismissal_map)
+            if dismissed:
+                dismissed_records.append(
+                    fp.make_dismissed_record(now, record, reason))
+            else:
+                kept.append(record)
+        records = kept
+    else:
+        dismissal_map = {}
+
+    # 2d. Alert dedup (RW-008): identical alert findings inside the
+    # configured window collapse into one record with a count.
+    # Baseline normal records are history, not alerts, and pass
+    # through untouched. This runs before escalations so a
+    # suppressed red repeat produces no duplicate escalation: the
+    # first occurrence already ran the chain.
+    dedup_collapsed = 0
+    dedup_suppressed = 0
+    dedup_counts = {}
+    dedup_window = None
+    if seen_dedup is not None and \
+            config.get("dedup_window_seconds") is not None:
+        try:
+            dedup_window = float(config.get("dedup_window_seconds"))
+            if dedup_window < 0:
+                raise ValueError("negative dedup window")
+        except (TypeError, ValueError) as exc:
+            errors.append("dedup window invalid: %s" % exc)
+            dedup_window = None
+        if dedup_window is not None:
+            records, dedup_collapsed, dedup_suppressed, dedup_counts = \
+                dedup.apply_dedup(records, seen_dedup, now, dedup_window)
+
     # 3. Escalations: red only, built in exactly one place.
     escalations = [escalate(r, now) for r in records
                    if r["tier"] == "red"]
     records.extend(escalations)
+    records.extend(dismissed_records)
 
     counts = {c: 0 for c in CATEGORIES}
     for r in records:
@@ -561,13 +894,24 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     records.append({
         "record_type": "patrol-summary",
         "ts": now,
-        "hosts_checked": len(config.get("hosts", [])),
+        "hosts_checked": len(host_watch),
         "kev_entries_seen": kev_seen_count,
+        "kev_aged_over_threshold": kev_aged,
         "ct_entries_seen": ct_seen_count,
         "dns_domains_checked": len(dns_domains),
+        "subdomains_checked": subdomains_checked,
+        "sources_run": [s for s in SCHEDULER_SOURCES if s in enabled],
+        "sources_skipped": [s for s in SCHEDULER_SOURCES
+                            if s not in enabled],
         "observations": counts,
         "escalations": len(escalations),
+        "false_positives_suppressed": len(dismissed_records),
+        "false_positive_review_entries": len(dismissals or []),
         "errors": errors,
+        "dedup_collapsed": dedup_collapsed,
+        "dedup_suppressed": dedup_suppressed,
+        "dedup_counts": dedup_counts,
+        "dedup_window_seconds": dedup_window,
     })
     return records, seen, seen_ids
 
@@ -591,12 +935,32 @@ def load_state(path):
     return set(), set(), {}
 
 
-def save_state(path, seen_cve, seen_ct, seen_dns=None):
+def load_dedup_state(path):
+    """The alert-dedup state dict from a state file, or {}.
+
+    Kept separate from load_state on purpose: load_state's
+    3-tuple return is pinned by existing callers. State files
+    written before RW-008 lack seen_dedup and load as empty, so
+    the next patrol records findings normally instead of
+    suppressing anything on an unreadable baseline.
+    """
+    if path and os.path.isfile(path):
+        with open(path) as f:
+            data = json.load(f)
+        seen_dedup = data.get("seen_dedup", {})
+        return dict(seen_dedup) if isinstance(seen_dedup, dict) else {}
+    return {}
+
+
+def save_state(path, seen_cve, seen_ct, seen_dns=None, seen_dedup=None):
     if path:
         with open(path, "w") as f:
-            json.dump({"seen_cve": sorted(seen_cve),
-                       "seen_ct": sorted(seen_ct),
-                       "seen_dns": seen_dns or {}}, f, indent=1)
+            data = {"seen_cve": sorted(seen_cve),
+                    "seen_ct": sorted(seen_ct),
+                    "seen_dns": seen_dns or {}}
+            if seen_dedup is not None:
+                data["seen_dedup"] = seen_dedup
+            json.dump(data, f, indent=1)
 
 
 def main(argv=None):
@@ -614,7 +978,27 @@ def main(argv=None):
     run.add_argument("--dns-file", help="read DNS snapshots from a local "
                                         "JSON file {domain: snapshot} "
                                         "instead of resolving them")
+    run.add_argument("--review", help="false-positive review file "
+                                      "(JSONL dismissals; defaults to "
+                                      "the config's "
+                                      "false_positive_review path)")
+    dismiss = sub.add_parser("dismiss", help="record a false-positive "
+                                            "dismissal in the review file")
+    dismiss.add_argument("--review", required=True)
+    dismiss.add_argument("--category", required=True)
+    dismiss.add_argument("--host", default=None)
+    dismiss.add_argument("--key", required=True)
+    dismiss.add_argument("--reason", required=True)
     args = parser.parse_args(argv)
+
+    if args.command == "dismiss":
+        if fp is None:
+            print("false_positives module unavailable", file=sys.stderr)
+            return 1
+        entry = fp.append_dismissal(args.review, args.category,
+                                    args.host, args.key, args.reason)
+        print("dismissal recorded: %s" % json.dumps(entry, sort_keys=True))
+        return 0
 
     with open(args.config) as f:
         config = json.load(f)
@@ -646,11 +1030,19 @@ def main(argv=None):
 
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     seen, seen_ct, seen_dns = load_state(args.state)
+    seen_dedup = load_dedup_state(args.state)
+    review_path = args.review or config.get("false_positive_review")
+    dismissals, review_errors = ([], [])
+    if review_path and fp is not None:
+        dismissals, review_errors = fp.load_review(review_path)
     records, seen, seen_ct = run_patrol(config, now, fetch_fn, probe_cert,
                                         probe_port, seen, fetch_ct_fn,
                                         seen_ct, fetch_dns_fn=fetch_dns_fn,
-                                        seen_dns=seen_dns)
-    save_state(args.state, seen, seen_ct, seen_dns)
+                                        seen_dns=seen_dns,
+                                        seen_dedup=seen_dedup,
+                                        dismissals=dismissals,
+                                        review_errors=review_errors)
+    save_state(args.state, seen, seen_ct, seen_dns, seen_dedup)
 
     lines = "".join(json.dumps(r, sort_keys=True) + "\n" for r in records)
     if args.records:

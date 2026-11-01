@@ -1599,6 +1599,10 @@ body[data-view="command"] > main { display: none; }
 .cmd-cam-row--flagged { box-shadow: inset 2px 0 0 var(--cmd-flag); }
 .cmd-row-tag { margin-left: auto; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; color: var(--cmd-accent); }
 .cmd-row-tag--flagged { color: #ff8d84; }
+.cmd-row-source { margin-left: auto; font-family: var(--mono); font-size: 9px; opacity: 0.7; }
+.cmd-row-state { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; }
+.cmd-row-state--live { color: #8fe3a8; }
+.cmd-row-state--test { color: #ffd9a8; }
 
 /* Pins: DOM markers on the 3D map (and schematic grid dots, and
    list-row dots) share the state classes. Priority is carried by
@@ -1822,8 +1826,9 @@ body[data-view="command"] > main { display: none; }
   line-height: 1.45;
 }
 .cmd-loop-when { flex: 0 0 auto; font-size: 10px; opacity: 0.6; padding-top: 1px; }
-.cmd-loop-item--flag, .cmd-loop-item--incident { color: #ffb3ab; }
+.cmd-loop-item--flag { color: #ffb3ab; }
 .cmd-loop-item--incident-yellow { color: #ffe27a; }
+.cmd-loop-item--incident-red { color: #ffb3ab; }
 .cmd-loop-item--dispatch { color: #ffd9a8; }
 .cmd-loop-item--patrol-status { color: #ffe27a; }
 
@@ -2263,4 +2268,20 @@ main > .panel {
   display: inline-block;
   vertical-align: middle;
   margin-right: 8px;
+}
+
+/* HN-069 Print stylesheet: printing the boards page prints only the
+   incident record (evidence + BOLO + timeline + receipt sections).
+   Navigation, controls, and every other board are hidden; the record
+   prints black on white so it reads on paper. */
+@media print {
+  @page { margin: 1cm; }
+  .boards-nav, button, .logo-studio-link { display: none !important; }
+  .board-section:not(.incident-record) { display: none !important; }
+  .incident-record, .incident-record * {
+    color: #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .incident-record { width: 100%; margin: 0 0 1rem 0; }
 }

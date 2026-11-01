@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta Imperium — Boards</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  .boards-nav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
+  .boards-nav a { color: inherit; }
+  .board-section { margin: 2rem 0; }
+  .empty-state { font-style: italic; }
+  .lab-list { list-style: none; padding: 0; }
+  .lab-row { display: flex; gap: 1rem; padding: 0.25rem 0; }
+  .lab-hypothesis { flex: 2; }
+  .lab-level, .lab-status { flex: 1; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <h1>Meta Imperium</h1>
+    <p class="product-badge">Boards</p>
+    <a class="logo-studio-link" href="index.html">Back to console</a>
+  </div>
+</header>
+<main>
+  <nav class="boards-nav" aria-label="Boards">
+    <a href="#board-lab">Lab</a>
+    <a href="#board-hortus">Hortus</a>
+    <a href="#board-gate">Gate</a>
+    <a href="#board-evidence">Evidence</a>
+    <a href="#board-tiers">Tiers</a>
+    <a href="#board-bolo">BOLO</a>
+    <a href="#board-timeline">Timeline</a>
+    <a href="#board-cameras">Cameras</a>
+    <a href="#board-receipt">Receipt</a>
+    <a href="#board-costs">Costs</a>
+    <a href="#board-officina">Officina</a>
+    <a href="#board-custos">Custos</a>
+    <a href="#board-systems">Systems</a>
+  </nav>
+  <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
+    <h2 id="board-lab-heading">Lab board</h2>
+    <p>Reads the lab's records when present (os/lab/records.json). No level is ever shown higher than its record's cap.</p>
+    <div id="lab-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-hortus" aria-labelledby="board-hortus-heading">
+    <h2 id="board-hortus-heading">Hortus run viewer</h2>
+    <p>Generations charted from the real run JSONLs (best/mean per generation). Run JSONLs are expected at os/hortus/runs/*.jsonl; none exist in this repo yet, so the viewer shows its honest empty state until real runs land.</p>
+    <div id="hortus-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-gate" aria-labelledby="board-gate-heading">
+    <h2 id="board-gate-heading">Gate status</h2>
+    <p>Delaney gate state, read from the gate directory's files (gates/delaney/manifest.json).</p>
+    <div id="gate-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section incident-record" id="board-evidence" aria-labelledby="board-evidence-heading">
+    <h2 id="board-evidence-heading">Evidence viewer</h2>
+    <p>Flagged-incident evidence crops, from the live crew records (/api/crew/status). Crops exist only on flagged events; the card always reads ID: UNIDENTIFIED.</p>
+    <div id="evidence-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-tiers" aria-labelledby="board-tiers-heading">
+    <h2 id="board-tiers-heading">Tier colours audit</h2>
+    <p>Yellow/red rendering audited against the display table: 31 categories across vigiles (3 yellow, 3 red), ignis (8 yellow, 5 red), medicus (4 yellow, 8 red). One fix landed: untiered incident rows no longer inherit red; red rows carry an explicit red class. Visual proof: screenshots owed at Mac gate (docs/TIER_SCREENSHOT_PACK.md).</p>
+  </section>
+  <section class="board-section incident-record" id="board-bolo" aria-labelledby="board-bolo-heading">
+    <h2 id="board-bolo-heading">BOLO card</h2>
+    <p>Recorded-description card from the live crew records (/api/crew/status). Exactly the BOLO key set, visible marks only, ID: UNIDENTIFIED — no name field exists.</p>
+    <div id="bolo-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section incident-record" id="board-timeline" aria-labelledby="board-timeline-heading">
+    <h2 id="board-timeline-heading">Records timeline</h2>
+    <p>An incident's life as one timeline from its record file, via /api/crew/status (patrol → review → investigation → dispatch in the normal life).</p>
+    <div id="timeline-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-cameras" aria-labelledby="board-cameras-heading">
+    <h2 id="board-cameras-heading">Camera wall labels</h2>
+    <p>Every wall row and the pin card show their source + LIVE/TEST state in the UI itself: NYCTMC live → LIVE, offline subset → TEST. The pin card used to hardcode "test feed" for every feed, including live ones.</p>
+  </section>
+  <section class="board-section incident-record" id="board-receipt" aria-labelledby="board-receipt-heading">
+    <h2 id="board-receipt-heading">Dispatch receipt</h2>
+    <p>The sim- receipt on the incident after a staged dispatch, via /api/crew/status, labelled SIMULATED in the view.</p>
+    <div id="receipt-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-costs" aria-labelledby="board-costs-heading">
+    <h2 id="board-costs-heading">Cost ticker</h2>
+    <p>Calls spent and dollars spent from the budget ledger (server/queue/spark_guardrail_state.json), refreshed as the chain runs.</p>
+    <div id="cost-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-officina" aria-labelledby="board-officina-heading">
+    <h2 id="board-officina-heading">Officina board</h2>
+    <p>Workshop runs (variants, failures, proven design) rendered from Milo's records (os/worlds/officina/runs/*.json). A run is failed only on recorded failure evidence.</p>
+    <div id="officina-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-custos" aria-labelledby="board-custos-heading">
+    <h2 id="board-custos-heading">Custos board</h2>
+    <p>Patrol records by tier/source rendered from Rowan's records (os/worlds/custos/runs/*.jsonl).</p>
+    <div id="custos-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-systems" aria-labelledby="board-systems-heading">
+    <h2 id="board-systems-heading">Systems home</h2>
+    <p>Status chips from each world's own pack.json status field. The Trio products are live in this app; a spec is never shown as live.</p>
+    <div id="systems-content" aria-live="polite">Loading…</div>
+  </section>
+</main>
+<script type="module">
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView, costTicker, officinaBoard, parseCustosJsonl, custosBoard, systemsChip, systemsHome } from "./js/surfaces.js";
+  const el = document.getElementById("lab-content");
+  try {
+    const res = await fetch("os/lab/records.json");
+    const records = res.ok ? await res.json() : [];
+    el.innerHTML = labBoard(records);
+  } catch {
+    el.innerHTML = labBoard([]);
+  }
+  document.getElementById("hortus-content").innerHTML =
+    hortusChart([]) + hortusChampion(null);
+  try {
+    const res = await fetch("gates/delaney/manifest.json");
+    const manifest = res.ok ? await res.json() : null;
+    document.getElementById("gate-content").innerHTML = gateStatusPage(manifest);
+  } catch {
+    document.getElementById("gate-content").innerHTML = gateStatusPage(null);
+  }
+  try {
+    const res = await fetch("/api/crew/status");
+    const crew = res.ok ? await res.json() : null;
+    const flagged = (crew?.incidents ?? []).find((i) => i.status === "flagged") ?? null;
+    document.getElementById("evidence-content").innerHTML = flagged
+      ? evidenceViewer(flagged)
+      : `<p class="empty-state">No flagged incident in the live crew records.</p>`;
+    const withBolo = (crew?.incidents ?? []).find((i) => i.bolo) ?? null;
+    document.getElementById("bolo-content").innerHTML = withBolo
+      ? boloCard(withBolo.bolo)
+      : `<p class="empty-state">No BOLO filed in the live crew records.</p>`;
+    const withTimeline = (crew?.incidents ?? []).find((i) => Array.isArray(i.timeline) && i.timeline.length > 0) ?? null;
+    document.getElementById("timeline-content").innerHTML = withTimeline
+      ? timelineView(withTimeline)
+      : `<p class="empty-state">No timeline in the live crew records.</p>`;
+    const withReceipt = (crew?.incidents ?? []).find((i) => typeof i.receipt_id === "string" && i.receipt_id.length > 0) ?? null;
+    document.getElementById("receipt-content").innerHTML = withReceipt
+      ? receiptView(withReceipt)
+      : `<p class="empty-state">No dispatch receipt in the live crew records.</p>`;
+    // HN-065: refresh the ticker as the chain runs.
+    async function refreshCosts() {
+      try {
+        const res = await fetch("server/queue/spark_guardrail_state.json");
+        const ledger = res.ok ? await res.json() : null;
+        document.getElementById("cost-content").innerHTML = costTicker(ledger);
+      } catch {
+        document.getElementById("cost-content").innerHTML = costTicker(null);
+      }
+    }
+    await refreshCosts();
+    setInterval(refreshCosts, 15000);
+    // HN-066: fetch the known run files (no directory listing is
+    // served); missing files are skipped and the count says so.
+    const officinaFiles = ["forced-airflow-run-001.json", "forced-airflow-best-design.json",
+      "gap-headroom-run-001.json", "gap-headroom-best-design.json",
+      "overnight-run-001.json", "overnight-best-design.json",
+      "rough-words-run-001.json", "rough-words-best-design.json",
+      "volume-repair-run-001.json"];
+    const loaded = [];
+    for (const f of officinaFiles) {
+      try {
+        const res = await fetch(`os/worlds/officina/runs/${f}`);
+        if (res.ok) loaded.push(await res.json());
+      } catch { /* skipped, counted below */ }
+    }
+    document.getElementById("officina-content").innerHTML =
+      `<p>Loaded ${loaded.length} of ${officinaFiles.length} run files.</p>` + officinaBoard(loaded);
+    // HN-067: fetch the real patrol JSONLs (served as ndjson now).
+    const custosTexts = [];
+    for (const f of ["patrol-001.jsonl", "patrol-002.jsonl"]) {
+      try {
+        const res = await fetch(`os/worlds/custos/runs/${f}`);
+        if (res.ok) custosTexts.push(await res.text());
+      } catch { /* skipped, counted below */ }
+    }
+    const parsed = custosTexts.map(parseCustosJsonl);
+    const allRecords = parsed.flatMap((p) => p.records);
+    const skipped = parsed.reduce((n, p) => n + p.skipped, 0);
+    document.getElementById("custos-content").innerHTML =
+      `<p>${allRecords.length} patrol records (${skipped} malformed lines skipped).</p>` + custosBoard(allRecords);
+    // HN-068: status chips from each world's own pack.json.
+    const worldDirs = ["custos", "dep", "doe", "dsny", "ems", "fdny", "hospital", "mta", "nypd", "officina"];
+    const systems = [
+      { name: "Vigiles", status: "live" },
+      { name: "Ignis", status: "live" },
+      { name: "Medicus", status: "live" },
+    ];
+    let packsLoaded = 0;
+    for (const dir of worldDirs) {
+      try {
+        const res = await fetch(`os/worlds/${dir}/pack.json`);
+        if (res.ok) {
+          const pack = await res.json();
+          systems.push({ name: pack.pack_name ?? dir, status: systemsChip(pack.status) });
+          packsLoaded += 1;
+        } else {
+          systems.push({ name: dir, status: "not built" });
+        }
+      } catch {
+        systems.push({ name: dir, status: "not built" });
+      }
+    }
+    document.getElementById("systems-content").innerHTML =
+      `<p>Loaded ${packsLoaded} of ${worldDirs.length} world packs.</p>` + systemsHome(systems);
+  } catch {
+    document.getElementById("evidence-content").innerHTML =
+      `<p class="empty-state">Crew records unavailable.</p>`;
+    document.getElementById("bolo-content").innerHTML =
+      `<p class="empty-state">Crew records unavailable.</p>`;
+    document.getElementById("timeline-content").innerHTML =
+      `<p class="empty-state">Crew records unavailable.</p>`;
+    document.getElementById("receipt-content").innerHTML =
+      `<p class="empty-state">Crew records unavailable.</p>`;
+    document.getElementById("cost-content").innerHTML = costTicker(null);
+  }
+</script>
+</body>
+</html>

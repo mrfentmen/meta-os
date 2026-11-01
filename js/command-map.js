@@ -30,7 +30,7 @@
 // selected camera (snapshot captured, request returned, result
 // recorded, operator marked reviewed in this session).
 
-import { CAMERA_API_URL, CAMERA_PROXY_URL, FALLBACK_CAMERAS, WALL_FEEDS } from "./camera-fallback.js";
+import { CAMERA_API_URL, CAMERA_PROXY_URL, FALLBACK_CAMERAS, WALL_FEEDS, cameraFeedState } from "./camera-fallback.js";
 import {
   HANDOFF_IDLE_MS,
   MAX_WATCHED,
@@ -59,7 +59,7 @@ import {
   firesToGeoJson,
 } from "./command-layers.js";
 import { PRODUCT_BY_ID } from "./products.js";
-import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier } from "./command-loop.js";
+import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier, loopItemTierClass } from "./command-loop.js";
 import { createDelayedIndicator, errorClassFor } from "./loading.js";
 import { prefersReducedMotion } from "./motion.js";
 import { isDemoMode } from "./demo.js";
@@ -839,6 +839,16 @@ function renderList() {
       name.className = "cmd-row-name";
       name.textContent = cam.name;
       btn.append(dot, name);
+      // HN-063: every wall row shows its source + LIVE/TEST state in
+      // the UI itself, not just in data.
+      const feed = cameraFeedState(state.usingFallback);
+      const source = document.createElement("span");
+      source.className = "cmd-row-source";
+      source.textContent = feed.source;
+      const stateBadge = document.createElement("span");
+      stateBadge.className = `cmd-row-state cmd-row-state--${feed.state.toLowerCase()}`;
+      stateBadge.textContent = feed.state;
+      btn.append(source, stateBadge);
       const entry = state.camState.get(cam.id);
       if (entry?.flagged) {
         const tag = document.createElement("span");
@@ -904,7 +914,7 @@ function selectCamera(id, { pan = false, openCard = false } = {}) {
     at: Date.now(),
   });
   els.inspName.textContent = cam.name;
-  els.inspMeta.textContent = `${cam.area} · ${cam.latitude.toFixed(5)}, ${cam.longitude.toFixed(5)} · NYC DOT test feed`;
+  els.inspMeta.textContent = `${cam.area} · ${cam.latitude.toFixed(5)}, ${cam.longitude.toFixed(5)} · ${cameraFeedState(state.usingFallback).source} · ${cameraFeedState(state.usingFallback).state}`;
   els.viewerImg.hidden = false;
   els.viewerImg.src = cacheBust(cam.imageUrl);
   els.viewerUpdated.textContent = `Snapshot ${fmtTime(new Date())} — refreshes automatically`;
@@ -967,7 +977,11 @@ function openPinCard(id) {
   els.pinCard.hidden = false;
   els.pinCardImg.src = cacheBust(cam.imageUrl);
   els.pinCardName.textContent = cam.name;
-  els.pinCardMeta.textContent = `${cam.area} · NYC DOT test feed`;
+  // HN-063: the pin card shows the feed's true source + LIVE/TEST
+  // state — it used to hardcode a test-feed label for every feed,
+  // including live ones.
+  const feed = cameraFeedState(state.usingFallback);
+  els.pinCardMeta.textContent = `${cam.area} · ${feed.source} · ${feed.state}`;
   updatePinCardChip(id);
   updateWatchButtons();
   positionPinCard();
@@ -1694,8 +1708,7 @@ async function refreshLoopFeed() {
   }
   for (const item of items) {
     const li = document.createElement("li");
-    li.className = `cmd-loop-item cmd-loop-item--${item.type}` +
-      (item.tier === "yellow" ? " cmd-loop-item--incident-yellow" : "");
+    li.className = `cmd-loop-item cmd-loop-item--${item.type}` + loopItemTierClass(item.tier);
     const when = document.createElement("span");
     when.className = "cmd-loop-when mono";
     when.textContent = item.at ? fmtTime(new Date(item.at)) : "";

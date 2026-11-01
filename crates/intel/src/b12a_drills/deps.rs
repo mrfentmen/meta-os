@@ -8,8 +8,8 @@
 //! `intel.wake` (B10, `b10_brief`), the Spark client (B11), and
 //! `intel.trust` / `intel.timer_sweep` (B14). Those modules are not
 //! in this branch yet, so — exactly like the Python sources, which
-//! reach them through patchable module attributes (the e2e loops
-//! run on `unittest.mock` seams) — the ports here take the surface
+//! reach them through patchable module attributes — the ports here
+//! take the surface
 //! as a trait object with the Python call shapes preserved. When
 //! the owning batches land, wiring is one adapter per trait.
 //!

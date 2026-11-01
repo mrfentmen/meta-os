@@ -85,6 +85,10 @@ function projectIncident(record) {
     category: record.category,
     priority: record.priority,
     steps: timeline.length,
+    // HN-062: the record's own timeline, passed through in file
+    // order (shallow copies). The timeline board renders this, never
+    // a reordered or rebuilt version — the record file is the order.
+    timeline: timeline.map((s) => ({ ...(s ?? {}) })),
     receipt_id:
       [...timeline].reverse().find((s) => s.step === "dispatch")?.receipt_id ?? null,
     bolo,

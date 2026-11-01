@@ -1,0 +1,61 @@
+{
+  "actual_s": 59.997,
+  "segments": [
+    {
+      "excerpt_s": 7.273,
+      "file": "normalized/take-001.wav",
+      "session_id": "hn029-chipsynth",
+      "take_id": "take-001"
+    },
+    {
+      "excerpt_s": 7.273,
+      "file": "normalized/take-002.wav",
+      "session_id": "hn029-chipsynth",
+      "take_id": "take-002"
+    },
+    {
+      "excerpt_s": 7.273,
+      "file": "normalized/take-003.wav",
+      "session_id": "hn029-chipsynth",
+      "take_id": "take-003"
+    },
+    {
+      "excerpt_s": 7.273,
+      "file": "normalized/take-005.wav",
+      "session_id": "hn029-chipsynth",
+      "take_id": "take-005"
+    },
+    {
+      "excerpt_s": 7.273,
+      "file": "normalized/take-006.wav",
+      "session_id": "hn029-chipsynth",
+      "take_id": "take-006"
+    },
+    {
+      "excerpt_s": 7.273,
+      "file": "normalized/take-007.wav",
+      "session_id": "hn029-chipsynth",
+      "take_id": "take-007"
+    },
+    {
+      "excerpt_s": 7.273,
+      "file": "normalized/take-008.wav",
+      "session_id": "hn029-chipsynth",
+      "take_id": "take-008"
+    },
+    {
+      "excerpt_s": 7.273,
+      "file": "normalized/take-009.wav",
+      "session_id": "hn029-chipsynth",
+      "take_id": "take-009"
+    },
+    {
+      "excerpt_s": 1.816,
+      "file": "normalized/take-010.wav",
+      "session_id": "hn029-chipsynth",
+      "take_id": "take-010"
+    }
+  ],
+  "session_id": "hn029-chipsynth",
+  "target_s": 60.0
+}

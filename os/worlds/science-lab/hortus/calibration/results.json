@@ -1,0 +1,291 @@
+{
+ "effective_h": 3.551609601401193,
+ "fitted_h_multiplier": 0.3551609601401193,
+ "nominal_h": 10.0,
+ "rows_after": [
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 1.36,
+   "part_id": "BE8711-H2",
+   "pct_error": 27.75761084059513,
+   "predicted_c_per_w": 1.737503507432094,
+   "profile_no": "8711",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.83,
+   "part_id": "BE8711-H4",
+   "pct_error": 15.311921794284672,
+   "predicted_c_per_w": 0.9570889508925627,
+   "profile_no": "8711",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 1.11,
+   "part_id": "BE8731-H2",
+   "pct_error": 5.335884783518728,
+   "predicted_c_per_w": 1.169228321097058,
+   "profile_no": "8731",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.685,
+   "part_id": "BE8731-H4",
+   "pct_error": -6.372187494244303,
+   "predicted_c_per_w": 0.6413505156644266,
+   "profile_no": "8731",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 1.33,
+   "part_id": "BE8546-H2",
+   "pct_error": -33.40774450513151,
+   "predicted_c_per_w": 0.8856769980817509,
+   "profile_no": "8546",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.823,
+   "part_id": "BE8546-H4",
+   "pct_error": -41.23505586626754,
+   "predicted_c_per_w": 0.48363549022061814,
+   "profile_no": "8546",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 0.88,
+   "part_id": "BE8119-H2",
+   "pct_error": 22.9067997741299,
+   "predicted_c_per_w": 1.0815798380123431,
+   "profile_no": "8119",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.539,
+   "part_id": "BE8119-H4",
+   "pct_error": 10.7338237503122,
+   "predicted_c_per_w": 0.5968553100141828,
+   "profile_no": "8119",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 1.122,
+   "part_id": "BE8712-H2",
+   "pct_error": -36.85012491395717,
+   "predicted_c_per_w": 0.7085415984654007,
+   "profile_no": "8712",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.692,
+   "part_id": "BE8712-H4",
+   "pct_error": -44.08838263345456,
+   "predicted_c_per_w": 0.3869083921764944,
+   "profile_no": "8712",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 0.937,
+   "part_id": "BE8737-H2",
+   "pct_error": 3.865819021322436,
+   "predicted_c_per_w": 0.9732227242297913,
+   "profile_no": "8737",
+   "subset": "validation"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.58,
+   "part_id": "BE8737-H4",
+   "pct_error": -7.910806319361563,
+   "predicted_c_per_w": 0.5341173233477029,
+   "profile_no": "8737",
+   "subset": "validation"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 0.751,
+   "part_id": "BE8556-H2",
+   "pct_error": -2.9047529076762033,
+   "predicted_c_per_w": 0.7291853056633517,
+   "profile_no": "8556",
+   "subset": "validation"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.438,
+   "part_id": "BE8556-H4",
+   "pct_error": -8.591895765613137,
+   "predicted_c_per_w": 0.40036749654661447,
+   "profile_no": "8556",
+   "subset": "validation"
+  }
+ ],
+ "rows_before": [
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 1.36,
+   "part_id": "BE8711-H2",
+   "pct_error": -52.85188941744915,
+   "predicted_c_per_w": 0.6412143039226916,
+   "profile_no": "8711",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.83,
+   "part_id": "BE8711-H4",
+   "pct_error": -53.27618793980229,
+   "predicted_c_per_w": 0.38780764009964097,
+   "profile_no": "8711",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 1.11,
+   "part_id": "BE8731-H2",
+   "pct_error": -61.112186710613614,
+   "predicted_c_per_w": 0.431654727512189,
+   "profile_no": "8731",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.685,
+   "part_id": "BE8731-H4",
+   "pct_error": -62.034892220478476,
+   "predicted_c_per_w": 0.26006098828972246,
+   "profile_no": "8731",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 1.33,
+   "part_id": "BE8546-H2",
+   "pct_error": -75.40583474406068,
+   "predicted_c_per_w": 0.3271023979039929,
+   "profile_no": "8546",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.823,
+   "part_id": "BE8546-H4",
+   "pct_error": -76.15299940762422,
+   "predicted_c_per_w": 0.19626081487525274,
+   "profile_no": "8546",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 0.88,
+   "part_id": "BE8119-H2",
+   "pct_error": -54.6491664614691,
+   "predicted_c_per_w": 0.3990873351390719,
+   "profile_no": "8119",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.539,
+   "part_id": "BE8119-H4",
+   "pct_error": -55.145210219963495,
+   "predicted_c_per_w": 0.24176731691439682,
+   "profile_no": "8119",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 1.122,
+   "part_id": "BE8712-H2",
+   "pct_error": -76.67719088028572,
+   "predicted_c_per_w": 0.2616819183231943,
+   "profile_no": "8712",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.692,
+   "part_id": "BE8712-H4",
+   "pct_error": -77.31088845372801,
+   "predicted_c_per_w": 0.1570086519002022,
+   "profile_no": "8712",
+   "subset": "calibration"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 0.937,
+   "part_id": "BE8737-H2",
+   "pct_error": -61.65666605261624,
+   "predicted_c_per_w": 0.3592770390869858,
+   "profile_no": "8737",
+   "subset": "validation"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.58,
+   "part_id": "BE8737-H4",
+   "pct_error": -62.6621663859576,
+   "predicted_c_per_w": 0.21655943496144595,
+   "profile_no": "8737",
+   "subset": "validation"
+  },
+  {
+   "fin_height_in": 2,
+   "measured_c_per_w": 0.751,
+   "part_id": "BE8556-H2",
+   "pct_error": -64.15752177565474,
+   "predicted_c_per_w": 0.26917701146483286,
+   "profile_no": "8556",
+   "subset": "validation"
+  },
+  {
+   "fin_height_in": 4,
+   "measured_c_per_w": 0.438,
+   "part_id": "BE8556-H4",
+   "pct_error": -62.94120456646392,
+   "predicted_c_per_w": 0.16231752399888807,
+   "profile_no": "8556",
+   "subset": "validation"
+  }
+ ],
+ "subsets": {
+  "calibration": {
+   "after": {
+    "count": 10,
+    "mean_abs_pct": 24.399953635589572,
+    "mean_pct": -7.990745447021444,
+    "rms_pct": 27.98584858694541
+   },
+   "before": {
+    "count": 10,
+    "mean_abs_pct": 64.46164464554747,
+    "mean_pct": -64.46164464554747,
+    "rms_pct": 65.25634953467039
+   }
+  },
+  "validation": {
+   "after": {
+    "count": 4,
+    "mean_abs_pct": 5.818318503493335,
+    "mean_pct": -3.885408992832117,
+    "rms_pct": 6.320278388447053
+   },
+   "before": {
+    "count": 4,
+    "mean_abs_pct": 62.854389695173126,
+    "mean_pct": -62.854389695173126,
+    "rms_pct": 62.86070791356144
+   }
+  }
+ }
+}

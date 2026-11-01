@@ -52,7 +52,7 @@ All new code lives only in `labs/`, `hortus-rung3/`, `oc-proofs/`.
 - Dispatch is SIMULATED only, always — nothing dials, posts, or
   dispatches to a real service, in any section, ever.
 - Live Spark ASSESSMENT calls are allowed ONLY in Section R, under
-  its $20 round cap, tracked per call in the report (boss's order
+  its $5 round cap, tracked per call in the report (boss's order
   2026-11-01: only about $5 spent on the key so far, test more).
   Every other section spends $0.
 - Fresh unique file names for every piece of footage, always.
@@ -631,7 +631,7 @@ Rules for this section, all hard:
   Never print, log, commit, or screenshot the key value.
 - Dispatch stays SIMULATED, always. Live model calls never change
   the dispatch rule.
-- Round cap for this section: $20 cumulative. Every call's usage is
+- Round cap for this section: $5 cumulative. Every call's usage is
   recorded in the report as it happens. At the cap, NC-215 fires.
 - Frames come only from inside this repo (test footage and fixtures
   already committed). Do not fetch external frames for live passes.
@@ -676,7 +676,7 @@ Rules for this section, all hard:
   approves them for any claim.
 - NC-214: Failure museum deposit: the 5 worst frames with their
   outputs into `oc-proofs/failure-museum/`, one-line note each.
-- NC-215: STOP RULE: if cumulative round spend reaches $20 at any
+- NC-215: STOP RULE: if cumulative round spend reaches $5 at any
   point, stop live work immediately, record where it stopped, and
   finish the round on $0 sections only.
 - NC-216: Section R summary into the report, ending with the

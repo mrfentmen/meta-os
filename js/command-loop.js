@@ -56,6 +56,21 @@ export function flagTier(division, category) {
   return null;
 }
 
+// HN-060: the loop-feed tier color class for one tier. Yellow and red
+// each get their own class; an untiered incident gets NO color class,
+// so it never renders in a tier color it does not carry (before this,
+// every incident row inherited the red incident color, including
+// untiered ones). Exported for the tier audit test.
+export function loopItemTierClass(tier) {
+  if (tier === "yellow") return " cmd-loop-item--incident-yellow";
+  if (tier === "red") return " cmd-loop-item--incident-red";
+  return "";
+}
+
+// The display table itself, exported for the audit test so the test
+// iterates the real table instead of a copied list.
+export { FLAG_TIERS };
+
 // One line for one projected crew incident (GET /api/crew/status
 // incidents: server/crew-status.mjs). Surfaces what the crew
 // recorded and the UI previously dropped: the BOLO block with its
