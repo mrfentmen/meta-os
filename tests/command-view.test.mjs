@@ -84,6 +84,7 @@ test("3d buildings, selection ring, modes, and AI focus are wired to real data o
   assert.ok(html.includes('id="cmd-ai-focus"'));
   assert.ok(commandJs.includes("function aiFocus()"));
   assert.ok(commandJs.includes("newestFlaggedCamera()"), "AI focus targets the newest real flag");
+  assert.ok(commandJs.includes('els.aiFocus.addEventListener("click", aiFocus)'), "AI focus is an on-screen button, not keyboard-only");
 });
 
 test("fallback subset: 60 cameras, 12 per borough, exact API shape", () => {
