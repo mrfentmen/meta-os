@@ -63,8 +63,8 @@ agent to live in it, is not finished.
 ## Milestones
 
 - K1 (started 2026-11-01): kernel crate skeleton in `kernel/`. Boots
-  under the rust-osdev bootloader, prints META OS KERNEL alive on the
-  serial port, halts cleanly. Proof: QEMU serial log.
+  under the rust-osdev bootloader, prints `META OS KERNEL - alive (K1)`
+  on the serial port, halts cleanly. Proof: QEMU serial log.
 - K2: framebuffer console, the kernel draws its own text.
 - K3: interrupts, timer, keyboard input.
 - K4: memory management, paging, heap.
