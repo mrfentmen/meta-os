@@ -72,3 +72,56 @@ says ADOPT (HN-048).
 ## Adopted (HN-048)
 
 - pretty_midi (MIT): MIDI export of keeper note sequences.
+
+## Keyless music APIs/MCPs beyond Audius (HN-047)
+
+Scouted 2026-11-01. One smoke call each, from the sandbox.
+"Keyless" means no API key for the endpoint called. Audius is
+excluded by the task (beyond Audius).
+
+### 1. MusicBrainz API — VERIFIED
+
+- Endpoint: musicbrainz.org/ws/2 (artist search, fmt=json).
+- Keyless, with a required User-Agent and 1 req/sec courtesy
+  limit. Smoke call: artist search for Radiohead returned 200
+  with count 7 and the artist record. Use: metadata lookup for
+  catalogue enrichment (never for track audio).
+- Verdict: USABLE, with rate-limit respect.
+
+### 2. iTunes Search API — VERIFIED
+
+- Endpoint: itunes.apple.com/search (media=music).
+- Keyless, no registration. Smoke call: search for Radiohead
+  returned resultCount 1 with a real track record (Let Down, OK
+  Computer). Use: metadata lookup only.
+- Verdict: USABLE.
+
+### 3. Openverse Audio API — UNVERIFIED (bot check)
+
+- Endpoint: api.openverse.org/v1/audio.
+- Keyless in principle for anonymous search, but the smoke call
+  from this sandbox was blocked by a Cloudflare bot check (403,
+  "Just a moment..." challenge page; healthcheck also 403).
+  That is a sandbox egress block, not a key requirement, but it
+  means the endpoint is NOT verified from here.
+- Verdict: NOT ADOPTED until verified from an unblocked host.
+
+### 4. Deezer public API — VERIFIED
+
+- Endpoint: api.deezer.com/search.
+- Keyless for basic search. Smoke call: search for Radiohead
+  returned a real track record (Creep) with a 30-second preview
+  URL. Previews are Deezer-hosted; they are never catalogue
+  audio, only reference listening.
+- Verdict: USABLE for reference search.
+
+### 5. Wikimedia Commons API — VERIFIED
+
+- Endpoint: commons.wikimedia.org/w/api.php (file search).
+- Keyless for search. Smoke call: file search for piano audio
+  returned 11,354 hits with a real file record (a 1916 Scott
+  Joplin piano-roll recording). Files carry their own licences
+  per file; any reuse must check the file's licence, not assume
+  public domain.
+- Verdict: USABLE for CC-licensed reference audio discovery.
+

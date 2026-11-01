@@ -23,3 +23,14 @@ test("adoptions file covers 5 candidates with licences and verdicts", () => {
   }
   assert.match(doc, /ADOPT/);
 });
+
+test("adoptions file covers 5 keyless APIs with smoke notes", () => {
+  const doc = readFileSync(
+    join(root, "os/worlds/musica/ADOPTIONS.md"), "utf8");
+  for (const api of ["MusicBrainz", "iTunes", "Openverse", "Deezer",
+    "Wikimedia Commons"]) {
+    assert.ok(doc.includes(api), api);
+  }
+  assert.match(doc, /VERIFIED/);
+  assert.match(doc, /UNVERIFIED \(bot check\)/);
+});
