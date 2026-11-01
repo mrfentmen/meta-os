@@ -163,6 +163,54 @@ var, and what is its license. **If it needs a key it does not go in a committed
 file**: use the client's secret store or an environment variable and note it
 here.
 
+## The full set, wired 2026-11-01 on the boss's order
+
+Twelve servers he named, plus the three the security stack already had and the
+Rust docs server above. Every row was proven by spawning the server and
+speaking `initialize` plus `tools/list` to it, not by reading its config.
+
+```
+14/14 servers answered
+```
+
+| Config name | Server / version | Tools | What it is for |
+|---|---|---|---|
+| `analysis` | analysis 1.0.0 | 6 | Endpoint mining, response diffs, JWT decode, corpus search |
+| `browser` | browser-mcp 1.0.0 | 10 | Open a page, screenshot, links, headings, run script, DNS records |
+| `context7` | Context7 4.4.4 | 2 | Library documentation lookup by library id |
+| `docs-rs` | docs-rs 1.0.1 | 4 | Rust crate docs and API items (see the 403 note above) |
+| `fetch` | fetch-mcp 0.0.5 | 2 | Fetch a URL, fetch a YouTube transcript |
+| `filesystem` | secure-filesystem 2.0.0 | 14 | Read/write files, rooted at `/Users/test/Desktop` |
+| `mcp-advisor` | mcp-advisor 0.5.1 | **0** | See the note below: starts, but exposes no tools |
+| `mcp-shell` | terminal-mcp-server 1.0.0 | 1 | Arbitrary terminal |
+| `mcp-terminal` | mcp-shell-server 2.8.1 | 13 | Shell exec with async execution records |
+| `memory` | memory-server 2.0.0 | 9 | Knowledge graph entities, relations, observations |
+| `research` | research 0.1.0 | 3 | `market_check`, `trend`, `suggest` |
+| `secstack` | secstack 1.0.0 | 5 | nuclei, httpx, ffuf, header audit, raw fetch. Scope enforced |
+| `sequential-thinking` | sequential-thinking 2.0.0 | 1 | Structured multi-step reasoning |
+| `state` | state 1.0.0 | 9 | The engagement ledger (confirmed / refuted / untested) |
+
+Where they live: `/Users/test/Desktop/.agents/mcp.json`, the project-scoped
+client config (`.agents/mcp.json` under the working directory). It is outside
+this repo on purpose: it is a client config for one machine, not something the
+crew VMs should inherit. All fourteen entries are stdio, all keyless, and every
+`env` value in them is a filesystem path, so nothing secret is in the file.
+
+**`mcp-advisor` answers with zero tools.** It initializes cleanly and reports
+version 0.5.1, so the process and the wiring are correct, but it exposes no
+callable tools, which is consistent with it being an advisory server that speaks
+in resources or instructions rather than actions. Counting it as "12 connected"
+would be wrong: eleven of the fourteen give me callable tools.
+
+**Restart is still required.** These were verified by talking to each server
+directly. They become tools in a session only after the client restarts, so the
+next session is the first one that can actually use them.
+
+**The parked program stays parked.** `secstack` and `analysis` are wired
+because they were already live in this workspace, not because the cybersecurity
+program started. The boss's park order stands: no scanning, no engagement work,
+no program design. Their scope file is enforced by the server, not by me.
+
 ## Rule card (OS-187)
 
 - **Keyless first.** Everything wired here needs no account, no token, no key.
