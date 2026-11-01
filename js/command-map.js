@@ -60,6 +60,7 @@ import {
 } from "./command-layers.js";
 import { PRODUCT_BY_ID } from "./products.js";
 import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier } from "./command-loop.js";
+import { createDelayedIndicator } from "./loading.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
 
@@ -238,6 +239,21 @@ async function getBridge() {
 async function loadCameras() {
   let list = null;
   let live = false;
+  // Loading row (HN-013): appears only if the list is still
+  // loading past 300 ms, so fast loads never flicker and slow
+  // loads never look frozen.
+  const loading = createDelayedIndicator({
+    show: () => {
+      const row = document.createElement("p");
+      row.className = "note cmd-loading";
+      row.textContent = "Loading cameras…";
+      els.cameraList.appendChild(row);
+    },
+    hide: () => {
+      for (const row of els.cameraList.querySelectorAll(".cmd-loading")) row.remove();
+    },
+  });
+  loading.start();
   // The NYCTMC API sends no Access-Control-Allow-Origin header, so a
   // direct browser fetch is blocked by CORS: try the app server's
   // same-origin proxy first, then the direct API (still useful where
@@ -264,6 +280,7 @@ async function loadCameras() {
     list = FALLBACK_CAMERAS.map(normalizeCamera).filter(Boolean);
     state.usingFallback = true;
   }
+  loading.settle();
   state.cameras = list;
   state.byId = new Map(list.map((cam) => [cam.id, cam]));
   state.onlineCount = list.length;
@@ -1559,16 +1576,25 @@ function renderActivity() {
 // the app server), the panel says so and keeps polling — it never
 // invents crew activity.
 async function refreshLoopFeed() {
+  // Loading line (HN-013): replaces the stale status only if the
+  // poll is still pending past 300 ms.
+  const loading = createDelayedIndicator({
+    show: () => { els.loopStatus.textContent = "Loading crew status…"; },
+    hide: () => {},
+  });
+  loading.start();
   let payload;
   try {
     const res = await fetch("/api/crew/status", { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     payload = await res.json();
   } catch {
+    loading.settle();
     els.loopStatus.textContent = loopStatusText({ unreachable: true });
     if (els.ribbon) els.ribbon.hidden = true;
     return;
   }
+  loading.settle();
   els.loopStatus.textContent = loopStatusText(payload);
   // Crew-board live ribbon (HN-011): the newest incident from this
   // same payload — the crew's live store, not a second source.
