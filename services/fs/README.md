@@ -1,50 +1,34 @@
-# `fs` — Layer 4
+# fs — MOSFS01 (B-L1-79..86)
 
-**Status: WRITTEN** (not COMPILED). Source exists; nothing in it has been compiled or run.
+A real filesystem over the block contract: superblock, allocation bitmap, inode
+table, directory entries, path resolution, and an fsck-style checker.
 
-## What it does
-
-A filesystem over the storage contract: paths, directories, files, and a checker.
-
-## Contract
-
-- **Entry:** none. A filesystem over the storage contract: paths, directories, files, and a checker.
-- **Kernel surface:** none. This unit reaches the kernel only through other services.
-- **Needs from Layers 1–3:** see `os-build/layer1/BOUNDARIES.md`; the binding milestone is K6 for anything that calls a syscall, and nothing here needs K2/K3 directly unless the kernel surface line above says so.
-- **Offers to Layers 5–6:** the functions listed below in the source. Nothing may rely on them until the layer is COMPILED.
-
-## Dependencies
-
-- **Libraries:** none
-- **Services:** none resolved by name from this unit; the caller resolves names through the supervisor's registry (B-L1-22).
-- **Data it owns:** Blocks on the storage backend.
-
-## Failure behaviour
-
-- Not yet written.
-- Missing dependency at start-up: refuses to start (non-zero exit), rather than running with a hole it cannot report.
-- Every failure path returns a code from `common/err` or a trailing `false`; none of them is silent.
-
-## Verification
-
-Checked against the Goose docs served by the language MCP (goose-mcp@1.1.0 `lookup_symbol` / `overview`):
-
-| Symbol / form | Source |
+| File | What it is |
 |---|---|
-| struct with typed fields | `tutorial` §3, `samples/01_tour.goose` |
-| fixed arrays `T[..N]`, `u8[..N]` | `samples/03_strings.goose` |
-| growable builder `u8[>..]`, `.push`, `.len` | `samples/03_strings.goose` |
-| `while` / `if` / `return` | `list_keywords` |
-| trailing-bool and multi-value returns | `samples/04_errors.goose` |
-| reference parameter `T&` | `reference` #46 |
-| bitwise `&` `|` `~` `<<` `>>` | `list_keywords` |
+| `DESIGN.md` | the layout, the limits, and the crash story — read this first |
+| `fs.goose` | format, mount, allocate, inodes, files, directories (B-L1-80..82) |
+| `paths.goose` | path parsing and resolution, hostile cases included (B-L1-83) |
+| `fsck.goose` | consistency checker and its safe repairs (B-L1-86) |
 
-## Not verified
+**Status: WRITTEN. Not COMPILED, not RUN.** No Goose toolchain on this machine
+and no kernel to run it on.
 
-- Compilation. There is no Goose toolchain on this machine.
-- Execution. No assertion in this unit has run; the test programs in `services/tests/` are where it will be exercised.
-- Any kernel behaviour assumed: the syscall shapes in `common/sys/sys.goose` are this layer's request, not a published kernel interface.
+## Limits, stated up front
 
-## Deviations
+- Max file size **2560 bytes** (5 direct blocks, no indirect blocks).
+- Max directory **160 entries**; max name **12 bytes**.
+- Max path depth **16** components.
+- Two 512-byte scratch blocks shared by the whole module — safe only because
+  services are single-threaded by contract (`fs.goose`, first paragraph).
 
-- See the note above: this directory does not hold the implementation.
+## Persistence: none, and it says so
+
+The backend is `storage`'s RAM disk. A remount **within one process** keeps your
+files; a restart does not. `storage_volatile()` is the call that answers this,
+and `DESIGN.md` §7 is the paragraph that does not hide it.
+
+Binding to a real Layer 3 block driver is B-L1-74 and changes nothing here: the
+FS talks `storage_read` / `storage_write` and nothing else.
+
+Tests: `services/tests/t65_fs.goose` (round trip, hostile paths, remount, checker
+on a clean tree and on a planted leak).
