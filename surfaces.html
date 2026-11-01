@@ -28,6 +28,7 @@
   <nav class="boards-nav" aria-label="Boards">
     <a href="#board-lab">Lab</a>
     <a href="#board-hortus">Hortus</a>
+    <a href="#board-gate">Gate</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -39,9 +40,14 @@
     <p>Generations charted from the real run JSONLs (best/mean per generation). Run JSONLs are expected at os/hortus/runs/*.jsonl; none exist in this repo yet, so the viewer shows its honest empty state until real runs land.</p>
     <div id="hortus-content" aria-live="polite">Loading…</div>
   </section>
+  <section class="board-section" id="board-gate" aria-labelledby="board-gate-heading">
+    <h2 id="board-gate-heading">Gate status</h2>
+    <p>Delaney gate state, read from the gate directory's files (gates/delaney/manifest.json).</p>
+    <div id="gate-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard, hortusChart, hortusChampion } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -52,6 +58,13 @@
   }
   document.getElementById("hortus-content").innerHTML =
     hortusChart([]) + hortusChampion(null);
+  try {
+    const res = await fetch("gates/delaney/manifest.json");
+    const manifest = res.ok ? await res.json() : null;
+    document.getElementById("gate-content").innerHTML = gateStatusPage(manifest);
+  } catch {
+    document.getElementById("gate-content").innerHTML = gateStatusPage(null);
+  }
 </script>
 </body>
 </html>

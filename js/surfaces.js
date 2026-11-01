@@ -102,3 +102,32 @@ export function hortusChampion(run) {
     + `<span class="hortus-champion-rung">${escapeHtml(champ.rung ?? "—")}</span> `
     + `<span class="hortus-champion-params">${escapeHtml(JSON.stringify(champ.params ?? {}))}</span></div>`;
 }
+
+// HN-058 Gate status page: the Delaney gate shown as its true state,
+// driven by the gate directory's files. The directory is read via its
+// manifest (gates/delaney/manifest.json, listing the files present).
+// State criteria, in precedence order:
+//   earned   — a file whose name marks the gate earned (earned.json)
+//   running  — a run marker is present (running.json)
+//   prepared — the Delaney set file is present (delaney-set.json)
+//   not prepared — none of the above (today's true state on main:
+//   no gate files exist in this repo, so the page says so plainly).
+export function gateState(files) {
+  const names = (Array.isArray(files) ? files : []).map((f) => String(f ?? ""));
+  if (names.some((n) => /(^|\/)earned\.json$/.test(n))) return "earned";
+  if (names.some((n) => /(^|\/)running\.json$/.test(n))) return "running";
+  if (names.some((n) => /(^|\/)delaney-set\.json$/.test(n))) return "prepared";
+  return "not prepared";
+}
+
+export function gateStatusPage(manifest) {
+  const files = Array.isArray(manifest?.files) ? manifest.files : [];
+  const state = gateState(files);
+  const fileList = files.length > 0
+    ? `<ul>${files.map((f) => `<li>${escapeHtml(f)}</li>`).join("")}</ul>`
+    : `<p class="empty-state">No gate files in this repo yet.</p>`;
+  return `<div class="gate-status" data-gate-state="${escapeHtml(state)}">`
+    + `<span class="gate-state-chip">${escapeHtml(state)}</span>`
+    + `<p>Delaney gate state is read from the gate directory's files: earned.json → earned, running.json → running, delaney-set.json → prepared, otherwise not prepared.</p>`
+    + fileList + `</div>`;
+}
