@@ -1,45 +1,45 @@
-# `netcfg` — Layer 4 service
+# netcfg — addresses and interface configuration as data
 
-**Status: NOT BUILT.** No source yet. Filled by **B-L1-30**.
+Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
+service 14.
 
-This README is the entry from `services/README_TEMPLATE.md`, unfilled. Every
-section below is deliberately empty rather than optimistic: a section that says
-nothing is honest, a section that guesses is not.
+## Bytes, not text
 
-## What it does
+Every protocol layer asks questions about an address — in my subnet? broadcast? is this
+mask real? On text, every layer re-implements parsing and they disagree in exactly the
+cases that matter (leading zeros, `/31`, the difference between `0.0.0.0` and "unset").
+Configuration is text; there is one parser; everything above it is bytes.
 
-interface model and address assignment. Not written yet.
+## "Unset" is not 0.0.0.0
 
-## Contract
+`0.0.0.0` is a real address — DHCP must send from it before it has one. So every parse
+returns `(value, ok)` and the caller cannot confuse "the user wrote 0.0.0.0" with "the
+user wrote nothing". `IfaceCfg.configured` records the second question separately.
 
-- **Entry:** none yet. Will be `export "svc_entry" fn service_main(...) -> i32`
-  per `os-build/layer1/SERVICE_CONTRACT.md` §2.
-- **Kernel surface:** none declared yet. Requirements it will place on Layers 1–3
-  are listed in `os-build/layer1/BOUNDARIES.md`.
-- **Needs from Layers 1–3:** see `services/MANIFEST.md`, row for `netcfg`.
-- **Offers to Layers 5–6:** see `services/MANIFEST.md`; nothing may rely on it yet.
+## `ip4_parse` is strict on purpose
 
-## Dependencies
+Exactly four parts, 1–3 digits each, each 0–255, **no leading zeroes** (an
+octal-looking address is a config error, and every system that accepted it shipped a
+bug), no spaces, no signs, no hex. A rejected string returns `0.0.0.0` with
+`ok = false`, so a caller that ignores the flag gets an obvious value rather than a
+plausible wrong one.
 
-- **Libraries:** not yet decided — B-L1-15's gap audit narrows the candidates.
-- **Services:** not yet decided.
-- **Data it owns:** not yet decided.
+## Masks
 
-## Failure behaviour
+`ip4_mask(prefix)` builds one; `ip4_mask_contiguous` rejects `255.0.255.0` — if that
+passed, every subnet comparison below it would be meaningless.
 
-Not yet designed. When it is, the codes come from `common/err` and a failure is
-always a log record, never a silence.
+## Configuration rules, in the order they apply
 
-## Verification
+1. **`dhcp=yes` beats static fields.** A file with both is contradictory; the dynamic
+   reading cannot black-hole the machine with a stale address that no longer routes.
+2. **Static address without a netmask is refused.** There is no sensible default, and
+   guessing `/24` has put hosts on the wrong network for decades.
+3. **One invalid address fails the whole interface.** Half an interface configured is a
+   machine that looks fine and reaches nothing.
+4. **MTU is clamped to 576..1500.** Below 576 DHCP/DNS responses do not fit.
 
-Nothing to verify: no source.
+Each read uses a **fresh** buffer: reusing one would parse `1.2.3.4` followed by
+`5.6.7.8` as a single string and produce an address nobody typed.
 
-## Not verified
-
-Everything. There is no Goose toolchain on this machine
-(`goose__toolchain_status` → `NOT FOUND`), so even a finished service cannot pass
-WRITTEN into COMPILED here.
-
-## Deviations
-
-None — nothing has been written to deviate from.
+Not compiled, not run.
