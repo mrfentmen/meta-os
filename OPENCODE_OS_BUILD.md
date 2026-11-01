@@ -43,6 +43,12 @@ make it better, improve it where it lacks. In practice:
   this project (rustdocs). For Goose and Lobster, find the docs and
   tooling, wire what exists, and write down what does not exist yet
   instead of pretending.
+- NO MOCKS, boss's order 2026-11-01: nothing fake ships in this OS.
+  No mocked networks or services, no fixture data in any shipped
+  surface, no stub or skeleton presented as working. Test data
+  lives inside tests only, is named as test data, and never ships.
+  A component that is not real yet is NOT BUILT in the report.
+  An honest empty state beats invented data, every time.
 - Protected: do not edit the crew's merged program code (server/,
   js/, os/worlds/, crates/) from this file. Your ground is kernel/,
   services/, lobster/, os-build/, and docs you create there.
@@ -350,7 +356,7 @@ make it better, improve it where it lacks. In practice:
   and the exact steps.
 - OS-155: Hello service: a Goose program that prints and exits.
   Build log in the report.
-- OS-156: A Goose daemon skeleton: starts, writes a heartbeat line
+- OS-156: The smallest real Goose daemon: starts, writes a heartbeat line
   to a file every second, stops cleanly on signal.
 - OS-157: The supervisor contract: who starts services, who
   restarts them, where their records live. Design note.
@@ -365,8 +371,10 @@ make it better, improve it where it lacks. In practice:
   behavior is logged and matches the contract, or the contract is
   corrected.
 - OS-162: The updater service in Goose: checks, stages, and the
-  A/B rule from OS-114. Skeleton with the network mocked.
-- OS-163: The MCP host skeleton in Goose: starts, lists one tool,
+  A/B rule from OS-114. The network check is real, against a real
+  endpoint. Where no real endpoint exists yet, that part is
+  NOT BUILT, never mocked.
+- OS-163: The MCP host in Goose, smallest real version: starts, lists one tool,
   answers one call, all logged.
 - OS-164: Tests for OS-156, OS-159, OS-163 in Goose's own test way,
   or a runner script if the language lacks one (state which).
