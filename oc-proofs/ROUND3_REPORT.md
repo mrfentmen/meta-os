@@ -314,3 +314,17 @@
   UNIDENTIFIED enforced, no personal paths in own code.
 - NC-159 not triggered. Full table: oc-proofs/safety-audit.md.
 - NC-160: this summary.
+
+## Section N — Fresh-reader runbook (NC-161..NC-170) — DONE
+
+- NC-161/162 DONE. Fresh clone of current main (59be5b2) + static
+  server: clone-to-serve 4 s; first app screen renders immediately
+  after (nc-162-first-screen.png shows full command view loading).
+  Total path under 10 s. No stumble in the run block itself.
+- NC-163/165/167/168/169: see oc-proofs/runbook-log.md (top-5 stumbles,
+  unittest-vs-pytest mismatch as #1, stale test numbers, queue needs
+  sandbox path, combined-pytest collision; log credential-clean).
+- NC-164 DONE. Spark table verified present (endpoint/model/key-slot/
+  $75 in server/model.mjs + budget.mjs); no key values anywhere.
+- NC-166 DONE. README relative links: 2 found, 0 dead.
+- NC-170: this summary. Docs not fixed (protected).
