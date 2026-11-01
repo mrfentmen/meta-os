@@ -3428,16 +3428,17 @@ try {
   var NO_POST_LINE = "A human approves every plan. Nothing posts " +
     "until you approve it.";
 
-  // DSH-009 gate: viewer posting is OFF. GOV-002 as ruled 2026-10-24
-  // (the bus does not get touched except a fix or an OS-required
-  // upgrade) — Dale's viewer posting decision has not landed, so the
-  // "Brief me now" button ships disabled with the spec §4 explanation
-  // and there is deliberately NO send-path call for a brief request
-  // anywhere in this module. The gate is a switch, not a redesign:
-  // when the decision lands, the flip task enables the button AND
-  // wires the viewer's existing send path in the same change — never
-  // one without the other.
-  var BRIEF_ME_NOW_ENABLED = false;
+  // DSH-009 gate, flipped HN-001: "Brief me now" is now a READ-ONLY
+  // on-demand refresh. Clicking calls collectBrief, which GETs the
+  // brief index and the latest brief record from the live store and
+  // renders it — zero writes, no bus message, no announcement line,
+  // so GOV-002 (ruled 2026-10-24) is preserved. The SEND path
+  // (requesting a newly generated brief) is still unwired: Dale's
+  // viewer posting decision has not landed, so no send-path call
+  // for a brief request exists anywhere in this module. When that
+  // decision lands, a later task may wire the send path; this gate
+  // covers only the read-only refresh.
+  var BRIEF_ME_NOW_ENABLED = true;
 
   // DSH-011 gate: viewer dispatch posting is OFF, same GOV-002 rule
   // as BRIEF_ME_NOW_ENABLED. The approve flow below (approvePost +
@@ -4205,14 +4206,29 @@ try {
     renderBrief();
   }
 
-  // DSH-009: the on-demand brief affordance. Disabled while the
-  // GOV-002 gate is off (see BRIEF_ME_NOW_ENABLED); the explanation
-  // is the spec §4 wording. No click handler is attached: a disabled
-  // button fires nothing, and no send-path call exists for brief
-  // requests in this module until the gate flip wires one.
+  // DSH-009, HN-001: the on-demand brief affordance. The button is
+  // enabled and refreshes the latest brief from the live store
+  // (collectBrief, read-only). It never posts, so no gate note is
+  // shown next to it.
   function briefMeNowRow() {
-    return '<div class="trow"><button disabled>Brief me now</button></div>' +
-      '<div class="trow">Posting is off for this build.</div>';
+    return '<div class="trow"><button id="intel-brief-now">' +
+      "Brief me now</button></div>";
+  }
+
+  // HN-001: attach the on-demand refresh to the rendered button.
+  // Best-effort like the other live listeners: a stub body without
+  // querySelector skips this and the harness drives collectBrief
+  // through refreshBrief.
+  function attachBriefNowButton(body) {
+    try {
+      var btn = body.querySelector ?
+        body.querySelector("#intel-brief-now") : null;
+      if (btn && btn.addEventListener) {
+        btn.addEventListener("click", function () {
+          try { collectBrief(); } catch (e) {}
+        });
+      }
+    } catch (e) {}
   }
 
   function renderBrief(nowMs) {
@@ -4223,6 +4239,7 @@ try {
         body.innerHTML = panelErrorHTML("brief") +
           '<div class="trow">No brief yet for this ' +
           "room.</div>" + briefMeNowRow();
+        attachBriefNowButton(body);
         return;
       }
       var now = (typeof nowMs === "number") ? nowMs : Date.now();
@@ -4300,6 +4317,7 @@ try {
           vchecks.map(visualCheckHTML).join("") + "</details>";
       }
       body.innerHTML = briefErr + html;
+      attachBriefNowButton(body);
       scrollToDeepLink();
       try {
         var sel = body.querySelector ? body.querySelector("select") : null;
@@ -5468,8 +5486,8 @@ try {
         "(muse-bus:intel:brief:&lt;room&gt;:&lt;ts&gt;); the history " +
         "dropdown holds the last 7. A brief is stale at age 2 hours " +
         "or more; TEMPLATE marks the no-Spark fallback. " +
-        "'Brief me now' is disabled — posting is off for this " +
-        "build.</div>" +
+        "'Brief me now' refreshes the latest brief from the live " +
+        "store on demand; it never posts.</div>" +
         '<div class="trow"><b>Dispatch:</b> goal in, plan preview ' +
         "out. Approve is request-only: a human approves, then posts " +
         "from the CLI. Dispatch never auto-posts. The tracker " +
@@ -5771,8 +5789,8 @@ try {
       },
       selectHistory: function (ts) { return selectBriefHistory(ts); },
       refreshBrief: function () { return collectBrief(); },
-      // DSH-009: the gate as the panel sees it (false until Dale's
-      // viewer posting decision lands); the rendered button mirrors it.
+      // DSH-009, HN-001: the gate as the panel sees it (true: the
+      // read-only refresh is enabled); the rendered button mirrors it.
       briefMeNowGate: function () { return BRIEF_ME_NOW_ENABLED; },
       // DSH-010: feed a plan-preview payload (spec §5.2) and render
       // it; drive the Plan / Reject buttons through the same

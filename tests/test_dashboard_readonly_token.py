@@ -17,10 +17,11 @@ so all four panels render busy at once. The assertions:
   rejects nothing and no panel surfaces a token error
   (panelErrors all null);
 - every write affordance renders disabled with the plain
-  explanation: Brief me now, dispatch Post, alert Acknowledge and
-  Resolve, each next to "Posting is off for this build.";
+  explanation: dispatch Post, alert Acknowledge and Resolve, each
+  next to "Posting is off for this build."; Brief me now renders
+  enabled: it is a read, not a write (HN-001), and never posts;
 - the live ack/resolve drivers return "gated" and leave the alert
-  untouched, so a read-only viewer never mutates state.
+  untouched, so a read-only viewer never mutates shared state.
 
 The node driver stubs U.api/busHooks/document like the other
 dashboard harness tests. The beat ts and brief generated_at come
@@ -248,15 +249,15 @@ class DashboardReadonlyTokenTest(unittest.TestCase):
                           snap["beat"], snap["alerts"]),
                          (2, 2, True, True, 1))
 
-    def test_write_buttons_disabled_with_explanation(self):
+    def test_write_buttons_disabled_brief_button_enabled(self):
         data = _run_driver()
         self.assertEqual(data["gates"],
-                         {"briefMeNow": False, "dispatchPost": False,
+                         {"briefMeNow": True, "dispatchPost": False,
                           "alertWrite": False})
-        self.assertIn("<button disabled>Brief me now</button>",
+        self.assertIn('<button id="intel-brief-now">Brief me now</button>',
                       data["bodies"]["brief"])
-        self.assertIn("Posting is off for this build.",
-                      data["bodies"]["brief"])
+        self.assertNotIn("Posting is off for this build.",
+                         data["bodies"]["brief"])
         self.assertIn("disabled", data["bodies"]["dispatch"])
         self.assertIn("Posting is off for this build.",
                       data["bodies"]["dispatch"])

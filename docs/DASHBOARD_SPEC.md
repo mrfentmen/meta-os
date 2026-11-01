@@ -61,19 +61,21 @@ spec lives here.
   with HTTP 403; all four panels rendered busy (2 crew rows, 2 jobs,
   latest brief, 1 open alert, fresh beat), zero write commands were
   attempted, zero rejections fired, no panel raised a token error,
-  and Brief me now / dispatch Post / alert Acknowledge / Resolve all
-  rendered disabled next to `Posting is off for this build.`, with
-  the live ack/resolve drivers returning `gated` and the alert
-  untouched.
+  and dispatch Post / alert Acknowledge / Resolve rendered disabled
+  next to `Posting is off for this build.`, with the live ack/resolve
+  drivers returning `gated` and the alert untouched. Brief me now
+  rendered enabled: it refreshes the latest brief from the live store
+  and never posts.
 - **Nothing posts without Dale's word** (GOV-002 as ruled 2026-10-24;
   DSH-009/DSH-011 gates): the bus is not touched by this build except a
   fix or an OS-required upgrade. Viewer write paths ship
   disabled/read-only. Dispatch approve is decided, not pending: it is
   request-only per the DSH-038 decision in section 5.6, so its gate
   stays off by decision rather than waiting on a posting rule.
-  Brief-me-now stays gated until Dale's posting rule for the viewer
-  lands; the shapes below are defined now so a gate flip, where one
-  is still possible, is a switch, not a redesign.
+  Brief-me-now's send path stays unwired until Dale's posting rule
+  for the viewer lands; its read-only refresh is enabled (HN-001).
+  The shapes below are defined now so a gate flip, where one is
+  still possible, is a switch, not a redesign.
 - **Example payloads:** the JSON blocks in this spec are *contract
   shapes* — field names, types, and nesting that producers must emit and
   panels must consume. Panel development and tests run against real
@@ -244,11 +246,13 @@ color alone (DSH-019); no new palette colors are used. Covered by
 the room, newest first, each labeled with its `kind`; selecting one
 renders that record through the same renderer.
 
-**"Brief me now" (DSH-009):** a button that requests an on-demand brief
-through the viewer's existing send path. It ships **disabled with the
-explanation "posting is off for this build"** until Dale's viewer
+**"Brief me now" (DSH-009, HN-001):** a button that refreshes the
+latest brief from the live store on demand. It calls the read-only
+collect path (GET the brief index, GET the latest record) and renders
+it; it never posts, so it ships **enabled**. The send path
+(requesting a newly generated brief) stays unwired until Dale's viewer
 posting decision lands (GOV-002). There is no code path in the panel
-that posts without that decision flipping the gate.
+that posts a brief request.
 
 ## 5. Dispatch panel (DSH-010, DSH-011, DSH-012) + payload contracts (DSP-037–DSP-040)
 
