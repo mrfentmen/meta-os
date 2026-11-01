@@ -26,8 +26,8 @@ churning while he sleeps: post at every stage boundary on room 1.
 - R2: Write the K2 framebuffer module as a separate file in
   kernel/src/, against the bootloader version in the lockfile,
   not wired into main.rs yet.
-- R3: Write the K3 interrupt module skeleton (IDT, handlers as
-  stubs with the print paths), separate file, not wired in.
+- R3: Write the K3 interrupt module (IDT, handlers with their
+  real print behavior — no stubs), separate file, not wired in.
 - R4: Keep a running list of Mac build questions for OpenCode in
   kernel/MAC_QUESTIONS.md (exact API points, not vibes).
 - R5: When OpenCode's os-build branch shows a K1 boot log, rebase
@@ -55,9 +55,10 @@ churning while he sleeps: post at every stage boundary on room 1.
   the agent's structured view. Spec in os-build/shell-spec.md.
 - H2: The banner and status formats as data: exact strings and
   fields, so kernel and services emit the same facts.
-- H3: A clickable mock of the OS home surface in the app (the
-  programs must be able to show the OS state later): static,
-  labeled MOCK, no fake live data.
+- H3: The OS home surface gets built ONLY when it reads real OS
+  state. No mock, no clickable fake, no placeholder screen: until
+  real state exists to show, the surface does not exist. When it
+  is built, every value on it traces to a real source.
 - H4: The first minute walkthroughs (user and agent) drafted from
   the spec, every unbuilt step marked NOT BUILT.
 - H5: Musica and the other programs stay warm, not hot: no new
