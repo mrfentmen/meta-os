@@ -56,6 +56,10 @@ The night watch for machines. One patrol:
      known-exploited vulnerability present, service down,
      anomalous exposure, certificate issued, security headers
      missing, dns drift, subdomain unexpected network.
+  3b. False-positive log (RW-009): observations matching a dismissal
+     in the review file (same category, host, and finding key, with
+     a recorded reason) become "dismissed" audit records instead of
+     observations, and are never escalated.
   4. Appends one record per observation to the patrol record (JSONL),
      plus one patrol-summary record per patrol.
 
@@ -120,6 +124,10 @@ import ipaddress
 import json
 
 import dedup
+try:
+    import false_positives as fp
+except ImportError:  # patrol imported from elsewhere; tests put runtime/ on path
+    fp = None
 import os
 import socket
 import ssl
@@ -568,7 +576,8 @@ def fetch_headers(host, port, timeout=HEADER_TIMEOUT):
 def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                seen_cve=None, fetch_ct_fn=None, seen_ct=None,
                fetch_headers_fn=None, fetch_dns_fn=None, seen_dns=None,
-               resolve_subdomain_fn=None, seen_dedup=None):
+               resolve_subdomain_fn=None, seen_dedup=None,
+               dismissals=None, review_errors=None):
     """One patrol. Returns (records, seen_cve, seen_ct).
 
     Every observation is classified and recorded. Yellow records are
@@ -779,7 +788,31 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                                        "anomalous exposure",
                                        {"port": p}))
 
-    # 2c. Alert dedup (RW-008): identical alert findings inside the
+    # 2c. False-positive log (RW-009): dismissals from the review
+    # file suppress the same finding signature, never a whole
+    # category and never a different host. A suppressed finding
+    # becomes a "dismissed" audit record, not an observation, so
+    # it is counted nowhere as an observation and never escalates.
+    # Review-file errors are summary errors and suppress nothing
+    # beyond the valid entries already loaded.
+    if review_errors:
+        errors.extend(review_errors)
+    dismissed_records = []
+    if dismissals and fp is not None:
+        dismissal_map = fp.build_dismissal_map(dismissals)
+        kept = []
+        for record in records:
+            dismissed, reason = fp.is_dismissed(record, dismissal_map)
+            if dismissed:
+                dismissed_records.append(
+                    fp.make_dismissed_record(now, record, reason))
+            else:
+                kept.append(record)
+        records = kept
+    else:
+        dismissal_map = {}
+
+    # 2d. Alert dedup (RW-008): identical alert findings inside the
     # configured window collapse into one record with a count.
     # Baseline normal records are history, not alerts, and pass
     # through untouched. This runs before escalations so a
@@ -806,6 +839,7 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     escalations = [escalate(r, now) for r in records
                    if r["tier"] == "red"]
     records.extend(escalations)
+    records.extend(dismissed_records)
 
     counts = {c: 0 for c in CATEGORIES}
     for r in records:
@@ -822,6 +856,8 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
         "subdomains_checked": subdomains_checked,
         "observations": counts,
         "escalations": len(escalations),
+        "false_positives_suppressed": len(dismissed_records),
+        "false_positive_review_entries": len(dismissals or []),
         "errors": errors,
         "dedup_collapsed": dedup_collapsed,
         "dedup_suppressed": dedup_suppressed,
@@ -893,7 +929,27 @@ def main(argv=None):
     run.add_argument("--dns-file", help="read DNS snapshots from a local "
                                         "JSON file {domain: snapshot} "
                                         "instead of resolving them")
+    run.add_argument("--review", help="false-positive review file "
+                                      "(JSONL dismissals; defaults to "
+                                      "the config's "
+                                      "false_positive_review path)")
+    dismiss = sub.add_parser("dismiss", help="record a false-positive "
+                                            "dismissal in the review file")
+    dismiss.add_argument("--review", required=True)
+    dismiss.add_argument("--category", required=True)
+    dismiss.add_argument("--host", default=None)
+    dismiss.add_argument("--key", required=True)
+    dismiss.add_argument("--reason", required=True)
     args = parser.parse_args(argv)
+
+    if args.command == "dismiss":
+        if fp is None:
+            print("false_positives module unavailable", file=sys.stderr)
+            return 1
+        entry = fp.append_dismissal(args.review, args.category,
+                                    args.host, args.key, args.reason)
+        print("dismissal recorded: %s" % json.dumps(entry, sort_keys=True))
+        return 0
 
     with open(args.config) as f:
         config = json.load(f)
@@ -926,11 +982,17 @@ def main(argv=None):
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     seen, seen_ct, seen_dns = load_state(args.state)
     seen_dedup = load_dedup_state(args.state)
+    review_path = args.review or config.get("false_positive_review")
+    dismissals, review_errors = ([], [])
+    if review_path and fp is not None:
+        dismissals, review_errors = fp.load_review(review_path)
     records, seen, seen_ct = run_patrol(config, now, fetch_fn, probe_cert,
                                         probe_port, seen, fetch_ct_fn,
                                         seen_ct, fetch_dns_fn=fetch_dns_fn,
                                         seen_dns=seen_dns,
-                                        seen_dedup=seen_dedup)
+                                        seen_dedup=seen_dedup,
+                                        dismissals=dismissals,
+                                        review_errors=review_errors)
     save_state(args.state, seen, seen_ct, seen_dns, seen_dedup)
 
     lines = "".join(json.dumps(r, sort_keys=True) + "\n" for r in records)
