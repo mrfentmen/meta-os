@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, rmSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -17,6 +17,7 @@ function today() {
 }
 
 test("cap hit stops the session gracefully, not as an error", () => {
+  rmSync(staging, { recursive: true, force: true });
   const config = join(staging, "budget.json");
   const ledger = join(staging, "spend.json");
   const session = join(staging, "sessions", "capped");
@@ -39,9 +40,12 @@ test("cap hit stops the session gracefully, not as an error", () => {
 });
 
 test("under the cap the loop runs normally", () => {
+  rmSync(staging, { recursive: true, force: true });
+  mkdirSync(staging, { recursive: true });
   const config = join(staging, "budget.json");
   const ledger = join(staging, "spend.json");
   const session = join(staging, "sessions", "under-cap");
+  writeFileSync(config, JSON.stringify({ daily_cap_usd: 5.0 }));
   writeFileSync(ledger, JSON.stringify(
     [{ date: today(), usd: 1.0, take_id: "take-001" }]));
   execFileSync("python3", [join(runtime, "compose.py"),

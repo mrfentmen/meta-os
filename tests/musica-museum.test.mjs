@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,6 +18,7 @@ function py(script, args) {
 }
 
 test("museum renders real rejects with reasons", () => {
+  rmSync(staging, { recursive: true, force: true });
   const session = join(staging, "sessions", "museum-a");
   py("compose.py", ["--session-dir", session, "--brief-id", "chipsynth",
     "--takes", "3", "--seed-base", "14000"]);

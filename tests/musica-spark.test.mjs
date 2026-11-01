@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -49,11 +49,13 @@ print("SPARK-OK")
 `;
 
 test("spark builders follow the repo contract and record attempts", () => {
+  rmSync(staging, { recursive: true, force: true });
   const out = execFileSync("python3", ["-"], { input: driver, encoding: "utf8" });
   assert.match(out, /SPARK-OK/);
 });
 
 test("loop with --spark-assist records an attempt per take", () => {
+  rmSync(staging, { recursive: true, force: true });
   execFileSync("python3", [join(runtime, "compose.py"),
     "--session-dir", staging, "--brief-id", "chipsynth",
     "--takes", "2", "--seed-base", "6000", "--spark-assist", "structure"],

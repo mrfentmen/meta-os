@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,6 +18,7 @@ function py(script, args) {
 }
 
 test("rights check rejects tracks with empty rights lines", () => {
+  rmSync(staging, { recursive: true, force: true });
   py("compose.py", ["--session-dir", staging, "--brief-id", "chipsynth",
     "--takes", "3", "--seed-base", "9200"]);
   py("keepers.py", [staging]);

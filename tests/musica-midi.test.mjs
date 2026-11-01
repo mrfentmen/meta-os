@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,6 +19,7 @@ function py(script, args) {
 }
 
 test("MIDI export writes the take's own notes via pretty_midi", () => {
+  rmSync(staging, { recursive: true, force: true });
   py("compose.py", ["--session-dir", staging, "--brief-id", "chipsynth",
     "--takes", "2", "--seed-base", "17000"]);
   py("keepers.py", [staging]);

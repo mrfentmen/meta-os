@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -19,6 +19,7 @@ function py(script, args) {
 }
 
 test("demo cut lands on target from labelled keeper excerpts", () => {
+  rmSync(staging, { recursive: true, force: true });
   py("compose.py", ["--session-dir", staging, "--brief-id", "chipsynth",
     "--takes", "5", "--seed-base", "1000"]);
   py("keepers.py", [staging]);

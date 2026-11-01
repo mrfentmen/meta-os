@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync, existsSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,6 +12,7 @@ const runtime = join(root, "os/worlds/musica/runtime");
 const staging = join(root, "..", "staging", "musica-overnight-test");
 
 test("overnight pipeline runs and reports honest counts", () => {
+  rmSync(staging, { recursive: true, force: true });
   const out = execFileSync("python3", [join(runtime, "overnight.py"),
     "--session-dir", staging, "--brief-id", "chipsynth",
     "--brief-file", join(root, "os/worlds/musica/briefs/chipsynth.md"),

@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,6 +18,7 @@ function py(script, args) {
 }
 
 test("prompt library reports keeper rates from the logs", () => {
+  rmSync(staging, { recursive: true, force: true });
   const a = join(staging, "sessions", "lib-a");
   const b = join(staging, "sessions", "lib-b");
   py("compose.py", ["--session-dir", a, "--brief-id", "chipsynth",

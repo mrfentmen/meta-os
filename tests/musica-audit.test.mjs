@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync, spawnSync } from "node:child_process";
-import { readFileSync, writeFileSync, copyFileSync } from "node:fs";
+import { readFileSync, writeFileSync, copyFileSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -24,6 +24,7 @@ function audit(session) {
 }
 
 test("audit passes a clean catalogue and catches silence + duplicates", () => {
+  rmSync(staging, { recursive: true, force: true });
   py("compose.py", ["--session-dir", staging, "--brief-id", "chipsynth",
     "--takes", "3", "--seed-base", "22000"]);
   py("keepers.py", [staging]);

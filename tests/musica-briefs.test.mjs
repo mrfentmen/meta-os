@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,6 +20,7 @@ const EXPECTED = {
 for (const [id, params] of Object.entries(EXPECTED)) {
   test(`brief ${id} parses and drives a logged session`, () => {
     const staging = join(root, "..", "staging", `musica-brief-${id}`);
+    rmSync(staging, { recursive: true, force: true });
     const out = execFileSync("python3", [join(runtime, "compose.py"),
       "--session-dir", staging, "--brief-id", id,
       "--brief-file", join(briefs, `${id}.md`),

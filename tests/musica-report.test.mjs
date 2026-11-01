@@ -3,7 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -18,6 +18,7 @@ function py(script, args) {
 }
 
 test("session report matches the take log", () => {
+  rmSync(staging, { recursive: true, force: true });
   py("compose.py", ["--session-dir", staging, "--brief-id", "chipsynth",
     "--brief-text", "report prompt", "--takes", "3", "--seed-base", "19000"]);
   py("keepers.py", [staging]);
