@@ -30,7 +30,10 @@
   <button id="btn-play">Play</button>
   <button id="btn-pause">Pause</button>
   <button id="btn-restart">Replay</button>
-  <label>Tempo <input type="range" id="tempo" min="60" max="200" value="92"> <span id="tempo-val">92 bpm</span></label>
+  <label>Tempo <input type="range" id="tempo" min="60" max="140" value="92"> <span id="tempo-val">92 bpm</span></label>
+    <button id="btn-mode" aria-pressed="false">Mode: scale</button>
+    <button id="btn-row2" aria-pressed="false">Row 2: octave</button>
+    <button id="btn-metro" aria-pressed="false">Metronome: off</button>
   <label>Volume <input type="range" id="vol" min="0" max="100" value="80"> <span id="vol-val">80%</span></label>
   <button id="btn-labels" aria-pressed="true">Note names</button>
   <button id="btn-v2" aria-pressed="true">Octave row</button>
@@ -38,10 +41,11 @@
 <div id="meta" aria-live="polite"></div>
 <canvas id="view"></canvas>
 <div id="fps">frame rate: measuring…</div>
+<div id="loadms">first render: measuring…</div>
 <footer>Notes in one accent color (cyan); the playing note turns amber #FFBE55 (the film accent). Audio: WebAudio triangle wave, A4 = 440 Hz. All geometry from primitives.</footer>
 <script src="vendor/three.min.js"></script>
 <script type="module">
-import { SCALE, NOTE_Y, BEATS, freqOf, octaveUp } from "./notes-data.mjs";
+import { SCALE, MINOR_SCALE, CHORDS, CHORD_ORDER, NOTE_Y, BEATS, freqOf, octaveUp } from "./notes-data.mjs";
 // Color rule: every note is cyan #22D3EE at rest; the note under the
 // playhead turns amber #FFBE55 while it sounds, then back to cyan.
 const REST = 0x22d3ee, PLAYING = 0xffbe55, ROW2 = 0x8a6f3f;
@@ -50,8 +54,14 @@ let renderer, scene, camera, audio = null, master = null;
 let row1 = [], row2 = [], playhead, theta = 0.9, phi = 1.05, dist = 16;
 let playing = false, playT = 0, lastT = 0, showLabels = true, v2on = true;
 let bpm = 92, vol = 0.8, fpsAcc = 0, fpsN = 0;
+const T0 = performance.now();
+let mode = "scale", row2src = "octave", metro = false, lastBeat = -1;
 const beatLen = () => 60 / bpm;
-const songLen = () => SCALE.reduce((s, e) => s + BEATS[e.v] * beatLen(), 0);
+function currentMelody() { return row2src === "minor" ? MINOR_SCALE : SCALE; }
+function songLen() {
+  if (mode === "chords") return CHORD_ORDER.length * 2 * beatLen();
+  return currentMelody().reduce((t, e) => t + BEATS[e.v] * beatLen(), 0);
+}
 
 // Note models from primitives. Differences:
 // whole: filled head, NO stem, NO flag. half: HOLLOW head (torus) + stem.
@@ -121,10 +131,51 @@ function layoutRow(names, z, scale, color, isRow2) {
 }
 
 function buildSong() {
-  row1 = layoutRow(SCALE, 0.9, 1.0, REST, false);
-  row2 = layoutRow(SCALE.map((e) => ({ n: octaveUp(e.n), v: e.v })), -1.6, 0.7, ROW2, true);
+  [...row1, ...row2].forEach((n) => scene.remove(n));
+  row1 = [];
+  row2 = [];
+  if (mode === "chords") {
+    const x0 = -6.5, dx = 13 / CHORD_ORDER.length;
+    CHORD_ORDER.forEach((ck, ci) => {
+      const x = x0 + dx * (ci + 0.5);
+      const t0 = ci * 2 * beatLen(), t1 = t0 + 2 * beatLen();
+      CHORDS[ck].forEach((e) => {
+        const n = makeNote(e.v, REST);
+        n.scale.setScalar(1.0);
+        n.position.set(x, NOTE_Y[e.n] * SPACING + 2.2, 0.9);
+        const lab = labelSprite(e.n);
+        lab.position.set(0, 0.85, 0);
+        n.add(lab);
+        n.userData = { ...n.userData, name: e.n, label: lab, baseY: n.position.y, t0, t1, dur: t1 - t0, chord: ck, voice2: false };
+        scene.add(n);
+        row1.push(n);
+      });
+    });
+  } else {
+    const mel = currentMelody();
+    row1 = layoutRow(mel, 0.9, 1.0, REST, false);
+    const r2 = row2src === "minor" ? MINOR_SCALE : mel.map((e) => ({ n: octaveUp(e.n), v: e.v }));
+    row2 = layoutRow(r2, -1.6, 0.7, ROW2, true);
+  }
+  playT = Math.min(playT, songLen());
+}
+function addLabel(n, name) {
+  const lab = labelSprite(name);
+  lab.position.set(0, 0.85, 0);
+  n.add(lab);
+  n.userData.label = lab;
 }
 
+function click(t0) {
+  const o = audio.createOscillator(), g = audio.createGain();
+  o.type = "square";
+  o.frequency.value = 2000;
+  g.gain.setValueAtTime(0.12, t0);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.05);
+  o.connect(g).connect(master);
+  o.start(t0);
+  o.stop(t0 + 0.06);
+}
 function tone(f, t0, dur) {
   const o = audio.createOscillator(), g = audio.createGain();
   o.type = "triangle";
@@ -138,7 +189,14 @@ function tone(f, t0, dur) {
 }
 
 function update(dt) {
-  if (playing) { playT += dt; if (playT >= songLen()) playT = 0; }
+  if (playing) {
+    playT += dt;
+    if (playT >= songLen()) { playT = 0; lastBeat = -1; }
+    if (audio && metro) {
+      const b = Math.floor(playT / beatLen());
+      if (b !== lastBeat) { lastBeat = b; click(audio.currentTime); }
+    }
+  }
   playhead.position.x = -6.5 + 13 * (playT / songLen());
   let sounding = [];
   for (const [list, on] of [[row1, true], [row2, v2on]]) {
@@ -154,8 +212,9 @@ function update(dt) {
       u.was = active;
     }
   }
+  const what = mode === "chords" ? "chord progression C-G-Am-F" : "placeholder C major" + (v2on ? (row2src === "minor" ? " + A-minor row" : " + octave row") : "");
   document.getElementById("meta").textContent = playing
-    ? "Playing (placeholder C major" + (v2on ? " + octave row" : "") + ")" + (sounding.length ? " — sounding: " + sounding.join(", ") : "")
+    ? "Playing (" + what + ")" + (sounding.length ? " — sounding: " + sounding.join(", ") : "")
     : "Stopped. Press Play. Space toggles, R replays.";
   fpsAcc += dt; fpsN++;
   if (fpsAcc >= 1) {
@@ -179,8 +238,11 @@ function init() {
   scene.add(grid);
   const lineMat = new THREE.MeshStandardMaterial({ color: 0x2a3644, roughness: 0.8 });
   for (let L = 0; L < 5; L++) {
-    const line = new THREE.Mesh(new THREE.BoxGeometry(LINE_X1 - LINE_X0, 0.03, 30), lineMat);
-    line.position.set(0, L * SPACING + 2.2, -8);
+    const line = new THREE.Mesh(new THREE.BoxGeometry(LINE_X1 - LINE_X0, 0.03, 28), lineMat);
+    // Slabs recede BEHIND both note rows (rows at z=0.9 and z=-1.6 stay
+    // clear of the slab volume z -31..-3) so they never occlude notes
+    // from the front. The old slabs (z -23..+7) swallowed every low note.
+    line.position.set(0, L * SPACING + 2.2, -17);
     scene.add(line);
   }
   playhead = new THREE.Mesh(
@@ -237,14 +299,36 @@ function init() {
     v2on = !v2on;
     e.currentTarget.setAttribute("aria-pressed", String(v2on));
   });
+  document.getElementById("btn-mode").addEventListener("click", (e) => {
+    mode = mode === "scale" ? "chords" : "scale";
+    e.currentTarget.textContent = "Mode: " + mode;
+    e.currentTarget.setAttribute("aria-pressed", String(mode === "chords"));
+    buildSong();
+  });
+  document.getElementById("btn-row2").addEventListener("click", (e) => {
+    row2src = row2src === "octave" ? "minor" : "octave";
+    e.currentTarget.textContent = "Row 2: " + row2src;
+    e.currentTarget.setAttribute("aria-pressed", String(row2src === "minor"));
+    buildSong();
+  });
+  document.getElementById("btn-metro").addEventListener("click", (e) => {
+    metro = !metro;
+    e.currentTarget.textContent = "Metronome: " + (metro ? "on" : "off");
+    e.currentTarget.setAttribute("aria-pressed", String(metro));
+  });
   document.addEventListener("keydown", (e) => {
     if (e.target.tagName === "INPUT" && e.target.type === "text") return;
     if (e.code === "Space" && !e.repeat) { e.preventDefault(); ensureAudio(); playing = !playing; }
     if (e.key === "r" || e.key === "R") playT = 0;
   });
-  let lastT = 0;
+  let lastT = 0, firstFrame = true;
   const frame = (t) => {
     requestAnimationFrame(frame);
+    if (firstFrame) {
+      firstFrame = false;
+      document.getElementById("loadms").textContent =
+        "first render: " + Math.round(performance.now() - T0) + " ms after script start (this Mac, headless Chromium)";
+    }
     const dt = Math.min(0.1, (t - lastT) / 1000 || 0);
     lastT = t;
     update(dt);

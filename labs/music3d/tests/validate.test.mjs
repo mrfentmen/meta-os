@@ -4,7 +4,7 @@
 // Run: node --test labs/music3d/tests/validate.test.mjs
 import test from "node:test";
 import assert from "node:assert/strict";
-import { SCALE, NOTE_Y, BEATS, freqOf, octaveUp } from "../notes-data.mjs";
+import { SCALE, MINOR_SCALE, CHORDS, NOTE_Y, BEATS, freqOf, octaveUp } from "../notes-data.mjs";
 
 test("height map covers C4 to C5 in order", () => {
   const names = ["C4", "D4", "E4", "F4", "G4", "A4", "B4", "C5"];
@@ -23,6 +23,21 @@ test("playback order matches the scale data", () => {
   for (const e of SCALE) {
     assert.ok(BEATS[e.v] > 0, `${e.n} has a positive beat value`);
     assert.ok(Number.isFinite(freqOf(e.n)), `${e.n} has a frequency`);
+  }
+});
+
+test("minor scale is covered ascending and descending", () => {
+  const names = MINOR_SCALE.map((e) => e.n);
+  assert.ok(names.includes("A4") && names.includes("A5"), "minor spans A4..A5");
+  for (const n of names) {
+    assert.ok(Number.isFinite(NOTE_Y[n]), `${n} has a height`);
+  }
+});
+
+test("chords have no duplicate heights", () => {
+  for (const [name, tones] of Object.entries(CHORDS)) {
+    const hs = tones.map((t) => NOTE_Y[t.n]);
+    assert.equal(new Set(hs).size, hs.length, `${name} heights distinct`);
   }
 });
 

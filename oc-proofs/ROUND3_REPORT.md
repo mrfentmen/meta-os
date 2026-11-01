@@ -85,3 +85,55 @@
 - NC-047 DONE. labs/delaney-xcheck/README.md with the gate-is-Milo's
   sentence first.
 - NC-048: this summary.
+
+## Section E — Musica 3D, expansion (NC-049..NC-060) — DONE
+
+- NC-049 DONE. A natural minor scale as second playable row (toggle
+  Row 2: octave/minor), same NOTE_Y map, no new geometry code.
+- NC-050 DONE. Chord stacks C/G/Am/F as three-note columns in a chord
+  mode; all three highlight + sound in sync (meta names them).
+- NC-051 DONE. Tempo slider now 60–140 BPM; single beatLen() drives
+  playhead + tones. Verified playing at 60 and 140 (labels read, no
+  errors, highlight tracks).
+- NC-052 DONE. Metronome toggle (square-wave click per beat), off by
+  default; toggled on without errors.
+- NC-053 DONE. 4 fresh shots in labs/music3d/shots/: start, mid-chord
+  (amber G major), minor row (A minor playing), octave row.
+- NC-054 DONE. oc-proofs/nc-054-chords-15s.mp4 (15.0 s, video + matching
+  chord audio; stitched-screenshot method stated).
+- NC-055 DONE. Tests extended to 5/5 (minor coverage, chord heights
+  distinct, octave 2x).
+- NC-056 DONE. Amber #FFBE55 hits: footer text, code comment, PLAYING
+  const, update() emissive+color sets. Caught + fixed a real bug where
+  only the glow (not the color) changed.
+- NC-057 DONE. labs/music3d/note-map.json (scale, minor, chords, order,
+  heights) generated from the data module; parses (15/15/4 verified).
+- NC-058 DONE. 390 px shot: toolbar wraps, staff + notes visible, no
+  note clipped.
+- NC-059 DONE. First render: 20/18/18 ms over 3 loads, median 18 ms.
+- NC-060: this summary. Plus a real rendering bug found and fixed by the
+  chord shots: staff slabs (z -23..+7) occluded every low note from the
+  default camera (labels draw through, bodies did not). Slabs moved to
+  z -31..-3 behind both rows; chord columns now fully visible. Affected
+  all scale shots too — re-shot after the fix.
+
+## Section G (round 2 tail): endurance drills — DONE except offline
+
+- Soak 60 min (:8092, valid-frame held traffic): 12/12 samples, every
+  health=200, assess=503, cameras=200, zero errors. RSS 59.8 MB start,
+  103.3 MB after camera-proxy warmup (t+2), then 95–99 MB flat for 50
+  min; peak 105,008 KB at t+4. No leak trend. Full log:
+  oc-proofs/soak-mem.log.
+- NB-072: 0 dispatches (no queue, no live model — nothing to dispatch;
+  every receipt anywhere this round is sim-; count of receipts: 0).
+- NB-073: trip recorded (556 stub calls, exact message + $75.00 figure).
+- NB-074 DONE post-soak: killed :8092 (100 MB RSS), restarted, healthy
+  in 1 s, held path 503 immediately. Records dir unchanged (220K,
+  no crew-data — queue never ran here).
+- NB-075: 220K before and after (0 growth; per-day projection at this
+  cadence: 0 — the app server is stateless, records only grow when the
+  queue runs).
+- NB-076: 129 completed iterations, all cameras=200 + assess=503; one
+  ~1-min window of localhost-refused mid-run, self-recovered, no crash.
+- NB-077: TZ-independent (no wall-clock timestamps in the served API).
+- NB-078/079 BLOCKED: no sudo, no fault-injection path. Recorded.
