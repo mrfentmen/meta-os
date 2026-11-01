@@ -49,7 +49,7 @@ fn serial_write_str(s: &str) {
     }
 }
 
-fn kernel_main(_boot_info: &'static mut bootloader::BootInfo) -> ! {
+fn kernel_main(_boot_info: &'static bootloader::BootInfo) -> ! {
     serial_init();
     serial_write_str("META OS KERNEL - alive (K1)\n");
     loop {
