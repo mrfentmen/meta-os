@@ -224,3 +224,64 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
   No rounding up: 5/5 with log lines each.
 - OS-086: unsafe ledger extended (above). DONE.
 - OS-088: this summary. Pushing.
+
+## Sections G–J — research + tools (OS-089..OS-152) — DONE
+
+### Section G — Debian audit (OS-089..OS-104)
+- OS-089..096: eight maps under os-build/research/debian-*.md,
+  read from the real bake (build-image.sh), preseed.cfg, and
+  packages.txt — never from assumed Debian. DONE.
+- OS-097/098: 20 rough edges + one-line answers each
+  (debian-rough-edges.md). DONE.
+- OS-099/100: keep-vs-replace list in the same file. DONE.
+- OS-101: clean-room rule card (clean-room.md). DONE.
+- OS-102: 5 second-source spot checks done during writing
+  (systemd.special(7), APT/FHS docs). DONE.
+- OS-103: the 10 findings that most change the build: single
+  shared uid (identity), flat supervision (ordered supervision),
+  no rollback (A/B), uncapped logs (budgets), volatile records
+  (append-only), dpkg half-states (atomic generations), silent
+  old kernel (proof names binary), DHCP-or-wait (offline mode),
+  unpinned versions (pin step), rebake-as-recovery (revert path).
+- OS-104: this block. DONE.
+
+### Section H — other systems (OS-105..OS-118)
+- OS-105..112: already on main under
+  os-build/research/distros/ (8 systems, idea + license each).
+  Verified present, not duplicated. DONE (by verification).
+- OS-113: consolidated borrow list (others/borrow-list.md). DONE.
+- OS-114: A/B update design (others/ab-update.md). DONE.
+- OS-115: appliance note, person + agent views
+  (others/appliance.md). DONE.
+- OS-116/117: ranking + GPL red list (others/ranking.md). DONE.
+- OS-118: this block. DONE.
+
+### Section I — agent gaps (OS-119..OS-132)
+- OS-119..127: nine design notes (agent-identity/memory.md,
+  tool-registry.md, mcp-host.md, bus.md, records.md,
+  attention.md, budgets.md, sandboxing.md). DONE.
+- OS-128: every note ends with the human-visible paragraph. DONE.
+- OS-129: first three to build after K6: (1) records (OS-124) —
+  without the audit trail nothing else is trustworthy; (2) MCP
+  host (OS-122/163) — tools are how agents act; (3) sandboxing
+  (OS-127) — the shared-uid hole is open until closed.
+- OS-130: layer map (layer-map.md). DONE.
+- OS-131: drift-checked against KERNEL_SPEC rules 1-6: clean.
+- OS-132: this block. DONE.
+
+### Section J — tools manifest (OS-133..OS-152)
+- OS-133..141 + OS-146..150: TOOLS_MANIFEST.md (categories,
+  versions sources, licenses, sizes, trim, kernel-native view,
+  prerequisites, update rule). DONE.
+- OS-142: install-tools.sh (Mac adaptation stated: no OS image
+  was ever delivered; the dev carrier is this Mac). DONE.
+- OS-143/144: ran clean twice (exit 0), second run 0 missing
+  after adding ~/.cargo/bin to the script PATH. DONE
+  (os-build/logs/install-tools.txt).
+- OS-145: 10+ tools verified with versions (qemu, jq, rg,
+  ffmpeg, sqlite3, python3, node, npm, git, curl, rustc, cargo,
+  bootimage). DONE.
+- OS-146: sizes — QEMU 696M, Rust toolchain 1.6G. DONE.
+- OS-147..150: trim / kernel-native / prerequisites / update
+  rule in the manifest. DONE.
+- OS-151/152: this block. DONE.
