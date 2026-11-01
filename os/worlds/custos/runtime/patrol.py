@@ -9,6 +9,12 @@ The night watch for machines. One patrol:
      "known-exploited vulnerability present" (red). Presence means the
      inventory names the product; it is never a claim that an exploit
      was observed.
+  1b. Polls Certificate Transparency logs (crt.sh) for the
+     configured watched domains. A newly issued cert for a watched
+     domain becomes a "certificate issued" record (yellow). Cert ids
+     already in the seen-state were recorded on an earlier patrol
+     and are never re-recorded; ct_since bounds a first patrol so
+     a domain with years of history does not flood the record.
   2. For every watched host: probes the service port (liveness),
      reads the TLS certificate the host actually presents (expiry),
      and probes a small set of sensitive ports the installation did
@@ -64,10 +70,12 @@ DEFAULT_KEV_URL = (
     "https://www.cisa.gov/sites/default/files/feeds/"
     "known_exploited_vulnerabilities.json"
 )
+DEFAULT_CT_URL_TEMPLATE = "https://crt.sh/?q=%25.{domain}&output=json"
 DEFAULT_CERT_WARN_DAYS = 21
 DEFAULT_SENSITIVE_PORTS = [22, 3306, 5432, 6379, 9200, 27017]
 PROBE_TIMEOUT = 5.0
 KEV_TIMEOUT = 30.0
+CT_TIMEOUT = 30.0
 
 CATEGORIES = (
     "baseline normal",
@@ -76,6 +84,7 @@ CATEGORIES = (
     "known-exploited vulnerability present",
     "service down",
     "anomalous exposure",
+    "certificate issued",
 )
 
 # Category -> tier. Yellow stops at record + flag (zero escalation
@@ -85,6 +94,7 @@ TIER_BY_CATEGORY = {
     "baseline normal": "none",
     "certificate expiring": "yellow",
     "anomalous exposure": "yellow",
+    "certificate issued": "yellow",
     "certificate expired": "red",
     "known-exploited vulnerability present": "red",
     "service down": "red",
@@ -177,6 +187,18 @@ def fetch_kev(url):
     return data.get("vulnerabilities", [])
 
 
+def fetch_ct(domain, url_template=DEFAULT_CT_URL_TEMPLATE):
+    """Certificate Transparency entries for a domain (crt.sh).
+
+    Returns the raw entry list. Matching and filtering live in the
+    patrol core, so the record keeps exactly what the log returned.
+    """
+    url = url_template.format(domain=domain)
+    req = urllib.request.Request(url, headers={"User-Agent": "meta-custos/0.1"})
+    with urllib.request.urlopen(req, timeout=CT_TIMEOUT) as resp:
+        return json.load(resp)
+
+
 def probe_port(host, port, timeout=PROBE_TIMEOUT):
     try:
         with socket.create_connection((host, port), timeout=timeout):
@@ -220,8 +242,8 @@ def probe_cert(host, port, timeout=PROBE_TIMEOUT):
 # The patrol.
 
 def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
-               seen_cve=None):
-    """One patrol. Returns (records, new_seen_cve).
+               seen_cve=None, fetch_ct_fn=None, seen_ct=None):
+    """One patrol. Returns (records, seen_cve, seen_ct).
 
     Every observation is classified and recorded. Yellow records are
     never escalated (zero escalation calls — the escalation list is
@@ -230,6 +252,7 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     """
     records = []
     seen = set(seen_cve or ())
+    seen_ids = set(seen_ct or ())
     warn_days = int(config.get("cert_warn_days", DEFAULT_CERT_WARN_DAYS))
     sensitive = list(config.get("sensitive_ports", DEFAULT_SENSITIVE_PORTS))
     errors = []
@@ -255,6 +278,41 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                                         entry.get("vendorProject", ""),
                                         entry.get("product", "")),
                                     "date_added": entry.get("dateAdded", "")}))
+
+    # 1b. Certificate Transparency: newly issued certs for watched
+    # domains. A cert id already in the seen-state was recorded on
+    # an earlier patrol and is never re-recorded; ct_since (ISO
+    # date) bounds the first patrol so a domain with years of
+    # history does not flood the record.
+    ct_seen_count = 0
+    ct_since = config.get("ct_since", "")
+    ct_fetch = fetch_ct_fn or fetch_ct
+    for domain in config.get("ct_domains", []):
+        try:
+            entries = ct_fetch(domain, config.get(
+                "ct_url_template", DEFAULT_CT_URL_TEMPLATE))
+        except Exception as exc:  # log down: noted, never invented
+            errors.append("ct fetch failed for %s: %s" % (domain, exc))
+            continue
+        ct_seen_count += len(entries)
+        for entry in entries:
+            ct_id = entry.get("id")
+            if ct_id in seen_ids:
+                continue
+            if ct_since and entry.get("not_before", "")[:10] < ct_since:
+                continue
+            seen_ids.add(ct_id)
+            records.append(make_record(now, "ct", domain,
+                                       "certificate issued",
+                                       {"ct_id": ct_id,
+                                        "common_name": entry.get(
+                                            "common_name", ""),
+                                        "issuer_name": entry.get(
+                                            "issuer_name", ""),
+                                        "not_before": entry.get(
+                                            "not_before", ""),
+                                        "not_after": entry.get(
+                                            "not_after", "")}))
 
     # 2. Per-host checks.
     for host_cfg in config.get("hosts", []):
@@ -295,11 +353,12 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
         "ts": now,
         "hosts_checked": len(config.get("hosts", [])),
         "kev_entries_seen": kev_seen_count,
+        "ct_entries_seen": ct_seen_count,
         "observations": counts,
         "escalations": len(escalations),
         "errors": errors,
     })
-    return records, seen
+    return records, seen, seen_ids
 
 
 # ---------------------------------------------------------------------
@@ -308,14 +367,17 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
 def load_state(path):
     if path and os.path.isfile(path):
         with open(path) as f:
-            return set(json.load(f).get("seen_cve", []))
-    return set()
+            data = json.load(f)
+        return (set(data.get("seen_cve", [])),
+                set(data.get("seen_ct", [])))
+    return set(), set()
 
 
-def save_state(path, seen):
+def save_state(path, seen_cve, seen_ct):
     if path:
         with open(path, "w") as f:
-            json.dump({"seen_cve": sorted(seen)}, f, indent=1)
+            json.dump({"seen_cve": sorted(seen_cve),
+                       "seen_ct": sorted(seen_ct)}, f, indent=1)
 
 
 def main(argv=None):
@@ -328,6 +390,8 @@ def main(argv=None):
     run.add_argument("--state", help="seen-state JSON file for KEV dedupe")
     run.add_argument("--kev-file", help="read the KEV feed from a local "
                                         "file instead of fetching it")
+    run.add_argument("--ct-file", help="read the CT entries from a local "
+                                       "file instead of fetching them")
     args = parser.parse_args(argv)
 
     with open(args.config) as f:
@@ -340,11 +404,19 @@ def main(argv=None):
     else:
         fetch_fn = fetch_kev
 
+    if args.ct_file:
+        with open(args.ct_file) as f:
+            ct_feed = json.load(f)
+        fetch_ct_fn = lambda _domain, _template: ct_feed
+    else:
+        fetch_ct_fn = None
+
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    seen = load_state(args.state)
-    records, seen = run_patrol(config, now, fetch_fn, probe_cert,
-                               probe_port, seen)
-    save_state(args.state, seen)
+    seen, seen_ct = load_state(args.state)
+    records, seen, seen_ct = run_patrol(config, now, fetch_fn, probe_cert,
+                                        probe_port, seen, fetch_ct_fn,
+                                        seen_ct)
+    save_state(args.state, seen, seen_ct)
 
     lines = "".join(json.dumps(r, sort_keys=True) + "\n" for r in records)
     if args.records:

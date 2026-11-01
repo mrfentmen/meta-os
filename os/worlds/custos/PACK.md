@@ -21,10 +21,11 @@ Custos is the night watch pointed at that problem: Imperium's machinery — watc
 - **Certificate expiry.** The certificate each watched host actually presents, in days remaining: baseline normal, expiring inside the configured warning window, or expired.
 - **Service liveness.** Whether each watched host's service port answers at all.
 - **Anomalous exposure.** Whether a sensitive port (database, cache, search, shell) answers on a watched host without being declared expected for that host.
+- **Newly issued certificates.** Certificate Transparency logs for watched domains: a cert id not yet in the seen-state becomes a certificate-issued record. `ct_since` bounds a first patrol so a domain with years of history does not flood the record.
 
 ## Categories and tiers
 
-Every observation lands in exactly one of six categories:
+Every observation lands in exactly one of seven categories:
 
 | Category | Tier | What happens |
 |---|---|---|
@@ -34,6 +35,7 @@ Every observation lands in exactly one of six categories:
 | certificate expired | red | Escalation chain runs. |
 | known-exploited vulnerability present | red | Escalation chain runs. |
 | service down | red | Escalation chain runs. |
+| certificate issued | yellow | Record + flag only. Zero escalation calls. |
 
 In stage 1 the escalation chain is real bookkeeping that ends at a **labelled SIMULATED endpoint**: the steps (record, notify, page, ticket) are written to the patrol record with `endpoint: "SIMULATED"`, and no real responder, vendor, or service is ever contacted. Yellow means a human reads it in the morning; red means the record says, in so many words, that a page *would* have gone out.
 

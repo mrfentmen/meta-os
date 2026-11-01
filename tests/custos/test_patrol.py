@@ -123,8 +123,10 @@ class TestCertExpiryParsing(unittest.TestCase):
 
 class TestPatrol(unittest.TestCase):
     def run_fake(self, open_map, fetch=fake_fetch, seen=None):
-        return patrol.run_patrol(fake_config(), NOW, fetch, fake_cert,
-                                 fake_port_factory(open_map), seen)
+        records, seen, _ct = patrol.run_patrol(
+            fake_config(), NOW, fetch, fake_cert,
+            fake_port_factory(open_map), seen)
+        return records, seen
 
     def test_full_patrol_categories_tiers_and_escalations(self):
         open_map = {("up.example", 443): True}
@@ -173,7 +175,7 @@ class TestPatrol(unittest.TestCase):
         config = fake_config()
         config["hosts"][0]["expected_ports"] = [443, 22]
         open_map = {("up.example", 443): True, ("up.example", 22): True}
-        records, _seen = patrol.run_patrol(
+        records, _seen, _ct = patrol.run_patrol(
             config, NOW, fake_fetch, fake_cert,
             fake_port_factory(open_map))
         self.assertEqual([r for r in observations(records)
@@ -182,7 +184,7 @@ class TestPatrol(unittest.TestCase):
     def test_cert_probe_failure_is_an_error_not_data(self):
         def no_cert(_host, _port):
             return None
-        records, _seen = patrol.run_patrol(
+        records, _seen, _ct = patrol.run_patrol(
             fake_config(), NOW, fake_fetch, no_cert,
             fake_port_factory({("up.example", 443): True}))
         self.assertEqual([r for r in observations(records)
