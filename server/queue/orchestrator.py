@@ -32,6 +32,12 @@ Decisions:
                      evidence is insufficient (review could not
                      confirm or clear, or the loop guard tripped):
                      the incident stays open, nothing is spent.
+  record_for_review  YELLOW-TIER flag (two-tier ruling): the flag
+                     is recorded for human review and the chain
+                     ends here — no review, no investigation, no
+                     dispatch is ordered. The record's status
+                     becomes yellow-review, which names the tier
+                     and the pending human review.
   stop               a stop condition hit, or the lifecycle is
                      already complete. The reason names the limit.
 
@@ -53,10 +59,22 @@ agent "orchestrator") — the Command LOOP FEED renders them.
 Lifecycle statuses (carried on decision timeline steps, so the
 status history IS the timeline): candidate, under_review,
 investigating, response_prepared, dispatched-simulated,
-closed-false-positive, monitoring, stopped. (The dispatch step in
-crew.py still sets dispatched-simulated itself; the legacy
-"flagged" / "reported" / "cleared-by-review" values from the
-fixed-pipeline era remain readable everywhere they were readable.)
+closed-false-positive, monitoring, stopped, yellow-review. (The
+dispatch step in crew.py still sets dispatched-simulated itself;
+the legacy "flagged" / "reported" / "cleared-by-review" values
+from the fixed-pipeline era remain readable everywhere they were
+readable.)
+
+Tier gate (two-tier ruling, Oct 31): before ANY spend is ordered,
+decide() maps the flagged category's priority
+(crew_common.priority_for_category) to a tier — high is red,
+medium/low is yellow — and a yellow flag returns record_for_review
+with no actions. Red runs the full chain below, unchanged. A
+category with no priority (it does not flag) is not gated, so the
+existing chain runs unchanged for it. The gate is re-checked from
+the record on every call, so a yellow record that already carries
+review or investigation steps (filed before the gate existed)
+still spends nothing further.
 """
 import crew_common
 import spark_guardrail
@@ -80,7 +98,26 @@ EST_COST_PER_CALL_USD = 0.01
 
 DIVISIONS = ("vigiles", "ignis", "medicus")
 TERMINAL_STATUSES = ("dispatched-simulated", "closed-false-positive",
-                     "cleared-by-review", "stopped")
+                     "cleared-by-review", "stopped", "yellow-review")
+
+# Two-tier mapping for the tier gate: the priority mapping's
+# values collapse to two tiers. A priority outside this table
+# (none exists in the current category sets) maps to None and is
+# not gated — the gate fails open to the existing chain rather
+# than inventing a tier.
+TIER_BY_PRIORITY = {"high": "red", "medium": "yellow", "low": "yellow"}
+
+
+def tier_for(division, category):
+    """The two-tier tier of a flagged category, or None when the
+    category does not flag (no priority to map from). The tier
+    comes from the existing priority mapping, never from a stored
+    field on the record — decide() recomputes it from
+    (division, category) on every call."""
+    priority = crew_common.priority_for_category(division, category)
+    if priority is None:
+        return None
+    return TIER_BY_PRIORITY.get(priority)
 ACTION_STEPS = ("review", "investigation", "brief", "dispatch")
 CALL_STEPS = ("flag", "review", "investigation")
 
@@ -143,6 +180,8 @@ def lifecycle_status(decision):
         return "response_prepared"
     if name == "continue_monitoring":
         return "monitoring"
+    if name == "record_for_review":
+        return "yellow-review"
     if name == "stop":
         return "stopped"
     if name == "reconcile":
@@ -237,6 +276,19 @@ def decide(record, guardrail_status=None, evidence_hash=None,
             record, "stop",
             "a simulated dispatch receipt is already on the "
             "timeline; nothing further is ordered", [], sc)
+
+    # TIER GATE — checked before any review, investigation, or
+    # dispatch is ordered, and re-checked on every call: a
+    # yellow-tier flag is recorded for human review and the chain
+    # ends here, with zero actions ordered. Red falls through to
+    # the full chain below, unchanged.
+    if tier_for(division, category) == "yellow":
+        return _contract(
+            record, "record_for_review",
+            f"yellow tier — \"{category}\" is a yellow-tier flag, "
+            f"so it is recorded for human review; no "
+            f"investigation and no dispatch are ordered on a "
+            f"yellow flag", [], sc)
 
     reviews = _steps(record, "review")
     if not reviews:
