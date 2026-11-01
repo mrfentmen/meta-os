@@ -60,7 +60,7 @@
   <aside class="cmd-float cmd-rail-left" aria-label="Incident queue and camera list">
     <h3 class="cmd-h">Incident queue</h3>
     <p class="note">One queue for all three divisions — flags raised by Vigiles, Ignis, and Medicus land here together, newest first, each tagged with the division that raised it. Selecting an entry views the camera and marks the entry seen — its pin pulse slows.</p>
-    <p id="cmd-alerts-empty" class="note">No cameras flagged yet.</p>
+    <p id="cmd-alerts-empty" class="note empty-state">No cameras flagged yet. This queue holds flags from all three divisions. It fills when a watched camera's assessment flags it for human review.</p>
     <ul id="cmd-alerts" class="cmd-alerts"></ul>
     <h3 class="cmd-h">Cameras</h3>
     <label for="cmd-search">Filter cameras</label>
@@ -77,7 +77,7 @@
   <aside class="cmd-float cmd-rail-right" aria-label="Inspector and system status">
     <h3 class="cmd-h">Inspector</h3>
     <p id="cmd-insp-name" class="cmd-insp-name">No camera selected</p>
-    <p id="cmd-insp-meta" class="note mono"></p>
+    <p id="cmd-insp-meta" class="note mono empty-state">Choose a camera from the list or the map. The inspector shows its live snapshot, status, and latest assessment here.</p>
     <img id="cmd-viewer-img" class="cmd-viewer-img" alt="Selected camera live snapshot" hidden>
     <p id="cmd-viewer-updated" class="note mono"></p>
     <div class="controls">
@@ -295,6 +295,7 @@
   <section class="panel" aria-label="Evaluation session log">
     <h2>Evaluation session log</h2>
     <p id="log-stats" class="note mono">Session log entries: 0</p>
+    <p id="log-empty" class="note empty-state">No session entries yet. This log fills as frames are assessed or requests fail.</p>
     <details class="stats-details"><summary>Full session statistics</summary><p id="log-stats-by-product" class="note mono">Assessments by product: Vigiles 0 · Ignis 0 · Medicus 0 · Failed 0</p>
     <p id="log-stats-failed-by-product" class="note mono">Failed by product: Vigiles 0 · Ignis 0 · Medicus 0</p>
     <p id="log-stats-by-failure" class="note mono">Failures by cause: Network 0 · HTTP 0 · Invalid response 0</p>

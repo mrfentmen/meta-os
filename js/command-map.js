@@ -834,8 +834,8 @@ function renderList() {
   }
   if (filtered.length === 0) {
     const note = document.createElement("p");
-    note.className = "note";
-    note.textContent = "No cameras match the filter.";
+    note.className = "note empty-state";
+    note.textContent = "No cameras match the filter. Clear the filter to see the full loaded list again.";
     els.cameraList.appendChild(note);
   }
 }
@@ -1464,8 +1464,8 @@ function renderWall() {
   }
   if (state.watch.size === 0) {
     const empty = document.createElement("p");
-    empty.className = "note cmd-wall-empty";
-    empty.textContent = "No watched cameras yet — select a camera and choose Watch.";
+    empty.className = "note cmd-wall-empty empty-state";
+    empty.textContent = "No watched cameras yet. This wall shows watched cameras' live snapshots. Select a camera and choose Watch to fill it.";
     els.wall.appendChild(empty);
   }
   for (const feed of WALL_FEEDS) {
@@ -1591,8 +1591,8 @@ async function refreshLoopFeed() {
   els.loopFeed.textContent = "";
   if (items.length === 0) {
     const li = document.createElement("li");
-    li.className = "note";
-    li.textContent = "No crew events recorded yet.";
+    li.className = "note empty-state";
+    li.textContent = "No crew events recorded yet. This feed shows the agent crew's patrol, review, investigation, and response activity. It fills once the crew has run on this stack.";
     els.loopFeed.appendChild(li);
     return;
   }

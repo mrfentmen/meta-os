@@ -1769,6 +1769,7 @@ body[data-view="command"] > main { display: none; }
    polled from /api/crew/status. Text rows only — the feed reports
    what the crew recorded; it renders no state of its own. */
 .cmd-ribbon { margin: 0 0 6px; padding: 8px 10px; border: 1px solid var(--cmd-line); background: rgba(83, 200, 255, 0.08); font-size: 12px; font-weight: 700; }
+.empty-state { border-left: 2px solid var(--panel-border); padding-left: 8px; }
 .cmd-ribbon--yellow { color: #ffe27a; border-color: rgba(255, 226, 122, 0.5); }
 .cmd-ribbon--red { color: #ffb3ab; border-color: rgba(255, 179, 171, 0.5); }
 .cmd-loop-feed { list-style: none; margin: 6px 0 0; padding: 0; max-height: 260px; overflow-y: auto; }

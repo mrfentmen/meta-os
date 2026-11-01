@@ -72,6 +72,7 @@ const els = {
   btnExport: $("btn-export-log"),
   btnClearLog: $("btn-clear-log"),
   logStats: $("log-stats"),
+  logEmpty: $("log-empty"),
   logStatsByProduct: $("log-stats-by-product"),
   logStatsFailedByProduct: $("log-stats-failed-by-product"),
   logStatsByFailure: $("log-stats-by-failure"),
@@ -361,6 +362,7 @@ function clearLastRoundTrip() {
 
 function updateLogStats() {
   els.logStats.textContent = `Session log entries: ${log.count}`;
+  if (els.logEmpty) els.logEmpty.hidden = log.count > 0;
   const stats = log.stats();
   els.logStatsByProduct.textContent =
     `Assessments by product: Vigiles ${stats.byProduct.vigiles} · Ignis ${stats.byProduct.ignis} · Medicus ${stats.byProduct.medicus} · Failed ${stats.failed}`;
