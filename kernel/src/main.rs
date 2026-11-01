@@ -41,6 +41,8 @@ mod gdt;
 mod interrupts;
 mod mem;
 mod memory;
+mod sched;
+mod tasks;
 mod traps;
 mod vga;
 
@@ -146,58 +148,12 @@ fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
     }
     #[cfg(feature = "stack-test")]
     stack_overflow(0);
-    keyboard_echo_loop();
-}
-
-/// PS/2 set-1 scancode to ASCII, unshifted letters/digits/space/enter.
-/// Releases (top bit set) and anything else map to nothing. Shift is
-/// NOT handled — stated limit, not a silent gap (see report OS-036).
-fn decode_scancode(scancode: u8) -> Option<char> {
-    if scancode & 0x80 != 0 {
-        return None;
+    // Section E: multitasking takes over (console task keeps the
+    // echo loop and uptime; A/B/C prove rotation, sleep, exit).
+    unsafe {
+        sched::sched_init();
+        sched::start_demo_tasks();
     }
-    let ch = match scancode {
-        0x02 => '1',
-        0x03 => '2',
-        0x04 => '3',
-        0x05 => '4',
-        0x06 => '5',
-        0x07 => '6',
-        0x08 => '7',
-        0x09 => '8',
-        0x0A => '9',
-        0x0B => '0',
-        0x10 => 'q',
-        0x11 => 'w',
-        0x12 => 'e',
-        0x13 => 'r',
-        0x14 => 't',
-        0x15 => 'y',
-        0x16 => 'u',
-        0x17 => 'i',
-        0x18 => 'o',
-        0x19 => 'p',
-        0x1C => '\n',
-        0x1E => 'a',
-        0x1F => 's',
-        0x20 => 'd',
-        0x21 => 'f',
-        0x22 => 'g',
-        0x23 => 'h',
-        0x24 => 'j',
-        0x25 => 'k',
-        0x26 => 'l',
-        0x2C => 'z',
-        0x2D => 'x',
-        0x2E => 'c',
-        0x2F => 'v',
-        0x30 => 'b',
-        0x31 => 'n',
-        0x32 => 'm',
-        0x39 => ' ',
-        _ => return None,
-    };
-    Some(ch)
 }
 
 /// Test-only drill (OS-031, `stack-test` builds): recurse with 2 KiB
@@ -213,29 +169,6 @@ fn stack_overflow(depth: u64) -> u64 {
         sum = sum.wrapping_add(b as u64);
     }
     sum + stack_overflow(depth + 1)
-}
-
-/// Drain the keyboard buffer (filled by IRQ 1), echo decoded keys,
-/// and print uptime once per second from the PIT tick counter.
-/// Sleeps with `hlt` between interrupts (OS-034/037).
-fn keyboard_echo_loop() -> ! {
-    let mut last_sec = 0u64;
-    loop {
-        while let Some(scancode) = interrupts::keyboard_read() {
-            if let Some(ch) = decode_scancode(scancode) {
-                print!("{}", ch);
-            }
-        }
-        let ticks = interrupts::ticks();
-        let sec = ticks / 100;
-        if sec != last_sec {
-            last_sec = sec;
-            println!("uptime {}s ticks {}", sec, ticks);
-        }
-        unsafe {
-            core::arch::asm!("hlt", options(nomem, nostack, preserves_flags));
-        }
-    }
 }
 
 #[panic_handler]

@@ -169,3 +169,29 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
   regressions; int3 not re-fired (IDT proven live by timer/keyboard
   IRQs in the same boot). DONE.
 - OS-060: this summary. Pushing.
+
+## Section E — K5 tasks and scheduling (OS-061..OS-074) — DONE
+
+- OS-061: `os-build/research/scheduler.md` — cooperative round-robin
+  because preemption without locks would corrupt heap/console. DONE.
+- OS-062/063: tasks (id/state/context/stack) from `tasks.rs`
+  primitives; 16 KiB heap stacks (`Box<[u128; 2048]>`, always
+  16-aligned). DONE.
+- OS-064: `switch_to` in `sched.rs`, commented register by
+  register; only `rax` clobbered. DONE.
+- OS-065/066: A/B print 5 lines each, `ABABABABAB`, then exit. DONE.
+- OS-067/068: C sleeps 200 ticks, wakes (`C awake`). DONE.
+- OS-069: A/B/C all exit (5-line bounds, C returns); Exited never
+  rescheduled. DONE.
+- OS-070: console task = K3 echo loop + uptime, yielding per pass.
+  DONE.
+- OS-071: K5-boot.txt. DONE.
+- OS-072: unsafe ledger (switch, CUR bookkeeping, leaked stacks). DONE.
+- OS-073: failure note appended to scheduler.md (no preemption,
+  no effective priorities, no reap, sleep-only blocking). DONE.
+- Live bug found and fixed: the wake pass lived only in the run
+  loop, but tasks switch directly task-to-task, so a lone task
+  starved the sleeper forever (C never woke in the first boot).
+  Fix: wake on every scheduling decision (yield/sleep/exit).
+- K1–K3 re-proven in the same boot (alive + banner + uptime 7s).
+- OS-074: this summary. Pushing.

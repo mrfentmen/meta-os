@@ -1,0 +1,365 @@
+//! Meta OS kernel, Section E (K5): cooperative scheduler wiring.
+//!
+//! Rowan's `tasks.rs` owns Task/Context/Stack and the scheduling
+//! POLICY (spawn, pick, yield, block, exit, reap). This module owns
+//! what his file deliberately leaves to R5: the `switch_to` assembly,
+//! the task stacks (heap boxes, OS-063), the entry trampoline, the
+//! sleep table, and the run loop. All K5 tasks spawn at priority 0,
+//! so his rotation is pure round-robin; the timer IRQ never switches
+//! (cooperative — see `os-build/research/scheduler.md`).
+
+use alloc::boxed::Box;
+
+use crate::interrupts;
+use crate::tasks::{Context, TaskId};
+
+/// Tasks the kernel can hold. No reap in K5: slots fill in spawn
+/// order and stay, so spawn order is the table index.
+const MAX_TASKS: usize = 8;
+/// One task stack: 16 KiB, `u128` cells so the base (and the top) is
+/// always 16-aligned as `Context::initial` demands.
+const STACK_CELLS: usize = 2048;
+
+/// Live contexts, parallel to `IDS`. The switcher owns these;
+/// `tasks.rs` keeps its own spawn-time copy for validation only.
+static mut CTXS: [Context; MAX_TASKS] = [Context::zero(); MAX_TASKS];
+/// Task ids in spawn order (slot index = spawn order; no reap in K5).
+static mut IDS: [TaskId; MAX_TASKS] = [TaskId::new(0); MAX_TASKS];
+/// Entry points, keyed by task id, for the trampoline.
+static mut ENTRIES: [(TaskId, fn()); MAX_TASKS] =
+    [(TaskId::new(0), idle_entry); MAX_TASKS];
+/// Sleep deadlines (wake tick), keyed by task id; `u64::MAX` = awake.
+static mut SLEEPS: [(TaskId, u64); MAX_TASKS] =
+    [(TaskId::new(0), u64::MAX); MAX_TASKS];
+static mut NTABLE: usize = 0;
+/// The task currently on the CPU (single CPU, no preemption).
+static mut CUR: TaskId = TaskId::new(0);
+/// Scheduler's own context (kernel_main's stack): tasks yield back
+/// here when nothing else is ready, and the first switch leaves here.
+static mut SCHED_CTX: Context = Context::zero();
+static mut SCHED: Option<crate::tasks::Scheduler<'static>> = None;
+static mut SLOTS: [Option<crate::tasks::Task>; MAX_TASKS] = [None; MAX_TASKS];
+
+fn idle_entry() {}
+
+fn find_row(id: TaskId) -> Option<usize> {
+    if !id.is_valid() {
+        return None;
+    }
+    unsafe { (0..NTABLE).find(|&i| IDS[i] == id) }
+}
+
+/// Raw context-save/context-restore switch (OS-064). Saves the
+/// callee-saved registers, current rip (resume label) and rflags
+/// into `*old`, then loads `*new` and jumps to its rip.
+///
+/// Register by register: `rsp` (the stack itself) first, then `rbp`
+/// (frame chain), `rbx`/`r12`-`r15` (callee-saved per SysV), `rip`
+/// via `lea` on a local label, `rflags` via `pushfq`. The load side
+/// mirrors it; `rflags` goes through `push`/`popfq` because flags
+/// cannot move directly. `rdi`/`rsi` still hold `old`/`new` at the
+/// indirect jump: the switch clobbers only `rax`, which is
+/// caller-saved, so no caller state leaks across. Interrupts stay
+/// in whatever state the tasks had (tasks run with IF set).
+///
+/// # Safety
+/// Both pointers must be valid `Context`s; the new one must hold a
+/// runnable stack and entry (built by `Context::initial`). The
+/// caller owns the `CUR` bookkeeping.
+pub unsafe fn switch_to(old: *mut Context, new: *const Context) {
+    core::arch::asm!(
+        "pushfq",
+        "pop rax",
+        "mov [rdi + 64], rax",
+        "mov [rdi + 0], rsp",
+        "mov [rdi + 8], rbp",
+        "mov [rdi + 16], rbx",
+        "mov [rdi + 24], r12",
+        "mov [rdi + 32], r13",
+        "mov [rdi + 40], r14",
+        "mov [rdi + 48], r15",
+        "lea rax, [rip + 2f]",
+        "mov [rdi + 56], rax",
+        "mov rsp, [rsi + 0]",
+        "mov rbp, [rsi + 8]",
+        "mov rbx, [rsi + 16]",
+        "mov r12, [rsi + 24]",
+        "mov r13, [rsi + 32]",
+        "mov r14, [rsi + 40]",
+        "mov r15, [rsi + 48]",
+        "push qword ptr [rsi + 64]",
+        "popfq",
+        "jmp qword ptr [rsi + 56]",
+        "2:",
+        in("rdi") old,
+        in("rsi") new,
+        out("rax") _,
+    );
+}
+
+/// Switch the CPU to `next`, updating `CUR` across the switch: set
+/// before (so the new task is current while it runs), restored
+/// after (this line resumes in the OLD task when it runs again).
+unsafe fn goto(next: TaskId) {
+    let old = CUR;
+    CUR = next;
+    let old_ptr = &mut CTXS[find_row(old).expect("sched: old task")] as *mut Context;
+    let new_ptr = &CTXS[find_row(next).expect("sched: next task")] as *const Context;
+    switch_to(old_ptr, new_ptr);
+    CUR = old;
+}
+
+/// Offset bookkeeping: none — contexts live in their own array, so
+/// no field-offset math exists to rot. (An earlier draft kept
+/// `(TaskId, Context)` rows with `byte_add(8)`; parallel arrays
+/// replaced it before first boot. History kept in the report.)
+
+/// First switch: from the scheduler's own context to a task.
+unsafe fn enter(next: TaskId) {
+    CUR = next;
+    let new_ptr = &CTXS[find_row(next).expect("sched: enter")] as *const Context;
+    switch_to(&mut SCHED_CTX as *mut Context, new_ptr);
+}
+
+/// Yield back to the scheduler context (nothing else ready, or the
+/// last task exited): the run loop picks up from `SCHED_CTX`.
+unsafe fn back_to_sched() {
+    let old = CUR;
+    CUR = TaskId::new(0);
+    let old_ptr = &mut CTXS[find_row(old).expect("sched: back")] as *mut Context;
+    switch_to(old_ptr, &mut SCHED_CTX as *mut Context);
+    CUR = old;
+}
+
+/// Voluntary yield (OS-065/066): rotate to the next ready task.
+pub fn yield_task() {
+    unsafe {
+        wake_expired();
+        let next = SCHED.as_mut().expect("sched: no scheduler").yield_now();
+        match next {
+            Some(id) => goto(id),
+            None => {}
+        }
+    }
+}
+
+/// Sleep `ticks` timer ticks (OS-067): block until the wake pass
+/// releases us.
+pub fn sleep_task(ticks: u64) {
+    unsafe {
+        let now = interrupts::ticks();
+        let cur = CUR;
+        if let Some(i) = find_row(cur) {
+            SLEEPS[i].1 = now.saturating_add(ticks);
+        }
+        wake_expired();
+        let next = SCHED
+            .as_mut()
+            .expect("sched: no scheduler")
+            .block_current();
+        match next {
+            Some(id) => goto(id),
+            None => back_to_sched(),
+        }
+    }
+}
+
+/// Exit the current task (OS-069): slot to `Exited`, never resumed.
+pub fn exit_task() -> ! {
+    unsafe {
+        wake_expired();
+        let next = SCHED
+            .as_mut()
+            .expect("sched: no scheduler")
+            .exit_current();
+        match next {
+            Some(id) => goto(id),
+            None => back_to_sched(),
+        }
+        core::hint::unreachable_unchecked()
+    }
+}
+
+/// Wake every sleeper whose deadline has passed (runs in the
+/// scheduler loop, never in the IRQ: the IRQ only counts).
+unsafe fn wake_expired() {
+    let now = interrupts::ticks();
+    for i in 0..NTABLE {
+        if SLEEPS[i].1 <= now && SLEEPS[i].1 != u64::MAX {
+            SLEEPS[i].1 = u64::MAX;
+            SCHED.as_mut().expect("sched").unblock(SLEEPS[i].0);
+        }
+    }
+}
+
+/// Entry all tasks start at: look up our own entry by id, run it,
+/// exit when it returns (OS-069 for returned tasks too).
+extern "C" fn task_trampoline() -> ! {
+    let id = unsafe { CUR };
+    let entry = unsafe {
+        ENTRIES
+            .iter()
+            .find(|(tid, _)| *tid == id)
+            .map(|(_, e)| *e)
+            .unwrap_or(idle_entry)
+    };
+    entry();
+    exit_task();
+}
+
+/// Spawn a task: heap stack (OS-063), validation via `Task::new`
+/// (bad stack/entry refused at spawn), tables filled in spawn order.
+pub unsafe fn spawn_task(entry: fn(), quantum: u32) -> Option<TaskId> {
+    if NTABLE >= MAX_TASKS {
+        return None;
+    }
+    let stack_box = Box::new([0u128; STACK_CELLS]);
+    let base = Box::leak(stack_box) as *mut [u128; STACK_CELLS] as u64;
+    let stack = crate::tasks::Stack::new(base, STACK_CELLS * 16)?;
+    let sched = SCHED.as_mut().expect("sched: no scheduler");
+    let trampoline: u64 = task_trampoline as extern "C" fn() -> ! as usize as u64;
+    let id = sched.spawn(0, quantum, stack, trampoline)?;
+    let top = base + (STACK_CELLS * 16) as u64;
+    let ctx = crate::tasks::Context::initial(top, trampoline)?;
+    let i = NTABLE;
+    CTXS[i] = ctx;
+    IDS[i] = id;
+    ENTRIES[i] = (id, entry);
+    SLEEPS[i] = (id, u64::MAX);
+    NTABLE += 1;
+    Some(id)
+}
+
+/// Create the scheduler over the static slot table. Call once.
+pub unsafe fn sched_init() {
+    let slots: &'static mut [Option<crate::tasks::Task>] =
+        &mut *core::ptr::addr_of_mut!(SLOTS);
+    SCHED = Some(crate::tasks::Scheduler::new(slots));
+}
+
+/// The run loop: wake sleepers, decide, switch. `hlt` when idle —
+/// the timer IRQ wakes us for the next decision. Never returns.
+/// This loop always runs in the scheduler's own context (tasks
+/// switch among themselves; we resume only via `back_to_sched`),
+/// so every switch from here is `enter`, never `goto`.
+pub unsafe fn run() -> ! {
+    loop {
+        wake_expired();
+        let next = SCHED.as_mut().expect("sched").schedule();
+        match next {
+            Some(id) => {
+                enter(id);
+            }
+            None => {
+                core::arch::asm!("hlt", options(nomem, nostack, preserves_flags));
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// The K5 tasks (OS-065/066/067/068/070)
+// ---------------------------------------------------------------------------
+
+/// Task A: five lines, yielding between each (OS-065).
+fn task_a() {
+    for _ in 0..5 {
+        print!("A\n");
+        yield_task();
+    }
+}
+
+/// Task B: the alternation partner (OS-066).
+fn task_b() {
+    for _ in 0..5 {
+        print!("B\n");
+        yield_task();
+    }
+}
+
+/// Task C: sleep and wake on the timer (OS-067/068).
+fn task_c() {
+    print!("C sleeping 200 ticks\n");
+    sleep_task(200);
+    print!("C awake\n");
+}
+
+/// Console task: the K3 echo loop as a task (OS-070). Yields every
+/// pass so A/B/C run; uptime print stays here.
+fn console_task() {
+    let mut last_sec = 0u64;
+    loop {
+        while let Some(scancode) = interrupts::keyboard_read() {
+            if let Some(ch) = decode_scancode(scancode) {
+                print!("{}", ch);
+            }
+        }
+        let ticks = interrupts::ticks();
+        let sec = ticks / 100;
+        if sec != last_sec {
+            last_sec = sec;
+            println!("uptime {}s ticks {}", sec, ticks);
+        }
+        yield_task();
+    }
+}
+
+/// PS/Vec set-1 scancode to ASCII (moved from main.rs for the console
+/// task). Shift not handled — stated limit (OS-036 carries over).
+fn decode_scancode(scancode: u8) -> Option<char> {
+    if scancode & 0x80 != 0 {
+        return None;
+    }
+    let ch = match scancode {
+        0x02 => '1',
+        0x03 => '2',
+        0x04 => '3',
+        0x05 => '4',
+        0x06 => '5',
+        0x07 => '6',
+        0x08 => '7',
+        0x09 => '8',
+        0x0A => '9',
+        0x0B => '0',
+        0x10 => 'q',
+        0x11 => 'w',
+        0x12 => 'e',
+        0x13 => 'r',
+        0x14 => 't',
+        0x15 => 'y',
+        0x16 => 'u',
+        0x17 => 'i',
+        0x18 => 'o',
+        0x19 => 'p',
+        0x1C => '\n',
+        0x1E => 'a',
+        0x1F => 's',
+        0x20 => 'd',
+        0x21 => 'f',
+        0x22 => 'g',
+        0x23 => 'h',
+        0x24 => 'j',
+        0x25 => 'k',
+        0x26 => 'l',
+        0x2C => 'z',
+        0x2D => 'x',
+        0x2E => 'c',
+        0x2F => 'v',
+        0x30 => 'b',
+        0x31 => 'n',
+        0x32 => 'm',
+        0x39 => ' ',
+        _ => return None,
+    };
+    Some(ch)
+}
+
+/// Spawn A, B, C and the console task, then run. Called once from
+/// `kernel_main` after `mem_init` (tasks need the heap for stacks).
+pub unsafe fn start_demo_tasks() -> ! {
+    spawn_task(task_a, u32::MAX).expect("sched: spawn A");
+    spawn_task(task_b, u32::MAX).expect("sched: spawn B");
+    spawn_task(task_c, u32::MAX).expect("sched: spawn C");
+    spawn_task(console_task, u32::MAX).expect("sched: spawn console");
+    run();
+}

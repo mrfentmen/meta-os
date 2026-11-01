@@ -62,3 +62,19 @@
 - Static roots (`REGIONS`, `MAP`, `BITMAP`, `HEAP`, `MAPPER`) via
   `addr_of!`/`addr_of_mut!`, never shared references.
 - Probe write/read + guard-test read: volatile, on the mapped page.
+
+## kernel/src/sched.rs (Section E)
+
+- `switch_to`: saves callee-saved regs + resume-rip + rflags into
+  `*old`, loads `*new`, jumps. Only `rax` clobbered (caller-saved);
+  `rdi`/`rsi` still hold the pointers at the indirect jump. New
+  contexts come from `Context::initial` (16-aligned top, IF set).
+  Red zone: no stack slots used below rsp; `push [rsi+64]`/`popfq`
+  run on the NEW stack. Callers: single CPU, no preemption, so no
+  task can be switched away from mid-switch.
+- `enter`/`goto`/`back_to_sched`: raw `Context` pointers from the
+  owned `CTXS` table; `CUR` set-before/restored-after keeps the
+  current-task identity exact across resume.
+- `Box::leak` stacks: 16 KiB heap boxes, never freed in K5 (no reap
+  yet); leaking is documented, not a silent loss — K6 reaps.
+- `SCHED`/`SLOTS`/`CTXS` roots via `addr_of_mut!`, never references.
