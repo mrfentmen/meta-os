@@ -1,0 +1,11 @@
+# B-L1-127 -- DNS resolver (services/dns)
+CASE name_over_255 | generated:4x64_byte_labels | expect E_INVAL | the wire format caps a name at 255 bytes; longer is a spliced packet
+CASE label_over_63 | generated:64_byte_label | expect E_INVAL | a label length of 64 is the top two bits of a compression pointer
+CASE compression_loop | "hex:c00cc00c" | expect E_CORRUPT | a pointer to itself is the classic resolver infinite loop
+CASE pointer_forward | "hex:c010" | expect E_CORRUPT | RFC 1035 requires pointers to point backwards; forward is how a decoder runs off the packet
+CASE truncated_mid_name | "hex:0377777706676f6f" | expect E_CORRUPT | a name that ends mid-label must fail, not guess the rest
+CASE zero_length_label_mid | "hex:037777770003636f6d00" | expect E_INVAL | an empty label is only legal as the root terminator
+CASE wrong_query_id | generated:response_with_id_plus_one | expect E_REFUSED | an answer to a question we did not ask must never be trusted
+CASE no_question_section | "hex:818000010001000000000000" | expect E_CORRUPT | qdcount 0 with an answer section is a response to nothing
+CASE answer_before_question | "hex:8180000000010000000000" | expect E_CORRUPT | answers with no question cannot be matched to a name
+CASE ordinary_lookup | "hex:1234010000010000000000000377777706676f6f676c6503636f6d0000010001" | expect CODE_OK | the common case must be accepted; a strict parser that refuses this is broken

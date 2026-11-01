@@ -1,0 +1,12 @@
+# B-L1-125 -- config parser (services/common/cfg)
+# format: see FORMAT.md
+CASE section_unterminated | "[net.eth0" | expect E_INVAL | a header with no ] must not become a key
+CASE key_without_value | "[a]\nkey" | expect E_INVAL | a key with no = has no value and must not read the next line as one
+CASE duplicate_key | "[a]\nk=1\nk=2" | expect E_INVAL | two values for one key makes the reader's answer order-dependent
+CASE nulted_key | "hex:5b615d0a6b00" | expect E_INVAL | a NUL inside a key truncates it silently at every C boundary
+CASE section_repeated | "[a]\nk=1\n[a]\nj=2" | expect E_INVAL | a repeated section merges two documents with one name
+CASE value_over_cap | "[a]\nk=0123456789012345678901234567890123456789" | expect E_NOROOM | a value longer than the caller's buffer must refuse, not truncate
+CASE empty_document | "" | expect CODE_OK | an empty file is a valid empty config
+CASE crlf_lines | "[a]\r\nk=1\r\n" | expect CODE_OK | CRLF is what a file edited on another OS looks like; it must parse
+CASE comment_only | "# a comment\n; another\n" | expect CODE_OK | a file with no keys is legal
+CASE key_with_spaces | "[a]\nk e y = 1" | expect CODE_OK | spaces around a key are trimmed; the key is "k e y"

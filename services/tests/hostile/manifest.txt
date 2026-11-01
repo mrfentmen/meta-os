@@ -1,0 +1,10 @@
+# B-L1-131 -- update manifest (services/updater)
+CASE digest_short | "file path=a size=1 sha256=ab" | expect E_BAD_MANIFEST | a short digest is a truncated hash that compares equal only by accident
+CASE path_dotdot | "file path=../etc/shadow size=1 sha256=<64 hex>" | expect E_BAD_MANIFEST | traversal in an update path writes outside the slot
+CASE duplicate_path | generated:two_files_same_path | expect E_BAD_MANIFEST | one path written twice means one of the two contents wins arbitrarily
+CASE size_mismatch | generated:size_not_matching_content | expect E_VERIFY | a manifest that lies about size must fail verification, not fit the content to the claim
+CASE unknown_key | "file path=a size=1 sha256=<64 hex> mode=777" | expect E_BAD_MANIFEST | an unknown field must not be ignored: it is a signer and a verifier disagreeing about the format
+CASE no_files | "version 1\norigin x\nslot a\n" | expect E_BAD_MANIFEST | an update with no files would be applied as a no-op success
+CASE signature_twice | generated:two_signature_lines | expect E_INVAL | two signatures means the verifier and the reader can pick different ones
+CASE junk_after_signature | generated:bytes_after_signature_line | expect E_INVAL | anything after the signed region is unsigned data attached to a signed document
+CASE valid_two_file | generated:two_files_valid | expect CODE_OK | the common case must be accepted

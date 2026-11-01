@@ -92,3 +92,14 @@ Written down now so the answers land as work rather than as a discussion:
 
 Every question above is one Rowan can answer from `KERNEL_SPEC.md` plus the
 implementation, or one Pax can rule on. None needs a meeting.
+
+## F. Language semantics (added in round 2, from the audits — B-L1-146/138)
+
+These two came out of the regenerated link map, not from the kernel, and both are questions only
+a working Goose compiler answers. They are listed here because they block the same thing the rest
+of the file blocks: a COMPILED status word.
+
+| # | Question | Blocks | Answer that closes it |
+|---|---|---|---|
+| Q-B-L1-21 | **Self-package imports.** Eleven files import their own service's module (`services/socket/bind.goose` has `import socket.socket;`, `agenthost`, `audit`, `input`, `net`, `netcfg`, `session`, `supervisor`, `updater`, `tests` the same). Is a directory one package, so the import is a no-op — or does it pull the module in a second time, defining every symbol twice at link? | every multi-file service: `agenthost`, `net`, `socket`, `logd`, `console`, `netcfg`, `fs`, `shell` | one line: "no-op, same package" or "duplicates; use the same-directory rule instead" |
+| Q-B-L1-22 | **`import` granularity.** `import common.err.err;` is per file, but the tree assumes one copy per *module*, so `E_INVAL` is one constant and not 74. Does the linker emit one instance per module, one per importing file, or one per service binary? | every cross-service comparison of a code or a table (`callmatrix`'s ids, `err`'s codes) | which of the three, and whether a module can be explicitly marked once-only |

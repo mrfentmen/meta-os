@@ -90,3 +90,53 @@ sequence is the only thing that resolves these.
 Only `bootlog`, `time`, `display` and `net` declare `extern fn` calls. Everything else reaches
 the kernel through `common/sys/sys.goose` or not at all. That is deliberate: one file to change
 when K6 publishes a different signature.
+
+---
+
+# Round 2 — regenerated after Waves G–J (B-L1-138)
+
+Round 1 above was drawn by hand before the network, filesystem and shell waves landed. Round 2
+is `python3 os-build/layer1/linkmap.py`, which reads `^import` out of every `.goose` file and
+compares the result against the round-1 table parsed back out of this file. So the drift below
+is measured, not remembered.
+
+Measured: **26 services with source, 74 Goose files, 46 service→service edges.** Round 1 read
+23 services; `example`, `fs`, `shell` and `tests` were not in it.
+
+## Drift vs round 1
+
+| Service | Gained | Why |
+|---|---|---|
+| `agenthost` | `common.fmt.fmt` | quota/channel messages format numbers |
+| `net` | `net.net` + `netcfg.netcfg` | Waves G–H modules (IP/ARP/ICMP/UDP/TCP, loopback) share the address model |
+| `netcfg` | `common.fmt.fmt`, `fs.fs` | `persist.goose` (B-L1-104) writes its config through the filesystem |
+| `socket` | `net.net` | `bind.goose` binds a real UDP endpoint |
+| `time` | `common.err.err` | calendar/zones return registry codes |
+| `updater` | `common.enc.enc`, `common.fmt.fmt` | delta encoding (B-L1-121) and manifest printing |
+| `supervisor`, `watchdog` | `common.fmt.fmt` | dependency messages and metric lines |
+| `audit`, `input`, `session` | own-module import | see the question below |
+| `fs`, `shell`, `example`, `tests` | — | new since round 1 |
+
+Nothing was removed: every round-1 edge still exists in source. Round 1's warning stands
+unchanged — `dhcp`, `dns`, `socket` still import `netcfg.netcfg` as a library, so the address
+model is compiled into four places.
+
+## The one new question this round surfaces
+
+Eleven files import their own service's module (`services/socket/bind.goose` does
+`import socket.socket;`, `services/agenthost/*` does `import agenthost.agenthost;`, and the same
+in `audit`, `input`, `net`, `netcfg`, `session`, `supervisor`, `updater`, `tests`).
+
+That is how a sibling file reaches the types its own service defines, and it is correct **if**
+Goose treats one directory as one package and makes the import a no-op. If it instead pulls the
+module in twice, every symbol in it is defined twice at link. Filed as Q-B-L1-21 in
+`os-build/layer1/K6_NEEDS.md`: *does a file importing its own package's module duplicate
+definitions?* Until answered, status stays WRITTEN.
+
+## Reading these numbers honestly
+
+An import edge is not a permission and not a call: `services/fs/fs.goose` importing `storage`
+says the block API is in scope, not that `fs` is allowed to call it at runtime. The permission
+question lives in `CALLMATRIX_DRIFT.md`, which currently reports 12 missing permissions and 2
+services with no matrix row. Both documents are true at once; the map is what the linker sees,
+the matrix is what the kernel enforces.

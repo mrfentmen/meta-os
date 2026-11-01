@@ -42,17 +42,38 @@ in writing, or `bootlog` is lying.
 
 ## 2. What Layer 4 offers Layers 5–6
 
+**Rewritten 2026-11-01 against the finished sources (B-L1-67).** The previous version of this
+table said NOT BUILT for six things that now have source. The honest state word for all of them
+is WRITTEN: the file exists, every symbol was checked against `goose__*`, and **nothing has
+compiled or run** — there is no Goose toolchain on this machine and `kernel/src/main.rs` is still
+the K1 skeleton. WRITTEN is not a step on the way to working; it is a statement about text.
+
 | # | Offer | Kind | Who it is for | State |
 |---|---|---|---|---|
-| B1 | `bootlog`: an append-only boot record, one record per syscall | CONTRACT | anyone diagnosing a boot | WRITTEN (no ring retention yet) |
-| B2 | `time`: monotonic clock, `sleep_ms`, one rate constant | CONTRACT | every service and every agent | WRITTEN (core only; no IPC handler) |
-| B3 | One record format: `<ticks> <tag> <level> <message>` | CONTRACT | `logd`, the shell, the audit trail | WRITTEN in `bootlog`, formalised by B-L1-28 |
-| B4 | A name registry so nothing hardcodes a service id | CONTRACT | Hana's shell, Milo's agent host | NOT BUILT (B-L1-22) |
-| B5 | A supervisor that starts services in dependency order and restarts them per policy | CONTRACT | anything that assumes its dependency is up | NOT BUILT (B-L1-20/21) |
-| B6 | An audit trail of what agents did, readable by the user | CONTRACT (the OS's promise) | Milo, and the user | NOT BUILT (B-L1-41/42) |
-| B7 | Agent lifecycle: spawn, grant, quota, stop | CONTRACT | Milo | NOT BUILT (B-L1-38..40, 116) |
-| B8 | Filesystem above the storage contract | CONTRACT | Hana's shell, every program | NOT BUILT (B-L1-79..84) |
-| B9 | A shell with builtins and scripts | CONTRACT | the user and the agent's command surface | NOT BUILT (B-L1-87..92) |
+| B1 | `bootlog`: an append-only boot record, one record per syscall | CONTRACT | anyone diagnosing a boot | WRITTEN — no retention ring (its own header says so) |
+| B2 | `time`: monotonic clock, `sleep_ms`, calendar and zones | CONTRACT | every service and every agent | WRITTEN (`time.goose`, `calendar.goose`) |
+| B3 | One record format: `<ticks> <tag> <level> <message>` | CONTRACT | `logd`, the shell, the audit trail | WRITTEN (`logfmt`), with levels, tags and a message cap |
+| B4 | A name registry and a service-id table | CONTRACT | Hana's shell, Milo's agent host | WRITTEN (`registry/`, `callmatrix/` — the id table is `SVC_*`) |
+| B5 | A supervisor: dependency-ordered start, restart policy, boot-order cascade | CONTRACT | anything that assumes its dependency is up | WRITTEN (`supervisor/`, `bootorder.goose`); the start timeout is NOT implemented — see `FAILURE_TRACE.md` |
+| B6 | An audit trail of what agents did, readable by the user | CONTRACT (the OS's promise) | Milo, and the user | WRITTEN (`audit/`: chained records, fixed budget, retention) |
+| B7 | Agent lifecycle: spawn, grant, quota, channel, stop | CONTRACT | Milo | WRITTEN (`agenthost/`: 24 slots, 9 capabilities, quotas, channels) |
+| B8 | Filesystem above the storage contract | CONTRACT | Hana's shell, every program | WRITTEN (`fs/`: files, directories, paths, `fsck`) |
+| B9 | A shell with builtins and scripts | CONTRACT | the user and the agent's command surface | WRITTEN (`shell/`: parser via `common.args`, builtins, script loop) |
+| B10 | A network stack: IPv4, ARP, ICMP, UDP, TCP, loopback, sockets | CONTRACT | Milo's agents, Hana's `net` builtins | WRITTEN (`net/`, `socket/`) — no driver under it |
+| B11 | Address autoconfiguration: DHCP client, DNS resolver, NTP-style time sync | CONTRACT | anything that names a host | WRITTEN (`dhcp/`, `dns/`, `timesync/`) |
+| B12 | Storage contract over a block device, RAM backend default, `fsck` | CONTRACT | `fs`, `updater` | WRITTEN (`storage/`, `fs/fsck.goose`); RAM only until B-L1-74 |
+| B13 | A text display: grid, cursor, attributes, per-console history, escapes | CONTRACT | `console`, the shell, the agent view | WRITTEN (`display/`, `console/esc.goose`) |
+| B14 | Input: keymaps, compose sequences, escape parsing | CONTRACT | `console`, `session` | WRITTEN (`input/`) |
+| B15 | Log retention and rotation, with counters for what was dropped | CONTRACT | anyone reading a log after a bad boot | WRITTEN (`logd/`: 64-record ring, rotation, `dropped_*` counters) |
+| B16 | Device inventory and hot-plug events | CONTRACT | drivers above, `storage` | WRITTEN (`devices/`, `hotplug.goose`) |
+| B17 | Updates: manifest, SHA-256 verify, signature interface, deltas, rollback | CONTRACT | Pax's release process | WRITTEN (`updater/`: verify + delta + signature *interface*) |
+| B18 | Session: login flow, identity, session scope | CONTRACT | Hana's shell prompt, the audit trail | WRITTEN (`session/login.goose`) |
+| B19 | Health and metrics: heartbeat watches, counters | CONTRACT | the supervisor, the demo | WRITTEN (`watchdog/`, `metrics.goose`) |
+| B20 | A permission table: which service may call which | CONTRACT | the merge gate, Milo | WRITTEN and **incomplete in 12 places the tree already depends on** — `CALLMATRIX_DRIFT.md` |
+| B21 | Seventeen `common.*` libraries: `args boot bytes cfg enc err fmt hash hex json pool ring sort str sys table text` | CONTRACT | every service above | WRITTEN; `text`, `table`, `sort`, `pool` have no consumer yet |
+
+**What Layers 5–6 still cannot rely on:** any of the above *working*. Every row is a shape, not a
+service. The first row that becomes a fact is the first one with a boot log behind it.
 
 **What Layers 5–6 must not do:** reach past this layer to the raw kernel. The
 current that flows is L6 → L4 → L1–3, and a shell that calls syscalls directly
@@ -69,7 +90,26 @@ line in the merge gate.
 | Q-B-L1-4 | BootInfo delivery: argument pointer, fixed address, or a syscall the service makes? | A7, B-L1-08 | Rowan |
 | Q5 | Goose freestanding link: can Goose-generated C link with no libc? | everything past WRITTEN, B-L1-75 | anyone with a toolchain |
 
-## 4. What this sheet does not claim
+## 4. The shell formats sheet (Hana, H2) — coordination, not duplication
+
+`os-build/shell-formats.md` and `shell-formats.json` define the banner and status strings Layer 6
+will print, with the rule that an unmeasured fact is **omitted from the console line and `null` in
+the agent record** — never zero, never a guessed number. That is the same rule this layer's
+`fmt` library follows (it refuses to truncate silently) and the same rule `logd`'s counters follow
+(a dropped record is counted, not hidden).
+
+Where the two sheets meet, and what is true today:
+
+- **Banner fields** (`ticks`, `memory_kib`, `tasks`, `heap`) are Layer 6's format and Layers 1–3's
+  facts. This layer emits none of them; `bootlog` writes `<ticks> <tag> <level> <message>` and
+  nothing else. Two formats for one boot is fine only while both are honest about their state.
+- **Service state words** in the agent view come from `supervisor.state_name` (`ST_*`), which is
+  the one place a state is spelled. Layer 6 should read that vocabulary rather than invent a
+  parallel one, or the console and the agent will disagree about the same service.
+- **Not built on either side:** no kernel or service emits any H2 string today, and this layer
+  does not have a session to print a banner into. Both sheets say so.
+
+## 5. What this sheet does not claim
 
 - It does not claim a single line of Layer 4 runs.
 - It does not claim the kernel implements any of A1–A10. All ten are requests.
