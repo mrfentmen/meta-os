@@ -139,6 +139,39 @@ export const PRODUCT_BY_ID = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
 
 export const PRODUCT_IDS = PRODUCTS.map((p) => p.id);
 
+// Studio products (NOT Trio assessment products). Musica is a Meta
+// World studio, not a fourth 911 service: it must never enter the
+// Trio PRODUCTS array, because that array drives the camera
+// assessment contract (server/model.mjs PRODUCT_PROFILES, assess.mjs
+// product validation) and the web<->native parity test pins it to
+// the Trio three. The Swift Trio mirror (ProductConfig.swift) is
+// therefore unaffected by Musica; if Musica ever becomes an
+// assessment product, the Swift mirror needs a matching case first.
+// HN-027: Musica's registry entry lives here, in js/products.js.
+export const STUDIO_PRODUCTS = [
+  {
+    id: "musica",
+    displayName: "Meta Musica",
+    department: "Studio — generated music from written briefs",
+    tagline: "The studio that never closes: real takes, logged, kept or rejected on the record.",
+    accent: "#8b5cf6",
+    categories: ["chipsynth", "ambient", "boom-bap"],
+    scenarios: [
+      "A chipsynth take from its genre brief",
+      "An ambient take from its genre brief",
+      "A boom-bap take from its genre brief",
+    ],
+    limitations:
+      "A composition studio, not a record label and not a human performance. Every track is generated in-studio from a written genre brief and a seed; no track is a human performance, and no rights are claimed beyond the studio's own generated material. No live model calls are made from this sandbox; Spark assist records its prompts and its held/not-configured state, never a fabricated reply. Stage-1 studio: the loop, keeper bar, and catalogue are real, but Spark-assisted composition is not yet live.",
+    inputGuidance:
+      "Pick a genre brief and a seed; the loop renders real audio takes and logs every attempt. Keepers land in the catalogue with a licence line; rejects stay in the reject log.",
+  },
+];
+
+export const STUDIO_PRODUCT_BY_ID = Object.fromEntries(
+  STUDIO_PRODUCTS.map((p) => [p.id, p]),
+);
+
 export function isProductId(value) {
   return typeof value === "string" && Object.hasOwn(PRODUCT_BY_ID, value);
 }

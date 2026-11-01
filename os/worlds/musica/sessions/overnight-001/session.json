@@ -1,0 +1,17 @@
+{
+  "brief_id": "chipsynth",
+  "keeper_pass": {
+    "keepers": 85,
+    "rejects": 15,
+    "timestamp": "2026-11-01T11:35:56.250449Z"
+  },
+  "seed_base": 10000,
+  "session_id": "overnight-001",
+  "takes_logged": 100,
+  "takes_new": 100,
+  "variation_pass": {
+    "clones": 0,
+    "threshold": 0.98,
+    "timestamp": "2026-11-01T11:36:03.831581Z"
+  }
+}

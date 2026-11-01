@@ -1,0 +1,39 @@
+{
+  "sessions": [
+    {
+      "catalogue_tracks": 11,
+      "keepers": 11,
+      "rejects": 1,
+      "session_id": "hn029-chipsynth",
+      "takes": 12
+    },
+    {
+      "catalogue_tracks": 0,
+      "keepers": 4,
+      "rejects": 0,
+      "session_id": "hn038-ambient",
+      "takes": 4
+    },
+    {
+      "catalogue_tracks": 0,
+      "keepers": 4,
+      "rejects": 0,
+      "session_id": "hn038-boom-bap",
+      "takes": 4
+    },
+    {
+      "catalogue_tracks": 0,
+      "keepers": 4,
+      "rejects": 0,
+      "session_id": "hn038-chipsynth",
+      "takes": 4
+    },
+    {
+      "catalogue_tracks": 85,
+      "keepers": 85,
+      "rejects": 15,
+      "session_id": "overnight-001",
+      "takes": 100
+    }
+  ]
+}
