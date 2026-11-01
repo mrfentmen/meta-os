@@ -89,8 +89,20 @@ def _tone(freq, count, wave_type, attack=0.01, decay=0.4):
     return out
 
 
+def _midi_of(freq):
+    """MIDI note number for a frequency, clamped to 0..127."""
+    note = int(round(69 + 12 * math.log2(freq / 440.0)))
+    return max(0, min(127, note))
+
+
 def render_samples(params, seed):
-    """Render the full take as float samples in [-1, 1]. Deterministic."""
+    """Render the full take as float samples in [-1, 1]. Deterministic.
+
+    Returns (samples, events) where events is the note list the
+    renderer actually played: {kind, start_s, duration_s, midi}.
+    The MIDI export (HN-048) replays these events, so a keeper's
+    MIDI file is the take's own notes, not a reconstruction.
+    """
     tempo = params["tempo"]
     bars = params["bars"]
     key = params["key"]
@@ -101,6 +113,7 @@ def render_samples(params, seed):
     bar_samples = int(4 * beat * SAMPLE_RATE)
     total = bars * bar_samples
     buf = [0.0] * total
+    events = []
     prog = PROGRESSIONS[mode]
     melody_degree = 0
     for bar in range(bars):
@@ -117,6 +130,10 @@ def render_samples(params, seed):
             freq = _freq(key, mode, chord_root) / 2.0
             _add(buf, start + beat_i * beat_samples,
                  _tone(freq, beat_samples, "sine", attack=0.02, decay=0.6), 0.35)
+            events.append({"kind": "bass",
+                           "start_s": (start + beat_i * beat_samples) / SAMPLE_RATE,
+                           "duration_s": beat_samples / SAMPLE_RATE,
+                           "midi": _midi_of(freq)})
         # Melody: one seeded note per beat, occasional rest.
         for beat_i in range(4):
             if rng.random() < 0.2:
@@ -126,6 +143,10 @@ def render_samples(params, seed):
             _add(buf, start + beat_i * beat_samples,
                  _tone(freq, beat_samples, wave_type, attack=0.01, decay=0.5),
                  0.30)
+            events.append({"kind": "melody",
+                           "start_s": (start + beat_i * beat_samples) / SAMPLE_RATE,
+                           "duration_s": beat_samples / SAMPLE_RATE,
+                           "midi": _midi_of(freq)})
         # Hats: noise bursts on offbeats, quieter on major (ambient).
         hat_gain = 0.06 if mode == "major" else 0.12
         for half in (1, 3, 5, 7):
@@ -136,7 +157,8 @@ def render_samples(params, seed):
                     buf[pos + i] += (rng.random() * 2.0 - 1.0) * hat_gain * (
                         1.0 - i / length)
     peak = max(max(buf), -min(buf), 1e-9)
-    return [max(-1.0, min(1.0, v * 0.89 / peak)) for v in buf]
+    samples = [max(-1.0, min(1.0, v * 0.89 / peak)) for v in buf]
+    return samples, events
 
 
 def write_wav(path, samples):
@@ -153,7 +175,8 @@ def write_wav(path, samples):
 
 def render_take(params, seed, out_path):
     """Render one take; return (duration_s, sha256)."""
-    duration = write_wav(out_path, render_samples(params, seed))
+    samples, _events = render_samples(params, seed)
+    duration = write_wav(out_path, samples)
     return duration, sha256_file(out_path)
 
 

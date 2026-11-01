@@ -1,0 +1,73 @@
+{
+  "licence": "MIT",
+  "takes": [
+    {
+      "bass_notes": 16,
+      "file": "midi/take-001.mid",
+      "melody_notes": 11,
+      "take_id": "take-001"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-002.mid",
+      "melody_notes": 11,
+      "take_id": "take-002"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-003.mid",
+      "melody_notes": 14,
+      "take_id": "take-003"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-005.mid",
+      "melody_notes": 12,
+      "take_id": "take-005"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-006.mid",
+      "melody_notes": 13,
+      "take_id": "take-006"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-007.mid",
+      "melody_notes": 13,
+      "take_id": "take-007"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-008.mid",
+      "melody_notes": 12,
+      "take_id": "take-008"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-009.mid",
+      "melody_notes": 14,
+      "take_id": "take-009"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-010.mid",
+      "melody_notes": 12,
+      "take_id": "take-010"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-011.mid",
+      "melody_notes": 15,
+      "take_id": "take-011"
+    },
+    {
+      "bass_notes": 16,
+      "file": "midi/take-012.mid",
+      "melody_notes": 15,
+      "take_id": "take-012"
+    }
+  ],
+  "tool": "pretty_midi",
+  "tool_version": "0.2.11.post0"
+}

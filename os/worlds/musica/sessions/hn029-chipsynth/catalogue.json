@@ -13,6 +13,7 @@
         "before_lufs": -15.12,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-001.mid",
       "normalized_file": "normalized/take-001.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1001, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -30,6 +31,7 @@
         "before_lufs": -15.65,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-002.mid",
       "normalized_file": "normalized/take-002.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1002, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -47,6 +49,7 @@
         "before_lufs": -15.18,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-003.mid",
       "normalized_file": "normalized/take-003.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1003, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -64,6 +67,7 @@
         "before_lufs": -15.66,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-005.mid",
       "normalized_file": "normalized/take-005.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1005, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -81,6 +85,7 @@
         "before_lufs": -15.91,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-006.mid",
       "normalized_file": "normalized/take-006.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1006, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -98,6 +103,7 @@
         "before_lufs": -15.59,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-007.mid",
       "normalized_file": "normalized/take-007.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1007, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -115,6 +121,7 @@
         "before_lufs": -15.59,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-008.mid",
       "normalized_file": "normalized/take-008.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1008, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -132,6 +139,7 @@
         "before_lufs": -14.97,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-009.mid",
       "normalized_file": "normalized/take-009.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1009, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -149,6 +157,7 @@
         "before_lufs": -15.88,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-010.mid",
       "normalized_file": "normalized/take-010.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1010, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -166,6 +175,7 @@
         "before_lufs": -15.95,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-011.mid",
       "normalized_file": "normalized/take-011.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1011, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",
@@ -183,6 +193,7 @@
         "before_lufs": -15.08,
         "target_lufs": -16.0
       },
+      "midi_file": "midi/take-012.mid",
       "normalized_file": "normalized/take-012.wav",
       "provenance": "rendered by os/worlds/musica/runtime/compose.py from brief chipsynth, seed 1012, params {\"bars\": 4, \"key\": \"C\", \"mode\": \"minor\", \"tempo\": 132, \"waveform\": \"square\"}",
       "session_id": "hn029-chipsynth",

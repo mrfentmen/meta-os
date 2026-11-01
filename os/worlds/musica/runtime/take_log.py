@@ -29,6 +29,8 @@ A take record:
     blind A/B harness (HN-039)
   measurement: optional, added by the keeper pass (HN-030):
     {duration_s, rms_dbfs, silence_ratio, repetition}
+  midi_file: optional, added by the MIDI export (HN-048):
+    path to the keeper's MIDI file, e.g. "midi/take-001.mid"
 """
 
 import hashlib
