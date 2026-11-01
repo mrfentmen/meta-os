@@ -11,8 +11,43 @@ it says so in the same table rather than a paragraph further down.
 | Language / layer | MCP server | Status | Evidence |
 |---|---|---|---|
 | Rust (Layer 0, kernel) | `docs-rs` — npm `@nuskey8/docs-rs-mcp@1.0.1`, MIT | **WIRED, verified live** | Handshake plus two successful tool calls, below |
-| Goose (Layer 1, services) | none exists | **NOT POSSIBLE** | No MCP server for the Goose language exists. Substitute is `goose lsp` (a real LSP), not yet installed |
-| Lobster (Layer 2, agents) | none exists | **NOT POSSIBLE** | No MCP server and no LSP. Substitute is the docs sources |
+| Goose (Layer 1, services) | npm `goose-mcp@1.1.0`, MIT (boss's own server) | **WIRED, verified live** | 15 tools, real calls, below |
+| Lobster (Layer 2, agents) | npm `lobster-mcp@1.1.0`, MIT (boss's own server) | **WIRED, verified live** | 14 tools, real calls, below |
+
+### Update 2026-11-01, after the pull from `origin/main`
+
+The two rows above said "no MCP exists" when this file was first written. That
+was true then and is false now: the boss published both servers. Reinstalled on
+this Mac and smoke-called again, so no claim below rests on the older text.
+
+```
+$ npm install goose-mcp lobster-mcp     # /Users/test/Desktop/.agents/mcp-servers
+  goose-mcp 1.1.0
+  lobster-mcp 1.1.0
+
+$ python3 os-build/mcp/mcp_client.py goose overview '{}'
+Goose - memory-safe systems language with a flat data model.
+Bundled from commit: b78158797a3a4199a2c519d90d4e5421b2760fe3
+Doc sections: 389 across 10 documents
+Stdlib symbols: 702 | Keywords: 57 | Sample programs: 32
+
+$ python3 os-build/mcp/mcp_client.py lobster overview '{}'
+Source: https://github.com/aardappel/lobster @ 6c1389c6e2
+Docs: 187 sections across 14 documents | Builtins: 879 | Samples: 18
+```
+
+Both are offline bundled data (no network at runtime), so querying them hard
+costs nothing — which is what BUFFY_LAYER1_TASKS.md rule 3 assumes.
+
+Two facts from this wiring that change the lane, recorded here once:
+
+- `goose__toolchain_status` reports **Goose toolchain: NOT FOUND**. There is no
+  `goose` compiler on this Mac, so nothing written in `services/` can honestly
+  reach COMPILED. WRITTEN is the ceiling until someone builds the compiler.
+- The committed `mcp-gateway/backends.json` points `goose`/`lobster` at Pax's VM
+  paths (`/home/hatch/workspace/...`), which do not exist here. The gateway is
+  therefore not the route on this Mac; the config in
+  `/Users/test/Desktop/.agents/mcp.json` (`npx -y goose-mcp@1.1.0`) is.
 
 ## Rust: what was proven, and the exact output
 
