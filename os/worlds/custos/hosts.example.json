@@ -1,4 +1,11 @@
 {
+ "cadence": {
+  "ct": "1h",
+  "dns": "6h",
+  "hosts": "15m",
+  "kev": "24h",
+  "subdomain": "6h"
+ },
  "cert_warn_days": 21,
  "hosts": [
   {

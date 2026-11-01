@@ -99,6 +99,17 @@ domain absent from the map is enumerated but never graded.
 dns_domains defaults to ct_domains when absent: the watched-domain
 list is the DNS watch list unless the config says otherwise. A
 snapshot is {"A": [...], "AAAA": [...], "MX": [...], "TXT": [...]}.
+
+Source filtering (RW-007): run_patrol accepts an optional `sources`
+set naming which of the five patrol sources run this cycle —
+"kev", "ct", "dns", "subdomain", "hosts" (hosts covers liveness,
+certificate, exposure, and the headers audit for live hosts, since
+the audit needs a live host). None means all five, exactly the
+pre-RW-007 behaviour. The scheduler (runtime/scheduler.py) is the
+caller that filters: it runs the patrol with only the sources its
+per-source cadence says are due. The summary reports sources_run
+and sources_skipped so the record shows what a filtered cycle did
+and did not check.
 """
 
 import argparse
@@ -131,6 +142,11 @@ SECURITY_HEADERS = (
     "x-content-type-options",
     "referrer-policy",
 )
+
+# Patrol sources, in run order. The scheduler's cadence config keys
+# are exactly these names; "hosts" covers the whole per-host step
+# (liveness, certificate, exposure, headers audit).
+SCHEDULER_SOURCES = ("kev", "ct", "dns", "subdomain", "hosts")
 
 CATEGORIES = (
     "baseline normal",
@@ -517,7 +533,7 @@ def fetch_headers(host, port, timeout=HEADER_TIMEOUT):
 def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                seen_cve=None, fetch_ct_fn=None, seen_ct=None,
                fetch_headers_fn=None, fetch_dns_fn=None, seen_dns=None,
-               resolve_subdomain_fn=None):
+               resolve_subdomain_fn=None, sources=None):
     """One patrol. Returns (records, seen_cve, seen_ct).
 
     Every observation is classified and recorded. Yellow records are
@@ -530,7 +546,21 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     caller reads it back after the call and persists it. A domain
     missing from it is a first sighting: the snapshot is stored
     and no record is written.
+
+    sources, when given, is the set of patrol sources to run this
+    cycle (subset of SCHEDULER_SOURCES); anything else is skipped
+    outright — no fetch, no probe, no record — and the summary
+    names it as skipped. An unknown source name raises ValueError
+    before any signal runs.
     """
+    if sources is None:
+        enabled = set(SCHEDULER_SOURCES)
+    else:
+        enabled = set(sources)
+        unknown = sorted(enabled - set(SCHEDULER_SOURCES))
+        if unknown:
+            raise ValueError("unknown patrol source(s): %s"
+                             % ", ".join(unknown))
     records = []
     seen = set(seen_cve or ())
     seen_ids = set(seen_ct or ())
@@ -539,13 +569,16 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     errors = []
 
     # 1. Known-exploited vulnerabilities vs the configured inventory.
+    # Skipped outright when the scheduler says kev is not due: no
+    # fetch, no match, no record.
     kev_seen_count = 0
     entries = []
-    try:
-        entries = fetch_kev_fn(config.get("kev_url", DEFAULT_KEV_URL))
-    except Exception as exc:  # feed down: noted, never invented
-        errors.append("kev fetch failed: %s" % exc)
-    kev_seen_count = len(entries)
+    if "kev" in enabled:
+        try:
+            entries = fetch_kev_fn(config.get("kev_url", DEFAULT_KEV_URL))
+        except Exception as exc:  # feed down: noted, never invented
+            errors.append("kev fetch failed: %s" % exc)
+        kev_seen_count = len(entries)
     for entry, item in match_kev(entries, config.get("inventory", [])):
         cve = entry.get("cveID", "")
         if cve in seen:
@@ -569,7 +602,10 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     ct_since = config.get("ct_since", "")
     ct_fetch = fetch_ct_fn or fetch_ct
     ct_entries_by_domain = {}
-    for domain in config.get("ct_domains", []):
+    # Skipped outright when ct is not due: no fetch, and the
+    # subdomain sweep below then has no entries to grade.
+    ct_watch = config.get("ct_domains", []) if "ct" in enabled else []
+    for domain in ct_watch:
         try:
             entries = ct_fetch(domain, config.get(
                 "ct_url_template", DEFAULT_CT_URL_TEMPLATE))
@@ -601,7 +637,10 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     # baseline. First sighting stores silently; a change is a
     # yellow record carrying the diff; a failed fetch is a summary
     # error, never an empty snapshot.
-    dns_domains = config.get("dns_domains") or config.get("ct_domains", [])
+    # Skipped outright when dns is not due: no resolution, no diff.
+    dns_domains = ((config.get("dns_domains")
+                    or config.get("ct_domains", []))
+                   if "dns" in enabled else [])
     dns_fetch = fetch_dns_fn or resolve_dns
     dns_state = seen_dns if seen_dns is not None else {}
     for domain in dns_domains:
@@ -630,7 +669,12 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     subdomains_checked = 0
     resolver = resolve_subdomain_fn or resolve_subdomain
     expected_map = config.get("subdomain_expected_networks", {}) or {}
-    for domain in config.get("ct_domains", []):
+    # Skipped outright when subdomain is not due: nothing resolved.
+    # (A direct caller that enables subdomain without ct gets no
+    # entries to grade: the sweep grades this cycle's CT entries.)
+    sub_watch = (config.get("ct_domains", [])
+                 if "subdomain" in enabled else [])
+    for domain in sub_watch:
         if domain not in ct_entries_by_domain:
             continue
         networks_cfg = expected_map.get(domain)
@@ -665,8 +709,10 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                  "expected_networks": list(networks_cfg),
                  "unexpected_addresses": unexpected}))
 
-    # 2. Per-host checks.
-    for host_cfg in config.get("hosts", []):
+    # 2. Per-host checks. Skipped outright when hosts is not due:
+    # no liveness probe, no certificate probe, no headers audit.
+    host_watch = (config.get("hosts", []) if "hosts" in enabled else [])
+    for host_cfg in host_watch:
         host = host_cfg["host"]
         port = int(host_cfg.get("port", 443))
         if not probe_port_fn(host, port):
@@ -717,11 +763,14 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
     records.append({
         "record_type": "patrol-summary",
         "ts": now,
-        "hosts_checked": len(config.get("hosts", [])),
+        "hosts_checked": len(host_watch),
         "kev_entries_seen": kev_seen_count,
         "ct_entries_seen": ct_seen_count,
         "dns_domains_checked": len(dns_domains),
         "subdomains_checked": subdomains_checked,
+        "sources_run": [s for s in SCHEDULER_SOURCES if s in enabled],
+        "sources_skipped": [s for s in SCHEDULER_SOURCES
+                            if s not in enabled],
         "observations": counts,
         "escalations": len(escalations),
         "errors": errors,
