@@ -33,6 +33,7 @@
     <a href="#board-tiers">Tiers</a>
     <a href="#board-bolo">BOLO</a>
     <a href="#board-timeline">Timeline</a>
+    <a href="#board-cameras">Cameras</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -67,6 +68,10 @@
     <h2 id="board-timeline-heading">Records timeline</h2>
     <p>An incident's life as one timeline from its record file, via /api/crew/status (patrol → review → investigation → dispatch in the normal life).</p>
     <div id="timeline-content" aria-live="polite">Loading…</div>
+  </section>
+  <section class="board-section" id="board-cameras" aria-labelledby="board-cameras-heading">
+    <h2 id="board-cameras-heading">Camera wall labels</h2>
+    <p>Every wall row and the pin card show their source + LIVE/TEST state in the UI itself: NYCTMC live → LIVE, offline subset → TEST. The pin card used to hardcode "test feed" for every feed, including live ones.</p>
   </section>
 </main>
 <script type="module">

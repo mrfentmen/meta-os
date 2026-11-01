@@ -1599,6 +1599,10 @@ body[data-view="command"] > main { display: none; }
 .cmd-cam-row--flagged { box-shadow: inset 2px 0 0 var(--cmd-flag); }
 .cmd-row-tag { margin-left: auto; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; color: var(--cmd-accent); }
 .cmd-row-tag--flagged { color: #ff8d84; }
+.cmd-row-source { margin-left: auto; font-family: var(--mono); font-size: 9px; opacity: 0.7; }
+.cmd-row-state { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; }
+.cmd-row-state--live { color: #8fe3a8; }
+.cmd-row-state--test { color: #ffd9a8; }
 
 /* Pins: DOM markers on the 3D map (and schematic grid dots, and
    list-row dots) share the state classes. Priority is carried by

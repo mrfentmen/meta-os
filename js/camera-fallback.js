@@ -24,6 +24,16 @@ export const CAMERA_API_URL = "https://webcams.nyctmc.org/api/cameras";
 // then FALLBACK_CAMERAS below.
 export const CAMERA_PROXY_URL = "/api/cameras";
 
+// HN-063: the feed's source + LIVE/TEST state, as one pure fact.
+// Live NYCTMC list → LIVE; the built-in offline subset → TEST (the
+// subset's own header says these are TEST feeds). The wall rows and
+// the pin card render this in the UI itself, never just in data.
+export function cameraFeedState(usingFallback) {
+  return usingFallback
+    ? { source: "Offline subset", state: "TEST" }
+    : { source: "NYCTMC live", state: "LIVE" };
+}
+
 export const FALLBACK_CAMERAS = [
   // ---- Manhattan (12) ----
   { id: "330e2a88-3cea-4ce5-b1a2-ae8440de9b1a", name: "1 Ave @ 84 St", latitude: 40.7755, longitude: -73.9502, area: "Manhattan", isOnline: "true", imageUrl: "https://webcams.nyctmc.org/api/cameras/330e2a88-3cea-4ce5-b1a2-ae8440de9b1a/image" },
