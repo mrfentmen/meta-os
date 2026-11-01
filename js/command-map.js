@@ -150,6 +150,9 @@ const state = {
   onlineCount: 0,
   query: "",
   focusedId: null,
+  searchReturnFocus: null, // HN-019: element to refocus when search closes
+  helpReturnFocus: null, // HN-019: element to refocus when help closes
+  pinReturnFocus: null, // HN-019: element to refocus when the pin card closes
   watch: new WatchList(MAX_WATCHED),
   queue: new IncidentQueue(),
   camState: new Map(), // id -> { flagged, flagByProduct, lastCategory, lastProduct, lastFlagged, lastAt, lastResult, phase, reviewed, errorNote }
@@ -943,6 +946,7 @@ function toggleWatch(id) {
 function openPinCard(id) {
   const cam = state.byId.get(id);
   if (!cam) return;
+  state.pinReturnFocus = rememberFocus();
   els.pinCard.hidden = false;
   els.pinCardImg.src = cacheBust(cam.imageUrl);
   els.pinCardName.textContent = cam.name;
@@ -950,6 +954,7 @@ function openPinCard(id) {
   updatePinCardChip(id);
   updateWatchButtons();
   positionPinCard();
+  els.pinCardClose.focus();
 }
 
 function updatePinCardChip(id) {
@@ -1725,6 +1730,7 @@ function renderKResults() {
 }
 
 function openSearch() {
+  state.searchReturnFocus = rememberFocus();
   els.overlay.hidden = false;
   els.ksearch.value = "";
   renderKResults();
@@ -1733,6 +1739,30 @@ function openSearch() {
 
 function closeSearch() {
   els.overlay.hidden = true;
+  restoreFocus(state.searchReturnFocus);
+  state.searchReturnFocus = null;
+}
+
+// Focus return (HN-019): overlays and cards remember the element
+// that opened them and give focus back on close, so a keyboard
+// walk never strands the operator at the document body. Walk
+// order is DOM order, which matches visual order here: topbar,
+// left rail, right rail, wall, pin card, then the overlays (which
+// take focus on open and return it on close). No positive
+// tabindex exists anywhere in this view.
+function rememberFocus() {
+  const el = document.activeElement;
+  return el instanceof Element ? el : null;
+}
+
+function restoreFocus(el) {
+  if (el && el.isConnected && typeof el.focus === "function") el.focus();
+}
+
+function closeHelp() {
+  els.helpOverlay.hidden = true;
+  restoreFocus(state.helpReturnFocus);
+  state.helpReturnFocus = null;
 }
 
 // ---------------------------------------------------------------- map modes + AI focus
@@ -1871,6 +1901,8 @@ function init() {
   });
   els.pinCardClose.addEventListener("click", () => {
     els.pinCard.hidden = true;
+    restoreFocus(state.pinReturnFocus);
+    state.pinReturnFocus = null;
   });
   els.assessNow.addEventListener("click", () => {
     if (state.focusedId) void assessCamera(state.focusedId);
@@ -1923,7 +1955,7 @@ function init() {
     } else if (event.key === "Escape" && !els.overlay.hidden) {
       closeSearch();
     } else if (event.key === "Escape" && els.helpOverlay && !els.helpOverlay.hidden) {
-      els.helpOverlay.hidden = true;
+      closeHelp();
     }
   });
   els.ksearch.addEventListener("input", renderKResults);
@@ -1944,14 +1976,13 @@ function init() {
   // by button, by backdrop click, or by Esc.
   if (els.searchOpen) els.searchOpen.addEventListener("click", openSearch);
   if (els.helpOpen) els.helpOpen.addEventListener("click", () => {
+    state.helpReturnFocus = rememberFocus();
     els.helpOverlay.hidden = false;
     els.helpClose.focus();
   });
-  if (els.helpClose) els.helpClose.addEventListener("click", () => {
-    els.helpOverlay.hidden = true;
-  });
+  if (els.helpClose) els.helpClose.addEventListener("click", closeHelp);
   if (els.helpOverlay) els.helpOverlay.addEventListener("click", (event) => {
-    if (event.target === els.helpOverlay) els.helpOverlay.hidden = true;
+    if (event.target === els.helpOverlay) closeHelp();
   });
 
   // Reduced motion (HN-017): the wall does not auto-cycle its
