@@ -1,0 +1,16 @@
+[Unit]
+Description=Meta OS self-development loop cycle (agent inside the OS working on the OS)
+After=network-online.target relay-bus.service
+Wants=network-online.target relay-bus.service
+PartOf=relay.target
+
+[Service]
+Type=oneshot
+User=relay
+Group=relay
+WorkingDirectory=/opt/relay
+EnvironmentFile=-/etc/metaos/loop.env
+ExecStart=/usr/local/bin/metaos-loop
+
+[Install]
+WantedBy=relay.target

@@ -66,7 +66,7 @@ trap cleanup EXIT
 
 cp services/*.service services/*.timer services/relay.target \
   "$STAGE/etc/systemd/system/"
-cp firstboot/metaos-firstboot bin/metaos-boot-checklist bin/metaos-update \
+cp firstboot/metaos-firstboot bin/metaos-boot-checklist bin/metaos-update bin/metaos-loop \
   "$STAGE/usr/local/bin/"
 chmod 755 "$STAGE/usr/local/bin/"*
 
