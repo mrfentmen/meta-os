@@ -1,12 +1,17 @@
-# Layer 2 — the agent process model (Milo, ML-L2-01)
+# Layer 5 — the agent process model (Milo, ML-L2-01)
 
 Status: **DRAFT** — first version 2026-11-01, target status DESIGNED
-per `MILO_LAYER2_TASKS.md` (ML-L2-01). Nothing here is built: the
+per `MILO_LAYER2_TASKS.md` (ML-L2-01). Layer numbers in prose
+follow the seven-layer scheme (boss's word 2026-11-01 ~09:02,
+`os-build/LAYERS.md` on main): this document is Layer 5
+(agent runtime), services are Layer 4, the shell is Layer 6.
+File name, task id ML-L2-01, and branch name keep the old
+digits as stable identifiers per Pax's renumber order. Nothing here is built: the
 model is designed now, and no agent process runs until K6 exists
 (KERNEL_SPEC.md K6: system calls, first userspace program, the Goose
 services layer gets its first process). This document fixes what an
-agent process IS on Meta OS, so Hana's Layer 2 shell work and Buffy's
-Layer 1 service contract are written against the same model. Items
+agent process IS on Meta OS, so Hana's Layer 6 shell work and Buffy's
+Layer 4 service contract are written against the same model. Items
 the kernel or the Mac build must answer are marked OPEN and are not
 guessed here. Rules that bind this document: NO MOCKS anywhere; the
 audit trail is part of the model, not an add-on; status words are
@@ -25,11 +30,11 @@ memory; Q1/Q5/Q9 and enforcement/storage stay OPEN.
 
 ## 1. What an agent process is
 
-An agent process is a Layer 2 userspace process that acts on behalf
+An agent process is a Layer 5 userspace process that acts on behalf
 of a named principal (a person, or another agent process acting under
-delegation) and does its work exclusively by calling Layer 1
-services. It is not a kernel task with special privilege, not a
-service, and not a shell: the shell (Hana's Layer 2 work) lists and
+delegation) and does its work exclusively by calling Layer 4
+system services. It is not a kernel task with special privilege, not a
+service, and not a shell: the shell (Hana's Layer 6 work) lists and
 starts agent processes and reads real OS state; it does not grant
 them anything the model does not.
 
@@ -49,16 +54,16 @@ one of them is incomplete:
 - **Principal.** The person (or delegating agent process) the agent
   acts for. Delegation chains are recorded, not flattened: a record
   cites the acting agent and the principal it acted for.
-- **Origin.** Which Layer 2 program started it (shell command, app,
+- **Origin.** Which program started it (shell command, app,
   or another agent process), and the start request that created it.
   An agent process with no recorded origin is not started.
 - **No kernel identity beyond the task.** At K6 the kernel knows a
   service only as a task it loads (K6 shape item 1: one compiled
   binary, loaded as a K5 task). An agent process likewise carries no
   kernel-side privilege, role, or identity beyond its task; all
-  agent identity lives in Layer 2 records and in the capability set
+  agent identity lives in Layer 5 records and in the capability set
   checked at start (§4). OPEN: whether the kernel task id and the
-  Layer 2 agent id are the same value or mapped — decided at R5/K6
+  Layer 5 agent id are the same value or mapped — decided at R5/K6
   wiring time, not before, because it depends on the resolved
   bootloader and task shape (Q1/Q5 in `kernel/MAC_QUESTIONS.md`).
 
@@ -93,13 +98,13 @@ There is no other state, and no state is skipped in a record.
 
 ## 4. Capabilities
 
-- **Agents call Layer 1 services only.** An agent process never
+- **Agents call Layer 4 system services only.** An agent process never
   calls the kernel directly and never touches hardware. Every effect
-  an agent has on the system goes through a Layer 1 service call.
+  an agent has on the system goes through a Layer 4 system service call.
   This is the hard boundary of the model: anything that looks like
   a direct kernel access from an agent is a design violation, not a
   shortcut.
-- **A capability is a named set of Layer 1 service calls.** The set
+- **A capability is a named set of Layer 4 system service calls.** The set
   is fixed at start, named in the start request, and recorded with
   the agent's identity. An agent that calls outside its set is
   failed ( §3), and the failed call is recorded.
@@ -116,7 +121,7 @@ There is no other state, and no state is skipped in a record.
   capability set. Widening a set is a new start request with a new
   id and a new record.
 - OPEN: how the capability set is enforced — a kernel-side table
-  checked on each call, or a service-side check at the Layer 1
+  checked on each call, or a service-side check at the Layer 4
   boundary. This depends on the K6 syscall surface (six draft
   calls: exit, write_serial, write_console, read_key, ticks, yield)
   and on the Q9 handler-ABI answer, so it is left OPEN here.
@@ -127,7 +132,7 @@ Every agent action is logged. The audit trail is part of the model,
 not an add-on, and a run with missing records is not a valid run.
 
 - **One record per action.** A record cites: the agent id, the
-  principal, the Layer 1 service called, the arguments that matter
+  principal, the Layer 4 system service called, the arguments that matter
   for audit (not bulk data), the result, and the tick at which it
   happened (K6 syscall 4, ticks, is the clock this layer has).
 - **Failure records are mandatory.** A fault, an out-of-capability
@@ -135,7 +140,7 @@ not an add-on, and a run with missing records is not a valid run.
   name and exit state, mirroring K6 shape item 5's serial logging
   for failed services. At minimum the record reaches serial; where
   the durable store lives (and how it rotates) is OPEN until a
-  Layer 1 storage service exists.
+  Layer 4 storage service exists.
 - **Records are append-only in v0.** No record is edited or
   deleted by an agent process. Correction, if ever allowed, is a
   separate design with its own document.
@@ -176,7 +181,7 @@ Mapping to §§2–5, and where the mapping stops:
 - **Identity (§2): a worker thread is NOT an agent process.**
   A worker thread is the execution vehicle: a copy of the
   program running in isolation. The agent id, principal, and
-  origin live in Layer 2 records (§2), not in the thread. Code
+  origin live in Layer 5 records (§2), not in the thread. Code
   can tell it is running as a worker via `is_worker_thread()`,
   but that answers "am I a worker", never "which agent am I":
   the agent id comes from the start request, as §2 requires.
@@ -193,13 +198,13 @@ Mapping to §§2–5, and where the mapping stops:
   not Lobster's.** No shared memory means an agent process
   cannot reach another process's state at all: its only effects
   are objects it copies out through `thread_write`. That is
-  the mechanism shape of "Layer 1 services only". But no
+  the mechanism shape of "Layer 4 system services only". But no
   Lobster construct enforces a capability set: the set is a
-  Layer 2 record checked at the Layer 1 boundary, still OPEN
+  Layer 5 record checked at the Layer 4 boundary, still OPEN
   per §4. And one tension is explicit: Lobster's queue is a
   general message channel, while §4 forbids agent-to-agent
   channels in v0. Resolution: on Meta OS the queue's
-  legitimate v0 endpoints are Layer 1 services and the record
+  legitimate v0 endpoints are Layer 4 system services and the record
   store, not other agents. The queue mechanism is adopted;
   the agent-to-agent use is not.
 - **Records (§5): copy semantics support append-only.** A
@@ -207,7 +212,7 @@ Mapping to §§2–5, and where the mapping stops:
   stored record is a snapshot the sending agent can no longer
   mutate, which is exactly what §5's append-only rule needs
   on the sender side. The store side (durability, rotation)
-  is still OPEN until a Layer 1 storage service exists.
+  is still OPEN until a Layer 4 storage service exists.
 - **Not claimed:** coroutine behaviour (the docs mention
   coroutines only historically, `philosophy#4`), sample
   `threads.lobster` behaviour (not run: no toolchain), and
@@ -227,10 +232,10 @@ Mapping to §§2–5, and where the mapping stops:
    Layer 0 work and the Mac build, listed in
    `kernel/MAC_QUESTIONS.md`.
 3. **Capability enforcement point** (§4) and **record storage**
-   (§5): OPEN until the first Layer 1 services exist.
+   (§5): OPEN until the first Layer 4 system services exist.
 4. **Restart policy, suspend/resume, agent-to-agent channels:**
    future designs, not implied here.
-5. **Shell alignment:** Hana's Layer 2 shell work reads real OS
+5. **Shell alignment:** Hana's Layer 6 shell work reads real OS
    state only (per `HANA_LAYER2_TASKS.md`); the shell's view of an
    agent process (list, start, stop) must match §§2–3 exactly, and
    any mismatch is a design conflict to resolve in the open, not
