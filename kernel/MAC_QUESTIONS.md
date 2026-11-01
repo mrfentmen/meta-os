@@ -38,6 +38,32 @@ Also open at the Pax merge gate: license confirmation for the Terminus
 `Lat2-Terminus16.psf.gz`; see that file's header). Kernel merges go
 through Pax personally until K2 lands, so this is gated, not assumed.
 
+## Update 2026-11-01 ~08:28 EST — R3 drafted, Q9 opened
+
+Boss layer order 2026-11-01 ~08:18 (same order as the R2 note above)
+assigns Rowan the R2/R3 modules unwired with real behavior.
+`kernel/src/interrupts.rs` (K3: IDT, PIC remap/EOI, PIT programming,
+PS/2 keyboard ring buffer, handlers with real serial print behavior)
+landed on `rowan/kernel` in the same commit as this note. UNWIRED into
+`main.rs`, UNCOMPILED, no boot claim — same status as R2.
+
+What did NOT change: `kernel/Cargo.lock` is still absent on main
+(checked this run, main tip 89209d6), so Q1 is still unanswered and
+Q6 (interrupt entry state) is still open. The R3 module therefore
+imports no bootloader type and no `x86_64` crate type (that crate is
+not in `kernel/Cargo.toml`): its IDT structures are local, defined
+from the x86_64 long-mode gate layout, and it never asserts a Rust
+function address into the IDT — a Rust `fn` is not a valid IDT entry
+point (no `iretq` semantics), so the R5 wiring commit must supply
+real asm trampoline addresses via `idt_set()`, under the trampoline
+contract stated in the module header. R5 still wires ONE module per
+commit, onto the proven tree only, after a K1 boot log exists.
+
+Open at the Pax merge gate for R3: Q9 below (handler ABI +
+assumed-device confirmation). Milo gate-1 on the R3 commit is invited
+on the same review-only basis as R1/R2: source-level verification,
+not a compile or boot verdict.
+
 ## Q1 — Resolved bootloader version + lockfile (BLOCKS R2)
 
 `kernel/Cargo.toml` pins `bootloader` version `"0.9"` with feature
@@ -149,6 +175,33 @@ Needed: confirmation at Milo gate that the K2 module, when written,
 drives the real framebuffer (Q5) and stays unwired into `main.rs`
 until a boot log proves it, per OS_BUILD_TASKS.md R5 (wire ONE module
 per commit, onto the proven tree only).
+
+## Q9 — K3 handler ABI + assumed devices (needed before R3 wiring, after Q1)
+
+`kernel/src/interrupts.rs` defines the IDT layout, the PIC/PIT/
+keyboard port map, and handlers with real serial print behavior, but
+deliberately installs no handler address into the IDT: a Rust `fn`
+cannot serve as an IDT entry point (it returns with `ret`, not
+`iretq`, and does not build the interrupt frame).
+
+Needed, at the Q1-resolved toolchain / QEMU setup:
+- Handler ABI decision: `extern "x86-interrupt"` (nightly feature
+  `abi_x86_interrupt`) with handler functions, or asm trampolines
+  that build `InterruptFrame` and call `dispatch()` — which one the
+  Mac build uses, and the exact trampoline source location if the
+  second.
+- Confirmation that the K1 QEMU target presents a dual 8259 PIC at
+  0x20/0x21 + 0xA0/0xA1, a PIT channel 0 at 0x40/0x43 ticking at
+  1,193,182 Hz, and a PS/2 keyboard at 0x60/0x64 — the three devices
+  `interrupts.rs` programs. If any differs, the port map is wrong
+  and the R5 commit must say so.
+- Confirmation of the install sequence the module header documents
+  (cli, PIC remap to 32/40, PIT rate, lidt, sti) against the
+  bootloader's entry interrupt state (Q6).
+
+Why: R3's `dispatch()` + `InterruptFrame` contract is written, but
+the entry points that call it do not exist yet. Until Q9 is answered,
+R3 stays unwired and no interrupt is claimed to work.
 
 ## What this file is not
 
