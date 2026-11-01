@@ -5,9 +5,10 @@ Run: python3 tests/edge_check.py [--list]
 - salts (multi-fragment, e.g. Na+.[Cl-]) -> computes on the whole (documented behavior)
 - charged species (e.g. acetate) -> computes (charge is not a Delaney input)
 """
+import os
 import sys
 
-sys.path.insert(0, ".")
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from xcheck import predict  # noqa: E402
 
 
