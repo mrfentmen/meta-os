@@ -25,13 +25,15 @@ sys.path.insert(
 )
 
 from brief import (  # noqa: E402
+    _volume_move,
     export_design,
+    grading_conditions,
     iterate_brief,
     parse_rough_words,
     run_rough_words,
 )
 from design_loop import verify_proven  # noqa: E402
-from heatsink import HeatsinkParams  # noqa: E402
+from heatsink import Conditions, HeatsinkParams, simulate  # noqa: E402
 
 WORKED = ("i need a heatsink for a hot little chip, about 50mm "
           "square, no fan, keep it small, needs to stay cool under "
@@ -169,6 +171,94 @@ class TestIterate(unittest.TestCase):
             json.dumps(first["brief"], sort_keys=True),
             json.dumps(second["brief"], sort_keys=True))
         self.assertEqual(first["final_params"], second["final_params"])
+
+
+class TestForcedAirflowGrading(unittest.TestCase):
+    # ML-001: a stated forced-airflow requirement used to be
+    # parsed and then dropped — the run graded at passive h=10,
+    # so this input produced the exact same design and R as the
+    # passive demo. The requirement must flow into grading.
+    PAX_EXAMPLE = ("cool a power supply in a hot garage, fan is "
+                   "fine, cheap")
+
+    def test_forced_airflow_grades_under_forced_conditions(self):
+        brief = parse_rough_words(self.PAX_EXAMPLE)
+        reqs = {r["kind"]: r["value"] for r in brief["requirements"]}
+        self.assertTrue(reqs["forced_airflow"])
+        self.assertEqual(
+            grading_conditions(brief).h_w_m2k, 25.0)
+        record = iterate_brief(brief)
+        grade = record["final_grade"]
+        self.assertEqual(grade["conditions"]["h_w_m2k"], 25.0)
+        # Every grade the loop acted on was a forced grade.
+        for entry in record["brief"]["decision_log"]:
+            before = entry["grade_before"]
+            if before is not None:
+                self.assertEqual(
+                    before["conditions"]["h_w_m2k"], 25.0)
+        # The grade reproduces under forced conditions, not passive.
+        params = HeatsinkParams(**record["final_params"])
+        self.assertAlmostEqual(
+            simulate(params, Conditions(h_w_m2k=25.0)).r_th_c_per_w,
+            grade["r_th_c_per_w"], places=9)
+        self.assertNotAlmostEqual(
+            simulate(params, Conditions(h_w_m2k=10.0)).r_th_c_per_w,
+            grade["r_th_c_per_w"], places=3)
+        self.assertTrue(record["proven"])
+
+    def test_passive_still_grades_at_natural_convection(self):
+        record = run_rough_words(WORKED)
+        self.assertEqual(
+            record["final_grade"]["conditions"]["h_w_m2k"], 10.0)
+
+
+class TestGapVolumeHeadroom(unittest.TestCase):
+    # ML-003: the improve loop climbed fin height only — gap and
+    # volume moves existed in code but never fired in a run.
+    # When the best improving move is blocked, the loop must
+    # exercise a gap/volume move whose two-step outcome improves
+    # the grade, not stall and not climb height only.
+
+    def test_gap_headroom_move_fires_and_improves(self):
+        # Height capped at 40, add fins gap-blocked (gap would be
+        # 0.667 mm), target 1.4 below the stall-point grade: the
+        # old loop had no improving move here.
+        brief = parse_rough_words("heatsink under 1.4 degrees per watt")
+        brief["parameters"].update({
+            "fin_height_mm": 40.0, "fin_thickness_mm": 2.0,
+            "fin_count": 17, "base_thickness_mm": 8.0})
+        stall_r = simulate(HeatsinkParams(
+            fin_height_mm=40.0, fin_thickness_mm=2.0,
+            fin_count=17, base_thickness_mm=8.0)).r_th_c_per_w
+        record = iterate_brief(brief)
+        log = record["brief"]["decision_log"]
+        rules = [e["rule"] for e in log]
+        self.assertIn("gap headroom", rules)
+        self.assertIn("improve", rules)
+        # The gap move comes first, then add fins fires on the
+        # widened gap — the loop is no longer height-only.
+        gap_at = rules.index("gap headroom")
+        improve_at = next(
+            i for i, e in enumerate(log)
+            if e["rule"] == "improve" and "fin_count" in e["decision"])
+        self.assertLess(gap_at, improve_at)
+        self.assertIn("add fins", log[gap_at]["reason"])
+        self.assertLess(
+            record["final_grade"]["r_th_c_per_w"], stall_r)
+        self.assertTrue(record["proven"])
+
+    def test_volume_move_returns_thin_base(self):
+        # Function-level pin: under the current bounds the loop
+        # cannot reach volume repair from a feasible start (the
+        # largest gap-feasible volume is about 92,000 mm^3
+        # against a 100,000 budget), so this tests the move
+        # itself, not a loop path — and says so.
+        brief = parse_rough_words("heatsink")
+        brief["parameters"]["base_thickness_mm"] = 8.0
+        changes, reason = _volume_move(
+            brief, {"violations": ["volume above budget"]})
+        self.assertEqual(changes, {"base_thickness_mm": 7.0})
+        self.assertIn("volume", reason)
 
 
 if __name__ == "__main__":

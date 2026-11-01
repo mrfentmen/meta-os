@@ -68,7 +68,22 @@ target is never exported as proven. Worked run
 chip, about 50mm square, no fan, keep it small, under 2 degrees
 per watt" — 4 rounds, 3 logged improvements, accepted with
 R 1.7210 (held-out 1.1848), exported to
-`runs/rough-words-best-design.json`. UNPROVEN, stated plainly:
+`runs/rough-words-best-design.json`.
+
+Stage 2a gate fixes (ML-001, ML-003): a stated forced-airflow
+requirement now flows into grading — fan-cooled briefs grade at
+h=25, never at the passive h=10, and the held-out gate re-scores
+under the same design conditions (its fixed h=15 then acts as a
+degraded-airflow check for forced briefs). Worked run
+`runs/forced-airflow-run-001.json`: "cool a power supply in a
+hot garage, fan is fine, cheap" — 2 rounds, accepted with
+R 1.0623 at h=25 (held-out 1.7825). And when the best improving
+move is blocked by a gap or volume rule, the loop now tries a
+gap/volume move whose two-step outcome beats the current grade
+instead of stalling — worked run `runs/gap-headroom-run-001.json`:
+height capped, add fins gap-blocked, a gap-headroom thin-fins move
+fires, then add fins fires, accepted with R 1.3405. UNPROVEN,
+stated plainly:
 the intake parser has never been checked against real user
 wording beyond the tested examples, and the loop has never run
 on a booted Meta OS image or as a scheduled service.
