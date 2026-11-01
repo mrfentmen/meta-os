@@ -1,0 +1,130 @@
+{
+  "alerts": [
+    {
+      "acknowledged_at": null,
+      "created_at": 1793101200,
+      "dedupe_key": "presence-stall:milo:1",
+      "explanation": "milo holds claimed job 1 but has been absent from presence for over 10 minutes with no progress on it for 120 minutes.",
+      "id": "presence-stall:milo:1",
+      "job": "1",
+      "job_title": "intel status module",
+      "kind": "presence-stall",
+      "last_progress_age_minutes": 120,
+      "last_progress_age_seconds": 7200,
+      "last_seen": 1793101200,
+      "nick": "milo",
+      "resolved_at": null,
+      "room": "build-relay-intel",
+      "severity": "critical",
+      "status": "open",
+      "subjects": [
+        "milo",
+        "1"
+      ],
+      "suggested_fix": "Check on milo; if the worker is gone, the lease sweep will requeue job 1 for another worker."
+    },
+    {
+      "acknowledged_at": null,
+      "created_at": 1793101200,
+      "dedupe_key": "file-collision:7:8:intel/status.py",
+      "explanation": "Jobs 7 and 8 both touch intel/status.py: two workers editing the same file will collide at merge time.",
+      "id": "file-collision:7:8:intel/status.py",
+      "job": "7",
+      "job_title": "status panel A",
+      "kind": "file-collision",
+      "last_seen": 1793101200,
+      "nick": "pax",
+      "other_job": "8",
+      "other_title": "status panel B",
+      "resolved_at": null,
+      "room": "build-relay-intel",
+      "severity": "critical",
+      "shared_path": "intel/status.py",
+      "status": "open",
+      "subjects": [
+        "pax",
+        "7",
+        "8",
+        "intel/status.py"
+      ],
+      "suggested_fix": "Coordinate jobs 7 and 8 before either finishes: split intel/status.py between them, or hold one job until the other merges."
+    },
+    {
+      "acknowledged_at": null,
+      "created_at": 1793101200,
+      "dedupe_key": "file-collision:1:8:intel/status.py",
+      "explanation": "Jobs 1 and 8 both touch intel/status.py: two workers editing the same file will collide at merge time.",
+      "id": "file-collision:1:8:intel/status.py",
+      "job": "1",
+      "job_title": "intel status module",
+      "kind": "file-collision",
+      "last_seen": 1793101200,
+      "nick": "milo",
+      "other_job": "8",
+      "other_title": "status panel B",
+      "resolved_at": null,
+      "room": "build-relay-intel",
+      "severity": "critical",
+      "shared_path": "intel/status.py",
+      "status": "open",
+      "subjects": [
+        "milo",
+        "1",
+        "8",
+        "intel/status.py"
+      ],
+      "suggested_fix": "Coordinate jobs 1 and 8 before either finishes: split intel/status.py between them, or hold one job until the other merges."
+    },
+    {
+      "acknowledged_at": null,
+      "created_at": 1793101200,
+      "dedupe_key": "file-collision:1:7:intel/status.py",
+      "explanation": "Jobs 1 and 7 both touch intel/status.py: two workers editing the same file will collide at merge time.",
+      "id": "file-collision:1:7:intel/status.py",
+      "job": "1",
+      "job_title": "intel status module",
+      "kind": "file-collision",
+      "last_seen": 1793101200,
+      "nick": "milo",
+      "other_job": "7",
+      "other_title": "status panel A",
+      "resolved_at": null,
+      "room": "build-relay-intel",
+      "severity": "critical",
+      "shared_path": "intel/status.py",
+      "status": "open",
+      "subjects": [
+        "milo",
+        "1",
+        "7",
+        "intel/status.py"
+      ],
+      "suggested_fix": "Coordinate jobs 1 and 7 before either finishes: split intel/status.py between them, or hold one job until the other merges."
+    },
+    {
+      "acknowledged_at": null,
+      "blocking_reason": "waiting on the Spark endpoint decision",
+      "created_at": 1793101200,
+      "dedupe_key": "dead-dep:9:3",
+      "dep": "3",
+      "dep_status": "blocked",
+      "explanation": "Job 9 cannot proceed: its dependency 3 is blocked. Blocking reason: waiting on the Spark endpoint decision",
+      "id": "dead-dep:9:3",
+      "job": "9",
+      "job_title": "docs for the status page",
+      "kind": "dead-dep",
+      "last_seen": 1793101200,
+      "nick": "",
+      "resolved_at": null,
+      "room": "build-relay-intel",
+      "severity": "critical",
+      "status": "open",
+      "subjects": [
+        "9",
+        "3"
+      ],
+      "suggested_fix": "Unblock or replace dependency 3 (currently blocked) so job 9 can proceed, or repost job 9 without that dependency."
+    }
+  ],
+  "room": "build-relay-intel"
+}
