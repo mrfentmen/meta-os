@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta Scientia — Molecule Viewer</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #06090f; color: #d7e5f2; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  header { padding: 12px 16px; border-bottom: 1px solid #1c2b3d; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+  header h1 { font-size: 15px; margin: 0; letter-spacing: 0.12em; }
+  header p { font-size: 11px; color: #8fa9bd; margin: 0; }
+  #bar { padding: 10px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #1c2b3d; }
+  button { background: #0f1c2b; color: #d7e5f2; border: 1px solid #2b4258; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 12px; }
+  button[aria-pressed="true"] { background: #1d4d33; border-color: #3f9e63; }
+  button:disabled { opacity: 0.45; cursor: default; }
+  #meta { padding: 8px 16px; font-size: 12px; color: #9fd8b4; min-height: 18px; }
+  #wrap { position: relative; }
+  #view { display: block; width: 100%; height: 62vh; touch-action: none; cursor: grab; }
+  #tip { position: absolute; display: none; background: #0b141f; border: 1px solid #2b4258; padding: 4px 8px; font-size: 11px; pointer-events: none; }
+  #err { display: none; margin: 10px 16px; padding: 10px 12px; border: 1px solid #7a2e2e; background: #1d1010; color: #f0b0b0; font-size: 12px; }
+  footer { padding: 10px 16px; font-size: 11px; color: #8fa9bd; border-top: 1px solid #1c2b3d; }
+  footer a { color: #7fb8e8; }
+  #legend { padding: 6px 16px; font-size: 11px; color: #8fa9bd; }
+  .sw { display: inline-block; width: 10px; height: 10px; margin: 0 4px 0 10px; vertical-align: baseline; }
+</style>
+</head>
+<body>
+<header>
+  <h1>META SCIENTIA · MOLECULE VIEWER</h1>
+  <p>Real PubChem 3D records for caffeine, aspirin, glucose; RDKit-generated ESOL five. All assets local — works offline.</p>
+</header>
+<div id="bar" role="toolbar" aria-label="Viewer controls">
+  <span id="picker" role="group" aria-label="Compound picker"></span>
+  <button id="btn-bs" aria-pressed="true">Ball and stick</button>
+  <button id="btn-sf" aria-pressed="false">Space filling</button>
+  <button id="btn-spin" aria-pressed="true">Auto rotate</button>
+  <button id="btn-labels" aria-pressed="false">Labels</button>
+  <button id="btn-bad">Load malformed file</button>
+</div>
+<div id="meta" aria-live="polite"></div>
+<div id="wrap">
+  <canvas id="view"></canvas>
+  <div id="tip"></div>
+</div>
+<div id="err" role="alert"></div>
+<div id="legend">Legend:
+  <span class="sw" style="background:#c8c8c8"></span>C
+  <span class="sw" style="background:#ffffff"></span>H
+  <span class="sw" style="background:#e03131"></span>O
+  <span class="sw" style="background:#3050f8"></span>N — hover any atom for element and position.
+</div>
+<footer id="prov"></footer>
+<script src="vendor/three.min.js"></script>
+<script>
+"use strict";
+// CPK-ish colors + display radii (ball-and-stick) and vdW radii (space fill), Angstrom.
+const EL = {
+  C: { c: 0xc8c8c8, r: 0.42, vdw: 1.70 }, H: { c: 0xffffff, r: 0.28, vdw: 1.20 },
+  O: { c: 0xe03131, r: 0.44, vdw: 1.52 }, N: { c: 0x3050f8, r: 0.43, vdw: 1.55 },
+};
+const OTHER = { c: 0xffa63d, r: 0.42, vdw: 1.60 };
+
+let renderer, scene, camera, group, labelGroup, spinning = true, showLabels = false;
+let atoms = [], theta = 0.6, phi = 1.05, dist = 14, lastT = 0;
+let META = [], current = null;
+
+function elOf(sym) { return EL[sym] || OTHER; }
+
+// Minimal V2000 SDF reader. Throws an Error with a plain message on bad input.
+function parseSDF(text) {
+  if (typeof text !== "string" || text.length < 100) throw new Error("File too short to be an SDF record.");
+  const lines = text.replace(/\r/g, "").split("\n");
+  if (lines.length < 5) throw new Error("Fewer than 5 lines: not an SDF molfile.");
+  const counts = lines[3] || "";
+  const na = parseInt(counts.slice(0, 3), 10), nb = parseInt(counts.slice(3, 6), 10);
+  if (!Number.isInteger(na) || na <= 0 || na > 500) throw new Error("Bad atom count in counts line: " + JSON.stringify(counts));
+  if (!Number.isInteger(nb) || nb < 0 || nb > 1000) throw new Error("Bad bond count in counts line.");
+  if (lines.length < 4 + na + nb) throw new Error("Truncated file: header promises " + na + " atoms and " + nb + " bonds.");
+  const out = { atoms: [], bonds: [] };
+  for (let i = 0; i < na; i++) {
+    const ln = lines[4 + i];
+    const x = parseFloat(ln.slice(0, 10)), y = parseFloat(ln.slice(10, 20)), z = parseFloat(ln.slice(20, 30));
+    const sym = (ln.slice(31, 34) || "").trim();
+    if (![x, y, z].every(Number.isFinite) || !sym) throw new Error("Bad atom line " + (i + 1) + ": " + JSON.stringify(ln));
+    out.atoms.push({ x, y, z, sym });
+  }
+  for (let i = 0; i < nb; i++) {
+    const ln = lines[4 + na + i];
+    const a = parseInt(ln.slice(0, 3), 10) - 1, b = parseInt(ln.slice(3, 6), 10) - 1;
+    const order = parseInt(ln.slice(6, 9), 10);
+    if (!(a >= 0 && a < na && b >= 0 && b < na) || !(order >= 1 && order <= 3))
+      throw new Error("Bad bond line " + (i + 1) + ": " + JSON.stringify(ln));
+    out.bonds.push({ a, b, order });
+  }
+  return out;
+}
+
+function bondMesh(p1, p2, radius, mat, offset) {
+  const dir = new THREE.Vector3().subVectors(p2, p1);
+  const len = dir.length();
+  const geo = new THREE.CylinderGeometry(radius, radius, len, 10);
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(p1).addScaledVector(dir, 0.5);
+  if (offset) mesh.position.add(offset);
+  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
+  return mesh;
+}
+
+function buildScene(mol, mode) {
+  if (group) { scene.remove(group); }
+  group = new THREE.Group();
+  atoms = [];
+  const pts = mol.atoms.map((a) => new THREE.Vector3(a.x, a.y, a.z));
+  const center = pts.reduce((s, p) => s.add(p), new THREE.Vector3()).multiplyScalar(1 / pts.length);
+  const sphereGeo = new THREE.SphereGeometry(1, 24, 18);
+  mol.atoms.forEach((a, i) => {
+    const e = elOf(a.sym);
+    const rad = mode === "sf" ? e.vdw : e.r;
+    const mesh = new THREE.Mesh(sphereGeo, new THREE.MeshStandardMaterial({ color: e.c, roughness: 0.35 }));
+    mesh.scale.setScalar(rad);
+    mesh.position.copy(pts[i]).sub(center);
+    mesh.userData = { i, sym: a.sym, x: a.x.toFixed(2), y: a.y.toFixed(2), z: a.z.toFixed(2) };
+    group.add(mesh);
+    atoms.push(mesh);
+  });
+  if (mode === "bs") {
+    const bondMat = new THREE.MeshStandardMaterial({ color: 0x8a99a8, roughness: 0.5 });
+    mol.bonds.forEach((bd) => {
+      const p1 = pts[bd.a].clone().sub(center), p2 = pts[bd.b].clone().sub(center);
+      if (bd.order === 1) {
+        group.add(bondMesh(p1, p2, 0.12, bondMat));
+      } else {
+        const dir = new THREE.Vector3().subVectors(p2, p1).normalize();
+        const side = new THREE.Vector3(0, 0, 1).cross(dir);
+        if (side.lengthSq() < 1e-6) side.set(1, 0, 0);
+        side.normalize().multiplyScalar(0.14);
+        group.add(bondMesh(p1, p2, 0.09, bondMat, side));
+        group.add(bondMesh(p1, p2, 0.09, bondMat, side.clone().negate()));
+        if (bd.order === 3) group.add(bondMesh(p1, p2, 0.09, bondMat));
+      }
+    });
+  }
+  scene.add(group);
+  buildLabels(mode);
+  frameCamera(mode);
+}
+
+function buildLabels(mode) {
+  if (labelGroup) scene.remove(labelGroup);
+  labelGroup = new THREE.Group();
+  if (showLabels) {
+    atoms.forEach((mesh) => {
+      const u = mesh.userData;
+      const text = u.sym + (u.i + 1);
+      const cv = document.createElement("canvas");
+      const meas = cv.getContext("2d");
+      meas.font = "22px monospace";
+      const w = Math.ceil(meas.measureText(text).width) + 12;
+      cv.width = w; cv.height = 34;
+      const cx = cv.getContext("2d");
+      cx.font = "22px monospace"; cx.fillStyle = "#d7e5f2";
+      cx.fillText(text, 6, 24);
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(cv), depthTest: false,
+      }));
+      sp.scale.set(w / 34 * 0.5, 0.5, 1);
+      sp.position.copy(mesh.position);
+      labelGroup.add(sp);
+    });
+  }
+  scene.add(labelGroup);
+}
+
+function frameCamera() {
+  const box = new THREE.Box3().setFromObject(group);
+  const size = box.getSize(new THREE.Vector3()).length();
+  dist = Math.max(6, size * 1.1);
+}
+
+function showError(msg) {
+  const e = document.getElementById("err");
+  e.style.display = "block";
+  e.textContent = "Could not load that structure: " + msg + " Nothing was drawn — no fake molecule substituted.";
+}
+function clearError() { document.getElementById("err").style.display = "none"; }
+
+async function loadCompound(id) {
+  clearError();
+  const meta = META.find((m) => m.id === id);
+  if (!meta) { showError("unknown compound id " + id); return; }
+  current = meta;
+  document.querySelectorAll("#picker button").forEach((b) =>
+    b.setAttribute("aria-pressed", String(b.dataset.id === id)));
+  try {
+    const res = await fetch("molecules/" + meta.file, { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status + " for " + meta.file);
+    const mol = parseSDF(await res.text());
+    buildScene(mol, currentMode());
+    document.getElementById("meta").textContent =
+      meta.name + " — " + meta.formula + " — " + meta.weight.toFixed(2) + " g/mol — " + mol.atoms.length +
+      " atoms, " + mol.bonds.length + " bonds — " + meta.coords;
+    document.getElementById("prov").innerHTML =
+      "Source: " + meta.source + " (<a href=\"" + meta.url + "\">" + meta.url + "</a>). " +
+      "Coordinates: " + meta.coords + ".";
+  } catch (err) {
+    showError(err.message);
+  }
+}
+
+function currentMode() {
+  return document.getElementById("btn-sf").getAttribute("aria-pressed") === "true" ? "sf" : "bs";
+}
+
+function setMode(sf) {
+  document.getElementById("btn-sf").setAttribute("aria-pressed", String(sf));
+  document.getElementById("btn-bs").setAttribute("aria-pressed", String(!sf));
+  if (current) loadCompound(current.id);
+}
+
+function init() {
+  const cv = document.getElementById("view");
+  renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x06090f);
+  camera = new THREE.PerspectiveCamera(40, 2, 0.1, 200);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const key = new THREE.DirectionalLight(0xffffff, 1.1);
+  key.position.set(6, 9, 7);
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0x7fb8e8, 0.5);
+  rim.position.set(-7, -4, -6);
+  scene.add(rim);
+
+  function resize() {
+    const w = cv.clientWidth, h = cv.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener("resize", resize);
+
+  // Drag to rotate, wheel to zoom. Any drag stops auto-rotate.
+  let dragging = false, px = 0, py = 0;
+  cv.addEventListener("pointerdown", (e) => {
+    dragging = true; px = e.clientX; py = e.clientY;
+    cv.setPointerCapture(e.pointerId);
+    if (spinning) { spinning = false; document.getElementById("btn-spin").setAttribute("aria-pressed", "false"); }
+  });
+  cv.addEventListener("pointermove", (e) => {
+    if (dragging) {
+      theta -= (e.clientX - px) * 0.008;
+      phi = Math.min(Math.PI - 0.05, Math.max(0.05, phi - (e.clientY - py) * 0.008));
+      px = e.clientX; py = e.clientY;
+    } else {
+      hover(e);
+    }
+  });
+  const up = () => { dragging = false; };
+  cv.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  cv.addEventListener("wheel", (e) => { e.preventDefault(); dist = Math.min(60, Math.max(3, dist * (1 + Math.sign(e.deltaY) * 0.1))); }, { passive: false });
+
+  // Hover tooltips via raycast.
+  const ray = new THREE.Raycaster(), mv = new THREE.Vector2(), tip = document.getElementById("tip");
+  function hover(e) {
+    const r = cv.getBoundingClientRect();
+    mv.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+    mv.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+    ray.setFromCamera(mv, camera);
+    const hit = ray.intersectObjects(atoms, false)[0];
+    if (hit) {
+      const u = hit.object.userData;
+      tip.style.display = "block";
+      tip.style.left = (e.clientX - r.left + 14) + "px";
+      tip.style.top = (e.clientY - r.top + 10) + "px";
+      tip.textContent = u.sym + " atom " + (u.i + 1) + " at (" + u.x + ", " + u.y + ", " + u.z + ") Å";
+    } else {
+      tip.style.display = "none";
+    }
+  }
+
+  document.getElementById("btn-bs").addEventListener("click", () => setMode(false));
+  document.getElementById("btn-sf").addEventListener("click", () => setMode(true));
+  document.getElementById("btn-spin").addEventListener("click", (e) => {
+    spinning = !spinning;
+    e.currentTarget.setAttribute("aria-pressed", String(spinning));
+  });
+  document.getElementById("btn-labels").addEventListener("click", (e) => {
+    showLabels = !showLabels;
+    e.currentTarget.setAttribute("aria-pressed", String(showLabels));
+    if (current) loadCompound(current.id);
+  });
+  document.getElementById("btn-bad").addEventListener("click", async () => {
+    clearError();
+    try {
+      parseSDF("HEADER\nnot a molfile\n");
+    } catch (err) {
+      showError(err.message);
+      return;
+    }
+    showError("parser accepted garbage (should never happen)");
+  });
+
+  function frame(t) {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.1, (t - lastT) / 1000 || 0);
+    lastT = t;
+    if (spinning) theta += dt * 0.35;
+    camera.position.set(
+      dist * Math.sin(phi) * Math.sin(theta),
+      dist * Math.cos(phi),
+      dist * Math.sin(phi) * Math.cos(theta));
+    camera.lookAt(0, 0, 0);
+    renderer.render(scene, camera);
+  }
+  resize();
+  requestAnimationFrame(frame);
+
+  fetch("molecules/meta.json", { cache: "no-store" })
+    .then((r) => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+    .then((j) => {
+      META = j.compounds;
+      const pk = document.getElementById("picker");
+      META.forEach((m) => {
+        const b = document.createElement("button");
+        b.textContent = m.name;
+        b.dataset.id = m.id;
+        b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", () => loadCompound(m.id));
+        pk.appendChild(b);
+      });
+      loadCompound(META[0].id);
+    })
+    .catch((err) => showError("compound list failed: " + err.message));
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
