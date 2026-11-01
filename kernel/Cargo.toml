@@ -17,6 +17,7 @@ panic-test = []
 break-test = []
 fault-test = []
 stack-test = []
+guard-test = []
 
 [profile.dev]
 panic = "abort"

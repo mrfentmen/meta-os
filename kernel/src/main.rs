@@ -10,8 +10,37 @@
 #![no_std]
 #![no_main]
 
+extern crate alloc;
+
+/// Dual-output print: serial port AND VGA console (OS-021). A missing
+/// console (before init) degrades to serial only, never to silence.
+/// Defined before the `mod` lines so every module sees it.
+macro_rules! print {
+    ($($arg:tt)*) => {{
+        use core::fmt::Write as _;
+        let _ = write!($crate::SerialPort, $($arg)*);
+        // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+        let slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::CONSOLE) };
+        if let Some(console) = slot {
+            let _ = write!(console, $($arg)*);
+        }
+    }};
+}
+
+macro_rules! println {
+    () => {
+        print!("\n")
+    };
+    ($($arg:tt)*) => {
+        print!($($arg)*);
+        print!("\n")
+    };
+}
+
 mod gdt;
 mod interrupts;
+mod mem;
+mod memory;
 mod traps;
 mod vga;
 
@@ -71,30 +100,6 @@ impl core::fmt::Write for SerialPort {
     }
 }
 
-/// Dual-output print: serial port AND VGA console (OS-021). A missing
-/// console (before init) degrades to serial only, never to silence.
-macro_rules! print {
-    ($($arg:tt)*) => {{
-        use core::fmt::Write as _;
-        let _ = write!(SerialPort, $($arg)*);
-        // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
-        let slot = unsafe { &mut *core::ptr::addr_of_mut!(CONSOLE) };
-        if let Some(console) = slot {
-            let _ = write!(console, $($arg)*);
-        }
-    }};
-}
-
-macro_rules! println {
-    () => {
-        print!("\n")
-    };
-    ($($arg:tt)*) => {
-        print!($($arg)*);
-        print!("\n")
-    };
-}
-
 fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
     serial_init();
     let vga_base =
@@ -126,6 +131,11 @@ fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
         interrupts::load_idt();
     }
     interrupts::enable();
+    // Section D: frames, mapper, heap (IDT is live, so a stray fault
+    // prints instead of triple-faulting).
+    unsafe {
+        mem::mem_init(boot_info);
+    }
     #[cfg(feature = "break-test")]
     unsafe {
         core::arch::asm!("int3", options(nomem, nostack, preserves_flags));

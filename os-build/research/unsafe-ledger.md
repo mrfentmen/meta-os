@@ -48,3 +48,17 @@
 - `break-test`/`fault-test` hooks: `int3` and a volatile read of
   unmapped 0xdeadbeef, feature-gated test builds only (OS-058 style).
 - `hlt` in the echo loop: valid with IF set, wakes on IRQ.
+
+## kernel/src/mem.rs (Section D)
+
+- `PhysMem::read_entry/write_entry`: volatile u64 at
+  `offset + table + index*8`, index asserted < 512; caller (mapper)
+  supplies real table addresses.
+- `cr3()`: `mov {}, cr3` read only.
+- `invlpg`: invalidates one translation; correctness (un)mapping
+  belongs to the caller.
+- `KernelAlloc` (`Sync` shell over `static mut HEAP`): sound while
+  single-CPU and handlers never allocate — stated, not assumed.
+- Static roots (`REGIONS`, `MAP`, `BITMAP`, `HEAP`, `MAPPER`) via
+  `addr_of!`/`addr_of_mut!`, never shared references.
+- Probe write/read + guard-test read: volatile, on the mapped page.

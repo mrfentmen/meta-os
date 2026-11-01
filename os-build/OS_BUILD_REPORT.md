@@ -138,3 +138,34 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
 - OS-043: sendkey scripting worked first try; no manual steps
   needed. DONE (moot).
 - OS-044: this summary. Pushing.
+
+## Section D — K4 memory, paging, heap (OS-045..OS-060) — DONE
+
+- OS-045: 16 regions from BootInfo (frame numbers × 4096):
+  usable 516940K in two windows (0x2bf000 low + 0x84e000 main),
+  big 12G 64-bit PCI window reserved. DONE (K4-boot.txt `mem map`).
+- OS-046: bitmap frame allocator, 129235 usable frames, all
+  covered, all free at boot. DONE.
+- OS-047: mapper rooted at the live CR3 through the phys offset
+  (`TableMemory` over offset RAM). DONE.
+- OS-048: probe page at 0x700000000000 mapped, pattern written
+  and read back (`mem probe page ok`). DONE.
+- OS-049/050: 256 KiB .bss heap as `#[global_allocator]`
+  (`alloc` from build-std, no crates.io); Box(42) + Vec sum 120.
+  DONE. Allocator choice recorded in memory-map.md (OS-057).
+- OS-051: 10k Box alloc/free loop, heap back to 255K free. DONE.
+- OS-052: `guard-test` unmaps the probe and reads it:
+  `page-fault ... addr 0x700000000000`. DONE (K4-guard.txt).
+- OS-053: console summary (`mem summary: K4 up`). DONE.
+- OS-054: `os-build/research/memory-map.md` from the real map. DONE.
+- OS-055: unsafe ledger extended (PhysMem, CR3, invlpg, global
+  alloc, static roots). DONE.
+- OS-056: K4-boot.txt (regions + allocator + probe + heap + Box/Vec
+  + stress + summary). DONE.
+- OS-058: test-only paths behind `guard-test` (like break/fault/
+  stack/panic-test before it); clean boot never faults. DONE.
+- OS-059: one clean K4 boot re-proves K1 (alive), K2 (banner), K3
+  (uptime 7s + timer IRQs throughout), K4 (mem lines). No
+  regressions; int3 not re-fired (IDT proven live by timer/keyboard
+  IRQs in the same boot). DONE.
+- OS-060: this summary. Pushing.
