@@ -61,11 +61,12 @@ spec lives here.
   with HTTP 403; all four panels rendered busy (2 crew rows, 2 jobs,
   latest brief, 1 open alert, fresh beat), zero write commands were
   attempted, zero rejections fired, no panel raised a token error,
-  and dispatch Post / alert Acknowledge / Resolve rendered disabled
-  next to `Posting is off for this build.`, with the live ack/resolve
+  and alert Resolve rendered disabled, with the live ack/resolve
   drivers returning `gated` and the alert untouched. Brief me now
   rendered enabled: it refreshes the latest brief from the live store
-  and never posts.
+  and never posts. Dispatch Post rendered enabled as simulated-only
+  (HN-002, no write). Alert Acknowledge rendered enabled and stored
+  locally on the device (HN-003, not posted).
 - **Nothing posts without Dale's word** (GOV-002 as ruled 2026-10-24;
   DSH-009/DSH-011 gates): the bus is not touched by this build except a
   fix or an OS-required upgrade. Viewer write paths ship
@@ -475,12 +476,14 @@ refused, re-acking and re-resolving are idempotent, exactly as
 ack; a resolved alert (`resolved_at` set) collapses into the
 resolved count. Live viewer writes are gated by §0 (the
 `ALERT_WRITE_ENABLED` switch, off): until Dale's viewer posting
-decision lands, both buttons render disabled with the §0
-explanation and no live write path exists — the transitions are
+decision lands, no live write path exists — the transitions are
 exercised in the harness, and the flip task enables the gate,
 attaches the live handlers, and wires the REST read-modify-write
-in the same change. Under a read-only token the same disabled
-rendering applies.
+in the same change. HN-003/004: the buttons perform the transitions
+LOCALLY instead: the result is stored on the device only
+(localStorage overlay) and re-rendered; nothing posts. Under a
+read-only token the same local rendering applies (local state needs
+no token).
 
 **Empty state (DSH-015):** driven by the watchdog beat key
 `muse-bus:intel:wd:beat`:

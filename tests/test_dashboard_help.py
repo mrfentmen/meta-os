@@ -143,7 +143,11 @@ class DashboardHelpTest(unittest.TestCase):
     def test_help_states_read_only_and_posting_gate(self):
         html = self.normal["helpHTML"]
         self.assertIn("read-only", html)
-        self.assertIn("posting is off", html)
+        # HN-001/002/003: the gate is now worded as local/simulated
+        # behavior, not "posting is off": nothing posts from the
+        # viewer (brief refresh reads, post is simulated, ack is
+        # local-only, resolve still gated).
+        self.assertIn("not posted", html)
         self.assertIn("never auto-posts", html)
 
     def test_help_states_demo_and_deep_links(self):

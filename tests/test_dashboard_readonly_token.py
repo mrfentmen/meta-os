@@ -16,11 +16,11 @@ so all four panels render busy at once. The assertions:
 - the module attempts zero write commands, so the read-only token
   rejects nothing and no panel surfaces a token error
   (panelErrors all null);
-- every write affordance renders disabled with the plain
-  explanation: alert Acknowledge and Resolve, each next to
-  "Posting is off for this build."; Brief me now renders enabled:
-  it is a read, not a write (HN-001), and never posts; dispatch
-  Post renders enabled as simulated-only (HN-002, no write);
+- alert Acknowledge renders enabled and stores locally (HN-003);
+  alert Resolve renders disabled (its local path lands in HN-004);
+  Brief me now renders enabled: it is a read, not a write (HN-001),
+  and never posts; dispatch Post renders enabled as simulated-only
+  (HN-002, no write);
 - the live ack/resolve drivers return "gated" and leave the alert
   untouched, so a read-only viewer never mutates shared state.
 
@@ -267,8 +267,10 @@ class DashboardReadonlyTokenTest(unittest.TestCase):
         self.assertIn("<button disabled", data["bodies"]["alerts"])
         self.assertIn("Acknowledge", data["bodies"]["alerts"])
         self.assertIn("Resolve", data["bodies"]["alerts"])
-        self.assertIn("Posting is off for this build.",
-                      data["bodies"]["alerts"])
+        self.assertIn("Acknowledge is stored on this device only, "
+                      "not posted.", data["bodies"]["alerts"])
+        self.assertNotIn("Posting is off for this build.",
+                         data["bodies"]["alerts"])
         self.assertEqual(data["clickAck"], "gated")
         self.assertEqual(data["clickResolve"], "gated")
         self.assertEqual(data["alertsAfter"], 1)

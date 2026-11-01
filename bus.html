@@ -3466,7 +3466,12 @@ try {
   // change — never one without the other. Until then the
   // transitions are exercised in the harness through
   // clickAcknowledge/clickResolve with gateForTest, exactly like
-  // clickPost for DSH-011.
+  // clickPost for DSH-011. HN-003/004: the buttons now perform the
+  // lifecycle LOCALLY (acknowledgeAlertLocal/resolveAlertLocal):
+  // the transition lands in a device-local overlay (localStorage)
+  // and re-renders; nothing is written to the store and nothing
+  // posts. The live REST read-modify-write stays gated here until
+  // the decision lands.
   var ALERT_WRITE_ENABLED = false;
 
   // --- Per-panel error states (DSH-021, spec §9) -------------------
@@ -4828,10 +4833,12 @@ try {
   // an alert index, exactly as DSH-012's tracker is harness-fed
   // until DSP-008 lands. Ack/resolve land with DSH-014 below: the
   // WDG-014 lifecycle shape (open -> acknowledged -> resolved) is
-  // wired as pure transitions + buttons, gated off live per spec
-  // §0 (see ALERT_WRITE_ENABLED); an acked record shows its
-  // acked_by, and a resolved record collapses into the resolved
-  // count in renderAlerts (spec §6).
+  // wired as pure transitions + buttons; the LIVE write stays gated
+  // off per spec §0 (see ALERT_WRITE_ENABLED), while HN-003/004
+  // perform the transitions locally (device-local overlay, nothing
+  // posted); an acked record shows its acked_by, and a resolved
+  // record collapses into the resolved count in renderAlerts
+  // (spec §6).
   // The beat-driven empty states land with DSH-015; the live beat
   // key is written by Milo's WDG-016 (intel/store.py wd_self_beat,
   // renewed on every watchdog tick, 300s TTL).
@@ -4982,6 +4989,84 @@ try {
     } catch (e) { return "error"; }
   }
 
+  // HN-003/004: device-local lifecycle overlay. Ack/resolve state
+  // lives on THIS device only: localStorage under ALERT_LOCAL_KEY,
+  // or a test-injected backend ({getItem, setItem}), or an
+  // in-memory fallback when neither exists. It never posts: no
+  // network call, no store write, no bus message. The live write
+  // path stays gated (ALERT_WRITE_ENABLED false) until Dale's viewer
+  // posting decision lands; when it does, a later task wires the
+  // REST read-modify-write and must reconcile this overlay against
+  // the live record (live wins on conflict) before retiring it.
+  // Overlay entries merge into records at ingest (setAlerts) and at
+  // local-write time, so every reader of state.alerts (rows, header
+  // counts, crew unblock) sees the merged state.
+  var ALERT_LOCAL_KEY = "intel-alert-lifecycle-local";
+  var alertLocalBackend = null;
+  var alertLocalMemory = {};
+  function alertLocalRead() {
+    try {
+      var raw = null;
+      if (alertLocalBackend) raw = alertLocalBackend.getItem(ALERT_LOCAL_KEY);
+      else if (typeof localStorage !== "undefined" && localStorage) {
+        raw = localStorage.getItem(ALERT_LOCAL_KEY);
+      } else raw = alertLocalMemory[ALERT_LOCAL_KEY] || null;
+      if (!raw) return {};
+      var parsed = JSON.parse(raw);
+      return (parsed && typeof parsed === "object") ? parsed : {};
+    } catch (e) { return {}; }
+  }
+  function alertLocalWrite(map) {
+    try {
+      var raw = JSON.stringify(map);
+      if (alertLocalBackend) alertLocalBackend.setItem(ALERT_LOCAL_KEY, raw);
+      else if (typeof localStorage !== "undefined" && localStorage) {
+        localStorage.setItem(ALERT_LOCAL_KEY, raw);
+      } else alertLocalMemory[ALERT_LOCAL_KEY] = raw;
+    } catch (e) {}
+  }
+  function applyAlertLocalOverlay(records) {
+    var map = alertLocalRead();
+    return (records || []).map(function (a) {
+      if (!a || !a.id || !map[a.id]) return a;
+      var ov = map[a.id];
+      var rec = copyAlertRecord(a);
+      if (ov.status) rec.status = ov.status;
+      if (ov.acknowledged_at != null) rec.acknowledged_at = ov.acknowledged_at;
+      if (ov.acked_by) rec.acked_by = ov.acked_by;
+      if (ov.resolved_at != null) rec.resolved_at = ov.resolved_at;
+      return rec;
+    });
+  }
+  // HN-003: acknowledge locally. Same pure transition as the live
+  // path (acknowledgeAlertRecord), but the result lands in the
+  // device-local overlay and in state.alerts, not the store.
+  // Returns the transition outcome ("acknowledged" |
+  // "already-acknowledged" | "refused-resolved" | "not-found" |
+  // "error"). Never "gated": local state needs no posting decision.
+  function acknowledgeAlertLocal(alertId, nowSec) {
+    try {
+      var i = findAlertIndex(alertId);
+      if (i < 0) return "not-found";
+      var now = (typeof nowSec === "number")
+        ? Math.floor(nowSec) : Math.floor(Date.now() / 1000);
+      var res = acknowledgeAlertRecord(state.alerts[i], now, viewerNick());
+      if (res.outcome === "acknowledged") {
+        var map = alertLocalRead();
+        map[alertId] = {
+          status: res.record.status,
+          acknowledged_at: res.record.acknowledged_at,
+          acked_by: res.record.acked_by,
+          resolved_at: res.record.resolved_at
+        };
+        alertLocalWrite(map);
+        state.alerts[i] = res.record;
+        renderCrew(); renderAlerts();
+      }
+      return res.outcome;
+    } catch (e) { return "error"; }
+  }
+
   function alertRows(nowMs) {
     var now = (typeof nowMs === "number") ? nowMs : Date.now();
     return sortedAlerts().map(function (a) {
@@ -5057,15 +5142,14 @@ try {
       html += '<div class="trow">Suggested fix: ' +
         U.esc(r.suggested_fix) + "</div>";
     }
-    // DSH-014: lifecycle buttons. Disabled while the §0 gate is off,
-    // and per state once the transition no longer applies (ack
-    // disabled once acknowledged or resolved, resolve disabled once
-    // resolved); a disabled button fires nothing and no live
-    // handler is attached — the gate flip attaches one. The
-    // gate-off note itself renders once per panel in renderAlerts,
-    // not once per card.
-    var ackDisabled = ALERT_WRITE_ENABLED
-      ? (r.status === "acknowledged" || r.resolved) : true;
+    // DSH-014: lifecycle buttons. HN-003: Acknowledge is local now
+    // (stored on this device only), so it is enabled whenever its
+    // transition applies (disabled once acknowledged or resolved).
+    // Resolve stays gated until HN-004 wires its local path, and
+    // disabled once resolved; a disabled button fires nothing. The
+    // local note renders once per panel in renderAlerts, not once
+    // per card.
+    var ackDisabled = (r.status === "acknowledged" || r.resolved);
     var resDisabled = ALERT_WRITE_ENABLED ? r.resolved : true;
     html += '<div class="trow"><button' +
       (ackDisabled ? " disabled" : "") +
@@ -5195,7 +5279,27 @@ try {
         (resolvedCount ? '<div class="trow">' + resolvedCount +
           " resolved</div>" : "") +
         (ALERT_WRITE_ENABLED ? "" :
-          '<div class="trow">Posting is off for this build.</div>');
+          '<div class="trow">Acknowledge is stored on this device ' +
+          "only, not posted.</div>");
+      try {
+        var ackBtns = body.querySelectorAll ?
+          body.querySelectorAll("[data-intel-alert-ack]") : null;
+        if (ackBtns) {
+          for (var ai = 0; ai < ackBtns.length; ai++) {
+            (function (el) {
+              if (el && el.addEventListener) {
+                el.addEventListener("click", function () {
+                  try {
+                    var id = el.getAttribute ?
+                      el.getAttribute("data-intel-alert-ack") : null;
+                    if (id) acknowledgeAlertLocal(id);
+                  } catch (e) {}
+                });
+              }
+            })(ackBtns[ai]);
+          }
+        }
+      } catch (e) {}
       scrollToDeepLink();
       renderHeader(nowMs);
     } catch (e) { /* rendering must never throw */ }
@@ -5560,8 +5664,8 @@ try {
         '<div class="trow"><b>Alerts:</b> alert records ' +
         "(muse-bus:intel:alert:&lt;id&gt;), newest first; severity " +
         "shown as color + icon + text, never color alone. " +
-        "Acknowledge / Resolve are disabled — posting is off for " +
-        "this build. Empty state follows the watchdog beat " +
+        "Acknowledge is stored on this device only, not posted; " +
+        "Resolve is still gated. Empty state follows the watchdog beat " +
         "(muse-bus:intel:wd:beat): 'All quiet' when fresh, " +
         "'Watchdog silent' when stale.</div>" +
         '<div class="trow"><b>Read-only safe:</b> with a read-only ' +
@@ -5714,6 +5818,7 @@ try {
             acked_by: a.acked_by || ""
           };
         });
+        state.alerts = applyAlertLocalOverlay(state.alerts);
         renderCrew(nowMs);
         renderAlerts(nowMs);
       },
@@ -5797,6 +5902,18 @@ try {
       },
       clickResolve: function (id, nowSec, gateForTest) {
         return clickResolve(id, nowSec, gateForTest);
+      },
+      // HN-003: local lifecycle driver + test store injection.
+      // acknowledgeAlertLocal returns the transition outcome; it
+      // never returns "gated" (local state needs no posting
+      // decision). setAlertLocalStore injects a {getItem, setItem}
+      // backend so a test can prove persistence across a fresh
+      // module eval (a reload) with the same backing object.
+      acknowledgeAlertLocal: function (id, nowSec) {
+        return acknowledgeAlertLocal(id, nowSec);
+      },
+      setAlertLocalStore: function (store) {
+        alertLocalBackend = store || null;
       },
       renderAlertsAt: function (nowMs) { renderAlerts(nowMs); },
       stateFor: function (nick) { return crewState(nick, jobFor(nick)); },

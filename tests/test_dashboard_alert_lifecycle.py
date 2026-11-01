@@ -141,12 +141,17 @@ class DashboardAlertLifecycleTest(unittest.TestCase):
                          "resolved card must collapse, not render")
         self.assertIn("1 resolved", html)
 
-    def test_buttons_render_disabled_with_gate_note(self):
+    def test_ack_enabled_local_resolve_still_gated(self):
         html = self.js["htmlBefore"]
         self.assertIn("Acknowledge", html)
         self.assertIn("Resolve", html)
+        # HN-003: ack is local and enabled; resolve still gated.
+        self.assertIn('data-intel-alert-ack="alert:1">Acknowledge</button>',
+                      html)
         self.assertIn("disabled", html)
-        self.assertIn("Posting is off for this build.", html)
+        self.assertIn("Acknowledge is stored on this device only, "
+                      "not posted.", html)
+        self.assertNotIn("Posting is off for this build.", html)
 
     def test_ack_persists_and_renders_acknowledged(self):
         self.assertEqual(self.js["ack"], "acknowledged")
