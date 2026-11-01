@@ -138,4 +138,44 @@ repo, commit 556bd41; repo untouched per the prompt). Status per task:
 - OC-063 DONE. Pause verified (meta flips to "Stopped..."); Restart resets
   playT (clicked, no error, playhead returns).
 - OC-064 DONE. ~115–120 fps headless Chromium on this Mac (on-page meter).
-- OC-065 this section of the report.
+## Section 6: The OS image in UTM (OC-066 to OC-080) — BLOCKED, not attempted
+
+- OC-066 BLOCKED: UTM installed on this Mac via brew (UTM.app present,
+  utmctl linked) — but metaos-2026-11-01.img exists nowhere on disk
+  (whole-disk search, zero hits) and has never been built: the packer
+  pipeline (os/build-packer.sh) needs a Debian ISO plus KVM, and its own
+  test file states no build has ever run on a host without /dev/kvm —
+  macOS has no KVM. The task says not to rebuild the image anyway.
+  With UTM ready and no image to import, OC-067 through OC-080 cannot run.
+- Recorded, not faked. Unblock needs: a built image file delivered to this Mac.
+
+## Section 7: Land the Science Lab branch (OC-081 to OC-090) — BLOCKED, not attempted
+
+- OC-081 BLOCKED: pax/science-lab-scaffold is not pushed (git ls-remote
+  for *science*/*lab* returns nothing). The task says to ask on the bus if
+  it is not pushed — no bus access from this Mac session, so the question
+  could not even be asked. OC-082 through OC-090 all need the branch.
+  Recorded, not faked. Unblock needs: Pax pushes the branch.
+
+## Section 8: Real app footage for the demo film (OC-091 to OC-100) — partial
+
+- OC-091 BLOCKED: the patrol loop lives in the queue crew service, which
+  does not start on this Mac (dynamic_credentials, same as OC-004).
+- OC-092 BLOCKED: staged flag chain needs queue + live model + camera.
+- OC-093 BLOCKED: no chain, no dispatch receipt (nothing pointed anywhere else).
+- OC-094 BLOCKED: no flagged incident can exist without the chain.
+- OC-095 DONE. oc-095-scientia-10s.mp4 (10.0 s): aspirin ball-and-stick
+  rotating, mid-clip switch to space-filling. Fresh file, method as in OC-046.
+- OC-096 DONE. oc-096-musica-15s.mp4 (15.0 s, video + AAC): top-view playback
+  at 120 bpm with matching synthesized two-voice audio (0.5 s grid). Fresh file.
+- OC-097 BLOCKED: no recorded incident exists (chain down).
+- OC-098 DONE so far: oc-095-scientia-10s.mp4 (10.0 s), oc-096-musica-15s.mp4
+  (15.0 s), plus earlier oc-046-rotation-10s.mp4 (10.0 s) and
+  oc-062-playback-15s.mp4 (15.0 s). All names unique.
+- OC-099 DONE for the four clips above: ffprobe durations exact (10.0/15.0),
+  mid-frames viewed and correct (molecule mid-frame and musica mid-frame
+  checked this session).
+- OC-100 summary: Sections 1, 3, 4, 5 done and pushed. Section 2 waiting on
+  the user's go-ahead for tonight's 8pm run. Sections 6 and 7 blocked on
+  missing externals (image file, unpushed branch). Section 8 partial — the
+  chain-dependent recordings need the queue fixed first.
