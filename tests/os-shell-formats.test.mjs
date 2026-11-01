@@ -89,3 +89,31 @@ test("home surface states NOT BUILT and names its real sources", () => {
   );
   assert.ok(!dir.some((f) => f.endsWith(".html")), "no shipped home surface UI");
 });
+
+test("walkthrough steps all carry NOT BUILT or DOC markers", () => {
+  const walk = readFileSync(
+    new URL("../os-build/walkthroughs.md", import.meta.url),
+    "utf8",
+  );
+  const steps = walk.split("\n").filter((l) => l.startsWith("Step "));
+  assert.ok(steps.length >= 10, `expected walkthrough steps, got ${steps.length}`);
+  for (const step of steps) {
+    assert.ok(
+      step.includes("[NOT BUILT]") || step.includes("[DOC]"),
+      `unmarked walkthrough step: ${step}`,
+    );
+  }
+  assert.ok(steps.some((s) => s.includes("[DOC]")), "no DOC step found");
+  assert.ok(steps.some((s) => s.includes("[NOT BUILT]")), "no NOT BUILT step found");
+});
+
+test("shell spec covers both citizens and states its honesty", () => {
+  const spec = readFileSync(
+    new URL("../os-build/shell-spec.md", import.meta.url),
+    "utf8",
+  );
+  assert.ok(spec.includes("USER's console"));
+  assert.ok(spec.includes("AGENT's structured view"));
+  assert.ok(spec.includes("NOT BUILT"));
+  assert.ok(spec.includes("UNCOMPILED"));
+});
