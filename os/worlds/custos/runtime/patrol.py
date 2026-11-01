@@ -160,6 +160,23 @@ KEV_TIMEOUT = 30.0
 CT_TIMEOUT = 30.0
 DNS_TIMEOUT = 10.0
 DNS_TYPES = ("A", "AAAA", "MX", "TXT")
+
+DEFAULT_TLS_BASELINE = {
+    "min_version": "TLSv1.2",
+    "forbidden_ciphers": ["RC4", "3DES", "DES", "NULL", "EXPORT",
+                          "MD5", "RC2"],
+}
+# Negotiated protocol versions, weakest first. The grade compares the
+# version the host actually negotiated against the baseline minimum;
+# a version string outside this table cannot be confirmed to meet
+# the baseline, so it grades as drift with its reason stated.
+TLS_VERSION_RANK = {
+    "SSLv2": 0, "SSLv3": 0,
+    "TLSv1": 1, "TLSv1.0": 1, "TLSv1.1": 2,
+    "TLSv1.2": 3, "TLSv1.3": 4,
+}
+
+
 SECURITY_HEADERS = (
     "strict-transport-security",
     "content-security-policy",
@@ -181,6 +198,7 @@ CATEGORIES = (
     "service down",
     "anomalous exposure",
     "certificate issued",
+    "tls configuration drift",
     "security headers missing",
     "dns drift",
     "subdomain unexpected network",
@@ -197,6 +215,7 @@ TIER_BY_CATEGORY = {
     "security headers missing": "yellow",
     "dns drift": "yellow",
     "subdomain unexpected network": "yellow",
+    "tls configuration drift": "yellow",
     "certificate expired": "red",
     "known-exploited vulnerability present": "red",
     "service down": "red",
@@ -467,6 +486,62 @@ def parse_cert_expiry(not_after):
     return expires.replace(tzinfo=timezone.utc)
 
 
+def probe_tls(host, port, timeout=PROBE_TIMEOUT):
+    """Negotiated TLS posture the host actually presents, or None.
+
+    Returns {"version": ..., "cipher": ...} for the single handshake
+    the default context negotiates: the version and cipher the host
+    actually presented, not a claim about every version or cipher
+    the host supports. A failed handshake is None, never an
+    exception: like a failed certificate probe it is recorded as
+    an error in the summary, never as data.
+    """
+    ctx = ssl.create_default_context()
+    try:
+        with socket.create_connection((host, port), timeout=timeout) as sock:
+            with ctx.wrap_socket(sock, server_hostname=host) as tls:
+                cipher = tls.cipher()
+                return {"version": tls.version(),
+                        "cipher": cipher[0] if cipher else ""}
+    except (OSError, ssl.SSLError):
+        return None
+
+
+def grade_tls(posture, baseline):
+    """Grade a negotiated TLS posture against the stated baseline.
+
+    Returns (category, reason). "baseline normal" when the
+    negotiated version meets the baseline minimum and the
+    negotiated cipher matches no forbidden substring;
+    "tls configuration drift" (yellow) otherwise, with the reason
+    naming the failing check so a human can verify it by eye.
+    Cipher matching is a case-insensitive substring test against
+    the baseline's forbidden list.
+    """
+    baseline = baseline or DEFAULT_TLS_BASELINE
+    version = (posture or {}).get("version", "")
+    cipher = (posture or {}).get("cipher", "")
+    rank = TLS_VERSION_RANK.get(version)
+    if rank is None:
+        return ("tls configuration drift",
+                "unrecognized protocol version %r" % version)
+    min_version = baseline.get("min_version",
+                               DEFAULT_TLS_BASELINE["min_version"])
+    min_rank = TLS_VERSION_RANK.get(min_version)
+    if min_rank is not None and rank < min_rank:
+        return ("tls configuration drift",
+                "protocol version %s below baseline %s"
+                % (version, min_version))
+    upper = str(cipher).upper()
+    for bad in baseline.get(
+            "forbidden_ciphers",
+            DEFAULT_TLS_BASELINE["forbidden_ciphers"]):
+        if bad and str(bad).upper() in upper:
+            return ("tls configuration drift",
+                    "cipher %s matches forbidden %s" % (cipher, bad))
+    return ("baseline normal", "meets baseline")
+
+
 def probe_cert(host, port, timeout=PROBE_TIMEOUT):
     """Days left on the certificate the host presents, or None."""
     ctx = ssl.create_default_context()
@@ -593,7 +668,8 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
                seen_cve=None, fetch_ct_fn=None, seen_ct=None,
                fetch_headers_fn=None, fetch_dns_fn=None, seen_dns=None,
                resolve_subdomain_fn=None, seen_dedup=None,
-               dismissals=None, review_errors=None, sources=None):
+               dismissals=None, review_errors=None, sources=None,
+               probe_tls_fn=None):
     """One patrol. Returns (records, seen_cve, seen_ct).
 
     Every observation is classified and recorded. Yellow records are
@@ -811,6 +887,23 @@ def run_patrol(config, now, fetch_kev_fn, probe_cert_fn, probe_port_fn,
             records.append(make_record(
                 now, "cert", host, classify_certificate(days, warn_days),
                 {"port": port, "days_left": days, "warn_days": warn_days}))
+        tls_probe = probe_tls_fn or probe_tls
+        posture = tls_probe(host, port)
+        if posture is None:
+            errors.append("tls probe failed for %s:%d" % (host, port))
+        else:
+            tls_baseline = config.get("tls_baseline",
+                                      DEFAULT_TLS_BASELINE)
+            category, reason = grade_tls(posture, tls_baseline)
+            records.append(make_record(
+                now, "tls", host, category,
+                {"port": port,
+                 "version": posture.get("version", ""),
+                 "cipher": posture.get("cipher", ""),
+                 "baseline_min_version": tls_baseline.get(
+                     "min_version",
+                     DEFAULT_TLS_BASELINE["min_version"]),
+                 "grade_reason": reason}))
         # 2b. Security-headers audit, live hosts only: a failed
         # fetch is a summary error, never data, never a fix.
         headers_fetch = fetch_headers_fn or fetch_headers
