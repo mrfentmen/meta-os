@@ -1,0 +1,12 @@
+=== goose toolchain_status (verbatim MCP output, 2026-11-01) ===
+Goose toolchain: found
+Binary: goose (from PATH)
+Probe: first line of --help: usage: goose <command> file.goose [options]
+=== lobster toolchain_status (verbatim MCP output, 2026-11-01) ===
+Lobster toolchain: found
+Binary: lobster (from PATH)
+Probe: first line of --help: Usage:
+=== goose overview (verbatim counts) ===
+389 sections / 10 docs / 702 symbols / 57 keywords / 32 samples
+=== lobster overview (verbatim counts) ===
+187 sections / 14 docs / 879 builtins / 45 keywords / 18 samples

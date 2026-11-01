@@ -10,6 +10,15 @@ license = "MIT"
 [dependencies]
 bootloader = { version = "0.9", features = ["map_physical_memory"] }
 
+[features]
+# Test-only hooks (OS-024/OS-058): boot once with a forced trap to
+# prove the handler, then boot normal builds without it.
+panic-test = []
+break-test = []
+fault-test = []
+stack-test = []
+guard-test = []
+
 [profile.dev]
 panic = "abort"
 

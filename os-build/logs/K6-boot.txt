@@ -1,0 +1,88 @@
+c[?7l[2J[0mSeaBIOS (version rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org)
+
+
+iPXE (http://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+1EFD1EC0+1EF31EC0 CA00
+Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
+
+
+Booting from Hard Disk...
+Booting (first stage)...
+Booting (second stage)...
+c[?7l[2JMETA OS - milestone K3
+META OS KERNEL - alive (K1)
+mem region 0: 0x0-0x1000 reserved
+mem region 1: 0x1000-0x5000 reserved
+mem region 2: 0x5000-0x15000 reserved
+mem region 3: 0x15000-0x16000 reserved
+mem region 4: 0x16000-0x5f000 reserved
+mem region 5: 0x5f000-0x9f000 reserved
+mem region 6: 0x9f000-0xa0000 reserved
+mem region 7: 0xf0000-0x100000 reserved
+mem region 8: 0x100000-0x2c0000 reserved
+mem region 9: 0x2c0000-0x400000 usable
+mem region 10: 0x400000-0xc03000 reserved
+mem region 11: 0xc03000-0x1013000 reserved
+mem region 12: 0x1013000-0x1ffe0000 usable
+mem region 13: 0x1ffe0000-0x20000000 reserved
+mem region 14: 0xfffc0000-0x100000000 reserved
+mem region 15: 0xfd00000000-0x10000000000 reserved
+mem map: 16 regions, usable 508980K reserved 12598156K other 0K
+mem frames: 127245 usable total
+mem allocator: 127245 covered frames, 127245 free
+mem probe page ok
+mem heap: 256K total
+mem Box+Vec ok (box 42, vec sum 120)
+mem stress 10k ok, heap free 255K
+mem summary: K4 up
+A
+B
+C sleeping 200 ticks
+A
+B
+user hello: 2627000 bytes magic=0x464c457f type=Some(3) entry=Some(105553116266496)
+user hello: entry 0x600000000000 head [50, 48, 8d, 3d, 30, 01, 00, 00, 48, 8b, 05, 21, 02, 00, 00, be]
+HELLO FROM USERSPACE
+user exit code 0
+A
+B
+user sleeper: 2739160 bytes magic=0x464c457f type=Some(3) entry=Some(106652627894288)
+user sleeper: entry 0x610000000010 head [50, 48, 8d, 3d, 98, e8, 00, 00, 48, 8b, 05, 49, 09, 01, 00, be]
+sleeper: before sleep
+sleeper: pid 5
+user crasher: 2635456 bytes magic=0x464c457f type=Some(3) entry=Some(107752139522368)
+user crasher: entry 0x620000000140 head [50, 48, 8d, 3d, 8e, 05, 00, 00, 48, 8b, 05, 91, 07, 00, 00, be]
+crasher: about to read zero
+INT user page-fault addr 0x0000000000000000 err 0x0000000000000004: task killed
+A
+B
+sleeper: yielded and back
+A
+B
+uptime 1s ticks 100
+sleeper: after sleep
+user bad syscall 99 refused
+sleeper: bad call refused
+user exit code 0
+uptime 2s ticks 200
+C awake
+uptime 3s ticks 300
+uptime 4s ticks 400
+uptime 5s ticks 500
+uptime 6s ticks 600
+uptime 7s ticks 700
+uptime 8s ticks 800
+uptime 9s ticks 900
+uptime 10s ticks 1000
+uptime 11s ticks 1100
+uptime 12s ticks 1200
+uptime 13s ticks 1300
+uptime 14s ticks 1400
+uptime 15s ticks 1500
+uptime 16s ticks 1600
+uptime 17s ticks 1700
+uptime 18s ticks 1800
+uptime 19s ticks 1900
+uptime 20s ticks 2000
+uptime 21s ticks 2100
+uptime 22s ticks 2200
+qemu-system-x86_64: terminating on signal 15 from pid 22890 (<unknown process>)

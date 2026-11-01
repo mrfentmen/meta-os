@@ -1,0 +1,120 @@
+c[?7l[2J[0mSeaBIOS (version rel-1.17.0-0-gb52ca86e094d-prebuilt.qemu.org)
+
+
+iPXE (http://ipxe.org) 00:03.0 CA00 PCI2.10 PnP PMM+1EFD1EC0+1EF31EC0 CA00
+Press Ctrl-B to configure iPXE (PCI 00:03.0)...                                                                               
+
+
+Booting from Hard Disk...
+Booting (first stage)...
+Booting (second stage)...
+c[?7l[2JMETA OS - milestone K3
+META OS KERNEL - alive (K1)
+uptime 1s ticks 100
+uptime 2s ticks 200
+uptime 3s ticks 300
+uptime 4s ticks 400
+uptime 5s ticks 500
+uptime 6s ticks 600
+uptime 7s ticks 700
+uptime 8s ticks 800
+uptime 9s ticks 900
+INT keyboard scancode 0x0000000000000023
+hINT keyboard scancode 0x00000000000000a3
+uptime 10s ticks 1000
+INT keyboard scancode 0x0000000000000012
+eINT keyboard scancode 0x0000000000000092
+uptime 11s ticks 1100
+INT keyboard scancode 0x0000000000000026
+lINT keyboard scancode 0x00000000000000a6
+uptime 12s ticks 1200
+INT keyboard scancode 0x0000000000000026
+lINT keyboard scancode 0x00000000000000a6
+uptime 13s ticks 1300
+INT keyboard scancode 0x0000000000000018
+oINT keyboard scancode 0x0000000000000098
+uptime 14s ticks 1400
+INT keyboard scancode 0x0000000000000002
+1INT keyboard scancode 0x0000000000000082
+uptime 15s ticks 1500
+INT keyboard scancode 0x0000000000000003
+2INT keyboard scancode 0x0000000000000083
+uptime 16s ticks 1600
+INT keyboard scancode 0x0000000000000004
+3INT keyboard scancode 0x0000000000000084
+uptime 17s ticks 1700
+INT keyboard scancode 0x000000000000001c
+
+INT keyboard scancode 0x000000000000009c
+uptime 18s ticks 1800
+uptime 19s ticks 1900
+uptime 20s ticks 2000
+uptime 21s ticks 2100
+uptime 22s ticks 2200
+uptime 23s ticks 2300
+uptime 24s ticks 2400
+uptime 25s ticks 2500
+uptime 26s ticks 2600
+uptime 27s ticks 2700
+uptime 28s ticks 2800
+uptime 29s ticks 2900
+uptime 30s ticks 3000
+uptime 31s ticks 3100
+uptime 32s ticks 3200
+uptime 33s ticks 3300
+uptime 34s ticks 3400
+uptime 35s ticks 3500
+uptime 36s ticks 3600
+uptime 37s ticks 3700
+uptime 38s ticks 3800
+uptime 39s ticks 3900
+uptime 40s ticks 4000
+uptime 41s ticks 4100
+uptime 42s ticks 4200
+uptime 43s ticks 4300
+uptime 44s ticks 4400
+uptime 45s ticks 4500
+uptime 46s ticks 4600
+uptime 47s ticks 4700
+uptime 48s ticks 4800
+uptime 49s ticks 4900
+uptime 50s ticks 5000
+uptime 51s ticks 5100
+uptime 52s ticks 5200
+uptime 53s ticks 5300
+uptime 54s ticks 5400
+uptime 55s ticks 5500
+uptime 56s ticks 5600
+uptime 57s ticks 5700
+uptime 58s ticks 5800
+uptime 59s ticks 5900
+uptime 60s ticks 6000
+uptime 61s ticks 6100
+uptime 62s ticks 6200
+uptime 63s ticks 6300
+uptime 64s ticks 6400
+uptime 65s ticks 6500
+uptime 66s ticks 6600
+uptime 67s ticks 6700
+uptime 68s ticks 6800
+uptime 69s ticks 6900
+uptime 70s ticks 7000
+uptime 71s ticks 7100
+uptime 72s ticks 7200
+uptime 73s ticks 7300
+uptime 74s ticks 7400
+uptime 75s ticks 7500
+uptime 76s ticks 7600
+uptime 77s ticks 7700
+uptime 78s ticks 7800
+uptime 79s ticks 7900
+uptime 80s ticks 8000
+uptime 81s ticks 8100
+uptime 82s ticks 8200
+uptime 83s ticks 8300
+uptime 84s ticks 8400
+uptime 85s ticks 8500
+uptime 86s ticks 8600
+uptime 87s ticks 8700
+uptime 88s ticks 8800
+qemu-system-x86_64: terminating on signal 15 from pid 19491 (<unknown process>)
