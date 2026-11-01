@@ -96,3 +96,29 @@
 - Gate 128 is DPL 3 (0xEE); all other gates stay 0x8E.
 - Page-fault CPL check: ring-3 faults exit the task instead of
   returning into it (no re-fault loop by design).
+
+## Adopted files (OS-224 review — written by Rowan, reviewed here,
+## wired by my branch; single-CPU discipline holds for all)
+
+## kernel/src/interrupts.rs (16 unsafe sites)
+- Raw port IO (`outb`/`inb` asm): COM1 + PIC + PIT + keyboard
+  ports only; same shape as main.rs.
+- `IDT.entries[...]` writes/reads in `idt_set`/`idt_get`: R5 wiring
+  installs gates before `lidt`; never touched live.
+- `load_idt` (unsafe fn): caller (my traps install path) calls it
+  once, interrupts off, after gates are set.
+- `disable`/`enable` (cli/sti asm).
+- `TICKS`, `KEY_BUFFER/HEAD/TAIL`, `HANDLERS` statics: only the
+  running handler or kernel_main touches them; no concurrency.
+- `dispatch`: handler lookup from static table; called from the
+  single trap path.
+
+## kernel/src/memory.rs (17 unsafe sites)
+- Heap free-list pointer chasing (`(*cur).span/next`): the heap
+  owns its buffer exclusively (Heap::init contract); single
+  threaded; GlobalAlloc shell adds no threads.
+- All other sites are the same list walk in alloc/dealloc/split/
+  coalesce paths — one invariant, reviewed once.
+
+## kernel/src/tasks.rs
+- Zero unsafe blocks (pure data + policy). Nothing to justify.

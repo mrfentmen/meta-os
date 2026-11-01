@@ -468,3 +468,106 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
 - OS-227: os-build/README.md written; the fresh-reader test
   runs as the Section Q clean clone (stumbles recorded there).
 - OS-228: this summary.
+
+## Section Q — Endurance and hand back (OS-229..OS-240) — DONE
+
+### OS-195 loud-failure proof
+Appended `BOGUS LINE THAT NEVER BOOTS` to a copy of the expected
+set and ran the pipeline's own grep loop: `FAIL: BOGUS LINE THAT
+NEVER BOOTS`, pass=7 fail=1, exit 1. The pipeline cannot go green
+on a missing line. (One real instance: run 1 failed
+`lobster memory-1` on stale agent state — fixed by resetting
+state in the script, fix verified in the clone drill.)
+
+### OS-229/197/237 clean-clone drill (one event, timed)
+Cloned `opencode/os-build` fresh from GitHub to a clean tree and
+ran `boot-test.sh` there end to end (userspace per-base builds +
+kernel bootimage + full QEMU boot + goose + lobster). Verbatim
+tail in the report block below (OS-203). This single run is the
+fresh-reader test (OS-227: stumbles recorded here), the full
+rebuild timing (OS-229), and the second-clone verification
+(OS-237: files present, pipeline green, report readable).
+
+### OS-230 one-hour soak
+First attempt died at 17 min (1017 uptime lines, zero errors) —
+killed by MY OWN pkill crossfire from parallel boot jobs, not by
+the kernel. Lesson recorded, never repeated: the rerun uses an
+isolated image copy (`/tmp/soak-image.bin`, PID-file kills only).
+Soak log: os-build/logs/soak.txt (tail + count in OS-203 block).
+
+### OS-231 reboot loop
+10 boots, alive line each, no variance unexplained (loop log in
+the OS-203 block).
+
+### OS-232 milestone logs
+os-build/logs/: K1-boot(+run1/2/3), K2-boot+console.png,
+K2-panic-drill+panic.png, K3-boot/break/fault/doublefault,
+K4-boot/guard, K5-boot, K6-boot(+debug), O-shell(+png, shell2),
+pipeline-boot+run, soak, install-tools, flakes. Named and dated.
+
+### OS-233/234/235/236/238/239/240 — below.
+
+### OS-226 honesty block (final: proven / written-unproven / not started)
+
+PROVEN (boot log or test output on this Mac, files named in OS-220):
+K1 alive 3/3; K2 banner + red panic screen + drill; IDT + int3 +
+PIT 100 Hz + keyboard + 98-line tick run + hello123 echo; CR2
+fault address; double fault on IST (after the packed(4) fix);
+16-region map + frame allocator + probe page + heap/Box/Vec +
+10k stress + guard fault; cooperative tasks A/B interleave + C
+sleep/wake + console; int-0x80 write/exit/sleep/getpid/yield +
+3 user programs + bad-call refusal + user-fault kill with
+survival; VGA status/help/unknown/truncated + STATUS record;
+Goose 7/7; Lobster hello/memory/identity/bus/scheduled/budget/
+shim/MCP-call; MCP toolchain probes FOUND; pipeline 15/15 on
+the clean clone (after the memory-state fix); 1-hour soak;
+10-boot loop.
+
+WRITTEN BUT UNPROVEN (design notes, no running code yet):
+supervisor + IPC contracts; A/B updater (network part NOT
+BUILT); MCP host beyond list/echo; agent notes (identity,
+memory, bus, records, attention, budgets, sandboxing);
+appliance + walkthroughs (walked on paper, not filmed);
+fresh-reader test outcome (runs in the clone drill — see
+timing below; stumbles, if any, are recorded there).
+
+NOT STARTED: VBE pixel framebuffer (OS-016); line discipline
+for the console echo; syscall/sysret fast path; VDSO/signals;
+preemptive scheduler + locks + task reap; kernel-native tool
+carriage; the parked cybersecurity program (boss order).
+
+### OS-234 headline brief for the boss (10 lines)
+
+1. The kernel boots on this Mac and proves it: K1 alive line.
+2. It draws, takes interrupts, manages memory, and schedules.
+3. Three userspace programs run; faults kill only the program.
+4. The shell answers status and help; agents get STATUS records.
+5. Goose and Lobster toolchains built; services and agents run.
+6. One command proves it all: sh os-build/boot-test.sh.
+7. One hour soaked, ten reboots, clean-clone verified.
+8. Research, designs, audits, and gates are all written down.
+9. What is not real is marked NOT BUILT, in those words.
+10. The parked security program was never touched. Report first.
+
+### OS-235 next 20 tasks (what the build learned)
+
+1. Bigger heap or frame-backed task stacks (31K free at 7 tasks).
+2. Console line discipline (echo vs uptime share, no protocol).
+3. Backspace/history/completion for the shell.
+4. Reap exited tasks + free their stacks (K5 leak noted).
+5. Preemption: spinlock, then quantum expiry in the timer IRQ.
+6. syscall/sysret fast path (STAR/MSR entry).
+7. VDSO getpid/gettime (no trap for the hot calls).
+8. VBE pixel mode (needs bootloader with GOP or VBE setup).
+9. Wire Rowan's pixel console to the VBE framebuffer when it lands.
+10. Goose supervisor with real process control (needs kernel IPC).
+11. MCP host: full JSON-RPC surface beyond list/echo.
+12. Lobster sleep builtin (kill the busy-wait).
+13. Agent homes enforced by the OS (not convention).
+14. A/B updater with a real endpoint + rollback drill.
+15. Tool call budgets enforced at serve time (Layer 5 runtime).
+16. Records compaction/rotation policy for the log.
+17. Nightly pipeline on a schedule with the flake log reviewed.
+18. Fresh-reader stumbles fixed (from the clone drill notes).
+19. Second architecture spike (aarch64 kernel? stated open).
+20. STOP — the parked program waits for the boss's word, again.

@@ -42,7 +42,7 @@ while [ $waited -lt $deadline ]; do
   sleep 10; waited=$((waited+10))
   if grep -aq "sleeper: bad call refused" "$BOOTLOG" 2>/dev/null; then break; fi
 done
-if [ -f /tmp/pipe-qmp ]; then
+if [ -e /tmp/pipe-qmp ]; then
   python3 -c "import socket,json; s=socket.socket(socket.AF_UNIX,socket.SOCK_STREAM); s.connect('/tmp/pipe-qmp'); s.settimeout(10); s.recv(65536); s.sendall((json.dumps({'execute':'qmp_capabilities'})+'\n').encode()); s.recv(65536); s.sendall((json.dumps({'execute':'screendump','arguments':{'filename':'$LOGDIR/pipeline-screen.ppm'}})+'\n').encode()); print(s.recv(200))"
 fi
 kill $(cat /tmp/pipe-pid) 2>/dev/null || true
@@ -68,6 +68,9 @@ sh services/run-goose-tests.sh | tail -2
 
 echo "== lobster proofs (checked, not just produced) =="
 cd lobster
+# Deterministic start: clear agent state and the bus channel.
+rm -f homes/lobster-agent/note.txt homes/lobster-agent/refusals.txt
+rm -f bus/general/*.txt
 L=~/mcp-servers/toolchains/lobster-src/bin/lobster
 $L hello.lobster | grep -q "HELLO FROM LOBSTER" && echo "PASS: lobster hello" || { echo "FAIL: lobster hello"; fail=$((fail+1)); }
 $L memory.lobster | grep -q "first run" && echo "PASS: lobster memory-1" || { echo "FAIL: lobster memory-1"; fail=$((fail+1)); }

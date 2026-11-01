@@ -5,14 +5,19 @@
 //! double-fault gate can use IST stack 0, then reloads the segments
 //! and the task register. `core` only, no dependencies.
 
-/// GDT slot count: null, code, data, TSS low, TSS high (TSS takes two).
-const GDT_LEN: usize = 5;
+/// GDT slot count: null, code, data, TSS low, TSS high (TSS takes
+/// two), user code, user data (OS-076/079).
+const GDT_LEN: usize = 7;
 /// Selector of the kernel code segment in our GDT.
 pub const CODE_SELECTOR: u16 = 0x08;
 /// Selector of the kernel data segment in our GDT.
 const DATA_SELECTOR: u16 = 0x10;
 /// Selector of the TSS descriptor in our GDT.
 const TSS_SELECTOR: u16 = 0x18;
+/// User code segment (ring 3): index 5, RPL 3.
+pub const USER_CODE_SELECTOR: u16 = 0x2B;
+/// User data segment (ring 3): index 6, RPL 3.
+pub const USER_DATA_SELECTOR: u16 = 0x33;
 /// Bytes in a 64-bit TSS with no I/O bitmap.
 const TSS_SIZE: u16 = 104;
 
@@ -67,6 +72,16 @@ fn data_descriptor() -> u64 {
     0x00CF93000000FFFF
 }
 
+fn user_code_descriptor() -> u64 {
+    // access 0xFA (present, ring 3, code, execute/read), flags 0xA.
+    0x00AFFA000000FFFF
+}
+
+fn user_data_descriptor() -> u64 {
+    // access 0xF2 (present, ring 3, data, writable), flags 0xC.
+    0x00CFF2000000FFFF
+}
+
 fn tss_descriptors(tss_addr: u64) -> (u64, u64) {
     let limit = u64::from(TSS_SIZE - 1);
     let low = (limit & 0xFFFF)
@@ -95,6 +110,8 @@ pub unsafe fn init() {
     GDT[2] = data_descriptor();
     GDT[3] = tss_lo;
     GDT[4] = tss_hi;
+    GDT[5] = user_code_descriptor();
+    GDT[6] = user_data_descriptor();
 
     #[repr(C, packed)]
     struct GdtPointer {
@@ -129,4 +146,17 @@ pub unsafe fn init() {
         in(reg) TSS_SELECTOR,
         options(nostack, preserves_flags),
     );
+}
+
+/// Set the ring-0 stack the CPU loads on a ring 3 -> 0 transition
+/// (syscall/IRQ from userspace). The Section F contract sets this to
+/// the entering task's OWN kernel stack top, so scheduler calls
+/// made from inside a syscall handler switch exactly like
+/// task-called ones. Single CPU; call before `iretq` to userspace.
+///
+/// # Safety
+/// The top must be a valid kernel stack for the current task.
+pub unsafe fn set_rsp0(top: u64) {
+    // `packed(4)`: write through a raw pointer, never a reference.
+    core::ptr::addr_of_mut!(TSS.rsp[0]).write_unaligned(top);
 }

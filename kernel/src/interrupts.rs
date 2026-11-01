@@ -459,6 +459,17 @@ pub fn page_fault_handler(frame: &InterruptFrame, error_code: u64) {
         core::arch::asm!("mov {}, cr2", out(reg) addr,
             options(nomem, nostack, preserves_flags));
     }
+    // OS-085: a ring-3 fault kills only that userspace task — log it,
+    // exit the task, and let the kernel (and the console task) carry
+    // on. Never iret back into the faulting context.
+    if frame.code_segment & 3 == 3 {
+        serial_write_str("INT user page-fault addr 0x");
+        serial_write_hex_u64(addr);
+        serial_write_str(" err 0x");
+        serial_write_hex_u64(error_code);
+        serial_write_str(": task killed\n");
+        crate::sched::exit_task();
+    }
     serial_write_str("INT exception page-fault vector 0x");
     serial_write_hex_u64(14);
     serial_write_str(" addr 0x");

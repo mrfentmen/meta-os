@@ -1,2 +1,8 @@
 .sentinel-cron.lock
 server/queue/crew-data/
+# Build outputs (never commit; rebuild from source)
+kernel/target/
+os-build/userspace/user/target/
+*.bin
+*.elf
+*.ppm

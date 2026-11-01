@@ -1,1 +1,0 @@
-/private/tmp/os-build/os-build/userspace/user/target/x86_64-unknown-none/debug/hello: /private/tmp/os-build/os-build/userspace/user/src/bin/hello.rs /private/tmp/os-build/os-build/userspace/user/src/lib.rs
