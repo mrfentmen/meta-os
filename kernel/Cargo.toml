@@ -1,0 +1,17 @@
+[package]
+name = "metaos-kernel"
+version = "0.1.0"
+edition = "2021"
+description = "Meta OS kernel, layer 0, written in Rust. Milestone K1: boot, print on serial, halt."
+license = "MIT"
+
+[workspace]
+
+[dependencies]
+bootloader = { version = "0.9", features = ["map_physical_memory"] }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
