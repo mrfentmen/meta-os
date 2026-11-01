@@ -235,11 +235,43 @@ def run_session(session_dir, brief_id, brief_text, params, takes,
     return made
 
 
+def load_brief(path):
+    """Parse a genre brief file into (params, prompt_text).
+
+    Params come from the "## Parameters" section (tempo, key, mode,
+    waveform, bars). The prompt is the brief's prose (title, sound,
+    structure, constraints) with the Parameters section removed.
+    """
+    with open(path, encoding="utf-8") as fh:
+        lines = fh.read().splitlines()
+    params = {}
+    prose = []
+    in_params = False
+    for line in lines:
+        if line.startswith("## Parameters"):
+            in_params = True
+            continue
+        if line.startswith("## ") and in_params:
+            in_params = False
+        if in_params:
+            if ":" in line:
+                name, value = line.split(":", 1)
+                params[name.strip()] = value.strip()
+        else:
+            prose.append(line)
+    out = {"tempo": float(params["tempo"]), "key": params["key"],
+           "mode": params["mode"], "waveform": params["waveform"],
+           "bars": int(params["bars"])}
+    prompt = "\n".join(line for line in prose if line.strip())
+    return out, prompt
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Musica composition loop")
     parser.add_argument("--session-dir")
     parser.add_argument("--brief-id", default="chipsynth")
     parser.add_argument("--brief-text", default="")
+    parser.add_argument("--brief-file", default=None)
     parser.add_argument("--tempo", type=float, default=132)
     parser.add_argument("--key", default="C")
     parser.add_argument("--mode", default="minor")
@@ -259,10 +291,15 @@ def main(argv=None):
         return 0
     params = {"tempo": args.tempo, "key": args.key, "mode": args.mode,
               "waveform": args.waveform, "bars": args.bars}
+    brief_text = args.brief_text
+    if args.brief_file:
+        file_params, file_prompt = load_brief(args.brief_file)
+        params = file_params
+        brief_text = brief_text or file_prompt
     made = run_session(args.session_dir, args.brief_id,
-                       args.brief_text or ("%s brief: %.0f bpm %s %s"
-                                           % (args.brief_id, args.tempo,
-                                              args.key, args.mode)),
+                       brief_text or ("%s brief: %.0f bpm %s %s"
+                                      % (args.brief_id, params["tempo"],
+                                         params["key"], params["mode"])),
                        params, args.takes, args.seed_base, args.resume,
                        args.spark_assist)
     for record in made:
