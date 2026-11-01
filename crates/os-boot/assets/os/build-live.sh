@@ -67,6 +67,7 @@ trap cleanup EXIT
 cp services/*.service services/*.timer services/relay.target \
   "$STAGE/etc/systemd/system/"
 cp firstboot/metaos-firstboot bin/metaos-boot-checklist bin/metaos-update \
+  bin/metaos-custos \
   "$STAGE/usr/local/bin/"
 chmod 755 "$STAGE/usr/local/bin/"*
 
@@ -117,6 +118,17 @@ mkdir -p "$STAGE/var/lib/metaos/skills"
   echo "skills-collection-root /var/lib/metaos/skills"
   echo "populated by a later install step, never baked with skill content"
 } > "$STAGE/var/lib/metaos/skills/.metaos-skills-root"
+
+# Meta Custos state root staging, same empty-plus-marker shape as
+# the debootstrap route (see os/build-image.sh 2f). Ownership on
+# the live route is set by the live hook
+# (0900-metaos-services.hook.chroot): this staging dir carries no
+# records and no config, only the marker.
+mkdir -p "$STAGE/var/lib/metaos/custos"
+{
+  echo "custos-state-root /var/lib/metaos/custos"
+  echo "patrol records appended by metaos-custos at run time, never baked"
+} > "$STAGE/var/lib/metaos/custos/.metaos-custos-root"
 
 cd "$BUILD_DIR"
 lb clean

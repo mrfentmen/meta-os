@@ -22,11 +22,11 @@
 set -e
 mkdir -p /etc/systemd/system/relay.target.wants
 mkdir -p /etc/systemd/system/multi-user.target.wants
-for u in relay-dashboard.service relay-bus.service relay-jobs.service relay-overseer.timer relay-ready.service relay-overseer.service relay-watchdog.service relay-brief.service relay-watchman.service relay-uplink.service relay-mcp-gateway.service relay-memory.service; do
+for u in relay-dashboard.service relay-bus.service relay-jobs.service relay-overseer.timer relay-ready.service relay-overseer.service relay-watchdog.service relay-brief.service relay-watchman.service relay-uplink.service relay-mcp-gateway.service relay-memory.service metaos-custos.timer; do
   ln -sf "/etc/systemd/system/$u" "/etc/systemd/system/relay.target.wants/$u"
 done
 ln -sf /etc/systemd/system/metaos-firstboot.service /etc/systemd/system/multi-user.target.wants/metaos-firstboot.service
-chmod 755 /usr/local/bin/metaos-firstboot /usr/local/bin/metaos-boot-checklist /usr/local/bin/metaos-update
+chmod 755 /usr/local/bin/metaos-firstboot /usr/local/bin/metaos-boot-checklist /usr/local/bin/metaos-update /usr/local/bin/metaos-custos
 # OS-083: the artifact store root staged by os/build-live.sh
 # belongs to the relay user, like the gateway dir on the other
 # routes; the store repo itself is created on first deposit.
@@ -43,3 +43,8 @@ chown relay:relay /var/lib/metaos/memory
 # staged, only the marker.
 mkdir -p /var/lib/metaos/skills
 chown relay:relay /var/lib/metaos/skills
+# Meta Custos: the patrol state root staged by os/build-live.sh
+# belongs to the relay user the same way; records and seen-state
+# are appended by the metaos-custos driver at run time, not staged.
+mkdir -p /var/lib/metaos/custos
+chown relay:relay /var/lib/metaos/custos

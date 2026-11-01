@@ -69,10 +69,16 @@ pub const CARRIED: &[&str] = &[
     "os/packer/metaos.pkr.hcl",
     "os/preseed.cfg",
     "os/test-boot.sh",
+    // Meta Custos stage 2 — the standing patrol service.
+    "os/METAOS_CUSTOS.md",
+    "os/bin/metaos-custos",
+    "os/services/metaos-custos.service",
+    "os/services/metaos-custos.timer",
 ];
 
-/// Number of carried files (T153 10 + T154 10 + T155 10 + T156 9).
-pub const CARRIED_COUNT: usize = 39;
+/// Number of carried files (T153 10 + T154 10 + T155 10 + T156 9
+/// + Meta Custos stage 2 4).
+pub const CARRIED_COUNT: usize = 43;
 
 /// Resolve the source path for a manifest entry (repo `<repo>/os/<entry>`).
 pub fn source_path(entry: &str) -> std::path::PathBuf {
