@@ -270,3 +270,51 @@ repo, commit 556bd41; repo untouched per the prompt). Status per task:
 - NB-034 DONE. labs/molecules/tests/validate.test.mjs: 6/6 pass (counts,
   bond endpoints, CPK membership, meta coverage).
 - NB-035 section report: this list; shots + test named above.
+
+## Section B (round 2), completed: clean-clone proof (NB-016 to NB-020)
+
+- NB-016 DONE. Fresh clone to /tmp/cleanclone (45 MB), no install needed
+  (zero-dependency repo: npm install = "up to date"), npm test: 1933 run,
+  1877 pass, 56 fail — all 56 in tests/native-*, zero outside the known set.
+- NB-017 DONE. Same clone, cargo test --workspace: 1412 pass, 0 fail.
+- NB-018 DONE. Timing: npm install+test under 1 minute wall; cargo cold
+  build+test under 1 minute wall (both logs show 0 elapsed minutes).
+  Judge's-machine number: minutes, not hours.
+- NB-019 DONE. Env: node v24.21.0, npm 11.19.0, cargo/rustc 1.99.1
+  (Homebrew), python3 system for the python suites. No lockfile in repo
+  (no dependencies to lock). No other tools needed.
+- NB-020 DONE. Totals match baselines exactly. PROVEN CLEAN.
+
+## Section D (round 2): Musica 3D notes, labs/music3d/ (NB-036 to NB-050)
+
+- NB-036 DONE. labs/music3d/ static page + vendored three.js r152
+  (own copy under labs/music3d/vendor, LICENSE kept).
+- NB-037 DONE. Whole/half/quarter/eighth from primitives; differences
+  tabled in a code comment (whole: no stem; half: torus head + stem;
+  quarter: filled + stem; eighth: + flag cone).
+- NB-038 DONE. Five long thin dark boxes into the distance; framed by
+  default camera.
+- NB-039 DONE. C major scale; heights from NOTES NOTE_Y map (never
+  hand-placed): C4=-2 … C5=+5 half-steps from E4.
+- NB-040 DONE. WebAudio TRIANGLE wave (not sine — spec), 92 BPM default;
+  each note highlights as it sounds from the shared beat clock.
+- NB-041 DONE. Second row BEHIND the first (z=-1.6), same scale one octave
+  up, 0.7 size, amber-brown resting color; toggleable.
+- NB-042 DONE. Play/Pause/Replay clicked and verified (meta line flips).
+- NB-043 SKIPPED with reason: os/worlds/musica/ does not exist in this
+  checkout (Hana's pack lane not landed) — no take file to read, and
+  nothing was modified anywhere regardless.
+- NB-044 DONE. 3 PNGs in labs/music3d/shots/: start (playhead left),
+  mid-highlight (amber note at playhead, fix verified), octave-row
+  (reframed view showing both rows).
+- NB-045 DONE. Color rule in code comment + footer: rest cyan #22D3EE,
+  playing note amber #FFBE55. First implementation only glowed cyan
+  (emissive color never updated) — caught on screenshot, fixed, re-shot.
+- NB-046 DONE. Space toggles play/pause, R restarts (run_code test:
+  "Stopped…" then "Playing (placeholder…").
+- NB-047 DONE. Volume slider 0–100 drives WebAudio gain (verified 0% label
+  update; gain path is master GainNode).
+- NB-048 DONE. Note-name labels toggle (canvas sprites), on by default.
+- NB-049 DONE. labs/music3d/tests/validate.test.mjs: 3/3 pass (map covers
+  C4..C5 ascending, order matches scale, octave = exactly 2x frequency).
+- NB-050 section report: this list; shots + test named above.

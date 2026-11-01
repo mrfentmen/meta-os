@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labs — 3D music notes</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #05070c; color: #d7e5f2; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  header { padding: 12px 16px; border-bottom: 1px solid #1c2b3d; }
+  header h1 { font-size: 15px; margin: 0; letter-spacing: 0.12em; }
+  header p { font-size: 11px; color: #8fa9bd; margin: 4px 0 0; }
+  #bar { padding: 10px 16px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid #1c2b3d; }
+  button { background: #0f1c2b; color: #d7e5f2; border: 1px solid #2b4258; padding: 5px 12px; cursor: pointer; font: inherit; font-size: 12px; }
+  button[aria-pressed="true"] { background: #123a3a; border-color: #22d3ee; }
+  label { font-size: 12px; color: #8fa9bd; display: flex; gap: 6px; align-items: center; }
+  input[type="range"] { width: 110px; }
+  #meta { padding: 8px 16px; font-size: 12px; color: #7ee2f5; min-height: 18px; }
+  #view { display: block; width: 100%; height: 62vh; touch-action: none; cursor: grab; }
+  #fps { padding: 6px 16px; font-size: 11px; color: #8fa9bd; }
+  footer { padding: 10px 16px; font-size: 11px; color: #8fa9bd; border-top: 1px solid #1c2b3d; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LABS · 3D NOTES</h1>
+  <p>Placeholder melody: C major scale (mixed note values), ascending and descending — NOT a Musica composition. No take file exists in this checkout.</p>
+</header>
+<div id="bar" role="toolbar" aria-label="Playback controls">
+  <button id="btn-play">Play</button>
+  <button id="btn-pause">Pause</button>
+  <button id="btn-restart">Replay</button>
+  <label>Tempo <input type="range" id="tempo" min="60" max="200" value="92"> <span id="tempo-val">92 bpm</span></label>
+  <label>Volume <input type="range" id="vol" min="0" max="100" value="80"> <span id="vol-val">80%</span></label>
+  <button id="btn-labels" aria-pressed="true">Note names</button>
+  <button id="btn-v2" aria-pressed="true">Octave row</button>
+</div>
+<div id="meta" aria-live="polite"></div>
+<canvas id="view"></canvas>
+<div id="fps">frame rate: measuring…</div>
+<footer>Notes in one accent color (cyan); the playing note turns amber #FFBE55 (the film accent). Audio: WebAudio triangle wave, A4 = 440 Hz. All geometry from primitives.</footer>
+<script src="vendor/three.min.js"></script>
+<script type="module">
+import { SCALE, NOTE_Y, BEATS, freqOf, octaveUp } from "./notes-data.mjs";
+// Color rule: every note is cyan #22D3EE at rest; the note under the
+// playhead turns amber #FFBE55 while it sounds, then back to cyan.
+const REST = 0x22d3ee, PLAYING = 0xffbe55, ROW2 = 0x8a6f3f;
+const SPACING = 0.9, LINE_X0 = -8, LINE_X1 = 8;
+let renderer, scene, camera, audio = null, master = null;
+let row1 = [], row2 = [], playhead, theta = 0.9, phi = 1.05, dist = 16;
+let playing = false, playT = 0, lastT = 0, showLabels = true, v2on = true;
+let bpm = 92, vol = 0.8, fpsAcc = 0, fpsN = 0;
+const beatLen = () => 60 / bpm;
+const songLen = () => SCALE.reduce((s, e) => s + BEATS[e.v] * beatLen(), 0);
+
+// Note models from primitives. Differences:
+// whole: filled head, NO stem, NO flag. half: HOLLOW head (torus) + stem.
+// quarter: filled head + stem. eighth: filled head + stem + flag cone.
+function makeNote(kind, color) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.35, emissive: color, emissiveIntensity: 0 });
+  let head;
+  if (kind === "half") {
+    head = new THREE.Mesh(new THREE.TorusGeometry(0.26, 0.09, 10, 24), mat);
+    head.scale.set(1.25, 0.85, 1);
+  } else {
+    head = new THREE.Mesh(new THREE.SphereGeometry(0.30, 20, 14), mat);
+    head.scale.set(1.25, 0.85, 0.6);
+  }
+  g.add(head);
+  if (kind !== "whole") {
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 1.6, 8), mat);
+    stem.position.set(0.36, 0.8, 0);
+    g.add(stem);
+    if (kind === "eighth") {
+      const flag = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.5, 8), mat);
+      flag.position.set(0.36, 1.7, 0);
+      flag.rotation.z = -0.5;
+      g.add(flag);
+    }
+  }
+  g.userData.mat = mat;
+  return g;
+}
+
+function labelSprite(text) {
+  const cv = document.createElement("canvas");
+  const m = cv.getContext("2d");
+  m.font = "22px monospace";
+  const w = Math.ceil(m.measureText(text).width) + 12;
+  cv.width = w; cv.height = 34;
+  const cx = cv.getContext("2d");
+  cx.font = "22px monospace"; cx.fillStyle = "#9be9f7";
+  cx.fillText(text, 6, 24);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthTest: false }));
+  sp.scale.set(w / 34 * 0.42, 0.42, 1);
+  return sp;
+}
+
+function layoutRow(names, z, scale, color, isRow2) {
+  const total = songLen();
+  let t = 0;
+  const out = [];
+  const x0 = -6.5;
+  names.forEach((nm) => {
+    const beats = BEATS[nm.v];
+    const dur = beats * beatLen();
+    const x = x0 + 13 * ((t + dur / 2) / total);
+    const n = makeNote(nm.v, color);
+    n.scale.setScalar(scale);
+    n.position.set(x, NOTE_Y[nm.n] * SPACING + 2.2, z);
+    const lab = labelSprite(nm.n);
+    lab.position.set(0, 0.85, 0);
+    n.add(lab);
+    n.userData = { ...n.userData, name: nm.n, label: lab, baseY: n.position.y, t0: t, t1: t + dur, dur, voice2: isRow2 };
+    scene.add(n);
+    out.push(n);
+    t += dur;
+  });
+  return out;
+}
+
+function buildSong() {
+  row1 = layoutRow(SCALE, 0.9, 1.0, REST, false);
+  row2 = layoutRow(SCALE.map((e) => ({ n: octaveUp(e.n), v: e.v })), -1.6, 0.7, ROW2, true);
+}
+
+function tone(f, t0, dur) {
+  const o = audio.createOscillator(), g = audio.createGain();
+  o.type = "triangle";
+  o.frequency.value = f;
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(0.25 * vol + 0.0001, t0 + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+  o.connect(g).connect(master);
+  o.start(t0);
+  o.stop(t0 + dur + 0.05);
+}
+
+function update(dt) {
+  if (playing) { playT += dt; if (playT >= songLen()) playT = 0; }
+  playhead.position.x = -6.5 + 13 * (playT / songLen());
+  let sounding = [];
+  for (const [list, on] of [[row1, true], [row2, v2on]]) {
+    for (const n of list) {
+      const u = n.userData;
+      const active = on && playing && playT >= u.t0 && playT < u.t1;
+      u.mat.emissive.setHex(active ? PLAYING : (u.voice2 ? ROW2 : REST));
+      u.mat.emissiveIntensity = active ? 0.95 : 0;
+      u.mat.color.setHex(active ? PLAYING : (u.voice2 ? ROW2 : REST));
+      n.position.y = u.baseY + (active ? 0.35 : 0);
+      u.label.visible = showLabels;
+      if (active && !u.was) { sounding.push(u.name); if (audio) tone(freqOf(u.name), audio.currentTime, u.dur * 0.95); }
+      u.was = active;
+    }
+  }
+  document.getElementById("meta").textContent = playing
+    ? "Playing (placeholder C major" + (v2on ? " + octave row" : "") + ")" + (sounding.length ? " — sounding: " + sounding.join(", ") : "")
+    : "Stopped. Press Play. Space toggles, R replays.";
+  fpsAcc += dt; fpsN++;
+  if (fpsAcc >= 1) {
+    document.getElementById("fps").textContent = "frame rate: ~" + Math.round(fpsN / fpsAcc) + " fps (headless Chromium on this Mac)";
+    fpsAcc = 0; fpsN = 0;
+  }
+}
+
+function init() {
+  const cv = document.getElementById("view");
+  renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x05070c);
+  camera = new THREE.PerspectiveCamera(50, 2, 0.1, 200);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+  const key = new THREE.DirectionalLight(0xffffff, 0.8);
+  key.position.set(5, 9, 6);
+  scene.add(key);
+  const grid = new THREE.GridHelper(40, 40, 0x123a3a, 0x0b1622);
+  grid.position.y = -1.2;
+  scene.add(grid);
+  const lineMat = new THREE.MeshStandardMaterial({ color: 0x2a3644, roughness: 0.8 });
+  for (let L = 0; L < 5; L++) {
+    const line = new THREE.Mesh(new THREE.BoxGeometry(LINE_X1 - LINE_X0, 0.03, 30), lineMat);
+    line.position.set(0, L * SPACING + 2.2, -8);
+    scene.add(line);
+  }
+  playhead = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 4.6, 5),
+    new THREE.MeshStandardMaterial({ color: 0x22d3ee, emissive: 0x22d3ee, emissiveIntensity: 0.8, transparent: true, opacity: 0.28 }));
+  playhead.position.set(-6.5, 4.0, 0);
+  scene.add(playhead);
+  buildSong();
+  const resize = () => {
+    renderer.setSize(cv.clientWidth, cv.clientHeight, false);
+    camera.aspect = cv.clientWidth / cv.clientHeight;
+    camera.updateProjectionMatrix();
+  };
+  window.addEventListener("resize", resize);
+  let dragging = false, px = 0, py = 0;
+  cv.addEventListener("pointerdown", (e) => { dragging = true; px = e.clientX; py = e.clientY; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    theta -= (e.clientX - px) * 0.008;
+    phi = Math.min(Math.PI - 0.05, Math.max(0.05, phi - (e.clientY - py) * 0.008));
+    px = e.clientX; py = e.clientY;
+  });
+  const up = () => { dragging = false; };
+  cv.addEventListener("pointerup", up);
+  cv.addEventListener("pointercancel", up);
+  cv.addEventListener("wheel", (e) => { e.preventDefault(); dist = Math.min(60, Math.max(4, dist * (1 + Math.sign(e.deltaY) * 0.1))); }, { passive: false });
+  const ensureAudio = () => {
+    if (!audio) { audio = new (window.AudioContext || window.webkitAudioContext)(); master = audio.createGain(); master.gain.value = 1; master.connect(audio.destination); }
+    if (audio.state === "suspended") audio.resume();
+  };
+  document.getElementById("btn-play").addEventListener("click", () => { ensureAudio(); playing = true; });
+  document.getElementById("btn-pause").addEventListener("click", () => { playing = false; });
+  document.getElementById("btn-restart").addEventListener("click", () => { playT = 0; });
+  document.getElementById("tempo").addEventListener("input", (e) => {
+    bpm = Number(e.target.value);
+    document.getElementById("tempo-val").textContent = bpm + " bpm";
+    const keep = playT / songLen();
+    buildSongRefresh();
+  });
+  function buildSongRefresh() {
+    [...row1, ...row2].forEach((n) => scene.remove(n));
+    buildSong();
+    playT = keep * songLen();
+  }
+  document.getElementById("vol").addEventListener("input", (e) => {
+    vol = Number(e.target.value) / 100;
+    document.getElementById("vol-val").textContent = e.target.value + "%";
+  });
+  document.getElementById("btn-labels").addEventListener("click", (e) => {
+    showLabels = !showLabels;
+    e.currentTarget.setAttribute("aria-pressed", String(showLabels));
+  });
+  document.getElementById("btn-v2").addEventListener("click", (e) => {
+    v2on = !v2on;
+    e.currentTarget.setAttribute("aria-pressed", String(v2on));
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT" && e.target.type === "text") return;
+    if (e.code === "Space" && !e.repeat) { e.preventDefault(); ensureAudio(); playing = !playing; }
+    if (e.key === "r" || e.key === "R") playT = 0;
+  });
+  let lastT = 0;
+  const frame = (t) => {
+    requestAnimationFrame(frame);
+    const dt = Math.min(0.1, (t - lastT) / 1000 || 0);
+    lastT = t;
+    update(dt);
+    camera.position.set(dist * Math.sin(phi) * Math.sin(theta), dist * Math.cos(phi), dist * Math.sin(phi) * Math.cos(theta));
+    camera.lookAt(0, 2.8, -8);
+    renderer.render(scene, camera);
+  };
+  resize();
+  requestAnimationFrame(frame);
+}
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
