@@ -22,6 +22,7 @@ const ACCENT_HEX_BY_COLOR_NAME = {
   blue: "#4f7ec2",
   red: "#d92b2b",
   green: "#5da864",
+  purple: "#7c5cbf",
 };
 
 function stringField(block, name) {
@@ -42,8 +43,15 @@ function parseNativeConfigs() {
     "utf8",
   );
   const configs = {};
-  for (const id of ["vigiles", "ignis", "medicus"]) {
-    const start = swift.indexOf(`static let ${id} = ProductConfig(`);
+  // [web id, Swift static-let name] — the science-lab web id has a dash,
+  // so its Swift static is scienceLab; the map is keyed by web id.
+  for (const [id, swiftName] of [
+    ["vigiles", "vigiles"],
+    ["ignis", "ignis"],
+    ["medicus", "medicus"],
+    ["science-lab", "scienceLab"],
+  ]) {
+    const start = swift.indexOf(`static let ${swiftName} = ProductConfig(`);
     assert.notEqual(start, -1, `native config is missing ${id}`);
     const end = swift.indexOf("\n    )", start);
     assert.notEqual(end, -1, `native config for ${id} has no closing paren`);
@@ -65,7 +73,7 @@ function parseNativeConfigs() {
 const native = parseNativeConfigs();
 
 test("web and native list the same products in the same order", () => {
-  assert.deepEqual(PRODUCT_IDS, ["vigiles", "ignis", "medicus"]);
+  assert.deepEqual(PRODUCT_IDS, ["vigiles", "ignis", "medicus", "science-lab"]);
   assert.deepEqual(Object.keys(native), PRODUCT_IDS);
 });
 

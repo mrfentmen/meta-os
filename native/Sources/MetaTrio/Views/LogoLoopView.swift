@@ -116,6 +116,11 @@ struct LogoLoopView: View {
             return LogoColor.color(fromHex: "#ffe8e0") ?? .white
         case .medicus:
             return LogoColor.color(fromHex: "#e8fbe9") ?? .white
+        case .scienceLab:
+            // HN-077: no web science-lab specular exists yet, so this
+            // follows the documented custom-color rule — the specular is
+            // the derived science-lab palette's lightest step.
+            return LogoColor.productPalette(for: .scienceLab).last ?? .white
         }
     }
 
