@@ -38,6 +38,7 @@
     <a href="#board-costs">Costs</a>
     <a href="#board-officina">Officina</a>
     <a href="#board-custos">Custos</a>
+    <a href="#board-systems">Systems</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -97,9 +98,14 @@
     <p>Patrol records by tier/source rendered from Rowan's records (os/worlds/custos/runs/*.jsonl).</p>
     <div id="custos-content" aria-live="polite">Loading…</div>
   </section>
+  <section class="board-section" id="board-systems" aria-labelledby="board-systems-heading">
+    <h2 id="board-systems-heading">Systems home</h2>
+    <p>Status chips from each world's own pack.json status field. The Trio products are live in this app; a spec is never shown as live.</p>
+    <div id="systems-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView, costTicker, officinaBoard, parseCustosJsonl, custosBoard } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView, costTicker, officinaBoard, parseCustosJsonl, custosBoard, systemsChip, systemsHome } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -177,6 +183,30 @@
     const skipped = parsed.reduce((n, p) => n + p.skipped, 0);
     document.getElementById("custos-content").innerHTML =
       `<p>${allRecords.length} patrol records (${skipped} malformed lines skipped).</p>` + custosBoard(allRecords);
+    // HN-068: status chips from each world's own pack.json.
+    const worldDirs = ["custos", "dep", "doe", "dsny", "ems", "fdny", "hospital", "mta", "nypd", "officina"];
+    const systems = [
+      { name: "Vigiles", status: "live" },
+      { name: "Ignis", status: "live" },
+      { name: "Medicus", status: "live" },
+    ];
+    let packsLoaded = 0;
+    for (const dir of worldDirs) {
+      try {
+        const res = await fetch(`os/worlds/${dir}/pack.json`);
+        if (res.ok) {
+          const pack = await res.json();
+          systems.push({ name: pack.pack_name ?? dir, status: systemsChip(pack.status) });
+          packsLoaded += 1;
+        } else {
+          systems.push({ name: dir, status: "not built" });
+        }
+      } catch {
+        systems.push({ name: dir, status: "not built" });
+      }
+    }
+    document.getElementById("systems-content").innerHTML =
+      `<p>Loaded ${packsLoaded} of ${worldDirs.length} world packs.</p>` + systemsHome(systems);
   } catch {
     document.getElementById("evidence-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;

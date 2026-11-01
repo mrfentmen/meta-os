@@ -367,3 +367,27 @@ export function custosBoard(records) {
     + (otherRows ? `<h3>Other patrol records</h3><ul>${otherRows}</ul>` : "")
     + `<h3>Latest observations</h3><ol>${recent}</ol></div>`;
 }
+
+// HN-068 Systems home: status chips from each world's own pack.json
+// status field (os/worlds/*/pack.json). The pack status is the chip:
+// "live" stays live, "partial" stays partial, "spec" stays spec, and
+// anything else — including a missing pack — is "not built". A spec
+// is never upgraded to live, and a missing pack is never called live.
+export function systemsChip(status) {
+  if (status === "live" || status === "partial" || status === "spec") return status;
+  return "not built";
+}
+
+export function systemsHome(systems) {
+  const rows = (Array.isArray(systems) ? systems : []).filter((s) => s && typeof s === "object");
+  if (rows.length === 0) {
+    return `<p class="empty-state">No systems listed.</p>`;
+  }
+  const items = rows.map((s) => {
+    const chip = systemsChip(s.status);
+    return `<li class="systems-item">`
+      + `<span class="systems-name">${escapeHtml(s.name ?? "—")}</span> `
+      + `<span class="systems-chip systems-chip--${escapeHtml(chip)}">${escapeHtml(chip)}</span></li>`;
+  }).join("");
+  return `<ul class="systems-home">${items}</ul>`;
+}
