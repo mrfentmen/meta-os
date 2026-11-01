@@ -27,15 +27,21 @@
 <main>
   <nav class="boards-nav" aria-label="Boards">
     <a href="#board-lab">Lab</a>
+    <a href="#board-hortus">Hortus</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
     <p>Reads the lab's records when present (os/lab/records.json). No level is ever shown higher than its record's cap.</p>
     <div id="lab-content" aria-live="polite">Loading…</div>
   </section>
+  <section class="board-section" id="board-hortus" aria-labelledby="board-hortus-heading">
+    <h2 id="board-hortus-heading">Hortus run viewer</h2>
+    <p>Generations charted from the real run JSONLs (best/mean per generation). Run JSONLs are expected at os/hortus/runs/*.jsonl; none exist in this repo yet, so the viewer shows its honest empty state until real runs land.</p>
+    <div id="hortus-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -44,6 +50,8 @@
   } catch {
     el.innerHTML = labBoard([]);
   }
+  document.getElementById("hortus-content").innerHTML =
+    hortusChart([]) + hortusChampion(null);
 </script>
 </body>
 </html>
