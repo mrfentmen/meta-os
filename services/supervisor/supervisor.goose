@@ -368,9 +368,9 @@ fn sup_set_policy(slot: i64, policy: i64, max_restarts: i64, base_ms: i64, max_m
 }
 
 // Delay before attempt number `attempt` (0 = the first restart). Doubles each
-// time, capped at max_ms. Written as a loop rather than a shift because the shift
-// operators are not among the forms verified against the Goose docs, and an
-// unverified operator in the backoff is a bug that only appears under load.
+// time, capped at max_ms. A loop rather than `base << attempt`: a shift past 63
+// bits is silently wrong on a signed type, and the cap has to be checked between
+// doublings anyway, so the loop is the version with nowhere to hide.
 //
 // Overflow: `attempt` is bounded by max_restarts (or by the cap) before it gets
 // anywhere near i64, and the loop stops the moment it reaches max_ms, so the
