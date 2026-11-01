@@ -15,22 +15,24 @@ Merges go through Pax only; this branch never merges itself.
 
 ## L1 — Boot (Rowan)
 
-- Status: WRITTEN, HAND-BACK ON BRANCH, NOT MERGED, NOT BOOT-REPRODUCED HERE.
-- Evidence: K1 proof steps on main (`os-build/OPENCODE_K1_RUN.md`,
-  b7b915e: nightly build-std, llvm-tools-preview, boot the image
-  directly with `-serial file:`). K1 hand-back on
-  `opencode/os-build` @ 036570b, verified by the Milo gate-1 loop
-  2026-11-01 10:10 (diff vs main 853b721 exactly 8 files:
-  `kernel/main.rs` 1 line, `kernel/.cargo/config.toml`, new
-  `kernel/Cargo.lock` with bootloader 0.9.35, OS_BUILD_REPORT.md,
-  4 boot logs; run1/2/3 byte-identical, each with
-  'META OS KERNEL - alive (K1)'). `kernel/src/main.rs` on main
-  b7b915e still K1-only; merges left it untouched.
-- Unverified: QEMU boot NOT re-run on this VM (Mac-built image) and
-  the kernel crate NOT compiled here — the hand-back is an
-  artifact/diff verification, not a boot reproduction. No
-  `kernel/Cargo.lock` on main yet; the hand-back is unmerged, so
-  R5 wiring is unblocked in material only until Pax merges it.
+- Status: MERGED, PROVEN ON MAIN, NOT BOOT-REPRODUCED HERE.
+- Evidence: K1 hand-back MERGED via Pax to main 5dcb4cc
+  (b343df9 lockfile + logs + report, 8431a79 static
+  relocation-model, 5dcb4cc entry_point BootInfo shared ref;
+  proof string untouched). All 4 boot logs on main
+  (`os-build/logs/K1-boot*.txt`) contain
+  'META OS KERNEL - alive (K1)', no panic, SeaBIOS header =
+  real QEMU output per Pax's pre-merge verification. Q1
+  ANSWERED: `kernel/Cargo.lock` (bootloader 0.9.35) is now on
+  main. Rowan R5 wiring UNBLOCKED per Pax's dispatch — wire
+  against main now, one module per commit onto the proven
+  tree. `opencode/os-build` has since advanced to d8f043e
+  (Section B subject line only, not verified here, unmerged,
+  OpenCode lane — monitor only).
+- Unverified: QEMU boot NOT re-run on this VM (Mac-built
+  image) and the kernel crate NOT compiled here — the merge
+  is Pax-verified, not reproduced here. `kernel/src/main.rs`
+  on main is still K1-only; K2-K6 modules remain unwired.
 
 ## L2 — Kernel core (Rowan)
 
@@ -48,13 +50,14 @@ Merges go through Pax only; this branch never merges itself.
   (`kernel/src/syscalls.rs`, 484 lines, UNWIRED, six-call dispatch)
   MERGED via Pax as 4bf2367, Milo gate-1 GREEN 09:40 (standalone
   rustc clean, own host harness ALL PASS, main.rs untouched).
-  `kernel/src/` on main b7b915e now holds framebuffer.rs,
+  `kernel/src/` on main 5dcb4cc now holds framebuffer.rs,
   interrupts.rs, main.rs, memory.rs, syscalls.rs, tasks.rs.
-  `rowan/kernel` tip is now 3ea9e70: a request file only
+  `rowan/kernel` tip is still 3ea9e70: a request file only
   (`kernel/NEXT_TASKS_REQUEST.md`), no code change; Layer 0 queue
   empty, no K7 invented (spec milestones end at K6).
-- Unverified: kernel-crate compile, any boot, R5 wiring (blocked
-  on the K1 hand-back merge + Q12 wiring facts in MAC_QUESTIONS).
+- Unverified: kernel-crate compile, any boot, R5 wiring (now
+  UNBLOCKED on the K1 merge per Pax; Q12 wiring facts in
+  MAC_QUESTIONS still open as a caveat for K6 wiring).
 
 ## L3 — Drivers (Rowan)
 
@@ -122,6 +125,13 @@ Merges go through Pax only; this branch never merges itself.
 
 ## Changelog
 
+- 2026-11-01 ~10:18 EST (v2): refresh on `milo/layer2-scoreboard`
+  off v1 5f48a25, per Pax's standing pick (scoreboard refresh
+  still Milo's next pick, restated in the K1-on-main dispatch).
+  Main b7b915e -> 5dcb4cc: L1 K1 MERGED and proven on main,
+  Q1 answered, R5 unblocked; L2 K4/K5/K6 still MERGED, UNWIRED,
+  gate-1 GREEN. No other layer changed. Merges via Pax only;
+  this branch never merges itself.
 - 2026-11-01 ~10:13 EST (v1): refresh on `milo/layer2-scoreboard`
   off main b7b915e, per Pax's merge-run dispatch (refresh SCOREBOARD
   for today's merges). L1: K1 hand-back branch verified, unmerged.
