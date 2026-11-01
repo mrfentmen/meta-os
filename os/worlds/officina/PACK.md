@@ -43,6 +43,36 @@ judges a design here. The simulator scores; the loop counts; the
 gate re-scores held out. A human decides whether anything gets
 built.
 
+## Stage 2a: rough words in, proven design out
+
+A user gives a sloppy plain-words description — no blueprint, no
+specs. `runtime/brief.py` turns it into a structured brief
+(artefact class, stated requirements, stated targets, preferences,
+unknowns, conflicts), then iterates the brief itself with no human
+in the loop: each round grades the current parameters, applies
+exactly one rule-driven move (gap repair, volume repair, range
+repair, improvement, held-out repair), and logs the decision with
+its reason and the grade that motivated it.
+
+Honesty rules, same as stage 1: the parser is rules in code, not
+a model, so it records only what the words state — anything
+unstated goes in unknowns (a workshop default target is labelled
+a default in targets and disclosed as a gap in unknowns, never
+passed off as stated). Wishes the simulator cannot grade (cheap,
+small) are preferences, explicitly not graded. The search grades
+at design conditions, but nothing counts as proven until the
+independent held-out gate passes — and proven also requires the
+brief's own target, so a design that stalls above a tighter stated
+target is never exported as proven. Worked run
+`runs/rough-words-run-001.json`: "a heatsink for a hot little
+chip, about 50mm square, no fan, keep it small, under 2 degrees
+per watt" — 4 rounds, 3 logged improvements, accepted with
+R 1.7210 (held-out 1.1848), exported to
+`runs/rough-words-best-design.json`. UNPROVEN, stated plainly:
+the intake parser has never been checked against real user
+wording beyond the tested examples, and the loop has never run
+on a booted Meta OS image or as a scheduled service.
+
 ## What it watches
 
 - **design-board**: design jobs — posted, claimed, scored, kept as
@@ -60,6 +90,10 @@ built.
 ## Agent roster
 
 - **design-smith**: samples variants, posts jobs, keeps winners.
+- **brief-smith**: turns rough plain words into a structured
+  brief, then iterates the brief itself, logging every decision
+  with its reason; never grades its own work — the held-out gate
+  decides what counts as proven.
 - **bench-runner**: runs the simulator on every job and re-score.
 - **failure-clerk**: records every failure with its score and reason.
 - **record-keeper**: keeps the proven record; never marks proven
