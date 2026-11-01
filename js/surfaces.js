@@ -131,3 +131,31 @@ export function gateStatusPage(manifest) {
     + `<p>Delaney gate state is read from the gate directory's files: earned.json → earned, running.json → running, delaney-set.json → prepared, otherwise not prepared.</p>`
     + fileList + `</div>`;
 }
+
+// HN-059 Evidence viewer: flagged-incident evidence crops in the app,
+// with the ID: UNIDENTIFIED card exactly as specced (README identity
+// rule: the system describes what a person looks like and never puts
+// a name to a face). Rules, all enforced here:
+//   - crops are shown only for flagged incidents;
+//   - a purged incident shows the purge, never stale counts;
+//   - the card carries ID: UNIDENTIFIED and no name field, ever.
+// Input is the crew-status projection shape: {status, evidence:
+// {files, frames, face_crops} | null, evidence_purged}. Flagged means
+// status === "flagged" (crew_records.py).
+export function evidenceViewer(incident) {
+  const card = `<div class="evidence-id-card">ID: UNIDENTIFIED</div>`;
+  if (incident?.evidence_purged) {
+    return card + `<p class="evidence-purged">Evidence purged — no person evidence is kept.</p>`;
+  }
+  if (incident?.status !== "flagged") {
+    return card + `<p class="empty-state">Evidence crops are taken only on flagged events.</p>`;
+  }
+  const ev = incident?.evidence;
+  if (!ev || !Number.isFinite(ev.files) || ev.files <= 0) {
+    return card + `<p class="empty-state">No evidence recorded for this incident.</p>`;
+  }
+  return card + `<ul class="evidence-crops">`
+    + `<li>${ev.files} evidence file${ev.files === 1 ? "" : "s"}</li>`
+    + `<li>${ev.frames ?? 0} flagged/investigation frames</li>`
+    + `<li>${ev.face_crops ?? 0} face crops</li></ul>`;
+}

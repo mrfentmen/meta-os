@@ -29,6 +29,7 @@
     <a href="#board-lab">Lab</a>
     <a href="#board-hortus">Hortus</a>
     <a href="#board-gate">Gate</a>
+    <a href="#board-evidence">Evidence</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -45,9 +46,14 @@
     <p>Delaney gate state, read from the gate directory's files (gates/delaney/manifest.json).</p>
     <div id="gate-content" aria-live="polite">Loading…</div>
   </section>
+  <section class="board-section" id="board-evidence" aria-labelledby="board-evidence-heading">
+    <h2 id="board-evidence-heading">Evidence viewer</h2>
+    <p>Flagged-incident evidence crops, from the live crew records (/api/crew/status). Crops exist only on flagged events; the card always reads ID: UNIDENTIFIED.</p>
+    <div id="evidence-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard, hortusChart, hortusChampion, gateStatusPage } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -64,6 +70,17 @@
     document.getElementById("gate-content").innerHTML = gateStatusPage(manifest);
   } catch {
     document.getElementById("gate-content").innerHTML = gateStatusPage(null);
+  }
+  try {
+    const res = await fetch("/api/crew/status");
+    const crew = res.ok ? await res.json() : null;
+    const flagged = (crew?.incidents ?? []).find((i) => i.status === "flagged") ?? null;
+    document.getElementById("evidence-content").innerHTML = flagged
+      ? evidenceViewer(flagged)
+      : `<p class="empty-state">No flagged incident in the live crew records.</p>`;
+  } catch {
+    document.getElementById("evidence-content").innerHTML =
+      `<p class="empty-state">Crew records unavailable.</p>`;
   }
 </script>
 </body>
