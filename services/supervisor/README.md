@@ -12,12 +12,13 @@ before it, and every other service's life is a row in its table.
 
 ## What this file is, and is not
 
-This is the **table + state machine** (B-L1-20) with the restart *fields* in
-place. The restart *policy* — how many times, how fast, when to give up — is
-B-L1-21 and lands against these fields. The state machine is complete now so
-the policy has a place to attach rather than a design to contradict.
+This is the **table + state machine** (B-L1-20) plus the **restart policy**
+(B-L1-21): how many times a service may come back, how fast, and when to give up.
+The policy was written against the state machine rather than beside it, which is
+why it found a missing edge in that machine (`STARTING → STOPPING`) instead of
+working around it.
 
-It does **not** start processes. `enter_state` records what the supervisor
+It does **not** start processes. `sup_set_state` records what the supervisor
 believes; making that belief true is the K6 fork/exec work (`services/common/sys`
 has no spawn call yet — that is a requirement on Layers 1–3, not a fact).
 Keeping the table honest first is deliberate: a supervisor that records a
@@ -69,13 +70,13 @@ STOPPED ──▶ STARTING ──▶ RUNNING ──▶ STOPPING ──▶ STOPPE
                                               └──▶ STOPPED ◀─┘
 ```
 
-The complete legal set, as `transition_legal` implements it — eleven pairs, no
+The complete legal set, as `transition_legal` implements it — twelve pairs, no
 more:
 
 | From | To |
 |---|---|
 | STOPPED | STARTING |
-| STARTING | RUNNING, FAILED |
+| STARTING | RUNNING, FAILED, STOPPING |
 | RUNNING | STOPPING, FAILED |
 | STOPPING | STOPPED, FAILED |
 | FAILED | RESTARTING, STOPPED |
@@ -89,6 +90,12 @@ Two exclusions carry the design:
 - **`STOPPED → RUNNING` does not exist.** Every start goes through `STARTING`, so
   "did it actually come up" always has an answer instead of being assumed from a
   optimistic write.
+
+`STARTING → STOPPING` was added at B-L1-21. Without it there was no legal way to
+stop a service that had not yet reported ready — the only exit from `STARTING`
+was a failure, so "stop" would have had to be spelled "crash". That was a hole in
+the machine, not a policy question, and it is recorded here rather than quietly
+widened.
 
 `sup_set_state` refuses anything outside this set with `E_STATE` and leaves the
 entry untouched. A supervisor that "fixes" a bad transition produces a table
@@ -108,6 +115,60 @@ The discipline this needs from callers: **record after acting, never before.**
 If spawn fails, the next call is `sup_set_state(slot, ST_FAILED)`, not
 `ST_RUNNING`. A state written before the fact is the bug that makes supervisors
 untrustworthy in exactly the situation they exist for.
+
+## Restart policy (B-L1-21)
+
+Policy is data on the entry, not a parallel array keyed by slot index: a second
+array would desync the moment anything moved, and the policy belongs to the
+service, not to the table.
+
+```goose
+struct ServiceEntry {
+    ...
+    policy: i64,          // RP_NEVER / RP_ON_FAIL / RP_ALWAYS
+    max_restarts: i64,    // 0 = no count limit
+    base_ms: i64,         // first backoff step
+    max_ms: i64,          // backoff ceiling, and the "this run was healthy" line
+}
+```
+
+Defaults at registration: `RP_ON_FAIL`, unlimited retries, `base_ms` 100, `max_ms`
+30 s. `RP_ALWAYS` must be asked for — restarting something that stopped on
+purpose is a loop, and a loop is the failure mode this whole section exists to
+avoid.
+
+`sup_decide` is the whole policy as a pure function of `(slot, exited_clean,
+uptime_ms)`, returning one of `RT_LEAVE` / `RT_GIVE_UP` / `RT_NOW` / `RT_AFTER
+plus a delay`. No clock, no spawn, no side effects — which is why B-L1-52 can
+test every branch on a machine with neither.
+
+| Situation | RP_NEVER | RP_ON_FAIL | RP_ALWAYS |
+|---|---|---|---|
+| clean exit | leave | leave | restart now |
+| unclean exit, budget left | give up | restart after backoff | restart after backoff |
+| unclean exit, budget spent | give up | give up | give up |
+
+Three decisions worth defending:
+
+- **The backoff doubles and caps.** A flat retry turns a service that crashes on
+  start-up into a spin loop that floods the log you would read to find the cause.
+  `sup_backoff_ms` walks `base_ms × 2ⁿ` up to `max_ms`. It is a loop, not a shift,
+  because the shift operators are not among the Goose forms verified in this file.
+- **A healthy run resets the counter.** Uptime of at least `max_ms` means a working
+  service that later failed, not a crash loop; counting those the same would spend
+  the retry budget of anything that fails once a week.
+- **Giving up leaves the entry `FAILED`, not `STOPPED`.** "Stopped" reads as a
+  decision that went well. A service that crashed out of its retry budget must stay
+  visible as failed in the health line and the audit record (B-L1-41).
+
+`sup_on_exit` is the side-effecting wrapper: it applies the decision through
+`sup_set_state` (never by assigning `state`), so every move is still one the state
+machine allowed. `sup_restart_ready` is the counterpart for a caller that cancels a
+pending restart while the backoff is still running.
+
+The supervisor never sleeps through its own backoff either: `sup_on_exit` returns
+`RT_AFTER` with the delay and the caller owns the wait, because sleeping inside the
+supervisor would block the table for every other service.
 
 ## What this needs from below
 

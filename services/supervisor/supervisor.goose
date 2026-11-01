@@ -57,6 +57,13 @@ fn state_name(s: i64) -> const u8[:] {
 let NAME_MAX: i64 = 32;
 let MAX_SERVICES: i64 = 32;
 
+// B-L1-21: restart policy lives in the entry, not in a parallel array. A second
+// array keyed by the same slot index would desync the moment anything moved
+// entries, and the policy is a property of the service, not of the table.
+let RP_NEVER: i64 = 0;       // never restart, however it exits
+let RP_ON_FAIL: i64 = 1;     // restart only after an unclean exit
+let RP_ALWAYS: i64 = 2;      // restart whatever happens, clean or not
+
 struct ServiceEntry {
     name: u8[..32],       // inline, no pointer: the entry is self-contained
     id: i64,              // kernel process id once spawned; -1 until then
@@ -66,6 +73,11 @@ struct ServiceEntry {
     restarts: i64,        // how many times this run has been restarted
     last_beat_ms: i64,    // uptime when the last heartbeat arrived
     enabled: bool,        // a disabled service is never started
+    // --- B-L1-21 ---
+    policy: i64,          // RP_*
+    max_restarts: i64,    // 0 = unlimited (capped by policy, not by count)
+    base_ms: i64,         // first backoff step
+    max_ms: i64,          // backoff ceiling; also the "quick crash" threshold
 }
 
 var table: ServiceEntry[..32];
@@ -92,6 +104,13 @@ fn sup_register(name: const u8[:], needs: i64, enabled: bool) -> i64, i64 {
     table[table_len].restarts = 0;
     table[table_len].last_beat_ms = 0;
     table[table_len].enabled = enabled;
+    // Default is RP_ON_FAIL with a 100 ms rising to 30 s: a service that crashes
+    // is retried, a service that exits cleanly is not. RP_ALWAYS has to be asked
+    // for, because restarting something that shut down on purpose is a loop.
+    table[table_len].policy = RP_ON_FAIL;
+    table[table_len].max_restarts = 0;
+    table[table_len].base_ms = 100;
+    table[table_len].max_ms = 30000;
 
     table_len++;
     return table_len - 1, CODE_OK;
@@ -135,6 +154,11 @@ fn transition_legal(from: i64, to: i64) -> bool {
     if from == ST_STOPPED && to == ST_STARTING { return true; }
     if from == ST_STARTING && to == ST_RUNNING { return true; }
     if from == ST_STARTING && to == ST_FAILED { return true; }
+    // STARTING -> STOPPING added at B-L1-21: a service that is still coming up can
+    // be told to stop (it failed to become ready, or the operator changed their
+    // mind). Without this edge there is no legal way out of STARTING except a
+    // failure, so "stop" would have had to be spelled "crash".
+    if from == ST_STARTING && to == ST_STOPPING { return true; }
     if from == ST_RUNNING && to == ST_STOPPING { return true; }
     if from == ST_RUNNING && to == ST_FAILED { return true; }
     if from == ST_STOPPING && to == ST_STOPPED { return true; }
@@ -215,6 +239,159 @@ fn sup_can_start(slot: i64) -> bool, i64 {
 //
 //   extern fn sys_spawn(image: u64, len: i64, priority: i64) -> i64;
 //   extern fn sys_kill(pid: i64) -> i32;
+//
+// ---------------------------------------------------------------------------
+// B-L1-21: restart policy
+// ---------------------------------------------------------------------------
+//
+// The question this answers: the supervisor has just been told a service exited.
+// What now? Three policies (RP_NEVER / RP_ON_FAIL / RP_ALWAYS) and one backoff.
+//
+// WHY THE BACKOFF IS EXPONENTIAL AND CAPPED
+// -----------------------------------------
+// A flat retry delay turns a service that crashes on start-up into a spin loop:
+// it burns a core and floods the log with the same failure, and the log is what
+// someone reads to find the cause. Doubling from base_ms to max_ms keeps early
+// retries fast (a transient failure recovers in a fraction of a second) and later
+// retries slow (a broken service stops competing with the services that work).
+
+let RT_LEAVE: i64 = 0;        // no restart; the exit was deliberate
+let RT_GIVE_UP: i64 = 1;      // no restart; policy says it has failed for good
+let RT_NOW: i64 = 2;          // restart immediately, no wait
+let RT_AFTER: i64 = 3;        // restart after the returned delay
+
+fn sup_set_policy(slot: i64, policy: i64, max_restarts: i64, base_ms: i64, max_ms: i64) -> i64 {
+    if slot < 0 || slot >= table_len { return E_INVAL; }
+    if policy != RP_NEVER && policy != RP_ON_FAIL && policy != RP_ALWAYS { return E_INVAL; }
+    if base_ms <= 0 || max_ms < base_ms { return E_INVAL; }
+    if max_restarts < 0 { return E_INVAL; }
+    table[slot].policy = policy;
+    table[slot].max_restarts = max_restarts;
+    table[slot].base_ms = base_ms;
+    table[slot].max_ms = max_ms;
+    return CODE_OK;
+}
+
+// Delay before attempt number `attempt` (0 = the first restart). Doubles each
+// time, capped at max_ms. Written as a loop rather than a shift because the shift
+// operators are not among the forms verified against the Goose docs, and an
+// unverified operator in the backoff is a bug that only appears under load.
+//
+// Overflow: `attempt` is bounded by max_restarts (or by the cap) before it gets
+// anywhere near i64, and the loop stops the moment it reaches max_ms, so the
+// multiply can never run away.
+fn sup_backoff_ms(slot: i64, attempt: i64) -> i64 {
+    if slot < 0 || slot >= table_len { return 0; }
+    let base = table[slot].base_ms;
+    let cap = table[slot].max_ms;
+    var d = base;
+    var i: i64 = 0;
+    while i < attempt {
+        if d >= cap { return cap; }
+        d = d * 2;
+        i++;
+    }
+    if d > cap { return cap; }
+    return d;
+}
+
+// The decision, with no side effects, so it can be replayed and tested
+// (B-L1-52) without a supervisor, a clock or a process.
+//
+// Returns (decision, delay_ms). `exited_clean` is the exit status's verdict, not
+// the caller's opinion: a signal death is not clean.
+fn sup_decide(slot: i64, exited_clean: bool, uptime_ms: i64) -> i64, i64 {
+    if slot < 0 || slot >= table_len { return RT_GIVE_UP, 0; }
+    let policy = table[slot].policy;
+
+    // A service that stayed up earns a clean slate: 30 s of uptime is a working
+    // service that later failed, not a crash loop, and counting both the same
+    // would exhaust the retry budget of anything that fails once a week.
+    var attempts = table[slot].restarts;
+    if uptime_ms >= table[slot].max_ms { attempts = 0; }
+
+    if exited_clean {
+        // Clean exit means the service chose to stop. Only ALWAYS overrides that,
+        // and it restarts at once: a clean stop has no crash to back off from.
+        if policy == RP_ALWAYS { return RT_NOW, 0; }
+        return RT_LEAVE, 0;
+    }
+
+    if policy == RP_NEVER { return RT_GIVE_UP, 0; }
+    // Always restarts anyway; on-fail restarts because the exit was unclean.
+    let limit = table[slot].max_restarts;
+    if limit > 0 && attempts >= limit { return RT_GIVE_UP, 0; }
+    return RT_AFTER, sup_backoff_ms(slot, attempts);
+}
+
+// Apply the decision to the table. Two deliberate choices here:
+//
+// 1. A clean exit walks RUNNING -> STOPPING -> STOPPED rather than jumping. The
+//    jump is not a legal transition (B-L1-20 keeps STOPPED reachable only through
+//    STOPPING), and widening the state machine to suit this one caller would cost
+//    the property that "every stop was observed". The intermediate state is real:
+//    the exit has been seen and the entry is being finalised.
+// 2. RT_GIVE_UP leaves the service in FAILED, not STOPPED. "Stopped" reads as a
+//    decision that went well; a service that crashed out of its retry budget must
+//    stay visible as failed, which is what the health line and the audit record
+//    (B-L1-41) report on.
+//
+// Returns (decision, delay_ms) exactly as decided, so the caller knows what it
+// owes the kernel: RT_AFTER means "call sup_set_state(STARTING) after delay_ms".
+fn sup_on_exit(slot: i64, exited_clean: bool, uptime_ms: i64) -> i64, i64 {
+    let decision, delay = sup_decide(slot, exited_clean, uptime_ms);
+    if slot < 0 || slot >= table_len { return decision, delay; }
+
+    if uptime_ms >= table[slot].max_ms { table[slot].restarts = 0; }
+
+    if decision == RT_LEAVE {
+        sup_walk_stopped(slot);
+        return decision, 0;
+    }
+    if decision == RT_NOW {
+        // A clean stop under RP_ALWAYS: the run was healthy, so it costs nothing.
+        // The entry goes back to STOPPED and RT_NOW tells the caller to spawn; the
+        // caller then records STARTING through the gate like every other start.
+        // Nothing is written to `state` directly here -- that would be the
+        // "record before acting" bug the state machine exists to prevent.
+        table[slot].restarts = 0;
+        sup_walk_stopped(slot);
+        return decision, 0;
+    }
+    if decision == RT_AFTER {
+        table[slot].restarts = table[slot].restarts + 1;
+        sup_set_state(slot, ST_FAILED);
+        sup_set_state(slot, ST_RESTARTING);
+        return decision, delay;
+    }
+    // RT_GIVE_UP
+    sup_set_state(slot, ST_FAILED);
+    return decision, 0;
+}
+
+// How a service that is stuck in RESTARTING gets back in: legal, and the only
+// entry point to STARTING from there. Separate from sup_on_exit so the caller can
+// release the entry if the restart is cancelled while waiting out the backoff.
+// Bring an entry to STOPPED through legal moves only. A RUNNING entry has to pass
+// through STOPPING (the machine does not allow the jump); a FAILED one goes
+// straight to STOPPED, which is legal and is how "stop retrying this" ends.
+fn sup_walk_stopped(slot: i64) -> i64 {
+    if slot < 0 || slot >= table_len { return E_INVAL; }
+    let s = table[slot].state;
+    if s == ST_STOPPED { return CODE_OK; }
+    if s == ST_RUNNING || s == ST_STARTING {
+        if sup_set_state(slot, ST_STOPPING) != CODE_OK { return E_STATE; }
+        return sup_set_state(slot, ST_STOPPED);
+    }
+    if s == ST_FAILED || s == ST_RESTARTING { return sup_set_state(slot, ST_STOPPED); }
+    return E_STATE;
+}
+
+fn sup_restart_ready(slot: i64) -> i64 {
+    if slot < 0 || slot >= table_len { return E_INVAL; }
+    if table[slot].state != ST_RESTARTING { return E_STATE; }
+    return sup_set_state(slot, ST_STARTING);
+}
 //
 // Not declared as externs in this file yet: a declaration that cannot link would
 // make the whole service unlinkable, and the shape above is a guess. It belongs in
