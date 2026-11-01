@@ -40,10 +40,18 @@ VOLUME_BUDGET_MM3 = 100_000.0
 MIN_GAP_MM = 1.0
 
 # Declared parameter ranges (stage 1 artefact class).
-FIN_HEIGHT_MM = (5.0, 40.0)
+# Widened 2026-11-01 (boss's order): at the original bounds the
+# volume rule was dead on the loop path — the largest gap-feasible
+# volume was ~95,400 mm^3 (N=13, t=2.9, H=40, base=8) against the
+# 100,000 mm^3 budget, so no feasible start could ever reach a
+# volume violation and the volume repair move could never fire.
+# Fin height 40 -> 80 and base thickness 8 -> 12 make volume-only
+# violations reachable inside the ranges (max gap-feasible volume
+# is now ~180,800 mm^3), so the rule and its repair move are live.
+FIN_HEIGHT_MM = (5.0, 80.0)
 FIN_THICKNESS_MM = (0.5, 3.0)
 FIN_COUNT = (4, 30)
-BASE_THICKNESS_MM = (2.0, 8.0)
+BASE_THICKNESS_MM = (2.0, 12.0)
 
 
 @dataclass(frozen=True)

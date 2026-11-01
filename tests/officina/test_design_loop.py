@@ -93,18 +93,46 @@ class TestLoop(unittest.TestCase):
         self.assertEqual(seen, sorted(seen, reverse=True))
         self.assertEqual(seen[-1], record["best"]["score_r_th_c_per_w"])
 
-    def test_overnight_seed_proves_second_winner(self):
-        # The overnight run's raw best fails held out on its fin gap
-        # under tolerance; the gate must skip it and prove the next
-        # winner instead of exporting an unproven design.
+    def test_overnight_seed_proves_a_winner(self):
+        # Under the original bounds this seed's raw best failed
+        # held out and the gate proved the second winner. The
+        # 2026-11-01 bounds widening (fin height 40 -> 80, base
+        # 8 -> 12) changed the sampled space: the raw best now
+        # proves on the first attempt. The skip behaviour itself
+        # is pinned deterministically by the next test.
         record = run_loop(240, 20261101)
         selection = select_proven(record)
         self.assertIsNotNone(selection["proven_best"])
         self.assertTrue(selection["verification"]["proven"])
-        self.assertEqual(len(selection["attempts"]), 2)
-        self.assertGreater(
+        self.assertEqual(len(selection["attempts"]), 1)
+        self.assertEqual(
             selection["proven_best"]["score_r_th_c_per_w"],
             record["best"]["score_r_th_c_per_w"],
+        )
+
+    def test_select_proven_skips_unproven_raw_best(self):
+        # The gate must skip a raw best that fails held out and
+        # prove the next winner instead of exporting an unproven
+        # design. Constructed record: the raw best is feasible as
+        # drawn but its fin gap falls below minimum under the
+        # held-out thickness tolerance; the second winner proves.
+        raw_best = HeatsinkParams(30.0, 0.69, 30, 4.0)
+        robust = HeatsinkParams(30.0, 1.0, 20, 4.0)
+        record = {"winners": [
+            {"params": raw_best.as_dict(),
+             "score_r_th_c_per_w": simulate(raw_best).r_th_c_per_w},
+            {"params": robust.as_dict(),
+             "score_r_th_c_per_w": simulate(robust).r_th_c_per_w},
+        ]}
+        selection = select_proven(record)
+        self.assertEqual(len(selection["attempts"]), 2)
+        self.assertFalse(selection["attempts"][0]["proven"])
+        self.assertTrue(selection["verification"]["proven"])
+        self.assertEqual(
+            selection["proven_best"]["params"], robust.as_dict())
+        self.assertGreater(
+            selection["proven_best"]["score_r_th_c_per_w"],
+            record["winners"][0]["score_r_th_c_per_w"],
         )
 
     def test_export_never_claims_unproven(self):

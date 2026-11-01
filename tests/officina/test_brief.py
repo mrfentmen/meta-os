@@ -220,10 +220,14 @@ class TestGapVolumeHeadroom(unittest.TestCase):
     # the grade, not stall and not climb height only.
 
     def test_gap_headroom_move_fires_and_improves(self):
-        # Height capped at 40, add fins gap-blocked (gap would be
-        # 0.667 mm), target 1.4 below the stall-point grade: the
-        # old loop had no improving move here.
-        brief = parse_rough_words("heatsink under 1.4 degrees per watt")
+        # Height capped at 40 by the brief's stated bound, add fins
+        # gap-blocked (gap would be 0.667 mm), target 1.4 below the
+        # stall-point grade: the old loop had no improving move
+        # here. (The stated bound matters since 2026-11-01: the
+        # artefact range now runs to 80 mm, so the cap comes from
+        # the brief, not the range.)
+        brief = parse_rough_words(
+            "heatsink no taller than 40mm under 1.4 degrees per watt")
         brief["parameters"].update({
             "fin_height_mm": 40.0, "fin_thickness_mm": 2.0,
             "fin_count": 17, "base_thickness_mm": 8.0})
@@ -248,17 +252,45 @@ class TestGapVolumeHeadroom(unittest.TestCase):
         self.assertTrue(record["proven"])
 
     def test_volume_move_returns_thin_base(self):
-        # Function-level pin: under the current bounds the loop
-        # cannot reach volume repair from a feasible start (the
-        # largest gap-feasible volume is about 92,000 mm^3
-        # against a 100,000 budget), so this tests the move
-        # itself, not a loop path — and says so.
+        # Function-level pin for the move itself; the loop path
+        # is pinned by TestVolumeRepairReachable below.
         brief = parse_rough_words("heatsink")
         brief["parameters"]["base_thickness_mm"] = 8.0
         changes, reason = _volume_move(
             brief, {"violations": ["volume above budget"]})
         self.assertEqual(changes, {"base_thickness_mm": 7.0})
         self.assertIn("volume", reason)
+
+
+class TestVolumeRepairReachable(unittest.TestCase):
+    # Bounds widening, 2026-11-01 (boss's order): at the original
+    # bounds (fin height <= 40, base <= 8) the largest gap-feasible
+    # volume was ~95,400 mm^3 against the 100,000 budget, so no
+    # in-range start could ever reach a volume violation and the
+    # volume repair move could never fire on the loop path. With
+    # fin height <= 80 and base <= 12 it can, and this pins a full
+    # loop run that uses it: an in-range start whose only
+    # violation is volume is repaired by thinning the base and
+    # ends proven. Run record: runs/volume-repair-run-001.json.
+
+    def test_volume_repair_fires_and_proves(self):
+        start = simulate(HeatsinkParams(
+            fin_height_mm=48.0, fin_thickness_mm=2.5,
+            fin_count=12, base_thickness_mm=12.0))
+        self.assertFalse(start.feasible)
+        self.assertTrue(any("volume" in v for v in start.violations))
+        self.assertFalse(any("gap" in v for v in start.violations))
+        brief = parse_rough_words("heatsink")
+        brief["parameters"].update({
+            "fin_height_mm": 48.0, "fin_thickness_mm": 2.5,
+            "fin_count": 12, "base_thickness_mm": 12.0})
+        record = iterate_brief(brief)
+        rules = [e["rule"] for e in record["brief"]["decision_log"]]
+        self.assertIn("volume repair", rules)
+        self.assertTrue(record["proven"])
+        self.assertTrue(record["final_grade"]["feasible"])
+        self.assertEqual(
+            record["final_params"]["base_thickness_mm"], 10.0)
 
 
 if __name__ == "__main__":
