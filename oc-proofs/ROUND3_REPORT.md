@@ -365,3 +365,44 @@
 - NC-214: oc-proofs/failure-museum/ (5 worst + notes).
 - NC-215: cap never approached ($0.92 of $20). Not triggered.
 - NC-216: round TOTAL live spend: $0.92.
+
+## Section Q — Final sweep (NC-195..NC-200) — in progress
+
+- NC-195: suite table on the final state (pending pristine-main
+  comparison run for attribution).
+- NC-196: lane audit — round-3 commits touch ONLY labs/,
+  hortus-rung3/, oc-proofs/, and report/proof files. The only
+  out-of-lane paths on the branch diff are round-1 artifacts that
+  predate the lanes (design/* viewer + one .sdf MIME line in
+  server/server.mjs, plus the Q-merge conflict resolution keeping
+  main's .jsonl line alongside it). Zero protected paths touched by
+  any round-3 commit (verified per-commit, clean).
+- NC-198: footage total 255.0 s across all branch clips.
+
+## Section Q — Final sweep (NC-195..NC-200) — DONE
+
+- NC-195 final table (merged tip 78f9a4f): node 2107 run / 2044 pass /
+  63 fail; cargo 1412/0; custos 111/111; officina 49/49; labs 32/32.
+  Against NC-009 baselines: node grew +108 tests (Musica merge),
+  failures 56→63. The +7 are exactly the merge message's open
+  science-registration js-side asserts (products.js gained the
+  scienceLab entry; trio-only asserts fail) — Hana's lane, recorded,
+  not fixed. Pristine-main comparison run confirms identical 66→63
+  family (mirror fix accounts for the delta). No failure is mine:
+  round-3 commits touch only labs/, hortus-rung3/, oc-proofs/.
+- NC-196 lane audit: round-3 range clean (labs/hortus-rung3/oc-proofs
+  + reports only); branch-vs-main outliers are round-1 artifacts
+  (design/*, one .sdf MIME line) predating the lanes — stated, not
+  repaired.
+- NC-197: this report now summarizes all 18 sections A–R (grep
+  "## Section" shows A–R present; Q is this section).
+- NC-198: footage total 255.0 s across all branch clips.
+- NC-199 headline block:
+  TASKS DONE: A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R (216/216 attempted;
+  blocked items recorded, not claimed).
+  BLOCKED: science-lab branch never pushed (G/H affected sections note
+  it); OS image never delivered (H/E); offline drills need sudo;
+  8 PM test awaits the boss; 3 medicus frames unassessed (transport
+  502s); 7 science-registration asserts are crew follow-ups.
+  TOTAL LIVE SPEND: $0.92 of the $20 Section R cap.
+- NC-200: STOP. No end-to-end test, no OpenScreen, no new sections.
