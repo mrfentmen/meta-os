@@ -59,7 +59,12 @@ import {
   firesToGeoJson,
 } from "./command-layers.js";
 import { PRODUCT_BY_ID } from "./products.js";
-import { loopFeedItems, loopIncidentItems, loopStatusText } from "./command-loop.js";
+import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbonText, flagTier } from "./command-loop.js";
+import { createDelayedIndicator, errorClassFor } from "./loading.js";
+import { prefersReducedMotion } from "./motion.js";
+import { isDemoMode } from "./demo.js";
+import { formatTimeWithZone } from "./timefmt.js";
+import { saveSelection, loadSelection, resolveSelection } from "./restore.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
 
@@ -105,9 +110,15 @@ const els = {
   activityCount: $("cmd-activity-count"),
   loopStatus: $("cmd-loop-status"),
   loopFeed: $("cmd-loop-feed"),
+  ribbon: $("cmd-ribbon"),
+  demoBanner: $("demo-banner"),
   overlay: $("cmd-search-overlay"),
   ksearch: $("cmd-ksearch"),
   kresults: $("cmd-kresults"),
+  searchOpen: $("cmd-search-open"),
+  helpOverlay: $("cmd-help-overlay"),
+  helpOpen: $("cmd-help-open"),
+  helpClose: $("cmd-help-close"),
   captureCanvas: $("cmd-capture-canvas"),
   sysBackend: $("cmd-sys-backend"),
   sysEndpoint: $("cmd-sys-endpoint"),
@@ -143,6 +154,10 @@ const state = {
   onlineCount: 0,
   query: "",
   focusedId: null,
+  restored: false, // HN-023: session restore attempted once per load
+  searchReturnFocus: null, // HN-019: element to refocus when search closes
+  helpReturnFocus: null, // HN-019: element to refocus when help closes
+  pinReturnFocus: null, // HN-019: element to refocus when the pin card closes
   watch: new WatchList(MAX_WATCHED),
   queue: new IncidentQueue(),
   camState: new Map(), // id -> { flagged, flagByProduct, lastCategory, lastProduct, lastFlagged, lastAt, lastResult, phase, reviewed, errorNote }
@@ -174,9 +189,10 @@ function cacheBust(url) {
 }
 
 function fmtTime(value) {
-  const d = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) return typeof value === "string" ? value : "";
-  return d.toLocaleTimeString([], { hour12: false });
+  // HN-024: delegates to timefmt so every call site (loop times,
+  // alert meta, viewer-updated, wall refresh, search results, pin
+  // meta) renders the viewer's zone with the zone named.
+  return formatTimeWithZone(value);
 }
 
 // Division (product) display helpers. One system, three divisions:
@@ -237,6 +253,21 @@ async function getBridge() {
 async function loadCameras() {
   let list = null;
   let live = false;
+  // Loading row (HN-013): appears only if the list is still
+  // loading past 300 ms, so fast loads never flicker and slow
+  // loads never look frozen.
+  const loading = createDelayedIndicator({
+    show: () => {
+      const row = document.createElement("p");
+      row.className = "note cmd-loading";
+      row.textContent = "Loading cameras…";
+      els.cameraList.appendChild(row);
+    },
+    hide: () => {
+      for (const row of els.cameraList.querySelectorAll(".cmd-loading")) row.remove();
+    },
+  });
+  loading.start();
   // The NYCTMC API sends no Access-Control-Allow-Origin header, so a
   // direct browser fetch is blocked by CORS: try the app server's
   // same-origin proxy first, then the direct API (still useful where
@@ -263,6 +294,7 @@ async function loadCameras() {
     list = FALLBACK_CAMERAS.map(normalizeCamera).filter(Boolean);
     state.usingFallback = true;
   }
+  loading.settle();
   state.cameras = list;
   state.byId = new Map(list.map((cam) => [cam.id, cam]));
   state.onlineCount = list.length;
@@ -833,8 +865,8 @@ function renderList() {
   }
   if (filtered.length === 0) {
     const note = document.createElement("p");
-    note.className = "note";
-    note.textContent = "No cameras match the filter.";
+    note.className = "note empty-state";
+    note.textContent = "No cameras match the filter. Clear the filter to see the full loaded list again.";
     els.cameraList.appendChild(note);
   }
 }
@@ -860,6 +892,17 @@ function selectCamera(id, { pan = false, openCard = false } = {}) {
   if (!cam) return;
   const previous = state.focusedId;
   state.focusedId = id;
+  // HN-023: persist the selection pointer (records, not memory).
+  // On reload, maybeRestore validates it against the fresh
+  // camera list and crew incidents before reselecting.
+  const entry = state.camState.get(id);
+  const open = state.queue.openForCamera(id);
+  saveSelection(localStorage, {
+    cameraId: id,
+    category: open?.category ?? entry?.lastCategory ?? null,
+    priority: open?.priority ?? null,
+    at: Date.now(),
+  });
   els.inspName.textContent = cam.name;
   els.inspMeta.textContent = `${cam.area} · ${cam.latitude.toFixed(5)}, ${cam.longitude.toFixed(5)} · NYC DOT test feed`;
   els.viewerImg.hidden = false;
@@ -920,6 +963,7 @@ function toggleWatch(id) {
 function openPinCard(id) {
   const cam = state.byId.get(id);
   if (!cam) return;
+  state.pinReturnFocus = rememberFocus();
   els.pinCard.hidden = false;
   els.pinCardImg.src = cacheBust(cam.imageUrl);
   els.pinCardName.textContent = cam.name;
@@ -927,6 +971,7 @@ function openPinCard(id) {
   updatePinCardChip(id);
   updateWatchButtons();
   positionPinCard();
+  els.pinCardClose.focus();
 }
 
 function updatePinCardChip(id) {
@@ -1463,8 +1508,8 @@ function renderWall() {
   }
   if (state.watch.size === 0) {
     const empty = document.createElement("p");
-    empty.className = "note cmd-wall-empty";
-    empty.textContent = "No watched cameras yet — select a camera and choose Watch.";
+    empty.className = "note cmd-wall-empty empty-state";
+    empty.textContent = "No watched cameras yet. This wall shows watched cameras' live snapshots. Select a camera and choose Watch to fill it.";
     els.wall.appendChild(empty);
   }
   for (const feed of WALL_FEEDS) {
@@ -1557,17 +1602,84 @@ function renderActivity() {
 // (crew not running on this stack, or the page is hosted without
 // the app server), the panel says so and keeps polling — it never
 // invents crew activity.
+// HN-023: restore the saved selection once per load. Skipped
+// when the operator already picked a camera (their live choice
+// wins over the saved pointer) and while cameras are still
+// loading (the next poll retries). A stale pointer restores
+// nothing — resolveSelection returns null for unknown cameras.
+function maybeRestore(payload) {
+  if (state.restored) return;
+  if (state.focusedId) {
+    state.restored = true;
+    return;
+  }
+  if (state.cameras.length === 0) return;
+  const saved = loadSelection(localStorage);
+  state.restored = true;
+  if (!saved) return;
+  const resolved = resolveSelection(saved, state.cameras.map((c) => c.id), payload?.incidents);
+  if (!resolved) return;
+  selectCamera(resolved.cameraId);
+}
+
 async function refreshLoopFeed() {
+  // Loading line (HN-013): replaces the stale status only if the
+  // poll is still pending past 300 ms.
+  const loading = createDelayedIndicator({
+    show: () => { els.loopStatus.textContent = "Loading crew status…"; },
+    hide: () => {},
+  });
+  loading.start();
   let payload;
   try {
     const res = await fetch("/api/crew/status", { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     payload = await res.json();
-  } catch {
+  } catch (err) {
+    loading.settle();
     els.loopStatus.textContent = loopStatusText({ unreachable: true });
+    if (els.ribbon) els.ribbon.hidden = true;
+    // Error state (HN-014): a retry control plus the REAL error
+    // class (network / http / invalid) — never a generic failure
+    // line, and never a fabricated status. Success clears the row.
+    const li = document.createElement("li");
+    li.className = "note";
+    const retry = document.createElement("button");
+    retry.type = "button";
+    retry.className = "cmd-retry";
+    const kind = errorClassFor(err);
+    retry.textContent = `Retry (error: ${kind})`;
+    retry.setAttribute("aria-label", `Retry loading crew status, last error ${kind}`);
+    retry.addEventListener("click", () => {
+      li.remove();
+      refreshLoopFeed();
+    });
+    li.appendChild(retry);
+    els.loopFeed.textContent = "";
+    els.loopFeed.appendChild(li);
     return;
   }
+  loading.settle();
   els.loopStatus.textContent = loopStatusText(payload);
+  // Crew-board live ribbon (HN-011): the newest incident from this
+  // same payload — the crew's live store, not a second source.
+  // No incidents recorded means no ribbon, never a placeholder.
+  const ribbon = ribbonIncident(payload);
+  if (els.ribbon) {
+    if (ribbon) {
+      els.ribbon.hidden = false;
+      els.ribbon.textContent = ribbonText(ribbon);
+      const tier = flagTier(ribbon.division, ribbon.category);
+      els.ribbon.className = "cmd-ribbon" + (tier ? ` cmd-ribbon--${tier}` : "");
+    } else {
+      els.ribbon.hidden = true;
+    }
+  }
+  // Session restore (HN-023): once per load, on the first
+  // successful crew fetch, reselect the saved camera — validated
+  // against the loaded cameras and this payload's incidents, so
+  // the restored view renders from fresh records, not stale memory.
+  maybeRestore(payload);
   // Events first, then the crew's incidents with their recorded
   // evidence, BOLO + visible marks, and yellow/red tier — the
   // projection the endpoint carries but the feed used to drop.
@@ -1575,8 +1687,8 @@ async function refreshLoopFeed() {
   els.loopFeed.textContent = "";
   if (items.length === 0) {
     const li = document.createElement("li");
-    li.className = "note";
-    li.textContent = "No crew events recorded yet.";
+    li.className = "note empty-state";
+    li.textContent = "No crew events recorded yet. This feed shows the agent crew's patrol, review, investigation, and response activity. It fills once the crew has run on this stack.";
     els.loopFeed.appendChild(li);
     return;
   }
@@ -1660,6 +1772,7 @@ function renderKResults() {
 }
 
 function openSearch() {
+  state.searchReturnFocus = rememberFocus();
   els.overlay.hidden = false;
   els.ksearch.value = "";
   renderKResults();
@@ -1668,6 +1781,30 @@ function openSearch() {
 
 function closeSearch() {
   els.overlay.hidden = true;
+  restoreFocus(state.searchReturnFocus);
+  state.searchReturnFocus = null;
+}
+
+// Focus return (HN-019): overlays and cards remember the element
+// that opened them and give focus back on close, so a keyboard
+// walk never strands the operator at the document body. Walk
+// order is DOM order, which matches visual order here: topbar,
+// left rail, right rail, wall, pin card, then the overlays (which
+// take focus on open and return it on close). No positive
+// tabindex exists anywhere in this view.
+function rememberFocus() {
+  const el = document.activeElement;
+  return el instanceof Element ? el : null;
+}
+
+function restoreFocus(el) {
+  if (el && el.isConnected && typeof el.focus === "function") el.focus();
+}
+
+function closeHelp() {
+  els.helpOverlay.hidden = true;
+  restoreFocus(state.helpReturnFocus);
+  state.helpReturnFocus = null;
 }
 
 // ---------------------------------------------------------------- map modes + AI focus
@@ -1768,6 +1905,9 @@ function setView(view) {
 // ---------------------------------------------------------------- init
 
 function init() {
+  // HN-022: ?demo=1 shows the persistent demo banner in both
+  // views (it is body-level and sticky); anything else stays live.
+  if (isDemoMode(window.location.search)) els.demoBanner.hidden = false;
   setView("command");
   initMap();
   for (const kind of ["pointerdown", "wheel", "touchstart"]) {
@@ -1806,6 +1946,8 @@ function init() {
   });
   els.pinCardClose.addEventListener("click", () => {
     els.pinCard.hidden = true;
+    restoreFocus(state.pinReturnFocus);
+    state.pinReturnFocus = null;
   });
   els.assessNow.addEventListener("click", () => {
     if (state.focusedId) void assessCamera(state.focusedId);
@@ -1857,6 +1999,8 @@ function init() {
       else closeSearch();
     } else if (event.key === "Escape" && !els.overlay.hidden) {
       closeSearch();
+    } else if (event.key === "Escape" && els.helpOverlay && !els.helpOverlay.hidden) {
+      closeHelp();
     }
   });
   els.ksearch.addEventListener("input", renderKResults);
@@ -1871,7 +2015,26 @@ function init() {
     if (event.target === els.overlay) closeSearch();
   });
 
-  setInterval(refreshWallSrcs, 15000);
+  // Keyboard map (HN-015): search and shortcuts are visible
+  // buttons too, never keyboard-only. The help overlay lists every
+  // keyboard feature in the view — the search three — and closes
+  // by button, by backdrop click, or by Esc.
+  if (els.searchOpen) els.searchOpen.addEventListener("click", openSearch);
+  if (els.helpOpen) els.helpOpen.addEventListener("click", () => {
+    state.helpReturnFocus = rememberFocus();
+    els.helpOverlay.hidden = false;
+    els.helpClose.focus();
+  });
+  if (els.helpClose) els.helpClose.addEventListener("click", closeHelp);
+  if (els.helpOverlay) els.helpOverlay.addEventListener("click", (event) => {
+    if (event.target === els.helpOverlay) closeHelp();
+  });
+
+  // Reduced motion (HN-017): the wall does not auto-cycle its
+  // snapshots when the viewer asked for reduced motion. It still
+  // loads once, and reselecting a camera refreshes it. The loop
+  // feed keeps polling — live data, not animation.
+  if (!prefersReducedMotion()) setInterval(refreshWallSrcs, 15000);
   refreshLoopFeed();
   setInterval(refreshLoopFeed, 5000);
   setInterval(() => {

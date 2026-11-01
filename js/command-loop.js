@@ -202,3 +202,38 @@ export function loopStatusText(payload) {
   }
   return `Patrol ${patrol.state ?? "unknown"} — ${counts.checks ?? 0} checks · ${counts.baseline ?? 0} baseline · ${counts.reported ?? 0} reported · ${counts.feed_errors ?? 0} feed errors · ${source}`;
 }
+
+// ---------------------------------------------------------------- crew-board live ribbon (HN-011)
+
+// The ribbon shows the newest recorded incident from the SAME
+// payload the loop feed renders — the crew's live store (GET
+// /api/crew/status incidents), never a second source. The endpoint
+// already orders newest first; the pick is defensive (max
+// created_at) so a reordered payload still ribbons the newest.
+// When the store holds no incidents there is no ribbon: an empty
+// ribbon would imply a live incident that does not exist.
+export function ribbonIncident(payload) {
+  const incidents = Array.isArray(payload?.incidents) ? payload.incidents : [];
+  let newest = null;
+  for (const incident of incidents) {
+    if (!incident || typeof incident !== "object") continue;
+    if (!newest || String(incident.created_at ?? "") > String(newest.created_at ?? "")) {
+      newest = incident;
+    }
+  }
+  return newest;
+}
+
+// One compact line for the ribbon: camera, division, category,
+// recorded status, and the display tier. Times live in the loop
+// feed rows beside it; the ribbon names the incident, not the clock.
+export function ribbonText(incident) {
+  if (!incident || typeof incident !== "object") return null;
+  const cam = incident.camera_name ?? incident.camera_id ?? "camera";
+  const div = divisionLabel(incident.division);
+  let text = `LIVE CREW INCIDENT — ${cam} · ${div}: ${incident.category ?? ""} (${incident.status ?? "unknown"})`.trim();
+  const tier = flagTier(incident.division, incident.category);
+  if (tier === "yellow") text += " · YELLOW — recorded for human review";
+  else if (tier === "red") text += " · RED — full flag chain";
+  return text;
+}

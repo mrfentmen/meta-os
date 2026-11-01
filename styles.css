@@ -1225,6 +1225,42 @@ body > .footer {
   }
 }
 
+/* HN-022 demo-mode banner: sticky, so it stays at the top of
+   the viewport in both views while scrolling; yellow on near-
+   black text measures ~7.5, past AA. */
+.demo-banner {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  background: #c9a227;
+  color: #14161a;
+  font-weight: 700;
+  text-align: center;
+  padding: 8px;
+  margin: 0;
+}
+/* HN-018 contrast pass (WCAG AA, measured in tests/contrast.test.mjs):
+   brand hexes stay pinned (tests + logo palettes assert them), so
+   only TEXT colors move — to lighter variants of the same hue.
+   Borders, backgrounds, and gradients are untouched. One pair is
+   measured short and deliberately NOT changed: the Ignis badge /
+   primary gradient's light end (#e54848) with white text measures
+   3.93 — the gradient is pinned by tests/ignis-web-theme.test.mjs
+   and no single text color passes both gradient ends, so that one
+   needs a brand call from the boss, not a silent edit. */
+body[data-product="vigiles"] .product-badge { color: #6a96d8; }
+body[data-product="vigiles"] .logo-studio-link,
+body[data-product="vigiles"] .assessment-product { color: #6a96d8; }
+body[data-product="ignis"] .logo-studio-link,
+body[data-product="ignis"] .assessment-product { color: #e85545; }
+.product-option[data-product-option="vigiles"]:has(input:checked) .product-option-name { color: #6a96d8; }
+.product-option[data-product-option="ignis"]:has(input:checked) .product-option-name { color: #e85545; }
+.status[data-state="error"],
+.camera-indicator,
+.history-error .history-head strong { color: #e07068; }
+body[data-product="vigiles"] .btn-primary:not(:disabled) { color: #02131c; }
+body[data-product="medicus"] .btn-primary:not(:disabled) { color: #02131c; }
+
 /* Medicus ops-console pass (Del UI direction, Oct 29): modern, elite,
    professional dispatch-console feel, scoped to
    body[data-product="medicus"] only. Additive sharpness on top of the
@@ -1626,7 +1662,7 @@ body[data-view="command"] > main { display: none; }
   letter-spacing: 0.06em;
   text-transform: uppercase;
   text-align: center;
-  color: rgba(210, 230, 240, 0.45);
+  color: rgba(210, 230, 240, 0.66);
 }
 .cmd-step::before {
   content: "";
@@ -1763,11 +1799,19 @@ body[data-view="command"] > main { display: none; }
 }
 .cmd-kresult:hover { border-color: var(--cmd-line); }
 .cmd-kresult-sub { font-size: 10px; opacity: 0.65; }
+.cmd-help-list { margin: 8px 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.cmd-help-list kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--cmd-line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; background: rgba(83, 200, 255, 0.08); }
 
 /* Loop feed: the agent crew's recorded activity (patrol checks,
    review verdicts, incident reports, SIMULATED dispatch receipts),
    polled from /api/crew/status. Text rows only — the feed reports
    what the crew recorded; it renders no state of its own. */
+.cmd-ribbon { margin: 0 0 6px; padding: 8px 10px; border: 1px solid var(--cmd-line); background: rgba(83, 200, 255, 0.08); font-size: 12px; font-weight: 700; }
+.empty-state { border-left: 2px solid var(--panel-border); padding-left: 8px; }
+.cmd-loading { font-style: italic; }
+.cmd-retry { margin-top: 4px; }
+.cmd-ribbon--yellow { color: #ffe27a; border-color: rgba(255, 226, 122, 0.5); }
+.cmd-ribbon--red { color: #ffb3ab; border-color: rgba(255, 179, 171, 0.5); }
 .cmd-loop-feed { list-style: none; margin: 6px 0 0; padding: 0; max-height: 260px; overflow-y: auto; }
 .cmd-loop-item {
   display: flex;
@@ -1790,6 +1834,38 @@ body[data-view="command"] > main { display: none; }
   .cmd-wall-panel { left: auto; right: auto; }
   .cmd-activity { position: static; }
   .cmd-pin-card { position: absolute; }
+}
+
+/* HN-016 mobile pass (390 px): the 1150 px rules already stack the
+   floats; this block finishes the phone width — the camera wall
+   stacks vertically instead of scrolling sideways, every tap target
+   reaches 44 px, and nothing overflows the viewport width. Layout
+   is asserted by rule tests; a real-device 390 px check stays owed
+   at gate (no browser runs in this sandbox). */
+@media (max-width: 480px) {
+  .command-view { overflow-x: clip; }
+  .cmd-map { height: 300px; }
+  .cmd-wall { flex-direction: column; overflow-x: visible; }
+  .cmd-tile { flex: 1 1 auto; }
+  .cmd-tile img { height: auto; aspect-ratio: 16 / 9; }
+  .command-view button,
+  .command-view input,
+  .command-view select { min-height: 44px; }
+  .command-view .cmd-sys-value { overflow-wrap: anywhere; }
+  main button,
+  main input,
+  main select { min-height: 44px; }
+  main { overflow-x: clip; padding: 8px; }
+  .maplibregl-ctrl button { min-height: 44px; min-width: 44px; }
+}
+
+/* HN-017 reduced motion: CSS pulses and bar transitions stop for
+   viewers who asked for reduced motion. The ASCII canvas stops
+   itself (js/logo-background.js gates its animation frame), and
+   the wall interval is gated in js/command-map.js init. */
+@media (prefers-reduced-motion: reduce) {
+  .cmd-pin--fast, .cmd-pin--slow, .cmd-step--current .cmd-step-dot { animation: none; }
+  .cmd-bar span { transition: none; }
 }
 /* OPS-CONSOLE-1 (Del UI direction, Oct 29): first web-first
    modern/elite/professional dispatch/ops-console piece for Ignis.
