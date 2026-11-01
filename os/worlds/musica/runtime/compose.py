@@ -169,7 +169,11 @@ def run_session(session_dir, brief_id, brief_text, params, takes,
 
     With resume=True an existing log is continued after its last
     take; without resume an existing log refuses to run (never
-    silently overwrite a session). Returns the new take records.
+    silently overwrite a session). A take killed between render and
+    log-append leaves an orphaned WAV; resume re-renders that take
+    number deterministically (same seed, same bytes) and logs it
+    once, so no take is lost or duplicated. Returns the new take
+    records.
     """
     os.makedirs(session_dir, exist_ok=True)
     log_path = os.path.join(session_dir, "take_log.jsonl")
