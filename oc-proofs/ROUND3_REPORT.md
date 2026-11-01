@@ -277,3 +277,19 @@
   UNIDENTIFIED enforced, no personal paths in own files.
 - NC-159 not triggered. Full table: oc-proofs/safety-audit.md.
 - NC-160: this summary.
+
+## Section O — Data-prep tooling (NC-171..NC-184) — DONE
+
+- NC-171/172 DONE. extract.py + 5 s synthetic fixture → 10 ordered
+  frames at 2 fps.
+- NC-173 DONE. Scene mode: static 1 frame vs busy 16 (threshold 12).
+- NC-174/175 DONE. Contact sheet 4x3, labels viewed legible.
+- NC-176/177 DONE. dHash dedupe: 3 wild originals + copies → 3 groups
+  (fixture fixed twice: near-identical testsrc frames and flat colors
+  collide by design — the tool is honest, the fixture was weak).
+- NC-178/179 DONE. Flip flagged, other scene not (plus a real bug
+  found: --aug compared unflipped hashes; fixed).
+- NC-180/181 DONE. Manifest with content-derived groups; delete +
+  re-run reports GAP, no renumber.
+- NC-182 DONE. 19.2 fps extract, 120.3 fps hash.
+- NC-183 DONE (README). NC-184: this summary. Suite 6/6.
