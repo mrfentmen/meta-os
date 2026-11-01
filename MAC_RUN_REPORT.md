@@ -42,10 +42,11 @@ key was never printed, logged, committed, or written into the repo.
   `dynamic_credentials` from `/opt/muse/skills/custom-connector-setup/bin`,
   which does not exist on this Mac. Ran the suite with
   `PYTHONPATH=/tmp/queue-shim` pointing at a shim module whose three
-  functions raise a clear "connector toolchain absent" error unless
-  mocked. All 90 tests pass against the local SQLite fallback or
-  with mocked credentials; nothing touched credentials. The shim
-  lives in /tmp and is not committed.
+  functions raise a clear "connector toolchain absent" error when
+  called. All 90 tests pass against the local SQLite fallback, with
+  credential calls answered only by that throwaway local shim;
+  nothing touched a real credential. The shim lives in /tmp and is
+  not committed.
 
 ## 4. Stack up (manual bring-up; script bug noted)
 
