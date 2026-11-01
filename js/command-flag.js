@@ -34,6 +34,13 @@ export const BASELINE_CATEGORIES = {
   vigiles: ["normal activity", "indeterminate"],
   ignis: ["no hazard visible", "steam or fog", "flame-like lighting", "indeterminate"],
   medicus: ["normal activity", "indeterminate"],
+  // Science Lab is not a camera/incident product: its categories are
+  // evidence levels, not scene types (js/products.js). Level 0 (an
+  // idea with no evidence behind it) is the only non-flagging level,
+  // analogous to indeterminate; levels 1-6 are recorded claims and
+  // surface through the flag rule at LOW priority (no
+  // CATEGORY_PRIORITY entry), never as a dispatch incident.
+  "science-lab": ["level 0: idea"],
 };
 
 const BASELINE_SETS = Object.fromEntries(
