@@ -361,3 +361,110 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
 - OS-180: this summary. Workarounds used: file-based requests
   (no brace literals), busy-wait sleep (no sleep builtin),
   convention-level isolation (runtime enforcement later).
+
+## Section O — The shell (OS-205..OS-216) — DONE
+
+- OS-205: shell-screen.md (banner + machine-readable twin). DONE.
+- OS-206: K2 banner already on the console (Section B proof).
+- OS-207: `status` → tasks/ticks/heap_free (7/1074/31K live).
+- OS-208: `STATUS tasks=7 ticks=1074 heap_free_kb=31` agent twin.
+- OS-209: `help` lists status + help. DONE (O-shell.txt).
+- OS-210: every command has its boot-log line (status, help,
+  unknown x2, truncated). DONE.
+- OS-211: bogus refused + help; empty ignored; 100-char line
+  truncated to 80 with a marker. DONE (O-shell2.txt).
+- OS-212: O-shell.png screendump. Cosmetic known: echo and
+  uptime share the writer without line discipline, so typed
+  input interleaves mid-row with uptime lines — readable, not
+  pretty; a line discipline is a follow-up, not a claim.
+- OS-213/214: walkthrough-user.md + walkthrough-agent.md. DONE.
+- OS-215: shell-not-built.md (editing, history, completion,
+  colors, scrollback — named NOT BUILT). DONE.
+- OS-216: this summary. NOTE: heap shows 31K free with 7 tasks
+  (7x16K stacks) — fits today, but task 8+ or bigger binaries
+  need a bigger heap or frame-backed stacks. Follow-up, stated.
+
+## Section M — MCP wiring (OS-181..OS-192) — DONE
+
+- OS-181: inventory in os-build/mcp/WIRING.md (goose/lobster live,
+  rust-docs pattern-not-artifact, shell+files for fs/git). DONE.
+- OS-182: repo artifact created (mcp/backends/*.json + WIRING.md
+  + smoke log) — nothing copied, the "existing rustdocs" was
+  gateway practice, stated. DONE.
+- OS-183/184: goose + lobster doc MCPs are the best case and are
+  wired (client config + backend descriptors). DONE.
+- OS-185: filesystem + git via shell/file tools, smoke in the
+  log. DONE.
+- OS-186: WIRING.md. OS-187: rule card inside it. DONE.
+- OS-188: two named cases (host.goose json API; agent-call
+  launch_subprocess form — both first-try green because of the
+  docs lookups). DONE.
+- OS-189: no repo gateway rebuilt; restart pointer recorded. DONE.
+- OS-190: crew summary in WIRING.md. DONE.
+- OS-191: smokes re-run at the end (toolchain_status FOUND both,
+  counts verified). DONE (smoke-2026-11-01.log).
+- OS-192: this summary. Pushing with N/O/P.
+
+## Section N — Boot and test pipeline (OS-193..OS-204) — DONE
+
+- OS-193: os-build/boot-test.sh (userspace per-base builds +
+  kernel + one QEMU boot + greps + goose + lobster). DONE.
+- OS-194: os-build/expected/K-all.txt. DONE.
+- OS-195: loud-failure proof: with a bogus line appended to
+  K-all.txt the pipeline FAILs that group and exits nonzero;
+  line removed after (recorded in flakes-adjacent note below).
+- OS-196: QMP screendump beside the serial log every pipeline
+  run (pipeline-screen.ppm). DONE.
+- OS-197: clean-clone drill runs in Section Q (same event as
+  OS-229/237 — one clone, timed, reported there).
+- OS-198: userspace proofs are pipeline steps 1-3 (built, then
+  proven in-boot). DONE.
+- OS-199: os-build/README.md documents the one command. DONE.
+- OS-200: os-build/logs/flakes.txt (every run appends; zero
+  entries would need runs to back it — the runs are in).
+- OS-201: pipeline runs the Goose suite. OS-202: lobster outputs
+  are grepped for expected strings, not just produced. DONE.
+- OS-203: the final run's output goes verbatim into the Section
+  Q block. OS-204: this summary.
+
+## Section P — License and honesty gates (OS-217..OS-228) — DONE
+
+- OS-217: os-build/LICENSE_AUDIT.md (table, not feeling). DONE.
+- OS-218: zero GPL in the kernel closure (bootloader MIT/Apache,
+  core MIT/Apache; bootimage is a host tool). Nothing removed —
+  there was nothing to remove. DONE.
+- OS-219: clean-room grep over kernel/ for Linux tells: empty.
+  Borrowed ideas stay ideas (OS-113/116). DONE.
+- OS-220: claims audit (spot trace, 2026-11-01): K1 alive →
+  K1-boot.txt (3 runs); K2 banner/screens → K2-boot.txt +
+  K2-console.png; panic → K2-panic.png; IDT/int3/ticks/keys →
+  K3-*.txt; 16-region map → K4-boot.txt; Box/Vec/stress →
+  K4-boot.txt; guard/page faults → K4-guard.txt/K3-fault.txt;
+  double fault → K3-doublefault.txt; A/B interleave + C wake →
+  K5-boot.txt; HELLO/5 syscalls/user kill → K6-boot.txt;
+  console commands → O-shell.txt; goose 7/7 → run log; lobster
+  proofs → session logs + repo scripts; MCP smokes →
+  smoke-2026-11-01.log. Every headline claim traces to a file.
+  Untraceable leftovers: none found; the flake-prone timing
+  claims ("~20 s") are marked approximate where they appear.
+- OS-221: word check — new docs call repo apps "programs"
+  throughout; "OS" used only for the layered system. DONE.
+- OS-222: KERNEL_SPEC re-read vs the build: rule 1 (no stock
+  kernel — ours boots) ✓; rule 2 (Mac proof before claims —
+  every claim has a log) ✓; rule 3 (QEMU log per milestone —
+  K1..K6 logs exist) ✓; rule 4 (small steps — 15 branch commits
+  and counting) ✓; rule 5 (old spec stays dead — untouched) ✓;
+  rule 6 (no mocks — NOT BUILT lists in B/G/H/I/J/K/L/M/O, no
+  fake passes) ✓. No drift.
+- OS-223: the cybersecurity program stays PARKED by the boss's
+  order. Named here once, never started. DONE.
+- OS-224: unsafe ledger complete (vga/main/gdt/traps/mem/sched/
+  user + adopted interrupts/memory/tasks review). DONE.
+- OS-225: secrets sweep over all sources: zero key-shaped
+  strings (sk-/ghp/AKIA/private-key patterns + the Spark key
+  name never appears with a value). Counts: 0 real secrets.
+  DONE.
+- OS-226: honesty block — see Section Q.
+- OS-227: os-build/README.md written; the fresh-reader test
+  runs as the Section Q clean clone (stumbles recorded there).
+- OS-228: this summary.

@@ -263,6 +263,15 @@ pub fn with_mapper<R>(
     }
 }
 
+/// Heap free bytes for the status command (OS-207).
+pub fn heap_free_bytes() -> u64 {
+    unsafe {
+        match (*core::ptr::addr_of!(HEAP)).as_ref() {
+            Some(heap) => heap.free_bytes() as u64,
+            None => 0,
+        }
+    }
+}
 /// True when every page of `[start, start+len)` is currently mapped.
 /// Used to validate userspace buffers (OS-080): an unmapped byte
 /// refuses the call instead of faulting the kernel.

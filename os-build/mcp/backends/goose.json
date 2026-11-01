@@ -1,0 +1,7 @@
+{
+  "name": "goose",
+  "command": ["goose-mcp"],
+  "note": "local stdio server: Goose language docs, stdlib, samples (17 tools). Install: awesome-servers mcp/servers/goose-mcp, npm install, npm run build. Toolchain it documents: ~/mcp-servers/toolchains/goose-src (build/goose), symlinked to /opt/homebrew/bin/goose.",
+  "license": "docs: upstream Goose (Wouter van Oortmerssen); server: see package",
+  "smoke": "toolchain_status FOUND; overview/lists/symbols/samples all answered (see ../smoke-2026-11-01.log)"
+}

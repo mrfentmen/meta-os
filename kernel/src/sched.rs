@@ -301,14 +301,34 @@ fn task_c() {
     print!("C awake\n");
 }
 
-/// Console task: the K3 echo loop as a task (OS-070). Yields every
-/// pass so A/B/C run; uptime print stays here.
+/// Number of live task slots for the status command (OS-207).
+pub fn task_count() -> usize {
+    unsafe { SCHED.as_ref().map(|s| s.task_count()).unwrap_or(0) }
+}
+
+/// Console task: the K3 echo loop grown into the shell (OS-070 +
+/// O-205..O-211). Line-buffered commands with echo; `status` and
+/// `help` are real, everything else is refused with help re-listed.
 fn console_task() {
     let mut last_sec = 0u64;
+    let mut line: [u8; 80] = [0; 80];
+    let mut len = 0usize;
+    let mut truncated = false;
     loop {
         while let Some(scancode) = interrupts::keyboard_read() {
             if let Some(ch) = decode_scancode(scancode) {
-                print!("{}", ch);
+                if ch == '\n' {
+                    print!("\n");
+                    run_command(&line[..len], truncated);
+                    len = 0;
+                    truncated = false;
+                } else if len < line.len() {
+                    line[len] = ch as u8;
+                    len += 1;
+                    print!("{}", ch);
+                } else if !truncated {
+                    truncated = true;
+                }
             }
         }
         let ticks = interrupts::ticks();
@@ -318,6 +338,45 @@ fn console_task() {
             println!("uptime {}s ticks {}", sec, ticks);
         }
         yield_task();
+    }
+}
+
+/// One parsed console line (OS-207/209/211).
+fn run_command(line: &[u8], truncated: bool) {
+    if truncated {
+        println!("line too long, truncated to 80");
+    }
+    // Compare without alloc: byte slices against literals.
+    if line == b"status" {
+        let tasks = task_count();
+        let ticks = interrupts::ticks();
+        let heap_kb = crate::mem::heap_free_bytes() / 1024;
+        use crate::vga::{Color, ColorSpec};
+        // Cyan status block on screen; serial gets the same text.
+        unsafe_console_color(ColorSpec(Color::LightCyan, Color::Black));
+        println!("tasks {} ticks {} heap_free {}K", tasks, ticks, heap_kb);
+        println!(
+            "STATUS tasks={} ticks={} heap_free_kb={}",
+            tasks, ticks, heap_kb
+        );
+        unsafe_console_color(ColorSpec(Color::LightGray, Color::Black));
+    } else if line == b"help" {
+        println!("commands: status help");
+    } else if line.is_empty() {
+        // Empty line: nothing, not an error.
+    } else {
+        println!("unknown command");
+        println!("commands: status help");
+    }
+}
+
+/// Recolor the console (OS-212 deliberate look). Single CPU: the
+/// console is only touched by its own task and print macros.
+fn unsafe_console_color(spec: crate::vga::ColorSpec) {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(crate::CONSOLE)).as_mut() {
+            console.set_colors(spec);
+        }
     }
 }
 

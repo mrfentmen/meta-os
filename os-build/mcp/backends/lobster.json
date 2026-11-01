@@ -1,0 +1,7 @@
+{
+  "name": "lobster",
+  "command": ["lobster-mcp"],
+  "note": "local stdio server: Lobster language docs, builtins, samples (16 tools). Install: awesome-servers mcp/servers/lobster-mcp, npm install, npm run build. Toolchain it documents: ~/mcp-servers/toolchains/lobster-src (bin/lobster), symlinked to /opt/homebrew/bin/lobster.",
+  "license": "docs: upstream Lobster (Wouter van Oortmerssen); server: see package",
+  "smoke": "toolchain_status FOUND; overview/lists/builtins/samples all answered (see ../smoke-2026-11-01.log)"
+}
