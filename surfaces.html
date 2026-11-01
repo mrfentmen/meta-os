@@ -55,7 +55,7 @@
     <p>Delaney gate state, read from the gate directory's files (gates/delaney/manifest.json).</p>
     <div id="gate-content" aria-live="polite">Loading…</div>
   </section>
-  <section class="board-section" id="board-evidence" aria-labelledby="board-evidence-heading">
+  <section class="board-section incident-record" id="board-evidence" aria-labelledby="board-evidence-heading">
     <h2 id="board-evidence-heading">Evidence viewer</h2>
     <p>Flagged-incident evidence crops, from the live crew records (/api/crew/status). Crops exist only on flagged events; the card always reads ID: UNIDENTIFIED.</p>
     <div id="evidence-content" aria-live="polite">Loading…</div>
@@ -64,12 +64,12 @@
     <h2 id="board-tiers-heading">Tier colours audit</h2>
     <p>Yellow/red rendering audited against the display table: 31 categories across vigiles (3 yellow, 3 red), ignis (8 yellow, 5 red), medicus (4 yellow, 8 red). One fix landed: untiered incident rows no longer inherit red; red rows carry an explicit red class. Visual proof: screenshots owed at Mac gate (docs/TIER_SCREENSHOT_PACK.md).</p>
   </section>
-  <section class="board-section" id="board-bolo" aria-labelledby="board-bolo-heading">
+  <section class="board-section incident-record" id="board-bolo" aria-labelledby="board-bolo-heading">
     <h2 id="board-bolo-heading">BOLO card</h2>
     <p>Recorded-description card from the live crew records (/api/crew/status). Exactly the BOLO key set, visible marks only, ID: UNIDENTIFIED — no name field exists.</p>
     <div id="bolo-content" aria-live="polite">Loading…</div>
   </section>
-  <section class="board-section" id="board-timeline" aria-labelledby="board-timeline-heading">
+  <section class="board-section incident-record" id="board-timeline" aria-labelledby="board-timeline-heading">
     <h2 id="board-timeline-heading">Records timeline</h2>
     <p>An incident's life as one timeline from its record file, via /api/crew/status (patrol → review → investigation → dispatch in the normal life).</p>
     <div id="timeline-content" aria-live="polite">Loading…</div>
@@ -78,7 +78,7 @@
     <h2 id="board-cameras-heading">Camera wall labels</h2>
     <p>Every wall row and the pin card show their source + LIVE/TEST state in the UI itself: NYCTMC live → LIVE, offline subset → TEST. The pin card used to hardcode "test feed" for every feed, including live ones.</p>
   </section>
-  <section class="board-section" id="board-receipt" aria-labelledby="board-receipt-heading">
+  <section class="board-section incident-record" id="board-receipt" aria-labelledby="board-receipt-heading">
     <h2 id="board-receipt-heading">Dispatch receipt</h2>
     <p>The sim- receipt on the incident after a staged dispatch, via /api/crew/status, labelled SIMULATED in the view.</p>
     <div id="receipt-content" aria-live="polite">Loading…</div>

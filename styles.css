@@ -2269,3 +2269,19 @@ main > .panel {
   vertical-align: middle;
   margin-right: 8px;
 }
+
+/* HN-069 Print stylesheet: printing the boards page prints only the
+   incident record (evidence + BOLO + timeline + receipt sections).
+   Navigation, controls, and every other board are hidden; the record
+   prints black on white so it reads on paper. */
+@media print {
+  @page { margin: 1cm; }
+  .boards-nav, button, .logo-studio-link { display: none !important; }
+  .board-section:not(.incident-record) { display: none !important; }
+  .incident-record, .incident-record * {
+    color: #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .incident-record { width: 100%; margin: 0 0 1rem 0; }
+}
