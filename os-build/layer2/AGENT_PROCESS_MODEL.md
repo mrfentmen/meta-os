@@ -19,9 +19,9 @@ Sources this version is grounded in (all read on main 91dbbf5):
 kernel state on main (K1 crate UNCOMPILED, Mac boot proof
 outstanding; K2 framebuffer and K3 interrupts merged unwired at
 6c29370b; R5 wiring BLOCKED on the K1 boot log and the absent
-kernel/Cargo.lock). Lobster-side idioms are OPEN in this version
-(see §6): they are grounded in `lobster__*` on a later pass, not
-asserted from memory.
+kernel/Cargo.lock). Lobster-side idioms are grounded in §6 from
+a live lobster-mcp 1.1.0 check (2026-11-01), not asserted from
+memory; Q1/Q5/Q9 and enforcement/storage stay OPEN.
 
 ## 1. What an agent process is
 
@@ -143,17 +143,85 @@ not an add-on, and a run with missing records is not a valid run.
   cite ids a human can follow back to a start request. A trail that
   needs a special tool to be legible is not finished.
 
-## 6. What this version does NOT claim (OPEN items)
+## 6. Lobster expression (grounded 2026-11-01, live check)
 
-1. **Lobster idioms.** The layer order grounds the Lobster-side
-   idioms in `lobster__*` (lobster-mcp 1.1.0, 16 tools, committed
-   in the repo at `mcp-gateway/`). This version does not assert
-   any Lobster language fact from memory: the Lobster section —
-   how an agent process is expressed in Lobster code, and which
-   Lobster constructs map to identity, lifecycle, capability, and
-   record — is written on the next pass, against a live
-   `lobster__*` check. Until then, nothing in this document depends
-   on an unverified Lobster claim.
+Grounded in a live `lobster-mcp` 1.1.0 stdio check run on this
+VM 2026-11-01 (server reports Lobster source
+github.com/aardappel/lobster @ 6c1389c6e2, 187 sections, 879
+builtins). The committed gateway config at `mcp-gateway/`
+points at a `_del` path that does not exist on this VM; the
+check ran the same server from its actual local path
+`mcp-servers/lobster-mcp/dist/index.js`. The Lobster toolchain
+binary itself is NOT FOUND on this VM (`toolchain_status`), so
+no Lobster code was compiled or run here: what follows is a
+design mapping, not a verified program, which is consistent
+with §7 — no agent-process code exists until K6 exists.
+
+Lobster's concurrency model, verbatim in substance from the
+docs (`language_reference#45` Multi-threading,
+`language_spec#67` Threads): Lobster runs one VM per hardware
+thread, each an independent and isolated copy of the program,
+with no shared memory or VM state; communication and
+synchronisation are explicit, through a "tuple space" (a bag of
+Lobster objects used as messages) which are copied, not
+shared. Worker builtins (from `search_builtins "thread"`,
+10 matches): `start_worker_threads(numthreads)`,
+`stop_worker_threads()`, `workers_alive()`,
+`is_worker_thread()`, `thread_write(object)`,
+`thread_read(type)`, `thread_check(type)`,
+`thread_wake(type)`, `thread_information()`.
+
+Mapping to §§2–5, and where the mapping stops:
+
+- **Identity (§2): a worker thread is NOT an agent process.**
+  A worker thread is the execution vehicle: a copy of the
+  program running in isolation. The agent id, principal, and
+  origin live in Layer 2 records (§2), not in the thread. Code
+  can tell it is running as a worker via `is_worker_thread()`,
+  but that answers "am I a worker", never "which agent am I":
+  the agent id comes from the start request, as §2 requires.
+- **Lifecycle (§3): start and cooperative stop map cleanly.**
+  `start_worker_threads` is the start vehicle;
+  `stop_worker_threads` makes `workers_alive()` false inside
+  the workers, which should then exit — a cooperative clean
+  stop, matching §3's stop. There is no Lobster construct for
+  §3's failure rule: that a faulted agent ends finally with a
+  logged name and exit state is a model rule imposed by this
+  document and by K6 shape item 5, not a Lobster guarantee,
+  and the K6 failure path must supply it.
+- **Capabilities (§4): isolation is mechanical, enforcement is
+  not Lobster's.** No shared memory means an agent process
+  cannot reach another process's state at all: its only effects
+  are objects it copies out through `thread_write`. That is
+  the mechanism shape of "Layer 1 services only". But no
+  Lobster construct enforces a capability set: the set is a
+  Layer 2 record checked at the Layer 1 boundary, still OPEN
+  per §4. And one tension is explicit: Lobster's queue is a
+  general message channel, while §4 forbids agent-to-agent
+  channels in v0. Resolution: on Meta OS the queue's
+  legitimate v0 endpoints are Layer 1 services and the record
+  store, not other agents. The queue mechanism is adopted;
+  the agent-to-agent use is not.
+- **Records (§5): copy semantics support append-only.** A
+  record written with `thread_write` is a copied object: the
+  stored record is a snapshot the sending agent can no longer
+  mutate, which is exactly what §5's append-only rule needs
+  on the sender side. The store side (durability, rotation)
+  is still OPEN until a Layer 1 storage service exists.
+- **Not claimed:** coroutine behaviour (the docs mention
+  coroutines only historically, `philosophy#4`), sample
+  `threads.lobster` behaviour (not run: no toolchain), and
+  any Lobster construct beyond the builtins and sections
+  cited above.
+
+## 7. What this version does NOT claim (OPEN items)
+
+1. **Lobster idioms beyond §6.** §6 is the grounded Lobster
+   section (live lobster-mcp 1.1.0 check, 2026-11-01). Nothing
+   in this document depends on a Lobster claim outside §6;
+   coroutine behaviour, `threads.lobster` sample behaviour, and
+   any construct not cited in §6 remain unclaimed until a
+   toolchain run verifies them.
 2. **K6 wiring answers** (Q1/Q5 bootloader and task shape, Q9
    handler ABI, syscall transport): all OPEN, owned by Rowan's
    Layer 0 work and the Mac build, listed in
@@ -168,11 +236,13 @@ not an add-on, and a run with missing records is not a valid run.
    any mismatch is a design conflict to resolve in the open, not
    by either side drifting.
 
-## 7. Status path
+## 8. Status path
 
 DRAFT → DESIGNED once: (a) the Lobster section is grounded in a
-live `lobster__*` check, (b) Pax has reviewed it against the K6
-shape, and (c) Hana confirms the shell's view matches §§2–3. It
-becomes WRITTEN only when the first agent-process code exists, and
-no code exists until K6 exists. Gate-1 for this branch is Milo's
+live `lobster__*` check — DONE in §6 (2026-11-01 live check),
+(b) Pax has reviewed it against the K6 shape — PENDING, and
+(c) Hana confirms the shell's view matches §§2–3 — PENDING.
+Status stays DRAFT until (b) and (c) land. It becomes WRITTEN
+only when the first agent-process code exists, and no code
+exists until K6 exists. Gate-1 for this branch is Milo's
 standing duty, and merges go through Pax.
