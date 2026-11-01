@@ -187,15 +187,26 @@ def heldout_params(params):
     )
 
 
-def verify_proven(params, claimed_r):
+def verify_proven(params, claimed_r, design_conditions=None):
     """Independent re-score gate. Recomputes the design-condition
     score from the parameters (never trusts the claimed number),
     then re-scores under held-out conditions and tolerance
     perturbation. Proven only if: the claimed score agrees with
     the fresh computation, the design clears the bar at design
     conditions, and it stays feasible and clears the bar held out.
-    Returns a dict with every number, so a pass can be checked."""
-    fresh = simulate(params)
+    Returns a dict with every number, so a pass can be checked.
+
+    design_conditions is the conditions the design was graded
+    under (default natural convection). Callers grading under
+    other conditions — a forced-airflow brief — must pass them,
+    or the gate would re-score under the wrong conditions and
+    reject designs that pass where they were graded. The held-out
+    re-score always uses HELDOUT_CONDITIONS: for a forced-airflow
+    design that is a degraded-airflow check (h=15 against a design
+    h=25), stricter than design conditions, which is conservative,
+    not a hole."""
+    design_conditions = design_conditions or Conditions()
+    fresh = simulate(params, design_conditions)
     fresh_ok = (
         fresh.feasible
         and math.isfinite(claimed_r)

@@ -1,0 +1,31 @@
+{
+  "artefact_class": "heatsink-fin-geometry",
+  "best": {
+    "params": {
+      "fin_height_mm": 40.0,
+      "fin_thickness_mm": 1.6,
+      "fin_count": 19,
+      "base_thickness_mm": 8.0
+    },
+    "score_r_th_c_per_w": 1.3404602579815585
+  },
+  "verification": {
+    "params": {
+      "fin_height_mm": 40.0,
+      "fin_thickness_mm": 1.6,
+      "fin_count": 19,
+      "base_thickness_mm": 8.0
+    },
+    "claimed_r_th_c_per_w": 1.3404602579815585,
+    "fresh_r_th_c_per_w": 1.3404602579815585,
+    "fresh_agrees": true,
+    "heldout_r_th_c_per_w": 0.9229821029743297,
+    "heldout_feasible": true,
+    "heldout_violations": [],
+    "accept_r_c_per_w": 2.0,
+    "proven": true
+  },
+  "proven": true,
+  "status": "proven",
+  "rounds_used": 3
+}

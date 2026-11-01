@@ -23,6 +23,20 @@ How it stays honest (the stage-1 discipline, carried over):
   - When the loop cannot prove a design — impossible target,
     round budget spent, no move left — the record says unproven.
     It never exports an unproven design as proven.
+  - A stated airflow requirement flows into grading: a
+    forced-airflow brief grades at fan conditions (h=25), never
+    at the passive h=10 — a stated requirement must not be
+    dropped between brief and grade. The held-out gate re-scores
+    under the same design conditions, so the gate checks the
+    design where it was graded.
+  - The improvement step is not height-only: when the best
+    improving move is blocked by a gap or volume rule, the loop
+    tries an enabling gap/volume move whose two-step outcome
+    (enabling move, then the blocked move) beats the current
+    grade, and logs it as gap/volume headroom. A move that
+    only undoes itself — fewer fins, then add fins back to the
+    same parameters — is rejected by the two-step test, so the
+    loop cannot ping-pong.
 
 No model calls anywhere. No network, no bus posts. The only
 grader is code: heatsink.simulate plus the held-out gate.
@@ -58,6 +72,13 @@ DEFAULT_PARAMS = {
 CLASS_FOOTPRINT_MM = 50.0
 
 MAX_ROUNDS = 10
+
+# Fan-forced cooling for a stated forced-airflow requirement, vs
+# natural convection (h=10) for passive or unstated airflow.
+# A fan on a small sink moves far more air than still air; 25 is
+# a conservative fan figure, and the held-out gate's fixed h=15
+# then acts as a degraded-airflow check for forced briefs.
+FORCED_AIRFLOW_H_W_M2K = 25.0
 
 _CLASS_WORDS = ("heatsink", "heat sink", "heat-sink", "fin", "cooler")
 _PASSIVE_WORDS = ("no fan", "fanless", "passive", "quiet", "silent",
@@ -228,12 +249,31 @@ def _params_of(brief):
     )
 
 
+def grading_conditions(brief):
+    """Cooling conditions a brief grades under. A stated
+    forced-airflow requirement flows into grading: fan-cooled
+    designs grade at h=25, distinct from natural convection
+    h=10. Passive or unstated airflow grades at natural
+    convection. Derived from the requirements on every call, so
+    a hand-built brief grades correctly too."""
+    reqs = {r["kind"] for r in brief.get("requirements", [])}
+    if "forced_airflow" in reqs:
+        return Conditions(h_w_m2k=FORCED_AIRFLOW_H_W_M2K)
+    return Conditions()
+
+
 def _grade(brief):
-    result = simulate(_params_of(brief))
+    conditions = grading_conditions(brief)
+    result = simulate(_params_of(brief), conditions)
     return {
         "r_th_c_per_w": result.r_th_c_per_w,
         "feasible": result.feasible,
         "violations": list(result.violations),
+        "conditions": {
+            "h_w_m2k": conditions.h_w_m2k,
+            "t_base_c": conditions.t_base_c,
+            "t_amb_c": conditions.t_amb_c,
+        },
     }
 
 
@@ -269,13 +309,14 @@ def _height_cap(brief):
     return min(cap, stated) if stated is not None else cap
 
 
-def _improvement_candidates(brief):
-    """Candidate single moves for a feasible design that misses its
-    target, scored at design conditions. Returns (name, params,
-    grade) for each feasible candidate, best first. Scoring
-    candidates is search; proven status still comes only from the
-    held-out gate, which no search step grades."""
+def _scored_moves(brief):
+    """All improving moves scored at the brief's grading
+    conditions, feasible or not, best R first. Each entry is
+    (name, changes, SimResult). Scoring moves is search; proven
+    status still comes only from the held-out gate, which no
+    search step grades."""
     p = brief["parameters"]
+    conditions = grading_conditions(brief)
     moves = []
     if p["fin_height_mm"] < _height_cap(brief):
         moves.append(("raise fin height", {
@@ -291,47 +332,145 @@ def _improvement_candidates(brief):
     for name, changes in moves:
         trial = dict(p)
         trial.update(changes)
-        result = simulate(HeatsinkParams(
+        scored.append((name, changes, simulate(HeatsinkParams(
             fin_height_mm=trial["fin_height_mm"],
             fin_thickness_mm=trial["fin_thickness_mm"],
             fin_count=int(trial["fin_count"]),
-            base_thickness_mm=trial["base_thickness_mm"]))
+            base_thickness_mm=trial["base_thickness_mm"]),
+            conditions)))
+    scored.sort(key=lambda item: item[2].r_th_c_per_w)
+    return scored
+
+
+def _improvement_candidates(brief):
+    """Candidate single moves for a feasible design that misses its
+    target, scored at the brief's grading conditions. Returns
+    (name, params, grade) for each feasible candidate, best
+    first."""
+    scored = []
+    for name, changes, result in _scored_moves(brief):
         if result.feasible:
             scored.append((name, changes, {
                 "r_th_c_per_w": result.r_th_c_per_w,
                 "feasible": True,
                 "violations": [],
             }))
-    scored.sort(key=lambda item: item[2]["r_th_c_per_w"])
     return scored
 
 
-def _gap_move(brief, grade):
+def _enabling_pair(brief, grade):
+    """Find a gap/volume move that unblocks the best improving
+    move. When no feasible candidate beats the current grade,
+    the loop would otherwise stall on height alone. For each
+    infeasible candidate, best R first, try each gap move (thin
+    fins, then fewer fins) when it is gap-blocked, or each
+    volume move (thin base, then shorter fins) when it is
+    volume-blocked: the enabling move must itself be feasible,
+    must not revisit parameters already seen in this run, and
+    the two-step outcome (enabling move, then the candidate)
+    must beat the current grade. Returns (rule, changes,
+    reason) or None. The two-step test is what keeps the loop
+    honest: a move that only undoes itself scores exactly the
+    current grade and is rejected, never applied."""
+    current_r = grade["r_th_c_per_w"]
+    conditions = grading_conditions(brief)
+    seen = set()
+    for entry in brief["decision_log"]:
+        after = entry.get("params_after")
+        if after:
+            seen.add(tuple(sorted(
+                (k, float(v)) for k, v in after.items())))
+
+    def _as_params(values):
+        return HeatsinkParams(
+            fin_height_mm=values["fin_height_mm"],
+            fin_thickness_mm=values["fin_thickness_mm"],
+            fin_count=int(values["fin_count"]),
+            base_thickness_mm=values["base_thickness_mm"])
+
+    for name, changes, result in _scored_moves(brief):
+        if result.feasible:
+            continue
+        violations = result.violations
+        if any("gap" in v for v in violations):
+            rule = "gap headroom"
+            options = _gap_moves(brief)
+        elif any("volume" in v for v in violations):
+            rule = "volume headroom"
+            options = _volume_moves(brief)
+        else:
+            continue
+        for enabling, why in options:
+            trial = dict(brief["parameters"])
+            trial.update(enabling)
+            if tuple(sorted(
+                    (k, float(v)) for k, v in trial.items())) in seen:
+                continue
+            enabled = simulate(_as_params(trial), conditions)
+            if not enabled.feasible:
+                continue
+            pair = dict(trial)
+            pair.update(changes)
+            paired = simulate(_as_params(pair), conditions)
+            if paired.feasible and paired.r_th_c_per_w < current_r:
+                reason = (
+                    "%s is blocked (%s); %s so %s can fire; "
+                    "two-step R %.4f beats current %.4f"
+                    % (name, "; ".join(violations), why, name,
+                       paired.r_th_c_per_w, current_r))
+                return rule, enabling, reason
+    return None
+
+
+def _gap_moves(brief):
+    """Gap-widening moves, in preference order: fewer fins, then
+    thinner fins. Each entry is (changes, why)."""
     p = brief["parameters"]
+    moves = []
     if p["fin_count"] > FIN_COUNT[0]:
-        return {"fin_count": p["fin_count"] - 2}, \
-            "fin gap %s; fewer fins widens the gap" % (
-                "; ".join(grade["violations"]),)
+        moves.append(({"fin_count": p["fin_count"] - 2},
+                      "fewer fins widens the gap"))
     if p["fin_thickness_mm"] > FIN_THICKNESS_MM[0]:
-        return {"fin_thickness_mm": max(
-            FIN_THICKNESS_MM[0], p["fin_thickness_mm"] * 0.8)}, \
-            "fin gap %s; thinner fins widen the gap" % (
-                "; ".join(grade["violations"]),)
+        moves.append(({"fin_thickness_mm": max(
+            FIN_THICKNESS_MM[0], p["fin_thickness_mm"] * 0.8)},
+            "thinner fins widen the gap"))
+    return moves
+
+
+def _gap_move(brief, grade):
+    moves = _gap_moves(brief)
+    if moves:
+        changes, why = moves[0]
+        return changes, "fin gap %s; %s" % (
+            "; ".join(grade["violations"]), why)
     return None, "fin gap violation with no move left at the bounds"
 
 
-def _volume_move(brief, grade):
+def _volume_moves(brief):
+    """Volume-cutting moves, in preference order: thinner base,
+    then shorter fins. Thinning the base never changes R in
+    this simulator (base thickness is not in the heat path),
+    so it frees volume headroom at zero thermal cost. Each
+    entry is (changes, why)."""
     p = brief["parameters"]
+    moves = []
     if p["base_thickness_mm"] > BASE_THICKNESS_MM[0]:
-        return {"base_thickness_mm": max(
-            BASE_THICKNESS_MM[0], p["base_thickness_mm"] - 1.0)}, \
-            "volume %s; thinner base cuts volume" % (
-                "; ".join(grade["violations"]),)
+        moves.append(({"base_thickness_mm": max(
+            BASE_THICKNESS_MM[0], p["base_thickness_mm"] - 1.0)},
+            "thinner base cuts volume"))
     if p["fin_height_mm"] > FIN_HEIGHT_MM[0]:
-        return {"fin_height_mm": max(
-            FIN_HEIGHT_MM[0], p["fin_height_mm"] * 0.8)}, \
-            "volume %s; shorter fins cut volume" % (
-                "; ".join(grade["violations"]),)
+        moves.append(({"fin_height_mm": max(
+            FIN_HEIGHT_MM[0], p["fin_height_mm"] * 0.8)},
+            "shorter fins cut volume"))
+    return moves
+
+
+def _volume_move(brief, grade):
+    moves = _volume_moves(brief)
+    if moves:
+        changes, why = moves[0]
+        return changes, "volume %s; %s" % (
+            "; ".join(grade["violations"]), why)
     return None, "volume violation with no move left at the bounds"
 
 
@@ -390,7 +529,8 @@ def iterate_brief(brief, max_rounds=MAX_ROUNDS):
         grade = _grade(brief)
         if grade["feasible"] and grade["r_th_c_per_w"] <= target:
             verification = verify_proven(
-                _params_of(brief), grade["r_th_c_per_w"])
+                _params_of(brief), grade["r_th_c_per_w"],
+                grading_conditions(brief))
             if verification["proven"]:
                 brief["decision_log"].append({
                     "round": round_no,
@@ -472,17 +612,28 @@ def iterate_brief(brief, max_rounds=MAX_ROUNDS):
             _apply(brief, changes, round_no, rule, reason, grade)
             continue
         # Feasible but above target: take the best improving move.
+        # When none improves, try a gap/volume move that unblocks
+        # the best blocked move — the loop must exercise those
+        # moves when their two-step outcome improves the grade,
+        # not climb height only. Otherwise it stalls honestly.
         candidates = _improvement_candidates(brief)
         current_r = grade["r_th_c_per_w"]
         improving = [c for c in candidates
                      if c[2]["r_th_c_per_w"] < current_r]
         if not improving:
+            pair = _enabling_pair(brief, grade)
+            if pair is not None:
+                rule, changes, reason = pair
+                _apply(brief, changes, round_no, rule, reason, grade)
+                continue
             brief["decision_log"].append({
                 "round": round_no,
                 "rule": "improve",
                 "decision": "stalled: no move left",
                 "reason": "feasible R %.4f above target %.4f and no "
-                          "candidate move improves it"
+                          "candidate move improves it, and no "
+                          "gap/volume move unblocks an improving "
+                          "move"
                           % (current_r, target),
                 "grade_before": grade,
                 "params_before": dict(brief["parameters"]),
@@ -501,7 +652,8 @@ def iterate_brief(brief, max_rounds=MAX_ROUNDS):
     final_grade = _grade(brief)
     if final_grade["feasible"]:
         final_verification = verify_proven(
-            _params_of(brief), final_grade["r_th_c_per_w"])
+            _params_of(brief), final_grade["r_th_c_per_w"],
+            grading_conditions(brief))
     else:
         final_verification = None
     # Proven means BOTH: the brief's own target is met and the
