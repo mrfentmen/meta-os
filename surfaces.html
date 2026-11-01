@@ -37,6 +37,7 @@
     <a href="#board-receipt">Receipt</a>
     <a href="#board-costs">Costs</a>
     <a href="#board-officina">Officina</a>
+    <a href="#board-custos">Custos</a>
   </nav>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
@@ -91,9 +92,14 @@
     <p>Workshop runs (variants, failures, proven design) rendered from Milo's records (os/worlds/officina/runs/*.json). A run is failed only on recorded failure evidence.</p>
     <div id="officina-content" aria-live="polite">Loading…</div>
   </section>
+  <section class="board-section" id="board-custos" aria-labelledby="board-custos-heading">
+    <h2 id="board-custos-heading">Custos board</h2>
+    <p>Patrol records by tier/source rendered from Rowan's records (os/worlds/custos/runs/*.jsonl).</p>
+    <div id="custos-content" aria-live="polite">Loading…</div>
+  </section>
 </main>
 <script type="module">
-  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView, costTicker, officinaBoard } from "./js/surfaces.js";
+  import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView, costTicker, officinaBoard, parseCustosJsonl, custosBoard } from "./js/surfaces.js";
   const el = document.getElementById("lab-content");
   try {
     const res = await fetch("os/lab/records.json");
@@ -158,6 +164,19 @@
     }
     document.getElementById("officina-content").innerHTML =
       `<p>Loaded ${loaded.length} of ${officinaFiles.length} run files.</p>` + officinaBoard(loaded);
+    // HN-067: fetch the real patrol JSONLs (served as ndjson now).
+    const custosTexts = [];
+    for (const f of ["patrol-001.jsonl", "patrol-002.jsonl"]) {
+      try {
+        const res = await fetch(`os/worlds/custos/runs/${f}`);
+        if (res.ok) custosTexts.push(await res.text());
+      } catch { /* skipped, counted below */ }
+    }
+    const parsed = custosTexts.map(parseCustosJsonl);
+    const allRecords = parsed.flatMap((p) => p.records);
+    const skipped = parsed.reduce((n, p) => n + p.skipped, 0);
+    document.getElementById("custos-content").innerHTML =
+      `<p>${allRecords.length} patrol records (${skipped} malformed lines skipped).</p>` + custosBoard(allRecords);
   } catch {
     document.getElementById("evidence-content").innerHTML =
       `<p class="empty-state">Crew records unavailable.</p>`;

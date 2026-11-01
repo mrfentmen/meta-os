@@ -302,3 +302,68 @@ export function officinaBoard(files) {
   if (sections.length === 0) return `<p class="empty-state">No Officina runs recorded.</p>`;
   return `<div class="officina-board">${sections.join("")}</div>`;
 }
+
+// HN-067 Custos board: patrol records by tier/source rendered from
+// Rowan's records format (os/worlds/custos/runs/*.jsonl). Each line
+// is one observation: {record_type, tier, source, category, ts,
+// detail}. Malformed lines are skipped and counted, never rendered.
+// The server serves .jsonl now (server.mjs CONTENT_TYPES), so the
+// board fetches the real run files.
+export function parseCustosJsonl(text) {
+  const records = [];
+  let skipped = 0;
+  for (const line of String(text ?? "").split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed === "") continue;
+    try {
+      const obj = JSON.parse(trimmed);
+      if (obj && typeof obj === "object") records.push(obj);
+      else skipped += 1;
+    } catch { skipped += 1; }
+  }
+  return { records, skipped };
+}
+
+export function custosBoard(records) {
+  const rows = (Array.isArray(records) ? records : []).filter((r) => r && typeof r === "object");
+  if (rows.length === 0) {
+    return `<p class="empty-state">No patrol records yet.</p>`;
+  }
+  // Observations carry tier/source/category. Escalations and
+  // patrol-summaries are patrol records too, but untiered — they are
+  // counted by type, never folded into the tier/source groups.
+  const isObservation = (r) => r.record_type === "observation"
+    || (r.record_type === undefined && typeof r.tier === "string");
+  const observations = rows.filter(isObservation);
+  const others = rows.filter((r) => !isObservation(r));
+  const byTier = new Map();
+  const bySource = new Map();
+  for (const r of observations) {
+    const tier = typeof r.tier === "string" ? r.tier : "unknown";
+    const source = typeof r.source === "string" ? r.source : "unknown";
+    byTier.set(tier, (byTier.get(tier) ?? 0) + 1);
+    bySource.set(source, (bySource.get(source) ?? 0) + 1);
+  }
+  const tierRows = [...byTier.entries()].sort().map(([t, n]) =>
+    `<li>${escapeHtml(t)}: ${n}</li>`).join("");
+  const sourceRows = [...bySource.entries()].sort().map(([s, n]) =>
+    `<li>${escapeHtml(s)}: ${n}</li>`).join("");
+  const otherCounts = new Map();
+  for (const r of others) {
+    const t = typeof r.record_type === "string" ? r.record_type : "unknown";
+    otherCounts.set(t, (otherCounts.get(t) ?? 0) + 1);
+  }
+  const otherRows = [...otherCounts.entries()].sort().map(([t, n]) =>
+    `<li>${escapeHtml(t)}: ${n}</li>`).join("");
+  const sorted = [...observations].sort((a, b) => String(b.ts ?? "").localeCompare(String(a.ts ?? "")));
+  const recent = sorted.slice(0, 20).map((r) =>
+    `<li><span class="custos-tier">${escapeHtml(r.tier ?? "—")}</span> `
+    + `<span class="custos-category">${escapeHtml(r.category ?? "—")}</span> `
+    + `<span class="custos-source">${escapeHtml(r.source ?? "—")}</span> `
+    + `<span class="custos-at">${escapeHtml(r.ts ?? "—")}</span></li>`).join("");
+  return `<div class="custos-board">`
+    + `<h3>By tier</h3><ul>${tierRows}</ul>`
+    + `<h3>By source</h3><ul>${sourceRows}</ul>`
+    + (otherRows ? `<h3>Other patrol records</h3><ul>${otherRows}</ul>` : "")
+    + `<h3>Latest observations</h3><ol>${recent}</ol></div>`;
+}
