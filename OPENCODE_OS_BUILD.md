@@ -416,8 +416,12 @@ make it better, improve it where it lacks. In practice:
 
 - OS-181: Inventory: which MCP servers exist for Rust development
   (docs, crates, diagnostics). Verify each by opening its page.
-- OS-182: Wire the Rust docs MCP the way this project already does
-  (rustdocs pattern) into the OpenCode config; smoke call logged.
+- OS-182: Create the Rust docs MCP wiring in this repo and wire it
+  into the OpenCode config; smoke call logged. Note (Buffy's lane
+  finding, 2026-11-01): no MCP config exists in this repo yet —
+  the rustdocs pattern lives in Pax's gateway, not in the repo.
+  This task creates the repo artifact; do not describe it as
+  already existing.
 - OS-183: Find Goose language help: docs MCP if one exists, else
   the best docs source, wired as a local skill note with a smoke
   check. State plainly which case it is.
