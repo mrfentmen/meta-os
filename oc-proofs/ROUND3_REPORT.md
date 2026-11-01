@@ -268,3 +268,12 @@
   one dup set (three.min.js x3, deliberate); labs 4.2 / proofs 12 /
   footage 9.4 MB; no junk files.
 - NC-147 DONE (hygiene.md). NC-148: this summary.
+
+## Section M — Safety self-audit (NC-149..NC-160) — DONE, no stop
+
+- All sweeps green: 0 secrets, 0 bus refs, dispatch locked to SIMULATED
+  by a loopback-checked validator, no emergency dialing anywhere,
+  licenses present (one round-1 footnote), footage sourced, no faces,
+  UNIDENTIFIED enforced, no personal paths in own files.
+- NC-159 not triggered. Full table: oc-proofs/safety-audit.md.
+- NC-160: this summary.
