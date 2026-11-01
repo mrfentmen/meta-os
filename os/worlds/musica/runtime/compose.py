@@ -36,6 +36,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from take_log import append_take, read_log, sha256_file  # noqa: E402
 from spark_assist import (  # noqa: E402
     build_lyric_prompt, build_structure_prompt, request_assist)
+from budget import (  # noqa: E402
+    budget_allows, load_config, record_stop, today_spend)
 
 SAMPLE_RATE = 22050
 
@@ -189,7 +191,8 @@ def replay_take(log_path, take_id, out_path):
 
 
 def run_session(session_dir, brief_id, brief_text, params, takes,
-                seed_base, resume=False, spark_mode=None):
+                seed_base, resume=False, spark_mode=None,
+                budget_config=None, spend_ledger=None):
     """Run takes 1..N, appending each to the take log as rendered.
 
     With resume=True an existing log is continued after its last
@@ -202,7 +205,12 @@ def run_session(session_dir, brief_id, brief_text, params, takes,
     spark_mode is None, "structure", or "lyrics" (HN-034): each take
     records a Spark assist attempt in its spark_assist field. In
     this sandbox every attempt records held/not_configured and no
-    call is sent. Returns the new take records.
+    call is sent.
+
+    budget_config + spend_ledger (HN-051): when spark assist is on,
+    each take first checks the daily spend cap; a cap hit stops
+    the session gracefully (budget_stop in session.json, exit 0),
+    keeping the takes already logged. Returns the new take records.
     """
     os.makedirs(session_dir, exist_ok=True)
     log_path = os.path.join(session_dir, "take_log.jsonl")
@@ -214,6 +222,16 @@ def run_session(session_dir, brief_id, brief_text, params, takes,
     session_id = os.path.basename(os.path.abspath(session_dir))
     made = []
     for n in range(len(existing) + 1, len(existing) + takes + 1):
+        # HN-051: the spend guard runs before each assisted take.
+        if spark_mode and budget_config and spend_ledger:
+            config = load_config(budget_config)
+            spend = today_spend(spend_ledger)
+            if not budget_allows(config, spend):
+                record_stop(session_dir, config["daily_cap_usd"], spend)
+                print("budget stop: daily cap %.2f reached "
+                      "(spend %.2f); session stopped, not failed"
+                      % (config["daily_cap_usd"], spend))
+                break
         take_id = "take-%03d" % n
         seed = seed_base + n
         rel = "takes/%s.wav" % take_id
@@ -252,8 +270,14 @@ def run_session(session_dir, brief_id, brief_text, params, takes,
         "takes_logged": len(existing) + len(made),
         "takes_new": len(made),
     }
-    with open(os.path.join(session_dir, "session.json"), "w",
-              encoding="utf-8") as fh:
+    session_path = os.path.join(session_dir, "session.json")
+    if os.path.exists(session_path):
+        # Preserve pass markers from earlier runs (keeper_pass,
+        # variation_pass, budget_stop) across resumes.
+        with open(session_path, encoding="utf-8") as fh:
+            prior = json.load(fh)
+        session = {**prior, **session}
+    with open(session_path, "w", encoding="utf-8") as fh:
         json.dump(session, fh, indent=2, sort_keys=True)
     return made
 
@@ -305,6 +329,8 @@ def main(argv=None):
     parser.add_argument("--resume", action="store_true")
     parser.add_argument("--spark-assist", default=None,
                         choices=[None, "structure", "lyrics"])
+    parser.add_argument("--budget-config", default=None)
+    parser.add_argument("--spend-ledger", default=None)
     parser.add_argument("--replay", nargs=3, metavar=("LOG", "TAKE", "OUT"))
     args = parser.parse_args(argv)
     if args.replay:
@@ -324,7 +350,8 @@ def main(argv=None):
                                       % (args.brief_id, params["tempo"],
                                          params["key"], params["mode"])),
                        params, args.takes, args.seed_base, args.resume,
-                       args.spark_assist)
+                       args.spark_assist, args.budget_config,
+                       args.spend_ledger)
     for record in made:
         print("%s seed=%d duration=%.3f sha256=%s"
               % (record["take_id"], record["seed"], record["duration_s"],
