@@ -198,3 +198,31 @@ supervisor would block the table for every other service.
 - Bounds-check behaviour (abort, not exception — `reference#82`) is why every
   array write here is preceded by an explicit capacity check.
 - Not compiled, not run. No toolchain on this Mac.
+
+## Name registry (B-L1-22)
+
+Every inter-service call names a service. Naming it by slot index would let a
+caller act on whatever service holds that slot later — the caller thinks it is
+talking to the logger and is writing to the updater.
+
+A handle packs `(slot, gen)` into one i64: `(slot + 1) * 65535 + gen`, with 0
+never valid so an uninitialised field cannot look like a service. `sup_resolve`
+checks the slot still holds the generation the handle was issued for, and
+`sup_release` bumps that generation when a stopped slot is freed for reuse, so
+every handle from the previous occupant stops resolving instead of quietly
+pointing at its replacement.
+
+Generation wraps at `HANDLE_GEN_MAX - 1`, not at the maximum: a generation equal
+to the maximum would make one slot's handle collide with the next slot's.
+
+| Call | Answers |
+|---|---|
+| `sup_lookup(name)` | handle + code; `E_NOENT` for an unknown name, which is different from a stale handle |
+| `sup_handle(slot)` | handle, or 0 for no such slot |
+| `sup_resolve(handle)` | slot, or -1 if stale |
+| `sup_name_of(handle)` | the name, or `""` for a stale handle — never a guess |
+| `sup_release(slot)` | frees a STOPPED slot; refused with `E_STATE` on anything else |
+
+`sup_name_of` returns a slice into the static table, not into a local copy:
+a slice of a fixed-size local would dangle the moment the function returned.
+

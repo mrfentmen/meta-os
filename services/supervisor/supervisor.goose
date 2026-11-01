@@ -78,6 +78,8 @@ struct ServiceEntry {
     max_restarts: i64,    // 0 = unlimited (capped by policy, not by count)
     base_ms: i64,         // first backoff step
     max_ms: i64,          // backoff ceiling; also the "quick crash" threshold
+    // --- B-L1-22 ---
+    gen: i64,             // bumped on every (re)assignment of this slot
 }
 
 var table: ServiceEntry[..32];
@@ -111,9 +113,102 @@ fn sup_register(name: const u8[:], needs: i64, enabled: bool) -> i64, i64 {
     table[table_len].max_restarts = 0;
     table[table_len].base_ms = 100;
     table[table_len].max_ms = 30000;
+    table[table_len].gen = 1;
 
     table_len++;
     return table_len - 1, CODE_OK;
+}
+
+// ---------------------------------------------------------------------------
+// B-L1-22: names to handles
+// ---------------------------------------------------------------------------
+//
+// Every inter-service call names a service. Naming it by slot index would let a
+// caller act on whichever service happens to hold that slot later, which is the
+// classic stale-reference bug with a security flavour: the caller thinks it is
+// talking to the logger and is writing to the updater.
+//
+// A handle is (slot, generation) packed into one i64, with slot*4 leaving room for
+// generations. A handle is only valid while the slot still holds the generation it
+// was issued for. 0 is never a valid handle, so an uninitialised field cannot be
+// mistaken for a real service.
+
+let HANDLE_GEN_MAX: i64 = 65535;
+
+fn sup_handle(slot: i64) -> i64 {
+    if slot < 0 || slot >= table_len { return 0; }
+    return (slot + 1) * HANDLE_GEN_MAX + table[slot].gen;
+}
+
+// Resolve a handle to a slot, or -1. This is the check that makes the handle worth
+// having: a handle from a replaced service resolves to nothing instead of to the
+// service that took its place.
+fn sup_resolve(handle: i64) -> i64 {
+    if handle <= 0 { return -1; }
+    let gen = handle % HANDLE_GEN_MAX;
+    let slot = (handle / HANDLE_GEN_MAX) - 1;
+    if slot < 0 || slot >= table_len { return -1; }
+    if table[slot].gen != gen { return -1; }
+    return slot;
+}
+
+// Name by handle, for logging. An empty slice for a stale handle, never a guess.
+fn sup_name_of(handle: i64) -> const u8[:] {
+    let slot = sup_resolve(handle);
+    if slot < 0 { return ""; }
+    return entry_name_slice(slot);
+}
+
+// The stored name as a slice, stopping at the NUL. Bounded by the array length so a
+// name that lost its terminator (a corruption this file cannot prevent) still ends.
+fn entry_name_slice(slot: i64) -> const u8[:] {
+    if slot < 0 || slot >= table_len { return ""; }
+    // Sliced straight out of the table, never out of a local copy: a slice into a
+    // fixed-size local would point at storage that is gone the moment this returns,
+    // and returning it would be a dangling view. The table is static storage, so a
+    // slice into it outlives the call.
+    var n: i64 = 0;
+    while n < NAME_MAX && table[slot].name[n] != 0 { n++; }
+    return table[slot].name[..n];
+}
+
+// Look a name up and get a handle in one step -- the call every other service
+// makes. Two returns because "not registered" and "registered but stale" are
+// different answers and a caller that cannot tell them apart will retry forever.
+fn sup_lookup(name: const u8[:]) -> i64, i64 {
+    let slot = sup_find(name);
+    if slot < 0 { return 0, E_NOENT; }
+    return sup_handle(slot), CODE_OK;
+}
+
+// Free a stopped slot for reuse, bumping its generation so every handle issued to
+// the previous occupant stops resolving. Refused while the service is anything but
+// STOPPED: reusing a slot under a running service is the bug this guards.
+fn sup_release(slot: i64) -> i64 {
+    if slot < 0 || slot >= table_len { return E_INVAL; }
+    if table[slot].state != ST_STOPPED { return E_STATE; }
+    table[slot].gen = table[slot].gen + 1;
+    // Clamped at the top of the range, not into it: a generation equal to
+    // HANDLE_GEN_MAX would make (slot+1)*MAX + gen collide with the next slot's
+    // handle, so the wrap has to happen one before that value.
+    if table[slot].gen >= HANDLE_GEN_MAX { table[slot].gen = 1; }
+    table[slot].id = -1;
+    table[slot].restarts = 0;
+    table[slot].last_beat_ms = 0;
+    table[slot].needs = -1;
+    table[slot].enabled = false;
+    table[slot].policy = RP_ON_FAIL;
+    table[slot].max_restarts = 0;
+    table[slot].base_ms = 100;
+    table[slot].max_ms = 30000;
+    // The name is cleared byte by byte: a stale name in a released slot would make
+    // sup_find match a service that is not there.
+    var i: i64 = 0;
+    while i < NAME_MAX {
+        table[slot].name[i] = 0;
+        i++;
+    }
+    return CODE_OK;
 }
 
 // Find by name. Linear and unoptimised: the table is 32 entries and lookups happen
