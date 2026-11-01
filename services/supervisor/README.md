@@ -2,7 +2,10 @@
 
 Status: **WRITTEN** (every symbol checked against `goose__lookup_symbol` /
 `goose__search_docs`; no Goose toolchain on this Mac, so nothing is COMPILED —
-see `services/BUILD.md`).
+see `services/BUILD.md`). Re-checked 2026-11-01 after the pull: `struct` with
+fixed-size fields and `Entry { field: value }` literals are `reference#32` and
+`tutorial#9`; `class` is **not** a Goose keyword (`goose__list_keywords`), which
+is why this file uses `struct`.
 
 Layer 4. The supervisor is the first service, not the last: nothing is running
 before it, and every other service's life is a row in its table.
@@ -24,66 +27,87 @@ rule 6 forbids.
 ## The table
 
 Fixed capacity (`MAX_SERVICES` = 32), no heap, no allocation — a static array of
-`Service`. `MAX_NAME` = 16 matches the name registry (B-L1-22) and the `exec`
-path limit; the two must not drift.
+`ServiceEntry`. This is the source, copied, not an illustration of it:
 
 ```goose
-class Service {
-    name: u8[..MAX_NAME]
-    name_len: i32
-    state: i32              // ST_*
-    restarts: i32
-    max_restarts: i32
-    last_exit: i32
+let NAME_MAX: i64 = 32;
+let MAX_SERVICES: i64 = 32;
+
+struct ServiceEntry {
+    name: u8[..32],       // inline, no pointer: the entry is self-contained
+    id: i64,              // kernel process id once spawned; -1 until then
+    state: i64,
+    needs: i64,           // which service starts this one; -1 = no dependency
+    restarts: i64,
+    last_beat_ms: i64,    // uptime when the last heartbeat arrived
+    enabled: bool,
 }
+
+var table: ServiceEntry[..32];
 ```
 
-`name_len` is explicit rather than a zero terminator, so a name containing a
-NUL (possible from a corrupted config file) cannot silently shorten itself. The
-registration path still refuses empty names and over-long names, and requires
-NUL padding — belt and braces, because both consumers exist.
+`NAME_MAX` is 32 here, not 16: earlier prose in this lane said 16, and that was
+wrong against the source. The name registry (B-L1-22) must adopt this value
+rather than the other way round, or the two drift.
+
+Names are NUL-terminated *and* length-checked at registration
+(`name.len >= NAME_MAX` is refused), and `entry_name_matches` compares the
+terminator too — so a stored `web` cannot answer a lookup for the longer `webx`
+that shares its prefix.
 
 ## The state machine
 
+Six states. `ST_RESTARTING` exists as a state rather than a flag because a
+service waiting out a backoff is genuinely neither running nor failed, and a
+health line that called it either one would be lying.
+
 ```
-ST_DOWN ──enter(RUNNING)──▶ ST_RUNNING ◀──enter(STARTING)── ST_STARTING
-   ▲                          │                                │
-   │                          └──enter(STOPPING)──▶ ST_STOPPING ┘
-   │                                                │
-   └────────────────────────────────────────────────┘
-                                                    ▼ (terminal)
-                                              ST_FAILED / ST_STOPPING → ST_DOWN
+STOPPED ──▶ STARTING ──▶ RUNNING ──▶ STOPPING ──▶ STOPPED
+               │            │            │
+               └────────────┴────────────┴──▶ FAILED ──▶ RESTARTING ──▶ STARTING
+                                              │              │
+                                              └──▶ STOPPED ◀─┘
 ```
 
-Legal transitions, enforced in code — `enter_state` refuses anything else with
-`CODE_STATE` and leaves the table untouched:
+The complete legal set, as `transition_legal` implements it — eleven pairs, no
+more:
 
 | From | To |
 |---|---|
-| DOWN | STARTING, FAILED (a service can fail before it starts) |
+| STOPPED | STARTING |
 | STARTING | RUNNING, FAILED |
 | RUNNING | STOPPING, FAILED |
-| STOPPING | DOWN, FAILED |
-| FAILED | STARTING, DOWN |
+| STOPPING | STOPPED, FAILED |
+| FAILED | RESTARTING, STOPPED |
+| RESTARTING | STARTING, STOPPED |
 
-`DOWN → FAILED` is allowed on purpose: a config that fails to parse at boot is a
-failure with no running process to show for it, and hiding that as `DOWN` would
-make the boot log lie.
+Two exclusions carry the design:
 
-`FAILED` is not terminal. A service that crashed should be restartable without
-being re-registered — otherwise every crash would need the whole table rebuilt.
+- **`RUNNING → RUNNING` is not a transition.** It is a heartbeat, and
+  `sup_beat` handles it. A state machine that re-enters the same state cannot
+  tell a healthy service from a thrashing one.
+- **`STOPPED → RUNNING` does not exist.** Every start goes through `STARTING`, so
+  "did it actually come up" always has an answer instead of being assumed from a
+  optimistic write.
+
+`sup_set_state` refuses anything outside this set with `E_STATE` and leaves the
+entry untouched. A supervisor that "fixes" a bad transition produces a table
+nobody can audit, which is worse than a table with a hole in it.
+
+`FAILED` is not terminal: a crashed service must be restartable without being
+re-registered, otherwise every crash would need the whole table rebuilt.
 
 ## Why transition is a separate call from the action
 
-`enter_state` does not do anything. The caller performs the action (spawn, kill)
-and records the outcome. This keeps one code path that can refuse an illegal
-transition, and it keeps the supervisor testable on a machine with no process
-spawning at all — which is every machine until K6.
+`sup_set_state` does not do anything. The caller performs the action (spawn,
+kill) and records the outcome. This keeps one code path that can refuse an
+illegal transition, and it keeps the supervisor checkable on a machine with no
+process spawning at all — which is every machine until K6.
 
 The discipline this needs from callers: **record after acting, never before.**
-If `spawn` fails, the next call is `enter_state(ST_FAILED)`, not
-`enter_state(ST_RUNNING)`. A state written before the fact is the bug that makes
-supervisors untrustworthy in exactly the situation they exist for.
+If spawn fails, the next call is `sup_set_state(slot, ST_FAILED)`, not
+`ST_RUNNING`. A state written before the fact is the bug that makes supervisors
+untrustworthy in exactly the situation they exist for.
 
 ## What this needs from below
 
@@ -97,10 +121,12 @@ supervisors untrustworthy in exactly the situation they exist for.
 
 ## What this offers above
 
-- `find` — by name, the only lookup other services need.
-- `enter_state` — the single gate every lifecycle change passes through, so the
+- `sup_find` — by name, the only lookup other services need.
+- `sup_set_state` — the single gate every lifecycle change passes through, so the
   boot log and the audit record (B-L1-41) can be driven off one function.
-- `count_in(state)` — the number a health line reports.
+- `sup_can_start` — dependency-ordered starts, so a service whose `needs` is not
+  running is refused for a stated reason instead of failing mysteriously later.
+- `sup_beat` / `sup_ms_since_beat` — the watchdog's input (B-L1-23).
 
 ## Verification
 
