@@ -52,6 +52,18 @@ struct Watch {
 
 var watches: Watch[..32];
 
+// The watchdog's own handle, when the supervisor has told it. A watchdog that watched itself
+// would report its own scheduling delay as a system failure, and the one thing worse than a
+// silent watchdog is a watchdog that cries wolf -- it teaches everyone to ignore the alarm.
+var wd_self: i64 = 0;
+
+// Called once, by the watchdog's entry point, with the handle the supervisor gave it.
+fn wd_set_self(handle: i64) -> i64 {
+    if handle <= 0 { return E_INVAL; }
+    wd_self = handle;
+    return CODE_OK;
+}
+
 // ---------------------------------------------------------------------------
 // Registration
 // ---------------------------------------------------------------------------
@@ -60,6 +72,7 @@ var watches: Watch[..32];
 // "beat constantly", which no service can satisfy and every watchdog would report.
 fn wd_watch(handle: i64, period_ms: i64, grace_ms: i64, miss_allow: i64, now_ms: i64) -> i64 {
     if handle <= 0 { return E_INVAL; }
+    if wd_self != 0 && handle == wd_self { return E_INVAL; }   // never watch itself
     if period_ms <= 0 || grace_ms < 0 || miss_allow < 0 { return E_INVAL; }
     if now_ms < 0 { return E_INVAL; }
 

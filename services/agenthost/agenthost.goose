@@ -231,6 +231,22 @@ fn ah_exit(h: i64, code: i64, now_ms: i64) -> i64 { return ah_set_state(h, AS_ST
 fn ah_fail(h: i64, code: i64, now_ms: i64) -> i64 { return ah_set_state(h, AS_FAILED, code, now_ms); }
 fn ah_kill(h: i64, now_ms: i64) -> i64 { return ah_set_state(h, AS_KILLED, 0, now_ms); }
 
+// The one absence a user cannot see for themselves: a session with no agent layer looks exactly
+// like a session with one that is idle. FAILURE.md promises a user-visible line, so the line is
+// here as data -- the console prints what this returns, and a test can assert the exact string
+// instead of a screenshot (H2's rule: the banner and status formats are data).
+let AH_DOWN_LINE: const u8[:] = "AGENT LAYER DOWN";
+
+fn ah_down_line(out: u8[>..]&, cap: i64) -> bool {
+    if out.len + AH_DOWN_LINE.len > cap { return false; }
+    var i: i64 = 0;
+    while i < AH_DOWN_LINE.len {
+        out.push(AH_DOWN_LINE[i]);
+        i++;
+    }
+    return true;
+}
+
 // Reap: free the slot. Only from a terminal state -- freeing a running agent would leave a
 // process with no name and no record. The generation is kept, which is what makes an old
 // handle resolve to nothing instead of to the next occupant.

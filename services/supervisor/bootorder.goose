@@ -66,7 +66,7 @@ var boot_table: BootEntry[..24] = [
     BootEntry { id: 16, needs: 2, fatal: true, by_kernel: true, order: 6 },  // supervisor
     BootEntry { id: 7, needs: 4, fatal: false, by_kernel: false, order: 7 },  // console
     BootEntry { id: 6, needs: 32, fatal: false, by_kernel: false, order: 8 },  // logfmt
-    BootEntry { id: 8, needs: 208, fatal: true, by_kernel: false, order: 9 },  // log
+    BootEntry { id: 8, needs: 208, fatal: true, by_kernel: false, order: 9 },  // logd
     BootEntry { id: 14, needs: 32, fatal: false, by_kernel: false, order: 10 },  // watchdog
     BootEntry { id: 13, needs: 304, fatal: false, by_kernel: false, order: 11 },  // audit
     BootEntry { id: 9, needs: 16, fatal: false, by_kernel: false, order: 12 },  // netcfg
@@ -87,7 +87,11 @@ var boot_table: BootEntry[..24] = [
 // table is, and the two differ the moment the sequence is tuned. Keeping one table for
 // "what is it called" and another for "when does it start" is deliberate: the name table
 // must stay stable because it ends up in logs people grep.
-let BO_NAMES: const u8[:] = "callmatrix bootlog devices storage time logfmt console log netcfg net input display audit watchdog session supervisor dhcp dns socket timesync updater agenthost";
+//
+// Each token is the service's directory name under `services/`, exactly. `logd`, not `log`:
+// a log line that names a service the manifest does not have costs an hour every time. The
+// boot order data test (`os-build/layer1/bootorder_check.py`) fails on a mismatch.
+let BO_NAMES: const u8[:] = "callmatrix bootlog devices storage time logfmt console logd netcfg net input display audit watchdog session supervisor dhcp dns socket timesync updater agenthost";
 
 fn bo_count() -> i64 { return 22; }
 
