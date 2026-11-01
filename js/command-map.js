@@ -63,6 +63,7 @@ import { loopFeedItems, loopIncidentItems, loopStatusText, ribbonIncident, ribbo
 import { createDelayedIndicator, errorClassFor } from "./loading.js";
 import { prefersReducedMotion } from "./motion.js";
 import { isDemoMode } from "./demo.js";
+import { formatTimeWithZone } from "./timefmt.js";
 import { saveSelection, loadSelection, resolveSelection } from "./restore.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
@@ -188,9 +189,10 @@ function cacheBust(url) {
 }
 
 function fmtTime(value) {
-  const d = value instanceof Date ? value : new Date(value);
-  if (Number.isNaN(d.getTime())) return typeof value === "string" ? value : "";
-  return d.toLocaleTimeString([], { hour12: false });
+  // HN-024: delegates to timefmt so every call site (loop times,
+  // alert meta, viewer-updated, wall refresh, search results, pin
+  // meta) renders the viewer's zone with the zone named.
+  return formatTimeWithZone(value);
 }
 
 // Division (product) display helpers. One system, three divisions:
