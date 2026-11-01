@@ -371,3 +371,31 @@ repo, commit 556bd41; repo untouched per the prompt). Status per task:
 - NB-088 DONE. labs/review/README.md with each command.
 - NB-089 DONE. labs/review/tests/review.test.mjs: 2/2 pass.
 - NB-090 section report: this list.
+
+## Section G (round 2): endurance and drills (NB-071 to NB-080) — in progress
+
+- NB-071 RUNNING. Soak: :8092 app server, held-mode assess traffic (valid
+  frame, expect 503) + health + cameras every 5 min x12 with RSS. Peak TBD.
+- NB-072 PENDING (count at soak end; expect 0 dispatches — no queue, no
+  live model; every receipt anywhere this round is sim-).
+- NB-073 DONE. Budget drill vs temp ledger: 556 stub calls ($0.135 each at
+  $1.25/$4.25 per M) then checkBudget throws: "GUARDRAIL STOP: estimated
+  test spend $75.0600 has reached the $75.00 test budget. No call sent."
+- NB-074 PENDING (post-soak: kill/restart :8092, verify health + held path).
+- NB-075 BASELINE. server/queue/ = 220K at 11:03 UTC, no crew-data dir
+  (queue never ran here). After-size at soak end.
+- NB-076 DONE with blemishes: 3 targets x ~43 iters on :8093 (129/150 —
+  run cut short by an operator pkill, recorded): all cameras=200,
+  assess=503 (held). One ~1 min window of cameras=000 (localhost refused)
+  mid-run, self-recovered, no crash. Verbatim sample: "t1 i30
+  cameras=000". No other errors.
+- NB-077 DONE. TZ=Pacific/Auckland server: identical behavior. Finding:
+  the served API surface carries no wall-clock timestamps (health/crew
+  have none; assess validates image BEFORE timestamp — a stub image 400s
+  on image shape regardless of TZ, a valid frame 503s held). Ordering
+  N/A — nothing emitted to order. Timestamp parsing (valid +13:00,
+  Z, garbage) behaves TZ-independently; garbage timestamp still 400s.
+- NB-078/079 BLOCKED: no sudo on this Mac (sudo -n fails), so no firewall
+  rule can cut the network; pulling the cable is not an option on a
+  remote-shared build machine. No network manipulation performed.
+  Unblock needs: root, or a sanctioned fault-injection path.
