@@ -15,6 +15,29 @@ OS_BUILD_TASKS.md is written "against the bootloader version in the
 lockfile", and no `kernel/Cargo.lock` exists yet (R1 A2). No R2 code
 is written until then.
 
+## Update 2026-11-01 ~08:21 EST — R2 drafted, Q1 hold superseded for drafting only
+
+Boss layer order 2026-11-01 ~08:18 (Pax relay, room 1 index 498;
+OS_BUILD_TASKS.md on main) assigns Rowan the R2/R3 modules unwired with
+real behavior, parallel by layer, nobody stops. That order supersedes the
+hold below ("no R2 code until Q1 is answered") for drafting purposes:
+`kernel/src/framebuffer.rs` (K2 framebuffer console, UNWIRED, UNCOMPILED)
+landed on `rowan/kernel` in the same commit as this note.
+
+What did NOT change: `kernel/Cargo.lock` is still absent on main
+(checked this run, main tip 992d7bf), so Q1 is still unanswered and Q5
+(exact bootloader framebuffer accessor/type names) is still open. The R2
+module therefore imports no bootloader type: its boundary types are
+local (`FramebufferInfo`, `PixelFormat`), and the R5 wiring commit is the
+thin adapter that answers Q5 against the resolved 0.9.x version. R5
+still wires ONE module per commit, onto the proven tree only, after a K1
+boot log exists. Nothing in the R2 commit claims a compile or a boot.
+
+Also open at the Pax merge gate: license confirmation for the Terminus
+16 glyph table embedded in `framebuffer.rs` (generated verbatim from
+`Lat2-Terminus16.psf.gz`; see that file's header). Kernel merges go
+through Pax personally until K2 lands, so this is gated, not assumed.
+
 ## Q1 — Resolved bootloader version + lockfile (BLOCKS R2)
 
 `kernel/Cargo.toml` pins `bootloader` version `"0.9"` with feature
