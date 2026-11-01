@@ -146,11 +146,23 @@ export function isProductId(value) {
 // World packs (Meta OS institutions) register here, NOT in PRODUCTS.
 // PRODUCTS is the Trio camera-product list, guarded by the
 // product-parity test (web must equal native, exactly three camera
-// products). A workshop is not a camera product: it has no
+// products). A machine watch is not a camera product: it has no
 // observation categories and must never appear in the camera picker,
-// so Officina registers as a world entry with its own shape and
+// so Custos registers as a world entry with its own shape and
 // status, and the Trio list stays exactly vigiles / ignis / medicus.
+// A workshop is not a camera product either, so Officina registers
+// the same way.
 export const WORLD_PRODUCTS = [
+  {
+    id: "custos",
+    displayName: "Meta Custos",
+    department: "Machine infrastructure watch — the night watch for machines",
+    tagline: "A patrol that watches certificates, services, and known-exploited vulnerabilities while humans sleep.",
+    accent: "#587b8f",
+    status: "stage-1",
+    pack: "os/worlds/custos",
+    runtime: "os/worlds/custos/runtime/patrol.py",
+  },
   {
     id: "officina",
     displayName: "Meta Officina",
