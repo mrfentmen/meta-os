@@ -2,12 +2,14 @@
 """DSH-038 decision pins: dispatch approve is request-only.
 
 Acceptance: the decision plus rationale live in docs/DASHBOARD_SPEC.md
-(section 5.6), and the panel implementation matches it: the live Post
-button stays disabled under DISPATCH_POST_ENABLED (false), the
-approve flow makes no U.api post call, and the mock note tells the
-human the real post happens from the CLI. No behavior is changed by
-this batch; these tests pin the decided posture so a later lane
-cannot quietly re-enable a browser write path.
+(section 5.6), and the panel implementation matches it: the REAL post
+stays gated under DISPATCH_POST_ENABLED (false), the approve flow
+makes no U.api post call, and the mock note tells the human the real
+post happens from the CLI. HN-002 adds a SIMULATED post only: the
+Post button records a receipt in local panel state, clearly labelled
+simulated, with no network call and no bus write, so it does not
+reopen the decision. These tests pin the decided posture so a later
+lane cannot quietly re-enable a browser write path.
 """
 import os
 import unittest

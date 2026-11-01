@@ -256,9 +256,10 @@ that posts a brief request.
 
 ## 5. Dispatch panel (DSH-010, DSH-011, DSH-012) + payload contracts (DSP-037–DSP-040)
 
-**Flow:** goal in → plan preview out → human approves → human posts
-from the CLI (DSH-038, request-only) → tracker follows the posted
-jobs. Dispatch never auto-posts (DSP-040).
+**Flow:** goal in → plan preview out → human approves → Post records
+a SIMULATED receipt (HN-002: local state only, nothing posts) →
+human posts real jobs from the CLI (DSH-038, request-only) → tracker
+follows the posted jobs. Dispatch never auto-posts (DSP-040).
 
 ### 5.1 Request shape (DSP-037)
 
@@ -360,6 +361,13 @@ dispatch is request-only: the panel renders the plan preview and the
 approval states, and a human posts from the CLI. There is no live
 browser write path for dispatch approve in the hackathon window, and
 no flip task that enables one later.
+
+**HN-002 simulated post (not a post):** the Post button records a
+simulated receipt in local panel state only (label and tooltip state
+simulated, receipt row states it). It makes no network call, writes
+nothing to the store, and posts nothing to the bus, so it does not
+reopen the decision above: a real post still happens only from the
+CLI, after the CLI approval gate.
 
 **Why a browser post is ruled out, not deferred:**
 

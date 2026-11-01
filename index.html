@@ -3443,13 +3443,14 @@ try {
   // DSH-011 gate: viewer dispatch posting is OFF, same GOV-002 rule
   // as BRIEF_ME_NOW_ENABLED. The approve flow below (approvePost +
   // the approval shape + the native confirm) is wired and exercised
-  // in the mock, but the live Post button ships disabled and no live
-  // click handler is attached — a disabled button fires nothing, and
-  // there is deliberately NO send-path / U.api call for a post
-  // anywhere in this module. DSH-038 (spec section 5.6) decided
-  // this path request-only: the gate stays off by decision, not
-  // pending a flip. A live post would need a Dale decision plus a
-  // server-side signing service, neither in the hackathon window.
+  // in the mock. HN-002: the Post button now performs the SIMULATED
+  // post only (postSimulatedJobs): it records a receipt in local
+  // panel state and renders it, clearly labelled simulated. It makes
+  // no U.api call, writes nothing to the store, and posts nothing
+  // to the bus. The REAL post stays gated: DISPATCH_POST_ENABLED is
+  // false by the DSH-038 decision (spec section 5.6), not pending a
+  // flip. A live post would need a Dale decision plus a server-side
+  // signing service, neither in the hackathon window.
   var DISPATCH_POST_ENABLED = false;
 
   // DSH-014 gate: viewer alert lifecycle writes are OFF, same GOV-002
@@ -4407,9 +4408,9 @@ try {
   // latest-listed job it depends on, roots at level 0. No graph
   // library, no fixed widths — rows are plain block divs, so the
   // preview stacks at phone widths. Posting stays gated (spec
-  // §5.4, DSH-011): plan-ready renders Post N jobs disabled with
-  // the posting-off explanation, and Reject only flips local state
-  // — it posts nothing. A preview carrying errors instead of jobs
+  // §5.4, DSH-011): plan-ready renders Post N jobs as a SIMULATED
+  // post (HN-002, labelled simulated, receipt in local state only),
+  // and Reject only flips local state — it posts nothing. A preview carrying errors instead of jobs
   // renders the errors plainly with no Post button (spec §5.2);
   // validation is the engine's job, the panel only renders what it
   // is given. DSH-011 wires the approve flow on top: approvePost()
@@ -4417,9 +4418,10 @@ try {
   // room), asks the native confirm "Post N jobs to <room>?"
   // (spec §5.4), and, because DSH-038 decided dispatch approve
   // request-only (spec section 5.6), records the approval and says
-  // so plainly instead of posting. The live Post button stays disabled
+  // so plainly instead of posting. The REAL Post path stays gated
   // under DISPATCH_POST_ENABLED (see the gate comment above) with
-  // no live click handler, mirroring DSH-009.
+  // no live click handler; the enabled button runs the simulated
+  // post only (HN-002).
   function planJobLevels(jobs) {
     var index = {};
     for (var i = 0; i < jobs.length; i++) {
@@ -4499,6 +4501,7 @@ try {
     try {
       state.plan = null; state.dispatchNote = "";
       state.dispatchApproval = null; state.postedDispatch = null;
+      state.simulatedDispatch = null;
       state.dispatchState = "rejected";
       renderDispatch();
     } catch (e) {}
@@ -4568,6 +4571,54 @@ try {
       renderDispatch();
       return "approved-mock";
     } catch (e) { return state.dispatchState; }
+  }
+
+  // HN-002: the SIMULATED post. Records a receipt in local panel
+  // state only: no network call, no store write, no bus message.
+  // The button label and tooltip state simulated, and the receipt
+  // row says so too. The real post still goes through the CLI
+  // (DSH-038, request-only). Returns "posted-simulated" |
+  // "cancelled" | the current dispatch state (not plan-ready, plan
+  // has errors, or no confirm available).
+  function postSimulatedJobs(confirmFn, nowSec) {
+    try {
+      if (state.dispatchState !== "plan-ready" || !state.plan) {
+        return state.dispatchState;
+      }
+      var errs = Array.isArray(state.plan.errors) ? state.plan.errors : [];
+      if (errs.length) return state.dispatchState;
+      var n = Array.isArray(state.plan.jobs) ? state.plan.jobs.length : 0;
+      var room = dispatchRoom();
+      var ask = confirmFn ||
+        ((typeof window !== "undefined") ? window.confirm : null);
+      if (!ask) return state.dispatchState;
+      var ok = false;
+      try {
+        ok = !!ask(dispatchApprovalText(n, room) +
+          " (simulated: nothing posts to the bus)");
+      } catch (e) { return state.dispatchState; }
+      if (!ok) return "cancelled";
+      var now = (typeof nowSec === "number")
+        ? Math.floor(nowSec) : Math.floor(Date.now() / 1000);
+      state.simulatedDispatch = {
+        dispatch_id: "sim-" + room + "-" + now,
+        room: room, jobs: n, ts: now, simulated: true
+      };
+      state.dispatchNote = "Simulated post recorded: receipt below; " +
+        "nothing posted to the bus.";
+      renderDispatch();
+      return "posted-simulated";
+    } catch (e) { return state.dispatchState; }
+  }
+
+  function simulatedReceiptHTML(rec) {
+    var when = "";
+    try { when = new Date(rec.ts * 1000).toISOString(); } catch (e) {}
+    return '<div class="trow">Simulated receipt: ' +
+      U.esc(rec.dispatch_id) + " - " + U.esc(String(rec.jobs)) +
+      " jobs to " + U.esc(rec.room) +
+      (when ? " at " + U.esc(when) : "") +
+      " - nothing posted to the bus.</div>";
   }
 
   // --- Posted-plan tracker (DSH-012) -------------------------------
@@ -4693,10 +4744,15 @@ try {
               "</div>";
           }
           var n = Array.isArray(plan.jobs) ? plan.jobs.length : 0;
-          html += '<div class="trow"><button id="intel-post" disabled>' +
-            "Post " + n + " jobs</button> " +
+          html += '<div class="trow"><button id="intel-post" ' +
+            'title="Simulated only: nothing posts to the bus">' +
+            "Post " + n + " jobs (simulated)</button> " +
             '<button id="intel-reject">Reject plan</button></div>';
-          html += '<div class="trow">Posting is off for this build.</div>';
+          html += '<div class="trow">Simulated posting only: ' +
+            "nothing posts to the bus.</div>";
+          if (state.simulatedDispatch) {
+            html += simulatedReceiptHTML(state.simulatedDispatch);
+          }
         }
       } else if (st === "posting") {
         // DSP-039: the spec §5.4 posting row — preview frozen,
@@ -4741,6 +4797,13 @@ try {
           ? body.querySelector("#intel-reject") : null;
         if (rejBtn && rejBtn.addEventListener) {
           rejBtn.addEventListener("click", rejectPlan);
+        }
+        var postBtn = body.querySelector
+          ? body.querySelector("#intel-post") : null;
+        if (postBtn && postBtn.addEventListener) {
+          postBtn.addEventListener("click", function () {
+            try { postSimulatedJobs(); } catch (e) {}
+          });
         }
       } catch (e) { /* buttons are best-effort */ }
     } catch (e) { /* rendering must never throw */ }
@@ -5489,8 +5552,10 @@ try {
         "'Brief me now' refreshes the latest brief from the live " +
         "store on demand; it never posts.</div>" +
         '<div class="trow"><b>Dispatch:</b> goal in, plan preview ' +
-        "out. Approve is request-only: a human approves, then posts " +
-        "from the CLI. Dispatch never auto-posts. The tracker " +
+        "out. Post is simulated only: a human approves, the panel " +
+        "records a simulated receipt, nothing posts to the bus. Real " +
+        "posts still go through the CLI. Dispatch never auto-posts. " +
+        "The tracker " +
         "follows posted jobs with live status.</div>" +
         '<div class="trow"><b>Alerts:</b> alert records ' +
         "(muse-bus:intel:alert:&lt;id&gt;), newest first; severity " +
@@ -5830,6 +5895,14 @@ try {
       clickReject: function () {
         rejectPlan();
         return state.dispatchState;
+      },
+      // HN-002: drive the simulated post through the same handler
+      // the live button uses; simulatedDispatch reads the receipt.
+      postSimulated: function (confirmFn, nowSec) {
+        return postSimulatedJobs(confirmFn, nowSec);
+      },
+      simulatedDispatch: function () {
+        return state.simulatedDispatch || null;
       },
       // DSH-011: drive the approve flow the way the live button
       // will once the gate flips. clickPost(confirmFn, gateForTest)

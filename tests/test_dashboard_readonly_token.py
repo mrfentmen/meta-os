@@ -17,9 +17,10 @@ so all four panels render busy at once. The assertions:
   rejects nothing and no panel surfaces a token error
   (panelErrors all null);
 - every write affordance renders disabled with the plain
-  explanation: dispatch Post, alert Acknowledge and Resolve, each
-  next to "Posting is off for this build."; Brief me now renders
-  enabled: it is a read, not a write (HN-001), and never posts;
+  explanation: alert Acknowledge and Resolve, each next to
+  "Posting is off for this build."; Brief me now renders enabled:
+  it is a read, not a write (HN-001), and never posts; dispatch
+  Post renders enabled as simulated-only (HN-002, no write);
 - the live ack/resolve drivers return "gated" and leave the alert
   untouched, so a read-only viewer never mutates shared state.
 
@@ -249,7 +250,7 @@ class DashboardReadonlyTokenTest(unittest.TestCase):
                           snap["beat"], snap["alerts"]),
                          (2, 2, True, True, 1))
 
-    def test_write_buttons_disabled_brief_button_enabled(self):
+    def test_write_buttons_disabled_brief_and_post_sim_enabled(self):
         data = _run_driver()
         self.assertEqual(data["gates"],
                          {"briefMeNow": True, "dispatchPost": False,
@@ -259,7 +260,9 @@ class DashboardReadonlyTokenTest(unittest.TestCase):
         self.assertNotIn("Posting is off for this build.",
                          data["bodies"]["brief"])
         self.assertIn("disabled", data["bodies"]["dispatch"])
-        self.assertIn("Posting is off for this build.",
+        self.assertIn("Post 1 jobs (simulated)",
+                      data["bodies"]["dispatch"])
+        self.assertIn("Simulated posting only:",
                       data["bodies"]["dispatch"])
         self.assertIn("<button disabled", data["bodies"]["alerts"])
         self.assertIn("Acknowledge", data["bodies"]["alerts"])
