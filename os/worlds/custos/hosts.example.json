@@ -1,5 +1,6 @@
 {
  "cert_warn_days": 21,
+ "kev_age_red_days": 30,
  "hosts": [
   {
    "expected_ports": [
