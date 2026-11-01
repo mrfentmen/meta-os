@@ -63,3 +63,25 @@
 - NC-035: h cross-check — protocol central 55.9 matches closeout primary;
   closeout's flat-50 was sensitivity-only and stays there. No mismatch.
 - NC-036: this summary.
+
+## Section D — Scientia cross-checks (NC-037..NC-048) — DONE (CSV tasks recorded not-run)
+
+- NC-037 DONE. labs/delaney-xcheck/xcheck.py: Delaney-2004 equation from
+  the paper (0.16 -0.63*cLogP -0.0062*MWT +0.066*RB -0.74*AP), from scratch.
+  Gate code never read (doesn't exist in this checkout anyway).
+- NC-038 DONE as a negative: no archived Delaney CSV anywhere (searched).
+  NC-040 (run), NC-041 (compare vs gate 0.725/1.099/0.844), NC-042 (sha256
+  check) recorded NOT-RUN, not skipped-silently. Runner + selftest + OLS +
+  mol-audit below all proceed.
+- NC-039 DONE. --selfcheck 5/5 (benzene hand-verified term by term;
+  tolerance 0.05; worst |err| 0.005).
+- NC-043/044 DONE. Live PubChem re-fetch of all 5 round-2 structures:
+  atom/bond counts, element lists, formulas, weights ALL MATCH. Nothing
+  stale on either side.
+- NC-045 DONE. --ols mode, every output line labelled "NOT Delaney".
+- NC-046 DONE. Edge contract (empty→ValueError, salts/charged compute
+  with documented behavior); an empty-SMILES hole found by the contract
+  itself and fixed in the runner. Node bridge test 2/2.
+- NC-047 DONE. labs/delaney-xcheck/README.md with the gate-is-Milo's
+  sentence first.
+- NC-048: this summary.
