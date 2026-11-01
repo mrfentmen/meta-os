@@ -50,3 +50,21 @@ Work branch: `opencode/os-build`. Ground: `kernel/`, `services/`, `lobster/`, `o
   Fix (committed): `relocation-model=static` in
   kernel/.cargo/config.toml; `file` now says `statically linked`;
   image 58368 bytes. Reboot in progress.
+  UPDATE 10:0x: K1 ALIVE — `META OS KERNEL - alive (K1)` on serial
+  ~20 s after launch (fixed image). OS-006/007 DONE.
+- OS-008: triple boot DONE 2026-11-01 (K1-boot-run1/2/3.txt):
+  1 alive line each, all byte-identical
+  (`META OS KERNEL - alive (K1)`).
+- OS-009: K1 section. Built: kernel/ as written + 2 fixes (entry_point
+  shared ref; static relocation model). Booted: QEMU 11.1.3 -nographic,
+  512M, our bootimage .bin. Log: os-build/logs/K1-boot.txt (+ runs).
+  Unproven: everything past printing one line (no console, no
+  interrupts, no memory management — Sections B–F).
+- OS-010: image 58368 bytes (static build); bootloader crate 0.9.35
+  (bootimage 0.10.5 wraps it). DONE.
+- OS-011: no blocker hit (toolchain + boot issues fixed in-section).
+- OS-012: Section A summary. K1 proven on this Mac: our kernel binary
+  prints the alive line on QEMU serial, 3/3 boots identical. Fixes:
+  entry_point shared ref, static relocation model, rust-src + target
+  + llvm-tools components. Logs: K1-boot.txt (+ run1/2/3). Next:
+  Section B framebuffer. DONE — pushing.
