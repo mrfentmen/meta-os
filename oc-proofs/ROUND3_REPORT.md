@@ -328,3 +328,12 @@
   $75 in server/model.mjs + budget.mjs); no key values anywhere.
 - NC-166 DONE. README relative links: 2 found, 0 dead.
 - NC-170: this summary. Docs not fixed (protected).
+
+## Section K — Endurance and budget drills (NC-125..NC-136) — DONE (offline blocked)
+
+- 60-cycle loop soak: 59 committed, 1 deliberate kill rolled back clean;
+  zero errors otherwise. Caps never approached. Full results:
+  oc-proofs/endurance.md with log file names.
+- Budget trip, restart (1-commit proof), reconstruct, purge, clock,
+  disk, memory: all recorded in endurance.md.
+- NC-128 offline: still blocked (no sudo). NC-136: this summary.
