@@ -203,6 +203,105 @@ Why: R3's `dispatch()` + `InterruptFrame` contract is written, but
 the entry points that call it do not exist yet. Until Q9 is answered,
 R3 stays unwired and no interrupt is claimed to work.
 
+## Q10 — K4 memory wiring (needed before R5 wires memory.rs)
+
+`kernel/src/memory.rs` (K4, drafted unwired) takes a plain
+`MemoryMap` slice, a bitmap, a `TableMemory` implementation, and a
+heap buffer. It asserts none of the bootloader names below; the R5
+wiring commit must answer them from the Q1-resolved build, not from
+this file.
+
+Needed, at the Q1-resolved toolchain / bootloader version:
+- Memory map source: which BootInfo accessor/field carries the
+  physical memory map, and what its region-kind names are — in
+  particular which kinds the R5 adapter may map to `RegionKind::Usable`
+  (and which it must map to `Reserved`/`Other`, never allocated).
+  The adapter must also state its rule for overlapping regions, if
+  the map can report any.
+- Physical-memory access for tables: how the R5 adapter implements
+  `TableMemory` — how it obtains a writable view of a page-table
+  frame at a physical address (the `map_physical_memory` feature's
+  offset: a fixed value, or read from BootInfo, and the exact way
+  the adapter reads it). `memory.rs` never guesses this address.
+- Heap placement: which usable region the kernel heap buffer lives
+  in, where it sits relative to the kernel image, and how that
+  range is kept out of the frame allocator's hands (reserved region,
+  allocator exclusion, or both — stated, not assumed).
+- Root table: how R5 obtains the current top-level table's physical
+  frame address for `Mapper::new` (register read vs BootInfo value,
+  and the exact source). `memory.rs` takes the root as a parameter
+  and never reads it from hardware.
+- Translation-cache invalidation: what mechanism the Mac build uses
+  after `Mapper::unmap_page` (the module documents that R5 must
+  invalidate, and does not do it itself).
+
+Why: K4's frame allocator, mapper, and heap are written, but none
+of them can run until these five adapter points are answered. Until
+then, K4 stays unwired and no mapped page or heap allocation is
+claimed to work.
+
+## Update 2026-11-01 ~09:18 EST — K5 drafted, Q11 opened
+
+Boss layer order 2026-11-01 ~08:18 (same order as the R2 note above)
+assigns Rowan the Layer 2 kernel-core modules unwired with real
+behavior. `kernel/src/tasks.rs` (K5: task struct + scheduler
+skeleton, written against what K4's draft exposes) landed on
+`rowan/kernel` in the same commit as this note. UNWIRED into
+`main.rs`, UNCOMPILED, no boot claim, no context switch claimed to
+have run — same status as R2/R3/K4.
+
+What did NOT change: `kernel/Cargo.lock` is still absent on main
+(checked this run, live main tip), so Q1 is still unanswered and
+Q11 below is still open. The K5 module therefore imports no
+bootloader type, no `x86_64` crate type, and no K4 type (that
+module is not wired either): its stack and entry addresses are
+plain `u64` boundary values in K4's page units, and the R5 wiring
+commit is the thin adapter that maps them onto K4's `VirtAddr`
+and `FrameAllocator`. The module never asserts a Rust function as
+a switch target — a Rust `fn` cannot switch stacks — so the R5
+wiring commit must supply a real `asm` trampoline under the
+contract stated in the module header. R5 still wires ONE module
+per commit, onto the proven tree only, after a K1 boot log exists.
+
+Open at the Pax merge gate for K5: Q11 below (context-switch ABI
++ initial stack frame + stack sourcing). Milo gate-1 on the K5
+commit is invited on the same review-only basis as R1/R2/R3/K4:
+source-level verification, not a compile, switch, or boot verdict.
+
+## Q11 — Context-switch ABI, initial stack frame, stack sourcing (BLOCKS R5 wiring of K5)
+
+`kernel/src/tasks.rs` records a `Context` (callee-saved registers
+`rbx`, `rbp`, `r12`-`r15`, plus `rsp`, `rip`, `rflags`) and a
+`Stack` range, and `Scheduler` makes pure state decisions. None of
+that moves execution. The switch itself is R5's `asm` trampoline.
+
+Needed, at the Q1-resolved toolchain / bootloader version:
+- Switch ABI: the exact register save/restore order the trampoline
+  must follow, which registers it must preserve beyond the
+  callee-saved set (segment state, if any), and how `rflags` is
+  handled across the switch (which bits the trampoline may set,
+  which it must carry verbatim).
+- Initial stack frame: the exact layout the trampoline builds for
+  a first-run task (where the entry address sits, what return
+  address a task that returns falls into — the exit path, since a
+  task has no caller to return to — and the 16-byte alignment
+  rule at entry, which `Context::initial` already enforces on the
+  stack top).
+- Stack sourcing: which K4 `FrameAllocator` frames back each task
+  stack, how those frames are kept out of the heap buffer and out
+  of other tasks' stacks, and what the R5 adapter does when the
+  allocator is exhausted mid-spawn (spawn already returns `None`
+  on no free slot; the frame-exhaustion answer must match that
+  contract, not invent a fallback stack).
+- Timer hookup: how the R5 wiring calls `Scheduler::on_timer_tick`
+  from the K3 timer interrupt path (which handler, what runs at
+  interrupt level vs deferred), and what the tick rate is, so a
+  quantum in ticks means something measurable in a boot log.
+
+Why: K5's scheduler decisions are written, but no task can run
+until these four adapter points are answered. Until then, K5 stays
+unwired and no context switch or scheduled task is claimed to work.
+
 ## What this file is not
 
 - Not a design doc: it asks, it does not decide.
