@@ -20,6 +20,7 @@ hosts. The claims pinned here are the pack's safety claims:
 import os
 import sys
 import unittest
+from datetime import datetime, timezone
 
 REPO = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 sys.path.insert(0, os.path.join(REPO, "os", "worlds", "custos", "runtime"))
@@ -104,6 +105,22 @@ class TestClassify(unittest.TestCase):
         self.assertEqual(patrol.classify_exposure([22], [22, 443], 443), [])
 
 
+class TestCertExpiryParsing(unittest.TestCase):
+    def test_space_padded_and_zero_padded_days(self):
+        # getpeercert pads single-digit days with a space, not a zero.
+        self.assertEqual(
+            patrol.parse_cert_expiry("Nov  1 00:00:00 2027 GMT"),
+            datetime(2027, 11, 1, tzinfo=timezone.utc))
+        self.assertEqual(
+            patrol.parse_cert_expiry("Nov 01 00:00:00 2027 GMT"),
+            datetime(2027, 11, 1, tzinfo=timezone.utc))
+
+    def test_unparseable_date_is_none_never_an_exception(self):
+        self.assertIsNone(patrol.parse_cert_expiry("not a date"))
+        self.assertIsNone(patrol.parse_cert_expiry(""))
+        self.assertIsNone(patrol.parse_cert_expiry(None))
+
+
 class TestPatrol(unittest.TestCase):
     def run_fake(self, open_map, fetch=fake_fetch, seen=None):
         return patrol.run_patrol(fake_config(), NOW, fetch, fake_cert,
@@ -161,6 +178,23 @@ class TestPatrol(unittest.TestCase):
             fake_port_factory(open_map))
         self.assertEqual([r for r in observations(records)
                           if r["category"] == "anomalous exposure"], [])
+
+    def test_cert_probe_failure_is_an_error_not_data(self):
+        def no_cert(_host, _port):
+            return None
+        records, _seen = patrol.run_patrol(
+            fake_config(), NOW, fake_fetch, no_cert,
+            fake_port_factory({("up.example", 443): True}))
+        self.assertEqual([r for r in observations(records)
+                          if r["source"] == "cert"], [])
+        summary = records[-1]
+        self.assertIn("cert probe failed for up.example:443",
+                      summary["errors"])
+        # The liveness baseline still recorded; the failure did not
+        # stop the patrol.
+        self.assertTrue(any(r["host"] == "up.example" and
+                            r["category"] == "baseline normal"
+                            for r in observations(records)))
 
     def test_feed_failure_is_an_error_not_data(self):
         def broken_fetch(_url):

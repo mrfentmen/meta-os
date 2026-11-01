@@ -185,6 +185,21 @@ def probe_port(host, port, timeout=PROBE_TIMEOUT):
         return False
 
 
+def parse_cert_expiry(not_after):
+    """UTC expiry datetime for a getpeercert notAfter string, or None.
+
+    getpeercert dates are space-padded for single-digit days
+    ("Nov  1 ..."), which strptime accepts. Anything unparseable is
+    None, never an exception: an unparseable date is a failed probe,
+    recorded as an error, never a crash of the patrol.
+    """
+    try:
+        expires = datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z")
+    except (ValueError, TypeError):
+        return None
+    return expires.replace(tzinfo=timezone.utc)
+
+
 def probe_cert(host, port, timeout=PROBE_TIMEOUT):
     """Days left on the certificate the host presents, or None."""
     ctx = ssl.create_default_context()
@@ -194,11 +209,9 @@ def probe_cert(host, port, timeout=PROBE_TIMEOUT):
                 cert = tls.getpeercert()
     except (OSError, ssl.SSLError):
         return None
-    not_after = cert.get("notAfter")
-    if not not_after:
+    expires = parse_cert_expiry(cert.get("notAfter"))
+    if expires is None:
         return None
-    expires = datetime.strptime(not_after, "%b %d %H:%M:%S %Y %Z")
-    expires = expires.replace(tzinfo=timezone.utc)
     delta = expires - datetime.now(timezone.utc)
     return int(delta.total_seconds() // 86400)
 
