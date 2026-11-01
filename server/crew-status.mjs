@@ -52,6 +52,28 @@ async function readJsonlTail(file, limit) {
 }
 
 function projectIncident(record) {
+  const timeline = Array.isArray(record.timeline) ? record.timeline : [];
+  // The BOLO is filed on the timeline by the response step
+  // (server/queue/crew.py): observation text only, exactly the
+  // BOLO_KEYS key set — no identity field exists to leak. It is
+  // passed through verbatim, never rebuilt here.
+  const boloStep = [...timeline].reverse().find((s) => s.step === "bolo");
+  const bolo = boloStep && typeof boloStep.bolo === "object" && boloStep.bolo !== null
+    ? boloStep.bolo
+    : null;
+  // A false-positive close purges the evidence files and files a
+  // receipt step (crew_records.purge_evidence). After a purge no
+  // person evidence is kept, so the counts below are null and the
+  // UI says so instead of showing stale counts.
+  const evidencePurged = timeline.some((s) => s.step === "evidence-purged");
+  const files = Array.isArray(record.evidence?.files) ? record.evidence.files : null;
+  const evidence = !evidencePurged && files && files.length > 0
+    ? {
+        files: files.length,
+        frames: files.filter((f) => f.kind === "flag-frame" || f.kind === "investigation-frame").length,
+        face_crops: files.filter((f) => f.kind === "face-crop").length,
+      }
+    : null;
   return {
     id: record.id,
     status: record.status,
@@ -62,9 +84,12 @@ function projectIncident(record) {
     division: record.division,
     category: record.category,
     priority: record.priority,
-    steps: Array.isArray(record.timeline) ? record.timeline.length : 0,
+    steps: timeline.length,
     receipt_id:
-      [...(record.timeline ?? [])].reverse().find((s) => s.step === "dispatch")?.receipt_id ?? null,
+      [...timeline].reverse().find((s) => s.step === "dispatch")?.receipt_id ?? null,
+    bolo,
+    evidence,
+    evidence_purged: evidencePurged,
   };
 }
 

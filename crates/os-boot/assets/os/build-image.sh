@@ -203,13 +203,13 @@ if [ "${METAOS_DEMO:-0}" = "1" ]; then
   install -m 644 services/relay-watchdog.service.d/demo-thresholds.conf \
     "$ROOTFS/etc/systemd/system/relay-watchdog.service.d/"
 fi
-install -m 755 firstboot/metaos-firstboot bin/metaos-boot-checklist bin/metaos-update \
+install -m 755 firstboot/metaos-firstboot bin/metaos-boot-checklist bin/metaos-update bin/metaos-loop \
   "$ROOTFS/usr/local/bin/"
 install -m 644 README-FIRSTBOOT.md "$ROOTFS/usr/local/share/README-FIRSTBOOT.md" 2>/dev/null || \
   install -m 644 README-FIRSTBOOT.md "$ROOTFS/root/README-FIRSTBOOT.md"
 mkdir -p "$ROOTFS/etc/systemd/system/relay.target.wants" \
          "$ROOTFS/etc/systemd/system/multi-user.target.wants"
-for u in relay-dashboard.service relay-bus.service relay-jobs.service relay-overseer.timer relay-ready.service relay-watchdog.service relay-brief.service relay-watchman.service relay-uplink.service relay-mcp-gateway.service relay-memory.service metaos-firstboot.service; do
+for u in relay-dashboard.service relay-bus.service relay-jobs.service relay-overseer.timer relay-ready.service relay-watchdog.service relay-brief.service relay-watchman.service relay-uplink.service relay-mcp-gateway.service relay-memory.service metaos-loop.timer metaos-firstboot.service; do
   case $u in
     metaos-firstboot.service) ln -sf "/etc/systemd/system/$u" "$ROOTFS/etc/systemd/system/multi-user.target.wants/$u" ;;
     *) ln -sf "/etc/systemd/system/$u" "$ROOTFS/etc/systemd/system/relay.target.wants/$u" ;;
@@ -217,6 +217,11 @@ for u in relay-dashboard.service relay-bus.service relay-jobs.service relay-over
 done
 ln -sf /etc/systemd/system/relay-overseer.service \
   "$ROOTFS/etc/systemd/system/relay.target.wants/relay-overseer.service"
+ln -sf /etc/systemd/system/metaos-loop.service \
+  "$ROOTFS/etc/systemd/system/relay.target.wants/metaos-loop.service"
+# metaos-loop state dir (lock, cycle counts, loop log), owned by the relay user
+mkdir -p "$ROOTFS/var/lib/metaos/loop"
+chroot "$ROOTFS" chown relay:relay /var/lib/metaos/loop 2>/dev/null || true
 # getty autologin for the relay user on tty1 + serial (appliance, OS-009)
 for g in getty@tty1 serial-getty@ttyS0; do
   d="$ROOTFS/etc/systemd/system/$g.d"

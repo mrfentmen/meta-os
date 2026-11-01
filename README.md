@@ -190,7 +190,10 @@ top-level product; the still-image helpers accept `image/*` files only
 and resolve/reject with the file-reader result; the history re-inspection
 wiring (page note, Show assessment button, live and restored entries
 carrying their assessment). Current result:
-**88 tests, 88 pass, 0 fail** (Node v24).
+**1875 tests, 1819 pass, 56 fail** (Node v24, measured 2026-11-01 on
+main). The 56 fails are the pre-existing WKWebView-red native tests —
+see `docs/NATIVE_TEST_PREP.md` for the per-test UPDATE vs CARVE-OUT
+classification; the update-vs-carve-out call itself stays the boss's.
 
 Note: `node --test tests/` (directory form) fails in this sandbox's Node
 build; use the file form above.

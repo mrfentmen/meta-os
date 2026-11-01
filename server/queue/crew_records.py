@@ -9,8 +9,10 @@ Everything the agent crew does lands here, append-only:
                     and the step-writing API below exposes append as
                     the only mutation. Status fields move forward
                     (flagged -> reported -> dispatched-simulated, or
-                    -> cleared-by-review) alongside the timeline step
-                    that records the same transition.
+                    -> cleared-by-review, or -> yellow-review for a
+                    yellow-tier flag recorded for human review)
+                    alongside the timeline step that records the
+                    same transition.
   events.jsonl      the crew event feed the status endpoint serves:
                     one JSON object per line, appended, never
                     rewritten (patrol checks, flags, review verdicts,

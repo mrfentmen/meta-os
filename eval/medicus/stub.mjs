@@ -12,7 +12,11 @@
 //   - MED-013 (CPR training manikin) -> "person on ground" (a false alarm)
 //   - MED-016 (dark blurry night) -> "normal activity" (wrong category, no alert)
 //   - MED-019 (glare frame) -> "normal activity" (wrong category, no alert)
-// Every other scenario is answered with its labeled category.
+// Every other scenario is answered with its labeled category. The
+// current-taxonomy scenarios (MED-021..027, see
+// scenarios-current.json) are all answered with their labeled
+// category: the extended stub exercises the new categories, it does
+// not invent misses for them.
 // processing.model names the stub itself; latency_ms is null because the
 // stub reports no latency — the harness measures its own wall clock.
 
@@ -70,6 +74,13 @@ const CORRECT = {
   "MED-017": ["indeterminate", "Occlusion hides the deciding detail."],
   "MED-018": ["indeterminate", "Fog and rain obscure the scene."],
   "MED-020": ["indeterminate", "Figure class cannot be determined in this light."],
+  "MED-021": ["person down in roadway", "Person lying in the roadway, vehicles stopped around them."],
+  "MED-022": ["person slumped in vehicle", "Person slumped over in a parked vehicle."],
+  "MED-023": ["person in or near water", "Person in shallow water at the edge of a pond."],
+  "MED-024": ["person trapped or pinned", "Person pinned beneath debris beside a vehicle."],
+  "MED-025": ["bystander aid in progress", "Bystanders kneeling beside a person on the ground, attending to them."],
+  "MED-026": ["multi-person incident scene", "Several people down on the ground in one scene."],
+  "MED-027": ["blood visible at scene", "Blood visible on the ground beside a person lying there."],
 };
 
 export async function assessStub(scenario) {

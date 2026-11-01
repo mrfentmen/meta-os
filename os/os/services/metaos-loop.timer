@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the Meta OS self-development loop periodically
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=30min
+Unit=metaos-loop.service
+
+[Install]
+WantedBy=relay.target

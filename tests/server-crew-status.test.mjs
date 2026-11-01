@@ -33,9 +33,34 @@ async function fixtureDir() {
       created_at: "2026-10-30T09:59:30.000Z",
       camera: { id: "cam-a", name: "1 Ave @ 84 St", area: "Manhattan" },
       division: "vigiles", category: "person down", priority: "high",
+      evidence: { files: [
+        { kind: "flag-frame", ref: "evidence/incident-1/flag.jpg" },
+        { kind: "face-crop", ref: "evidence/incident-1/crop.jpg" },
+        { kind: "investigation-frame", ref: "evidence/incident-1/inv.jpg" },
+      ] },
       timeline: [
         { step: "flag" }, { step: "review" }, { step: "reported" },
+        { step: "bolo", bolo: {
+          division: "vigiles", category: "person down",
+          camera_name: "1 Ave @ 84 St", area: "Manhattan",
+          flagged_at: "2026-10-30T09:59:30.000Z",
+          frame_files: ["evidence/incident-1/flag.jpg", "evidence/incident-1/inv.jpg"],
+          face_crops: 1, person_descriptions: ["a person on the ground"],
+          visible_marks: ["tattoo on left forearm"],
+          direction_of_travel: null,
+          direction_note: "Not determined from still frames.",
+        } },
         { step: "dispatch", receipt_id: "sim-abc123" },
+      ],
+    },
+    "incident-2": {
+      id: "incident-2", status: "cleared-by-review",
+      created_at: "2026-10-30T09:00:00.000Z",
+      camera: { id: "cam-b", name: "2 Ave @ 10 St", area: "Manhattan" },
+      division: "vigiles", category: "energetic movement", priority: "low",
+      timeline: [
+        { step: "flag" }, { step: "review" },
+        { step: "evidence-purged", reason: "false positive" },
       ],
     },
   }));
@@ -57,10 +82,24 @@ test("readCrewStatus projects the crew's record files", async () => {
   assert.equal(status.events.length, 2);
   assert.equal(status.events[0].type, "dispatch");
   assert.equal(status.events[1].type, "patrol-check");
-  assert.equal(status.incidents.length, 1);
+  assert.equal(status.incidents.length, 2);
   assert.equal(status.incidents[0].id, "incident-1");
-  assert.equal(status.incidents[0].steps, 4);
+  assert.equal(status.incidents[0].steps, 5);
   assert.equal(status.incidents[0].receipt_id, "sim-abc123");
+  // BOLO + evidence ride the projection verbatim; counts only, no images.
+  assert.deepEqual(status.incidents[0].bolo.visible_marks, ["tattoo on left forearm"]);
+  assert.deepEqual(Object.keys(status.incidents[0].bolo).sort(), [
+    "area", "camera_name", "category", "direction_note", "direction_of_travel",
+    "face_crops", "flagged_at", "frame_files", "person_descriptions",
+    "visible_marks", "division",
+  ].sort());
+  assert.deepEqual(status.incidents[0].evidence, { files: 3, frames: 2, face_crops: 1 });
+  assert.equal(status.incidents[0].evidence_purged, false);
+  // Purged incident: no BOLO shown as kept evidence, no stale counts.
+  assert.equal(status.incidents[1].id, "incident-2");
+  assert.equal(status.incidents[1].bolo, null);
+  assert.equal(status.incidents[1].evidence, null);
+  assert.equal(status.incidents[1].evidence_purged, true);
   assert.equal(status.dispatches.count, 1);
   assert.equal(status.dispatches.last.receipt_id, "sim-abc123");
 });

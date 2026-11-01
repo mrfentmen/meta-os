@@ -1,0 +1,205 @@
+{
+  "rough_input": "i need a heatsink for a hot little chip, about 50mm square, no fan, keep it small, needs to stay cool under 2 degrees per watt",
+  "brief": {
+    "artefact_class": "heatsink-fin-geometry",
+    "gradeable": true,
+    "source_text": "i need a heatsink for a hot little chip, about 50mm square, no fan, keep it small, needs to stay cool under 2 degrees per watt",
+    "summary": "i need a heatsink for a hot little chip, about 50mm square, no fan, keep it small, needs to stay cool under 2 degrees per watt",
+    "requirements": [
+      {
+        "kind": "footprint_mm",
+        "value": 50.0,
+        "source": "stated"
+      },
+      {
+        "kind": "passive_cooling",
+        "value": true,
+        "source": "stated"
+      }
+    ],
+    "targets": [
+      {
+        "kind": "target_r_c_per_w",
+        "value": 2.0,
+        "source": "stated"
+      }
+    ],
+    "preferences": [
+      {
+        "kind": "compact",
+        "value": true,
+        "source": "stated",
+        "note": "not graded: the thermal simulator has no size score beyond the volume rule"
+      }
+    ],
+    "unknowns": [
+      {
+        "slot": "power_w",
+        "note": "not stated in the rough words"
+      }
+    ],
+    "conflicts": [],
+    "parameters": {
+      "fin_height_mm": 39.0625,
+      "fin_thickness_mm": 1.5,
+      "fin_count": 15,
+      "base_thickness_mm": 4.0
+    },
+    "bounds": {},
+    "amendments": [
+      {
+        "round": 1,
+        "change": "fin_height_mm 20.0 -> 25.0",
+        "reason": "feasible R 3.2136 above target 2.0000; raise fin height improves it to 2.6059 at design conditions"
+      },
+      {
+        "round": 2,
+        "change": "fin_height_mm 25.0 -> 31.25",
+        "reason": "feasible R 2.6059 above target 2.0000; raise fin height improves it to 2.1150 at design conditions"
+      },
+      {
+        "round": 3,
+        "change": "fin_height_mm 31.25 -> 39.0625",
+        "reason": "feasible R 2.1150 above target 2.0000; raise fin height improves it to 1.7210 at design conditions"
+      }
+    ],
+    "decision_log": [
+      {
+        "round": 0,
+        "rule": "intake",
+        "decision": "workshop first guess {'fin_height_mm': 20.0, 'fin_thickness_mm': 1.5, 'fin_count': 15, 'base_thickness_mm': 4.0}",
+        "reason": "rough words state no geometry; the loop starts mid-range and improves from graded feedback",
+        "grade_before": null,
+        "params_before": null,
+        "params_after": {
+          "fin_height_mm": 20.0,
+          "fin_thickness_mm": 1.5,
+          "fin_count": 15,
+          "base_thickness_mm": 4.0
+        }
+      },
+      {
+        "round": 1,
+        "rule": "improve",
+        "decision": "fin_height_mm 20.0 -> 25.0",
+        "reason": "feasible R 3.2136 above target 2.0000; raise fin height improves it to 2.6059 at design conditions",
+        "grade_before": {
+          "r_th_c_per_w": 3.213624062116546,
+          "feasible": true,
+          "violations": []
+        },
+        "params_before": {
+          "fin_height_mm": 20.0,
+          "fin_thickness_mm": 1.5,
+          "fin_count": 15,
+          "base_thickness_mm": 4.0
+        },
+        "params_after": {
+          "fin_height_mm": 25.0,
+          "fin_thickness_mm": 1.5,
+          "fin_count": 15,
+          "base_thickness_mm": 4.0
+        }
+      },
+      {
+        "round": 2,
+        "rule": "improve",
+        "decision": "fin_height_mm 25.0 -> 31.25",
+        "reason": "feasible R 2.6059 above target 2.0000; raise fin height improves it to 2.1150 at design conditions",
+        "grade_before": {
+          "r_th_c_per_w": 2.605863297150273,
+          "feasible": true,
+          "violations": []
+        },
+        "params_before": {
+          "fin_height_mm": 25.0,
+          "fin_thickness_mm": 1.5,
+          "fin_count": 15,
+          "base_thickness_mm": 4.0
+        },
+        "params_after": {
+          "fin_height_mm": 31.25,
+          "fin_thickness_mm": 1.5,
+          "fin_count": 15,
+          "base_thickness_mm": 4.0
+        }
+      },
+      {
+        "round": 3,
+        "rule": "improve",
+        "decision": "fin_height_mm 31.25 -> 39.0625",
+        "reason": "feasible R 2.1150 above target 2.0000; raise fin height improves it to 1.7210 at design conditions",
+        "grade_before": {
+          "r_th_c_per_w": 2.114963451847143,
+          "feasible": true,
+          "violations": []
+        },
+        "params_before": {
+          "fin_height_mm": 31.25,
+          "fin_thickness_mm": 1.5,
+          "fin_count": 15,
+          "base_thickness_mm": 4.0
+        },
+        "params_after": {
+          "fin_height_mm": 39.0625,
+          "fin_thickness_mm": 1.5,
+          "fin_count": 15,
+          "base_thickness_mm": 4.0
+        }
+      },
+      {
+        "round": 4,
+        "rule": "accept",
+        "decision": "freeze brief; design accepted",
+        "reason": "design-condition R 1.7210 meets target 2.0000 and the held-out gate passed (held-out R 1.1848)",
+        "grade_before": {
+          "r_th_c_per_w": 1.7210411106861345,
+          "feasible": true,
+          "violations": []
+        },
+        "params_before": {
+          "fin_height_mm": 39.0625,
+          "fin_thickness_mm": 1.5,
+          "fin_count": 15,
+          "base_thickness_mm": 4.0
+        },
+        "params_after": {
+          "fin_height_mm": 39.0625,
+          "fin_thickness_mm": 1.5,
+          "fin_count": 15,
+          "base_thickness_mm": 4.0
+        }
+      }
+    ]
+  },
+  "rounds_used": 4,
+  "final_params": {
+    "fin_height_mm": 39.0625,
+    "fin_thickness_mm": 1.5,
+    "fin_count": 15,
+    "base_thickness_mm": 4.0
+  },
+  "final_grade": {
+    "r_th_c_per_w": 1.7210411106861345,
+    "feasible": true,
+    "violations": []
+  },
+  "verification": {
+    "params": {
+      "fin_height_mm": 39.0625,
+      "fin_thickness_mm": 1.5,
+      "fin_count": 15,
+      "base_thickness_mm": 4.0
+    },
+    "claimed_r_th_c_per_w": 1.7210411106861345,
+    "fresh_r_th_c_per_w": 1.7210411106861345,
+    "fresh_agrees": true,
+    "heldout_r_th_c_per_w": 1.1847867647554304,
+    "heldout_feasible": true,
+    "heldout_violations": [],
+    "accept_r_c_per_w": 2.0,
+    "proven": true
+  },
+  "proven": true,
+  "status": "proven"
+}

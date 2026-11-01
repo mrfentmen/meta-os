@@ -313,5 +313,155 @@ class RecordingTests(unittest.TestCase):
                                      "prepare_response"])
 
 
+class TierGateTests(unittest.TestCase):
+    """Two-tier gate (Oct 31 ruling): a yellow-tier flag is
+    recorded for human review and nothing further is spent on it;
+    red runs the full chain unchanged. The tier comes from the
+    DISPLAY table (boss ruling, room 1 msg 502, display-wins);
+    the priority mapping is only a fallback where the display
+    table is silent, and a category in neither table stays
+    ungated.
+
+    NOTE on the record() helper: it always stores priority
+    "high". The gate ignores that stored field and recomputes
+    from (division, category) — so a yellow-category record here
+    still gates, which is the behaviour under test, not an error
+    in the fixture."""
+
+    def test_yellow_tier_records_for_review_without_spend(self):
+        rec = record([flag_step("energetic movement")],
+                     category="energetic movement")
+        d = orchestrator.decide(rec, guardrail_status=GUARDRAIL_OK)
+        self.assertEqual(d["decision"], "record_for_review")
+        self.assertEqual(d["actions"], [])
+        self.assertEqual(orchestrator.lifecycle_status(d),
+                         "yellow-review")
+        self.assertIn("yellow", d["reason"])
+        self.assertIn("human review", d["reason"])
+
+    def test_yellow_gate_holds_after_review_and_investigation(self):
+        # The gate sits above the whole chain: a yellow record
+        # that already carries review + investigation steps (filed
+        # before the gate existed) still spends nothing further.
+        rec = record([flag_step("energetic movement"),
+                      review_step("confirmed", "energetic movement"),
+                      investigation_step("ignis"),
+                      investigation_step("medicus")],
+                     category="energetic movement",
+                     status="investigating")
+        d = orchestrator.decide(rec, guardrail_status=GUARDRAIL_OK)
+        self.assertEqual(d["decision"], "record_for_review")
+        self.assertEqual(d["actions"], [])
+
+    def test_yellow_review_status_is_terminal(self):
+        rec = record([flag_step("energetic movement")],
+                     category="energetic movement",
+                     status="yellow-review")
+        d = orchestrator.decide(rec, guardrail_status=GUARDRAIL_OK)
+        self.assertEqual(d["decision"], "stop")
+        self.assertEqual(d["actions"], [])
+
+    def test_red_tier_runs_full_chain_unchanged(self):
+        rec = record([flag_step("possible altercation")],
+                     category="possible altercation")
+        d = orchestrator.decide(rec, guardrail_status=GUARDRAIL_OK)
+        self.assertEqual(d["decision"], "investigate")
+        self.assertEqual([a["agent"] for a in d["actions"]],
+                         ["review"])
+
+    def test_unflagged_category_is_not_gated(self):
+        # A baseline category has no priority, so the gate fails
+        # open: the existing chain runs unchanged for it.
+        rec = record([flag_step("normal activity")],
+                     category="normal activity")
+        d = orchestrator.decide(rec, guardrail_status=GUARDRAIL_OK)
+        self.assertEqual(d["decision"], "investigate")
+        self.assertEqual([a["agent"] for a in d["actions"]],
+                         ["review"])
+
+    def test_tier_for_mapping(self):
+        self.assertEqual(
+            orchestrator.tier_for("vigiles", "energetic movement"),
+            "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("vigiles", "possible altercation"),
+            "red")
+        self.assertEqual(
+            orchestrator.tier_for("medicus",
+                                  "crowd gathered around a person"),
+            "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("medicus", "person on ground"),
+            "red")
+        # Display wins over priority (boss ruling, room 1 msg 502):
+        # the display table lists ignis "visible smoke" as yellow
+        # while its priority is high, so the pipeline treats it as
+        # yellow. Same for the other display/priority disagreements.
+        self.assertEqual(
+            orchestrator.tier_for("ignis", "visible smoke"), "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("ignis",
+                                  "electrical fire indicators"),
+            "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("ignis", "gas fire indicators"),
+            "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("ignis",
+                                  "battery fire indicators"),
+            "yellow")
+        self.assertEqual(
+            orchestrator.tier_for("ignis", "brown smoke"), "red")
+        self.assertIsNone(
+            orchestrator.tier_for("vigiles", "normal activity"))
+
+    def test_tier_for_full_display_table(self):
+        # Every entry of the ported display table resolves to its
+        # display tier, in every division — not just the disputed
+        # categories.
+        for division, tiers in orchestrator.DISPLAY_TIERS.items():
+            for tier, categories in tiers.items():
+                for category in categories:
+                    self.assertEqual(
+                        orchestrator.tier_for(division, category),
+                        tier, (division, category))
+
+    def test_tier_for_neither_table_is_ungated(self):
+        # A category in neither the display table nor the
+        # priority map stays ungated (fail open), even though the
+        # priority helper defaults unlisted flagged categories to
+        # "low" — that default must not invent a tier.
+        self.assertIsNone(
+            orchestrator.tier_for("vigiles",
+                                  "definitely not a category"))
+
+
+class TierGateRecordingTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="trio-orchestrator-tests-")
+        self.records = crew_records.CrewRecords(
+            directory=os.path.join(self.tmp, "crew-data"))
+        self.orch = orchestrator.Orchestrator(
+            self.records, guardrail_status=lambda: GUARDRAIL_OK)
+
+    def test_yellow_decision_marks_record_yellow_review(self):
+        # The record itself must say yellow/review: the decision
+        # step carries status yellow-review, which advances the
+        # record's status field in the same append.
+        rec = record([flag_step("energetic movement")],
+                     category="energetic movement")
+        self.records.create_incident(rec)
+        self.records.append_timeline(
+            "incident-test", flag_step("energetic movement"))
+        d = self.orch.step(self.records.get_incident("incident-test"))
+        self.assertEqual(d["decision"], "record_for_review")
+        after = self.records.get_incident("incident-test")
+        self.assertEqual(after["status"], "yellow-review")
+        step = after["timeline"][-1]
+        self.assertEqual(step["step"], "decision")
+        self.assertEqual(step["decision"], "record_for_review")
+        self.assertEqual(step["status"], "yellow-review")
+
+
 if __name__ == "__main__":
     unittest.main()

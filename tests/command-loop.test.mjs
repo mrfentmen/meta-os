@@ -9,7 +9,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-import { loopEventText, loopFeedItems, loopStatusText } from "../js/command-loop.js";
+import { flagTier, loopEventText, loopFeedItems, loopIncidentItems, loopIncidentText, loopStatusText } from "../js/command-loop.js";
 
 const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
@@ -99,12 +99,66 @@ test("status line: waiting, unreachable, never-ran, paused, running", () => {
   );
 });
 
+test("flag tiers follow the ruling lists, baselines and unknowns get none", () => {
+  assert.equal(flagTier("vigiles", "energetic movement"), "yellow");
+  assert.equal(flagTier("vigiles", "staged verbal dispute"), "yellow");
+  assert.equal(flagTier("vigiles", "person down"), "red");
+  assert.equal(flagTier("ignis", "visible smoke"), "yellow");
+  assert.equal(flagTier("ignis", "cooking oil fire indicators"), "yellow");
+  assert.equal(flagTier("ignis", "structure fire"), "red");
+  assert.equal(flagTier("ignis", "dark smoke"), "red");
+  assert.equal(flagTier("medicus", "bystander aid in progress"), "yellow");
+  assert.equal(flagTier("medicus", "blood visible at scene"), "red");
+  assert.equal(flagTier("vigiles", "normal activity"), null);
+  assert.equal(flagTier("ignis", "no hazard visible"), null);
+  assert.equal(flagTier("medicus", "indeterminate"), null);
+  assert.equal(flagTier("vigiles", "something unlisted"), null);
+  assert.equal(flagTier("unknown-division", "person down"), null);
+});
+
+test("incident lines surface BOLO marks, evidence counts, and the tier", () => {
+  const line = loopIncidentText({
+    camera_name: "1 Ave @ 84 St", division: "vigiles", category: "person down",
+    status: "dispatched-simulated",
+    bolo: { visible_marks: ["tattoo on left forearm"], person_descriptions: ["a person on the ground"], direction_note: "Not determined from still frames." },
+    evidence: { files: 3, frames: 2, face_crops: 1 }, evidence_purged: false,
+  });
+  assert.match(line, /Incident — 1 Ave @ 84 St · Vigiles: person down \(dispatched-simulated\)/);
+  assert.match(line, /RED — full flag chain/);
+  assert.match(line, /BOLO: tattoo on left forearm/);
+  assert.match(line, /1 person description/);
+  assert.match(line, /evidence: 3 files \(2 frames, 1 face crops\)/);
+  // Face crops are a count only — no image, no identity language.
+  assert.doesNotMatch(line, /<img|data:image|identified as|matched to/);
+  const yellow = loopIncidentText({
+    camera_name: "2 Ave @ 10 St", division: "vigiles", category: "energetic movement",
+    status: "reported", bolo: null, evidence: null, evidence_purged: false,
+  });
+  assert.match(yellow, /YELLOW — recorded for human review, no investigation, no dispatch/);
+  assert.doesNotMatch(yellow, /BOLO|evidence:/);
+  const purged = loopIncidentText({
+    camera_name: "3 Ave @ 20 St", division: "medicus", category: "crowd gathered around a person",
+    status: "cleared-by-review", bolo: null, evidence: null, evidence_purged: true,
+  });
+  assert.match(purged, /YELLOW/);
+  assert.match(purged, /evidence files purged on false-positive close/);
+  const items = loopIncidentItems({ incidents: [
+    { camera_name: "X", division: "ignis", category: "visible smoke", status: "reported" },
+    null,
+  ] });
+  assert.equal(items.length, 1);
+  assert.equal(items[0].type, "incident");
+  assert.equal(items[0].tier, "yellow");
+});
+
 test("loop feed panel is wired: markup, honest copy, polling glue, CSS", () => {
   assert.ok(html.includes('id="cmd-loop-status"'), "status line element exists");
   assert.ok(html.includes('id="cmd-loop-feed"'), "feed list element exists");
   assert.ok(html.includes("Dispatch from this system is SIMULATED"), "panel copy labels dispatch simulated");
   assert.ok(html.includes("no real emergency service is ever contacted"), "panel copy states the boundary");
   assert.ok(commandJs.includes("loopFeedItems("), "glue renders via the pure formatters");
+  assert.ok(commandJs.includes("loopIncidentItems("), "glue renders incidents via the pure formatters");
+  assert.ok(css.includes(".cmd-loop-item--incident-yellow"), "yellow-tier incident rows are styled distinctly");
   assert.ok(commandJs.includes("loopStatusText("), "glue renders the status line via the pure formatter");
   assert.ok(commandJs.includes('fetch("/api/crew/status"'), "glue polls the crew status endpoint");
   assert.ok(commandJs.includes("setInterval(refreshLoopFeed, 5000)"), "poll interval is wired");

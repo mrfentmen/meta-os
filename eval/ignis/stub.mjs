@@ -19,7 +19,11 @@
 //     (wrong category, no alert)
 //   - IGN-018 (vehicle lights in rain, flame-like lighting) ->
 //     "visible flame" (a false alarm on a confusable negative, FP)
-// Every other scenario is answered with its labeled category.
+// Every other scenario is answered with its labeled category. The
+// current-taxonomy scenarios (IGN-021..030, see
+// scenarios-current.json) are all answered with their labeled
+// category: the extended stub exercises the new categories, it does
+// not invent misses for them.
 // processing.model names the stub itself; latency_ms is null because the
 // stub reports no latency — the harness measures its own wall clock.
 
@@ -77,6 +81,16 @@ const CORRECT = {
   "IGN-017": ["no hazard visible", "Empty parking lot at noon, no smoke, flame, or haze.", false],
   "IGN-019": ["obscured or distant hazard", "Thin haze only at the far edge of the frame, unconfirmable.", true],
   "IGN-020": ["indeterminate", "Unidentifiable glowing shape at dusk.", true],
+  "IGN-021": ["electrical fire indicators", "Sparks and arcing from an electrical panel.", true],
+  "IGN-022": ["gas fire indicators", "Blue flame jet from a gas stove burner.", true],
+  "IGN-023": ["cooking oil fire indicators", "Flames rising from a pan of cooking oil.", true],
+  "IGN-024": ["metal fire indicators", "Intensely bright white flame with a shower of sparks.", true],
+  "IGN-025": ["battery fire indicators", "E-bike battery venting sparks and intense flame.", true],
+  "IGN-026": ["vehicle fire", "Vehicle on fire, flames and smoke from the engine area.", true],
+  "IGN-027": ["structure fire", "Building with flame and heavy smoke at its windows.", true],
+  "IGN-028": ["smoldering fire", "Smoke from smoldering material, no visible flame.", true],
+  "IGN-029": ["dark smoke", "Thick dark smoke from burning fuel, plastics, or rubber.", true],
+  "IGN-030": ["brown smoke", "Brown smoke from burning wood and building framing.", true],
 };
 
 export async function assessStub(scenario) {

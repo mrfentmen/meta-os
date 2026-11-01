@@ -13,16 +13,17 @@
 // scenario, or throws. Every returned object is validated against the
 // frozen v2 contract with product "ignis".
 //
-// Alert definition (fixed, from the scenario labels): an assessment
-// "fires an alert" when its assessment.category is "visible smoke" or
-// "visible flame". NOTE (2026-10-31): the product taxonomy in
-// js/products.js has since grown fire-type and smoke-type categories
-// (electrical / gas / cooking-oil / metal / battery indicators,
-// vehicle fire, structure fire, smoldering, dark smoke, brown
-// smoke). This harness is a FROZEN benchmark: its scenario set and
-// this alert definition predate that growth and are unchanged, so
-// a type-category answer scores here as a category miss, not as a
-// product error. Extending the benchmark is a separate lane.
+// Alert definition (default: the current js/products.js taxonomy): an
+// assessment "fires an alert" when its assessment.category is one of
+// IGNIS_ALERT_CATEGORIES below — the two original alert categories
+// plus the fire-type and smoke-type categories the taxonomy grew on
+// 2026-10-31 (electrical / gas / cooking-oil / metal / battery
+// indicators, vehicle fire, structure fire, smoldering fire, dark
+// smoke, brown smoke). The frozen benchmark (scenarios.json, 20
+// scenarios, alert only for visible smoke / visible flame) still runs
+// as legacy: pass { alertCategories:
+// IGNIS_ALERT_CATEGORIES_LEGACY } to validateIgnisScenarios /
+// runIgnisEval, or run the runner with --legacy.
 // "obscured or distant hazard" never fires an alert
 // on its own: a distant or partially hidden hazard warrants human
 // review, recorded separately, not an automatic alert — the same logic
@@ -47,11 +48,30 @@ import { computeMetrics } from "../shared/metrics.mjs";
 
 export { computeMetrics };
 
-export const IGNIS_ALERT_CATEGORIES = ["visible smoke", "visible flame"];
+export const IGNIS_ALERT_CATEGORIES = [
+  "visible smoke",
+  "visible flame",
+  "electrical fire indicators",
+  "gas fire indicators",
+  "cooking oil fire indicators",
+  "metal fire indicators",
+  "battery fire indicators",
+  "vehicle fire",
+  "structure fire",
+  "smoldering fire",
+  "dark smoke",
+  "brown smoke",
+];
+
+// Frozen-benchmark alert set (pre-2026-10-31 taxonomy): only visible
+// smoke and visible flame fire an alert. Legacy runs only; the
+// default is IGNIS_ALERT_CATEGORIES above.
+export const IGNIS_ALERT_CATEGORIES_LEGACY = ["visible smoke", "visible flame"];
 
 const IGNIS_CATEGORIES = PRODUCT_BY_ID.ignis.categories;
 
-export function validateIgnisScenarios(scenarios) {
+export function validateIgnisScenarios(scenarios, options = {}) {
+  const alertCategories = options.alertCategories ?? IGNIS_ALERT_CATEGORIES;
   const errors = [];
   if (!Array.isArray(scenarios) || scenarios.length === 0) {
     return ["scenario set is missing or empty"];
@@ -83,19 +103,20 @@ export function validateIgnisScenarios(scenarios) {
       errors.push(`${prefix}.alert_expected: missing or not a boolean`);
     } else if (
       IGNIS_CATEGORIES.includes(s.ground_truth_label) &&
-      s.alert_expected !== IGNIS_ALERT_CATEGORIES.includes(s.ground_truth_label)
+      s.alert_expected !== alertCategories.includes(s.ground_truth_label)
     ) {
       errors.push(
         `${prefix}.alert_expected: ${s.alert_expected} contradicts the alert definition ` +
-          `(alert only for ${IGNIS_ALERT_CATEGORIES.join(", ")})`,
+          `(alert only for ${alertCategories.join(", ")})`,
       );
     }
   });
   return errors;
 }
 
-export async function runIgnisEval(scenarios, assess) {
-  const labelErrors = validateIgnisScenarios(scenarios);
+export async function runIgnisEval(scenarios, assess, options = {}) {
+  const alertCategories = options.alertCategories ?? IGNIS_ALERT_CATEGORIES;
+  const labelErrors = validateIgnisScenarios(scenarios, { alertCategories });
   if (labelErrors.length > 0) {
     throw new Error(`invalid scenario set: ${labelErrors.join("; ")}`);
   }
@@ -135,7 +156,7 @@ export async function runIgnisEval(scenarios, assess) {
       continue;
     }
     const actualCategory = assessment.assessment.category;
-    const alertFired = IGNIS_ALERT_CATEGORIES.includes(actualCategory);
+    const alertFired = alertCategories.includes(actualCategory);
     const firstEvidence =
       Array.isArray(assessment.observations) && assessment.observations.length > 0
         ? assessment.observations[0].evidence

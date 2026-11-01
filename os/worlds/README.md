@@ -100,6 +100,7 @@ And every pack must satisfy these rules:
 | doe | Public school | SPEC, landed 2026-10-28 | Staffing and substitute coverage watch, certification and filing compliance clock, sealed duty record; school operating status crosses to civic worlds as counts, student data never leaves the building. Definition only; no runtime. |
 | mta | Transit authority | SPEC, landed 2026-10-28 | Headway gap watch, rolling stock health, platform crowd states where feeds exist, sealed incident timeline; casualty counts cross to ems and nypd, service state to civic worlds, imagery and rosters local only. Definition only; no runtime. |
 | dep | Water and sewer utility | SPEC, landed 2026-10-28 | Pump station overflow-risk watch, water quality exceedance elevation, outfall and overflow watch against rainfall, sealed operations record; advisory state crosses to doe and mta as zone counts, customer records never leave the utility. Definition only; no runtime. |
+| officina | Invention workshop | PARTIAL (design loop + heatsink simulator + held-out gate, landed 2026-11-01) | An agent that designs, simulates, breaks, and redesigns. Stage 1 runs heatsink fin geometry through a real simulator, a design-job loop, and a held-out acceptance gate; overnight run 001 (240 variants) exported a workshop-proven design. It proposes and scores only — it never orders a build or ships a part. |
 
 ## Checking a pack
 

@@ -355,6 +355,63 @@ export function nearestCameras(cameras, point, radiusMeters, limit = 3) {
     .slice(0, limit);
 }
 
+// Nearest-camera handoff: when a camera flags, the operator gets a
+// second angle for free instead of hunting the list. Same radius as
+// the building popup's nearby list. Pure: no DOM, no map, no side
+// effects — the caller owns showing vs. suggesting (see
+// resolveHandoff).
+export const HANDOFF_RADIUS_METERS = 600;
+
+// Other online cameras near the flagged one, nearest first, each
+// with its real distance attached. The flagged camera itself is
+// always excluded; offline cameras are excluded by default since a
+// handoff target has to show a live picture.
+export function nearestOtherCamera(cameras, flaggedCameraId, options = {}) {
+  const { radiusMeters = HANDOFF_RADIUS_METERS, limit = 1, onlineOnly = true } = options;
+  if (!Array.isArray(cameras) || !flaggedCameraId) return [];
+  const origin = cameras.find((cam) => cam && cam.id === flaggedCameraId);
+  if (
+    !origin ||
+    typeof origin.latitude !== "number" ||
+    typeof origin.longitude !== "number" ||
+    !Number.isFinite(origin.latitude) ||
+    !Number.isFinite(origin.longitude)
+  ) {
+    return [];
+  }
+  return cameras
+    .filter((cam) => cam && cam.id !== flaggedCameraId && (!onlineOnly || isCameraOnline(cam)))
+    .map((camera) => ({ camera, distance: distanceMeters(camera, origin) }))
+    .filter((entry) => Number.isFinite(entry.distance) && entry.distance <= radiusMeters)
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, Math.max(0, limit));
+}
+
+// Milliseconds of map silence before an auto-show is allowed again.
+// The map side sets userInteracting on pointer/wheel/touch input and
+// clears it after this long without input, so a handoff never yanks
+// the view mid-drag.
+export const HANDOFF_IDLE_MS = 5000;
+// Decide what a fresh flag should do, without touching the UI.
+// risingEdge must be the `changed` half of applyAssessmentToFlag:
+// only a baseline -> flagged transition may move the view.
+// Returns one of:
+// - { action: "show", camera, distanceMeters } — operator is idle,
+//   auto-show the nearest other camera.
+// - { action: "suggest", camera, distanceMeters } — operator is busy;
+//   record a suggestion instead of moving anything.
+// - { action: "none", reason } — nothing to do (not-a-rising-edge,
+//   no-candidate, or invalid input); reason is a stable string.
+export function resolveHandoff({ cameras, flaggedCameraId, risingEdge, userInteracting, radiusMeters = HANDOFF_RADIUS_METERS } = {}) {
+  if (!risingEdge) return { action: "none", reason: "not-rising-edge" };
+  const [next] = nearestOtherCamera(cameras, flaggedCameraId, { radiusMeters, limit: 1 });
+  if (!next) return { action: "none", reason: "no-candidate" };
+  if (userInteracting) {
+    return { action: "suggest", camera: next.camera, distanceMeters: next.distance };
+  }
+  return { action: "show", camera: next.camera, distanceMeters: next.distance };
+}
+
 // A GeoJSON polygon ring approximating a ground circle (for the
 // selected camera's radius ring on the 3D map). Returns [lng, lat]
 // pairs, closed (first == last). Pure destination-point math on a
@@ -438,4 +495,51 @@ export function filterCameras(cameras, query) {
       ((typeof camera.name === "string" && camera.name.toLowerCase().includes(q)) ||
         (typeof camera.area === "string" && camera.area.toLowerCase().includes(q))),
   );
+}
+
+// ---- Tracked incident ------------------------------------------------
+// One incident at a time can be tracked: the map keeps the view on
+// its camera as new assessments land, until the operator takes over
+// or the incident clears. All decisions are pure; the map owns the
+// timer and the actual pan.
+
+// Follow only on a genuinely new result for the tracked camera while
+// the operator is hands-off. Anything else leaves the view alone.
+export function shouldFollowTracked({ isTracked, hasNewResult, userInteracting }) {
+  return Boolean(isTracked && hasNewResult && !userInteracting);
+}
+
+// ---- Bounded world snapshot ------------------------------------------
+// A fixed-shape, capped summary of the command view for anything that
+// needs context without the whole world: model prompts, logging, or
+// a future assistant. Bounding is the contract: flagged is capped at
+// WORLD_SNAPSHOT_MAX_FLAGGED with truncated: true when clipped, and
+// only plain JSON values are ever included.
+export const WORLD_SNAPSHOT_MAX_FLAGGED = 50;
+export const WORLD_SNAPSHOT_VERSION = 1;
+
+export function worldSnapshot({ cameras = [], watchedIds = [], incidents = [], focusedCameraId = null, at = null } = {}) {
+  const online = Array.isArray(cameras) ? cameras.filter((cam) => cam && cam.isOnline).length : 0;
+  const watched = Array.isArray(watchedIds) ? watchedIds.filter((id) => typeof id === "string") : [];
+  const open = Array.isArray(incidents) ? incidents.filter((entry) => entry && entry.open !== false && !entry.cleared) : [];
+  const flagged = open.slice(0, WORLD_SNAPSHOT_MAX_FLAGGED).map((entry) => ({
+    cameraId: typeof entry.cameraId === "string" ? entry.cameraId : null,
+    productId: typeof entry.productId === "string" ? entry.productId : null,
+    category: typeof entry.category === "string" ? entry.category : null,
+    priority: typeof entry.priority === "string" ? entry.priority : null,
+    timestamp: typeof entry.timestamp === "string" ? entry.timestamp : null,
+  }));
+  return {
+    version: WORLD_SNAPSHOT_VERSION,
+    updatedAt: typeof at === "string" && at.length > 0 ? at : new Date().toISOString(),
+    counts: {
+      online,
+      watched: watched.length,
+      flagged: flagged.length,
+    },
+    focusedCameraId: typeof focusedCameraId === "string" ? focusedCameraId : null,
+    watched,
+    flagged,
+    truncated: open.length > flagged.length,
+  };
 }
