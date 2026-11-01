@@ -1,45 +1,50 @@
-# `dns` — Layer 4 service
+# dns — the resolver client
 
-**Status: NOT BUILT.** No source yet. Filled by **B-L1-32**.
+Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
+service 16. Pure: bytes in, bytes out, no cache and no timers.
 
-This README is the entry from `services/README_TEMPLATE.md`, unfilled. Every
-section below is deliberately empty rather than optimistic: a section that says
-nothing is honest, a section that guesses is not.
+## Scope
 
-## What it does
+One A-record lookup, built from RFC 1035 §4.1.2. AAAA and everything else wait until
+IPv6 exists anywhere in this stack — an untested parser for records nothing can use is
+liability, not coverage.
 
-resolver client. Not written yet.
+## The compression pointer is the whole problem
 
-## Contract
+A name may point at bytes earlier in the packet. That makes a naive parser trivially
+crashable and a careless one infinitely loopable — a pointer to itself is a valid-looking
+encoding that never terminates. Three guards, because one of them will be the one that
+matters:
 
-- **Entry:** none yet. Will be `export "svc_entry" fn service_main(...) -> i32`
-  per `os-build/layer1/SERVICE_CONTRACT.md` §2.
-- **Kernel surface:** none declared yet. Requirements it will place on Layers 1–3
-  are listed in `os-build/layer1/BOUNDARIES.md`.
-- **Needs from Layers 1–3:** see `services/MANIFEST.md`, row for `dns`.
-- **Offers to Layers 5–6:** see `services/MANIFEST.md`; nothing may rely on it yet.
+1. **Every pointer must point strictly backwards.** Forward or same-offset is refused.
+   Forward can loop and can read sections the packet has not finished writing; same-offset
+   is a one-instruction infinite loop.
+2. **Jump count capped** at `DNS_MAX_JUMPS` (32).
+3. **Name length capped** at the format's own 255 bytes.
 
-## Dependencies
+`dns_read_name` returns the offset where parsing **continues**, not where the pointer
+led — a caller that continued at the target would re-read records already consumed.
 
-- **Libraries:** not yet decided — B-L1-15's gap audit narrows the candidates.
-- **Services:** not yet decided.
-- **Data it owns:** not yet decided.
+## Refusals, and why each exists
 
-## Failure behaviour
+| Check | Reason |
+|---|---|
+| reply id != query id | otherwise we answer somebody else's question |
+| `QR` bit clear | not a response |
+| `QDCOUNT != 1` | not a shape this parser understands |
+| label length > 63 | the length byte's top two bits are the pointer marker; 64..191 are not lengths |
+| A record `rdlength != 4` | a different record pretending to be A, or malformed |
+| `ANCOUNT < 1` | name does not resolve |
 
-Not yet designed. When it is, the codes come from `common/err` and a failure is
-always a log record, never a silence.
+An empty label (leading or doubled dot) is refused at build time rather than emitted: a
+zero-length label **is** the root terminator, so one in the middle makes the query
+malformed by construction.
 
-## Verification
+## Bug found while writing it
 
-Nothing to verify: no source.
+The query builder reused the loop counter from the 12-byte header loop, so the name loop
+started at offset 12 and **silently dropped the first twelve characters of every
+hostname**. The reset to 0 is now commented where it sits, because it looks redundant
+and is not.
 
-## Not verified
-
-Everything. There is no Goose toolchain on this machine
-(`goose__toolchain_status` → `NOT FOUND`), so even a finished service cannot pass
-WRITTEN into COMPILED here.
-
-## Deviations
-
-None — nothing has been written to deviate from.
+Not compiled, not run.
