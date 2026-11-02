@@ -1,0 +1,20 @@
+{
+  "run": "aegis-hosted-2026-11-02T14-14-27-308Z",
+  "at": "2026-11-02T14:14:27.313Z",
+  "confusables": {
+    "scanned": 77,
+    "findings": 0
+  },
+  "lifecycle": {
+    "state": "closed",
+    "steps": [
+      true,
+      true
+    ]
+  },
+  "alarm": {
+    "small": "quiet",
+    "big": "alarm"
+  },
+  "note": "local passes only; the OSV sweep is a separate run and is not claimed here"
+}
