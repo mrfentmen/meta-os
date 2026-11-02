@@ -1,0 +1,93 @@
+{
+  "camera": {
+    "area": "Manhattan",
+    "id": "cam-a",
+    "latitude": 40.7755,
+    "longitude": -73.9502,
+    "name": "1 Ave @ 84 St"
+  },
+  "category": "person down",
+  "created_at": "2026-11-02T15:41:33.120Z",
+  "division": "vigiles",
+  "evidence": {
+    "detector": "unavailable",
+    "files": [],
+    "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
+    "purged": {
+      "at": "2026-11-02T15:41:33.123Z",
+      "files_removed": 1,
+      "reason": "closed-false-positive"
+    }
+  },
+  "id": "incident-725c546b990dd1b4",
+  "patrol_job_id": "stub",
+  "priority": "high",
+  "status": "closed-false-positive",
+  "timeline": [
+    {
+      "at": "2026-11-02T15:41:33.120Z",
+      "category": "person down",
+      "division": "vigiles",
+      "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
+      "job_id": "stub",
+      "latency_ms": 0,
+      "model": "none",
+      "priority": "high",
+      "step": "flag",
+      "summary": "stubbed summary: person down"
+    },
+    {
+      "actions": [
+        {
+          "agent": "review",
+          "task": "Independent second assessment of the flagged frame (review survival rule: the flag stands only if this reading also lands outside the baseline set)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T15:41:33.121Z",
+      "decision": "investigate",
+      "reason": "flagged category \"person down\" is outside the vigiles baseline set and no independent review has been recorded yet",
+      "status": "under_review",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T15:41:33.122Z",
+      "category": "normal activity",
+      "error": null,
+      "job_id": "stub",
+      "judge_mode": "deterministic",
+      "judge_reasons": [
+        "the review reading landed on the baseline category 'normal activity'; the flag reads as a look-alike"
+      ],
+      "judged_by": "imperium-judge",
+      "latency_ms": 0,
+      "model": "none",
+      "status": null,
+      "step": "review",
+      "summary": "stubbed summary: normal activity",
+      "verdict": "cleared"
+    },
+    {
+      "actions": [
+        {
+          "agent": "records",
+          "task": "Close the incident as a false positive in the append-only record (status closed-false-positive); retain the full timeline"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T15:41:33.123Z",
+      "decision": "close_candidate",
+      "reason": "review returned the baseline category \"normal activity\" \u2014 the flag is a look-alike; the incident closes as a false positive and its record is kept, not erased",
+      "status": "closed-false-positive",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T15:41:33.123Z",
+      "files_removed": 1,
+      "reason": "closed-false-positive",
+      "step": "evidence-purged"
+    }
+  ]
+}

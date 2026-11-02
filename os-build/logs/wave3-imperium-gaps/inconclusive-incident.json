@@ -1,0 +1,85 @@
+{
+  "camera": {
+    "area": "Manhattan",
+    "id": "cam-a",
+    "latitude": 40.7755,
+    "longitude": -73.9502,
+    "name": "1 Ave @ 84 St"
+  },
+  "category": "person down",
+  "created_at": "2026-11-02T15:42:11.781Z",
+  "division": "vigiles",
+  "evidence": {
+    "detector": "unavailable",
+    "files": [
+      {
+        "bytes": 1026,
+        "camera_id": "cam-a",
+        "kind": "flag-frame",
+        "ref": "evidence/incident-725c546b990dd1b4/flag-frame-cam-a-ed9e92.jpg",
+        "sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64"
+      }
+    ],
+    "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64"
+  },
+  "id": "incident-725c546b990dd1b4",
+  "patrol_job_id": "stub",
+  "priority": "high",
+  "status": "monitoring",
+  "timeline": [
+    {
+      "at": "2026-11-02T15:42:11.781Z",
+      "category": "person down",
+      "division": "vigiles",
+      "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
+      "job_id": "stub",
+      "latency_ms": 0,
+      "model": "none",
+      "priority": "high",
+      "step": "flag",
+      "summary": "stubbed summary: person down"
+    },
+    {
+      "actions": [
+        {
+          "agent": "review",
+          "task": "Independent second assessment of the flagged frame (review survival rule: the flag stands only if this reading also lands outside the baseline set)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T15:42:11.782Z",
+      "decision": "investigate",
+      "reason": "flagged category \"person down\" is outside the vigiles baseline set and no independent review has been recorded yet",
+      "status": "under_review",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T15:42:11.783Z",
+      "category": null,
+      "error": "stubbed failure",
+      "job_id": "stub",
+      "judge_mode": "deterministic",
+      "judge_reasons": [
+        "the review reading failed or carried no category; the judge does not confirm on a missing reading"
+      ],
+      "judged_by": "imperium-judge",
+      "latency_ms": 0,
+      "model": "none",
+      "status": null,
+      "step": "review",
+      "summary": null,
+      "verdict": "inconclusive"
+    },
+    {
+      "actions": [],
+      "actions_count": 0,
+      "agent": "orchestrator",
+      "at": "2026-11-02T15:42:11.783Z",
+      "decision": "continue_monitoring",
+      "reason": "review was inconclusive \u2014 the flag is neither confirmed nor cleared, so the evidence is insufficient; the incident stays open for human review and no further model call is spent on it",
+      "status": "monitoring",
+      "step": "decision"
+    }
+  ]
+}
