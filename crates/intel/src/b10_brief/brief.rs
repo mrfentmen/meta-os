@@ -2320,6 +2320,71 @@ pub fn environment_budget_record(
     None
 }
 
+/// OS-103 follow-up: the merged environment record a caller stores
+/// as a snapshot's "environment" value: one `as_of` stamp for the
+/// whole record, taken once so the repo, bus, and Working now
+/// lines' ages agree instead of drifting across reads, plus each
+/// part the builders could produce. A part that yields nothing
+/// usable is left out, never padded: a non-checkout repo path
+/// leaves `repo` out, a snapshot with no usable jobs list leaves
+/// `jobs` out, a snapshot with no usable messages list leaves
+/// `bus` out, and a snapshot with no usable budgets entry leaves
+/// `budget` out, and `environment_lines` then renders that line
+/// as not reported instead of falsely reading nobody, zero
+/// messages, or a clean tree. An empty claimed-jobs list is kept
+/// as `Some(vec![])`, so it still renders as nobody holds a
+/// claimed job, and an empty messages list is kept as a bus
+/// record with 0 messages, so it still renders as an empty
+/// window. The budget part reads the snapshot's stated figures,
+/// never a live ledger: no spend ledger exists in this repo yet,
+/// so a snapshot carrying no budgets list still renders the
+/// Budget line as not reported. Never fails: the builders
+/// already never fail.
+///
+/// Typed-input mapping, following this module's convention:
+/// the caller passes `None` for a jobs, messages, or budgets
+/// value that is not a list (Python treats a non-dict snapshot
+/// as no snapshot, so all three arrive as `None`), `None` for
+/// a room value that is neither a string nor a list, and
+/// `None` for a lane that is not a string. One documented
+/// deviation: Python defaults `repo_path` to its own repo root
+/// (see `environment_repo_record`); here `None` means "no path
+/// given" and yields no repo part — the caller passes the
+/// checkout path.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BuiltEnvironmentRecord {
+    pub as_of: i64,
+    pub repo: Option<EnvironmentRepoRecord>,
+    pub jobs: Option<Vec<EnvironmentJobsEntry>>,
+    pub bus: Option<EnvironmentBusRecord>,
+    pub budget: Option<EnvironmentBudgetRecord>,
+}
+
+pub fn build_environment_record(
+    jobs: Option<&[RawEnvironmentJob]>,
+    messages: Option<&[RawMessage]>,
+    budgets: Option<&[RawEnvironmentBudget]>,
+    repo_path: Option<&str>,
+    room: Option<&BusRooms>,
+    lane: Option<&str>,
+    now: Option<i64>,
+) -> BuiltEnvironmentRecord {
+    let stamp = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    BuiltEnvironmentRecord {
+        as_of: stamp,
+        repo: environment_repo_record(repo_path, Some(stamp)),
+        jobs: environment_jobs_record(jobs),
+        bus: environment_bus_record(messages, room, Some(stamp)),
+        budget: environment_budget_record(budgets, lane, Some(stamp)),
+    }
+}
+
 /// STR-002 image extensions: the digest lists what the pointer
 /// itself names, so only these extensions count as screenshots.
 /// A `.txt`, `.pdf`, or extension-less pointer is a file share,
@@ -4883,5 +4948,47 @@ mod tests {
         assert!(lines[0].contains("not reported"));
         assert!(lines[1].contains("not reported"));
         assert!(lines[2].contains("not reported"));
+    }
+
+    #[test]
+    fn build_environment_record_nothing_usable_leaves_all_parts_out() {
+        let record = build_environment_record(
+            None, None, None, None, None, None, Some(1793093400),
+        );
+        assert_eq!(record.as_of, 1793093400);
+        assert!(record.repo.is_none());
+        assert!(record.jobs.is_none());
+        assert!(record.bus.is_none());
+        assert!(record.budget.is_none());
+    }
+
+    #[test]
+    fn build_environment_record_keeps_empty_jobs_and_empty_bus_and_one_stamp() {
+        use super::super::window::RawMessage;
+        let jobs: Vec<RawEnvironmentJob> = vec![];
+        let messages: Vec<RawMessage> = vec![];
+        let budgets = budget_budgets();
+        let non_checkout = repo_test_dir("non-checkout-build");
+        let _ = std::fs::remove_dir_all(&non_checkout);
+        std::fs::create_dir_all(&non_checkout).expect("temp non-checkout dir");
+        let record = build_environment_record(
+            Some(&jobs),
+            Some(&messages),
+            Some(&budgets),
+            non_checkout.to_str(),
+            Some(&BusRooms::Single("main".into())),
+            Some("HANA"),
+            Some(1793093400),
+        );
+        assert_eq!(record.as_of, 1793093400);
+        assert!(record.repo.is_none(), "a non-checkout path leaves repo out");
+        assert_eq!(record.jobs, Some(vec![]));
+        let bus = record.bus.expect("an empty list is a bus record, not none");
+        assert_eq!(bus.messages, 0);
+        assert_eq!(bus.as_of, 1793093400);
+        let budget = record.budget.expect("a usable HANA entry yields a budget");
+        assert_eq!(budget.lane, "HANA");
+        assert_eq!(budget.as_of, 1793093400);
+        let _ = std::fs::remove_dir_all(&non_checkout);
     }
 }
