@@ -1,0 +1,74 @@
+{
+  "comparison_vs_prereg": {
+    "detail": "observed=0.8177471797566775 threshold=1.5 direction='<='",
+    "observed": 0.8177471797566775,
+    "observed_metric": "rmse",
+    "target": 1.5,
+    "verdict": "match"
+  },
+  "compute_output_hash": "616e42f33e61dea36eb4c2794ddc8d5fe42b6968f5efcb00a55d4bee93a1e0fd",
+  "compute_record_id": "exp-524d7b884c1b",
+  "cycle_id": "DRESS-REHEARSAL-001",
+  "department": "chemistry",
+  "filed": {
+    "cycle_transitions": 6,
+    "experiment_entry": "e99dd19a3d19c9807bb4dfdfe6b0666e48eac5ab3ffd2c46f7d58dab51838fd4",
+    "repository": [
+      "experiments",
+      "claims",
+      "cycles"
+    ],
+    "result_entry": "7bbf63c0be7439c801b29dbc6ec5b867bdd739734c8856871566f02b78a2d7ad"
+  },
+  "filed_level": 2,
+  "gate": {
+    "decision": "confirmed",
+    "level": 2,
+    "reason": "verifier agreed (blind re-run reproduced the hash)."
+  },
+  "generated_at": "2026-11-02T14:11:37.887338Z",
+  "hash_comparison": {
+    "diff": "agree: hashes match (616e42f33e61...) and outcomes match ('match').",
+    "original_hash": "616e42f33e61dea36eb4c2794ddc8d5fe42b6968f5efcb00a55d4bee93a1e0fd",
+    "re_hash": "616e42f33e61dea36eb4c2794ddc8d5fe42b6968f5efcb00a55d4bee93a1e0fd",
+    "verdict": "agree"
+  },
+  "held_out": {
+    "file_sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189",
+    "n": 20,
+    "rmse": 0.8177471797566775,
+    "rows": "11-30"
+  },
+  "honesty": [
+    "The RMSE 0.8177 is scored from the archived ESOL-predicted vs measured columns on held-out rows 11-30, recomputed at run time (file sha256 8c06a76f0c64).",
+    "scientific verdict 'match' vs pre-registered RMSE <= 1.5 (no adjectives).",
+    "Pipeline verdict 'reproduced': reproduce_from_record re-executed the chem computation from archived inputs; the hash comparison checks pipeline integrity, not the science.",
+    "Repository write is 'confirmed' at level 2 (gate rule: only verifier-agreed results enter as confirmed).",
+    "Levels 4-6 not earned and not claimed (human-only)."
+  ],
+  "prereg": {
+    "direction": "<=",
+    "metric": "rmse",
+    "note": "pre-registered BEFORE results (this dict is built before the RMSE is compared).",
+    "threshold": 1.5
+  },
+  "question": "Can ESOL-style linear model predict solubility for 20 held-out compounds within RMSE 1.5?",
+  "repository_decision": "confirmed",
+  "reproduce_from_record": {
+    "match": true,
+    "original_output_hash": "616e42f33e61dea36eb4c2794ddc8d5fe42b6968f5efcb00a55d4bee93a1e0fd",
+    "rerun_output_hash": "616e42f33e61dea36eb4c2794ddc8d5fe42b6968f5efcb00a55d4bee93a1e0fd",
+    "verdict": "reproduced"
+  },
+  "rotation": "independent-verifier != computational-scientist (check_rotation returned 'independent-verifier')",
+  "scientific_verdict": "match",
+  "timing": {
+    "model_spend": 0,
+    "model_spend_note": "0 -- no model calls on this path; the rehearsal is deterministic stdlib only (compute/verify/repository), so there is no spend to meter.",
+    "wall_clock_s": 0.003
+  },
+  "verifier_bundle_keys": [
+    "inputs",
+    "plan"
+  ]
+}

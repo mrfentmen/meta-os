@@ -66,3 +66,25 @@ Next: Section 2 — Research Intelligence (11–20), in order.
 - Example records/examples/verification_example.json (synthetic, real pipeline, verdict agree, confirmed L2, dispute null)
 - Tests test_section6.py: isolation, blind, caps, rotation, repo — full suite 119 OK
 - Note: records/ledger.jsonl checkpoint stays 5 entries (Sec 3); Sec 4-6 examples carry own hashes verified at creation (7/17 entries noted in files)
+
+## Section 7 — Hortus breeding (61–70) — LANDED 2026-11-02
+- hortus_audit.md: engine/model/verifier/records API from code; Task 70 honest paragraph (complete capped generator for toy problem, cannot touch plans/ledger/repo)
+- breeding.py: new_variant (falsifier required), propose_variants (reasoning + hortus_status, UNIMPLEMENTED if no import), run_variant via compute (same records/budgets), select_survivor AFTER results vs filed prereg (unregistered refused), lineage hash chain, dead-ends as L2 negatives
+- Example breeding_example.json (Delaney prep stat, 3 variants run via run_chem, survivor V002, 6 ledger entries, lineage verifies)
+- Tests test_section7.py 14 OK
+
+## Section 8 — Gateway (71–80) — LANDED 2026-11-02
+- gateway.py: ALLOWLIST 9 boss tools, SCOPES per agent (runner none), call_tool records every call (args/result hashes, cost, ts) to records/gateway/calls.jsonl, allowlist/scope refusal recorded, quarantine unconfirmed, budget caps + receipt, offline_mode closed + recorded, backend LOCAL-SHELF only (no network)
+- Example gateway_example.json (3 real LOCAL-SHELF calls, network_touched false, unconfirmed)
+- GATEWAY_README.md; Tests test_section8.py 11 OK
+
+## Section 9 — Outputs (81–90) — LANDED 2026-11-02
+- export.py: export_session, display (0 grey/1 blue/2 green/3 teal/4+ amber), labs/science-lab-review/index.html (regen by --review), check_specimens (molecules are viz NOT lab sources — gap stated), dept_summary, audit_exports (14 claims 0 violations), archive_cycle (zips + sha), board, regen_drill 4/4 identical, sign-off 13 outputs/8 sources
+- Tests test_section9.py 13 OK
+
+## Section 10 — Demo + truth (91–100) — LANDED 2026-11-02
+- dress_rehearsal.json (fresh chem Q, 20 held-out rows 11-30, run_chem RMSE 0.818<=1.5 match, blind reproduce agree, gate confirmed L2, wall-clock measured, model spend 0)
+- failure_drill.json (broken hypotheses refused, fake_success false)
+- Test sweep: tests/science-lab 163 OK; hortus 9 OK (os/tests/test_hortus_engine); registry loads 25 entries
+- Claim audit: 19 checked 19 backed 0 cut; SCIENCE_LAB_STATUS.md + README.md in tree; exports regen verified
+- Final line: The Science Lab runs a full question-to-verified-repository cycle with every claim filed at its honestly earned evidence level and never shown above it.

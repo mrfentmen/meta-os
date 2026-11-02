@@ -1,0 +1,82 @@
+{
+  "claims": [
+    {
+      "basis": "held-out rows 11-30 RMSE 0.8177 vs pre-registered <= 1.5; pipeline reproduced",
+      "claim_id": "CLAIM-DRESS-REHEARSAL-001",
+      "level": 2,
+      "recorded_level": 2,
+      "source": "repository:claims",
+      "statement": "ESOL-style predictions match measured solubility on 20 held-out compounds within RMSE 1.5 (observed RMSE 0.8177).",
+      "verdict": "match"
+    },
+    {
+      "basis": "filed repository experiment (verification_status=reproduced)",
+      "claim_id": "EXP-DRESS-REHEARSAL-001",
+      "level": 2,
+      "recorded_level": 2,
+      "source": "repository:experiments",
+      "statement": "Can ESOL-style linear model predict solubility for 20 held-out compounds within RMSE 1.5?",
+      "verdict": "reproduced"
+    },
+    {
+      "basis": "sealed_record.levels.computation=2; verification: ?; claim capped at 2; ",
+      "claim_id": "DRESS-REHEARSAL-001-computation",
+      "level": 2,
+      "recorded_level": 2,
+      "source": "cycle-record:sealed_record.levels.computation",
+      "statement": "Computation observation for the cycle question (prep-run, unverified unless a reproduced record exists).",
+      "verdict": "unverified"
+    }
+  ],
+  "claims_by_level": {
+    "2": 3
+  },
+  "cycle_id": "DRESS-REHEARSAL-001",
+  "display": [
+    {
+      "basis": "held-out rows 11-30 RMSE 0.8177 vs pre-registered <= 1.5; pipeline reproduced",
+      "claim_id": "CLAIM-DRESS-REHEARSAL-001",
+      "colour": "green",
+      "level": 2,
+      "statement": "ESOL-style predictions match measured solubility on 20 held-out compounds within RMSE 1.5 (observed RMSE 0.8177)."
+    },
+    {
+      "basis": "filed repository experiment (verification_status=reproduced)",
+      "claim_id": "EXP-DRESS-REHEARSAL-001",
+      "colour": "green",
+      "level": 2,
+      "statement": "Can ESOL-style linear model predict solubility for 20 held-out compounds within RMSE 1.5?"
+    },
+    {
+      "basis": "sealed_record.levels.computation=2; verification: ?; claim capped at 2; ",
+      "claim_id": "DRESS-REHEARSAL-001-computation",
+      "colour": "green",
+      "level": 2,
+      "statement": "Computation observation for the cycle question (prep-run, unverified unless a reproduced record exists)."
+    }
+  ],
+  "export_version": "science-lab-export/1",
+  "gate_state": "open",
+  "generated_at": "2026-11-02T14:11:41.944972Z",
+  "generated_by": "os/worlds/science-lab/export.py export_session",
+  "honesty": [
+    "Generated from records by export_session; no hand-written levels.",
+    "Every claim displays at its recorded level, never higher (ladder.assert_export_allowed checked per claim).",
+    "Levels 4-6 are human-only (amber) and unreachable by this system alone; none is claimed here."
+  ],
+  "parked_gate": null,
+  "phase": "sealing",
+  "question": "Can ESOL-style linear model predict solubility for 20 held-out compounds within RMSE 1.5?",
+  "sources": [
+    "records/cycles/DRESS-REHEARSAL-001.json",
+    "records/ledger.jsonl",
+    "records/repository/claims.jsonl",
+    "records/repository/experiments.jsonl",
+    "records/examples/cycle_example.json"
+  ],
+  "verdicts": {
+    "match": 1,
+    "reproduced": 1,
+    "unverified": 1
+  }
+}
