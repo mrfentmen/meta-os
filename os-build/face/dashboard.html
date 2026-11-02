@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="data:,"><title>Dashboard</title>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Dashboard</title>
 <style>body{font-family:system-ui;background:#0a0f1c;color:#eee;padding:24px}.cards{display:grid;grid-template-columns:repeat(2,minmax(160px,1fr));gap:12px}.card{background:#16213a;border-radius:10px;padding:14px}.card b{font-size:22px;display:block}</style>
 </head><body>
 <h1>Dashboard <small>(live, this machine)</small></h1>
@@ -12,7 +12,7 @@
 <script>
 async function tick(){
   try{
-    const r = await fetch('http://127.0.0.1:18932/facts'); const f = await r.json();
+    const r = await fetch('/facts'); const f = await r.json();
     document.getElementById('cpu').textContent = f.cpu;
     document.getElementById('mem').textContent = f.mem;
     document.getElementById('disk').textContent = f.disk;
