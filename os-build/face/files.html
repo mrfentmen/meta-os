@@ -1,0 +1,65 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Files</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font-family:system-ui;background:#111;color:#eee;padding:24px;max-width:860px;margin:auto}
+#bar{display:flex;gap:6px;margin:12px 0}input[type=text]{flex:1;padding:8px;background:#222;color:#eee;border:1px solid #444}
+button{padding:8px 12px;cursor:pointer}
+#quick button{margin:2px;padding:6px 10px;background:#222;color:#eee;border:1px solid #444;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #333;font-size:14px}
+tr.dir td.n{color:#7cc4ff;cursor:pointer}tr.file td.n{color:#eee}
+a{color:#7cc4ff}.op{margin-left:6px;padding:4px 8px;font-size:13px;cursor:pointer}
+#status{min-height:1.4em;color:#999}#mk{display:flex;gap:6px;margin:12px 0}</style>
+</head><body>
+<h1>Files <small>(live, this machine)</small></h1>
+<div id="quick"></div>
+<div id="bar"><input id="path" type="text" placeholder="/absolute/path"><button id="go">Go</button><button id="up">Up</button></div>
+<div id="mk"><input id="newdir" type="text" placeholder="New folder path"><button id="mkbtn">Create folder</button></div>
+<table><thead><tr><th>Name</th><th>Size</th><th>Modified</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+<p><a href="trash.html">Trash</a></p>
+<p id="status" role="status"></p>
+<script>
+(function(){
+var API="http://127.0.0.1:18936",cur="";
+var pathEl=document.getElementById("path"),rows=document.getElementById("rows"),st=document.getElementById("status");
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fmt(n){if(n<1024)return n+" B";if(n<1048576)return (n/1024).toFixed(1)+" K";return (n/1048576).toFixed(1)+" M"}
+function dt(t){try{return new Date(t*1000).toLocaleString()}catch(e){return""}}
+function load(p){
+  st.textContent="Loading "+(p||"(face dir)")+"...";
+  fetch(API+"/list"+(p?"?path="+encodeURIComponent(p):"")).then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d}})})
+  .then(function(x){
+    if(!x.ok||!x.d.ok){st.textContent="Error: "+(x.d.error||"request failed");return}
+    cur=x.d.path;pathEl.value=cur;st.textContent=cur+" ("+x.d.entries.length+" entries)";
+    rows.innerHTML="";
+    x.d.entries.forEach(function(e){
+      var tr=document.createElement("tr");tr.className=e.is_dir?"dir":"file";
+      var n=document.createElement("td");n.className="n";n.textContent=(e.is_dir?"\uD83D\uDCC1 ":"\uD83D\uDCC4 ")+e.name;
+      if(e.is_dir)n.onclick=function(){load(e.path)};
+      var s=document.createElement("td");s.textContent=e.is_dir?"\u2014":fmt(e.size);
+      var m=document.createElement("td");m.textContent=dt(e.mtime);
+      var a=document.createElement("td");
+      if(e.is_dir){var o=document.createElement("button");o.className="op";o.textContent="Open";o.onclick=function(){load(e.path)};a.appendChild(o);}
+      else{var ed=document.createElement("a");ed.href="editor.html?path="+encodeURIComponent(e.path);ed.textContent="Edit";a.appendChild(ed);}
+      var t=document.createElement("button");t.className="op";t.textContent="Trash";t.onclick=function(){trash(e.path)};a.appendChild(t);
+      tr.appendChild(n);tr.appendChild(s);tr.appendChild(m);tr.appendChild(a);rows.appendChild(tr);
+    });
+  }).catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+}
+function trash(p){
+  fetch(API+"/trash",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:p})})
+  .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?"Trashed "+p:"Error: "+d.error;load(cur);})
+  .catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+}
+[["Face",""],["Root","/"],["/tmp","/tmp"],["/opt/face","/opt/face"]].forEach(function(q){
+  var b=document.createElement("button");b.textContent=q[0];b.onclick=function(){load(q[1])};document.getElementById("quick").appendChild(b);
+});
+document.getElementById("go").onclick=function(){load(pathEl.value.trim())};
+document.getElementById("up").onclick=function(){if(!cur)return;var i=cur.lastIndexOf("/");load(i<=0?"/":cur.slice(0,i))};
+document.getElementById("mkbtn").onclick=function(){
+  var p=document.getElementById("newdir").value.trim();if(!p)return;
+  fetch(API+"/mkdir",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:p})})
+  .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?"Created "+p:"Error: "+d.error;if(d.ok)load(cur);});
+};
+pathEl.addEventListener("keydown",function(e){if(e.key==="Enter")load(pathEl.value.trim())});
+load("");
+})();
+</script></body></html>

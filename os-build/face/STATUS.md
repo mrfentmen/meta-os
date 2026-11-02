@@ -42,18 +42,31 @@ or BLOCKED with the artifact named.
 | 26 | Open/drag/close/minimise/snap | PROVEN (local) | minimized/restored + snap halves |
 | 27 | Right-click menu | PROVEN (local) | ctxmenu verified |
 | 28 | Alt-tab + terminal shortcut | PROVEN (local) | Notes->Terminal->Notes |
-| 29-33 | Wallpapers | TODO | — |
-| 34-37 | Dock | TODO | — |
+| 29 | Ribbon fps | PROVEN (local) | rAF ~61 frames/500ms on Mac (wallpapers.html, 5 live canvases) |
+| 30-32 | Wallpaper set + picker persists | PROVEN (local) | 13/13 checks: 5 previews live, click applies + Applied note + reload persists |
+| 33 | Pause when fullscreen | TODO | — |
+| 34 | Dock per mocks + systems pinned | DONE (code) | APPS has Chrome/Terminal/Files/Dash/Editor/Notes/Board/Calendar/Calc/Settings/Trash + 5 systems |
+| 35 | Icons same style, no Apple art | DONE (code) | drawn letters, systems share style |
+| 36 | Hover/running/dock-toggle | PROVEN (local) | running dot + toggle minimise/restore verified |
+| 37 | Every entry real target | DONE (staged) | local pages exist; systems via :18934 site stage; guest proof TODO |
 | 38 | Terminal app real shell | PROVEN (local) | shell-terminal.png ([connected]+bash prompt via ws:18933) |
 | 39 | First tab status page live facts | PROVEN (local) | term-status bar (cpu/mem/disk/net, same /facts as Dashboard) |
 | 40 | clear/scrollback/copy/paste | DONE (code) | clear btn, 2000-line cap, select-to-copy, paste event |
-| 41-43 | Dashboard | TODO | — |
-| 44-49 | Systems as apps | TODO | — |
-| 50-51 | Board | TODO | — |
-| 52-59 | Everyday apps | TODO | — |
+| 41-43 | Dashboard live numbers | TODO (guest) | Mac facts.py is Linux-only (cpu/mem/net ?) by design; guest proof next |
+| 44-49 | Systems as apps | DONE (staged) | :18934 site server stages surfaces/index/logo-studio + data; dock retargeted; guest proof TODO |
+| 50-51 | Board rooms/post/persist | DONE (local PASS) | board.py :18935 + board.html; curl rooms/post/restart-persist PASS; guest proof TODO |
+| 52 | Files real browser | DONE (local PASS) | files.py :18936 + files.html; selftest PASS; guest proof TODO |
+| 53 | Code Editor save real | DONE (local PASS) | editor.html via files.py save; roundtrip PASS; guest proof TODO |
+| 54 | Notes persisted | PROVEN (local) | reload persists via localStorage |
+| 55 | Calendar add+survive | PROVEN (local) | grid+today+add verified, reload persists |
+| 56 | Calculator | PROVEN (local) | 7*8=56, 9/0=Error, C clears |
+| 57 | Chrome meta-os.pages.dev | DONE (code) | dock target set; guest proof TODO |
+| 58 | Trash restore | DONE (local PASS) | trash.html live via files.py; trash/restore/delete PASS; guest proof TODO |
+| 59 | Settings all controls | TODO | settings.html exists, control audit next |
 | 60-64 | First run + polish | TODO | — |
 | 65-68 | Proof pack | TODO | — |
-| 69-74 | Long tail | PARKED (after tonight) | — |
+| 69-73 | Long tail | PARKED (after tonight) | — |
+| 74 | Bare-metal research note | PROVEN | BARE_METAL_NOTE.md (framebuffer/mouse/compositor/storage+net/ordering) |
 
 ## Spike judgment (task 4) and decision (task 5) — DONE 2026-11-02
 

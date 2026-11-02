@@ -1,0 +1,34 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Board</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font-family:system-ui;background:#111;color:#eee;padding:24px;max-width:720px;margin:auto}
+#rooms button{margin:2px;padding:6px 10px;background:#222;color:#eee;border:1px solid #444;cursor:pointer}
+#rooms button.on{background:#0a84ff;border-color:#0a84ff}
+#log{border:1px solid #333;height:50vh;overflow-y:auto;padding:8px;margin:12px 0;background:#000}
+.msg{margin:4px 0}.msg b{color:#7cc4ff}.msg span{color:#888;font-size:12px}
+form{display:flex;gap:6px}input{flex:1;padding:8px;background:#222;color:#eee;border:1px solid #444}
+button{padding:8px 12px}</style>
+</head><body>
+<h1>Board</h1>
+<div id="rooms"></div>
+<div id="log"></div>
+<form id="f"><input id="author" placeholder="name" size="8"><input id="text" placeholder="Message..." autocomplete="off"><button>Post</button></form>
+<script>
+(function(){
+var API="http://127.0.0.1:18935",room="general";
+var roomsEl=document.getElementById("rooms"),log=document.getElementById("log");
+var author=document.getElementById("author"),text=document.getElementById("text");
+function loadRooms(){fetch(API+"/rooms").then(function(r){return r.json()}).then(function(d){
+if(!d.rooms)return;if(d.rooms.indexOf(room)<0)room=d.rooms[0]||room;
+roomsEl.innerHTML="";d.rooms.forEach(function(n){var b=document.createElement("button");
+b.textContent="#"+n;if(n===room)b.className="on";
+b.onclick=function(){room=n;poll()};roomsEl.appendChild(b)})})}
+function poll(){fetch(API+"/messages?room="+encodeURIComponent(room)).then(function(r){return r.json()})
+.then(function(d){if(!d.messages)return;log.innerHTML=d.messages.map(function(m){
+return "<div class=msg><b>"+esc(m.author)+"</b> <span>#"+m.id+"</span> "+esc(m.text)+"</div>"}).join("");
+log.scrollTop=log.scrollHeight;loadRooms()}).catch(function(){})}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+document.getElementById("f").onsubmit=function(e){e.preventDefault();
+fetch(API+"/post",{method:"POST",headers:{"Content-Type":"application/json"},
+body:JSON.stringify({room:room,author:author.value||"anon",text:text.value})}).then(function(){text.value="";poll()})};
+loadRooms();poll();setInterval(poll,2000)})();
+</script></body></html>

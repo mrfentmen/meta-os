@@ -67,22 +67,23 @@
    entry opens something real: repo pages in windows, or a backend
    launch (launcher.py) for real Linux apps behind the browser. */
 const APPS = [
-  { id: "chrome",   icon: "C", name: "Chrome",    kind: "url", target: "surfaces.html" },
+  { id: "chrome",   icon: "C", name: "Chrome",    kind: "url", target: "https://meta-os.pages.dev" },
   { id: "terminal", icon: "T", name: "Terminal",  kind: "term" },
-  { id: "files",    icon: "F", name: "Files", kind: "launch", target: "pcmanfm" },
+  { id: "files",    icon: "F", name: "Files", kind: "url", target: "files.html" },
   { id: "dash",     icon: "D", name: "Dashboard", kind: "url", target: "dashboard.html" },
-  { id: "editor",   icon: "E", name: "Code Editor", kind: "launch", target: "mousepad" },
+  { id: "editor",   icon: "E", name: "Code Editor", kind: "url", target: "editor.html" },
   { id: "notes",    icon: "N", name: "Notes", kind: "url", target: "notes.html" },
-  { id: "calendar", icon: "C", name: "Calendar", kind: "launch", target: "orage" },
-  { id: "calc",     icon: "=", name: "Calculator", kind: "launch", target: "galculator" },
+  { id: "board",    icon: "B", name: "Board", kind: "url", target: "board.html" },
+  { id: "calendar", icon: "C", name: "Calendar", kind: "url", target: "calendar.html" },
+  { id: "calc",     icon: "=", name: "Calculator", kind: "url", target: "calculator.html" },
   { id: "settings",icon: "S", name: "Settings",  kind: "url", target: "settings.html" },
   { id: "trash",    icon: "X", name: "Trash", kind: "url", target: "trash.html" },
   { sep: true },
-  { id: "imperium", icon: "S", name: "Imperium", kind: "url", target: "surfaces.html" },
-  { id: "science",  icon: "F", name: "Science Lab", kind: "url", target: "index.html" },
-  { id: "musica",   icon: "M", name: "Musica", kind: "url", target: "logo-studio.html" },
-  { id: "custos",   icon: "E", name: "Custos", kind: "url", target: "surfaces.html" },
-  { id: "officina", icon: "G", name: "Officina", kind: "url", target: "index.html" },
+  { id: "imperium", icon: "S", name: "Imperium", kind: "url", target: "http://127.0.0.1:18934/surfaces.html" },
+  { id: "science",  icon: "F", name: "Science Lab", kind: "url", target: "http://127.0.0.1:18934/index.html" },
+  { id: "musica",   icon: "M", name: "Musica", kind: "url", target: "http://127.0.0.1:18934/logo-studio.html" },
+  { id: "custos",   icon: "E", name: "Custos", kind: "url", target: "http://127.0.0.1:18934/surfaces.html#board-custos" },
+  { id: "officina", icon: "G", name: "Officina", kind: "url", target: "http://127.0.0.1:18934/index.html" },
 ];
 const desktop = document.getElementById("desktop");
 const dock = document.getElementById("dock");

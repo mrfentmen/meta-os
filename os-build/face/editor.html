@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Editor</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font-family:system-ui;background:#111;color:#eee;padding:24px;max-width:860px;margin:auto}
+#bar{display:flex;gap:6px;margin:12px 0;align-items:center}input{flex:1;padding:8px;background:#222;color:#eee;border:1px solid #444}
+button{padding:8px 12px;cursor:pointer}a{color:#7cc4ff}
+textarea{width:100%;box-sizing:border-box;height:60vh;background:#000;color:#eee;border:1px solid #444;font:13px/1.5 monospace;padding:8px}
+#meta{color:#999;font-size:13px;min-height:1.4em}#status{min-height:1.4em}</style>
+</head><body>
+<h1>Editor <small>(live, this machine)</small></h1>
+<div id="bar"><input id="path" type="text" placeholder="/absolute/path/to/file"><button id="open">Open</button><button id="save">Save (Ctrl+S)</button><a href="files.html">Browse</a></div>
+<div id="meta"></div>
+<textarea id="ed" spellcheck="false" placeholder="Open a text file to edit it. Binary files are refused by files.py."></textarea>
+<p id="status" role="status"></p>
+<script>
+(function(){
+var API="http://127.0.0.1:18936";
+var pathEl=document.getElementById("path"),ed=document.getElementById("ed"),
+    meta=document.getElementById("meta"),st=document.getElementById("status");
+function open(p){
+  if(!p){st.textContent="Enter an absolute file path.";return}
+  st.textContent="Opening "+p+"...";
+  fetch(API+"/read?path="+encodeURIComponent(p)).then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d}})})
+  .then(function(x){
+    if(!x.ok||!x.d.ok){st.textContent="Error: "+(x.d.error||"open failed");return}
+    ed.value=x.d.content;pathEl.value=x.d.path;
+    meta.textContent=x.d.path+" \u00b7 "+x.d.size+" bytes \u00b7 saved "+new Date(x.d.mtime*1000).toLocaleString();
+    st.textContent="Opened "+x.d.path;
+  }).catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+}
+function save(){
+  var p=pathEl.value.trim();if(!p){st.textContent="Enter a path first.";return}
+  st.textContent="Saving "+p+"...";
+  fetch(API+"/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:p,content:ed.value})})
+  .then(function(r){return r.json()}).then(function(d){
+    st.textContent=d.ok?("Saved "+d.path+" ("+d.bytes+" bytes)"):"Error: "+d.error;
+    if(d.ok)meta.textContent=d.path+" \u00b7 "+d.bytes+" bytes \u00b7 just saved";
+  }).catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+}
+document.getElementById("open").onclick=function(){open(pathEl.value.trim())};
+document.getElementById("save").onclick=save;
+ed.addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&e.key==="s"){e.preventDefault();save()}});
+pathEl.addEventListener("keydown",function(e){if(e.key==="Enter")open(pathEl.value.trim())});
+try{
+  var m=/[?&]path=([^&]+)/.exec(location.search);
+  if(m){pathEl.value=decodeURIComponent(m[1]);open(pathEl.value);}
+}catch(e){}
+})();
+</script></body></html>
