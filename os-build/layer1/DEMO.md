@@ -10,14 +10,14 @@ says which.** No line here has been invented to look like a boot.
 
 # Tour A — what runs right now
 
-No toolchain, no kernel. What exists is 94 Goose files and seven auditors, and the auditors are
+No toolchain, no kernel. What exists is 95 Goose files and seven auditors, and the auditors are
 the only part of this layer that can be demonstrated without hardware.
 
 ```console
 $ cd meta-os
 $ python3 os-build/layer1/source_audit.py
 ...
-94 files audited, 0 finding(s)
+95 files audited, 0 finding(s)
 $ echo $?
 0
 ```
@@ -29,7 +29,7 @@ does **not** prove: that it compiles.
 ```console
 $ python3 os-build/layer1/error_audit.py --unused
 error registry audit
-  declared: 34   used: 34   files: 94
+  declared: 34   used: 34   files: 95
 ...
 $ echo $?
 0
@@ -47,19 +47,20 @@ $ echo $?
 ```
 
 ```console
-$ python3 os-build/layer1/callmatrix_audit.py | tail -5
-UNKNOWN (2):
-  in source only: fs
-  in source only: shell
+$ python3 os-build/layer1/callmatrix_audit.py | tail -3
+  watchdog     -> time         allowed, not called from a source
 
-drift: 14 problem(s)
+clean on permissions; 67 dormant row(s) reported above
 $ echo $?
-1
+0
 ```
 
-**This one fails on purpose, and that is the honest demo.** The permission table is missing twelve
-edges the tree depends on and two services have no id at all (`CALLMATRIX_DRIFT.md`). A tour that
-shows six green lights and skips the seventh red one is the tour that gets quoted wrong later.
+**This one was red when the tour was first written, and the fix is the interesting part.** Twelve
+import edges had no permission and `fs`/`shell` had no id. They are in now (ids 22–24, twelve rows),
+and so is a fix to the auditor itself: its `log`/`logd` alias was declared and never applied, which
+had reported every edge to the log service twice. The 67 dormant rows stay on screen — they are
+permissions that allow a call no import makes, and they are the next thing to drive down, not a
+number to hide.
 
 ```console
 $ python3 services/tests/hostile/hostile_check.py | tail -3
@@ -70,11 +71,11 @@ packs valid. NOTE: this proves the cases are well formed, NOT that any parser re
 ```console
 $ python3 os-build/layer1/size_audit.py | head -4
 size audit -- resident bytes for fixed arrays (slices are views, not storage)
-  services: 27   resident: 393967 bytes (384.8 KiB)   unknown-element arrays: 0
+  services: 27   resident: 393967 bytes (384.7 KiB)   unknown-element arrays: 0
 ```
 
-Total: **6 of 7 gates green, 1 red, 0 lines of this layer executed.** That sentence is the demo of
-today.
+Total: **7 of 7 gates green, 0 lines of this layer executed.** That sentence is the demo of today —
+the gates prove the text is consistent with itself, and nothing more.
 
 ---
 
@@ -167,7 +168,7 @@ a filesystem that persists, and a boot to update. **NOT BUILT.**
 
 # What each tour is worth, in one line each
 
-- Tour A: seven mechanical gates over 94 files; six pass, one fails, and the failure is the
-  permission table. Nothing executed.
+- Tour A: seven mechanical gates over 95 files, all seven green — and the newest green one is the
+  permission table, which was red until its last twelve edges were written in. Nothing executed.
 - Tour B: five moments, all specified, none reachable. Every block names the missing piece, so
   nobody has to ask "is this real" — the answer is in the block.

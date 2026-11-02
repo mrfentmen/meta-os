@@ -137,6 +137,7 @@ definitions?* Until answered, status stays WRITTEN.
 
 An import edge is not a permission and not a call: `services/fs/fs.goose` importing `storage`
 says the block API is in scope, not that `fs` is allowed to call it at runtime. The permission
-question lives in `CALLMATRIX_DRIFT.md`, which currently reports 12 missing permissions and 2
-services with no matrix row. Both documents are true at once; the map is what the linker sees,
-the matrix is what the kernel enforces.
+question lives in `CALLMATRIX_DRIFT.md`: every import edge in this map now has a permission (round 2
+added the last twelve, and ids 22–24 for `fs`, `shell` and the template), and what remains open is
+the 67 rows that allow a call no import makes. Both documents are true at once; the map is what the
+linker sees, the matrix is what the kernel enforces.

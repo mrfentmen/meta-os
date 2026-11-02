@@ -63,3 +63,61 @@ allowed and none of them import the audit module.
 
 Until then, the honest status of the Layer 4 permission table is: **written, and incomplete
 in twelve places that the tree already depends on.**
+
+---
+
+# Round 2 — resolved (2026-11-01)
+
+Pax's ruling came back: append the ids, add the edges, and do not touch the auditor's standard.
+All twelve edges are in, `fs` and `shell` have ids, and the gate is green:
+
+```console
+$ python3 os-build/layer1/callmatrix_audit.py
+call-matrix audit  (24 services in the matrix, 25 with sources)
+
+DORMANT permission (67, informational):
+...
+clean on permissions; 67 dormant row(s) reported above
+$ echo $?
+0
+```
+
+## What changed in the matrix
+
+| Change | Why |
+|---|---|
+| `SVC_FS = 22` | `fs` had source and no id. Appended, never renumbered: the ids are also the numbers services report to the supervisor. |
+| `SVC_SHELL = 23` | same, for `shell`. |
+| `SVC_EXAMPLE = 24` | the template needs its own row. A service generated from `example` inherits nothing otherwise, and a template copied *without* permissions is exactly how these twelve edges went missing. |
+| `SVC_COUNT` 21 → 24 | the array is the table. |
+| `netcfg → fs` | `persist.goose` writes the config through the filesystem; the address model is a library import, the file is a call. |
+| `socket → netcfg` | a bound address belongs to `netcfg`; the lookup is a call, not a copy. |
+| `fs → storage, log` | the filesystem's whole job is another service's API, which is why its row is short. |
+| `shell → fs, log, audit, supervisor, time` | the widest row in the table, and worth reading as a warning: a user's shell can do everything a user can. Agents do not get a shell handle. |
+| `example → fs, time, supervisor, watchdog, log` | one of each thing it demonstrates. |
+
+## The auditor bug this exposed
+
+`ALIASES = {"log": "logd"}` was declared and never applied: the round-1 comparisons used matrix
+names on one side and directory names on the other. So every edge to the log service was reported
+**twice** — once as a missing permission (caller side) and once as a dormant one (callee side) —
+which is why round 1's dormant count was 65 and why `shell → logd` survived the first fix.
+
+Fixed in `callmatrix_audit.py`: `canon()` maps matrix names to directory names through the
+declared alias table and nowhere else, applied to both sides before comparing. The dormant count is
+67 after the fix, and every entry in it is real.
+
+**The standard did not move.** The green light comes from adding permissions to the matrix and
+adding ids to the table, not from exempting a caller (`example` is still audited, and now has a
+row), not from `--all`-style weakening, and not from silencing the dormant list.
+
+## What the 67 dormant rows mean now
+
+They are permissions with no import edge: mostly runtime registry lookups rather than compile-time
+imports. That is still the answer to "who can reach the audit log" — `supervisor`, `agenthost`,
+`session`, `updater`, `shell` — and it is a deliberate list, not a surprise one. The strict mode
+(`--all`) remains available for a gate that wants to drive that list to zero.
+
+This file stays as the record of the order-of-work gap inside this build-out: the permission table
+was written before the services it governs, and twelve edges were missing by the time the last
+wave landed. The green light is the end of the story, not the whole story.

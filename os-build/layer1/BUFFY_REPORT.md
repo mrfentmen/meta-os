@@ -99,7 +99,7 @@ The rule used for every row, so a reader can audit the table instead of trusting
 | B-L1-059 | Test program: agent host lifecycle + grants (B-L1-39/40). | **WRITTEN** | library + service source; the mechanism's test program is in `tests/` | compilation and run |
 | B-L1-060 | Test program: audit write/read round trip (B-L1-41/42). | **WRITTEN** | library + service source; the mechanism's test program is in `tests/` | compilation and run |
 | B-L1-061 | README completion pass. | **WRITTEN** | library + service source; the mechanism's test program is in `tests/` | compilation and run |
-| B-L1-062 | Source audit pass. | **WRITTEN** | `os-build/layer1/source_audit.py` — 94 files, 0 findings today | compilation |
+| B-L1-062 | Source audit pass. | **WRITTEN** | `os-build/layer1/source_audit.py` — 95 files, 0 findings today | compilation |
 | B-L1-063 | Link map. | **WRITTEN** | `os-build/layer1/LINK_MAP.md` round 1 + round 2 | compilation |
 | B-L1-064 | Boot order. | **WRITTEN** | `BOOT_ORDER.md` + `services/supervisor/bootorder.goose` | compilation |
 | B-L1-065 | Failure plan. | **WRITTEN** | `FAILURE.md`, re-traced in `FAILURE_TRACE.md` | compilation |
@@ -155,7 +155,7 @@ The rule used for every row, so a reader can audit the table instead of trusting
 | B-L1-115 | Audit retention. | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
 | B-L1-116 | Agent quotas. | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
 | B-L1-117 | Agent message channel. | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
-| B-L1-118 | Call-matrix auditor. | **WRITTEN** | `CALLMATRIX_DRIFT.md` — 12 missing permissions reported, not fixed | nothing mechanical — but also nothing executed |
+| B-L1-118 | Call-matrix auditor. | **WRITTEN** | `CALLMATRIX_DRIFT.md` — 12 missing permissions reported in round 1, all 12 added in round 2; gate green | nothing mechanical — but also nothing executed |
 | B-L1-119 | Service SDK. | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
 | B-L1-120 | JSON subset library. | **WRITTEN** | `common/json` + the hostile packs | nothing mechanical — but also nothing executed |
 | B-L1-121 | Encoding libraries. | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
@@ -173,7 +173,7 @@ The rule used for every row, so a reader can audit the table instead of trusting
 | B-L1-133 | Parser hardening: log records (B-L1-28). | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
 | B-L1-134 | Parser hardening: BootInfo block (B-L1-08). | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
 | B-L1-135 | Programmer's guide. | **WRITTEN** | `GUIDE.md` — 12 rules, each traced to a landed file | nothing mechanical — but also nothing executed |
-| B-L1-136 | Size audit. | **WRITTEN** | `size_audit.py` + `SIZE_AUDIT.md` — 384.8 KiB resident measured | nothing mechanical — but also nothing executed |
+| B-L1-136 | Size audit. | **WRITTEN** | `size_audit.py` + `SIZE_AUDIT.md` — 384.7 KiB resident measured | nothing mechanical — but also nothing executed |
 | B-L1-137 | Error registry final. | **WRITTEN** | `error_audit.py` + `ERROR_AUDIT.md` — 34 codes, 0 drift | nothing mechanical — but also nothing executed |
 | B-L1-138 | Link map round 2. | **WRITTEN** | `linkmap.py` — drift vs round 1 is measured, not remembered | nothing mechanical — but also nothing executed |
 | B-L1-139 | Boot order data test. | **WRITTEN** | `bootorder_check.py` — 22 services, dependencies proven, no cycles | nothing mechanical — but also nothing executed |
@@ -183,34 +183,39 @@ The rule used for every row, so a reader can audit the table instead of trusting
 | B-L1-143 | Gap library 5. | **WRITTEN** | `common/table` (no consumer yet) | compilation |
 | B-L1-144 | Gap library 6. | **WRITTEN** | `common/sort` (no consumer yet) | compilation |
 | B-L1-145 | Gap library 7. | **WRITTEN** | `common/pool` (no consumer yet) | compilation |
-| B-L1-146 | Source audit round 2. | **WRITTEN** | `source_audit.py` over all 94 files incl. Waves G–J: 0 findings | nothing mechanical — but also nothing executed |
+| B-L1-146 | Source audit round 2. | **WRITTEN** | `source_audit.py` over all 95 files incl. Waves G–J: 0 findings | nothing mechanical — but also nothing executed |
 | B-L1-147 | Manifest + report refresh. | **WRITTEN** | this table, `MANIFEST.md`, `SCOREBOARD.md` cross-checked | nothing mechanical — but also nothing executed |
 | B-L1-148 | Final ready post. | **WRITTEN** | the room-1 post in `README-lane.md` queue / this file's tail | nothing mechanical — but also nothing executed |
 ## The gates, as they stand right now
 
-Seven mechanical checks over 94 Goose files. Each was run at the end of the build-out; the exit
+Seven mechanical checks over 95 Goose files. Each was run at the end of the build-out; the exit
 code is the one below, unedited.
 
 | Gate | Command | Exit | Result |
 |---|---|---|---|
-| Source audit | `python3 os-build/layer1/source_audit.py` | 0 | 94 files, 0 findings |
+| Source audit | `python3 os-build/layer1/source_audit.py` | 0 | 95 files, 0 findings |
 | Error registry | `python3 os-build/layer1/error_audit.py --unused` | 0 | 34 codes declared, 34 used, 0 undeclared |
 | Boot order | `python3 os-build/layer1/bootorder_check.py` | 0 | 22 services, deps proven, no cycle |
-| Link map | `python3 os-build/layer1/linkmap.py` | 0 | 26 services, 74 files, 46 service→service edges |
-| Size audit | `python3 os-build/layer1/size_audit.py` | 0 | 384.8 KiB resident, 0 unresolvable types |
+| Link map | `python3 os-build/layer1/linkmap.py` | 0 | 26 services, 75 files, 46 service→service edges |
+| Size audit | `python3 os-build/layer1/size_audit.py` | 0 | 384.7 KiB resident, 0 unresolvable types |
 | Parser hardening | `python3 services/tests/hostile/hostile_check.py` | 0 | 93 cases, 10 packs, 34 codes known |
-| **Call matrix** | `python3 os-build/layer1/callmatrix_audit.py` | **1** | **12 missing permissions, 2 services with no id** |
+| Call matrix | `python3 os-build/layer1/callmatrix_audit.py` | 0 | 24 services, 0 missing permissions, 67 dormant (informational) |
 
-The red one is left red on purpose. Green lights that were made green by editing the auditor are
-worse than a red light with a work item attached.
+All seven are green, and the call matrix only went green after the permissions were added: three ids
+appended (`fs` 22, `shell` 23, `example` 24) and twelve edges written into the table
+(`CALLMATRIX_DRIFT.md`, round 2). The auditor's own alias bug was fixed at the same time — the
+`log`/`logd` mapping was declared and never applied, which had made every edge to the log service
+show up twice.
 
 ## Findings worth the boss's attention
 
-1. **The permission table is 12 edges short of the tree.** `fs→storage`, `netcfg→fs`,
-   `shell→{fs, logd, audit, supervisor, time}`, `socket→netcfg`, and the template's four edges are
-   all absent from `callmatrix.goose`, and `fs`/`shell` have no `SVC_*` id. Every one of those
-   compiles and then fails at `cm_allows` as "service did not start". Fixing it is a policy change
-   (append ids 22/23, add rows) and belongs to Pax with the matrix's owner. `CALLMATRIX_DRIFT.md`.
+1. **The permission table was 12 edges short of the tree, and is not any more.** `fs→storage`,
+   `netcfg→fs`, `shell→{fs, logd, audit, supervisor, time}`, `socket→netcfg` and the template's
+   four edges were absent, and `fs`/`shell` had no `SVC_*` id — every one of those compiles and
+   then fails at `cm_allows` as "service did not start". All twelve are in, ids 22/23/24 are
+   appended (never renumbered: the ids are also what services report to the supervisor), and the
+   gate exits 0. The history stays in `CALLMATRIX_DRIFT.md` rather than being deleted, because the
+   order-of-work gap it records is the finding.
 2. **The start timeout does not exist.** `FAILURE.md` promises that a service not RUNNING within
    2 s is given up on. There is no such timer, no field recording when a slot entered
    `ST_STARTING`, and the watchdog cannot see it (it only watches RUNNING services). A service that
@@ -224,7 +229,7 @@ worse than a red light with a work item attached.
 4. **The boot table named the log service `log` while its directory and manifest say `logd`.**
    Found by `bootorder_check.py` on its first run; fixed in the name table, because that string
    ends up in log lines people grep.
-5. **One service holds 36% of the layer's static storage.** `display` is 136.6 KiB of 384.8 KiB
+5. **One service holds 35.5% of this layer's static storage.** `display` is 136.6 KiB of 384.7 KiB
    (four consoles × a 32 KiB history ring, exactly sized to the documented 256 × 128 contract). No
    silent cut made: the real lever is `VCON_MAX`, and that is a product decision. `SIZE_AUDIT.md`.
 6. **Four libraries nobody links.** `common/text`, `table`, `sort`, `pool` (B-L1-142..145) have no
@@ -245,8 +250,9 @@ worse than a red light with a work item attached.
 - `BUFFY_LAYER1_TASKS.md` is the boss's file, copied unchanged from local `main`.
 - New directories this build-out added: `services/{net,socket,fs,shell,example,common/*}`,
   `services/tests/{harness,peers,hostile}`, `os-build/layer1/sdk`. All self-contained.
-- The call matrix gate will fail on merge **by design** until its 12 edges are added. Do not merge
-  a green `callmatrix_audit.py` that was made green by loosening the auditor.
+- The call matrix gate now passes on permissions. Its 67 dormant rows are informational and are
+  printed on every run; do not make them pass by exempting a caller, and do not put `--all` in the
+  merge gate until that list has been driven down deliberately.
 
 ## Queue
 
@@ -263,14 +269,15 @@ Nothing left in this lane. B-L1-01 … 148 are all either done to WRITTEN or exp
 > row.**
 >
 > `buffy/layer1-goose-services`, 148 tasks accounted for: 143 WRITTEN, 5 NOT BUILT (the compile,
-> run and boot passes — no toolchain, no kernel), 0 COMPILED. 94 Goose files across 27 services
-> and 17 `common` libraries. Seven mechanical gates: six green, one red on purpose — the call
-> matrix is missing 12 edges the tree already depends on, and `CALLMATRIX_DRIFT.md` names all 12.
+> run and boot passes — no toolchain, no kernel), 0 COMPILED. 95 Goose files across 27 services
+> and 17 `common` libraries. Seven mechanical gates, all green: the call matrix's last 12 missing
+> edges are in, with ids appended for `fs`, `shell` and the template, and the auditor's own
+> `log`/`logd` alias bug fixed on the way (`CALLMATRIX_DRIFT.md`, round 2).
 >
 > New this pass: the boot order is proven consistent from outside the source (`bootorder_check.py`,
 > 22 services, no cycles, and it caught the `log`/`logd` name drift); the error registry holds at 34
 > codes with zero undeclared; the link map is regenerated with measured drift; resident storage is
-> 384.8 KiB and the biggest single consumer is flagged rather than quietly cut; the failure plan was
+> 384.7 KiB and the biggest single consumer is flagged rather than quietly cut; the failure plan was
 > re-traced line by line and 8 of its claims did not survive (two fixed in source, six corrected in
 > the document, one — the start timeout — listed as a real hole). `GUIDE.md` tells the next person
 > how to add a service, `DEMO.md` separates what runs today (audits) from what does not (everything

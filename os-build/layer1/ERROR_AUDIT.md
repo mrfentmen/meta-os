@@ -5,7 +5,7 @@ Result: **exit 0, one finding, zero undeclared codes.**
 
 ```
 error registry audit
-  declared: 34   used: 34   files: 94
+  declared: 34   used: 34   files: 95
 ```
 
 ## What the audit does

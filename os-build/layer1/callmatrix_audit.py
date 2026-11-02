@@ -102,6 +102,11 @@ def source_edges(dirs):
     return edges
 
 
+def canon(name):
+    """A matrix name to the directory name, through the declared aliases and nothing else."""
+    return ALIASES.get(name, name)
+
+
 def main(argv):
     strict = "--all" in argv
     for path in (MATRIX, SERVICES):
@@ -113,6 +118,12 @@ def main(argv):
     if not ids or not rows or declared == 0:
         print("matrix parsed as empty (ids=%d rows=%d count=%d)" % (len(ids), len(rows), declared))
         return 2
+
+    # Compare in DIRECTORY names on both sides. Without this the alias is decorative: the
+    # matrix says `log`, the tree says `logd`, and every edge to the log service showed up
+    # twice -- once as a missing permission and once as a dormant one. The round-1 audit did
+    # exactly that for all 24 callers, which is why its dormant count was 65.
+    rows = {canon(caller): {canon(c) for c in callees} for caller, callees in rows.items()}
 
     dirs = service_dirs()
     edges = source_edges(dirs)

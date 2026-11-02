@@ -69,7 +69,7 @@ the K1 skeleton. WRITTEN is not a step on the way to working; it is a statement 
 | B17 | Updates: manifest, SHA-256 verify, signature interface, deltas, rollback | CONTRACT | Pax's release process | WRITTEN (`updater/`: verify + delta + signature *interface*) |
 | B18 | Session: login flow, identity, session scope | CONTRACT | Hana's shell prompt, the audit trail | WRITTEN (`session/login.goose`) |
 | B19 | Health and metrics: heartbeat watches, counters | CONTRACT | the supervisor, the demo | WRITTEN (`watchdog/`, `metrics.goose`) |
-| B20 | A permission table: which service may call which | CONTRACT | the merge gate, Milo | WRITTEN and **incomplete in 12 places the tree already depends on** — `CALLMATRIX_DRIFT.md` |
+| B20 | A permission table: which service may call which | CONTRACT | the merge gate, Milo | WRITTEN — 24 ids, 0 denied import edges, 67 dormant rows listed on every run (`CALLMATRIX_DRIFT.md`) |
 | B21 | Seventeen `common.*` libraries: `args boot bytes cfg enc err fmt hash hex json pool ring sort str sys table text` | CONTRACT | every service above | WRITTEN; `text`, `table`, `sort`, `pool` have no consumer yet |
 
 **What Layers 5–6 still cannot rely on:** any of the above *working*. Every row is a shape, not a

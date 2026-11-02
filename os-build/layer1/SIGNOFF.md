@@ -11,7 +11,7 @@ the clock, logging, the supervisor and its boot order, the permission table, sto
 filesystem, the network stack, sockets, updates, the audit trail, the agent host, the session, the
 display, input, devices and the watchdog.
 
-94 Goose files. 384.8 KiB of static storage across all of them. No heap, no threads, no libc.
+95 Goose files. 384.7 KiB of static storage across all of them. No heap, no threads, no libc.
 
 ## What is proven
 
@@ -19,11 +19,11 @@ Proven means a check ran and its output is in this tree.
 
 | Claim | How it is proven |
 |---|---|
-| The sources are internally consistent | `source_audit.py`: 94 files, 0 findings — braces, defined functions, declared codes, no duplicate `let`, no non-Goose keywords |
+| The sources are internally consistent | `source_audit.py`: 95 files, 0 findings — braces, defined functions, declared codes, no duplicate `let`, no non-Goose keywords |
 | There is one error vocabulary | `error_audit.py`: 34 codes declared, 34 used, 0 undeclared, 0 local redefinitions |
 | The boot order cannot deadlock on paper | `bootorder_check.py`: 22 services, every dependency starts earlier, DAG proven independently, no cycles, names match directories |
-| The link structure is known | `linkmap.py`: 26 services, 74 files, 46 service→service edges, drift vs round 1 measured |
-| The storage footprint is known | `size_audit.py`: 384.8 KiB resident, 0 unresolvable types, the largest consumer identified (`display`, 136.6 KiB) |
+| The link structure is known | `linkmap.py`: 26 services, 75 files, 46 service→service edges, drift vs round 1 measured |
+| The storage footprint is known | `size_audit.py`: 384.7 KiB resident, 0 unresolvable types, the largest consumer identified (`display`, 136.6 KiB) |
 | Every parser has hostile inputs and stated outcomes | `hostile_check.py`: 93 cases across 10 packs |
 
 ## What is not proven
@@ -36,9 +36,9 @@ Not proven means nobody has checked it, or it cannot be checked here.
 | **Anything runs** | no kernel above K1; nothing in this layer has ever been executed |
 | **The supervisor starts a service** | needs K6 and a kernel |
 | **A service that hangs mid-start is detected** | the start timeout is not implemented (`FAILURE_TRACE.md` item 4) |
-| **The permission table is complete** | 12 edges are missing and 2 services have no id — `CALLMATRIX_DRIFT.md`; the gate is red on purpose |
+| **The permission table covers every call the tree makes** | 24 ids, 0 denied import edges. What the gate cannot see is a call made without an import — 67 rows allow one — so "complete" here means "no known edge is denied" |
 | **Goose can link freestanding** | needs the toolchain; it is the assumption all of the above rests on |
-| **The static storage is enough** | needs the linker's number; this layer measured its own side (384.8 KiB) and nothing else |
+| **The static storage is enough** | needs the linker's number; this layer measured its own side (384.7 KiB) and nothing else |
 
 ## What the next person should do, in order
 
@@ -49,11 +49,11 @@ Not proven means nobody has checked it, or it cannot be checked here.
 3. Compile one service (`example`, the template) and read every error as a fact about the
    language's semantics. There are 22 open questions in `K6_NEEDS.md` that a compiler answers in
    seconds.
-4. Add the 12 call-matrix edges (Pax's ruling), then turn the red gate green by changing the
-   matrix, not the auditor.
+4. Drive the 67 dormant permission rows down as the runtime paths land: each is either a real call
+   the compiler will reveal or a row to delete.
 5. Then, and only then, the run pass: `t45` … `t68` on a real kernel, one program at a time.
 
 ## The one-sentence version
 
 **Layer 4 is written, internally consistent by seven mechanical checks, and has never compiled or
-run; the report says exactly that on all 148 rows, and the red gate is the honest one.**
+run; the report says exactly that on all 148 rows.**

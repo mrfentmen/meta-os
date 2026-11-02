@@ -136,7 +136,10 @@ fn main() {
     // --- 7. names ---
     var buf: u8[>..] = [];
     check("bo_name(8) copies", bo_name(8, buf, 32));
-    check("bo_name(8) is log", buf.len == 3);
+    // id 8 is `logd`, not `log`: the name table carries the service's directory name so a log
+    // line names something the manifest has. This assertion failed for exactly that reason
+    // when the drift was fixed, which is what an assertion is for.
+    check("bo_name(8) is logd", buf.len == 4 && buf[0] == 108 && buf[3] == 100);
     var small: u8[>..] = [];
     check("bo_name refuses a buffer too small", !bo_name(22, small, 4) && small.len == 0);
     check("bo_name refuses id 0", !bo_name(0, small, 32));
