@@ -607,6 +607,7 @@ pub struct CurrentJob {
 /// `None` (no record at all) yields no lines: a template brief
 /// without a previous-brief record says nothing about newness
 /// rather than claiming it, and older briefs keep their exact shape.
+#[derive(Debug, Clone, PartialEq)]
 pub struct PreviousBrief {
     pub jobs: Vec<PreviousBriefJob>,
     pub age_label: String,
@@ -2767,6 +2768,88 @@ pub fn with_held_decisions(
     }
     Some(HeldDecisions {
         decisions: usable,
+        age_label: environment_age_label(Some(stamp)),
+    })
+}
+
+/// BRF-019 follow-up: the morning-path caller that fills a
+/// snapshot's `previous_brief` record, so a morning brief carries
+/// its Since your last brief section even when the snapshot states
+/// only the previous brief's job statuses as a plain stated list.
+/// Returns the record to store as the snapshot's `previous_brief`
+/// value. A hand-stated record wins over a built one: pass it as
+/// `existing` and it is returned unchanged, whatever the inputs say,
+/// so a caller that knows its previous brief better than this list
+/// is never overwritten. The record exists only when the snapshot
+/// states at least one usable job id, so a snapshot that states
+/// nothing usable gets no record at all, and older briefs keep
+/// their exact shape instead of gaining a padded section. This
+/// filler reads no previous status from the current jobs list, and
+/// that is the whole point: comparing the current window against
+/// itself would report nothing changed, always, and a current
+/// status is not a previous status. The previous statuses come only
+/// from the caller's stated entries, never from the job. A job id
+/// named twice is one previous entry, not two: the first listing
+/// wins, in stated order. An entry with no usable id is skipped,
+/// never guessed, and a list of only skipped entries counts as
+/// nothing stated, so junk alone never builds a record. An entry
+/// that states an id but no usable status is still a usable entry:
+/// the renderer reads that previous status as empty, which is the
+/// stated absence, not a guessed status. The record carries one
+/// as_of stamp for the whole record, formed into its age label
+/// here, so the section's age agrees with the other sections
+/// instead of drifting across reads — `now` supplies the stamp,
+/// and a missing stamp reads the current time, the same fallback
+/// the other with_* callers use. Never fails: a builder failure
+/// leaves the caller without a record, so the morning path still
+/// produces a brief, just without this section, instead of failing
+/// outright.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `entries` when the snapshot's
+/// previous_brief_entries list is missing or not a list — silence
+/// states no jobs and yields no record; `Some(&[])` is an
+/// explicitly empty list, which likewise yields no record, since
+/// no usable id is ever a previous list. An entry that is not
+/// a dict has no Rust form: the caller omits it, which matches
+/// Python skipping it. An entry with an empty id reads as no usable
+/// id and is skipped here; an entry with an empty status reads as
+/// no status stated and is kept, since the renderer reads that
+/// previous status as empty.
+pub fn with_previous_brief(
+    existing: Option<&PreviousBrief>,
+    entries: Option<&[PreviousBriefJob]>,
+    now: Option<i64>,
+) -> Option<PreviousBrief> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let stamp = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let stated = entries?;
+    let mut usable: Vec<PreviousBriefJob> = Vec::new();
+    for entry in stated {
+        if entry.id.is_empty() {
+            continue;
+        }
+        if usable.iter().any(|j| j.id == entry.id) {
+            continue;
+        }
+        usable.push(PreviousBriefJob {
+            id: entry.id.clone(),
+            status: entry.status.clone(),
+        });
+    }
+    if usable.is_empty() {
+        return None;
+    }
+    Some(PreviousBrief {
+        jobs: usable,
         age_label: environment_age_label(Some(stamp)),
     })
 }
@@ -6921,6 +7004,76 @@ mod tests {
         ];
         assert_eq!(
             with_held_decisions(None, Some(&junk), Some(1793093400)),
+            None
+        );
+    }
+
+    #[test]
+    fn with_previous_brief_builds_from_stated_entries_and_renders_lines() {
+        let entries = vec![
+            PreviousBriefJob { id: "T1".into(), status: "open".into() },
+            // A second listing of the same id loses to the first.
+            PreviousBriefJob { id: "T1".into(), status: "done".into() },
+            // An entry with no usable id is skipped, never guessed.
+            PreviousBriefJob { id: "".into(), status: "open".into() },
+            // An id with no usable status is still usable: the
+            // renderer reads it as an empty previous status.
+            PreviousBriefJob { id: "T2".into(), status: "".into() },
+        ];
+        let record = with_previous_brief(None, Some(&entries), Some(1793093400))
+            .expect("usable entries yield a previous-brief record");
+        assert_eq!(record.jobs.len(), 2);
+        assert_eq!(record.jobs[0].id, "T1");
+        assert_eq!(record.jobs[0].status, "open");
+        assert_eq!(record.jobs[1].id, "T2");
+        assert!(record.jobs[1].status.is_empty());
+        assert_eq!(
+            record.age_label,
+            environment_age_label(Some(1793093400))
+        );
+        let label = record.age_label.clone();
+        let current = vec![
+            CurrentJob { id: "T1".into(), title: "Ship panel".into(), status: "done".into() },
+            CurrentJob { id: "T3".into(), title: "Wire gate".into(), status: "open".into() },
+        ];
+        assert_eq!(
+            since_last_brief_lines(Some(&record), &current),
+            vec![
+                format!("Changed since your last brief: T1 Ship panel: open -> done{label}"),
+                format!("New since your last brief: T3 Wire gate (open){label}"),
+            ]
+        );
+    }
+
+    #[test]
+    fn with_previous_brief_hand_stated_record_wins_unchanged() {
+        let stated = PreviousBrief {
+            jobs: vec![PreviousBriefJob { id: "T9".into(), status: "done".into() }],
+            age_label: " (snapshot time not reported)".into(),
+        };
+        // A hand-stated record wins even when no entries are stated.
+        let record = with_previous_brief(Some(&stated), None, None)
+            .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_previous_brief_silence_or_junk_gets_no_record() {
+        // Silence states no jobs.
+        assert_eq!(with_previous_brief(None, None, Some(1793093400)), None);
+        // An explicitly empty list is still no jobs.
+        let empty: Vec<PreviousBriefJob> = vec![];
+        assert_eq!(
+            with_previous_brief(None, Some(&empty), Some(1793093400)),
+            None
+        );
+        // Entries with no usable id, alone, are nothing stated.
+        let junk = vec![
+            PreviousBriefJob { id: "".into(), status: "open".into() },
+            PreviousBriefJob { id: "".into(), status: "".into() },
+        ];
+        assert_eq!(
+            with_previous_brief(None, Some(&junk), Some(1793093400)),
             None
         );
     }
