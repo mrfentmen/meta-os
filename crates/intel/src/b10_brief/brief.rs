@@ -1528,6 +1528,134 @@ pub fn memory_budget_lines(record: Option<&MemoryBudget>) -> Vec<String> {
     lines
 }
 
+/// One aged decision in a memory_depth record: the decision string
+/// plus its original date. `original_date: None` — or an empty string,
+/// which Python reads the same way — means the original date was not
+/// reported, never a guessed date.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AgedDecision {
+    pub decision: String,
+    pub original_date: Option<String>,
+}
+
+/// One due commitment in a memory_depth record: the commitment string
+/// plus its due date. `due: None` — or an empty string — means the due
+/// date was not reported, never a guessed date.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DueCommitment {
+    pub commitment: String,
+    pub due: Option<String>,
+}
+
+/// The whole memory_depth record. `None` for a category means the
+/// snapshot carries no such key at all (or it was not a list), which
+/// reads as that category's none-reported line; `Some(vec![])` means
+/// an empty list, which reads the same way. `age_label` is the
+/// record's own `as_of` time, preformed as
+/// `" (as of YYYY-MM-DD HH:MM ET)"`, or
+/// `" (snapshot time not reported)"` when the record gives no time;
+/// this crate has no time dependency, so the caller supplies the
+/// label already formed.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MemoryDepth {
+    pub memory_down: bool,
+    pub aged_decisions: Option<Vec<AgedDecision>>,
+    pub due_commitments: Option<Vec<DueCommitment>>,
+    pub fresh_context: Option<Vec<String>>,
+    pub age_label: String,
+}
+
+/// OS-092: the long-term-memory lines for a daily brief, in the
+/// brief's plain-English standard. A down memory service is said in
+/// one line — with no age label, exactly as Python returns it — and
+/// shows no item at all, never hiding behind an absent section.
+/// An aged decision or a due commitment is named verbatim; a missing
+/// date reads not reported, never guessed. An entry without its text
+/// is skipped, never padded. A category with no usable entries reads
+/// none reported, never a padded item, and a record with no usable
+/// entry at all still renders its three none-reported lines, so a
+/// reader can tell the memory was checked and held nothing. These
+/// are plain lines, not bullets, so the BRF-007 budget trim never
+/// drops an aged commitment ahead of a watch item, and they are
+/// redacted by the composer, not here. A snapshot without the record
+/// carries no lines at all, so older briefs keep their exact shape.
+pub fn memory_depth_lines(record: Option<&MemoryDepth>) -> Vec<String> {
+    let record = match record {
+        None => return Vec::new(),
+        Some(r) => r,
+    };
+    if record.memory_down {
+        return vec![
+            "Long-term memory: memory service down, so no aged decisions, due commitments, or fresh-agent context are shown"
+                .to_string(),
+        ];
+    }
+    let age = &record.age_label;
+    let mut lines: Vec<String> = Vec::new();
+    let usable_aged: Vec<String> = record
+        .aged_decisions
+        .as_ref()
+        .map(|aged| {
+            aged.iter()
+                .filter(|e| !e.decision.is_empty())
+                .map(|e| match e.original_date.as_deref().filter(|d| !d.is_empty()) {
+                    Some(date) => format!("Aged decision: {} (from {})", e.decision, date),
+                    None => format!(
+                        "Aged decision: {} (original date not reported)",
+                        e.decision
+                    ),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    if usable_aged.is_empty() {
+        lines.push(format!("Aged decisions: none reported{age}"));
+    } else {
+        lines.extend(usable_aged.iter().map(|l| format!("{l}{age}")));
+    }
+    let usable_due: Vec<String> = record
+        .due_commitments
+        .as_ref()
+        .map(|due| {
+            due.iter()
+                .filter(|e| !e.commitment.is_empty())
+                .map(|e| match e.due.as_deref().filter(|d| !d.is_empty()) {
+                    Some(date) => format!("Due commitment: {} (due {})", e.commitment, date),
+                    None => format!(
+                        "Due commitment: {} (due date not reported)",
+                        e.commitment
+                    ),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    if usable_due.is_empty() {
+        lines.push(format!("Due commitments: none reported{age}"));
+    } else {
+        lines.extend(usable_due.iter().map(|l| format!("{l}{age}")));
+    }
+    let usable_context: Vec<&str> = record
+        .fresh_context
+        .as_ref()
+        .map(|ctx| {
+            ctx.iter()
+                .map(String::as_str)
+                .filter(|item| !item.is_empty())
+                .collect()
+        })
+        .unwrap_or_default();
+    if usable_context.is_empty() {
+        lines.push(format!("Fresh-agent context: none reported{age}"));
+    } else {
+        lines.extend(
+            usable_context
+                .iter()
+                .map(|item| format!("Fresh-agent context: {item}{age}")),
+        );
+    }
+    lines
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -2209,5 +2337,67 @@ mod tests {
             memory_budget_lines(Some(&empty))[0],
             "Settled decisions from memory: none reported"
         );
+    }
+
+    #[test]
+    fn memory_depth_lines_items_missing_dates_down_and_none() {
+        let age = " (snapshot time not reported)";
+        let full = MemoryDepth {
+            memory_down: false,
+            aged_decisions: Some(vec![
+                AgedDecision { decision: "freeze at 05:12".into(), original_date: Some("2026-10-30".into()) },
+                AgedDecision { decision: "".into(), original_date: Some("2026-10-01".into()) },
+                AgedDecision { decision: "green look carries over".into(), original_date: None },
+            ]),
+            due_commitments: Some(vec![
+                DueCommitment { commitment: "ship the demo script".into(), due: Some("2026-11-02".into()) },
+                DueCommitment { commitment: "re-check the gate".into(), due: None },
+            ]),
+            fresh_context: Some(vec!["the bus moved rooms".into(), "".into()]),
+            age_label: age.into(),
+        };
+        assert_eq!(
+            memory_depth_lines(Some(&full)),
+            vec![
+                format!("Aged decision: freeze at 05:12 (from 2026-10-30){age}"),
+                format!("Aged decision: green look carries over (original date not reported){age}"),
+                format!("Due commitment: ship the demo script (due 2026-11-02){age}"),
+                format!("Due commitment: re-check the gate (due date not reported){age}"),
+                format!("Fresh-agent context: the bus moved rooms{age}"),
+            ]
+        );
+        // Down service: one line, no items, no age label.
+        let down = MemoryDepth {
+            memory_down: true,
+            aged_decisions: Some(vec![AgedDecision {
+                decision: "must not show".into(),
+                original_date: None,
+            }]),
+            due_commitments: None,
+            fresh_context: None,
+            age_label: age.into(),
+        };
+        assert_eq!(
+            memory_depth_lines(Some(&down)),
+            vec!["Long-term memory: memory service down, so no aged decisions, due commitments, or fresh-agent context are shown"]
+        );
+        // No usable entry at all: three none-reported lines.
+        let empty = MemoryDepth {
+            memory_down: false,
+            aged_decisions: None,
+            due_commitments: Some(vec![]),
+            fresh_context: Some(vec!["".into()]),
+            age_label: age.into(),
+        };
+        assert_eq!(
+            memory_depth_lines(Some(&empty)),
+            vec![
+                format!("Aged decisions: none reported{age}"),
+                format!("Due commitments: none reported{age}"),
+                format!("Fresh-agent context: none reported{age}"),
+            ]
+        );
+        // No record: no lines, so older briefs keep their shape.
+        assert_eq!(memory_depth_lines(None), Vec::<String>::new());
     }
 }
