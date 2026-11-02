@@ -49,3 +49,29 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - All UNLANDED: no window/desktop/topbar/dock code in kernel/ (sole "window" hit is a sched.rs comment). Per-task notes in `OC2B-kf09-11.txt`; absence rows in screendump index.
 - No Milestone-1 pack assembled (no single tree with serial+ribbon+shell exists). kernel/ diff vs main EMPTY (verified). 3-line Pax summary in status per task OC2B-100: KF-01 failures reproduced MATCH on second machine; candidate 0.10.9 carries Optional<FrameBuffer>; everything past KF-01 waits on Rowan's upgraded stack + framebuffer wiring.
 - Landed: absence verification + Pax summary. In flight: none. Blocked: full waiting-on list above.
+
+## Section 8 — Science cycle 1, Delaney reproduction (OC2B-176–200) — DONE 2026-11-02
+- Target (named first): Delaney solubility cross-check (`labs/delaney-xcheck`), expected RMSE 1.099 ± 0.05 from repo-recorded numbers. Falsifier: RMSE outside [1.049, 1.149] kills the claim.
+- Prereg hash committed BEFORE any run (commit `4c63aa8` precedes all result commits). Inputs frozen + hashed. Deterministic run.py, seed 500001.
+- Verdict MATCH (all fields in band), critic answered with evidence, clean-dir re-run bit-for-bit, level L3 (independently reproduced, justification in record).
+- Pack `labs/cycles/cycle-001/` complete (record/prereg/inputs/run/raw/score/critic/verify/summary/second-eyes/pack.sha256 + figure). Ledger entry quoted in record. Suite re-run 177 OK. No summary above earned L3. Spend $0 (no model calls). Pack hash recorded.
+- Bond checklist: re-run run.py from inputs/, compare raw/ hashes, check verify/rerun_result.json bit-match, confirm critic response cites evidence.
+- Truth: cycle-001 reproduced the repo-recorded Delaney prep statistics exactly as pre-registered. Landed. Nothing blocked.
+
+## Section 9 — Science cycle 2, different department (OC2B-201–225) — DONE 2026-11-02
+- Target (named first): physics projectile range (textbook value, different department from chem cycle-1). Falsifier + prereg hash committed first (same `4c63aa8` prereg commit).
+- Verdict MATCH, critic answered, clean-dir re-run bit-for-bit, level L3. Full pack `labs/cycles/cycle-002/`. Suite 177 OK. Spend $0.
+- Truth: cycle-002 reproduced the textbook range inside its pre-registered band. Landed. Nothing blocked.
+
+## Section 10 — Science cycle 3, model-directed (OC2B-226–250) — DONE 2026-11-02
+- Spark directed (prompt+reply+receipt under `model/`); adopt/reject lines in record. Falsifier + prereg first.
+- Wonder read the cycle figure (agreement recorded with exact numbers); SAM segmented one labs image (box+overlay recorded, no-box would have stood as-is); critic came from the second model; `model/impact.md` states per-call what changed (model direction changed nothing — runs were deterministic).
+- Verdict MATCH, clean-dir re-run bit-for-bit, level L3. Pack + figure + pack hash complete. Spend from receipts (small, metered-only). Suite 177 OK.
+- Truth: cycle-003 matched under a model-written plan that changed nothing about the outcome. Landed. Model flake noted (metered-but-empty responses filed honestly).
+
+## Section 11 — Cycles 4–5, repository + ledger hardening (OC2B-251–275) — DONE 2026-11-02
+- Cycle-4 (shelf target): MATCH, L3, full pack. Cycle-5 (held-out Delaney rows-beyond-30 slice): DIFFER — recorded as failed reproduction with full completeness (failure.md names the first diverged input/step); level L2 per mismatch cap, even though the clean re-run agrees bit-for-bit.
+- Repository export of all 5 packs (paths + hash-check table in `OC2B-repository-export.md`). Ledger audit (`OC2B-ledger-audit.md`): 5 entries, levels 3/3/3/3/2 match records. Ladder grep audit: no export/summary above earned level.
+- `labs/cycles/COMPARISON.md`: 5-cycle table + DIFFER honour roll (cycle-005 listed unedited).
+- Suite 177 OK. Spend $0 outside cycle-3 receipts.
+- Truth: four reproductions at L3 and one honest DIFFER at L2, all hash-chained and exported. Landed. Nothing blocked.
