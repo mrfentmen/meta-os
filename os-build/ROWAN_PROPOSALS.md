@@ -45,6 +45,18 @@ logs as the acceptance test.
    next reader is misled.
 7. **Oversize `write` returns 0**, indistinguishable from a zero-length write (`user.rs`,
    `user_write`). Proposal: `u64::MAX` for oversize, 0 only for zero-length.
+8. **Wire the new programs.** They build but the kernel embeds only the original three. The
+   exact change, in `kernel/build.rs`:
+
+   ```rust
+   const BINS: &[&str] = &["hello", "sleeper", "crasher", "quitter", "badcall"];
+   ```
+
+   `quitter` proves a deliberate nonzero exit (expect `quitter: exiting 7`, `user exit code 7`).
+   `badcall` proves the reserved edges 6 and 15 refuse, not just 99 (expect three
+   `user bad syscall <n> refused` lines, then `badcall: survived all three`). `writer` and
+   `readkey` are probes and should stay out of `BINS` unless someone wants their output in every
+   boot log — `writer` dumps a 4097-byte write attempt and `readkey` polls 200000 times.
 
 ## Filed by
 

@@ -78,6 +78,22 @@ def main():
     if "is_mapped_range" not in write:
         failures.append("user_write no longer validates the buffer range")
 
+    # The wrappers are the other half of the ABI: a bin can call a wrapper the
+    # library never defined (readkey did, and the crate stayed red until the
+    # missing `sys_read_key` was added), or a wrapper can send the wrong number
+    # and quietly reach a different call. Both are drift.
+    lib = read("os-build/userspace/user/src/lib.rs")
+    wrappers = {
+        "sys_exit": 0, "sys_write": 1, "sys_sleep": 2,
+        "sys_getpid": 3, "sys_yield": 4, "sys_read_key": 5,
+    }
+    for name, number in wrappers.items():
+        match = re.search(rf"pub fn {name}\s*\([^)]*\)[^{{]*\{{(.*?)\n\}}", lib, re.S)
+        if not match:
+            failures.append(f"lib.rs has no `{name}` wrapper")
+        elif f"syscall({number}" not in match.group(1):
+            failures.append(f"lib.rs `{name}` does not call syscall({number})")
+
     # The frozen table in the spec must still match the dispatch.
     if "0 — exit" not in spec or "5 — read_key" not in spec:
         failures.append("KERNEL_SPEC.md no longer lists the 0-5 frozen table")
@@ -92,7 +108,8 @@ def main():
         for line in failures:
             print(f"  - {line}")
         return 1
-    print("abi_check: spec and dispatch agree (6 calls, refusal arm, write cap, reserved range)")
+    print("abi_check: spec, dispatch and lib.rs wrappers agree "
+          "(6 calls, refusal arm, write cap, reserved range)")
     return 0
 
 

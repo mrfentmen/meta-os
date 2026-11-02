@@ -16,6 +16,7 @@ different sets, and only the second one predicts whether a boot survives.
 Exit: 0 in agreement, 1 on drift, 2 on a missing file.
 """
 
+import json
 import pathlib
 import re
 import sys
@@ -108,8 +109,31 @@ def main():
     if "services degraded:" not in manifest_text:
         failures.append("boot line format ('services degraded:') missing from the manifest")
 
+    # The generated JSON claims to be a rendering of these two documents. If it
+    # drifts, a consumer (the image lane) reads a different boot order than the
+    # one this checker just validated — the worst kind of agreement, because
+    # both files pass on their own.
+    json_path = pathlib.Path("os-build/boot-manifest.json")
+    if not json_path.is_file():
+        failures.append("boot-manifest.json missing (run gen_boot_manifest_json.py)")
+    else:
+        data = json.loads(json_path.read_text())
+        by_id = {s.get("id"): s for s in data.get("services", [])}
+        if set(by_id) != set(order):
+            failures.append("boot-manifest.json service set differs from BOOT_ORDER.md")
+        for name, row in order.items():
+            entry = by_id.get(name)
+            if not entry:
+                continue
+            if entry.get("order") != row["order"]:
+                failures.append(f"json {name}: order {entry.get('order')} != {row['order']}")
+            if sorted(entry.get("needs", [])) != sorted(row["needs"]):
+                failures.append(f"json {name}: needs {entry.get('needs')} != {row['needs']}")
+            if bool(entry.get("fatal_in_effect")) != (name in effective):
+                failures.append(f"json {name}: fatal_in_effect disagrees with the closure")
+
     print(f"boot_manifest: {len(order)} services, fatal on paper={len(fatal)}, "
-          f"fatal in effect={len(effective)}")
+          f"fatal in effect={len(effective)}, json {'checked' if json_path.is_file() else 'missing'}")
     print(f"  effective-fatal adds: {sorted(effective - fatal)}")
     print(f"  truly degradable: {sorted(set(order) - effective)}")
 
