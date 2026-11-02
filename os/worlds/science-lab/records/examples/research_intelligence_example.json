@@ -1,0 +1,60 @@
+{
+  "answer": {
+    "answer_status": "unanswered-in-this-run",
+    "note": "The paper text was not opened in this run, so no reported RMSE is stated as fact. P3 gives only our own prep-run observation on the archived set (RMSE 1.099), which is NOT the paper figure. The gate run extracts the paper figure from the source at run time (SLICE1 s.4).",
+    "reported_rmse": "TO_BE_READ_AT_RUN"
+  },
+  "budget": {
+    "allowed": true,
+    "reason": "ok: cycle 'RI-EXAMPLE-001' within literature budget (sources 3/50, calls 3/50)"
+  },
+  "claims_dropped": [
+    {
+      "claim": "The paper's own reported RMSE / fit statistics.",
+      "id": "D1",
+      "reason": "DROPPED (unpinned): paper text not opened in this run. Per SCIENCE_LAB_W2_SLICE1.md s.4 target numbers are pulled at run time, never hardcoded; value left TO_BE_READ_AT_RUN."
+    }
+  ],
+  "claims_pinned": [
+    {
+      "claim": "Delaney (2004) ESOL paper: J. Chem. Inf. Comput. Sci. 44(3), 1000-1005, doi:10.1021/ci034243x.",
+      "id": "P1",
+      "source": "shelves/chemistry.json + gate/delaney/SOURCES.md"
+    },
+    {
+      "claim": "Archived compound set gate/delaney/delaney-processed.csv holds 1,128 data rows with SHA-256 8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189, hash re-verified at run time.",
+      "id": "P2",
+      "source": "gate/delaney/SOURCES.md + live sha256 recompute by find_prior_result()"
+    },
+    {
+      "claim": "Prep-run observation (NOT the paper report): the published equation scored on THIS 1,128 set at R2 0.725, RMSE 1.099, MAE 0.844.",
+      "id": "P3",
+      "source": "gate/prep_results.json (labelled PREP RUN, not the gate)"
+    }
+  ],
+  "contested": [],
+  "contested_note": "No two consulted sources disagreed on any claim in this run; contested list is honestly empty.",
+  "cycle_id": "RI-EXAMPLE-001",
+  "honesty": [
+    "No RMSE is hardcoded as the paper figure; reported value is TO_BE_READ_AT_RUN.",
+    "Every number stated is verified in-checkout (dataset hash recomputed; prep stats read from gate/prep_results.json).",
+    "Gate NOT attempted; no evidence level earned; this run supports at most ladder level 1."
+  ],
+  "kind": "research-intelligence-worked-example",
+  "ledger": {
+    "brief_entry_hash": "cdb4e0be28f7f0093b21b91e435542b2460ca36ddccde3355c44e8a5d6a9204e",
+    "brief_prev_hash": "GENESIS",
+    "chain": "ok: 2 entries verified",
+    "file": "records/ledger.jsonl",
+    "status_entry_hash": "d6446e4d260ba1fa3fa381441e08af691ad0dca9226cb57c080213d5f1456009",
+    "status_prev_hash": "cdb4e0be28f7f0093b21b91e435542b2460ca36ddccde3355c44e8a5d6a9204e"
+  },
+  "question": "What is the reported RMSE of Delaney ESOL aqueous solubility model?",
+  "recorded_by": "os/worlds/science-lab/literature.py (find_prior_result, check_source_budget, status_record)",
+  "sources_read": [
+    "shelves/chemistry.json :: Delaney (2004) entry",
+    "gate/delaney/SOURCES.md :: archived dataset provenance + sha256",
+    "gate/prep_results.json :: prep-run observation (paper equation on this 1,128 set)"
+  ],
+  "status_record_path": "records/literature/RI-EXAMPLE-001.json"
+}

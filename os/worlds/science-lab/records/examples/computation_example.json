@@ -1,0 +1,55 @@
+{
+  "gate_status": "NOT passed. This is a prep statistic (mean over 10 rows), not the Delaney ESOL gate run. The gate additionally requires the published equation scored on the full archived set plus independent-verifier re-execution within a pre-stated tolerance (gate/GATE_PREP.md). No evidence level earned beyond the record cap.",
+  "honesty": [
+    "CSV header read at run time; column matched against the live header, not assumed.",
+    "Mean computed from the 10 archived values by statistics.mean; file SHA-256 recomputed at run time.",
+    "Gate NOT claimed as passed; no discovery claim filed."
+  ],
+  "input_hash": "7963f5e162c039b4624a1a0368da8227a4ab7919ddd283c60826bc962302ef7d",
+  "kind": "computation-worked-example",
+  "ledger": {
+    "entry_hash": "0a8773122e9df098e646d441d1c45a0b88f433a3aa033b7701be0795b0327c40",
+    "file": "records/ledger.jsonl",
+    "prev_hash": "4eff340da1ed57f19e634e13d5c95cefda09f1fbb7b992d90e87d72902fc77c6"
+  },
+  "output_hash": "616e42f33e61dea36eb4c2794ddc8d5fe42b6968f5efcb00a55d4bee93a1e0fd",
+  "paper_figure": "TO_BE_READ_AT_RUN: no paper figure is stated or used here.",
+  "record_id": "exp-2e03dad2f295",
+  "run": {
+    "department": "chem",
+    "file_sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189",
+    "header": [
+      "Compound ID",
+      "ESOL predicted log solubility in mols per litre",
+      "Minimum Degree",
+      "Molecular Weight",
+      "Number of H-Bond Donors",
+      "Number of Rings",
+      "Number of Rotatable Bonds",
+      "Polar Surface Area",
+      "measured log solubility in mols per litre",
+      "smiles"
+    ],
+    "mode": "dataset-statistic",
+    "plan": {
+      "column": "measured log solubility in mols per litre",
+      "dataset": "gate/delaney/delaney-processed.csv",
+      "n_rows": 10,
+      "statistic": "mean"
+    },
+    "result": -3.989,
+    "values": [
+      -0.77,
+      -3.3,
+      -2.06,
+      -7.87,
+      -1.33,
+      -1.5,
+      -7.32,
+      -5.03,
+      -6.29,
+      -4.42
+    ]
+  },
+  "task": "Section 4 Task 40: first full run on the reproduction target (prep computation, NOT the gate)"
+}

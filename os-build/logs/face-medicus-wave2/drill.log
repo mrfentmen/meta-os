@@ -9,5 +9,5 @@ package human_verify: True
 package simulated: True
 picture.frame: evidence/incident-725c546b990dd1b4/flag-frame-cam-c-ed9e92.jpg
 picture.evidence_crop: None
-receipt_id: sim-f0e40e1695baefb6
+receipt_id: sim-a85a4e0c03a47dc5
 FACE-45 MEDICUS LOOP GREEN: dispatched-simulated with picture

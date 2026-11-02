@@ -1,0 +1,41 @@
+{
+  "claims_dropped": [
+    {
+      "claim": "The paper's own reported RMSE / fit statistics.",
+      "id": "D1",
+      "reason": "DROPPED (unpinned): paper text not opened in this run. Per SCIENCE_LAB_W2_SLICE1.md s.4 target numbers are pulled at run time, never hardcoded; value left TO_BE_READ_AT_RUN."
+    }
+  ],
+  "claims_pinned": [
+    {
+      "claim": "Delaney (2004) ESOL paper: J. Chem. Inf. Comput. Sci. 44(3), 1000-1005, doi:10.1021/ci034243x.",
+      "id": "P1",
+      "source": "shelves/chemistry.json + gate/delaney/SOURCES.md"
+    },
+    {
+      "claim": "Archived compound set gate/delaney/delaney-processed.csv holds 1,128 data rows with SHA-256 8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189, hash re-verified at run time.",
+      "id": "P2",
+      "source": "gate/delaney/SOURCES.md + live sha256 recompute by find_prior_result()"
+    },
+    {
+      "claim": "Prep-run observation (NOT the paper report): the published equation scored on THIS 1,128 set at R2 0.725, RMSE 1.099, MAE 0.844.",
+      "id": "P3",
+      "source": "gate/prep_results.json (labelled PREP RUN, not the gate)"
+    }
+  ],
+  "contested": [],
+  "counts": {
+    "claims_dropped": 1,
+    "claims_pinned": 3,
+    "contested": 0,
+    "sources_read": 3
+  },
+  "cycle_id": "RI-EXAMPLE-001",
+  "kind": "research-intelligence-status",
+  "recorded_at": "2026-11-02T13:42:48.649666Z",
+  "sources_read": [
+    "shelves/chemistry.json :: Delaney (2004) entry",
+    "gate/delaney/SOURCES.md :: archived dataset provenance + sha256",
+    "gate/prep_results.json :: prep-run observation (paper equation on this 1,128 set)"
+  ]
+}

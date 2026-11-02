@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: B2.1 the boot file's order is checked, not trusted
+ok 1 - B2.1 the boot file's order is checked, not trusted
+  ---
+  duration_ms: 5.005384
+  type: 'test'
+  ...
+# Subtest: B2.2 a dependency that is not running refuses the start, and says why
+ok 2 - B2.2 a dependency that is not running refuses the start, and says why
+  ---
+  duration_ms: 5.440684
+  type: 'test'
+  ...
+# Subtest: B2.3 bootAll starts in order and leaves both running
+ok 3 - B2.3 bootAll starts in order and leaves both running
+  ---
+  duration_ms: 120.098392
+  type: 'test'
+  ...
+# Subtest: B2.4 a STOP filed before the claim means nothing is spawned (window 1)
+ok 4 - B2.4 a STOP filed before the claim means nothing is spawned (window 1)
+  ---
+  duration_ms: 2.926691
+  type: 'test'
+  ...
+# Subtest: B2.5 a STOP during the run kills it and records why (window 2)
+ok 5 - B2.5 a STOP during the run kills it and records why (window 2)
+  ---
+  duration_ms: 34.473809
+  type: 'test'
+  ...
+# Subtest: B2.6 an unrequested nonzero exit is a failure; a budget kill is a stop
+ok 6 - B2.6 an unrequested nonzero exit is a failure; a budget kill is a stop
+  ---
+  duration_ms: 476.422867
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1575.906752

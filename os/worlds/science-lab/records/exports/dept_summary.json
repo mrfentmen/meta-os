@@ -1,0 +1,61 @@
+{
+  "departments": {
+    "biology": {
+      "claims_by_level": {},
+      "cycle_ids": [],
+      "cycles": 0,
+      "disputes_open": 0
+    },
+    "chem": {
+      "claims_by_level": {
+        "2": 3
+      },
+      "cycle_ids": [],
+      "cycles": 0,
+      "disputes_open": 0
+    },
+    "chemistry": {
+      "claims_by_level": {
+        "1": 2,
+        "2": 5
+      },
+      "cycle_ids": [
+        "CYCLE-EXAMPLE-001",
+        "DRESS-REHEARSAL-001"
+      ],
+      "cycles": 2,
+      "disputes_open": 0
+    },
+    "materials": {
+      "claims_by_level": {},
+      "cycle_ids": [],
+      "cycles": 0,
+      "disputes_open": 0
+    },
+    "physics-math": {
+      "claims_by_level": {},
+      "cycle_ids": [],
+      "cycles": 0,
+      "disputes_open": 0
+    },
+    "unassigned": {
+      "claims_by_level": {
+        "2": 2
+      },
+      "cycle_ids": [],
+      "cycles": 0,
+      "disputes_open": 0
+    }
+  },
+  "dept_rule": "cycle department from record.department, else question keywords (delaney/esol/solubility -> chemistry); repository rows use their own department else their cycle's.",
+  "export_version": "science-lab-export/1",
+  "generated_at": "2026-11-02T14:11:41.945734Z",
+  "generated_by": "os/worlds/science-lab/export.py dept_summary",
+  "sources": [
+    "records/cycles/*.json",
+    "records/repository/claims.jsonl",
+    "records/repository/experiments.jsonl",
+    "records/exports/CYCLE-*.json",
+    "records/ledger.jsonl (dispute kinds)"
+  ]
+}

@@ -7,7 +7,7 @@
     "name": "Broadway @ 45 St"
   },
   "category": "person on ground",
-  "created_at": "2026-11-02T14:02:07.491Z",
+  "created_at": "2026-11-02T14:33:22.098Z",
   "division": "medicus",
   "evidence": {
     "detector": "unavailable",
@@ -63,7 +63,7 @@
   "status": "dispatched-simulated",
   "timeline": [
     {
-      "at": "2026-11-02T14:02:07.491Z",
+      "at": "2026-11-02T14:33:22.098Z",
       "category": "person on ground",
       "division": "medicus",
       "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
@@ -83,14 +83,14 @@
       ],
       "actions_count": 1,
       "agent": "orchestrator",
-      "at": "2026-11-02T14:02:07.492Z",
+      "at": "2026-11-02T14:33:22.098Z",
       "decision": "investigate",
       "reason": "flagged category \"person on ground\" is outside the medicus baseline set and no independent review has been recorded yet",
       "status": "under_review",
       "step": "decision"
     },
     {
-      "at": "2026-11-02T14:02:07.492Z",
+      "at": "2026-11-02T14:33:22.099Z",
       "category": "person on ground",
       "error": null,
       "job_id": "stub",
@@ -106,7 +106,7 @@
       "verdict": "confirmed"
     },
     {
-      "at": "2026-11-02T14:02:07.493Z",
+      "at": "2026-11-02T14:33:22.099Z",
       "status": "reported",
       "step": "reported"
     },
@@ -119,14 +119,14 @@
       ],
       "actions_count": 1,
       "agent": "orchestrator",
-      "at": "2026-11-02T14:02:07.493Z",
+      "at": "2026-11-02T14:33:22.100Z",
       "decision": "investigate",
       "reason": "the flag survived review and no investigation has been recorded; additional evidence is gathered before any response is prepared",
       "status": "investigating",
       "step": "decision"
     },
     {
-      "at": "2026-11-02T14:02:07.493Z",
+      "at": "2026-11-02T14:33:22.100Z",
       "camera_id": "cam-c",
       "camera_name": "Broadway @ 45 St",
       "category": "normal activity",
@@ -142,14 +142,14 @@
       "step": "investigation"
     },
     {
-      "at": "2026-11-02T14:02:07.493Z",
+      "at": "2026-11-02T14:33:22.100Z",
       "files": [
         "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg"
       ],
       "step": "evidence"
     },
     {
-      "at": "2026-11-02T14:02:07.494Z",
+      "at": "2026-11-02T14:33:22.101Z",
       "camera_id": "cam-c",
       "camera_name": "Broadway @ 45 St",
       "category": "no hazard visible",
@@ -165,14 +165,14 @@
       "step": "investigation"
     },
     {
-      "at": "2026-11-02T14:02:07.494Z",
+      "at": "2026-11-02T14:33:22.101Z",
       "files": [
         "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg"
       ],
       "step": "evidence"
     },
     {
-      "at": "2026-11-02T14:02:07.495Z",
+      "at": "2026-11-02T14:33:22.102Z",
       "camera_id": "cam-n0",
       "camera_name": "Neighbour 0",
       "category": "normal activity",
@@ -188,14 +188,14 @@
       "step": "investigation"
     },
     {
-      "at": "2026-11-02T14:02:07.495Z",
+      "at": "2026-11-02T14:33:22.102Z",
       "files": [
         "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n0-ed9e92.jpg"
       ],
       "step": "evidence"
     },
     {
-      "at": "2026-11-02T14:02:07.496Z",
+      "at": "2026-11-02T14:33:22.103Z",
       "camera_id": "cam-n1",
       "camera_name": "Neighbour 1",
       "category": "normal activity",
@@ -211,14 +211,14 @@
       "step": "investigation"
     },
     {
-      "at": "2026-11-02T14:02:07.496Z",
+      "at": "2026-11-02T14:33:22.103Z",
       "files": [
         "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n1-ed9e92.jpg"
       ],
       "step": "evidence"
     },
     {
-      "at": "2026-11-02T14:02:07.497Z",
+      "at": "2026-11-02T14:33:22.104Z",
       "camera_id": "cam-n2",
       "camera_name": "Neighbour 2",
       "category": "normal activity",
@@ -234,7 +234,7 @@
       "step": "investigation"
     },
     {
-      "at": "2026-11-02T14:02:07.497Z",
+      "at": "2026-11-02T14:33:22.104Z",
       "files": [
         "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n2-ed9e92.jpg"
       ],
@@ -249,14 +249,14 @@
       ],
       "actions_count": 1,
       "agent": "orchestrator",
-      "at": "2026-11-02T14:02:07.499Z",
+      "at": "2026-11-02T14:33:22.105Z",
       "decision": "prepare_response",
       "reason": "flagged, confirmed by independent review, and investigated; the response brief is prepared and submitted to the simulated dispatch endpoint only",
       "status": "response_prepared",
       "step": "decision"
     },
     {
-      "at": "2026-11-02T14:02:07.499Z",
+      "at": "2026-11-02T14:33:22.106Z",
       "brief": {
         "assessment": {
           "category": "person on ground",
@@ -286,12 +286,12 @@
           "model": "none"
         },
         "product": "medicus",
-        "timestamp": "2026-11-02T14:02:07.499Z"
+        "timestamp": "2026-11-02T14:33:22.106Z"
       },
       "step": "brief"
     },
     {
-      "at": "2026-11-02T14:02:07.500Z",
+      "at": "2026-11-02T14:33:22.107Z",
       "bolo": {
         "area": "Manhattan",
         "camera_name": "Broadway @ 45 St",
@@ -300,7 +300,7 @@
         "direction_of_travel": null,
         "division": "medicus",
         "face_crops": 0,
-        "flagged_at": "2026-11-02T14:02:07.491Z",
+        "flagged_at": "2026-11-02T14:33:22.098Z",
         "frame_files": [
           "evidence/incident-725c546b990dd1b4/flag-frame-cam-c-ed9e92.jpg",
           "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg",
@@ -315,8 +315,8 @@
       "step": "bolo"
     },
     {
-      "at": "2026-11-02T14:02:07.502Z",
-      "receipt_id": "sim-f0e40e1695baefb6",
+      "at": "2026-11-02T14:33:22.109Z",
+      "receipt_id": "sim-a85a4e0c03a47dc5",
       "service": "hospital (EMS receiving)",
       "simulated": true,
       "status": "dispatched-simulated",

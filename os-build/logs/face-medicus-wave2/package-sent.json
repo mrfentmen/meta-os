@@ -28,9 +28,9 @@
       "model": "none"
     },
     "product": "medicus",
-    "timestamp": "2026-11-02T14:02:07.499Z"
+    "timestamp": "2026-11-02T14:33:22.106Z"
   },
-  "created_at": "2026-11-02T14:02:07.499Z",
+  "created_at": "2026-11-02T14:33:22.106Z",
   "destination": "SIMULATED hospital (EMS receiving) endpoint (local stack route) \u2014 no real emergency service is contacted by this system",
   "dispatch_mode": "judge-confirmed",
   "incident_id": "incident-725c546b990dd1b4",
@@ -44,7 +44,7 @@
     "direction_of_travel": null,
     "division": "medicus",
     "face_crops": 0,
-    "flagged_at": "2026-11-02T14:02:07.491Z",
+    "flagged_at": "2026-11-02T14:33:22.098Z",
     "frame_files": [
       "evidence/incident-725c546b990dd1b4/flag-frame-cam-c-ed9e92.jpg",
       "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg",
@@ -60,8 +60,8 @@
     "evidence_crop": null,
     "frame": "evidence/incident-725c546b990dd1b4/flag-frame-cam-c-ed9e92.jpg"
   },
-  "receipt_id": "sim-f0e40e1695baefb6",
-  "received_at": "2026-11-02T14:02:07.502Z",
+  "receipt_id": "sim-a85a4e0c03a47dc5",
+  "received_at": "2026-11-02T14:33:22.109Z",
   "recommended_actions": {
     "ignis": "For human review: check the recorded frames from Broadway @ 45 St (Manhattan) against the flagged category \"person on ground\". This system is not a certified fire-detection system; a human reviewer decides whether any follow-up is warranted.",
     "medicus": "For human review: look at the recorded scene from Broadway @ 45 St (Manhattan). The flagged category \"person on ground\" is a scene indicator only \u2014 no diagnosis, cause, severity, or treatment is stated or implied. A human reviewer decides whether any follow-up is warranted.",
