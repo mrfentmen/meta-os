@@ -45,11 +45,11 @@ fn dj(status: &str) -> push::JobView {
     assert!(brief::brief_index_key("main").contains("main"));
 }
 #[test] fn test_intel_brief_environment_repo_plan_ok() {
-    let p = Plan { goal: "g".into(), jobs: vec![PlanJob { key: "a".into(), title: "A".into(), files: vec![], deps: vec![], max_attempts: 3, spec: String::new(), accept: vec![] }] };
+    let p = Plan { goal: "g".into(), summary: String::new(), jobs: vec![PlanJob { key: "a".into(), title: "A".into(), files: vec![], deps: vec![], max_attempts: 3, spec: String::new(), accept: vec![] }] };
     assert!(dispatch::check_dep_graph(&p).is_ok());
 }
 #[test] fn test_intel_brief_federation_caller_cycle() {
-    let p = Plan { goal: "g".into(), jobs: vec![
+    let p = Plan { goal: "g".into(), summary: String::new(), jobs: vec![
         PlanJob { key: "a".into(), title: "A".into(), files: vec![], deps: vec!["b".into()], max_attempts: 3, spec: String::new(), accept: vec![] },
         PlanJob { key: "b".into(), title: "B".into(), files: vec![], deps: vec!["a".into()], max_attempts: 3, spec: String::new(), accept: vec![] }] };
     assert!(dispatch::check_dep_graph(&p).is_err());
@@ -85,7 +85,7 @@ fn dj(status: &str) -> push::JobView {
     assert!(dispatch::check_no_secrets("sk-live-abc").is_err());
 }
 #[test] fn test_intel_brief_prompt_version_clamp() {
-    let mut p = Plan { goal: "g".into(), jobs: vec![PlanJob { key: "a".into(), title: "A".into(), files: vec![], deps: vec![], max_attempts: 0, spec: String::new(), accept: vec![] }] };
+    let mut p = Plan { goal: "g".into(), summary: String::new(), jobs: vec![PlanJob { key: "a".into(), title: "A".into(), files: vec![], deps: vec![], max_attempts: 0, spec: String::new(), accept: vec![] }] };
     dispatch::clamp_attempt_budgets(&mut p);
     assert_eq!(p.jobs[0].max_attempts, 3);
 }
