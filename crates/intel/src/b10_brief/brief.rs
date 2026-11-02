@@ -1922,6 +1922,77 @@ pub fn environment_age_label(as_of: Option<i64>) -> String {
     }
 }
 
+/// OS-103 follow-up: the "repo" part of an environment record,
+/// read from a local git checkout at generation time.
+///
+/// Returns the current branch, the short commit, and the count
+/// of uncommitted files (porcelain lines, so untracked files
+/// count too), stamped with `now` or the current time. This is
+/// only the repo quarter of the environment record: a caller
+/// merges it with the bus, jobs, and budget parts from their own
+/// sources, and a record with only this part still renders the
+/// other three lines as not reported. Returns `None` instead of
+/// failing when the path is not a git checkout, git is missing,
+/// a command fails, the HEAD is detached (no branch to name),
+/// or any output is unusable, so a repo the record does not
+/// describe renders as not reported by `environment_lines`,
+/// never guessed.
+///
+/// Two documented deviations from Python. First, Python
+/// defaults `repo_path` to its own repo root (the parent of
+/// `intel/`); a Rust binary has no source-tree location, so
+/// `None` here means "no path given" and yields `None` — the
+/// caller passes the checkout path. Second, Python caps each
+/// git call at 10 seconds; `std::process::Command` has no
+/// timeout, so that cap is not enforced here — the calls run
+/// to completion, as on Python's success path.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnvironmentRepoRecord {
+    pub branch: String,
+    pub commit: String,
+    pub dirty: i64,
+    pub as_of: i64,
+}
+
+pub fn environment_repo_record(
+    repo_path: Option<&str>,
+    now: Option<i64>,
+) -> Option<EnvironmentRepoRecord> {
+    let path = repo_path?;
+    let run = |args: &[&str]| -> Option<String> {
+        let output = std::process::Command::new("git")
+            .arg("-C")
+            .arg(path)
+            .args(args)
+            .output()
+            .ok()?;
+        if !output.status.success() {
+            return None;
+        }
+        Some(String::from_utf8_lossy(&output.stdout).into_owned())
+    };
+    let branch = run(&["rev-parse", "--abbrev-ref", "HEAD"])?;
+    let commit = run(&["rev-parse", "--short", "HEAD"])?;
+    let status = run(&["status", "--porcelain"])?;
+    let branch = branch.trim().to_string();
+    let commit = commit.trim().to_string();
+    if branch.is_empty() || branch == "HEAD" || commit.is_empty() {
+        return None;
+    }
+    let dirty = status
+        .lines()
+        .filter(|line| !line.trim().is_empty())
+        .count() as i64;
+    let as_of = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    Some(EnvironmentRepoRecord { branch, commit, dirty, as_of })
+}
+
 /// STR-002 image extensions: the digest lists what the pointer
 /// itself names, so only these extensions count as screenshots.
 /// A `.txt`, `.pdf`, or extension-less pointer is a file share,
@@ -4057,5 +4128,114 @@ mod tests {
             environment_age_label(None),
             " (snapshot time not reported)"
         );
+    }
+
+    // Real temp git checkouts, not a stubbed git, mirroring the
+    // Python repo-record tests. Each test uses its own directory
+    // (process id + test name) so parallel test runs cannot share
+    // a checkout, and removes it afterwards.
+    fn repo_test_dir(name: &str) -> std::path::PathBuf {
+        std::env::temp_dir().join(format!(
+            "intel-b10-repo-{}-{name}",
+            std::process::id()
+        ))
+    }
+
+    fn repo_git(path: &std::path::Path, args: &[&str]) {
+        let status = std::process::Command::new("git")
+            .arg("-C")
+            .arg(path)
+            .args(args)
+            .status()
+            .expect("git must run for the repo-record tests");
+        assert!(status.success(), "git {args:?} failed in {path:?}");
+    }
+
+    fn repo_checkout(name: &str) -> std::path::PathBuf {
+        let path = repo_test_dir(name);
+        let _ = std::fs::remove_dir_all(&path);
+        std::fs::create_dir_all(&path).expect("temp checkout dir");
+        repo_git(&path, &["init", "-b", "testbranch"]);
+        repo_git(&path, &["config", "user.email", "test@example.local"]);
+        repo_git(&path, &["config", "user.name", "Test"]);
+        std::fs::write(path.join("note.txt"), "hello\n").expect("note.txt");
+        repo_git(&path, &["add", "note.txt"]);
+        repo_git(&path, &["commit", "-m", "first"]);
+        path
+    }
+
+    #[test]
+    fn environment_repo_record_clean_checkout() {
+        let path = repo_checkout("clean");
+        let record = environment_repo_record(
+            path.to_str(),
+            Some(1793093400),
+        )
+        .expect("clean checkout yields a record");
+        assert_eq!(record.branch, "testbranch");
+        assert!(!record.commit.is_empty());
+        assert_eq!(record.dirty, 0);
+        assert_eq!(record.as_of, 1793093400);
+        let _ = std::fs::remove_dir_all(&path);
+    }
+
+    #[test]
+    fn environment_repo_record_modified_and_untracked_count_dirty() {
+        let path = repo_checkout("dirty");
+        std::fs::write(path.join("note.txt"), "hello\nmore\n")
+            .expect("modify note.txt");
+        std::fs::write(path.join("new.txt"), "untracked\n")
+            .expect("new.txt");
+        let record = environment_repo_record(
+            path.to_str(),
+            Some(1793093400),
+        )
+        .expect("dirty checkout yields a record");
+        assert_eq!(record.dirty, 2);
+        let _ = std::fs::remove_dir_all(&path);
+    }
+
+    #[test]
+    fn environment_repo_record_non_checkout_returns_none() {
+        let path = repo_test_dir("non-checkout");
+        let _ = std::fs::remove_dir_all(&path);
+        std::fs::create_dir_all(&path).expect("temp non-checkout dir");
+        assert_eq!(
+            environment_repo_record(path.to_str(), Some(1793093400)),
+            None
+        );
+        let _ = std::fs::remove_dir_all(&path);
+    }
+
+    #[test]
+    fn environment_repo_record_renders_repo_line_only() {
+        let path = repo_checkout("render");
+        let record = environment_repo_record(
+            path.to_str(),
+            Some(1793093400),
+        )
+        .expect("checkout yields a record");
+        let env = Environment {
+            repo: Some(EnvironmentRepo {
+                branch: record.branch.clone(),
+                commit: record.commit.clone(),
+                dirty: Some(record.dirty),
+                age_label: environment_age_label(Some(record.as_of)),
+            }),
+            bus: None,
+            jobs: None,
+            working_age_label: String::new(),
+            budget: None,
+        };
+        let lines = environment_lines(Some(&env));
+        assert!(lines[0].contains(&format!(
+            "Repo: testbranch at {}",
+            record.commit
+        )));
+        assert!(lines[0].contains("clean"));
+        assert!(lines[1].contains("not reported"));
+        assert!(lines[2].contains("not reported"));
+        assert!(lines[3].contains("not reported"));
+        let _ = std::fs::remove_dir_all(&path);
     }
 }
