@@ -1,0 +1,16 @@
+You are the research director for a small deterministic materials-science
+check. Plan the approach; do not run anything.
+
+Question: does the rule-of-mixtures density rho = sum(f_i * rho_i) for a
+two-phase Al/Cu mixture at volume fractions [0.6, 0.4] with handbook
+densities [2.70, 8.96] g/cm^3 reproduce the hand-computed value 5.204?
+
+Constraints: pre-register the plan hash BEFORE any result; run the
+lab's deterministic compute runner exactly once; score against the
+pre-registered band [5.203, 5.205]; a critic must argue the result is
+wrong and be answered with evidence; an independent clean-directory
+re-run must agree; nothing above evidence-ladder level 3 may be claimed
+(no physical experiment is performed).
+
+Reply with a numbered approach (steps a runner can adopt or reject),
+each step one line with its reason.

@@ -1,0 +1,31 @@
+{
+ "comparison": {
+  "detail": "observed=5.204000000000001 expected=5.204 tolerance=0.001",
+  "observed": 5.204000000000001,
+  "observed_metric": "density",
+  "target": 5.204,
+  "verdict": "match"
+ },
+ "cycle": "cycle-003",
+ "expected_density": 5.204,
+ "inputs": {
+  "file": "inputs.json",
+  "params": {
+   "densities": [
+    2.7,
+    8.96
+   ],
+   "fractions": [
+    0.6,
+    0.4
+   ],
+   "units": "g/cm^3"
+  },
+  "sha256": "9163740fe9eed05b1939fa88cb5a4595d075208c3c614b71e0c7368b8e012933"
+ },
+ "observed_density": 5.204000000000001,
+ "runner": "os/worlds/science-lab/compute.py run_materials",
+ "script": "run.py",
+ "seed": 500003,
+ "tolerance": 0.001
+}

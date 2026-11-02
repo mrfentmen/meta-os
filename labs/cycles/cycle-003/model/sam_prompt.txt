@@ -1,0 +1,2 @@
+Segment the central caffeine molecule specimen in this laboratory molecule image. Return the tight box around the molecule.
+(source image: labs/molecules/shots/nb-caffeine-sf.png, 1200x685 PNG converted to JPEG for the call)

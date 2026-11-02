@@ -1,0 +1,1 @@
+You are the scientific critic. Argue the following result is wrong. Result: rule-of-mixtures density 5.204 g/cm^3 for Al/Cu fractions [0.6,0.4] with handbook densities [2.70,8.96], computed deterministically, clean-directory re-run agrees bit-for-bit. Give your single strongest objection, concrete and checkable.

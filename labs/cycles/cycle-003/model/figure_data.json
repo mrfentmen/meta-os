@@ -1,0 +1,21 @@
+{
+ "bars": [
+  {
+   "density": 2.7,
+   "fraction": 0.6,
+   "label": "Al (f=0.6)"
+  },
+  {
+   "density": 8.96,
+   "fraction": 0.4,
+   "label": "Cu (f=0.4)"
+  },
+  {
+   "density": 5.204000000000001,
+   "label": "mixture (rule of mixtures)"
+  }
+ ],
+ "figure": "figure.png",
+ "prereg_expected": 5.204,
+ "tolerance": 0.001
+}

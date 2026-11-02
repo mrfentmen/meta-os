@@ -1,0 +1,32 @@
+[OFFLINE figure note - UNPROVEN. No live Muse Wonder call succeeded, so no model reading exists. The numbers below are the runner's own record of what was plotted, NOT a model's reading of figure.png: {
+ "bars": [
+  {
+   "density": 2.7,
+   "fraction": 0.6,
+   "label": "Al (f=0.6)"
+  },
+  {
+   "density": 8.96,
+   "fraction": 0.4,
+   "label": "Cu (f=0.4)"
+  },
+  {
+   "density": 5.204000000000001,
+   "label": "mixture (rule of mixtures)"
+  }
+ ],
+ "figure": "figure.png",
+ "prereg_expected": 5.204,
+ "tolerance": 0.001
+}. The plot file itself is archived alongside this note; its agreement with the raw outputs was checked by the runner's pixel/data comparison in figure_check.md, which remains UNPROVEN as a model reading.]
+[CHECK against the numbers — runner verification, appended per OC2B-234]
+No live Muse Wonder call succeeded (tried once; empty message content;
+failure logged once in wonder_receipt.json), so no model reading exists
+and there is no model text to agree with or differ from. The note above
+is the deterministic OFFLINE template, UNPROVEN as a model reading.
+Runner's own check of the plotted material: figure_data.json carries
+bar3 density 5.204000, byte-identical to raw/result.json
+observed_density 5.204000 (sha 9c47379b...edcd); the red expected line
+at 5.204 passes through bar 3 exactly (band +-0.001). The plot file
+figure.png (sha 393b73c2...) is archived beside the data. Agreement
+status: NO MODEL READING TO CHECK — runner numbers self-consistent.
