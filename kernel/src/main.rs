@@ -6,6 +6,12 @@
 //! mapping) mirrors every serial line on screen; the panic handler
 //! paints a red PANIC screen. No pixel framebuffer exists under
 //! bootloader 0.9.35 — see `os-build/research/framebuffer.md`.
+//!
+//! K3 evidence (2026-11-02): `prove_timer` measures the PIT by waiting
+//! on the handler's tick counter, so the boot log carries a real
+//! `K3 timer:` line rather than the inference "sleep worked, so a timer
+//! must be firing". The keyboard half of K3 is proven by the console
+//! echo in the same log when QEMU is given keystrokes.
 
 #![no_std]
 #![no_main]
@@ -135,6 +141,7 @@ fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
         interrupts::load_idt();
     }
     interrupts::enable();
+    prove_timer();
     // Section D: frames, mapper, heap (IDT is live, so a stray fault
     // prints instead of triple-faulting).
     unsafe {
@@ -155,6 +162,36 @@ fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
     unsafe {
         sched::sched_init();
         sched::start_demo_tasks();
+    }
+}
+
+/// K3 proof: wait for the PIT IRQ to actually advance `ticks()`, and say
+/// so in the log. The install sequence above programs the PIC and PIT and
+/// loads the IDT, but none of that is evidence that a timer interrupt ever
+/// fired; the scheduler's sleep working is an inference, not a line.
+///
+/// Two properties matter. It is a measurement, not a canned print: `got`
+/// comes from the handler's own counter. And it is bounded: a dead PIC
+/// must not hang the boot, so after SPIN_LIMIT iterations it prints the
+/// failure in the same shape. A silent boot would look identical to a
+/// working one, which is exactly what this project keeps getting wrong.
+fn prove_timer() {
+    const WANT_TICKS: u64 = 10;
+    const SPIN_LIMIT: u64 = 400_000_000;
+    let start = interrupts::ticks();
+    let mut spins: u64 = 0;
+    while interrupts::ticks() < start.saturating_add(WANT_TICKS) && spins < SPIN_LIMIT {
+        spins = spins.wrapping_add(1);
+        core::hint::spin_loop();
+    }
+    let got = interrupts::ticks().saturating_sub(start);
+    if got >= WANT_TICKS {
+        println!("K3 timer: {} ticks after {} spins", got, spins);
+    } else {
+        println!(
+            "K3 timer: FAILED, {} ticks after {} spins (PIT not firing)",
+            got, spins
+        );
     }
 }
 

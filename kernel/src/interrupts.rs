@@ -499,6 +499,20 @@ pub fn timer_handler(_frame: &InterruptFrame, _error_code: u64) {
 /// typed lines stay readable.
 pub fn keyboard_handler(_frame: &InterruptFrame, _error_code: u64) {
     let scancode = inb(KEYBOARD_DATA);
+    // One line for the first key of the boot, so a log can distinguish
+    // "IRQ1 never fired" (no line, input never reached the controller)
+    // from "the handler ran and dropped it" (line, no echo). It stays
+    // because that distinction cost a full debugging round on 2026-11-02:
+    // QEMU's sendkey against a display-less VM produced no byte at all.
+    static mut SEEN_FIRST: bool = false;
+    unsafe {
+        if !SEEN_FIRST {
+            SEEN_FIRST = true;
+            serial_write_str("K3 keyboard: first scancode 0x");
+            serial_write_hex_u64(scancode as u64);
+            serial_write_str("\n");
+        }
+    }
     keyboard_push(scancode);
     pic_send_eoi(1);
 }

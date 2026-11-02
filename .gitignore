@@ -6,3 +6,5 @@ os-build/userspace/user/target/
 *.bin
 *.elf
 *.ppm
+os-build/logs/*.ppm
+os-build/logs/qemu-monitor.log
