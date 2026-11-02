@@ -1,0 +1,16 @@
+# run-001 pack manifest.
+# Pack hash = sha256 over concatenated file bytes in the sorted
+# order below, EXCEPT record.md contributes its zeroed form
+# (pack-sha256 line = 64 zeros). table record.md hash is likewise
+# over the zeroed form. To verify: substitute the filed H back to
+# zeros in record.md, rehash each file, compare table, then compare
+# the pack hash over the concatenation.
+pack-sha256: adc4c6306d57c254aa402827662be74ffbc49a59d04709b56d106d871102cb63
+check_csv.py:a089176b1f1c8ed2897d189cf933fce9b9f7a3cd8e335761406572a3cf87a8f9
+fitness.svg:7ba8f80fedac729ce40043cf774f00657c02e76509ef21a72043034f7fa84c87
+generations.csv:4657d1e8cff40434ae23f5a69ed5f2c335e5cbc0728987c09a09684b0c92869c
+record.md:b3c81eadb0d9e8ab42bfe111d76b6de5265ae74ba5932391349701a0dad50f6a
+records.jsonl:171efa5eae5b4bf4ff6f9df34c24ded87f745c7a7e6265574d3f56b5e01ea505
+run.py:ec9cabec64c3de92410d5fdba0acc06b4b6c277bca8ec3712bb10694730b2f9b
+walltime.txt:188be4d8b065988c4e2fd35badee5c84e2d7ee7d32551be2a059d0dfb10845fe
+winner.json:8257c409fe5ab683be979b5aae1a55f32a267a023f1a19f5f260707eb8a8b833

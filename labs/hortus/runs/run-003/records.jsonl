@@ -1,0 +1,320 @@
+{"engine": "hortus", "engine_version": "0.1.0", "env": {"delta_t_k": 40.0, "h_w_per_m2k": 3.55161, "k_w_per_mk": 237.0, "margin_spacing_m": 0.0018, "mass_cap_kg": 0.45, "min_spacing_m": 0.001, "name": "train-nominal-calibrated", "rho_kg_per_m3": 2700.0}, "evidence_level_cap": 2, "gene_bounds": [[2.0, 40.0], [4.0, 60.0], [0.4, 4.0], [1.0, 8.0]], "generations": 8, "is_prediction": true, "kind": "run_start", "model": "hortus-toy-fin-v1-calibrated", "population_size": 20, "seed": 500001}
+{"generation": 0, "genome": [10.0, 25.0, 1.5, 3.0], "kind": "birth", "organism": 0, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [7.063439, 27.10183, 2.067809, 6.578212], "kind": "birth", "organism": 1, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [22.563311, 32.374628, 3.38911, 6.493761], "kind": "birth", "organism": 2, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [35.539231, 37.00376, 2.074232, 1.089422], "kind": "birth", "organism": 3, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [26.543662, 24.893909, 3.292576, 5.550959], "kind": "birth", "organism": 4, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [25.095375, 9.607884, 1.440737, 3.088579], "kind": "birth", "organism": 5, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [11.035934, 44.982439, 1.253149, 3.743772], "kind": "birth", "organism": 6, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [9.913093, 17.709714, 3.569791, 4.184078], "kind": "birth", "organism": 7, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [11.01286, 14.002579, 2.51715, 7.935945], "kind": "birth", "organism": 8, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [35.495617, 24.089834, 1.814677, 6.070443], "kind": "birth", "organism": 9, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [10.809372, 57.926582, 2.408293, 3.41311], "kind": "birth", "organism": 10, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [7.194062, 46.105576, 1.279107, 7.577031], "kind": "birth", "organism": 11, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [22.654136, 47.451147, 3.412844, 4.065185], "kind": "birth", "organism": 12, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [9.86939, 49.814883, 1.734187, 7.05692], "kind": "birth", "organism": 13, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [12.76213, 55.904968, 1.761725, 1.09156], "kind": "birth", "organism": 14, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [31.780206, 35.038552, 3.887117, 2.942693], "kind": "birth", "organism": 15, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [5.72586, 52.602411, 3.741182, 3.942825], "kind": "birth", "organism": 16, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [16.787437, 26.549428, 3.503172, 6.074641], "kind": "birth", "organism": 17, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [10.965196, 34.538542, 0.719321, 4.289667], "kind": "birth", "organism": 18, "origin": "seed", "parents": []}
+{"generation": 0, "genome": [31.746868, 36.4505, 2.626947, 3.060925], "kind": "birth", "organism": 19, "origin": "seed", "parents": []}
+{"best_score": 17.3493719893354, "champion": 14, "generation": 0, "kind": "generation", "mean_score": -20.436510844560832, "population": 20}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 0}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 1}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 2}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 3}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 4}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 5}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 6}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 7}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 8}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 9}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 11}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 12}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 13}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 15}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 16}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 17}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 18}
+{"cause": "not-selected", "generation": 0, "kind": "death", "organism": 19}
+{"generation": 1, "genome": [14.233639, 52.404355, 1.663632, 1.85006], "kind": "birth", "organism": 20, "origin": "crossover+mutation", "parents": [14, 6]}
+{"generation": 1, "genome": [6.139812, 58.174427, 0.898977, 2.12086], "kind": "birth", "organism": 21, "origin": "crossover+mutation", "parents": [11, 10]}
+{"generation": 1, "genome": [24.740502, 59.769032, 1.735694, 3.206791], "kind": "birth", "organism": 22, "origin": "crossover+mutation", "parents": [14, 5]}
+{"generation": 1, "genome": [12.047465, 44.758612, 1.629779, 4.485418], "kind": "birth", "organism": 23, "origin": "crossover+mutation", "parents": [14, 16]}
+{"generation": 1, "genome": [12.777094, 45.299797, 1.887931, 4.940277], "kind": "birth", "organism": 24, "origin": "crossover+mutation", "parents": [18, 13]}
+{"generation": 1, "genome": [10.446475, 45.064251, 1.876218, 7.479364], "kind": "birth", "organism": 25, "origin": "crossover+mutation", "parents": [11, 13]}
+{"generation": 1, "genome": [13.765934, 30.867051, 0.67832, 4.787897], "kind": "birth", "organism": 26, "origin": "mutation", "parents": [18, 18]}
+{"generation": 1, "genome": [13.458483, 56.601024, 2.278416, 2.796258], "kind": "birth", "organism": 27, "origin": "mutation", "parents": [10, 10]}
+{"generation": 1, "genome": [10.207918, 43.074418, 0.510929, 3.952797], "kind": "birth", "organism": 28, "origin": "crossover+mutation", "parents": [6, 16]}
+{"generation": 1, "genome": [18.257798, 38.448833, 3.673697, 2.929221], "kind": "birth", "organism": 29, "origin": "crossover+mutation", "parents": [6, 16]}
+{"generation": 1, "genome": [16.006247, 60.0, 2.547631, 3.491708], "kind": "birth", "organism": 30, "origin": "crossover+mutation", "parents": [10, 14]}
+{"generation": 1, "genome": [16.079108, 50.345001, 1.335266, 4.778375], "kind": "birth", "organism": 31, "origin": "crossover+mutation", "parents": [6, 11]}
+{"generation": 1, "genome": [12.665865, 59.693402, 1.890862, 1.403778], "kind": "birth", "organism": 32, "origin": "crossover+mutation", "parents": [17, 14]}
+{"generation": 1, "genome": [10.373035, 47.271976, 3.465278, 5.864821], "kind": "birth", "organism": 33, "origin": "crossover+mutation", "parents": [6, 17]}
+{"generation": 1, "genome": [10.04046, 60.0, 1.799699, 1.0], "kind": "birth", "organism": 34, "origin": "crossover+mutation", "parents": [11, 14]}
+{"generation": 1, "genome": [7.331629, 55.105602, 2.485317, 8.0], "kind": "birth", "organism": 35, "origin": "crossover+mutation", "parents": [10, 13]}
+{"generation": 1, "genome": [9.482249, 34.930635, 1.130357, 3.616648], "kind": "birth", "organism": 36, "origin": "mutation", "parents": [18, 18]}
+{"generation": 1, "genome": [8.926673, 40.974663, 2.098136, 7.853775], "kind": "birth", "organism": 37, "origin": "mutation", "parents": [13, 13]}
+{"best_score": 19.08749632650456, "champion": 31, "generation": 1, "kind": "generation", "mean_score": 9.834072795288524, "population": 20}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 14}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 10}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 20}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 21}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 22}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 23}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 24}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 25}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 26}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 27}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 28}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 29}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 30}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 33}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 34}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 35}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 36}
+{"cause": "not-selected", "generation": 1, "kind": "death", "organism": 37}
+{"generation": 2, "genome": [9.942199, 56.049935, 2.188723, 1.548458], "kind": "birth", "organism": 38, "origin": "crossover+mutation", "parents": [20, 34]}
+{"generation": 2, "genome": [11.692804, 60.0, 1.659574, 1.0], "kind": "birth", "organism": 39, "origin": "mutation", "parents": [34, 34]}
+{"generation": 2, "genome": [17.593783, 55.00251, 1.766992, 3.994069], "kind": "birth", "organism": 40, "origin": "crossover+mutation", "parents": [34, 24]}
+{"generation": 2, "genome": [11.592596, 56.337643, 1.78085, 1.024267], "kind": "birth", "organism": 41, "origin": "crossover+mutation", "parents": [34, 27]}
+{"generation": 2, "genome": [6.074635, 60.0, 2.383161, 3.107928], "kind": "birth", "organism": 42, "origin": "crossover+mutation", "parents": [10, 34]}
+{"generation": 2, "genome": [15.130883, 47.50612, 1.312521, 4.814999], "kind": "birth", "organism": 43, "origin": "crossover+mutation", "parents": [31, 24]}
+{"generation": 2, "genome": [13.794643, 58.27189, 2.063798, 2.34403], "kind": "birth", "organism": 44, "origin": "crossover+mutation", "parents": [27, 32]}
+{"generation": 2, "genome": [16.433767, 52.146992, 2.197636, 2.228597], "kind": "birth", "organism": 45, "origin": "crossover+mutation", "parents": [31, 20]}
+{"generation": 2, "genome": [16.97052, 58.786941, 1.56164, 5.037907], "kind": "birth", "organism": 46, "origin": "crossover+mutation", "parents": [32, 23]}
+{"generation": 2, "genome": [12.441146, 55.087795, 1.786389, 2.419159], "kind": "birth", "organism": 47, "origin": "mutation", "parents": [14, 14]}
+{"generation": 2, "genome": [11.069835, 59.267972, 1.830597, 1.0], "kind": "birth", "organism": 48, "origin": "crossover+mutation", "parents": [35, 32]}
+{"generation": 2, "genome": [9.541883, 60.0, 1.387046, 1.41562], "kind": "birth", "organism": 49, "origin": "crossover+mutation", "parents": [32, 27]}
+{"generation": 2, "genome": [16.612375, 57.48213, 1.414482, 2.241146], "kind": "birth", "organism": 50, "origin": "crossover+mutation", "parents": [34, 31]}
+{"generation": 2, "genome": [9.918473, 59.216065, 1.774951, 1.0], "kind": "birth", "organism": 51, "origin": "crossover+mutation", "parents": [14, 32]}
+{"generation": 2, "genome": [14.718888, 60.0, 2.206141, 1.0], "kind": "birth", "organism": 52, "origin": "mutation", "parents": [14, 14]}
+{"generation": 2, "genome": [16.566791, 54.605566, 1.782347, 1.0], "kind": "birth", "organism": 53, "origin": "crossover+mutation", "parents": [32, 20]}
+{"generation": 2, "genome": [11.458079, 42.325264, 0.4, 3.09589], "kind": "birth", "organism": 54, "origin": "crossover+mutation", "parents": [28, 27]}
+{"generation": 2, "genome": [12.148971, 60.0, 1.86216, 1.439374], "kind": "birth", "organism": 55, "origin": "mutation", "parents": [14, 14]}
+{"best_score": 23.33436345375872, "champion": 46, "generation": 2, "kind": "generation", "mean_score": 17.41384473585943, "population": 20}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 31}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 32}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 38}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 39}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 40}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 41}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 42}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 43}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 44}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 45}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 47}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 48}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 49}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 51}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 52}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 53}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 54}
+{"cause": "not-selected", "generation": 2, "kind": "death", "organism": 55}
+{"generation": 3, "genome": [12.353975, 60.0, 1.897089, 2.867618], "kind": "birth", "organism": 56, "origin": "crossover+mutation", "parents": [52, 45]}
+{"generation": 3, "genome": [8.638114, 57.827101, 1.93862, 2.388131], "kind": "birth", "organism": 57, "origin": "crossover+mutation", "parents": [50, 44]}
+{"generation": 3, "genome": [15.530787, 60.0, 1.595053, 1.559962], "kind": "birth", "organism": 58, "origin": "crossover+mutation", "parents": [53, 52]}
+{"generation": 3, "genome": [10.901294, 60.0, 2.608359, 1.337619], "kind": "birth", "organism": 59, "origin": "mutation", "parents": [52, 52]}
+{"generation": 3, "genome": [12.892076, 60.0, 1.239956, 1.249116], "kind": "birth", "organism": 60, "origin": "crossover+mutation", "parents": [32, 48]}
+{"generation": 3, "genome": [15.034325, 56.15633, 2.242414, 4.590984], "kind": "birth", "organism": 61, "origin": "crossover+mutation", "parents": [55, 31]}
+{"generation": 3, "genome": [18.500195, 52.223158, 1.994474, 2.730069], "kind": "birth", "organism": 62, "origin": "crossover+mutation", "parents": [50, 44]}
+{"generation": 3, "genome": [13.512226, 55.814038, 1.236606, 4.951269], "kind": "birth", "organism": 63, "origin": "crossover+mutation", "parents": [31, 52]}
+{"generation": 3, "genome": [12.838558, 53.641887, 1.744208, 4.782778], "kind": "birth", "organism": 64, "origin": "crossover+mutation", "parents": [46, 41]}
+{"generation": 3, "genome": [18.917447, 57.345837, 1.884517, 1.0], "kind": "birth", "organism": 65, "origin": "crossover+mutation", "parents": [52, 39]}
+{"generation": 3, "genome": [22.483953, 54.624225, 1.453448, 2.928901], "kind": "birth", "organism": 66, "origin": "crossover+mutation", "parents": [40, 50]}
+{"generation": 3, "genome": [20.261834, 58.325754, 1.098542, 2.042991], "kind": "birth", "organism": 67, "origin": "crossover+mutation", "parents": [46, 45]}
+{"generation": 3, "genome": [9.226564, 60.0, 2.180432, 1.0], "kind": "birth", "organism": 68, "origin": "crossover+mutation", "parents": [41, 44]}
+{"generation": 3, "genome": [16.475942, 58.392722, 1.704826, 5.007863], "kind": "birth", "organism": 69, "origin": "mutation", "parents": [46, 46]}
+{"generation": 3, "genome": [13.12674, 60.0, 0.898162, 5.572672], "kind": "birth", "organism": 70, "origin": "crossover+mutation", "parents": [46, 50]}
+{"generation": 3, "genome": [11.703556, 56.406667, 1.899366, 4.624915], "kind": "birth", "organism": 71, "origin": "mutation", "parents": [46, 46]}
+{"generation": 3, "genome": [18.696478, 55.418863, 1.799865, 1.922735], "kind": "birth", "organism": 72, "origin": "crossover+mutation", "parents": [47, 53]}
+{"generation": 3, "genome": [13.798663, 60.0, 2.077123, 5.646203], "kind": "birth", "organism": 73, "origin": "mutation", "parents": [46, 46]}
+{"best_score": 27.873669520107647, "champion": 66, "generation": 3, "kind": "generation", "mean_score": 18.669590709956672, "population": 20}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 46}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 50}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 56}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 57}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 58}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 59}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 60}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 61}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 62}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 63}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 64}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 65}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 68}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 69}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 70}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 71}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 72}
+{"cause": "not-selected", "generation": 3, "kind": "death", "organism": 73}
+{"generation": 4, "genome": [22.320956, 53.145469, 0.725846, 1.809168], "kind": "birth", "organism": 74, "origin": "crossover+mutation", "parents": [67, 72]}
+{"generation": 4, "genome": [24.556314, 55.582342, 0.996941, 3.863454], "kind": "birth", "organism": 75, "origin": "crossover+mutation", "parents": [66, 67]}
+{"generation": 4, "genome": [12.906025, 53.56482, 1.833821, 3.747269], "kind": "birth", "organism": 76, "origin": "crossover+mutation", "parents": [63, 66]}
+{"generation": 4, "genome": [7.797915, 60.0, 1.006784, 1.740775], "kind": "birth", "organism": 77, "origin": "crossover+mutation", "parents": [60, 56]}
+{"generation": 4, "genome": [15.492671, 60.0, 1.700049, 1.423928], "kind": "birth", "organism": 78, "origin": "crossover+mutation", "parents": [46, 65]}
+{"generation": 4, "genome": [16.92543, 50.847462, 1.051823, 4.884171], "kind": "birth", "organism": 79, "origin": "crossover+mutation", "parents": [63, 72]}
+{"generation": 4, "genome": [17.983252, 59.614402, 1.469149, 2.445825], "kind": "birth", "organism": 80, "origin": "crossover+mutation", "parents": [69, 67]}
+{"generation": 4, "genome": [20.492873, 59.401131, 2.217564, 2.2813], "kind": "birth", "organism": 81, "origin": "crossover+mutation", "parents": [72, 60]}
+{"generation": 4, "genome": [24.286812, 52.681172, 1.464956, 2.50443], "kind": "birth", "organism": 82, "origin": "crossover+mutation", "parents": [50, 66]}
+{"generation": 4, "genome": [10.303083, 56.711495, 1.656299, 4.718223], "kind": "birth", "organism": 83, "origin": "crossover+mutation", "parents": [72, 69]}
+{"generation": 4, "genome": [14.882315, 56.172623, 0.710242, 6.045302], "kind": "birth", "organism": 84, "origin": "mutation", "parents": [70, 70]}
+{"generation": 4, "genome": [15.016776, 60.0, 2.080351, 3.856498], "kind": "birth", "organism": 85, "origin": "crossover+mutation", "parents": [67, 71]}
+{"generation": 4, "genome": [24.949932, 60.0, 0.739983, 1.865094], "kind": "birth", "organism": 86, "origin": "crossover+mutation", "parents": [69, 67]}
+{"generation": 4, "genome": [14.939069, 57.813708, 1.734505, 2.834113], "kind": "birth", "organism": 87, "origin": "crossover+mutation", "parents": [58, 66]}
+{"generation": 4, "genome": [15.0069, 60.0, 1.420604, 4.79465], "kind": "birth", "organism": 88, "origin": "crossover+mutation", "parents": [46, 71]}
+{"generation": 4, "genome": [14.696911, 53.384051, 1.491774, 2.797484], "kind": "birth", "organism": 89, "origin": "crossover+mutation", "parents": [58, 66]}
+{"generation": 4, "genome": [19.840667, 60.0, 1.126984, 2.4561], "kind": "birth", "organism": 90, "origin": "crossover+mutation", "parents": [66, 50]}
+{"generation": 4, "genome": [16.287319, 57.719564, 1.033567, 1.536601], "kind": "birth", "organism": 91, "origin": "crossover+mutation", "parents": [58, 67]}
+{"best_score": 33.62410484489166, "champion": 86, "generation": 4, "kind": "generation", "mean_score": 21.018723167878367, "population": 20}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 66}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 67}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 74}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 76}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 77}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 78}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 79}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 80}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 81}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 82}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 83}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 84}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 85}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 87}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 88}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 89}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 90}
+{"cause": "not-selected", "generation": 4, "kind": "death", "organism": 91}
+{"generation": 5, "genome": [21.543366, 58.614142, 1.359819, 2.070097], "kind": "birth", "organism": 92, "origin": "crossover+mutation", "parents": [80, 67]}
+{"generation": 5, "genome": [20.998918, 60.0, 0.856825, 3.698556], "kind": "birth", "organism": 93, "origin": "crossover+mutation", "parents": [86, 75]}
+{"generation": 5, "genome": [17.872215, 58.757469, 1.045335, 3.842954], "kind": "birth", "organism": 94, "origin": "crossover+mutation", "parents": [66, 75]}
+{"generation": 5, "genome": [22.920367, 60.0, 0.912463, 2.724973], "kind": "birth", "organism": 95, "origin": "crossover+mutation", "parents": [86, 67]}
+{"generation": 5, "genome": [23.321519, 59.42919, 0.991856, 3.32998], "kind": "birth", "organism": 96, "origin": "crossover+mutation", "parents": [74, 75]}
+{"generation": 5, "genome": [25.394394, 57.021551, 2.271632, 1.018133], "kind": "birth", "organism": 97, "origin": "crossover+mutation", "parents": [78, 82]}
+{"generation": 5, "genome": [15.935642, 56.761438, 1.80195, 2.648604], "kind": "birth", "organism": 98, "origin": "crossover+mutation", "parents": [88, 66]}
+{"generation": 5, "genome": [24.446394, 56.700074, 0.981215, 1.873612], "kind": "birth", "organism": 99, "origin": "crossover+mutation", "parents": [80, 82]}
+{"generation": 5, "genome": [18.582493, 56.181881, 1.854908, 2.131839], "kind": "birth", "organism": 100, "origin": "crossover+mutation", "parents": [67, 78]}
+{"generation": 5, "genome": [23.183081, 60.0, 0.7512, 4.520311], "kind": "birth", "organism": 101, "origin": "crossover+mutation", "parents": [75, 90]}
+{"generation": 5, "genome": [20.655336, 49.339853, 0.679767, 6.05391], "kind": "birth", "organism": 102, "origin": "crossover+mutation", "parents": [84, 67]}
+{"generation": 5, "genome": [23.913087, 49.588524, 1.101228, 1.988194], "kind": "birth", "organism": 103, "origin": "crossover+mutation", "parents": [75, 66]}
+{"generation": 5, "genome": [18.201917, 60.0, 0.4, 1.255526], "kind": "birth", "organism": 104, "origin": "crossover+mutation", "parents": [86, 67]}
+{"generation": 5, "genome": [27.599628, 55.857562, 1.100569, 3.437985], "kind": "birth", "organism": 105, "origin": "crossover+mutation", "parents": [66, 75]}
+{"generation": 5, "genome": [22.149241, 55.933676, 1.205208, 1.762198], "kind": "birth", "organism": 106, "origin": "crossover+mutation", "parents": [67, 90]}
+{"generation": 5, "genome": [16.033265, 56.800742, 1.637453, 2.755194], "kind": "birth", "organism": 107, "origin": "crossover+mutation", "parents": [87, 86]}
+{"generation": 5, "genome": [21.598923, 48.956452, 1.046925, 2.425437], "kind": "birth", "organism": 108, "origin": "crossover+mutation", "parents": [84, 74]}
+{"generation": 5, "genome": [25.449406, 51.390539, 1.162219, 1.919819], "kind": "birth", "organism": 109, "origin": "crossover+mutation", "parents": [74, 75]}
+{"best_score": 35.6714478780695, "champion": 105, "generation": 5, "kind": "generation", "mean_score": 25.405772386827557, "population": 20}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 75}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 92}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 93}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 94}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 95}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 96}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 97}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 98}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 99}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 100}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 101}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 102}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 103}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 104}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 106}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 107}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 108}
+{"cause": "not-selected", "generation": 5, "kind": "death", "organism": 109}
+{"generation": 6, "genome": [13.071901, 49.993798, 1.552974, 1.990778], "kind": "birth", "organism": 110, "origin": "crossover+mutation", "parents": [108, 75]}
+{"generation": 6, "genome": [26.17667, 55.879233, 0.766995, 3.903805], "kind": "birth", "organism": 111, "origin": "crossover+mutation", "parents": [99, 105]}
+{"generation": 6, "genome": [27.219268, 52.96893, 0.86636, 3.199547], "kind": "birth", "organism": 112, "origin": "crossover+mutation", "parents": [86, 96]}
+{"generation": 6, "genome": [26.810283, 57.019673, 0.868935, 2.203548], "kind": "birth", "organism": 113, "origin": "crossover+mutation", "parents": [105, 86]}
+{"generation": 6, "genome": [29.612187, 52.878991, 1.251301, 1.664644], "kind": "birth", "organism": 114, "origin": "mutation", "parents": [99, 99]}
+{"generation": 6, "genome": [22.56722, 56.248936, 0.697488, 3.854629], "kind": "birth", "organism": 115, "origin": "crossover+mutation", "parents": [75, 92]}
+{"generation": 6, "genome": [28.971527, 60.0, 1.172044, 3.225801], "kind": "birth", "organism": 116, "origin": "mutation", "parents": [105, 105]}
+{"generation": 6, "genome": [28.513798, 58.425682, 1.383201, 2.23948], "kind": "birth", "organism": 117, "origin": "crossover+mutation", "parents": [95, 105]}
+{"generation": 6, "genome": [22.444452, 60.0, 1.070443, 3.374455], "kind": "birth", "organism": 118, "origin": "crossover+mutation", "parents": [105, 108]}
+{"generation": 6, "genome": [28.142848, 55.817225, 0.8564, 2.023246], "kind": "birth", "organism": 119, "origin": "crossover+mutation", "parents": [109, 95]}
+{"generation": 6, "genome": [27.110276, 60.0, 0.596675, 3.737721], "kind": "birth", "organism": 120, "origin": "crossover+mutation", "parents": [95, 75]}
+{"generation": 6, "genome": [22.367542, 57.103524, 1.296352, 2.96109], "kind": "birth", "organism": 121, "origin": "crossover+mutation", "parents": [94, 101]}
+{"generation": 6, "genome": [22.980591, 58.676181, 1.160259, 2.613624], "kind": "birth", "organism": 122, "origin": "crossover+mutation", "parents": [108, 95]}
+{"generation": 6, "genome": [20.976353, 60.0, 1.062454, 2.755965], "kind": "birth", "organism": 123, "origin": "crossover+mutation", "parents": [96, 95]}
+{"generation": 6, "genome": [28.035793, 60.0, 1.052935, 2.540562], "kind": "birth", "organism": 124, "origin": "mutation", "parents": [86, 86]}
+{"generation": 6, "genome": [26.020116, 43.669141, 0.687696, 1.657972], "kind": "birth", "organism": 125, "origin": "crossover+mutation", "parents": [102, 86]}
+{"generation": 6, "genome": [23.647795, 60.0, 1.128211, 2.493776], "kind": "birth", "organism": 126, "origin": "crossover+mutation", "parents": [106, 101]}
+{"generation": 6, "genome": [24.651973, 57.037232, 0.440741, 4.79007], "kind": "birth", "organism": 127, "origin": "crossover+mutation", "parents": [96, 101]}
+{"best_score": 38.02177462207618, "champion": 124, "generation": 6, "kind": "generation", "mean_score": 30.575622738687677, "population": 20}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 105}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 86}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 110}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 111}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 112}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 113}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 114}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 115}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 116}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 117}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 118}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 119}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 121}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 122}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 123}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 125}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 126}
+{"cause": "not-selected", "generation": 6, "kind": "death", "organism": 127}
+{"generation": 7, "genome": [27.020511, 60.0, 0.4, 3.552182], "kind": "birth", "organism": 128, "origin": "crossover+mutation", "parents": [120, 127]}
+{"generation": 7, "genome": [24.200688, 60.0, 0.596721, 4.718791], "kind": "birth", "organism": 129, "origin": "mutation", "parents": [118, 118]}
+{"generation": 7, "genome": [25.478411, 52.501447, 1.009339, 4.407169], "kind": "birth", "organism": 130, "origin": "crossover+mutation", "parents": [112, 86]}
+{"generation": 7, "genome": [28.857599, 53.86529, 0.953765, 2.068094], "kind": "birth", "organism": 131, "origin": "crossover+mutation", "parents": [114, 122]}
+{"generation": 7, "genome": [23.544299, 46.472242, 1.237798, 3.277738], "kind": "birth", "organism": 132, "origin": "mutation", "parents": [105, 105]}
+{"generation": 7, "genome": [17.845649, 60.0, 0.43738, 2.347009], "kind": "birth", "organism": 133, "origin": "crossover+mutation", "parents": [113, 124]}
+{"generation": 7, "genome": [26.167317, 53.822254, 0.4, 3.24643], "kind": "birth", "organism": 134, "origin": "crossover+mutation", "parents": [111, 112]}
+{"generation": 7, "genome": [20.790989, 60.0, 0.742882, 2.972076], "kind": "birth", "organism": 135, "origin": "crossover+mutation", "parents": [122, 126]}
+{"generation": 7, "genome": [24.224778, 57.166745, 1.00558, 3.223095], "kind": "birth", "organism": 136, "origin": "crossover+mutation", "parents": [112, 119]}
+{"generation": 7, "genome": [26.993908, 58.66258, 0.867609, 3.813747], "kind": "birth", "organism": 137, "origin": "crossover+mutation", "parents": [105, 113]}
+{"generation": 7, "genome": [25.856481, 53.67819, 1.507161, 2.219638], "kind": "birth", "organism": 138, "origin": "crossover+mutation", "parents": [105, 122]}
+{"generation": 7, "genome": [29.838312, 48.961702, 1.045207, 2.59161], "kind": "birth", "organism": 139, "origin": "crossover+mutation", "parents": [111, 114]}
+{"generation": 7, "genome": [28.171902, 46.612078, 0.971962, 2.237828], "kind": "birth", "organism": 140, "origin": "crossover+mutation", "parents": [113, 112]}
+{"generation": 7, "genome": [28.984821, 55.756894, 0.422489, 2.226886], "kind": "birth", "organism": 141, "origin": "crossover+mutation", "parents": [114, 120]}
+{"generation": 7, "genome": [32.49154, 60.0, 1.166967, 1.392596], "kind": "birth", "organism": 142, "origin": "crossover+mutation", "parents": [114, 86]}
+{"generation": 7, "genome": [22.834639, 51.632962, 0.629866, 3.557516], "kind": "birth", "organism": 143, "origin": "crossover+mutation", "parents": [119, 120]}
+{"generation": 7, "genome": [33.302344, 58.088909, 1.218245, 3.7086], "kind": "birth", "organism": 144, "origin": "crossover+mutation", "parents": [124, 105]}
+{"generation": 7, "genome": [23.60548, 60.0, 0.749392, 2.381945], "kind": "birth", "organism": 145, "origin": "crossover+mutation", "parents": [120, 86]}
+{"best_score": 38.02177462207618, "champion": 124, "generation": 7, "kind": "generation", "mean_score": 30.509664337711655, "population": 20}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 128}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 129}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 130}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 131}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 132}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 133}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 134}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 135}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 136}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 137}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 138}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 139}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 140}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 141}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 142}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 143}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 144}
+{"cause": "not-selected", "generation": 7, "kind": "death", "organism": 145}
+{"generation": 8, "genome": [27.594851, 60.0, 0.59582, 1.344833], "kind": "birth", "organism": 146, "origin": "crossover+mutation", "parents": [145, 128]}
+{"generation": 8, "genome": [24.477807, 55.473313, 0.448299, 4.609887], "kind": "birth", "organism": 147, "origin": "crossover+mutation", "parents": [120, 145]}
+{"generation": 8, "genome": [32.680712, 57.601251, 1.230638, 2.517861], "kind": "birth", "organism": 148, "origin": "crossover+mutation", "parents": [134, 142]}
+{"generation": 8, "genome": [30.423767, 60.0, 1.411171, 2.774408], "kind": "birth", "organism": 149, "origin": "crossover+mutation", "parents": [141, 124]}
+{"generation": 8, "genome": [28.432736, 54.243228, 0.4, 2.604042], "kind": "birth", "organism": 150, "origin": "crossover+mutation", "parents": [141, 131]}
+{"generation": 8, "genome": [24.40411, 60.0, 0.871391, 2.449986], "kind": "birth", "organism": 151, "origin": "crossover+mutation", "parents": [145, 120]}
+{"generation": 8, "genome": [25.285803, 58.535416, 0.868185, 3.571864], "kind": "birth", "organism": 152, "origin": "crossover+mutation", "parents": [137, 131]}
+{"generation": 8, "genome": [26.69164, 52.38081, 1.130834, 4.329154], "kind": "birth", "organism": 153, "origin": "crossover+mutation", "parents": [131, 120]}
+{"generation": 8, "genome": [27.492082, 60.0, 0.481237, 2.907516], "kind": "birth", "organism": 154, "origin": "mutation", "parents": [120, 120]}
+{"generation": 8, "genome": [27.245855, 60.0, 0.716478, 2.598444], "kind": "birth", "organism": 155, "origin": "crossover+mutation", "parents": [136, 137]}
+{"generation": 8, "genome": [23.22417, 60.0, 0.4, 2.525656], "kind": "birth", "organism": 156, "origin": "crossover+mutation", "parents": [145, 141]}
+{"generation": 8, "genome": [27.577766, 52.296355, 1.337972, 1.842845], "kind": "birth", "organism": 157, "origin": "crossover+mutation", "parents": [139, 124]}
+{"generation": 8, "genome": [24.901184, 56.734276, 0.996151, 1.989269], "kind": "birth", "organism": 158, "origin": "crossover+mutation", "parents": [124, 137]}
+{"generation": 8, "genome": [26.262722, 57.733325, 0.476815, 2.629489], "kind": "birth", "organism": 159, "origin": "crossover+mutation", "parents": [124, 128]}
+{"generation": 8, "genome": [22.806189, 55.151861, 0.623834, 3.068965], "kind": "birth", "organism": 160, "origin": "crossover+mutation", "parents": [124, 145]}
+{"generation": 8, "genome": [29.131126, 55.839304, 1.326078, 3.372014], "kind": "birth", "organism": 161, "origin": "crossover+mutation", "parents": [131, 134]}
+{"generation": 8, "genome": [22.951843, 57.901351, 0.723942, 3.29236], "kind": "birth", "organism": 162, "origin": "crossover+mutation", "parents": [145, 137]}
+{"generation": 8, "genome": [27.369695, 59.894592, 1.364057, 2.572381], "kind": "birth", "organism": 163, "origin": "crossover+mutation", "parents": [130, 124]}
+{"best_score": 38.02177462207618, "champion": 124, "generation": 8, "kind": "generation", "mean_score": 29.961053243240478, "population": 20}
+{"beat_margin": 1.05, "champion_status": "verified-candidate", "checks": [{"beat_reference": true, "champion_heat_w": 100.59358196114354, "env": "heldout-forced-air-calibrated", "feasible": true, "mass_ok": true, "passed": true, "reference_heat_w": 18.890079106714264, "spacing_ok": true}, {"beat_reference": true, "champion_heat_w": 31.78689508384145, "env": "heldout-still-air-hot-calibrated", "feasible": true, "mass_ok": true, "passed": true, "reference_heat_w": 5.6127575314800175, "spacing_ok": true}, {"beat_reference": true, "champion_heat_w": 45.124870177100185, "env": "heldout-other-alloy-calibrated", "feasible": true, "mass_ok": true, "passed": true, "reference_heat_w": 8.289976112974943, "spacing_ok": true}], "evidence_level_cap": 2, "genome": [28.035793, 60.0, 1.052935, 2.540562], "kind": "verdict", "organism": 124, "passed": true}
+{"champion": 124, "final_population": [124, 120, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163], "kind": "run_end"}

@@ -75,3 +75,16 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - `labs/cycles/COMPARISON.md`: 5-cycle table + DIFFER honour roll (cycle-005 listed unedited).
 - Suite 177 OK. Spend $0 outside cycle-3 receipts.
 - Truth: four reproductions at L3 and one honest DIFFER at L2, all hash-chained and exported. Landed. Nothing blocked.
+
+## Section 12 — Hortus run 001, eight generations (OC2B-276–300) — DONE 2026-11-02
+- Entry map + suite baseline (14 OK) in `labs/hortus/runs/run-001/record.md`. Definition + seed 500001 BEFORE run (pop 20, nominal fitness).
+- 8 generations logged (best 47.37→108.84, mean 34.79→88.88, one mean dip at gen 7 — reported, not smoothed). Curve figure in pack. Clean-dir rerun byte-identical.
+- Selection: max fin area past mass limit (34 fins @60mm, 0.51kg > 0.45 cap) → champion REJECTED by held-out gate (gate bites honestly).
+- Pack hash recorded; run-002 change variable: POP_SIZE 20→40. CSV gap check: 8/8 rows. Suite re-run 14 OK. Wall time in record.
+- Truth: run-001 selects hard under a biting gate and reproduces exactly. Landed. Nothing blocked.
+
+## Section 13 — Hortus runs 002–003, selection analysis (OC2B-301–325) — DONE 2026-11-02
+- Run-002 (pop 40, one variable changed): best 56.59→115.78 monotone; selection tall thin-fin area inside cap (33 fins, 0.39kg) → verified-candidate. Run-003 (calibrated low-h env fitness): best 17.35→38.02 then flat gens 6–8 (plateau reported; scores not cross-comparable by construction) → verified-candidate.
+- COMPARISON.md: 3-run table, diversity metric (mean pairwise normalized Euclidean: 001 0.7305→0.2233, 002 0.7579→0.2103, 003 0.7305→0.2257), collapse NO/NO/NO (<0.05 threshold), 3 pack hashes, 5-line demonstrably-does chapter, total compute 0.03s, error lines (001: 2 pre-pack SVG errors with partials deleted, clean rerun; 002/003 error-free).
+- Suites: hortus 14 OK, science-lab 177 OK (163 + 7 cycles + 7 hortus). CSV parse: 8 rows each, 24 total.
+- Truth: Hortus breeds selectable, reproducible heatsink candidates under a held-out gate, capped at ladder level 2. Landed. Nothing blocked.
