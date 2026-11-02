@@ -33,15 +33,9 @@ or BLOCKED with the artifact named.
 | 5 | Decision: **Spike A** | DONE | rationale below |
 | 6 | Scaffold os-build/face/ | DONE | this dir + build-image.sh |
 | 7-13 | Image foundation | PROVEN | image-status-2026-11-02.md, metaos-update.* |
-| 14-17 | Boot screen | PROVEN | metaos.plymouth+script, boot-early/mid/late.png |
-| 18-21 | Login | PROVEN | login-dark/shake/entered/light.png + AUTOLOGIN.md |
-| 22 | Desktop shell | PROVEN (local) | shell-minimized/restored.png |
-| 23 | Top bar (app name, clock, icons) | PROVEN | screenshots |
-| 24 | Bar colour white/blue/black | DONE (code) | shell.html applyBar |
-| 25 | Light/dark | PROVEN (local) | shell-restored.png (light) |
-| 26 | Open/drag/close/minimise/snap | PROVEN (local) | minimized/restored + snap halves |
-| 27 | Right-click menu | PROVEN (local) | ctxmenu verified |
-| 28 | Alt-tab + terminal shortcut | PROVEN (local) | Notes->Terminal->Notes |
+| 14-17 | Boot screen | TODO | — |
+| 18-21 | Login | TODO | — |
+| 22-28 | Desktop shell | TODO | — |
 | 29-33 | Wallpapers | TODO | — |
 | 34-37 | Dock | TODO | — |
 | 38-40 | Terminal | TODO | — |
@@ -78,21 +72,3 @@ localhost services — facts (done, live numbers), launcher
 (done), pty bridge + files route (Sections 5/8 work). The
 pty-terminal gap is stated, not hidden. Pax may overrule within
 one cycle; silence = proceed.
-
-## Section 3 — boot screen (tasks 14-17) — PROVEN 2026-11-02
-- Theme `metaos` (plymouth script plugin): black screen, 20-dot
-  blue orbit ring computed live per refresh, thin blue progress
-  bar bound to real boot progress, three white stage lines naming
-  the real stages (kernel -> rootfs -> face). No pre-rendered
-  video: every moving pixel is computed at boot.
-- Screendumps: boot-early.png (dots at ~2 blocks), boot-mid.png
-  (dots rotated = animation proven across frames, bar ~19/20),
-  boot-late.png (splash quit, autologin prompt).
-- Boot-to-login measured: 11.848s kernel + 29.329s userspace =
-  41.178s, inside the 45 s budget (after trimming cloud-init
-  per-boot services + e2scrub_reap; first-boot cloud-init cost
-  excluded as one-time).
-- Honest note: plymouth forces text mode when a serial console is
-  present, so the SHIPPED kernel cmdline drops `console=ttyS0`
-  (keeps `console=tty0`). Serial logging is a dev-time variant
-  (add it back on the GRUB line); shipped proofs use screendumps.
