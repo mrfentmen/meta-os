@@ -1,0 +1,425 @@
+{
+  "camera": {
+    "area": "Manhattan",
+    "id": "cam-a",
+    "latitude": 40.7755,
+    "longitude": -73.9502,
+    "name": "1 Ave @ 84 St"
+  },
+  "category": "person down",
+  "created_at": "2026-11-02T04:40:11.954Z",
+  "division": "vigiles",
+  "evidence": {
+    "detector": "injected",
+    "files": [
+      {
+        "bytes": 1302,
+        "camera_id": "cam-a",
+        "kind": "flag-frame",
+        "ref": "evidence/incident-27e9cfbd46e8078d/flag-frame-cam-a-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-a",
+        "kind": "face-crop",
+        "ref": "evidence/incident-27e9cfbd46e8078d/face-crop-cam-a-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-a",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-a-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-a",
+        "kind": "face-crop",
+        "ref": "evidence/incident-27e9cfbd46e8078d/face-crop-cam-a-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-a",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-a-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-a",
+        "kind": "face-crop",
+        "ref": "evidence/incident-27e9cfbd46e8078d/face-crop-cam-a-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-n0",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-n0-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-n0",
+        "kind": "face-crop",
+        "ref": "evidence/incident-27e9cfbd46e8078d/face-crop-cam-n0-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-n1",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-n1-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-n1",
+        "kind": "face-crop",
+        "ref": "evidence/incident-27e9cfbd46e8078d/face-crop-cam-n1-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-n2",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-n2-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-n2",
+        "kind": "face-crop",
+        "ref": "evidence/incident-27e9cfbd46e8078d/face-crop-cam-n2-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      }
+    ],
+    "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+  },
+  "id": "incident-27e9cfbd46e8078d",
+  "patrol_job_id": "trio-20f6d68430252cd3a94341390fb5af47",
+  "priority": "high",
+  "status": "dispatched-simulated",
+  "timeline": [
+    {
+      "at": "2026-11-02T04:40:11.954Z",
+      "category": "person down",
+      "division": "vigiles",
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-20f6d68430252cd3a94341390fb5af47",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "priority": "high",
+      "step": "flag",
+      "summary": "stubbed summary: person down"
+    },
+    {
+      "actions": [
+        {
+          "agent": "review",
+          "task": "Independent second assessment of the flagged frame (review survival rule: the flag stands only if this reading also lands outside the baseline set)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T04:40:11.955Z",
+      "decision": "investigate",
+      "reason": "flagged category \"person down\" is outside the vigiles baseline set and no independent review has been recorded yet",
+      "status": "under_review",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T04:40:11.955Z",
+      "category": "person down",
+      "error": null,
+      "job_id": "trio-cbdd9a5173f8cbc3337cbb2fbc8cfb81",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "review",
+      "summary": "stubbed summary: person down",
+      "verdict": "confirmed"
+    },
+    {
+      "at": "2026-11-02T04:40:11.955Z",
+      "status": "reported",
+      "step": "reported"
+    },
+    {
+      "actions": [
+        {
+          "agent": "investigation",
+          "task": "Assess the incident camera under the other divisions' lenses, then up to 3 nearest cameras under the origin division (bounded by MAX_INVESTIGATION_CALLS)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T04:40:11.956Z",
+      "decision": "investigate",
+      "reason": "the flag survived review and no investigation has been recorded; additional evidence is gathered before any response is prepared",
+      "status": "investigating",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T04:40:11.956Z",
+      "camera_id": "cam-a",
+      "camera_name": "1 Ave @ 84 St",
+      "category": "no hazard visible",
+      "division": "ignis",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-bcd5c4ba6c3a4e69645093a246f37808",
+      "kind": "cross-lens",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": "investigating",
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T04:40:11.956Z",
+      "files": [
+        "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-a-d0966c.jpg",
+        "evidence/incident-27e9cfbd46e8078d/face-crop-cam-a-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T04:40:11.958Z",
+      "camera_id": "cam-a",
+      "camera_name": "1 Ave @ 84 St",
+      "category": "normal activity",
+      "division": "medicus",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-e2dee239b645f03162095644233c27eb",
+      "kind": "cross-lens",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T04:40:11.958Z",
+      "files": [
+        "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-a-d0966c.jpg",
+        "evidence/incident-27e9cfbd46e8078d/face-crop-cam-a-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T04:40:11.959Z",
+      "camera_id": "cam-n0",
+      "camera_name": "Neighbour 0",
+      "category": "normal activity",
+      "division": "vigiles",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-08e7b9dc4d1bf55273a238e1ea810c00",
+      "kind": "neighbour",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T04:40:11.959Z",
+      "files": [
+        "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-n0-d0966c.jpg",
+        "evidence/incident-27e9cfbd46e8078d/face-crop-cam-n0-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T04:40:11.960Z",
+      "camera_id": "cam-n1",
+      "camera_name": "Neighbour 1",
+      "category": "normal activity",
+      "division": "vigiles",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-17a07caa4a2cd0ec081e5e04744e8be3",
+      "kind": "neighbour",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T04:40:11.960Z",
+      "files": [
+        "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-n1-d0966c.jpg",
+        "evidence/incident-27e9cfbd46e8078d/face-crop-cam-n1-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T04:40:11.962Z",
+      "camera_id": "cam-n2",
+      "camera_name": "Neighbour 2",
+      "category": "normal activity",
+      "division": "vigiles",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-099920a402f4b6f393116cb9fb1ca5c7",
+      "kind": "neighbour",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T04:40:11.962Z",
+      "files": [
+        "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-n2-d0966c.jpg",
+        "evidence/incident-27e9cfbd46e8078d/face-crop-cam-n2-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "actions": [
+        {
+          "agent": "response",
+          "task": "Build the incident brief from the recorded assessments and submit it, picture included, to the simulated dispatch endpoint (loopback-only, labelled simulated; the agent sends it with no human verify step \u2014 requires_human_review stays true as the post-hoc audit flag, and the agency verify policy may hold the package in the crew)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T04:40:11.963Z",
+      "decision": "prepare_response",
+      "reason": "flagged, confirmed by independent review, and investigated; the response brief is prepared and submitted to the simulated dispatch endpoint only",
+      "status": "response_prepared",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T04:40:11.964Z",
+      "brief": {
+        "assessment": {
+          "category": "person down",
+          "requires_human_review": true,
+          "summary": "stubbed summary: normal activity",
+          "uncertainty": [
+            "stubbed uncertainty"
+          ]
+        },
+        "observations": [
+          {
+            "category": "person down",
+            "confidence": 0.8,
+            "description": "stubbed reading: person down",
+            "evidence": "center of frame"
+          },
+          {
+            "category": "person down",
+            "confidence": 0.8,
+            "description": "stubbed reading: person down",
+            "evidence": "center of frame"
+          },
+          {
+            "category": "normal activity",
+            "confidence": 0.8,
+            "description": "stubbed reading: normal activity",
+            "evidence": "center of frame"
+          },
+          {
+            "category": "normal activity",
+            "confidence": 0.8,
+            "description": "stubbed reading: normal activity",
+            "evidence": "center of frame"
+          },
+          {
+            "category": "normal activity",
+            "confidence": 0.8,
+            "description": "stubbed reading: normal activity",
+            "evidence": "center of frame"
+          }
+        ],
+        "processing": {
+          "latency_ms": 49,
+          "model": "muse-spark-1.3"
+        },
+        "product": "vigiles",
+        "timestamp": "2026-11-02T04:40:11.964Z"
+      },
+      "step": "brief"
+    },
+    {
+      "at": "2026-11-02T04:40:11.965Z",
+      "bolo": {
+        "area": "Manhattan",
+        "camera_name": "1 Ave @ 84 St",
+        "category": "person down",
+        "direction_note": "Not determined from still frames.",
+        "direction_of_travel": null,
+        "division": "vigiles",
+        "face_crops": 6,
+        "flagged_at": "2026-11-02T04:40:11.954Z",
+        "frame_files": [
+          "evidence/incident-27e9cfbd46e8078d/flag-frame-cam-a-d0966c.jpg",
+          "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-a-d0966c.jpg",
+          "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-a-d0966c.jpg",
+          "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-n0-d0966c.jpg",
+          "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-n1-d0966c.jpg",
+          "evidence/incident-27e9cfbd46e8078d/investigation-frame-cam-n2-d0966c.jpg"
+        ],
+        "person_descriptions": [
+          "stubbed reading: person down",
+          "stubbed reading: no hazard visible",
+          "stubbed reading: normal activity"
+        ],
+        "visible_marks": []
+      },
+      "step": "bolo"
+    },
+    {
+      "at": "2026-11-02T04:40:11.970Z",
+      "receipt_id": "sim-6623d237a90b3d9d",
+      "simulated": true,
+      "status": "dispatched-simulated",
+      "step": "dispatch"
+    }
+  ]
+}

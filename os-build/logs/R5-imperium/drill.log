@@ -1,0 +1,13 @@
+== patrol -> review -> investigation -> response ==
+outcome: dispatched-simulated
+incident_id: incident-27e9cfbd46e8078d
+incidents recorded: 1
+incident status: dispatched-simulated
+timeline steps: flag,decision,review,reported,decision,investigation,evidence,investigation,evidence,investigation,evidence,investigation,evidence,investigation,evidence,decision,brief,bolo,dispatch
+package dispatch_mode: auto
+package human_verify: False
+package simulated: True
+picture.frame: evidence/incident-27e9cfbd46e8078d/flag-frame-cam-a-d0966c.jpg
+picture.evidence_crop: evidence/incident-27e9cfbd46e8078d/face-crop-cam-a-283674.jpg
+receipt_id: sim-6623d237a90b3d9d
+R5-4 LIVE LOOP GREEN: dispatched-simulated with picture

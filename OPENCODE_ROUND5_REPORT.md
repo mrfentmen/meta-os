@@ -65,7 +65,30 @@ bytes not yet captured; kernel-lane blocker documented below)
   Rowan's merged RW4-1 work — re-run owed if his R-2 surface
   changes (prompt/backspace/read_key not yet in tree: named
   missing, log never fakes them).
-## R5-4 Imperium live loop — TODO
+## R5-4 Imperium live loop — DONE
+- Full end-to-end run on this Mac, all real code: patrol flagged
+  (scripted RED assessor: person down x2), review confirmed,
+  investigation ran (lenses+neighbours baseline), direct dispatch
+  sent the package WITH the picture to the SIMULATED endpoint
+  (real HTTP POST to 127.0.0.1:8935/dispatch-simulated served by
+  server/queue/queue_service.py; loopback-only enforced by
+  crew.check_dispatch_url). No human step, no external endpoint.
+- Captured in os-build/logs/R5-imperium/: incident.json (status
+  `dispatched-simulated`, full timeline flag..dispatch),
+  package-sent.json (byte-identical to what the endpoint
+  received: `simulated true`, `dispatch_mode auto`,
+  `human_verify false`, picture with flag-frame + face-crop
+  refs, destination string names SIMULATED, audit flag true),
+  receipt.txt (`sim-6623d237a90b3d9d`, simulated=true),
+  drill.log (full transcript).
+- Staged feed only (scripted assessor + generated JPEG + injected
+  detector), per-incident caps respected, budget guardrail
+  untouched. One environment note (not a product defect): the
+  queue suite cannot import on this Mac as committed —
+  trio_store.py unconditionally imports dynamic_credentials from
+  a sandbox-only path (/opt/muse/...); the drill carries the same
+  three names as a /tmp-only stub (repo untouched) and runs
+  TRIO_STORE=local, which never calls them.
 ## R5-5 soak — TODO
 ## R5-6 merge-watch — TODO
 ## What remains unverified — TODO
