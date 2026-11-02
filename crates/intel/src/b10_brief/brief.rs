@@ -1993,6 +1993,99 @@ pub fn environment_repo_record(
     Some(EnvironmentRepoRecord { branch, commit, dirty, as_of })
 }
 
+/// OS-103 follow-up: the "jobs" part of an environment record,
+/// read from a stated jobs list at generation time.
+///
+/// The caller passes the snapshot's own jobs list — the same
+/// list the brief composer already sees — and gets back the
+/// list to store as the environment record's "jobs" value, in
+/// job order. Only claimed jobs count as work in progress,
+/// exactly as `environment_lines` renders them: an entry counts
+/// only when its status is "claimed" and it carries a non-empty
+/// claim nick and a non-empty title; open, blocked, done,
+/// claim-less, title-less, and non-dict entries are skipped,
+/// never guessed into a name. The id is carried only when it
+/// is a non-empty string or an int, and is otherwise left out
+/// rather than invented. Returns `None` when there is no
+/// usable jobs list, so the caller leaves "jobs" out of the
+/// record and the Working now line reads not reported instead
+/// of falsely reading nobody holds a job; an empty list, or a
+/// list with no claimed usable job, returns an empty list and
+/// renders as nobody holds a claimed job. The list carries no
+/// time of its own: the Working now line's age label comes
+/// from the record's as_of, which the caller stamps when it
+/// merges this part in, at the same instant the jobs list was
+/// read. This is only the jobs quarter: a record carrying
+/// only this part still renders repo, bus, and budget as not
+/// reported. Never raises.
+///
+/// Typed-input mapping, following this module's convention:
+/// the caller passes `None` for a non-list jobs value (Python
+/// returns `None` for it), and `Some` for a list or tuple;
+/// a non-dict entry has no typed form, so the caller drops
+/// it before the call; a non-string status, claim, or title
+/// maps to an empty string and is then filtered here; a
+/// missing, bool, or other unusable id maps to `None`, and an
+/// empty-string id is dropped here, never carried.
+#[derive(Debug, Clone, PartialEq)]
+pub enum EnvironmentJobId {
+    Text(String),
+    Int(i64),
+}
+
+/// One stated job as the caller sees it, before filtering: the
+/// status, claim nick, and title verbatim, plus the id when the
+/// caller could read one (a non-empty string or an int).
+#[derive(Debug, Clone, PartialEq)]
+pub struct RawEnvironmentJob {
+    pub status: String,
+    pub claim: String,
+    pub title: String,
+    pub id: Option<EnvironmentJobId>,
+}
+
+/// One entry of the jobs part, mirroring Python's entry dict:
+/// title, status (always "claimed" here), and claim nick, plus
+/// the id only when it was a non-empty string or an int.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnvironmentJobsEntry {
+    pub title: String,
+    pub status: String,
+    pub claim: String,
+    pub id: Option<EnvironmentJobId>,
+}
+
+pub fn environment_jobs_record(
+    jobs: Option<&[RawEnvironmentJob]>,
+) -> Option<Vec<EnvironmentJobsEntry>> {
+    let jobs = jobs?;
+    let mut claimed = Vec::new();
+    for job in jobs {
+        if job.status != "claimed" {
+            continue;
+        }
+        if job.claim.is_empty() || job.title.is_empty() {
+            continue;
+        }
+        let id = match &job.id {
+            Some(EnvironmentJobId::Text(text)) if !text.is_empty() => {
+                Some(EnvironmentJobId::Text(text.clone()))
+            }
+            Some(EnvironmentJobId::Int(value)) => {
+                Some(EnvironmentJobId::Int(*value))
+            }
+            _ => None,
+        };
+        claimed.push(EnvironmentJobsEntry {
+            title: job.title.clone(),
+            status: "claimed".to_string(),
+            claim: job.claim.clone(),
+            id,
+        });
+    }
+    Some(claimed)
+}
+
 /// STR-002 image extensions: the digest lists what the pointer
 /// itself names, so only these extensions count as screenshots.
 /// A `.txt`, `.pdf`, or extension-less pointer is a file share,
