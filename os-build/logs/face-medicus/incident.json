@@ -1,0 +1,326 @@
+{
+  "camera": {
+    "area": "Manhattan",
+    "id": "cam-c",
+    "latitude": 40.757953,
+    "longitude": -73.98549,
+    "name": "Broadway @ 45 St"
+  },
+  "category": "person on ground",
+  "created_at": "2026-11-02T12:12:25.000Z",
+  "division": "medicus",
+  "evidence": {
+    "detector": "unavailable",
+    "files": [
+      {
+        "bytes": 1026,
+        "camera_id": "cam-c",
+        "kind": "flag-frame",
+        "ref": "evidence/incident-725c546b990dd1b4/flag-frame-cam-c-ed9e92.jpg",
+        "sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64"
+      },
+      {
+        "bytes": 1026,
+        "camera_id": "cam-c",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg",
+        "sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64"
+      },
+      {
+        "bytes": 1026,
+        "camera_id": "cam-c",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg",
+        "sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64"
+      },
+      {
+        "bytes": 1026,
+        "camera_id": "cam-n0",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n0-ed9e92.jpg",
+        "sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64"
+      },
+      {
+        "bytes": 1026,
+        "camera_id": "cam-n1",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n1-ed9e92.jpg",
+        "sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64"
+      },
+      {
+        "bytes": 1026,
+        "camera_id": "cam-n2",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n2-ed9e92.jpg",
+        "sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64"
+      }
+    ],
+    "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64"
+  },
+  "id": "incident-725c546b990dd1b4",
+  "patrol_job_id": "stub",
+  "priority": "high",
+  "status": "dispatched-simulated",
+  "timeline": [
+    {
+      "at": "2026-11-02T12:12:25.000Z",
+      "category": "person on ground",
+      "division": "medicus",
+      "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
+      "job_id": "stub",
+      "latency_ms": 0,
+      "model": "none",
+      "priority": "high",
+      "step": "flag",
+      "summary": "stubbed summary: person on ground"
+    },
+    {
+      "actions": [
+        {
+          "agent": "review",
+          "task": "Independent second assessment of the flagged frame (review survival rule: the flag stands only if this reading also lands outside the baseline set)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T12:12:25.001Z",
+      "decision": "investigate",
+      "reason": "flagged category \"person on ground\" is outside the medicus baseline set and no independent review has been recorded yet",
+      "status": "under_review",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T12:12:25.001Z",
+      "category": "person on ground",
+      "error": null,
+      "job_id": "stub",
+      "judge_reasons": [
+        "two independent readings agree on 'person on ground'"
+      ],
+      "judged_by": "imperium-judge",
+      "latency_ms": 0,
+      "model": "none",
+      "status": null,
+      "step": "review",
+      "summary": "stubbed summary: person on ground",
+      "verdict": "confirmed"
+    },
+    {
+      "at": "2026-11-02T12:12:25.002Z",
+      "status": "reported",
+      "step": "reported"
+    },
+    {
+      "actions": [
+        {
+          "agent": "investigation",
+          "task": "Assess the incident camera under the other divisions' lenses, then up to 3 nearest cameras under the origin division (bounded by MAX_INVESTIGATION_CALLS)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T12:12:25.002Z",
+      "decision": "investigate",
+      "reason": "the flag survived review and no investigation has been recorded; additional evidence is gathered before any response is prepared",
+      "status": "investigating",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T12:12:25.003Z",
+      "camera_id": "cam-c",
+      "camera_name": "Broadway @ 45 St",
+      "category": "normal activity",
+      "division": "vigiles",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
+      "job_id": "stub",
+      "kind": "cross-lens",
+      "latency_ms": 0,
+      "model": "none",
+      "status": "investigating",
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T12:12:25.003Z",
+      "files": [
+        "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T12:12:25.004Z",
+      "camera_id": "cam-c",
+      "camera_name": "Broadway @ 45 St",
+      "category": "no hazard visible",
+      "division": "ignis",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
+      "job_id": "stub",
+      "kind": "cross-lens",
+      "latency_ms": 0,
+      "model": "none",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T12:12:25.004Z",
+      "files": [
+        "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T12:12:25.005Z",
+      "camera_id": "cam-n0",
+      "camera_name": "Neighbour 0",
+      "category": "normal activity",
+      "division": "medicus",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
+      "job_id": "stub",
+      "kind": "neighbour",
+      "latency_ms": 0,
+      "model": "none",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T12:12:25.005Z",
+      "files": [
+        "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n0-ed9e92.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T12:12:25.006Z",
+      "camera_id": "cam-n1",
+      "camera_name": "Neighbour 1",
+      "category": "normal activity",
+      "division": "medicus",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
+      "job_id": "stub",
+      "kind": "neighbour",
+      "latency_ms": 0,
+      "model": "none",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T12:12:25.006Z",
+      "files": [
+        "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n1-ed9e92.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T12:12:25.007Z",
+      "camera_id": "cam-n2",
+      "camera_name": "Neighbour 2",
+      "category": "normal activity",
+      "division": "medicus",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "ed9e920aa1a3b191817e56d08ac150cc66ab0d2bd78f52ae14a9d31934e1ab64",
+      "job_id": "stub",
+      "kind": "neighbour",
+      "latency_ms": 0,
+      "model": "none",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T12:12:25.007Z",
+      "files": [
+        "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n2-ed9e92.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "actions": [
+        {
+          "agent": "response",
+          "task": "Build the incident brief from the recorded assessments and submit it, picture included, to the simulated dispatch endpoint (loopback-only, labelled simulated; the agent sends it with no human verify step \u2014 requires_human_review stays true as the post-hoc audit flag, and the agency verify policy may hold the package in the crew)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T12:12:25.008Z",
+      "decision": "prepare_response",
+      "reason": "flagged, confirmed by independent review, and investigated; the response brief is prepared and submitted to the simulated dispatch endpoint only",
+      "status": "response_prepared",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T12:12:25.009Z",
+      "brief": {
+        "assessment": {
+          "category": "person on ground",
+          "requires_human_review": true,
+          "summary": "stubbed summary: normal activity",
+          "uncertainty": []
+        },
+        "observations": [
+          {
+            "category": "person on ground"
+          },
+          {
+            "category": "person on ground"
+          },
+          {
+            "category": "normal activity"
+          },
+          {
+            "category": "normal activity"
+          },
+          {
+            "category": "normal activity"
+          }
+        ],
+        "processing": {
+          "latency_ms": 0,
+          "model": "none"
+        },
+        "product": "medicus",
+        "timestamp": "2026-11-02T12:12:25.009Z"
+      },
+      "step": "brief"
+    },
+    {
+      "at": "2026-11-02T12:12:25.010Z",
+      "bolo": {
+        "area": "Manhattan",
+        "camera_name": "Broadway @ 45 St",
+        "category": "person on ground",
+        "direction_note": "Not determined from still frames.",
+        "direction_of_travel": null,
+        "division": "medicus",
+        "face_crops": 0,
+        "flagged_at": "2026-11-02T12:12:25.000Z",
+        "frame_files": [
+          "evidence/incident-725c546b990dd1b4/flag-frame-cam-c-ed9e92.jpg",
+          "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg",
+          "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg",
+          "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n0-ed9e92.jpg",
+          "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n1-ed9e92.jpg",
+          "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n2-ed9e92.jpg"
+        ],
+        "person_descriptions": [],
+        "visible_marks": []
+      },
+      "step": "bolo"
+    },
+    {
+      "at": "2026-11-02T12:12:25.012Z",
+      "receipt_id": "sim-5f894be30820178f",
+      "service": "hospital (EMS receiving)",
+      "simulated": true,
+      "status": "dispatched-simulated",
+      "step": "dispatch"
+    }
+  ]
+}
