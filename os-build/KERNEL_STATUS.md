@@ -11,9 +11,9 @@ Build: see `kernel/BUILD_LOG.md`. Log: `os-build/logs/K1-boot.txt` (54 lines, ca
 | K1 | boot + alive line | **PROVEN** | `META OS KERNEL - alive (K1)`, `K1-boot.txt` line 2 |
 | K2 | framebuffer console | **PROVEN** | `screendump` of the live VGA buffer: 196 of 2000 cells carry glyphs, rows 0-10 and 24 (`K2-boot.png`); 215 cells on the shell screen (`K2-shell.png`). Screen capture, not a serial line. |
 | K3 | interrupts, timer, keyboard | **PROVEN** | `K3 timer: 10 ticks after 407902 spins` (measured against the handler's counter), `K3 keyboard: first scancode 0x1f`, then a typed `status` answered `STATUS tasks=7 ticks=169 heap_free_kb=287` (`K3-boot.txt`) |
-| K4 | paging, frames, heap | **PROVEN** | 15-region memory map, `61660` frames, `mem probe page ok`, `Box+Vec ok`, `mem stress 10k ok`, `mem summary: K4 up` |
-| K5 | tasks, scheduling | **PROVEN** | `A` / `B` / `C sleeping 200 ticks` interleaving, then `C awake` |
-| K6 | syscalls, userspace | **PROVEN** | `HELLO FROM USERSPACE`, `user exit code 0`, `user bad syscall 99 refused` (refusal path), page fault with `err 0x4: task killed` |
+| K4 | paging, frames, heap | **PROVEN** | 15-region memory map, `61660` frames, `mem probe page ok`, `Box+Vec ok`, `mem stress 10k ok`, `mem summary: K4 up` (`os-build/logs/K1-boot.txt`) |
+| K5 | tasks, scheduling | **PROVEN** | `A` / `B` / `C sleeping 200 ticks` interleaving, then `C awake` (`os-build/logs/K1-boot.txt`) |
+| K6 | syscalls, userspace | **PROVEN** | `HELLO FROM USERSPACE`, `user exit code 0`, `user bad syscall 99 refused` (refusal path), page fault with `err 0x4: task killed` (`os-build/logs/K1-boot.txt`) |
 
 ## What is not claimed
 

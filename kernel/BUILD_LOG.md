@@ -72,12 +72,12 @@ draws to a screen nobody captured.
 
 | milestone | evidence in `K1-boot.txt` | verdict |
 |---|---|---|
-| K1 | `META OS KERNEL - alive (K1)` (line 2) | **PROVEN** |
-| K4 | `mem map: 15 regions, usable 246640K` … `mem heap: 512K` … `mem stress 10k ok` … `mem summary: K4 up` | **PROVEN** |
-| K5 | `A` / `B` / `C sleeping 200 ticks` alternating, `C awake` after the sleep | **PROVEN** |
-| K6 | `HELLO FROM USERSPACE`, `user exit code 0`, `user bad syscall 99 refused`, page fault `err 0x4: task killed` | **PROVEN** |
+| K1 | `META OS KERNEL - alive (K1)` (line 2 of `K1-boot.txt`) | **PROVEN** |
+| K4 | `mem map: 15 regions, usable 246640K` … `mem heap: 512K` … `mem stress 10k ok` … `mem summary: K4 up` (`K1-boot.txt`) | **PROVEN** |
+| K5 | `A` / `B` / `C sleeping 200 ticks` alternating, `C awake` after the sleep (`K1-boot.txt`) | **PROVEN** |
+| K6 | `HELLO FROM USERSPACE`, `user exit code 0`, `user bad syscall 99 refused`, page fault `err 0x4: task killed` (`K1-boot.txt`) | **PROVEN** |
 | K2 | `screendump` of the live VGA buffer: 196 of 2000 cells carry glyphs on rows 0-10 and 24 — the banner, the alive line and the memory summary as pixels (`os-build/logs/K2-boot.png`); 215 cells on the shell/attract screen (`K2-shell.png`) | **PROVEN** by capture, not by serial |
-| K3 | `K3 timer: 10 ticks after 407902 spins` (measured, not asserted) and `K3 keyboard: first scancode 0x1f`, then a typed `status` answered `STATUS tasks=7 ticks=169 heap_free_kb=287` | **PROVEN** |
+| K3 | `K3 timer: 10 ticks after 407902 spins` (measured, not asserted) and `K3 keyboard: first scancode 0x1f`, then a typed `status` answered `STATUS tasks=7 ticks=169 heap_free_kb=287` (`K3-boot.txt`) | **PROVEN** |
 
 All six milestones now have evidence. K2's evidence is a screen capture rather than a serial
 line, which is the only form that can exist: the VGA console writes to memory that a serial

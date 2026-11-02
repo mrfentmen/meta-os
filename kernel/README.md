@@ -42,7 +42,7 @@ proof — and it is now in the repo.
 
 ## What is proven, and what is not
 
-- **Proven by the committed log:** K1 alive, the K4 memory/paging/heap summary, K5 task
+- **Proven by the committed log** (`os-build/logs/K1-boot.txt`): K1 alive, the K4 memory/paging/heap summary, K5 task
   rotation with sleep, K6 userspace ELF load, a syscall refusal, and a page fault that kills
   the offending task.
 - **Not proven:** K2 (the VGA console draws to a screen this boot did not capture) and K3's

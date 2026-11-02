@@ -26,9 +26,9 @@ process on the kernel yet. That is the single most important sentence in this fi
 
 | Layer | Status |
 |---|---|
-| 1 Boot | PROVEN |
-| 2 Kernel core | PROVEN for what is built; no demand paging, no COW, no swap |
-| 3 Drivers | PROVEN: VGA text, PIT, PS/2 keyboard. No serial driver beyond the debug port, no disk, no NIC |
+| 1 Boot | PROVEN (`os-build/logs/K1-boot.txt`) |
+| 2 Kernel core | PROVEN (`K1-boot.txt`) for what is built; no demand paging, no COW, no swap |
+| 3 Drivers | PROVEN (`K2-boot.png`, `K3-boot.txt`): VGA text, PIT, PS/2 keyboard. No disk, no NIC |
 | 4 Services (Goose) | **HOST** — 33 programs, 1253 checks, 0 fails, with 5 syscalls refused on purpose |
 | 5 Agent runtime (Lobster) | HOST-side runtime and tests |
 | 6 Shell and apps | PARTIAL — kernel console shell is real; Lobster/graphical shell is spec-only |
