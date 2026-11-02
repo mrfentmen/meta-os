@@ -21,12 +21,15 @@ ps), which the serial log backs verbatim.
 
 ## What is simulated
 
-Beat 6 (0:40 receipt card) is rendered text quoting the
-committed log os-build/logs/R5-imperium/receipt.txt
-(receipt_id sim-6623d237a90b3d9d, simulated=true). The card
-says SIMULATED on its face. The Imperium reading behind that
-receipt was staged (scripted assessor + generated JPEG); the
-receipt itself is the real endpoint record.
+Beat 6 (0:40 receipt card) is rendered text quoting the filed
+wave-3 judge run (receipt_id sim-8040104f5e0c7d23, simulated=true,
+judge_mode deterministic with the named model-fallback reasons
+shown on the card). The card says SIMULATED on its face. The
+Imperium reading behind that receipt was staged (scripted
+assessor + generated frame); the receipt itself is the real
+endpoint record. (The R5-4 receipt sim-6623d237a90b3d9d remains
+the DEMO_SCRIPT canonical; this cut shows the wave-3 judge run
+instead, and says so here.)
 
 ## Self-check (task 10)
 
