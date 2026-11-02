@@ -102,3 +102,40 @@ body.bar-blue .tb-mark, body.light .tb-mark { color: inherit; }
 .board-post button, .mini-btn { border: 0; background: var(--accent); color: #fff; border-radius: 7px; padding: 6px 12px; cursor: pointer; font-size: 12.5px; }
 .sim-tag { display: inline-block; font-size: 10.5px; font-weight: 700; letter-spacing: .05em;
   border: 1px solid currentColor; border-radius: 5px; padding: 1px 6px; opacity: .85; }
+
+/* CALCULATOR */
+.calc-disp { font-family: ui-monospace, Menlo, monospace; font-size: 30px; text-align: right;
+  padding: 10px 12px; border: 1px solid rgba(127,127,127,.3); border-radius: 10px; margin-bottom: 10px;
+  background: rgba(127,127,127,.08); overflow: hidden; }
+.calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.calc-btn { padding: 11px 0; font-size: 16px; border-radius: 9px; cursor: pointer;
+  border: 1px solid rgba(127,127,127,.3); background: rgba(127,127,127,.12); color: inherit; }
+.calc-btn:hover { background: var(--accent); color: #fff; }
+
+/* NOTES */
+.notes { display: flex; gap: 12px; }
+.notes-list { width: 128px; flex: none; }
+.notes-item { padding: 7px 9px; border-radius: 8px; cursor: pointer; font-size: 12.5px;
+  border: 1px solid transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.notes-item.on { border-color: var(--accent); background: rgba(127,127,127,.12); }
+.notes-main { flex: 1; display: flex; flex-direction: column; }
+.notes-title { padding: 7px 9px; border-radius: 8px; border: 1px solid rgba(127,127,127,.3);
+  background: rgba(127,127,127,.1); color: inherit; font-weight: 700; outline: none; }
+.notes-text { margin-top: 8px; min-height: 150px; padding: 9px; border-radius: 8px; resize: vertical;
+  border: 1px solid rgba(127,127,127,.3); background: rgba(127,127,127,.1); color: inherit;
+  font-family: inherit; font-size: 13px; outline: none; }
+
+/* CALENDAR */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-dow { text-align: center; font-size: 11px; opacity: .6; padding: 3px 0; }
+.cal-day { padding: 7px 0; border-radius: 8px; border: 1px solid rgba(127,127,127,.2);
+  background: rgba(127,127,127,.07); color: inherit; cursor: pointer; font-size: 12.5px; }
+.cal-day.today { border-color: var(--accent); background: var(--accent); color: #fff; font-weight: 700; }
+
+/* FILES */
+.file-row { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 8px;
+  cursor: pointer; border: 1px solid rgba(127,127,127,.18); margin-bottom: 6px; }
+.file-row:hover { border-color: var(--accent); }
+.file-folder { opacity: .55; font-size: 12px; }
+.files-view pre { margin-top: 6px; }
