@@ -1,0 +1,4 @@
+{"ts":"2026-11-02T11:45:09.188Z","run":"watch","event":"gym-task-score","drill":"gym-drill-1","task":"registry-entry","score":1,"max":1}
+{"ts":"2026-11-02T11:45:09.188Z","run":"watch","event":"gym-task-score","drill":"gym-drill-1","task":"spawn-clean-exit","score":1,"max":1}
+{"ts":"2026-11-02T11:45:09.188Z","run":"watch","event":"gym-task-score","drill":"gym-drill-1","task":"ledger-complete","score":1,"max":1}
+{"ts":"2026-11-02T11:45:09.188Z","run":"watch","event":"gym-total","drill":"gym-drill-1","total":3,"max":3}

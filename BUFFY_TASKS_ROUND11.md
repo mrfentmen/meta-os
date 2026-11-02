@@ -1,0 +1,325 @@
+# BUFFY — TASKS ROUND 11 (boss order, 2026-11-02)
+
+Blockers first, because they are DONE: B2.6 is verified
+green on main — Pax ran tests/agents-bridge.test.mjs on the
+merged tree (6/6). The merge gate from Round 9 is lifted.
+Round 9 sections B-E and the Round 10 queue fold into this
+list; nothing from them is dropped, it is continued here.
+Fresh branch off current main, checkpoint per section,
+merges through Pax from exact commits.
+
+## Part 1 — the services, one by one
+
+- [ ] R11-001. Deepen services/agenthost: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-002. Error paths for services/agenthost: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-003. Restart behaviour for services/agenthost: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-004. Contract record for services/agenthost: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-005. Load shape for services/agenthost: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-006. README truth pass for services/agenthost: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-007. Deepen services/audit: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-008. Error paths for services/audit: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-009. Restart behaviour for services/audit: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-010. Contract record for services/audit: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-011. Load shape for services/audit: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-012. README truth pass for services/audit: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-013. Deepen services/board: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-014. Error paths for services/board: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-015. Restart behaviour for services/board: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-016. Contract record for services/board: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-017. Load shape for services/board: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-018. README truth pass for services/board: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-019. Deepen services/bootlog: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-020. Error paths for services/bootlog: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-021. Restart behaviour for services/bootlog: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-022. Contract record for services/bootlog: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-023. Load shape for services/bootlog: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-024. README truth pass for services/bootlog: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-025. Deepen services/build: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-026. Error paths for services/build: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-027. Restart behaviour for services/build: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-028. Contract record for services/build: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-029. Load shape for services/build: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-030. README truth pass for services/build: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-031. Deepen services/callmatrix: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-032. Error paths for services/callmatrix: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-033. Restart behaviour for services/callmatrix: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-034. Contract record for services/callmatrix: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-035. Load shape for services/callmatrix: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-036. README truth pass for services/callmatrix: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-037. Deepen services/console: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-038. Error paths for services/console: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-039. Restart behaviour for services/console: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-040. Contract record for services/console: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-041. Load shape for services/console: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-042. README truth pass for services/console: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-043. Deepen services/dashboard: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-044. Error paths for services/dashboard: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-045. Restart behaviour for services/dashboard: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-046. Contract record for services/dashboard: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-047. Load shape for services/dashboard: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-048. README truth pass for services/dashboard: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-049. Deepen services/devices: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-050. Error paths for services/devices: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-051. Restart behaviour for services/devices: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-052. Contract record for services/devices: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-053. Load shape for services/devices: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-054. README truth pass for services/devices: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-055. Deepen services/devmgr: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-056. Error paths for services/devmgr: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-057. Restart behaviour for services/devmgr: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-058. Contract record for services/devmgr: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-059. Load shape for services/devmgr: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-060. README truth pass for services/devmgr: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-061. Deepen services/dhcp: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-062. Error paths for services/dhcp: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-063. Restart behaviour for services/dhcp: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-064. Contract record for services/dhcp: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-065. Load shape for services/dhcp: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-066. README truth pass for services/dhcp: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-067. Deepen services/display: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-068. Error paths for services/display: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-069. Restart behaviour for services/display: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-070. Contract record for services/display: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-071. Load shape for services/display: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-072. README truth pass for services/display: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-073. Deepen services/dns: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-074. Error paths for services/dns: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-075. Restart behaviour for services/dns: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-076. Contract record for services/dns: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-077. Load shape for services/dns: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-078. README truth pass for services/dns: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-079. Deepen services/dock: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-080. Error paths for services/dock: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-081. Restart behaviour for services/dock: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-082. Contract record for services/dock: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-083. Load shape for services/dock: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-084. README truth pass for services/dock: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-085. Deepen services/echo: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-086. Error paths for services/echo: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-087. Restart behaviour for services/echo: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-088. Contract record for services/echo: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-089. Load shape for services/echo: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-090. README truth pass for services/echo: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-091. Deepen services/fs: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-092. Error paths for services/fs: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-093. Restart behaviour for services/fs: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-094. Contract record for services/fs: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-095. Load shape for services/fs: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-096. README truth pass for services/fs: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-097. Deepen services/heartbeat: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-098. Error paths for services/heartbeat: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-099. Restart behaviour for services/heartbeat: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-100. Contract record for services/heartbeat: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-101. Load shape for services/heartbeat: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-102. README truth pass for services/heartbeat: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-103. Deepen services/input: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-104. Error paths for services/input: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-105. Restart behaviour for services/input: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-106. Contract record for services/input: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-107. Load shape for services/input: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-108. README truth pass for services/input: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-109. Deepen services/logd: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-110. Error paths for services/logd: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-111. Restart behaviour for services/logd: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-112. Contract record for services/logd: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-113. Load shape for services/logd: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-114. README truth pass for services/logd: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-115. Deepen services/logfmt: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-116. Error paths for services/logfmt: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-117. Restart behaviour for services/logfmt: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-118. Contract record for services/logfmt: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-119. Load shape for services/logfmt: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-120. README truth pass for services/logfmt: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-121. Deepen services/mcp-host: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-122. Error paths for services/mcp-host: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-123. Restart behaviour for services/mcp-host: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-124. Contract record for services/mcp-host: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-125. Load shape for services/mcp-host: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-126. README truth pass for services/mcp-host: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-127. Deepen services/net: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-128. Error paths for services/net: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-129. Restart behaviour for services/net: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-130. Contract record for services/net: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-131. Load shape for services/net: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-132. README truth pass for services/net: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-133. Deepen services/netcfg: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-134. Error paths for services/netcfg: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-135. Restart behaviour for services/netcfg: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-136. Contract record for services/netcfg: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-137. Load shape for services/netcfg: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-138. README truth pass for services/netcfg: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-139. Deepen services/notify: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-140. Error paths for services/notify: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-141. Restart behaviour for services/notify: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-142. Contract record for services/notify: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-143. Load shape for services/notify: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-144. README truth pass for services/notify: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-145. Deepen services/registry: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-146. Error paths for services/registry: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-147. Restart behaviour for services/registry: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-148. Contract record for services/registry: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-149. Load shape for services/registry: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-150. README truth pass for services/registry: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-151. Deepen services/session: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-152. Error paths for services/session: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-153. Restart behaviour for services/session: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-154. Contract record for services/session: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-155. Load shape for services/session: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-156. README truth pass for services/session: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-157. Deepen services/settings: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-158. Error paths for services/settings: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-159. Restart behaviour for services/settings: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-160. Contract record for services/settings: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-161. Load shape for services/settings: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-162. README truth pass for services/settings: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-163. Deepen services/shell: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-164. Error paths for services/shell: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-165. Restart behaviour for services/shell: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-166. Contract record for services/shell: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-167. Load shape for services/shell: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-168. README truth pass for services/shell: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-169. Deepen services/socket: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-170. Error paths for services/socket: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-171. Restart behaviour for services/socket: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-172. Contract record for services/socket: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-173. Load shape for services/socket: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-174. README truth pass for services/socket: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-175. Deepen services/sockets: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-176. Error paths for services/sockets: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-177. Restart behaviour for services/sockets: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-178. Contract record for services/sockets: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-179. Load shape for services/sockets: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-180. README truth pass for services/sockets: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-181. Deepen services/storage: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-182. Error paths for services/storage: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-183. Restart behaviour for services/storage: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-184. Contract record for services/storage: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-185. Load shape for services/storage: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-186. README truth pass for services/storage: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-187. Deepen services/supervisor: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-188. Error paths for services/supervisor: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-189. Restart behaviour for services/supervisor: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-190. Contract record for services/supervisor: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-191. Load shape for services/supervisor: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-192. README truth pass for services/supervisor: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-193. Deepen services/time: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-194. Error paths for services/time: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-195. Restart behaviour for services/time: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-196. Contract record for services/time: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-197. Load shape for services/time: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-198. README truth pass for services/time: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-199. Deepen services/timesync: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-200. Error paths for services/timesync: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-201. Restart behaviour for services/timesync: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-202. Contract record for services/timesync: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-203. Load shape for services/timesync: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-204. README truth pass for services/timesync: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-205. Deepen services/updater: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-206. Error paths for services/updater: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-207. Restart behaviour for services/updater: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-208. Contract record for services/updater: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-209. Load shape for services/updater: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-210. README truth pass for services/updater: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-211. Deepen services/updater_client: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-212. Error paths for services/updater_client: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-213. Restart behaviour for services/updater_client: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-214. Contract record for services/updater_client: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-215. Load shape for services/updater_client: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-216. README truth pass for services/updater_client: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-217. Deepen services/wallpaper: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-218. Error paths for services/wallpaper: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-219. Restart behaviour for services/wallpaper: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-220. Contract record for services/wallpaper: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-221. Load shape for services/wallpaper: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-222. README truth pass for services/wallpaper: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+- [ ] R11-223. Deepen services/watchdog: every entry in its limits list gets a test that reaches it, or the limit is removed with the reason written in the service README.
+- [ ] R11-224. Error paths for services/watchdog: each refusal the service can make is exercised by a test that expects exactly that refusal.
+- [ ] R11-225. Restart behaviour for services/watchdog: killed mid-work, restarted by the supervisor, state proven continuous or the loss named in the README.
+- [ ] R11-226. Contract record for services/watchdog: its calls in and out, against the call matrix — any call the matrix does not know is a finding on room 1.
+- [ ] R11-227. Load shape for services/watchdog: ten times the normal request volume through its host driver; the result (holds, degrades, refuses) recorded with numbers.
+- [ ] R11-228. README truth pass for services/watchdog: every sentence checked against the code as it stands today; stale sentences rewritten, not annotated.
+
+## Part 2 — Aegis, live fire
+
+- [ ] R11-229. Run the OSV sweep over every manifest in this repo and file the report under os-build/aegis/ with counts per manifest.
+- [ ] R11-230. Run the secret-hygiene count over the full tree; counts only, never a value, filed as a record.
+- [ ] R11-231. OSINT v1: certificate-transparency and DNS review over the four named domains; exposures as counts and locations only.
+- [ ] R11-232. OPSEC checklist run over the submission materials (README, demo script, site) before Nov 4; findings as a checklist record.
+- [ ] R11-233. Unicode-confusable scan over the shipped MCP server names and descriptions; findings filed.
+- [ ] R11-234. KEV cross-check: every dependency finding from the sweep checked against the CISA KEV list; exploited-in-the-wild flags first.
+- [ ] R11-235. Aegis as a hosted registry agent: the sweep runs under the agent runtime with a real command, ledger-proven start and stop.
+- [ ] R11-236. Findings lifecycle drill: a finding opens, is acknowledged, closes — the full record chain written and tested.
+- [ ] R11-237. Watch-targets review: every target in aegis/watch-targets.mjs confirmed still ours and still live; dead ones removed with a note.
+- [ ] R11-238. The alarm split proven: one small finding produces a quiet note, one big finding produces the full alarm — both recorded.
+- [ ] R11-239. Aegis README brought true: what has actually run, with dates and report paths, nothing aspirational.
+- [ ] R11-240. Second sweep, one week of code later: diff the findings against the first sweep; the delta is the report.
+
+## Part 3 — Hands-Free, finished as services
+
+- [ ] R11-241. Order intake: malformed and empty orders refused with named reasons, tests for each.
+- [ ] R11-242. Brief speaker: a brief over the size cap is summarised, never truncated mid-sentence; test proves it.
+- [ ] R11-243. Approval inbox: an approval spoken twice counts once; the duplicate is logged, not acted on.
+- [ ] R11-244. Hands-Free as hosted agents: intake, brief, approval each a registry entry with real commands, ledger-proven.
+- [ ] R11-245. Refusal catalogue: every thing Hands-Free will not do by voice (money, sends, deletes) listed and enforced by test.
+- [ ] R11-246. Latency record: order-to-brief time measured on the host path, numbers filed.
+- [ ] R11-247. Failure voice: when a service is down, the spoken answer names the outage plainly; test covers it.
+- [ ] R11-248. Session record shape: one full voice session written as a record another agent can replay.
+- [ ] R11-249. Hands-Free README brought true against the code.
+
+## Part 4 — the hosted loops (Round 10 C, continued)
+
+- [ ] R11-250. Imperium patrol as a hosted registry agent with its real command; spawn, kill, restart proven in the ledger.
+- [ ] R11-251. Musica keeper as a hosted registry agent; same proof.
+- [ ] R11-252. Officina faber as a hosted registry agent; same proof.
+- [ ] R11-253. Cadence watch as a hosted registry agent; same proof.
+- [ ] R11-254. Aegis sweep as a hosted registry agent (see Part 2); same proof.
+- [ ] R11-255. Nervus stub-runner as a hosted registry agent, labelled stub everywhere; same proof.
+- [ ] R11-256. Watchman on Nuntius: job orders arrive over the in-repo relay, claimed once, results posted back (Round 9 D1).
+- [ ] R11-257. Timer-sweep fallback: watchman killed, job lands, watchman restarts, job runs exactly once (Round 9 D2).
+- [ ] R11-258. Baton pass across two different hosted loops: job continues, zero duplicated file changes, ledger shows the pass.
+- [ ] R11-259. Budget kill drill on a hosted loop: cap hit, run stops, receipt written, no overrun.
+- [ ] R11-260. STOP file drill on every hosted loop: each honours it, each records why it stopped.
+- [ ] R11-261. The registry with zero placeholder commands: every entry's command is real or the entry is marked draft in the open.
+
+## Part 5 — Nervus host prep (no model is modified)
+
+- [ ] R11-262. Model inspector: read a local model directory, report architecture, layer count, sizes — tested on a tiny fixture model.
+- [ ] R11-263. Layer-map record shape: the floor-1 map as a file the face can draw, from the repo's published numbers.
+- [ ] R11-264. Reduction planner: given a layer map, propose cuts with the before/after proof each cut would need — plans and records only.
+- [ ] R11-265. Dose-rule checks: the repo's dose window (inert, persona, collapse) as executable contract tests.
+- [ ] R11-266. Probe-rule checks: (neuron, probe) pairing enforced by the contract tests — a sweep without a named probe refuses.
+- [ ] R11-267. Tray manifest validated against the real gateway backend list; any tool named that the gateway lacks is a finding.
+- [ ] R11-268. Sweep contract end-to-end against the stub runner, labelled stub in every record.
+- [ ] R11-269. Steer and ablate contracts against the stub runner, same labelling.
+- [ ] R11-270. Evaluate-delta contract: before/after records compared, delta signed, never absolute-claimed.
+- [ ] R11-271. Nervus face data feed: the inspector's output shaped for the Nervus window (Hana's surface contract).
+
+## Part 6 — the OS/kernel lane (Buffy's ground, from BUFFY_OS_KERNEL_TASKS)
+
+- [ ] R11-272. Userspace hog: spec line first, then the program — containment proven by its boot-log line (Mac proof is OpenCode's; your job is the program and the spec).
+- [ ] R11-273. Userspace talker and listener: the pair written against the kernel's existing means, or the honest gap record filed for Rowan.
+- [ ] R11-274. Userspace quitter: nonzero exit, and the spec for how ps must report it.
+- [ ] R11-275. Services boot manifest: start order and dependencies for the Goose corpus, as the file the image lane consumes.
+- [ ] R11-276. Services failure table: for each service, the boot symptom when it is missing, from its own contract.
+- [ ] R11-277. ABI tests: every call in os-build/USERSPACE_ABI.md gets a test holding the spec to user.rs as written.
+- [ ] R11-278. ABI worked examples: one example per call, from real dispatch behaviour.
+- [ ] R11-279. Kernel records: memory.rs allocator behaviour, read from the code, filed under os-build/.
+- [ ] R11-280. Kernel records: tasks.rs and sched.rs lifecycle and policy, same standard.
+- [ ] R11-281. Kernel records: the fault path through interrupts.rs and traps.rs, same standard.
+- [ ] R11-282. Boot-log index: every committed boot log, its build, and the claims it backs, kept current.
+- [ ] R11-283. Gap-fill on the OS surfaces: while doing all of the above, anything obviously missing (a button, a setting, a refused case) is added, per the standing order — not listed, built.
+
+## Part 7 — the chaos pack
+
+- [ ] R11-284. Kill each hosted loop mid-write; the ledger must never show a torn record.
+- [ ] R11-285. Feed the queue a package with a missing picture; behaviour named and tested.
+- [ ] R11-286. Feed the judge two contradictory readings; the ruling must be inconclusive, never a coin flip.
+- [ ] R11-287. Cut the network mid-sweep (Aegis); the sweep records the cut and resumes or closes honestly.
+- [ ] R11-288. Fill the watchman's jobs dir with a malformed job file; it is refused and logged, never spawned.
+- [ ] R11-289. Two jobs for the same agent at the same instant; claimed once each, no double spawn.
+- [ ] R11-290. A lessons file with a corrupted line; spawns still brief, the bad line quarantined.
+- [ ] R11-291. Clock jump on the host; budget math must not go negative or infinite.
+- [ ] R11-292. Disk-full simulation on the records dir; writes fail loudly, nothing silently dropped.
+- [ ] R11-293. The full agents suite under chaos: every drill above lands as a test in tests/, named for its failure.
+
+Total: 293 tasks. When this list runs out, Pax writes the next one — do not stop at the end of a list.
