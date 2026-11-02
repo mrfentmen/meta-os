@@ -83,7 +83,22 @@ def main():
         },
         "services": services,
     }
-    pathlib.Path(OUT).write_text(json.dumps(doc, indent=2) + "\n")
+    rendered = json.dumps(doc, indent=2) + "\n"
+    if "--check" in sys.argv[1:]:
+        # Freshness gate: a generated file that nobody regenerates is a stale
+        # copy of a decision, and the image lane would consume the stale one.
+        existing = pathlib.Path(OUT)
+        if not existing.is_file():
+            print(f"gen_boot_manifest_json: {OUT} missing", file=sys.stderr)
+            return 1
+        if existing.read_text() != rendered:
+            print(f"gen_boot_manifest_json: {OUT} is stale; run without --check",
+                  file=sys.stderr)
+            return 1
+        print(f"gen_boot_manifest_json: {OUT} is current ({len(services)} services)")
+        return 0
+
+    pathlib.Path(OUT).write_text(rendered)
     print(f"gen_boot_manifest_json: wrote {OUT} ({len(services)} services, "
           f"{len(effective)} fatal in effect)")
     return 0
