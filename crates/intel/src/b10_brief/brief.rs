@@ -8080,7 +8080,7 @@ mod tests {
             .expect("a stated sweep yields a recovery record");
         // Dedupe is not a skip: the count survives.
         assert_eq!(record.sweep_count, Some(1));
-        let jobs = record.recovered.expect("a recovered list is built");
+        let jobs = record.recovered.as_ref().expect("a recovered list is built");
         assert_eq!(jobs.len(), 1);
         assert_eq!(
             jobs[0],
