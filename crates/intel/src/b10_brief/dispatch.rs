@@ -28,6 +28,10 @@ pub struct PlanJob {
     /// Job accept lines. The shape-only parser leaves this empty; the
     /// accept scorer reads it, so a fuller parse fills it in.
     pub accept: Vec<String>,
+    /// Job capability requirements. The shape-only parser leaves this
+    /// empty; the detail renderer reads it, so a fuller parse fills
+    /// it in.
+    pub req: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -57,7 +61,7 @@ pub fn parse_plan(goal: &str, jobs: Vec<(String, String)>, unknown: &[String]) -
         if key.trim().is_empty() || title.trim().is_empty() {
             return Err(fail("job needs key + title"));
         }
-        out.push(PlanJob { key, title, files: Vec::new(), deps: Vec::new(), max_attempts: 3, spec: String::new(), accept: Vec::new() });
+        out.push(PlanJob { key, title, files: Vec::new(), deps: Vec::new(), max_attempts: 3, spec: String::new(), accept: Vec::new(), req: Vec::new() });
     }
     Ok(Plan { goal: goal.to_string(), summary: String::new(), jobs: out })
 }
@@ -765,6 +769,59 @@ pub fn plan_paragraph(plan: &Plan, order: Option<&[String]>) -> Result<String, P
     })
 }
 
+/// Render a parsed plan in full for the DSP-006 dry-run, ported
+/// from `dispatch.py::render_plan_detail`. First line is the plan's
+/// summary, second line is the posting order ("jobs in posting
+/// order: base -> api -> panel -> docs"), then one block per job in
+/// posting order: title and attempt budget on the header line, then
+/// files, deps ("none" when empty), req ("none" when the job names
+/// no capability), and accept lines, each comma/semicolon joined on
+/// its own line. Clamp lines (same shape as plan_summary) close the
+/// output; warning lines (DSP-013 plan_size_warnings output, empty
+/// by default) close the output after the clamp lines, so a large
+/// plan's guard message is visible in the dry-run too. Errors when
+/// the order does not cover exactly the plan's jobs, so a dry-run
+/// can never render a partial plan. Posts nothing; pure string
+/// building.
+pub fn render_plan_detail(plan: &Plan, order: &[String], clamps: &[PlanClamp], warnings: &[String]) -> Result<String, PlanError> {
+    use std::collections::HashMap;
+    let mut by_key: HashMap<&str, &PlanJob> = HashMap::new();
+    for job in &plan.jobs {
+        by_key.insert(job.key.as_str(), job);
+    }
+    let mut sorted_order: Vec<&str> = order.iter().map(|s| s.as_str()).collect();
+    sorted_order.sort_unstable();
+    let mut sorted_keys: Vec<&str> = by_key.keys().copied().collect();
+    sorted_keys.sort_unstable();
+    if sorted_order != sorted_keys {
+        return Err(fail("plan: posting order must cover exactly the plan's jobs"));
+    }
+    let mut lines = vec![
+        plan.summary.clone(),
+        format!("jobs in posting order: {}", order.join(" -> ")),
+    ];
+    for key in order {
+        let job = by_key[key.as_str()];
+        lines.push(format!("- {key}: {} (attempts {})", job.title, job.max_attempts));
+        lines.push(format!("  files: {}", job.files.join(", ")));
+        lines.push(format!("  deps: {}", if job.deps.is_empty() { "none".to_string() } else { job.deps.join(", ") }));
+        lines.push(format!("  req: {}", if job.req.is_empty() { "none".to_string() } else { job.req.join(", ") }));
+        lines.push(format!("  accept: {}", job.accept.join("; ")));
+    }
+    for clamp in clamps {
+        lines.push(format!(
+            "clamped: job {}: max_attempts {} -> {}",
+            repr_str(&clamp.key),
+            clamp.requested,
+            clamp.clamped
+        ));
+    }
+    for warning in warnings {
+        lines.push(warning.clone());
+    }
+    Ok(lines.join("\n"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -774,8 +831,8 @@ mod tests {
             goal: "g".into(),
             summary: String::new(),
             jobs: vec![
-                PlanJob { key: "a".into(), title: "A".into(), files: vec!["f.py".into()], deps: vec![], max_attempts: 3, spec: String::new(), accept: vec![] },
-                PlanJob { key: "b".into(), title: "B".into(), files: vec![], deps: vec!["a".into()], max_attempts: 3, spec: String::new(), accept: vec![] },
+                PlanJob { key: "a".into(), title: "A".into(), files: vec!["f.py".into()], deps: vec![], max_attempts: 3, spec: String::new(), accept: vec![], req: vec![] },
+                PlanJob { key: "b".into(), title: "B".into(), files: vec![], deps: vec!["a".into()], max_attempts: 3, spec: String::new(), accept: vec![], req: vec![] },
             ],
         }
     }
@@ -785,7 +842,7 @@ mod tests {
     }
 
     fn cjob(key: &str, files: Vec<&str>, spec: &str) -> PlanJob {
-        PlanJob { key: key.into(), title: key.into(), files: files.iter().map(|s| s.to_string()).collect(), deps: vec![], max_attempts: 3, spec: spec.into(), accept: vec![] }
+        PlanJob { key: key.into(), title: key.into(), files: files.iter().map(|s| s.to_string()).collect(), deps: vec![], max_attempts: 3, spec: spec.into(), accept: vec![], req: vec![] }
     }
 
     #[test]
@@ -960,7 +1017,7 @@ mod tests {
     }
 
     fn ajob(key: &str, files: Vec<&str>, accept: Vec<&str>) -> PlanJob {
-        PlanJob { key: key.into(), title: key.into(), files: files.iter().map(|s| s.to_string()).collect(), deps: vec![], max_attempts: 3, spec: String::new(), accept: accept.iter().map(|s| s.to_string()).collect() }
+        PlanJob { key: key.into(), title: key.into(), files: files.iter().map(|s| s.to_string()).collect(), deps: vec![], max_attempts: 3, spec: String::new(), accept: accept.iter().map(|s| s.to_string()).collect(), req: vec![] }
     }
 
     fn accept_lines() -> Vec<String> {
@@ -1114,6 +1171,33 @@ mod tests {
         let p = plan();
         let order = vec!["a".to_string()];
         let err = plan_paragraph(&p, Some(&order)).unwrap_err();
+        assert!(err.0.contains("posting order"), "got: {err}");
+    }
+
+    #[test]
+    fn detail_renders_blocks_clamps_and_warnings_in_posting_order() {
+        let p = Plan {
+            goal: "g".into(),
+            summary: "Do the thing".into(),
+            jobs: vec![
+                PlanJob { key: "base".into(), title: "Base".into(), files: vec!["a.py".into(), "b.py".into()], deps: vec![], max_attempts: 3, spec: String::new(), accept: vec!["file-exists: a.py".into(), "tests-pass: tests/test_a.py".into()], req: vec!["cap-x".into()] },
+                PlanJob { key: "api".into(), title: "Api".into(), files: vec![], deps: vec!["base".into()], max_attempts: 5, spec: String::new(), accept: vec![], req: vec![] },
+            ],
+        };
+        let order = vec!["api".to_string(), "base".to_string()];
+        let clamps = vec![PlanClamp { key: "api".into(), requested: 99, clamped: 10 }];
+        let warnings = vec!["plan size guardrail: too big".to_string()];
+        assert_eq!(
+            render_plan_detail(&p, &order, &clamps, &warnings).unwrap(),
+            "Do the thing\njobs in posting order: api -> base\n- api: Api (attempts 5)\n  files: \n  deps: base\n  req: none\n  accept: \n- base: Base (attempts 3)\n  files: a.py, b.py\n  deps: none\n  req: cap-x\n  accept: file-exists: a.py; tests-pass: tests/test_a.py\nclamped: job 'api': max_attempts 99 -> 10\nplan size guardrail: too big"
+        );
+    }
+
+    #[test]
+    fn detail_partial_order_refused() {
+        let p = plan();
+        let order = vec!["a".to_string()];
+        let err = render_plan_detail(&p, &order, &[], &[]).unwrap_err();
         assert!(err.0.contains("posting order"), "got: {err}");
     }
 }
