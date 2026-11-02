@@ -123,13 +123,35 @@ impl VgaConsole {
         }
     }
 
+    /// Erase the cell left of the cursor (R-2 backspace): move back
+    /// one cell and blank it. At column 0, wrap to the previous
+    /// row's last cell; at the top-left cell, a no-op. The caller
+    /// prints the serial erase sequence separately; this method is
+    /// the screen side only.
+    pub fn backspace(&mut self) {
+        if self.col > 0 {
+            self.col -= 1;
+        } else if self.row > 0 {
+            self.row -= 1;
+            self.col = VGA_WIDTH - 1;
+        } else {
+            return;
+        }
+        let blank = self.entry(b' ');
+        let idx = self.row * VGA_WIDTH + self.col;
+        // SAFETY: row < 25 and col < 80 by the logic above.
+        unsafe { core::ptr::write_volatile(self.buffer.add(idx), blank) };
+    }
+
     /// Write one byte. `\n` newlines, `\r` returns to column zero,
-    /// printable Latin-1 bytes draw through the VGA ROM font, other
-    /// control bytes are ignored rather than drawn as noise.
+    /// `\x08` backspaces (R-2), printable Latin-1 bytes draw through
+    /// the VGA ROM font, other control bytes are ignored rather than
+    /// drawn as noise.
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
             b'\n' => self.newline(),
             b'\r' => self.col = 0,
+            0x08 => self.backspace(),
             0x20..=0xFF => {
                 let x = self.col;
                 let y = self.row;
