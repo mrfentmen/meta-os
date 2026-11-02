@@ -1,0 +1,27 @@
+{
+  "box_px": {
+    "x1": 381,
+    "y1": 257,
+    "x2": 1279,
+    "y2": 538
+  },
+  "image_size": {
+    "w": 1280,
+    "h": 846
+  },
+  "region": {
+    "x": 298,
+    "y": 304,
+    "w": 702,
+    "h": 332
+  },
+  "mask": {
+    "x": 0,
+    "y": 0,
+    "data": "282,899,~!!(!J#L*/dkw+gJhgM$n9c]8WiqzUjNo%B5S@8H@$!j)0W@A!fv-ExvTtfZ)[xxC3wnpyxroHY+P1_o?k6OMcdDU4l'zg2xb2ta{:TVUi[epbx-%rnE#6IpBtcNe?[@w@ds1Sm6)fWxkhFC^=di.]?K56i(d5ZUqjwz*3$+/@nZX)7LQJBS_*E.#8y0Z]np...[truncated]",
+    "data_len": 54247
+  },
+  "model": "sam-3.1",
+  "latency_ms": 1412,
+  "raw_text_len": 54324
+}

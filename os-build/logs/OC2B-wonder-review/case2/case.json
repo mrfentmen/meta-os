@@ -1,0 +1,39 @@
+{
+  "note": "disagree-case: patrol flags, review clears as look-alike",
+  "division": "ignis",
+  "first_reading": {
+    "status": "ok",
+    "product": "ignis",
+    "assessment": {
+      "assessment": {
+        "category": "visible flame",
+        "summary": "Bright flames along the left side of the structure."
+      }
+    },
+    "observations": [
+      {
+        "category": "visible flame",
+        "description": "Bright flames along the left side of the structure."
+      }
+    ]
+  },
+  "review_reading": {
+    "status": "ok",
+    "product": "ignis",
+    "assessment": {
+      "assessment": {
+        "category": "steam or fog",
+        "summary": "White plume venting from a street stack; no flame source anywhere in frame."
+      }
+    },
+    "observations": [
+      {
+        "category": "steam or fog",
+        "description": "White plume venting from a street stack; no flame source anywhere in frame."
+      }
+    ]
+  },
+  "model": "muse-wonder-1.0 via models.chat_text",
+  "error": "RuntimeError: muse-wonder-1.0 response carried no message content",
+  "degraded_path": "staged case recorded with the transport error; deterministic combine() stands in COMPARE.md from local evaluation"
+}

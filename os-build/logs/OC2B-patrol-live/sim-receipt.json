@@ -1,0 +1,21 @@
+{
+  "endpoint": "http://127.0.0.1:50475",
+  "sim_server_saw": {
+    "path": "/fire",
+    "bytes": 4953,
+    "incident": "incident-a59ece55ba7e0a46"
+  },
+  "dispatch_step": {
+    "at": "2026-11-02T16:12:01.132Z",
+    "step": "dispatch",
+    "simulated": true,
+    "service": "fire department",
+    "receipt_id": "sim-oc2b-patrol-001",
+    "status": "dispatched-simulated"
+  },
+  "segment_record": {
+    "error": "ValueError: SAM output carried no <|box;...|> segment",
+    "degraded_path": "flag stands without measured region"
+  },
+  "guardrail_spend_delta_usd": 0.058133
+}

@@ -1,0 +1,6 @@
+{
+  "no_box": true,
+  "error": "SAM output carried no <|box;...|> segment",
+  "latency_ms": 572,
+  "raw_text_len": 0
+}

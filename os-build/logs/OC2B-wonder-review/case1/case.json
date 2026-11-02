@@ -1,0 +1,44 @@
+{
+  "note": "agree-case: both readings flag visible flame",
+  "division": "ignis",
+  "first_reading": {
+    "status": "ok",
+    "product": "ignis",
+    "assessment": {
+      "assessment": {
+        "category": "visible flame",
+        "summary": "Bright flames along the left side of the structure with a dark smoke plume overhead."
+      }
+    },
+    "observations": [
+      {
+        "category": "visible flame",
+        "description": "Bright flames along the left side of the structure with a dark smoke plume overhead."
+      }
+    ]
+  },
+  "review_reading": {
+    "status": "ok",
+    "product": "ignis",
+    "assessment": {
+      "assessment": {
+        "category": "visible flame",
+        "summary": "Active flames visible on the structure, smoke rising above the roofline."
+      }
+    },
+    "observations": [
+      {
+        "category": "visible flame",
+        "description": "Active flames visible on the structure, smoke rising above the roofline."
+      }
+    ]
+  },
+  "model": "muse-wonder-1.0 via models.chat_text",
+  "verdict": "confirmed",
+  "judge_category": "visible flame",
+  "judge_reasons": [
+    "model judge ruling: Both readings independently categorize the scene as visible flame",
+    "model judge ruling: Both describe active flames on the structure with smoke rising above the roofline"
+  ],
+  "tier": "high"
+}
