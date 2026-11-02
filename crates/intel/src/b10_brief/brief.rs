@@ -501,6 +501,108 @@ pub fn source_pointer_lines(pointers: Option<&[&str]>) -> Vec<String> {
     }
 }
 
+/// One job as the previous brief carried it: its id and the status it
+/// carried then. Python skips a previous-brief entry with no id, and
+/// keeps only the first entry when an id repeats; the caller builds
+/// this list with those rules applied.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PreviousBriefJob {
+    pub id: String,
+    pub status: String,
+}
+
+/// One job in the current window, as the comparison reads it: its id,
+/// title, and current status. Python skips a current job with no id;
+/// a missing title reads as empty, and a missing status reads as
+/// empty. The caller builds this list with those rules applied.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CurrentJob {
+    pub id: String,
+    pub title: String,
+    pub status: String,
+}
+
+/// A previous-brief record for the since-last-brief comparison: the
+/// jobs it carried, and its age label. Python derives the label from
+/// the record's `as_of` time through `_environment_age_label`:
+/// `" (as of YYYY-MM-DD HH:MM ET)"`, or
+/// `" (snapshot time not reported)"` when the record gives no time.
+/// This crate has no time dependency, so the caller supplies the
+/// label already formed, the same way `previous_session_digest`
+/// takes its last-brief time as a string.
+///
+/// `None` (no record at all) yields no lines: a template brief
+/// without a previous-brief record says nothing about newness
+/// rather than claiming it, and older briefs keep their exact shape.
+pub struct PreviousBrief {
+    pub jobs: Vec<PreviousBriefJob>,
+    pub age_label: String,
+}
+
+/// BRF-019 follow-up: the since-last-brief lines for a morning
+/// brief, closing cold-start gap 2 (old news and new news looking
+/// identical) for the template brief from a stated record.
+///
+/// A current job whose status differs from its previous-brief status
+/// reads as changed, with the old status and the new status both
+/// named; a current job with no previous-brief entry reads as new;
+/// a job whose status is unchanged is not listed at all. When the
+/// comparison finds nothing changed, the single line reads nothing
+/// changed, never a padded change, so a reader can tell the diff
+/// was checked and the window held nothing new. Every line carries
+/// its age label. The lines are plain lines, not bullets, so the
+/// BRF-007 budget trim never drops a change ahead of a watch item,
+/// and they are redacted by the composer, not here. This closes gap
+/// 2 for the template brief only: a Spark-composed brief carrying
+/// these lines, and an independent lane member's cold-start re-run,
+/// are still owed.
+pub fn since_last_brief_lines(
+    previous: Option<&PreviousBrief>,
+    current: &[CurrentJob],
+) -> Vec<String> {
+    let previous = match previous {
+        None => return Vec::new(),
+        Some(p) => p,
+    };
+    let mut prev: Vec<(&str, &str)> = Vec::new();
+    for job in &previous.jobs {
+        if job.id.is_empty() {
+            continue;
+        }
+        if prev.iter().any(|(id, _)| *id == job.id.as_str()) {
+            continue;
+        }
+        prev.push((job.id.as_str(), job.status.as_str()));
+    }
+    let mut lines: Vec<String> = Vec::new();
+    for job in current {
+        if job.id.is_empty() {
+            continue;
+        }
+        match prev.iter().find(|(id, _)| *id == job.id.as_str()) {
+            None => lines.push(format!(
+                "New since your last brief: {} {} ({})",
+                job.id, job.title, job.status
+            )),
+            Some((_, old)) if *old != job.status.as_str() => lines.push(format!(
+                "Changed since your last brief: {} {}: {} -> {}",
+                job.id, job.title, old, job.status
+            )),
+            Some(_) => {}
+        }
+    }
+    if lines.is_empty() {
+        return vec![format!(
+            "Nothing changed since your last brief{}",
+            previous.age_label
+        )];
+    }
+    lines
+        .iter()
+        .map(|l| format!("{l}{}", previous.age_label))
+        .collect()
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -722,5 +824,45 @@ mod tests {
         assert_eq!(source_pointer_lines(None), Vec::<String>::new());
         assert_eq!(source_pointer_lines(Some(&[])), Vec::<String>::new());
         assert_eq!(source_pointer_lines(Some(&[""])), Vec::<String>::new());
+    }
+
+    #[test]
+    fn since_last_brief_new_changed_unchanged_and_nothing() {
+        let prev = PreviousBrief {
+            jobs: vec![
+                PreviousBriefJob { id: "T1".into(), status: "open".into() },
+                PreviousBriefJob { id: "T2".into(), status: "done".into() },
+                // First entry wins for a repeated id.
+                PreviousBriefJob { id: "T2".into(), status: "open".into() },
+                PreviousBriefJob { id: "".into(), status: "open".into() },
+            ],
+            age_label: " (as of 2026-10-30 08:00 ET)".into(),
+        };
+        let current = vec![
+            CurrentJob { id: "T1".into(), title: "Alpha".into(), status: "done".into() },
+            CurrentJob { id: "T2".into(), title: "Beta".into(), status: "done".into() },
+            CurrentJob { id: "T3".into(), title: "Gamma".into(), status: "open".into() },
+            CurrentJob { id: "".into(), title: "NoId".into(), status: "open".into() },
+        ];
+        assert_eq!(
+            since_last_brief_lines(Some(&prev), &current),
+            vec![
+                "Changed since your last brief: T1 Alpha: open -> done (as of 2026-10-30 08:00 ET)",
+                "New since your last brief: T3 Gamma (open) (as of 2026-10-30 08:00 ET)",
+            ]
+        );
+        // No record at all says nothing about newness.
+        assert_eq!(since_last_brief_lines(None, &current), Vec::<String>::new());
+        // A checked window with nothing new says so, with the
+        // not-reported label when the record gives no time.
+        let unreported = PreviousBrief {
+            jobs: vec![PreviousBriefJob { id: "T2".into(), status: "done".into() }],
+            age_label: " (snapshot time not reported)".into(),
+        };
+        let same = vec![CurrentJob { id: "T2".into(), title: "Beta".into(), status: "done".into() }];
+        assert_eq!(
+            since_last_brief_lines(Some(&unreported), &same),
+            vec!["Nothing changed since your last brief (snapshot time not reported)"]
+        );
     }
 }
