@@ -105,6 +105,30 @@ function applyBar() {
   else { bar.style.background = dark ? "#000" : "#fff"; bar.style.color = dark ? "#fff" : "#000"; }
 }
 applyTheme(); applyBar();
+/* Wallpaper from picker/Settings (localStorage), live. All five stay in
+   the blue/white/black discipline (vigiles palette); they differ by
+   backdrop tint. Explicit metaos-bg from Settings wins. */
+const WALLPAPERS = {
+  "ribbon-blue": "#020814", "ribbon-dark": "#000000",
+  "ribbon-light": "#eaf2ff", "comet-dense": "#0a1f3d",
+  "wave-slow": "#101010",
+};
+function applyWallpaper() {
+  let id = "ribbon-blue";
+  try { id = window.localStorage.getItem("metaos-wallpaper") || "ribbon-blue"; } catch (e) {}
+  if (!WALLPAPERS[id]) id = "ribbon-blue";
+  document.body.dataset.product = "vigiles";
+  let bg = WALLPAPERS[id];
+  try { bg = window.localStorage.getItem("metaos-bg") || bg; } catch (e) {}
+  document.getElementById("logo-background").style.background = bg;
+}
+applyWallpaper();
+window.addEventListener("storage", (e) => {
+  if (e.key === "metaos-wallpaper" || e.key === "metaos-bg") applyWallpaper();
+  if (e.key === "metaos-theme") { applyTheme(); applyBar(); }
+  if (e.key === "metaos-bar") applyBar();
+});
+
 document.getElementById("theme-toggle").addEventListener("click", () => {
   let t = "dark";
   try {

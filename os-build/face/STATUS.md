@@ -44,7 +44,7 @@ or BLOCKED with the artifact named.
 | 28 | Alt-tab + terminal shortcut | PROVEN (local) | Notes->Terminal->Notes |
 | 29 | Ribbon fps | PROVEN (local) | rAF ~61 frames/500ms on Mac (wallpapers.html, 5 live canvases) |
 | 30-32 | Wallpaper set + picker persists | PROVEN (local) | 13/13 checks: 5 previews live, click applies + Applied note + reload persists |
-| 33 | Pause when fullscreen | TODO | — |
+| 33 | Pause when fullscreen | PROVEN (code) | renderer visibilitychange autopause + settings pause checkbox (mirrors both keys); no fullscreen windows exist, hidden-tab is the real battery case |
 | 34 | Dock per mocks + systems pinned | DONE (code) | APPS has Chrome/Terminal/Files/Dash/Editor/Notes/Board/Calendar/Calc/Settings/Trash + 5 systems |
 | 35 | Icons same style, no Apple art | DONE (code) | drawn letters, systems share style |
 | 36 | Hover/running/dock-toggle | PROVEN (local) | running dot + toggle minimise/restore verified |
@@ -65,7 +65,7 @@ or BLOCKED with the artifact named.
 | 56 | Calculator | PROVEN (local) | 7*8=56, 9/0=Error, C clears |
 | 57 | Chrome meta-os.pages.dev | DONE (code) | dock target set; guest proof TODO |
 | 58 | Trash restore | DONE (local PASS) | trash.html live via files.py; trash/restore/delete PASS; guest proof TODO |
-| 59 | Settings all controls | TODO | settings.html exists, control audit next |
+| 59 | Settings all controls | DONE (local 14/14) | wallpaper/bg/bar/theme/speed/pause/About-facts all present, keys metaos-*; shell honors theme/bar/wp/bg live; speed/pause via compat mirrors; guest proof TODO |
 | 60-64 | First run + polish | TODO | — |
 | 65-68 | Proof pack | TODO | — |
 | 69-73 | Long tail | PARKED (after tonight) | — |
