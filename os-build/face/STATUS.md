@@ -34,7 +34,7 @@ or BLOCKED with the artifact named.
 | 6 | Scaffold os-build/face/ | DONE | this dir + build-image.sh |
 | 7-13 | Image foundation | PROVEN | image-status-2026-11-02.md, metaos-update.* |
 | 14-17 | Boot screen | PROVEN | metaos.plymouth+script, boot-early/mid/late.png |
-| 18-21 | Login | TODO | — |
+| 18-21 | Login | PROVEN | login-dark/shake/entered/light.png + AUTOLOGIN.md |
 | 22-28 | Desktop shell | TODO | — |
 | 29-33 | Wallpapers | TODO | — |
 | 34-37 | Dock | TODO | — |

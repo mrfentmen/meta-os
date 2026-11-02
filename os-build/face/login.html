@@ -96,9 +96,12 @@
 <script src="vendor-logo-background.js"></script>
 <script>
 "use strict";
-/* Theme: dark default, light only when explicitly stored. */
+/* Theme: dark default; ?theme= overrides once (also stored), then stored value wins. */
 try {
-  var t = window.localStorage && window.localStorage.getItem("metaos-theme");
+  var q = new URLSearchParams(location.search).get("theme");
+  var t = (q === "light" || q === "dark") ? q :
+    (window.localStorage && window.localStorage.getItem("metaos-theme"));
+  if (q === "light" || q === "dark") { try { window.localStorage.setItem("metaos-theme", q); } catch (e2) {} }
   document.documentElement.setAttribute(
     "data-theme", t === "light" ? "light" : "dark");
 } catch (e) {
