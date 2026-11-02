@@ -1,0 +1,234 @@
+META OS - milestone K3
+META OS KERNEL - alive (K1)
+mem region 0: 0x0-0x1000 reserved
+mem region 1: 0x1000-0x5000 reserved
+mem region 2: 0x5000-0x15000 reserved
+mem region 3: 0x15000-0x16000 reserved
+mem region 4: 0x16000-0x5e000 reserved
+mem region 5: 0x5e000-0x9f000 reserved
+mem region 6: 0x9f000-0xa0000 reserved
+mem region 7: 0xf0000-0x100000 reserved
+mem region 8: 0x100000-0x2bf000 reserved
+mem region 9: 0x2bf000-0x400000 usable
+mem region 10: 0x400000-0xc10000 reserved
+mem region 11: 0xc10000-0x1020000 reserved
+mem region 12: 0x1020000-0x1ffe0000 usable
+mem region 13: 0x1ffe0000-0x20000000 reserved
+mem region 14: 0xfffc0000-0x100000000 reserved
+mem region 15: 0xfd00000000-0x10000000000 reserved
+mem map: 16 regions, usable 508932K reserved 12598204K other 0K
+mem frames: 127233 usable total
+mem allocator: 127233 covered frames, 127233 free
+mem probe page ok
+mem heap: 256K total
+mem Box+Vec ok (box 42, vec sum 120)
+mem stress 10k ok, heap free 255K
+mem summary: K4 up
+A
+B
+C sleeping 200 ticks
+A
+B
+user hello: 2627000 bytes magic=0x464c457f type=Some(3) entry=Some(105553116266496)
+user hello: entry 0x600000000000 head [50, 48, 8d, 3d, 30, 01, 00, 00, 48, 8b, 05, 21, 02, 00, 00, be]
+HELLO FROM USERSPACE
+user exit code 0
+A
+B
+user sleeper: 2739160 bytes magic=0x464c457f type=Some(3) entry=Some(106652627894288)
+user sleeper: entry 0x610000000010 head [50, 48, 8d, 3d, 98, e8, 00, 00, 48, 8b, 05, 49, 09, 01, 00, be]
+sleeper: before sleep
+sleeper: pid 5
+user crasher: 2635456 bytes magic=0x464c457f type=Some(3) entry=Some(107752139522368)
+user crasher: entry 0x620000000140 head [50, 48, 8d, 3d, 8e, 05, 00, 00, 48, 8b, 05, 91, 07, 00, 00, be]
+crasher: about to read zero
+INT user page-fault addr 0x0000000000000000 err 0x0000000000000004: task killed
+A
+B
+sleeper: yielded and back
+A
+B
+uptime 1s ticks 100
+sleeper: after sleep
+user bad syscall 99 refused
+sleeper: bad call refused
+user exit code 0
+uptime 2s ticks 200
+C awake
+uptime 3s ticks 300
+uptime 4s ticks 400
+uptime 5s ticks 500
+uptime 6s ticks 600
+uptime 7s ticks 700
+uptime 8s ticks 800
+uptime 9s ticks 900
+uptime 10s ticks 1000
+uptime 11s ticks 1100
+uptime 12s ticks 1200
+uptime 13s ticks 1300
+uptime 14s ticks 1400
+uptime 15s ticks 1500
+uptime 16s ticks 1600
+uptime 17s ticks 1700
+uptime 18s ticks 1800
+uptime 19s ticks 1900
+uptime 20s ticks 2000
+uptime 21s ticks 2100
+uptime 22s ticks 2200
+uptime 23s ticks 2300
+uptime 24s ticks 2400
+uptime 25s ticks 2500
+uptime 26s ticks 2600
+uptime 27s ticks 2700
+uptime 28s ticks 2800
+uptime 29s ticks 2900
+uptime 30s ticks 3000
+uptime 31s ticks 3100
+uptime 32s ticks 3200
+uptime 33s ticks 3300
+uptime 34s ticks 3400
+uptime 35s ticks 3500
+uptime 36s ticks 3600
+uptime 37s ticks 3700
+uptime 38s ticks 3800
+uptime 39s ticks 3900
+uptime 40s ticks 4000
+uptime 41s ticks 4100
+uptime 42s ticks 4200
+uptime 43s ticks 4300
+uptime 44s ticks 4400
+uptime 45s ticks 4500
+uptime 46s ticks 4600
+uptime 47s ticks 4700
+uptime 48s ticks 4800
+uptime 49s ticks 4900
+uptime 50s ticks 5000
+uptime 51s ticks 5100
+uptime 52s ticks 5200
+uptime 53s ticks 5300
+uptime 54s ticks 5400
+uptime 55s ticks 5500
+uptime 56s ticks 5600
+uptime 57s ticks 5700
+uptime 58s ticks 5800
+uptime 59s ticks 5900
+uptime 60s ticks 6000
+uptime 61s ticks 6100
+uptime 62s ticks 6200
+uptime 63s ticks 6300
+uptime 64s ticks 6400
+uptime 65s ticks 6500
+uptime 66s ticks 6600
+uptime 67s ticks 6700
+uptime 68s ticks 6800
+uptime 69s ticks 6900
+uptime 70s ticks 7000
+uptime 71s ticks 7100
+uptime 72s ticks 7200
+uptime 73s ticks 7300
+uptime 74s ticks 7400
+uptime 75s ticks 7500
+uptime 76s ticks 7600
+uptime 77s ticks 7700
+uptime 78s ticks 7800
+uptime 79s ticks 7900
+uptime 80s ticks 8000
+uptime 81s ticks 8100
+uptime 82s ticks 8200
+uptime 83s ticks 8300
+uptime 84s ticks 8400
+uptime 85s ticks 8500
+uptime 86s ticks 8600
+uptime 87s ticks 8700
+uptime 88s ticks 8800
+uptime 89s ticks 8900
+uptime 90s ticks 9000
+uptime 91s ticks 9100
+uptime 92s ticks 9200
+uptime 93s ticks 9300
+uptime 94s ticks 9400
+uptime 95s ticks 9500
+uptime 96s ticks 9600
+uptime 97s ticks 9700
+uptime 98s ticks 9800
+uptime 99s ticks 9900
+uptime 100s ticks 10000
+uptime 101s ticks 10100
+uptime 102s ticks 10200
+uptime 103s ticks 10300
+uptime 104s ticks 10400
+uptime 105s ticks 10500
+uptime 106s ticks 10600
+uptime 107s ticks 10700
+uptime 108s ticks 10800
+uptime 109s ticks 10900
+uptime 110s ticks 11000
+uptime 111s ticks 11100
+uptime 112s ticks 11200
+uptime 113s ticks 11300
+uptime 114s ticks 11400
+uptime 115s ticks 11500
+uptime 116s ticks 11600
+uptime 117s ticks 11700
+uptime 118s ticks 11800
+uptime 119s ticks 11900
+uptime 120s ticks 12000
+uptime 121s ticks 12100
+uptime 122s ticks 12200
+uptime 123s ticks 12300
+uptime 124s ticks 12400
+uptime 125s ticks 12500
+uptime 126s ticks 12600
+uptime 127s ticks 12700
+uptime 128s ticks 12800
+uptime 129s ticks 12900
+uptime 130s ticks 13000
+uptime 131s ticks 13100
+uptime 132s ticks 13200
+uptime 133s ticks 13300
+uptime 134s ticks 13400
+uptime 135s ticks 13500
+uptime 136s ticks 13600
+uptime 137s ticks 13700
+uptime 138s ticks 13800
+uptime 139s ticks 13900
+uptime 140s ticks 14000
+uptime 141s ticks 14100
+uptime 142s ticks 14200
+uptime 143s ticks 14300
+uptime 144s ticks 14400
+uptime 145s ticks 14500
+uptime 146s ticks 14600
+uptime 147s ticks 14700
+uptime 148s ticks 14800
+uptime 149s ticks 14900
+uptime 150s ticks 15000
+uptime 151s ticks 15100
+uptime 152s ticks 15200
+uptime 153s ticks 15300
+uptime 154s ticks 15400
+uptime 155s ticks 15500
+uptime 156s ticks 15600
+uptime 157s ticks 15700
+uptime 158s ticks 15800
+uptime 159s ticks 15900
+uptime 160s ticks 16000
+uptime 161s ticks 16100
+uptime 162s ticks 16200
+uptime 163s ticks 16300
+uptime 164s ticks 16400
+uptime 165s ticks 16500
+uptime 166s ticks 16600
+uptime 167s ticks 16700
+uptime 168s ticks 16800
+uptime 169s ticks 16900
+uptime 170s ticks 17000
+uptime 171s ticks 17100
+uptime 172s ticks 17200
+uptime 173s ticks 17300
+uptime 174s ticks 17400
+uptime 175s ticks 17500
+uptime 176s ticks 17600
+uptime 177s ticks 17700
+uptime 178s ticks 17800
+uptime 179s ticks 17900
