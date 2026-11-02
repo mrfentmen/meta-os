@@ -132,3 +132,7 @@ marked; nothing is asserted on another lane's behalf.
 
 ## Coordinator addendum 2026-11-02, third pass (OC1B-453 FINAL)
 §9 verdicts merged (s9 @ f43a2cb7): truthfully nameable with receipts — muse-spark-1.3 (CHAT path + judge fallbacks), muse-wonder-1.0 (live "WONDEROK" chat receipt; review-reader UNPROVEN 212/213 by token budget, fallback PROVEN — name the model, not the reader), sam-3.1 (live box receipt on ignis-fire-1), Muse Image (112KB webp generation receipt). Receipt dir: os-build/logs/oc1b-model-proofs/ + R5-imperium/receipt.txt. Spend receipts: $0.097 (§9) + $0.1756 (§13), guardrail $0.3108/$75. OC1B-453 READY; OC1B-473 row 2 READY.
+
+## Coordinator addendum 2026-11-02, fourth pass (OC1B-454, OC1B-464)
+- OC1B-454 FINAL: §11's film IS the final cut — os-build/demo/demo-3min.mp4, ffprobe duration=180.000000 (s17 measured on prior cut; s11 rebuilt: 719410 B, sha256 a29bc47dd56e9f583d8af231d8d3908f3a4c4d6218fb1b3492ce5381b3ae13f0). Exactly 180.000s as required. No further cut planned.
+- OC1B-464 path check (on opencode/500 @ this commit): film os-build/demo/demo-3min.mp4 PRESENT (719410 B); runbook os-build/demo/OC1B_RUNBOOK.md PRESENT (69 lines); snapshot os-build/logs/OC1B-state-snapshot.md PRESENT. All three resolve. Rehearsal (465) launched as background clean-clone run, results to follow.
