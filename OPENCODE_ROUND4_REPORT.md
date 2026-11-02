@@ -54,6 +54,32 @@ Standing rules: no source edits outside task scope; errors verbatim + stop; 4 bu
 - Loader refusal path untouched (`address in use` arm intact; this
   session's gates show 0 loader-refused lines because the build is right).
 - Proof: clean-clone GATE GREEN above used only the branch's scripts.
-## R4-3 K7 demo boot log — TODO
-## R4-4 merge-watch — TODO
-## What remains unverified — TODO
+## R4-3 K7 demo boot log — DONE
+- `os-build/logs/K7-boot.txt` (7158 bytes): headless boot of the
+  merged tree (post-Rowan-r1: banner now `META OS 0.1 (K6)`),
+  full userspace sequence (HELLO, sleeper sleep/wake, bad-call
+  refused, fault isolated, 2 clean exits), then drive.py-typed
+  `help` (→ `commands: status help`), `status` (→ live tasks/ticks
+  + `STATUS tasks=`), `mem`/`ps`/`bogus` (→ 3× `unknown command`
+  + help re-list: REAL output proving absence, never faked).
+- Missing by name (Rowan's R-2 not yet merged; re-run owed after):
+  prompt string, backspace, `mem`, `ps`, `uptime`-as-command,
+  `clear`, `read_key` syscall. Tree supports exactly 2 commands;
+  matches Hana's frozen shell-spec (2 commands + refusal wording).
+## R4-4 merge-watch — OPEN (1 entry)
+- `1655d56` (Hana shell-spec + Rowan kernel-r1 merges): GATE GREEN
+  7/7 via os-build/gate.sh on merged branch (log
+  os-build/logs/GATE-boot-main1655d56.txt, run
+  os-build/logs/gate-run-main1655d56.txt). No RED so far.
+  NOTE: new tree prints `META OS 0.1 (K6)`; the old
+  os-build/expected/K-all.txt `milestone K3` line no longer matches —
+  expected, Rowan fixed the banner on purpose (R-1).
+- Watch continues: each new main tip gets a gate re-run + one line here.
+## What remains unverified
+- R4-4 watch: open until the 24h window closes; new main tips need
+  gate re-runs (Rowan R-2 shell commands + backspace/prompt will
+  trigger a K7 re-run when they land).
+- K-all.txt `milestone K3` line is stale against the new truthful
+  banner (flagged, not silently patched — gate ownership is Milo's).
+- Bare `cargo build` in os-build/userspace/user still links wrong
+  bases by design (Pax ruling); pipeline scripts are the supported path.
