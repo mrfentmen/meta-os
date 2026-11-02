@@ -1,0 +1,25 @@
+# OC1B-226 live camera list (Mac, tree 94010c76, 2026-11-02T16:12:46Z)
+
+975 online cameras (DOT list via module's own fetcher: python3 server/queue/livecams.py --list).
+
+First 10:
+```
+ Belt Pkwy @  Guy R Brewer Blvd  [Queens] https://webcams.nyctmc.org/api/cameras/f4633287-e3eb-463e-a73c-0917e6243c5b/image
+ WEBSTER AVE @ NEREID AVE [Bronx] https://webcams.nyctmc.org/api/cameras/6a841f4c-93ef-4f51-b38d-80e70053ff8d/image
+1 Ave @ 110 St [Manhattan] https://webcams.nyctmc.org/api/cameras/f2b94b32-fc41-42b6-935d-8330374ca05a/image
+1 Ave @ 124 St [Manhattan] https://webcams.nyctmc.org/api/cameras/38c07664-0329-471e-997f-6a9015a5bcef/image
+1 Ave @ 14 St [Manhattan] https://webcams.nyctmc.org/api/cameras/23994d9e-7e59-4808-8d47-405f779d19cf/image
+1 Ave @ 23 St [Manhattan] https://webcams.nyctmc.org/api/cameras/eafc65f5-6ff9-4203-905f-3995b9fbc9eb/image
+1 Ave @ 42 St [Manhattan] https://webcams.nyctmc.org/api/cameras/f0e5c9aa-7700-4918-834f-c106189bde4b/image
+1 Ave @ 57 st [Manhattan] https://webcams.nyctmc.org/api/cameras/79f45918-c13e-4357-9ccb-9e3e7ea5b6af/image
+1 Ave @ 59 St [Manhattan] https://webcams.nyctmc.org/api/cameras/f7c4d5d5-f4d4-4590-9459-6491507ae9f9/image
+1 Ave @ 62 St [Manhattan] https://webcams.nyctmc.org/api/cameras/aa85b894-336d-42bb-9801-0359e452f845/image
+```
+
+# OC1B-227 field check
+
+total: 975
+entries missing id/name/area/nyctmc-imageUrl: 0
+areas: {'Queens': 211, 'Manhattan': 377, 'Bronx': 81, 'Brooklyn': 206, 'Staten Island': 100}
+
+All 975 entries carry id, name, area, and an imageUrl on https://webcams.nyctmc.org/ - the published API shape, nothing scraped.

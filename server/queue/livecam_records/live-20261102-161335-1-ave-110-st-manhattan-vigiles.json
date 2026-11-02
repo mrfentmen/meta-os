@@ -1,0 +1,44 @@
+{
+ "frame": {
+  "camera_id": "f2b94b32-fc41-42b6-935d-8330374ca05a",
+  "camera_name": "1 Ave @ 110 St",
+  "area": "Manhattan",
+  "latitude": 40.792177,
+  "longitude": -73.93825,
+  "source": "NYC DOT public traffic camera",
+  "image_url": "https://webcams.nyctmc.org/api/cameras/f2b94b32-fc41-42b6-935d-8330374ca05a/image",
+  "fetched_at": "2026-11-02T16:13:14.189639+00:00",
+  "image_sha256": "22ca66a071fff074b8a80fa07c926d9c110c957040fd5bed9a5817b4b06979d2",
+  "image_bytes": 25315,
+  "live": true
+ },
+ "reading": [
+  {
+   "product": "vigiles",
+   "timestamp": "2026-11-02T16:13:14.189639+00:00",
+   "observations": [
+    {
+     "category": "normal activity",
+     "description": "Daytime urban street with multiple vehicles traveling in lanes and parked along curbs, buildings and trees lining street, no visible disturbance",
+     "evidence": "center and lower frame roadway with moving vehicles, right and left sides with parked vehicles, brick buildings on right",
+     "confidence": 0.9,
+     "region": null
+    }
+   ],
+   "assessment": {
+    "category": "normal activity",
+    "summary": "Busy city street with normal vehicular traffic and parked cars, no visible disturbance or person in need.",
+    "uncertainty": [
+     "No distinct people clearly resolvable in this wide view"
+    ],
+    "requires_human_review": false
+   },
+   "processing": {
+    "model": "muse-spark-1.3",
+    "latency_ms": null
+   }
+  },
+  "muse-spark-1.3",
+  7292
+ ]
+}
