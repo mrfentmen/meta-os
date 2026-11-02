@@ -1,220 +1,408 @@
 {
- "agents": [
-  {
-   "budget": {
-    "maxWallMs": 3600000
-   },
-   "capabilities": [
-    "kernel",
-    "gate-runs"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "kernel (L1-L3)",
-   "name": "rowan",
-   "owner": "boss"
-  },
-  {
-   "budget": {
-    "maxWallMs": 3600000
-   },
-   "capabilities": [
-    "surfaces",
-    "design",
-    "site"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "UI and surfaces (L6)",
-   "name": "hana",
-   "owner": "boss"
-  },
-  {
-   "budget": {
-    "maxWallMs": 3600000
-   },
-   "capabilities": [
-    "gate-1",
-    "claim-audit",
-    "scoreboard"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "gates and records",
-   "name": "milo",
-   "owner": "boss"
-  },
-  {
-   "budget": {
-    "maxWallMs": 3600000
-   },
-   "capabilities": [
-    "services",
-    "failure-injection"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "services (L4, Goose)",
-   "name": "buffy",
-   "owner": "boss"
-  },
-  {
-   "budget": {
-    "maxWallMs": 3600000
-   },
-   "capabilities": [
-    "clean-clone-gate",
-    "image-boot-checks"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "verification (8GB Mac) Renamed Bond by the boss 2026-11-02 (formerly Buffy 2). Light lanes: BOND_LIGHT_LANES.md.",
-   "name": "bond",
-   "owner": "boss"
-  },
-  {
-   "budget": {
-    "maxWallMs": 3600000
-   },
-   "capabilities": [
-    "merge",
-    "dispatch",
-    "watch"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "dispatch and merge",
-   "name": "pax",
-   "owner": "boss"
-  },
-  {
-   "budget": {
-    "maxActions": 8,
-    "maxCalls": 12,
-    "maxSpendUsd": 0.5
-   },
-   "capabilities": [
-    "patrol",
-    "assess",
-    "dispatch-simulated"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "Imperium loop (patrol -> review -> investigation -> records -> response)",
-   "name": "imperium-patrol",
-   "owner": "system: imperium"
-  },
-  {
-   "budget": {
-    "maxWallMs": 28800000
-   },
-   "capabilities": [
-    "compose",
-    "keeper-pass",
-    "rights-check"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "Musica overnight sessions",
-   "name": "musica-studio",
-   "owner": "system: musica"
-  },
-  {
-   "budget": {
-    "maxWallMs": 3600000
-   },
-   "capabilities": [
-    "design-iterate"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "Officina faber loop",
-   "name": "officina-faber",
-   "owner": "system: officina"
-  },
-  {
-   "budget": {
-    "maxWallMs": 3600000
-   },
-   "capabilities": [
-    "watch"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "watch rounds (bus, repo, gateway) \u2014 capability demo agent",
-   "name": "watch",
-   "owner": "boss",
-   "watch": [],
-   "watchCadenceMs": 900000,
-   "gym": {
-    "drill": "gym-drill-1",
-    "at": "2026-11-02T11:45:09.186Z",
-    "tasks": [
-     {
-      "id": "registry-entry",
-      "score": 1,
-      "max": 1
-     },
-     {
-      "id": "spawn-clean-exit",
-      "score": 1,
-      "max": 1
-     },
-     {
-      "id": "ledger-complete",
-      "score": 1,
-      "max": 1
-     }
-    ],
-    "total": 3,
-    "max": 3
-   }
-  },
-  {
-   "name": "aegis",
-   "lane": "Meta Aegis \u2014 security sweeps over the boss's own ground",
-   "command": [
-    "true"
-   ],
-   "capabilities": [
-    "osv-check",
-    "kev-check",
-    "secret-hygiene",
-    "unicode-security"
-   ],
-   "budget": {
-    "maxActions": 40,
-    "maxCalls": 60
-   },
-   "owner": "boss"
-  },
-  {
-   "budget": {
-    "maxWallMs": 3600000
-   },
-   "capabilities": [
-    "model-surgery",
-    "sweeps",
-    "steering",
-    "model-reduction",
-    "tool-tray"
-   ],
-   "command": [
-    "true"
-   ],
-   "lane": "Meta Nervus - model surgery bench (standalone system)",
-   "name": "nervus",
-   "owner": "boss"
-  }
- ]
+  "agents": [
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "kernel",
+        "gate-runs"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "kernel (L1-L3)",
+      "name": "rowan",
+      "owner": "boss"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "surfaces",
+        "design",
+        "site"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "UI and surfaces (L6)",
+      "name": "hana",
+      "owner": "boss"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "gate-1",
+        "claim-audit",
+        "scoreboard"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "gates and records",
+      "name": "milo",
+      "owner": "boss"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "services",
+        "failure-injection"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "services (L4, Goose)",
+      "name": "buffy",
+      "owner": "boss"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "clean-clone-gate",
+        "image-boot-checks"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "verification (8GB Mac) Renamed Bond by the boss 2026-11-02 (formerly Buffy 2). Light lanes: BOND_LIGHT_LANES.md.",
+      "name": "bond",
+      "owner": "boss"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "merge",
+        "dispatch",
+        "watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "dispatch and merge",
+      "name": "pax",
+      "owner": "boss"
+    },
+    {
+      "budget": {
+        "maxActions": 8,
+        "maxCalls": 12,
+        "maxSpendUsd": 0.5
+      },
+      "capabilities": [
+        "patrol",
+        "assess",
+        "dispatch-simulated"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Imperium loop (patrol -> review -> investigation -> records -> response)",
+      "name": "imperium-patrol",
+      "owner": "system: imperium"
+    },
+    {
+      "budget": {
+        "maxWallMs": 28800000
+      },
+      "capabilities": [
+        "compose",
+        "keeper-pass",
+        "rights-check"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Musica overnight sessions",
+      "name": "musica-studio",
+      "owner": "system: musica"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "design-iterate"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Officina faber loop",
+      "name": "officina-faber",
+      "owner": "system: officina"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "watch rounds (bus, repo, gateway) \u2014 capability demo agent",
+      "name": "watch",
+      "owner": "boss",
+      "watch": [],
+      "watchCadenceMs": 900000,
+      "gym": {
+        "drill": "gym-drill-1",
+        "at": "2026-11-02T11:45:09.186Z",
+        "tasks": [
+          {
+            "id": "registry-entry",
+            "score": 1,
+            "max": 1
+          },
+          {
+            "id": "spawn-clean-exit",
+            "score": 1,
+            "max": 1
+          },
+          {
+            "id": "ledger-complete",
+            "score": 1,
+            "max": 1
+          }
+        ],
+        "total": 3,
+        "max": 3
+      }
+    },
+    {
+      "name": "aegis",
+      "lane": "Meta Aegis \u2014 security sweeps over the boss's own ground",
+      "command": [
+        "true"
+      ],
+      "capabilities": [
+        "osv-check",
+        "kev-check",
+        "secret-hygiene",
+        "unicode-security"
+      ],
+      "budget": {
+        "maxActions": 40,
+        "maxCalls": 60
+      },
+      "owner": "boss"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "model-surgery",
+        "sweeps",
+        "steering",
+        "model-reduction",
+        "tool-tray"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Meta Nervus - model surgery bench (standalone system)",
+      "name": "nervus",
+      "owner": "boss"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "literature-watch",
+        "experiment-watch",
+        "verification-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "research-director",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "literature-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "literature-researcher",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "literature-watch",
+        "experiment-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "scientific-analyst",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "experiment-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "mathematics-researcher",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "experiment-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "chemistry-researcher",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "experiment-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "biology-researcher",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "experiment-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "physics-researcher",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "literature-watch",
+        "experiment-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "hypothesis-generator",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "experiment-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "computational-scientist",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "experiment-watch",
+        "verification-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "statistician",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "verification-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "scientific-critic",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "verification-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "independent-verifier",
+      "owner": "system: science-lab"
+    },
+    {
+      "budget": {
+        "maxWallMs": 3600000
+      },
+      "capabilities": [
+        "experiment-watch",
+        "verification-watch"
+      ],
+      "command": [
+        "true"
+      ],
+      "lane": "Science Lab (research)",
+      "name": "research-archivist",
+      "owner": "system: science-lab"
+    }
+  ]
 }
