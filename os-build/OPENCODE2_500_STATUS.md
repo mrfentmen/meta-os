@@ -154,3 +154,17 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - Crash drill (122): fresh 15-min run, crasher path fired (`task killed` page-fault line in serial), shell answered after (`STATUS tasks=8`). Drill QEMU shut down after.
 - Captures: 5 PNGs, 19–23 KB each (no recompression needed). No file over 1 MB in §5.
 - Landed: both soak verdicts (one line each): A — 60 min clean; B — 2 h clean. In flight: none. Blocked: ribbon (needs Rowan graphics; absence verified, not a gap in method).
+
+## Section 20 — Proof index, truth pass, closeout (OC2B-476–500) — DONE 2026-11-02
+- Index `os-build/logs/OC2B_PROOF_INDEX.md`: 20 sections → artifact paths. Click-check (477): all paths exist on branch; late-filed verify/ dirs + model_calls.py noted. No missing paths.
+- Truth passes: DONE↔artifact — 2 prose drifts corrected in §7 block (test file 28 not 27; Sec-3 commit tree ran 238 green incl. parallel untracked file). Summaries vs earned levels: CLEAN (all state exactly recorded L3; cycle-005 DIFFER at L2). Officina bounds: scripted check 5/5 ok; GENERATED filenames: 3 (2× §17 scenes + 1× build-001 render). Kernel-face wording: CLEAN. SAM: no-box honesty intact (VARIANCE.md).
+- Secrets sweep: 0 key hits in branch diff (REQUIRED — met). No key-shaped files added.
+- >1 MB sweep: zero new files over 1 MB (largest: Delaney CSV input 96 KB, PNG captures ≤36 KB, baked .img never staged).
+- Final suites: science-lab 177 OK; officina 77 OK; queue 289 OK; hortus 14 OK; goose node 4/0; kernel gate GREEN.
+- Spend grand total (490): priced ≈ $0.11 (smoke $0.00023 + cycle-3 $0.00536 + §17 ≈$0.06 + cams $0.04114); image/Wonder/SAM usage unpriced (no published rates) — all receipts indexed. Under Del's $75 guardrail (orders of magnitude headroom).
+- UNPROVEN list (491, plain words): KF-02+ everything past KF-01 (no upgraded stack, no framebuffer, no pixels, no ribbon, no fallback, no windows, no Milestone-1 pack); soak verdicts cover the text tree only; face-in-chromium unverified in image; host-forwarded dashboard unchecked; in-image model endpoint erroring server-side; desktop screendump impossible (no GUI in server image); no live-model figure reading beyond recorded attempts; no physical builds; cycle-005 is a DIFFER (kept, not hidden); Officina faber loop takes loop seeds not packs (gap recorded, not forced).
+- Handoff for Pax (492): ready to merge section by section — tip `opencode2/500` (sha in push receipt below): §§1,5,6,8–19 fully proven; §§2–4 proven-blocked (KF-01 MATCH ×2 + candidate FB field; rest needs Rowan); §7 baked image boots with updater (model endpoint + desktop need follow-up); §20 this block.
+- Diffstat (494): see commit stat. kernel/ diff vs main EMPTY (495). server/queue untouched (496 — one receipt side-effect file deleted, not committed). agents/registry.json untouched (497 — proposals live in §14/15/16/17 blocks only).
+- §20 block complete (498). Index closing entry points here (499).
+
+The Science Lab reproduced four results and honored one failure at the levels it earned, Hortus bred selectable candidates under a biting gate, Officina turned rough words into checked packs, the models proved live where they answered and were logged honestly where they flaked, the cameras watched real streets, and the kernel soaked four hours without a panic — and everything past the text console waits on Rowan's framebuffer. (500)
