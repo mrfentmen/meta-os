@@ -1,0 +1,161 @@
+{
+  "note": "Drill only: inventory, record, watch. No vulnerability data was fetched; nothing here is a security finding.",
+  "ts": "2026-11-02T09:58:52.236Z",
+  "run": "aegis-drill-mvz36qt6",
+  "inventory": {
+    "total": 23,
+    "byEcosystem": {
+      "cargo": 22,
+      "npm": 1
+    },
+    "scannedDirs": 371,
+    "skipped": 5,
+    "capped": 0,
+    "symlinksSkipped": 0,
+    "manifests": [
+      {
+        "path": "Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/agent-runtime/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/assess-server/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/dashboard/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/guardrail/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/intel/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/os-boot/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/os-budget/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/os-identity/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/os-jobs/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/os-memory/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/os-misc/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/os-supervisor/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/os-worker/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/os-workspace/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/parity-tests/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/queue-core/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/queue-store/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/relay/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "crates/stack/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "kernel/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "os-build/userspace/user/Cargo.toml",
+        "manifest": "Cargo.toml",
+        "ecosystem": "cargo"
+      },
+      {
+        "path": "package.json",
+        "manifest": "package.json",
+        "ecosystem": "npm"
+      }
+    ]
+  },
+  "record": {
+    "file": "<scratch>",
+    "total": 1,
+    "bySeverity": {
+      "info": 1,
+      "low": 0,
+      "medium": 0,
+      "high": 0,
+      "critical": 0
+    },
+    "torn": 0
+  },
+  "watch": {
+    "targets": [
+      {
+        "type": "file",
+        "path": ".git/HEAD"
+      },
+      {
+        "type": "file",
+        "path": ".git/refs/heads/buffy/round8"
+      }
+    ],
+    "missing": [],
+    "quietPollChanges": 0,
+    "pageChangeDetected": 1,
+    "pageChangeKey": "file:listing.html"
+  }
+}

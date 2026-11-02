@@ -192,7 +192,7 @@ fn ip4_same_subnet(x: Ipv4&, y: Ipv4&, mask: Ipv4&) -> bool {
 }
 
 // The directed broadcast for an address under a mask (host bits all ones).
-fn ip4_subnet_broadcast(addr: Ipv4&, mask: Ipv4&) -> Ipv4 {
+fn ip4_subnet_broadcast(addr: Ipv4, mask: Ipv4) -> Ipv4 {
     return Ipv4 {
         a: addr.a | (~mask.a),
         b: addr.b | (~mask.b),

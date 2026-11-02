@@ -29,12 +29,35 @@ export class Ledger {
   constructor(file) { this.file = file; }
   add(run, event, fields = {}) {
     const line = JSON.stringify({ ts: new Date().toISOString(), run, event, ...fields }) + "\n";
-    fs.appendFileSync(this.file, line);
+    // A crash mid-append leaves a line with no trailing newline, and appending straight onto it
+    // fuses the next record into the torn one -- so the record after the crash is lost as well.
+    // One byte of separation is the whole fix; the reader skips the torn line it leaves behind.
+    let sep = "";
+    try {
+      const st = fs.statSync(this.file);
+      if (st.size > 0) {
+        const fd = fs.openSync(this.file, "r");
+        const b = Buffer.alloc(1);
+        fs.readSync(fd, b, 0, 1, st.size - 1);
+        fs.closeSync(fd);
+        if (b[0] !== 0x0a) sep = "\n";
+      }
+    } catch { /* no file yet: nothing to separate from */ }
+    fs.appendFileSync(this.file, sep + line);
     return line;
   }
+  // A torn last line is what a crash mid-append leaves behind, and the old reader threw on it
+  // and took every complete record before it down too: one bad append made the whole run's
+  // history unreadable. Skipping is the smallest honest recovery -- it repairs nothing and
+  // reorders nothing, it just keeps the records that are whole.
   read() {
     if (!fs.existsSync(this.file)) return [];
-    return fs.readFileSync(this.file, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l));
+    const out = [];
+    for (const line of fs.readFileSync(this.file, "utf8").split("\n")) {
+      if (!line) continue;
+      try { out.push(JSON.parse(line)); } catch { /* torn line: skip, keep the rest */ }
+    }
+    return out;
   }
 }
 

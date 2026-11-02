@@ -23,6 +23,10 @@ uint8_t sys_read_key(gs_rref)        gs_rref = { gs_rhdr *hdr; gs_stack *stk; }
 
 | Program | Status | pass | fail | First failure |
 |---|---|---|---|---|
+| `tests/t100_common` | **RUNS** | 55 | 0 | — |
+| `tests/t101_netaddr` | **RUNS** | 34 | 0 | — |
+| `tests/t102_keycompose` | **RUNS** | 38 | 0 | — |
+| `tests/t103_limits_rest` | **RUNS** | 11 | 0 | — |
 | `tests/t45_fmt` | **RUNS** | 24 | 0 | — |
 | `tests/t46_ring` | **RUNS** | 36 | 0 | — |
 | `tests/t47_cfg` | **RUNS** | 16 | 0 | — |
@@ -39,7 +43,7 @@ uint8_t sys_read_key(gs_rref)        gs_rref = { gs_rhdr *hdr; gs_stack *stk; }
 | `tests/t58_updater` | **RUNS** | 35 | 0 | — |
 | `tests/t59_agenthost` | **RUNS** | 48 | 0 | — |
 | `tests/t60_audit` | **RUNS** | 33 | 0 | — |
-| `tests/t61_bootorder` | **RUNS** | 24 | 0 | — |
+| `tests/t61_bootorder` | **RUNS** | 25 | 0 | — |
 | `tests/t62_bytes` | **RUNS** | 50 | 0 | — |
 | `tests/t63_str` | **RUNS** | 27 | 0 | — |
 | `tests/t64_hex` | **RUNS** | 25 | 0 | — |
@@ -47,7 +51,7 @@ uint8_t sys_read_key(gs_rref)        gs_rref = { gs_rhdr *hdr; gs_stack *stk; }
 | `tests/t66_shell` | **RUNS** | 57 | 0 | — |
 | `tests/t67_net` | **RUNS** | 89 | 0 | — |
 | `tests/t68_proto` | **RUNS** | 41 | 0 | — |
-| `tests/t69_callmatrix` | **RUNS** | 28 | 0 | — |
+| `tests/t69_callmatrix` | **RUNS** | 31 | 0 | — |
 | `tests/t70_status` | **RUNS** | 20 | 0 | — |
 | `tests/t71_rotate` | **RUNS** | 48 | 0 | — |
 | `tests/t72_hostile` | **RUNS** | 77 | 0 | — |
@@ -56,13 +60,35 @@ uint8_t sys_read_key(gs_rref)        gs_rref = { gs_rhdr *hdr; gs_stack *stk; }
 | `tests/t75_supervisor_load` | **RUNS** | 32 | 0 | — |
 | `tests/t76_demo_session` | **RUNS** | 25 | 0 | — |
 | `tests/t77_gaps` | **RUNS** | 73 | 0 | — |
+| `tests/t78_lib_limits` | **RUNS** | 27 | 0 | — |
+| `tests/t79_limit_drivers` | **RUNS** | 42 | 0 | — |
+| `tests/t80_limit_drivers2` | **RUNS** | 30 | 0 | — |
+| `tests/t81_logd_deep` | **RUNS** | 24 | 0 | — |
+| `tests/t82_fs_deep` | **RUNS** | 35 | 0 | — |
+| `tests/t83_sup_deep` | **RUNS** | 117 | 0 | — |
+| `tests/t84_session_deep` | **RUNS** | 106 | 0 | — |
+| `tests/t85_net_deep` | **RUNS** | 154 | 0 | — |
+| `tests/t86_settings` | **RUNS** | 67 | 0 | — |
+| `tests/t87_wallpaper` | **RUNS** | 56 | 0 | — |
+| `tests/t88_dock` | **RUNS** | 61 | 0 | — |
+| `tests/t89_dashboard` | **RUNS** | 50 | 0 | — |
+| `tests/t90_updater_client` | **RUNS** | 62 | 0 | — |
+| `tests/t91_board` | **RUNS** | 58 | 0 | — |
+| `tests/t92_sup_load` | **RUNS** | 27 | 0 | — |
+| `tests/t93_face_walkthrough` | **RUNS** | 63 | 0 | — |
+| `tests/t94_face_failures` | **RUNS** | 88 | 0 | — |
+| `tests/t95_notify` | **RUNS** | 77 | 0 | — |
+| `tests/t96_logfmt` | **RUNS** | 50 | 0 | — |
+| `tests/t97_agent_surface` | **RUNS** | 61 | 0 | — |
+| `tests/t98_delta` | **RUNS** | 29 | 0 | — |
+| `tests/t99_calendar` | **RUNS** | 36 | 0 | — |
 | `entry/bootlog` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/console` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/example` | TYPECHECKS (not run) | 0 | 0 | svc_entry takes a kernel BootInfo; no host boot block |
 | `entry/logd` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/time` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 
-**33 of 33 drivers run to completion, all green: 1253 assertions passed, 0 failed** (measured 2026-11-02, `run_native.sh` exit 0). 4 entry points **build** and are not run — they export `svc_entry`, and a host process has no supervisor to call it. 1 entry point **typechecks** and is not run: its `svc_entry` takes a kernel `BootInfo`, and a host has no boot block to hand it.
+**59 of 59 drivers run to completion, all green: 2715 assertions passed, 0 failed** (measured 2026-11-02, `run_native.sh` exit 0). 4 entry points **build** and are not run — they export `svc_entry`, and a host process has no supervisor to call it. 1 entry point **typechecks** and is not run: its `svc_entry` takes a kernel `BootInfo`, and a host has no boot block to hand it.
 
 ## What the first pass found, and what fixing it taught
 

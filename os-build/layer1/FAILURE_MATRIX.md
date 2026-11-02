@@ -16,13 +16,13 @@ which is the honest word for a promise. Every cell marked EXERCISED names the te
 | `callmatrix` | t69 (unknown caller/callee, denied edge) | t61 | — | — | — | — |
 | `supervisor` | t52 (bad name, bad transition) | t52 (`can_start` reason) | **t52** (never/on-fail/always, cap, backoff), t74 | — | **t74/rehearsal** | — |
 | `console` | t49 (line editing) | t61 | — | t49 (editor full) | **BOOT_REHEARSAL** (hangs on `read_key`) | — |
-| `input` | t56 (overlong key) | t61 | — | t49 (editor full) | — | — |
+| `input` | t56 (overlong key), t102 (NUL key, unmatched dead key, layout hole) | t61 | — | t49 (editor full) | — | — |
 | `logfmt` | t72 (truncated record) | t61 | — | — | — | — |
 | `logd` | t72, t74 (level, long record) | t61 | — | **t74** (ring full, counted) | — | t74 (tampered trail is audit's, see below) |
 | `watchdog` | t53 (zero handle, negative period/grace/allowance) | t61 | — | t53 (past allowance is dead) | — | — |
 | `audit` | t60 (bad offset, read past end), t72 | t61 | — | t60 (writer refuses, drops counted) | — | **t60 + t74** (flipped byte, truncation) |
-| `netcfg` | t57 (bad config file) | t61 | — | — | — | — |
-| `net` | t67 (bad header, bad length) | t61 | — | t67 (queue) | — | — |
+| `netcfg` | t57 (bad config file), t101 (every prefix 0-32 contiguous, /33 refused) | t61 | — | — | — | — |
+| `net` | t67 (bad header, bad length), t101 (route refusals, broadcast MAC) | t61 | — | t67 (queue) | — | — |
 | `display` | t56 (clipped draw) | t61 | — | — | — | — |
 | `session` | t77 (owner 0, missing user id, missing agent handle, three wrong tokens, empty expected token), t76 | t61 | — | t77 (table stops at `SES_CAP`, `E_NO_SPACE` past it) | — | — |
 | `dhcp` | t57 (bad option, bad length) | t61 | — | — | — | — |

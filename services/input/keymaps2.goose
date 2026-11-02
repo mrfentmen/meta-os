@@ -2,7 +2,7 @@
 //
 // B-L1-111 — More keymaps plus a dead-key compose table, on the same machinery as B-L1-26.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t102_keycompose (38 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT "THE SAME MACHINERY" MEANS HERE
 // ------------------------------------
@@ -48,7 +48,13 @@ let KM_ROWS_OK: i64 = 0;
 // with ok=false -- a keyboard that refuses to type because a config said "Dvorak2" is worse
 // than one that types US and records the fallback.
 fn km_char(layout: i64, sc: i64, shift: bool, caps: bool) -> u8, bool {
-    if layout == LAYOUT_US { return input_char(sc, shift), true; }
+    if layout == LAYOUT_US {
+        // Known only when there IS a character. The US table has no 0x56 (that key exists on
+        // the UK board), and claiming every scancode is known made the start-up self-check
+        // report a hole in the default layout -- a failure it could never recover from.
+        let c = input_char(sc, shift);
+        return c, c != 0;
+    }
     if layout == LAYOUT_DVORAK { return km_dvorak(sc, shift, caps), km_dvorak_known(sc); }
     if layout == LAYOUT_UK { return km_uk(sc, shift, caps), km_uk_known(sc); }
     return input_char(sc, shift), false;
@@ -178,6 +184,10 @@ fn compose_dead_for(layout: i64, sc: i64) -> i64 {
 // pair that has not resolved yet), `code` E_NOKEY when nothing is pending and nothing came
 // out -- the console's "nothing now" answer, so it never prints a NUL.
 fn compose_feed(cp: Compose&, ch: u8) -> u8, bool, i64 {
+    // A NUL is not a keypress. Without this the function emitted a NUL byte with emit=true
+    // whenever the input layer handed it an unmapped scancode -- the console would write a NUL
+    // for a key the user never pressed, which is the exact thing E_NOKEY exists to prevent.
+    if ch == 0 { return 0, false, E_NOKEY; }
     if cp.dead == DEAD_NONE {
         // Nothing pending: the character is the character. Dead keys are armed by the
         // caller (compose_arm) from the layout table, not guessed from the byte here.

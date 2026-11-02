@@ -1,85 +1,78 @@
-# The Lobster host binding (BF4-10) — NOT BUILT
+# The Lobster host binding (BF4-10) — one round trip proven, FFI still not built
 
-Task: "services callable from the Lobster agent host, one real round trip (agent
-calls a service, service answers), log committed."
+Status measured 2026-11-02: **PROVEN — a Lobster program calls a merged OS service and
+prints the service's own answer** (`lobster/roundtrip.log`). **NOT BUILT — the in-process
+C ABI / FFI path** (steps 1–3 of the old plan, below). Both statements are true at once and
+the rest of this file keeps them apart.
 
-**Status: NOT BUILT. There is no round trip, and no log of one, because there is
-nothing in the repository that a Lobster program could call.** This document is
-the evidence and the plan, in that order. It is not a claim of progress.
+## Correction to the earlier version of this document
 
-## What exists, measured 2026-11-02
+The previous text said "Lobster source in this repo: zero files". That was wrong. `lobster/`
+holds real programs (hello, shim, agent-call, bus-send/recv, budget, identity, memory,
+scheduled, failures/). They landed in `75e1feb`; the earlier measurement was taken from a
+stale listing and repeated as fact. The table below is from the tree as it stands.
+
+## What exists, measured
 
 | thing | state | command that shows it |
 |---|---|---|
-| `lobster` binary | **present**, `/opt/homebrew/bin/lobster` | `ls /opt/homebrew/bin/lobster` |
-| Lobster source in this repo | **zero files** | `find . -name '*.lobster' \| wc -l` → `0` |
-| Lobster build step for services | **none** | `grep -rl lobster os-build/ --include=*.sh --include=*.py` → only `mcp/mcp_client.py` (the MCP client, not a build step) |
-| Goose callable surface | **one symbol per service**: `export "svc_entry" fn service_main() -> i32`, no arguments, returns a code | `grep -n 'export' services/*/entry.goose` |
-| Anything a host could call with arguments | **nothing** | `grep -rn '^export fn' services/` → no matches |
+| `lobster` binary | present, `/opt/homebrew/bin/lobster` | `command -v lobster` |
+| Lobster programs in repo | **11** `.lobster` files under `lobster/` | `find lobster -name '*.lobster' \| wc -l` |
+| merged service `echo` | **runs** under the Goose toolchain | `goose run services/echo/echo.goose` |
+| MCP host `services/mcp-host/host.goose` | **runs**, answers JSON lines | `lobster agent-call.lobster` |
+| services exporting an argument-taking function | **none** — one `svc_entry` per service | `grep -rn '^export fn' services/` |
+| dispatcher / C ABI shim for a host | **none** | `ls os-build/layer1/sdk` → absent |
 
-So the gap is not wiring. The services expose a single entry point that takes
-nothing and returns an exit code. A host that "calls a service" needs a function
-that takes arguments, returns a value, and has a name the host can resolve. That
-function does not exist in this layer at any level.
+## Round trip A — Lobster → merged service (PROVEN)
 
-## Why it is not a one-line shim
+Program: `lobster/service-roundtrip.lobster`. Mechanism: the interpreter's own
+`launch_subprocess` builtin starts the Goose toolchain on `services/echo/echo.goose`, feeds
+the request on stdin, and captures stdout. The service's reply is printed, not composed.
 
-Three separate things are missing, and each one is honest work:
+Transcript, `lobster/roundtrip.log`, produced by
+`cd lobster && lobster service-roundtrip.lobster`:
 
-1. **A callable surface.** Each service would export typed functions
-   (`log_info(tag, msg) -> i32`, `fs_create_path(ino, name, kind) -> i64, i64`)
-   instead of only `svc_entry`. Goose's `export "name" fn` supports this
-   (spec#41), so the shape is available — it has simply never been used for an
-   arguments-and-return call, only for the entry symbol.
-2. **A dispatcher.** One C function per exported service function, or one
-   generated table: `int64_t svc_log_log_info(const char *tag, int64_t tag_len,
-   const char *msg, int64_t msg_len)`. This is mechanical, and `goose -o x.c`
-   output is what it links against.
-3. **A way for Lobster to reach it.** The installed `lobster` binary loads a fixed
-   set of native modules; it has no documented mechanism in this repo for calling
-   into an arbitrary C library at run time. The route that works is building the
-   Lobster host from source with the dispatcher registered as a builtin — which
-   means a C++ toolchain build of Lobster itself, outside this repository, before
-   a single line of the round trip exists.
-
-Item 3 is why this is NOT BUILT rather than half built: the cheapest honest
-version still needs a build of the host, and a fake round trip (a Lobster program
-that prints a canned service reply) is exactly the thing the boss's NO MOCKS rule
-forbids.
-
-## What the round trip will look like when it is built
-
-```lobster
-// os-build/layer1/sdk/host_roundtrip.lobster   (NOT WRITTEN)
-let code = svc_call("logd.log_info", "smoke", "round trip")
-print("service answered: " + code)
+```
+service exit: 0
+service said: > echo: hello from lobster
+> 
 ```
 
-with `svc_call` a builtin that resolves the name to a dispatcher entry, calls it,
-and maps the returned code to a Lobster value. The log to commit is the
-program's own output plus the service's `sys_write_serial` line, so the two sides
-of the round trip are visible in one transcript.
+The `> ` is the echo service's own prompt; `echo: hello from lobster` is its own output.
+The exit code is the service process's, not the program's guess. Reproduce the log exactly
+with the command above.
 
-## The four steps, in order of cost
+Why a subprocess round trip counts: the requirement was one real round trip — call, answer,
+log — and stdio JSON-lines is the dev-carrier contract the services already implement
+(`os-build/research/goose-ipc.md`). When the kernel channel lands it replaces the transport,
+not the contract, and neither side of this proof changes.
 
-1. Export two functions from one service (smallest: `logfmt.format` or
-   `logd.log_info`) and prove the C symbol exists:
-   `nm <objects> | grep log_info`. **Cheap, no Lobster involved.**
-2. Write the dispatcher and a C driver that calls it from a plain `main`, run it
-   under `run_native.sh`'s shim. This is a round trip *through the C ABI* and is
-   worth committing on its own — it is the half that does not need Lobster.
-3. Build Lobster from source with the dispatcher registered as a builtin. This is
-   the expensive step and it is a toolchain task, not a services task.
-4. Write `host_roundtrip.lobster`, run it, commit the transcript next to this
-   file. Only then does BF4-10 move from NOT BUILT to RUNS.
+## Round trip B — Lobster → MCP host (also proven)
 
-## What I did not do, and why
+`lobster/agent-call.lobster` sends `{"tool":"list"}` and `{"tool":"echo",...}` to
+`services/mcp-host/host.goose`; `lobster/host.log` holds the requests, and the program's
+transcript shows the answers (`{"ok":true,"tools":["echo"]}` and
+`{"ok":true,"result":"hello from lobster"}`). Same mechanism, different host program.
 
-I did not build Lobster from source tonight: it is a C++ build of a compiler that
-this lane has never touched, it is outside the repository, and starting it without
-a ruled ABI (Pax's 2026-11-02 decision) risks building the wrong calling
-convention into a host binary. Steps 1 and 2 are the ones that can be done
-before that ruling, and neither of them was on this round's list.
+## What is still NOT built — the in-process FFI path
 
-The report says BF4-10 NOT BUILT. Nothing in this document should be read as
-"wired".
+The four steps from the original plan are unchanged, and none of them is done:
+
+1. **A callable surface.** Each service would export typed functions with arguments and
+   returns (`log_info(tag, msg) -> i32`) instead of only `svc_entry`.
+2. **A dispatcher.** One C function per exported function, linked against the Goose
+   output.
+3. **A way for Lobster to reach it in-process.** The installed interpreter has no
+   documented mechanism for calling an arbitrary C library at run time; the route that
+   works is building Lobster from source with the dispatcher registered as a builtin.
+4. **`host_roundtrip.lobster`** calling that builtin, with a transcript.
+
+Until 1–3 exist, a Lobster program can call a service *process* (proven above) and cannot
+call a service *function*. That is the exact boundary of this commit.
+
+## Files
+
+- `lobster/service-roundtrip.lobster` — the F1 program (new)
+- `lobster/roundtrip.log` — committed transcript of the run above (new)
+- `lobster/agent-call.lobster`, `lobster/host.log` — the MCP-host proof (existing)
+- `services/echo/echo.goose` — the merged service that answers
