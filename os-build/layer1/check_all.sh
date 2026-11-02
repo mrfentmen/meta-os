@@ -65,9 +65,13 @@ fi
 
 # 4. Node suite. Known failures exist; the count is reported either way and only a
 #    regression in the pass count fails the script.
-NODE_OUT="$(node --test tests/ 2>&1 | tail -40)"
-NODE_PASS="$(echo "$NODE_OUT" | grep -oE '# pass [0-9]+' | grep -oE '[0-9]+' | tail -1)"
-NODE_FAIL="$(echo "$NODE_OUT" | grep -oE '# fail [0-9]+' | grep -oE '[0-9]+' | tail -1)"
+# `node --test tests/` treats the directory as a test file and fails; the
+# files must be named. Node 24's summary lines are "(i) pass 1877" / "(i) fail
+# 56", not the older "# pass" form, and an unknown summary is a script bug,
+# not a suite result — so the parse is checked against both spellings.
+NODE_OUT="$(node --test tests/*.test.mjs 2>&1 | tail -60)"
+NODE_PASS="$(echo "$NODE_OUT" | grep -oE '(#|ℹ|i) *pass [0-9]+' | grep -oE '[0-9]+' | tail -1)"
+NODE_FAIL="$(echo "$NODE_OUT" | grep -oE '(#|ℹ|i) *fail [0-9]+' | grep -oE '[0-9]+' | tail -1)"
 if [ -n "$NODE_PASS" ]; then
     report "node suite" "pass=${NODE_PASS:-?} fail=${NODE_FAIL:-0}"
 else
