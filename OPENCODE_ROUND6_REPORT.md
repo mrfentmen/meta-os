@@ -41,7 +41,9 @@ needed; none used).
   (`simulated` true, `auto`, picture with flag-frame + face-crop,
   SIMULATED destination, audit flag true), receipt
   `sim-9da0ad66d87add2e`. Two divisions now proven live.
-## R6-4 freeze support — OPEN (H+9 freeze 2026-11-02 05:12 EST = 10:12 UTC; 24-hour mark 2026-11-02 20:12 EST = 2026-11-03 01:12 UTC. Both in the future: gate the frozen tip + one line each when they land.)
+## R6-4 freeze support — H+9 DONE (24-hour mark pending 2026-11-02 20:12 EST)
+- H+9 freeze (2026-11-02 05:12 EST = 10:12 UTC): frozen tip `1022ee39` (last main commit before the mark, 05:09:34 EST). GATE GREEN 7/7 in detached worktree /tmp/freeze-gate (log /tmp/freeze-gate.log, boot /tmp/gate-boot-dfGG9x). No kernel/config edits; record-and-stop rule held.
+- 24-hour mark (2026-11-02 20:12 EST = 2026-11-03 01:12 UTC): in the future — gate + line when it lands.
 ## R6-5 submission package checks — DONE
 - No tracked build artifacts: `git ls-files | grep -E "target/|\.bin$|\.elf$|\.ppm$|\.img$"` → empty.
 - Secret sweep (git grep for sk-/ghp_/AKIA/private-key patterns): 5
@@ -61,6 +63,13 @@ needed; none used).
   GATE-boot-main4702e5c.txt, gate-run-main4702e5c.txt).
 - `1df6311` (Buffy finish-tonight slice 2): GATE GREEN 7/7 via
   the R6-1 pristine run above (same logs double as the line).
+- `21f9be68` (tip 06:21 EST, invisible-chars audit): GATE GREEN 7/7
+  in detached worktree /tmp/merge-tip (log /tmp/merge-tip-gate.log,
+  boot /tmp/gate-boot-0eivmw). Window 936a690..21f9be68 covered by
+  the frozen-tip gate (1022ee39, above), the R6-2 merge gate
+  (28e99285), and this tip gate — intermediate commits are JUDGE
+  dupes/merges, no kernel/tree changes between them that a separate
+  boot would distinguish; recorded as one line per the standing rule.
 - No RED this window. Standing rule for the rest of the window:
   each new main tip gets one gate run + one line here.
 ## Blockers for Pax
