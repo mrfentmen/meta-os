@@ -121,3 +121,30 @@ imports. That is still the answer to "who can reach the audit log" — `supervis
 This file stays as the record of the order-of-work gap inside this build-out: the permission table
 was written before the services it governs, and twelve edges were missing by the time the last
 wave landed. The green light is the end of the story, not the whole story.
+
+## The four programs the auditor used to call unknown (2026-11-02)
+
+After round 8 gave `hello`, `heartbeat`, `echo` and `mcp-host` regression tests, the audit reported
+them as `UNKNOWN (in source only)`: four directories with `.goose` files and no matrix id.
+
+The first fix would have been to append four ids with empty rows. That is wrong here, and the
+reason is checkable rather than stylistic:
+
+| program | exports `svc_entry` | in `BOOT_ORDER.md` | cross-service imports |
+|---|---|---|---|
+| `hello` | no | no | none |
+| `heartbeat` | no | no | none |
+| `echo` | no | no | none |
+| `mcp-host` | no | no | none |
+
+None of the four is booted; they are run directly (and, for `echo`, as the child process the
+Lobster host calls). They make no cross-service calls, so a row for each would be empty — and
+`t69_callmatrix` asserts every row has at least one callee. An id added to satisfy that assertion
+would be a permission in the table that no source makes and no boot needs: the exact drift this
+file exists to remove, pointed the other way.
+
+So the auditor's scope is now stated precisely: **a directory under `services/` is a service when
+it can be booted** — it exports `svc_entry` or it is named in the boot table. The four programs are
+listed by name in `NOT_SERVICES` (never a pattern), alongside `example` and `callmatrix`. The
+standard did not move: no row was removed, no caller was exempted from an edge it actually makes,
+and `--all` still reports the dormant list.
