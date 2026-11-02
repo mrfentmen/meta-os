@@ -307,8 +307,8 @@ pub fn task_count() -> usize {
 }
 
 /// Console task: the K3 echo loop grown into the shell (OS-070 +
-/// O-205..O-211, Round 4 R-2/R-3/R-4/R-5/R-6). Line-buffered commands
-/// with echo; `status`, `help`, `uptime`, `mem` and `ps` are real,
+/// O-205..O-211, Round 4 R-2/R-3/R-4/R-5/R-6, R-9 attract). Line-buffered
+/// commands with echo; `status`, `help`, `uptime`, `mem` and `ps` are real,
 /// everything else is refused with help re-listed. Backspace (0x0E)
 /// erases the last
 /// buffered char and the screen cell; shift (0x2A/0x36 press,
@@ -318,13 +318,43 @@ pub fn task_count() -> usize {
 /// spec records that no prompt exists in the built kernel and a
 /// future prompt needs a Pax ruling, so this task prints none
 /// rather than inventing one (R-2 prompt item held for Pax).
+/// R-9 attract (spec os-build/ATTRACT_SCREEN.md): when no key
+/// has been pressed for BOOT_IDLE_TICKS after boot, and again
+/// after IDLE_TICKS idle at the shell, the shell screen is
+/// snapshotted and replaced by the spinning logo frames, one
+/// frame every FRAME_TICKS. Any key press restores the snapshot
+/// and the key is then processed normally, not swallowed. The
+/// drawing runs in this loop between key polls: no new task,
+/// no blocking, no scheduler changes.
 fn console_task() {
     let mut line: [u8; 80] = [0; 80];
     let mut len = 0usize;
     let mut truncated = false;
     let mut shift = false;
+    // R-9 attract state. `last_key_tick` starts at task start
+    // (~boot: this task spawns in kernel_main before any typing),
+    // so the first attract entry is ~2 s after boot if nobody
+    // types; after the first exit the threshold is ~30 s idle.
+    let mut last_key_tick = interrupts::ticks();
+    let mut idle_ticks = BOOT_IDLE_TICKS;
+    let mut attract = false;
+    let mut frame_idx = 0usize;
+    let mut next_frame_tick = 0u64;
+    let mut saved: Option<crate::vga::ScreenSnapshot> = None;
     loop {
         while let Some(scancode) = interrupts::keyboard_read() {
+            // Press codes only (high bit clear): a release is not
+            // a keypress, so it neither exits attract nor resets
+            // the idle clock. The match below still handles every
+            // scancode, presses and releases alike.
+            if scancode & 0x80 == 0 {
+                if attract {
+                    attract_exit(&mut saved);
+                    attract = false;
+                    idle_ticks = IDLE_TICKS;
+                }
+                last_key_tick = interrupts::ticks();
+            }
             match scancode {
                 // Shift press/release: state only, no echo, no char.
                 0x2A | 0x36 => shift = true,
@@ -357,7 +387,88 @@ fn console_task() {
                 }
             }
         }
+        // R-9 attract, between key polls. While active, advance
+        // one frame every FRAME_TICKS; a full redraw each advance
+        // also repairs any stray print from another task sharing
+        // this console. While inactive, enter once the idle clock
+        // runs out, starting the spin from frame 0.
+        if attract {
+            let now = interrupts::ticks();
+            if now >= next_frame_tick {
+                frame_idx = (frame_idx + 1) % crate::logo_frames::FRAMES.len();
+                attract_draw(frame_idx);
+                next_frame_tick = now.saturating_add(FRAME_TICKS);
+            }
+        } else if interrupts::ticks().saturating_sub(last_key_tick) >= idle_ticks {
+            frame_idx = 0;
+            attract_enter(&mut saved);
+            attract_draw(frame_idx);
+            attract = true;
+            next_frame_tick = interrupts::ticks().saturating_add(FRAME_TICKS);
+        }
         yield_task();
+    }
+}
+
+/// Attract screen geometry (R-9): the 46x17 frame block plus one
+/// `META OS 0.1` label row, centred on the 80x25 screen. Integer
+/// division floors the top margin (3, with 4 rows below).
+const BOOT_IDLE_TICKS: u64 = 200; // ~2 s at 100 Hz, after boot
+const IDLE_TICKS: u64 = 3000; // ~30 s idle at the shell
+const FRAME_TICKS: u64 = 6; // one frame per ~6 ticks
+const ATTRACT_TOP: usize =
+    (crate::vga::VGA_HEIGHT - crate::logo_frames::FRAME_H - 1) / 2;
+const ATTRACT_LEFT: usize =
+    (crate::vga::VGA_WIDTH - crate::logo_frames::FRAME_W) / 2;
+
+/// Draw one attract frame centred, VGA-only (R-9): the serial log
+/// stays a clean shell log, because `print!` would mirror every
+/// frame line to serial too. Frame rows start at ATTRACT_TOP,
+/// each line offset by ATTRACT_LEFT; `META OS 0.1` sits on the
+/// row under the loop. Lines past FRAME_H are ignored and short
+/// lines leave the cleared background, so the block never scrolls:
+/// it is 18 rows from row 3, inside 80x25.
+fn attract_draw(frame_idx: usize) {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(crate::CONSOLE)).as_mut() {
+            console.clear();
+            let frame =
+                crate::logo_frames::FRAMES[frame_idx % crate::logo_frames::FRAMES.len()];
+            for (i, line) in frame.split('\n').enumerate() {
+                if i >= crate::logo_frames::FRAME_H {
+                    break;
+                }
+                console.set_pos(ATTRACT_TOP + i, ATTRACT_LEFT);
+                console.write_str(line);
+            }
+            console.set_pos(ATTRACT_TOP + crate::logo_frames::FRAME_H, ATTRACT_LEFT);
+            console.write_str("META OS 0.1");
+        }
+    }
+}
+
+/// Enter attract (R-9): snapshot the shell screen first, so the
+/// exit restores it exactly — no re-print, no lost output.
+fn attract_enter(saved: &mut Option<crate::vga::ScreenSnapshot>) {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(crate::CONSOLE)).as_mut() {
+            *saved = Some(console.snapshot());
+        }
+    }
+}
+
+/// Exit attract (R-9): restore the snapshot taken on entry. A
+/// missing snapshot cannot happen (entry always saves first);
+/// the fallback is a plain clear rather than a corrupt screen.
+fn attract_exit(saved: &mut Option<crate::vga::ScreenSnapshot>) {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(crate::CONSOLE)).as_mut() {
+            if let Some(snap) = saved.take() {
+                console.restore(snap);
+            } else {
+                console.clear();
+            }
+        }
     }
 }
 
