@@ -1,0 +1,43 @@
+{
+  "task": "R12-022 + R12-025",
+  "at": "2026-11-02T15:05:16.146Z",
+  "ok": true,
+  "killedProcessGroup": 1443,
+  "firstRun": "worker-mvze4riw",
+  "result": {
+    "code": 0,
+    "signal": null,
+    "run": "worker-mvze4rsc"
+  },
+  "killedRunResult": null,
+  "artifacts": {
+    "lines": [
+      "stage-1",
+      "continuation"
+    ],
+    "stageOne": 1,
+    "continuation": 1
+  },
+  "recovery": {
+    "orphanedRecords": 1,
+    "batonPassRecords": 1,
+    "heartbeatBeforeRestart": {
+      "ageMs": 300,
+      "fresh": false
+    },
+    "alarm": {
+      "state": "dead",
+      "line": "ALARM watchman heartbeat lost: last beat 0.3s ago (limit 0.1s, last 2026-11-02T15:05:15.610Z)"
+    },
+    "restartToResultMs": 83
+  },
+  "daemons": {
+    "firstOutputTail": [
+      "watchman-drill: pid 1443"
+    ],
+    "secondOutputTail": [
+      "watchman-drill: pid 1445"
+    ]
+  },
+  "note": "SIGKILL to the process group; the continuation is a separate run composed from the baton. No duplicate artifact line. Host processes only."
+}
