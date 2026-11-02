@@ -42,3 +42,10 @@ Next: Section 2 — Research Intelligence (11–20), in order.
 - 19 tests: test_section2a 26 OK (unpinned dropped, contested marked) + test_section2b 6 OK (budget stop, status counts, target, example honesty)
 - Full suite: 68 tests OK (`discover -s tests/science-lab`); hortus 9 OK; registry loads
 - UNIMPLEMENTED carried: remote adapters (openalex/archive-org/etc), model judgement calls, live paper extraction (run-time per SLICE1 §4)
+
+## Section 3 — Scientific Reasoning (21–30) — LANDED 2026-11-02
+- reasoning.py: new_hypothesis (L0, disproof required), generate_hypotheses (3-5, falsifierless rejected+logged), decompose, check_math (deterministic), preregister (hashed to ledger BEFORE results, late refused), critique (required record)
+- reasoning_chain.py: build_chain hash-linked brief->hyps->decomp->prereg->critique, verify_chain_links, gate_to_computational (missing critique/prereg blocks; step-8 never invented; prereg-before-result enforced via ledger)
+- Example records/examples/reasoning_example.json (Delaney RH1-3, prereg R2>=0.5 filed, critique null -> gate blocked honestly, no paper figure hardcoded)
+- Tests test_section3.py 4 OK; full suite 72 OK; hortus 9 OK
+- UNIMPLEMENTED: model judgement calls (synthesize_with_model), live math-symbolic engine beyond deterministic checks
