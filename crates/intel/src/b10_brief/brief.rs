@@ -1033,6 +1033,7 @@ pub fn onjoin_template_lines(snapshot: &OnjoinSnapshot) -> Vec<String> {
             })
             .collect(),
         alerts: snapshot.alerts.clone(),
+        source_window: None,
     };
     let mut lines: Vec<String> = Vec::new();
     lines.push("What this crew is building".to_string());
@@ -8089,6 +8090,7 @@ mod template_brief_tests {
                 messages: vec![SnapMessage {
                     nick: "pax".into(),
                     text: "DECISION: freeze the demo".into(),
+                    ts: None,
                 }],
                 jobs: vec![SnapJob {
                     id: "1".into(),
@@ -8100,6 +8102,7 @@ mod template_brief_tests {
                     claimed_at: None,
                 }],
                 alerts: vec![],
+                source_window: None,
             },
             window: WindowInput::default(),
             ..Default::default()

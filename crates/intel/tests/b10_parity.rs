@@ -114,7 +114,7 @@ fn dj(status: &str) -> push::JobView {
 // these tests pin the record half only.
 
 fn msg(nick: &str, text: &str) -> sections::SnapMessage {
-    sections::SnapMessage { nick: nick.into(), text: text.into() }
+    sections::SnapMessage { nick: nick.into(), text: text.into(), ts: None }
 }
 
 fn job(id: &str, title: &str, status: &str, claim: &str, note: &str) -> sections::SnapJob {
@@ -139,6 +139,7 @@ fn job(id: &str, title: &str, status: &str, claim: &str, note: &str) -> sections
             job("9", "watchdog loop", "done", "", "finished"),
         ],
         alerts: vec![],
+        source_window: None,
     };
     let s = sections::derive_sections(&snap);
     assert_eq!(s.decisions, [
@@ -161,6 +162,7 @@ fn job(id: &str, title: &str, status: &str, claim: &str, note: &str) -> sections
             summary: "watchdog loop silent for 20 minutes".into(),
             explanation: "".into(),
         }],
+        source_window: None,
     };
     let s = sections::derive_sections(&snap);
     assert_eq!(s.decisions, ["decision: restart the watchdog loop".to_string()]);
@@ -175,6 +177,7 @@ fn job(id: &str, title: &str, status: &str, claim: &str, note: &str) -> sections
         messages: vec![msg("pax", "morning, checking in")],
         jobs: vec![],
         alerts: vec![],
+        source_window: None,
     };
     let s = sections::derive_sections(&snap);
     assert!(s.decisions.is_empty());
@@ -193,6 +196,7 @@ fn job(id: &str, title: &str, status: &str, claim: &str, note: &str) -> sections
             summary: "".into(),
             explanation: "first line\nsecond line".into(),
         }],
+        source_window: None,
     };
     let s = sections::derive_sections(&snap);
     assert_eq!(s.watch_items, ["ALERT-X: first line".to_string()]);

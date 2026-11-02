@@ -11,11 +11,19 @@
 //! explanation). String-form bus messages are split into nick/text
 //! by the caller, mirroring `_message_parts`.
 
+use super::window::{SourceWindow, WindowHours};
+
 /// One snapshot message (nick + text), as `extract_decisions` reads it.
+/// `ts` is the message's Unix timestamp when it carries a numeric
+/// one; `None` is an untimed message, which the window cap can never
+/// age out (Python keeps messages without a numeric `ts` the same way).
+/// A non-integer `ts` has no form in this crate's i64-second
+/// convention yet and arrives as `None` — kept, never dropped.
 #[derive(Debug, Clone, PartialEq)]
 pub struct SnapMessage {
     pub nick: String,
     pub text: String,
+    pub ts: Option<i64>,
 }
 
 /// One snapshot job, as `extract_owners` / `extract_blocked` read it.
@@ -41,11 +49,16 @@ pub struct SnapAlert {
 }
 
 /// A snapshot: messages, jobs, and alerts in dump order.
+/// `source_window` is the cap record a previous cap wrote (BRF-023);
+/// `None` is a fresh, never-capped snapshot. The cap reads it only
+/// for its prior `messages_dropped` count, so re-capping never
+/// resets the drop count.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Snapshot {
     pub messages: Vec<SnapMessage>,
     pub jobs: Vec<SnapJob>,
     pub alerts: Vec<SnapAlert>,
+    pub source_window: Option<SourceWindow>,
 }
 
 /// One marker decision: kind is `done`, `blocked`, or `decision`
@@ -247,5 +260,200 @@ pub fn derive_sections(snapshot: &Snapshot) -> Sections {
             .iter()
             .map(|w| format!("{}: {}", w.id, w.summary))
             .collect(),
+    }
+}
+
+/// BRF-023: cap a snapshot's source window, as `generate_brief`
+/// (and `compose_brief` inside it) applies it.
+///
+/// Default cap in Python: last 500 messages or last 24 hours,
+/// whichever is smaller; callers pass both explicitly, and `None`
+/// on either side means no cap on that side. Messages stay in
+/// snapshot order; when a cap cuts, the oldest messages go first.
+/// A timed message at or after `now - max_hours * 3600` is kept;
+/// an untimed message (`ts: None`) is never aged out, only counted
+/// down by the message cap. Jobs and alerts pass through unchanged
+/// — the cap is a message window cap, not a job cap. The returned
+/// snapshot carries the new `source_window` dict naming the cap
+/// values actually applied (`max_messages`, `max_hours`,
+/// `messages_kept`, `messages_dropped`).
+///
+/// BRF-024: capping an already-capped snapshot must not reset the
+/// drop count — a prior dict window's `messages_dropped` is added
+/// to this cap's drops, so a second cap inside `compose_brief`
+/// cannot report 0 dropped while the record reports the true count.
+/// A text-form prior window carries no drop count and adds nothing.
+///
+/// Ported oddity: Python slices `messages[-max_messages:]`, and
+/// `-0` is `0`, so a zero message cap counts every message as
+/// dropped yet keeps them all. That is preserved here, not fixed:
+/// a zero cap reports `messages_dropped` = all and keeps the list.
+pub fn cap_snapshot_window(
+    snapshot: &Snapshot,
+    max_messages: Option<i64>,
+    max_hours: Option<f64>,
+    now: Option<i64>,
+) -> Snapshot {
+    let current = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let mut messages = snapshot.messages.clone();
+    let mut dropped: i64 = 0;
+    if let Some(hours) = max_hours {
+        let cutoff = current as f64 - hours * 3600.0;
+        let kept: Vec<SnapMessage> = messages
+            .into_iter()
+            .filter(|m| match m.ts {
+                None => true,
+                Some(ts) => (ts as f64) >= cutoff,
+            })
+            .collect();
+        dropped += (snapshot.messages.len() as i64) - (kept.len() as i64);
+        messages = kept;
+    }
+    if let Some(m) = max_messages {
+        let len = messages.len() as i64;
+        if len > m {
+            dropped += len - m;
+            messages = if m >= 0 {
+                if m == 0 {
+                    messages
+                } else {
+                    messages.split_off((len - m) as usize)
+                }
+            } else {
+                let skip = m.saturating_neg().min(len) as usize;
+                messages.split_off(skip)
+            };
+        }
+    }
+    if let Some(SourceWindow::Dict {
+        messages_dropped: Some(prior),
+        ..
+    }) = &snapshot.source_window
+    {
+        dropped += *prior;
+    }
+    let window_hours = max_hours.map(|h| {
+        if h.is_finite() && h.fract() == 0.0 {
+            WindowHours::Int(h as i64)
+        } else {
+            WindowHours::Float(h)
+        }
+    });
+    let messages_kept = messages.len() as i64;
+    Snapshot {
+        messages,
+        jobs: snapshot.jobs.clone(),
+        alerts: snapshot.alerts.clone(),
+        source_window: Some(SourceWindow::Dict {
+            max_messages,
+            max_hours: window_hours,
+            messages_kept: Some(messages_kept),
+            messages_dropped: Some(dropped),
+        }),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn msg(nick: &str, text: &str, ts: Option<i64>) -> SnapMessage {
+        SnapMessage {
+            nick: nick.into(),
+            text: text.into(),
+            ts,
+        }
+    }
+
+    fn snap(messages: Vec<SnapMessage>) -> Snapshot {
+        Snapshot {
+            messages,
+            jobs: vec![],
+            alerts: vec![],
+            source_window: None,
+        }
+    }
+
+    fn window_of(s: &Snapshot) -> (Option<i64>, Option<WindowHours>, Option<i64>, Option<i64>) {
+        match &s.source_window {
+            Some(SourceWindow::Dict {
+                max_messages,
+                max_hours,
+                messages_kept,
+                messages_dropped,
+            }) => (
+                *max_messages,
+                max_hours.clone(),
+                *messages_kept,
+                *messages_dropped,
+            ),
+            _ => (None, None, None, None),
+        }
+    }
+
+    #[test]
+    fn cap_time_drops_old_keeps_untimed_in_order() {
+        let s = snap(vec![
+            msg("a", "old", Some(100)),
+            msg("b", "no time", None),
+            msg("c", "fresh", Some(900)),
+        ]);
+        let capped = cap_snapshot_window(&s, None, Some(1.0), Some(4000));
+        let texts: Vec<&str> = capped.messages.iter().map(|m| m.text.as_str()).collect();
+        assert_eq!(texts, ["no time", "fresh"]);
+        assert_eq!(
+            window_of(&capped),
+            (None, Some(WindowHours::Int(1)), Some(2), Some(1))
+        );
+    }
+
+    #[test]
+    fn cap_count_keeps_last_n_and_reports_drops() {
+        let s = snap(vec![
+            msg("a", "one", Some(1)),
+            msg("b", "two", Some(2)),
+            msg("c", "three", Some(3)),
+        ]);
+        let capped = cap_snapshot_window(&s, Some(2), None, Some(10));
+        let texts: Vec<&str> = capped.messages.iter().map(|m| m.text.as_str()).collect();
+        assert_eq!(texts, ["two", "three"]);
+        assert_eq!(window_of(&capped), (Some(2), None, Some(2), Some(1)));
+    }
+
+    #[test]
+    fn cap_recaps_add_prior_drops_instead_of_resetting() {
+        let mut s = snap(vec![msg("a", "one", Some(1)), msg("b", "two", Some(2))]);
+        s.source_window = Some(SourceWindow::Dict {
+            max_messages: Some(500),
+            max_hours: Some(WindowHours::Int(24)),
+            messages_kept: Some(2),
+            messages_dropped: Some(5),
+        });
+        let capped = cap_snapshot_window(&s, Some(1), None, Some(10));
+        assert_eq!(capped.messages.len(), 1);
+        assert_eq!(capped.messages[0].text, "two");
+        assert_eq!(window_of(&capped), (Some(1), None, Some(1), Some(6)));
+    }
+
+    #[test]
+    fn cap_zero_message_cap_counts_drops_but_keeps_all() {
+        let s = snap(vec![msg("a", "one", Some(1)), msg("b", "two", Some(2))]);
+        let capped = cap_snapshot_window(&s, Some(0), None, Some(10));
+        assert_eq!(capped.messages.len(), 2);
+        assert_eq!(window_of(&capped), (Some(0), None, Some(2), Some(2)));
+    }
+
+    #[test]
+    fn cap_no_caps_passes_messages_through_with_window_record() {
+        let s = snap(vec![msg("a", "one", Some(1))]);
+        let capped = cap_snapshot_window(&s, None, None, Some(10));
+        assert_eq!(capped.messages.len(), 1);
+        assert_eq!(window_of(&capped), (None, None, Some(1), Some(0)));
     }
 }
