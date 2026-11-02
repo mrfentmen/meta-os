@@ -1,0 +1,27 @@
+R13-251 spawn and clean exit                       OBSERVED  {"code":0,"events":["spawn","exit"]}
+R13-252 spawn and nonzero exit                     OBSERVED  {"code":3,"events":["spawn","exit"]}
+R13-253 spawn and hang                             OBSERVED  {"alive_at_300ms":true,"stopped_by":"drill-end","events":["spawn","stop-request","exit"]}
+R13-254 restart on death (allowed)                 GAP       {"restart_logic_in_runtime":false,"why":"runtime.mjs has no restart policy; a second spawn is a second run, not a restar
+R13-255 restart refused (fence)                    GAP       {"restart_logic_in_runtime":false,"why":"no restart path exists, so there is no fence to refuse one"}
+R13-256 two agents one job                         OBSERVED  {"distinct_runs":true,"distinct_dirs":true,"codes":[0,0],"finding":"neither spawn is fenced: the runtime does not know a
+R13-257 registry entry with a draft command        OBSERVED  {"draft_entries":23,"spawn_exit":0,"finding":"spawnAgent does not check the draft flag: a draft lane is spawned like any
+R13-258 registry entry with a missing command      REFUSED   {"refusal":"registry: x missing command"}
+R13-259 job with no budget                         OBSERVED  {"code":0,"budget_timer":false}
+R13-260 job with a zero budget                     REFUSED   {"refusal":"registry: z bad maxWallMs"}
+R13-261 job past its budget                        OBSERVED  {"receipt_reason":"budget-wall-clock","cap_ms":400,"events":["spawn","budget-receipt","stop-request","exit"]}
+R13-262 ledger write on every transition           OBSERVED  {"events":["spawn","exit"]}
+R13-263 lessons.mjs graft on a finished job        OBSERVED  {"brief_has_lessons":true,"lessons":0}
+R13-264 queue.mjs ordering under burst             OBSERVED  {"exports":["PACKAGE_REFUSALS","PackageError","acceptPackage","validatePackage"],"valid_input":{"returned":"{\"ok\":fals
+R13-265 safe-write on a contested file             OBSERVED  {"exports":["DiskFullError","appendLoud","writeFileLoud"],"bytes":2050,"lines":2,"whole_a":true,"whole_b":true,"error":n
+R13-266 bridge failure shape                       OBSERVED  {"module_present":true,"exports":["BST_FAILED","BST_RUNNING","BST_STOPPED","createBridge","loadBoot"]}
+R13-267 judge.mjs on a malformed verdict           OBSERVED  {"exports":["JudgeError","RULING_AGREE","RULING_INCONCLUSIVE","rule"],"bad_verdict":{"returned":"{\"ruling\":\"inconclus
+R13-268 clock.mjs drift note                       OBSERVED  {"exports":["ClockJumpError","budgetRemainingMs","elapsedMs"],"clock_moved_backwards":{"returned":{"ms":0,"jumped":true,
+R13-269 room1.mjs reconnect                        GAP       {"module_present":true,"why":"room1.mjs posts to the live bus; a reconnect drill needs the bus running and was not run h
+R13-270 hosted.mjs cycle counts                    OBSERVED  {"module_present":true,"exports":["hostedLoops","isStopped","spawnHosted","stopDrill","stopMarker"]}
+R13-271 gym.mjs drill scoring                      NOT_EXERCISED{"tasks_defined":3,"exports":["GYM_LEDGER_FILE","REGISTRY_FILE","TASKS","recordGymResult","runGymDrill"],"why":"runGymDr
+R13-272 boot.json shape check                      OBSERVED  {"agents":28,"malformed":0,"loaded":true}
+R13-273 runtime state after a kill                 OBSERVED  {"stopped":"drill-kill","events":["spawn","stop-request","exit"]}
+R13-274 runtime state after a STOP                 OBSERVED  {"stopped":"stop-file","events":["spawn","stop-request","exit"]}
+R13-275 runtime recovery after a crash             OBSERVED  {"records_before_torn_line":1,"events":["spawn"],"torn_line_still_present":true,"appended_after_separator":3}
+
+tasks=25 OBSERVED=19 GAP=3 REFUSED=2 NOT_EXERCISED=1

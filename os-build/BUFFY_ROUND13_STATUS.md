@@ -15,15 +15,16 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | H — surface/unicode | **COMPLETE** | 25 / 25; 16 scanned (1.9 M chars), 9 missing artifacts, **0 findings** | `os-build/round13/aegis/SECTION_H.md` |
 | I — Aegis OSINT | **COMPLETE** | 25 / 25; 15 passes run, 9 not implementable, 1 unavailable; **2 findings** (NXDOMAIN, soft 404) | `os-build/round13/aegis/SECTION_I.md` |
 | J — Aegis OPSEC | **COMPLETE** | 25 / 25; 20 decided, 3 not inspectable, 2 n/a; **4 failures, 6 findings** | `os-build/round13/aegis/SECTION_J.md` |
-| K–O — agent runtime | NOT STARTED | 0 / 125 | — |
+| K — agent runtime: supervisor | **COMPLETE** | 25 / 25; 19 observed, 2 refused, 1 not exercised, 3 gaps; **5 findings** | `os-build/round13/agents/SECTION_K.md` |
+| L–O — agent runtime | NOT STARTED | 0 / 100 | — |
 | P — Hands-Free | NOT STARTED | 0 / 25 | — |
 | Q–R — Nuntius | NOT STARTED | 0 / 50 | — |
 | S — userspace | NOT STARTED | 0 / 25 | — |
 | T — federation + closeout | NOT STARTED | 0 / 25 | — |
 
-**Sections A–J:** 235 / 235 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
+**Sections A–K:** 260 / 260 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
 (E), 9 missing artifacts (H), 9 unimplemented OSINT angles (I), 1 review item (G), 4 real
-observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J).
+observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J), 5 runtime findings (K).
 
 ## Method
 
@@ -40,6 +41,7 @@ be regenerated:
 | `os-build/layer1/surface_passes.mjs` | surface + confusable passes over named artifacts |
 | `os-build/layer1/osint_passes.py` | OSINT angles parsed from the task list, counts only |
 | `os-build/layer1/opsec_checks.py` | 25 OPSEC checks, mechanical where a command can decide |
+| `os-build/layer1/agent_drills.mjs` | 25 runtime drills with real spawns, budgets, STOP files and ledgers |
 
 ## Limits carried forward
 
