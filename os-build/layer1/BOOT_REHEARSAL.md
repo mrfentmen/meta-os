@@ -10,6 +10,11 @@ Regenerate with:
 ./os-build/layer1/boot_rehearsal.sh 5    # 5s wall clock per service
 ```
 
+**The one deviation from BF5-01.** The task said "inside the Lobster host". This ran in a
+shell script against the host runtime instead, because there is no Lobster host here to run it
+in: `find . -name '*.lobster' | wc -l` is `0`, and `LOBSTER_BINDING.md` measures that. The
+rehearsal therefore proves the boot order and the entry points, and says nothing about Lobster.
+
 **What this is.** 18 services have no entry point at all, so they cannot be started
 by anything; the rest were started here, one host process each, in the supervisor's
 order. That is a rehearsal of the *order and the entry points*, in a host runtime, and
