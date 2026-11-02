@@ -307,35 +307,55 @@ pub fn task_count() -> usize {
 }
 
 /// Console task: the K3 echo loop grown into the shell (OS-070 +
-/// O-205..O-211). Line-buffered commands with echo; `status` and
-/// `help` are real, everything else is refused with help re-listed.
+/// O-205..O-211, Round 4 R-2/R-3/R-4/R-5/R-6). Line-buffered commands
+/// with echo; `status`, `help`, `uptime`, `mem` and `ps` are real,
+/// everything else is refused with help re-listed. Backspace (0x0E)
+/// erases the last
+/// buffered char and the screen cell; shift (0x2A/0x36 press,
+/// 0xAA/0xB6 release) shifts letters/digits. No periodic uptime
+/// print: `uptime` runs only as a command (R-4), so a quiet run
+/// stays quiet. No prompt string is printed here: Hana's HN4-1
+/// spec records that no prompt exists in the built kernel and a
+/// future prompt needs a Pax ruling, so this task prints none
+/// rather than inventing one (R-2 prompt item held for Pax).
 fn console_task() {
-    let mut last_sec = 0u64;
     let mut line: [u8; 80] = [0; 80];
     let mut len = 0usize;
     let mut truncated = false;
+    let mut shift = false;
     loop {
         while let Some(scancode) = interrupts::keyboard_read() {
-            if let Some(ch) = decode_scancode(scancode) {
-                if ch == '\n' {
-                    print!("\n");
-                    run_command(&line[..len], truncated);
-                    len = 0;
-                    truncated = false;
-                } else if len < line.len() {
-                    line[len] = ch as u8;
-                    len += 1;
-                    print!("{}", ch);
-                } else if !truncated {
-                    truncated = true;
+            match scancode {
+                // Shift press/release: state only, no echo, no char.
+                0x2A | 0x36 => shift = true,
+                0xAA | 0xB6 => shift = false,
+                // Backspace: drop the buffered char, erase on screen.
+                // The "\x08 \x08" sequence erases on a serial
+                // terminal; the VGA console handles 0x08 itself
+                // (vga.rs), so the screen cell blanks too.
+                0x0E => {
+                    if len > 0 {
+                        len -= 1;
+                        print!("\x08 \x08");
+                    }
+                }
+                _ => {
+                    if let Some(ch) = decode_scancode(scancode, shift) {
+                        if ch == '\n' {
+                            print!("\n");
+                            run_command(&line[..len], truncated);
+                            len = 0;
+                            truncated = false;
+                        } else if len < line.len() {
+                            line[len] = ch as u8;
+                            len += 1;
+                            print!("{}", ch);
+                        } else if !truncated {
+                            truncated = true;
+                        }
+                    }
                 }
             }
-        }
-        let ticks = interrupts::ticks();
-        let sec = ticks / 100;
-        if sec != last_sec {
-            last_sec = sec;
-            println!("uptime {}s ticks {}", sec, ticks);
         }
         yield_task();
     }
@@ -361,12 +381,51 @@ fn run_command(line: &[u8], truncated: bool) {
         );
         unsafe_console_color(ColorSpec(Color::LightGray, Color::Black));
     } else if line == b"help" {
-        println!("commands: status help");
+        println!("commands: status help uptime mem ps");
+    } else if line == b"uptime" {
+        // R-4: uptime only as a command, same line shape the
+        // periodic print used to emit (no new string invented).
+        let ticks = interrupts::ticks();
+        println!("uptime {}s ticks {}", ticks / 100, ticks);
+    } else if line == b"mem" {
+        // R-5: numbers memory.rs already computes — free/total
+        // frames from the allocator, free/total heap. No new
+        // accounting invented; the getters live in mem.rs.
+        let frames_free = crate::mem::frames_free();
+        let frames_total = crate::mem::frames_total();
+        let heap_free_kb = crate::mem::heap_free_bytes() / 1024;
+        let heap_total_kb = crate::mem::heap_total_bytes() / 1024;
+        println!(
+            "mem frames_free {} frames_total {} heap_free {}K heap_total {}K",
+            frames_free, frames_total, heap_free_kb, heap_total_kb
+        );
+    } else if line == b"ps" {
+        // R-6: one line per spawned task slot (IDS in spawn order,
+        // the scheduler's own table for state/counters). ticks_used
+        // is the current-run quantum usage tasks.rs keeps — there
+        // is no lifetime CPU counter in tasks.rs, so ps reports
+        // ticks_used and does not claim a cumulative total.
+        unsafe {
+            if let Some(sched) = SCHED.as_ref() {
+                for i in 0..NTABLE {
+                    let id = IDS[i];
+                    if let Some(task) = sched.task(id) {
+                        println!(
+                            "ps id {} state {:?} ticks_used {} prio {}",
+                            task.id.as_u64(),
+                            task.state,
+                            task.ticks_used,
+                            task.priority
+                        );
+                    }
+                }
+            }
+        }
     } else if line.is_empty() {
         // Empty line: nothing, not an error.
     } else {
         println!("unknown command");
-        println!("commands: status help");
+        println!("commands: status help uptime mem ps");
     }
 }
 
@@ -380,9 +439,16 @@ fn unsafe_console_color(spec: crate::vga::ColorSpec) {
     }
 }
 
-/// PS/Vec set-1 scancode to ASCII (moved from main.rs for the console
-/// task). Shift not handled — stated limit (OS-036 carries over).
-fn decode_scancode(scancode: u8) -> Option<char> {
+/// PS/2 set-1 scancode to ASCII (moved from main.rs for the console
+/// task). Release codes (high bit set) decode to nothing, so a key
+/// never echoes twice. Shift state comes from the caller, which
+/// tracks 0x2A/0x36 press and 0xAA/0xB6 release (R-2): shifted
+/// letters go uppercase, shifted digits go to their symbols;
+/// Enter and space are shift-invariant. Backspace (0x0E) and the
+/// shift keys themselves are handled by the caller, never here.
+/// Punctuation keys outside this table still decode to nothing —
+/// stated limit, unchanged by this commit.
+fn decode_scancode(scancode: u8, shift: bool) -> Option<char> {
     if scancode & 0x80 != 0 {
         return None;
     }
@@ -427,7 +493,23 @@ fn decode_scancode(scancode: u8) -> Option<char> {
         0x39 => ' ',
         _ => return None,
     };
-    Some(ch)
+    if !shift {
+        return Some(ch);
+    }
+    Some(match ch {
+        'a'..='z' => ch.to_ascii_uppercase(),
+        '1' => '!',
+        '2' => '@',
+        '3' => '#',
+        '4' => '$',
+        '5' => '%',
+        '6' => '^',
+        '7' => '&',
+        '8' => '*',
+        '9' => '(',
+        '0' => ')',
+        _ => ch,
+    })
 }
 
 /// Spawn A, B, C, the console task and the three userspace programs,
