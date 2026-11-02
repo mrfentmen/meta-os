@@ -70,8 +70,10 @@ fi
 # 56", not the older "# pass" form, and an unknown summary is a script bug,
 # not a suite result — so the parse is checked against both spellings.
 NODE_OUT="$(node --test tests/*.test.mjs 2>&1 | tail -60)"
-NODE_PASS="$(echo "$NODE_OUT" | grep -oE '(#|ℹ|i) *pass [0-9]+' | grep -oE '[0-9]+' | tail -1)"
-NODE_FAIL="$(echo "$NODE_OUT" | grep -oE '(#|ℹ|i) *fail [0-9]+' | grep -oE '[0-9]+' | tail -1)"
+# Plain ASCII match: BSD grep is not UTF-8 aware, so an "(i)" or "#" prefix in
+# the pattern silently matches nothing. The words and counts are ASCII either way.
+NODE_PASS="$(echo "$NODE_OUT" | grep -oE 'pass [0-9]+' | grep -oE '[0-9]+' | tail -1)"
+NODE_FAIL="$(echo "$NODE_OUT" | grep -oE 'fail [0-9]+' | grep -oE '[0-9]+' | tail -1)"
 if [ -n "$NODE_PASS" ]; then
     report "node suite" "pass=${NODE_PASS:-?} fail=${NODE_FAIL:-0}"
 else
