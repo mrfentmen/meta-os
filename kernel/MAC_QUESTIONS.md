@@ -432,6 +432,68 @@ Pax's F1 ruling (2026-11-01) settles the number question.
   ticks; and `read_key` is F1 number 5 in `user.rs` (RW4-1
   work), not number 3 in `syscalls.rs`.
 
+## Update 2026-11-01 ~21:05 EST — RW4-1 complete (R-8): console + read_key API points
+
+R-1..R-7 are WRITTEN on `rowan/kernel-r1` (R-1 merged to main
+1655d56 with the F1 table and the RW4-3/RW4-5 docs; R-2/R-3/R-4
+and R-5/R-6 gate-1 GREEN per Milo bus notes; R-7 awaiting Milo
+gate-1). All of it is WRITTEN, not compiled, on this VM (no
+cargo/rustc/qemu here) — Mac gate-2 still owed, nothing below is
+boot-proven. Exact points from `kernel/src` on this branch:
+
+- Banner (R-1): `META OS 0.1 (K6)` at `kernel/src/main.rs:118`;
+  the alive line `(K1)` is untouched. Milestone = last proven.
+- Prompt (R-2): NONE, closed by Pax room-1 ruling (bus idx 514):
+  NO-PROMPT STANDS. Hana HN4-1 verified no prompt exists in the
+  frozen shell spec, and the old H2 `metaos> ` string was
+  spec-only, never emitted, and is SUPERSEDED. The Mac build
+  must not expect a prompt string; a prompt only arrives if Del
+  orders one.
+- Console input (`sched.rs` `console_task`, K3 ring buffer via
+  `interrupts::keyboard_read`): backspace 0x0E erases the last
+  buffered char and the screen cell; shift 0x2A/0x36 press and
+  0xAA/0xB6 release, state only, no echo; `decode_scancode
+  (scancode, shift)` shifts letters/digits; line buffer 80
+  bytes, overlong lines print `line too long, truncated to 80`;
+  an empty line prints nothing. No periodic uptime print: a
+  quiet run stays quiet (R-4).
+- Commands, exact output shapes on this branch:
+  - `status`: `tasks {} ticks {} heap_free {}K`, then
+    `STATUS tasks={} ticks={} heap_free_kb={}`
+  - `help`: `commands: status help uptime mem ps`
+  - `uptime`: `uptime {}s ticks {}` (seconds = ticks/100)
+  - `mem`: `mem frames_free {} frames_total {} heap_free {}K
+    heap_total {}K` (getters in `mem.rs`)
+  - `ps`: one line per spawned task slot,
+    `ps id {} state {:?} ticks_used {} prio {}`;
+    `ticks_used` is current-run quantum usage — no lifetime CPU
+    counter exists in `tasks.rs`, so none is claimed
+  - unknown: `unknown command`, then the help listing re-listed
+- Syscall 5 `read_key` (`user.rs`, vector 128 handler, number =
+  saved RAX, args RDI/RSI): returns the next raw PS/2 set-1
+  scancode byte (0..=255, release codes included, NOT decoded
+  ASCII — decoding stays in the console task), or u64::MAX when
+  the ring buffer is empty (non-blocking; a caller that wants
+  to wait polls, or sleeps/yields between polls). It shares the
+  console's K3 ring buffer: a byte read here is consumed and is
+  not echoed by the console task. Unknown numbers print
+  `user bad syscall {} refused` and return u64::MAX.
+- Q12 remainder update: key semantics — ANSWERED in source
+  (read_key + console decode rules above). Console instance —
+  the `sched.rs` console task is the only console, and it shares
+  the K3 ring buffer with read_key. Tick source — the uptime
+  command divides `interrupts::ticks()` by 100 for seconds; the
+  hardware tick rate itself is still a Mac-boot-log question.
+  Still open, unchanged: user-copy rules, binary loading (track
+  the `user.rs` wiring, not the `syscalls.rs` dispatch).
+- Known divergence, NOT resolved here: this branch's help
+  listing (`status help uptime mem ps`) is longer than Hana's
+  frozen HN4-1 listing (`status help`), which predates
+  uptime/mem/ps. Pax accepted `status help uptime` at idx 514
+  and the mem/ps listing was flagged at idx 516 awaiting his
+  ruling. RW4-2 reconciles the listing; do not treat either
+  listing as final until Pax rules.
+
 ## What this file is not
 
 - Not a design doc: it asks, it does not decide.
