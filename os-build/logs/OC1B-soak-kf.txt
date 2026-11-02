@@ -1,0 +1,22 @@
+# OC1B-163 interactive KF soak — NOT RUN (blocked)
+
+Reason: the task requires the MERGED graphics tree — "the main tip after
+Pax merges the KF work". No such merge has landed: the tree under test is
+opencode/500-s7 @ 94010c76 (kernel-only; `ls os-build/captures/` shows no
+KF desktop captures on this branch), and no OC1B-kf17-soak.txt or merged
+graphics image exists anywhere in os-build/logs. Rowan's KF spikes exist
+only as spikes (origin/rowan/kernel-face-spike,
+origin/rowan/kernel-face-spike-2, origin/rowan/kernel-kf01-spike) —
+unmerged, ungated. Soaking a non-graphics tree "interactively" would not
+satisfy the task's tree identity, and OC1B-168 forbids soaking the wrong
+tree. The 30-minute input-load shape (six 5-minute interaction entries)
+is therefore unexecuted.
+Source check commands (run 2026-11-02 ~11:20 EST on /tmp/oc500-s7):
+  `ls os-build/logs/ | grep -i kf-` (no KF gate artifacts on this tree)
+  `ls os-build/captures/` (no KF desktop captures)
+Duration: NOT RUN — 0 minutes. No image booted, no serial exists.
+Required contents missing and why: duration (no run), six timed
+interaction entries (no merged graphics tree to drive), panic count
+(no run).
+Next step: re-run this task on the post-merge graphics tip once Pax merges
+the KF work and §4 gates it.

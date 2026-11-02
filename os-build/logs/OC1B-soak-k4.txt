@@ -1,0 +1,19 @@
+# OC1B-162 K4 soak — NOT RUN (blocked)
+
+Reason: the K4 tree image is gated by §6 (OC1B-126..150), which has not
+completed on any branch in this repo state. Rowan's design/build branches
+exist (origin/rowan/kernel-k4-design, origin/rowan/kernel-k4-build), but
+no §6 gate-pack artifact exists on this tree:
+`ls os-build/logs/ | grep k4-gate` is empty, and no OC1B-k4-gatepack.md was
+found. The talker/listener pair the soak must loop does not exist in this
+tree's userspace (`ls os-build/userspace/user/src/bin/` =
+badcall, crasher, hello, quitter, readkey, sleeper, writer — no
+talker/listener). Per the task ("after §6 gates it, with the talker/
+listener pair looping"), there is nothing gateable to soak.
+Source check commands (run 2026-11-02 ~11:20 EST on /tmp/oc500-s7):
+  `ls os-build/userspace/user/src/bin/` (no talker/listener)
+  `ls os-build/logs/ | grep -i -E "k4-gate..."` (no gate artifact)
+Duration: NOT RUN — 0 minutes. No image booted, no serial exists.
+Required contents missing and why: duration (no run), message count
+(no talker/listener pair), panic count (no run).
+Next step: re-run this task once OC1B-126..150 land the gated K4 image.
