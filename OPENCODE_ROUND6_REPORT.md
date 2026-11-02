@@ -77,6 +77,12 @@ needed; none used).
 - `e5ce311b` (merge batch): GATE GREEN 7/7 in detached worktree
   /tmp/merge-tip3 (log /tmp/merge-tip3-gate.log, boot
   /tmp/gate-boot-CENl03).
+- `54ee4353` (ABI/fault-manifest checkers): GATE GREEN 7/7 via the
+  submission-rehearsal run (log /tmp/reh-gate.log, boot
+  /tmp/gate-boot-90N7Fk); full rehearsal in
+  os-build/logs/SUBMISSION_REHEARSAL.md (cargo E0271 x2 RED,
+  node 1947/55, python all green, R6-2 files missing-on-main
+  gap named).
 - No RED this window. Standing rule for the rest of the window:
   each new main tip gets one gate run + one line here.
 ## Blockers for Pax
