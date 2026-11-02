@@ -692,6 +692,7 @@ pub fn priority_order_lines(
 /// ask about it, if one was stated. Python reads the entry's `ask`
 /// only when it is a non-empty string; anything else reads as no
 /// nick, never a guessed one.
+#[derive(Debug, Clone, PartialEq)]
 pub struct BlockedContact {
     pub job_id: String,
     pub ask: String,
