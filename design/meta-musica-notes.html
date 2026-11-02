@@ -177,12 +177,16 @@ function init() {
   const grid = new THREE.GridHelper(40, 40, 0x123a3a, 0x0b1622);
   grid.position.y = -1.2;
   scene.add(grid);
-  // Staff: five long dark lines into the distance (dark room, one accent).
+  // Staff: five lines on ONE flat backdrop plane BEHIND both note rows
+  // (boss fix 2026-11-02: the old lines were 30-deep planks centred at
+  // z=-8, spanning z -23..+7, so they sliced through the note heads at
+  // z=+0.9 and z=-0.9 and buried most notes. A staff is a backdrop:
+  // thin in depth, behind the notes, notes stand in front of it.)
   const lineMat = new THREE.MeshStandardMaterial({ color: 0x2a3644, roughness: 0.8 });
   for (let L = 0; L < 5; L++) {
     const y = L * SPACING + 2.2;
-    const line = new THREE.Mesh(new THREE.BoxGeometry(LINE_X1 - LINE_X0, 0.03, 30), lineMat);
-    line.position.set(0, y, -8);
+    const line = new THREE.Mesh(new THREE.BoxGeometry(LINE_X1 - LINE_X0, 0.035, 0.06), lineMat);
+    line.position.set(0, y, -2.4);
     scene.add(line);
   }
   // Playhead: a slim glowing curtain around the note rows, travelling in x.
@@ -247,7 +251,7 @@ function init() {
       dist * Math.sin(phi) * Math.sin(theta),
       dist * Math.cos(phi),
       dist * Math.sin(phi) * Math.cos(theta));
-    camera.lookAt(0, 2.8, -8);
+    camera.lookAt(0, 2.8, 0);
     renderer.render(scene, camera);
   }
   resize();
