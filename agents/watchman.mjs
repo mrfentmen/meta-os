@@ -8,6 +8,7 @@ import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
 import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
+import { readBaton, continuationOrders } from "./baton.mjs";
 
 export function createWatchman({ registryFile, root, jobsDir }) {
   const agents = loadRegistry(registryFile);
@@ -30,6 +31,15 @@ export function createWatchman({ registryFile, root, jobsDir }) {
       const agent = agents.find((a) => a.name === job.agent);
       claimed.add(id); save();
       if (!agent) { ledger.add("watchman", "job-unmatched", { id, agent: job.agent }); continue; }
+      if (job.continuesFrom) {
+        const baton = readBaton(path.join(root, "runs", job.continuesFrom));
+        if (baton) {
+          job = { ...job, orders: continuationOrders(job.continuesFrom, baton, job.orders || ""), baton };
+          ledger.add("watchman", "baton-pass", { id, from: job.continuesFrom });
+        } else {
+          ledger.add("watchman", "baton-missing", { id, from: job.continuesFrom });
+        }
+      }
       const h = spawnAgent(agent, { root, job });
       runs.set(id, h);
       ledger.add("watchman", "bell", { id, agent: job.agent, run: h.runId });
