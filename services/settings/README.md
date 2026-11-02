@@ -30,6 +30,11 @@ Not a general key/value store. The key set is closed: `st_import` refuses an
 unknown id rather than adding it, because a store that accepts any key at
 runtime cannot validate anything — it does not know what a key means.
 
+The file path is not a second validator for every rule: `st_import` checks
+range, type and printable bytes, but it accepts a hostname containing a space,
+which `st_put_text` refuses. The gap is recorded in
+`os-build/layer1/r11/settings.md`.
+
 ## Surface
 
 | Function | Answers |
@@ -41,9 +46,16 @@ runtime cannot validate anything — it does not know what a key means.
 | `st_kind`, `st_name`, `st_in_range`, `st_count` | the table itself, readable |
 
 Capacity is `SET_MAX` (24) entries and `SET_TEXT_MAX` bytes of text per entry;
-both are static, and `st_import` returns `E_NO_SPACE` rather than growing.
+both are static, and `st_import` returns `E_NO_SPACE` rather than growing. The
+key set is closed at six ids, so the 24 slots cannot be filled by any input:
+`LIMITS.md` records `SET_MAX` as unreachable on the host.
 
 ## Where the proof is
 
 `services/tests/t86_settings.goose` — the driver that exercises the write-time
 refusals, the dirty count and the atomic-import path.
+
+`services/tests/t130_settings_r11.goose` — the range gate as a pure function,
+the import parser's key bounds (0, `SK_MAX_ID + 1`, negative), a control byte in
+imported text, atomicity across an int line and a text line, and the
+space-in-hostname finding.

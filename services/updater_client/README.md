@@ -48,4 +48,6 @@ the authority for "what is installed" is the image, not a service's memory.
 
 ## Where the proof is
 
-`services/tests/t90_updater_client.goose`.
+`services/tests/t90_updater_client.goose` (the happy path and the check order) and
+`services/tests/t139_updater_client_r11.goose` (the seeded truth, independent counters, and the
+apply/retry path).

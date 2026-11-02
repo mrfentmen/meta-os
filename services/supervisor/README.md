@@ -1,11 +1,10 @@
 # supervisor — the service table and lifecycle state machine
 
-Status: **WRITTEN** (every symbol checked against `goose__lookup_symbol` /
-`goose__search_docs`; no Goose toolchain on this Mac, so nothing is COMPILED —
-see `services/BUILD.md`). Re-checked 2026-11-01 after the pull: `struct` with
-fixed-size fields and `Entry { field: value }` literals are `reference#32` and
-`tutorial#9`; `class` is **not** a Goose keyword (`goose__list_keywords`), which
-is why this file uses `struct`.
+Status: **RUNS** — driven by `tests/t52_supervisor`, `t75_supervisor_load`,
+`t83_sup_deep` and `tests/t135_supervisor_r11`. Every symbol in this file was
+checked against the Goose docs (`struct` with fixed-size fields is `reference#32`,
+`Entry { field: value }` is `tutorial#9`, and `class` is not a keyword); the run
+rows are what make it RUNS rather than merely written.
 
 Layer 4. The supervisor is the first service, not the last: nothing is running
 before it, and every other service's life is a row in its table.
@@ -42,9 +41,14 @@ struct ServiceEntry {
     restarts: i64,
     last_beat_ms: i64,    // uptime when the last heartbeat arrived
     enabled: bool,
+    policy: i64,          // RP_NEVER / RP_ON_FAIL / RP_ALWAYS
+    max_restarts: i64,    // 0 = no count limit
+    base_ms: i64,         // first backoff step
+    max_ms: i64,          // backoff ceiling, and the "this run was healthy" line
+    gen: i64,             // bumped whenever a stopped slot is released
 }
 
-var table: ServiceEntry[..32];
+var table: ServiceEntry[..32] = [ServiceEntry { .. }; 32];
 ```
 
 `NAME_MAX` is 32 here, not 16: earlier prose in this lane said 16, and that was
@@ -70,17 +74,17 @@ STOPPED ──▶ STARTING ──▶ RUNNING ──▶ STOPPING ──▶ STOPPE
                                               └──▶ STOPPED ◀─┘
 ```
 
-The complete legal set, as `transition_legal` implements it — twelve pairs, no
+The complete legal set, as `transition_legal` implements it — fourteen pairs, no
 more:
 
 | From | To |
 |---|---|
-| STOPPED | STARTING |
+| STOPPED | STARTING, FAILED |
 | STARTING | RUNNING, FAILED, STOPPING |
 | RUNNING | STOPPING, FAILED |
 | STOPPING | STOPPED, FAILED |
 | FAILED | RESTARTING, STOPPED |
-| RESTARTING | STARTING, STOPPED |
+| RESTARTING | STARTING, STOPPED, FAILED |
 
 Two exclusions carry the design:
 
@@ -197,7 +201,8 @@ supervisor would block the table for every other service.
   `services/common/fmt/README.md`.
 - Bounds-check behaviour (abort, not exception — `reference#82`) is why every
   array write here is preceded by an explicit capacity check.
-- Not compiled, not run. No toolchain on this Mac.
+- Driven on a host by the four drivers named above; nothing here spawns a
+  process, because no spawn call exists.
 
 ## Name registry (B-L1-22)
 

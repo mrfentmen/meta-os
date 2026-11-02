@@ -1,7 +1,8 @@
 # net — the packet interface (and, from B-L1-95, the protocols on it)
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
-service 13.
+Status: **RUNS** — `tests/t67_net`, `tests/t85_net_deep` and `tests/t125_net_r11` run in
+the native host corpus (`run_native.sh`), and the whole corpus typechecks under
+`os-build/layer1/check_services.sh`. Layer 4, service 13.
 
 ## Why an interface rather than a driver
 
@@ -38,4 +39,10 @@ matching — is real code that runs against any backend implementing those two s
 `pkt_for_us` accepts unicast-to-us and broadcast, and rejects another host's traffic
 delivered by a shared medium — normal on a hub, never something this layer answers.
 
-Not compiled, not run.
+## What running does not prove
+
+The two externs still do not exist. The host shim refuses every frame, so every refusal
+path up to the syscall is driven and a *successful* transmit and receive are unproven on
+this machine — the send that reaches the shim is asserted to fail with `E_IO` and to move
+the drop counter once (`tests/t125_net_r11`). Loopback delivery is the one path that
+completes without a driver, and it is asserted end to end there.

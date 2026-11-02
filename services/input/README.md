@@ -1,6 +1,8 @@
 # input — scancodes to key events
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
+Status: **RUNS** as a host process: `tests/t56_input_display` (49 checks) and
+`tests/t102_keycompose` (38 checks), both exit 0. Round 11 adds
+`tests/t121_input_r11` (repeat floors, out-of-range refusals, caps+shift). Layer 4,
 service 10.
 
 ## The split
@@ -46,4 +48,12 @@ looking at.
 | `input_repeat(now_ms)` | (KeyEvent, got_event) — the held key's next repeat |
 | `input_passthrough(byte)` | bytes that are already characters (serial, scripted input) |
 
-Not compiled, not run.
+The two repeat numbers are **floors**, not defaults: `input_init` clamps a delay
+below 250 ms to 250 and a rate below 16 ms to 16, which `t121_input_r11` proves
+from both sides. The same driver drives the out-of-range refusals and the
+caps+shift XOR.
+
+`Decoder.dropped` is declared and initialised but **nothing reads or increments
+it**: `input_decode` takes no output buffer, so there is no refused-event path
+today. The field describes a mechanism the service does not have; it is left in
+place rather than removed in a documentation round.

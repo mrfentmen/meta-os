@@ -1,7 +1,9 @@
 # dns — the resolver client
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
-service 16. Pure: bytes in, bytes out, no cache and no timers.
+Status: **RUNS** — `tests/t57_dhcp_dns` passes 45 checks and `tests/t79_limit_drivers`
+drives the three name limits in the native host corpus; Round 11 adds
+`tests/t116_dns_r11` for both sides of the jump cap. Layer 4, service 16. Pure: bytes
+in, bytes out, no cache and no timers.
 
 ## Scope
 
@@ -35,6 +37,8 @@ led — a caller that continued at the target would re-read records already cons
 | label length > 63 | the length byte's top two bits are the pointer marker; 64..191 are not lengths |
 | A record `rdlength != 4` | a different record pretending to be A, or malformed |
 | `ANCOUNT < 1` | name does not resolve |
+| A record `rdlength != 4` | a different record pretending to be A, or malformed |
+| non-zero rcode, NXDOMAIN excepted | NXDOMAIN is reported as an answer; anything else is a resolver failure |
 
 An empty label (leading or doubled dot) is refused at build time rather than emitted: a
 zero-length label **is** the root terminator, so one in the middle makes the query
@@ -47,4 +51,4 @@ started at offset 12 and **silently dropped the first twelve characters of every
 hostname**. The reset to 0 is now commented where it sits, because it looks redundant
 and is not.
 
-Not compiled, not run.
+Compiled and run as a host driver; not booted on the kernel.

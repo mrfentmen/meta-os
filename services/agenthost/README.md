@@ -1,6 +1,6 @@
 # `agenthost` — Layer 4, service 20
 
-**Status: WRITTEN** (not COMPILED). Source exists; nothing in it has been compiled or run.
+**Status: RUNS** — reached by `tests/t59_agenthost` (48 checks), `tests/t97_agent_surface` (quota, channel, lifecycle, the down line) and `tests/t104_agenthost_r11` (capacity, all refusals, handle reuse), all exit 0 in the native host corpus on 2026-11-02. Not booted on the kernel.
 
 ## What it does
 
@@ -11,7 +11,7 @@ The host-side table of agent processes: name, lifecycle state, pid and capabilit
 - **Entry:** none yet. No file here exports `svc_entry`; the units are functions a `service_main` will call once the spawn signature is fixed (Q-B-L1-4, `os-build/layer1/SERVICE_CONTRACT.md` §2). That is a deviation, stated in `Deviations` below.
 - **Kernel surface:** none. This unit reaches the kernel only through other services.
 - **Needs from Layers 1–3:** see `os-build/layer1/BOUNDARIES.md`; the binding milestone is K6 for anything that calls a syscall, and nothing here needs K2/K3 directly unless the kernel surface line above says so.
-- **Offers to Layers 5–6:** the functions listed below in the source. Nothing may rely on them until the layer is COMPILED.
+- **Offers to Layers 5–6:** the functions listed below in the source. They run as host processes today; nothing may treat them as kernel services until the layer is booted.
 
 ## Dependencies
 
@@ -24,6 +24,10 @@ The host-side table of agent processes: name, lifecycle state, pid and capabilit
 - `E_INVAL` for a bad name or an undefined capability bit, `E_BUSY` for a duplicate name, `E_NO_SPACE` when the table is full, `E_STATE` for an illegal lifecycle move, `E_NOTFOUND` for an unknown handle. Refuses to start without the supervisor (no table owner).
 - Missing dependency at start-up: refuses to start (non-zero exit), rather than running with a hole it cannot report.
 - Every failure path returns a code from `common/err` or a trailing `false`; none of them is silent.
+
+## Limits
+
+`AH_CAP` (24 agents) is the fixed table: the 25th spawn returns `E_NO_SPACE`, driven by `t97` and `t104`. `CH_SLOTS` (16 queued messages) is driven by `t79_limit_drivers`. The generated limit table with the test behind each row is `os-build/layer1/LIMITS.md`.
 
 ## Verification
 
@@ -41,9 +45,9 @@ Checked against the Goose docs served by the language MCP (goose-mcp@1.1.0 `look
 
 ## Not verified
 
-- Compilation. There is no Goose toolchain on this machine.
-- Execution. No assertion in this unit has run; the test programs in `services/tests/` are where it will be exercised.
-- Any kernel behaviour assumed: the syscall shapes in `common/sys/sys.goose` are this layer's request, not a published kernel interface.
+- Boot. The table has never been instantiated by the kernel; every run is a host process.
+- Restart continuity. The table is process memory: a supervisor restart loses every handle, grant and queued message. Named in `os-build/layer1/r11/agenthost.md` §3.
+- More than one CPU. The table has no lock; it assumes the scheduler runs it on one core.
 
 ## Deviations
 

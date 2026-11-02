@@ -1,13 +1,14 @@
 # updater — manifest, verification, apply plan, rollback record
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
-service 18.
+Status: **RUNS** — the host corpus runs `tests/t58_updater`, and `tests/t79_limit_drivers`,
+`t80_limit_drivers2`, `t103_limits_rest` and `tests/t138_updater_r11` drive its limits and
+refusals. Layer 4, service 18. Nothing boots it on the kernel yet.
 
 | Task | Section | State |
 |---|---|---|
-| B-L1-34 manifest | `upd_parse_manifest` | WRITTEN |
-| B-L1-35 verify + apply plan | `upd_verify_file`, `upd_plan` | WRITTEN |
-| B-L1-36 rollback record | `upd_record_*` | WRITTEN |
+| B-L1-34 manifest | `upd_parse_manifest` | RUNS (`t58`, `t138`) |
+| B-L1-35 verify + apply plan | `upd_verify_file`, `upd_plan` | RUNS (`t58`, `t138`) |
+| B-L1-36 rollback record | `upd_record_*` | RUNS (`t58`, `t138`); not yet written to storage |
 
 ## Why a line format and not JSON
 
@@ -44,4 +45,7 @@ lines it understood installs half an update and reports success.
 Digests are parsed from hex into **bytes** at parse time. Comparing hex text is how the
 first implementation of every updater gets prefixes wrong.
 
-Not compiled, not run.
+Run on the host corpus; not booted on the kernel. The rollback record encodes and decodes but
+nothing writes it to a slot yet, so the A/B history is process memory (named in
+`os-build/layer1/r11/updater.md` §3). No signature verifier exists: `sig_verify_manifest`
+returns `E_UNSUPPORTED` and `sig_status_name()` says `DESIGNED`.

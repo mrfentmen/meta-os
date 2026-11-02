@@ -1,7 +1,8 @@
 # devices — the device table
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
-service 8.
+Status: **RUNS** — reached by `tests/t77_gaps` (73 checks, exit 0) and typechecked with the
+corpus; `tests/t112_devices_r11.goose` drives the table's capacity and the hot-plug queue.
+Layer 4, service 8.
 
 ## Why a table at all
 
@@ -50,9 +51,39 @@ papered over.
   Three numbers, not a formatted string: `common/fmt` owns formatting, and a
   service that formats its own diagnostics disagrees with its neighbours.
 
+## Hot-plug
+
+`hotplug.goose` is the change-notification half. `hp_raise` is called after the
+table has already been updated, so a subscriber that re-reads the table on
+notification always sees the new truth. Subscribers register a mask (add, remove,
+fault, ready) and **drain** events with `hp_next`; there are no callbacks and no
+IPC needed.
+
+The queue holds 8 events. When it is full the **oldest** is dropped and counted,
+because a storm is almost always a flapping device and the newest events describe
+its current state. Per-subscriber `delivered` and `dropped` are kept so a health
+line can name the service that is behind, and `delivered + dropped` never exceeds
+`raised`.
+
+## Limits, and the test that reaches each
+
+| Limit | Value | Reached by |
+|---|---|---|
+| `DEV_MAX` | 16 devices | `t112`: one device per kind fills the table; the 17th returns `E_NOROOM` |
+| `HP_QUEUE` | 8 events | `t112`: the ninth raise drops the oldest, `dropped=1` |
+| `HP_SUBS` | 8 subscribers | `t112`: the ninth subscription returns `-1` |
+
+`HP_QUEUE` and `HP_SUBS` are not yet in the generated `os-build/layer1/LIMITS.md`; the tests
+exist and the inventory should catch up.
+
 ## Deliberately absent
 
-No driver code (Layer 3), no hot-plug (B-L1-113, needs IPC), no PCI/ACPI walk
-(that is Layer 3 enumeration, and duplicated enumeration disagrees with itself).
+No driver code (Layer 3), and no PCI/ACPI walk — that is Layer 3 enumeration, and duplicated
+enumeration disagrees with itself.
 
-Not compiled, not run.
+## Not verified
+
+- **Restart continuity.** The table is rebuilt from `BootInfo`; post-boot state changes
+  (faults, removals, recoveries) are lost on restart. Named in
+  `os-build/layer1/r11/devices.md`.
+- **A real keyboard.** Nothing publishes one, so the absent row is the whole test.

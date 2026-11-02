@@ -1,7 +1,8 @@
 # display — virtual consoles over one framebuffer
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
-service 11.
+Status: **RUNS** — `tests/t56_input_display` (49 checks, exit 0), plus
+`tests/t115_display_r11` for the console limits and the text helpers; the text module is
+also driven by `t79_limit_drivers` and `t103_limits_rest`. Layer 4, service 11.
 
 ## The problem it solves
 
@@ -26,7 +27,7 @@ honours it). Recorded as requirement A12 rather than faked.
 | Name | Value | Why |
 |---|---|---|
 | `VCON_MAX` | 4 | console, boot log, agent view, one spare |
-| `LINE_MAX` | 128 | characters before wrapping; wider than a real terminal so a wrapped boot line stays one line |
+| `DISPLAY_LINE_MAX` | 128 | characters before wrapping; wider than a real terminal so a wrapped boot line stays one line |
 | `SCROLL_MAX` | 256 | history lines kept per console |
 | screen | `u8[..2048]` per console | `rows × cols`, bytes only |
 | history | `u8[..32768]` per console | byte ring; `hist_start`/`hist_used`/`hist_lines` |
@@ -48,4 +49,5 @@ colours (the K2 console has none, and attributes nothing renders are a promise t
 service cannot keep), no scrollback paging (needs the same positioning as the
 repaint).
 
-Not compiled, not run.
+Compiled to C and run as a host process. Not booted on the kernel: the console syscall it
+paints through is the host shim's, and a paint on K1 writes nothing.

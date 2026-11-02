@@ -1,6 +1,7 @@
 # dhcp — the client state machine
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
+Status: **RUNS** — `tests/t57_dhcp_dns` (45 checks, exit 0), plus
+`tests/t114_dhcp_r11` for every parser refusal and the lease clock. Layer 4,
 service 15. Speaks the packet interface (B-L1-29); takes time as a parameter.
 
 ## Why time is a parameter
@@ -49,4 +50,5 @@ and a strict client fails on most real networks.
 - **Broadcast flag never set.** Servers that insist on it will not answer a client that
   cannot receive unicast before it has an address. A compatibility question, noted.
 
-Not compiled, not run.
+Compiled to C and run as a host process, against real memory and a real clock. Not
+booted on the kernel: there is no supervisor and no network device in this path.

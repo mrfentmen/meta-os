@@ -4,7 +4,9 @@ Two entry points: `sh_exec(line, out, cap)` runs one line into a buffer (testabl
 no console), and `sh_run()` is the REPL that owns the keyboard. Everything worth
 testing lives in the first.
 
-**Status: WRITTEN. Not COMPILED, not RUN.** `sh_run` has never read a key.
+**Status: RUNS** — `t66_shell` (57 checks, exit 0) on the host, plus `t131_shell_r11` for
+the refusal catalogue. `sh_run` has never read a key: the REPL path needs the kernel
+keyboard, and `SH_LINE_MAX` lives in that buffer, so it has no host proof.
 
 ## Builtins
 
@@ -28,4 +30,7 @@ completion, no `su`. Each refusal is in `shell.goose`'s header with the reason.
 yet. The builtin says so on its second line, because an empty `log tail` looks
 exactly like an empty log.
 
-Tests: `services/tests/t66_shell.goose` (argument parser, builtins and a script in one session).
+Tests: `services/tests/t66_shell.goose` (argument parser, builtins and a script in one session),
+`services/tests/t80_limit_drivers2.goose` (the cwd buffer truncates at `SH_CWD_MAX - 1`), and
+`services/tests/t131_shell_r11.goose` (every refused operator, the arity errors, the caller's
+output cap, and a 200-command load batch).

@@ -1,7 +1,8 @@
 # `time` — Layer 4, service 3
 
-**Status: WRITTEN.** Not COMPILED — `goose__toolchain_status` → `NOT FOUND`.
-B-L1-04 wrote the clock core; B-L1-19 added the deadline and budget surface.
+**Status: RUNS** — driven by `tests/t51_time` (24 checks) and
+`tests/t136_time_r11`. B-L1-04 wrote the clock core; B-L1-19 added the deadline and
+budget surface.
 
 ## What it does
 
@@ -17,8 +18,9 @@ the one rate constant the whole layer refers to.
 - `sleep_ticks(n)` / `sleep_ms(ms, hz)` — poll `sys_ticks` and `sys_yield`,
   with a stall detector that returns `false` rather than spinning forever on a
   clock that never advances.
-- `service_main()` — a self-check entry: sleep 10 ms, prove the counter moved,
-  return a distinct non-zero code for each way it could have failed.
+- `entry.goose` — a self-check entry: sleep 10 ms, prove the counter moved,
+  return a distinct non-zero code for each way it could have failed. The clock
+  itself lives in `time.goose`.
 
 ## Why this is the second service
 
@@ -60,9 +62,10 @@ layer a hard spin, which is why it is requirement R6.
 
 ## Not verified
 
-Compilation (no toolchain), and the one assumption this file makes about the
-kernel: that `sys_ticks` is monotonic and cheap enough to poll. Neither is
-proven by anything in this repo today.
+The one assumption this file makes about the kernel: that `sys_ticks` is
+monotonic and cheap enough to poll. Compilation and the pure surface are exercised
+by `t51_time` and `t136_time_r11` on the host; monotonicity under the real timer
+is not.
 
 ## B-L1-19: deadlines and budgets
 
@@ -92,6 +95,5 @@ budget silently *adds* time on a slow path.
 
 - **No calendar or time zones** — B-L1-110.
 - **No settable clock.** Monotonic only; wall-clock correction is an offset held by
-  the time sync client (B-L1-37), never a change to this counter.
-- **No timer service.** Waking another process needs K5 and the IPC transport
+  the time sync client (B-L1-37), never a change to this counter. **No timer service.** Waking another process needs K5 and the IPC transport
   (Q-B-L1-2); a wake list here would be fiction.

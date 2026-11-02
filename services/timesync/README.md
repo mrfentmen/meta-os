@@ -1,6 +1,7 @@
 # `timesync` — Layer 4, service 19
 
-**Status: WRITTEN** (not COMPILED). Source exists; nothing in it has been compiled or run.
+**Status: RUNS** — driven by `tests/t77_gaps` (73 checks) and `tests/t137_timesync_r11`
+(the smear and the millisecond round trip), exit 0 on the host corpus. Layer 4, service 19.
 
 ## What it does
 
@@ -11,7 +12,7 @@ NTP message build/parse and offset arithmetic, held as an offset over the monoto
 - **Entry:** none yet. No file here exports `svc_entry`; the units are functions a `service_main` will call once the spawn signature is fixed (Q-B-L1-4, `os-build/layer1/SERVICE_CONTRACT.md` §2). That is a deviation, stated in `Deviations` below.
 - **Kernel surface:** none. This unit reaches the kernel only through other services.
 - **Needs from Layers 1–3:** see `os-build/layer1/BOUNDARIES.md`; the binding milestone is K6 for anything that calls a syscall, and nothing here needs K2/K3 directly unless the kernel surface line above says so.
-- **Offers to Layers 5–6:** the functions listed below in the source. Nothing may rely on them until the layer is COMPILED.
+- **Offers to Layers 5–6:** the functions listed below in the source. The host drivers exercise them; nothing boots them on the kernel yet, so a caller in a booted system is still a design, not a dependency.
 
 ## Dependencies
 
@@ -41,9 +42,11 @@ Checked against the Goose docs served by the language MCP (goose-mcp@1.1.0 `look
 
 ## Not verified
 
-- Compilation. There is no Goose toolchain on this machine.
-- Execution. No assertion in this unit has run; the test programs in `services/tests/` are where it will be exercised.
-- Any kernel behaviour assumed: the syscall shapes in `common/sys/sys.goose` are this layer's request, not a published kernel interface.
+- A kernel boot. The corpus runs this service as a host process; no kernel task calls it yet.
+- A real NTP exchange. The socket, the timeout and the retry schedule belong to the caller
+  (stated in the source), so no packet has been sent to a server from this unit.
+- Offset persistence across a restart: the offset is process memory by design, and a restart
+  resets it (named in `os-build/layer1/r11/timesync.md` §3).
 
 ## Deviations
 

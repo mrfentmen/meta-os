@@ -45,4 +45,6 @@ died on its own.
 ## Where the proof is
 
 `services/tests/t88_dock.goose` — including the double-click dedupe and the
-expiry path.
+expiry path. `services/tests/t117_dock_r11.goose` adds both edges of each constant:
+a second click at exactly `DK_DEDUPE_MS` is a new launch, and a pending launch at
+exactly `DK_LAUNCH_TIMEOUT_MS` has already expired.

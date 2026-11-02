@@ -1,7 +1,8 @@
 # netcfg — addresses and interface configuration as data
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
-service 14.
+Status: **RUNS** — `tests/t67_net`, `tests/t79_limit_drivers`,
+`tests/t80_limit_drivers2` and `tests/t126_netcfg_r11` run in the native host corpus, and
+the corpus typechecks under `os-build/layer1/check_services.sh`. Layer 4, service 14.
 
 ## Bytes, not text
 
@@ -42,4 +43,9 @@ passed, every subnet comparison below it would be meaningless.
 Each read uses a **fresh** buffer: reusing one would parse `1.2.3.4` followed by
 `5.6.7.8` as a single string and produce an address nobody typed.
 
-Not compiled, not run.
+## What persistence proves, and what it does not
+
+`netcfg_save` truncates the inode and writes the rendered section; `netcfg_load` reads it
+back through the same parser (`tests/t80_limit_drivers2`). The configuration survives a
+process death. A supervisor-driven restart of the service has **not** been run, so
+"restarted and re-applied the address" is unproven; the file is the part that is tested.

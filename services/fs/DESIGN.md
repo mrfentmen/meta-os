@@ -5,8 +5,8 @@ A real filesystem, laid directly over the block contract in
 blocks). Not a path table, not a mock: blocks, inodes, a bitmap and directory
 entries, with an fsck that can be wrong in a way you can see.
 
-Status: **WRITTEN, UNCOMPILED.** Nothing here ran. The RAM backend is real
-storage and volatile — see §7.
+Status: **RUNS** through `tests/t65_fs` (75 checks) and `tests/t82_fs_deep`
+(35 checks). The RAM backend is real storage and volatile — see §7.
 
 ## 1. The layout
 
@@ -121,7 +121,8 @@ Rules the resolver enforces, each with a hostile case in `t65_fs`:
 - `//` collapses; a trailing `/` is allowed and ignored.
 - `.` is skipped; `..` pops, and at the root it stays at the root (no escape).
 - A component longer than 12 bytes is `E_NAME` (not truncated).
-- More than 16 components is `E_NOROOM` (not truncated).
+- More than 15 named components is `E_NOROOM` (not truncated). The resolver's
+  16-slot chain includes the root, so 15 names is the real maximum.
 - An empty path is `E_INVAL`. A path not starting with `/` is resolved relative
   to a caller-supplied directory, and `fs_resolve` takes that as an argument
   rather than assuming a current directory, because the process-wide cwd is
@@ -180,7 +181,7 @@ whole contract.
 | Max file size | 2560 B | 5 direct blocks, no indirect |
 | Max directory entries | 160 | 32 per block, 5 blocks |
 | Max name | 12 B | 16-byte entries, name starts at byte 4 |
-| Path depth | 16 | resolver stack, `u8`-indexed |
+| Path depth | 15 names | resolver stack of 16 inodes includes the root |
 | Block cache | 1 scratch block | single-threaded services, stated in `fs.goose` |
 
 Every one of these is a refusal at the boundary rather than a truncation.

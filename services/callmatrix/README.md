@@ -1,50 +1,51 @@
 # `callmatrix` — Layer 4, service 26
 
-**Status: WRITTEN** (not COMPILED). Source exists; nothing in it has been compiled or run.
+**Status: RUNS.** `tests/t69_callmatrix` (28 checks, exit 0) proves every id has a row, the twelve
+previously-missing edges are allowed, and the table denies by default. `tests/t109_callmatrix_r11`
+adds the bound (`cm_bit(32)` is 0), the self-call rules, the `E_DENIED`/`E_INVAL` split, and the
+mask/check agreement. Host runs only; nothing has booted.
 
 ## What it does
 
-The service-to-service permission table and the single check `cm_allows`/`cm_check` the registry consults. Deny by default: an unlisted pair, an unknown caller or an unknown callee is refused.
+The service-to-service permission table, and the single check `cm_allows`/`cm_check` the registry
+consults. Deny by default: an unlisted pair, an unknown caller or an unknown callee is refused.
+
+The table is 31 rows of `i64` bitmasks — one bit per callee — so a check is a shift and a mask: no
+search, no allocation, and no way to have a partially-written row. `cm_row` also denies a row whose
+`caller` field does not match its index, so an uninitialised table fails closed.
 
 ## Contract
 
-- **Entry:** none yet. No file here exports `svc_entry`; the units are functions a `service_main` will call once the spawn signature is fixed (Q-B-L1-4, `os-build/layer1/SERVICE_CONTRACT.md` §2). That is a deviation, stated in `Deviations` below.
+- **Entry:** none. No file here exports `svc_entry`; the units are functions a `service_main` will
+  call once the spawn signature is fixed (Q-B-L1-4, `SERVICE_CONTRACT.md` §2), stated in
+  `Deviations` below.
 - **Kernel surface:** none. This unit reaches the kernel only through other services.
-- **Needs from Layers 1–3:** see `os-build/layer1/BOUNDARIES.md`; the binding milestone is K6 for anything that calls a syscall, and nothing here needs K2/K3 directly unless the kernel surface line above says so.
-- **Offers to Layers 5–6:** the functions listed below in the source. Nothing may rely on them until the layer is COMPILED.
+- **Needs from Layers 1–3:** nothing directly.
+- **Offers to Layers 5–6:** `cm_allows`, `cm_check`, `cm_mask`, `cm_row`, `cm_bit`, `cm_init`.
 
 ## Dependencies
 
 - **Libraries:** `common.err.err`
-- **Services:** none resolved by name from this unit; the caller resolves names through the supervisor's registry (B-L1-22).
-- **Data it owns:** The matrix itself (one 64-bit row per service). Static data, no file.
+- **Services:** none resolved by name; the supervisor's registry calls this table.
+- **Data it owns:** the matrix itself (31 × 64-bit rows). Static data, no file.
 
 ## Failure behaviour
 
-- `E_DENIED` for a refused pair, `E_INVAL` for an out-of-range service id. Both are distinguishable on purpose: one is policy, the other is a caller bug.
-- Missing dependency at start-up: refuses to start (non-zero exit), rather than running with a hole it cannot report.
-- Every failure path returns a code from `common/err` or a trailing `false`; none of them is silent.
+- `E_DENIED` for a refused pair, `E_INVAL` for an out-of-range service id. The split is testable
+  and tested: one is policy and belongs to the table's owner, the other is a caller bug and
+  belongs to the caller's author.
+- No failure path is silent; `cm_allows` answers `false`, `cm_check` answers a code.
 
-## Verification
+## Deviations and gaps
 
-Checked against the Goose docs served by the language MCP (goose-mcp@1.1.0 `lookup_symbol` / `overview`):
+- **No `svc_entry`.** The spawn signature is not published (Q-B-L1-4); a `service_main` here would
+  be guessing at its own arguments.
+- **No row for itself.** `callmatrix` has no `SVC_*` id: it is the permission function, not a
+  participant, so it cannot be called through the registry it answers for. Recorded as a finding
+  in `os-build/layer1/r11/callmatrix.md`; adding an id is an append-only decision, not a cleanup.
 
-| Symbol / form | Source |
-|---|---|
-| struct with typed fields | `tutorial` §3, `samples/01_tour.goose` |
-| fixed arrays `T[..N]`, `u8[..N]` | `samples/03_strings.goose` |
-| growable builder `u8[>..]`, `.push`, `.len` | `samples/03_strings.goose` |
-| `while` / `if` / `return` | `list_keywords` |
-| trailing-bool and multi-value returns | `samples/04_errors.goose` |
-| reference parameter `T&` | `reference` #46 |
-| bitwise `&` `|` `~` `<<` `>>` | `list_keywords` |
+## What is not verified
 
-## Not verified
-
-- Compilation. There is no Goose toolchain on this machine.
-- Execution. No assertion in this unit has run; the test programs in `services/tests/` are where it will be exercised.
-- Any kernel behaviour assumed: the syscall shapes in `common/sys/sys.goose` are this layer's request, not a published kernel interface.
-
-## Deviations
-
-- No `svc_entry`. The spawn signature is not published (Q-B-L1-4), so a `service_main` would be guessing at its own arguments. The functions are the body a `service_main` will wrap.
+- That the freestanding link works; host runs use `host_shim.c`.
+- A kernel-hosted start: nothing has run this module under the supervisor, and `cm_init` ordering
+  is a registry responsibility, not something this unit can enforce.

@@ -1,7 +1,8 @@
 # logfmt — the record shape every service logs through
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
-service 12.
+Status: **RUNS** — `tests/t96_logfmt` (50 checks, exit 0) drives the format, and Round 11
+adds `tests/t123_logfmt_r11` (limits, truncation marker, parser refusals, round trip).
+Layer 4, service 12.
 
 ## Why one format
 
@@ -23,7 +24,8 @@ secs     | tag      message
 
 Fixed width (4-digit seconds, `.` and 3-digit milliseconds, one letter, an 8-wide
 tag column) is what makes a log greppable, sortable and visually aligned without a
-parser. Machine-shaped records are the audit service's job (B-L1-41); this is the
+parser. The seconds column holds for the first 2.7 hours; past 9999 s it grows rather
+than truncating an uptime, and the columns shift — deliberate, per the code. Machine-shaped records are the audit service's job (B-L1-41); this is the
 format for the person reading a boot failure at 3am.
 
 Seconds + milliseconds rather than a bare millisecond count: `0042.300` reads as
@@ -44,4 +46,5 @@ Seconds + milliseconds rather than a bare millisecond count: `0042.300` reads as
 digits, space, level letter, space, tag (≤7), space, message to newline, no message
 over `MSG_MAX`. Anything else is `false`, not a best guess.
 
-Not compiled, not run.
+Run as a host driver, not on the kernel. What is unproven is the kernel path, because no
+service has run there yet.

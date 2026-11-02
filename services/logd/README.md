@@ -1,6 +1,6 @@
 # `logd` — Layer 4, service 5
 
-**Status: WRITTEN.** Not COMPILED (no Goose toolchain).
+**Status: RUNS** — reached by `tests/t66_shell` (57 checks), `tests/t81_logd_deep`, and the rotation driver `tests/t71_rotate` (48 checks). Round 11 adds `tests/t122_logd_r11` (ring edges, loss counters, rotation ceiling).
 
 ## What it does
 
@@ -61,7 +61,7 @@ a 1000-iteration guard, so a dead port cannot hang the sink forever.
   spins, yields, and exits after a bounded count rather than pretending to serve.
   B-L1-76 makes it real by feeding it records.
 - **`min_level` is a global, not config**, until B-L1-13 has a file to read.
-- **No rotation and no export** — B-L1-108.
+- **Rotation and export live in `rotate.goose`**, not here: eight segments (`ROT_SEG_MAX`), byte-triggered rolls, and a prune that never drops the newest segment. Covered by `tests/t71_rotate`; the segment bytes are written by the caller through the filesystem, because this file keeps only policy.
 
 ## Verification
 
@@ -76,7 +76,7 @@ a 1000-iteration guard, so a dead port cannot hang the sink forever.
 
 ## Not verified
 
-Compilation; the cross-file import roots (same risk as `console`); and that
-`sys_write_serial` returns a byte count rather than a status — if it returns a
-status, `write_record`'s retry loop is wrong and the kernel contract (A2) needs
-to say so explicitly.
+Two things, and only two: the kernel UART path (no service has run on the kernel), and
+whether `sys_write_serial` returns a byte count rather than a status — if it returns a
+status, `write_record`'s retry loop is wrong and the kernel contract (A2) needs to say so
+explicitly. Compilation and the host run are proven by the drivers named above.

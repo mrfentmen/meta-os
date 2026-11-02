@@ -1,7 +1,7 @@
 # storage — block contract + RAM backend
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac). Layer 4,
-service 9.
+Status: **RUNS** — driven by `tests/t54_storage` (26 checks) and
+`tests/t134_storage_r11`. Layer 4, service 9.
 
 ## Real, not a mock
 
@@ -17,6 +17,7 @@ two calls and nothing above them changes.
 ## The contract
 
 ```
+storage_init(blocks)    -> CODE_OK | E_INVAL        (0 < blocks <= RAM_BLOCKS)
 storage_read(lba, buf)  -> CODE_OK | E_NO_DEVICE | E_BAD_BLOCK
 storage_write(lba, buf) -> CODE_OK | E_NO_DEVICE | E_BAD_BLOCK | E_READ_ONLY
 ```
@@ -47,4 +48,5 @@ table, no bad-block map, no flush, no async queue. The first three are Layer 3
 facts this backend does not have; the flush is meaningless for a volatile store.
 Async is real work B-L1-74 inherits.
 
-Not compiled, not run.
+Driven by `t54_storage` and `t134_storage_r11`; the RAM backend's volatility is
+asserted, not assumed.
