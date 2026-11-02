@@ -1,4 +1,5 @@
 {
+  "name": "science-lab",
   "endpoint": "file://local - Muse Spark endpoint via helper, key on Mac line1 only",
   "agents": {
     "default": {"maxCalls": 50, "maxSpend": 5.0},

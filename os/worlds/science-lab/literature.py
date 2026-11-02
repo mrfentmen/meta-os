@@ -821,3 +821,328 @@ def mark_contested(claims, sources=None):
                     "stance unknown for source(s): %s" % (", ".join(unknown)))
         out.append(entry)
     return out
+
+
+# ------------------------------------------------------------------
+# Source parsing, dedupe, shelves, citations, and schema conformance
+# (Section 5, CB2-101..125). Everything here is local and deterministic.
+# ------------------------------------------------------------------
+
+DOI_RE = re.compile(r"10\.\d{4,9}/[^\s\"<>]+", re.IGNORECASE)
+YEAR_RE = re.compile(r"^\d{4}$")
+ARCHIVE_URL_RE = re.compile(
+    r"^https?://(?:www\.)?archive\.org/", re.IGNORECASE)
+
+SHELF_NAMES = ("biology", "chemistry", "materials", "physics_math")
+UNFILED_SHELF = "unfiled"
+
+
+class LiteratureSourceError(ValueError):
+    """A source record cannot be parsed as a real source."""
+
+
+def normalize_doi(value):
+    """Return a lowercase bare DOI, or None. Never guesses one."""
+    if not isinstance(value, str):
+        return None
+    text = value.strip()
+    text = re.sub(r"^https?://(?:dx\.)?doi\.org/", "", text,
+                  flags=re.IGNORECASE)
+    text = re.sub(r"^doi:\s*", "", text, flags=re.IGNORECASE)
+    text = text.strip().rstrip(".,;")
+    match = DOI_RE.search(text)
+    return match.group(0).lower() if match else None
+
+
+def normalize_authors(value):
+    """A single author string or a list both become a clean list.
+
+    Whitespace-only entries are dropped. Order is preserved and no
+    author is invented.
+    """
+    if value is None:
+        return []
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return []
+        parts = text.split(";") if ";" in text else [text]
+    elif isinstance(value, (list, tuple)):
+        parts = value
+    else:
+        raise LiteratureSourceError(
+            "authors must be a string or a list, got %r"
+            % type(value).__name__)
+    authors = []
+    for part in parts:
+        if not isinstance(part, str):
+            continue
+        name = part.strip()
+        if name and name not in authors:
+            authors.append(name)
+    return authors
+
+
+def parse_year(value):
+    """A four-digit year as int; a range is refused, never split."""
+    if value is None or value == "":
+        return None
+    if isinstance(value, bool):
+        raise LiteratureSourceError("year must be a four-digit year, got a bool")
+    if isinstance(value, int):
+        if 1000 <= value <= 9999:
+            return value
+        raise LiteratureSourceError(
+            "year must be a four-digit year, got %r" % (value,))
+    if isinstance(value, str):
+        text = value.strip()
+        if YEAR_RE.match(text):
+            return int(text)
+        raise LiteratureSourceError(
+            "year must be a four-digit year; ranges are not split: %r"
+            % (value,))
+    raise LiteratureSourceError(
+        "year must be a four-digit year, got %r" % type(value).__name__)
+
+
+def _source_doi(record):
+    for field in ("doi", "identifier", "locator", "citation"):
+        doi = normalize_doi(record.get(field))
+        if doi:
+            return doi
+    return None
+
+
+def parse_source(record, require_title=True):
+    """Parse and normalise one source record.
+
+    The schema's required fields are checked. `title` is required by
+    this parser (the schema keeps it optional for display), because
+    a source with no title cannot be cited or deduped by title.
+    Missing abstracts stay None; an archive URL identifier stays an
+    archive URL and is never relabelled as a DOI.
+    """
+    if not isinstance(record, dict):
+        raise LiteratureSourceError(
+            "source record must be an object, got %r"
+            % type(record).__name__)
+    title = record.get("title")
+    if require_title and (not isinstance(title, str) or not title.strip()):
+        raise LiteratureSourceError(
+            "source record missing required field 'title'")
+    errors = validate_source(record)
+    if errors:
+        raise LiteratureSourceError(
+            "invalid source record: %s" % "; ".join(errors))
+
+    parsed = dict(record)
+    parsed["title"] = title.strip() if isinstance(title, str) else None
+    parsed["authors"] = normalize_authors(record.get("authors"))
+    abstract = record.get("abstract")
+    parsed["abstract"] = (abstract if isinstance(abstract, str)
+                          and abstract.strip() else None)
+    parsed["year"] = parse_year(record.get("year"))
+
+    doi = _source_doi(record)
+    identifier = record.get("identifier")
+    if not isinstance(identifier, str) or not identifier.strip():
+        identifier = ("doi:%s" % doi) if doi else None
+    if doi:
+        identifier_type = "doi"
+    elif isinstance(identifier, str) and ARCHIVE_URL_RE.match(identifier):
+        identifier_type = "archive-url"
+    elif isinstance(identifier, str) and identifier.startswith(("http://",
+                                                               "https://")):
+        identifier_type = "url"
+    else:
+        identifier_type = "none"
+    parsed["doi"] = doi
+    parsed["identifier"] = identifier
+    parsed["identifier_type"] = identifier_type
+    parsed["origin"] = record.get("origin") or record.get("server")
+    return parsed
+
+
+def _dedupe_key(record):
+    doi = _source_doi(record)
+    if doi:
+        return ("doi", doi)
+    title = record.get("title") or record.get("citation") or ""
+    return ("title", _normalize_text(str(title)))
+
+
+def dedupe_sources(records):
+    """Keep the first source per DOI (case-insensitive) or title."""
+    if not isinstance(records, (list, tuple)):
+        raise TypeError("records must be a list, got %r"
+                        % type(records).__name__)
+    seen = set()
+    kept = []
+    for record in records:
+        if not isinstance(record, dict):
+            continue
+        key = _dedupe_key(record)
+        if key in seen:
+            continue
+        seen.add(key)
+        kept.append(record)
+    return kept
+
+
+def assign_shelf(source):
+    """The shelf a source belongs on; untagged sources are unfiled."""
+    if not isinstance(source, dict):
+        return UNFILED_SHELF
+    raw = source.get("shelf") or source.get("tags") or \
+        source.get("tag") or source.get("department")
+    if isinstance(raw, str):
+        tags = [raw]
+    elif isinstance(raw, (list, tuple)):
+        tags = [t for t in raw if isinstance(t, str)]
+    else:
+        tags = []
+    for tag in tags:
+        name = tag.strip().lower().replace("-", "_").replace(" ", "_")
+        if name.startswith("shelves/"):
+            name = name[len("shelves/"):]
+        if name.endswith(".json"):
+            name = name[:-5]
+        if name in SHELF_NAMES:
+            return name
+    return UNFILED_SHELF
+
+
+class ShelfIndex(object):
+    """In-memory shelf index: file sources, then list in filing order."""
+
+    def __init__(self):
+        self._shelves = {}
+
+    def file(self, source):
+        parsed = parse_source(source)
+        shelf = assign_shelf(parsed)
+        self._shelves.setdefault(shelf, []).append(parsed)
+        return shelf
+
+    def list(self, shelf=None):
+        if shelf is None:
+            return {name: list(items)
+                    for name, items in self._shelves.items()}
+        return list(self._shelves.get(shelf, []))
+
+
+def format_citation(source):
+    """A deterministic citation string from parsed source fields."""
+    if not isinstance(source, dict):
+        raise LiteratureSourceError("citation source must be an object")
+    authors = normalize_authors(source.get("authors"))
+    author_text = ", ".join(authors) if authors else "Unknown author"
+    year = parse_year(source.get("year"))
+    year_text = str(year) if year is not None else "n.d."
+    title = str(source.get("title") or "").strip()
+    parts = ["%s (%s)." % (author_text, year_text)]
+    if title:
+        parts.append(title + ".")
+    venue = str(source.get("venue") or "").strip()
+    if venue:
+        parts.append(venue + ".")
+    doi = _source_doi(source)
+    if doi:
+        parts.append("doi:%s." % doi)
+    else:
+        identifier = source.get("identifier") or source.get("locator")
+        if isinstance(identifier, str) and identifier.startswith(
+                ("http://", "https://")):
+            parts.append(identifier + ".")
+    return " ".join(parts)
+
+
+def parse_source_corpus(records):
+    """Parse a mixed corpus and count parsed, rejected, duplicate rows."""
+    if not isinstance(records, (list, tuple)):
+        raise TypeError("records must be a list, got %r"
+                        % type(records).__name__)
+    parsed = []
+    rejected = []
+    duplicates = 0
+    seen = set()
+    for index, record in enumerate(records):
+        try:
+            item = parse_source(record)
+        except (LiteratureSourceError, TypeError) as exc:
+            rejected.append({"index": index, "error": str(exc)})
+            continue
+        key = _dedupe_key(item)
+        if key in seen:
+            duplicates += 1
+            continue
+        seen.add(key)
+        parsed.append(item)
+    return {
+        "parsed": parsed,
+        "rejected": rejected,
+        "duplicates": duplicates,
+        "counts": {
+            "received": len(records),
+            "parsed": len(parsed),
+            "rejected": len(rejected),
+            "duplicates": duplicates,
+        },
+    }
+
+
+def validate_against_schema(record, schema):
+    """Validate the subset of JSON Schema this repo's schemas use.
+
+    Supports object/array/string/integer/number/boolean/null, required,
+    properties, minLength, pattern, and enum. Unknown schema keywords are
+    ignored (the schemas are plain). Returns a list of named errors.
+    """
+    errors = []
+    if not isinstance(schema, dict):
+        return ["schema must be an object"]
+    expected = schema.get("type")
+    types = {
+        "object": dict, "array": (list, tuple), "string": str,
+        "integer": int, "number": (int, float), "boolean": bool,
+    }
+    if expected in types:
+        value_ok = isinstance(record, types[expected])
+        if expected in ("integer", "number") and isinstance(record, bool):
+            value_ok = False
+        if not value_ok:
+            return ["value is not of schema type %r" % expected]
+    if not isinstance(record, dict):
+        return errors
+    for field in schema.get("required") or []:
+        if record.get(field) is None:
+            errors.append("missing required field %r" % (field,))
+    for field, rule in (schema.get("properties") or {}).items():
+        if not isinstance(rule, dict) or field not in record:
+            continue
+        value = record.get(field)
+        if value is None:
+            continue
+        rule_type = rule.get("type")
+        if rule_type in types and not isinstance(value, types[rule_type]):
+            errors.append("field %r must be %r" % (field, rule_type))
+            continue
+        if isinstance(value, str):
+            minimum = rule.get("minLength")
+            if isinstance(minimum, int) and len(value) < minimum:
+                errors.append("field %r is shorter than minLength %d"
+                              % (field, minimum))
+            pattern = rule.get("pattern")
+            if isinstance(pattern, str) and not re.fullmatch(pattern, value):
+                errors.append("field %r does not match %r" % (field, pattern))
+        enum = rule.get("enum")
+        if isinstance(enum, list) and value not in enum:
+            errors.append("field %r must be one of %r" % (field, enum))
+    return errors
+
+
+def validate_source_against_schema(record, schema_path=SOURCE_SCHEMA_FILENAME):
+    """Load schemas/source.schema.json and validate one parsed source."""
+    with open(schema_path, "r", encoding="utf-8") as fh:
+        schema = json.load(fh)
+    return validate_against_schema(record, schema)

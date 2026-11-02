@@ -142,3 +142,36 @@ pass, 0 fail**; existing `test_models.py` **7 pass**.
 
 Section 4 verification: **459 queue-Python tests pass, 0 fail**
 (`python3 -m unittest discover -s tests/queue-python`).
+
+## Section 5 — Science Lab — literature and gateway shelf (CB2-101..125) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-101 | `test_literature_source_edges.py` | missing title rejected with named error |
+| CB2-102 | `test_literature_dedupe.py` | DOI dedupe is case-insensitive |
+| CB2-103 | `test_literature_dedupe.py` | no-DOI dedupe uses normalised title |
+| CB2-104 | `test_literature_shelves.py` | chemistry tag lands; untagged is unfiled |
+| CB2-105 | `test_literature_source_edges.py` | missing abstract stays null |
+| CB2-106 | `test_literature_year.py` | four-digit year accepted; range refused |
+| CB2-107 | `test_gateway_allowlist.py` | all nine allowlisted servers accepted |
+| CB2-108 | `test_gateway_allowlist.py` | near-miss hyphen and unknown names refused |
+| CB2-109 | `test_gateway_local_shelf.py` | local shelf answers without constructing an adapter |
+| CB2-110 | `test_gateway_local_shelf.py` | remote adapter raises UNIMPLEMENTED and names it |
+| CB2-111 | `test_gateway_query.py` | empty query refused before lookup |
+| CB2-112 | `test_gateway_query.py` | hit shape is exactly id/title/shelf |
+| CB2-113 | `test_literature_citation.py` | golden citation string matches exactly |
+| CB2-114 | `test_literature_citation.py` | empty authors use pinned fallback |
+| CB2-115 | `test_literature_provenance.py` | origin server survives parse and filing |
+| CB2-116 | `test_literature_corpus.py` | 12 records: 6 parsed, 3 duplicate, 3 rejected |
+| CB2-117 | `test_lab_config_edges.py` | missing name raises a named error |
+| CB2-118 | `test_lab_config_edges.py` | unknown top-level key is ignored (pinned rule) |
+| CB2-119 | `test_lab_config_edges.py` | empty optional sections yield defaults |
+| CB2-120 | `test_literature_authors.py` | string and list both normalise to list |
+| CB2-121 | `test_literature_authors.py` | whitespace-only author dropped |
+| CB2-122 | `test_literature_shelves.py` | three filings list in filing order |
+| CB2-123 | `test_gateway_query.py` | shelf routing searches only that shelf |
+| CB2-124 | `test_literature_source_edges.py` | archive URL stays archive URL, not DOI |
+| CB2-125 | `test_literature_schema_fit.py` | every parsed fixture validates against source schema |
+
+Section 5 verification: **203 Science Lab tests pass, 0 fail**
+(`python3 -m unittest discover -s tests/science-lab`).
