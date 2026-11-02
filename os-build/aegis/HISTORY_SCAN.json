@@ -1,0 +1,34 @@
+{
+  "run": "history-2026-11-02T14-59-10-859Z",
+  "at": "2026-11-02T14:59:10.860Z",
+  "rev": "HEAD",
+  "commits": 1881,
+  "range": {
+    "first": {
+      "hash": "8bd9824b07e48b30f755efa343f5946349ee215d",
+      "date": "2026-11-02"
+    },
+    "last": {
+      "hash": "5e17fc794342fe16c13ecd2561aa8478a20d3503",
+      "date": "2026-10-28"
+    }
+  },
+  "linesScanned": 1491306,
+  "categories": {
+    "private-key": {},
+    "aws-access-key": {},
+    "github-token": {
+      "2026": 4
+    },
+    "slack-token": {},
+    "openai-style-key": {},
+    "stripe-key": {},
+    "jwt": {},
+    "url-credentials": {},
+    "secret-assignment": {
+      "2026": 10
+    }
+  },
+  "totalCategoryHits": 14,
+  "limits": "line-based diff scan; a secret split across lines is not seen; counts include documentation and test fixtures"
+}
