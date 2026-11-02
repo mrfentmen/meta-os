@@ -2,7 +2,7 @@
 //
 // Layer 4, service 12: the record shape every service emits through.
 //
-// Status: RUNS — reached by tests/t50_logd (19 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs with
+// Status: RUNS — reached by tests/t96_logfmt (50 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs with
 // literals (reference#32), static arrays, `while`/`if`, slices `a[x..y]`, `T&`
 // references (reference#46), multi-value returns.
 //
@@ -119,11 +119,17 @@ fn logfmt_make(level_in: i64, tag: const u8[:], msg: const u8[:], uptime_ms: i64
     r.tag[t] = 0;
     r.tag_len = t;
 
+    // A message that begins with spaces cannot survive the round trip: the tag column is
+    // padded with spaces, so a reader cannot tell padding from a deliberate indent. The
+    // writer trims them, and the format says a message does not begin with a space.
+    var start: i64 = 0;
+    while start < msg.len && msg[start] == 0x20 { start = start + 1; }
+
     var m: i64 = 0;
     var truncated = false;
-    while m < msg.len {
+    while start + m < msg.len {
         if m >= MSG_MAX - 3 { truncated = true; break; }
-        r.msg[m] = msg[m];
+        r.msg[m] = msg[start + m];
         m = m + 1;
     }
     if truncated {
@@ -244,11 +250,18 @@ fn logfmt_put_int(out: u8[..200]&, at_in: i64, v: i64) -> i64 {
 // The reader (B-L1-108 export, B-L1-118 auditing) needs the record, not the line. One
 // parser here, so the format has exactly one definition of "what a line means".
 //
-// Returns (record, ok). A malformed line is ok = false and fills nothing: a parser
-// that guessed at a damaged line would put invented data into an audit trail.
+// Returns ok. A malformed line is ok = false and leaves `out` untouched: a parser that
+// guessed at a damaged line would put invented data into an audit trail, and one that
+// half-filled the record would put a real tag next to a message it never came from.
+//
+// That is why the work happens in a local record and is copied out only on success. An
+// earlier version wrote straight into `out` and failed midway on `0042.300 I tagx` (tag
+// read, no separator after it), leaving the caller's record holding the new tag with the
+// old message. The caller has no way to tell that apart from a well-formed parse.
 fn logfmt_parse(line: const u8[:], out: Record&) -> bool {
     // Minimum: `0.000 I t msg\n`.
     if line.len < 10 { return false; }
+    var r = Record { uptime_ms: 0, level: 0, tag: [0; 8], tag_len: 0, msg: [0; 160], msg_len: 0 };
     var i: i64 = 0;
 
     // seconds
@@ -288,12 +301,21 @@ fn logfmt_parse(line: const u8[:], out: Record&) -> bool {
     var t: i64 = 0;
     while i < line.len && line[i] != 0x20 {
         if t >= TAG_MAX - 1 { return false; }
-        out.tag[t] = line[i];
+        r.tag[t] = line[i];
         t = t + 1;
         i = i + 1;
     }
-    out.tag[t] = 0;
-    out.tag_len = t;
+    r.tag[t] = 0;
+    r.tag_len = t;
+    // The tag column is fixed width, so the writer padded it to TAG_MAX-1 and then wrote one
+    // separator space. Skip the pad first: a reader that stopped at the first space took the
+    // padding for the start of the message, so `cons` plus four spaces parsed as "   ready"
+    // -- the message shifted left by the padding whenever a tag was shorter than the column.
+    var pads: i64 = 0;
+    while t + pads < TAG_MAX - 1 && i < line.len && line[i] == 0x20 {
+        i = i + 1;
+        pads = pads + 1;
+    }
     if i >= line.len || line[i] != 0x20 { return false; }
     i = i + 1;
 
@@ -301,12 +323,24 @@ fn logfmt_parse(line: const u8[:], out: Record&) -> bool {
     var m: i64 = 0;
     while i < line.len && line[i] != 0x0A {
         if m >= MSG_MAX { return false; }
-        out.msg[m] = line[i];
+        r.msg[m] = line[i];
         m = m + 1;
         i = i + 1;
     }
-    out.msg_len = m;
-    out.uptime_ms = secs * 1000 + ms;
-    out.level = level;
+    r.msg_len = m;
+    r.uptime_ms = secs * 1000 + ms;
+    r.level = level;
+
+    // The line was well formed all the way to its end: only now does the caller's record
+    // change. The copy is byte-level because the arrays are fixed-size, and it clears the
+    // unused tail so a shorter message cannot leave the previous record's bytes behind it.
+    var k2: i64 = 0;
+    while k2 < TAG_MAX { out.tag[k2] = r.tag[k2]; k2 = k2 + 1; }
+    var k3: i64 = 0;
+    while k3 < MSG_MAX { out.msg[k3] = r.msg[k3]; k3 = k3 + 1; }
+    out.tag_len = r.tag_len;
+    out.msg_len = r.msg_len;
+    out.uptime_ms = r.uptime_ms;
+    out.level = r.level;
     return true;
 }
