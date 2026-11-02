@@ -120,3 +120,8 @@ Buffy's roster. Clock: H+0 = 2026-11-01 20:12 EST. Hard freeze at
 H+9 = 2026-11-02 05:12 EST; after it, only gate fixes and the
 report. All rulings above are in force. Rowan's HOLD is lifted for
 the R-lane only, by this order.
+
+
+## Boss decision 2026-11-02 (~03:11 EST)
+
+**F1 closed: `kernel/src/syscalls.rs` stays FROZEN.** The boss chose keep-frozen over Rowan's delete recommendation. No wiring, no deletion, no renumbering. Revisit only on the boss's word.
