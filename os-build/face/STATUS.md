@@ -78,6 +78,8 @@ or BLOCKED with the artifact named.
 | 64 | Fidelity pass | PROVEN (text) | login glass+avatar+shake, topbar, 16-icon dock, live ribbon all match task specs; closed: favicon 404s, dead dock targets, missing board/settings/terminal-real, music3d-as-Musica |
 | 65 | Screendump set | PROVEN | 18 guest shots: above + notes/calendar/calculator/wallpapers/trash/editor; boot 3 stages + login dark/shake/entered/light; shell-terminal dark |
 | 66 | 60s recording | ADAPTED (frames) | no video capture tool in guest X env; 8 QEMU beat dumps (R6-2) + 18 guest app shots + boot/login series stand in as the frame record |
+| 67a | UTM/hardware boot | BLOCKED (honest) | utmctl has no headless create/import, zero VMs registered, GUI import not drivable from this session; QEMU boots (face-boot1/2/3.txt + all guest proofs) stand as machine-boot evidence |
+| 67b | Toolchain in bake | PROVEN (finding) | guest-toolchain-listing.txt: node /usr/bin/node + git 2.39.5 + chromium present; opencode ABSENT (no binary, 0 dpkg hits) |
 | 67 | Fresh image from script | TODO | build-image.sh needs Linux+sudo, not run this session |
 | 68 | STATUS final | TODO | this file, updated per section |
 | 69-73 | Long tail | PARKED (after tonight) | — |
