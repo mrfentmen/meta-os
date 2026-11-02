@@ -7,7 +7,7 @@
 //! parsed and mapped at their linked addresses, then entered with
 //! `iretq` at ring 3. Syscalls arrive on `int 0x80` (vector 128);
 //! the handler reads the saved registers, serves write/exit/sleep/
-//! getpid/yield, and refuses anything else. A userspace page fault
+//! getpid/yield/read_key, and refuses anything else. A userspace page fault
 //! kills only that task (see the `page_fault_handler` note in
 //! `interrupts.rs`). `core` only.
 
@@ -106,6 +106,22 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
             4 => {
                 crate::sched::yield_task();
                 set_return(base, 0);
+            }
+            5 => {
+                // R-7: read_key — a getter over the K3 keyboard ring
+                // buffer, no new machinery. Returns the next raw
+                // PS/2 set-1 scancode byte (0..=255, release codes
+                // included, NOT decoded ASCII — decoding stays in
+                // the console task), or u64::MAX when the buffer is
+                // empty (non-blocking; a caller that wants to wait
+                // polls, or sleeps/yields between polls). Valid
+                // returns are all <= 255, so MAX is unambiguous.
+                // Shares the console's buffer: a byte read here is
+                // consumed and is not echoed by the console task.
+                set_return(base, match crate::interrupts::keyboard_read() {
+                    Some(scancode) => scancode as u64,
+                    None => u64::MAX,
+                });
             }
             n => {
                 println!("user bad syscall {} refused", n);
