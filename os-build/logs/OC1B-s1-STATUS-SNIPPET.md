@@ -30,20 +30,37 @@ Do NOT edit OPENCODE1_500_STATUS.md from this lane. Copy the blocks below.
   (proofs: os-build/captures/oc1b-baseline-shell.png,
   os-build/captures/oc1b-baseline-fetch.png, os-build/logs/OC1B-baseline-drive.txt).
 
-## README VERDICT (§18, OC1B-426..OC1B-450) — tree 3452d244 (INTERIM — fixes pending)
+## README VERDICT (§18, OC1B-426..OC1B-450) — tree 3452d244 (FINAL)
 
-Final per-number verdicts land here at the §18 commit. Interim findings:
-STALE: node 2016/55 (actual 2015/56, newcomer R11-282 os-docs index gap),
-rust 2186 (workspace does not build: intel E0063, 0 run; excl-intel 1851/0),
-queue skip (296 pass, 0 skip), kernel lines (5984 vs "about 5,800"),
-Goose 33/1253 vs cited record 59/2715, services count 25 vs 24 manifest rows.
-UNVERIFIABLE-AS-STATED: OS-side 122,000 (method unstated; reconstructions
-119k-139k), batch-2 100/42/46 numbers (no eval log; in-repo audit agrees),
-musica "4 of 4" (no such suite in tree; actual node musica suite 39/39 pass),
-model endpoint history (no receipts in tree; re-proven live in §9).
-VERIFIED: worlds 12/12, officina 49, science 163/163, hortus 14,
-loop 11/12 (green cycle fails), 19 crates, 28 agents, bootloader 0.9.35,
-framebuffer 576 lines, ignis 17 categories, $75 guardrail, relay 8787,
-officina gate 14/14, EVAL4 80/20/0 + 5/5 + 0/8, live DOT reading,
-all README links (200s), gate 7/7 lineage, 73-min R5-5 record,
-2-hour soak still PENDING, kernel 13 files, ps/mem/status/fetch serial claims.
+Checklist with per-row verdicts: os-build/logs/OC1B-readme-checklist.md (46 rows marked).
+Fix commit: 01f8c264 (README.md only, 9 lines; proof + re-runs + badge check:
+os-build/logs/OC1B-readme-fixes.md; post-fix npm re-run:
+os-build/logs/OC1B-readme-node-rerun.txt = 2071/2015/56).
+
+- Baseline verdict block: tip sha 3452d244663f4ad87e51bfe2f0dd3902f90ae087,
+  gate GREEN 8/8 twice (95s, 32s), panic 0 both serials, every assertion SAME
+  across runs (alive, mem K4, HELLO, exit 0, task-killed + sleeper continues,
+  readkey entry, commands, STATUS). No failures; kernel lanes NOT stopped.
+  Wave-3 diff: no lost claim, no regression. Bootimage 11202048 B /
+  sha256 4d0cfaa0…. Clone clean at close.
+- README per-number verdicts (FINAL): STALE-FIXED: node row + badge
+  (2015/56; newcomer R11-282 docs-index gap named), queue row (0 skip),
+  rust workspace row + badge + built-with row (does not build, intel E0063;
+  excl-intel 1851 pass / 0 fail / 88 suites), intel row (0 run),
+  kernel lines (5984 -> "about 6,000", 2 places), node-failures paragraph.
+  STALE-NAMED-NOT-FIXED (needs §16 re-run or Pax ruling, not a number edit):
+  Goose 33 programs / 1,253 checks receipt block (cited record now says
+  59 drivers / 2,715 assertions), services count 25 (24 manifest rows vs
+  37 source dirs). UNVERIFIABLE-AS-STATED (named, never padded): OS-side
+  ~122,000 (method unstated; 119k-139k reconstructions), batch-2
+  100/42/46/0 + 6.4s (no eval log; in-repo audit agrees), musica "4 of 4"
+  (no such suite; actual node musica suite 39/39 pass), model endpoint
+  history (no receipts in tree; §9 re-proves live). VERIFIED: worlds 12/12,
+  officina 49 + gate 14/14, science 163/163, hortus 14, loop 11/12,
+  19 crates, 28 agents, bootloader 0.9.35, framebuffer 576, ignis 17,
+  $75 guardrail, relay 8787, EVAL4 80/20/0 + 5/5 + 0/8, live DOT reading,
+  all README links 200, gate 7/7 lineage, 73-min R5-5 record, 2-hour soak
+  still PENDING, kernel 13 files, all serial claims.
+- Fences kept: no main push, no opencode/500 commit, no kernel/src edit
+  (diff empty), no face/web work, baseline runs in /tmp/oc500-baseline only,
+  every proof committed. Mac key never needed, never touched.
