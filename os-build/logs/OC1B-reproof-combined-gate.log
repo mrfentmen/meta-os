@@ -1,0 +1,329 @@
+combined gate run start: 2026-11-02T16:07:16Z tree 94010c76ee095fa6c6bcfa4405cd56a9695f32d3 status-clean-above
+== toolchain ==
+cargo 1.101.0-nightly (31d3246e0 2026-10-27)
+QEMU emulator version 11.1.3
+== userspace ==
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+== kernel ==
+WARNING: `CARGO_MANIFEST_DIR` env variable not set
+Building kernel
+   Compiling metaos-kernel v0.1.0 (/private/tmp/oc500-s8/kernel)
+warning: unnecessary `unsafe` block
+   --> src/main.rs:29:20
+    |
+ 24 | / macro_rules! print {
+ 25 | |     ($($arg:tt)*) => {{
+ 26 | |         use core::fmt::Write as _;
+ 27 | |         let _ = write!($crate::SerialPort, $($arg)*);
+ 28 | |         // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+ 29 | |         let slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::CONSOLE) };
+    | |                    ^^^^^^ unnecessary `unsafe` block
+...   |
+ 33 | |     }};
+ 34 | | }
+    | |_- this warning originates in the macro `print` which comes from the expansion of the macro `println`
+    |
+   ::: src/sched.rs:559:9
+    |
+559 |           unsafe {
+    |           ------ because it's nested under this `unsafe` block
+...
+564 | /                         println!(
+565 | |                             "ps id {} state {:?} ticks_used {} prio {}",
+566 | |                             task.id.as_u64(),
+567 | |                             task.state,
+568 | |                             task.ticks_used,
+569 | |                             task.priority
+570 | |                         );
+    | |_________________________- in this macro invocation
+    |
+    = note: `#[warn(unused_unsafe)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary `unsafe` block
+   --> src/main.rs:29:20
+    |
+ 24 | / macro_rules! print {
+ 25 | |     ($($arg:tt)*) => {{
+ 26 | |         use core::fmt::Write as _;
+ 27 | |         let _ = write!($crate::SerialPort, $($arg)*);
+ 28 | |         // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+ 29 | |         let slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::CONSOLE) };
+    | |                    ^^^^^^ unnecessary `unsafe` block
+...   |
+ 33 | |     }};
+ 34 | | }
+    | |_- this warning originates in the macro `print` which comes from the expansion of the macro `println`
+    |
+   ::: src/sched.rs:559:9
+    |
+559 |           unsafe {
+    |           ------ because it's nested under this `unsafe` block
+...
+564 | /                         println!(
+565 | |                             "ps id {} state {:?} ticks_used {} prio {}",
+566 | |                             task.id.as_u64(),
+567 | |                             task.state,
+568 | |                             task.ticks_used,
+569 | |                             task.priority
+570 | |                         );
+    | |_________________________- in this macro invocation
+
+warning: unnecessary `unsafe` block
+  --> src/main.rs:29:20
+   |
+24 | / macro_rules! print {
+25 | |     ($($arg:tt)*) => {{
+26 | |         use core::fmt::Write as _;
+27 | |         let _ = write!($crate::SerialPort, $($arg)*);
+28 | |         // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+29 | |         let slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::CONSOLE) };
+   | |                    ^^^^^^ unnecessary `unsafe` block
+...  |
+33 | |     }};
+34 | | }
+   | |_- this warning originates in the macro `print` which comes from the expansion of the macro `println`
+   |
+  ::: src/user.rs:88:5
+   |
+88 |       unsafe {
+   |       ------ because it's nested under this `unsafe` block
+...
+94 |                   println!("user exit code {}", a1);
+   |                   --------------------------------- in this macro invocation
+
+warning: unnecessary `unsafe` block
+   --> src/main.rs:29:20
+    |
+ 24 | / macro_rules! print {
+ 25 | |     ($($arg:tt)*) => {{
+ 26 | |         use core::fmt::Write as _;
+ 27 | |         let _ = write!($crate::SerialPort, $($arg)*);
+ 28 | |         // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+ 29 | |         let slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::CONSOLE) };
+    | |                    ^^^^^^ unnecessary `unsafe` block
+...   |
+ 33 | |     }};
+ 34 | | }
+    | |_- this warning originates in the macro `print` which comes from the expansion of the macro `println`
+    |
+   ::: src/user.rs:88:5
+    |
+ 88 |       unsafe {
+    |       ------ because it's nested under this `unsafe` block
+...
+133 |                   println!("user bad syscall {} refused", n);
+    |                   ------------------------------------------ in this macro invocation
+
+warning: unnecessary `unsafe` block
+   --> src/user.rs:456:30
+    |
+456 |                     .map(|p| unsafe {
+    |                              ^^^^^^ unnecessary `unsafe` block
+
+warning: associated items `new`, `as_u64`, and `align_down` are never used
+   --> src/memory.rs:102:18
+    |
+100 | impl PhysAddr {
+    | ------------- associated items in this implementation
+101 |     /// Wrap a raw address.
+102 |     pub const fn new(addr: u64) -> PhysAddr {
+    |                  ^^^
+...
+107 |     pub const fn as_u64(self) -> u64 {
+    |                  ^^^^^^
+...
+117 |     pub const fn align_down(self) -> PhysAddr {
+    |                  ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated function `new` is never used
+   --> src/memory.rs:142:18
+    |
+140 | impl VirtAddr {
+    | ------------- associated function in this implementation
+141 |     /// Wrap a raw address.
+142 |     pub const fn new(addr: u64) -> VirtAddr {
+    |                  ^^^
+
+warning: methods `len`, `is_empty`, and `contains_frame` are never used
+   --> src/memory.rs:227:18
+    |
+225 | impl MemoryRegion {
+    | ----------------- methods in this implementation
+226 |     /// Length in bytes, or 0 for an empty/inverted region.
+227 |     pub const fn len(self) -> u64 {
+    |                  ^^^
+...
+232 |     pub const fn is_empty(self) -> bool {
+    |                  ^^^^^^^^
+...
+259 |     pub fn contains_frame(self, addr: PhysAddr) -> bool {
+    |            ^^^^^^^^^^^^^^
+
+warning: methods `frame_index` and `is_usable_frame` are never used
+   --> src/memory.rs:320:12
+    |
+282 | impl<'a> MemoryMap<'a> {
+    | ---------------------- methods in this implementation
+...
+320 |     pub fn frame_index(&self, addr: PhysAddr) -> Option<usize> {
+    |            ^^^^^^^^^^^
+...
+337 |     pub fn is_usable_frame(&self, addr: PhysAddr) -> bool {
+    |            ^^^^^^^^^^^^^^^
+
+warning: associated items `required_bitmap_words`, `total_frames`, `used_frames`, and `deallocate` are never used
+   --> src/memory.rs:364:18
+    |
+362 | impl<'a> FrameAllocator<'a> {
+    | --------------------------- associated items in this implementation
+363 |     /// Bitmap words needed to cover `total_frames` frames.
+364 |     pub const fn required_bitmap_words(total_frames: usize) -> usize {
+    |                  ^^^^^^^^^^^^^^^^^^^^^
+...
+386 |     pub fn total_frames(&self) -> usize {
+    |            ^^^^^^^^^^^^
+...
+396 |     pub fn used_frames(&self) -> usize {
+    |            ^^^^^^^^^^^
+...
+432 |     pub fn deallocate(&mut self, frame: PhysAddr) -> bool {
+    |            ^^^^^^^^^^
+
+warning: constant `ENTRY_WRITE_THROUGH` is never used
+   --> src/memory.rs:464:11
+    |
+464 | pub const ENTRY_WRITE_THROUGH: u64 = 1 << 3;
+    |           ^^^^^^^^^^^^^^^^^^^
+
+warning: constant `ENTRY_NO_CACHE` is never used
+   --> src/memory.rs:466:11
+    |
+466 | pub const ENTRY_NO_CACHE: u64 = 1 << 4;
+    |           ^^^^^^^^^^^^^^
+
+warning: constant `ENTRY_ACCESSED` is never used
+   --> src/memory.rs:468:11
+    |
+468 | pub const ENTRY_ACCESSED: u64 = 1 << 5;
+    |           ^^^^^^^^^^^^^^
+
+warning: constant `ENTRY_DIRTY` is never used
+   --> src/memory.rs:470:11
+    |
+470 | pub const ENTRY_DIRTY: u64 = 1 << 6;
+    |           ^^^^^^^^^^^
+
+warning: constant `ENTRY_GLOBAL` is never used
+   --> src/memory.rs:475:11
+    |
+475 | pub const ENTRY_GLOBAL: u64 = 1 << 8;
+    |           ^^^^^^^^^^^^
+
+warning: method `flags` is never used
+   --> src/memory.rs:517:18
+    |
+487 | impl PageTableEntry {
+    | ------------------- method in this implementation
+...
+517 |     pub const fn flags(self) -> u64 {
+    |                  ^^^^^
+
+warning: methods `root` and `unmap_page` are never used
+   --> src/memory.rs:581:12
+    |
+567 | impl<'a, T: TableMemory> Mapper<'a, T> {
+    | -------------------------------------- methods in this implementation
+...
+581 |     pub fn root(&self) -> PhysAddr {
+    |            ^^^^
+...
+701 |     pub fn unmap_page(&mut self, virt: VirtAddr) -> Option<PhysAddr> {
+    |            ^^^^^^^^^^
+
+warning: methods `size` and `contains_sp` are never used
+   --> src/tasks.rs:268:18
+    |
+245 | impl Stack {
+    | ---------- methods in this implementation
+...
+268 |     pub const fn size(self) -> u64 {
+    |                  ^^^^
+...
+285 |     pub const fn contains_sp(self, sp: u64) -> bool {
+    |                  ^^^^^^^^^^^
+
+warning: field `ticks` is never read
+   --> src/tasks.rs:396:5
+    |
+388 | pub struct Scheduler<'a> {
+    |            --------- field in this struct
+...
+396 |     ticks: u64,
+    |     ^^^^^
+
+warning: methods `capacity`, `ticks`, `reap`, and `on_timer_tick` are never used
+   --> src/tasks.rs:415:12
+    |
+399 | impl<'a> Scheduler<'a> {
+    | ---------------------- methods in this implementation
+...
+415 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+...
+425 |     pub fn ticks(&self) -> u64 {
+    |            ^^^^^
+...
+658 |     pub fn reap(&mut self, id: TaskId) -> bool {
+    |            ^^^^
+...
+678 |     pub fn on_timer_tick(&mut self) -> Option<TaskId> {
+    |            ^^^^^^^^^^^^^
+
+warning: constant `SAVED_RCX` is never used
+  --> src/user.rs:69:7
+   |
+69 | const SAVED_RCX: isize = -32;
+   |       ^^^^^^^^^
+
+warning: constant `SAVED_RDX` is never used
+  --> src/user.rs:70:7
+   |
+70 | const SAVED_RDX: isize = -40;
+   |       ^^^^^^^^^
+
+warning: `metaos-kernel` (bin "metaos-kernel") generated 24 warnings (2 duplicates)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.53s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+Building bootloader
+   Compiling bootloader v0.9.35 (/Users/test/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bootloader-0.9.35)
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.98s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+Created bootimage for `metaos-kernel` at `/private/tmp/oc500-s8/kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin`
+== boot ==
+qemu-system-x86_64: terminating on signal 15 from pid 19642 (<unknown process>)
+== assert (/tmp/gate-boot-AQJIEp) ==
+  ok   K1 alive
+  ok   K4 memory
+  ok   K6 ring 3
+  ok   K6 clean exit
+  ok   K6 fault isolation
+  ok   readkey spawned (R5-2 follow-up)
+  ok   shell answered
+  ok   status reported live state
+GATE GREEN (/tmp/gate-boot-AQJIEp)
+combined gate run exit: 0, wall-clock: see timestamps

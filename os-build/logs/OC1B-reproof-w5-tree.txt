@@ -1,0 +1,47 @@
+# OC1B-177/181/185/189/193 — re-proof wave slots 1–5: TREE RECORD (all slots)
+
+Trigger rule (§8, quoted from os-build/OPENCODE1_TASKS_500.md):
+  "a re-proof wave runs ONLY when Pax lands a merge wave that touches
+   kernel/ (source, Cargo files, or userspace pack). Doc, face, and
+   services merges do not trigger a wave."
+
+Wave 0 reference tree (prior proof that stands):
+  WAVE3 combined-tree boot proof at c7aeb162
+  (os-build/logs/WAVE3_KERNEL_PROOF.md: GATE GREEN 7/7, banner, alive,
+   readkey got=3, fetch screen, status/ps, bad syscall 99 refused,
+   fault isolation, panic 0).
+
+Tips checked 2026-11-02 (commands run on /tmp/oc500-s8 = opencode/500-s8):
+  origin/main = 3452d244663f4ad87e51bfe2f0dd3902f90ae087 (2026-11-02 10:59 -0500)
+  opencode/500 tip = 94010c76ee095fa6c6bcfa4405cd56a9695f32d3 (2026-11-02 11:00 -0500)
+  worktree HEAD = 94010c76 (git status --porcelain: clean/empty)
+
+Kernel-touching merge-wave check (the ONLY trigger):
+  $ git log --format="%H %s" c7aeb162..origin/main -- kernel/
+  (empty — no output, no kernel-touching commit on main since wave 0)
+  $ git log --format="%H %s" origin/main..HEAD -- kernel/ os-build/userspace/
+  (empty — opencode/500 adds no kernel or userspace-pack change)
+  $ git log --format="%H %s" origin/main..HEAD -- kernel/src/syscalls.rs
+  (empty — FROZEN file untouched)
+
+What DID land c7aeb162..origin/main (non-triggering by the rule):
+  d8ca587d server/queue/models.py + cea55cca server/queue/crew.py +
+  37618387 tests/queue-python/test_crew_model_wiring.py
+  (Imperium multi-model wiring: SAM segment on flag path, Wonder
+   second reader; dispatch stays simulated-loopback-only, crew.py
+   refuses every non-loopback URL) + 3452d244 README expansion +
+  task-list/audit docs. None touches kernel/.
+
+Per-slot verdicts (OC1B-197):
+  Wave 1: NO WAVE — no kernel-touching merge wave 1 landed before closeout; the prior proof stands.
+  Wave 2: NO WAVE — no kernel-touching merge wave 2 landed before closeout; the prior proof stands.
+  Wave 3: NO WAVE — no kernel-touching merge wave 3 landed before closeout; the prior proof stands.
+  Wave 4: NO WAVE — no kernel-touching merge wave 4 landed before closeout; the prior proof stands.
+  Wave 5: NO WAVE — no kernel-touching merge wave 5 landed before closeout; the prior proof stands.
+
+This one file serves OC1B-177, -181, -185, -189, -193 (tree record)
+and OC1B-197 (NO WAVE lines); the per-slot copies below are
+byte-identical records filed under the spec's named paths.
+Combined-tree re-proof on the merged tip (gate + suites + serial +
+captures + diff) is filed separately in this section because the
+Imperium wiring merged into the tip without triggering a wave slot.
