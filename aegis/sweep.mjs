@@ -144,6 +144,7 @@ export function buildPlan(root) {
   const queries = [];
   const local = [];
   const unversioned = [];
+  const unreadable = [];
   const seen = new Set();
   const addAll = (qs, file) => {
     for (const q of qs) {
@@ -166,11 +167,20 @@ export function buildPlan(root) {
   for (const m of inventory.manifests) {
     if (m.manifest !== "package.json") continue;
     if (lockFiles.includes(path.posix.join(path.posix.dirname(m.path), "package-lock.json"))) continue;
-    const doc = JSON.parse(fs.readFileSync(path.join(root, m.path), "utf8"));
+    let doc;
+    try {
+      doc = JSON.parse(fs.readFileSync(path.join(root, m.path), "utf8"));
+    } catch (err) {
+      // A malformed manifest used to throw out of buildPlan and take the whole sweep down, so
+      // one bad file hid every other manifest's result (R11-283, gap-fill). It is now a recorded
+      // skip: named, counted, and not queried.
+      unreadable.push({ manifest: m.path, reason: String((err && err.message) || err).slice(0, 200) });
+      continue;
+    }
     const deps = { ...(doc.dependencies || {}), ...(doc.devDependencies || {}), ...(doc.optionalDependencies || {}) };
     if (Object.keys(deps).length) unversioned.push({ manifest: m.path, count: Object.keys(deps).length });
   }
-  return { inventory, lockFiles, queries, local, unversioned };
+  return { inventory, lockFiles, queries, local, unversioned, unreadable };
 }
 
 // `client` is injected: the real one speaks MCP (aegis/osv-client.mjs), the test's is a stub
@@ -221,9 +231,22 @@ export async function runSweep({ root, outDir, client, runId, sourceServer = "un
 
   for (let i = 0; i < plan.queries.length; i += BATCH) {
     const batch = plan.queries.slice(i, i + BATCH);
-    const res = await client.callTool("scan_packages", {
-      packages: batch.map((q) => ({ ecosystem: q.ecosystem, name: q.name, version: q.version })),
-    });
+    let res;
+    try {
+      res = await client.callTool("scan_packages", {
+        packages: batch.map((q) => ({ ecosystem: q.ecosystem, name: q.name, version: q.version })),
+      });
+    } catch (err) {
+      // A cut mid-sweep is not a blocked sweep: some batches DID run. The record keeps the
+      // checked count and every finding filed before the cut, and the status says CUT so no
+      // reader can mistake the partial run for a clean one (R11-287).
+      const reason = "transport failed at batch " + (batches + 1) + ": " + String((err && err.message) || err).slice(0, 200);
+      ledger.add(runId, "sweep-cut", { batch: batches + 1, checked, findings: findings.length, reason });
+      return {
+        status: "cut", reason, plan, findings, checked, batches,
+        startedAt, finishedAt: now().toISOString(), findingsFile, sourceServer, unparseable,
+      };
+    }
     batches += 1;
     checked += batch.length;
     const parsed = parseScanText(res && res.text);
@@ -301,6 +324,7 @@ export function renderReport(result, { runId }) {
   lines.push("| query batches | " + (result.batches || 0) + " |");
   lines.push("| workspace members skipped (not published) | " + plan.local.length + " |");
   lines.push("| manifests with unversioned deps (not queryable) | " + plan.unversioned.length + " |");
+  lines.push("| manifests unreadable (skipped, named below) | " + (plan.unreadable || []).length + " |");
   lines.push("");
   if (plan.lockFiles.length) {
     lines.push("Lockfiles: " + plan.lockFiles.map((f) => "`" + f + "`").join(", ") + ".");
@@ -309,6 +333,34 @@ export function renderReport(result, { runId }) {
   if (plan.local.length) {
     lines.push("Skipped as this tree's own crates: " + [...new Set(plan.local.map((l) => l.name))].join(", ") + ".");
     lines.push("");
+  }
+
+  if ((plan.unreadable || []).length) {
+    lines.push("Skipped as unreadable: " + plan.unreadable.map((u) => "`" + u.manifest + "`").join(", ") + ".");
+    lines.push("");
+  }
+
+  if (result.status === "cut") {
+    lines.push("## Result: CUT — partial run, nothing beyond the cut is claimed");
+    lines.push("");
+    lines.push("The transport failed during batch " + ((result.batches || 0) + 1) + ": " + (result.reason || "unknown") + ".");
+    lines.push((result.checked || 0) + " reference(s) were queried and " + (result.findings || []).length + " finding(s) filed before the cut.");
+    lines.push("This is **not** a clean result and **not** a blocked one: everything after the cut is unexamined.");
+    lines.push("");
+    if ((result.findings || []).length) {
+      lines.push("| severity | id | target |");
+      lines.push("|---|---|---|");
+      for (const f of result.findings) {
+        lines.push("| " + f.severity + " | " + f.title.split(" affects ")[0] + " | `" + (f.target || "") + "` |");
+      }
+      lines.push("");
+    }
+    lines.push("## Records");
+    lines.push("");
+    lines.push("- Findings so far: `" + path.relative(process.cwd(), result.findingsFile) + "` (append-only).");
+    lines.push("- Cut receipt: `os-build/aegis/runs.jsonl`, run `" + runId + "`.");
+    lines.push("");
+    return lines.join("\n");
   }
 
   if (result.status !== "ran") {

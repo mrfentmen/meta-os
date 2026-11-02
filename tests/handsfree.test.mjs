@@ -109,11 +109,17 @@ test("C3.2 a yes lands in the run ledger, timestamped, once", () => {
   assert.equal(ledger[0].at, "1970-01-01T00:00:02.000Z");
   assert.equal(ledger[0].what, "send the nightly report");
 
-  // A second, conflicting answer is refused and writes nothing: an approval that can be
-  // changed is not an approval.
-  assert.equal(dropApproval(dir, "no").reason, "already-answered");
+  // A second, conflicting answer is refused and does not change the decision. It IS logged as a
+  // duplicate (R11-243): hearing an approval twice is a fact the record must keep, while the
+  // approval itself still counts once.
+  const dup = dropApproval(dir, "no");
+  assert.equal(dup.reason, "already-answered");
+  assert.equal(dup.duplicate, true);
   assert.equal(readApproval(dir).state, "allowed");
-  assert.equal(fs.readFileSync(path.join(dir, "ledger.jsonl"), "utf8").trim().split("\n").length, 1);
+  const events = fs.readFileSync(path.join(dir, "ledger.jsonl"), "utf8").trim().split("\n").map((l) => JSON.parse(l));
+  assert.deepEqual(events.map((e) => e.event), ["approval", "approval-duplicate"]);
+  assert.equal(events[0].decision, "yes");
+  assert.ok(fs.readFileSync(path.join(dir, "approval-duplicates.jsonl"), "utf8").includes("no"));
 });
 
 test("C3.3 a no denies, a shrug is refused, and the difference is in the record", () => {

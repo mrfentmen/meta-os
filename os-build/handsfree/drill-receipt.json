@@ -1,0 +1,49 @@
+{
+  "at": "2026-11-02T14:13:52.801Z",
+  "jobs": 2,
+  "exits": [
+    {
+      "run": "aegis-mvzcaoqw",
+      "code": 0,
+      "signal": null
+    },
+    {
+      "run": "nervus-mvzcaoqz",
+      "code": 0,
+      "signal": null
+    }
+  ],
+  "latency": {
+    "measured": 2,
+    "skipped": 0,
+    "minMs": 49,
+    "medianMs": 50,
+    "maxMs": 50,
+    "clockJumps": 0,
+    "at": "2026-11-02T14:13:52.801Z",
+    "rows": [
+      {
+        "id": "aegis-20261102141352-0",
+        "agent": "aegis",
+        "ok": true,
+        "ms": 49,
+        "filedAt": "2026-11-02T14:13:52.704Z",
+        "finishedAt": "2026-11-02T14:13:52.753Z",
+        "clockJump": false,
+        "reason": null
+      },
+      {
+        "id": "nervus-20261102141352-1",
+        "agent": "nervus",
+        "ok": true,
+        "ms": 50,
+        "filedAt": "2026-11-02T14:13:52.704Z",
+        "finishedAt": "2026-11-02T14:13:52.754Z",
+        "clockJump": false,
+        "reason": null
+      }
+    ]
+  },
+  "brief": "2 orders ran.\n2 finished, 0 stopped, 0 failed.\naegis finished.\nnervus finished.\n",
+  "note": "measured on this host; one run, wall time includes agent start-up"
+}

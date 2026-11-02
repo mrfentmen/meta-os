@@ -1,0 +1,32 @@
+{
+  "at": "2026-11-02T14:14:27.365Z",
+  "ledger": "os-build/nervus/stub-ledger.jsonl",
+  "rows": [
+    {
+      "op": "map_layers",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "op": "sweep",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "op": "steer",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "op": "ablate",
+      "ok": true,
+      "errors": []
+    },
+    {
+      "op": "evaluate_delta",
+      "ok": true,
+      "errors": []
+    }
+  ],
+  "stub": true
+}
