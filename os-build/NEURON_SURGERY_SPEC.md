@@ -6,7 +6,8 @@ in IBM Granite models, ~9,400 steered generations, 1,500-neuron
 layer sweeps, dose windows, the audited layer curve) into Meta
 OS as a program that BOTH a user and the OS's own agents
 (OpenCode included) can drive. Product name: the boss's to
-settle. Placement recommendation at the end.
+settle. Placement: STANDALONE SYSTEM (boss's ruling,
+2026-11-02) — not inside Science Lab.
 
 ## What it is (his formula)
 
@@ -33,6 +34,39 @@ Two doors, one room, one ledger.
    Every operation writes a ledger record: model hash, layer,
    neuron, dose, probe, result. His provenance discipline IS
    the ledger discipline — they were always the same idea.
+
+
+## The instrument tray (boss's order: "tons of the tools we
+made")
+
+The bench does not start empty. It ships with the boss's own
+existing instruments wired in as its tray — the MCP servers
+and repo tools he already built and uses, sorted by the job
+they do at the bench:
+
+- **Know the patient:** repo-forensics (what this model/code
+  actually is), worktree-orbit (which copies exist and their
+  state), migrationmap (how it got here).
+- **Before/after proof:** evidencediff and contractdiff (the
+  evaluate-delta receipts), testshape and flakyhistory (are
+  the eval runs themselves trustworthy).
+- **Safety of the stack:** OSV and CISA KEV (the model stack's
+  dependencies), secret-hygiene (counts only, before anything
+  is published), deprecation-radar (rotting APIs under the
+  bench).
+- **Records:** release-notes-forge (operation summaries),
+  incident-timeline (what happened, in order), the agent
+  ledger itself.
+- **Text integrity:** unicode and unicode-security (steered
+  outputs and published claims checked for confusables and
+  invisible characters).
+- **The bus they ride:** his local MCP gateway — the tools are
+  already wired there; the bench is a new room on an existing
+  corridor, not a new building.
+
+New bench operations (sweep, steer, ablate, evaluate-delta,
+map-layers) join the tray as first-class tools beside these,
+callable by the user door and the agent door alike.
 
 ## The second job: breaking models down
 
@@ -80,7 +114,8 @@ loops (Imperium patrol, Musica studio, Officina faber).
 
 ## First build (v1)
 
-- [ ] Spec (this file) + the boss settles name and placement.
+- [x] Spec (this file). Placement settled: standalone system
+      (boss, 2026-11-02). Name still the boss's to give.
 - [ ] The operation set written as tool contracts (sweep,
       steer, ablate, evaluate-delta, map-layers) with the
       ledger record shape.
@@ -90,11 +125,12 @@ loops (Imperium patrol, Musica studio, Officina faber).
 - [ ] The face: layer map + sweep results as records — after
       the runner reproduces, not before.
 
-## Placement (boss's call)
+## Placement — SETTLED
 
-Recommended: inside **Science Lab** as its model bench —
-LABORATORY's Computational Lab and Independent Verification
-are already this shape, and Hortus set the precedent (an
-engine inside a system, not a standalone system). If the boss
-wants it headline, it stands alone as its own system; the
-spec works either way.
+Standalone system (boss's ruling, 2026-11-02). It stands
+beside Imperium, Science Lab, Musica, Officina, and Aegis in
+the platform doctrine — a system in its own right, with the
+instrument tray of the boss's existing tools inside it.
+Science Lab remains a neighbour, not a parent: the bench
+borrows LABORATORY's verification discipline without living
+in its house.
