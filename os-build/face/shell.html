@@ -49,8 +49,12 @@
 <div id="topbar">
   <span class="ribbon-mark">&#8734;</span>
   <span id="app-name">Finder</span>
+  <input id="shell-search" type="search" placeholder="Search Files Notes apps (Ctrl+K)" aria-label="Search" autocomplete="off">
+  <div id="search-results" hidden></div>
+  <div id="ws-bar" role="tablist" aria-label="Workspaces"></div>
   <span id="clock">--:--</span>
   <span id="theme-toggle" title="Toggle light/dark" role="button" tabindex="0">&#9681;</span>
+  <span id="lock-btn" title="Lock screen" role="button" tabindex="0" style="cursor:pointer">&#128274;</span>
   <span class="icons"><span id="net">NET</span><span id="bat">BAT</span><span id="snd">SND</span></span>
 </div>
 <div id="desktop"></div>
@@ -105,13 +109,16 @@ function applyBar() {
   else { bar.style.background = dark ? "#000" : "#fff"; bar.style.color = dark ? "#fff" : "#000"; }
 }
 applyTheme(); applyBar();
-/* Wallpaper from picker/Settings (localStorage), live. All five stay in
+/* Wallpaper from picker/Settings (localStorage), live. All eleven stay in
    the blue/white/black discipline (vigiles palette); they differ by
    backdrop tint. Explicit metaos-bg from Settings wins. */
 const WALLPAPERS = {
   "ribbon-blue": "#020814", "ribbon-dark": "#000000",
   "ribbon-light": "#eaf2ff", "comet-dense": "#0a1f3d",
-  "wave-slow": "#101010",
+  "wave-slow": "#101010", "ribbon-frost": "#e8f0fd",
+  "ribbon-midnight": "#030712", "ribbon-ghost": "#141414",
+  "comet-sparse": "#0a2548", "comet-pale": "#f2f7ff",
+  "wave-fast": "#0d1b3e",
 };
 function applyWallpaper() {
   let id = "ribbon-blue";
@@ -129,6 +136,7 @@ window.addEventListener("storage", (e) => {
   if (e.key === "metaos-bar") applyBar();
 });
 
+document.getElementById("lock-btn").addEventListener("click", () => { window.location.href = "lock.html"; });
 document.getElementById("theme-toggle").addEventListener("click", () => {
   let t = "dark";
   try {
@@ -411,5 +419,9 @@ for (const app of APPS) {
   dock.appendChild(b);
 }
 </script>
+<script src="notify.js"></script>
+<script src="tile.js"></script>
+<script src="search.js"></script>
+<script src="workspace.js"></script>
 </body>
 </html>

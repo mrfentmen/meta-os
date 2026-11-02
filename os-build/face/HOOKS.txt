@@ -1,0 +1,26 @@
+shell.html hook lines (only additions; no existing logic touched)
+=============================================================
+Location 1 — inside #topbar, right after #app-name:
+  <input id="shell-search" type="search" placeholder="Search Files Notes apps (Ctrl+K)" aria-label="Search" autocomplete="off">
+    -> search.js input hook. search.js uses it if present, else creates it.
+  <div id="search-results" hidden></div>
+    -> search.js results dropdown hook. Populated/grouped Apps|Files|Notes.
+  <div id="ws-bar" role="tablist" aria-label="Workspaces"></div>
+    -> workspace.js button container hook. workspace.js fills WS1/WS2
+       buttons if empty, else wires existing buttons.
+
+Location 2 — end of body, after the main inline <script>:
+  <script src="tile.js"></script>
+    -> keyboard quarter/half tiling (Ctrl+Alt+1..4 quarters, Ctrl+Alt+arrows
+       halves, Ctrl+Alt+Up/5 maximize, Ctrl+Alt+Down/0 restore; Meta mirrors).
+  <script src="search.js"></script>
+    -> topbar search: APPS client-side + localStorage metaos-notes lines +
+       files.py :18936 /list name match (face dir + 1 subdir level).
+       Ctrl+K or "/" focuses, Esc closes, Enter opens top hit.
+  <script src="workspace.js"></script>
+    -> two workspaces: windows tagged dataset.ws 1|2, Alt+1/Alt+2 switch,
+       Ctrl+Alt+W toggles. dataset.min preserves minimized windows.
+
+Each *.js injects its own <style> at runtime, so no <style> edits in shell.html.
+Each *.js also self-creates its DOM hook if missing, so the page still works
+with only the three <script> lines.

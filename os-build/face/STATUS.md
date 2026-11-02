@@ -82,7 +82,11 @@ or BLOCKED with the artifact named.
 | 67b | Toolchain in bake | PROVEN (finding) | guest-toolchain-listing.txt: node /usr/bin/node + git 2.39.5 + chromium present; opencode ABSENT (no binary, 0 dpkg hits) |
 | 67 | Fresh image from script | TODO | build-image.sh needs Linux+sudo, not run this session |
 | 68 | STATUS final | TODO | this file, updated per section |
-| 69-73 | Long tail | PARKED (after tonight) | — |
+| 69 | Lock screen | PROVEN (local) | lock.html: ribbon dimmed + clock, password unlocks to shell; reuses login flow |
+| 70 | Notifications | DONE (local) | notify.js bell+badge polls board :18935/10s, dropdown, read-marking, log; hooked into shell; guest proof next |
+| 71 | Six more wallpapers | PROVEN (local) | 11 total, picker/settings/shell consistent, metaos-wallpaper persists |
+| 72 | Tiling + workspaces | PROVEN (local) | tile.js halves/quarters via FaceTile (right-half proven); workspace.js Alt+1/2 hide/show proven |
+| 73 | Topbar search | PROVEN (local) | search.js: "term" -> 1 hit (Terminal); Files/Notes included |
 | 74 | Bare-metal research note | PROVEN | BARE_METAL_NOTE.md (framebuffer/mouse/compositor/storage+net/ordering) |
 
 ## Spike judgment (task 4) and decision (task 5) — DONE 2026-11-02
