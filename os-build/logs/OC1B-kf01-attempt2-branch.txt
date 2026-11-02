@@ -1,0 +1,20 @@
+# OC1B-035 — KF-01 attempt-2 branch record (measured 2026-11-02, OpenCode 1)
+
+Attempt-1 status: no build/boot candidate landed (see
+OC1B-kf01-attempt1-branch.txt). Budget consumed so far: 0 of 2.
+
+Second-and-last FRESH candidate branch examined: NONE EXISTS.
+No origin ref matching rowan/kf/kernel-face/spike pins any bootloader
+other than 0.9 (exhaustive scan recorded in OC1B-kf01-attempt1-branch.txt;
+sole exception is the forbidden round7 history member 0.10.9).
+
+Fresh-candidate confirmation line: THERE IS NO SECOND FRESH CANDIDATE
+to confirm. Attempt 2 is not a re-run of attempt 1's candidate (there was
+none) and not either round7 pair member — because no branch proposes any
+candidate at all. Budget consumed by attempt 2: 0. Total consumed: 0 of 2.
+
+Difference note: not applicable — no attempt-1 approach exists to differ from.
+
+Verdict for OC1B-035..039: BLOCKED — no Rowan attempt-2 branch has landed.
+Per OC1B-040 the hard stop below applies WITHOUT any third attempt and
+without consuming budget on re-runs: the round7 pair stays history.

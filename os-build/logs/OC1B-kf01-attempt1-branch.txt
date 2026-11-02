@@ -1,0 +1,30 @@
+# OC1B-029 — KF-01 attempt-1 branch record (measured 2026-11-02, OpenCode 1)
+
+Candidate branch examined: origin/rowan/kernel-kf01-spike
+Exact tip sha: 8e725f4bb4acc9988624ee0a083c561d4ec4fcb4
+Subject: "KF-01 step 1: bootloader spike evidence synthesis (no version pinned, no boot claimed)"
+
+git diff --stat vs opencode/500 (94010c76), kernel files only:
+  (empty — this branch touches NO file under kernel/; its tip commit
+  changes os-build/face/KERNEL_FACE.md only, +145 lines)
+
+Bootloader pin on the candidate tip (kernel/Cargo.toml:11):
+  bootloader = { version = "0.9", features = ["map_physical_memory"] }
+  = identical to the OC1B-026 start record. No version pinned, no boot claimed.
+
+Fresh-candidate confirmation line: NO FRESH CANDIDATE EXISTS on this
+branch. It is not a new 0.11.x-line candidate, not a build/boot attempt
+at all — it is evidence synthesis prose. It is also not a re-run of the
+round7 pair (0.10.9 API-fail, 0.11 std-fail), so nothing is charged to the
+KF-01 budget. Budget consumed by attempt 1: 0. Remaining: 2 of 2.
+
+Companion doc-only branch origin/rowan/bootloader-spike @
+779012edac33c3ac80eef92826ea591d74a0d5ec likewise pins 0.9 unchanged
+(decision record RK-001..RK-005, no pin change, no kernel code).
+
+Exhaustive scan of all refs/remotes/origin/* kernel/Cargo.toml pins:
+the sole non-0.9 pin anywhere is origin/spike/bootloader-0.11 @ 0.10.9,
+the round7 history member — forbidden to re-run, never charged.
+
+Verdict for OC1B-029..034: BLOCKED — no Rowan attempt-1 build/boot
+branch has landed. Moved on per §2 rule; zero budget consumed.
