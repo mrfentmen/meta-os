@@ -46,9 +46,13 @@ def main():
     rows = {}
     for line in table.splitlines():
         cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) < 5 or not re.fullmatch(r"[a-z][a-z0-9_-]*", cells[0]):
+        if len(cells) < 5 or not re.fullmatch(r"[a-z][a-z0-9_()\s-]*", cells[0]):
             continue
-        rows[cells[0]] = cells
+        # Rows may annotate the boot id ("log (logd)"); the id is the bare name.
+        service = re.sub(r"\s*\(.*\)$", "", cells[0]).strip()
+        if service == "service":  # the header row
+            continue
+        rows[service] = cells
 
     missing = [s for s in ids if s not in rows]
     extra = [s for s in rows if s not in ids]

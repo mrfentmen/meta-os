@@ -26,7 +26,7 @@ Rules this table follows:
 | supervisor | it is the starter (`bootorder.goose:45-46`) | no — the header defines the policy | **boot stops** (fatal); the kernel starts nothing else | all table-started services |
 | console | escape parser may drop a leading style rather than refuse the call (`esc.goose:315`) | yes | effectively fatal: `log` needs it, so the boot stops | log, input, display, session |
 | logfmt | truncates an over-long message and marks it (`logfmt.goose:102,152`) | yes | effectively fatal: `log` needs it, so the boot stops | log, agenthost |
-| log (logd) | a refused queue slot is counted, not hidden (`logd.goose:32`; `entry.goose:20`) | yes | **boot stops** (fatal); nothing can report the failure that stopped it | audit, input, display, session, dhcp, dns, updater, agenthost |
+| log | a refused queue slot is counted, not hidden (`logd.goose:32`; `entry.goose:20`) | yes | **boot stops** (fatal); nothing can report the failure that stopped it | audit, input, display, session, dhcp, dns, updater, agenthost |
 | watchdog | metric registry is fixed-size and refuses unknowns (`metrics.goose:25`) | yes | boot continues; deaths are noticed only by restart-on-exit | — |
 | audit | a full buffer refuses rather than truncating (`audit.goose:83-84`) | yes | boot continues; no audit trail, and `agenthost` dies with it | session, updater, agenthost |
 | netcfg | a static address without a mask is refused (`netcfg.goose:275,345`) | yes | boot continues; no interfaces, so the network stack has nothing to bind | net, dhcp, dns, socket |
@@ -43,12 +43,14 @@ Rules this table follows:
 
 ## What this table makes obvious
 
-1. **Seventeen of the twenty-two contracts say nothing about their own absence.** They describe
-   what they do when running, and in detail; none describes the boot with them missing. That is
-   why the supervisor's `fatal` flag and its cascade are the only real source of symptoms for
-   most rows — and why the 7-on-paper / 9-in-effect correction in `BOOT_MANIFEST.md` matters.
+1. **Twenty-one of the twenty-two contracts say nothing about their own absence.** Only the
+   supervisor's header states a policy for a service being missing. Every other contract
+   describes what the service does while running, in detail, and is silent on the boot without
+   it. That is why the supervisor's `fatal` flag and its cascade are the only real source of
+   symptoms for most rows — and why the 7-on-paper / 9-in-effect correction in
+   `BOOT_MANIFEST.md` matters.
 2. **The most complete failure behaviour belongs to the services that are least fatal.**
-   `audit`, `socket`, `updater` and `agenthost` all refuse precisely and say why; the fatal five
+   `audit`, `socket`, `updater` and `agenthost` all refuse precisely and say why; the fatal seven
    mostly have no absence statement at all. The failure discipline was built where it was
    interesting, not where it is load-bearing.
 3. **Three symptoms are unobservable by design.** `log` missing means the reason is unlogged;
