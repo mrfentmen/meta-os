@@ -2190,6 +2190,136 @@ pub fn environment_bus_record(
     })
 }
 
+/// OS-103 follow-up: the "budget" part of an environment record,
+/// read from a stated budgets list at generation time.
+///
+/// The caller passes the snapshot's own budgets list — the
+/// same OS-079-shaped entries (lane, spent, cap, or
+/// remaining) the brief's spend-vs-budget lines already
+/// read — and gets back the record to store as the
+/// environment record's "budget" value: "lane", the usable
+/// figures exactly as stated ("spent" and "cap" when both
+/// are usable, "remaining" when it is stated usable), and
+/// "as_of" (the stamp passed as `now`, or the current
+/// time). This reads stated figures, never a live ledger:
+/// there is still no spend ledger in this repo for a
+/// filler to read spent from, so a snapshot that carries
+/// no budgets list yields nothing here, and the Budget
+/// line reads not reported rather than a guessed figure.
+/// An entry counts only when it carries a non-empty
+/// string lane and usable figures: a usable "remaining"
+/// (an integer, never a bool), or a usable spent/cap
+/// pair (integers, never bools, cap positive, spent not
+/// negative, matching intel/budgets.py's malformed-entry
+/// rule — a lane with no usable cap is unbudgeted, not a
+/// zero budget, and a spent figure past cap is kept, an
+/// honest overspend, not a zero). When `lane` names a
+/// lane, only that lane's entries count, and the first
+/// usable one in list order wins; without a lane the
+/// first usable entry in list order wins, so a caller
+/// with several lanes states the lane it reports rather
+/// than taking whichever entry happens to come first.
+/// Returns `None` when there is no usable budgets list,
+/// or when no entry is usable, so the caller leaves
+/// "budget" out of the record and the Budget line reads
+/// not reported instead of falsely reading a zero
+/// remaining. This is only the budget quarter: a record
+/// carrying only this part still renders repo, bus, and
+/// Working now as not reported. Never fails.
+///
+/// Typed-input mapping, following this module's convention:
+/// the caller passes `None` for a non-list budgets value
+/// (Python returns `None` for it); a non-dict entry maps to
+/// `RawEnvironmentBudget::Other` and is skipped here; a
+/// non-string lane maps to an empty string and is then
+/// filtered here; a non-int (including a bool) spent, cap,
+/// or remaining value maps to `None`; an empty-string
+/// `lane` filter maps to no filter, mirroring Python's
+/// `wanted = lane if isinstance(lane, str) and lane else
+/// None`. A non-int `now` maps to `None` and reads the wall
+/// clock, mirroring Python's fallback to the current time.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RawEnvironmentBudget {
+    /// A dict entry as the caller reads it: lane verbatim,
+    /// and each figure when the caller could read an int
+    /// for it (a bool, string, or missing figure is `None`).
+    Entry {
+        lane: String,
+        spent: Option<i64>,
+        cap: Option<i64>,
+        remaining: Option<i64>,
+    },
+    /// Any other shape: Python's `isinstance(entry, dict)`
+    /// check skips it, so it can never name a lane.
+    Other,
+}
+
+/// One budget part, mirroring Python's record dict: lane,
+/// the spent/cap pair only when both are usable, the
+/// remaining figure only when it is stated usable, and
+/// the stamp.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnvironmentBudgetRecord {
+    pub lane: String,
+    pub spent: Option<i64>,
+    pub cap: Option<i64>,
+    pub remaining: Option<i64>,
+    pub as_of: i64,
+}
+
+pub fn environment_budget_record(
+    budgets: Option<&[RawEnvironmentBudget]>,
+    lane: Option<&str>,
+    now: Option<i64>,
+) -> Option<EnvironmentBudgetRecord> {
+    let budgets = budgets?;
+    let wanted = match lane {
+        Some(l) if !l.is_empty() => Some(l),
+        _ => None,
+    };
+    let as_of = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    for entry in budgets {
+        let (entry_lane, spent, cap, remaining) = match entry {
+            RawEnvironmentBudget::Entry {
+                lane,
+                spent,
+                cap,
+                remaining,
+            } => (lane, spent, cap, remaining),
+            RawEnvironmentBudget::Other => continue,
+        };
+        if entry_lane.is_empty() {
+            continue;
+        }
+        if let Some(wanted) = wanted {
+            if entry_lane != wanted {
+                continue;
+            }
+        }
+        let pair = match (spent, cap) {
+            (Some(s), Some(c)) if *s >= 0 && *c > 0 => Some((*s, *c)),
+            _ => None,
+        };
+        if pair.is_none() && remaining.is_none() {
+            continue;
+        }
+        return Some(EnvironmentBudgetRecord {
+            lane: entry_lane.clone(),
+            spent: pair.map(|(s, _)| s),
+            cap: pair.map(|(_, c)| c),
+            remaining: *remaining,
+            as_of,
+        });
+    }
+    None
+}
+
 /// STR-002 image extensions: the digest lists what the pointer
 /// itself names, so only these extensions count as screenshots.
 /// A `.txt`, `.pdf`, or extension-less pointer is a file share,
@@ -4557,5 +4687,201 @@ mod tests {
         assert!(lines[0].contains("not reported"));
         assert!(lines[2].contains("not reported"));
         assert!(lines[3].contains("not reported"));
+    }
+
+    fn budget_budgets() -> Vec<RawEnvironmentBudget> {
+        vec![
+            RawEnvironmentBudget::Entry {
+                lane: "HANA".into(),
+                spent: Some(120),
+                cap: Some(300),
+                remaining: None,
+            },
+            RawEnvironmentBudget::Entry {
+                lane: "MILO".into(),
+                spent: Some(50),
+                cap: Some(200),
+                remaining: None,
+            },
+        ]
+    }
+
+    fn budget_env_from_record(record: &EnvironmentBudgetRecord) -> Environment {
+        Environment {
+            repo: None,
+            bus: None,
+            jobs: None,
+            working_age_label: String::new(),
+            budget: Some(EnvironmentBudget {
+                lane: record.lane.clone(),
+                cap: record.cap,
+                spent: record.spent,
+                remaining: record.remaining,
+                age_label: environment_age_label(Some(record.as_of)),
+            }),
+        }
+    }
+
+    #[test]
+    fn environment_budget_record_spent_and_cap_renders_remaining_with_cap() {
+        let budgets = budget_budgets();
+        let record = environment_budget_record(
+            Some(&budgets),
+            Some("HANA"),
+            Some(1793093400),
+        )
+        .expect("a usable HANA entry yields a budget record");
+        assert_eq!(record.lane, "HANA");
+        assert_eq!(record.spent, Some(120));
+        assert_eq!(record.cap, Some(300));
+        assert_eq!(record.as_of, 1793093400);
+        let lines = environment_lines(Some(&budget_env_from_record(&record)));
+        assert!(lines[3].contains("Budget: HANA lane: 180 remaining of 300 cap"));
+    }
+
+    #[test]
+    fn environment_budget_record_named_lane_picked_unknown_lane_is_none() {
+        let budgets = budget_budgets();
+        let record = environment_budget_record(
+            Some(&budgets),
+            Some("MILO"),
+            Some(1793093400),
+        )
+        .expect("a usable MILO entry yields a budget record");
+        assert_eq!(record.lane, "MILO");
+        let lines = environment_lines(Some(&budget_env_from_record(&record)));
+        assert!(lines[3].contains("Budget: MILO lane: 150 remaining of 200 cap"));
+        assert_eq!(
+            environment_budget_record(Some(&budgets), Some("PAX"), Some(1793093400)),
+            None
+        );
+    }
+
+    #[test]
+    fn environment_budget_record_no_lane_takes_first_usable_entry() {
+        let budgets = vec![
+            RawEnvironmentBudget::Entry {
+                lane: String::new(),
+                spent: Some(1),
+                cap: Some(2),
+                remaining: None,
+            },
+            RawEnvironmentBudget::Entry {
+                lane: "MILO".into(),
+                spent: Some(50),
+                cap: Some(200),
+                remaining: None,
+            },
+        ];
+        let record = environment_budget_record(Some(&budgets), None, Some(1793093400))
+            .expect("an empty lane is skipped for the first usable entry");
+        assert_eq!(record.lane, "MILO");
+    }
+
+    #[test]
+    fn environment_budget_record_remaining_direct_renders_without_cap_part() {
+        let budgets = vec![RawEnvironmentBudget::Entry {
+            lane: "HANA".into(),
+            spent: None,
+            cap: None,
+            remaining: Some(75),
+        }];
+        let record = environment_budget_record(Some(&budgets), None, Some(1793093400))
+            .expect("a stated remaining yields a budget record");
+        assert_eq!(record.remaining, Some(75));
+        assert_eq!(record.cap, None);
+        let lines = environment_lines(Some(&budget_env_from_record(&record)));
+        assert!(lines[3].contains("Budget: HANA lane: 75 remaining"));
+        assert!(!lines[3].contains("cap"));
+    }
+
+    #[test]
+    fn environment_budget_record_malformed_skipped_never_guessed() {
+        // Bool and string figures map to None by the caller, as do
+        // missing figures; non-dict entries map to Other.
+        let malformed = vec![
+            RawEnvironmentBudget::Entry {
+                lane: "HANA".into(),
+                spent: None,
+                cap: Some(300),
+                remaining: None,
+            },
+            RawEnvironmentBudget::Entry {
+                lane: "HANA".into(),
+                spent: Some(-5),
+                cap: Some(300),
+                remaining: None,
+            },
+            RawEnvironmentBudget::Entry {
+                lane: "HANA".into(),
+                spent: Some(10),
+                cap: Some(0),
+                remaining: None,
+            },
+            RawEnvironmentBudget::Entry {
+                lane: "HANA".into(),
+                spent: None,
+                cap: Some(300),
+                remaining: None,
+            },
+            RawEnvironmentBudget::Entry {
+                lane: "HANA".into(),
+                spent: None,
+                cap: Some(300),
+                remaining: None,
+            },
+            RawEnvironmentBudget::Entry {
+                lane: String::new(),
+                spent: Some(10),
+                cap: Some(300),
+                remaining: None,
+            },
+            RawEnvironmentBudget::Other,
+            RawEnvironmentBudget::Other,
+        ];
+        assert_eq!(
+            environment_budget_record(Some(&malformed), Some("HANA"), Some(1793093400)),
+            None
+        );
+        assert_eq!(
+            environment_budget_record(None, None, Some(1793093400)),
+            None
+        );
+        assert_eq!(
+            environment_budget_record(Some(&[]), None, Some(1793093400)),
+            None
+        );
+        let lines = environment_lines(None);
+        assert!(lines[3].contains("not reported"));
+    }
+
+    #[test]
+    fn environment_budget_record_overspend_kept_as_honest_negative_remaining() {
+        let budgets = vec![RawEnvironmentBudget::Entry {
+            lane: "HANA".into(),
+            spent: Some(310),
+            cap: Some(300),
+            remaining: None,
+        }];
+        let record = environment_budget_record(Some(&budgets), None, Some(1793093400))
+            .expect("an overspend is a usable pair, not a zero");
+        let lines = environment_lines(Some(&budget_env_from_record(&record)));
+        assert!(lines[3].contains("Budget: HANA lane: -10 remaining of 300 cap"));
+    }
+
+    #[test]
+    fn environment_budget_record_renders_budget_line_and_others_not_reported() {
+        let budgets = budget_budgets();
+        let record = environment_budget_record(
+            Some(&budgets),
+            Some("HANA"),
+            Some(1793093400),
+        )
+        .expect("a usable HANA entry yields a budget record");
+        let lines = environment_lines(Some(&budget_env_from_record(&record)));
+        assert!(lines[3].contains("Budget: HANA lane: 180 remaining"));
+        assert!(lines[0].contains("not reported"));
+        assert!(lines[1].contains("not reported"));
+        assert!(lines[2].contains("not reported"));
     }
 }
