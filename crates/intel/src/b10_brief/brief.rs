@@ -5398,7 +5398,7 @@ mod tests {
             record.settled_decisions,
             Some(vec!["Ship it".to_string()])
         );
-        let kept = record.budgets.expect("usable entries yield budgets");
+        let kept = record.budgets.as_ref().expect("usable entries yield budgets");
         assert_eq!(kept.len(), 3);
         assert_eq!(kept[0].lane, "HANA");
         assert_eq!(kept[0].spent, Some(120));
