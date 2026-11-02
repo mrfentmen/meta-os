@@ -1,0 +1,17 @@
+{
+  "run": "kev-2026-11-02T14-43-17-817Z",
+  "at": "2026-11-02T14:43:18.130Z",
+  "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+  "findings": "/Users/test/Desktop/meta-os/os-build/aegis/findings.jsonl",
+  "checked": 0,
+  "flagged": 0,
+  "unchecked": 0,
+  "rows": [],
+  "catalog": {
+    "count": 1766,
+    "version": "2026.10.30",
+    "released": "2026-10-30T17:02:45.3665Z",
+    "source": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+  },
+  "excludedNonSweep": 10
+}

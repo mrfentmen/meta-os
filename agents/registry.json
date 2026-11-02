@@ -113,24 +113,21 @@
     },
     {
       "budget": {
-        "maxActions": 8,
-        "maxCalls": 12,
-        "maxSpendUsd": 0.5
+        "maxWallMs": 120000
       },
       "capabilities": [
         "patrol",
-        "assess",
+        "queue",
         "dispatch-simulated"
       ],
       "command": [
-        "true"
+        "python3",
+        "repo:server/queue/hosted_imperium.py"
       ],
-      "lane": "Imperium loop (patrol -> review -> investigation -> records -> response)",
+      "lane": "Imperium queue stack — hosted one-pass: queue service + resident agent + simulated dispatch",
       "name": "imperium-patrol",
       "owner": "system: imperium",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "Imperium lives outside this repo; no real command can be named here"
+      "hosted": true
     },
     {
       "budget": {
@@ -170,15 +167,18 @@
     },
     {
       "budget": {
-        "maxWallMs": 3600000
+        "maxWallMs": 60000
       },
       "capabilities": [
-        "watch"
+        "watch",
+        "relay-drain"
       ],
       "command": [
-        "true"
+        "repo:node",
+        "agents/watchman.mjs",
+        "--once"
       ],
-      "lane": "watch rounds (bus, repo, gateway) — capability demo agent",
+      "lane": "Cadence watch — hosted one-pass relay drain",
       "name": "watch",
       "owner": "boss",
       "watch": [],
@@ -206,9 +206,7 @@
         "total": 3,
         "max": 3
       },
-      "hosted": false,
-      "draft": true,
-      "draftReason": "capability demo entry only; `true` proves the runtime, not a watch loop"
+      "hosted": true
     },
     {
       "name": "aegis",

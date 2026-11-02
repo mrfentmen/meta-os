@@ -139,5 +139,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
   console.log("relay-watchman: watching", path.join(HERE, "jobs"));
   const tick = async () => { await w.pollOnce(); };
   await tick();
+  // --once makes the watchman a hosted loop command: one drain, exit 0. A daemon never returns,
+  // so a registry entry pointing at it without this flag would sit until its budget killed it
+  // (R12-009).
+  if (process.argv.includes("--once")) process.exit(0);
   setInterval(tick, 2000);
 }

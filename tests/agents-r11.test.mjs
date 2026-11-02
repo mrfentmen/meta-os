@@ -18,11 +18,14 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 test("R11-261 every hosted entry has a real command; every placeholder is marked draft and says why", () => {
   const agents = JSON.parse(fs.readFileSync(path.join(ROOT, "agents", "registry.json"), "utf8")).agents;
   const hosted = hostedLoops(agents);
-  assert.equal(hosted.length, 5);
+  assert.ok(hosted.length >= 5, "at least the five round-11 loops");
   for (const a of hosted) {
-    assert.equal(a.command[0], "repo:node", a.name + " uses the portable node token");
     assert.equal(a.draft, undefined, a.name + " is not draft");
-    assert.ok(fs.existsSync(path.join(ROOT, a.command[1])), a.name + " names a file that exists");
+    // A hosted command is real when its script exists in this tree. Node entries use the
+    // portable repo:node token; the Imperium entry is the real Python queue-stack command.
+    assert.ok(["repo:node", "python3"].includes(a.command[0]), a.name + " has a real interpreter");
+    const script = a.command[1].startsWith("repo:") ? a.command[1].slice("repo:".length) : a.command[1];
+    assert.ok(fs.existsSync(path.join(ROOT, script)), a.name + " names a file that exists: " + script);
   }
   const drafts = agents.filter((a) => a.draft === true);
   assert.ok(drafts.length >= 20, "the rest are in the open, not silently placeholder");

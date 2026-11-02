@@ -14,3 +14,11 @@
 {"ts":"2026-11-02T14:13:52.931Z","run":"aegis-hosted-2026-11-02T14-13-52-928Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
 {"ts":"2026-11-02T14:14:27.310Z","run":"aegis-hosted-2026-11-02T14-14-27-308Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
 {"ts":"2026-11-02T14:14:27.313Z","run":"aegis-hosted-2026-11-02T14-14-27-308Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T14:40:15.811Z","run":"aegis-2026-11-02T14-40-15-772Z","event":"sweep-start","root":"meta-os","manifests":23,"lockFiles":["Cargo.lock","kernel/Cargo.lock","os-build/userspace/user/Cargo.lock"],"queries":108,"sourceServer":"api.osv.dev"}
+{"ts":"2026-11-02T14:40:16.727Z","run":"aegis-2026-11-02T14-40-15-772Z","event":"sweep-done","checked":108,"batches":2,"unparseable":0,"findings":0,"bySeverity":{"info":0,"low":0,"medium":0,"high":0,"critical":0}}
+{"ts":"2026-11-02T14:40:17.220Z","run":"aegis-2026-11-02T14-40-17-188Z","event":"sweep-start","root":"meta-os","manifests":23,"lockFiles":["Cargo.lock","kernel/Cargo.lock","os-build/userspace/user/Cargo.lock"],"queries":108,"sourceServer":"api.osv.dev"}
+{"ts":"2026-11-02T14:40:17.880Z","run":"aegis-2026-11-02T14-40-17-188Z","event":"sweep-done","checked":108,"batches":2,"unparseable":0,"findings":0,"bySeverity":{"info":0,"low":0,"medium":0,"high":0,"critical":0}}
+{"ts":"2026-11-02T14:45:04.550Z","run":"aegis-hosted-2026-11-02T14-45-04-549Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T14:45:04.552Z","run":"aegis-hosted-2026-11-02T14-45-04-549Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T14:46:19.045Z","run":"aegis-hosted-2026-11-02T14-46-19-044Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T14:46:19.046Z","run":"aegis-hosted-2026-11-02T14-46-19-044Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}

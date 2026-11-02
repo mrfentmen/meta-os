@@ -1,0 +1,1358 @@
+{
+  "v": 1,
+  "note": "Author R12-006: Del's repos plus the four named pages. liveness is UNVERIFIED until R12-017 runs a public check.",
+  "targets": [
+    {
+      "id": "repo-347movies",
+      "type": "repo",
+      "ref": "mrfentmen/347movies",
+      "url": "https://github.com/mrfentmen/347movies",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-8bitpeoples-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/8bitpeoples-mcp",
+      "url": "https://github.com/mrfentmen/8bitpeoples-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-acp",
+      "type": "repo",
+      "ref": "mrfentmen/acp",
+      "url": "https://github.com/mrfentmen/acp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-adobe-premiere-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/adobe-premiere-mcp",
+      "url": "https://github.com/mrfentmen/adobe-premiere-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-adsbdb-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/adsbdb-mcp",
+      "url": "https://github.com/mrfentmen/adsbdb-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-ai-agents",
+      "type": "repo",
+      "ref": "mrfentmen/ai-agents",
+      "url": "https://github.com/mrfentmen/ai-agents",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-ai-freebuff",
+      "type": "repo",
+      "ref": "mrfentmen/ai-freebuff",
+      "url": "https://github.com/mrfentmen/ai-freebuff",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-ai-opencode",
+      "type": "repo",
+      "ref": "mrfentmen/ai-opencode",
+      "url": "https://github.com/mrfentmen/ai-opencode",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-ai-tomogotchi-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/ai-tomogotchi-mcp",
+      "url": "https://github.com/mrfentmen/ai-tomogotchi-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-all-in-one-helper",
+      "type": "repo",
+      "ref": "mrfentmen/all-in-one-helper",
+      "url": "https://github.com/mrfentmen/all-in-one-helper",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-anime-filler-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/anime-filler-mcp",
+      "url": "https://github.com/mrfentmen/anime-filler-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-annotated-pages",
+      "type": "repo",
+      "ref": "mrfentmen/annotated-pages",
+      "url": "https://github.com/mrfentmen/annotated-pages",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-ape-social-machine",
+      "type": "repo",
+      "ref": "mrfentmen/ape-social-machine",
+      "url": "https://github.com/mrfentmen/ape-social-machine",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-api-deprecation-radar-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/api-deprecation-radar-mcp",
+      "url": "https://github.com/mrfentmen/api-deprecation-radar-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-archive-org-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/archive-org-mcp",
+      "url": "https://github.com/mrfentmen/archive-org-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-artifact-gauge-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/artifact-gauge-mcp",
+      "url": "https://github.com/mrfentmen/artifact-gauge-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-audius-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/audius-mcp",
+      "url": "https://github.com/mrfentmen/audius-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-awesome-servers",
+      "type": "repo",
+      "ref": "mrfentmen/awesome-servers",
+      "url": "https://github.com/mrfentmen/awesome-servers",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-bored",
+      "type": "repo",
+      "ref": "mrfentmen/bored",
+      "url": "https://github.com/mrfentmen/bored",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-brainrot-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/brainrot-mcp",
+      "url": "https://github.com/mrfentmen/brainrot-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-build-cache-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/build-cache-mcp",
+      "url": "https://github.com/mrfentmen/build-cache-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-chrome-ext-2",
+      "type": "repo",
+      "ref": "mrfentmen/chrome-ext-2",
+      "url": "https://github.com/mrfentmen/chrome-ext-2",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-cisa-kev-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/cisa-kev-mcp",
+      "url": "https://github.com/mrfentmen/cisa-kev-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-cleanshot",
+      "type": "repo",
+      "ref": "mrfentmen/cleanshot",
+      "url": "https://github.com/mrfentmen/cleanshot",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-clip-forge",
+      "type": "repo",
+      "ref": "mrfentmen/clip-forge",
+      "url": "https://github.com/mrfentmen/clip-forge",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-clipforge-lockbox",
+      "type": "repo",
+      "ref": "mrfentmen/clipforge-lockbox",
+      "url": "https://github.com/mrfentmen/clipforge-lockbox",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-clipforge-video-compressor",
+      "type": "repo",
+      "ref": "mrfentmen/clipforge-video-compressor",
+      "url": "https://github.com/mrfentmen/clipforge-video-compressor",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-codebuff",
+      "type": "repo",
+      "ref": "mrfentmen/codebuff",
+      "url": "https://github.com/mrfentmen/codebuff",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-codepet-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/codepet-mcp",
+      "url": "https://github.com/mrfentmen/codepet-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-commoncrawl-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/commoncrawl-mcp",
+      "url": "https://github.com/mrfentmen/commoncrawl-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-config-weather-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/config-weather-mcp",
+      "url": "https://github.com/mrfentmen/config-weather-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-contextink",
+      "type": "repo",
+      "ref": "mrfentmen/contextink",
+      "url": "https://github.com/mrfentmen/contextink",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-contract-diff-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/contract-diff-mcp",
+      "url": "https://github.com/mrfentmen/contract-diff-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-credence-enforce",
+      "type": "repo",
+      "ref": "mrfentmen/credence-enforce",
+      "url": "https://github.com/mrfentmen/credence-enforce",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-crew-a2a",
+      "type": "repo",
+      "ref": "mrfentmen/crew-a2a",
+      "url": "https://github.com/mrfentmen/crew-a2a",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-crtsh-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/crtsh-mcp",
+      "url": "https://github.com/mrfentmen/crtsh-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-CS460_GTAVII",
+      "type": "repo",
+      "ref": "mrfentmen/CS460_GTAVII",
+      "url": "https://github.com/mrfentmen/CS460_GTAVII",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-curious",
+      "type": "repo",
+      "ref": "mrfentmen/curious",
+      "url": "https://github.com/mrfentmen/curious",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-dependency-license-change-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/dependency-license-change-mcp",
+      "url": "https://github.com/mrfentmen/dependency-license-change-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-dnd5e-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/dnd5e-mcp",
+      "url": "https://github.com/mrfentmen/dnd5e-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-dwarffortress-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/dwarffortress-mcp",
+      "url": "https://github.com/mrfentmen/dwarffortress-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-env-contract-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/env-contract-mcp",
+      "url": "https://github.com/mrfentmen/env-contract-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-erddap-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/erddap-mcp",
+      "url": "https://github.com/mrfentmen/erddap-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-evidence-diff-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/evidence-diff-mcp",
+      "url": "https://github.com/mrfentmen/evidence-diff-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-favicon-studio",
+      "type": "repo",
+      "ref": "mrfentmen/favicon-studio",
+      "url": "https://github.com/mrfentmen/favicon-studio",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-federal-register-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/federal-register-mcp",
+      "url": "https://github.com/mrfentmen/federal-register-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-fedora-hat",
+      "type": "repo",
+      "ref": "mrfentmen/fedora-hat",
+      "url": "https://github.com/mrfentmen/fedora-hat",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-flaky-history-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/flaky-history-mcp",
+      "url": "https://github.com/mrfentmen/flaky-history-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-forest-encyclopedia",
+      "type": "repo",
+      "ref": "mrfentmen/forest-encyclopedia",
+      "url": "https://github.com/mrfentmen/forest-encyclopedia",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-fourchan-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/fourchan-mcp",
+      "url": "https://github.com/mrfentmen/fourchan-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-gamebanana-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gamebanana-mcp",
+      "url": "https://github.com/mrfentmen/gamebanana-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-gbif-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gbif-mcp",
+      "url": "https://github.com/mrfentmen/gbif-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-gimp-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gimp-mcp",
+      "url": "https://github.com/mrfentmen/gimp-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-git-reflog-archaeologist-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/git-reflog-archaeologist-mcp",
+      "url": "https://github.com/mrfentmen/git-reflog-archaeologist-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-gopher-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gopher-mcp",
+      "url": "https://github.com/mrfentmen/gopher-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-gumroad",
+      "type": "repo",
+      "ref": "mrfentmen/gumroad",
+      "url": "https://github.com/mrfentmen/gumroad",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-gw2-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gw2-mcp",
+      "url": "https://github.com/mrfentmen/gw2-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-hiddenpalace-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/hiddenpalace-mcp",
+      "url": "https://github.com/mrfentmen/hiddenpalace-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-human",
+      "type": "repo",
+      "ref": "mrfentmen/human",
+      "url": "https://github.com/mrfentmen/human",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-ietf-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/ietf-mcp",
+      "url": "https://github.com/mrfentmen/ietf-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-incident-timeline-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/incident-timeline-mcp",
+      "url": "https://github.com/mrfentmen/incident-timeline-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-instink",
+      "type": "repo",
+      "ref": "mrfentmen/instink",
+      "url": "https://github.com/mrfentmen/instink",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-invoice-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/invoice-mcp",
+      "url": "https://github.com/mrfentmen/invoice-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-itch-jams-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/itch-jams-mcp",
+      "url": "https://github.com/mrfentmen/itch-jams-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-jisho-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/jisho-mcp",
+      "url": "https://github.com/mrfentmen/jisho-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-license-boundary-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/license-boundary-mcp",
+      "url": "https://github.com/mrfentmen/license-boundary-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-lichess-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/lichess-mcp",
+      "url": "https://github.com/mrfentmen/lichess-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-linkedin",
+      "type": "repo",
+      "ref": "mrfentmen/linkedin",
+      "url": "https://github.com/mrfentmen/linkedin",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-lockstep-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/lockstep-mcp",
+      "url": "https://github.com/mrfentmen/lockstep-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-mangadex-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/mangadex-mcp",
+      "url": "https://github.com/mrfentmen/mangadex-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-mcp-gateway",
+      "type": "repo",
+      "ref": "mrfentmen/mcp-gateway",
+      "url": "https://github.com/mrfentmen/mcp-gateway",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-mcppss",
+      "type": "repo",
+      "ref": "mrfentmen/mcppss",
+      "url": "https://github.com/mrfentmen/mcppss",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-meilisearch-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/meilisearch-mcp",
+      "url": "https://github.com/mrfentmen/meilisearch-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-meta-musica",
+      "type": "repo",
+      "ref": "mrfentmen/meta-musica",
+      "url": "https://github.com/mrfentmen/meta-musica",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-meta-ops",
+      "type": "repo",
+      "ref": "mrfentmen/meta-ops",
+      "url": "https://github.com/mrfentmen/meta-ops",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-meta-os",
+      "type": "repo",
+      "ref": "mrfentmen/meta-os",
+      "url": "https://github.com/mrfentmen/meta-os",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-meta-os-image",
+      "type": "repo",
+      "ref": "mrfentmen/meta-os-image",
+      "url": "https://github.com/mrfentmen/meta-os-image",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-migration-map-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/migration-map-mcp",
+      "url": "https://github.com/mrfentmen/migration-map-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-mixpanel-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/mixpanel-mcp",
+      "url": "https://github.com/mrfentmen/mixpanel-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-modrinth-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/modrinth-mcp",
+      "url": "https://github.com/mrfentmen/modrinth-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-molten-oil-spill",
+      "type": "repo",
+      "ref": "mrfentmen/molten-oil-spill",
+      "url": "https://github.com/mrfentmen/molten-oil-spill",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-mrfentmen",
+      "type": "repo",
+      "ref": "mrfentmen/mrfentmen",
+      "url": "https://github.com/mrfentmen/mrfentmen",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-muse-bus-relay-skill",
+      "type": "repo",
+      "ref": "mrfentmen/muse-bus-relay-skill",
+      "url": "https://github.com/mrfentmen/muse-bus-relay-skill",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-muse-relay",
+      "type": "repo",
+      "ref": "mrfentmen/muse-relay",
+      "url": "https://github.com/mrfentmen/muse-relay",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-musicbrainz-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/musicbrainz-mcp",
+      "url": "https://github.com/mrfentmen/musicbrainz-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-neuron-surgery",
+      "type": "repo",
+      "ref": "mrfentmen/neuron-surgery",
+      "url": "https://github.com/mrfentmen/neuron-surgery",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-neuroreader",
+      "type": "repo",
+      "ref": "mrfentmen/neuroreader",
+      "url": "https://github.com/mrfentmen/neuroreader",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-nyc311-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/nyc311-mcp",
+      "url": "https://github.com/mrfentmen/nyc311-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-oembed",
+      "type": "repo",
+      "ref": "mrfentmen/oembed",
+      "url": "https://github.com/mrfentmen/oembed",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-open-food-facts-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/open-food-facts-mcp",
+      "url": "https://github.com/mrfentmen/open-food-facts-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-open-library-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/open-library-mcp",
+      "url": "https://github.com/mrfentmen/open-library-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-open-meta",
+      "type": "repo",
+      "ref": "mrfentmen/open-meta",
+      "url": "https://github.com/mrfentmen/open-meta",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-openalex-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/openalex-mcp",
+      "url": "https://github.com/mrfentmen/openalex-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-openapi-scout-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/openapi-scout-mcp",
+      "url": "https://github.com/mrfentmen/openapi-scout-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-OpenCE",
+      "type": "repo",
+      "ref": "mrfentmen/OpenCE",
+      "url": "https://github.com/mrfentmen/OpenCE",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-opensearch-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/opensearch-mcp",
+      "url": "https://github.com/mrfentmen/opensearch-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-osrs-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/osrs-mcp",
+      "url": "https://github.com/mrfentmen/osrs-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-osv-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/osv-mcp",
+      "url": "https://github.com/mrfentmen/osv-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-paper-trader",
+      "type": "repo",
+      "ref": "mrfentmen/paper-trader",
+      "url": "https://github.com/mrfentmen/paper-trader",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-pokemon-price-ticker",
+      "type": "repo",
+      "ref": "mrfentmen/pokemon-price-ticker",
+      "url": "https://github.com/mrfentmen/pokemon-price-ticker",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-pokemon-tcg-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/pokemon-tcg-mcp",
+      "url": "https://github.com/mrfentmen/pokemon-tcg-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-police-transparency-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/police-transparency-mcp",
+      "url": "https://github.com/mrfentmen/police-transparency-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-printify-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/printify-mcp",
+      "url": "https://github.com/mrfentmen/printify-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-privacy-policies",
+      "type": "repo",
+      "ref": "mrfentmen/privacy-policies",
+      "url": "https://github.com/mrfentmen/privacy-policies",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-pskreporter-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/pskreporter-mcp",
+      "url": "https://github.com/mrfentmen/pskreporter-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-qbcore-roblox",
+      "type": "repo",
+      "ref": "mrfentmen/qbcore-roblox",
+      "url": "https://github.com/mrfentmen/qbcore-roblox",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-radio-browser-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/radio-browser-mcp",
+      "url": "https://github.com/mrfentmen/radio-browser-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-reaserch",
+      "type": "repo",
+      "ref": "mrfentmen/reaserch",
+      "url": "https://github.com/mrfentmen/reaserch",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-release-notes-forge-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/release-notes-forge-mcp",
+      "url": "https://github.com/mrfentmen/release-notes-forge-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-repo-forensics-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/repo-forensics-mcp",
+      "url": "https://github.com/mrfentmen/repo-forensics-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-rewind",
+      "type": "repo",
+      "ref": "mrfentmen/rewind",
+      "url": "https://github.com/mrfentmen/rewind",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-RobloxGTACom",
+      "type": "repo",
+      "ref": "mrfentmen/RobloxGTACom",
+      "url": "https://github.com/mrfentmen/RobloxGTACom",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-rom-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/rom-mcp",
+      "url": "https://github.com/mrfentmen/rom-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-runtime-support-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/runtime-support-mcp",
+      "url": "https://github.com/mrfentmen/runtime-support-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-schema-compatibility-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/schema-compatibility-mcp",
+      "url": "https://github.com/mrfentmen/schema-compatibility-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-schema-sieve-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/schema-sieve-mcp",
+      "url": "https://github.com/mrfentmen/schema-sieve-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-scopink",
+      "type": "repo",
+      "ref": "mrfentmen/scopink",
+      "url": "https://github.com/mrfentmen/scopink",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-screenplaywriter-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/screenplaywriter-mcp",
+      "url": "https://github.com/mrfentmen/screenplaywriter-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-scriptwriter",
+      "type": "repo",
+      "ref": "mrfentmen/scriptwriter",
+      "url": "https://github.com/mrfentmen/scriptwriter",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-scryfall-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/scryfall-mcp",
+      "url": "https://github.com/mrfentmen/scryfall-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-secret-hygiene-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/secret-hygiene-mcp",
+      "url": "https://github.com/mrfentmen/secret-hygiene-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-segaretro-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/segaretro-mcp",
+      "url": "https://github.com/mrfentmen/segaretro-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-setlist-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/setlist-mcp",
+      "url": "https://github.com/mrfentmen/setlist-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-shebang-sherpa-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/shebang-sherpa-mcp",
+      "url": "https://github.com/mrfentmen/shebang-sherpa-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-simple-roblox-game",
+      "type": "repo",
+      "ref": "mrfentmen/simple-roblox-game",
+      "url": "https://github.com/mrfentmen/simple-roblox-game",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-skills",
+      "type": "repo",
+      "ref": "mrfentmen/skills",
+      "url": "https://github.com/mrfentmen/skills",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-skills-2",
+      "type": "repo",
+      "ref": "mrfentmen/skills-2",
+      "url": "https://github.com/mrfentmen/skills-2",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-skills-by-del",
+      "type": "repo",
+      "ref": "mrfentmen/skills-by-del",
+      "url": "https://github.com/mrfentmen/skills-by-del",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-skills-movie-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/skills-movie-mcp",
+      "url": "https://github.com/mrfentmen/skills-movie-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-smogon-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/smogon-mcp",
+      "url": "https://github.com/mrfentmen/smogon-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-snap-gpt",
+      "type": "repo",
+      "ref": "mrfentmen/snap-gpt",
+      "url": "https://github.com/mrfentmen/snap-gpt",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-source-finder",
+      "type": "repo",
+      "ref": "mrfentmen/source-finder",
+      "url": "https://github.com/mrfentmen/source-finder",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-space-weather-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/space-weather-mcp",
+      "url": "https://github.com/mrfentmen/space-weather-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-spdx-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/spdx-mcp",
+      "url": "https://github.com/mrfentmen/spdx-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-speedrun-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/speedrun-mcp",
+      "url": "https://github.com/mrfentmen/speedrun-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-sports-card-ticker",
+      "type": "repo",
+      "ref": "mrfentmen/sports-card-ticker",
+      "url": "https://github.com/mrfentmen/sports-card-ticker",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-steam-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/steam-mcp",
+      "url": "https://github.com/mrfentmen/steam-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-superagents",
+      "type": "repo",
+      "ref": "mrfentmen/superagents",
+      "url": "https://github.com/mrfentmen/superagents",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-telnetbbs-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/telnetbbs-mcp",
+      "url": "https://github.com/mrfentmen/telnetbbs-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-test-shape-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/test-shape-mcp",
+      "url": "https://github.com/mrfentmen/test-shape-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-tetriswiki-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/tetriswiki-mcp",
+      "url": "https://github.com/mrfentmen/tetriswiki-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-textfiles-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/textfiles-mcp",
+      "url": "https://github.com/mrfentmen/textfiles-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-tides-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/tides-mcp",
+      "url": "https://github.com/mrfentmen/tides-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-time",
+      "type": "repo",
+      "ref": "mrfentmen/time",
+      "url": "https://github.com/mrfentmen/time",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-toolchain-lens-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/toolchain-lens-mcp",
+      "url": "https://github.com/mrfentmen/toolchain-lens-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-twilio-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/twilio-mcp",
+      "url": "https://github.com/mrfentmen/twilio-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-unicode-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/unicode-mcp",
+      "url": "https://github.com/mrfentmen/unicode-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-unicode-security-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/unicode-security-mcp",
+      "url": "https://github.com/mrfentmen/unicode-security-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-usgs-water-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/usgs-water-mcp",
+      "url": "https://github.com/mrfentmen/usgs-water-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-usps-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/usps-mcp",
+      "url": "https://github.com/mrfentmen/usps-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-vg-resource-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/vg-resource-mcp",
+      "url": "https://github.com/mrfentmen/vg-resource-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-vgchartz-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/vgchartz-mcp",
+      "url": "https://github.com/mrfentmen/vgchartz-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-vgmdb-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/vgmdb-mcp",
+      "url": "https://github.com/mrfentmen/vgmdb-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-vndb-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/vndb-mcp",
+      "url": "https://github.com/mrfentmen/vndb-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-vocals",
+      "type": "repo",
+      "ref": "mrfentmen/vocals",
+      "url": "https://github.com/mrfentmen/vocals",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-walkthrough-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/walkthrough-mcp",
+      "url": "https://github.com/mrfentmen/walkthrough-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-wayback-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/wayback-mcp",
+      "url": "https://github.com/mrfentmen/wayback-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-web-projects",
+      "type": "repo",
+      "ref": "mrfentmen/web-projects",
+      "url": "https://github.com/mrfentmen/web-projects",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-wikidata-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/wikidata-mcp",
+      "url": "https://github.com/mrfentmen/wikidata-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-wikisource-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/wikisource-mcp",
+      "url": "https://github.com/mrfentmen/wikisource-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-worktree-orbit-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/worktree-orbit-mcp",
+      "url": "https://github.com/mrfentmen/worktree-orbit-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-y2k-new-tab",
+      "type": "repo",
+      "ref": "mrfentmen/y2k-new-tab",
+      "url": "https://github.com/mrfentmen/y2k-new-tab",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-yugioh-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/yugioh-mcp",
+      "url": "https://github.com/mrfentmen/yugioh-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-yugioh-price-ticker",
+      "type": "repo",
+      "ref": "mrfentmen/yugioh-price-ticker",
+      "url": "https://github.com/mrfentmen/yugioh-price-ticker",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "repo-zork-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/zork-mcp",
+      "url": "https://github.com/mrfentmen/zork-mcp",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "page-meta-os-pages-dev",
+      "type": "page",
+      "ref": "meta-os.pages.dev",
+      "url": "https://meta-os.pages.dev",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "page-muse-relay-live-pages-dev",
+      "type": "page",
+      "ref": "muse-relay-live.pages.dev",
+      "url": "https://muse-relay-live.pages.dev",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "page-clipraiders-com",
+      "type": "page",
+      "ref": "clipraiders.com",
+      "url": "https://clipraiders.com",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    },
+    {
+      "id": "page-watchpeoplefight-com",
+      "type": "page",
+      "ref": "watchpeoplefight.com",
+      "url": "https://watchpeoplefight.com",
+      "liveness": "UNVERIFIED",
+      "addedAt": "2026-11-02T14:43:18.178Z"
+    }
+  ]
+}

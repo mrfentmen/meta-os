@@ -9,6 +9,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { openOsv } from "./osv-client.mjs";
+import { openOsvDirect } from "./osv-direct.mjs";
 import { runSweep, renderReport } from "./sweep.mjs";
 
 const root = process.env.AEGIS_ROOT ? path.resolve(process.env.AEGIS_ROOT) : process.cwd();
@@ -23,6 +24,14 @@ try {
     client = openOsv({ serverPath });
     const info = await client.init();
     result = await runSweep({ root, outDir, client, runId, sourceServer: (info.name || "osv-mcp") + " " + (info.version || "?") });
+  } else if (process.env.AEGIS_OSV_DIRECT === "1") {
+    // Pax's written exception: this sweep, this repo's manifests only, route named in the report.
+    client = openOsvDirect();
+    result = await runSweep({
+      root, outDir, client, runId,
+      sourceLabel: "api.osv.dev directly (Pax written exception: this sweep only, this repo's manifests only)",
+      sourceServer: "api.osv.dev",
+    });
   } else {
     result = await runSweep({ root, outDir, client: null, runId, sourceServer: "not configured", sourceError: "AEGIS_OSV_MCP is not set" });
   }

@@ -17,17 +17,18 @@ wired** until that list changes — the wiring is a proposal, not an edit.
 | `readkey` | syscall 5 returns real scancodes | `readkey: polling syscall 5`, `readkey got <n>`, `readkey: empty` | **WRITTEN, COMPILES**; a diagnostic probe, not for `BINS` |
 | `writer` | the one-page write cap is enforced | `writer: alive`, `writer: oversize returned 0`, `writer: cap returned 19` | **WRITTEN, COMPILES**; probe, not for `BINS` |
 | `badcall` | reserved numbers 6-15 refuse, not just 99 | `user bad syscall 6 refused` / `15` / `99`, then `badcall: 6 returned 18446744073709551615` and `badcall: survived all three` | **WRITTEN, COMPILES**; wiring proposal |
-| `hog` | allocation is bounded and contained | `hog: allocating`, then either a refusal line or the task killed; the shell must still answer `status` afterwards | **BLOCKED — no allocation syscall exists** |
+| `hog` | allocation is bounded and contained | `hog: allocating`, then the task killed by the fault; the shell must still answer `status` afterwards | **WRITTEN, COMPILES**; fault-containment drill, not an allocator test — no allocation syscall exists (wiring proposal: `os-build/userspace/WIRING_PROPOSAL_R12.md`) |
 | `talker` + `listener` | two tasks can exchange a message | `talker: sent <n>`, `listener: got <n>` | **BLOCKED — no IPC exists** |
 
 ## Why two of the six are blocked, and why that is the deliverable
 
-`hog` cannot be written honestly. The kernel's userspace ABI is six calls (0 exit, 1 write,
-2 sleep, 3 pid, 4 yield, 5 read_key) and 6-15 are reserved by the F1 ruling. There is no
-`mmap`, no `brk`, no `alloc` — a userspace program has no way to ask for memory at all. Writing
-`hog` against a syscall that does not exist would be exactly the mock the spec forbids, so the
-finding goes to Rowan instead: **`hog` needs a memory syscall, and that is a Pax number ruling
-before it is code.**
+`hog` cannot test allocation, because there is nothing to allocate with. The kernel's userspace
+ABI is six calls (0 exit, 1 write, 2 sleep, 3 pid, 4 yield, 5 read_key) and 6-15 are reserved by
+the F1 ruling; there is no `mmap`, no `brk`, no `alloc`. What is written is the refusal path that
+does exist: `hog` touches pages past its image, the first unmapped page faults, and the kernel
+kills only that task. That is containment by fault kill, and the program says so in its own
+source. A real allocation drill still needs a memory syscall: **Pax assigns the number, Rowan
+implements it, then `hog` changes.**
 
 `talker`/`listener` are blocked for the same class of reason but deeper: the kernel has no IPC
 of any kind (no queue, no shared page, no signal). `KERNEL_BUILDOUT_SPEC.md` section K4 designs
