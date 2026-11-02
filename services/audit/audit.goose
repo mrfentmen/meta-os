@@ -120,7 +120,11 @@ fn audit_link(kind: i64, seq: i64, at_ms: i64, actor: i64, body: u8[:]) -> i64 {
 // Returns the sequence number assigned, or -1 when the buffer has no room. Room is
 // checked against the worst case so a record is never half-written.
 fn audit_write(kind: i64, actor: i64, at_ms: i64, body: u8[:]) -> i64 {
-    let need = 48 + body.len;
+    // The head is 7 fields of 6 bytes: 42. This said 48, so every record DECLARED six
+    // bytes it did not contain, and the reader stepped six bytes into the following
+    // record and read its magic as the rest of this one's body. The chain could not
+    // verify, and the failure looked like corruption rather than an off-by-six.
+    let need = 42 + body.len;
     if need > AUD_REC_BUDGET { return AUD_NO_REC; }
     if !audit_room(need) {
         aud_dropped = aud_dropped + 1;
@@ -164,15 +168,16 @@ fn aud_put(p: i64, v: i64) -> i64 {
     return p + 6;
 }
 
+// Six bytes here too. This read SEVEN: the field is 6 bytes wide, so the seventh byte
+// belonged to the next field and every value decoded to something that was not what was
+// written.
 fn aud_get(p: i64) -> i64 {
     var v: i64 = 0;
-    v = (aud_buf[p] as i64) * 281474976710656;
-    v = v + (aud_buf[p + 1] as i64) * 1099511627776;
-    v = v + (aud_buf[p + 2] as i64) * 4294967296;
-    v = v + (aud_buf[p + 3] as i64) * 16777216;
-    v = v + (aud_buf[p + 4] as i64) * 65536;
-    v = v + (aud_buf[p + 5] as i64) * 256;
-    v = v + (aud_buf[p + 6] as i64) * 1;
+    var i: i64 = 0;
+    while i < 6 {
+        v = v * 256 + (aud_buf[p + i] as i64);
+        i = i + 1;
+    }
     return v;
 }
 
@@ -273,14 +278,22 @@ fn head_at(buf: const u8[:], off: i64, out: RecHead&) -> i64 {
     return off + 42;
 }
 
+// Six bytes, big-endian, into an i64.
+//
+// The last multiplier is 1, not 256. The chain was shifted by one place, so every field
+// decoded 256x too large: the record magic never matched what was written, and the whole
+// audit chain read as corrupt while the bytes on disk were correct.
 fn get6(buf: const u8[:], p: i64) -> i64 {
+    // Accumulate rather than summing six hand-written multipliers: the written form is
+    // `v * 256 + byte`, which a loop cannot get out of step the way a list of powers of
+    // 256 can (it did -- the last one was 256 instead of 1, decoding every field 256x
+    // too large and making the whole audit chain read as corrupt).
     var v: i64 = 0;
-    v = (buf[p] as i64) * 281474976710656;
-    v = v + (buf[p + 1] as i64) * 1099511627776;
-    v = v + (buf[p + 2] as i64) * 4294967296;
-    v = v + (buf[p + 3] as i64) * 16777216;
-    v = v + (buf[p + 4] as i64) * 65536;
-    v = v + (buf[p + 5] as i64) * 256;
+    var i: i64 = 0;
+    while i < 6 {
+        v = v * 256 + (buf[p + i] as i64);
+        i = i + 1;
+    }
     return v;
 }
 
