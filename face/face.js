@@ -221,22 +221,14 @@ var APPS = {
   board: {
     title: "Board",
     build: function (body) {
-      var posts = JSON.parse(localStorage.getItem("metaos-face-board") || "[]");
-      body.innerHTML = '<div class="win-sub">Web reference board (this browser only). The real board is the in-repo board server; wiring it into the shell is a listed task.</div><div class="board-list"></div>' +
-        '<div class="board-post"><input placeholder="Write a post"><button>Post</button></div>';
-      var list = body.querySelector(".board-list"), input = body.querySelector("input");
-      function render() {
-        list.innerHTML = posts.length ? "" : '<div style="opacity:.6">No posts yet.</div>';
-        posts.forEach(function (p) { var d = document.createElement("div"); d.textContent = "Mrfentmen: " + p; list.appendChild(d); });
-      }
-      function post() {
-        if (!input.value.trim()) return;
-        posts.push(input.value.trim()); input.value = "";
-        localStorage.setItem("metaos-face-board", JSON.stringify(posts)); render();
-      }
-      body.querySelector("button").addEventListener("click", post);
-      input.addEventListener("keydown", function (e) { if (e.key === "Enter") post(); });
-      render();
+      // W7: the Board window is the real board service's viewer, not a
+      // browser-only copy. The viewer is served by board/board.mjs
+      // (default port 8790); an iframe keeps the viewer on its own
+      // origin, so no cross-origin fetch is needed. If the service is
+      // not running, the frame stays blank — that blank is the honest
+      // signal, not a substitute board.
+      body.innerHTML = '<div class="win-sub">Live board from the in-OS board service (board/board.mjs, port 8790). Start it with: node board/board.mjs — a blank window means the service is not running.</div>' +
+        '<iframe title="Board" src="http://localhost:8790/" style="width:100%;height:480px;border:1px solid #444;border-radius:8px;background:#fff"></iframe>';
     }
   },
   imperium: {
