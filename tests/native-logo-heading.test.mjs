@@ -2,44 +2,33 @@
 //   node --test tests/native-logo-heading.test.mjs
 //
 // LOGO-NATIVE-3 (Del direction, Oct 30): native parity for the
-// web OPS-CONSOLE panel headings, for the Logo panel. The Logo
-// panel was the one panel still carrying a plain 15pt bold title,
-// so under Ignis, Vigiles, or Medicus it missed the console
-// heading treatment the web .panel h2 carries for that product.
-// This slice wires its title into the shared PanelHeading, which
-// already implements all three branches. Static checks on the
-// shipped Swift only: no Swift toolchain exists in this sandbox,
-// so no Mac build run is claimed. Presets, picker, slider, pause,
-// and the large-logo note are untouched.
+// web OPS-CONSOLE panel headings, for the Logo panel: its title
+// was wired into the shared PanelHeading so it carried the same
+// console heading treatment as the other five panels.
+//
+// UPDATED 2026-11-01 (boss order): the LOGO-1 color section is
+// removed everywhere, and with it the native Logo panel file
+// (LogoColorPanel.swift). There is no native Logo panel title
+// left to wire. What survives, and what these checks now pin:
+// PanelHeading itself still carries the three web console
+// branches in ContentView.swift for the remaining panels, and
+// the deleted panel file stays deleted.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
-const panel = readFileSync(
-  new URL("../native/Sources/MetaTrio/Views/LogoColorPanel.swift", import.meta.url),
-  "utf8",
-);
 const contentView = readFileSync(
   new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url),
   "utf8",
 );
+const panelExists = existsSync(
+  new URL("../native/Sources/MetaTrio/Views/LogoColorPanel.swift", import.meta.url),
+);
 
-test("logo heading: panel title uses PanelHeading with all three product gates", () => {
-  assert.ok(
-    panel.includes(
-      'PanelHeading(title: "Logo", isIgnis: model.selectedProduct == .ignis, isVigiles: model.selectedProduct == .vigiles, isMedicus: model.selectedProduct == .medicus)',
-    ),
-    "Logo title must call PanelHeading gated by the selected product, like the other panel titles",
-  );
-});
-
-test("logo heading: plain 15pt bold title is gone", () => {
-  assert.ok(!panel.includes('Text("Logo")'), "plain Logo title must not remain");
-  assert.ok(
-    !panel.includes('Text("Logo")\n                    .font(.system(size: 15, weight: .bold))'),
-    "plain 15pt bold Logo title must not remain",
-  );
+test("logo heading: the native Logo panel is removed with the color section", () => {
+  assert.equal(panelExists, false, "LogoColorPanel.swift must stay deleted");
+  assert.ok(!contentView.includes("LogoColorPanel"), "no view may reference the deleted panel");
 });
 
 test("logo heading: PanelHeading still carries the three web console branches", () => {
@@ -55,14 +44,9 @@ test("logo heading: PanelHeading still carries the three web console branches", 
   assert.ok(contentView.includes(".tracking(1.2)"));
 });
 
-test("logo heading: VoiceOver still hears the plain title, and the panel body is untouched", () => {
+test("logo heading: VoiceOver still hears the plain title on the surviving panels", () => {
   assert.ok(
     contentView.includes(".accessibilityLabel(title)"),
     "PanelHeading keeps the original title as the accessibility label",
   );
-  assert.ok(panel.includes('ColorPicker("Custom logo color"'), "custom picker untouched");
-  assert.ok(panel.includes("Slider("), "speed slider untouched");
-  assert.ok(panel.includes('paused ? "Resume logo" : "Pause logo"'), "pause button untouched");
-  assert.ok(panel.includes('"Large logo stays in the web studio."'), "large-logo note untouched");
-  assert.ok(panel.includes('Button("Reset to product color")'), "reset button untouched");
 });
