@@ -251,6 +251,29 @@ var APPS = {
         '<span style="opacity:.7">The vision readings in that run were staged. A real camera run is still owed, and this window does not pretend otherwise.</span>';
     }
   },
+  musica: {
+    title: "Musica",
+    build: function (body) {
+      body.innerHTML = '<div style="background:#17101f;border:1px solid #3b2a52;border-radius:10px;padding:12px;color:#e9e2f5">' +
+        '<div style="font-weight:700;letter-spacing:.06em;color:#c9a7ff">MUSICA — STUDIO</div>' +
+        '<div style="opacity:.75;font-size:12px;margin:2px 0 10px">System candidate three. Sessions run overnight; the studio keeps what passes.</div>' +
+        '<b>Session hn029-chipsynth</b> (record)<br>' +
+        'Takes: 12 &middot; Keepers: <b>11</b> &middot; Rights: checked per take<br>' +
+        'Catalogue written by the studio itself: os/worlds/musica/sessions/<br><br>' +
+        '<span style="opacity:.7">Its face is the 3D notation — two voices on a staff, rendered from the real session takes (design/meta-musica-notes.html).</span></div>';
+    }
+  },
+  science: {
+    title: "Science Lab",
+    build: function (body) {
+      body.innerHTML = '<div style="background:#eef4ee;border:1px solid #b9d2b9;border-radius:10px;padding:12px;color:#1d2b1d">' +
+        '<div style="font-weight:700;letter-spacing:.06em;color:#2e7d43">SCIENCE LAB</div>' +
+        '<div style="opacity:.75;font-size:12px;margin:2px 0 10px">System two. General science; heatsinks were only the practice test.</div>' +
+        '<b>Molecule viewer</b> (record): caffeine, C8H10N4O2 — 24 atoms, 25 bonds, ball-and-stick from the real PubChem/RDKit record on file (design/molecules/caffeine.sdf).<br><br>' +
+        '<b>Hortus</b> sits inside Science as its breeding engine — not a standalone system.<br>' +
+        '<span style="opacity:.7">Viewer: design/meta-scientia-molecules.html. Served over HTTP it renders live; the records are real data files, not drawings.</span></div>';
+    }
+  },
   calculator: {
     title: "Calculator",
     build: function (body) {
@@ -409,7 +432,7 @@ var DOCK = [
   ["files", "&#128193;", "Files"], ["notes", "&#128221;", "Notes"],
   ["calendar", "&#128197;", "Calendar"], ["calculator", "&#128425;", "Calculator"],
   ["board", "&#9998;", "Board"], null,
-  ["imperium", "&#9960;", "Imperium"], null,
+  ["imperium", "&#9960;", "Imperium"], ["musica", "&#9835;", "Musica"], ["science", "&#9879;", "Science"], null,
   ["settings", "&#9881;", "Settings"], ["trash", "&#128465;", "Trash"], ["about", "&#9432;", "About"]
 ];
 DOCK.forEach(function (item) {
