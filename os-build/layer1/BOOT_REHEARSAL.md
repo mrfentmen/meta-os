@@ -10,7 +10,7 @@ Regenerate with:
 ./os-build/layer1/boot_rehearsal.sh 5    # 5s wall clock per service
 ```
 
-**What this is.** 24 services have no entry point at all, so they cannot be started
+**What this is.** 25 services have no entry point at all, so they cannot be started
 by anything; the rest were started here, one host process each, in the supervisor's
 order. That is a rehearsal of the *order and the entry points*, in a host runtime, and
 it is the closest thing to a boot this layer has.
@@ -30,7 +30,7 @@ the start timeout the layer promises does not exist (`FAILURE_TRACE.md` item 4).
 | 4 | `storage` | **NO ENTRY** | — | no services/storage/entry.goose, or it was not built |
 | 5 | `callmatrix` | **NO ENTRY** | — | no services/callmatrix/entry.goose, or it was not built |
 | 6 | `supervisor` | **NO ENTRY** | — | no services/supervisor/entry.goose, or it was not built |
-| 7 | `console` | **HANGS** | 2 | still running after 2s; killed |
+| 7 | `console` | **HANGS** | 2 | still running after 5s; killed |
 | 8 | `logfmt` | **NO ENTRY** | — | no services/logfmt/entry.goose, or it was not built |
 | 9 | `logd` | **STARTED** | 4 | printed 4 line(s), exited 0 |
 | 10 | `watchdog` | **NO ENTRY** | — | no services/watchdog/entry.goose, or it was not built |
@@ -52,9 +52,10 @@ the start timeout the layer promises does not exist (`FAILURE_TRACE.md` item 4).
 | 26 | `dashboard` | **NO ENTRY** | — | no services/dashboard/entry.goose, or it was not built |
 | 27 | `updater_client` | **NO ENTRY** | — | no services/updater_client/entry.goose, or it was not built |
 | 28 | `board` | **NO ENTRY** | — | no services/board/entry.goose, or it was not built |
+| 29 | `notify` | **NO ENTRY** | — | no services/notify/entry.goose, or it was not built |
 
-**3 started, 1 hung, 0 failed, 24 could not start (no entry
-point)** out of 28 services in boot order.
+**3 started, 1 hung, 0 failed, 25 could not start (no entry
+point)** out of 29 services in boot order.
 
 ## The transcripts
 
@@ -184,6 +185,10 @@ _No output. The program produced nothing before it exited._
 
 _No output. The program produced nothing before it exited._
 
+### 29. notify — NO ENTRY
+
+_No output. The program produced nothing before it exited._
+
 ## What the rehearsal found
 
 1. **`console` hangs.** It prints its banner, then loops on `sys_read_key`; the host
@@ -195,5 +200,5 @@ _No output. The program produced nothing before it exited._
    is why the supervisor's proof line (BOOT_PLAN S7) is specified as a printed line.
 3. **`bootlog` and `logd` both start cleanly** and print their state, in order, with
    the fields the boot record expects.
-4. **24 of 28 services cannot start at all** — no `entry.goose`. Those are the
+4. **25 of 29 services cannot start at all** — no `entry.goose`. Those are the
    real load-plan blockers, named by service in the table above.

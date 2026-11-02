@@ -25,7 +25,7 @@ same process table.
 | function | returns | notes |
 |---|---|---|
 | `dk_init()` | — | empty dock, ids from 1 |
-| `dk_pin(name)` | `(id, code)` | duplicate name → `E_EXISTS`, 13th pin → `E_NO_SPACE` |
+| `dk_pin(name)` | `(id, code)` | duplicate name → `E_STATE`, 13th pin → `E_NO_SPACE` |
 | `dk_unpin(id)` | code | refuses while running, and while a launch is pending |
 | `dk_move(id, index)` | code | shifts the array; index is the destination slot |
 | `dk_launch(id, now_ms)` | code | sets pending; dedupe window applies |
@@ -44,8 +44,8 @@ what is on screen.
 - **Silent spawn** — pending past the timeout is expired, counted as a failure, and the app
   is not marked running.
 - **Unpin while running / pending** — `E_BUSY` both ways.
-- **Move out of range** — `E_RANGE`, order unchanged.
-- **Duplicate pin** — `E_EXISTS`. Case-sensitive, deliberately: two entries that differ only
+- **Move out of range** — `E_INVAL`, order unchanged.
+- **Duplicate pin** — `E_STATE`. Case-sensitive, deliberately: two entries that differ only
   by case are two entries a user cannot tell apart.
 - **Full dock** — 12 pins, the 13th is `E_NO_SPACE`.
 

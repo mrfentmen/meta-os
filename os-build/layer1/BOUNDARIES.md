@@ -11,7 +11,7 @@ Every line is marked:
 - **OPEN** — nobody has decided, and work that assumes an answer is guessing.
 
 **Updated 2026-11-02 (R7).** The Goose toolchain is installed and the layer's drivers build and
-run natively: `./os-build/layer1/run_native.sh` runs 50 drivers with 0 failures against
+run natively: `./os-build/layer1/run_native.sh` runs 51 drivers with 0 failures against
 `host/host_shim.c`. That makes each service **COMPILED and RUN on the host**, which is a real
 statement and a narrow one: five syscalls are refused by the shim on purpose, and no kernel has
 started a service. The word WRITTEN in the table below therefore means "written, compiled and
@@ -117,7 +117,7 @@ Where the two sheets meet, and what is true today:
 ## 5. What this sheet does not claim
 
 - It does not claim a kernel has run a line of Layer 4 — but it no longer claims nothing runs:
-  the layer's 50 drivers execute natively, and that evidence is in `SERVICE_RUNS.md`.
+  the layer's 51 drivers execute natively, and that evidence is in `SERVICE_RUNS.md`.
 - It does not claim the kernel implements any of A1–A10. All ten are requests.
 - It does not settle Q9, and it deliberately leaves the six syscall signatures
   as *our* request rather than a mirror of a kernel design that does not exist.

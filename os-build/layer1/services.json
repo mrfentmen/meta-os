@@ -307,6 +307,19 @@
       "class": "library (no kernel calls)"
     },
     {
+      "name": "notify",
+      "path": "services/notify",
+      "entry": null,
+      "entry_status": "no entry",
+      "test": "tests/t95_notify",
+      "test_status": "RUNS",
+      "checks": 77,
+      "failures": 0,
+      "syscalls": [],
+      "reachable_modules": 3,
+      "class": "library (no kernel calls)"
+    },
+    {
       "name": "session",
       "path": "services/session",
       "entry": null,

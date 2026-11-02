@@ -72,11 +72,14 @@ let SVC_DOCK: i64 = 27;
 let SVC_DASHBOARD: i64 = 28;
 let SVC_UPDATER_CLIENT: i64 = 29;
 let SVC_BOARD: i64 = 30;
+// The top-bar feed (2026-11-02, R8). Appended like every id before it: the face services
+// push into it, so its own row is short and its callers gained a bit.
+let SVC_NOTIFY: i64 = 31;
 
-let SVC_COUNT: i64 = 30;   // ids 1..30 inclusive
+let SVC_COUNT: i64 = 31;   // ids 1..31 inclusive
 
-// One bit per callee id, in a word per caller. 24 services fit in an i64 with room to
-// spare, so the row is a bitmask and `cm_allows` is a shift and a mask: no search, no
+// One bit per callee id, in a word per caller. Thirty-one services fit in an i64 with room
+// to spare, so the row is a bitmask and `cm_allows` is a shift and a mask: no search, no
 // allocation, and impossible to have a partially-written row.
 struct Row {
     caller: i64,
@@ -155,9 +158,18 @@ fn cm_init() {
     cm_set(SVC_DASHBOARD, cm_bit(SVC_LOG) | cm_bit(SVC_SUPERVISOR) | cm_bit(SVC_WATCHDOG)
         | cm_bit(SVC_SESSION) | cm_bit(SVC_SETTINGS));
     cm_set(SVC_UPDATER_CLIENT, cm_bit(SVC_UPDATER) | cm_bit(SVC_SOCKET) | cm_bit(SVC_NET)
-        | cm_bit(SVC_LOG) | cm_bit(SVC_TIME));
+        | cm_bit(SVC_LOG) | cm_bit(SVC_TIME) | cm_bit(SVC_NOTIFY));
+    // The board and the updater's client half push events at the bar: a post arrived, an
+    // update is available. The bit is declared here, on the CALLER's row, because that is
+    // where a permission lives -- and it is dormant until one of them imports notify.
     cm_set(SVC_BOARD, cm_bit(SVC_NET) | cm_bit(SVC_STORAGE) | cm_bit(SVC_LOG)
-        | cm_bit(SVC_TIME));
+        | cm_bit(SVC_TIME) | cm_bit(SVC_NOTIFY));
+
+    // The bar itself reads nothing from the machine except the log and the clock. It is the
+    // receiver of the two edges above, which is why its row is the shortest in the face
+    // layer: a notification that could call back into the thing that sent it would let a
+    // producer make the bar lie about its own event.
+    cm_set(SVC_NOTIFY, cm_bit(SVC_LOG) | cm_bit(SVC_TIME));
 }
 
 fn cm_set(caller: i64, allow: i64) {

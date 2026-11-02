@@ -6,7 +6,7 @@
 // WHAT THIS IS FOR
 // ----------------
 // The boot order table is proven consistent by `bootorder_check.py`, and the supervisor's
-// state machine is proven by t30 and t83. Neither of those says what happens when all 28
+// state machine is proven by t30 and t83. Neither of those says what happens when all 29
 // services are started THROUGH the order, three times, and one of them dies halfway. This
 // file is that: the order and the runner driven to completion repeatedly, with the
 // failures injected where a real boot would meet them.
@@ -125,7 +125,7 @@ fn main() {
         if steps != seq_n { same_every_time = false; }
         boots = boots + 1;
     }
-    check("three boots, all 28 started each time", all_full);
+    check("three boots, all 29 started each time", all_full);
     check("three boots, same number of start decisions", same_every_time);
     num("     start decisions across three boots: ", total_steps);
     num("     expected: ", seq_n * 3);
@@ -204,7 +204,7 @@ fn main() {
         }
         pos = pos + 1;
     }
-    check("all 28 services register in one table", registered == total);
+    check("all 29 services register in one table", registered == total);
 
     // The service under test is slot 7 (logd, id 8 in bootorder terms). Registering in
     // order makes slot = id - 1, which this asserts rather than assumes.

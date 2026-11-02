@@ -7,8 +7,10 @@ a table that drifted from its note is how a boot sequence gets quietly reordered
 
 ## The sequence
 
-28 services. The `#` column is `BootEntry.order`; `needs` is the bitmask in the
-file, written here as names because nobody audits base-2 in their head.
+29 services. The `#` column is `BootEntry.order`; `needs` is the bitmask in the
+file, written here as names because nobody audits base-2 in their head. The bitmask uses
+this table's own ids (1..29, contiguous), not the call matrix's — the two agreed only as far
+as id 1, and `bootorder_check.py` proves these are consistent with each other.
 
 | # | service | needs (must be RUNNING first) | fatal | started by |
 |---|---|---|---|---|
@@ -40,6 +42,12 @@ file, written here as names because nobody audits base-2 in their head.
 | 26 | dashboard | log, session, settings, supervisor, watchdog | no | table |
 | 27 | updater_client | log, net, socket, time, updater | no | table |
 | 28 | board | log, net, storage, time | no | table |
+| 29 | notify | log, time | no | table |
+
+`notify` is last because it is what the others push into: a feed that started before its
+producers would be a feed whose first events had nowhere to go. It needs only `log` and
+`time`, so it never waits on the face services that call it — `board` and `updater_client`
+have that edge declared in the call matrix and dormant until one of them imports it.
 
 ## Why the supervisor is number six and not number one
 

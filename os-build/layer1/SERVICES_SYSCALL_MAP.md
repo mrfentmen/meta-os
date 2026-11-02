@@ -31,7 +31,7 @@ native output changes that, because the host shim is substituting for a kernel.
 | service | entry | entry proof | native run | checks | calls |
 |---|---|---|---|---|---|
 
-## Class 1b — modules with no kernel calls at all (23)
+## Class 1b — modules with no kernel calls at all (24)
 
 These are libraries every other service links against. They make no `sys_*` call,
 so "runs on the ABI" would be a claim about nothing; what they have is a native
@@ -52,6 +52,7 @@ run that proves the logic, and a caller one layer up that does the syscalls.
 | `input` | tests/t56_input_display | 49 |
 | `logfmt` | tests/t50_logd | 19 |
 | `netcfg` | tests/t85_net_deep | 154 |
+| `notify` | tests/t95_notify | 77 |
 | `session` | tests/t84_session_deep | 106 |
 | `settings` | tests/t86_settings | 67 |
 | `socket` | tests/t77_gaps | 73 |

@@ -9,8 +9,8 @@ in place. Regenerate this file with `python3 os-build/layer1/gen_finish_status.p
 
 | Measurement | Value | Command that produces it |
 |---|---|---|
-| `goose check`, full corpus incl. `services/root.goose` | **56 ok, 0 failed** | `./os-build/layer1/check_services.sh` |
-| Native drivers that build and run to exit 0 | **50 of 50, 2323 assertions, 0 failed** | `./os-build/layer1/run_native.sh` |
+| `goose check`, full corpus incl. `services/root.goose` | **57 ok, 0 failed** | `./os-build/layer1/check_services.sh` |
+| Native drivers that build and run to exit 0 | **51 of 51, 2401 assertions, 0 failed** | `./os-build/layer1/run_native.sh` |
 | Entry programs that build but are not run | 5 (no supervisor to call `svc_entry`) | same run |
 
 The typecheck command exited 0.
@@ -37,6 +37,7 @@ The typecheck command exited 0.
 | `logfmt` | no entry | `tests/t50_logd` | **RUNS** | 19 | library (no kernel calls) |
 | `net` | no entry | `tests/t85_net_deep` | **RUNS** | 154 | needs a proposal |
 | `netcfg` | no entry | `tests/t85_net_deep` | **RUNS** | 154 | library (no kernel calls) |
+| `notify` | no entry | `tests/t95_notify` | **RUNS** | 77 | library (no kernel calls) |
 | `session` | no entry | `tests/t84_session_deep` | **RUNS** | 106 | library (no kernel calls) |
 | `settings` | no entry | `tests/t86_settings` | **RUNS** | 67 | library (no kernel calls) |
 | `shell` | no entry | `tests/t66_shell` | **RUNS** | 57 | needs a proposal |
@@ -55,12 +56,12 @@ The typecheck command exited 0.
 
 | Status word | Services | What it covers |
 |---|---|---|
-| **RUNS** | 30 | a driver builds, executes and exits 0 |
+| **RUNS** | 31 | a driver builds, executes and exits 0 |
 | TYPECHECKS | 1 | an entry point builds (or typechecks) but no driver runs it |
 | NEITHER | 0 | no driver and no entry point |
 
 A service that `RUNS` is also `TYPECHECKS` (the driver is typechecked too); the rows
-above give each service its strongest true word, so the three counts add to 31.
+above give each service its strongest true word, so the three counts add to 32.
 
 ## What this table cannot tell you
 

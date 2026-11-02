@@ -67,22 +67,22 @@ fn main() {
     check("order is consistent (no forward references)", bo_order_ok());
 
     // --- 2. completeness ---
-    check("table holds 28 entries", bo_count() == 28);
+    check("table holds 29 entries", bo_count() == 29);
     var ids_ok: bool = true;
     var i: i64 = 0;
     while i < bo_count() {
         let id = bo_entry(i).id;
-        if id < 1 || id > 28 { ids_ok = false; }
+        if id < 1 || id > 29 { ids_ok = false; }
         i = i + 1;
     }
-    check("every id is in 1..28", ids_ok);
+    check("every id is in 1..29", ids_ok);
     var orders_ok: bool = true;
     var pos: i64 = 1;
     while pos <= bo_count() {
         if order_hits(pos) != 1 { orders_ok = false; }
         pos = pos + 1;
     }
-    check("every order number 1..28 used exactly once", orders_ok);
+    check("every order number 1..29 used exactly once", orders_ok);
 
     // --- 3. readiness, both edges ---
     // log needs console, logfmt and storage. Running all but storage must not be ready.
@@ -103,6 +103,9 @@ fn main() {
 
     // --- 4. the by-kernel exception ---
     let sup = bo_entry(5);   // supervisor
+    // The boot table's ids are its own contiguous 1..n sequence, NOT the call matrix's --
+    // the two agreed only as far as id 1. The `needs` masks below use THESE ids, which is
+    // what `bo_ready` is handed.
     check("supervisor is marked by_kernel", sup.by_kernel);
     // Its needs are runtime needs, so it must NOT be gated on log (which it starts).
     check("supervisor does not need log to start", (bo_needs(16) & (1 << 8)) == 0);
@@ -122,9 +125,11 @@ fn main() {
     // --- 6. sequence ---
     var seq: i64[..32] = [0; 32];
     let n = bo_sequence(seq, 32);
-    check("sequence yields all 28 in order", n == 28);
+    check("sequence yields all 29 in order", n == 29);
     check("sequence starts at bootlog", seq[0] == 2);
-    check("sequence ends at board", seq[n - 1] == 28);
+    // notify starts last on purpose: it is what the other face services push into, so it
+    // must not be waiting on any of them.
+    check("sequence ends at notify", seq[n - 1] == 29);
     var monotone: bool = true;
     var k: i64 = 0;
     while k < n {
@@ -143,7 +148,9 @@ fn main() {
     var small: u8[>..] = [];
     check("bo_name refuses a buffer too small", !bo_name(22, small, 4) && small.len == 0);
     check("bo_name refuses id 0", !bo_name(0, small, 32));
-    check("bo_name refuses id 29 (past the table)", !bo_name(29, small, 32));
+    check("bo_name refuses id 30 (past the table)", !bo_name(30, small, 32));
+    var last: u8[>..] = [];
+    check("bo_name names the last row", bo_name(29, last, 32) && last.len == 6);
 
     say("t61 done  pass=");
     var pb: u8[>..] = [];

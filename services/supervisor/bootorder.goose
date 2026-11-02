@@ -13,11 +13,13 @@
 // fatal are one table; `bo_ready()` is the only reader, and `sup_register` calls are made from
 // it in order.
 //
-// THE MASKS ARE SERVICE IDS
-// -------------------------
-// A dependency mask uses the ids from `services/callmatrix/callmatrix.goose` (1..22) so the
-// matrix and the boot order cannot disagree about what a service is. If an id changes there,
-// it changes here in the same commit; that is what the mask comment on each row is for.
+// THE MASKS ARE THIS TABLE'S IDS
+// ------------------------------
+// `needs` is a bitmask of the ids in the table below, which are its own contiguous 1..n
+// sequence and the numbers handed to `bo_ready`. They are NOT the call matrix's ids: the
+// two agreed only as far as id 1, and the comment that used to sit here claimed otherwise.
+// The name table is what ties a row to a service, and `bootorder_check.py` fails if a name
+// here is not a directory under `services/` or vice versa.
 //
 // CYCLES, AND HOW THEY ARE BROKEN
 // -------------------------------
@@ -89,6 +91,11 @@ var boot_table: BootEntry[..30] = [
     BootEntry { id: 26, needs: 8487168, fatal: false, by_kernel: false, order: 26 },  // dashboard
     BootEntry { id: 27, needs: 2622720, fatal: false, by_kernel: false, order: 27 },  // updater_client
     BootEntry { id: 28, needs: 1328, fatal: false, by_kernel: false, order: 28 },  // board
+    // The top-bar feed (2026-11-02, R8). Last of all, and it needs only the log and the
+    // clock: it is the thing the OTHER face services push into, so it must not be waiting
+    // on any of them. board and updater_client have the edge to it declared in the call
+    // matrix; starting it after both means the first event arrived at a feed that exists.
+    BootEntry { id: 29, needs: 40, fatal: false, by_kernel: false, order: 29 },  // notify
 ];
 
 // Name per id, in ID order (token 1 is id 1), so a log line can name a service without the
@@ -100,9 +107,9 @@ var boot_table: BootEntry[..30] = [
 // Each token is the service's directory name under `services/`, exactly. `logd`, not `log`:
 // a log line that names a service the manifest does not have costs an hour every time. The
 // boot order data test (`os-build/layer1/bootorder_check.py`) fails on a mismatch.
-let BO_NAMES: const u8[:] = "callmatrix bootlog devices storage time logfmt console logd netcfg net input display audit watchdog session supervisor dhcp dns socket timesync updater agenthost settings wallpaper dock dashboard updater_client board";
+let BO_NAMES: const u8[:] = "callmatrix bootlog devices storage time logfmt console logd netcfg net input display audit watchdog session supervisor dhcp dns socket timesync updater agenthost settings wallpaper dock dashboard updater_client board notify";
 
-fn bo_count() -> i64 { return 28; }
+fn bo_count() -> i64 { return 29; }
 
 // Copy the name of a service into the caller's buffer. Returns false for an unknown id, or
 // when the name does not fit -- the caller can tell those apart with bo_count/bo_entry, and a

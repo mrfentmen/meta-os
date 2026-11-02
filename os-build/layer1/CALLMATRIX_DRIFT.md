@@ -47,9 +47,11 @@ services report to the supervisor). `example` and `callmatrix` are excluded by n
 template still needs permissions the day a service is generated from it, which is why its
 four edges are listed above.
 
-## Findings — DORMANT permissions (65)
+## Findings — DORMANT permissions (65 when this was written; 95 now)
 
-Not a defect. Two readings are both true: the code paths that use these edges go through the
+Not a defect. The count grew with the services: the six face services and `notify` added rows
+before anything imported them, which is the deliberate order described in the matrix — declare
+the edge, then wire it — and is why the number here is a date, not a defect count. Two readings are both true: the code paths that use these edges go through the
 registry at runtime rather than through imports, and the matrix was written before the
 services were. The list is the one to read when answering "who can reach the audit log":
 `supervisor -> audit`, `agenthost -> audit`, `session -> audit`, `updater -> audit` are all
@@ -74,62 +76,9 @@ Pax's ruling came back: append the ids, add the edges, and do not touch the audi
 All twelve edges are in, `fs` and `shell` have ids, and the gate is green:
 
 ```console
-$ python3 os-build/layer1/callmatrix_audit.py
-call-matrix audit  (24 services in the matrix, 25 with sources)
+call-matrix audit  (31 services in the matrix, 32 with sources)
 
-DORMANT permission (67, informational):
-...
-clean on permissions; 67 dormant row(s) reported above
-$ echo $?
-0
-```
-
-## What changed in the matrix
-
-| Change | Why |
-|---|---|
-| `SVC_FS = 22` | `fs` had source and no id. Appended, never renumbered: the ids are also the numbers services report to the supervisor. |
-| `SVC_SHELL = 23` | same, for `shell`. |
-| `SVC_EXAMPLE = 24` | the template needs its own row. A service generated from `example` inherits nothing otherwise, and a template copied *without* permissions is exactly how these twelve edges went missing. |
-| `SVC_COUNT` 21 → 24 | the array is the table. |
-| `netcfg → fs` | `persist.goose` writes the config through the filesystem; the address model is a library import, the file is a call. |
-| `socket → netcfg` | a bound address belongs to `netcfg`; the lookup is a call, not a copy. |
-| `fs → storage, log` | the filesystem's whole job is another service's API, which is why its row is short. |
-| `shell → fs, log, audit, supervisor, time` | the widest row in the table, and worth reading as a warning: a user's shell can do everything a user can. Agents do not get a shell handle. |
-| `example → fs, time, supervisor, watchdog, log` | one of each thing it demonstrates. |
-
-## The auditor bug this exposed
-
-`ALIASES = {"log": "logd"}` was declared and never applied: the round-1 comparisons used matrix
-names on one side and directory names on the other. So every edge to the log service was reported
-**twice** — once as a missing permission (caller side) and once as a dormant one (callee side) —
-which is why round 1's dormant count was 65 and why `shell → logd` survived the first fix.
-
-Fixed in `callmatrix_audit.py`: `canon()` maps matrix names to directory names through the
-declared alias table and nowhere else, applied to both sides before comparing. The dormant count is
-67 after the fix, and every entry in it is real.
-
-**The standard did not move.** The green light comes from adding permissions to the matrix and
-adding ids to the table, not from exempting a caller (`example` is still audited, and now has a
-row), not from `--all`-style weakening, and not from silencing the dormant list.
-
-## What the 67 dormant rows mean now
-
-They are permissions with no import edge: mostly runtime registry lookups rather than compile-time
-imports. That is still the answer to "who can reach the audit log" — `supervisor`, `agenthost`,
-`session`, `updater`, `shell` — and it is a deliberate list, not a surprise one. The strict mode
-(`--all`) remains available for a gate that wants to drive that list to zero.
-
-This file stays as the record of the order-of-work gap inside this build-out: the permission table
-was written before the services it governs, and twelve edges were missing by the time the last
-wave landed. The green light is the end of the story, not the whole story.
-
-## Appendix — the audit, regenerated (2026-11-02)
-
-```
-call-matrix audit  (30 services in the matrix, 31 with sources)
-
-DORMANT permission (91, informational):
+DORMANT permission (95, informational):
   agenthost    -> audit        allowed, not called from a source
   agenthost    -> logd         allowed, not called from a source
   agenthost    -> session      allowed, not called from a source
@@ -141,6 +90,7 @@ DORMANT permission (91, informational):
   audit        -> time         allowed, not called from a source
   board        -> logd         allowed, not called from a source
   board        -> net          allowed, not called from a source
+  board        -> notify       allowed, not called from a source
   board        -> storage      allowed, not called from a source
   board        -> time         allowed, not called from a source
   bootlog      -> console      allowed, not called from a source
@@ -182,6 +132,8 @@ DORMANT permission (91, informational):
   netcfg       -> logd         allowed, not called from a source
   netcfg       -> net          allowed, not called from a source
   netcfg       -> storage      allowed, not called from a source
+  notify       -> logd         allowed, not called from a source
+  notify       -> time         allowed, not called from a source
   session      -> audit        allowed, not called from a source
   session      -> display      allowed, not called from a source
   session      -> input        allowed, not called from a source
@@ -212,6 +164,7 @@ DORMANT permission (91, informational):
   updater      -> time         allowed, not called from a source
   updater_client -> logd         allowed, not called from a source
   updater_client -> net          allowed, not called from a source
+  updater_client -> notify       allowed, not called from a source
   updater_client -> socket       allowed, not called from a source
   updater_client -> time         allowed, not called from a source
   updater_client -> updater      allowed, not called from a source
@@ -222,5 +175,150 @@ DORMANT permission (91, informational):
   watchdog     -> supervisor   allowed, not called from a source
   watchdog     -> time         allowed, not called from a source
 
-clean on permissions; 91 dormant row(s) reported above
+clean on permissions; 95 dormant row(s) reported above
+```
+
+## What changed in the matrix
+
+| Change | Why |
+|---|---|
+| `SVC_FS = 22` | `fs` had source and no id. Appended, never renumbered: the ids are also the numbers services report to the supervisor. |
+| `SVC_SHELL = 23` | same, for `shell`. |
+| `SVC_EXAMPLE = 24` | the template needs its own row. A service generated from `example` inherits nothing otherwise, and a template copied *without* permissions is exactly how these twelve edges went missing. |
+| `SVC_COUNT` 21 → 24 | the array is the table. |
+| `netcfg → fs` | `persist.goose` writes the config through the filesystem; the address model is a library import, the file is a call. |
+| `socket → netcfg` | a bound address belongs to `netcfg`; the lookup is a call, not a copy. |
+| `fs → storage, log` | the filesystem's whole job is another service's API, which is why its row is short. |
+| `shell → fs, log, audit, supervisor, time` | the widest row in the table, and worth reading as a warning: a user's shell can do everything a user can. Agents do not get a shell handle. |
+| `example → fs, time, supervisor, watchdog, log` | one of each thing it demonstrates. |
+
+## The auditor bug this exposed
+
+`ALIASES = {"log": "logd"}` was declared and never applied: the round-1 comparisons used matrix
+names on one side and directory names on the other. So every edge to the log service was reported
+**twice** — once as a missing permission (caller side) and once as a dormant one (callee side) —
+which is why round 1's dormant count was 65 and why `shell → logd` survived the first fix.
+
+Fixed in `callmatrix_audit.py`: `canon()` maps matrix names to directory names through the
+declared alias table and nowhere else, applied to both sides before comparing. The dormant count is
+67 after the fix, and every entry in it is real.
+
+**The standard did not move.** The green light comes from adding permissions to the matrix and
+adding ids to the table, not from exempting a caller (`example` is still audited, and now has a
+row), not from `--all`-style weakening, and not from silencing the dormant list.
+
+## What the dormant rows mean now
+
+They are permissions with no import edge: mostly runtime registry lookups rather than compile-time
+imports. That is still the answer to "who can reach the audit log" — `supervisor`, `agenthost`,
+`session`, `updater`, `shell` — and it is a deliberate list, not a surprise one. The strict mode
+(`--all`) remains available for a gate that wants to drive that list to zero.
+
+This file stays as the record of the order-of-work gap inside this build-out: the permission table
+was written before the services it governs, and twelve edges were missing by the time the last
+wave landed. The green light is the end of the story, not the whole story.
+
+## Appendix — the audit, regenerated (2026-11-02)
+
+```
+call-matrix audit  (31 services in the matrix, 32 with sources)
+
+DORMANT permission (95, informational):
+  agenthost    -> audit        allowed, not called from a source
+  agenthost    -> logd         allowed, not called from a source
+  agenthost    -> session      allowed, not called from a source
+  agenthost    -> storage      allowed, not called from a source
+  agenthost    -> supervisor   allowed, not called from a source
+  agenthost    -> time         allowed, not called from a source
+  audit        -> logd         allowed, not called from a source
+  audit        -> storage      allowed, not called from a source
+  audit        -> time         allowed, not called from a source
+  board        -> logd         allowed, not called from a source
+  board        -> net          allowed, not called from a source
+  board        -> notify       allowed, not called from a source
+  board        -> storage      allowed, not called from a source
+  board        -> time         allowed, not called from a source
+  bootlog      -> console      allowed, not called from a source
+  bootlog      -> devices      allowed, not called from a source
+  bootlog      -> logd         allowed, not called from a source
+  bootlog      -> time         allowed, not called from a source
+  console      -> bootlog      allowed, not called from a source
+  console      -> logd         allowed, not called from a source
+  dashboard    -> logd         allowed, not called from a source
+  dashboard    -> session      allowed, not called from a source
+  dashboard    -> settings     allowed, not called from a source
+  dashboard    -> supervisor   allowed, not called from a source
+  dashboard    -> watchdog     allowed, not called from a source
+  devices      -> bootlog      allowed, not called from a source
+  devices      -> logd         allowed, not called from a source
+  dhcp         -> logd         allowed, not called from a source
+  dhcp         -> net          allowed, not called from a source
+  dhcp         -> time         allowed, not called from a source
+  display      -> logd         allowed, not called from a source
+  display      -> session      allowed, not called from a source
+  dns          -> logd         allowed, not called from a source
+  dns          -> net          allowed, not called from a source
+  dock         -> logd         allowed, not called from a source
+  dock         -> session      allowed, not called from a source
+  dock         -> settings     allowed, not called from a source
+  dock         -> storage      allowed, not called from a source
+  example      -> logd         allowed, not called from a source
+  fs           -> logd         allowed, not called from a source
+  input        -> display      allowed, not called from a source
+  input        -> logd         allowed, not called from a source
+  input        -> session      allowed, not called from a source
+  logd         -> console      allowed, not called from a source
+  logd         -> logfmt       allowed, not called from a source
+  logd         -> storage      allowed, not called from a source
+  logd         -> time         allowed, not called from a source
+  logfmt       -> time         allowed, not called from a source
+  net          -> devices      allowed, not called from a source
+  net          -> logd         allowed, not called from a source
+  netcfg       -> logd         allowed, not called from a source
+  netcfg       -> net          allowed, not called from a source
+  netcfg       -> storage      allowed, not called from a source
+  notify       -> logd         allowed, not called from a source
+  notify       -> time         allowed, not called from a source
+  session      -> audit        allowed, not called from a source
+  session      -> display      allowed, not called from a source
+  session      -> input        allowed, not called from a source
+  session      -> logd         allowed, not called from a source
+  session      -> time         allowed, not called from a source
+  settings     -> logd         allowed, not called from a source
+  settings     -> storage      allowed, not called from a source
+  settings     -> time         allowed, not called from a source
+  socket       -> dns          allowed, not called from a source
+  socket       -> logd         allowed, not called from a source
+  socket       -> time         allowed, not called from a source
+  storage      -> devices      allowed, not called from a source
+  storage      -> logd         allowed, not called from a source
+  supervisor   -> agenthost    allowed, not called from a source
+  supervisor   -> audit        allowed, not called from a source
+  supervisor   -> logd         allowed, not called from a source
+  supervisor   -> session      allowed, not called from a source
+  supervisor   -> time         allowed, not called from a source
+  supervisor   -> watchdog     allowed, not called from a source
+  time         -> devices      allowed, not called from a source
+  timesync     -> logd         allowed, not called from a source
+  timesync     -> socket       allowed, not called from a source
+  timesync     -> time         allowed, not called from a source
+  updater      -> audit        allowed, not called from a source
+  updater      -> logd         allowed, not called from a source
+  updater      -> socket       allowed, not called from a source
+  updater      -> storage      allowed, not called from a source
+  updater      -> time         allowed, not called from a source
+  updater_client -> logd         allowed, not called from a source
+  updater_client -> net          allowed, not called from a source
+  updater_client -> notify       allowed, not called from a source
+  updater_client -> socket       allowed, not called from a source
+  updater_client -> time         allowed, not called from a source
+  updater_client -> updater      allowed, not called from a source
+  wallpaper    -> logd         allowed, not called from a source
+  wallpaper    -> settings     allowed, not called from a source
+  wallpaper    -> storage      allowed, not called from a source
+  watchdog     -> logd         allowed, not called from a source
+  watchdog     -> supervisor   allowed, not called from a source
+  watchdog     -> time         allowed, not called from a source
+
+clean on permissions; 95 dormant row(s) reported above
 ```
