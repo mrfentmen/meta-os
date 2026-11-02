@@ -9,3 +9,5 @@ os-build/userspace/user/target/
 os-build/logs/*.ppm
 os-build/logs/qemu-monitor.log
 /target/
+os-build/userspace/user/target/
+kernel/target/

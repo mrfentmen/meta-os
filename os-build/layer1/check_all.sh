@@ -76,6 +76,13 @@ fi
 #    claim to describe code. If they drift, the claim is the bug.
 # 4b. The checkers' own negative tests: a checker that has only printed PASS is
 #     unverified. This mutates temp copies and requires each one to fail.
+if python3 os-build/layer1/gen_boot_manifest_json.py --check >/dev/null 2>&1; then
+    report "boot-manifest.json" "PASS (current)"
+else
+    report "boot-manifest.json" "FAIL (stale or missing)"
+    FAILED=1
+fi
+
 if bash os-build/layer1/test_checkers.sh >/dev/null 2>&1; then
     report "checker self-tests" "PASS"
 else
@@ -83,7 +90,8 @@ else
     FAILED=1
 fi
 
-for check in abi_check.py boot_manifest_check.py failure_table_check.py claim_check.py; do
+for check in abi_check.py boot_manifest_check.py failure_table_check.py claim_check.py \
+             facts_check.py link_check.py root_manifest_check.py; do
     if python3 "os-build/layer1/$check" >/dev/null 2>&1; then
         report "$check" "PASS"
     else

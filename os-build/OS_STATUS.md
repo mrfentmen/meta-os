@@ -64,6 +64,9 @@ os-build/layer1/build_kernel.sh      # build + boot + K1 gate
 os-build/layer1/prove_k2_k3.sh       # screen + keyboard + timer evidence
 os-build/layer1/check_all.sh         # kernel, os-boot, userspace bins, Goose corpus, doc checks
 os-build/layer1/test_checkers.sh     # proves the checkers fail when they should
+os-build/layer1/clean_clone_check.sh # proves main builds from nothing but itself
+os-build/layer1/claim_check.py       # every proven claim cites a file that exists
+os-build/layer1/boot_log_diff.py A B # two boots compared structurally
 ```
 
 ## The next three things, in order
