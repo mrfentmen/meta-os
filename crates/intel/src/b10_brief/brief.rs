@@ -688,6 +688,102 @@ pub fn priority_order_lines(
         .collect()
 }
 
+/// One blocked-contact entry: the blocked job's id and the nick to
+/// ask about it, if one was stated. Python reads the entry's `ask`
+/// only when it is a non-empty string; anything else reads as no
+/// nick, never a guessed one.
+pub struct BlockedContact {
+    pub job_id: String,
+    pub ask: String,
+}
+
+/// A blocked-contacts record for the blocked-contact lines: the
+/// stated contact entries, and its age label. Python derives the
+/// label from the record's `as_of` time through
+/// `_environment_age_label`: `" (as of YYYY-MM-DD HH:MM ET)"`, or
+/// `" (snapshot time not reported)"` when the record gives no time.
+/// This crate has no time dependency, so the caller supplies the
+/// label already formed, the same way `PreviousBrief` does.
+///
+/// `None` (no record at all) yields no lines: a snapshot without
+/// the record carries none, so older briefs keep their exact shape.
+/// A malformed Python record (not a dict, or contacts not a list)
+/// also yields no lines, so the caller maps those to `None` here.
+pub struct BlockedContacts {
+    pub contacts: Vec<BlockedContact>,
+    pub age_label: String,
+}
+
+/// INT-027 follow-up: the blocked-contacts lines for a morning
+/// brief, closing cold-start gap 5 (no ask-nick on the blocked job:
+/// the blocked line names the job and its reason, but no owner to
+/// ask about it) for the template brief from a stated record.
+///
+/// The lines cover every blocked job in the snapshot, in snapshot
+/// order, not only the jobs the record names: a blocked job with a
+/// contact entry reads "Ask <nick> about <id> <title>", and a
+/// blocked job with no usable entry reads "<id> <title>: owner not
+/// reported in this window", the v2 rule 8 wording, never a guessed
+/// nick. A contact entry for a job that is not blocked in this
+/// snapshot is ignored; a blocked job with no id cannot be named
+/// here and is skipped, though its blocked line still names it in
+/// the Blocked section. A record over a window with no blocked jobs
+/// reads none reported, never a padded contact. Every line carries
+/// its age label. The lines are plain lines, not bullets, so the
+/// BRF-007 budget trim never drops a contact ahead of a watch item,
+/// and they are redacted by the composer, not here. This closes gap
+/// 5 for the template brief only: a Spark-composed brief carrying
+/// these lines, and an independent lane member's cold-start re-run,
+/// are still owed, the same caveats INT-027 carries.
+pub fn blocked_contact_lines(
+    record: Option<&BlockedContacts>,
+    current: &[CurrentJob],
+) -> Vec<String> {
+    let record = match record {
+        None => return Vec::new(),
+        Some(r) => r,
+    };
+    // First entry wins for a repeated job id; an entry with no
+    // job id is skipped, never a contact for an unnamed job.
+    let mut asks: Vec<(&str, &str)> = Vec::new();
+    for contact in &record.contacts {
+        if contact.job_id.is_empty() {
+            continue;
+        }
+        if asks.iter().any(|(id, _)| *id == contact.job_id.as_str()) {
+            continue;
+        }
+        asks.push((contact.job_id.as_str(), contact.ask.as_str()));
+    }
+    let mut lines: Vec<String> = Vec::new();
+    for job in current {
+        if job.status != "blocked" || job.id.is_empty() {
+            continue;
+        }
+        let label = if job.title.is_empty() {
+            job.id.clone()
+        } else {
+            format!("{} {}", job.id, job.title)
+        };
+        match asks.iter().find(|(id, _)| *id == job.id.as_str()) {
+            Some((_, ask)) if !ask.is_empty() => {
+                lines.push(format!("Ask {ask} about {label}"))
+            }
+            _ => lines.push(format!("{label}: owner not reported in this window")),
+        }
+    }
+    if lines.is_empty() {
+        return vec![format!(
+            "Blocked contacts: none reported{}",
+            record.age_label
+        )];
+    }
+    lines
+        .iter()
+        .map(|l| format!("{l}{}", record.age_label))
+        .collect()
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -997,6 +1093,58 @@ mod tests {
         assert_eq!(
             priority_order_lines(Some(&empty), &current),
             vec!["Priority order: none reported (snapshot time not reported)"]
+        );
+    }
+
+    #[test]
+    fn blocked_contact_lines_ask_first_wins_non_blocked_ignored_and_none() {
+        let record = BlockedContacts {
+            contacts: vec![
+                BlockedContact { job_id: "7".into(), ask: "milo".into() },
+                // First entry wins for a repeated job id.
+                BlockedContact { job_id: "7".into(), ask: "pax".into() },
+                // A contact for a job that is not blocked is ignored.
+                BlockedContact { job_id: "3".into(), ask: "pax".into() },
+                BlockedContact { job_id: "".into(), ask: "rowan".into() },
+            ],
+            age_label: " (as of 2026-10-30 08:00 ET)".into(),
+        };
+        let current = vec![
+            CurrentJob { id: "7".into(), title: "spark client".into(), status: "blocked".into() },
+            CurrentJob { id: "3".into(), title: "brief panel".into(), status: "claimed".into() },
+            CurrentJob { id: "9".into(), title: "watchdog loop".into(), status: "blocked".into() },
+            CurrentJob { id: "".into(), title: "NoId".into(), status: "blocked".into() },
+        ];
+        assert_eq!(
+            blocked_contact_lines(Some(&record), &current),
+            vec![
+                "Ask milo about 7 spark client (as of 2026-10-30 08:00 ET)",
+                "9 watchdog loop: owner not reported in this window (as of 2026-10-30 08:00 ET)",
+            ]
+        );
+        // No record at all says nothing about contacts.
+        assert_eq!(blocked_contact_lines(None, &current), Vec::<String>::new());
+        // A record over a window with no blocked jobs reads none
+        // reported, never a padded contact.
+        let claimed = vec![
+            CurrentJob { id: "3".into(), title: "brief panel".into(), status: "claimed".into() },
+        ];
+        assert_eq!(
+            blocked_contact_lines(Some(&record), &claimed),
+            vec!["Blocked contacts: none reported (as of 2026-10-30 08:00 ET)"]
+        );
+        // An entry with no ask, and a blocked job with no title,
+        // both read owner-not-reported / bare id, never guessed.
+        let no_ask = BlockedContacts {
+            contacts: vec![BlockedContact { job_id: "7".into(), ask: "".into() }],
+            age_label: " (snapshot time not reported)".into(),
+        };
+        let bare = vec![
+            CurrentJob { id: "7".into(), title: "".into(), status: "blocked".into() },
+        ];
+        assert_eq!(
+            blocked_contact_lines(Some(&no_ask), &bare),
+            vec!["7: owner not reported in this window (snapshot time not reported)"]
         );
     }
 }
