@@ -33,6 +33,9 @@ pub struct PlanJob {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Plan {
     pub goal: String,
+    /// Plan summary sentence. The shape-only parser leaves this empty;
+    /// the summary renderers read it, so a fuller parse fills it in.
+    pub summary: String,
     pub jobs: Vec<PlanJob>,
 }
 
@@ -56,7 +59,7 @@ pub fn parse_plan(goal: &str, jobs: Vec<(String, String)>, unknown: &[String]) -
         }
         out.push(PlanJob { key, title, files: Vec::new(), deps: Vec::new(), max_attempts: 3, spec: String::new(), accept: Vec::new() });
     }
-    Ok(Plan { goal: goal.to_string(), jobs: out })
+    Ok(Plan { goal: goal.to_string(), summary: String::new(), jobs: out })
 }
 
 /// Two jobs touching the same file overlap (unless explicitly ordered by deps).
@@ -644,6 +647,124 @@ pub fn score_plan_accepts(plan: &Plan) -> Vec<JobAcceptScore> {
         .collect()
 }
 
+/// One attempt-budget clamp, ported from the `clamps` entries
+/// `plan_summary` renders: the job key plus the requested and
+/// clamped `max_attempts` values.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PlanClamp {
+    pub key: String,
+    pub requested: i64,
+    pub clamped: i64,
+}
+
+/// Python `repr` for a short string: single quotes, with backslash
+/// and single quote escaped. Plan keys are identifiers in practice,
+/// so no other escaping is needed here.
+fn repr_str(s: &str) -> String {
+    let mut out = String::from("'");
+    for c in s.chars() {
+        if c == '\'' || c == '\\' {
+            out.push('\\');
+        }
+        out.push(c);
+    }
+    out.push('\'');
+    out
+}
+
+/// Render a parsed plan as a human-readable summary string, ported
+/// from `dispatch.py::plan_summary`. First line is the plan's
+/// summary, then one line per job in plan order ("- key: title
+/// (attempts N)"), then one line per clamp ("clamped: job 'key':
+/// max_attempts 99 -> 5"). With no clamps there is no clamp section
+/// at all. Pure string building; posts nothing and touches no
+/// state. Python's dict-shape failures are unrepresentable here:
+/// `Plan` always carries a jobs list.
+pub fn plan_summary(plan: &Plan, clamps: &[PlanClamp]) -> String {
+    let mut lines = vec![plan.summary.clone()];
+    for job in &plan.jobs {
+        lines.push(format!(
+            "- {}: {} (attempts {})",
+            job.key, job.title, job.max_attempts
+        ));
+    }
+    for clamp in clamps {
+        lines.push(format!(
+            "clamped: job {}: max_attempts {} -> {}",
+            repr_str(&clamp.key),
+            clamp.requested,
+            clamp.clamped
+        ));
+    }
+    lines.join("\n")
+}
+
+/// Render a parsed plan as one plain-English paragraph (DSP-025),
+/// ported from `dispatch.py::plan_paragraph`. The paragraph is the
+/// dashboard form of a plan: the plan's summary sentence first,
+/// then every job named once, in posting order, each with the files
+/// it owns in parentheses — "First, ..., then ..., and finally ...".
+/// A one-job plan reads "It does ...". A single paragraph with no
+/// newlines, so the dashboard panel can show the whole plan without
+/// a multi-line block. The paragraph never names a likely claimant:
+/// a parsed plan carries no claimant field, and inventing one would
+/// break the brief lane's ground rule that a brief never invents a
+/// fact. Errors when an explicit order does not cover exactly the
+/// plan's jobs, so a paragraph can never silently drop a job. Pure
+/// string building; posts nothing.
+pub fn plan_paragraph(plan: &Plan, order: Option<&[String]>) -> Result<String, PlanError> {
+    use std::collections::HashMap;
+    let mut by_key: HashMap<&str, &PlanJob> = HashMap::new();
+    for job in &plan.jobs {
+        by_key.insert(job.key.as_str(), job);
+    }
+    let default_order: Vec<String> = plan.jobs.iter().map(|j| j.key.clone()).collect();
+    let order: &[String] = match order {
+        Some(o) => o,
+        None => &default_order,
+    };
+    let mut sorted_order: Vec<&str> = order.iter().map(|s| s.as_str()).collect();
+    sorted_order.sort_unstable();
+    let mut sorted_keys: Vec<&str> = by_key.keys().copied().collect();
+    sorted_keys.sort_unstable();
+    if sorted_order != sorted_keys {
+        return Err(fail("plan: posting order must cover exactly the plan's jobs"));
+    }
+    let mut summary = plan.summary.trim().to_string();
+    if !summary.is_empty() && !summary.ends_with('.') {
+        summary.push('.');
+    }
+    let mut clauses: Vec<String> = Vec::new();
+    for key in order {
+        let job = by_key[key.as_str()];
+        if job.files.is_empty() {
+            clauses.push(job.title.clone());
+        } else {
+            clauses.push(format!("{} (in {})", job.title, job.files.join(", ")));
+        }
+    }
+    if clauses.is_empty() {
+        return Ok(summary);
+    }
+    let body = if clauses.len() == 1 {
+        format!("It does {}.", clauses[0])
+    } else if clauses.len() == 2 {
+        format!("First, {}, then {}.", clauses[0], clauses[1])
+    } else {
+        format!(
+            "First, {}, then {}, and finally {}.",
+            clauses[0],
+            clauses[1..clauses.len() - 1].join(", then "),
+            clauses[clauses.len() - 1]
+        )
+    };
+    Ok(if summary.is_empty() {
+        body
+    } else {
+        format!("{summary} {body}")
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -651,6 +772,7 @@ mod tests {
     fn plan() -> Plan {
         Plan {
             goal: "g".into(),
+            summary: String::new(),
             jobs: vec![
                 PlanJob { key: "a".into(), title: "A".into(), files: vec!["f.py".into()], deps: vec![], max_attempts: 3, spec: String::new(), accept: vec![] },
                 PlanJob { key: "b".into(), title: "B".into(), files: vec![], deps: vec!["a".into()], max_attempts: 3, spec: String::new(), accept: vec![] },
@@ -659,7 +781,7 @@ mod tests {
     }
 
     fn cplan(jobs: Vec<PlanJob>) -> Plan {
-        Plan { goal: "g".into(), jobs }
+        Plan { goal: "g".into(), summary: String::new(), jobs }
     }
 
     fn cjob(key: &str, files: Vec<&str>, spec: &str) -> PlanJob {
@@ -920,5 +1042,78 @@ mod tests {
         assert!(scores[0].passes);
         assert_eq!(scores[1].key, "two");
         assert!(!scores[1].passes);
+    }
+
+    #[test]
+    fn summary_lines_jobs_in_plan_order() {
+        let mut p = plan();
+        p.summary = "Do the thing".into();
+        assert_eq!(
+            plan_summary(&p, &[]),
+            "Do the thing\n- a: A (attempts 3)\n- b: B (attempts 3)"
+        );
+    }
+
+    #[test]
+    fn summary_clamps_appended_and_empty_summary_keeps_first_line() {
+        let mut p = plan();
+        p.summary = "Do the thing".into();
+        let clamps = vec![PlanClamp { key: "b".into(), requested: 99, clamped: 10 }];
+        assert_eq!(
+            plan_summary(&p, &clamps),
+            "Do the thing\n- a: A (attempts 3)\n- b: B (attempts 3)\nclamped: job 'b': max_attempts 99 -> 10"
+        );
+        let p = plan();
+        assert_eq!(
+            plan_summary(&p, &[]),
+            "\n- a: A (attempts 3)\n- b: B (attempts 3)"
+        );
+    }
+
+    #[test]
+    fn paragraph_two_jobs_adds_period_and_files() {
+        let mut p = plan();
+        p.summary = "Ship the fix".into();
+        assert_eq!(
+            plan_paragraph(&p, None).unwrap(),
+            "Ship the fix. First, A (in f.py), then B."
+        );
+    }
+
+    #[test]
+    fn paragraph_one_job_and_empty_plan() {
+        let mut p = cplan(vec![cjob("only", vec![], "")]);
+        p.summary = String::new();
+        assert_eq!(plan_paragraph(&p, None).unwrap(), "It does only.");
+        let mut p = cplan(vec![]);
+        p.summary = "Nothing to do".into();
+        assert_eq!(plan_paragraph(&p, None).unwrap(), "Nothing to do.");
+    }
+
+    #[test]
+    fn paragraph_three_jobs_finally_form_and_explicit_order() {
+        let mut p = cplan(vec![
+            cjob("a", vec!["f.py"], ""),
+            cjob("b", vec![], ""),
+            cjob("c", vec![], ""),
+        ]);
+        p.summary = "Do it.".into();
+        assert_eq!(
+            plan_paragraph(&p, None).unwrap(),
+            "Do it. First, a (in f.py), then b, and finally c."
+        );
+        let order = vec!["c".to_string(), "a".to_string(), "b".to_string()];
+        assert_eq!(
+            plan_paragraph(&p, Some(&order)).unwrap(),
+            "Do it. First, c, then a (in f.py), and finally b."
+        );
+    }
+
+    #[test]
+    fn paragraph_partial_order_refused() {
+        let p = plan();
+        let order = vec!["a".to_string()];
+        let err = plan_paragraph(&p, Some(&order)).unwrap_err();
+        assert!(err.0.contains("posting order"), "got: {err}");
     }
 }
