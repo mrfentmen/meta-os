@@ -66,3 +66,6 @@ Cargo check 19/19 crates clean (this tree). Python: queue 128, officina 49, cust
 - Medicus ran live twice (sim-5f894be3, sim-f0e40e16), third division proven.
 - Face long tail closed: lock, notifications, 11 wallpapers, tiling, workspaces, search — guest shots committed.
 - The face image recipe reproduces byte-identically (f7d8581e twice).
+
+## Section 3 — model pipeline, live (17-28): DONE with named gaps 2026-11-02
+Queue 141/141 pre-live. Live: wonder chat OK; SAM 2 calls, no box both times (recorded, not invented); Spark reading "structure fire" live; image generated (webp 60KB). Judge-model incident ran end to end but judge_mode stayed deterministic (Spark empty reply x3, direct prompt works) — model side UNPROVEN, fallback PROVEN with named reasons. Spend $0.016. Proof: WAVE3_MODEL_PROOFS.md + wave3-model-proofs/.
