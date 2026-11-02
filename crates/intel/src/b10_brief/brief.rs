@@ -353,6 +353,7 @@ pub fn build_previous_session(
 /// `None` fields mean "not reported in this snapshot"; a present
 /// but empty list means "none reported" — never padded, never
 /// guessed. A down gateway is reported as down, never omitted.
+#[derive(Debug, Clone, PartialEq)]
 pub struct SystemState {
     pub drivers: Option<Vec<String>>,
     pub gateway_healthy: Option<bool>,
@@ -1032,6 +1033,7 @@ pub fn onjoin_template_lines(snapshot: &OnjoinSnapshot) -> Vec<String> {
             })
             .collect(),
         alerts: snapshot.alerts.clone(),
+        source_window: None,
     };
     let mut lines: Vec<String> = Vec::new();
     lines.push("What this crew is building".to_string());
@@ -2854,6 +2856,297 @@ pub fn with_previous_brief(
     })
 }
 
+/// One stated entry of a snapshot's `sweep_recovered` list, as the
+/// caller reads it: a usable job record (non-empty id and title,
+/// baton step when stated) or an entry that could not be read.
+/// A stated entry that is not a dict, or has no usable id or
+/// title, has no Job form: the caller passes it as Unreadable,
+/// which matches Python skipping it — and, unlike a duplicate
+/// listing, an unreadable entry voids the sweep count, so the
+/// renderer never prints a tidy number over a gap.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SweepRecoveredEntry {
+    Job { id: String, title: String, baton_step: BatonStep },
+    Unreadable,
+}
+
+/// OS-127 follow-up: the boot-path caller that fills a
+/// snapshot's `recovery` record, so a boot brief carries its
+/// in-flight-jobs-recovered line even when the snapshot states
+/// only the lease sweep's own stated outcome. Returns the record
+/// to store as the snapshot's `recovery` value. A hand-stated
+/// record wins over a built one: pass it as `existing` and it is
+/// returned unchanged, whatever the inputs say, so a caller that
+/// knows its recovery better than these lists is never
+/// overwritten. The record exists only for a sweep that actually
+/// reported something, so a snapshot that states no usable sweep
+/// outcome — no recovered jobs, no sweep count, no corrupted
+/// jobs — gets no record at all, and older briefs keep their
+/// exact shape instead of gaining a silent line. A clean
+/// shutdown is a stated sweep count of zero with no recovered
+/// jobs: that builds a record, and it reads "0 recovered"
+/// plainly, because the sweep itself said so — a snapshot with
+/// no sweep count at all never reads zero. A job listed twice
+/// is one recovery, not two: the first listing wins, in sweep
+/// order. A recovered job without an id and a title, and a sweep
+/// count that is not a non-negative int, are skipped, never
+/// guessed — and a skipped recovered entry never turns into a
+/// clean count, because the record then carries no sweep count
+/// to reconcile against. A recovered job with no baton step is
+/// named with no step, never with an invented step: the
+/// renderer reads "step not reported" for it. This still reads
+/// stated inputs, never a live lease sweep: the OS-126
+/// plug-pull drill and the sweep verification have not landed,
+/// so a caller that states no sweep outcome gets no line even
+/// when a sweep ran somewhere else. Never fails: a builder
+/// failure leaves the caller without a record, so the boot path
+/// still produces a brief, just without this line, instead of
+/// failing outright.
+///
+/// The record carries no as_of stamp of its own — the
+/// RecoveryRecord holds corrupted, recovered, and sweep_count
+/// only — so unlike most with_* callers this one takes no now
+/// argument, following the with_federation precedent.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `recovered` when the snapshot's
+/// sweep_recovered list is missing or not a list — silence
+/// states no recovered jobs; `Some(&[])` is an explicitly empty
+/// list, which likewise states no jobs on its own. A job listed
+/// twice is passed twice and deduped here, first listing wins,
+/// since a duplicate is not a skip. A baton step that is not an
+/// int or a non-empty string has no typed form: the caller
+/// passes `BatonStep::Missing`, which the renderer reads as step
+/// not reported. The caller passes `None` for `sweep_count`
+/// when the snapshot's sweep_count is missing or not an int; a
+/// negative count is ignored here, never guessed, since Python
+/// only accepts a non-negative int. The caller passes `None`
+/// for `corrupted` when the snapshot's sweep_corrupted list is
+/// missing or not a list; a corrupted entry that names nothing
+/// — `CorruptedEntry::Other`, or a Job or Plain entry with no
+/// usable name — is dropped here, since Python appends nothing
+/// for it.
+pub fn with_recovery(
+    existing: Option<&RecoveryRecord>,
+    recovered: Option<&[SweepRecoveredEntry]>,
+    sweep_count: Option<i64>,
+    corrupted: Option<&[CorruptedEntry]>,
+) -> Option<RecoveryRecord> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let mut usable = false;
+    let mut skipped = false;
+    let mut recovered_out: Option<Vec<RecoveredEntry>> = None;
+    if let Some(stated) = recovered {
+        if !stated.is_empty() {
+            let mut seen: Vec<&str> = Vec::new();
+            let mut jobs: Vec<RecoveredEntry> = Vec::new();
+            for entry in stated {
+                match entry {
+                    SweepRecoveredEntry::Job { id, title, baton_step } => {
+                        if id.is_empty() || title.is_empty() {
+                            skipped = true;
+                            continue;
+                        }
+                        if seen.contains(&id.as_str()) {
+                            continue;
+                        }
+                        seen.push(id.as_str());
+                        jobs.push(RecoveredEntry::Job {
+                            id: id.clone(),
+                            title: title.clone(),
+                            baton_step: baton_step.clone(),
+                        });
+                    }
+                    SweepRecoveredEntry::Unreadable => {
+                        skipped = true;
+                    }
+                }
+            }
+            if jobs.is_empty() {
+                // Every stated entry was skipped: the sweep
+                // reported something, but nothing readable —
+                // the record carries an empty recovered list
+                // and no sweep count to reconcile against.
+                recovered_out = Some(vec![]);
+            } else {
+                recovered_out = Some(jobs);
+            }
+            usable = true;
+        }
+    }
+    let mut sweep_out: Option<i64> = None;
+    if let Some(count) = sweep_count {
+        if count >= 0 {
+            if recovered_out.is_none() {
+                recovered_out = Some(vec![]);
+            }
+            // A skipped recovered entry voids the count:
+            // without it the renderer cannot print a clean
+            // count, only an incomplete line. A job listed
+            // twice is not a skip: dedupe never voids a
+            // count on its own.
+            if !skipped {
+                sweep_out = Some(count);
+            }
+            usable = true;
+        }
+    }
+    let mut corrupted_out: Option<Vec<CorruptedEntry>> = None;
+    if let Some(stated) = corrupted {
+        let mut usable_corrupted: Vec<CorruptedEntry> = Vec::new();
+        for entry in stated {
+            match entry {
+                CorruptedEntry::Job { id, title } => {
+                    if !id.is_empty() || !title.is_empty() {
+                        usable_corrupted.push(entry.clone());
+                    }
+                }
+                CorruptedEntry::Plain(s) => {
+                    if !s.is_empty() {
+                        usable_corrupted.push(entry.clone());
+                    }
+                }
+                CorruptedEntry::Other => {}
+            }
+        }
+        if !usable_corrupted.is_empty() {
+            corrupted_out = Some(usable_corrupted);
+            usable = true;
+        }
+    }
+    if !usable {
+        return None;
+    }
+    Some(RecoveryRecord {
+        corrupted: corrupted_out,
+        recovered: recovered_out,
+        sweep_count: sweep_out,
+    })
+}
+
+/// OS-062 follow-up: the boot-path caller that fills a
+/// snapshot's `system_state` record, so a boot brief carries its
+/// three drivers + tools + apps lines even when the snapshot
+/// states only the machine's own stated state. Returns the record
+/// to store as the snapshot's `system_state` value. A hand-stated
+/// record wins over a built one: pass it as `existing` and it is
+/// returned unchanged, whatever the inputs say, so a caller that
+/// knows its machine state better than these flat lists is never
+/// overwritten. The record exists only when the snapshot states
+/// something usable, so a snapshot that states nothing usable
+/// gets no record at all, and older briefs keep their exact shape
+/// instead of gaining a silent record: a boot brief over such a
+/// snapshot still renders the three not-reported lines, as before.
+/// A driver or skill app named twice is one entry, not two: the
+/// first listing wins, in stated order. A name that is not a
+/// non-empty string is skipped, never guessed — and a list of only
+/// skipped names counts as nothing stated, so junk alone never
+/// builds a record. A stated empty list does count: it is the
+/// caller saying none, and it reads "no drivers reported" or "no
+/// skill apps mounted", never "not reported". Gateway health
+/// counts only as a real bool: true reads healthy, false reads
+/// down, and anything else is skipped, never guessed, so a caller
+/// that does not know its gateway health never gets a healthy or
+/// down line it did not state. This still reads stated inputs,
+/// never live machine state: the driver contract (OS-053), the
+/// gateway daemon (OS-058), and the skills loader (OS-065) have
+/// not landed, so a caller that states no drivers, gateway health,
+/// or skill apps gets the not-reported lines even when drivers are
+/// running somewhere else. Never fails: a builder failure leaves
+/// the caller without a record, so the boot path still produces a
+/// brief, just with the not-reported lines, instead of failing
+/// outright.
+///
+/// Stamp note, stated plainly: Python stamps the built record
+/// with one `as_of` for the whole record, but the Rust
+/// `SystemState` carries no stamp field and `system_state_lines`
+/// renders no age, so the stamp has nowhere to go in this crate
+/// and this filler takes no `now` argument, following the
+/// `with_federation` / `with_recovery` precedent for stamp-less
+/// records. If a later slice adds an age field to `SystemState`,
+/// this filler gains the stamp then; nothing here invents one.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `drivers` / `skill_apps` when the
+/// snapshot's list is missing or not a list — silence states no
+/// names; `Some(&[])` is an explicitly empty list, which counts
+/// as a stated none. A list entry that is not a string has no
+/// Rust form: the caller omits it, except that an empty string
+/// stands in for a skipped name, so a list of only empty strings
+/// is junk alone and builds no record, matching Python's
+/// junk-only rule. The caller passes `None` for
+/// `gateway_healthy` when the snapshot's value is missing or not
+/// a bool; `Some(false)` is a stated down gateway, kept, never
+/// omitted.
+pub fn with_system_state(
+    existing: Option<&SystemState>,
+    drivers: Option<&[String]>,
+    gateway_healthy: Option<bool>,
+    skill_apps: Option<&[String]>,
+) -> Option<SystemState> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let mut usable = false;
+    let mut drivers_out: Option<Vec<String>> = None;
+    if let Some(stated) = drivers {
+        if stated.is_empty() {
+            drivers_out = Some(vec![]);
+            usable = true;
+        } else {
+            let mut seen: Vec<&str> = Vec::new();
+            let mut names: Vec<String> = Vec::new();
+            for name in stated {
+                if name.is_empty() || seen.contains(&name.as_str()) {
+                    continue;
+                }
+                seen.push(name.as_str());
+                names.push(name.clone());
+            }
+            if !names.is_empty() {
+                drivers_out = Some(names);
+                usable = true;
+            }
+        }
+    }
+    let mut skill_apps_out: Option<Vec<String>> = None;
+    if let Some(stated) = skill_apps {
+        if stated.is_empty() {
+            skill_apps_out = Some(vec![]);
+            usable = true;
+        } else {
+            let mut seen: Vec<&str> = Vec::new();
+            let mut names: Vec<String> = Vec::new();
+            for name in stated {
+                if name.is_empty() || seen.contains(&name.as_str()) {
+                    continue;
+                }
+                seen.push(name.as_str());
+                names.push(name.clone());
+            }
+            if !names.is_empty() {
+                skill_apps_out = Some(names);
+                usable = true;
+            }
+        }
+    }
+    let mut gateway_out: Option<bool> = None;
+    if let Some(healthy) = gateway_healthy {
+        gateway_out = Some(healthy);
+        usable = true;
+    }
+    if !usable {
+        return None;
+    }
+    Some(SystemState {
+        drivers: drivers_out,
+        gateway_healthy: gateway_out,
+        skill_apps: skill_apps_out,
+    })
+}
+
 /// STR-002: `_format_brief_time` — a stored brief timestamp as
 /// `"YYYY-MM-DD HH:MM ET"` in America/New_York, the zone the
 /// BRF-011 morning schedule uses. This crate has no time
@@ -3838,20 +4131,6 @@ pub fn next_morning_run(now: Option<i64>, hour: i64) -> i64 {
     cand_days * 86400 + hour * 3600 - offset
 }
 
-/// Minimal morning-brief composer: sections in frozen order, no invention.
-pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
-    const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
-    let mut text = format!("Morning brief for {room}\n");
-    for k in ORDER {
-        if let Some(v) = sections.get(*k) {
-            if !v.trim().is_empty() {
-                text.push_str(&format!("\n## {k}\n{v}\n"));
-            }
-        }
-    }
-    BriefRecord { room: room.to_string(), ts: 0, text, kind: "morning".to_string() }
-}
-
 /// BRF-028: a stored brief record as `_brief_text_from_record` reads it.
 /// Only the fields that function touches: verbatim `text`, the stored
 /// `source_window` (string or dict form, shared with `window`), and
@@ -3977,13 +4256,17 @@ impl BriefTs {
 }
 
 /// One brief-index entry as `list_briefs` returns it, oldest
-/// first: `ts` with the `generated_at` fallback. `None` on a
+/// first: `ts` with the `generated_at` fallback, plus the kind
+/// Python's `store_brief` writes into the index entry. `None` on a
 /// field means the key is missing (or, for a store adapter, that
-/// the value was not an int/float).
+/// the value was not an int/float); `kind: None` is an entry
+/// written before the kind field existed, which the guard never
+/// matches on kind alone (it compares the record's kind).
 #[derive(Debug, Clone, PartialEq)]
 pub struct BriefIndexEntry {
     pub ts: Option<BriefTs>,
     pub generated_at: Option<BriefTs>,
+    pub kind: Option<String>,
 }
 
 /// A stored brief record as `find_recent_brief` returns it: the
@@ -4112,6 +4395,596 @@ pub fn find_recent_brief(
         return Some(record);
     }
     None
+}
+
+/// One watchdog alert record, as `build_watchdog_status` reads it:
+/// the alert id, its severity string, its creation time when known,
+/// and whether it is resolved. The caller derives `resolved` from
+/// the store record the way `alert_status` does (a `resolved`
+/// status, or a `resolved_at` time on a pre-WDG-014 record);
+/// anything else counts as open, never hidden.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WatchdogAlert {
+    pub id: String,
+    pub severity: String,
+    pub created_at: Option<i64>,
+    pub resolved: bool,
+}
+
+/// WDG-028, line half only: the one frozen watchdog sentence a
+/// template brief renders, from severity-carrying alert records.
+/// Returns `None` when no record carries a known severity
+/// (`critical`, `warning`, `info`) — the composer then renders no
+/// watchdog line at all, the same gate Python applies before it
+/// calls `build_watchdog_status`. Counts cover unresolved records
+/// only, by severity; the top alert is the highest-severity
+/// unresolved record with a known severity, earliest `created_at`
+/// first, id as the tie-break, and an unknown-severity record is
+/// never promoted to top. A record with no `created_at` sorts after
+/// every dated record of its severity. The full store record
+/// (`counts`, `open`, `resolved`, `total`, `ts`) stays owed to the
+/// store lane that ports `build_watchdog_status` itself; this is
+/// only the line the brief renders.
+pub fn watchdog_status_line(alerts: &[WatchdogAlert]) -> Option<String> {
+    const KNOWN: [&str; 3] = ["critical", "warning", "info"];
+    if !alerts.iter().any(|a| KNOWN.contains(&a.severity.as_str())) {
+        return None;
+    }
+    let mut counts = [0i64; 3];
+    let mut best: Option<(usize, bool, i64, String)> = None;
+    for alert in alerts {
+        if alert.resolved {
+            continue;
+        }
+        let Some(rank) = KNOWN.iter().position(|s| *s == alert.severity) else {
+            continue;
+        };
+        counts[rank] += 1;
+        if alert.id.is_empty() {
+            continue;
+        }
+        let candidate = (
+            rank,
+            alert.created_at.is_none(),
+            alert.created_at.unwrap_or(0),
+            alert.id.clone(),
+        );
+        if best.as_ref().map(|b| candidate < *b).unwrap_or(true) {
+            best = Some(candidate);
+        }
+    }
+    let mut line = format!(
+        "Watchdog: {} critical, {} warning, {} info open",
+        counts[0], counts[1], counts[2]
+    );
+    match best {
+        Some((_, _, _, id)) => line += &format!(" — top alert: {id}"),
+        None => line += " — no open alerts",
+    }
+    Some(line)
+}
+
+/// The snapshot `compose_template_brief` reads, in the normalized
+/// form this module's other functions read: the base window
+/// (messages, jobs, alerts) for the extractors, the stated window
+/// for the window line, and one optional record per additive
+/// section. `None` for a record means the snapshot carries no such
+/// record — the section is skipped, so older briefs keep their
+/// exact shape; a present record, even an empty one, renders its
+/// section's none-reported lines, never a padded section. The
+/// caller maps a non-dict snapshot, non-list jobs, and non-dict
+/// records to the empty / `None` forms here, the same mapping the
+/// `with_*` fillers document; a dict window with no keys maps to
+/// `None`, matching Python's falsy empty dict. `onjoin` is read
+/// only on the onjoin path; `screenshot_messages` feeds the
+/// screenshot digest, and `watchdog_alerts` feeds the watchdog
+/// line, because the base alerts carry no severity.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct TemplateSnapshot {
+    pub base: super::sections::Snapshot,
+    pub window: super::window::WindowInput,
+    pub onjoin: Option<OnjoinSnapshot>,
+    pub screenshot_messages: Vec<ScreenshotMessage>,
+    pub watchdog_alerts: Vec<WatchdogAlert>,
+    pub memory_budget: Option<MemoryBudget>,
+    pub previous_session: Option<PreviousSession>,
+    pub system_state: Option<SystemState>,
+    pub environment: Option<Environment>,
+    pub recovery: Option<RecoveryRecord>,
+    pub daily: Option<Daily>,
+    pub memory_depth: Option<MemoryDepth>,
+    pub federation: Option<Federation>,
+    pub held_decisions: Option<HeldDecisions>,
+    pub source_pointers: Option<Vec<String>>,
+    pub previous_brief: Option<PreviousBrief>,
+    pub priority_order: Option<PriorityOrder>,
+    pub blocked_contacts: Option<BlockedContacts>,
+}
+
+/// BRF-008: the template brief from extractors alone, no LLM.
+/// The output is marked TEMPLATE in its first line, so no reader
+/// mistakes it for a Spark-composed brief. Every fact comes from
+/// the extractors; nothing is invented, nothing is paraphrased
+/// away (blocked reasons stay verbatim). This never calls Spark
+/// and never touches the network.
+///
+/// Shape, in order: the empty-room branch wins for every kind —
+/// an empty window says no activity yet, with the record sections
+/// that are not window activity (memory budget, previous-session
+/// digest on boot, system lines on boot, environment and recovery
+/// on boot, daily, memory depth, federation, held decisions,
+/// sources) carried before it, never hidden behind the empty room.
+/// Otherwise kind `onjoin` (and not boot) renders the four
+/// BRF-002 on-join sections via `onjoin_template_lines`; any
+/// other kind, and a boot brief, keeps the morning shape exactly.
+/// An unknown kind falls back to `morning`, matching Python's
+/// `BRIEF_BUDGETS` lookup. A boot brief opens with its
+/// previous-session digest (when one renders), then the three
+/// system lines — with values, with none, or with health not
+/// reported, never omitted — then environment and recovery when
+/// their records are present. The memory-budget lines follow the
+/// window line with no heading and no blank line, exactly as
+/// Python extends them in place. The additive sections (daily,
+/// memory depth, federation, held decisions, sources, priority
+/// order, blocked contacts, screenshots) render only when their
+/// record or lines are present, in Python's order, and a
+/// single-machine federation record renders no section at all.
+///
+/// Typed-input notes, following this module's convention: a
+/// missing `onjoin` snapshot on the onjoin path renders from the
+/// empty on-join snapshot — the not-stated lines, never a failure.
+/// The system lines read from an all-`None` state when the
+/// snapshot carries no system record, which renders the three
+/// not-reported lines Python renders for a `None` record. The
+/// watchdog line renders only when some alert carries a known
+/// severity, from `watchdog_alerts`, because the base alerts
+/// carry no severity.
+///
+/// Redaction gap, stated plainly, not faked: Python's
+/// `redact_secrets` strips credential-shaped strings (GitHub
+/// tokens, `sk-` keys, AWS ids, Bearer tokens, named
+/// key/token/secret/password assignments) with regexes, while
+/// this crate's `redact_secrets` only redacts `KEY=secret`
+/// assignments per line. The composer applies the crate's
+/// redactor, so a token-shaped string inside a blocked reason
+/// would survive here; full BRF-014 regex redaction is still
+/// owed to the redactor, and this composer gains it when the
+/// redactor does. Nothing here invents a regex pass.
+pub fn compose_template_brief(snapshot: &TemplateSnapshot, boot: bool, kind: &str) -> String {
+    use super::sections::{
+        extract_blocked, extract_decisions, extract_owners, extract_watch_items,
+    };
+    use super::window::window_line;
+    let kind = if brief_budget(kind).is_some() {
+        kind
+    } else {
+        "morning"
+    };
+    let empty_room = snapshot.base.messages.is_empty()
+        && snapshot.base.jobs.is_empty()
+        && snapshot.base.alerts.is_empty();
+    let mut window = window_line(&snapshot.window);
+    let window_stated = match &snapshot.window.source_window {
+        Some(super::window::SourceWindow::Text(t)) => {
+            !t.is_empty()
+                || snapshot
+                    .window
+                    .window_start
+                    .as_ref()
+                    .map(|s| !s.is_empty())
+                    .unwrap_or(false)
+        }
+        Some(super::window::SourceWindow::Dict { .. }) => true,
+        None => snapshot
+            .window
+            .window_start
+            .as_ref()
+            .map(|s| !s.is_empty())
+            .unwrap_or(false),
+    };
+    if !window_stated {
+        window = "Window: empty (no history is available for this boot)".to_string();
+    } else if let Some(super::window::SourceWindow::Dict {
+        messages_kept: Some(0),
+        ..
+    }) = &snapshot.window.source_window
+    {
+        window += " The window is empty.";
+    }
+    let current: Vec<CurrentJob> = snapshot
+        .base
+        .jobs
+        .iter()
+        .map(|j| CurrentJob {
+            id: j.id.clone(),
+            title: j.title.clone(),
+            status: j.status.clone(),
+        })
+        .collect();
+    let pointer_strs: Vec<&str> = match &snapshot.source_pointers {
+        Some(list) => list.iter().map(String::as_str).collect(),
+        None => Vec::new(),
+    };
+    let pointers = source_pointer_lines(Some(&pointer_strs[..]));
+    let redact = |lines: &[String]| -> String {
+        let redacted = redact_secrets(lines);
+        let mut out = redacted.join("\n");
+        out.push('\n');
+        out
+    };
+    if empty_room {
+        let mut lines = vec!["TEMPLATE".to_string(), String::new(), window];
+        if let Some(record) = &snapshot.memory_budget {
+            lines.push(String::new());
+            lines.extend(memory_budget_lines(Some(record)));
+        }
+        if boot {
+            if let Some(digest) = previous_session_digest(snapshot.previous_session.as_ref()) {
+                lines.push(String::new());
+                lines.push(digest);
+            }
+            lines.push(String::new());
+            let state = snapshot.system_state.clone().unwrap_or(SystemState {
+                drivers: None,
+                gateway_healthy: None,
+                skill_apps: None,
+            });
+            lines.extend(system_state_lines(&state));
+            if let Some(env) = &snapshot.environment {
+                lines.push(String::new());
+                lines.extend(environment_lines(Some(env)));
+            }
+            if let Some(record) = &snapshot.recovery {
+                lines.push(String::new());
+                lines.push(recovery_line(Some(record)));
+            }
+        }
+        if let Some(record) = &snapshot.daily {
+            lines.push(String::new());
+            lines.push("Daily brief".to_string());
+            lines.extend(daily_lines(Some(record)));
+        }
+        if let Some(record) = &snapshot.memory_depth {
+            lines.push(String::new());
+            lines.push("Long-term memory".to_string());
+            lines.extend(memory_depth_lines(Some(record)));
+        }
+        if let Some(record) = &snapshot.federation {
+            let fed = federation_lines(Some(record));
+            if !fed.is_empty() {
+                lines.push(String::new());
+                lines.push("Federation".to_string());
+                lines.extend(fed);
+            }
+        }
+        if let Some(record) = &snapshot.held_decisions {
+            lines.push(String::new());
+            lines.push("Held decisions".to_string());
+            lines.extend(held_decisions_lines(Some(record)));
+        }
+        if !pointers.is_empty() {
+            lines.push(String::new());
+            lines.push("Sources".to_string());
+            lines.extend(pointers);
+        }
+        lines.push(String::new());
+        lines.push("no activity yet".to_string());
+        lines.push(String::new());
+        lines.push("This room has no activity yet in this window.".to_string());
+        return redact(&lines);
+    }
+    if kind == "onjoin" && !boot {
+        let empty_onjoin = OnjoinSnapshot::default();
+        let oj = snapshot.onjoin.as_ref().unwrap_or(&empty_onjoin);
+        let mut lines = vec!["TEMPLATE".to_string(), window, String::new()];
+        lines.extend(onjoin_template_lines(oj));
+        return redact(&lines);
+    }
+    let mut lines = vec!["TEMPLATE".to_string(), window];
+    if let Some(previous) = &snapshot.previous_brief {
+        let since = since_last_brief_lines(Some(previous), &current);
+        if !since.is_empty() {
+            lines.push(String::new());
+            lines.push("Since your last brief".to_string());
+            lines.extend(since);
+        }
+    }
+    if let Some(record) = &snapshot.memory_budget {
+        lines.extend(memory_budget_lines(Some(record)));
+    }
+    if boot {
+        if let Some(digest) = previous_session_digest(snapshot.previous_session.as_ref()) {
+            lines.push(digest);
+        }
+        let state = snapshot.system_state.clone().unwrap_or(SystemState {
+            drivers: None,
+            gateway_healthy: None,
+            skill_apps: None,
+        });
+        lines.extend(system_state_lines(&state));
+        if let Some(env) = &snapshot.environment {
+            lines.extend(environment_lines(Some(env)));
+        }
+        if let Some(record) = &snapshot.recovery {
+            lines.push(recovery_line(Some(record)));
+        }
+    }
+    lines.push(String::new());
+    lines.push("Decisions".to_string());
+    let decisions = extract_decisions(&snapshot.base);
+    if decisions.is_empty() {
+        lines.push("Nothing reported in this window".to_string());
+    } else {
+        for decision in &decisions {
+            lines.push(format!("- {}: {}", decision.kind, decision.text));
+        }
+    }
+    lines.push(String::new());
+    lines.push("In flight".to_string());
+    let in_flight: Vec<&super::sections::SnapJob> = snapshot
+        .base
+        .jobs
+        .iter()
+        .filter(|j| j.status == "open" || j.status == "claimed")
+        .collect();
+    if in_flight.is_empty() {
+        lines.push("Nothing reported in this window".to_string());
+    } else {
+        for job in in_flight {
+            lines.push(format!("- {} {} ({})", job.id, job.title, job.status));
+        }
+    }
+    lines.push(String::new());
+    lines.push("Owners".to_string());
+    let owners = extract_owners(&snapshot.base);
+    if owners.is_empty() {
+        lines.push("Nothing reported in this window".to_string());
+    } else {
+        for owner in &owners {
+            let titles: Vec<&str> = owner
+                .jobs
+                .iter()
+                .map(|j| j.title.as_str())
+                .collect();
+            lines.push(format!("- {}: {}", owner.nick, titles.join(", ")));
+        }
+    }
+    lines.push(String::new());
+    lines.push("Blocked and why".to_string());
+    let blocked = extract_blocked(&snapshot.base);
+    if blocked.is_empty() {
+        lines.push("Nothing blocked in this window".to_string());
+    } else {
+        for job in &blocked {
+            lines.push(format!("- {} {}: {}", job.id, job.title, job.reason));
+        }
+    }
+    lines.push(String::new());
+    lines.push("Watch items".to_string());
+    if let Some(line) = watchdog_status_line(&snapshot.watchdog_alerts) {
+        lines.push(line);
+    }
+    let watch_items = extract_watch_items(&snapshot.base);
+    if watch_items.is_empty() {
+        lines.push("Nothing to watch in this window".to_string());
+    } else {
+        for item in &watch_items {
+            lines.push(format!("- {}: {}", item.id, item.summary));
+        }
+    }
+    if let Some(record) = &snapshot.daily {
+        lines.push(String::new());
+        lines.push("Daily brief".to_string());
+        lines.extend(daily_lines(Some(record)));
+    }
+    if let Some(record) = &snapshot.memory_depth {
+        lines.push(String::new());
+        lines.push("Long-term memory".to_string());
+        lines.extend(memory_depth_lines(Some(record)));
+    }
+    let fed = federation_lines(snapshot.federation.as_ref());
+    if !fed.is_empty() {
+        lines.push(String::new());
+        lines.push("Federation".to_string());
+        lines.extend(fed);
+    }
+    if let Some(record) = &snapshot.held_decisions {
+        lines.push(String::new());
+        lines.push("Held decisions".to_string());
+        lines.extend(held_decisions_lines(Some(record)));
+    }
+    if !pointers.is_empty() {
+        lines.push(String::new());
+        lines.push("Sources".to_string());
+        lines.extend(pointers);
+    }
+    if let Some(record) = &snapshot.priority_order {
+        let prio = priority_order_lines(Some(record), &current);
+        if !prio.is_empty() {
+            lines.push(String::new());
+            lines.push("Priority order".to_string());
+            lines.extend(prio);
+        }
+    }
+    if let Some(record) = &snapshot.blocked_contacts {
+        let contacts = blocked_contact_lines(Some(record), &current);
+        if !contacts.is_empty() {
+            lines.push(String::new());
+            lines.push("Blocked contacts".to_string());
+            lines.extend(contacts);
+        }
+    }
+    let refs = extract_screenshot_refs(Some(&snapshot.screenshot_messages[..]));
+    if !refs.is_empty() {
+        lines.push(String::new());
+        lines.push("Screenshots".to_string());
+        lines.extend(screenshot_digest_lines(Some(&refs)));
+    }
+    redact(&lines)
+}
+
+/// Render a string the way Python `repr` does for the common cases:
+/// single quotes, with backslash, quote, newline, carriage return,
+/// and tab escaped. Other control characters have no escape here
+/// yet; fixtures do not carry them.
+fn python_str_repr(s: &str) -> String {
+    let mut out = String::from("'");
+    for ch in s.chars() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '\'' => out.push_str("\\'"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            _ => out.push(ch),
+        }
+    }
+    out.push('\'');
+    out
+}
+
+/// BRF-007: Spark composer with template fallback and budget.
+///
+/// Ports `compose_brief`: cap the window first (Python's defaults,
+/// 500 messages / 24 hours, when the caller passes `None`), clamp
+/// an unknown kind to `morning`, then either render the template
+/// brief (no client) or ask the injected client for a Spark brief
+/// from the section data only. The client stands in for
+/// `client.complete(prompt, system=..., lane_feature="brief")`:
+/// it receives the prompt and the system text (`None` when the
+/// caller passes `None` or an empty string, matching Python's
+/// `system_prompt or None`), and returns the Spark text or an
+/// error. A failing client falls back to the template brief,
+/// never a made-up brief, never a silent failure — exactly as
+/// Python's `except Exception` path does. A successful reply is
+/// redacted and trimmed to the kind budget.
+///
+/// Ported oddities, stated plainly:
+/// - An empty Spark reply is NOT a failure here: Python redacts
+///   and trims `""` and returns `""`. Only `compose_spark_brief`
+///   (BRF-026, owed to B11's client trait) turns an empty reply
+///   into the `spark_down` line.
+/// - The prompt renders the sections dict in Python `repr` form
+///   (`{'Decisions': [...], ...}` in Decisions/Blocked/Owners/
+///   Alerts order). The Alerts entries are the snapshot's typed
+///   alerts (`id`/`summary`/`explanation`), the Rust form of
+///   Python's raw alert dicts.
+/// - Redaction is the crate's line redactor (`KEY=secret`
+///   assignments per line), not Python's BRF-014 regex pass, and
+///   a trailing newline on a Spark reply is not preserved by the
+///   line split/join — the same gap already documented on
+///   `compose_template_brief`.
+pub fn compose_brief(
+    snapshot: &TemplateSnapshot,
+    kind: &str,
+    client: Option<&dyn Fn(&str, Option<&str>) -> Result<String, String>>,
+    max_messages: Option<i64>,
+    max_hours: Option<f64>,
+    now: Option<i64>,
+    boot: bool,
+    system_prompt: Option<&str>,
+) -> String {
+    use super::sections::{extract_blocked, extract_decisions, extract_owners};
+    let kind = if brief_budget(kind).is_some() { kind } else { "morning" };
+    let budget = brief_budget(kind).unwrap_or(220);
+    let mut capped = snapshot.clone();
+    let capped_base = super::sections::cap_snapshot_window(
+        &snapshot.base,
+        Some(max_messages.unwrap_or(500)),
+        Some(max_hours.unwrap_or(24.0)),
+        now,
+    );
+    capped.window.source_window = capped_base.source_window.clone();
+    capped.base = capped_base;
+    let template = || trim_to_budget(&compose_template_brief(&capped, boot, kind), budget);
+    let client = match client {
+        None => return template(),
+        Some(c) => c,
+    };
+    let system = system_prompt.filter(|s| !s.is_empty());
+    let decisions = extract_decisions(&capped.base);
+    let blocked = extract_blocked(&capped.base);
+    let owners = extract_owners(&capped.base);
+    let mut dec = String::from("[");
+    for (i, d) in decisions.iter().enumerate() {
+        if i > 0 {
+            dec.push_str(", ");
+        }
+        dec.push_str(&format!(
+            "{{'kind': {}, 'text': {}, 'nick': {}, 'index': {}}}",
+            python_str_repr(&d.kind),
+            python_str_repr(&d.text),
+            python_str_repr(&d.nick),
+            d.index
+        ));
+    }
+    dec.push(']');
+    let mut blk = String::from("[");
+    for (i, b) in blocked.iter().enumerate() {
+        if i > 0 {
+            blk.push_str(", ");
+        }
+        blk.push_str(&format!(
+            "{{'id': {}, 'title': {}, 'reason': {}}}",
+            python_str_repr(&b.id),
+            python_str_repr(&b.title),
+            python_str_repr(&b.reason)
+        ));
+    }
+    blk.push(']');
+    let mut own = String::from("[");
+    for (i, o) in owners.iter().enumerate() {
+        if i > 0 {
+            own.push_str(", ");
+        }
+        let mut jobs = String::from("[");
+        for (j, job) in o.jobs.iter().enumerate() {
+            if j > 0 {
+                jobs.push_str(", ");
+            }
+            let age = match job.last_progress_age {
+                Some(a) => a.to_string(),
+                None => "None".to_string(),
+            };
+            jobs.push_str(&format!(
+                "{{'id': {}, 'title': {}, 'last_progress_age': {}}}",
+                python_str_repr(&job.id),
+                python_str_repr(&job.title),
+                age
+            ));
+        }
+        jobs.push(']');
+        own.push_str(&format!(
+            "{{'nick': {}, 'jobs': {}}}",
+            python_str_repr(&o.nick),
+            jobs
+        ));
+    }
+    own.push(']');
+    let mut alr = String::from("[");
+    for (i, a) in capped.base.alerts.iter().enumerate() {
+        if i > 0 {
+            alr.push_str(", ");
+        }
+        alr.push_str(&format!(
+            "{{'id': {}, 'summary': {}, 'explanation': {}}}",
+            python_str_repr(&a.id),
+            python_str_repr(&a.summary),
+            python_str_repr(&a.explanation)
+        ));
+    }
+    alr.push(']');
+    let prompt = format!(
+        "Write a {kind} brief from this section data only. Do not invent facts. Keep it under {budget} words. Sections: {{'Decisions': {dec}, 'Blocked': {blk}, 'Owners': {own}, 'Alerts': {alr}}}"
+    );
+    match client(&prompt, system) {
+        Err(_) => template(),
+        Ok(text) => {
+            let lines: Vec<String> = text.lines().map(str::to_string).collect();
+            let redacted = redact_secrets(&lines).join("\n");
+            trim_to_budget(&redacted, budget)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -5344,7 +6217,7 @@ mod tests {
     }
 
     fn entry(ts: i64) -> BriefIndexEntry {
-        BriefIndexEntry { ts: Some(BriefTs::Int(ts)), generated_at: None }
+        BriefIndexEntry { ts: Some(BriefTs::Int(ts)), generated_at: None, kind: None }
     }
 
     #[test]
@@ -5502,6 +6375,7 @@ mod tests {
             list: Ok(vec![BriefIndexEntry {
                 ts: None,
                 generated_at: Some(BriefTs::Int(1793000000)),
+                kind: None,
             }]),
             records: vec![(BriefTs::Int(1793000000), guard_record("ondemand", dict_window()))],
             fail_get: vec![],
@@ -5510,7 +6384,7 @@ mod tests {
             .is_some());
         // Neither key: the entry is skipped, not fatal.
         let store = FakeBriefStore {
-            list: Ok(vec![BriefIndexEntry { ts: None, generated_at: None }]),
+            list: Ok(vec![BriefIndexEntry { ts: None, generated_at: None, kind: None }]),
             records: vec![],
             fail_get: vec![],
         };
@@ -7077,4 +7951,684 @@ mod tests {
             None
         );
     }
+
+    #[test]
+    fn with_recovery_builds_from_stated_sweep_and_renders_line() {
+        let recovered = vec![
+            SweepRecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            },
+            SweepRecoveredEntry::Job {
+                id: "6".into(),
+                title: "dispatch poster".into(),
+                baton_step: BatonStep::Number(1),
+            },
+        ];
+        let record = with_recovery(None, Some(&recovered), Some(2), None)
+            .expect("a stated sweep yields a recovery record");
+        assert_eq!(record.sweep_count, Some(2));
+        assert!(record.corrupted.is_none());
+        assert_eq!(
+            recovery_line(Some(&record)),
+            "In-flight jobs recovered at this boot: 2 recovered: \
+             job 5 brief panel (resumed at step 2); \
+             job 6 dispatch poster (resumed at baton step 1)"
+        );
+    }
+
+    #[test]
+    fn with_recovery_clean_shutdown_reads_zero_recovered_plainly() {
+        let empty: Vec<SweepRecoveredEntry> = vec![];
+        let record = with_recovery(None, Some(&empty), Some(0), None)
+            .expect("a stated zero sweep builds a record");
+        assert_eq!(record.sweep_count, Some(0));
+        assert_eq!(record.recovered, Some(vec![]));
+        assert_eq!(
+            recovery_line(Some(&record)),
+            "In-flight jobs recovered at this boot: 0 recovered"
+        );
+    }
+
+    #[test]
+    fn with_recovery_hand_stated_record_wins_unchanged() {
+        let stated = RecoveryRecord {
+            corrupted: Some(vec![]),
+            recovered: Some(vec![RecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            }]),
+            sweep_count: Some(1),
+        };
+        // A hand-stated record wins even when no sweep is stated.
+        let record = with_recovery(Some(&stated), None, None, None)
+            .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_recovery_silence_or_junk_gets_no_record() {
+        // Silence states no sweep outcome.
+        assert_eq!(with_recovery(None, None, None, None), None);
+        // Explicitly empty lists are still no sweep outcome, and
+        // no sweep count never reads zero.
+        let empty: Vec<SweepRecoveredEntry> = vec![];
+        let empty_corrupted: Vec<CorruptedEntry> = vec![];
+        assert_eq!(
+            with_recovery(None, Some(&empty), None, Some(&empty_corrupted)),
+            None
+        );
+        // A corrupted entry that names nothing is junk, not a sweep.
+        let nameless = vec![CorruptedEntry::Other];
+        assert_eq!(
+            with_recovery(None, None, None, Some(&nameless)),
+            None
+        );
+    }
+
+    #[test]
+    fn with_recovery_skipped_entries_void_the_sweep_count() {
+        let recovered = vec![
+            // No id, skipped.
+            SweepRecoveredEntry::Unreadable,
+            // Id but no title, skipped.
+            SweepRecoveredEntry::Unreadable,
+            SweepRecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            },
+            SweepRecoveredEntry::Job {
+                id: "6".into(),
+                title: "dispatch poster".into(),
+                baton_step: BatonStep::Missing,
+            },
+        ];
+        let corrupted = vec![
+            CorruptedEntry::Job { id: "7".into(), title: "watchdog loop".into() },
+            CorruptedEntry::Plain("a bare name".into()),
+        ];
+        let record =
+            with_recovery(None, Some(&recovered), Some(2), Some(&corrupted))
+                .expect("usable jobs plus corrupted entries yield a record");
+        // The skipped entries void the sweep count, so the line
+        // stays incomplete instead of printing a clean count
+        // over a gap.
+        assert_eq!(record.sweep_count, None);
+        assert_eq!(record.recovered.as_ref().map(|v| v.len()), Some(2));
+        assert_eq!(record.corrupted.as_ref().map(|v| v.len()), Some(2));
+        assert!(recovery_line(Some(&record)).contains("corrupted record"));
+    }
+
+    #[test]
+    fn with_recovery_job_listed_twice_is_one_recovery() {
+        let recovered = vec![
+            SweepRecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            },
+            SweepRecoveredEntry::Job {
+                id: "5".into(),
+                title: "a second listing".into(),
+                baton_step: BatonStep::Number(9),
+            },
+        ];
+        let record = with_recovery(None, Some(&recovered), Some(1), None)
+            .expect("a stated sweep yields a recovery record");
+        // Dedupe is not a skip: the count survives.
+        assert_eq!(record.sweep_count, Some(1));
+        let jobs = record.recovered.as_ref().expect("a recovered list is built");
+        assert_eq!(jobs.len(), 1);
+        assert_eq!(
+            jobs[0],
+            RecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            }
+        );
+        assert!(recovery_line(Some(&record)).contains("1 recovered"));
+    }
+
+    #[test]
+    fn with_recovery_all_skipped_entries_yield_an_unreconciled_record() {
+        let recovered = vec![SweepRecoveredEntry::Unreadable];
+        let record = with_recovery(None, Some(&recovered), Some(1), None)
+            .expect("a stated but unreadable sweep still reports");
+        assert_eq!(record.recovered, Some(vec![]));
+        assert_eq!(record.sweep_count, None);
+        assert!(recovery_line(Some(&record)).contains("no lease sweep count"));
+    }
+
+    #[test]
+    fn with_recovery_negative_sweep_count_is_ignored_never_guessed() {
+        let recovered = vec![SweepRecoveredEntry::Job {
+            id: "5".into(),
+            title: "brief panel".into(),
+            baton_step: BatonStep::Text("step 2".into()),
+        }];
+        let record = with_recovery(None, Some(&recovered), Some(-1), None)
+            .expect("usable jobs alone still yield a record");
+        assert_eq!(record.sweep_count, None);
+        assert!(recovery_line(Some(&record)).contains("no lease sweep count"));
+    }
+
+    #[test]
+    fn with_recovery_corrupted_only_still_builds_a_record() {
+        let corrupted = vec![CorruptedEntry::Plain("a bare name".into())];
+        let record = with_recovery(None, None, None, Some(&corrupted))
+            .expect("stated corrupted jobs alone yield a record");
+        assert!(record.recovered.is_none());
+        assert!(record.sweep_count.is_none());
+        assert!(recovery_line(Some(&record)).contains("corrupted record"));
+    }
+
+    #[test]
+    fn with_system_state_builds_all_three_fields_and_renders_lines() {
+        let drivers = vec!["muse-code".to_string(), "relay-driver".to_string()];
+        let apps = vec!["briefing".to_string(), "dispatch".to_string()];
+        let record = with_system_state(None, Some(&drivers), Some(true), Some(&apps))
+            .expect("stated machine state yields a system_state record");
+        assert_eq!(record.drivers, Some(drivers));
+        assert_eq!(record.gateway_healthy, Some(true));
+        assert_eq!(record.skill_apps, Some(apps));
+        assert_eq!(
+            system_state_lines(&record),
+            vec![
+                "Drivers: muse-code, relay-driver available",
+                "Tools: MCP gateway healthy",
+                "Skill apps: briefing, dispatch mounted",
+            ]
+        );
+    }
+
+    #[test]
+    fn with_system_state_hand_stated_record_wins_unchanged() {
+        let stated = SystemState {
+            drivers: Some(vec!["muse-code".to_string()]),
+            gateway_healthy: Some(false),
+            skill_apps: Some(vec![]),
+        };
+        let drivers = vec!["some-other-driver".to_string()];
+        let apps = vec!["briefing".to_string()];
+        let record = with_system_state(Some(&stated), Some(&drivers), Some(true), Some(&apps))
+            .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_system_state_silence_or_junk_gets_no_record() {
+        // Silence states nothing usable.
+        assert_eq!(with_system_state(None, None, None, None), None);
+        // Junk-only lists are nothing stated, never a record.
+        let junk_drivers = vec!["".to_string()];
+        let junk_apps = vec!["".to_string()];
+        assert_eq!(
+            with_system_state(None, Some(&junk_drivers), None, Some(&junk_apps)),
+            None
+        );
+    }
+
+    #[test]
+    fn with_system_state_name_listed_twice_is_one_entry() {
+        let drivers = vec!["muse-code".to_string(), "muse-code".to_string()];
+        let apps = vec![
+            "briefing".to_string(),
+            "briefing".to_string(),
+            "dispatch".to_string(),
+        ];
+        let record = with_system_state(None, Some(&drivers), None, Some(&apps))
+            .expect("stated names yield a record");
+        assert_eq!(record.drivers, Some(vec!["muse-code".to_string()]));
+        assert_eq!(
+            record.skill_apps,
+            Some(vec!["briefing".to_string(), "dispatch".to_string()])
+        );
+    }
+
+    #[test]
+    fn with_system_state_malformed_names_skipped_never_guessed() {
+        let drivers = vec!["muse-code".to_string(), "".to_string()];
+        let apps = vec!["".to_string(), "dispatch".to_string()];
+        let record = with_system_state(None, Some(&drivers), None, Some(&apps))
+            .expect("usable names among junk yield a record");
+        assert_eq!(record.drivers, Some(vec!["muse-code".to_string()]));
+        assert_eq!(record.skill_apps, Some(vec!["dispatch".to_string()]));
+    }
+
+    #[test]
+    fn with_system_state_gateway_down_is_kept_not_omitted() {
+        let record = with_system_state(None, None, Some(false), None)
+            .expect("a stated down gateway yields a record");
+        assert_eq!(record.gateway_healthy, Some(false));
+        let lines = system_state_lines(&record);
+        assert!(lines[1].starts_with("Tools: MCP gateway down"));
+    }
+
+    #[test]
+    fn with_system_state_stated_empty_lists_read_none_not_not_reported() {
+        let empty: Vec<String> = vec![];
+        let record = with_system_state(None, Some(&empty), None, Some(&empty))
+            .expect("stated empty lists yield a record");
+        let lines = system_state_lines(&record);
+        assert_eq!(lines[0], "Drivers: no drivers reported");
+        assert_eq!(lines[1], "Tools: MCP gateway health not reported in this snapshot");
+        assert_eq!(lines[2], "Skill apps: no skill apps mounted");
+    }
+
+    #[test]
+    fn with_system_state_partial_state_builds_partial_record() {
+        let apps = vec!["dispatch".to_string()];
+        let record = with_system_state(None, None, None, Some(&apps))
+            .expect("a stated skill app yields a record");
+        assert_eq!(record.skill_apps, Some(apps));
+        assert!(record.drivers.is_none());
+        assert!(record.gateway_healthy.is_none());
+        let lines = system_state_lines(&record);
+        assert_eq!(lines[0], "Drivers: not reported in this snapshot");
+        assert_eq!(lines[1], "Tools: MCP gateway health not reported in this snapshot");
+    }
+}
+
+#[cfg(test)]
+mod template_brief_tests {
+    use super::super::sections::{SnapJob, SnapMessage, Snapshot};
+    use super::super::window::WindowInput;
+    use super::*;
+
+    fn morning_snapshot() -> TemplateSnapshot {
+        TemplateSnapshot {
+            base: Snapshot {
+                messages: vec![SnapMessage {
+                    nick: "pax".into(),
+                    text: "DECISION: freeze the demo".into(),
+                    ts: None,
+                }],
+                jobs: vec![SnapJob {
+                    id: "1".into(),
+                    title: "brief panel".into(),
+                    status: "open".into(),
+                    claim: String::new(),
+                    note: String::new(),
+                    last_progress_at: None,
+                    claimed_at: None,
+                }],
+                alerts: vec![],
+                source_window: None,
+            },
+            window: WindowInput::default(),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn compose_template_brief_empty_room_says_no_activity_yet() {
+        let text = compose_template_brief(&TemplateSnapshot::default(), false, "morning");
+        assert!(text.starts_with("TEMPLATE\n"));
+        assert!(text.contains("Window: empty (no history is available for this boot)"));
+        assert!(text.contains("no activity yet"));
+        assert!(text.ends_with("This room has no activity yet in this window.\n"));
+    }
+
+    #[test]
+    fn compose_template_brief_morning_sections_in_order() {
+        let text = compose_template_brief(&morning_snapshot(), false, "morning");
+        assert!(text.starts_with("TEMPLATE\n"));
+        assert!(text.contains("\nDecisions\n- decision: freeze the demo"));
+        assert!(text.contains("\nIn flight\n- 1 brief panel (open)"));
+        assert!(text.contains("\nOwners\nNothing reported in this window"));
+        assert!(text.contains("\nBlocked and why\nNothing blocked in this window"));
+        assert!(text.contains("\nWatch items\nNothing to watch in this window"));
+    }
+
+    #[test]
+    fn compose_template_brief_onjoin_renders_four_sections() {
+        let mut snap = morning_snapshot();
+        snap.onjoin = Some(OnjoinSnapshot {
+            crew_building: "a demo".into(),
+            ..Default::default()
+        });
+        let text = compose_template_brief(&snap, false, "onjoin");
+        assert!(text.starts_with("TEMPLATE\n"));
+        assert!(text.contains("What this crew is building"));
+        assert!(text.contains("a demo"));
+        assert!(!text.contains("\nDecisions\n"));
+    }
+
+    #[test]
+    fn watchdog_status_line_counts_open_and_names_top_alert() {
+        let alerts = vec![
+            WatchdogAlert {
+                id: "A2".into(),
+                severity: "warning".into(),
+                created_at: Some(5),
+                resolved: false,
+            },
+            WatchdogAlert {
+                id: "A1".into(),
+                severity: "critical".into(),
+                created_at: Some(9),
+                resolved: false,
+            },
+            WatchdogAlert {
+                id: "A0".into(),
+                severity: "critical".into(),
+                created_at: Some(1),
+                resolved: true,
+            },
+        ];
+        assert_eq!(
+            watchdog_status_line(&alerts).as_deref(),
+            Some("Watchdog: 1 critical, 1 warning, 0 info open — top alert: A1")
+        );
+        assert_eq!(watchdog_status_line(&[]), None);
+    }
+}
+
+/// BRF-024 / BRF-028 / BRF-009: `generate_brief`,
+/// `generate_morning_brief`, `morning_brief_today`, and
+/// `store_brief` — the brief-generation orchestration, template
+/// path only. The Spark half of `generate_brief` (a client, a
+/// system prompt, a `spark` model label on a Spark-composed
+/// text) stays owed to B11's client trait: the caller supplies
+/// the text composer, and this function applies the Python
+/// ordering around it — cap once, guard, compose, build the
+/// record from the capped snapshot, validate, store unless dry.
+///
+/// `max_hours` is the window in hours after `--since` parsing:
+/// `None` is the BRF-023 default 24h, `Some(h)` is the parsed
+/// `--since` value. It is hours, not the timestamp form this
+/// crate's earlier `parse_since` returns — the two mappings
+/// coexist until the `--since` surface is unified, and this
+/// function's callers pass hours. `now` is a Unix time; `None`
+/// reads the wall clock, as Python's `time.time()` default does.
+/// A boot brief (`boot: true`, OS-049) skips the BRF-028 guard:
+/// a reboot inside 5 minutes still generates fresh, and its
+/// record carries `boot: true`; any other record carries
+/// `boot: false`, the Rust form of Python's absent key.
+///
+/// The guard hit returns the stored record exactly as the
+/// store gave it (`StoredBriefRecord`: kind plus render
+/// fields), with its verbatim text — never a recomposition,
+/// never a new `generated_at`. A fresh build returns the full
+/// record Python stores: room, generated_at, kind, the five
+/// sections from `derive_sections` on the capped snapshot,
+/// the capped source window, `model` (`template` when the text
+/// starts with `TEMPLATE`, else `spark`, exactly as Python
+/// labels it), `spend_id` always `None` on this path (a
+/// template brief spends nothing; a Spark spend id arrives
+/// with the B11 client), the text itself, the screenshot refs
+/// from the capped messages, and the boot flag. A dry run
+/// builds and validates but stores nothing, so a fake clock
+/// can prove the brief without touching the store.
+/// Validation errors return `Err("invalid brief record: ...")`,
+/// mirroring Python's `ValueError` raise, and nothing is
+/// stored on that path — `store_brief` validates again, as
+/// Python's does, before it writes.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeneratedBriefRecord {
+    pub room: String,
+    pub generated_at: i64,
+    pub kind: String,
+    pub sections: super::sections::Sections,
+    pub source_window: Option<SourceWindow>,
+    pub model: String,
+    pub spend_id: Option<String>,
+    pub text: String,
+    pub screenshot_refs: Vec<ScreenshotRef>,
+    pub boot: bool,
+}
+
+/// The outcome of `generate_brief`: either the BRF-028 guard
+/// hit (stored text, stored record, no new spend, no store
+/// write) or a fresh build (text, full record, whether it
+/// was stored — false on a dry run).
+#[derive(Debug, Clone, PartialEq)]
+pub enum GenerateBriefOutcome {
+    GuardHit {
+        text: String,
+        record: StoredBriefRecord,
+    },
+    Fresh {
+        text: String,
+        record: GeneratedBriefRecord,
+        stored: bool,
+    },
+}
+
+/// The write half of the brief store, beside the `BriefStore`
+/// read trait: `put_brief` stores one record under its room
+/// and timestamp and returns its key (Python's
+/// `_store.put_brief`); `set_brief_index` writes the room's
+/// whole index list (Python's relay `set` of the index key).
+/// A real Redis adapter implements both; tests use a fake.
+pub trait BriefWriter {
+    fn put_brief(
+        &mut self,
+        room: &str,
+        ts: i64,
+        record: &GeneratedBriefRecord,
+    ) -> Result<String, String>;
+    fn set_brief_index(
+        &mut self,
+        room: &str,
+        index: &[BriefIndexEntry],
+    ) -> Result<(), String>;
+}
+
+fn validate_generated_record(record: &GeneratedBriefRecord) -> Vec<String> {
+    let mut errors = Vec::new();
+    if record.room.is_empty() {
+        errors.push("room must be a non-empty string".to_string());
+    }
+    if !BRIEF_KINDS.contains(&record.kind.as_str()) {
+        errors.push(format!("kind must be one of {:?}", BRIEF_KINDS));
+    }
+    if record.source_window.is_none() {
+        errors.push("source_window must be a string or dict".to_string());
+    }
+    if record.model.is_empty() {
+        errors.push("model must be a non-empty string".to_string());
+    }
+    if let Some(spend) = &record.spend_id {
+        if spend.is_empty() {
+            errors.push("spend_id must be a string or null".to_string());
+        }
+    }
+    if record.text.trim().is_empty() {
+        errors.push("text must be a non-empty string".to_string());
+    }
+    errors
+}
+
+/// BRF-009: validate, store, and index one generated brief.
+///
+/// Returns the brief's store key. The index entry is appended
+/// only when no entry already carries this timestamp, then
+/// the index is sorted oldest first — a re-store of the same
+/// timestamp never duplicates its entry. A store failure on
+/// the put, the list read, or the index write propagates;
+/// Python's `store_brief` raises the same way instead of
+/// storing silently.
+pub fn store_brief(
+    store: &dyn BriefStore,
+    writer: &mut dyn BriefWriter,
+    room: &str,
+    record: &GeneratedBriefRecord,
+) -> Result<String, String> {
+    let errors = validate_generated_record(record);
+    if !errors.is_empty() {
+        return Err(format!("invalid brief record: {:?}", errors));
+    }
+    let key = writer.put_brief(room, record.generated_at, record)?;
+    let mut index = store.list_briefs(room)?;
+    let ts = record.generated_at as f64;
+    if !index.iter().any(|e| {
+        e.ts
+            .or(e.generated_at)
+            .map(|t| t.as_f64() == ts)
+            .unwrap_or(false)
+    }) {
+        index.push(BriefIndexEntry {
+            ts: Some(BriefTs::Int(record.generated_at)),
+            generated_at: Some(BriefTs::Int(record.generated_at)),
+            kind: Some(record.kind.clone()),
+        });
+        index.sort_by(|a, b| {
+            let ta = a.ts.or(a.generated_at).map(|t| t.as_f64());
+            let tb = b.ts.or(b.generated_at).map(|t| t.as_f64());
+            ta.partial_cmp(&tb).unwrap_or(std::cmp::Ordering::Equal)
+        });
+        writer.set_brief_index(room, &index)?;
+    }
+    Ok(key)
+}
+
+/// BRF-024: build (and, unless dry_run, store) a brief.
+///
+/// `compose` is the `compose_brief` equivalent for this call:
+/// it takes the capped template snapshot, the boot flag, and
+/// the kind, and returns the finished, budget-trimmed text.
+/// `generate_morning_brief` passes the template composer;
+/// a Spark composer arrives with B11 and must apply the same
+/// budget trim and redaction `compose_brief` applies, because
+/// this function stores the composer's text verbatim.
+#[allow(clippy::too_many_arguments)]
+pub fn generate_brief(
+    snapshot: &TemplateSnapshot,
+    room: &str,
+    kind: &str,
+    max_hours: Option<f64>,
+    now: Option<i64>,
+    dry_run: bool,
+    boot: bool,
+    store: &dyn BriefStore,
+    writer: &mut dyn BriefWriter,
+    compose: &dyn Fn(&TemplateSnapshot, bool, &str) -> String,
+) -> Result<GenerateBriefOutcome, String> {
+    let generated_at = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let hours = max_hours.unwrap_or(24.0);
+    let capped_base =
+        super::sections::cap_snapshot_window(&snapshot.base, Some(500), Some(hours), Some(generated_at));
+    let capped_window = capped_base.source_window.clone();
+    // BRF-028: same room + kind + window inside 5 minutes
+    // returns the stored brief, with no new compose call. A dry
+    // run still returns the stored brief when one exists — it
+    // just does not store a new one — and a guard miss falls
+    // through to a fresh brief below. A boot brief skips the
+    // guard outright (OS-049).
+    if !boot {
+        if let Some(window) = &capped_window {
+            if let Some(recent) = find_recent_brief(store, room, kind, window, Some(generated_at)) {
+                let text = brief_text_from_record(Some(&recent.stored));
+                return Ok(GenerateBriefOutcome::GuardHit { text, record: recent });
+            }
+        }
+    }
+    let mut capped = snapshot.clone();
+    capped.base = capped_base;
+    capped.window.source_window = capped_window.clone();
+    let text = compose(&capped, boot, kind);
+    let sections = super::sections::derive_sections(&capped.base);
+    // STR-002: refs from the same capped messages as the text
+    // and sections, so a --since brief cannot carry a
+    // screenshot from outside its window. The capped base
+    // messages map to the dict form `extract_screenshot_refs`
+    // reads; the template snapshot's own screenshot list is
+    // uncapped, so it is not the source here.
+    let shot_messages: Vec<ScreenshotMessage> = capped
+        .base
+        .messages
+        .iter()
+        .map(|m| ScreenshotMessage::Dict {
+            nick: m.nick.clone(),
+            text: m.text.clone(),
+            ts: m.ts,
+        })
+        .collect();
+    let record = GeneratedBriefRecord {
+        room: room.to_string(),
+        generated_at,
+        kind: kind.to_string(),
+        sections,
+        source_window: capped_window,
+        model: if text.starts_with("TEMPLATE") {
+            "template".to_string()
+        } else {
+            "spark".to_string()
+        },
+        spend_id: None,
+        text: text.clone(),
+        screenshot_refs: extract_screenshot_refs(Some(&shot_messages)),
+        boot,
+    };
+    let errors = validate_generated_record(&record);
+    if !errors.is_empty() {
+        return Err(format!("invalid brief record: {:?}", errors));
+    }
+    let stored = if dry_run {
+        false
+    } else {
+        store_brief(store, writer, room, &record)?;
+        true
+    };
+    Ok(GenerateBriefOutcome::Fresh { text, record, stored })
+}
+
+/// BRF-011: build (and, unless dry_run, store) a morning brief.
+///
+/// Delegates to `generate_brief` with kind `morning` and the
+/// default window, so morning sections are window-consistent
+/// with the morning text. The composer is the template brief,
+/// trimmed to the morning budget — no Spark call on this path,
+/// so the model label is always `template` here.
+pub fn generate_morning_brief(
+    snapshot: &TemplateSnapshot,
+    room: &str,
+    now: Option<i64>,
+    dry_run: bool,
+    store: &dyn BriefStore,
+    writer: &mut dyn BriefWriter,
+) -> Result<GenerateBriefOutcome, String> {
+    let compose = |snap: &TemplateSnapshot, boot: bool, kind: &str| -> String {
+        let budget = brief_budget(kind).unwrap_or(220);
+        trim_to_budget(&compose_template_brief(snap, boot, kind), budget)
+    };
+    generate_brief(
+        snapshot,
+        room,
+        "morning",
+        None,
+        now,
+        dry_run,
+        false,
+        store,
+        writer,
+        &compose,
+    )
+}
+
+/// BRF-011 fix: run TODAY, not tomorrow morning.
+///
+/// Generates and stores a morning brief right now, at the
+/// current time, with no wait for the next 08:00 ET. The 08:00
+/// ET daily cadence is not the today plan — today's build
+/// runs today.
+pub fn morning_brief_today(
+    snapshot: &TemplateSnapshot,
+    room: &str,
+    dry_run: bool,
+    store: &dyn BriefStore,
+    writer: &mut dyn BriefWriter,
+) -> Result<GenerateBriefOutcome, String> {
+    generate_morning_brief(snapshot, room, None, dry_run, store, writer)
 }
