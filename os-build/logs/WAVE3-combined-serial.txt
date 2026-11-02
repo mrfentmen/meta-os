@@ -1,6 +1,6 @@
 META OS 0.1 (K6)
 META OS KERNEL - alive (K1)
-K3 timer: 10 ticks after 503612 spins
+K3 timer: 10 ticks after 436007 spins
 mem region 0: 0x0-0x1000 reserved
 mem region 1: 0x1000-0x5000 reserved
 mem region 2: 0x5000-0x15000 reserved
@@ -35,7 +35,7 @@ HELLO FROM USERSPACE
 user exit code 0
 A
 B
-user sleeper: 2798760 bytes magic=0x464c457f type=Some(2) entry=Some(106652627894288)
+user sleeper: 2798768 bytes magic=0x464c457f type=Some(2) entry=Some(106652627894288)
 user sleeper: entry 0x610000000010 head [50, 48, bf, 23, 43, 01, 00, 00, 61, 00, 00, 48, b8, b0, 03, 00]
 sleeper: before sleep
 sleeper: pid 5
@@ -48,7 +48,7 @@ B
 sleeper: yielded and back
 A
 B
-user readkey: 2799712 bytes magic=0x464c457f type=Some(2) entry=Some(108851651149840)
+user readkey: 2799720 bytes magic=0x464c457f type=Some(2) entry=Some(108851651149840)
 user readkey: entry 0x630000000010 head [48, 83, ec, 38, 48, bf, 53, 44, 01, 00, 00, 63, 00, 00, 48, b8]
 readkey: polling syscall 5
 readkey: empty
@@ -75,6 +75,10 @@ readkey progress 1800
 readkey progress 1900
 readkey progress 2000
 readkey progress 2100
+sleeper: after sleep
+user bad syscall 99 refused
+sleeper: bad call refused
+user exit code 0
 readkey progress 2200
 readkey progress 2300
 readkey progress 2400
@@ -85,6 +89,7 @@ readkey progress 2800
 readkey progress 2900
 readkey progress 3000
 readkey progress 3100
+C awake
 readkey progress 3200
 readkey progress 3300
 readkey progress 3400
@@ -99,10 +104,6 @@ readkey progress 4200
 readkey progress 4300
 readkey progress 4400
 readkey progress 4500
-sleeper: after sleep
-user bad syscall 99 refused
-sleeper: bad call refused
-user exit code 0
 readkey progress 4600
 readkey progress 4700
 readkey progress 4800
@@ -138,7 +139,6 @@ readkey progress 7700
 readkey progress 7800
 readkey progress 7900
 readkey progress 8000
-C awake
 readkey progress 8100
 readkey progress 8200
 readkey progress 8300
@@ -313,9 +313,6 @@ readkey progress 25100
 readkey progress 25200
 readkey progress 25300
 readkey progress 25400
-K3 keyboard: first scancode 0x000000000000001e
-readkey got 30
-areadkey got 158
 readkey progress 25500
 readkey progress 25600
 readkey progress 25700
@@ -326,19 +323,119 @@ readkey progress 26100
 readkey progress 26200
 readkey progress 26300
 readkey progress 26400
-readkey got 28
-readkey: enter seen, done got=3
-user exit code 0
+readkey progress 26500
+readkey progress 26600
+readkey progress 26700
+readkey progress 26800
+readkey progress 26900
+readkey progress 27000
+readkey progress 27100
+readkey progress 27200
+readkey progress 27300
+readkey progress 27400
+readkey progress 27500
+readkey progress 27600
+readkey progress 27700
+readkey progress 27800
+readkey progress 27900
+readkey progress 28000
+readkey progress 28100
+readkey progress 28200
+readkey progress 28300
+readkey progress 28400
+readkey progress 28500
+readkey progress 28600
+readkey progress 28700
+readkey progress 28800
+readkey progress 28900
+readkey progress 29000
+readkey progress 29100
+readkey progress 29200
+readkey progress 29300
+readkey progress 29400
+readkey progress 29500
+readkey progress 29600
+readkey progress 29700
+readkey progress 29800
+readkey progress 29900
+readkey progress 30000
+readkey progress 30100
+readkey progress 30200
+readkey progress 30300
+readkey progress 30400
+readkey progress 30500
+readkey progress 30600
+readkey progress 30700
+readkey progress 30800
+readkey progress 30900
+readkey progress 31000
+readkey progress 31100
+readkey progress 31200
+readkey progress 31300
+readkey progress 31400
+readkey progress 31500
+readkey progress 31600
+readkey progress 31700
+readkey progress 31800
+readkey progress 31900
+readkey progress 32000
+readkey progress 32100
+readkey progress 32200
+readkey progress 32300
+readkey progress 32400
+readkey progress 32500
+readkey progress 32600
+readkey progress 32700
+readkey progress 32800
+readkey progress 32900
+readkey progress 33000
+readkey progress 33100
+readkey progress 33200
+readkey progress 33300
+readkey progress 33400
+readkey progress 33500
+readkey progress 33600
+readkey progress 33700
+readkey progress 33800
+readkey progress 33900
+readkey progress 34000
+readkey progress 34100
+readkey progress 34200
+readkey progress 34300
+readkey progress 34400
+readkey progress 34500
+readkey progress 34600
+readkey progress 34700
+readkey progress 34800
+readkey progress 34900
+readkey progress 35000
+readkey progress 35100
+readkey progress 35200
+readkey progress K3 keyboard: first scancode 0x000000000000002d
+35300
+readkey got 45
+xreadkey got 173
+readkey progress 35400
+readkey progress 35500
+readkey progress 35600
+readkey progress 35700
+readkey progress 35800
+readkey progress 35900
+readkey progress 36000
+readkey progress 36100
 
 unknown command
 commands: status help uptime mem ps
-b
+readkey got 28
+readkey: enter seen, done got=3
+user exit code 0
+y
 unknown command
 commands: status help uptime mem ps
 
 status
-tasks 8 ticks 2177 heap_free 255K
-STATUS tasks=8 ticks=2177 heap_free_kb=255
+tasks 8 ticks 2159 heap_free 255K
+STATUS tasks=8 ticks=2159 heap_free_kb=255
 fetch
 
 
@@ -361,13 +458,13 @@ Mrfentmen@metaos
 OS: Meta OS 0.1 (K6) x86_64
 Host: bare-metal Rust kernel (no_std)
 Kernel: META OS KERNEL - alive (K1)
-Uptime: 28s ticks 2875
+Uptime: 28s ticks 2857
 Tasks: 8
 Mem: frames_free 126430 frames_total 126509 heap_free 255K heap_total 512K
 Programs: hello sleeper crasher (ring 3)
 status
-tasks 8 ticks 4258 heap_free 255K
-STATUS tasks=8 ticks=4258 heap_free_kb=255
+tasks 8 ticks 4315 heap_free 255K
+STATUS tasks=8 ticks=4315 heap_free_kb=255
 mem
 mem frames_free 126430 frames_total 126509 heap_free 255K heap_total 512K
 ps
