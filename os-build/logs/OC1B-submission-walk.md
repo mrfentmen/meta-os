@@ -119,3 +119,7 @@ need their owners; the X post draft (OC1B-463) is missing; the §11 runbook
 path (OC1B-464) does not exist so the clean-clone rehearsal (OC1B-465) is
 BLOCKED. Everything this lane could prepare is committed here, honestly
 marked; nothing is asserted on another lane's behalf.
+
+## Coordinator addendum 2026-11-02 (OC1B-452, OC1B-463)
+- OC1B-452 Item 1 DONE: `curl https://api.github.com/repos/Mrfentmen/meta-os` → full_name mrfentmen/meta-os, private False (public), created_at 2026-10-28T10:47:33Z (in event window), pushed_at 2026-11-02T16:22:37Z.
+- OC1B-463 DONE-BY-DRAFT: no prior draft existed (s17 search confirmed); draft written to os-build/logs/OC1B-x-post-draft.md with [TBD] film link + honesty rules. Del posts it himself — NOT posted.

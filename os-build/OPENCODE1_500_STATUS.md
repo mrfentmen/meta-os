@@ -16,3 +16,6 @@ Branch opencode/500-s1 @ 1cad0158 (commits 029751d4/01f8c264/1cad0158). §1 PASS
 
 ## §2–§6 kernel-face gates (OC1B-026..150) — MERGED 2026-11-02
 Branch opencode/500-s2 @ 84b9bfa1 (6 commits). §2 KF-01: BLOCKED attempts (only non-0.9 pin is round7 history, never re-run; Rowan kf01/bootloader branches docs-only) — budget 0/2 consumed, hard stop, 0.9.35 restored + gate GREEN. §3 KF-02..10: ALL BLOCKED-on-Rowan (face-spike branches empty kernel diffs). §4 KF-11 BLOCKED, KF-12..20 UNIMPLEMENTED, branches named per task. §5 K3: demand leg FAILED deterministic (promised-page touch faults err 0x5 PRESENT, zero page-mapped lines) → DO NOT MERGE 7bb72075; containment PROVEN, gate GREEN on K3 tree, loop/soak NOT RUN. §6 K4: tree builds+boots GREEN but 7 acceptance lines UNPROVEN (no talker/listener pair, no spawn swap; writing either forbidden) → DO NOT MERGE as IPC proof. syscalls.rs diffs empty on all five gated Rowan branches. Full blocks: os-build/logs/OC1B-s2-STATUS-SNIPPET.md.
+
+## OC1B-469 DEL-ONLY list (coordinator, 2026-11-02)
+Only Del can do these — no lane touches them: (1) submit the entry (forms, portal clicks); (2) post the X draft (os-build/logs/OC1B-x-post-draft.md) from his account; (3) sign anything (attestations, rules acceptance); (4) pay anything (fees, if any). Dry-runs and drafts are done; the hands are Del's.
