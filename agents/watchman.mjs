@@ -11,7 +11,11 @@ import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
 import { readBaton, continuationOrders } from "./baton.mjs";
 import { writeBeat } from "./watchdog.mjs";
 
-export function createWatchman({ registryFile, root, jobsDir, heartbeatFile = path.join(root, "watchman.heartbeat.json") }) {
+export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDir, heartbeatFile = path.join(root, "watchman.heartbeat.json") }) {
+  // The job board and the result board are separate directories on a relay: work arrives on
+  // one, receipts go back on the other (R11-256). They default to the same dir so a local
+  // board keeps its old shape.
+  fs.mkdirSync(resultDir, { recursive: true });
   const agents = loadRegistry(registryFile);
   fs.mkdirSync(jobsDir, { recursive: true });
   const ledger = new Ledger(path.join(root, "watchman.jsonl"));
@@ -77,7 +81,13 @@ export function createWatchman({ registryFile, root, jobsDir, heartbeatFile = pa
     for (const f of fs.readdirSync(jobsDir).filter((x) => x.endsWith(".job.json")).sort()) {
       const jobPath = path.join(jobsDir, f);
       let job;
-      try { job = JSON.parse(fs.readFileSync(jobPath, "utf8")); } catch { continue; }
+      try { job = JSON.parse(fs.readFileSync(jobPath, "utf8")); }
+      catch (err) {
+        // Refused and LOGGED. A torn job used to be skipped silently, which made a malformed
+        // order indistinguishable from an empty board (R11-288).
+        ledger.add("watchman", "job-unreadable", { file: f, reason: String((err && err.message) || err).slice(0, 200) });
+        continue;
+      }
       const id = job.id || f.replace(/\.job\.json$/, "");
       if (claimed.has(id)) continue;
       const agent = agents.find((a) => a.name === job.agent);
@@ -106,8 +116,8 @@ export function createWatchman({ registryFile, root, jobsDir, heartbeatFile = pa
       spawnedNow.push({ id, handle: h });
       h.done.then(({ code, signal }) => {
         ledger.add("watchman", "job-done", { id, run: h.runId, code, signal });
-        fs.writeFileSync(path.join(jobsDir, id + ".result.json"),
-          JSON.stringify({ id, agent: job.agent, run: h.runId, code, signal, ledger: path.join(h.runDir, "ledger.jsonl") }, null, 2));
+        fs.writeFileSync(path.join(resultDir, id + ".result.json"),
+          JSON.stringify({ id, agent: job.agent, run: h.runId, code, signal, finishedAt: new Date().toISOString(), ledger: path.join(h.runDir, "ledger.jsonl") }, null, 2));
       });
     }
     // The beat is written after the poll, not before: a beat that lands while the poll is
