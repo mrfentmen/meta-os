@@ -784,6 +784,7 @@ pub struct BlockedContact {
 /// the record carries none, so older briefs keep their exact shape.
 /// A malformed Python record (not a dict, or contacts not a list)
 /// also yields no lines, so the caller maps those to `None` here.
+#[derive(Debug, Clone, PartialEq)]
 pub struct BlockedContacts {
     pub contacts: Vec<BlockedContact>,
     pub age_label: String,
@@ -2599,6 +2600,93 @@ pub fn with_priority_order(
     }
     Some(PriorityOrder {
         order: usable,
+        age_label: environment_age_label(Some(stamp)),
+    })
+}
+
+/// INT-027 follow-up: the morning-path caller that fills a
+/// snapshot's `blocked_contacts` record, so a morning brief carries
+/// its Blocked contacts section even when the snapshot states only
+/// the ask nicks as a plain stated list. Returns the record to
+/// store as the snapshot's `blocked_contacts` value. A hand-stated
+/// record wins over a built one: pass it as `existing` and it is
+/// returned unchanged, whatever the inputs say, so a caller that
+/// knows its contacts better than this list is never overwritten.
+/// The record exists only when the snapshot states at least one
+/// usable job_id, so a snapshot that states nothing usable gets
+/// no record at all, and older briefs keep their exact shape
+/// instead of gaining a padded section. This filler reads no nick
+/// from the jobs list, and that is the whole point: a blocked job
+/// carries no owner field to read one from — the claim, claim
+/// host, claimed_at, and lease are deleted when a job is marked
+/// blocked — so the ask nick comes only from the caller's stated
+/// entries, never from the job. A job_id named twice is one entry,
+/// not two: the first listing wins, in stated order. An entry with
+/// no usable job_id is skipped, never guessed, and a list of only
+/// skipped entries counts as nothing stated, so junk alone never
+/// builds a record. An entry that states a job_id but no usable
+/// ask nick is still a usable entry: the renderer reads that job
+/// as owner not reported in this window, which is the stated
+/// absence, not a guessed nick. The caller does not filter entries
+/// against the snapshot's jobs list: the renderer already ignores
+/// a contact for a job that is not blocked in this snapshot, and a
+/// caller that dropped such entries would silently rewrite the
+/// stated contacts instead of letting the section read what the
+/// window actually holds. The record carries one as_of stamp for
+/// the whole record, formed into its age label here, so the
+/// section's age agrees with the other sections instead of
+/// drifting across reads — `now` supplies the stamp, and a
+/// missing stamp reads the current time, the same fallback the
+/// other with_* callers use. Never fails: a builder failure
+/// leaves the caller without a record, so the morning path still
+/// produces a brief, just without this section, instead of failing
+/// outright.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `entries` when the snapshot's
+/// blocked_contact_entries list is missing or not a list — silence
+/// states no contacts and yields no record; `Some(&[])` is an
+/// explicitly empty list, which likewise yields no record, since
+/// no usable job_id is ever a contact list. An entry that is not
+/// a dict has no Rust form: the caller omits it, which matches
+/// Python skipping it. An entry with an empty job_id reads as no
+/// usable job_id and is skipped here; an entry with an empty ask
+/// reads as no nick stated and is kept, since the renderer reads
+/// that job as owner not reported.
+pub fn with_blocked_contacts(
+    existing: Option<&BlockedContacts>,
+    entries: Option<&[BlockedContact]>,
+    now: Option<i64>,
+) -> Option<BlockedContacts> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let stamp = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let stated = entries?;
+    let mut usable: Vec<BlockedContact> = Vec::new();
+    for entry in stated {
+        if entry.job_id.is_empty() {
+            continue;
+        }
+        if usable.iter().any(|c| c.job_id == entry.job_id) {
+            continue;
+        }
+        usable.push(BlockedContact {
+            job_id: entry.job_id.clone(),
+            ask: entry.ask.clone(),
+        });
+    }
+    if usable.is_empty() {
+        return None;
+    }
+    Some(BlockedContacts {
+        contacts: usable,
         age_label: environment_age_label(Some(stamp)),
     })
 }
@@ -6619,5 +6707,75 @@ mod tests {
             },
         ];
         assert_eq!(with_federation(None, Some(&dupes), None), None);
+    }
+
+    #[test]
+    fn with_blocked_contacts_builds_from_stated_entries_and_renders_lines() {
+        let entries = vec![
+            BlockedContact { job_id: "7".into(), ask: "milo".into() },
+            // A second listing of the same job loses to the first.
+            BlockedContact { job_id: "7".into(), ask: "pax".into() },
+            // An entry with no usable job_id is skipped, never guessed.
+            BlockedContact { job_id: "".into(), ask: "rowan".into() },
+            // A job_id with no usable ask nick is still usable: the
+            // renderer reads it as owner not reported.
+            BlockedContact { job_id: "9".into(), ask: "".into() },
+        ];
+        let record = with_blocked_contacts(None, Some(&entries), Some(1793093400))
+            .expect("usable entries yield a blocked-contacts record");
+        assert_eq!(record.contacts.len(), 2);
+        assert_eq!(record.contacts[0].job_id, "7");
+        assert_eq!(record.contacts[0].ask, "milo");
+        assert_eq!(record.contacts[1].job_id, "9");
+        assert!(record.contacts[1].ask.is_empty());
+        assert_eq!(
+            record.age_label,
+            environment_age_label(Some(1793093400))
+        );
+        let label = record.age_label.clone();
+        let current = vec![
+            CurrentJob { id: "7".into(), title: "spark client".into(), status: "blocked".into() },
+            CurrentJob { id: "9".into(), title: "watchdog loop".into(), status: "blocked".into() },
+        ];
+        assert_eq!(
+            blocked_contact_lines(Some(&record), &current),
+            vec![
+                format!("Ask milo about 7 spark client{label}"),
+                format!("9 watchdog loop: owner not reported in this window{label}"),
+            ]
+        );
+    }
+
+    #[test]
+    fn with_blocked_contacts_hand_stated_record_wins_unchanged() {
+        let stated = BlockedContacts {
+            contacts: vec![BlockedContact { job_id: "only".into(), ask: "milo".into() }],
+            age_label: " (snapshot time not reported)".into(),
+        };
+        // A hand-stated record wins even when no entries are stated.
+        let record = with_blocked_contacts(Some(&stated), None, None)
+            .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_blocked_contacts_silence_or_junk_gets_no_record() {
+        // Silence states no contacts.
+        assert_eq!(with_blocked_contacts(None, None, Some(1793093400)), None);
+        // An explicitly empty list is still no contacts.
+        let empty: Vec<BlockedContact> = vec![];
+        assert_eq!(
+            with_blocked_contacts(None, Some(&empty), Some(1793093400)),
+            None
+        );
+        // Entries with no usable job_id, alone, are nothing stated.
+        let junk = vec![
+            BlockedContact { job_id: "".into(), ask: "rowan".into() },
+            BlockedContact { job_id: "".into(), ask: "".into() },
+        ];
+        assert_eq!(
+            with_blocked_contacts(None, Some(&junk), Some(1793093400)),
+            None
+        );
     }
 }
