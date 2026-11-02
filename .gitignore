@@ -11,3 +11,8 @@ os-build/logs/qemu-monitor.log
 /target/
 os-build/userspace/user/target/
 kernel/target/
+
+# Aegis raw reports are local until secret triage is finished
+os-build/aegis/SECRETS.json
+os-build/aegis/SECRETS.md
+os-build/aegis/r11/run-secrets.txt

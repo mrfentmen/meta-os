@@ -1,0 +1,9 @@
+aegis opsec opsec-2026-11-02T13-43-41-368Z
+  files read  5
+  home-path    0
+  private-ip   0
+  email        0
+  internal-host 0
+  machine-name 0
+  findings    0
+  report      os-build/aegis/OPSEC.md

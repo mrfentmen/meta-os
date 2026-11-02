@@ -1,0 +1,7 @@
+aegis sweep aegis-2026-11-02T13-43-49-502Z
+  status      blocked (no OSV server)
+  manifests   23 {"cargo":22,"npm":1}
+  queried     0 versioned refs in 0 batch(es)
+  skipped     21 local crates, 0 unversioned manifests
+  findings    0
+  report      os-build/aegis/SWEEP.md

@@ -1,6 +1,6 @@
 # Aegis OPSEC v1 — pre-publish review
 
-Run `opsec-2026-11-02T11-13-45-200Z`. Materials: `README.md`, `os-build/DEMO_SCRIPT.md`, `os-build/layer1/DEMO_30S.md`, `os-build/SUBMISSION_CHECKLIST.md`, `site/index.html`.
+Run `opsec-2026-11-02T13-43-41-368Z`. Materials: `README.md`, `os-build/DEMO_SCRIPT.md`, `os-build/layer1/DEMO_30S.md`, `os-build/SUBMISSION_CHECKLIST.md`, `site/index.html`.
 
 The question is the one in the spec: **does this tell a stranger something we did not decide to tell?** Locations and kinds are recorded; the matched text never is.
 
