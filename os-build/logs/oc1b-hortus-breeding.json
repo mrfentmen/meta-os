@@ -1,0 +1,111 @@
+{
+ "dead_ends": "[{'experiment_id': 'P-OC1B-001-V001', 'variant_id': 'V001', 'level': 2, 'department': 'chem', 'agent': 'breeding-round', 'selection': 'survivor', 'output_hash': '616e42f33e61dea36eb4c2794ddc8d5fe42b6968f5efcb00a55d4bee93a1e0fd', 'recorded_at': '2026-11-02T16:06:40.016030Z', 'date': '2026-11-02'}, {'experiment_id': 'P-OC1B-001-V002', 'variant_id': 'V002', 'level': 2, 'department': 'chem', 'agent': 'breeding-round', 'selection': 'dead-end', 'output_hash': '616e42f33e61dea36eb4c2794ddc8d5fe42b6968f5efcb00a55d4bee93a1e0fd', 'recorded_at': '2026-11-02T16:06:40.016324Z', 'date': '2026-11-02'}, {'claim_id': 'NEG-V002', 'statement': 'Breeding variant V002 did not meet the pre-registered selection rule; kept as a negative result, not re-run blindly.', 'level': 2, 'experiment_ids': ['P-OC1B-001-V002'], 'recorded_at': '2026-11-02T16:06:40.016416Z', 'date': '2026-11-02'}, {'experiment_id': 'P-OC1B-001-V003', 'variant_id': 'V003', 'level': 2, 'department': 'chem', 'agent': 'breeding-round', 'selection': 'dead-end', 'output_hash': '616e42f33e61dea36eb4c2794ddc8d5fe42b6968f5efcb00a55d4bee93a1e0fd', 'recorded_at': '2026-11-02T16:06:40.016599Z', 'date': '2026-11-02'}, {'claim_id': 'NEG-V003', 'statement': 'Breeding variant V003 did not meet the pre-registered selection rule; kept as a negative result, not re-run blindly.', 'level': 2, 'experiment_ids': ['P-OC1B-001-V003'], 'recorded_at': '2026-11-02T16:06:40.016707Z', 'date': '2026-11-02'}]",
+ "hortus": {
+  "available": true,
+  "engine": "hortus",
+  "evidence_level_cap": 2,
+  "import_path": "top-level",
+  "model": "hortus-toy-fin-v1",
+  "note": "hortus.engine imports; its GA (run_evolution) searches heatsink genomes under hortus/model.py, not experiment plans, so variant deltas here come from reasoning.generate_hypotheses; Hortus is recorded as provenance, not used as a plan mutator.",
+  "version": "0.1.0"
+ },
+ "lineage": {
+  "entry_hash": "117c01328d3d5ed8348a09b35986094453dcc6dc8d9c4ad95c2b821e618dea3a",
+  "kind": "breeding-lineage",
+  "lineage_hash": "b92c69bdafcbf87903d20b98cf17ae58210b81812ee17b6267d983211e8c6155",
+  "parent_hash": "322b29166bcba3f3195eac1cb2a49e473f748a15f7c3f096e75055f67494acee",
+  "parent_plan_id": "P-OC1B-001",
+  "prev_hash": "395b9d6343a5c7e2ffb8d5116bbace1665ce0de1fd12cff32b0c6cf2bae7241a",
+  "recorded_at": "2026-11-02T16:06:40.015834Z",
+  "rule_entry_hash": "2cf536dea14e740593cb28cbc9f748d32eb60a6fa2df1945692c2c8de43a78c7",
+  "selection_criterion": "threshold=-4.5 direction='>='",
+  "survivor_id": "V001",
+  "variants": [
+   {
+    "parent_hash": "322b29166bcba3f3195eac1cb2a49e473f748a15f7c3f096e75055f67494acee",
+    "seed": 801,
+    "variant_hash": "8d94772f9609366fdb6b2768096b87e7f38999a84fc2fc1d608776e7598ef0f9",
+    "variant_id": "V001"
+   },
+   {
+    "parent_hash": "322b29166bcba3f3195eac1cb2a49e473f748a15f7c3f096e75055f67494acee",
+    "seed": 802,
+    "variant_hash": "e1dde05cc1378153f9186d9759a3e59d5d7ff9f2ff90bd198767be5615d4b0a7",
+    "variant_id": "V002"
+   },
+   {
+    "parent_hash": "322b29166bcba3f3195eac1cb2a49e473f748a15f7c3f096e75055f67494acee",
+    "seed": 803,
+    "variant_hash": "acc83b0073a06b371315ea0bce804fb32f1be33b1b8077075062a0574d732e94",
+    "variant_id": "V003"
+   }
+  ]
+ },
+ "lineage_verify": "(True, \"ok: 3 variant links verify, survivor 'V001'\")",
+ "n_variants": 3,
+ "plan": {
+  "agent": "computational-scientist",
+  "column": "measured log solubility in mols per litre",
+  "dataset": "gate/delaney/delaney-processed.csv",
+  "hypothesis_id": "H-OC1B-001",
+  "n_rows": 10,
+  "plan_id": "P-OC1B-001",
+  "research_question": "OC1B probe: reproduce slice means over archived Delaney rows",
+  "seed": 801,
+  "statistic": "mean"
+ },
+ "rejected": 0,
+ "results": [
+  {
+   "value": -3.989,
+   "variant_id": "V001"
+  },
+  {
+   "value": -3.989,
+   "variant_id": "V002"
+  },
+  {
+   "value": -3.989,
+   "variant_id": "V003"
+  }
+ ],
+ "selection": {
+  "candidates": [
+   {
+    "crashed": false,
+    "detail": "observed=-3.989 threshold=-4.5 direction='>='",
+    "experiment_id": "P-OC1B-001-V001",
+    "observed": -3.989,
+    "variant_id": "V001",
+    "verdict": "match"
+   },
+   {
+    "crashed": false,
+    "detail": "observed=-3.989 threshold=-4.5 direction='>='",
+    "experiment_id": "P-OC1B-001-V002",
+    "observed": -3.989,
+    "variant_id": "V002",
+    "verdict": "match"
+   },
+   {
+    "crashed": false,
+    "detail": "observed=-3.989 threshold=-4.5 direction='>='",
+    "experiment_id": "P-OC1B-001-V003",
+    "observed": -3.989,
+    "variant_id": "V003",
+    "verdict": "match"
+   }
+  ],
+  "criterion": "threshold=-4.5 direction='>='",
+  "entry_hash": "395b9d6343a5c7e2ffb8d5116bbace1665ce0de1fd12cff32b0c6cf2bae7241a",
+  "kind": "breeding-selection",
+  "prev_hash": "4c9a55f40dc2459fd20b23d1b1568394f2b1d522b4c28c19227cf1e48fa7662a",
+  "recorded_at": "2026-11-02T16:06:40.015653Z",
+  "rule_entry_hash": "2cf536dea14e740593cb28cbc9f748d32eb60a6fa2df1945692c2c8de43a78c7",
+  "rule_hypothesis_id": null,
+  "rule_kind": "preregistration",
+  "rule_test": null,
+  "survivor_id": "V001",
+  "survivor_measured": -3.989
+ }
+}

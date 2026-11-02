@@ -1,0 +1,31 @@
+{
+ "cycle_id": "CYCLE-OC1B-FRESH-001",
+ "gate": {
+  "decision": "confirmed",
+  "level": 2
+ },
+ "held_out_rows": "31-50",
+ "history_n": 3,
+ "hypotheses_n": 2,
+ "n": 20,
+ "phases": "verification",
+ "prior_shelf": true,
+ "question": "Can ESOL-style linear model predict solubility for 20 held-out compounds (rows 31-50) within RMSE 1.5?",
+ "reproduce": "reproduced",
+ "rmse": 0.5844340852482852,
+ "scientific_verdict": "match",
+ "transition_blocks": [
+  {
+   "error": "blocked: phase 'hypotheses' requires inputs ['sources']; file them first.",
+   "target": "hypotheses"
+  },
+  {
+   "error": "blocked: phase 'critic' requires inputs ['compute_results']; file them first.",
+   "target": "critic"
+  },
+  {
+   "error": "blocked: phase 'sealing' requires inputs ['verification']; file them first.",
+   "target": "sealing"
+  }
+ ]
+}

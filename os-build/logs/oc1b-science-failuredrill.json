@@ -1,0 +1,17 @@
+{
+ "attempted": "transition literature -> cheap-computations with the hypotheses input removed",
+ "behaviour": "refused",
+ "broken_input": "hypotheses",
+ "cycle_id": "DRILL-FAILURE-001",
+ "fake_success": false,
+ "generated_at": "2026-11-02T16:04:32.665431Z",
+ "honesty": [
+  "The cycle refused to advance without its required input.",
+  "No claim, level, or result was produced by this drill.",
+  "Refusal is the correct behaviour: park/refuse/fail loudly, never fake success."
+ ],
+ "recovery": "re-file the hypotheses input and advance again; no phase was duplicated and no result was fabricated.",
+ "refusal_message": "blocked: phase 'cheap-computations' requires inputs ['hypotheses']; file them first.",
+ "refused": true,
+ "second_probe": "run_bio with invalid bases; behaviour: refused: run_bio: invalid bases ['X', 'Z'] in sequence"
+}

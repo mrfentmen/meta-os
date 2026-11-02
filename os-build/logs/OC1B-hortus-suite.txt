@@ -1,0 +1,15 @@
+OC1B-328 Hortus suite — Mac run
+tree: 94010c76ee095fa6c6bcfa4405cd56a9695f32d3
+date(UTC): 2026-11-02T16:03:30Z
+command: python3 -m unittest discover -s os/tests -p "test_hortus*.py"
+
+..............
+----------------------------------------------------------------------
+Ran 14 tests in 0.132s
+
+OK
+
+OC1B-343 wall-clock: 0.132s test time (WALL_SECONDS=0 measured).
+--- per-file:
+test_hortus_calibration.py: Ran 5 tests in 0.004s
+test_hortus_engine.py: Ran 9 tests in 0.122s

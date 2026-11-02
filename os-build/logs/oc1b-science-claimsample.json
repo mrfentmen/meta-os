@@ -1,0 +1,37 @@
+{
+ "checked": 19,
+ "backed_n": 19,
+ "cut": [],
+ "sample_traces": [
+  {
+   "claim_id": "CYCLE-EXAMPLE-001-reasoning",
+   "level": 1,
+   "recorded_level": 1,
+   "has_basis": true
+  },
+  {
+   "claim_id": "CYCLE-EXAMPLE-001-computation",
+   "level": 2,
+   "recorded_level": 2,
+   "has_basis": true
+  },
+  {
+   "claim_id": "CYCLE-EXAMPLE-001-ledger-0",
+   "level": 1,
+   "recorded_level": 1,
+   "has_basis": true
+  },
+  {
+   "claim_id": "CYCLE-EXAMPLE-001-ledger-1",
+   "level": 2,
+   "recorded_level": 2,
+   "has_basis": true
+  },
+  {
+   "claim_id": "CYCLE-EXAMPLE-001-reasoning",
+   "level": 1,
+   "recorded_level": 1,
+   "has_basis": true
+  }
+ ]
+}
