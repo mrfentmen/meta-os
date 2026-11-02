@@ -1,0 +1,8 @@
+{
+  "name": "Ignis",
+  "purpose": "The fire and smoke division of Imperium: flames, smoldering, and hazard signs across the scene categories.",
+  "status": "VERIFIED",
+  "proof": "server/queue/judge.py and os-build/demo/EVAL4.md",
+  "limits": "Crowd-gathered and other lookalikes are cleared, never forced red. A red flag means human review, not a confirmed incident.",
+  "notes": "One of the three Imperium divisions, alongside Vigiles and Medicus."
+}

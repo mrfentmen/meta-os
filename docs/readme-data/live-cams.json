@@ -1,0 +1,8 @@
+{
+  "name": "Live cameras",
+  "purpose": "The NYC DOT public camera source and the real frames that run through the Imperium loop.",
+  "status": "VERIFIED",
+  "proof": "server/queue/livecam_records/ (Bay Pkwy @ 78 St, Brooklyn, 2026-11-02) assessed by Muse Spark 1.3",
+  "limits": "Public test feeds only. A snapshot is a reading, not continuous coverage, and the flagged path has not fired on a live wild event.",
+  "notes": "One proven live reading is committed; the rest of the camera list is configuration."
+}

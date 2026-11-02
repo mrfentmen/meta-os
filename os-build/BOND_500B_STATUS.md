@@ -531,3 +531,24 @@ CB2-459 (no enumerated 14-check gate list), CB2-460..470 and 473..474
 library/keeper/normalise modules for those node tests to import).
 
 Section 19 verification: 4 test files, **19 tests pass, 0 fail**.
+
+## Section 20 — Documentation-as-code (CB2-476..500) — 19/25 delivered
+
+| Task | File | Result |
+|---|---|---|
+| CB2-476..490 | `docs/readme-data/*.json` | 15 program records: imperium, ignis, medicus, science-lab, hortus, officina, musica, aegis, nervus, hands-free, agent-layer, nuntius, kernel, live-cams, goose-services |
+| CB2-491 | `tests/readme-data.test.mjs` | every file parses, carries the six keys, status in the four-value set |
+| CB2-492 | `tests/readme-data.test.mjs` | no file contains `Custos` |
+| CB2-493 | `tools/readme_data_index.py` | Markdown table (name, status, proof), fixture- and real-tree-tested |
+| CB2-499 | `docs/readme-data/face.json` | face is the design running in a carrier/browser; kernel graphics in progress |
+
+Not delivered:
+- CB2-494..496: no Nervus contract files or layer-curve fixture exist in the tree;
+  `nervus/` holds only `tray.json` and `dose-windows.json`.
+- CB2-497: Aegis ships `aegis/watch-targets.mjs` (code), not a domain data file.
+- CB2-498: no Aegis findings record type exists to pin a shape against.
+- CB2-500: `agents/registry.json` lists agent nicks, not programs, so a
+  program-file set cannot be matched against it without inventing a mapping.
+
+Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
+`test_readme_data_index.py` 3 pass.

@@ -1,0 +1,8 @@
+{
+  "name": "Agent layer",
+  "purpose": "The runtime that loads agents, watches files, passes batons, runs gym drills, and shares lessons.",
+  "status": "CODE-INSPECTED",
+  "proof": "agents/runtime.mjs, agents/watchman.mjs, agents/baton.mjs, agents/gym.mjs, tests/agents-*.test.mjs",
+  "limits": "Placeholder commands such as [\"true\"] are drafts, never runnable agents. A budget stop is recorded, not hidden.",
+  "notes": "Components: runtime, watchman, baton, gym, lessons."
+}

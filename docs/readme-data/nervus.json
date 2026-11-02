@@ -1,0 +1,8 @@
+{
+  "name": "Nervus",
+  "purpose": "A model-operation system: sweep, steer, ablate, evaluate-delta, and map-layers tools over one shared ledger.",
+  "status": "UNIMPLEMENTED",
+  "proof": "nervus/tray.json and nervus/dose-windows.json (data only)",
+  "limits": "No real model operation has run. The tool contracts and the layer-curve fixture are not in this tree.",
+  "notes": "Named as a system; no runtime code exists here."
+}

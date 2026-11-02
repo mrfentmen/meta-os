@@ -1,0 +1,8 @@
+{
+  "name": "Face",
+  "purpose": "The desktop design: window shell, dock, and app surfaces for the OS.",
+  "status": "CODE-INSPECTED",
+  "proof": "face/face.js, face/index.html, and tests/face-*.test.mjs",
+  "limits": "The face is the desktop design running in a carrier or browser today. Kernel graphics are in progress, not shipped.",
+  "notes": "No native SwiftUI screens remain; the native app moved to a web view shell."
+}

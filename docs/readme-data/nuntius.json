@@ -1,0 +1,8 @@
+{
+  "name": "Nuntius",
+  "purpose": "The relay and board: room messages with validation caps, plus a persistent note board.",
+  "status": "CODE-INSPECTED",
+  "proof": "relay/relay.test.mjs and board/board.test.mjs",
+  "limits": "Nicks are unauthenticated, and announce mode is a client-side convention, not access control.",
+  "notes": "Store trimming keeps a documented minimum number of messages."
+}

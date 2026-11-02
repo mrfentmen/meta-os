@@ -1,0 +1,8 @@
+{
+  "name": "Medicus",
+  "purpose": "The EMS division of Imperium: a person on the ground, a crowd around a person, or blocked crew access.",
+  "status": "VERIFIED",
+  "proof": "server/queue/judge.py and os-build/demo/EVAL4.md",
+  "limits": "Scene awareness only. Never a diagnosis, never a cause, never a treatment word. Identity stays UNIDENTIFIED.",
+  "notes": "Staged demo scenes use mannequins, not people, and are labelled as staged."
+}
