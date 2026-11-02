@@ -16,6 +16,9 @@ with everything there. Two different things, kept straight:
 
 ## Pack into the carrier image (existing apps, themed)
 - Browser: Chrome where the Mac build allows, else Chromium.
+  INSTALL ONLY. Nobody studies Chrome, nobody reverse
+  engineers Chrome, nobody rebuilds a browser. It is a
+  package; it goes in the image as-is.
 - Terminal: the distro's real terminal (GNOME Terminal / xfce4).
 - Files: the distro's real file manager (Nautilus / Thunar).
 - Code Editor: VS Code OSS build or a gedit-class editor — pick
