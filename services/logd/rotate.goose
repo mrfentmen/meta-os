@@ -2,7 +2,7 @@
 //
 // B-L1-108 — Log rotation and export.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t71_rotate (48 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // THE STORE IS A LIST OF SEGMENTS, AND THAT IS THE WHOLE MODEL
 // -----------------------------------------------------------

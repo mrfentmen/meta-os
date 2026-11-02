@@ -25,6 +25,8 @@ tests/t68_proto|RUNS|41|0|
 tests/t69_callmatrix|RUNS|28|0|
 tests/t70_status|RUNS|20|0|
 tests/t71_rotate|RUNS|48|0|
+tests/t72_hostile|RUNS|77|0|
+tests/t73_shell_hard|RUNS|46|0|
 entry/bootlog|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
 entry/console|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
 entry/example|TYPECHECKS (not run)|0|0|svc_entry takes a kernel BootInfo; no host boot block

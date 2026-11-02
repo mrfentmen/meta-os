@@ -2,7 +2,7 @@
 //
 // Layer 4, service 14: addresses and interface configuration as data.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs
+// Status: RUNS — reached by tests/t67_net (89 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs
 // (reference#32), fixed arrays, `while`/`if`, slices, `T&` references (reference#46),
 // `import` of a sibling module, `as` casts, multi-value returns.
 //

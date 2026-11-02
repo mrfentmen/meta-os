@@ -2,7 +2,7 @@
 //
 // B-L1-54 — test program for the storage contract and its RAM backend (B-L1-25).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t54_storage: 26 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS UNDER TEST
 // ------------------

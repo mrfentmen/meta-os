@@ -2,7 +2,7 @@
 //
 // The kernel boundary for every Layer 4 service: six calls, declared once.
 //
-// Status: WRITTEN (not COMPILED). Forms verified via goose-mcp@1.1.0:
+// Status: RUNS — reached by tests/t67_net (89 checks, exit 0). Measured 2026-11-02 by audit_status.py. Forms verified via goose-mcp@1.1.0:
 // `extern fn` with an optional `= "C symbol"` (spec#40, reference#106),
 // `const u8[:]` slice parameters (spec#40), `u8[>..]&` caller-supplied output
 // buffers (spec#40, samples/03_strings.goose), trailing-bool convention

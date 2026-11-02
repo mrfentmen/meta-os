@@ -2,7 +2,7 @@
 //
 // Layer 4, service 5: the log sink. Every service's records end up here.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: extern/export
+// Status: RUNS — reached by tests/t66_shell (57 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: extern/export
 // fn forms (spec#40, spec#41), builders and append (samples/03_strings.goose),
 // format/format_int (stdlib#9), trailing-bool (samples/04_errors.goose),
 // struct literals (tutorial#3), keywords (list_keywords).

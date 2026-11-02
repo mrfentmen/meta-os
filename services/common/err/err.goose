@@ -2,7 +2,7 @@
 //
 // The layer's error vocabulary: one code set, one result convention.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: trailing-bool and
+// Status: RUNS — reached by tests/t67_net (89 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: trailing-bool and
 // trailing-code returns (samples/04_errors.goose, samples/01_tour.goose), match
 // keyword (list_keywords), top-level globals (reference#5), const u8[:] returns
 // (spec#41 example).

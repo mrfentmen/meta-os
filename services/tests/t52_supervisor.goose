@@ -2,7 +2,7 @@
 //
 // B-L1-52 — test program for the supervisor and its name registry (B-L1-20/B-L1-22).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t52_supervisor: 53 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS UNDER TEST, AND WHY THESE CASES
 // ---------------------------------------

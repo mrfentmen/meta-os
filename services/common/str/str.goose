@@ -2,7 +2,7 @@
 //
 // B-L1-69 — gap library 2. Splitting and tokenising `u8[:]` without allocating.
 //
-// Status: WRITTEN (not COMPILED).
+// Status: RUNS — reached by tests/t63_str (27 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHY A CURSOR AND NOT A LIST
 // ---------------------------

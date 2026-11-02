@@ -5,7 +5,7 @@
 // data structure read three ways: a slot holds a lifecycle state AND a grant set, and a
 // grant that outlives its agent is the bug this file exists to make impossible.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs, static
+// Status: RUNS — reached by tests/t59_agenthost (48 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs, static
 // `Type[n]` arrays, `while`/`if`, slices, `T&` references (reference#46), multi-value
 // returns, bitwise operators.
 //

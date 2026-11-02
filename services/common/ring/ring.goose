@@ -3,7 +3,7 @@
 // Ring buffers over caller storage: the queue under the log service, the
 // history ring under the console, and the record ring under the audit writer.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0:
+// Status: RUNS — reached by tests/t66_shell (57 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0:
 // - growable `u8[>..]` arrays, `push`, `append`, `.len` .... samples/03_strings.goose
 // - whole-element assignment `a[i] = v` ..................... stdlib#13 (slot_pool)
 // - bounds checks abort, so indices are always computed mod cap  reference#82

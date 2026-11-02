@@ -2,8 +2,12 @@
 //
 // B-L1-48 — test program for the BootInfo block and the six syscalls (B-L1-08/B-L1-09).
 //
-// Status: WRITTEN (not COMPILED, not RUN). This is the one test in the set that CANNOT pass
-// on a host machine by design: it asserts the shape of what the kernel hands over.
+// Status: RUNS — tests/t48_boot: 10 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
+// The earlier header said this test CANNOT pass on a host by design, because it asserts the
+// shape of what the kernel hands over. It passes because the host shim provides the ten
+// syscalls with real host behaviour, so what the checks prove is the SHAPE of the contract
+// and the arithmetic around it -- not that a kernel fills a BootInfo block correctly. That
+// conflation is exactly what the section below refuses to claim.
 //
 // WHAT IT CHECKS, AND WHAT PASSING WOULD MEAN
 // -------------------------------------------

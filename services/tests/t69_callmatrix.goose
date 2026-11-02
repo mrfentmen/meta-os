@@ -2,7 +2,7 @@
 //
 // B-L1-118 — test program for the permission table (services/callmatrix/callmatrix.goose).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t69_callmatrix: 28 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS UNDER TEST, AND WHY THESE CASES
 // ---------------------------------------

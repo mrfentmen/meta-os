@@ -3,7 +3,7 @@
 // Layer 4, service 6: the service table and its state machine. Who is running,
 // what state it is in, and whether a transition is legal at all.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs with
+// Status: RUNS — reached by tests/t66_shell (57 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs with
 // fixed-size string fields (tutorial#3, samples/03_strings.goose), fixed arrays
 // (stdlib#13), extern/export fn (spec#40, spec#41), trailing-bool and trailing-code
 // returns (samples/04_errors.goose), keywords (list_keywords).

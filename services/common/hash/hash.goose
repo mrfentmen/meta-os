@@ -4,7 +4,7 @@
 // specifications. The updater's verification depends on SHA-256; record
 // integrity depends on CRC32.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0:
+// Status: RUNS — reached by tests/t72_hostile (77 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0:
 // - unsigned arithmetic wraps in every build ................. tutorial#3, stdlib#1
 // - signed overflow aborts in debug, wraps in release ......... tutorial#3
 // - `u32`/`u64`/`u8` integer keywords ........................ list_keywords

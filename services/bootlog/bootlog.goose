@@ -2,7 +2,7 @@
 //
 // Layer 4, service 1: the boot log.
 //
-// Status: WRITTEN (not COMPILED). Every symbol and keyword below was checked
+// Status: RUNS — reached by tests/t49_bootlog (23 checks, exit 0). Measured 2026-11-02 by audit_status.py. Every symbol and keyword below was checked
 // against goose-mcp@1.1.0 (bundled from aardappel/goose @ b781587):
 //   - export fn with a C symbol name ....... spec#41, reference#108
 //   - extern fn bound to a C symbol ........ spec#40, reference#106

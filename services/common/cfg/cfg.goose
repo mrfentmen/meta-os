@@ -3,7 +3,7 @@
 // Services' configuration: key=value pairs, optional [section] headers, parsed
 // from a borrowed text buffer. No allocation, no lifetime trouble, no copies.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0:
+// Status: RUNS — reached by tests/t67_net (89 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0:
 // std string helpers `trim`, `split`, `parse_int`, `compare`, `find` .... reference#30
 // slices `u8[:]` and indexing into them ................................ spec#40
 // trailing-bool and trailing-code returns ............................. samples/04_errors.goose
@@ -89,6 +89,15 @@ fn parse_section(text: u8[:], s: i64, e: i64) -> i64, i64, bool {
     if e - s < 3 { return 0, 0, false; }        // "[x]" is the shortest
     if text[s] != '[' { return 0, 0, false; }
     if text[e - 1] != ']' { return 0, 0, false; }
+    // The rule the header promises, which this function did not enforce: a section name is
+    // an identifier, so "[ sp ]" is not a header. It used to be accepted as the section
+    // " sp ", which meant a lookup for "sp" missed and the keys after it landed somewhere
+    // nobody asked for -- a whole-file misparse from one typo, silently.
+    var i: i64 = s + 1;
+    while i < e - 1 {
+        if cfg_is_space(text[i]) { return 0, 0, false; }
+        i = i + 1;
+    }
     return s + 1, e - 1, true;
 }
 

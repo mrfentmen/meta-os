@@ -3,7 +3,7 @@
 // Layer 4, service 18: the updater. Manifest parsing (B-L1-34), verification and the
 // apply plan (B-L1-35), and the rollback record (B-L1-36).
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs with
+// Status: RUNS — reached by tests/t58_updater (35 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs with
 // literals (reference#32), static arrays, `while`/`if`, slices, `T&` references
 // (reference#46), `as` casts, multi-value returns.
 //

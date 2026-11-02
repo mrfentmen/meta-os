@@ -2,7 +2,7 @@
 //
 // B-L1-57 — test program for DHCP and DNS over a loopback pair (B-L1-31/B-L1-32).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t57_dhcp_dns: 45 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // BOTH ENDS ARE IN THIS FILE
 // --------------------------

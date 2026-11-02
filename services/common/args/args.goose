@@ -2,7 +2,7 @@
 //
 // B-L1-88 — argument parsing: quoting, escapes, argv over fixed buffers.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t66_shell (57 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHY A PARSER AND NOT A SPLIT
 // ----------------------------

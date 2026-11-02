@@ -2,7 +2,9 @@
 //
 // B-L1-46 — test program for the ring buffer library (B-L1-11).
 //
-// Status: WRITTEN (not COMPILED, not RUN). Runs at K6, not before.
+// Status: RUNS — tests/t46_ring: 36 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
+// It ran on a host process, not at K6: the ring is pure logic over fixed buffers, so the
+// host run is the whole claim, and no kernel behaviour is involved.
 //
 // The cases are the wrap. A ring that works until it wraps is a ring that fails on the
 // second day of uptime and nowhere in a short test, so this walks past the end explicitly:

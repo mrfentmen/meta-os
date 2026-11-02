@@ -2,7 +2,7 @@
 //
 // B-L1-53 — test program for the health watchdog (B-L1-23).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t53_watchdog: 28 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS UNDER TEST
 // ------------------

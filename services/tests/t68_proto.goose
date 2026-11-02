@@ -2,7 +2,7 @@
 //
 // B-L1-106 — Test program: the protocol pack over the B-L1-105 harness.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t68_proto: 41 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // t67 checked each protocol module on its own. This file checks what only the harness can
 // show: a datagram that is lost and must be retransmitted, a datagram delivered twice, two

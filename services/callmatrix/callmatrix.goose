@@ -3,7 +3,7 @@
 // Layer 4, service 26: the service-to-service permission table and the one check that
 // consults it.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs, static arrays,
+// Status: RUNS — reached by tests/t69_callmatrix (28 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs, static arrays,
 // `while`/`if`, slices, `T&` references (reference#46), multi-value returns, bitwise
 // operators.
 //

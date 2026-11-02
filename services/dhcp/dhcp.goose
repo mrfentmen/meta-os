@@ -2,7 +2,7 @@
 //
 // Layer 4, service 15: the DHCP client.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs with
+// Status: RUNS — reached by tests/t57_dhcp_dns (45 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs with
 // literals (reference#32), static arrays, `while`/`if`, slices `a[x..y]`, `T&`
 // references (reference#46), `as` casts, multi-value returns.
 //

@@ -2,7 +2,7 @@
 //
 // MOSFS01 — a real filesystem over the block contract (B-L1-80..82, B-L1-84).
 //
-// Status: WRITTEN (not COMPILED, not RUN). Layout and reasoning: `DESIGN.md`.
+// Status: RUNS — reached by tests/t65_fs (70 checks, exit 0). Measured 2026-11-02 by audit_status.py. Layout and reasoning: `DESIGN.md`.
 //
 // THE ONE GLOBAL, AND WHY IT IS SAFE
 // ----------------------------------

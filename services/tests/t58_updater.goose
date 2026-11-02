@@ -3,7 +3,7 @@
 // B-L1-58 — test program for the update manifest, the apply plan and the rollback record
 // (B-L1-34/B-L1-35/B-L1-36). PLAN ONLY: nothing here applies an update.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t58_updater: 35 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // THE POINT OF THIS TEST
 // ----------------------

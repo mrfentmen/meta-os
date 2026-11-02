@@ -2,7 +2,7 @@
 //
 // Layer 4, service 3: the monotonic clock.
 //
-// Status: WRITTEN (not COMPILED). B-L1-04 wrote the clock core; B-L1-19 adds the
+// Status: RUNS — reached by tests/t66_shell (57 checks, exit 0). Measured 2026-11-02 by audit_status.py. B-L1-04 wrote the clock core; B-L1-19 adds the
 // deadline and wait surface every other service schedules against. Verified through goose-mcp@1.1.0
 // (aardappel/goose @ b781587): extern fn (spec#40), export fn (spec#41),
 // while/return/fn keywords (list_keywords), trailing-bool (samples/04_errors),

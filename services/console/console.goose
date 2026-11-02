@@ -2,7 +2,7 @@
 //
 // Layer 4, service 2: the interactive console. Echo, line editing, history.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0:
+// Status: RUNS — reached by tests/t49_bootlog (23 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0:
 // - export fn entry, extern fn ............................. spec#41, spec#40
 // - u8[>..] builder, append, push, .len ................... samples/03_strings.goose
 // - trailing-bool / trailing-code returns ................. samples/04_errors.goose

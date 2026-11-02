@@ -2,7 +2,7 @@
 //
 // B-L1-60 — test program for the audit writer and reader (B-L1-41/B-L1-42).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t60_audit: 33 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS UNDER TEST
 // ------------------

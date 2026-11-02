@@ -2,7 +2,7 @@
 //
 // B-L1-64 — the service start order as DATA, not prose.
 //
-// Status: WRITTEN (not COMPILED). Forms verified via goose-mcp@1.1.0 (structs, fixed arrays,
+// Status: RUNS — reached by tests/t61_bootorder (24 checks, exit 0). Measured 2026-11-02 by audit_status.py. Forms verified via goose-mcp@1.1.0 (structs, fixed arrays,
 // `while`/`if`, trailing-bool returns).
 //
 // WHY THIS IS DATA

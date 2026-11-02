@@ -2,7 +2,7 @@
 //
 // B-L1-97 — ICMP echo: ping out, ping answer.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t67_net (89 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS IMPLEMENTED IS ECHO AND ONLY ECHO
 // -----------------------------------------

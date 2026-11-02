@@ -3,7 +3,7 @@
 // No-heap formatting into caller buffers, with the overflow answer the work
 // order asks for: a full buffer returns a trailing false and never overflows.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0:
+// Status: RUNS — reached by tests/t67_net (89 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0:
 // - growable builder `var b: u8[>..] = [];` and `.len` ....... samples/03_strings.goose
 // - `append`, `push` ....................................... samples/03_strings.goose
 // - `format_int(out, v, base, width, padc)` ................ stdlib#9

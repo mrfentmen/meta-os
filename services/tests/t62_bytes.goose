@@ -2,7 +2,7 @@
 //
 // B-L1-68 — test program for `common/bytes`.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t62_bytes: 50 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // The cases that matter are the edges, not the happy path: an empty haystack, a
 // needle longer than the haystack, a `from` past the end, a copy that only half

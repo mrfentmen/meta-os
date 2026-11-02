@@ -2,7 +2,7 @@
 //
 // BF4-09 — test program for the status formatter (common/status).
 //
-// Status: WRITTEN and RUN natively against the host shim
+// Status: RUNS — tests/t70_status: 20 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 // (os-build/layer1/host/host_shim.c). It is not COMPILED for the kernel, and it has not
 // run in ring 3 -- there is no ring 3 for it yet.
 //

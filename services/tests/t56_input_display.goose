@@ -2,7 +2,7 @@
 //
 // B-L1-56 — test program for the input decoder and the virtual consoles (B-L1-26/B-L1-27).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t56_input_display: 49 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // THE INPUT SIDE
 // --------------

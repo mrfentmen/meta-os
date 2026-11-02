@@ -4,7 +4,7 @@
 // provide: `std`'s string functions (`find`, `split`, `trim`) are for Goose `string`,
 // and every service here passes byte slices around because a record is bytes.
 //
-// Status: WRITTEN (not COMPILED).
+// Status: RUNS — reached by tests/t67_net (89 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHY THIS EXISTS AT ALL
 // ----------------------

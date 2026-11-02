@@ -2,7 +2,7 @@
 //
 // MOSFS01 consistency checker (B-L1-86).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t65_fs (70 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IT CHECKS, AND WHY EACH ONE IS WORTH A CHECK
 // -------------------------------------------------

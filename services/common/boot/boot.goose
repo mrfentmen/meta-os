@@ -2,7 +2,7 @@
 //
 // B-L1-08: the BootInfo block, as Goose sees it.
 //
-// Status: WRITTEN (not COMPILED). Verified forms: struct with typed fields and
+// Status: RUNS — reached by tests/t48_boot (10 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified forms: struct with typed fields and
 // defaults (tutorial#3, samples/01_tour.goose), fixed arrays `T[..N]` and
 // `u8[..N]` (samples/03_strings.goose), i32/i64/u32/u64 keywords
 // (list_keywords), reference parameter `&` (spec#40).

@@ -2,7 +2,7 @@
 //
 // B-L1-47 — test program for the config parser (B-L1-13).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t47_cfg: 16 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // A config parser reads a file an operator wrote by hand, so its cases are the things
 // operators actually type: comments, trailing spaces, blank lines, a key repeated by

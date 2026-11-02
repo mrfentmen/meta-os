@@ -2,7 +2,7 @@
 //
 // B-L1-49 — test program for the boot log and the console editor (B-L1-17).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t49_bootlog: 23 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // THE BOOT LOG
 // ------------

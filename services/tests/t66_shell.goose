@@ -2,7 +2,7 @@
 //
 // B-L1-93 — shell session: argument parser, builtins, and a script.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t66_shell: 57 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHY IT DRIVES `sh_exec` AND NOT THE KEYBOARD
 // -------------------------------------------

@@ -2,7 +2,7 @@
 //
 // Layer 4, service 10: scancodes to key events.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs with
+// Status: RUNS — reached by tests/t56_input_display (49 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs with
 // literals (reference#32), `while`/`if` chains, `T&` references (reference#46),
 // trailing-bool/trailing-code returns, `as` casts (keyword list).
 //

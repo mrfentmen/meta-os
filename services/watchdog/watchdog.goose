@@ -3,7 +3,7 @@
 // Layer 4, service 7: the health watchdog. Who has gone quiet, and who decides
 // what happens next.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: struct with
+// Status: RUNS — reached by tests/t53_watchdog (28 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: struct with
 // fixed-size fields and struct literals (reference#32, tutorial#9), fixed arrays
 // `T[..k]` (stdlib#13), `while` and `if` chains (list_keywords), trailing-bool and
 // trailing-code returns (samples/04_errors.goose), references `T&` for modification

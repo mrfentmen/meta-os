@@ -2,7 +2,7 @@
 //
 // Layer 4, service 9: the storage contract and its RAM backend.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: `T&` references
+// Status: RUNS — reached by tests/t65_fs (70 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: `T&` references
 // ("one machine address, no pointer arithmetic, no casts, no way to make it
 // dangle" -- reference#46), structs, static arrays, `while`/`if`, multi-value
 // returns.

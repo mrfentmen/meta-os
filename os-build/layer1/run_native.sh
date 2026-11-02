@@ -139,8 +139,20 @@ if [ "${#failed[@]}" -gt 0 ]; then
 fi
 
 # Machine-readable row set, for the report table (label|status|pass|fail|note).
-{
-    printf '%s\n' "${ROWS[@]}"
-} > os-build/layer1/host/run_rows.txt
+#
+# A FILTERED run writes somewhere else. `run_native.sh t65_fs` used to overwrite this
+# file with its one row, so the table the docs are generated from silently shrank to the
+# last test anybody ran by hand -- and every generator downstream then reported "no native
+# run" for 26 programs that were green an hour earlier. The full table is only written by
+# a full run.
+if [ "$#" -eq 0 ]; then
+    {
+        printf '%s\n' "${ROWS[@]}"
+    } > os-build/layer1/host/run_rows.txt
+else
+    {
+        printf '%s\n' "${ROWS[@]}"
+    } > os-build/layer1/host/run_rows.last_filtered.txt
+fi
 
 [ "$fail" -eq 0 ]

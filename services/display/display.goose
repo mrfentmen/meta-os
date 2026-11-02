@@ -2,7 +2,7 @@
 //
 // Layer 4, service 11: virtual consoles over the single framebuffer.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs with
+// Status: RUNS — reached by tests/t56_input_display (49 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs with
 // literals (reference#32), static arrays `T[..k]`, `while`/`if`, `T&` references
 // (reference#46), multi-value returns, extern fn declarations.
 //

@@ -2,7 +2,7 @@
 //
 // Path parsing and resolution for MOSFS01 (B-L1-83).
 //
-// Status: WRITTEN (not COMPILED, not RUN). Rules and reasoning: `DESIGN.md` §4.
+// Status: RUNS — reached by tests/t65_fs (70 checks, exit 0). Measured 2026-11-02 by audit_status.py. Rules and reasoning: `DESIGN.md` §4.
 //
 // WHY RESOLUTION TAKES A STARTING DIRECTORY
 // -----------------------------------------

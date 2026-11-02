@@ -2,7 +2,7 @@
 //
 // Layer 4, service 16: the DNS resolver client.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs, static
+// Status: RUNS — reached by tests/t57_dhcp_dns (45 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs, static
 // arrays, `while`/`if`, slices, `T&`, `as` casts, multi-value returns.
 //
 // WHAT THIS IS

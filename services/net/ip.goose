@@ -2,7 +2,7 @@
 //
 // B-L1-95 — IPv4 header build/parse and checksums.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t67_net (89 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // ONE ADDRESS TYPE IN THE WHOLE LAYER
 // -----------------------------------

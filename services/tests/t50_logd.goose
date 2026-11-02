@@ -2,7 +2,7 @@
 //
 // B-L1-50 — test program for the log service and its formatter (B-L1-18/B-L1-28).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t50_logd: 19 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS UNDER TEST
 // ------------------

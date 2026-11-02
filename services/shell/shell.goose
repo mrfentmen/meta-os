@@ -2,7 +2,7 @@
 //
 // The command shell (B-L1-87, 89..92): REPL, dispatch, builtins, scripts.
 //
-// Status: WRITTEN (not COMPILED, not RUN). Every output line here is produced by code that
+// Status: RUNS — reached by tests/t66_shell (57 checks, exit 0). Measured 2026-11-02 by audit_status.py. Every output line here is produced by code that
 // has never run; the test program `t66_shell` is the first thing that will execute it.
 //
 // TWO ENTRY POINTS, ON PURPOSE

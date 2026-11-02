@@ -2,7 +2,7 @@
 //
 // B-L1-108 — the log rotation and retention policy, driven for the first time.
 //
-// Status: WRITTEN, then RUN by os-build/layer1/run_native.sh.
+// Status: RUNS — tests/t71_rotate: 48 checks, 0 failures. Measured 2026-11-02 by audit_status.py.sh.
 //
 // WHY THIS FILE EXISTS
 // --------------------

@@ -2,7 +2,7 @@
 //
 // B-L1-59 — test program for the agent host's lifecycle and grants (B-L1-39/B-L1-40).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t59_agenthost: 48 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS UNDER TEST
 // ------------------

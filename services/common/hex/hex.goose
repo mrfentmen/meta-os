@@ -2,7 +2,7 @@
 //
 // B-L1-70 — gap library 3. Base16 (hex) encoding and strict decoding.
 //
-// Status: WRITTEN (not COMPILED).
+// Status: RUNS — reached by tests/t64_hex (25 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHY A WHOLE MODULE FOR THIS
 // ---------------------------

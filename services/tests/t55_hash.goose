@@ -2,7 +2,7 @@
 //
 // B-L1-55 — test program for the hash library (B-L1-14).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t55_hash: 21 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHY THESE VECTORS AND NOT "SOMETHING HASHES"
 // --------------------------------------------

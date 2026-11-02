@@ -2,7 +2,7 @@
 //
 // B-L1-85 — FS round trip: format, files, directories, paths, remount, checker.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t65_fs: 70 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT THIS PROVES, AND WHAT IT CANNOT
 // ------------------------------------

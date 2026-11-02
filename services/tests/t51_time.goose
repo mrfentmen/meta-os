@@ -2,7 +2,7 @@
 //
 // B-L1-51 — test program for the time service (B-L1-19).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t51_time: 24 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS UNDER TEST
 // ------------------

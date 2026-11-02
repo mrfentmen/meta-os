@@ -2,7 +2,7 @@
 //
 // B-L1-64 — test program for the boot order table (services/supervisor/bootorder.goose).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — tests/t61_bootorder: 24 checks, 0 failures. Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS UNDER TEST, AND WHY THESE CASES
 // ---------------------------------------

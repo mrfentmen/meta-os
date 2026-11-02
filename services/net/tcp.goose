@@ -2,7 +2,7 @@
 //
 // B-L1-99/100 — TCP: connection state machine, header build/parse, retransmit timers.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t67_net (89 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT IS HERE AND WHAT IS NOT
 // ----------------------------
