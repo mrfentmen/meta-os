@@ -416,8 +416,21 @@ fn sh_exec(line: const u8[:], out: u8[>..]&, cap: i64) -> i64 {
         sh_errors = sh_errors + 1;
         return code;
     }
+    let before = out.len;
     let rc = sh_dispatch(a, out, cap);
-    if rc != CODE_OK { sh_errors = sh_errors + 1; }
+    if rc != CODE_OK {
+        sh_errors = sh_errors + 1;
+        // A builtin that fails silently is indistinguishable from one that succeeded and had
+        // nothing to say: `cat nope` printed nothing at all before this line. Name the command
+        // and the error -- but only when the dispatcher did not already explain itself, which
+        // `unknown command` and the refused operators both do.
+        if out.len == before {
+            let _ = out_str(out, cap, args_get(a, 0));
+            let _ = out_str(out, cap, ": ");
+            let _ = out_str(out, cap, name(rc));
+            out_nl(out, cap);
+        }
+    }
     return rc;
 }
 

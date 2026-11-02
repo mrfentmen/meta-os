@@ -337,6 +337,52 @@ Round 4 closed the run gap. What is left, as of 2026-11-02:
 4. **Lobster never calls a service.** Zero `.lobster` files in this repo; `LOBSTER_BINDING.md` has
    the measurement and the shortest path, and claims no round trip.
 
+## Round 5 close (2026-11-02) — what changed since the 148-task close
+
+Round 5 was the pass the Round-4 report said was missing: **the services layer was finally executed**.
+Fourteen tasks, and the honest summary is that the corpus now has a demonstration, not a boot.
+
+| Round-5 item | Artifact | State |
+|---|---|---|
+| BF5-01 boot rehearsal | `BOOT_REHEARSAL.md`, `boot_rehearsal.sh` | 22 services started in boot order against the host runtime: 3 start, 1 hangs, 18 have no entry |
+| BF5-02 failure matrix | `FAILURE_MATRIX.md`, `tests/t74_failure.goose` | green; logd's error-drop fixed |
+| BF5-03 gates re-run | `GATE_RERUN.md` | 32/32 run, 1,180 assertions, 0 failed; no ABI class moved |
+| BF5-04 supervisor under load | `tests/t75_supervisor_load.goose` | green: 10 services, 3 policies, a crash budget, table quota |
+| BF5-05 shell session | `DEMO_SHELL.md`, `tests/t76_demo_session.goose` | green; shell's silent-failure defect fixed |
+| BF5-06 integration pack | `integration/{bootlog,storage,time}.md` | three pages, each with its call surface and its gap |
+| BF5-07 freeze audit | `FREEZE_AUDIT.md` | counts by status word, every number with its command |
+| BF5-08 submission record | `SERVICES_FINAL.md` | one page a reviewer can read first |
+| BF5-09 demo reconciliation | `RECONCILE_DEMO_FACTS.md` | every demo claim checked against the run that backs it |
+| BF5-10 kernel asks | `KERNEL_NEEDS_AFTER.md` | what this layer needs from the kernel after the hackathon |
+| BF5-11 demo segment | `DEMO_30S.md` | 30-second script, every line traced to a run |
+| BF5-12 captures | `captures/*.txt` | three verbatim native runs, post-fix |
+| BF5-13 README section | `README.md`, "The services layer" | submission-grade, boundary stated in it |
+| BF5-14 closing report | this section | — |
+
+**Three defects, all found by running it, none visible in a typecheck:**
+
+1. `logd` dropped an **error-level record on a full ring** before the flush that exists to make room
+   for it. The policy was a comment; it is now a behaviour with a test (`t74`).
+2. The shell printed **nothing at all** when a builtin failed — `cat nope` was an empty line, and an
+   empty line reads as success. `sh_exec` now names the command and the error (`cat: notfound`).
+3. `console` **never returns from `sys_read_key`** under the host shim, so the boot rehearsal hangs
+   on it and kills it on a timeout. That is a property of the shim (`read_key` refuses forever), not
+   yet a proven kernel bug — and it is the single most useful thing the rehearsal produced, because
+   it is exactly what a real console will do if the key path has no wakeup.
+
+**What is still not true, in the same words as everywhere else in this lane:**
+
+- Nothing in this layer has been in a kernel. 32 green programs are 32 host processes with a
+  substituted syscall surface. `SERVICE_RUNS.md` says so on every row.
+- 18 of the 22 boot-order services have no entry point, so "boots in order" currently means
+  "the order is acyclic and three of them start". The other 18 are NOT BUILT, not passing.
+- No service restart has ever killed a process: `sys_spawn`/`sys_kill` do not exist (PROPOSALS.md P3).
+- Lobster still never calls a service; zero `.lobster` files (LOBSTER_BINDING.md).
+
+**For Pax, at the merge gate:** merge the branch on its mechanical gates (they are all green and
+re-runnable with one command each, listed in `SERVICES_FINAL.md`), and merge the *claims* only as
+`SERVICES_FINAL.md` states them. Do not let a submission sentence say the OS boots these services.
+
 ## The room-1 post (B-L1-148)
 
 > **Layer 4 is ready for Pax to merge — typechecked, not compiled, and the report says so on every

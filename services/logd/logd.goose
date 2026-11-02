@@ -121,6 +121,17 @@ fn log(level: i64, tag: const u8[:], msg: const u8[:]) -> bool {
         return false;
     }
     if !msg_push(queue, storage, rec) {
+        // Policy 2 used to be dead code on a full ring: the flush that makes room for an
+        // error only ran AFTER a successful push, so the one record worth a syscall was
+        // dropped by the ring it was supposed to interrupt. Flush, retry once, and only
+        // then count the loss.
+        if level >= LVL_ERROR {
+            let _ = flush();
+            if msg_push(queue, storage, rec) {
+                let _ = flush();
+                return true;
+            }
+        }
         dropped_full = dropped_full + 1;
         return false;
     }

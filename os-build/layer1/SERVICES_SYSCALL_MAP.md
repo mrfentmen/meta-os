@@ -49,7 +49,7 @@ run that proves the logic, and a caller one layer up that does the syscalls.
 | `input` | tests/t56_input_display | 49 |
 | `logfmt` | none | 0 |
 | `netcfg` | none | 0 |
-| `session` | none | 0 |
+| `session` | tests/t76_demo_session | 25 |
 | `socket` | none | 0 |
 | `storage` | tests/t54_storage | 26 |
 | `supervisor` | tests/t52_supervisor | 53 |

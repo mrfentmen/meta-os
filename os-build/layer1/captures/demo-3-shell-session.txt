@@ -1,0 +1,73 @@
+Meta OS — demo session (Layer 4 shell against the real filesystem)
+source: services/tests/t76_demo_session.goose, built and run natively (goose -> C -> clang)
+host shim: sys_read_key refused (nothing pending), so the lines were handed to sh_exec
+--------------------------------------------------------------------------------
+
+Meta OS — demo session (Layer 4 shell against the real filesystem)
+--------------------------------------------------------------------------------
+ok   format the demo disk
+ok   create /etc
+ok   create /etc/hostname
+ok   create /motd
+ok   three services registered
+meta> help
+commands: help echo pwd cd ls cat cp rm mkdir ps uptime log audit time exit
+no pipes, no redirection, no globs, no variables
+ok   help runs
+ok   help lists exit
+meta> pwd
+/
+ok   pwd prints the root
+meta> ls
+etc/
+motd
+ok   ls shows etc as a directory
+meta> cat motd
+welcome to meta os
+ok   command exited as expected
+ok   cat motd printed the text
+meta> cat /etc/hostname
+meta-os
+ok   command exited as expected
+meta> mkdir tmp
+ok   command exited as expected
+meta> cd tmp
+ok   command exited as expected
+meta> pwd
+/tmp
+ok   pwd follows the cd
+meta> cd ..
+ok   command exited as expected
+meta> echo meta os
+meta os
+ok   echo is literal
+meta> ps
+logd  stopped  restarts=0
+net  stopped  restarts=0
+supervisor  stopped  restarts=0
+ok   command exited as expected
+meta> uptime
+up 0s  lines=12  errors=0
+ok   command exited as expected
+meta> log
+log written=0 full=0 level=0 long=0
+(record reader not built: this is the loss counter)
+ok   command exited as expected
+meta> audit
+audit bytes=0
+ok   command exited as expected
+meta> time
+ticks=0 hz=1000
+ok   command exited as expected
+meta> cat nope
+cat: notfound
+ok   command exited as expected
+meta> ls | grep x
+unsupported: pipes/redirection are not built
+ok   command exited as expected
+meta> frobnicate
+unknown command: frobnicate
+ok   command exited as expected
+--------------------------------------------------------------------------------
+session end — everything above ran in this process against services/fs
+t76 done  pass=25 fail=0
