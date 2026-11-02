@@ -47,6 +47,11 @@ impl ColorSpec {
     }
 }
 
+/// Whole-screen snapshot for the R-9 attract exit: every VGA cell
+/// plus the cursor position at snapshot time, so the shell returns
+/// exactly as it was.
+pub type ScreenSnapshot = ([u16; VGA_WIDTH * VGA_HEIGHT], usize, usize);
+
 /// Text console over the VGA buffer. The buffer pointer is derived
 /// once per boot from `physical_memory_offset`; all writes are
 /// bounds-checked to 80x25, so a bad offset can corrupt but never
@@ -88,6 +93,35 @@ impl VgaConsole {
     /// Change colors; already-drawn cells keep their colors.
     pub fn set_colors(&mut self, spec: ColorSpec) {
         self.spec = spec;
+    }
+
+    /// Move the cursor without writing (R-9 attract drawing).
+    /// Out-of-range positions clamp to the screen edge.
+    pub fn set_pos(&mut self, row: usize, col: usize) {
+        self.row = row.min(VGA_HEIGHT - 1);
+        self.col = col.min(VGA_WIDTH - 1);
+    }
+
+    /// Snapshot the whole screen: every cell plus the cursor, so
+    /// an attract exit can redraw the shell exactly as it was (R-9).
+    pub fn snapshot(&self) -> ScreenSnapshot {
+        let mut cells = [0u16; VGA_WIDTH * VGA_HEIGHT];
+        for i in 0..VGA_WIDTH * VGA_HEIGHT {
+            // SAFETY: index is inside the 80x25 buffer by construction.
+            cells[i] = unsafe { core::ptr::read_volatile(self.buffer.add(i)) };
+        }
+        (cells, self.col, self.row)
+    }
+
+    /// Restore a snapshot taken by `snapshot` (R-9 attract exit).
+    pub fn restore(&mut self, snap: ScreenSnapshot) {
+        let (cells, col, row) = snap;
+        for i in 0..VGA_WIDTH * VGA_HEIGHT {
+            // SAFETY: index is inside the 80x25 buffer by construction.
+            unsafe { core::ptr::write_volatile(self.buffer.add(i), cells[i]) };
+        }
+        self.col = col;
+        self.row = row;
     }
 
     fn newline(&mut self) {
