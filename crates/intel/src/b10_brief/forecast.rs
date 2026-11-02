@@ -138,6 +138,50 @@ pub fn forecast_lines(entries: &[ForecastInput]) -> Vec<String> {
     lines
 }
 
+/// Python `preempt_decision` from `os/intel/forecast.py`, under a
+/// distinct name so the parity-pinned sketch `preempt_decision`
+/// above (projected vs cap, bool) is untouched.
+///
+/// Pause only when the job is running, low priority, and the lane
+/// is at warning — approaching the cap, not past it. Resume only
+/// when the job is paused and the lane is back below warning
+/// ("ok" or "unbudgeted"). At cap, running work is left alone:
+/// the gate already holds new claims. Anything else yields None,
+/// never a guessed action. Python's non-dict job case has no Rust
+/// equivalent here — a caller with no job passes no status/priority
+/// that matches, and also gets None.
+pub fn job_preempt_decision(status: &str, priority: &str, lane_state: &str) -> Option<&'static str> {
+    if status == "running" && priority == "low" && lane_state == "warning" {
+        return Some("pause");
+    }
+    if status == "paused" && (lane_state == "ok" || lane_state == "unbudgeted") {
+        return Some("resume");
+    }
+    None
+}
+
+/// One journal record from Python `preempt_record`: the job, the
+/// lane, the action, and the reason in plain words — nothing more.
+/// It performs no pause and no resume; the caller applies the
+/// decision and files this record beside it. Values are carried
+/// verbatim, exactly as Python stores them (no validation).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PreemptRecord {
+    pub job: String,
+    pub lane: String,
+    pub action: String,
+    pub reason: String,
+}
+
+pub fn preempt_record(job_id: &str, lane: &str, action: &str, reason: &str) -> PreemptRecord {
+    PreemptRecord {
+        job: job_id.to_string(),
+        lane: lane.to_string(),
+        action: action.to_string(),
+        reason: reason.to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -224,5 +268,40 @@ mod tests {
         ];
         assert!(forecast_lines(&entries).is_empty());
         assert!(forecast_lines(&[]).is_empty());
+    }
+    #[test]
+    fn job_preempt_pauses_low_running_at_warning() {
+        assert_eq!(job_preempt_decision("running", "low", "warning"), Some("pause"));
+    }
+    #[test]
+    fn job_preempt_resumes_paused_below_warning() {
+        assert_eq!(job_preempt_decision("paused", "low", "ok"), Some("resume"));
+        assert_eq!(job_preempt_decision("paused", "high", "unbudgeted"), Some("resume"));
+    }
+    #[test]
+    fn job_preempt_yields_none_otherwise() {
+        // High priority is never preempted, even at warning.
+        assert_eq!(job_preempt_decision("running", "high", "warning"), None);
+        // At cap, running work is left alone by this decision.
+        assert_eq!(job_preempt_decision("running", "low", "capped"), None);
+        // Already paused is never preempted twice.
+        assert_eq!(job_preempt_decision("paused", "low", "warning"), None);
+        // Running work never resumes.
+        assert_eq!(job_preempt_decision("running", "low", "ok"), None);
+        // Malformed / unknown values yield None, never a guess.
+        assert_eq!(job_preempt_decision("stuck", "low", "warning"), None);
+        assert_eq!(job_preempt_decision("running", "low", "unknown"), None);
+    }
+    #[test]
+    fn preempt_record_carries_fields_verbatim() {
+        assert_eq!(
+            preempt_record("job-7", "vigiles", "paused", "lane at warning"),
+            PreemptRecord {
+                job: "job-7".to_string(),
+                lane: "vigiles".to_string(),
+                action: "paused".to_string(),
+                reason: "lane at warning".to_string(),
+            }
+        );
     }
 }
