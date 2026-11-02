@@ -25,6 +25,9 @@ pub struct PlanJob {
     /// Job spec text. The shape-only parser leaves this empty; the
     /// contradiction guard reads it, so a fuller parse fills it in.
     pub spec: String,
+    /// Job accept lines. The shape-only parser leaves this empty; the
+    /// accept scorer reads it, so a fuller parse fills it in.
+    pub accept: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -51,7 +54,7 @@ pub fn parse_plan(goal: &str, jobs: Vec<(String, String)>, unknown: &[String]) -
         if key.trim().is_empty() || title.trim().is_empty() {
             return Err(fail("job needs key + title"));
         }
-        out.push(PlanJob { key, title, files: Vec::new(), deps: Vec::new(), max_attempts: 3, spec: String::new() });
+        out.push(PlanJob { key, title, files: Vec::new(), deps: Vec::new(), max_attempts: 3, spec: String::new(), accept: Vec::new() });
     }
     Ok(Plan { goal: goal.to_string(), jobs: out })
 }
@@ -477,6 +480,170 @@ pub fn score_plan_specs(plan: &Plan) -> Vec<JobSpecScore> {
         .collect()
 }
 
+/// One parsed accept check: the kind plus its argument, ported from
+/// `os/mos/acceptance.py::parse_accept` for the scorer's use (that
+/// module itself belongs to a later batch; only the parse step is
+/// needed here, never the runner).
+#[derive(Debug, Clone, PartialEq)]
+enum AcceptCheck {
+    FileExists(String),
+    Contains(String),
+    TestsPass(String),
+    CommandOk(String),
+}
+
+/// Parse one accept line the way `mos/acceptance.py::parse_accept`
+/// parses a single-line text: blank and `#` comment lines yield no
+/// checks, and a line with no `:` separator, an unknown kind, an
+/// empty argument, or a `contains` without `::` is an error.
+/// Kind matching is case-insensitive; the argument keeps its case.
+fn parse_accept_line(line: &str) -> Result<Vec<AcceptCheck>, ()> {
+    let trimmed = line.trim();
+    if trimmed.is_empty() || trimmed.starts_with('#') {
+        return Ok(Vec::new());
+    }
+    let Some((raw_kind, raw_arg)) = trimmed.split_once(':') else {
+        return Err(());
+    };
+    let kind = raw_kind.trim().to_lowercase();
+    let arg = raw_arg.trim();
+    if arg.is_empty() {
+        return Err(());
+    }
+    match kind.as_str() {
+        "file-exists" => Ok(vec![AcceptCheck::FileExists(arg.to_string())]),
+        "tests-pass" => Ok(vec![AcceptCheck::TestsPass(arg.to_string())]),
+        "command-ok" => Ok(vec![AcceptCheck::CommandOk(arg.to_string())]),
+        "contains" => {
+            if arg.contains("::") {
+                Ok(vec![AcceptCheck::Contains(arg.to_string())])
+            } else {
+                Err(())
+            }
+        }
+        _ => Err(()),
+    }
+}
+
+/// One entry of [`score_accept_lines`]: how one job's accept lines
+/// scored. `checks` and `parseable` are the same count, kept for
+/// symmetry with the spec scorer's shape.
+#[derive(Debug, Clone, PartialEq)]
+pub struct AcceptScore {
+    pub checks: usize,
+    pub parseable: usize,
+    pub unowned: Vec<String>,
+    pub bad_lines: Vec<String>,
+    pub passes: bool,
+}
+
+/// One entry of [`score_plan_accepts`]: an [`AcceptScore`] tagged
+/// with its job key, in plan order.
+#[derive(Debug, Clone, PartialEq)]
+pub struct JobAcceptScore {
+    pub key: String,
+    pub checks: usize,
+    pub parseable: usize,
+    pub unowned: Vec<String>,
+    pub bad_lines: Vec<String>,
+    pub passes: bool,
+}
+
+/// Test-target prefixes for `tests-pass` lines, from
+/// `dispatch.py::_ACCEPT_TEST_PREFIXES`.
+const ACCEPT_TEST_PREFIXES: [&str; 2] = ["tests.", "tests/"];
+
+/// Score one job's accept lines against the DSP-027 standard.
+/// Ownership is checked only when files were given; with no files
+/// list every parseable line passes on parse alone. Never raises on
+/// malformed input: a bad line is recorded, never fatal. Pure
+/// scoring; posts nothing and never refuses a plan. Python's
+/// non-list-accept branch is unrepresentable here: `accept` is
+/// always a list in the typed plan.
+pub fn score_accept_lines(accept: &[String], files: &[String]) -> AcceptScore {
+    let mut score = AcceptScore {
+        checks: 0,
+        parseable: 0,
+        unowned: Vec::new(),
+        bad_lines: Vec::new(),
+        passes: false,
+    };
+    let owned: Vec<&str> = if files.is_empty() {
+        Vec::new()
+    } else {
+        files.iter().map(|s| s.as_str()).collect()
+    };
+    for line in accept {
+        if line.trim().is_empty() {
+            score.bad_lines.push(line.clone());
+            continue;
+        }
+        let checks = match parse_accept_line(line) {
+            Ok(checks) => checks,
+            Err(()) => {
+                score.bad_lines.push(line.clone());
+                continue;
+            }
+        };
+        if checks.is_empty() {
+            score.bad_lines.push(line.clone());
+            continue;
+        }
+        for check in checks {
+            score.checks += 1;
+            score.parseable += 1;
+            match check {
+                AcceptCheck::FileExists(arg) => {
+                    if !owned.is_empty() && !owned.contains(&arg.as_str()) {
+                        score.unowned.push(arg);
+                    }
+                }
+                AcceptCheck::Contains(arg) => {
+                    let path = arg.split("::").next().unwrap_or("").trim();
+                    if !owned.is_empty() && !owned.contains(&path) {
+                        score.unowned.push(path.to_string());
+                    }
+                }
+                AcceptCheck::TestsPass(arg) => {
+                    let target = arg.trim();
+                    if !ACCEPT_TEST_PREFIXES.iter().any(|p| target.starts_with(*p)) {
+                        score.bad_lines.push(line.clone());
+                    }
+                }
+                AcceptCheck::CommandOk(arg) => {
+                    if !owned.is_empty() && !owned.iter().any(|path| arg.contains(*path)) {
+                        score.unowned.push(arg);
+                    }
+                }
+            }
+        }
+    }
+    score.passes =
+        score.checks >= 1 && score.bad_lines.is_empty() && score.unowned.is_empty();
+    score
+}
+
+/// Score every job's accept lines in a parsed plan (DSP-027), in
+/// plan order, one entry per job. Python raises `PlanError` on a
+/// malformed plan; the typed `Plan` cannot be malformed that way,
+/// so no error case exists here.
+pub fn score_plan_accepts(plan: &Plan) -> Vec<JobAcceptScore> {
+    plan.jobs
+        .iter()
+        .map(|job| {
+            let score = score_accept_lines(&job.accept, &job.files);
+            JobAcceptScore {
+                key: job.key.clone(),
+                checks: score.checks,
+                parseable: score.parseable,
+                unowned: score.unowned,
+                bad_lines: score.bad_lines,
+                passes: score.passes,
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -485,8 +652,8 @@ mod tests {
         Plan {
             goal: "g".into(),
             jobs: vec![
-                PlanJob { key: "a".into(), title: "A".into(), files: vec!["f.py".into()], deps: vec![], max_attempts: 3, spec: String::new() },
-                PlanJob { key: "b".into(), title: "B".into(), files: vec![], deps: vec!["a".into()], max_attempts: 3, spec: String::new() },
+                PlanJob { key: "a".into(), title: "A".into(), files: vec!["f.py".into()], deps: vec![], max_attempts: 3, spec: String::new(), accept: vec![] },
+                PlanJob { key: "b".into(), title: "B".into(), files: vec![], deps: vec!["a".into()], max_attempts: 3, spec: String::new(), accept: vec![] },
             ],
         }
     }
@@ -496,7 +663,7 @@ mod tests {
     }
 
     fn cjob(key: &str, files: Vec<&str>, spec: &str) -> PlanJob {
-        PlanJob { key: key.into(), title: key.into(), files: files.iter().map(|s| s.to_string()).collect(), deps: vec![], max_attempts: 3, spec: spec.into() }
+        PlanJob { key: key.into(), title: key.into(), files: files.iter().map(|s| s.to_string()).collect(), deps: vec![], max_attempts: 3, spec: spec.into(), accept: vec![] }
     }
 
     #[test]
@@ -663,6 +830,91 @@ mod tests {
             cjob("two", vec!["intel/brief.py"], "Add the line."),
         ]);
         let scores = score_plan_specs(&p);
+        assert_eq!(scores.len(), 2);
+        assert_eq!(scores[0].key, "one");
+        assert!(scores[0].passes);
+        assert_eq!(scores[1].key, "two");
+        assert!(!scores[1].passes);
+    }
+
+    fn ajob(key: &str, files: Vec<&str>, accept: Vec<&str>) -> PlanJob {
+        PlanJob { key: key.into(), title: key.into(), files: files.iter().map(|s| s.to_string()).collect(), deps: vec![], max_attempts: 3, spec: String::new(), accept: accept.iter().map(|s| s.to_string()).collect() }
+    }
+
+    fn accept_lines() -> Vec<String> {
+        vec![
+            "file-exists: intel/brief.py".into(),
+            "tests-pass: tests.test_brief".into(),
+            "contains: intel/brief.py :: hello".into(),
+            "command-ok: python3 -m py_compile intel/brief.py".into(),
+        ]
+    }
+
+    #[test]
+    fn accept_all_kinds_pass_with_owned_files() {
+        let s = score_accept_lines(&accept_lines(), &["intel/brief.py".to_string()]);
+        assert_eq!(s.checks, 4);
+        assert_eq!(s.parseable, 4);
+        assert!(s.unowned.is_empty(), "got: {s:?}");
+        assert!(s.bad_lines.is_empty(), "got: {s:?}");
+        assert!(s.passes);
+    }
+
+    #[test]
+    fn accept_no_files_skips_ownership() {
+        let s = score_accept_lines(&accept_lines(), &[]);
+        assert!(s.passes);
+        let s = score_accept_lines(&["file-exists: intel/other.py".to_string()], &[]);
+        assert!(s.passes);
+    }
+
+    #[test]
+    fn accept_unowned_paths_fail() {
+        let s = score_accept_lines(&["file-exists: intel/other.py".to_string()], &["intel/brief.py".to_string()]);
+        assert_eq!(s.unowned, vec!["intel/other.py".to_string()]);
+        assert!(!s.passes);
+        let s = score_accept_lines(&["contains: intel/other.py :: hello".to_string()], &["intel/brief.py".to_string()]);
+        assert_eq!(s.unowned, vec!["intel/other.py".to_string()]);
+        assert!(!s.passes);
+        let s = score_accept_lines(&["command-ok: make test".to_string()], &["intel/brief.py".to_string()]);
+        assert_eq!(s.unowned, vec!["make test".to_string()]);
+        assert!(!s.passes);
+    }
+
+    #[test]
+    fn accept_bad_lines_fail() {
+        let lines = vec![
+            "".to_string(),
+            "   ".to_string(),
+            "no separator here".to_string(),
+            "bogus-kind: intel/brief.py".to_string(),
+            "file-exists:".to_string(),
+            "contains: intel/brief.py".to_string(),
+            "# file-exists: intel/brief.py".to_string(),
+        ];
+        let s = score_accept_lines(&lines, &["intel/brief.py".to_string()]);
+        assert_eq!(s.checks, 0);
+        assert_eq!(s.bad_lines.len(), 7);
+        assert!(!s.passes);
+    }
+
+    #[test]
+    fn accept_bad_test_prefix_counts_but_fails() {
+        let s = score_accept_lines(&["tests-pass: foo.test_brief".to_string()], &["intel/brief.py".to_string()]);
+        assert_eq!(s.checks, 1);
+        assert_eq!(s.bad_lines, vec!["tests-pass: foo.test_brief".to_string()]);
+        assert!(!s.passes);
+        let s = score_accept_lines(&["tests-pass: tests/test_brief.py".to_string()], &[]);
+        assert!(s.passes);
+    }
+
+    #[test]
+    fn accept_plan_scores_in_plan_order() {
+        let p = cplan(vec![
+            ajob("one", vec!["intel/brief.py"], vec!["file-exists: intel/brief.py"]),
+            ajob("two", vec!["intel/brief.py"], vec!["file-exists: intel/other.py"]),
+        ]);
+        let scores = score_plan_accepts(&p);
         assert_eq!(scores.len(), 2);
         assert_eq!(scores[0].key, "one");
         assert!(scores[0].passes);
