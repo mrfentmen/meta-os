@@ -1,0 +1,6 @@
+  ok   K6 clean exit
+  ok   K6 fault isolation
+  ok   readkey spawned (R5-2 follow-up)
+  ok   shell answered
+  ok   status reported live state
+GATE GREEN (/tmp/gate-boot-r3VDjm)
