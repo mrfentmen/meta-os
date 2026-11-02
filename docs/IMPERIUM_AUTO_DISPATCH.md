@@ -1,5 +1,14 @@
 # Imperium — direct agent-to-police dispatch (no human verify step)
 
+> AMENDED 2026-11-02 (boss directive): the agency human-verify
+> hold described below (TRIO_CREW_HUMAN_VERIFY) is RETIRED. The
+> ruling on a flag now belongs to the JUDGE — a second agent
+> (server/queue/judge.py) — and a confirmed package routes to
+> the service that owns the scene: police (Vigiles), fire
+> (Ignis), hospital (Medicus), each a SIMULATED endpoint. See
+> os-build/IMPERIUM_JUDGE.md. Where this document and the
+> amendment disagree, the amendment wins.
+
 Boss directive, 2026-11-01 ~20:25 EST. Applies to Imperium
 (Vigiles / Ignis / Medicus) on Meta OS.
 
@@ -76,7 +85,9 @@ incident:
   stay `true` as the post-hoc AUDIT flag: they mark the incident
   for human review of the record after dispatch, and gate
   nothing.
-- Agency policy setting: **`TRIO_CREW_HUMAN_VERIFY`**
+- Agency policy setting: **`TRIO_CREW_HUMAN_VERIFY`** —
+  RETIRED 2026-11-02 (see the amendment at the top). The text
+  below is the historical record of the setting.
   (env var, parsed by `crew.human_verify_required()`, injectable
   per-Crew as `human_verify=`). Values `1/true/yes/on` switch it
   on; unset or anything else is off. Default OFF. When ON, the
