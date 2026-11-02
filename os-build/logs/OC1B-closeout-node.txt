@@ -1,0 +1,12 @@
+OC1B-489 final node run on branch-tip worktree 94010c76 (+untracked lane proofs only), 2026-11-02
+command: npm test
+ℹ tests 2071
+ℹ suites 0
+ℹ pass 2015
+ℹ fail 56
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2933.840083
+EXIT=1
+baseline §17 (OC1B-401): 2071 / 2015 / 56 — IDENTICAL

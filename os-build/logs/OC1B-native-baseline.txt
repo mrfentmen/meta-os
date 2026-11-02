@@ -1,0 +1,61 @@
+# OC1B-401/403/404/423 — node baseline on opencode/500-s17
+
+Tree: 94010c76ee095fa6c6bcfa4405cd56a9695f32d3 (opencode/500 tip 94010c76,
+checked out as opencode/500-s17 worktree; no test or Swift edits in this lane).
+Command: `npm test` (package.json suite, node --test over the listed files).
+Date: 2026-11-02, Mac (Darwin arm64). Full output retained outside the repo;
+per-proof extracts are committed here per task.
+
+Reporter summary lines (verbatim):
+  tests 2071
+  pass 2015
+  fail 56
+  cancelled 0 / skipped 0 / todo 0 / duration_ms 3131.337125
+
+Wall clock (`time npm test`): 3.418 total (14.14s user, 3.20s system, 507% cpu).
+Suite is parallel; reporter duration 3.1s, wall 3.4s.
+
+## OC1B-403 settled count: 56
+
+56 unique failing tests (OC1B-native-failures.txt, one per line, file :: name):
+31 whole-file failures (tests/*.test.mjs load throws on removed SwiftUI source)
++ 24 named native-mirror failures (single assertions on removed SwiftUI text)
++ 1 newcomer (R11-282, boot-log index drift — see OC1B-404).
+
+Reconciliation against the two baselines that disagree:
+- README.md:144 says "The 55 Node failures" and line 219 "The 55 old native
+  tests". Wave-3 says 55. Both describe the native-mirror set only, as of
+  Pax's logo-color-removal merge 5df78e5f ("suite verified by Pax
+  1993/1938/55 (baseline minus deleted color test, no new fails)").
+- docs/NATIVE_TEST_PREP.md (measured 2026-11-01 on 0da81e8: 1875/1819/56)
+  lists 56 entries: 31 file-level + 25 named, the 25th being the logo
+  test "logo: console wires the loop..." (native-logo-color).
+- On this tree the logo test is GONE (file removed by 5df78e5f, boss order),
+  so the native-mirror set is 55 = 31 file-level + 24 named. The 56th failure
+  is the newcomer R11-282 (see below), which fails on origin/main too
+  (verified: `node --test tests/os-docs-r11.test.mjs` on a clean
+  origin/main worktree at 3452d244 -> 1 pass / 1 fail; missing file there is
+  WAVE2-branch-boot-serial.txt; missing file here is OC1B-soak-wave2-tail.txt).
+- Net: README's 55 and wave-3's 55 are the native-mirror count and still
+  correct for that set; the full-suite failing count on this tree is 56
+  because of the one non-mirror newcomer. No test was added, removed, or
+  renamed by this lane (OC1B-421 attests the empty diff).
+
+## OC1B-404 newcomer: exactly one test outside the known set
+
+  tests/os-docs-r11.test.mjs:20 — "R11-282 the boot-log index names every
+  committed log and claims no verdict it did not check"
+
+Cause (quoted): `OC1B-soak-wave2-tail.txt is in the index` — the test
+enumerates every *.txt in os-build/logs/ and requires
+os-build/layer1/BOOTLOG_INDEX.md to name each. The §7 soak-verdict commit
+(b87cfb00, opencode/500 lane) added OC1B-soak-wave2-tail.txt without updating
+the index. REGRESSION SIGNAL, reported first per the task: this failure is
+branch-introduced drift (fails on main as well for a different missing file,
+so the test was already red on main; this branch adds one more missing name).
+Not a kernel or app regression; no running-app behavior involved. Fix
+belongs to a docs/index update, which this lane does NOT perform (no test or
+source edits in §17).
+
+Every other failing test is in the known native-mirror set classified in
+docs/NATIVE_TEST_PREP.md (agreement check in OC1B-native-pack.md).

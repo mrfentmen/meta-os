@@ -1,0 +1,356 @@
+OC1B-4013 group 7 run, tree 94010c76, 2026-11-02T16:07:59Z
+command: node --test <group-7 file list, see OC1B-native-groups.md>
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: ANALYSIS ACTIVE banner exists
+    at file:///private/tmp/oc500-s17/tests/native-analysis-active-size.test.mjs:25:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-analysis-active-size.test.mjs (80.501875ms)
+✔ anchor: the web backend-status line is a polite live region, so its Contacting line is heard (0.5325ms)
+✔ service: a request-started announcement posts the message verbatim, unprefixed (0.161417ms)
+✔ still-image tap: the Contacting line is announced, after the generation guard (0.133792ms)
+✔ video-frame tap: the Contacting line is announced, after the generation guard (0.071667ms)
+✔ no per-tick spam: the sampler and submit paths never announce a request start (0.074ms)
+✔ no double announcement: Start Analysis still announces only its banner, not a request start (0.0825ms)
+✔ native: clearStillImage clears the input but not the assessing flag (2.170333ms)
+✔ native: clearVideo clears the input but not the assessing flag (0.090292ms)
+✔ native: each assessing flag is cleared exactly once, by its Task defer (0.313042ms)
+✖ native: the Assess buttons still gate on the flag, so it is the guard (0.7685ms)
+✔ web parity: the web Clear paths already leave both flags alone (0.192833ms)
+✔ service: an export-failure announcement posts the message verbatim, unprefixed (2.824208ms)
+✔ native: the export failure is announced in the status line's own words (0.118667ms)
+✔ native: the announcement appears exactly once, in the export catch — never as a backend failure (0.098417ms)
+✔ native: no other error status in AppModel is left silent (4.40625ms)
+✔ anchor: the web health line is a polite live region, so its results are heard (0.517666ms)
+✔ service: a health-result announcement posts the message verbatim, unprefixed (0.14575ms)
+✔ native: the settled health result is announced inside the view-generation guard (0.107416ms)
+✔ native: the announcement appears exactly once, in the settle path — never on the interim text line (2.498416ms)
+✔ anchor: Reset clears the health line on both frontends, so a stale repaint would be visible (1.095375ms)
+✔ web: the health check captures the view generation and guards both result texts (0.174166ms)
+✔ web: a health check across Reset still re-enables its button (0.107791ms)
+✔ native: the health check captures the view generation and applies its result only when unchanged (0.1505ms)
+✔ native: a health check across Reset still clears its checking flag (0.095208ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: rightColumn exists
+    at file:///private/tmp/oc500-s17/tests/native-ignis-latest-note-size.test.mjs:31:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-ignis-latest-note-size.test.mjs (117.754917ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: rightColumn exists
+    at file:///private/tmp/oc500-s17/tests/native-ignis-latest-title.test.mjs:31:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-ignis-latest-title.test.mjs (120.378458ms)
+✔ native timeline: every row carries a 3pt accent leading rule (0.585459ms)
+✔ native timeline: rule color comes from the row's own product, not the selection (0.219ms)
+✔ native timeline: Ignis rows resolve to red (4.212291ms)
+✔ native timeline: rule is not confined to one row kind (0.1485ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: PanelHeading(title: "Still image" exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-input-panel-title-size.test.mjs:26:10)
+    at file:///private/tmp/oc500-s17/tests/native-input-panel-title-size.test.mjs:30:20
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-input-panel-title-size.test.mjs (87.953291ms)
+✔ web anchor: the image-state and video-state lines are polite, atomic live regions that read their ready lines aloud (0.77775ms)
+✔ native: AccessibilityAnnouncement has an inputReady that posts the message verbatim (0.089375ms)
+✖ native: a successfully chosen still image announces the panel's own ready words (0.321875ms)
+✖ native: a successfully chosen video announces the panel's own ready words (0.089ms)
+✔ native: clearing an input stays silent — no announcement from either Clear path (0.068625ms)
+✔ web: the interval change handler rewords the banner (0.443792ms)
+✔ web: the banner is a polite, atomic live region, so a mid-run rewording is read aloud (0.124041ms)
+✖ native: a mid-run interval change announces the banner's own words (0.327208ms)
+✔ native: an idle interval change stays silent (the banner is hidden, the next Start announces) (0.095958ms)
+✔ native: the interval change is not announced as a backend or capture failure (0.106ms)
+✔ native: restore parses the saved file as a raw JSON array, not as a decoded entry array (0.509875ms)
+✔ native: restore decodes each entry on its own and skips the ones that fail (0.090667ms)
+✔ native: restore still returns an empty log for a missing or non-array file (0.114459ms)
+✔ logo accessibility: the web swatch states are gone with the color controls (0.524834ms)
+✔ logo accessibility: the web pause button still toggles aria-pressed (0.083833ms)
+✔ logo accessibility: the native Logo panel is removed with the color section (0.072166ms)
+✔ logo accessibility: the loop view stays hidden from accessibility, as before (0.077083ms)
+✔ logo animation: the native Logo panel is removed with the color section (0.54625ms)
+✔ logo animation: speed and pause still reach the loop through the web panel's storage keys (0.103292ms)
+✔ logo animation: speed scale matches web LOGO-2 (25 default, 0 still, 100 four times) (0.076584ms)
+✔ logo animation: pause holds the last frame, resume restarts from it (0.082917ms)
+✔ logo animation: speed change re-bases without jumping, paused stays frozen (0.118917ms)
+✔ logo animation: reduced motion still renders one still frame, loop stays untouchable (0.070458ms)
+✔ logo animation: the web panel carries the slider, speed value line, and pause button now (0.086916ms)
+✔ logo animation: only the large logo stays in the web studio now (0.05075ms)
+✔ logo heading: the native Logo panel is removed with the color section (0.462792ms)
+✔ logo heading: PanelHeading still carries the three web console branches (0.087333ms)
+✔ logo heading: VoiceOver still hears the plain title on the surviving panels (0.0635ms)
+✔ logo intro: web panel opens with its intro paragraph, speed and pause only (3.636834ms)
+✔ logo intro: the native Logo panel is removed with the color section (0.346916ms)
+✔ logo intro: web panel body otherwise intact (0.301541ms)
+✔ logo tooltips: web swatches and their hover titles are gone (1.676583ms)
+✔ logo tooltips: the native preset model and panel are gone (0.179625ms)
+✔ logo tooltips: web panel body otherwise intact (0.09725ms)
+✔ web: submitAssessment takes the product as a parameter, captured at sample/tap time (1.145459ms)
+✔ native: submitAssessment takes the product as a parameter (0.096792ms)
+✔ native: live sample captures the product before capture, still/video capture it at tap time (0.2625ms)
+✔ native: after the await, the request product (never selectedProduct) labels the client call, log, and timeline (0.112125ms)
+✔ native: recordLog threads its product parameter into the session log (0.086417ms)
+✔ native: no submit-path call site still labels an entry with selectedProduct (0.092625ms)
+✔ native: the timer fires each tick as a queued main-actor Task (0.962708ms)
+✔ native: tick() stands down when the sampler is no longer running, before counting (0.115792ms)
+✔ native: stop() invalidates the timer, which is what makes the guard fire (0.067125ms)
+✔ native: Reset Session stops analysis, and stopping analysis stops the sampler (0.086291ms)
+✔ web: the interval callback calls tick() synchronously, so no queued-Task guard is needed there (0.117ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Stepper(value: $model.intervalSeconds, in: 1...60) exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-stepper-label-size.test.mjs:27:10)
+    at file:///private/tmp/oc500-s17/tests/native-stepper-label-size.test.mjs:31:17
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-stepper-label-size.test.mjs (50.515708ms)
+ℹ tests 78
+ℹ suites 0
+ℹ pass 69
+ℹ fail 9
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 279.1135
+
+✖ failing tests:
+
+test at tests/native-analysis-active-size.test.mjs:1:1
+✖ tests/native-analysis-active-size.test.mjs (80.501875ms)
+  'test failed'
+
+test at tests/native-clear-assessing.test.mjs:82:1
+✖ native: the Assess buttons still gate on the flag, so it is the guard (0.7685ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /\.disabled\(model\.stillImage == nil \|\| model\.stillImageAssessing\)/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-clear-assessing.test.mjs:83:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /\.disabled\(model\.stillImage == nil \|\| model\.stillImageAssessing\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/native-ignis-latest-note-size.test.mjs:1:1
+✖ tests/native-ignis-latest-note-size.test.mjs (117.754917ms)
+  'test failed'
+
+test at tests/native-ignis-latest-title.test.mjs:1:1
+✖ tests/native-ignis-latest-title.test.mjs (120.378458ms)
+  'test failed'
+
+test at tests/native-input-panel-title-size.test.mjs:1:1
+✖ tests/native-input-panel-title-size.test.mjs (87.953291ms)
+  'test failed'
+
+test at tests/native-input-ready-announcement.test.mjs:64:1
+✖ native: a successfully chosen still image announces the panel's own ready words (0.321875ms)
+  AssertionError [ERR_ASSERTION]: announced still-image words differ from the panel's on-screen ready text
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-input-ready-announcement.test.mjs:71:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/native-input-ready-announcement.test.mjs:79:1
+✖ native: a successfully chosen video announces the panel's own ready words (0.089ms)
+  AssertionError [ERR_ASSERTION]: announced video words differ from the panel's on-screen ready text
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-input-ready-announcement.test.mjs:86:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/native-interval-change-announcement.test.mjs:71:1
+✖ native: a mid-run interval change announces the banner's own words (0.327208ms)
+  AssertionError [ERR_ASSERTION]: native banner label changed — the announcement must match it
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-interval-change-announcement.test.mjs:72:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/native-stepper-label-size.test.mjs:1:1
+✖ tests/native-stepper-label-size.test.mjs (50.515708ms)
+  'test failed'
+GROUP-g7 exit=1 elapsed=0s

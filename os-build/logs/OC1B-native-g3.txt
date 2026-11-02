@@ -1,0 +1,266 @@
+OC1B-409 group 3 run, tree 94010c76, 2026-11-02T16:07:59Z
+command: node --test <group-3 file list, see OC1B-native-groups.md>
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: latest-assessment readout block exists
+    at file:///private/tmp/oc500-s17/tests/native-ignis-ops-console-body.test.mjs:50:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-ignis-ops-console-body.test.mjs (86.540584ms)
+✔ web contract: OPS-CONSOLE-1 Ignis panel-h2 rule still present (1.067125ms)
+✔ native PanelHeading: Ignis branch is uppercase mono 15 bold with 1.8pt tracking (0.182208ms)
+✔ native PanelHeading: Ignis branch carries a 3pt red tick with 10pt of room (0.13525ms)
+✔ native PanelHeading: Ignis branch keeps the original title for VoiceOver (0.069166ms)
+✔ native PanelHeading: ungated fallback still renders the plain 15pt bold title (0.118833ms)
+✖ native panel titles: all five use PanelHeading gated on Ignis (0.379875ms)
+✖ native panel titles: Latest and Timeline keep their header traits (0.130958ms)
+✔ native panel titles: no plain 15pt-bold title Text left behind (0.214042ms)
+✖ native panel titles: Settings stays a GroupBox label, camera panel untouched (0.105583ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: stateText block exists
+    at file:///private/tmp/oc500-s17/tests/native-ignis-ops-console-status.test.mjs:36:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-ignis-ops-console-status.test.mjs (102.027208ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: latest-assessment readout block exists
+    at file:///private/tmp/oc500-s17/tests/native-medicus-ops-console-body.test.mjs:54:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-medicus-ops-console-body.test.mjs (90.764709ms)
+✔ web contract: Medicus panel-h2 rule still present (0.77325ms)
+✔ native PanelHeading: Medicus branch is uppercase plain 15 bold with 1.2pt tracking (1.187125ms)
+✔ native PanelHeading: Medicus branch carries no mono face and no tick (0.130375ms)
+✔ native PanelHeading: Medicus branch keeps the original title for VoiceOver (0.078583ms)
+✔ native PanelHeading: fallback else still renders the plain 15pt bold title (0.133292ms)
+✖ native panel titles: all five use PanelHeading gated on Medicus (0.4325ms)
+✔ native panel titles: camera panel untouched, no Medicus heading for it (0.077375ms)
+✔ native PanelHeading: Ignis and Vigiles branches unchanged (0.137792ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: stateText block exists
+    at file:///private/tmp/oc500-s17/tests/native-medicus-ops-console-status.test.mjs:39:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-medicus-ops-console-status.test.mjs (100.2535ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: latest-assessment readout block exists
+    at file:///private/tmp/oc500-s17/tests/native-vigiles-ops-console-body.test.mjs:54:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-vigiles-ops-console-body.test.mjs (116.306875ms)
+✔ web contract: OPS-CONSOLE-6 Vigiles panel-h2 rule still present (0.776791ms)
+✔ native PanelHeading: Vigiles branch is uppercase mono 15 bold with 1.8pt tracking (1.134667ms)
+✔ native PanelHeading: Vigiles branch carries a 3pt blue tick with 10pt of room (0.170167ms)
+✔ native PanelHeading: Vigiles branch keeps the original title for VoiceOver (0.069875ms)
+✔ native PanelHeading: Vigiles branch uses no Ignis red (0.081666ms)
+✔ native PanelHeading: ungated fallback still renders the plain 15pt bold title (0.129208ms)
+✖ native panel titles: all five use PanelHeading gated on Vigiles (0.413625ms)
+✔ native panel titles: camera panel untouched, no Vigiles heading for it (0.066583ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: stateText block exists
+    at file:///private/tmp/oc500-s17/tests/native-vigiles-ops-console-status.test.mjs:38:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-vigiles-ops-console-status.test.mjs (108.77975ms)
+ℹ tests 31
+ℹ suites 0
+ℹ pass 20
+ℹ fail 11
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 129.494083
+
+✖ failing tests:
+
+test at tests/native-ignis-ops-console-body.test.mjs:1:1
+✖ tests/native-ignis-ops-console-body.test.mjs (86.540584ms)
+  'test failed'
+
+test at tests/native-ignis-ops-console-headings.test.mjs:90:1
+✖ native panel titles: all five use PanelHeading gated on Ignis (0.379875ms)
+  AssertionError [ERR_ASSERTION]: Latest assessment uses PanelHeading gated on the Ignis product
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-ignis-ops-console-headings.test.mjs:97:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/native-ignis-ops-console-headings.test.mjs:112:1
+✖ native panel titles: Latest and Timeline keep their header traits (0.130958ms)
+  AssertionError [ERR_ASSERTION]: Latest heading keeps its header trait
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-ignis-ops-console-headings.test.mjs:113:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)\s+\.accessibilityAddTraits\(\.isHeader\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/native-ignis-ops-console-headings.test.mjs:145:1
+✖ native panel titles: Settings stays a GroupBox label, camera panel untouched (0.105583ms)
+  AssertionError [ERR_ASSERTION]: Settings heading is still the GroupBox label
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-ignis-ops-console-headings.test.mjs:146:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /label: \{[\s\S]*?PanelHeading\(title: "Settings"/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/native-ignis-ops-console-status.test.mjs:1:1
+✖ tests/native-ignis-ops-console-status.test.mjs (102.027208ms)
+  'test failed'
+
+test at tests/native-medicus-ops-console-body.test.mjs:1:1
+✖ tests/native-medicus-ops-console-body.test.mjs (90.764709ms)
+  'test failed'
+
+test at tests/native-medicus-ops-console-headings.test.mjs:98:1
+✖ native panel titles: all five use PanelHeading gated on Medicus (0.4325ms)
+  AssertionError [ERR_ASSERTION]: Latest assessment uses PanelHeading gated on the Medicus product
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-medicus-ops-console-headings.test.mjs:105:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/native-medicus-ops-console-status.test.mjs:1:1
+✖ tests/native-medicus-ops-console-status.test.mjs (100.2535ms)
+  'test failed'
+
+test at tests/native-vigiles-ops-console-body.test.mjs:1:1
+✖ tests/native-vigiles-ops-console-body.test.mjs (116.306875ms)
+  'test failed'
+
+test at tests/native-vigiles-ops-console-headings.test.mjs:98:1
+✖ native panel titles: all five use PanelHeading gated on Vigiles (0.413625ms)
+  AssertionError [ERR_ASSERTION]: Latest assessment uses PanelHeading gated on the Vigiles product
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-vigiles-ops-console-headings.test.mjs:105:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /PanelHeading\(title: "Latest assessment", isIgnis: model\.selectedProduct == \.ignis, isVigiles: model\.selectedProduct == \.vigiles, isMedicus: model\.selectedProduct == \.medicus\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/native-vigiles-ops-console-status.test.mjs:1:1
+✖ tests/native-vigiles-ops-console-status.test.mjs (108.77975ms)
+  'test failed'
+GROUP-g3 exit=1 elapsed=0s
