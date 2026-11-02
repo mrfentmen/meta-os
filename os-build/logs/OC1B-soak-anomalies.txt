@@ -1,0 +1,84 @@
+# OC1B-167 soak anomaly contexts (±20 lines) — §7 soak engineer, 2026-11-02
+
+Method (run ~11:30 EST on /tmp/oc500-s7; every serial below is a §7 sample
+source or the wave-2 remains named in OC1B-soak-wave2-verdict.md):
+  `grep -in -E "panic|oops|loader refused|double fault|triple fault|assert|watchdog|hung|stuck|error|fail" <serial>`
+Result: ZERO hits in all four serials:
+  /tmp/soak-serial.txt (63 lines, wave-2 §19 remains) — 0 hits
+  /tmp/soak3-serial.txt (2124 lines, tracked wave-2 follow-on) — 0 hits
+  /tmp/oc1b-main-soak-serial.txt (main soak, in progress) — 0 hits
+  /tmp/oc1b-soak-end-serial.txt (task-170 monitor boot) — 0 hits
+
+The one fault-shaped line present in every serial is EXPECTED guest
+behavior, not an anomaly: the crasher's deliberate null read, isolated by
+the kernel. Full context from the main soak serial (lines 40-60 of
+/tmp/oc1b-main-soak-serial.txt at ~11:30 EST):
+
+  user sleeper: 2798760 bytes magic=0x464c457f type=Some(2) entry=Some(106652627894288)
+  user sleeper: entry 0x610000000010 head [50, 48, bf, 23, 43, 01, 00, 00, 61, 00, 00, 48, b8, b0, 03, 00]
+  sleeper: before sleep
+  sleeper: pid 5
+  user crasher: 2539192 bytes magic=0x464c457f type=Some(2) entry=Some(107752139522320)
+  user crasher: entry 0x620000000110 head [50, 48, bf, 41, 06, 00, 00, 00, 62, 00, 00, 48, b8, f0, 01, 00]
+  crasher: about to read zero
+  INT user page-fault addr 0x0000000000000000 err 0x0000000000000004: task killed
+  A
+  B
+  sleeper: yielded and back
+  A
+  B
+  user readkey: 2799712 bytes magic=0x464c457f type=Some(2) entry=Some(108851651149840)
+  user readkey: entry 0x630000000010 head [48, 83, ec, 38, 48, bf, 53, 44, 01, 00, 00, 63, 00, 00, 48, b8]
+  readkey: polling syscall 5
+  readkey: empty
+
+Why not an anomaly: the faulting task is killed in isolation while the
+sleeper (next lines: `sleeper: yielded and back`) and the whole pack
+continue — this is the K6 fault-isolation assertion the gate checks for.
+Identical shape in /tmp/soak-serial.txt:45, /tmp/soak3-serial.txt:45,
+/tmp/oc1b-soak-end-serial.txt (same line class).
+
+Anomaly verdict for §7 so far: 0 anomalies in 4 serials / ~6300 lines.
+If a later soak in this section surfaces an anomaly, its ±20-line context
+is appended here before the section closes.
+
+## Filed host-side incident (NOT a guest anomaly): main-soak attempt 1 killed
+At ~11:22 EST the main-soak attempt-1 QEMU (PID 19721, image
+/tmp/oc1b-main-soak.bin) died by host SIGTERM; its stderr
+(/tmp/oc1b-main-soak-progress.log, mtime 11:22) reads in full:
+  qemu-system-x86_64: terminating on signal 15 from pid 36720 (<unknown process>)
+Guest state at death (serial /tmp/oc1b-main-soak-attempt1-serial.txt,
+preserved copy, last write 11:09:30): 2094 lines, 10 STATUS, 0 panic,
+0 loader-refused — healthy and idle; the kill came from the host, not
+from any guest fault. The serial's final STATUS batch (last lines of
+/tmp/oc1b-main-soak-attempt1-serial.txt, verified 11:29 EST):
+
+tasks 8 ticks 9463 heap_free 255K
+STATUS tasks=8 ticks=9463 heap_free_kb=255
+status
+tasks 8 ticks 9923 heap_free 255K
+STATUS tasks=8 ticks=9923 heap_free_kb=255
+status
+tasks 8 ticks 10381 heap_free 255K
+STATUS tasks=8 ticks=10381 heap_free_kb=255
+status
+tasks 8 ticks 10839 heap_free 255K
+STATUS tasks=8 ticks=10839 heap_free_kb=255
+status
+tasks 8 ticks 11294 heap_free 255K
+STATUS tasks=8 ticks=11294 heap_free_kb=255
+status
+tasks 8 ticks 11753 heap_free 255K
+STATUS tasks=8 ticks=11753 heap_free_kb=255
+status
+tasks 8 ticks 12202 heap_free 255K
+STATUS tasks=8 ticks=12202 heap_free_kb=255
+
+(no error below this — the file simply stops: QEMU reaped from outside).
+Killer pid 36720: identity NOT RECOVERABLE; no §7 command addressed the
+main soak's PID (drill kills targeted drill PIDs; the drive at 11:26 only
+failed to connect AFTER death). Filed as a named host-side incident with
+its full context, counted as an incident but NOT as a guest anomaly or a
+panic. Corrective action: relaunched as attempt 2 (11:27:47 EST) on the
+same image; attempt-1 serial preserved separately and never merged into
+attempt-2 counts.

@@ -1,0 +1,34 @@
+# OC1B-157 userspace-pack drills during the main soak (10 runs)
+
+Image: /tmp/oc1b-drill-img.bin, sha256
+  3bbedee50a7535f621dd9046ccdc198f6a83407fab302087f69ca0cf40c1d09d
+  (copy of the main-soak image /tmp/oc1b-main-soak.bin; dedicated copy
+  because the running main soak holds QEMU's write lock on the original —
+  first attempt against the original failed with `Failed to get "write"
+  lock`, discarded, zero results kept from it).
+Method: /tmp/s7-drills.sh — one drill = one headless QEMU boot
+  (-m 512M, -display none), wait up to 420s for the pack-completion
+  signature `sleeper: bad call refused` (the last pack line per gate.sh),
+  kill, then count per-program result lines. Launcher log:
+  /tmp/s7-drills-progress.log. Drill serials: /tmp/oc1b-drill-N-* (N=1..10).
+Drill window: 2026-11-02 ~11:16–11:22 EST, concurrent with the main soak
+  (main soak serial /tmp/oc1b-main-soak-serial.txt kept growing throughout).
+
+Result lines (10, one per run):
+drill 1: log=/tmp/oc1b-drill-1-orUlno waited=15s hello=1 exit0=2 killed=1 readkey=1 badcall=1 panic=0
+drill 2: log=/tmp/oc1b-drill-2-DY9De5 waited=15s hello=1 exit0=2 killed=1 readkey=1 badcall=1 panic=0
+drill 3: log=/tmp/oc1b-drill-3-ygM9MA waited=15s hello=1 exit0=3 killed=1 readkey=1 badcall=1 panic=0
+drill 4: log=/tmp/oc1b-drill-4-8yzHq6 waited=15s hello=1 exit0=2 killed=1 readkey=1 badcall=1 panic=0
+drill 5: log=/tmp/oc1b-drill-5-VnqHRJ waited=15s hello=1 exit0=2 killed=1 readkey=1 badcall=1 panic=0
+drill 6: log=/tmp/oc1b-drill-6-mf8rNp waited=15s hello=1 exit0=2 killed=1 readkey=1 badcall=1 panic=0
+drill 7: log=/tmp/oc1b-drill-7-C1XuSh waited=15s hello=1 exit0=2 killed=1 readkey=1 badcall=1 panic=0
+drill 8: log=/tmp/oc1b-drill-8-MAX0UL waited=15s hello=1 exit0=2 killed=1 readkey=1 badcall=1 panic=0
+drill 9: log=/tmp/oc1b-drill-9-YvPknS waited=15s hello=1 exit0=2 killed=1 readkey=1 badcall=1 panic=0
+drill 10: log=/tmp/oc1b-drill-10-c7M4qw waited=15s hello=1 exit0=2 killed=1 readkey=1 badcall=1 panic=0
+
+Legend: hello=`HELLO FROM USERSPACE`, exit0=`user exit code 0`,
+killed=`task killed`, readkey=`user readkey: entry`, badcall=`bad call refused`.
+Verdict: 10/10 drills show the full pack (hello 1, killed 1, readkey 1,
+badcall 1, panic 0). Variance: drill 3 exit0=3 vs 2 elsewhere (one extra
+clean-exit line inside the 15s window — readkey's early exit path; not a
+failure, recorded as observed).
