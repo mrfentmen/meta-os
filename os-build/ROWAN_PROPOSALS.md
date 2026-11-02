@@ -39,24 +39,23 @@ logs as the acceptance test.
    undersized bitmap clamps `covered`.
 5. **Reap path**: `tasks.rs` implements reap/respawn and `sched.rs` never calls it, so exited
    slots are permanent and `MAX_TASKS` (8) fills. Wire the policy or state the 8-task ceiling in
-   the user-facing docs.
+   the user-facing docs. Related hard cap: `user.rs::take_ustack` allows three userspace
+   programs and refuses the fourth by panicking, not by returning an error.
 6. **Stale headers**: `interrupts.rs` and `tasks.rs` still say UNWIRED/UNCOMPILED/never booted
    (lines 1-40 of each). Both are wired and proven. Outdated headers on proven code are how the
    next reader is misled.
 7. **Oversize `write` returns 0**, indistinguishable from a zero-length write (`user.rs`,
    `user_write`). Proposal: `u64::MAX` for oversize, 0 only for zero-length.
-8. **Wire the new programs.** They build but the kernel embeds only the original three. The
-   exact change, in `kernel/build.rs`:
-
-   ```rust
-   const BINS: &[&str] = &["hello", "sleeper", "crasher", "quitter", "badcall"];
-   ```
+8. **Wire the new programs** — five changes, not one. The `BINS` line alone only stages the
+   ELF; `user.rs` caps user stacks at three and spawns each program by name, so a fourth spawn
+   panics in `run_elf` at `expect("user: no stack left")` rather than failing loudly. Full
+   proposal with line numbers and the exact patch shape:
+   `os-build/proposals/quitter-badcall-wiring.md`.
 
    `quitter` proves a deliberate nonzero exit (expect `quitter: exiting 7`, `user exit code 7`).
-   `badcall` proves the reserved edges 6 and 15 refuse, not just 99 (expect three
-   `user bad syscall <n> refused` lines, then `badcall: survived all three`). `writer` and
-   `readkey` are probes and should stay out of `BINS` unless someone wants their output in every
-   boot log — `writer` dumps a 4097-byte write attempt and `readkey` polls 200000 times.
+   `badcall` proves the reserved edges 6 and 15 refuse, not just 99. `writer` and `readkey` are
+   probes and stay out of `BINS` — `writer` dumps a 4097-byte write attempt and `readkey` polls
+   200000 times.
 
 ## Filed by
 
