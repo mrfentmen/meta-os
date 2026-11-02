@@ -35,7 +35,13 @@ or BLOCKED with the artifact named.
 | 7-13 | Image foundation | PROVEN | image-status-2026-11-02.md, metaos-update.* |
 | 14-17 | Boot screen | PROVEN | metaos.plymouth+script, boot-early/mid/late.png |
 | 18-21 | Login | PROVEN | login-dark/shake/entered/light.png + AUTOLOGIN.md |
-| 22-28 | Desktop shell | TODO | — |
+| 22 | Desktop shell | PROVEN (local) | shell-minimized/restored.png |
+| 23 | Top bar (app name, clock, icons) | PROVEN | screenshots |
+| 24 | Bar colour white/blue/black | DONE (code) | shell.html applyBar |
+| 25 | Light/dark | PROVEN (local) | shell-restored.png (light) |
+| 26 | Open/drag/close/minimise/snap | PROVEN (local) | minimized/restored + snap halves |
+| 27 | Right-click menu | PROVEN (local) | ctxmenu verified |
+| 28 | Alt-tab + terminal shortcut | PROVEN (local) | Notes->Terminal->Notes |
 | 29-33 | Wallpapers | TODO | — |
 | 34-37 | Dock | TODO | — |
 | 38-40 | Terminal | TODO | — |
