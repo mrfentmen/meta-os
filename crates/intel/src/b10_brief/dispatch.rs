@@ -1561,6 +1561,78 @@ pub fn render_dispatch_show(report: &DispatchShowReport) -> String {
     lines.join("\n")
 }
 
+/// One job entry of a dispatch record as `post_plan` stores it (DSP-008):
+/// the plan key, the posted job id, title, files, and posted dep job ids.
+/// The job's current queue state is not stored here; the caller reads it fresh.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DispatchRecordJob {
+    pub key: String,
+    pub id: String,
+    pub title: String,
+    pub files: Vec<String>,
+    pub deps: Vec<String>,
+}
+
+/// Build a `show_dispatch` report from a stored dispatch record (DSP-016).
+///
+/// `state_of` reads one job's current queue state fresh and returns
+/// `(status, claim)`; it returns `None` when the job id is no longer in
+/// the queue. Classification mirrors Python's `show_dispatch`: a missing
+/// job is "missing" with an empty claim; a claimed job carries its claim
+/// nick; every other state carries an empty claim. `counts` counts each
+/// status seen, in first-seen order (the renderer orders them).
+/// Read-only: it posts, claims, cancels, and stores nothing.
+///
+/// Rust adaptations, stated not hidden: Python reads the record from
+/// `intel.store` and the states from `jobs.job_get`, and raises
+/// `ShowError` when the record is missing; this builder takes the
+/// record jobs and the state lookup as arguments, so a missing record
+/// is the caller's error, not this function's. Python's report also
+/// carries room, created_at, latency_ms, order, and per-job
+/// max_attempts and req; the existing `DispatchShowReport` omits them,
+/// so this builder does not invent them.
+pub fn build_dispatch_show_report(
+    id: &str,
+    summary: &str,
+    jobs: &[DispatchRecordJob],
+    state_of: impl Fn(&str) -> Option<(String, String)>,
+) -> DispatchShowReport {
+    let mut out = Vec::new();
+    let mut counts: Vec<(String, usize)> = Vec::new();
+    for job in jobs {
+        let (status, claim) = match state_of(&job.id) {
+            None => ("missing".to_string(), String::new()),
+            Some((status, claim)) => {
+                if status == "claimed" {
+                    (status, claim)
+                } else {
+                    (status, String::new())
+                }
+            }
+        };
+        if let Some((_, n)) = counts.iter_mut().find(|(s, _)| *s == status) {
+            *n += 1;
+        } else {
+            counts.push((status.clone(), 1));
+        }
+        out.push(DispatchShowJob {
+            key: job.key.clone(),
+            id: job.id.clone(),
+            title: job.title.clone(),
+            files: job.files.clone(),
+            deps: job.deps.clone(),
+            status,
+            claim,
+        });
+    }
+    DispatchShowReport {
+        id: id.to_string(),
+        summary: summary.to_string(),
+        jobs: out,
+        counts,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2375,6 +2447,49 @@ mod tests {
         let text = render_dispatch_show(&report);
         assert!(text.contains("now: missing"), "got: {text}");
         assert!(text.ends_with("  counts: 1 missing"), "got: {text}");
+    }
+
+    #[test]
+    fn show_builder_classifies_fresh_states_and_counts() {
+        let record = vec![
+            DispatchRecordJob { key: "base".into(), id: "j-base".into(), title: "Do base".into(), files: vec!["intel/ingest.py".into()], deps: vec![] },
+            DispatchRecordJob { key: "api".into(), id: "j-api".into(), title: "Do api".into(), files: vec![], deps: vec!["j-base".into()] },
+            DispatchRecordJob { key: "gone".into(), id: "j-gone".into(), title: "Do gone".into(), files: vec![], deps: vec![] },
+            DispatchRecordJob { key: "done-one".into(), id: "j-done".into(), title: "Do done".into(), files: vec![], deps: vec![] },
+        ];
+        let report = build_dispatch_show_report("dsp-show-2", "Build it.", &record, |id| match id {
+            "j-base" => Some(("open".to_string(), String::new())),
+            "j-api" => Some(("claimed".to_string(), "tester".to_string())),
+            "j-done" => Some(("done".to_string(), "stale-nick".to_string())),
+            _ => None,
+        });
+        assert_eq!(report.id, "dsp-show-2");
+        assert_eq!(report.summary, "Build it.");
+        assert_eq!(report.jobs[0].status, "open");
+        assert_eq!(report.jobs[0].claim, "");
+        assert_eq!(report.jobs[1].status, "claimed");
+        assert_eq!(report.jobs[1].claim, "tester");
+        assert_eq!(report.jobs[2].status, "missing");
+        assert_eq!(report.jobs[2].claim, "");
+        // A non-claimed job never carries a claim, even when the lookup names one.
+        assert_eq!(report.jobs[3].status, "done");
+        assert_eq!(report.jobs[3].claim, "");
+        assert_eq!(
+            report.counts,
+            vec![
+                ("open".to_string(), 1),
+                ("claimed".to_string(), 1),
+                ("missing".to_string(), 1),
+                ("done".to_string(), 1),
+            ]
+        );
+        // The built report renders through the existing renderer unchanged.
+        let text = render_dispatch_show(&report);
+        assert!(
+            text.contains("  api -> j-api: Do api (files: none; deps: base) now: claimed by tester"),
+            "got: {text}"
+        );
+        assert!(text.ends_with("  counts: 1 open, 1 claimed, 1 done, 1 missing"), "got: {text}");
     }
 
     // Scripted Spark callable for plan_from_spark tests, mirroring
