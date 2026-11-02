@@ -99,8 +99,45 @@ async function echoDrill() {
   };
 }
 
+async function mcpHostDrill() {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "restart-mcp-host-"));
+  fs.copyFileSync(path.join(ROOT, "services", "mcp-host", "host.goose"), path.join(dir, "mcp-host.goose"));
+  const out = path.join(dir, "service.out");
+  const log = path.join(dir, "host.log");
+  const start = () => spawn("sh", [SUP, "mcp-host", dir, "--once"], {
+    cwd: ROOT, detached: true, stdio: ["pipe", "pipe", "pipe"],
+  });
+  const first = start();
+  first.stdin.write('{"tool":"list"}\n');
+  await waitFor(() => fs.existsSync(out) && fs.readFileSync(out, "utf8").includes('"tools":["echo"]'), 10000, "first mcp-host answer");
+  const logBeforeKill = lines(log).length;
+  process.kill(-first.pid, "SIGKILL");
+  await sleep(200);
+
+  const second = start();
+  second.stdin.write('{"tool":"echo","args":{"text":"after restart"}}\n');
+  await waitFor(() => fs.readFileSync(out, "utf8").includes('"result":"after restart"'), 10000, "mcp-host after restart");
+  const body = fs.readFileSync(out, "utf8");
+  const logAfterKill = lines(log).length;
+  process.kill(-second.pid, "SIGKILL");
+  await sleep(150);
+  const records = lines(path.join(dir, "records.log"));
+  return {
+    service: "mcp-host",
+    dir,
+    ok: body.includes('"tools":["echo"]') && body.includes('"result":"after restart"') &&
+      logAfterKill > logBeforeKill &&
+      records.filter((l) => /service-start/.test(l)).length === 2,
+    answeredBeforeKill: body.includes('"tools":["echo"]'),
+    answeredAfterRestart: body.includes('"result":"after restart"'),
+    logLinesBeforeKill: logBeforeKill, logLinesAfterRestart: logAfterKill,
+    recordedStarts: records.filter((l) => /service-start/.test(l)).length,
+    note: "host.log is append-only across the restart; the stdio JSON contract answers again",
+  };
+}
+
 const results = [];
-for (const drill of [heartbeatDrill, echoDrill]) {
+for (const drill of [heartbeatDrill, echoDrill, mcpHostDrill]) {
   try { results.push(await drill()); }
   catch (err) {
     results.push({ service: drill.name, ok: false, error: String(err && err.message || err) });
@@ -112,8 +149,8 @@ const receipt = {
   at: new Date().toISOString(),
   ok,
   services: results,
-  scope: "3 of 38 services have a main a host can run; only echo and heartbeat were drilled here. " +
-    "mcp-host is the third and is named in RESTART_GAP.md; the other 35 cannot be started by supervisor.sh.",
+  scope: "3 of 38 services have a main a host can run; all three (echo, heartbeat, mcp-host) were " +
+    "killed and restarted here. The other 35 cannot be started by supervisor.sh and are filed in RESTART_GAP.md.",
 };
 fs.writeFileSync(path.join(HERE, "RESTART_PROOF.json"), JSON.stringify(receipt, null, 2) + "\n");
 console.log("restart proof: " + (ok ? "PASS" : "FAIL") + " — " + results.map((r) => r.service + "=" + r.ok).join(" "));

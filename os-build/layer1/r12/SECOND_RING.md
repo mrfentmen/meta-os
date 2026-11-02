@@ -7,9 +7,9 @@ the restart result. Native numbers: `os-build/layer1/run_native.sh` on this bran
 **86 programs, 86 RUNS, 0 FAILS, 5 built-not-run, 3,804 assertions passed**.
 
 **Restart is tested only where a host can start the service.** Three of the 38 directories have a
-runnable `main` (echo, heartbeat, mcp-host). Echo and heartbeat were killed and restarted with
-state behaviour recorded (`RESTART_PROOF.json`); mcp-host is named but not drilled. The other 35
-cannot be started by `services/supervisor.sh` at all and are filed in `RESTART_GAP.md`.
+runnable `main` (echo, heartbeat, mcp-host). Echo, heartbeat and mcp-host were killed and restarted with
+state behaviour recorded (`RESTART_PROOF.json`). The other 35 cannot be started by
+`services/supervisor.sh` at all and are filed in `RESTART_GAP.md`.
 
 **The audit is mechanical plus a file read.** It checks README presence, the manifest's own status
 word, and whether a driver imports the service; the service's header/status comment was read for
@@ -60,7 +60,7 @@ owed, not claimed.
 
 | service | README | manifest | drivers (measured) | failure path | restart | gaps |
 |---|---|---|---|---|---|---|
-| `mcp-host` | yes | WRITTEN | none | untested | NOT TESTED (no host supervisor) | no native driver; no failure-specific driver |
+| `mcp-host` | yes | WRITTEN | none | untested | PASS — killed/restarted (`RESTART_PROOF.json`) | no native driver; no failure-specific driver |
 | `net` | yes | WRITTEN | `tests/t101_netaddr`, `tests/t125_net_r11`, `tests/t67_net`, `tests/t68_proto`, `tests/t85_net_deep` (373p/0f) | `tests/t85_net_deep` | NOT TESTED (no host supervisor) | contract read still owed |
 | `netcfg` | yes | WRITTEN | `tests/t101_netaddr`, `tests/t114_dhcp_r11`, `tests/t116_dns_r11`, `tests/t125_net_r11`, `tests/t126_netcfg_r11`, `tests/t57_dhcp_dns`, `tests/t67_net`, `tests/t68_proto`, `tests/t77_gaps`, `tests/t79_limit_drivers`, `tests/t80_limit_drivers2`, `tests/t85_net_deep` (715p/0f) | `tests/t77_gaps` | NOT TESTED (no host supervisor) | contract read still owed |
 | `notify` | yes | WRITTEN | `tests/t127_notify_r11`, `tests/t95_notify` (125p/0f) | driver only | NOT TESTED (no host supervisor) | no failure-specific driver |
@@ -102,8 +102,8 @@ owed, not claimed.
 - manifest NOT BUILT: **3** (`devmgr`, `registry`, `sockets`)
 - assertions attributed through those drivers: **5853 passed, 0 failed**
 - failure-path tested by a dedicated driver: **24**; driver-only: **7**; untested: **7**
-- restart tested: **2 of 38** (echo, heartbeat). **35 have no runnable `main`** (`RESTART_GAP.md`);
-  mcp-host is named but not drilled.
+- restart tested: **3 of 38** (echo, heartbeat, mcp-host). **35 have no runnable `main`**
+  (`RESTART_GAP.md`).
 
 **Named untested:** every restart cell above; every service row whose driver column says none;
 the failure path of every row that says "driver only"; and the contract-vs-code read for every

@@ -101,6 +101,7 @@ test("D restart is proven for the host-runnable services and the gap names the r
   const names = r.services.map((s) => s.service);
   assert.ok(names.includes("heartbeat"));
   assert.ok(names.includes("echo"));
+  assert.ok(names.includes("mcp-host"));
   const gap = readText("os-build/layer1/r12/RESTART_GAP.md");
   assert.match(gap, /35/);
   assert.match(gap, /mcp-host/);

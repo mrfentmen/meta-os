@@ -1,6 +1,6 @@
 # Round 12 — FINISH
 
-Branch `buffy/round12`, main merged. **35 done, 9 partial, 0 not started, of 44.**
+Branch `buffy/round12`, main merged. **36 done, 8 partial, 0 not started, of 44.**
 
 | task | title | state | evidence / why not |
 |---|---|---|---|
@@ -26,7 +26,7 @@ Branch `buffy/round12`, main merged. **35 done, 9 partial, 0 not started, of 44.
 | R12-020 | False-positive drill | **DONE** | 3 clean packages, 0 findings |
 | R12-021 | Imperium baton | **DONE** | killed mid-run, resume exit 0, 1 dispatch |
 | R12-022 | Cadence baton | **DONE** | 1 stage-1, 1 continuation, 1 baton-pass |
-| R12-023 | STOP on every loop | **PARTIAL** | 5 halted mid-run, 3 finished before stop; no orphans |
+| R12-023 | STOP on every loop | **DONE** | early 5 ms pass: **8/8 halted**, no orphans; late 40 ms pass: 5 halted, 2 finished, 1 exited before the poll |
 | R12-024 | Budget-kill drill | **DONE** | 20 ms cap, budget receipt, registry cap unchanged |
 | R12-025 | Watchman death drill | **DONE** | alarm raised, restart to result in 83 ms |
 | R12-026 | Registry honesty | **DONE** | hosted entries real; drafts say why |
@@ -34,7 +34,7 @@ Branch `buffy/round12`, main merged. **35 done, 9 partial, 0 not started, of 44.
 | R12-028 | Cluster 2 | **PARTIAL** | audit + drivers; restart gap filed |
 | R12-029 | Cluster 3 | **PARTIAL** | echo restart PASS; other rows gap |
 | R12-030 | Cluster 4 | **PARTIAL** | heartbeat restart PASS; other rows gap |
-| R12-031 | Cluster 5 | **PARTIAL** | mcp-host restart named, not drilled |
+| R12-031 | Cluster 5 | **PARTIAL** | mcp-host restart PASS; other rows gap |
 | R12-032 | Cluster 6 | **PARTIAL** | audit + drivers; restart gap filed |
 | R12-033 | Cluster 7 | **PARTIAL** | audit + drivers; restart gap filed |
 | R12-034 | Cluster 8 | **PARTIAL** | audit + drivers; restart gap filed |
@@ -56,8 +56,9 @@ Branch `buffy/round12`, main merged. **35 done, 9 partial, 0 not started, of 44.
   checked (168 live, 1 unreachable), OPSEC 20/20 with screenshots named unchecked, hosted Aegis
   cycle ran all three stages, and clean input stayed clean.
 - Section C: Imperium resumed with one dispatch; Cadence continued one artifact course; a killed
-  watchman was detected and restarted in 83 ms; 8 hosted loops got a STOP outcome with no
-  orphans; a 20 ms budget cap was enforced with a receipt and no self-raise.
+  watchman was detected and restarted in 83 ms; the early STOP pass halted **8/8** hosted loops
+  with no orphans (the late pass records 5 halted, 2 finished, 1 exited first); a 20 ms budget
+  cap was enforced with a receipt and no self-raise.
 - Section D: 38 services inventoried; 31 with measured drivers; 5,853 assertions attributed;
   echo and heartbeat killed and restarted with state recorded.
 - Lane suite: **119 tests, 119 pass, 0 fail**.
@@ -70,7 +71,5 @@ Branch `buffy/round12`, main merged. **35 done, 9 partial, 0 not started, of 44.
 
 ## Still a gap
 
-- R12-023: 3 fast loops finished before the STOP landed (their pre-spawn STOP is proven).
 - 35 of 38 service restarts: no runnable main; needs the K5/K6 supervisor.
-- mcp-host restart is named but not drilled.
 - No kernel compile/boot here; no model; transcription endpoint unresolved.

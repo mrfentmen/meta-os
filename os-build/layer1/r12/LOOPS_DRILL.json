@@ -3,8 +3,9 @@
     "R12-023",
     "R12-024"
   ],
-  "at": "2026-11-02T15:06:11.460Z",
+  "at": "2026-11-02T15:12:54.558Z",
   "ok": true,
+  "pass": "early",
   "pollMs": 2,
   "productionPollMs": 100,
   "loops": [
@@ -13,7 +14,7 @@
       "command": "python3 repo:server/queue/hosted_imperium.py",
       "stopFiledMidRun": true,
       "stopAfterMs": 5,
-      "durationMs": 11,
+      "durationMs": 12,
       "stoppedReason": "stop-file",
       "exit": {
         "code": null,
@@ -26,39 +27,39 @@
     {
       "agent": "watch",
       "command": "repo:node agents/watchman.mjs --once",
-      "stopFiledMidRun": false,
-      "stopAfterMs": 40,
-      "durationMs": 42,
-      "stoppedReason": null,
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 8,
+      "stoppedReason": "stop-file",
       "exit": {
-        "code": 0,
-        "signal": null
+        "code": null,
+        "signal": "SIGTERM"
       },
       "timedOut": false,
       "noOrphan": true,
-      "state": "finished-before-stop"
+      "state": "stopped-mid-run"
     },
     {
       "agent": "aegis",
       "command": "repo:node aegis/hosted.mjs",
-      "stopFiledMidRun": false,
-      "stopAfterMs": 40,
-      "durationMs": 42,
-      "stoppedReason": null,
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 7,
+      "stoppedReason": "stop-file",
       "exit": {
-        "code": 0,
-        "signal": null
+        "code": null,
+        "signal": "SIGTERM"
       },
       "timedOut": false,
       "noOrphan": true,
-      "state": "finished-before-stop"
+      "state": "stopped-mid-run"
     },
     {
       "agent": "aegis-cycle",
       "command": "repo:node aegis/cycle.mjs",
       "stopFiledMidRun": true,
       "stopAfterMs": 5,
-      "durationMs": 6,
+      "durationMs": 8,
       "stoppedReason": "stop-file",
       "exit": {
         "code": null,
@@ -71,24 +72,24 @@
     {
       "agent": "nervus",
       "command": "repo:node nervus/hosted.mjs",
-      "stopFiledMidRun": false,
-      "stopAfterMs": 40,
-      "durationMs": 42,
-      "stoppedReason": null,
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 7,
+      "stoppedReason": "stop-file",
       "exit": {
-        "code": 0,
-        "signal": null
+        "code": null,
+        "signal": "SIGTERM"
       },
       "timedOut": false,
       "noOrphan": true,
-      "state": "finished-before-stop"
+      "state": "stopped-mid-run"
     },
     {
       "agent": "handsfree-intake",
       "command": "repo:node handsfree/hosted.mjs intake",
       "stopFiledMidRun": true,
-      "stopAfterMs": 40,
-      "durationMs": 43,
+      "stopAfterMs": 5,
+      "durationMs": 8,
       "stoppedReason": "stop-file",
       "exit": {
         "code": null,
@@ -102,8 +103,8 @@
       "agent": "handsfree-brief",
       "command": "repo:node handsfree/hosted.mjs brief",
       "stopFiledMidRun": true,
-      "stopAfterMs": 40,
-      "durationMs": 45,
+      "stopAfterMs": 5,
+      "durationMs": 7,
       "stoppedReason": "stop-file",
       "exit": {
         "code": null,
@@ -117,8 +118,8 @@
       "agent": "handsfree-approval",
       "command": "repo:node handsfree/hosted.mjs approval",
       "stopFiledMidRun": true,
-      "stopAfterMs": 40,
-      "durationMs": 43,
+      "stopAfterMs": 5,
+      "durationMs": 7,
       "stoppedReason": "stop-file",
       "exit": {
         "code": null,
@@ -131,8 +132,8 @@
   ],
   "summary": {
     "loops": 8,
-    "stoppedMidRun": 5,
-    "finishedBeforeStop": 3
+    "stoppedMidRun": 8,
+    "finishedBeforeStop": 0
   },
   "budget": {
     "name": "nervus",
@@ -140,18 +141,18 @@
     "timedOut": false,
     "stoppedReason": "budget-wall-clock",
     "receipt": {
-      "ts": "2026-11-02T15:06:11.458Z",
-      "run": "nervus-mvze5ylo",
+      "ts": "2026-11-02T15:12:54.556Z",
+      "run": "nervus-mvzeelmu",
       "event": "budget-receipt",
       "reason": "budget-wall-clock",
       "capMs": 20,
-      "at": "2026-11-02T15:06:11.458Z"
+      "at": "2026-11-02T15:12:54.556Z"
     },
     "fileReceipt": {
-      "run": "nervus-mvze5ylo",
+      "run": "nervus-mvzeelmu",
       "reason": "budget-wall-clock",
       "capMs": 20,
-      "at": "2026-11-02T15:06:11.458Z"
+      "at": "2026-11-02T15:12:54.556Z"
     },
     "ok": true,
     "registryBudgetUnchanged": 120000

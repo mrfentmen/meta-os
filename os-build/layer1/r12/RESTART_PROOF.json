@@ -1,31 +1,42 @@
 {
   "task": "R12-027..R12-034 (restart half, services that run on a host)",
-  "at": "2026-11-02T15:08:30.066Z",
+  "at": "2026-11-02T15:14:01.717Z",
   "ok": true,
   "services": [
     {
       "service": "heartbeat",
-      "dir": "/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/restart-heartbeat-dmbRJf",
+      "dir": "/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/restart-heartbeat-L2sZfU",
       "ok": true,
       "beforeKill": 2,
       "afterKill": 2,
       "afterRestart": 3,
-      "grewMs": 51,
+      "grewMs": 50,
       "stoppedCleanly": true,
       "recordedStarts": 2,
       "recordedStops": 1,
       "note": "append-only heartbeat.log survived the kill and grew after restart; STOP was the clean stop",
-      "wallMs": 2366
+      "wallMs": 2365
     },
     {
       "service": "echo",
-      "dir": "/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/restart-echo-iuzzeO",
+      "dir": "/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/restart-echo-TbKv7Y",
       "ok": true,
       "answeredBeforeKill": true,
       "answeredAfterRestart": true,
       "recordedStarts": 2,
       "note": "no persistent state; the restart proves the process and its stdio contract, not state survival"
+    },
+    {
+      "service": "mcp-host",
+      "dir": "/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/restart-mcp-host-wfXYN4",
+      "ok": true,
+      "answeredBeforeKill": true,
+      "answeredAfterRestart": true,
+      "logLinesBeforeKill": 1,
+      "logLinesAfterRestart": 2,
+      "recordedStarts": 2,
+      "note": "host.log is append-only across the restart; the stdio JSON contract answers again"
     }
   ],
-  "scope": "3 of 38 services have a main a host can run; only echo and heartbeat were drilled here. mcp-host is the third and is named in RESTART_GAP.md; the other 35 cannot be started by supervisor.sh."
+  "scope": "3 of 38 services have a main a host can run; all three (echo, heartbeat, mcp-host) were killed and restarted here. The other 35 cannot be started by supervisor.sh and are filed in RESTART_GAP.md."
 }

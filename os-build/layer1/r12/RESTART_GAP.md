@@ -18,7 +18,7 @@ contain a runnable `main`:
 |---|---|---|
 | `echo` | 3 | **PASS** — killed, restarted, answered again (`RESTART_PROOF.json`) |
 | `heartbeat` | 4 | **PASS** — killed, restarted, append-only log grew, STOP exited 0 (`RESTART_PROOF.json`) |
-| `mcp-host` | 5 | not drilled; it has a `main`, so the same harness can run it next round |
+| `mcp-host` | 5 | **PASS** — killed, restarted, `host.log` appended, JSON answer after restart (`RESTART_PROOF.json`) |
 
 The other **35** either export `svc_entry` (the kernel/host supervisor calls it) or are libraries
 with no process entry. `services/supervisor.sh` requires a `<name>.goose` with a `main`; running
@@ -30,12 +30,14 @@ kernel (K5/K6), which does not exist on this host.
 - `heartbeat`: killed mid-run, restarted, the existing log was appended to (not truncated), and
   the STOP sentinel ended it cleanly with exit 0.
 - `echo`: killed and restarted; it answered a line before the kill and a new line after.
+- `mcp-host`: killed and restarted; it listed tools before the kill and answered an echo after,
+  with `host.log` appended across both runs.
 - No other service restart is claimed. `SECOND_RING.md` says `NOT TESTED` on those rows.
 
 ## What is not claimed
 
 - These are host processes under `services/supervisor.sh`, not kernel services under the OS
   supervisor. No address space, no scheduler, no kernel restart.
-- `mcp-host` is named but not drilled here.
+- `mcp-host` was drilled and passed; `host.log` grew across the restart.
 - A 35-service restart requires a supervisor that can call `svc_entry` — that is the K5/K6 gap,
   not something this lane can fabricate with a shell loop.

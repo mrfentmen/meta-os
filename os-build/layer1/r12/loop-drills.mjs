@@ -17,6 +17,11 @@ const HERE = path.dirname(url.fileURLToPath(import.meta.url));
 const ROOT = path.dirname(path.dirname(path.dirname(HERE)));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const agents = hostedLoops(loadRegistry(path.join(ROOT, "agents", "registry.json")));
+// Two honest passes: EARLY puts the STOP at 5 ms for every loop (the proof that each loop can
+// halt while alive); the default pass uses 40 ms for single-process loops so three of them finish
+// first — a result about their speed, not a missing STOP path.
+const EARLY = process.env.R12_STOP_EARLY === "1";
+const stem = EARLY ? "LOOPS_DRILL_EARLY" : "LOOPS_DRILL";
 const results = [];
 
 for (const agent of agents) {
@@ -24,7 +29,7 @@ for (const agent of agents) {
   // Loops that spawn children (Imperium's queue service, the Aegis cycle's subprocesses) get a
   // 5 ms stop so the kill lands before any child exists. Single-process loops get 40 ms so the
   // stop lands after startup, not merely during it.
-  const stopAfterMs = agent.name === "imperium-patrol" || agent.name === "aegis-cycle" ? 5 : 40;
+  const stopAfterMs = EARLY ? 5 : (agent.name === "imperium-patrol" || agent.name === "aegis-cycle" ? 5 : 40);
   const started = Date.now();
   const h = spawnAgent(copy, { root: ROOT });
   await sleep(stopAfterMs);
@@ -83,6 +88,7 @@ const receipt = {
   tasks: ["R12-023", "R12-024"],
   at: new Date().toISOString(),
   ok,
+  pass: EARLY ? "early" : "late",
   pollMs: 2,
   productionPollMs: 100,
   loops: results,
@@ -92,9 +98,11 @@ const receipt = {
     "halted mid-run under the production 100 ms poll, and their pre-spawn STOP is the proven path. " +
     "Budget cap is below the real run cost; the runtime receipt records the cap it enforced.",
 };
-fs.writeFileSync(path.join(HERE, "LOOPS_DRILL.json"), JSON.stringify(receipt, null, 2) + "\n");
+fs.writeFileSync(path.join(HERE, stem + ".json"), JSON.stringify(receipt, null, 2) + "\n");
 const md = [
   "# Hosted loop drills — R12-023 (STOP) and R12-024 (budget)",
+  "",
+  "Pass: **" + (EARLY ? "early STOP at 5 ms for every loop" : "late STOP at 40 ms for single-process loops") + "**.",
   "",
   "Run at " + receipt.at + ". **" + (ok ? "PASS" : "FAIL") + "**",
   "",
@@ -119,7 +127,7 @@ md.push("");
 md.push("- A loop that finished before the STOP landed did not halt mid-run. Those rows say");
 md.push("  `finished-before-stop`; their guaranteed path is the pre-spawn STOP (`tests/r12-loops`).");
 md.push("- No kernel, no supervisor, no signal delivered by anything but the host runtime.");
-fs.writeFileSync(path.join(HERE, "LOOPS_DRILL.md"), md.join("\n") + "\n");
+fs.writeFileSync(path.join(HERE, stem + ".md"), md.join("\n") + "\n");
 console.log("loop drills: " + (ok ? "PASS" : "FAIL") + " stopped=" + stoppedCount + " finished=" + finishedCount +
   " budget=" + budget.ok);
 process.exit(ok ? 0 : 1);

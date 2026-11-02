@@ -5,8 +5,9 @@
 1. **Kernel compile and boot.** No kernel crate compile or QEMU log here. Any kernel claim needs
    the Mac's log.
 2. **Userspace boot proof.** `hog` and `quitter` compile; wiring and the first boot log are theirs.
-3. **35 service restarts.** Only echo, heartbeat and mcp-host have a runnable `main`; the other 35
-   need a supervisor that can call `svc_entry` (K5/K6). Filed in `r12/RESTART_GAP.md`.
+3. **35 service restarts.** Only echo, heartbeat and mcp-host have a runnable `main`; those three
+   were killed and restarted. The other 35 need a supervisor that can call `svc_entry` (K5/K6),
+   filed in `r12/RESTART_GAP.md`.
 
 ## Boss / Pax
 
@@ -17,12 +18,12 @@
 
 ## Not blocked — just not done
 
-7. R12-023: three loops finish in ~42 ms, before any STOP can land; their guaranteed path is the
-   pre-spawn STOP, proven for every hosted entry.
-8. mcp-host restart is named but not drilled; the echo/heartbeat harness runs it next.
-9. The line-by-line service contract read is still owed; the cluster record says so.
+7. The **late** STOP pass (40 ms) has three loops finish before the marker: three run in ~42 ms.
+   The early pass (5 ms) halts all eight; the pre-spawn STOP remains the guaranteed path.
+8. The line-by-line service contract read is still owed; the cluster record says so.
 
 ## Closed this round
 
-All six Section B tasks, four of six Section C tasks (023 partial), the four hosted-loop drills,
-and restart proof for the two host-runnable services that have state and stdio contracts.
+Section B is complete; Section C is complete (023 with both early and late evidence); restart is
+proven for all three host-runnable services. The only Section D remainder is the 35 services that
+require the K5/K6 supervisor to exist.

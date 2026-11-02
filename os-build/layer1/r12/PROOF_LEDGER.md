@@ -36,6 +36,6 @@ Only commands that ran. A row with no command is not here.
 | False-positive drill | `node aegis/fp-drill.mjs` | 3 clean packages, 0 findings | `r12/FALSE_POSITIVE_DRILL.json` |
 | Imperium baton | `node r12/imperium-baton.mjs` | killed mid-run, resume exit 0, 1 dispatch | `r12/IMPERIUM_BATON.json` |
 | Cadence baton + death | `node r12/baton-proof.mjs` | 1 stage-1, 1 continuation, restart 83 ms | `r12/BATON_PROOF.json` |
-| STOP + budget | `node r12/loop-drills.mjs` | 5 stopped, 3 finished, 0 orphans; cap 20 ms receipt | `r12/LOOPS_DRILL.json` |
-| Service restart | `node r12/restart-proof.mjs` | echo PASS, heartbeat PASS (log grew, STOP clean) | `r12/RESTART_PROOF.json` |
+| STOP + budget | `node r12/loop-drills.mjs` (early and late) | early 5 ms: **8/8 halted**, 0 orphans; late 40 ms: 5 halted, 2 finished, 1 exited first; budget cap 20 ms with receipt | `r12/LOOPS_DRILL.json`, `r12/LOOPS_DRILL_LATE.json` |
+| Service restart | `node r12/restart-proof.mjs` | echo, heartbeat, mcp-host all PASS (heartbeat log grew; mcp-host host.log appended; STOP clean) | `r12/RESTART_PROOF.json` |
 | Lane suite | 19-file command in STATUS | 119 tests, 119 pass, 0 fail | this run |
