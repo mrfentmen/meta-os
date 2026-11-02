@@ -155,7 +155,30 @@
    "name": "watch",
    "owner": "boss",
    "watch": [],
-   "watchCadenceMs": 900000
+   "watchCadenceMs": 900000,
+   "gym": {
+    "drill": "gym-drill-1",
+    "at": "2026-11-02T11:45:09.186Z",
+    "tasks": [
+     {
+      "id": "registry-entry",
+      "score": 1,
+      "max": 1
+     },
+     {
+      "id": "spawn-clean-exit",
+      "score": 1,
+      "max": 1
+     },
+     {
+      "id": "ledger-complete",
+      "score": 1,
+      "max": 1
+     }
+    ],
+    "total": 3,
+    "max": 3
+   }
   },
   {
    "name": "aegis",
