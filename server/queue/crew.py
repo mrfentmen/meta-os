@@ -612,10 +612,25 @@ class Crew:
             for action in decision["actions"]:
                 agent = action.get("agent")
                 if agent == "review":
-                    review, verdict = self._run_review(
-                        incident_id, camera, division, frame,
-                        first_timestamp, first_category=category,
-                        first_result=first_result)
+                    try:
+                        review, verdict = self._run_review(
+                            incident_id, camera, division, frame,
+                            first_timestamp, first_category=category,
+                            first_result=first_result)
+                    except Exception as e:
+                        reason = f"judge step failed: {str(e)[:180]}"
+                        self.records.append_timeline(incident_id, {
+                            "at": crew_common.now_iso(), "step": "halt",
+                            "reason": reason})
+                        self.records.append_event({
+                            "at": crew_common.now_iso(), "type": "halt",
+                            "incident_id": incident_id,
+                            "camera_id": camera["id"],
+                            "reason": reason})
+                        return {"outcome": "halted",
+                                "incident_id": incident_id,
+                                "category": category,
+                                "reason": reason}
                     if review.get("status") == "ok":
                         results.append(review)
                     if verdict == "confirmed" and not reported:

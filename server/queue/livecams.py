@@ -26,6 +26,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import sys
 import urllib.request
@@ -60,9 +61,10 @@ def is_image_bytes(data: bytes) -> bool:
     return data.startswith(_JPEG_MAGIC) or data.startswith(_PNG_MAGIC)
 
 
-def parse_cameras(payload: bytes) -> list[dict]:
-    """Parse the DOT camera list. Only online cameras with an image URL
-    are returned; a malformed payload raises rather than guessing."""
+def parse_cameras_report(payload: bytes):
+    """Parse the DOT camera list into (cameras, skipped counts).
+    Online cameras need an id, an image URL, and finite coordinates;
+    anything else is counted and skipped, never plotted on a guess."""
     try:
         raw = json.loads(payload.decode("utf-8"))
     except (ValueError, UnicodeDecodeError) as exc:
@@ -70,23 +72,44 @@ def parse_cameras(payload: bytes) -> list[dict]:
     if not isinstance(raw, list):
         raise LiveCamError("camera list payload is not a list")
     cameras = []
+    skipped = {"not_object": 0, "offline": 0, "missing_id_or_url": 0,
+               "missing_coordinates": 0}
     for entry in raw:
         if not isinstance(entry, dict):
+            skipped["not_object"] += 1
             continue
         if str(entry.get("isOnline", "")).lower() != "true":
+            skipped["offline"] += 1
             continue
         if not entry.get("id") or not entry.get("imageUrl"):
+            skipped["missing_id_or_url"] += 1
+            continue
+        latitude = entry.get("latitude")
+        longitude = entry.get("longitude")
+        if (isinstance(latitude, bool) or
+                not isinstance(latitude, (int, float)) or
+                isinstance(longitude, bool) or
+                not isinstance(longitude, (int, float)) or
+                not math.isfinite(latitude) or
+                not math.isfinite(longitude)):
+            skipped["missing_coordinates"] += 1
             continue
         cameras.append({
             "id": entry["id"],
             "name": entry.get("name") or entry["id"],
             "area": entry.get("area") or "",
-            "latitude": entry.get("latitude"),
-            "longitude": entry.get("longitude"),
+            "latitude": latitude,
+            "longitude": longitude,
             "imageUrl": entry["imageUrl"],
             "source": "NYC DOT public traffic camera",
         })
-    return cameras
+    return cameras, skipped
+
+
+def parse_cameras(payload: bytes) -> list[dict]:
+    """Parse the DOT camera list. Only online cameras with an image URL
+    and finite coordinates are returned; a malformed payload raises."""
+    return parse_cameras_report(payload)[0]
 
 
 def list_cameras(fetch=default_fetch, api_url: str = API_URL) -> list[dict]:
@@ -130,8 +153,10 @@ class LiveCamSource:
     """
 
     def __init__(self, fetch=default_fetch, api_url: str = API_URL,
-                 area: str | None = None, name_contains: str | None = None):
+                 area: str | None = None, name_contains: str | None = None,
+                 now=None):
         self._fetch = fetch
+        self._now = now or (lambda: datetime.now(timezone.utc).isoformat())
         self._cameras = pick(list_cameras(fetch, api_url), area=area,
                              name_contains=name_contains, count=10_000)
         if not self._cameras:
@@ -151,7 +176,7 @@ class LiveCamSource:
             except Exception as exc:  # one dead camera must not kill the source
                 last_error = exc
                 continue
-            stamp = datetime.now(timezone.utc).isoformat()
+            stamp = self._now()
             return camera, image, stamp
         raise LiveCamError(f"every selected camera failed: {last_error}")
 
@@ -172,7 +197,7 @@ def _frame_record(camera: dict, image: bytes, stamp: str) -> dict:
     }
 
 
-def main(argv=None) -> int:
+def build_arg_parser():
     parser = argparse.ArgumentParser(
         description="NYC DOT live cameras for the Imperium patrol")
     parser.add_argument("--api-url", default=os.environ.get(
@@ -189,7 +214,11 @@ def main(argv=None) -> int:
                              "assessment (spark_gen) and record the reading")
     parser.add_argument("--division", default="vigiles",
                         help="division lens for --assess-one")
-    args = parser.parse_args(argv)
+    return parser
+
+
+def main(argv=None) -> int:
+    args = build_arg_parser().parse_args(argv)
 
     cameras = list_cameras(api_url=args.api_url)
     chosen = pick(cameras, area=args.area, name_contains=args.name,

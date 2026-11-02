@@ -109,3 +109,36 @@ against the new verdict builder).
 
 Section 3 verification, one command per file, all exit 0: **36 new tests
 pass, 0 fail**; existing `test_models.py` **7 pass**.
+
+## Section 4 — Queue Python, livecams/patrol/evidence (CB2-076..100) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-076 | `test_livecams_parse_edges.py` | string `"true"`/`"false"` online flags parsed correctly |
+| CB2-077 | `test_livecams_parse_edges.py` | missing coordinates skipped and counted |
+| CB2-078 | `test_livecams_pick.py` | same list + area picks the same camera deterministically |
+| CB2-079 | `test_livecams_pick.py` | area with no online camera returns empty |
+| CB2-080 | `test_livecams_snapshot.py` | JPEG/PNG accepted; non-image refused |
+| CB2-081 | `test_livecams_roundrobin.py` | three cameras cycle and wrap |
+| CB2-082 | `test_livecams_roundrobin.py` | camera that goes offline is skipped |
+| CB2-083 | `test_livecams_cli_parse.py` | `--list/--area/--division` parse; unknown flag exits 2 |
+| CB2-084 | `test_patrol_budget.py` | reserve floor pauses and files nothing |
+| CB2-085 | `test_patrol_budget.py` | pause event carries guardrail cost |
+| CB2-086 | `test_patrol_frame_flow.py` | baseline activity creates no incident |
+| CB2-087 | `test_patrol_frame_flow.py` | category list comes from the JS source |
+| CB2-088 | `test_evidence_bolo.py` | exact BOLO key set; no identity field |
+| CB2-089 | `test_evidence_bolo.py` | descriptions deduped; direction never invented |
+| CB2-090 | `test_evidence_purge.py` | files deleted; purge receipt + timeline recorded |
+| CB2-091 | `test_evidence_purge.py` | second purge is idempotent |
+| CB2-092 | `test_orchestrator_order.py` | review → investigation → response order |
+| CB2-093 | `test_crew_halt.py` | judge failure writes halt step and stops |
+| CB2-094 | `test_supervisor_failures.py` | repeated failure recorded once, never restarted |
+| CB2-095 | `test_supervisor_failures.py` | no restart/backoff implementation; gap pinned |
+| CB2-096 | `test_queue_envelope_edges.py` | missing id, unknown product, bad hash refused |
+| CB2-097 | `test_trio_store_roundtrip.py` | nested result round-trip; duplicate submit idempotent |
+| CB2-098 | `test_spark_guardrail_refusal.py` | cumulative spend adds up |
+| CB2-099 | `test_spark_guardrail_refusal.py` | at/over budget refused with clear wording |
+| CB2-100 | `test_spark_guardrail_refusal.py` | under budget allowed |
+
+Section 4 verification: **459 queue-Python tests pass, 0 fail**
+(`python3 -m unittest discover -s tests/queue-python`).
