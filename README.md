@@ -6,7 +6,7 @@
 
 **A platform that never sleeps.**
 
-[Live crew viewer](https://muse-relay-live.pages.dev) · [Task list](TASKS_V3.md) · [OpenCode tasks](OPENCODE_TASKS_100.md) · [Commit history](https://github.com/Mrfentmen/meta-os/commits/main)
+[Live crew viewer](https://muse-relay-live.pages.dev) · [Task list](os-build/TASKS_V3.md) · [OpenCode tasks](os-build/OPENCODE_TASKS_100.md) · [Commit history](https://github.com/Mrfentmen/meta-os/commits/main)
 
 ![Node tests: 1877 passing](https://img.shields.io/badge/node%20tests-1877%20passing-brightgreen) ![Rust tests: 1412 passing](https://img.shields.io/badge/rust%20tests-1412%20passing-brightgreen) ![Worlds packs: 9 of 9 valid](https://img.shields.io/badge/worlds%20packs-9%20of%209%20valid-blue) ![Status: in active build](https://img.shields.io/badge/status-in%20active%20build-orange)
 
