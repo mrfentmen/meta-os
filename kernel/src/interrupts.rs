@@ -493,14 +493,13 @@ pub fn timer_handler(_frame: &InterruptFrame, _error_code: u64) {
 }
 
 /// IRQ 1 (vector 33 after the standard remap): read the scancode from
-/// port 0x60, buffer it, print it in hex, EOI. One key press is one
-/// line, so printing here does not flood.
+/// port 0x60, buffer it, EOI. Round 4 R-3: no print per keystroke —
+/// the old per-key debug line is deleted, not hidden behind a
+/// switch, so the console echo is the only per-key output and
+/// typed lines stay readable.
 pub fn keyboard_handler(_frame: &InterruptFrame, _error_code: u64) {
     let scancode = inb(KEYBOARD_DATA);
     keyboard_push(scancode);
-    serial_write_str("INT keyboard scancode 0x");
-    serial_write_hex_u64(scancode as u64);
-    serial_write_str("\n");
     pic_send_eoi(1);
 }
 
