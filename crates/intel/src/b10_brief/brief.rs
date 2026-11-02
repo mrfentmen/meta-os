@@ -784,6 +784,86 @@ pub fn blocked_contact_lines(
         .collect()
 }
 
+/// One held decision: a question waiting on a word, plus the nick
+/// it waits on. An empty decider reads as decider not reported,
+/// never a guessed nick; the caller builds this list with that
+/// rule applied, and an entry with no usable question is skipped
+/// before it ever reaches this list.
+/// A held-decisions record for the held-decisions lines: the
+/// decisions it carries, and its age label. Python derives the
+/// label from the record's `as_of` time through
+/// `_environment_age_label`: `" (as of YYYY-MM-DD HH:MM ET)"`, or
+/// `" (snapshot time not reported)"` when the record gives no time.
+/// This crate has no time dependency, so the caller supplies the
+/// label already formed, the same way `BlockedContacts` does.
+///
+/// Unlike the sibling line-builders in this file, `None` (no
+/// record at all) does NOT yield no lines here: Python's
+/// `held_decisions_lines` treats a non-dict record as an empty
+/// record and reads none reported, and the parity tests pin that
+/// (`test_empty_record_reads_none_reported` calls it with
+/// `"not a record"`). The composer still gates the section on the
+/// record existing, so a brief without the record carries no
+/// section; this function on its own reports the empty state.
+#[derive(Debug, Clone, PartialEq)]
+pub struct HeldDecision {
+    pub question: String,
+    pub decider: String,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct HeldDecisions {
+    pub decisions: Vec<HeldDecision>,
+    pub age_label: String,
+}
+
+/// INT-027 follow-up: the held-decisions lines for a morning
+/// brief, closing cold-start gap 3 (no held decisions) for the
+/// template brief from a stated record.
+///
+/// A question is named verbatim from the record; an entry without
+/// a question is skipped, never padded; a decision without a
+/// decider reads decider not reported, never a guessed nick. A
+/// record with no usable entries reads none reported, never a
+/// padded decision, so a reader can tell the held list was
+/// checked and held nothing. Every line carries its age label.
+/// The lines are plain lines, not bullets, so the BRF-007 budget
+/// trim never drops a decision waiting on a word ahead of a watch
+/// item, and they are redacted by the composer, not here. This
+/// closes gap 3 for the template brief only: a Spark-composed
+/// brief carrying these lines, and an independent lane member's
+/// cold-start re-run, are still owed.
+pub fn held_decisions_lines(record: Option<&HeldDecisions>) -> Vec<String> {
+    let (decisions, age_label) = match record {
+        None => (&[][..], " (snapshot time not reported)"),
+        Some(r) => (&r.decisions[..], r.age_label.as_str()),
+    };
+    let mut lines: Vec<String> = Vec::new();
+    for entry in decisions {
+        if entry.question.is_empty() {
+            continue;
+        }
+        if entry.decider.is_empty() {
+            lines.push(format!(
+                "Held decision: {} (decider not reported)",
+                entry.question
+            ));
+        } else {
+            lines.push(format!(
+                "Held decision: {} (waiting on {})",
+                entry.question, entry.decider
+            ));
+        }
+    }
+    if lines.is_empty() {
+        return vec![format!("Held decisions: none reported{}", age_label)];
+    }
+    lines
+        .iter()
+        .map(|l| format!("{}{}", l, age_label))
+        .collect()
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -1145,6 +1225,41 @@ mod tests {
         assert_eq!(
             blocked_contact_lines(Some(&no_ask), &bare),
             vec!["7: owner not reported in this window (snapshot time not reported)"]
+        );
+    }
+
+    #[test]
+    fn held_decisions_lines_verbatim_decider_none_and_no_record() {
+        let record = HeldDecisions {
+            decisions: vec![
+                HeldDecision { question: "Approve posting brief announcements?".into(), decider: "dale".into() },
+                HeldDecision { question: "Pick the boot target for demo day?".into(), decider: "dale".into() },
+                // No decider reads not reported, never a guessed nick.
+                HeldDecision { question: "Which gateway for the demo?".into(), decider: "".into() },
+                // No question is skipped, never padded.
+                HeldDecision { question: "".into(), decider: "dale".into() },
+            ],
+            age_label: " (as of 2026-10-30 08:00 ET)".into(),
+        };
+        assert_eq!(
+            held_decisions_lines(Some(&record)),
+            vec![
+                "Held decision: Approve posting brief announcements? (waiting on dale) (as of 2026-10-30 08:00 ET)",
+                "Held decision: Pick the boot target for demo day? (waiting on dale) (as of 2026-10-30 08:00 ET)",
+                "Held decision: Which gateway for the demo? (decider not reported) (as of 2026-10-30 08:00 ET)",
+            ]
+        );
+        // An empty record reads none reported, never a padded decision.
+        let empty = HeldDecisions { decisions: vec![], age_label: " (snapshot time not reported)".into() };
+        assert_eq!(
+            held_decisions_lines(Some(&empty)),
+            vec!["Held decisions: none reported (snapshot time not reported)"]
+        );
+        // Python pins the non-record case the same way: a record
+        // that is not a dict reads none reported, not no lines.
+        assert_eq!(
+            held_decisions_lines(None),
+            vec!["Held decisions: none reported (snapshot time not reported)"]
         );
     }
 }
