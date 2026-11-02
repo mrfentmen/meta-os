@@ -2378,6 +2378,54 @@ pub fn with_memory_depth(
     }
 }
 
+/// OS-051 follow-up: the boot-path caller that fills a boot
+/// snapshot's `previous_session` record, so a boot brief carries its
+/// digest line even when the snapshot states only the raw inputs.
+/// Returns the record to store as the snapshot's `previous_session`
+/// value. A hand-stated record wins over a built one: pass it as
+/// `existing` and it is returned unchanged, whatever the inputs say,
+/// so a caller that knows its previous session better than these
+/// inputs is never overwritten. This reads stated inputs, never a
+/// live store: the brief store is not consulted for the last brief
+/// here, so a caller that states no last brief gets no digest even
+/// when an earlier brief sits in the store. Two inputs are
+/// deliberately NOT used here, and a reader must not confuse them
+/// with the filler's inputs: the snapshot's current jobs list is the
+/// window's jobs at boot, not the shutdown list, so it is never
+/// passed as `shutdown_jobs`; and the snapshot's `previous_brief`
+/// record is the BRF-019 diff record (job ids with their previous
+/// statuses), not a stored brief, so it carries no last-brief time
+/// for the builder to use. The record carries no as_of stamp of its
+/// own — its time is the last-brief time itself — so unlike the
+/// other with_* callers this one takes no now argument. Never
+/// fails: a builder failure leaves the caller without a record, so
+/// the boot path still produces a brief, just without the digest
+/// line, instead of failing the launch brief outright.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `shutdown_jobs` when the snapshot's
+/// shutdown list is missing or not a list — a missing or non-list
+/// shutdown list states nothing about shutdown and yields no record
+/// at all, so a brief never claims a clean shutdown on silence;
+/// `Some(&[])` is an explicitly empty list, which states a clean
+/// shutdown and yields a 0-jobs-completed, 0-open-threads record
+/// (when the last brief yields a usable time). A non-dict snapshot
+/// has no Rust form: the caller passes `None` for every input and
+/// gets `None` back, mirroring Python's empty-copy return. A
+/// non-dict last brief likewise has no Rust form and is passed as
+/// `None`, so the builder returns `None` instead of a guessed time.
+pub fn with_previous_session(
+    existing: Option<&PreviousSession>,
+    last_brief: Option<&StoredBriefInput>,
+    shutdown_jobs: Option<&[ShutdownJob]>,
+) -> Option<PreviousSession> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let shutdown_jobs = shutdown_jobs?;
+    build_previous_session(last_brief, Some(shutdown_jobs))
+}
+
 /// STR-002: `_format_brief_time` — a stored brief timestamp as
 /// `"YYYY-MM-DD HH:MM ET"` in America/New_York, the zone the
 /// BRF-011 morning schedule uses. This crate has no time
@@ -6176,5 +6224,86 @@ mod tests {
             .contains("Aged decision: freeze the demo fixture (from 2026-10-01)"));
         assert!(lines[1].contains("Due commitments: none reported"));
         assert!(lines[2].contains("Fresh-agent context: none reported"));
+    }
+
+    #[test]
+    fn with_previous_session_builds_from_stated_inputs_and_renders_digest() {
+        // 1793620800 formats as 2026-11-02 07:00 ET (same vector
+        // the build_previous_session tests use).
+        let brief = StoredBriefInput {
+            generated_at: Some(Some(1793620800)),
+            ts: None,
+            last_brief_at: None,
+        };
+        let jobs = vec![
+            ShutdownJob { title: "Ship it".into(), status: "done".into() },
+            ShutdownJob { title: "Thread A".into(), status: "open".into() },
+            ShutdownJob { title: "Thread B".into(), status: "claimed".into() },
+            ShutdownJob { title: "In flight".into(), status: "in_flight".into() },
+            ShutdownJob { title: "".into(), status: "done".into() },
+        ];
+        let record = with_previous_session(None, Some(&brief), Some(&jobs))
+            .expect("stated inputs yield a previous_session record");
+        assert_eq!(record.last_brief_at, "2026-11-02 07:00 ET");
+        assert_eq!(record.jobs_completed, vec!["Ship it"]);
+        assert_eq!(record.open_threads, vec!["Thread A", "Thread B"]);
+        assert_eq!(
+            previous_session_digest(Some(&record)).as_deref(),
+            Some("Previous session: last brief 2026-11-02 07:00 ET, 1 job completed (Ship it), 2 open threads (Thread A; Thread B)")
+        );
+    }
+
+    #[test]
+    fn with_previous_session_hand_stated_record_wins_unchanged() {
+        let stated = PreviousSession {
+            last_brief_at: "2026-10-30 08:00 ET".into(),
+            jobs_completed: vec!["Hand-stated job".into()],
+            open_threads: vec![],
+        };
+        let brief = StoredBriefInput {
+            generated_at: Some(Some(1793620800)),
+            ts: None,
+            last_brief_at: None,
+        };
+        let jobs = vec![
+            ShutdownJob { title: "Ship it".into(), status: "done".into() },
+        ];
+        let record = with_previous_session(Some(&stated), Some(&brief), Some(&jobs))
+            .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_previous_session_silence_or_no_time_gets_no_record() {
+        let brief = StoredBriefInput {
+            generated_at: Some(Some(1793620800)),
+            ts: None,
+            last_brief_at: None,
+        };
+        let jobs = vec![
+            ShutdownJob { title: "Ship it".into(), status: "done".into() },
+        ];
+        // A missing shutdown list states nothing about shutdown:
+        // no record, never a claimed clean shutdown.
+        assert_eq!(with_previous_session(None, Some(&brief), None), None);
+        // No last brief at all: no digest, even with a shutdown list.
+        assert_eq!(with_previous_session(None, None, Some(&jobs)), None);
+        // A last brief with no usable time: no record, never guessed.
+        let no_time = StoredBriefInput {
+            generated_at: None,
+            ts: None,
+            last_brief_at: Some(String::new()),
+        };
+        assert_eq!(
+            with_previous_session(None, Some(&no_time), Some(&jobs)),
+            None
+        );
+        // An explicitly empty shutdown list states a clean shutdown:
+        // a 0-jobs-completed, 0-open-threads record.
+        let empty: Vec<ShutdownJob> = vec![];
+        let record = with_previous_session(None, Some(&brief), Some(&empty))
+            .expect("an empty shutdown list yields a clean-shutdown record");
+        assert_eq!(record.last_brief_at, "2026-11-02 07:00 ET");
+        assert!(record.jobs_completed.is_empty() && record.open_threads.is_empty());
     }
 }
