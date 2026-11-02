@@ -1,0 +1,35 @@
+{
+  "a": {
+    "note_s": 0.0068,
+    "pack_s": 0.0001,
+    "status": "proven",
+    "proven": true,
+    "rounds": 4,
+    "R": 1.721,
+    "pack_ok": true,
+    "mem_seq": 1,
+    "dupes": []
+  },
+  "b": {
+    "note_s": 0.0055,
+    "pack_s": 0.0,
+    "status": "proven",
+    "proven": true,
+    "rounds": 4,
+    "R": 1.721,
+    "pack_ok": true,
+    "mem_seq": 2,
+    "dupes": []
+  },
+  "c": {
+    "note_s": 0.003,
+    "pack_s": 0.0,
+    "status": "proven",
+    "proven": true,
+    "rounds": 6,
+    "R": 1.8915,
+    "pack_ok": true,
+    "mem_seq": 3,
+    "dupes": []
+  }
+}

@@ -88,3 +88,23 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - COMPARISON.md: 3-run table, diversity metric (mean pairwise normalized Euclidean: 001 0.7305→0.2233, 002 0.7579→0.2103, 003 0.7305→0.2257), collapse NO/NO/NO (<0.05 threshold), 3 pack hashes, 5-line demonstrably-does chapter, total compute 0.03s, error lines (001: 2 pre-pack SVG errors with partials deleted, clean rerun; 002/003 error-free).
 - Suites: hortus 14 OK, science-lab 177 OK (163 + 7 cycles + 7 hortus). CSV parse: 8 rows each, 24 total.
 - Truth: Hortus breeds selectable, reproducible heatsink candidates under a held-out gate, capped at ladder level 2. Landed. Nothing blocked.
+
+## Section 14 — Officina 2b prior-art (OC2B-326–350) — DONE 2026-11-02
+- Baseline: 49 tests OK + 2a gate 14/14 (in `OC2B-officina-baseline.md`). Bounds read live from `heatsink.py:51,54` (FIN_HEIGHT (5.0,80.0), BASE (2.0,12.0)).
+- 2b `prior_art.py`: note schema (sources mandatory), zero-source rejection, repo grep search (capped 2 hits/file), web search (URLs+titles), per-claim sources, forbidden-phrase strip-guard, 2a→2b wiring.
+- Briefs A (heatsink-fin fixture), B (rough-words bracket), C (fin-array variant) → notes with primary/secondary marks, dead-URL re-fetch column, dedup clean. 3 timings recorded. Offline drill: repo-only note (clean refusal path tested).
+- Suite + gate re-run green. Stage record `OC2B_OFFICINA_2B.md`. Registry proposals as status text (not made).
+- Truth: 2b writes sourced prior-art notes and never a patentability opinion. Landed. Nothing blocked.
+
+## Section 15 — Officina 2c packs + 2d memory (OC2B-351–375) — DONE 2026-11-02
+- 2c `pack_export.py`: emitter + `check_pack` against live bounds. Checker tests: at-bounds pass, +1mm-over fails naming field, base-bound direction documented. Packs A/B/C emitted, all check ok in-workdir and clean-dir.
+- 2d `memory.py`: append-only JSONL (format in docstring). Tests: append/read-back, two-brief readability, 50-append oldest-present. Backfill 3 packs. Read-back dump + truncation drill (fails clean with line number) in `OC2B-2d-readback.md`.
+- Suite 77 OK + gate 14/14. Stage records `OC2B_OFFICINA_2C.md` / `2D.md`. Proposals as status text.
+- Truth: packs carry in-bounds dimensions and memory never drops entries. Landed. Nothing blocked.
+
+## Section 16 — Two real builds (OC2B-376–400) — DONE 2026-11-02
+- Build-001 (rough-words fanless router sink, no numbers): 2a proven R 1.7210 (4 rounds) → 2b note → 2c pack (15 fins, 4.0mm 50×50 base) → bounds ok (independent clean-dir PASS) → faber gap recorded verbatim (loop takes loop seeds, not packs — no forcing) → memory seq 3 → GENERATED render (webp, magic-verified, receipt parses) → summary.
+- Build-002 (different object, forced-airflow): 2a proven R 1.0623 (2 rounds) → same chain → memory. COMPARISON.md: identical vs differed, memory oldest-first, per-stage timings, no hidden failures.
+- Scripted no-OOB check over ALL packs: clean. GENERATED filename list: one file (build-001 render).
+- Suite 77 OK + gate 14/14.
+- Truth: Officina turns rough words into checked packs and remembers them; nothing built physically. Landed. Nothing blocked.
