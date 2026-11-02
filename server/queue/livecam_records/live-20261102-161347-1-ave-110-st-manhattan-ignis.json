@@ -1,0 +1,42 @@
+{
+ "frame": {
+  "camera_id": "f2b94b32-fc41-42b6-935d-8330374ca05a",
+  "camera_name": "1 Ave @ 110 St",
+  "area": "Manhattan",
+  "latitude": 40.792177,
+  "longitude": -73.93825,
+  "source": "NYC DOT public traffic camera",
+  "image_url": "https://webcams.nyctmc.org/api/cameras/f2b94b32-fc41-42b6-935d-8330374ca05a/image",
+  "fetched_at": "2026-11-02T16:13:25.749160+00:00",
+  "image_sha256": "d5aef647a2c9b55f6c1977933113707c40285da9375669fdc5d8692c5b9c6356",
+  "image_bytes": 25003,
+  "live": true
+ },
+ "reading": [
+  {
+   "product": "ignis",
+   "timestamp": "2026-11-02T16:13:25.749160+00:00",
+   "observations": [
+    {
+     "category": "no hazard visible",
+     "description": "Clear daytime urban street with vehicles, buildings and trees, no smoke, flames, or fire indicators visible",
+     "evidence": "across entire frame",
+     "confidence": 0.97,
+     "region": null
+    }
+   ],
+   "assessment": {
+    "category": "no hazard visible",
+    "summary": "No smoke, flames, or fire indicators are visible in this clear daytime street scene.",
+    "uncertainty": [],
+    "requires_human_review": false
+   },
+   "processing": {
+    "model": "muse-spark-1.3",
+    "latency_ms": null
+   }
+  },
+  "muse-spark-1.3",
+  5331
+ ]
+}

@@ -1,0 +1,120 @@
+{
+ "record": {
+  "id": "incident-budget-1",
+  "status": "stopped",
+  "division": "vigiles",
+  "category": "person down",
+  "camera": {
+   "id": "c",
+   "name": "STAGED"
+  },
+  "created_at": "t",
+  "timeline": [
+   {
+    "at": "t",
+    "step": "flag",
+    "division": "vigiles",
+    "category": "person down",
+    "job_id": "j1"
+   },
+   {
+    "at": "t",
+    "step": "decision",
+    "decision": "investigate",
+    "actions": [
+     {
+      "agent": "review",
+      "task": "x"
+     }
+    ]
+   },
+   {
+    "at": "t",
+    "step": "review",
+    "verdict": "confirmed",
+    "category": "person down",
+    "judge_mode": "deterministic",
+    "judge_reasons": [
+     "agree"
+    ]
+   },
+   {
+    "at": "t",
+    "step": "investigation",
+    "kind": "cross-lens",
+    "camera_id": "c",
+    "division": "ignis",
+    "category": "normal activity"
+   },
+   {
+    "at": "t",
+    "step": "investigation",
+    "kind": "cross-lens",
+    "camera_id": "c",
+    "division": "ignis",
+    "category": "normal activity"
+   },
+   {
+    "at": "t",
+    "step": "investigation",
+    "kind": "cross-lens",
+    "camera_id": "c",
+    "division": "ignis",
+    "category": "normal activity"
+   },
+   {
+    "at": "t",
+    "step": "investigation",
+    "kind": "cross-lens",
+    "camera_id": "c",
+    "division": "ignis",
+    "category": "normal activity"
+   },
+   {
+    "at": "t",
+    "step": "investigation",
+    "kind": "cross-lens",
+    "camera_id": "c",
+    "division": "ignis",
+    "category": "normal activity"
+   },
+   {
+    "at": "t",
+    "step": "investigation",
+    "kind": "cross-lens",
+    "camera_id": "c",
+    "division": "ignis",
+    "category": "normal activity"
+   },
+   {
+    "at": "t",
+    "step": "investigation",
+    "kind": "cross-lens",
+    "camera_id": "c",
+    "division": "ignis",
+    "category": "normal activity"
+   },
+   {
+    "at": "2026-11-02T16:25:50.395Z",
+    "step": "decision",
+    "agent": "orchestrator",
+    "decision": "stop",
+    "reason": "stop condition reached: max_actions (8) \u2014 the incident already has 8 actions on its timeline; no further action is ordered",
+    "actions": [],
+    "actions_count": 0,
+    "status": "stopped"
+   }
+  ]
+ },
+ "stop_decision": {
+  "incident_id": "incident-budget-1",
+  "decision": "stop",
+  "reason": "stop condition reached: max_actions (8) \u2014 the incident already has 8 actions on its timeline; no further action is ordered",
+  "actions": [],
+  "stop_conditions": {
+   "max_actions": 8,
+   "max_model_calls": 12,
+   "max_cost_usd": 0.5
+  }
+ }
+}

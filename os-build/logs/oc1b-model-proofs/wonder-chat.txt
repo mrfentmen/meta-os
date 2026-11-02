@@ -1,0 +1,7 @@
+OC1B-203 muse-wonder-1.0 chat_text live call (Mac, tree 94010c76)
+call: models.chat_text('muse-wonder-1.0', 'Reply with exactly the word WONDEROK and nothing else.')
+reply: 'WONDEROK'
+model-reported: muse-wonder-1.0
+latency_ms: 2655
+OC1B-204 receipt line (server/queue/model_receipts.jsonl):
+{"ts": "2026-11-02T16:03:30.242445+00:00", "kind": "chat:muse-wonder-1.0", "model": "muse-wonder-1.0", "surface": "chat", "usage": {"completion_tokens": 81, "prompt_tokens": 21, "total_tokens": 102, "completion_tokens_details": {"reasoning_tokens": 68}, "prompt_tokens_details": {"cached_tokens": 0}}, "latency_ms": 2655, "est_cost_usd": null}

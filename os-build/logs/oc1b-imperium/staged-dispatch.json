@@ -1,0 +1,305 @@
+{
+ "id": "incident-be309eb4a7b98a18",
+ "status": "dispatched-simulated",
+ "evidence": {
+  "frame_sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+  "detector": "unavailable",
+  "files": [
+   {
+    "ref": "evidence/incident-be309eb4a7b98a18/flag-frame-staged-cam-1-2e63be.jpg",
+    "kind": "flag-frame",
+    "sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+    "bytes": 294272,
+    "camera_id": "staged-cam-1"
+   },
+   {
+    "ref": "evidence/incident-be309eb4a7b98a18/investigation-frame-staged-cam-1-2e63be.jpg",
+    "kind": "investigation-frame",
+    "sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+    "bytes": 294272,
+    "camera_id": "staged-cam-1"
+   },
+   {
+    "ref": "evidence/incident-be309eb4a7b98a18/investigation-frame-staged-cam-1-2e63be.jpg",
+    "kind": "investigation-frame",
+    "sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+    "bytes": 294272,
+    "camera_id": "staged-cam-1"
+   },
+   {
+    "ref": "evidence/incident-be309eb4a7b98a18/investigation-frame-staged-cam-2-2e63be.jpg",
+    "kind": "investigation-frame",
+    "sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+    "bytes": 294272,
+    "camera_id": "staged-cam-2"
+   }
+  ]
+ },
+ "created_at": "2026-11-02T16:24:17.304Z",
+ "camera": {
+  "id": "staged-cam-1",
+  "name": "STAGED Cam 1",
+  "area": "STAGED",
+  "latitude": 40.0,
+  "longitude": -74.0
+ },
+ "division": "vigiles",
+ "category": "person down",
+ "priority": "high",
+ "patrol_job_id": "job-staged-307",
+ "timeline": [
+  {
+   "at": "2026-11-02T16:24:17.304Z",
+   "step": "flag",
+   "division": "vigiles",
+   "category": "person down",
+   "priority": "high",
+   "job_id": "job-staged-307",
+   "model": "muse-spark-1.3",
+   "latency_ms": 11,
+   "summary": "STAGED summary",
+   "frame_sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.305Z",
+   "step": "decision",
+   "agent": "orchestrator",
+   "decision": "investigate",
+   "reason": "flagged category \"person down\" is outside the vigiles baseline set and no independent review has been recorded yet",
+   "actions": [
+    {
+     "agent": "review",
+     "task": "Independent second assessment of the flagged frame (review survival rule: the flag stands only if this reading also lands outside the baseline set)"
+    }
+   ],
+   "actions_count": 1,
+   "status": "under_review",
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.305Z",
+   "step": "review",
+   "verdict": "confirmed",
+   "category": "person down",
+   "judged_by": "imperium-judge",
+   "judge_mode": "deterministic",
+   "judge_reasons": [
+    "two independent readings agree on 'person down'"
+   ],
+   "reader": "spark",
+   "reader_fallback": null,
+   "job_id": "job-staged-307",
+   "model": "muse-spark-1.3",
+   "latency_ms": 11,
+   "error": null,
+   "summary": "STAGED summary",
+   "status": null,
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.306Z",
+   "step": "reported",
+   "status": "reported",
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.306Z",
+   "step": "decision",
+   "agent": "orchestrator",
+   "decision": "investigate",
+   "reason": "the flag survived review and no investigation has been recorded; additional evidence is gathered before any response is prepared",
+   "actions": [
+    {
+     "agent": "investigation",
+     "task": "Assess the incident camera under the other divisions' lenses, then up to 3 nearest cameras under the origin division (bounded by MAX_INVESTIGATION_CALLS)"
+    }
+   ],
+   "actions_count": 1,
+   "status": "investigating",
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.307Z",
+   "step": "investigation",
+   "kind": "cross-lens",
+   "camera_id": "staged-cam-1",
+   "camera_name": "STAGED Cam 1",
+   "division": "ignis",
+   "category": "person down",
+   "flagged": true,
+   "frame_sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+   "job_id": "job-staged-307",
+   "model": "muse-spark-1.3",
+   "latency_ms": 11,
+   "error": null,
+   "status": "investigating",
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.307Z",
+   "step": "evidence",
+   "files": [
+    "evidence/incident-be309eb4a7b98a18/investigation-frame-staged-cam-1-2e63be.jpg"
+   ],
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.308Z",
+   "step": "investigation",
+   "kind": "cross-lens",
+   "camera_id": "staged-cam-1",
+   "camera_name": "STAGED Cam 1",
+   "division": "medicus",
+   "category": "person down",
+   "flagged": true,
+   "frame_sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+   "job_id": "job-staged-307",
+   "model": "muse-spark-1.3",
+   "latency_ms": 11,
+   "error": null,
+   "status": null,
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.308Z",
+   "step": "evidence",
+   "files": [
+    "evidence/incident-be309eb4a7b98a18/investigation-frame-staged-cam-1-2e63be.jpg"
+   ],
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.310Z",
+   "step": "investigation",
+   "kind": "neighbour",
+   "camera_id": "staged-cam-2",
+   "camera_name": "STAGED Cam 2",
+   "division": "vigiles",
+   "category": "person down",
+   "flagged": true,
+   "frame_sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+   "job_id": "job-staged-307",
+   "model": "muse-spark-1.3",
+   "latency_ms": 11,
+   "error": null,
+   "status": null,
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.310Z",
+   "step": "evidence",
+   "files": [
+    "evidence/incident-be309eb4a7b98a18/investigation-frame-staged-cam-2-2e63be.jpg"
+   ],
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.311Z",
+   "step": "decision",
+   "agent": "orchestrator",
+   "decision": "prepare_response",
+   "reason": "flagged, confirmed by independent review, and investigated; the response brief is prepared and submitted to the simulated dispatch endpoint only",
+   "actions": [
+    {
+     "agent": "response",
+     "task": "Build the incident brief from the recorded assessments and submit it, picture included, to the simulated dispatch endpoint (loopback-only, labelled simulated; the agent sends it with no human verify step \u2014 requires_human_review stays true as the post-hoc audit flag, and the agency verify policy may hold the package in the crew)"
+    }
+   ],
+   "actions_count": 1,
+   "status": "response_prepared",
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.312Z",
+   "step": "brief",
+   "brief": {
+    "product": "vigiles",
+    "timestamp": "2026-11-02T16:24:17.312Z",
+    "observations": [
+     {
+      "category": "person down",
+      "description": "STAGED: person down with red tattoo visible on left forearm",
+      "evidence": "STAGED frame",
+      "confidence": null,
+      "region": null
+     },
+     {
+      "category": "person down",
+      "description": "STAGED: person down with red tattoo visible on left forearm",
+      "evidence": "STAGED frame",
+      "confidence": null,
+      "region": null
+     },
+     {
+      "category": "person down",
+      "description": "STAGED: person down with red tattoo visible on left forearm",
+      "evidence": "STAGED frame",
+      "confidence": null,
+      "region": null
+     },
+     {
+      "category": "person down",
+      "description": "STAGED: person down with red tattoo visible on left forearm",
+      "evidence": "STAGED frame",
+      "confidence": null,
+      "region": null
+     },
+     {
+      "category": "person down",
+      "description": "STAGED: person down with red tattoo visible on left forearm",
+      "evidence": "STAGED frame",
+      "confidence": null,
+      "region": null
+     }
+    ],
+    "assessment": {
+     "category": "person down",
+     "summary": "STAGED summary",
+     "uncertainty": [],
+     "requires_human_review": true
+    },
+    "processing": {
+     "model": "muse-spark-1.3",
+     "latency_ms": 55
+    }
+   },
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.312Z",
+   "step": "bolo",
+   "bolo": {
+    "division": "vigiles",
+    "category": "person down",
+    "camera_name": "STAGED Cam 1",
+    "area": "STAGED",
+    "flagged_at": "2026-11-02T16:24:17.304Z",
+    "frame_files": [
+     "evidence/incident-be309eb4a7b98a18/flag-frame-staged-cam-1-2e63be.jpg",
+     "evidence/incident-be309eb4a7b98a18/investigation-frame-staged-cam-1-2e63be.jpg",
+     "evidence/incident-be309eb4a7b98a18/investigation-frame-staged-cam-1-2e63be.jpg",
+     "evidence/incident-be309eb4a7b98a18/investigation-frame-staged-cam-2-2e63be.jpg"
+    ],
+    "face_crops": 0,
+    "person_descriptions": [
+     "STAGED: person down with red tattoo visible on left forearm"
+    ],
+    "visible_marks": [],
+    "direction_of_travel": null,
+    "direction_note": "Not determined from still frames."
+   },
+   "staged": true
+  },
+  {
+   "at": "2026-11-02T16:24:17.320Z",
+   "step": "dispatch",
+   "simulated": true,
+   "service": "police",
+   "receipt_id": "sim-8488ea6982679dd0",
+   "status": "dispatched-simulated",
+   "staged": true
+  }
+ ],
+ "staged": true
+}

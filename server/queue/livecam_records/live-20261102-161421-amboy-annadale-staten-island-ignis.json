@@ -1,0 +1,42 @@
+{
+ "frame": {
+  "camera_id": "ebd920f9-8522-4ae7-af8f-b887256fdaa1",
+  "camera_name": "Amboy Rd @ Annadale Rd",
+  "area": "Staten Island",
+  "latitude": 40.53598,
+  "longitude": -74.180867,
+  "source": "NYC DOT public traffic camera",
+  "image_url": "https://webcams.nyctmc.org/api/cameras/ebd920f9-8522-4ae7-af8f-b887256fdaa1/image",
+  "fetched_at": "2026-11-02T16:13:59.920025+00:00",
+  "image_sha256": "847a010dc764663693a10cbfaf6e3afab1908df6377a5e55bff107535d0fda25",
+  "image_bytes": 23968,
+  "live": true
+ },
+ "reading": [
+  {
+   "product": "ignis",
+   "timestamp": "2026-11-02T16:13:59.920025+00:00",
+   "observations": [
+    {
+     "category": "no hazard visible",
+     "description": "Daytime street intersection with vehicles, buildings, and road markings; no smoke, flames, or fire indicators visible",
+     "evidence": "entire frame shows clear street scene",
+     "confidence": 0.95,
+     "region": null
+    }
+   ],
+   "assessment": {
+    "category": "no hazard visible",
+    "summary": "No smoke, flame, or fire indicators visible in the daytime street camera view.",
+    "uncertainty": [],
+    "requires_human_review": false
+   },
+   "processing": {
+    "model": "muse-spark-1.3",
+    "latency_ms": null
+   }
+  },
+  "muse-spark-1.3",
+  6150
+ ]
+}

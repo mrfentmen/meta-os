@@ -1,0 +1,7 @@
+# OC1B-242 livecams offline tests (Mac, tree 94010c76)
+
+```
+Ran 12 tests in 0.001s
+
+OK
+```

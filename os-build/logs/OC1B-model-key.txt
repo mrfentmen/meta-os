@@ -1,0 +1,3 @@
+SPARK_API_KEY present: length=48 first4=****... (value never printed)
+source: line 1 of ~/Desktop/hackathon key.txt
+tree: 94010c76
