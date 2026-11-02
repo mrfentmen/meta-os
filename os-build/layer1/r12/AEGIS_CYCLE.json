@@ -1,0 +1,42 @@
+{
+  "task": "R12-019",
+  "run": "aegis-cycle-2026-11-02T15-01-08-260Z",
+  "at": "2026-11-02T15:01:09.798Z",
+  "ok": true,
+  "route": "direct OSV API under Pax's written exception",
+  "stages": {
+    "sweep": {
+      "state": "ran",
+      "exit": 0,
+      "ms": 1130,
+      "route": "api.osv.dev directly (Pax written exception)",
+      "manifests": 23,
+      "queried": 108,
+      "findings": 0,
+      "stderr": ""
+    },
+    "kev": {
+      "state": "ran",
+      "exit": 0,
+      "ms": 365,
+      "checked": 0,
+      "flagged": 0,
+      "unchecked": 0,
+      "excluded": 10,
+      "stderr": ""
+    },
+    "ledger": {
+      "state": "ran",
+      "exit": 0,
+      "ms": 42,
+      "receiptsWritten": 0,
+      "sweepFindings": 0,
+      "ledgerLines": 2,
+      "stderr": ""
+    }
+  },
+  "claims": {
+    "proven": "the sweep queried the manifests, the KEV cross-check read its findings, and the ledger recorded a batch receipt",
+    "not_proven": "no model, no report beyond the stage counts; the registry entry is claimed only when the run ledger shows the spawn"
+  }
+}
