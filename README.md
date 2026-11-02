@@ -224,6 +224,90 @@ A missing confidence or latency key is rejected even though a null value is acce
 - **Buffy** built early Rust batches.
 - **OpenCode** runs on the director's Mac and takes the jobs only a Mac can do: compiling, clicking, booting, recording.
 
+## The operating system underneath
+
+Meta OS is not only the systems. Underneath them sits a real
+operating system, built in the open in this repo:
+
+- **A bare-metal kernel** (`kernel/`, Rust, ~5,700 lines):
+  boot, memory map and page tables, a scheduler, ring-3
+  userspace, fault isolation, and a shell that reports the
+  machine's real state. The claim is one sentence and every
+  clause is backed by a committed boot log: *Meta OS boots on
+  x86_64 in QEMU, drops to ring 3, runs three userspace
+  programs, isolates a fault to one task, and gives you a
+  shell that reports the machine's real state — reproduced
+  from a clean checkout by one command.*
+- **Seven layers**: L1 boot, L2 kernel core, L3 drivers
+  (Rust), L4 system services (Goose), L5 agent runtime
+  (Lobster), L6 shell and apps, L7 programs. The Rust OS
+  layer is 18 crates; the whole OS side — kernel, crates, the
+  Python root they port, the agent layer — is roughly
+  122,000 lines, tests excluded.
+- **The agent layer** (`agents/`): named, badged agents with
+  budgets, memory, and an append-only ledger; a watchman that
+  wakes the right agent when work lands; a baton pass so a
+  job continues instead of restarting; and a shared lessons
+  file so what one agent learns, the whole crew gets.
+- **Meta Nuntius** (`relay/`): the OS's own messaging — how
+  agents and rooms talk inside the platform.
+- **The kernel build-out** is specified in
+  `os-build/KERNEL_BUILDOUT_SPEC.md`: graphics, typed input,
+  demand paging, copy-on-write, swap, inter-task messaging,
+  storage and a filesystem, and drivers — each with the boot
+  log that will prove it.
+
+## More of the platform
+
+- **Meta Aegis** — the cybersecurity system: sweeps the
+  project's own ground (repos, shipped servers, sites)
+  against known-vulnerability and secret-hygiene checks,
+  findings as records, never a value printed.
+- **Meta Nervus** — the neuron-surgery bench: the tools from
+  the Neuron Surgery research, wired as a program for people
+  and a tool tray for agents — sweep, steer, ablate, and
+  prove every change before and after.
+- **Science Lab** — bright lab, evidence ladder on every
+  claim, a 13-agent research team; Hortus, its breeding
+  engine, lives inside it.
+- **Officina** — the invention workshop: starts from a plain
+  description, researches prior art, and generates its own
+  designs and blueprints.
+- **Musica** — the dark studio: an agent that keeps music
+  sessions alive around the clock.
+- **Hands-Free** — the whole crew run by voice: talk orders,
+  hear briefs, approve out loud.
+
+## Screens
+
+The boot screen of the face image — the logo is the spinning
+ASCII infinity ribbon, blue, drawn live:
+
+![Boot screen](os-build/face/boot-theme-live.png)
+
+The desktop (light theme) on the carrier image:
+
+![Desktop, light](os-build/captures/face-web/desktop-light.png)
+
+The login:
+
+![Login](os-build/captures/face-web/login.png)
+
+The bare-metal kernel's own text console — no face, the real
+machine talking:
+
+![Kernel console](os-build/logs/K2-console.png)
+
+The systems at a glance:
+
+![The systems](docs/assets/systems.png)
+
+The Imperium evaluation board — fifteen real scenes, every
+emergency named, no false alarms; the border is the score,
+the red tag marks a flagged emergency:
+
+![Imperium eval board](labs/review/shots/nb-083-timeline.png)
+
 ## License
 
 No repository `LICENSE` file exists yet. The position, plainly: the code is public to read for
