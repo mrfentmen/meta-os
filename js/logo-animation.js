@@ -9,7 +9,7 @@
 // drift, 0% is still, 100% is four times the usual drift.
 // Nothing here sends anything anywhere; an unavailable store
 // leaves the panel working in memory for this visit only, the
-// same pattern the session log and js/logo-color.js use. No
+// same pattern the session log uses. No
 // keyboard shortcut: a global Space handler would hijack typing
 // in the console's own inputs, so pause is the button only.
 
