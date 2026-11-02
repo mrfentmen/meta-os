@@ -555,7 +555,7 @@ Not delivered:
 Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 `test_readme_data_index.py` 3 pass.
 
-## Section 16 — Agent layer Node (CB2-376..400) — 15/25
+## Section 16 — Agent layer Node (CB2-376..400) — 17/25
 
 | Task | File | Result |
 |---|---|---|
@@ -574,16 +574,17 @@ Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 | CB2-390 | `tests/agents-lessons-edges.test.mjs` | `teach` refuses empty text and empty agent by name; nothing written |
 | CB2-396 | `tests/agents-safewrite-edges.test.mjs` | `writeIfChanged` reports changed:false on identical bytes; mtime untouched |
 | CB2-397 | `tests/agents-safewrite-edges.test.mjs` | `writeWithinRoot` refuses ../, siblings, and absolute paths |
+| CB2-378 | `tests/agents-runtime-budget.test.mjs` | over-cap job refused before spawn; no child, no poll, no timer |
+| CB2-379 | `tests/agents-runtime-budget.test.mjs` | `budget-receipt` and `refused` events name the cap and the estimate |
 
-Not delivered: CB2-378..379 (no job-cost governor; runtime only has a wall-clock
-budget), CB2-382 (no large-change alarm form), CB2-384 (baton has no required
+Not delivered: CB2-382 (no large-change alarm form), CB2-384 (baton has no required
 step-index check), CB2-385 (no resume function), CB2-387..388 (gym runs a fixed
 three-task drill; no drill-file loader or unknown-step refusal), CB2-392..393
 (bridge is a supervisor verb, not a message shaper), CB2-395 (queue.mjs is a
 package contract; job FIFO lives in room1.mjs, not tested here).
 
-Section 16 verification: 8 test files, **34 tests pass, 0 fail** (lessons 6,
-safe-write 10, plus the six original suites).
+Section 16 verification: 9 test files, **42 tests pass, 0 fail**; the whole agent
+suite (`node --test tests/agents-*.test.mjs`) is 112/112.
 
 ## Section 17 — Face tests (CB2-401..425) — 0/25, blocked
 

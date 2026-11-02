@@ -21,6 +21,7 @@ export function loadRegistry(file) {
     if (!Array.isArray(a.command) || a.command.length === 0) throw new Error("registry: " + a.name + " missing command");
     a.budget = a.budget || {};
     if (a.budget.maxWallMs != null && !(a.budget.maxWallMs > 0)) throw new Error("registry: " + a.name + " bad maxWallMs");
+    if (a.budget.maxCostUsd != null && !(a.budget.maxCostUsd >= 0)) throw new Error("registry: " + a.name + " bad maxCostUsd");
   }
   return raw.agents;
 }
@@ -106,6 +107,27 @@ export function resolveCommand(command, root) {
   return out;
 }
 
+// CB-378: a job's estimated cost is checked against the agent's own cap before
+// anything is spawned. The check is one number against one cap on purpose -- a
+// governor that guesses is worse than none -- and a missing estimate is NOT read
+// as zero: it passes to the wall-clock budget and is recorded as unchecked.
+export function preflightBudget(agent, job = {}) {
+  const cap = agent && agent.budget ? agent.budget.maxCostUsd : undefined;
+  const estimate = job ? job.estimatedCostUsd : undefined;
+  if (cap == null) return { ok: true };
+  if (typeof cap !== "number" || !(cap >= 0)) {
+    throw new Error("registry: " + (agent && agent.name) + " bad maxCostUsd");
+  }
+  if (estimate == null) return { ok: true, unchecked: "no-estimate" };
+  if (typeof estimate !== "number" || !Number.isFinite(estimate) || estimate < 0) {
+    throw new Error("budget: estimatedCostUsd must be a non-negative number");
+  }
+  if (estimate > cap) {
+    return { ok: false, reason: "budget-cost-cap", estimate, cap };
+  }
+  return { ok: true, estimate, cap };
+}
+
 export function spawnAgent(agent, { root, job = {} } = {}) {
   const runId = agent.name + "-" + Date.now().toString(36);
   const runDir = path.join(root, "runs", runId);
@@ -120,6 +142,26 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     deadline: job.deadline || null, capabilities: agent.capabilities || [],
   };
   fs.writeFileSync(path.join(runDir, "brief.json"), JSON.stringify(brief, null, 2));
+
+  // CB-379: the refusal is recorded where the run's history lives -- the ledger
+  // and the receipt both name the cap and the estimate -- and the returned handle
+  // resolves like any other run, so a caller needs no special case for "never
+  // started". No command is resolved and no process exists to kill.
+  const gate = preflightBudget(agent, job);
+  if (!gate.ok) {
+    const receipt = {
+      run: runId, reason: gate.reason, estimateUsd: gate.estimate,
+      capUsd: gate.cap, at: new Date().toISOString(),
+    };
+    ledger.add(runId, "budget-receipt", receipt);
+    fs.writeFileSync(path.join(runDir, "receipt.json"), JSON.stringify(receipt, null, 2));
+    ledger.add(runId, "refused", { reason: gate.reason });
+    return {
+      agent, runId, runDir, ledger, child: null, stopped: gate.reason,
+      done: Promise.resolve({ code: null, signal: null, refused: true }),
+    };
+  }
+
   const command = resolveCommand(agent.command, root);
   ledger.add(runId, "spawn", { command, lane: brief.lane });
   const child = spawn(command[0], command.slice(1), {
@@ -160,6 +202,8 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
 
 export async function killAgent(handle, reason, graceMs = 800) {
   if (handle.stopped) return;
+  // A refused run has no child; it is already stopped and its receipt says why.
+  if (!handle.child) return;
   handle.stopped = reason;
   handle.ledger.add(handle.runId, "stop-request", { reason });
   handle.child.kill("SIGTERM");
