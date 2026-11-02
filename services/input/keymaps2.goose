@@ -2,7 +2,7 @@
 //
 // B-L1-111 — More keymaps plus a dead-key compose table, on the same machinery as B-L1-26.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t102_keycompose (38 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT "THE SAME MACHINERY" MEANS HERE
 // ------------------------------------

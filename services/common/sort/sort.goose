@@ -2,7 +2,7 @@
 //
 // B-L1-144 — Gap library 6: sorting fixed arrays, in place, without allocating.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t100_common (55 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // THE GAP THIS FILLS
 // ------------------
