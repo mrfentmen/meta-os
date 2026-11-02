@@ -70,7 +70,7 @@ struct Seq {
 
 struct EscParser {
     state: i64,                   // 0 normal, 1 saw ESC, 2 saw CSI, 3 in parameters
-    params: i64[..4],
+    params: i64[..4] = [0; 4],
     nparams: i64,
     have: bool,                   // a digit has been seen for the current parameter
     last: Seq,
@@ -80,7 +80,7 @@ struct EscParser {
 fn esc_new() -> EscParser {
     var p: EscParser = EscParser {
         state: 0,
-        params: [],
+        params: [0; 4],
         nparams: 0,
         have: false,
         last: Seq { kind: 0,
@@ -246,7 +246,7 @@ fn esc_put_num(out: u8[>..]&, cap: i64, v: i64) -> bool {
     while x > 0 { digits = digits + 1; x = x / 10; }
     x = v;
     var i: i64 = 0;
-    var buf: u8[..20] = [];
+    var buf: u8[..20] = [0; 20];
     while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i = i + 1; }
     i = 0;
     while i < digits { if !esc_ch(out, cap, buf[i]) { return false; } i = i + 1; }

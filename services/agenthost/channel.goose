@@ -54,11 +54,11 @@ struct Msg {
     deadline_ms: i64,
     state: i64,
     len: i64,
-    body: u8[..64],
+    body: u8[..64] = [0; 64],
 }
 
 struct Channel {
-    msgs: Msg[..16],
+    msgs: Msg[..16] = [Msg { .. }; 16],
     count: i64,
     next_id: i64,
     sent: i64,
@@ -70,7 +70,7 @@ struct Channel {
 
 fn ch_new() -> Channel {
     var c: Channel = Channel {
-        msgs: [],
+        msgs: [Msg { .. }; 16],
         count: 0,
         next_id: 0,
         sent: 0,
@@ -95,7 +95,7 @@ fn ch_new() -> Channel {
 }
 
 fn ch_zero_body() -> u8[..64] {
-    var b: u8[..64] = [];
+    var b: u8[..64] = [0; 64];
     var i: i64 = 0;
     while i < CH_BODY { b[i] = 0; i = i + 1; }
     return b;
@@ -133,7 +133,7 @@ fn ch_send(c: Channel&, from: i64, to: i64, body: const u8[:], now_ms: i64, ttl_
         deadline_ms: 0,
         state: 0,
         len: 0,
-        body: [],
+        body: [0; 64],
     };
     m.id = c.next_id;
     c.next_id = c.next_id + 1;

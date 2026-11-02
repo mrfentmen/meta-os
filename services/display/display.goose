@@ -40,20 +40,20 @@ struct VCon {
     rows: i64,
     cx: i64,                    // cursor column, 0..cols-1
     cy: i64,                    // cursor row on screen, 0..rows-1
-    screen: u8[..2048],         // rows * LINE_MAX, the visible text
+    screen: u8[..2048] = [0; 2048],         // rows * LINE_MAX, the visible text
     screen_used: i64,
     // History is a ring of lines already scrolled off the top. Stored as bytes plus a
     // count rather than as a ring of line records: a console scrolls by the line, and
     // a ring of bytes would have to know where lines start, which is the same
     // bookkeeping in a worse place.
-    hist: u8[..32768],
+    hist: u8[..32768] = [0; 32768],
     hist_start: i64,            // ring head, in bytes
     hist_used: i64,             // bytes of history held
     hist_lines: i64,            // lines in history, for the scrollback count
-    name: u8[..16],
+    name: u8[..16] = [0; 16],
 }
 
-var vcons: VCon[..4] = [];
+var vcons: VCon[..4] = [VCon { .. }; 4];
 var vcon_count: i64 = 0;
 var active: i64 = 0;            // index into vcons, never a handle: this service owns them
 

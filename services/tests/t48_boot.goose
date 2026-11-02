@@ -62,7 +62,7 @@ fn main() {
         boot_ticks: 0 },
         memory: MemoryInfo { total_bytes: 0,
         service_bytes: 0 },
-        reserved: [],
+        reserved: [0; 8],
     };
     b.version = BOOTINFO_VERSION;
     check("version accepted", bootinfo_supported(b) == true);

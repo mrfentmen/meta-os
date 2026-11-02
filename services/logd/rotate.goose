@@ -45,7 +45,7 @@ struct RotSegment {
 }
 
 struct RotStore {
-    segs: RotSegment[..8],
+    segs: RotSegment[..8] = [RotSegment { .. }; 8],
     count: i64,
     policy: RotPolicy,
     dropped_total: i64,
@@ -54,7 +54,7 @@ struct RotStore {
 
 fn rot_new(max_bytes: i64, keep: i64) -> RotStore {
     var s: RotStore = RotStore {
-        segs: [],
+        segs: [RotSegment { .. }; 8],
         count: 0,
         policy: RotPolicy { max_bytes: 0,
         keep: 0 },
@@ -234,7 +234,7 @@ fn rot_push_i64(out: u8[>..]&, cap: i64, v: i64) -> bool {
     var x = v;
     while x > 0 { digits = digits + 1; x = x / 10; }
     if out.len + digits > cap { return false; }
-    var buf: u8[..20] = [];
+    var buf: u8[..20] = [0; 20];
     var i: i64 = 0;
     x = v;
     while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i = i + 1; }

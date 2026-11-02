@@ -54,8 +54,8 @@ let FS_MAX_DEPTH: i64 = 16;
 // second place to change and `t65_fs` fails until it is.
 let MAX_DISK_BLOCKS: i64 = 64;
 
-var fs_blk: u8[..512] = [];
-var fs_blk2: u8[..512] = [];
+var fs_blk: u8[..512] = [0; 512];
+var fs_blk2: u8[..512] = [0; 512];
 var fs_mounted: bool = false;
 var fs_block_count: i64 = 0;
 var fs_free_blocks: i64 = 0;

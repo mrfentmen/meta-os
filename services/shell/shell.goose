@@ -476,7 +476,7 @@ fn sh_run() -> i64 {
     // `push` and `.len` (verified), and no `pop`/`clear` this layer can rely on. So the
     // line is a fixed array we shrink by moving the length, and each command's output
     // gets a fresh array by being declared per iteration.
-    var line: u8[..192] = [];
+    var line: u8[..192] = [0; 192];
     var line_len: i64 = 0;
 
     var prompt: u8[>..] = [];

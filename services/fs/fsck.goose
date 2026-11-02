@@ -97,8 +97,8 @@ fn report_init() -> FsckReport {
 // Walk the tree from the root, marking inodes and blocks. Returns the number of problems
 // found during the walk (bad entries, dups, range errors).
 fn ck_walk(r: FsckReport&) -> i64 {
-    var queue: i64[..24] = [];
-    var ents: i64[..32] = [];
+    var queue: i64[..24] = [0; 24];
+    var ents: i64[..32] = [0; 32];
     var qhead: i64 = 0;
     var qtail: i64 = 0;
     queue[qtail] = fs_root();

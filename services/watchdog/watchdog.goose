@@ -50,7 +50,7 @@ struct Watch {
     reported: bool,     // already escalated; do not report the same death twice
 }
 
-var watches: Watch[..32] = [];
+var watches: Watch[..32] = [Watch { .. }; 32];
 
 // The watchdog's own handle, when the supervisor has told it. A watchdog that watched itself
 // would report its own scheduling delay as a system failure, and the one thing worse than a

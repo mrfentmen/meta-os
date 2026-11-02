@@ -33,7 +33,7 @@ struct Span {
 }
 
 struct LineList {
-    spans: Span[..16],
+    spans: Span[..16] = [Span { .. }; 16],
     count: i64,
     overflow: bool,     // more lines existed than WRAP_MAX_LINES: the caller got a prefix
 }

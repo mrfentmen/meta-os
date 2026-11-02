@@ -78,7 +78,7 @@ var ex_ring: Ring = Ring { head: 0, tail: 0, count: 0, cap: 0 };
 // Builder, not a fixed array: ring_push takes a builder (typed mismatch otherwise).
 var ex_ring_buf: u8[>..] = [];
 var ex_clock: Clock = Clock { hz: 1000 };
-var ex_cfg_text: u8[..256] = [];
+var ex_cfg_text: u8[..256] = [0; 256];
 var ex_cfg_len: i64 = 0;
 
 // ---------------------------------------------------------------------------

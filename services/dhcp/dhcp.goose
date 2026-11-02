@@ -85,7 +85,7 @@ struct Lease {
 struct Client {
     state: i64,
     xid: i64,               // transaction id, chosen by us and echoed by the server
-    mac: u8[..6],
+    mac: u8[..6] = [0; 6],
     retries: i64,
     wait_until_ms: i64,     // when to retry
     backoff_ms: i64,
@@ -304,7 +304,7 @@ fn dhcp_init(mac: u8[..6]&, xid: i64) -> Client {
     var c: Client = Client {
         state: 0,
         xid: 0,
-        mac: [],
+        mac: [0; 6],
         retries: 0,
         wait_until_ms: 0,
         backoff_ms: 0,

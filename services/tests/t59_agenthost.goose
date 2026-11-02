@@ -124,7 +124,7 @@ fn main() {
     check("unknown handle has no grants", ah_caps(12345) == 0);
 
     // --- enumeration ---
-    var out: i64[..24] = [];
+    var out: i64[..24] = [0; 24];
     let n = ah_list(out, 24);
     check("list returns a count", n >= 1);
     check("list wrote real handles", out[0] > 0);

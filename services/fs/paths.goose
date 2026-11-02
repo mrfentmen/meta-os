@@ -67,7 +67,7 @@ fn fs_resolve(start: i64, path: const u8[:], want_dir: bool) -> i64, i64 {
     if path.len == 0 { return 0, E_INVAL; }
     if path.len > 255 { return 0, E_INVAL; }
 
-    var chain: i64[..16] = [];
+    var chain: i64[..16] = [0; 16];
     var depth: i64 = 0;
     var cur = start;
 

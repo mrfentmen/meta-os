@@ -48,7 +48,7 @@ var disk: BlockDev = BlockDev {
     sealed: false,
     present: false,
 };
-var ram: u8[..32768] = [];
+var ram: u8[..32768] = [0; 32768];
 
 // ---------------------------------------------------------------------------
 // The contract

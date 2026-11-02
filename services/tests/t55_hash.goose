@@ -73,7 +73,7 @@ fn main() {
     say("t55 hash vectors\n");
 
     // --- SHA-256 of the empty string ---
-    var want_empty: u8[..32] = [];
+    var want_empty: u8[..32] = [0; 32];
     check("vector parses", hex_to_bytes("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", want_empty));
 
     var got: u8[>..] = [];
@@ -82,7 +82,7 @@ fn main() {
     check("sha256(\"\") matches the published digest", eq(got, want_empty));
 
     // --- SHA-256 of "abc" ---
-    var want_abc: u8[..32] = [];
+    var want_abc: u8[..32] = [0; 32];
     check("vector parses", hex_to_bytes("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad", want_abc));
 
     var got_abc: u8[>..] = [];
@@ -132,7 +132,7 @@ fn main() {
     check("different buffers", equal_constant_time(a, d) == false);
     // Different lengths must not compare equal: an empty buffer "equalling" a full one is
     // how an unset key passes a signature check.
-    var e: u8[..4] = [];
+    var e: u8[..4] = [0; 4];
     check("length mismatch is not equal", equal_constant_time(a, e) == false);
 
     var r: u8[>..] = [];

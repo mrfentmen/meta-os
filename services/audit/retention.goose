@@ -198,7 +198,7 @@ fn ret_num(out: u8[>..]&, cap: i64, v: i64) -> bool {
     var digits: i64 = 0;
     var x = v;
     while x > 0 { digits = digits + 1; x = x / 10; }
-    var buf: u8[..20] = [];
+    var buf: u8[..20] = [0; 20];
     if digits > 20 { return false; }
     var i: i64 = 0;
     x = v;

@@ -83,7 +83,7 @@ fn netcfg_kv_ip(out: u8[>..]&, cap: i64, key: const u8[:], addr: Ipv4&) -> bool 
     if ip4_zero(addr) { return true; }
     if !append_str(out, cap, key) { return false; }
     if !append_char(out, cap, '=') { return false; }
-    var text: u8[..16] = [];
+    var text: u8[..16] = [0; 16];
     let n = ip4_render(addr, text);
     if n <= 0 { return false; }
     if !append_str(out, cap, text[..n]) { return false; }

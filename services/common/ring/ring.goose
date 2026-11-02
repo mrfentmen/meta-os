@@ -155,11 +155,18 @@ fn msg_init(slot: i64, count: i64) -> MsgRing {
     return MsgRing { ring: ring_init(count * slot), slot: slot };
 }
 
+// A slot of 0 or less is a ring that cannot hold a message, and dividing by it is a
+// crash rather than a refusal. Found by running t46 natively: the test constructs
+// msg_init(0, 4) to check that msg_push refuses an impossible slot, and it never got
+// that far. The guard belongs here, because a caller is allowed to construct the
+// degenerate ring and ask it questions.
 fn msg_capacity(m: MsgRing&) -> i64 {
+    if m.slot <= 0 { return 0; }
     return m.ring.cap / m.slot;
 }
 
 fn msg_len(m: MsgRing&) -> i64 {
+    if m.slot <= 0 { return 0; }
     return m.ring.count / m.slot;
 }
 

@@ -65,7 +65,7 @@ fn ip4_equal(x: Ipv4&, y: Ipv4&) -> bool {
 // Returns (address, ok). A rejected string yields 0.0.0.0 and ok = false, so a caller
 // that ignores the flag gets an obvious value rather than a plausible wrong one.
 fn ip4_parse(s: const u8[:]) -> Ipv4, bool {
-    var parts: u8[..4] = [];
+    var parts: u8[..4] = [0; 4];
     var part_count: i64 = 0;
     var i: i64 = 0;
     var digits_here: i64 = 0;
@@ -146,7 +146,7 @@ fn ip4_put_octet(out: u8[..16]&, at_in: i64, v: u8) -> i64 {
 fn ip4_mask(prefix: i64) -> Ipv4, bool {
     if prefix < 0 || prefix > 32 { return ip4_any(), false; }
     var bits = prefix;
-    var m: u8[..4] = [];
+    var m: u8[..4] = [0; 4];
     var i: i64 = 0;
     while i < 4 {
         if bits >= 8 { m[i] = 0xFF; bits = bits - 8; }
@@ -208,7 +208,7 @@ fn ip4_subnet_broadcast(addr: Ipv4&, mask: Ipv4&) -> Ipv4 {
 let IF_NAME_MAX: i64 = 8;
 
 struct IfaceCfg {
-    name: u8[..8],
+    name: u8[..8] = [0; 8],
     name_len: i64,
     configured: bool,       // did the config file say anything about this interface
     use_dhcp: bool,
@@ -222,7 +222,7 @@ struct IfaceCfg {
 
 fn iface_default(name: const u8[:]) -> IfaceCfg {
     var c: IfaceCfg = IfaceCfg {
-        name: [],
+        name: [0; 8],
         name_len: 0,
         configured: false,
         use_dhcp: false,

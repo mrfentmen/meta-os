@@ -35,7 +35,7 @@ let PROMPT: const u8[:] = "meta> ";
 // The editable line. `line_len` is the number of bytes in use; the buffer is
 // capacity LINE_MAX and the last byte is reserved so a C shim can always be
 // handed a terminated string.
-var line: u8[..256] = [];
+var line: u8[..256] = [0; 256];
 var line_len: i64 = 0;
 var cursor: i64 = 0;
 

@@ -111,9 +111,9 @@ let SHA256_K: u32[..64] = [
 ];
 
 struct Sha256Ctx {
-    h: u32[..8],
+    h: u32[..8] = [0; 8],
     // Bytes of the current partial block, and its length.
-    blk: u8[..64],
+    blk: u8[..64] = [0; 64],
     block_len: i64,
     total_len: u64,     // bytes hashed so far
 }
@@ -124,7 +124,7 @@ fn sha256_init() -> Sha256Ctx {
             0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
             0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
         ],
-        blk: [],
+        blk: [0; 64],
         block_len: 0,
         total_len: 0,
     };
@@ -142,7 +142,7 @@ fn sha256_maj(x: u32, y: u32, z: u32) -> u32 {
 // the final block is assembled in a local buffer and passed the same way, so
 // there is exactly one implementation of the round function.
 fn sha256_compress(ctx: Sha256Ctx&, data: u8[:], p: i64) {
-    var w: u32[..64] = [];
+    var w: u32[..64] = [0; 64];
     var i: i64 = 0;
 
     // First 16 words: big-endian, as the specification requires.
@@ -241,7 +241,7 @@ fn sha256_final(ctx: Sha256Ctx&, out: u8[>..]&, cap: i64) -> bool {
     let bits = ctx.total_len * 8 as u64;
 
     // 0x80, then zeros, until 8 bytes remain in a 64-byte block.
-    var pad_block: u8[..64] = [];
+    var pad_block: u8[..64] = [0; 64];
     var n = ctx.block_len;
     var i: i64 = 0;
     while i < 64 { pad_block[i] = 0; i = i + 1; }

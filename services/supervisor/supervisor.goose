@@ -65,7 +65,7 @@ let RP_ON_FAIL: i64 = 1;     // restart only after an unclean exit
 let RP_ALWAYS: i64 = 2;      // restart whatever happens, clean or not
 
 struct ServiceEntry {
-    name: u8[..32],       // inline, no pointer: the entry is self-contained
+    name: u8[..32] = [0; 32],       // inline, no pointer: the entry is self-contained
     id: i64,              // kernel process id once spawned; -1 until then
     state: i64,
     // Which service starts this one. -1 = no dependency (boot services).
@@ -82,7 +82,7 @@ struct ServiceEntry {
     gen: i64,             // bumped on every (re)assignment of this slot
 }
 
-var table: ServiceEntry[..32] = [];
+var table: ServiceEntry[..32] = [ServiceEntry { .. }; 32];
 var table_len: i64 = 0;
 
 // Register a service. Registration is start-up only: a table that changes while

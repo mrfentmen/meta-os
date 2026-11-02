@@ -106,7 +106,7 @@ struct BootInfo {
     // Reserved: pad so future fields can be added without moving anything a
     // service already reads. A fixed size here is cheaper than a version bump
     // every time the kernel learns something new.
-    reserved: u64[..8],
+    reserved: u64[..8] = [0; 8],
 }
 
 // The version this source understands. Bump it in the same commit that changes

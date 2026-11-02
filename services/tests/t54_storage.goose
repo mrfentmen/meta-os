@@ -68,7 +68,7 @@ fn main() {
     check("one past the end invalid", storage_lba_ok(blocks) == false);
     check("negative lba invalid", storage_lba_ok(-1) == false);
 
-    var blk: u8[..512] = [];
+    var blk: u8[..512] = [0; 512];
 
     // --- read before write is zeroes ---
     fill_512(blk, 255);
@@ -78,7 +78,7 @@ fn main() {
     // --- write and read back ---
     fill_512(blk, 65);
     check("write block 1", storage_write(1, blk) == CODE_OK);
-    var back: u8[..512] = [];
+    var back: u8[..512] = [0; 512];
     check("read block 1", storage_read(1, back) == CODE_OK);
     check("round trip byte-exact", is_all(back, 65));
 
@@ -93,7 +93,7 @@ fn main() {
     // --- out of range, on both paths ---
     fill_512(blk, 67);
     check("write past the end refused", storage_write(blocks, blk) == E_BAD_BLOCK);
-    var junk: u8[..512] = [];
+    var junk: u8[..512] = [0; 512];
     check("read past the end refused", storage_read(blocks, junk) == E_BAD_BLOCK);
     check("negative write refused", storage_write(-1, blk) == E_BAD_BLOCK);
     check("negative read refused", storage_read(-1, junk) == E_BAD_BLOCK);

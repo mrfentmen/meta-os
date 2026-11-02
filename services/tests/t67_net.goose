@@ -58,7 +58,7 @@ fn main() {
     let _, ok6 = ip4_parse("1.2.3.-4");
     check("negative part refused", !ok6);
 
-    var pkt: u8[..1500] = [];
+    var pkt: u8[..1500] = [0; 1500];
     var src_ip = a();
     var dst_ip = b();
     let total, bc = ip_build(pkt, src_ip, dst_ip, IP_PROTO_UDP, 64, "payload");
@@ -86,7 +86,7 @@ fn main() {
     var big: u8[>..] = [];
     var i: i64 = 0;
     while i < 1500 { big.push('x'); i = i + 1; }
-    var pkt2: u8[..1500] = [];
+    var pkt2: u8[..1500] = [0; 1500];
     var s2 = a();
     var d2 = b();
     let _, oversized = ip_build(pkt2, s2, d2, IP_PROTO_UDP, 64, big[..]);
@@ -94,7 +94,7 @@ fn main() {
     let _, ttl0 = ip_build(pkt2, s2, d2, IP_PROTO_UDP, 0, "x");
     check("ttl 0 refused", ttl0 == E_INVAL);
 
-    var bc_pkt: u8[..1500] = [];
+    var bc_pkt: u8[..1500] = [0; 1500];
     var ref_ip_build_1 = a();
     var ref_ip_build_2 = ip4(255, 255, 255, 255);
     let _bc_len, _bc_code = ip_build(bc_pkt, ref_ip_build_1, ref_ip_build_2, IP_PROTO_UDP, 64, "x");
@@ -105,7 +105,7 @@ fn main() {
     check("someone else's address is not", !ip_for_us(view, other_addr));
 
     // ================= ARP =================
-    var arp_buf: u8[..1500] = [];
+    var arp_buf: u8[..1500] = [0; 1500];
     var ref_arp_build_3 = mac(0, 1, 2, 3, 4, 5);
     var ref_arp_build_4 = a();
     var ref_arp_build_5 = mac_zero();
@@ -156,7 +156,7 @@ fn main() {
     check("the newest entry is the one that survived", last);
 
     // ================= ICMP =================
-    var ic: u8[..1500] = [];
+    var ic: u8[..1500] = [0; 1500];
     let ilen, icc = icmp_build_echo(ic, ICMP_ECHO_REQUEST, 7, 1, "pingdata");
     check("build an echo request", icc == CODE_OK && ilen == 16);
     let req, rqc = icmp_parse(ic, ilen);
@@ -164,7 +164,7 @@ fn main() {
     check("a request is not a reply to us", !icmp_is_reply_to(req, 7, 1));
     check("classify request", by_eq(icmp_classify(req), "echo-request"));
 
-    var ic2: u8[..1500] = [];
+    var ic2: u8[..1500] = [0; 1500];
     let rlen, _ = icmp_build_echo(ic2, ICMP_ECHO_REPLY, 7, 1, "pingdata");
     let rep, rpc = icmp_parse(ic2, rlen);
     check("reply is recognised", rpc == CODE_OK && icmp_is_reply_to(rep, 7, 1));
@@ -176,7 +176,7 @@ fn main() {
     check("corrupt ICMP is refused", badc == E_CORRUPT);
 
     // ================= UDP =================
-    var u: u8[..1500] = [];
+    var u: u8[..1500] = [0; 1500];
     var ref_udp_build_19 = a();
     var ref_udp_build_20 = b();
     let ulen, uc = udp_build(u, ref_udp_build_19, ref_udp_build_20, 40000, 53, "query");
@@ -213,7 +213,7 @@ fn main() {
     check("in window", seq_before_window(103, 100, 10));
     check("past the window", !seq_before_window(120, 100, 10));
 
-    var seg: u8[..1500] = [];
+    var seg: u8[..1500] = [0; 1500];
     let slen, stc = tcp_build(seg, 1234, 80, 1000, 2000, SYN | ACK, 4096, "", a(), b());
     check("build a SYN/ACK", stc == CODE_OK && slen == 20);
     let th, thc = tcp_parse(seg, slen);
@@ -226,7 +226,7 @@ fn main() {
     let _, tiny = tcp_parse(seg, 10);
     check("truncated TCP refused", tiny == E_CORRUPT);
 
-    var seg2: u8[..1500] = [];
+    var seg2: u8[..1500] = [0; 1500];
     let _s2_len, _s2_code = tcp_build(seg2, 1234, 80, 1001, 2000, PSH | ACK, 4096, "hello", a(), b());
     let th2, _ = tcp_parse(seg2, 25);
     check("payload length in a data segment", th2.payload_len == 5);

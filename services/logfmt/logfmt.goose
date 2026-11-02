@@ -89,9 +89,9 @@ let LINE_MAX: i64 = 200;
 struct Record {
     uptime_ms: i64,         // from the time service (B-L1-19), not from the caller
     level: i64,
-    tag: u8[..8],           // who: the service's short name, NUL padded
+    tag: u8[..8] = [0; 8],           // who: the service's short name, NUL padded
     tag_len: i64,
-    msg: u8[..160],
+    msg: u8[..160] = [0; 160],
     msg_len: i64,
 }
 
@@ -105,7 +105,7 @@ struct Record {
 // ended" and "the message was cut".
 fn logfmt_make(level_in: i64, tag: const u8[:], msg: const u8[:], uptime_ms: i64) -> Record {
     var level = level_in;
-    var r: Record = Record { uptime_ms: 0, level: 0, tag: [], tag_len: 0, msg: [], msg_len: 0 };
+    var r: Record = Record { uptime_ms: 0, level: 0, tag: [0; 8], tag_len: 0, msg: [0; 160], msg_len: 0 };
     r.uptime_ms = uptime_ms;
     if level < LV_DEBUG { level = LV_DEBUG; }
     if level > LV_FATAL { level = LV_FATAL; }
@@ -219,7 +219,7 @@ fn logfmt_put_int(out: u8[..200]&, at_in: i64, v: i64) -> i64 {
     }
     // Digits are produced least-significant first into a scratch buffer, then copied
     // in order: writing them straight out would print the number backwards.
-    var scratch: u8[..24] = [];
+    var scratch: u8[..24] = [0; 24];
     var n: i64 = 0;
     var x = v;
     while x > 0 && n < 23 {

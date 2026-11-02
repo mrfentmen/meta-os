@@ -65,7 +65,7 @@ fn bind_build(frame: u8[..1500]&, from_ip: Ipv4&, to_ip: Ipv4&, sport: i64, dpor
 fn bind_send_one(h: i64, from_ip: Ipv4&, sport: i64) -> i64, i64 {
     var dg: Datagram = Datagram { to: Ipv4 { a: 0, b: 0, c: 0, d: 0 }, port: 0, len: 0, data: [] };
     if !sk_take_send(h, dg) { return 0, E_NOTFOUND; }
-    var frame: u8[..1500] = [];
+    var frame: u8[..1500] = [0; 1500];
     let len, code = bind_build(frame, from_ip, dg.to, sport, dg.port, dg.data[0..dg.len]);
     if code != CODE_OK {
         let _ = sk_send_result(h, false);

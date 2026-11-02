@@ -56,12 +56,12 @@ struct HotSub {
 }
 
 struct HotPlug {
-    events: HotEvent[..8],
+    events: HotEvent[..8] = [HotEvent { .. }; 8],
     head: i64,
     count: i64,
     next_seq: i64,
     next_sub: i64,
-    subs: HotSub[..8],
+    subs: HotSub[..8] = [HotSub { .. }; 8],
     sub_count: i64,
     raised: i64,
     dropped: i64,
@@ -69,12 +69,12 @@ struct HotPlug {
 
 fn hp_new() -> HotPlug {
     var h: HotPlug = HotPlug {
-        events: [],
+        events: [HotEvent { .. }; 8],
         head: 0,
         count: 0,
         next_seq: 0,
         next_sub: 0,
-        subs: [],
+        subs: [HotSub { .. }; 8],
         sub_count: 0,
         raised: 0,
         dropped: 0,

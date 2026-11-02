@@ -55,9 +55,9 @@ let SIG_BYTES_MAX: i64 = 64;      // Ed25519 signatures are 64 bytes
 
 struct SigBlock {
     alg: i64,
-    key_id: u8[..16],
+    key_id: u8[..16] = [0; 16],
     key_id_len: i64,
-    sig: u8[..64],
+    sig: u8[..64] = [0; 64],
     sig_len: i64,
     line_off: i64,                // where the signature line starts in the manifest text
 }
@@ -97,9 +97,9 @@ fn sig_verify_manifest(text: const u8[:], trusted: const u8[:]) -> i64, i64 {
 fn sig_parse(text: const u8[:]) -> SigBlock, i64 {
     var b: SigBlock = SigBlock {
         alg: 0,
-        key_id: [],
+        key_id: [0; 16],
         key_id_len: 0,
-        sig: [],
+        sig: [0; 64],
         sig_len: 0,
         line_off: 0,
     };

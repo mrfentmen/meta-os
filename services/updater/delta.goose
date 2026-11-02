@@ -58,13 +58,13 @@ struct DeltaOp {
 }
 
 struct DeltaFile {
-    path: u8[..32],
+    path: u8[..32] = [0; 32],
     path_len: i64,
     base_len: i64,                    // required length of the installed file
-    base_digest: u8[..32],            // required digest of the installed file
+    base_digest: u8[..32] = [0; 32],            // required digest of the installed file
     new_len: i64,
-    new_digest: u8[..32],
-    ops: DeltaOp[..4],
+    new_digest: u8[..32] = [0; 32],
+    ops: DeltaOp[..4] = [DeltaOp { .. }; 4],
     nops: i64,
 }
 

@@ -97,7 +97,7 @@ fn main() {
     // Copy the log, flip one byte inside the LAST record's body, and verify the COPY. The
     // chain must break at that record, which means the reader must have verified the three
     // before it -- "the log is bad" is not a useful answer, "seq 4 is where it breaks" is.
-    var copy: u8[..4096] = [];
+    var copy: u8[..4096] = [0; 4096];
     let bytes = audit_bytes();
     check("the log is readable as bytes", bytes.len == audit_used() && bytes.len > 168);
     var c: i64 = 0;
@@ -138,7 +138,7 @@ fn main() {
 
     // A buffer whose last record claims more bytes than it has is refused rather than read
     // past the end.
-    var clipped: u8[..4096] = [];
+    var clipped: u8[..4096] = [0; 4096];
     var k: i64 = 0;
     while k < audit_used() && k < 4096 {
         clipped[k] = bytes[k];

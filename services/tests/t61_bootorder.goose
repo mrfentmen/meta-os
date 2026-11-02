@@ -120,7 +120,7 @@ fn main() {
     check("non-fatal display takes only itself", disp_doom == (1 << 12));
 
     // --- 6. sequence ---
-    var seq: i64[..24] = [];
+    var seq: i64[..24] = [0; 24];
     let n = bo_sequence(seq, 24);
     check("sequence yields all 22 in order", n == 22);
     check("sequence starts at bootlog", seq[0] == 2);

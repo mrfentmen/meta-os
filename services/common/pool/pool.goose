@@ -38,16 +38,16 @@ let POOL_BLOCK_BYTES: i64 = 1500;
 let POOL_BYTES: i64 = 24000;          // POOL_BLOCKS * POOL_BLOCK_BYTES
 
 struct Pool {
-    data: u8[..24000],
+    data: u8[..24000] = [0; 24000],
     used: i64,             // bitmap: bit i set means block i is allocated
-    gens: i64[..16],       // per-block generation, bumped on free
+    gens: i64[..16] = [0; 16],       // per-block generation, bumped on free
     live: i64,
     handed_out: i64,
     refused: i64,
 }
 
 fn pool_new() -> Pool {
-    var p: Pool = Pool { data: [], used: 0, gens: [], live: 0, handed_out: 0, refused: 0 };
+    var p: Pool = Pool { data: [0; 24000], used: 0, gens: [0; 16], live: 0, handed_out: 0, refused: 0 };
     var i: i64 = 0;
     while i < POOL_BYTES { p.data[i] = 0; i = i + 1; }
     i = 0;

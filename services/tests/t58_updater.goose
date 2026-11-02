@@ -98,7 +98,7 @@ fn main() {
     check("short digest refused", bd_code == E_BAD_MANIFEST);
 
     // --- verification against content ---
-    var cs: ContentSet = ContentSet { slots: [], len: [] };
+    var cs: ContentSet = ContentSet { slots: [0; 32768], len: [0; 8] };
     cs.len[0] = 3;
     cs.slots[0] = 97;
     cs.slots[1] = 98;
@@ -135,7 +135,7 @@ fn main() {
     check("record names the target slot", rec.slot == SLOT_B);
     check("record counts what will be written", rec.files == 1 && rec.bytes == 3);
 
-    var blk: u8[..512] = [];
+    var blk: u8[..512] = [0; 512];
     check("record encodes to a blk", upd_record_encode(rec, blk) == UPD_REC_BYTES);
     check("record has a magic", blk[0] == 0x4D && blk[3] == 0x55);
 
@@ -143,7 +143,7 @@ fn main() {
         seq: 0,
         state: 0,
         slot: 0,
-        version: [],
+        version: [0; 16],
         version_len: 0,
         files: 0,
         bytes: 0,
@@ -161,7 +161,7 @@ fn main() {
         seq: 0,
         state: 0,
         slot: 0,
-        version: [],
+        version: [0; 16],
         version_len: 0,
         files: 0,
         bytes: 0,
@@ -170,7 +170,7 @@ fn main() {
     check("corrupt record refused", upd_record_decode(blk, torn) != CODE_OK);
 
     // A blk with the wrong magic is not our record, whatever the rest says.
-    var other: u8[..512] = [];
+    var other: u8[..512] = [0; 512];
     check("record decodes from a reset blk?", upd_record_decode(other, torn) != CODE_OK);
 
     // --- the record is not the plan: nothing applied ---

@@ -60,13 +60,13 @@ extern fn sys_net_recv(link: i64, out: u8[..1514]&) -> i64 = "sys_net_recv";
 struct Link {
     id: i64,                // kernel link index
     mtu: i64,               // payload MTU; FRAME_MAX is the hard ceiling
-    mac: u8[..6],
+    mac: u8[..6] = [0; 6],
     state: i64,
     sent: i64,
     received: i64,
     dropped: i64,           // frames refused here (too large, link down, bad length)
 }
-var links: Link[..4] = [];
+var links: Link[..4] = [Link { .. }; 4];
 var link_count: i64 = 0;
 
 fn pkt_add_link(id: i64, mac0: u8, mac1: u8, mac2: u8, mac3: u8, mac4: u8, mac5: u8, mtu: i64) -> i64, i64 {

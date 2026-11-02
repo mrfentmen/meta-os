@@ -46,7 +46,7 @@ fn main() {
     var mac: u8[..6] = [0x02, 0x00, 0x5A, 0x11, 0x22, 0x33];
     let xid = 0x5A5A0001;
 
-    var disc: u8[..576] = [];
+    var disc: u8[..576] = [0; 576];
     let n = dhcp_build_discover(disc, xid, mac);
     check("discover built", n > 243);
     check("discover is a BOOTREQUEST", disc[0] == 1);
@@ -58,7 +58,7 @@ fn main() {
     check("message type is DISCOVER", dhcp_message_type(disc) == DHCP_DISCOVER);
 
     // --- the server's reply, built here ---
-    var ack: u8[..576] = [];
+    var ack: u8[..576] = [0; 576];
     let ack_len = build_ack(ack, xid, mac, ip4(192, 168, 1, 50), ip4(255, 255, 255, 0),
         ip4(192, 168, 1, 1), 3600, ip4(192, 168, 1, 1));
     check("ack built", ack_len > 0);
@@ -114,7 +114,7 @@ fn main() {
 
     // --- refusals ---
     // 0.0.0.0 is not an offer.
-    var zero_ack: u8[..576] = [];
+    var zero_ack: u8[..576] = [0; 576];
     let _ = build_ack(zero_ack, xid, mac, ip4(0, 0, 0, 0), ip4(255, 255, 255, 0),
         ip4(192, 168, 1, 1), 3600, ip4(192, 168, 1, 1));
     var bad_lease: Lease = Lease {
@@ -154,7 +154,7 @@ fn main() {
     check("zero address refused", dhcp_parse(zero_ack, bad_lease) != CODE_OK);
 
     // No mask offered: refused rather than classful-guessed.
-    var no_mask: u8[..576] = [];
+    var no_mask: u8[..576] = [0; 576];
     let _ = build_ack_options(no_mask, xid, mac, ip4(10, 0, 0, 9), 3600, 0);
     var nl: Lease = Lease {
         addr: Ipv4 { a: 0,
@@ -193,7 +193,7 @@ fn main() {
     check("missing mask refused", dhcp_parse(no_mask, nl) != CODE_OK);
 
     // A zero lease would renew in a tight loop.
-    var zero_lease: u8[..576] = [];
+    var zero_lease: u8[..576] = [0; 576];
     let _ = build_ack_options(zero_lease, xid, mac, ip4(10, 0, 0, 9), 0, 1);
     var zl: Lease = Lease {
         addr: Ipv4 { a: 0,
@@ -232,7 +232,7 @@ fn main() {
     check("zero lease refused", dhcp_parse(zero_lease, zl) != CODE_OK);
 
     // Truncated packet, wrong cookie, wrong op: each refused.
-    var short: u8[..576] = [];
+    var short: u8[..576] = [0; 576];
     let _ = build_ack(short, xid, mac, ip4(10, 0, 0, 9), ip4(255, 255, 255, 0), ip4(10, 0, 0, 1), 60, ip4(10, 0, 0, 1));
     check("truncated packet refused", dhcp_parse(short[..100], nl) != CODE_OK);
     short[236] = 0x00;
@@ -250,7 +250,7 @@ fn main() {
     // -----------------------------------------------------------------------
     // DNS
     // -----------------------------------------------------------------------
-    var q: u8[..512] = [];
+    var q: u8[..512] = [0; 512];
     let qlen = dns_build_a_query(q, "example.com", 0x1234);
     check("query built", qlen > 12);
     check("query id on the wire", be16(q, 0) == 0x1234);
@@ -263,7 +263,7 @@ fn main() {
     check("query class is IN", be16(q, qlen - 2) == C_IN);
 
     // --- the server's reply, built here, using a compression pointer ---
-    var resp: u8[..512] = [];
+    var resp: u8[..512] = [0; 512];
     let rlen = build_dns_answer(resp, q, qlen, 0x1234, ip4(93, 184, 216, 34), 300);
     check("response built", rlen > qlen);
 
@@ -281,7 +281,7 @@ fn main() {
     check("wrong id refused", dns_parse_a(resp, 0x9999, a2) != CODE_OK);
 
     // NXDOMAIN is an answer with no address: reported as rcode, not as a bogus 0.0.0.0.
-    var nx: u8[..512] = [];
+    var nx: u8[..512] = [0; 512];
     let nxlen = build_dns_answer(nx, q, qlen, 0x1234, ip4(0, 0, 0, 0), 0);
     nx[3] = ((nx[3] & 0xF0) | RCODE_NXDOMAIN) as u8;
     // Recompute: the answer count stays 1 in this helper, so the parse must look at rcode.
@@ -290,7 +290,7 @@ fn main() {
     check("nxdomain reports its rcode", nxc == CODE_OK && a3.rcode == RCODE_NXDOMAIN);
 
     // A pointer that leads nowhere must fail rather than read off the end.
-    var broken: u8[..512] = [];
+    var broken: u8[..512] = [0; 512];
     let blen = build_dns_answer(broken, q, qlen, 0x1234, ip4(1, 2, 3, 4), 60);
     broken[qlen + 2] = 0xFF;      // first byte of the answer name: a pointer past the packet
     broken[qlen + 3] = 0xFF;

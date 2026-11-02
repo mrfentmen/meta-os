@@ -44,7 +44,7 @@ struct ArpEntry {
     added_ms: i64,
 }
 
-var arp_table: ArpEntry[..8] = [];
+var arp_table: ArpEntry[..8] = [ArpEntry { .. }; 8];
 var arp_drops: i64 = 0;
 
 fn mac(a: i64, b: i64, c: i64, d: i64, e: i64, f: i64) -> Mac {

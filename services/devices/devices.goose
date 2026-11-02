@@ -59,7 +59,7 @@ let DEV_MAX: i64 = 16;       // a PC at this layer has single digits of devices
 struct Device {
     kind: i64,
     state: i64,
-    name: u8[..16],
+    name: u8[..16] = [0; 16],
     name_len: i64,
     addr: u64,          // MMIO/IO base, or 0 when the device has none
     irq: i64,           // -1 when the device is polled
@@ -71,7 +71,7 @@ struct Device {
     detail_b: i64,
 }
 
-var devices: Device[..16] = [];
+var devices: Device[..16] = [Device { .. }; 16];
 var device_count: i64 = 0;
 
 // ---------------------------------------------------------------------------

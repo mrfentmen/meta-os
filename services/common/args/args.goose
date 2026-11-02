@@ -34,15 +34,15 @@ let ARG_MAX: i64 = 8;          // a Layer 4 command takes at most 7 arguments
 let ARG_TEXT_MAX: i64 = 192;   // unescaped bytes available to all arguments together
 
 struct Argv {
-    text: u8[..192],
+    text: u8[..192] = [0; 192],
     len: i64,
-    starts: i64[..8],
-    ends: i64[..8],
+    starts: i64[..8] = [0; 8],
+    ends: i64[..8] = [0; 8],
     count: i64,
 }
 
 fn args_empty() -> Argv {
-    var a: Argv = Argv { text: [], len: 0, starts: [], ends: [], count: 0 };
+    var a: Argv = Argv { text: [0; 192], len: 0, starts: [0; 8], ends: [0; 8], count: 0 };
     a.len = 0;
     a.count = 0;
     var i: i64 = 0;

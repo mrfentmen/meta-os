@@ -35,13 +35,13 @@ let TBL_KEY_MAX: i64 = 32;
 struct Entry {
     hash: i64,           // 0 = empty slot. FNV-1a of a real key is never 0 in practice; if it
                          // ever is, the key is stored in the next slot, which costs one probe.
-    key: u8[..32],
+    key: u8[..32] = [0; 32],
     key_len: i64,
     value: i64,
 }
 
 struct Table {
-    entries: Entry[..32],
+    entries: Entry[..32] = [Entry { .. }; 32],
     count: i64,
     probes: i64,         // total probes across all lookups: the health line's load measure
     misses: i64,
@@ -61,7 +61,7 @@ fn tbl_new() -> Table {
 }
 
 fn tbl_zero_key() -> u8[..32] {
-    var k: u8[..32] = [];
+    var k: u8[..32] = [0; 32];
     var i: i64 = 0;
     while i < TBL_KEY_MAX { k[i] = 0; i = i + 1; }
     return k;
@@ -90,7 +90,7 @@ fn tbl_put(t: Table&, key: const u8[:], value: i64) -> i64, i64 {
     while n < TBL_SLOTS {
         t.probes = t.probes + 1;
         if t.entries[i].hash == 0 {
-            var e: Entry = Entry { hash: 0, key: [], key_len: 0, value: 0 };
+            var e: Entry = Entry { hash: 0, key: [0; 32], key_len: 0, value: 0 };
             e.hash = h;
             e.key = tbl_zero_key();
             var k: i64 = 0;

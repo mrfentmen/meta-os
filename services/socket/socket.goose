@@ -51,7 +51,7 @@ struct Datagram {
     to: Ipv4,
     port: i64,
     len: i64,
-    data: u8[..512],
+    data: u8[..512] = [0; 512],
 }
 
 struct Sock {
@@ -64,12 +64,12 @@ struct Sock {
     // because a caller that got CODE_OK from sk_send has been told the data is ours now.
     out_count: i64,
     out_head: i64,
-    out: Datagram[..4],
+    out: Datagram[..4] = [Datagram { .. }; 4],
     received: i64,
     sent: i64,
     dropped: i64,
 }
-var socks: Sock[..16] = [];
+var socks: Sock[..16] = [Sock { .. }; 16];
 var ephemeral_next: i64 = SK_EPHEMERAL_MIN;
 
 // ---------------------------------------------------------------------------

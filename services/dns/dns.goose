@@ -237,7 +237,7 @@ fn dns_parse_a(pkt: const u8[:], id: i64, out: Answer&) -> i64 {
     if an < 1 { return E_RESOLVE; }                  // no records: name does not resolve
 
     // Skip the question section.
-    var namebuf: u8[..256] = [];
+    var namebuf: u8[..256] = [0; 256];
     let q_end, q_len, q_ok = dns_read_name(pkt, 12, namebuf);
     if !q_ok { return E_CORRUPT; }
     if q_end + 4 > pkt.len { return E_CORRUPT; }     // QTYPE + QCLASS

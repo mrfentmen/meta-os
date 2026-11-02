@@ -43,7 +43,7 @@ let MK_GAUGE: i64 = 1;            // set to a value
 
 struct Metric {
     id: i64,
-    name: u8[..16],
+    name: u8[..16] = [0; 16],
     name_len: i64,
     kind: i64,
     value: i64,
@@ -51,7 +51,7 @@ struct Metric {
 }
 
 struct Metrics {
-    slots: Metric[..16],
+    slots: Metric[..16] = [Metric { .. }; 16],
     count: i64,
     next_id: i64,
 }
@@ -73,7 +73,7 @@ fn met_new() -> Metrics {
 }
 
 fn met_zero_name() -> u8[..16] {
-    var n: u8[..16] = [];
+    var n: u8[..16] = [0; 16];
     var i: i64 = 0;
     while i < 16 { n[i] = 0; i = i + 1; }
     return n;
@@ -118,7 +118,7 @@ fn met_register(m: Metrics&, name: const u8[:], kind: i64) -> i64 {
     }
     if slot < 0 { return -1; }
 
-    var mm: Metric = Metric { id: 0, name: [], name_len: 0, kind: 0, value: 0, active: false };
+    var mm: Metric = Metric { id: 0, name: [0; 16], name_len: 0, kind: 0, value: 0, active: false };
     mm.id = m.next_id;
     m.next_id = m.next_id + 1;
     mm.name = met_zero_name();

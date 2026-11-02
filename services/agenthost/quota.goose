@@ -54,7 +54,7 @@ struct QuotaSlot {
 }
 
 struct Quotas {
-    slots: QuotaSlot[..24],
+    slots: QuotaSlot[..24] = [QuotaSlot { .. }; 24],
     count: i64,
 }
 

@@ -47,9 +47,9 @@ let LG_ATTEMPTS: i64 = 3;
 
 struct LoginFlow {
     state: i64,
-    name: u8[..24],
+    name: u8[..24] = [0; 24],
     name_len: i64,
-    token: u8[..40],
+    token: u8[..40] = [0; 40],
     token_len: i64,
     attempts: i64,
     session: i64,
@@ -60,9 +60,9 @@ struct LoginFlow {
 fn login_new() -> LoginFlow {
     var f: LoginFlow = LoginFlow {
         state: 0,
-        name: [],
+        name: [0; 24],
         name_len: 0,
-        token: [],
+        token: [0; 40],
         token_len: 0,
         attempts: 0,
         session: 0,

@@ -33,8 +33,8 @@ let LINK_PKT: i64 = 1500;
 let LINK_BYTES: i64 = 12000;          // LINK_SLOTS * LINK_PKT, flat storage
 
 struct Link {
-    slots: u8[..12000],               // packet i lives at [i*LINK_PKT .. i*LINK_PKT+len)
-    lens: i64[..8],
+    slots: u8[..12000] = [0; 12000],               // packet i lives at [i*LINK_PKT .. i*LINK_PKT+len)
+    lens: i64[..8] = [0; 8],
     head: i64,                        // index of the next packet to deliver
     count: i64,
     drop_every: i64,                  // 0 = never drop
@@ -50,8 +50,8 @@ struct Link {
 // impairment does not have to name the other two.
 fn link_new() -> Link {
     var l: Link = Link {
-        slots: [],
-        lens: [],
+        slots: [0; 12000],
+        lens: [0; 8],
         head: 0,
         count: 0,
         drop_every: 0,
@@ -168,7 +168,7 @@ fn link_put(l: Link&, pkt: const u8[:]) -> i64 {
 }
 
 fn link_swap(l: Link&, a: i64, b: i64) {
-    var tmp: u8[..1500] = [];
+    var tmp: u8[..1500] = [0; 1500];
     let an = l.lens[a];
     let bn = l.lens[b];
     var i: i64 = 0;

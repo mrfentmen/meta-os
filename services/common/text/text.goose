@@ -193,7 +193,7 @@ fn text_pad_int(out: u8[>..]&, cap: i64, v: i64, width_in: i64, pad_ch: u8) -> i
 
     var padn = width - digits;
     while padn > 0 { out.push(pad_ch); padn = padn - 1; }
-    var buf: u8[..20] = [];
+    var buf: u8[..20] = [0; 20];
     var i: i64 = 0;
     x = v;
     while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i = i + 1; }

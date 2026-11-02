@@ -51,21 +51,21 @@ let SLOT_A: i64 = 0;
 let SLOT_B: i64 = 1;
 
 struct ManifestFile {
-    path: u8[..32],
+    path: u8[..32] = [0; 32],
     path_len: i64,
-    digest: u8[..32],        // raw bytes: parsing hex once beats comparing hex strings
+    digest: u8[..32] = [0; 32],        // raw bytes: parsing hex once beats comparing hex strings
     digest_len: i64,
     size: i64,
 }
 
 struct Manifest {
-    version: u8[..16],
+    version: u8[..16] = [0; 16],
     version_len: i64,
-    origin: u8[..64],
+    origin: u8[..64] = [0; 64],
     origin_len: i64,
     slot: i64,
     count: i64,
-    files: ManifestFile[..8],
+    files: ManifestFile[..8] = [ManifestFile { .. }; 8],
 }
 
 // ---------------------------------------------------------------------------
@@ -79,13 +79,13 @@ struct Manifest {
 // an installer that installs half an update and reports success.
 fn upd_parse_manifest(text: u8[:]) -> Manifest, i64 {
     var m: Manifest = Manifest {
-        version: [],
+        version: [0; 16],
         version_len: 0,
-        origin: [],
+        origin: [0; 64],
         origin_len: 0,
         slot: 0,
         count: 0,
-        files: [],
+        files: [ManifestFile { .. }; 8],
     };
     m.version_len = 0;
     m.origin_len = 0;
@@ -324,8 +324,8 @@ fn upd_verify_file(m: Manifest&, idx: i64, content: u8[:]) -> i64 {
 let UPD_CONTENT_MAX: i64 = 4096;
 
 struct ContentSet {
-    slots: u8[..32768],          // 8 x 4096
-    len: i64[..8],
+    slots: u8[..32768] = [0; 32768],          // 8 x 4096
+    len: i64[..8] = [0; 8],
 }
 
 fn content_get(cs: ContentSet&, idx: i64, out: u8[..4096]&) -> i64 {
@@ -342,7 +342,7 @@ fn content_get(cs: ContentSet&, idx: i64, out: u8[..4096]&) -> i64 {
 }
 
 fn upd_verify_all(m: Manifest&, cs: ContentSet&) -> i64, i64 {
-    var buf: u8[..4096] = [];
+    var buf: u8[..4096] = [0; 4096];
     var verified: i64 = 0;
     var i: i64 = 0;
     while i < m.count {
@@ -379,7 +379,7 @@ struct Plan {
     active_slot: i64,
     files: i64,
     bytes: i64,
-    version: u8[..16],
+    version: u8[..16] = [0; 16],
     version_len: i64,
 }
 
@@ -390,7 +390,7 @@ fn upd_plan(m: Manifest&, active_slot: i64) -> Plan, i64 {
         active_slot: 0,
         files: 0,
         bytes: 0,
-        version: [],
+        version: [0; 16],
         version_len: 0,
     };
     p.action = UPD_APPLY_NONE;
@@ -472,14 +472,14 @@ struct UpdRecord {
     seq: i64,
     state: i64,
     slot: i64,
-    version: u8[..16],
+    version: u8[..16] = [0; 16],
     version_len: i64,
     files: i64,
     bytes: i64,
     applied_ms: i64,
 }
 
-var rec_history: UpdRecord[..4] = [];
+var rec_history: UpdRecord[..4] = [UpdRecord { .. }; 4];
 var rec_count: i64 = 0;
 var rec_next_seq: i64 = 1;
 
@@ -488,7 +488,7 @@ fn upd_record_make(plan: Plan&, now_ms: i64) -> UpdRecord {
         seq: 0,
         state: 0,
         slot: 0,
-        version: [],
+        version: [0; 16],
         version_len: 0,
         files: 0,
         bytes: 0,
@@ -598,7 +598,7 @@ fn upd_record_confirm(slot: i64, now_ms: i64) -> i64 {
         seq: 0,
         state: 0,
         slot: 0,
-        version: [],
+        version: [0; 16],
         version_len: 0,
         files: 0,
         bytes: 0,
