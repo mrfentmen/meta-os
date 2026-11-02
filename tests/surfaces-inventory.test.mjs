@@ -17,10 +17,10 @@ function staticControls(html) {
   return [...html.matchAll(/<(button|input|select)\b([^>]*)>/g)];
 }
 
-test("index.html static controls unchanged from HN-020: 42 buttons, 15 inputs, 2 selects", () => {
+test("index.html static controls: 35 buttons, 14 inputs, 2 selects (LOGO-1 color controls removed 2026-11-01)", () => {
   const tags = staticControls(indexHtml).map((m) => m[1]);
-  assert.equal(tags.filter((t) => t === "button").length, 42);
-  assert.equal(tags.filter((t) => t === "input").length, 15);
+  assert.equal(tags.filter((t) => t === "button").length, 35);
+  assert.equal(tags.filter((t) => t === "input").length, 14);
   assert.equal(tags.filter((t) => t === "select").length, 2);
 });
 
@@ -37,7 +37,6 @@ test("every id'd index.html control has a listener or read site in js/", () => {
 test("id-less index.html controls work by group listener or native behavior", () => {
   assert.match(jsSources, /querySelectorAll\("\[data-cmd-product\]"/);
   assert.match(jsSources, /querySelectorAll\("\[data-cmd-mode\]"/);
-  assert.match(jsSources, /querySelectorAll\("\.logo-swatch\[data-logo-color\]"/);
   const radios = [...indexHtml.matchAll(/<input type="radio" name="product"/g)];
   assert.equal(radios.length, 3);
   assert.equal((indexHtml.match(/<details/g) || []).length, 27);
