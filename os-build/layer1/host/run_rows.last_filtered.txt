@@ -1,5 +1,4 @@
-tests/t86_settings|RUNS|67|0|
-tests/t89_dashboard|RUNS|50|0|
+tests/t93_face_walkthrough|RUNS|63|0|
 entry/bootlog|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
 entry/console|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
 entry/example|TYPECHECKS (not run)|0|0|svc_entry takes a kernel BootInfo; no host boot block

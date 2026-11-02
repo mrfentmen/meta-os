@@ -9,8 +9,8 @@ in place. Regenerate this file with `python3 os-build/layer1/gen_finish_status.p
 
 | Measurement | Value | Command that produces it |
 |---|---|---|
-| `goose check`, full corpus incl. `services/root.goose` | **54 ok, 0 failed** | `./os-build/layer1/check_services.sh` |
-| Native drivers that build and run to exit 0 | **48 of 48, 2172 assertions, 0 failed** | `./os-build/layer1/run_native.sh` |
+| `goose check`, full corpus incl. `services/root.goose` | **55 ok, 0 failed** | `./os-build/layer1/check_services.sh` |
+| Native drivers that build and run to exit 0 | **49 of 49, 2235 assertions, 0 failed** | `./os-build/layer1/run_native.sh` |
 | Entry programs that build but are not run | 5 (no supervisor to call `svc_entry`) | same run |
 
 The typecheck command exited 0.

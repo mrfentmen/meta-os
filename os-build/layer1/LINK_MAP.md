@@ -141,3 +141,63 @@ question lives in `CALLMATRIX_DRIFT.md`: every import edge in this map now has a
 added the last twelve, and ids 22–24 for `fs`, `shell` and the template), and what remains open is
 the 67 rows that allow a call no import makes. Both documents are true at once; the map is what the
 linker sees, the matrix is what the kernel enforces.
+
+## Appendix — the edge list, regenerated (2026-11-02)
+
+```
+link map round 2
+  services with source: 32   files: 109
+
+  agenthost    libs: common.err.err, common.fmt.fmt           svc: agenthost
+  audit        libs: common.err.err                           svc: audit
+  board        libs: common.err.err                           svc: -
+  bootlog      libs: common.fmt.fmt, common.sys.sys, std      svc: bootlog
+  callmatrix   libs: common.err.err                           svc: -
+  console      libs: common.err.err, common.ring.ring, common.sys.sys svc: console
+  dashboard    libs: common.err.err                           svc: -
+  devices      libs: common.boot.boot, common.err.err         svc: -
+  dhcp         libs: common.err.err                           svc: netcfg
+  display      libs: common.err.err, common.sys.sys           svc: -
+  dns          libs: common.err.err                           svc: netcfg
+  dock         libs: common.err.err                           svc: -
+  example      libs: common.boot.boot, common.cfg.cfg, common.err.err, common.fmt.fmt, common.hash.hash, common.ring.ring, common.sys.sys svc: example, fs, supervisor, time, watchdog
+  fs           libs: common.err.err, common.hash.hash         svc: fs, storage
+  input        libs: common.err.err                           svc: input
+  logd         libs: common.err.err, common.fmt.fmt, common.ring.ring, common.sys.sys svc: logd
+  logfmt       libs: common.err.err                           svc: -
+  net          libs: common.err.err                           svc: net, netcfg
+  netcfg       libs: common.cfg.cfg, common.err.err, common.fmt.fmt svc: fs, netcfg
+  session      libs: common.err.err                           svc: session
+  settings     libs: common.err.err                           svc: -
+  shell        libs: common.args.args, common.bytes.bytes, common.err.err, common.fmt.fmt, common.sys.sys svc: audit, fs, logd, supervisor, time
+  socket       libs: common.err.err                           svc: net, netcfg, socket
+  storage      libs: common.err.err                           svc: -
+  supervisor   libs: common.err.err, common.fmt.fmt, common.ring.ring svc: supervisor
+  tests        libs: common.args.args, common.boot.boot, common.bytes.bytes, common.cfg.cfg, common.enc.enc, common.err.err, common.fmt.fmt, common.hash.hash, common.hex.hex, common.json.json, common.ring.ring, common.status.status, common.str.str, common.sys.sys, common.table.table svc: agenthost, audit, board, bootlog, callmatrix, console, dashboard, devices, dhcp, display, dns, dock, fs, input, logd, logfmt, net, netcfg, session, settings, shell, socket, storage, supervisor, tests, time, timesync, updater, updater_client, wallpaper, watchdog
+  time         libs: common.err.err, common.sys.sys, std      svc: time
+  timesync     libs: common.err.err                           svc: -
+  updater      libs: common.enc.enc, common.err.err, common.fmt.fmt, common.hash.hash svc: updater
+  updater_client libs: common.err.err                           svc: -
+  wallpaper    libs: common.err.err                           svc: -
+  watchdog     libs: common.err.err, common.fmt.fmt           svc: -
+
+DRIFT vs round 1
+  services new since round 1 (10): board, dashboard, dock, example, fs, settings, shell, tests, updater_client, wallpaper
+  agenthost    + agenthost.agenthost
+  audit        + audit.audit
+  bootlog      + bootlog.bootlog, common.fmt.fmt, common.sys.sys
+  console      + console.console
+  display      + common.sys.sys
+  input        + input.input
+  logd         + logd.logd
+  netcfg       + netcfg.netcfg
+  session      + session.session
+  socket       + socket.socket
+  supervisor   + common.fmt.fmt, supervisor.supervisor
+  time         + common.sys.sys, time.time
+  updater      + updater.updater
+  watchdog     + common.fmt.fmt
+
+service->service edges: 62 distinct across 32 services
+NOTE: an import edge is not a permission. The call matrix decides that; see CALLMATRIX_DRIFT.md.
+```

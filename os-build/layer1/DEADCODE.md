@@ -7,7 +7,7 @@ reason this page under-reports dead code rather than inventing any: a function t
 appears in a comment will not be listed here, and the page says so instead of claiming
 a compiler's answer.
 
-Scanned: 67 service directories, 136 Goose files.
+Scanned: 67 service directories, 137 Goose files.
 
 ## 1. Functions nothing calls
 
@@ -239,18 +239,18 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/audit/audit.goose` | `audit_find` | 311 | 3 |
 | `services/audit/audit.goose` | `audit_count_of` | 331 | 3 |
 | `services/audit/audit.goose` | `audit_body_copy` | 353 | 1 |
-| `services/board/board.goose` | `bd_init` | 56 | 9 |
-| `services/board/board.goose` | `bd_room_add` | 120 | 12 |
-| `services/board/board.goose` | `bd_room_count` | 138 | 6 |
-| `services/board/board.goose` | `bd_room_name_at` | 140 | 1 |
+| `services/board/board.goose` | `bd_init` | 56 | 11 |
+| `services/board/board.goose` | `bd_room_add` | 120 | 13 |
+| `services/board/board.goose` | `bd_room_count` | 138 | 7 |
+| `services/board/board.goose` | `bd_room_name_at` | 140 | 2 |
 | `services/board/board.goose` | `bd_room_id_at` | 145 | 1 |
-| `services/board/board.goose` | `bd_post` | 151 | 13 |
+| `services/board/board.goose` | `bd_post` | 151 | 16 |
 | `services/board/board.goose` | `bd_post_count` | 179 | 2 |
 | `services/board/board.goose` | `bd_last_id` | 189 | 3 |
-| `services/board/board.goose` | `bd_unread` | 199 | 2 |
-| `services/board/board.goose` | `bd_fetch` | 212 | 5 |
+| `services/board/board.goose` | `bd_unread` | 199 | 6 |
+| `services/board/board.goose` | `bd_fetch` | 212 | 6 |
 | `services/board/board.goose` | `bd_refused_total` | 233 | 1 |
-| `services/board/board.goose` | `bd_post_total` | 234 | 5 |
+| `services/board/board.goose` | `bd_post_total` | 234 | 6 |
 | `services/callmatrix/callmatrix.goose` | `cm_init` | 94 | 1 |
 | `services/callmatrix/callmatrix.goose` | `cm_check` | 190 | 8 |
 | `services/callmatrix/callmatrix.goose` | `cm_mask` | 199 | 2 |
@@ -297,10 +297,10 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/console/esc.goose` | `esc_new` | 81 | 1 |
 | `services/console/esc.goose` | `esc_feed` | 113 | 4 |
 | `services/dashboard/dashboard.goose` | `df_set_window` | 108 | 4 |
-| `services/dashboard/dashboard.goose` | `df_window` | 116 | 4 |
+| `services/dashboard/dashboard.goose` | `df_window` | 116 | 6 |
 | `services/dashboard/dashboard.goose` | `df_label` | 154 | 5 |
-| `services/dashboard/dashboard.goose` | `df_fresh_count` | 218 | 3 |
-| `services/dashboard/dashboard.goose` | `df_missing_count` | 229 | 4 |
+| `services/dashboard/dashboard.goose` | `df_fresh_count` | 218 | 6 |
+| `services/dashboard/dashboard.goose` | `df_missing_count` | 229 | 5 |
 | `services/devices/devices.goose` | `dev_ready` | 216 | 2 |
 | `services/devices/devices.goose` | `dev_detail` | 224 | 1 |
 | `services/devices/hotplug.goose` | `hp_new` | 70 | 1 |
@@ -318,20 +318,20 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/display/display.goose` | `disp_switch` | 233 | 2 |
 | `services/display/display.goose` | `disp_switch_key` | 269 | 5 |
 | `services/dns/dns.goose` | `dns_build_a_query` | 68 | 4 |
-| `services/dock/dock.goose` | `dk_init` | 53 | 2 |
-| `services/dock/dock.goose` | `dk_pin` | 102 | 8 |
-| `services/dock/dock.goose` | `dk_unpin` | 136 | 4 |
-| `services/dock/dock.goose` | `dk_launch` | 181 | 9 |
-| `services/dock/dock.goose` | `dk_result` | 200 | 4 |
+| `services/dock/dock.goose` | `dk_init` | 53 | 3 |
+| `services/dock/dock.goose` | `dk_pin` | 102 | 11 |
+| `services/dock/dock.goose` | `dk_unpin` | 136 | 5 |
+| `services/dock/dock.goose` | `dk_launch` | 181 | 12 |
+| `services/dock/dock.goose` | `dk_result` | 200 | 5 |
 | `services/dock/dock.goose` | `dk_running_off` | 227 | 2 |
 | `services/dock/dock.goose` | `dk_count` | 237 | 7 |
-| `services/dock/dock.goose` | `dk_name_at` | 244 | 8 |
-| `services/dock/dock.goose` | `dk_running_at` | 249 | 1 |
-| `services/dock/dock.goose` | `dk_pending_at` | 254 | 1 |
-| `services/dock/dock.goose` | `dk_launches_of` | 259 | 2 |
-| `services/dock/dock.goose` | `dk_failures_of` | 265 | 2 |
-| `services/dock/dock.goose` | `dk_expiries_of` | 271 | 1 |
-| `services/dock/dock.goose` | `dk_running_count` | 277 | 4 |
+| `services/dock/dock.goose` | `dk_name_at` | 244 | 12 |
+| `services/dock/dock.goose` | `dk_running_at` | 249 | 6 |
+| `services/dock/dock.goose` | `dk_pending_at` | 254 | 5 |
+| `services/dock/dock.goose` | `dk_launches_of` | 259 | 3 |
+| `services/dock/dock.goose` | `dk_failures_of` | 265 | 3 |
+| `services/dock/dock.goose` | `dk_expiries_of` | 271 | 2 |
+| `services/dock/dock.goose` | `dk_running_count` | 277 | 7 |
 | `services/dock/dock.goose` | `dk_pending_count` | 287 | 5 |
 | `services/dock/dock.goose` | `dk_find_by_name` | 297 | 2 |
 | `services/fs/fs.goose` | `fs_mount` | 402 | 8 |
@@ -408,12 +408,12 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/session/session.goose` | `ses_owner_agent` | 236 | 1 |
 | `services/session/session.goose` | `ses_close_agent_sessions` | 244 | 3 |
 | `services/settings/settings.goose` | `st_name` | 80 | 7 |
-| `services/settings/settings.goose` | `st_get_int` | 167 | 18 |
-| `services/settings/settings.goose` | `st_get_text` | 230 | 2 |
-| `services/settings/settings.goose` | `st_dirty_count` | 240 | 8 |
-| `services/settings/settings.goose` | `st_count` | 258 | 3 |
-| `services/settings/settings.goose` | `st_export` | 268 | 2 |
-| `services/settings/settings.goose` | `st_import` | 335 | 10 |
+| `services/settings/settings.goose` | `st_get_int` | 167 | 20 |
+| `services/settings/settings.goose` | `st_get_text` | 230 | 5 |
+| `services/settings/settings.goose` | `st_dirty_count` | 240 | 9 |
+| `services/settings/settings.goose` | `st_count` | 258 | 4 |
+| `services/settings/settings.goose` | `st_export` | 268 | 4 |
+| `services/settings/settings.goose` | `st_import` | 335 | 11 |
 | `services/shell/shell.goose` | `sh_init` | 80 | 2 |
 | `services/shell/shell.goose` | `sh_run_script` | 446 | 2 |
 | `services/socket/socket.goose` | `sk_open` | 98 | 7 |
@@ -464,19 +464,19 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/updater_client/updater_client.goose` | `uc_rollback_count` | 204 | 1 |
 | `services/updater_client/updater_client.goose` | `uc_applied_total` | 205 | 2 |
 | `services/updater_client/updater_client.goose` | `uc_failed_total` | 206 | 1 |
-| `services/wallpaper/wallpaper.goose` | `wl_init` | 55 | 3 |
-| `services/wallpaper/wallpaper.goose` | `wl_register` | 107 | 12 |
-| `services/wallpaper/wallpaper.goose` | `wl_count_` | 140 | 4 |
+| `services/wallpaper/wallpaper.goose` | `wl_init` | 55 | 4 |
+| `services/wallpaper/wallpaper.goose` | `wl_register` | 107 | 15 |
+| `services/wallpaper/wallpaper.goose` | `wl_count_` | 140 | 5 |
 | `services/wallpaper/wallpaper.goose` | `wl_kind_of` | 148 | 2 |
 | `services/wallpaper/wallpaper.goose` | `wl_fps_of` | 154 | 2 |
-| `services/wallpaper/wallpaper.goose` | `wl_select` | 171 | 4 |
+| `services/wallpaper/wallpaper.goose` | `wl_select` | 171 | 5 |
 | `services/wallpaper/wallpaper.goose` | `wl_current_id` | 179 | 4 |
-| `services/wallpaper/wallpaper.goose` | `wl_current_name` | 181 | 1 |
+| `services/wallpaper/wallpaper.goose` | `wl_current_name` | 181 | 4 |
 | `services/wallpaper/wallpaper.goose` | `wl_set_fullscreen` | 188 | 3 |
 | `services/wallpaper/wallpaper.goose` | `wl_is_paused` | 194 | 2 |
-| `services/wallpaper/wallpaper.goose` | `wl_tick` | 199 | 10 |
+| `services/wallpaper/wallpaper.goose` | `wl_tick` | 199 | 12 |
 | `services/wallpaper/wallpaper.goose` | `wl_frames_drawn` | 218 | 5 |
-| `services/wallpaper/wallpaper.goose` | `wl_budget_refusals` | 219 | 8 |
+| `services/wallpaper/wallpaper.goose` | `wl_budget_refusals` | 219 | 9 |
 | `services/wallpaper/wallpaper.goose` | `wl_pause_count` | 220 | 3 |
 | `services/wallpaper/wallpaper.goose` | `wl_summary` | 223 | 1 |
 | `services/watchdog/metrics.goose` | `met_standard` | 95 | 3 |

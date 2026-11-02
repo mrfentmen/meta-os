@@ -8,11 +8,11 @@ here disagrees with a report, this file is the one with a command behind it.
 | services with code | **31** | `ls -d services/*/` minus `common`, `tests`, `build` |
 | services in the manifest | **31** | `jq '.services | length' os-build/layer1/services.json` |
 | services in the boot order | **28** | `python3 os-build/layer1/bootorder_check.py` |
-| Goose files | **136** | `find services -name '*.goose' | wc -l` |
-| lines of Goose | **30,770** | `cat $(find services -name '*.goose') | wc -l` |
-| test drivers | **48** | `ls services/tests/*.goose | wc -l` |
-| drivers that run | **48** | `./os-build/layer1/run_native.sh` |
-| passing checks | **2,172** | `awk -F'|' '/^tests\// {s+=$3} END {print s}' os-build/layer1/host/run_rows.txt` |
+| Goose files | **137** | `find services -name '*.goose' | wc -l` |
+| lines of Goose | **31,038** | `cat $(find services -name '*.goose') | wc -l` |
+| test drivers | **49** | `ls services/tests/*.goose | wc -l` |
+| drivers that run | **49** | `./os-build/layer1/run_native.sh` |
+| passing checks | **2,235** | `awk -F'|' '/^tests\// {s+=$3} END {print s}' os-build/layer1/host/run_rows.txt` |
 
 ## Docs that repeat a count
 
@@ -21,39 +21,39 @@ not is listed below, with the reason it is allowed to disagree.
 
 | File | Claim in the doc | Live value | Status |
 |---|---|---|---|
-| `BOOT_PLAN.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `BUFFY_REPORT.md` | 33 drivers | 48 | historical record, bannered |
-| `BUFFY_REPORT.md` | 29 drivers | 48 | historical record, bannered |
-| `BUFFY_REPORT.md` | 29 drivers | 48 | historical record, bannered |
-| `BUFFY_REPORT.md` | 29 drivers | 48 | historical record, bannered |
-| `BUFFY_REPORT.md` | 29 drivers | 48 | historical record, bannered |
-| `BUFFY_REPORT.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `BUFFY_REPORT.md` | 1,097 assertions | 2,172 | historical record, bannered |
-| `BUFFY_REPORT.md` | 1,097 assertions | 2,172 | historical record, bannered |
-| `BUFFY_REPORT.md` | 1,097 assertions | 2,172 | historical record, bannered |
-| `BUFFY_REPORT.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `FINISH_STATE.md` | 33 drivers | 48 | historical record, bannered |
-| `FINISH_STATE.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `FINISH_STATE.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `FINISH_STATE.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `FREEZE_AUDIT.md` | 33 drivers | 48 | historical record, bannered |
-| `FREEZE_AUDIT.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `FREEZE_AUDIT.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `GATE_RERUN.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `GATE_RERUN.md` | 83 assertions | 2,172 | historical record, bannered |
-| `RECONCILE_DEMO_FACTS.md` | 33 test drivers | 48 | historical record, bannered |
-| `RECONCILE_DEMO_FACTS.md` | 33 drivers | 48 | historical record, bannered |
+| `BOOT_PLAN.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `BUFFY_REPORT.md` | 33 drivers | 49 | historical record, bannered |
+| `BUFFY_REPORT.md` | 29 drivers | 49 | historical record, bannered |
+| `BUFFY_REPORT.md` | 29 drivers | 49 | historical record, bannered |
+| `BUFFY_REPORT.md` | 29 drivers | 49 | historical record, bannered |
+| `BUFFY_REPORT.md` | 29 drivers | 49 | historical record, bannered |
+| `BUFFY_REPORT.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `BUFFY_REPORT.md` | 1,097 assertions | 2,235 | historical record, bannered |
+| `BUFFY_REPORT.md` | 1,097 assertions | 2,235 | historical record, bannered |
+| `BUFFY_REPORT.md` | 1,097 assertions | 2,235 | historical record, bannered |
+| `BUFFY_REPORT.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `FINISH_STATE.md` | 33 drivers | 49 | historical record, bannered |
+| `FINISH_STATE.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `FINISH_STATE.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `FINISH_STATE.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `FREEZE_AUDIT.md` | 33 drivers | 49 | historical record, bannered |
+| `FREEZE_AUDIT.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `FREEZE_AUDIT.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `GATE_RERUN.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `GATE_RERUN.md` | 83 assertions | 2,235 | historical record, bannered |
+| `RECONCILE_DEMO_FACTS.md` | 33 test drivers | 49 | historical record, bannered |
+| `RECONCILE_DEMO_FACTS.md` | 33 drivers | 49 | historical record, bannered |
 | `RECONCILE_DEMO_FACTS.md` | 25 services with code | 31 | historical record, bannered |
-| `SERVICES_SCOPE.md` | 33 drivers | 48 | historical record, bannered |
-| `SERVICES_SCOPE.md` | 33 drivers | 48 | historical record, bannered |
-| `SERVICES_SCOPE.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `SERVICES_SCOPE.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `SERVICES_SCOPE.md` | 1,097 assertions | 2,172 | historical record, bannered |
+| `SERVICES_SCOPE.md` | 33 drivers | 49 | historical record, bannered |
+| `SERVICES_SCOPE.md` | 33 drivers | 49 | historical record, bannered |
+| `SERVICES_SCOPE.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `SERVICES_SCOPE.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `SERVICES_SCOPE.md` | 1,097 assertions | 2,235 | historical record, bannered |
 | `SERVICES_SCOPE.md` | 25 services in the manifest | 31 | historical record, bannered |
-| `SIGNOFF.md` | 33 drivers | 48 | historical record, bannered |
-| `SIGNOFF.md` | 33 drivers | 48 | historical record, bannered |
-| `SIGNOFF.md` | 1,253 assertions | 2,172 | historical record, bannered |
-| `SIGNOFF.md` | 1,253 assertions | 2,172 | historical record, bannered |
+| `SIGNOFF.md` | 33 drivers | 49 | historical record, bannered |
+| `SIGNOFF.md` | 33 drivers | 49 | historical record, bannered |
+| `SIGNOFF.md` | 1,253 assertions | 2,235 | historical record, bannered |
+| `SIGNOFF.md` | 1,253 assertions | 2,235 | historical record, bannered |
 | `SIGNOFF.md` | 25 services with code | 31 | historical record, bannered |
 | — | no live doc disagrees | — | clean |
 

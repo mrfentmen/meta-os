@@ -41,18 +41,20 @@ One person directs the build. Del, known as Mrfentmen, makes the calls and does 
 
 ## The services layer
 
-The OS above is the image. Under it sits a services layer written in Goose, the systems language, and built here from source: 25 services over 18 shared libraries — a supervisor, logging with rotation and retention, a log-structured filesystem with a checker, storage, time, the call matrix, the network protocol pack, a shell, and the agent host. It is not a sketch. Every module has a test program that imports it, asserts against it, and is compiled to C and run as a real host process, 33 of them in one command:
+The OS above is the image. Under it sits a services layer written in Goose, the systems language, and built here from source: 31 services over 18 shared libraries — a supervisor, logging with rotation and retention, a log-structured filesystem with a checker, storage, time, the call matrix, the network protocol pack, a shell, the agent host, and the six services the home surface draws from (settings, wallpaper, dock, dashboard feed, updater client, board). It is not a sketch. Every module has a test program that imports it, asserts against it, and is compiled to C and run as a real host process, 48 of them in one command:
 
 ```
 ./os-build/layer1/run_native.sh
-ran: 33 programs  RUNS=33  FAILS=0
+ran: 48 programs  RUNS=48  FAILS=0
 ```
 
-1,253 checks, 0 failed, against real memory and a real clock. The table per program is `os-build/layer1/SERVICE_RUNS.md`, the raw runs are `os-build/layer1/TRANSCRIPTS.md`, and the demo surfaces the layer actually drives are `os-build/layer1/DEMO.md`, `DEMO_SHELL.md` and `DEMO_30S.md`.
+2,172 checks, 0 failed, against real memory and a real clock. The table per program is `os-build/layer1/SERVICE_RUNS.md`, the raw runs are `os-build/layer1/TRANSCRIPTS.md`, and the demo surfaces the layer actually drives are `os-build/layer1/DEMO.md`, `DEMO_SHELL.md` and `DEMO_30S.md`.
 
 The honest boundary, stated the same way everywhere in `os-build/layer1/`: **this layer is not booted.** It runs as host processes with a substituted syscall surface — `os-build/layer1/host/host_shim.c` implements ten `sys_*` calls and refuses five on purpose (`sys_spawn`, `sys_kill`, `sys_net_send`, `sys_net_recv`, and `sys_read_key`, which reports nothing pending forever). A restart recorded in a transcript is the supervisor's decision and its bookkeeping, not a process being killed and brought back. No scheduler, no address space, no NIC. That refusal is why the green runs mean something: a shim that faked those calls would make every transcript pass for a reason that does not exist on the kernel.
 
-What the layer needs from the kernel to stop being a host-side corpus is written down, call by call, in `os-build/layer1/SERVICES_SYSCALL_MAP.md` and `KERNEL_NEEDS_AFTER.md`.
+The face layer is the part a user meets first, and it is deliberately the part that fails last: its six services start at orders 23–28, none is fatal, and each contract page in `os-build/layer1/contracts/` states in its own words what a restart costs — four of the six lose their state, because nothing persists yet.
+
+What the layer needs from the kernel to stop being a host-side corpus is written down, call by call, in `os-build/layer1/SERVICES_SYSCALL_MAP.md` and `KERNEL_NEEDS_AFTER.md`; the four syscalls that would make the supervisor real are `PROPOSALS.md` § P3a, with their numbers.
 
 ## Meta Imperium
 

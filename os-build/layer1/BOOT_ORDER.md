@@ -7,7 +7,7 @@ a table that drifted from its note is how a boot sequence gets quietly reordered
 
 ## The sequence
 
-22 services. The `#` column is `BootEntry.order`; `needs` is the bitmask in the
+28 services. The `#` column is `BootEntry.order`; `needs` is the bitmask in the
 file, written here as names because nobody audits base-2 in their head.
 
 | # | service | needs (must be RUNNING first) | fatal | started by |
@@ -34,6 +34,12 @@ file, written here as names because nobody audits base-2 in their head.
 | 20 | timesync | log, socket, time | no | table |
 | 21 | updater | audit, log, socket, storage, time | no | table |
 | 22 | agenthost | audit, log, session, storage, supervisor | no | table |
+| 23 | settings | log, storage | no | table |
+| 24 | wallpaper | log, settings, storage | no | table |
+| 25 | dock | log, session, settings, storage | no | table |
+| 26 | dashboard | log, session, settings, supervisor, watchdog | no | table |
+| 27 | updater_client | log, net, socket, time, updater | no | table |
+| 28 | board | log, net, storage, time | no | table |
 
 ## Why the supervisor is number six and not number one
 
@@ -66,13 +72,18 @@ class of mistake this note exists to make visible.
    session (to be a citizen of it), audit (to record grants) and storage (for
    its record). Nothing may depend on the agent host, so it is never a
    bottleneck.
-6. **`updater` second-to-last.** It needs a socket, storage and audit — i.e. the
+6. **The six face services are dead last, and none of them is fatal.** They are the
+   things the home surface draws: settings, wallpaper, dock, the dashboard feed, the
+   updater's client half and the board client. Each is a window onto something that
+   already works, so a face service that hangs costs the user a pane, not a boot — which
+   is the only reason a service this late is allowed to exist at all.
+7. **`updater` second-to-last.** It needs a socket, storage and audit — i.e. the
    whole floor — and nothing needs it. An updater that runs before the network
    is a service that fails its first check every boot and logs a lie.
 
 ## The invariant the table is checked against
 
-`bo_order_ok()` walks `order` 1..22 and returns false the moment a `needs` bit
+`bo_order_ok()` walks `order` 1..28 and returns false the moment a `needs` bit
 refers to a service whose order is not strictly smaller. The generator that
 produced the table asserted the same invariant before writing the file, so the
 static check and the runtime check cannot disagree without a hand edit — and a

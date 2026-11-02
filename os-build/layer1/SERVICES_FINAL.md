@@ -9,8 +9,8 @@ quotes. `DEMO_FACTS.md` is the demo-facing subset, `LIMITS.md` owns the limits t
 ## What this layer is
 
 Meta OS's system services: **31 services with code** and **18 shared libraries**,
-written in Goose, with no heap, no threads and no libc. **136 files, 30,906 lines,
-194798 bytes (190.2 KiB) of static storage.** It owns the boot record, the clock,
+written in Goose, with no heap, no threads and no libc. **137 files, 31,175 lines,
+199982 bytes (195.3 KiB) of static storage.** It owns the boot record, the clock,
 logging and rotation, the supervisor and its boot order, the permission table, storage, the
 filesystem, the network stack and protocol pack, the audit trail, the agent host, the session,
 display, input, devices, updates, the watchdog — and, since R7, the six face services the home
@@ -20,15 +20,15 @@ surface draws from: settings, wallpaper, dock, dashboard feed, updater client an
 
 | Claim | Value | Command |
 |---|---|---|
-| Test programs build and run to exit 0 | **48 of 53** (5 build-only: `svc_entry`, no supervisor) | `./os-build/layer1/run_native.sh` |
+| Test programs build and run to exit 0 | **49 of 54** (5 build-only: `svc_entry`, no supervisor) | `./os-build/layer1/run_native.sh` |
 | Test programs that failed | **0** | same |
-| Passing individual checks | **2,172** | `awk -F'\|' '/^tests\// {s+=$3} END {print s}' os-build/layer1/host/run_rows.txt` |
-| Whole-corpus typecheck | **54 ok, 0 failed** | `./os-build/layer1/check_services.sh` |
-| Source audit | 136 files, **0 findings** | `python3 os-build/layer1/source_audit.py` |
+| Passing individual checks | **2,235** | `awk -F'\|' '/^tests\// {s+=$3} END {print s}' os-build/layer1/host/run_rows.txt` |
+| Whole-corpus typecheck | **55 ok, 0 failed** | `./os-build/layer1/check_services.sh` |
+| Source audit | 137 files, **0 findings** | `python3 os-build/layer1/source_audit.py` |
 | Error vocabulary | clean: every code used is declared, and nothing redefines one locally | `python3 os-build/layer1/error_audit.py` |
 | Boot order | **28 services**, dependency order proven, no cycles | `python3 os-build/layer1/bootorder_check.py` |
 | Call matrix | 0 missing permissions, **91 dormant rows** | `python3 os-build/layer1/callmatrix_audit.py` |
-| Status words | 114 lines, **0 stale** | `python3 os-build/layer1/audit_status.py` |
+| Status words | 115 lines, **0 stale** | `python3 os-build/layer1/audit_status.py` |
 | Numeric limits driven to their edge | **71 of 91** (20 explained, 0 open) | `python3 os-build/layer1/gen_limits.py` |
 | Manifest | 31 services, class1 0, class2 8 | `python3 os-build/layer1/gen_services.py` |
 

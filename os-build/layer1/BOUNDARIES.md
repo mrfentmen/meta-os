@@ -10,9 +10,13 @@ Every line is marked:
 - **REQUIREMENT** — not built anywhere; the other layer has to do it.
 - **OPEN** — nobody has decided, and work that assumes an answer is guessing.
 
-Nothing in this document is COMPILED evidence. The Goose toolchain is
-`NOT FOUND` on this machine and `kernel/src/main.rs` is still the K1 skeleton,
-so both sides of every boundary below are paper.
+**Updated 2026-11-02 (R7).** The Goose toolchain is installed and the layer's drivers build and
+run natively: `./os-build/layer1/run_native.sh` runs 49 drivers with 0 failures against
+`host/host_shim.c`. That makes each service **COMPILED and RUN on the host**, which is a real
+statement and a narrow one: five syscalls are refused by the shim on purpose, and no kernel has
+started a service. The word WRITTEN in the table below therefore means "written, compiled and
+run on the host, not yet run under a kernel" — never "paper". `kernel/src/main.rs` remains the K1
+skeleton, so every REQUIREMENT in §1 is still a request.
 
 ## 1. What Layer 4 needs from Layers 1–3
 
@@ -42,11 +46,11 @@ in writing, or `bootlog` is lying.
 
 ## 2. What Layer 4 offers Layers 5–6
 
-**Rewritten 2026-11-01 against the finished sources (B-L1-67).** The previous version of this
-table said NOT BUILT for six things that now have source. The honest state word for all of them
-is WRITTEN: the file exists, every symbol was checked against `goose__*`, and **nothing has
-compiled or run** — there is no Goose toolchain on this machine and `kernel/src/main.rs` is still
-the K1 skeleton. WRITTEN is not a step on the way to working; it is a statement about text.
+**Rewritten 2026-11-01 against the finished sources (B-L1-67), re-read 2026-11-02 (R7).** The
+previous version of this table said NOT BUILT for six things that now have source. Every row
+below now compiles and runs on the host — the row's state word is retained because what a reader
+of a *boundary* sheet needs to know is whether a KERNEL has run it, and none has. `SERVICE_RUNS.md`
+holds the per-driver evidence; this sheet holds the promise to the other layers.
 
 | # | Offer | Kind | Who it is for | State |
 |---|---|---|---|---|
@@ -58,6 +62,7 @@ the K1 skeleton. WRITTEN is not a step on the way to working; it is a statement 
 | B6 | An audit trail of what agents did, readable by the user | CONTRACT (the OS's promise) | Milo, and the user | WRITTEN (`audit/`: chained records, fixed budget, retention) |
 | B7 | Agent lifecycle: spawn, grant, quota, channel, stop | CONTRACT | Milo | WRITTEN (`agenthost/`: 24 slots, 9 capabilities, quotas, channels) |
 | B8 | Filesystem above the storage contract | CONTRACT | Hana's shell, every program | WRITTEN (`fs/`: files, directories, paths, `fsck`) |
+| B22 | The face layer: settings, wallpaper, dock, dashboard feed, updater client, board client | CONTRACT | Hana (the home surface), Milo (the agent view) | WRITTEN (`settings/`, `wallpaper/`, `dock/`, `dashboard/`, `updater_client/`, `board/`); orders 23–28 at boot, none fatal, all state in memory — see `contracts/*.md` for what a restart costs |
 | B9 | A shell with builtins and scripts | CONTRACT | the user and the agent's command surface | WRITTEN (`shell/`: parser via `common.args`, builtins, script loop) |
 | B10 | A network stack: IPv4, ARP, ICMP, UDP, TCP, loopback, sockets | CONTRACT | Milo's agents, Hana's `net` builtins | WRITTEN (`net/`, `socket/`) — no driver under it |
 | B11 | Address autoconfiguration: DHCP client, DNS resolver, NTP-style time sync | CONTRACT | anything that names a host | WRITTEN (`dhcp/`, `dns/`, `timesync/`) |
@@ -69,7 +74,7 @@ the K1 skeleton. WRITTEN is not a step on the way to working; it is a statement 
 | B17 | Updates: manifest, SHA-256 verify, signature interface, deltas, rollback | CONTRACT | Pax's release process | WRITTEN (`updater/`: verify + delta + signature *interface*) |
 | B18 | Session: login flow, identity, session scope | CONTRACT | Hana's shell prompt, the audit trail | WRITTEN (`session/login.goose`) |
 | B19 | Health and metrics: heartbeat watches, counters | CONTRACT | the supervisor, the demo | WRITTEN (`watchdog/`, `metrics.goose`) |
-| B20 | A permission table: which service may call which | CONTRACT | the merge gate, Milo | WRITTEN — 24 ids, 0 denied import edges, 67 dormant rows listed on every run (`CALLMATRIX_DRIFT.md`) |
+| B20 | A permission table: which service may call which | CONTRACT | the merge gate, Milo | WRITTEN — 30 ids, 0 missing permissions, 91 dormant rows listed on every run (`CALLMATRIX_DRIFT.md`) |
 | B21 | Seventeen `common.*` libraries: `args boot bytes cfg enc err fmt hash hex json pool ring sort str sys table text` | CONTRACT | every service above | WRITTEN; `text`, `table`, `sort`, `pool` have no consumer yet |
 
 **What Layers 5–6 still cannot rely on:** any of the above *working*. Every row is a shape, not a
@@ -111,7 +116,8 @@ Where the two sheets meet, and what is true today:
 
 ## 5. What this sheet does not claim
 
-- It does not claim a single line of Layer 4 runs.
+- It does not claim a kernel has run a line of Layer 4 — but it no longer claims nothing runs:
+  the layer's 49 drivers execute natively, and that evidence is in `SERVICE_RUNS.md`.
 - It does not claim the kernel implements any of A1–A10. All ten are requests.
 - It does not settle Q9, and it deliberately leaves the six syscall signatures
   as *our* request rather than a mirror of a kernel design that does not exist.

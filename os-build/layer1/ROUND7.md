@@ -14,6 +14,7 @@ page is `SERVICES_FINAL.md`; neither is quoted from memory here.
 | Six face services | settings, wallpaper, dock, dashboard feed, updater client, board client — code, tests, contract pages | `services/{settings,wallpaper,dock,dashboard,updater_client,board}/`, `t86`–`t91` |
 | Manifest, boot order, matrix | all six registered in `services.json`, in the boot table (orders 23–28), and given matrix ids 25–30 | `gen_services.py`, `bootorder_check.py`, `callmatrix_audit.py` |
 | Spawn/kill proposal with numbers | slots 6, 7, 8, 9 with shapes and the cost of each refusal | `PROPOSALS.md` § P3a |
+| Face walkthrough | six services driven as one user session, including byte-identical export round trips | `t93_face_walkthrough.goose` (63 checks) |
 | Load and cascade | three full boots of 28 services, two drills with a fatal service dead at step 0, a restart budget that runs out | `t92_sup_load.goose` (27 checks) |
 | Final state regenerated | `SERVICES_FINAL.md` is now generated from the tree | `gen_services_final.py` |
 | Counts reconciled | every live doc checked against the tree, every historical record bannered | `reconcile_counts.py`, `COUNTS.md` |
@@ -21,7 +22,7 @@ page is `SERVICES_FINAL.md`; neither is quoted from memory here.
 
 ## The gate, as it stands
 
-`./os-build/layer1/run_native.sh` — 48 drivers run, 0 fail, 2,172 passing checks, 5 entry
+`./os-build/layer1/run_native.sh` — 49 drivers run, 0 fail, 2,235 passing checks, 5 entry
 points build-only (they export `svc_entry` and a host has no supervisor to call it).
 `./os-build/layer1/check_services.sh` — 54 ok, 0 failed. `bootorder_check.py` — 28 services,
 dependency order proven, no cycles. `callmatrix_audit.py` — 0 missing permissions, 91 dormant
@@ -63,7 +64,7 @@ syscalls refused on purpose. The submission page says the same thing in its own 
 ## The honest summary for the boss
 
 The services layer is done as far as it can be without a kernel that spawns processes. 31
-services, 48 drivers, 2,172 checks, every audit green, every number generated from the tree.
+services, 49 drivers, 2,235 checks, every audit green, every number generated from the tree.
 The two things that would move it further are both on Pax's desk, not mine: rule P3a (four
 reserved slots) so the supervisor can start something, and a K2 boot log so any of this can
 be called running rather than passing.

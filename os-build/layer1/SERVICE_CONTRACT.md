@@ -268,3 +268,29 @@ is the largest unknown in the layer and it is B-L1-75's job to find out.
 so polling with `yield`), Q-B-L1-2 (message header layout is fixed here but the
 transport is not), Q-B-L1-3 (whether the kernel will ever implement `gs_os_*` so
 Goose's own `os` module works unchanged).
+
+---
+
+## The face services (R7)
+
+Six services exist that the system does not *need*: `settings`, `wallpaper`, `dock`,
+`dashboard`, `updater_client`, `board`. They follow every rule above and three more, because
+they are the first services written for a surface that does not exist yet.
+
+1. **They start last and none is fatal.** Orders 23–28 in the boot table. A face service that
+   hangs costs a pane, not a boot. This is a rule, not an accident of when they were written.
+2. **They read what they draw, and they are allowed to.** Each has a matrix row (ids 25–30)
+   naming the services it may read: `settings` reads storage, `dashboard` reads the log, the
+   supervisor, the watchdog and the session. Those rows are declared before the calls exist,
+   so the audit reports them as dormant rather than the wiring arriving with its own
+   permission in the same commit.
+3. **Their state is memory, and their contract says so.** Every contract page has a "restart
+   semantics" section stating what a restart costs the user. Four of the six lose everything:
+   settings, wallpaper selection, dock pins, dashboard samples. The board has a proven
+   export/import round trip and nothing calls it on a timer. None of them persists yet, and
+   no page pretends otherwise.
+
+A face service is also where the "don't invent a number" rule bites hardest: the dashboard
+returns `DF_NEVER` for a metric nobody sampled, and the dock marks a launch that never
+reported as a failure at 5 s. Both are refusals to display something that is not true, which
+is the same choice the kernel-facing services make with error codes.

@@ -12,24 +12,24 @@ disagrees with a number in a report, this file is the one with a command behind 
 
 | Fact | Value | Command that produces it |
 |---|---|---|
-| Goose source files | 136 | `find services -name '*.goose' \| wc -l` |
-| Lines of Goose | 30768 | `cat $(find services -name '*.goose') \| wc -l` |
+| Goose source files | 137 | `find services -name '*.goose' \| wc -l` |
+| Lines of Goose | 31038 | `cat $(find services -name '*.goose') \| wc -l` |
 | Service directories with a kernel-facing role | 35 | `ls -d services/*/ \| grep -v tests \| grep -v common \| wc -l` |
 | Shared libraries under `services/common` | 18 | `ls -d services/common/*/ \| wc -l` |
-| Native test programs | 48 | `ls services/tests/*.goose \| wc -l` |
+| Native test programs | 49 | `ls services/tests/*.goose \| wc -l` |
 
 ## The gate that ran
 
 | Fact | Value | Command that produces it |
 |---|---|---|
-| Test programs that built and ran to exit 0 | **48 of 48** | `./os-build/layer1/run_native.sh` |
+| Test programs that built and ran to exit 0 | **49 of 49** | `./os-build/layer1/run_native.sh` |
 | Test programs that failed | **0** | same |
-| Passing individual checks across those runs | **2172** | `awk -F'|' '/^tests\// {s+=$3} END {print s}' os-build/layer1/host/run_rows.txt` |
+| Passing individual checks across those runs | **2235** | `awk -F'|' '/^tests\// {s+=$3} END {print s}' os-build/layer1/host/run_rows.txt` |
 | Checks that reported FAIL | **0** | same file, column 4 |
 | Entry points that compile to a binary | 4 | `./os-build/layer1/run_native.sh` (entry section) |
 | Entry points that only typecheck | 1 | same |
 | Entry points that failed to build | 0 | same |
-| Whole-corpus typecheck | typechecked: 54 ok, 0 failed (exit 0) | `./os-build/layer1/check_services.sh` |
+| Whole-corpus typecheck | typechecked: 55 ok, 0 failed (exit 0) | `./os-build/layer1/check_services.sh` |
 
 `run_native.sh` is the gate: it compiles each driver with Goose, links it with clang
 against `host/host_shim.c`, and runs it. A test that does not build is a FAILED row,
@@ -51,13 +51,13 @@ nothing has been allocated.
 
 | Audit | Command | Exit | Summary line |
 |---|---|---|---|
-| source consistency | `os-build/layer1/source_audit.py` | 0 | 136 files audited, 0 finding(s) |
+| source consistency | `os-build/layer1/source_audit.py` | 0 | 137 files audited, 0 finding(s) |
 | error vocabulary | `os-build/layer1/error_audit.py` | 0 | clean: every code used is declared, and nothing redefines one locally |
-| static size | `os-build/layer1/size_audit.py` | 0 | services: 39   resident: 194798 bytes (190.2 KiB)   unknown-element arrays: 0 |
+| static size | `os-build/layer1/size_audit.py` | 0 | services: 39   resident: 199982 bytes (195.3 KiB)   unknown-element arrays: 0 |
 | boot order DAG | `os-build/layer1/bootorder_check.py` | 0 | RESULT: boot order is consistent -- 28 services, dependency order proven, no cycles |
 | link map | `os-build/layer1/linkmap.py` | 0 | service->service edges: 62 distinct across 32 services |
 | permission table | `os-build/layer1/callmatrix_audit.py` | 0 | clean on permissions; 91 dormant row(s) reported above |
-| status words | `os-build/layer1/audit_status.py` | 0 | status lines checked: 114, stale: 1 |
+| status words | `os-build/layer1/audit_status.py` | 0 | status lines checked: 115, stale: 0 |
 
 ## Limits, and how many are actually driven to their edge
 
@@ -86,9 +86,9 @@ them is measurable from `services/`:
 
 Safe, because each sentence is a row above:
 
-- "48 service programs build and run on this machine, 2172 checks passing."
+- "49 service programs build and run on this machine, 2235 checks passing."
 - "23 services need no kernel call at all; 8 need a syscall the freeze does not have."
-- "The corpus typechecks as 54 ok, 0 failed."
+- "The corpus typechecks as 55 ok, 0 failed."
 
 Not safe:
 

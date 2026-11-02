@@ -128,6 +128,10 @@ def main():
     A("- `NEITHER` is the honest word for code that exists and has never been given a caller.")
 
     with open(DEST, "w", encoding="utf-8") as fh:
+        banner = ("> Counts in this file are as of the round it records. "
+                  "Live numbers: `COUNTS.md`.")
+        if L and L[0].startswith("#"):
+            L = [L[0], "", banner] + L[1:]
         fh.write("\n".join(L) + "\n")
     print("FINISH_STATUS.md: %d services, %d RUNS, %d typecheck-only, %d neither; %d assertions"
           % (len(svcs), n_runs, n_entry, n_neither, total_checks))

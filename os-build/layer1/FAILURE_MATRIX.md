@@ -60,19 +60,42 @@ refusals in those two files are real and not aspirational.
 | `audit` tampered record | "a changed byte breaks the chain" | `t74`: one body byte flipped, and a truncated buffer | Verification stops at the tampered record and reports the sequence it stopped at; a truncated trail verifies fewer records rather than reading past the end. |
 | `console` hang | the start timeout (unbuilt) | `BOOT_REHEARSAL.md`: `console` starts, prints its banner, and loops on `read_key` forever | **Hangs.** Killed by the rehearsal's 5-second bound, not by the supervisor, because the start timeout does not exist. |
 
+## The face layer, added in R7
+
+Six services joined the boot order this round, and each has a column here because each was
+driven, not sketched. The failures chosen are the ones that would be silent: a limit that
+clamps instead of refusing, a counter that reads as success, a format that parses itself.
+
+| service | failure driven | driver | result |
+|---|---|---|---|
+| `settings` | out-of-range value, unknown key, control byte in text, corrupt import | `t86` (67 checks) | Refused whole; the import stages and commits at the end, so a bad line changes nothing. |
+| `wallpaper` | fps 0 and 61, duplicate name, ninth wallpaper, pause counted per tick | `t87` (56 checks) | Refuses at `WL_MAX`, and a fullscreen pause is counted once, not once per tick. |
+| `dock` | double click inside 1500 ms, launch that never reports, unpin while running | `t88` | Second click is `E_BUSY` and is not a launch; a pending launch past 5000 ms becomes a failure; unpin while running is refused. |
+| `dashboard` | never sampled, exactly-at-window age, unknown kind, clock going backwards | `t89` (50 checks) | `DF_NEVER` and `DF_STALE` are returned instead of a zero; kind 5 is refused rather than clamped onto `net`. |
+| `updater_client` | STOP file, bad digest, bad signature, rollback, re-check inside 60 s, apply failure | `t90` | Four distinct refusal codes above the error range; a failed apply stays `FAILED` until `uc_retry`. |
+| `board` | full log, fifth room, comma in text, truncated export, bad import line | `t91` (58 checks) | Refuses rather than drops; the import is atomic; the export/import round trip preserves ids and counters. |
+
+Two of these found defects on their first run: the board parser read `P,<id>,…` one field
+off, and the six new services were outside the manifest, the boot table and the matrix at
+once. Both are recorded in `SERVICES_FINAL.md`'s defect list.
+
 ## What is still unexercised, named
 
-- **`session`** has a driver but no *second* path: `t77` covers the user login end to end, the
-  agent session (`ses_open(OWNER_AGENT, ...)`) is only driven for its refusal, never opened and
-  used. The agent's session is the one an agent host will actually hold.
+- ~~**`session`** has a driver but no *second* path~~ — **closed in R7**: `t84_session_deep`
+  opens and uses an agent session, and drives double attach, input to a locked session and a
+  session closed twice. What is still missing is a session that outlives a supervisor restart:
+  `ses_init` resets every slot, which is stated in `contracts/session.md` and not proven.
 - **Hang** is only exercised for `console`, and only by the rehearsal's timeout. No service is
   instrumented to prove it was stopped by the layer.
-- **Crash and restart** is exercised as a decision (`t52`), never as an event: no process is
-  spawned or killed anywhere in the corpus.
+- **Crash and restart** is exercised as a decision (`t52`, and `t92` runs a budget to
+  exhaustion under load), never as an event: no process is spawned or killed anywhere in the
+  corpus. `PROPOSALS.md` § P3a asks for the four slots that would change that.
 - **Corrupt storage** covers the superblock and the audit trail. The inode table, the bitmap and the
   directory blocks are checked by `fsck` (`t65`) but not corrupted deliberately in a test.
-- **`net`, `dhcp`, `dns`, `updater`** are exercised for bad input only. Nothing drives a *dropped*
-  packet, a timeout, or a retry — the failure modes a network has when the peer is simply absent.
+- **`net`** is no longer bad-input only: `t85_net_deep` drives a truncated frame, a bad
+  checksum, an ARP for an unknown address and a full link queue. **`dhcp`, `dns`, `updater`**
+  are still exercised for bad input only — nothing drives a dropped packet or a retry, which is
+  what a network does when the peer is simply absent.
 
 ## How to reproduce
 

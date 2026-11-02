@@ -1,8 +1,10 @@
 # Call-matrix drift (B-L1-118)
 
 Produced by `python3 os-build/layer1/callmatrix_audit.py` against the tree as of this
-branch. Status: **REPORTED, NOT FIXED** — changing the permission table is a policy change
-and belongs to Pax with the matrix's owner, not to the lane that found it.
+branch. Status: **CLOSED for the six missing edges and the six UNKNOWN services, as of R7.** The
+matrix now declares ids 1–30 and every service directory resolves. The body below is the
+original report kept as the record of what was wrong; the appendix is the audit as it runs
+today. Permissions are still a policy surface: adding a row is Pax's call, not the lane's.
 
 ## What the auditor does
 
@@ -121,3 +123,104 @@ imports. That is still the answer to "who can reach the audit log" — `supervis
 This file stays as the record of the order-of-work gap inside this build-out: the permission table
 was written before the services it governs, and twelve edges were missing by the time the last
 wave landed. The green light is the end of the story, not the whole story.
+
+## Appendix — the audit, regenerated (2026-11-02)
+
+```
+call-matrix audit  (30 services in the matrix, 31 with sources)
+
+DORMANT permission (91, informational):
+  agenthost    -> audit        allowed, not called from a source
+  agenthost    -> logd         allowed, not called from a source
+  agenthost    -> session      allowed, not called from a source
+  agenthost    -> storage      allowed, not called from a source
+  agenthost    -> supervisor   allowed, not called from a source
+  agenthost    -> time         allowed, not called from a source
+  audit        -> logd         allowed, not called from a source
+  audit        -> storage      allowed, not called from a source
+  audit        -> time         allowed, not called from a source
+  board        -> logd         allowed, not called from a source
+  board        -> net          allowed, not called from a source
+  board        -> storage      allowed, not called from a source
+  board        -> time         allowed, not called from a source
+  bootlog      -> console      allowed, not called from a source
+  bootlog      -> devices      allowed, not called from a source
+  bootlog      -> logd         allowed, not called from a source
+  bootlog      -> time         allowed, not called from a source
+  console      -> bootlog      allowed, not called from a source
+  console      -> logd         allowed, not called from a source
+  dashboard    -> logd         allowed, not called from a source
+  dashboard    -> session      allowed, not called from a source
+  dashboard    -> settings     allowed, not called from a source
+  dashboard    -> supervisor   allowed, not called from a source
+  dashboard    -> watchdog     allowed, not called from a source
+  devices      -> bootlog      allowed, not called from a source
+  devices      -> logd         allowed, not called from a source
+  dhcp         -> logd         allowed, not called from a source
+  dhcp         -> net          allowed, not called from a source
+  dhcp         -> time         allowed, not called from a source
+  display      -> logd         allowed, not called from a source
+  display      -> session      allowed, not called from a source
+  dns          -> logd         allowed, not called from a source
+  dns          -> net          allowed, not called from a source
+  dock         -> logd         allowed, not called from a source
+  dock         -> session      allowed, not called from a source
+  dock         -> settings     allowed, not called from a source
+  dock         -> storage      allowed, not called from a source
+  example      -> logd         allowed, not called from a source
+  fs           -> logd         allowed, not called from a source
+  input        -> display      allowed, not called from a source
+  input        -> logd         allowed, not called from a source
+  input        -> session      allowed, not called from a source
+  logd         -> console      allowed, not called from a source
+  logd         -> logfmt       allowed, not called from a source
+  logd         -> storage      allowed, not called from a source
+  logd         -> time         allowed, not called from a source
+  logfmt       -> time         allowed, not called from a source
+  net          -> devices      allowed, not called from a source
+  net          -> logd         allowed, not called from a source
+  netcfg       -> logd         allowed, not called from a source
+  netcfg       -> net          allowed, not called from a source
+  netcfg       -> storage      allowed, not called from a source
+  session      -> audit        allowed, not called from a source
+  session      -> display      allowed, not called from a source
+  session      -> input        allowed, not called from a source
+  session      -> logd         allowed, not called from a source
+  session      -> time         allowed, not called from a source
+  settings     -> logd         allowed, not called from a source
+  settings     -> storage      allowed, not called from a source
+  settings     -> time         allowed, not called from a source
+  socket       -> dns          allowed, not called from a source
+  socket       -> logd         allowed, not called from a source
+  socket       -> time         allowed, not called from a source
+  storage      -> devices      allowed, not called from a source
+  storage      -> logd         allowed, not called from a source
+  supervisor   -> agenthost    allowed, not called from a source
+  supervisor   -> audit        allowed, not called from a source
+  supervisor   -> logd         allowed, not called from a source
+  supervisor   -> session      allowed, not called from a source
+  supervisor   -> time         allowed, not called from a source
+  supervisor   -> watchdog     allowed, not called from a source
+  time         -> devices      allowed, not called from a source
+  timesync     -> logd         allowed, not called from a source
+  timesync     -> socket       allowed, not called from a source
+  timesync     -> time         allowed, not called from a source
+  updater      -> audit        allowed, not called from a source
+  updater      -> logd         allowed, not called from a source
+  updater      -> socket       allowed, not called from a source
+  updater      -> storage      allowed, not called from a source
+  updater      -> time         allowed, not called from a source
+  updater_client -> logd         allowed, not called from a source
+  updater_client -> net          allowed, not called from a source
+  updater_client -> socket       allowed, not called from a source
+  updater_client -> time         allowed, not called from a source
+  updater_client -> updater      allowed, not called from a source
+  wallpaper    -> logd         allowed, not called from a source
+  wallpaper    -> settings     allowed, not called from a source
+  wallpaper    -> storage      allowed, not called from a source
+  watchdog     -> logd         allowed, not called from a source
+  watchdog     -> supervisor   allowed, not called from a source
+  watchdog     -> time         allowed, not called from a source
+
+clean on permissions; 91 dormant row(s) reported above
+```

@@ -18,7 +18,7 @@ be exported to and imported from one line of text so an image can carry its conf
 | 3 | `bar` | int | 0..`SET_COLOR_MAX` | `0x1c2230` |
 | 4 | `mode` | int | 1 = dark, 2 = light | 1 |
 | 5 | `anim` | int | 0 or 1 | 1 |
-| 6 | `hostname` | text | 1..31 bytes, printable | `meta-os` |
+| 6 | `hostname` | text | 1..31 bytes, printable | `meta` |
 
 `SET_MAX` is 24 entries, which is six keys plus room for named profiles. `st_count()`
 reports how many are occupied, so a caller can see the headroom rather than assume it.
@@ -51,7 +51,8 @@ reports how many are occupied, so a caller can see the headroom rather than assu
 ## Restart semantics
 
 There is no persistence call in this build. `st_init()` resets to defaults and clears
-dirty, so **a restart loses every change** unless the caller exported first. That is a fact
+dirty — the defaults are the starting state, not a change the user made — so **a restart
+loses every change** unless the caller exported first. That is a fact
 about this file, not a bug to discover later: the storage hook is `st_dirty_count` +
 `st_export`, and it is not wired.
 

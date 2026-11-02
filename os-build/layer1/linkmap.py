@@ -131,4 +131,25 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    code = main(sys.argv[1:])
+    # `--write` refreshes the generated appendix in LINK_MAP.md, so the document's edge
+    # tables cannot be older than the tree. The prose above the appendix is hand-written
+    # on purpose: it is the argument for the shape of the graph, not a listing of it.
+    if "--write" in sys.argv[1:]:
+        import io
+        import contextlib
+        import datetime
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            main([a for a in sys.argv[1:] if a != "--write"])
+        body = buf.getvalue().rstrip()
+        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "LINK_MAP.md")
+        with open(path, "r", encoding="utf-8") as h:
+            text = h.read()
+        marker = "## Appendix — the edge list, regenerated"
+        head = text.split(marker)[0].rstrip()
+        stamp = datetime.date.today().isoformat()
+        with open(path, "w", encoding="utf-8") as h:
+            h.write(head + "\n\n" + marker + " (" + stamp + ")\n\n```\n" + body + "\n```\n")
+        print("wrote LINK_MAP.md appendix")
+    sys.exit(code)

@@ -47,8 +47,9 @@ the part worth replaying.
 
 - **Never sampled** — `df_get` is `(0, DF_NEVER)`; `df_label` draws `--`.
 - **Just inside the window** — `DF_FRESH` at `window - 1` ms.
-- **Exactly the window** — `DF_STALE` at `window` ms: the boundary belongs to stale, so a
-  window is "valid for less than N ms", which is the only reading that cannot round up.
+- **Exactly the window** — still `DF_FRESH` at `window` ms, `DF_STALE` one ms later. The
+  window is inclusive and the test asserts both sides of it; an exclusive reading would have
+  called a sample stale at the instant it was taken.
 - **Unknown kind** — `df_put` and `df_get` are `E_NOTFOUND`; kind 5 does not fit in the
   table and is refused rather than clamped onto `net`.
 - **Clock going backwards** — a `now_ms` below `taken_ms` reports the sample as stale rather

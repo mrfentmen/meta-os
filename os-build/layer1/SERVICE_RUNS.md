@@ -71,13 +71,14 @@ uint8_t sys_read_key(gs_rref)        gs_rref = { gs_rhdr *hdr; gs_stack *stk; }
 | `tests/t90_updater_client` | **RUNS** | 62 | 0 | — |
 | `tests/t91_board` | **RUNS** | 58 | 0 | — |
 | `tests/t92_sup_load` | **RUNS** | 27 | 0 | — |
+| `tests/t93_face_walkthrough` | **RUNS** | 63 | 0 | — |
 | `entry/bootlog` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/console` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/example` | TYPECHECKS (not run) | 0 | 0 | svc_entry takes a kernel BootInfo; no host boot block |
 | `entry/logd` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/time` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 
-**48 of 48 drivers run to completion, all green: 2172 assertions passed, 0 failed** (measured 2026-11-02, `run_native.sh` exit 0). 4 entry points **build** and are not run — they export `svc_entry`, and a host process has no supervisor to call it. 1 entry point **typechecks** and is not run: its `svc_entry` takes a kernel `BootInfo`, and a host has no boot block to hand it.
+**49 of 49 drivers run to completion, all green: 2235 assertions passed, 0 failed** (measured 2026-11-02, `run_native.sh` exit 0). 4 entry points **build** and are not run — they export `svc_entry`, and a host process has no supervisor to call it. 1 entry point **typechecks** and is not run: its `svc_entry` takes a kernel `BootInfo`, and a host has no boot block to hand it.
 
 ## What the first pass found, and what fixing it taught
 
