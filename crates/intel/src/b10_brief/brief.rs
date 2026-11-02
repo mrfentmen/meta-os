@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 
-use super::window::RawMessage;
+use super::window::{RawMessage, SourceWindow, WindowHours};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct BriefRecord {
@@ -2355,6 +2355,106 @@ pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRec
     BriefRecord { room: room.to_string(), ts: 0, text, kind: "morning".to_string() }
 }
 
+/// BRF-028: a stored brief record as `_brief_text_from_record` reads it.
+/// Only the fields that function touches: verbatim `text`, the stored
+/// `source_window` (string or dict form, shared with `window`), and
+/// the stored `sections` map. A record that predates the text field
+/// carries `text: None` and renders from its sections instead.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct StoredBriefText {
+    pub text: Option<String>,
+    pub source_window: Option<SourceWindow>,
+    pub sections: HashMap<String, Vec<String>>,
+}
+
+/// Render a float the way Python `str()` does: a whole float keeps
+/// its `.0` (`24.0`, never `24`). Ported oddity: `_brief_text_from_record`
+/// does NOT apply the BRF-024 whole-float-to-int rule `_window_line`
+/// uses, so its dict window can read "last 24.0 hours" where the
+/// window line reads "last 24 hours".
+fn python_float(v: f64) -> String {
+    if v.is_finite() && v.fract() == 0.0 {
+        format!("{v:.1}")
+    } else {
+        v.to_string()
+    }
+}
+
+fn opt_count(v: &Option<i64>) -> String {
+    match v {
+        Some(n) => n.to_string(),
+        // Mirror Python's `.get` on a missing key: it renders None.
+        None => "None".to_string(),
+    }
+}
+
+/// BRF-028: text for a stored brief record.
+///
+/// A stored record's verbatim `text` wins exactly as stored — a
+/// guard hit returns the brief that was generated, never a
+/// recomposition. Blank or missing text renders from the stored
+/// sections instead: the window line first (string windows render
+/// verbatim even when empty; dict windows render their counts with
+/// missing keys as `None`; a missing window renders no line at
+/// all), then each frozen `BRIEF_SECTIONS` heading with its items
+/// as `- ` bullets, or "Nothing reported in this window" when the
+/// section is missing or empty. The result always ends with one
+/// trailing newline, mirroring Python's `"\n".join(lines) + "\n"`.
+/// A `None` record renders as a record with no text, no window,
+/// and no sections. Section items are typed `Vec<String>`: a
+/// non-list section value has no Rust form (Python would iterate
+/// its characters, which is a malformed record, not a rendering).
+pub fn brief_text_from_record(record: Option<&StoredBriefText>) -> String {
+    if let Some(rec) = record {
+        if let Some(text) = &rec.text {
+            if !text.trim().is_empty() {
+                return text.clone();
+            }
+        }
+    }
+    let mut lines: Vec<String> = Vec::new();
+    if let Some(rec) = record {
+        if let Some(window) = &rec.source_window {
+            match window {
+                SourceWindow::Text(t) => lines.push(format!("Window: {t}")),
+                SourceWindow::Dict {
+                    max_messages,
+                    max_hours,
+                    messages_kept,
+                    messages_dropped,
+                } => {
+                    let hours = match max_hours {
+                        Some(WindowHours::Int(v)) => v.to_string(),
+                        Some(WindowHours::Float(v)) => python_float(*v),
+                        None => "None".to_string(),
+                    };
+                    lines.push(format!(
+                        "Window: last {} messages or last {} hours, {} kept, {} dropped",
+                        opt_count(max_messages),
+                        hours,
+                        opt_count(messages_kept),
+                        opt_count(messages_dropped)
+                    ));
+                }
+            }
+        }
+    }
+    for section in BRIEF_SECTIONS {
+        let section = *section;
+        lines.push(String::new());
+        lines.push(section.to_string());
+        match record.and_then(|rec| rec.sections.get(section)) {
+            Some(items) if !items.is_empty() => {
+                for item in items {
+                    lines.push(format!("- {item}"));
+                }
+            }
+            _ => lines.push("Nothing reported in this window".to_string()),
+        }
+    }
+    format!("{}\n", lines.join("\n"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2481,6 +2581,65 @@ mod tests {
             last_brief_at: Some(String::new()),
         };
         assert_eq!(build_previous_session(Some(&no_time), None), None);
+    }
+
+    #[test]
+    fn brief_text_from_record_verbatim_and_sections() {
+        // Verbatim text wins exactly as stored, even with sections present.
+        let mut sections = HashMap::new();
+        sections.insert("Decisions".to_string(), vec!["DONE: x".to_string()]);
+        let stored = StoredBriefText {
+            text: Some("Stored brief\nsecond line".into()),
+            source_window: Some(SourceWindow::Text("yesterday".into())),
+            sections,
+        };
+        assert_eq!(brief_text_from_record(Some(&stored)), "Stored brief\nsecond line");
+        // Blank text falls through to the sections render.
+        let mut sections = HashMap::new();
+        sections.insert("Owners".to_string(), vec!["pax: ship it".to_string()]);
+        let blank = StoredBriefText {
+            text: Some("   \n".into()),
+            source_window: Some(SourceWindow::Dict {
+                max_messages: Some(500),
+                max_hours: Some(WindowHours::Float(24.0)),
+                messages_kept: Some(120),
+                messages_dropped: Some(380),
+            }),
+            sections,
+        };
+        assert_eq!(
+            brief_text_from_record(Some(&blank)),
+            "Window: last 500 messages or last 24.0 hours, 120 kept, 380 dropped\n\
+             \nDecisions\nNothing reported in this window\n\
+             \nIn flight\nNothing reported in this window\n\
+             \nOwners\n- pax: ship it\n\
+             \nBlocked and why\nNothing reported in this window\n\
+             \nWatch items\nNothing reported in this window\n"
+        );
+        // A missing dict key renders None; a fractional hour stays fractional.
+        let partial = StoredBriefText {
+            text: None,
+            source_window: Some(SourceWindow::Dict {
+                max_messages: None,
+                max_hours: Some(WindowHours::Float(2.5)),
+                messages_kept: None,
+                messages_dropped: Some(0),
+            }),
+            sections: HashMap::new(),
+        };
+        let rendered = brief_text_from_record(Some(&partial));
+        assert!(rendered.starts_with(
+            "Window: last None messages or last 2.5 hours, None kept, 0 dropped\n"
+        ));
+        // No record at all: no window line, every section empty.
+        assert_eq!(
+            brief_text_from_record(None),
+            "\nDecisions\nNothing reported in this window\n\
+             \nIn flight\nNothing reported in this window\n\
+             \nOwners\nNothing reported in this window\n\
+             \nBlocked and why\nNothing reported in this window\n\
+             \nWatch items\nNothing reported in this window\n"
+        );
     }
 
     #[test]
