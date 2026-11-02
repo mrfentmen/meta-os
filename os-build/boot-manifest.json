@@ -1,0 +1,256 @@
+{
+  "generated_from": [
+    "os-build/layer1/BOOT_ORDER.md",
+    "os-build/BOOT_MANIFEST.md"
+  ],
+  "note": "Effective fatality is computed through the dependency closure. A non-fatal service that a fatal service needs stops the boot too.",
+  "boot_line": "meta-os 0.1  (K6)  <n> services degraded: <comma-separated ids>",
+  "counts": {
+    "services": 22,
+    "fatal_on_paper": 7,
+    "fatal_in_effect": 9
+  },
+  "services": [
+    {
+      "order": 1,
+      "id": "bootlog",
+      "needs": [],
+      "fatal_on_paper": true,
+      "fatal_in_effect": true,
+      "loss": "the boot record; nothing runs first"
+    },
+    {
+      "order": 2,
+      "id": "devices",
+      "needs": [
+        "bootlog"
+      ],
+      "fatal_on_paper": true,
+      "fatal_in_effect": true,
+      "loss": "device inventory; drivers have no list"
+    },
+    {
+      "order": 3,
+      "id": "time",
+      "needs": [
+        "devices"
+      ],
+      "fatal_on_paper": true,
+      "fatal_in_effect": true,
+      "loss": "the clock; every timeout and budget"
+    },
+    {
+      "order": 4,
+      "id": "storage",
+      "needs": [
+        "devices"
+      ],
+      "fatal_on_paper": true,
+      "fatal_in_effect": true,
+      "loss": "all block storage beneath fs/audit/updater"
+    },
+    {
+      "order": 5,
+      "id": "callmatrix",
+      "needs": [],
+      "fatal_on_paper": true,
+      "fatal_in_effect": true,
+      "loss": "authorization; every service call is unguarded"
+    },
+    {
+      "order": 6,
+      "id": "supervisor",
+      "needs": [
+        "callmatrix"
+      ],
+      "fatal_on_paper": true,
+      "fatal_in_effect": true,
+      "loss": "the starter itself; nothing else launches"
+    },
+    {
+      "order": 7,
+      "id": "console",
+      "needs": [
+        "bootlog"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": true,
+      "loss": "the user's line console \u2014 and `log` needs it, so the boot stops"
+    },
+    {
+      "order": 8,
+      "id": "logfmt",
+      "needs": [
+        "time"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": true,
+      "loss": "uniform record format \u2014 `log` needs it, so the boot stops"
+    },
+    {
+      "order": 9,
+      "id": "log",
+      "needs": [
+        "console",
+        "logfmt",
+        "storage"
+      ],
+      "fatal_on_paper": true,
+      "fatal_in_effect": true,
+      "loss": "the log sink; nothing can report a later failure"
+    },
+    {
+      "order": 10,
+      "id": "watchdog",
+      "needs": [
+        "time"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "health checks and escalation; deaths are noticed only by restart policy"
+    },
+    {
+      "order": 11,
+      "id": "audit",
+      "needs": [
+        "log",
+        "storage",
+        "time"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "the append-only record of what agents did"
+    },
+    {
+      "order": 12,
+      "id": "netcfg",
+      "needs": [
+        "storage"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "interface configuration; the network has no addresses"
+    },
+    {
+      "order": 13,
+      "id": "net",
+      "needs": [
+        "devices",
+        "netcfg"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "the packet layer; nothing above it can reach a network"
+    },
+    {
+      "order": 14,
+      "id": "input",
+      "needs": [
+        "log"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "key events; the console loses typing"
+    },
+    {
+      "order": 15,
+      "id": "display",
+      "needs": [
+        "log"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "draw calls; the console loses its screen"
+    },
+    {
+      "order": 16,
+      "id": "session",
+      "needs": [
+        "audit",
+        "display",
+        "input"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "the login and session scope; no user is at the console"
+    },
+    {
+      "order": 17,
+      "id": "dhcp",
+      "needs": [
+        "log",
+        "net",
+        "netcfg",
+        "time"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "leased addresses; only static configuration remains"
+    },
+    {
+      "order": 18,
+      "id": "dns",
+      "needs": [
+        "log",
+        "net",
+        "netcfg"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "name resolution; sockets have addresses but no names"
+    },
+    {
+      "order": 19,
+      "id": "socket",
+      "needs": [
+        "dns",
+        "log",
+        "net",
+        "time"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "the network API above layer 4"
+    },
+    {
+      "order": 20,
+      "id": "timesync",
+      "needs": [
+        "log",
+        "socket",
+        "time"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "wall-clock correction; the monotonic clock keeps ticking"
+    },
+    {
+      "order": 21,
+      "id": "updater",
+      "needs": [
+        "audit",
+        "log",
+        "socket",
+        "storage",
+        "time"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "OS updates, including rollback"
+    },
+    {
+      "order": 22,
+      "id": "agenthost",
+      "needs": [
+        "audit",
+        "log",
+        "session",
+        "storage",
+        "supervisor"
+      ],
+      "fatal_on_paper": false,
+      "fatal_in_effect": false,
+      "loss": "agents as citizens: no agent can be spawned, granted or limited"
+    }
+  ]
+}

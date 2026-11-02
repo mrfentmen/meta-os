@@ -15,6 +15,8 @@ wired** until that list changes — the wiring is a proposal, not an edit.
 | `crasher` | fault isolation | `crasher: about to read zero`, `INT user page-fault addr 0x0 err 0x4: task killed` | PROVEN (`K6-boot.txt`) |
 | `quitter` | exit status is reported truthfully | `quitter: exiting 7`, `user exit code 7` | **WRITTEN, COMPILES**; needs one line in `BINS` to be wired |
 | `readkey` | syscall 5 returns real scancodes | `readkey: polling syscall 5`, `readkey got <n>`, `readkey: empty` | **WRITTEN, COMPILES**; a diagnostic probe, not for `BINS` |
+| `writer` | the one-page write cap is enforced | `writer: alive`, `writer: oversize returned 0`, `writer: cap returned 19` | **WRITTEN, COMPILES**; probe, not for `BINS` |
+| `badcall` | reserved numbers 6-15 refuse, not just 99 | `user bad syscall 6 refused` / `15` / `99`, then `badcall: 6 returned 18446744073709551615` and `badcall: survived all three` | **WRITTEN, COMPILES**; wiring proposal |
 | `hog` | allocation is bounded and contained | `hog: allocating`, then either a refusal line or the task killed; the shell must still answer `status` afterwards | **BLOCKED — no allocation syscall exists** |
 | `talker` + `listener` | two tasks can exchange a message | `talker: sent <n>`, `listener: got <n>` | **BLOCKED — no IPC exists** |
 

@@ -66,3 +66,9 @@ pub fn print_u64(mut n: u64) {
 pub fn sys_bad() -> u64 {
     syscall(99, 0, 0, 0)
 }
+
+/// Call an arbitrary number, for the refusal drill (`badcall`). Exists so the
+/// reserved-range edges can be exercised without hand-writing asm in the bin.
+pub fn sys_bad_n(number: u64) -> u64 {
+    syscall(number, 0, 0, 0)
+}

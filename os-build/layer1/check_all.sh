@@ -50,6 +50,15 @@ else
 fi
 
 # 3. Goose service corpus: real host processes, real memory.
+# 3b. Userspace programs: every bin the kernel can embed must build. This is the
+#     check that would have caught readkey's missing sys_read_key wrapper.
+if ( cd os-build/userspace/user && cargo build --target x86_64-unknown-none --bins >/dev/null 2>&1 ); then
+    report "userspace bins" "PASS ($(ls os-build/userspace/user/target/x86_64-unknown-none/debug 2>/dev/null | grep -cE '^(hello|sleeper|crasher|quitter|readkey|writer|badcall)$') built)"
+else
+    report "userspace bins" "FAIL"
+    FAILED=1
+fi
+
 if [ -x os-build/layer1/run_native.sh ]; then
     OUT="$(bash os-build/layer1/run_native.sh 2>&1 | tail -3)"
     if echo "$OUT" | grep -qE "FAILS=0"; then
