@@ -995,6 +995,128 @@ pub fn fallback_plan(goal: &str) -> Result<Plan, PlanError> {
     })
 }
 
+/// One Spark answer, as the caller classifies it (DSP-017).
+///
+/// Python's `plan_from_spark` takes raw answer text and calls
+/// `_is_malformed_json` on it; this crate has no JSON parser yet
+/// (the JSON-text parse of a Spark answer is still owed as its
+/// own slice), so the caller classifies its answer instead: a
+/// `Malformed` answer stands in for text that fails
+/// `_is_malformed_json`, including a non-string answer, and a
+/// `Plan` answer stands in for text that parses and shapes into a
+/// plan. The retry/fallback logic below is unchanged.
+pub enum SparkAnswer {
+    Malformed,
+    Plan(Plan),
+}
+
+/// A Spark transport failure, as the caller reports it (DSP-017,
+/// INT-008). `kind` is the error type name (Python's
+/// `type(exc).__name__`, e.g. `RuntimeError`); `detail` is the
+/// error message, truncated to 200 characters inside
+/// `plan_from_spark` exactly as Python truncates `str(exc)`.
+pub struct SparkTransport {
+    pub kind: String,
+    pub detail: String,
+}
+
+/// The result of `plan_from_spark`: the plan (validated, or the
+/// DSP-017 fallback), its posting order, its clamp reports, and
+/// whether it fell back, with the loud warning when it did
+/// (`None` on a clean Spark plan).
+pub struct SparkPlan {
+    pub plan: Plan,
+    pub order: Vec<String>,
+    pub clamps: Vec<PlanClamp>,
+    pub fallback: bool,
+    pub warning: Option<String>,
+}
+
+/// Get a plan from Spark, with the DSP-017 fallback, ported from
+/// `dispatch.py::plan_from_spark`.
+///
+/// `complete` is a caller-supplied Spark completion callable,
+/// called as `complete(goal)` — the caller wraps the DSP-001
+/// prompt construction around it, so this function stays
+/// transport-free and testable without a live Spark call. First
+/// attempt: call `complete`, and when the answer is malformed,
+/// call it once more. When the second answer is malformed too,
+/// return the fallback plan instead of raising: the
+/// [`fallback_plan`], order `["fallback-job"]`, no clamps,
+/// `fallback` true, and the loud FALLBACK warning. The warning
+/// is also printed to stderr, so an operator sees it even
+/// without reading the return value. When an answer carries a
+/// plan, it goes through [`validated_plan`] exactly like a
+/// dry-run plan: a guard failure there raises `PlanError` on
+/// the first attempt, with no retry and no fallback. INT-008: a
+/// Spark transport error raised by `complete` also returns the
+/// fallback plan, with a warning that names the endpoint-down
+/// failure instead of the malformed-JSON failure, because an
+/// endpoint that answers nothing is not a structured-plan fault
+/// and the drill requires dispatch to fall back when Spark is
+/// down. On success the result carries the validated plan, its
+/// order and clamps, `fallback` false, and no warning. Posts
+/// nothing, claims nothing, touches no job state: the fallback
+/// only becomes a job when a caller posts it through the
+/// DSP-007 gate and the DSP-008 poster.
+///
+/// Rust adaptation, stated not hidden: Python's `complete`
+/// returns raw text (or raises, or returns a non-string), and
+/// malformedness is judged inside this function; here the
+/// caller classifies the answer into [`SparkAnswer`] because
+/// the JSON-text parse is still owed (see above). A non-string
+/// answer maps to `SparkAnswer::Malformed`, matching Python's
+/// rule that there is no JSON text in it to parse.
+pub fn plan_from_spark(
+    goal: &str,
+    complete: &mut dyn FnMut(&str) -> Result<SparkAnswer, SparkTransport>,
+) -> Result<SparkPlan, PlanError> {
+    if goal.trim().is_empty() {
+        return Err(fail("dispatch from Spark: goal must be a non-empty string"));
+    }
+    let fallback = |warning: String| -> Result<SparkPlan, PlanError> {
+        eprintln!("{warning}");
+        Ok(SparkPlan {
+            plan: fallback_plan(goal)?,
+            order: vec![FALLBACK_JOB_KEY.to_string()],
+            clamps: Vec::new(),
+            fallback: true,
+            warning: Some(warning),
+        })
+    };
+    for attempt in 1..=2 {
+        match complete(goal) {
+            Err(transport) => {
+                let detail: String = transport.detail.chars().take(200).collect();
+                return fallback(format!(
+                    "WARNING: FALLBACK plan — Spark endpoint is down ({}: {}), so no structured plan was produced. This single FALLBACK job carries the raw goal as its spec; a human must approve it (DSP-007) before anything posts, and nothing malformed was posted.",
+                    transport.kind, detail
+                ));
+            }
+            Ok(SparkAnswer::Malformed) => {
+                if attempt == 1 {
+                    continue;
+                }
+                return fallback(
+                    "WARNING: FALLBACK plan — Spark returned malformed JSON twice for this goal, so no structured plan was produced. This single FALLBACK job carries the raw goal as its spec; a human must approve it (DSP-007) before anything posts, and nothing malformed was posted."
+                        .to_string(),
+                );
+            }
+            Ok(SparkAnswer::Plan(plan)) => {
+                let (plan, order, clamps) = validated_plan(plan)?;
+                return Ok(SparkPlan {
+                    plan,
+                    order,
+                    clamps,
+                    fallback: false,
+                    warning: None,
+                });
+            }
+        }
+    }
+    unreachable!("plan_from_spark: every attempt returns");
+}
+
 /// Build the interactive approval prompt for a plan, ported from
 /// `dispatch.py::approval_prompt`.
 ///
@@ -2034,5 +2156,182 @@ mod tests {
         let text = render_dispatch_show(&report);
         assert!(text.contains("now: missing"), "got: {text}");
         assert!(text.ends_with("  counts: 1 missing"), "got: {text}");
+    }
+
+    // Scripted Spark callable for plan_from_spark tests, mirroring
+    // Python's _ScriptedComplete: scripted answers in order (the
+    // last repeats), counting calls; a Transport answer raises.
+    struct ScriptedComplete {
+        answers: Vec<Result<SparkAnswer, (String, String)>>,
+        calls: usize,
+    }
+
+    impl ScriptedComplete {
+        fn call(&mut self, _goal: &str) -> Result<SparkAnswer, SparkTransport> {
+            self.calls += 1;
+            let index = (self.calls - 1).min(self.answers.len() - 1);
+            match &self.answers[index] {
+                Ok(SparkAnswer::Malformed) => Ok(SparkAnswer::Malformed),
+                Ok(SparkAnswer::Plan(p)) => Ok(SparkAnswer::Plan(p.clone())),
+                Err((kind, detail)) => Err(SparkTransport {
+                    kind: kind.clone(),
+                    detail: detail.clone(),
+                }),
+            }
+        }
+    }
+
+    fn valid_spark_plan() -> Plan {
+        Plan {
+            goal: "Do the thing".into(),
+            summary: "Do the one job.".into(),
+            jobs: vec![PlanJob {
+                key: "do-it".into(),
+                title: "Do it".into(),
+                files: vec!["intel/ingest.py".into()],
+                deps: vec![],
+                max_attempts: 3,
+                spec: "Goal, context, files, steps, out of scope.".into(),
+                accept: vec!["file-exists: intel/ingest.py".into()],
+                req: vec![],
+            }],
+        }
+    }
+
+    #[test]
+    fn spark_malformed_twice_falls_back_with_raw_goal() {
+        let goal = "Wire the snapshot panel\nsecond line of the goal";
+        let mut complete = ScriptedComplete {
+            answers: vec![Ok(SparkAnswer::Malformed), Ok(SparkAnswer::Malformed)],
+            calls: 0,
+        };
+        let result = plan_from_spark(goal, &mut |g| complete.call(g)).unwrap();
+        assert_eq!(complete.calls, 2);
+        assert!(result.fallback);
+        assert_eq!(result.order, vec![FALLBACK_JOB_KEY.to_string()]);
+        assert!(result.clamps.is_empty());
+        let warning = result.warning.as_deref().unwrap_or("");
+        assert!(warning.contains("FALLBACK"), "got: {warning}");
+        assert_eq!(result.plan.jobs.len(), 1);
+        let job = &result.plan.jobs[0];
+        assert_eq!(job.key, FALLBACK_JOB_KEY);
+        assert!(result.plan.summary.contains("FALLBACK"));
+        assert!(job.title.contains("FALLBACK"));
+        assert!(job.spec.contains("FALLBACK"));
+        assert!(job.spec.contains(goal), "got: {}", job.spec);
+    }
+
+    #[test]
+    fn spark_malformed_then_valid_succeeds_without_fallback() {
+        let mut complete = ScriptedComplete {
+            answers: vec![
+                Ok(SparkAnswer::Malformed),
+                Ok(SparkAnswer::Plan(valid_spark_plan())),
+            ],
+            calls: 0,
+        };
+        let result = plan_from_spark("Do the thing", &mut |g| complete.call(g)).unwrap();
+        assert_eq!(complete.calls, 2);
+        assert!(!result.fallback);
+        assert!(result.warning.is_none());
+        assert_eq!(result.order, vec!["do-it".to_string()]);
+        assert_eq!(result.plan.jobs[0].title, "Do it");
+    }
+
+    #[test]
+    fn spark_valid_first_answer_calls_once() {
+        let mut complete = ScriptedComplete {
+            answers: vec![Ok(SparkAnswer::Plan(valid_spark_plan()))],
+            calls: 0,
+        };
+        let result = plan_from_spark("Do the thing", &mut |g| complete.call(g)).unwrap();
+        assert_eq!(complete.calls, 1);
+        assert!(!result.fallback);
+    }
+
+    #[test]
+    fn spark_structured_invalid_plan_propagates_without_retry() {
+        // Two jobs sharing a file with no dep order: the overlap
+        // guard refuses on the first attempt, no retry, no fallback.
+        let mut bad = valid_spark_plan();
+        bad.jobs.push(PlanJob {
+            key: "also".into(),
+            title: "Also".into(),
+            files: vec!["intel/ingest.py".into()],
+            deps: vec![],
+            max_attempts: 3,
+            spec: "Goal, context, files, steps, out of scope.".into(),
+            accept: vec![],
+            req: vec![],
+        });
+        let mut complete = ScriptedComplete {
+            answers: vec![Ok(SparkAnswer::Plan(bad))],
+            calls: 0,
+        };
+        assert!(plan_from_spark("Do the thing", &mut |g| complete.call(g)).is_err());
+        assert_eq!(complete.calls, 1);
+    }
+
+    #[test]
+    fn spark_dependency_cycle_propagates_without_fallback() {
+        let mut cyclic = valid_spark_plan();
+        cyclic.jobs = vec![
+            PlanJob {
+                key: "a".into(),
+                title: "Do a".into(),
+                files: vec!["intel/ingest.py".into()],
+                deps: vec!["b".into()],
+                max_attempts: 3,
+                spec: "Spec a.".into(),
+                accept: vec!["file-exists: intel/ingest.py".into()],
+                req: vec![],
+            },
+            PlanJob {
+                key: "b".into(),
+                title: "Do b".into(),
+                files: vec!["intel.py".into()],
+                deps: vec!["a".into()],
+                max_attempts: 3,
+                spec: "Spec b.".into(),
+                accept: vec!["file-exists: intel.py".into()],
+                req: vec![],
+            },
+        ];
+        let mut complete = ScriptedComplete {
+            answers: vec![Ok(SparkAnswer::Plan(cyclic))],
+            calls: 0,
+        };
+        assert!(plan_from_spark("Do the thing", &mut |g| complete.call(g)).is_err());
+        assert_eq!(complete.calls, 1);
+    }
+
+    #[test]
+    fn spark_transport_error_falls_back_with_endpoint_down_warning() {
+        let mut complete = ScriptedComplete {
+            answers: vec![Err(("RuntimeError".to_string(), "spark down".to_string()))],
+            calls: 0,
+        };
+        let result = plan_from_spark("Do the thing", &mut |g| complete.call(g)).unwrap();
+        assert_eq!(complete.calls, 1);
+        assert!(result.fallback);
+        assert_eq!(result.order, vec!["fallback-job".to_string()]);
+        assert!(result.plan.summary.contains("FALLBACK"));
+        assert!(
+            result.plan.jobs[0].spec.contains("Do the thing"),
+            "got: {}",
+            result.plan.jobs[0].spec
+        );
+        let warning = result.warning.as_deref().unwrap_or("");
+        assert!(warning.contains("endpoint is down"), "got: {warning}");
+    }
+
+    #[test]
+    fn spark_empty_goal_raises_before_any_call() {
+        let mut complete = ScriptedComplete {
+            answers: vec![Ok(SparkAnswer::Plan(valid_spark_plan()))],
+            calls: 0,
+        };
+        assert!(plan_from_spark("   ", &mut |g| complete.call(g)).is_err());
+        assert_eq!(complete.calls, 0);
     }
 }
