@@ -76,3 +76,36 @@ Section 1 verification, one command per file, all exit 0:
 Section 2 verification, one command per file, all exit 0: 36 tests pass,
 0 fail (`test_judge.py`'s existing 11 also pass; `test_crew.py` 21 pass
 against the new verdict builder).
+
+## Section 3 — Queue Python, models client (CB2-051..075) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-051 | `test_models_sam_parse.py` | one box maps to the 0-1000 contract scale unchanged |
+| CB2-052 | `test_models_sam_parse.py` | no box raises; no invented region |
+| CB2-053 | `test_models_sam_parse.py` | mask-only raises; box-only returns `mask: None` |
+| CB2-054 | `test_models_sam_bounds.py` | exact 0 and 1000 accepted; 1001 refused |
+| CB2-055 | `test_models_sam_bounds.py` | inverted box refused |
+| CB2-056 | `test_models_image_magic.py` | PNG/JPEG/WebP magic labels |
+| CB2-057 | `test_models_image_magic.py` | unknown image format raises, never a placeholder |
+| CB2-058 | `test_models_image_items.py` | absent image item raises `EmptyResponseError` |
+| CB2-059 | `test_models_image_items.py` | truncated base64 raises named error |
+| CB2-060 | `test_models_chat_models.py` | Wonder id sent verbatim |
+| CB2-061 | `test_models_chat_models.py` | Spark 1.3 sent verbatim; 1.2/1.1 refused as unverified (premise said pass-through) |
+| CB2-062 | `test_models_chat_models.py` | empty prompt refused before transport |
+| CB2-063 | `test_models_receipts.py` | one call adds one line with model, surface, latency |
+| CB2-064 | `test_models_receipts.py` | Spark receipt has a dollar estimate; Wonder receipt null |
+| CB2-065 | `test_models_transcribe_block.py` | transcribe names the unresolved surface |
+| CB2-066 | `test_models_transcribe_block.py` | transcribe never calls transport |
+| CB2-067 | `test_models_error_map.py` | HTTP 429 maps to `RateLimitError` |
+| CB2-068 | `test_models_error_map.py` | 401/403 distinct `AuthError`; 500 `ServerError` |
+| CB2-069 | `test_models_error_map.py` | empty 200 body and empty chat/segment/image payloads named |
+| CB2-070 | `test_models_responses_shape.py` | SAM `/v1/responses` input_text + input_image shape |
+| CB2-071 | `test_models_responses_shape.py` | chat messages/model shape; no responses fields |
+| CB2-072 | `models.py` | `MAX_PROMPT_CHARS` added; overlong prompt refused before transport |
+| CB2-073 | `models.py` | empty/non-image segment input refused before transport |
+| CB2-074 | `test_models_id_constants.py` | verified ids and registry surfaces exact |
+| CB2-075 | `test_models_no_fabrication.py` | failure paths raise; no placeholder result |
+
+Section 3 verification, one command per file, all exit 0: **36 new tests
+pass, 0 fail**; existing `test_models.py` **7 pass**.
