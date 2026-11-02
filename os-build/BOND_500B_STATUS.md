@@ -585,8 +585,8 @@ Not delivered: CB2-382 (no large-change alarm form), CB2-384 (baton has no requi
 step-index check), CB2-385 (no resume function), CB2-392..393 (bridge is a
 supervisor verb, not a message shaper).
 
-Section 16 verification: 11 test files, **51 tests pass, 0 fail**; the whole agent
-suite (`node --test tests/agents-*.test.mjs`) is 121/121.
+Section 16 verification: 11 test files, **50 tests pass, 0 fail**; the whole agent
+suite (`node --test tests/agents-*.test.mjs`) is 120/120.
 
 ## Section 17 — Face tests (CB2-401..425) — 0/25, blocked
 
