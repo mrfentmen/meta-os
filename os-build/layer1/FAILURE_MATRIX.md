@@ -17,7 +17,7 @@ which is the honest word for a promise. Every cell marked EXERCISED names the te
 | `supervisor` | t52 (bad name, bad transition) | t52 (`can_start` reason) | **t52** (never/on-fail/always, cap, backoff), t74 | — | **t74/rehearsal** | — |
 | `console` | t49 (line editing) | t61 | — | t49 (editor full) | **BOOT_REHEARSAL** (hangs on `read_key`) | — |
 | `input` | t56 (overlong key) | t61 | — | t49 (editor full) | — | — |
-| `logfmt` | t72 (truncated record) | t61 | — | — | — | — |
+| `logfmt` | t96 (levels, clamping, tag and message truncation, padded column, refusals) | t61 | — | — | — | — |
 | `logd` | t72, t74 (level, long record) | t61 | — | **t74** (ring full, counted) | — | t74 (tampered trail is audit's, see below) |
 | `watchdog` | t53 (zero handle, negative period/grace/allowance) | t61 | — | t53 (past allowance is dead) | — | — |
 | `audit` | t60 (bad offset, read past end), t72 | t61 | — | t60 (writer refuses, drops counted) | — | **t60 + t74** (flipped byte, truncation) |
@@ -30,7 +30,7 @@ which is the honest word for a promise. Every cell marked EXERCISED names the te
 | `socket` | t77 (unbound send, privileged port, port 70000, zero-length, past MTU, 0.0.0.0, port 0, closed handle) | t61 | — | t77 (two queued is the limit, table cap is hard) | — | — |
 | `timesync` | t77 (short packet, client mode, stratum 0, leap 3, no transmit time, two days out, negative delay) | t61 | — | — | — | t77 (a corrupt reply is refused, a good one after it still applies) |
 | `updater` | t58 (unknown key, dup path, short digest) | t61 | t58 (rollback record) | t58 (slot refusal) | — | t58 (digest mismatch) |
-| `agenthost` | t59 (grant on a dead agent, ungranted bit) | t61 | t59 (agent exit is recorded) | — | — | — |
+| `agenthost` | t59 (grant on a dead agent, ungranted bit), t97 (quota on a dead handle, impossible quota, blocked call, blocked byte, over-release, table full) | t61 | t59 (agent exit is recorded), t97 (stop twice) | t97 (call rate, window reset, backwards clock, storage limit, row table) | — | — |
 
 `t62`–`t64` (bytes, str, hex) and `t45`–`t48` (format, ring, cfg, boot record) are the libraries the
 rows above run on; a library failure shows up as the service's failure, so they are not rows.

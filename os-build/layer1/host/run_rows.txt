@@ -49,6 +49,8 @@ tests/t92_sup_load|RUNS|27|0|
 tests/t93_face_walkthrough|RUNS|63|0|
 tests/t94_face_failures|RUNS|88|0|
 tests/t95_notify|RUNS|77|0|
+tests/t96_logfmt|RUNS|50|0|
+tests/t97_agent_surface|RUNS|61|0|
 entry/bootlog|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
 entry/console|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
 entry/example|TYPECHECKS (not run)|0|0|svc_entry takes a kernel BootInfo; no host boot block
