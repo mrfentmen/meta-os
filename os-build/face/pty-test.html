@@ -3,9 +3,9 @@
 <style>body{background:#000;color:#0f0;font-family:monospace;margin:2em;white-space:pre-wrap}</style>
 </head><body>pty bridge test contract (honest scaffolding: browsers cannot do raw TCP)
 
-No WebSocket here on purpose — ptyd.py speaks raw TCP, which the browser
-cannot open. A real terminal window needs a helper (e.g. websockify or a
-native client). This page only records the contract.
+ptyd.py speaks BOTH: raw TCP (nc, selftest) AND WebSocket RFC 6455 on the
+same port (browser Terminal). The browser path is proven: shell.html
+Terminal opens ws://host:18933/ and pumps a live bash session.
 
 <pre>host:     127.0.0.1
 port:     18933
@@ -15,7 +15,8 @@ shell:    fresh /bin/bash -i per connection on an 80x24 pty
 limit:    fixed 80x24, no resize protocol (winsize set via TIOCSWINSZ after fork)
 cleanup:  server SIGKILLs + reaps child on client disconnect, ready for next
 </pre>
-Run selftest (ssh into the box, Linux guest):
-  python3 ptyd.py --selftest   # expect: PASS
+Run selftests (guest or Mac):
+  python3 ptyd.py --selftest      # raw TCP, expect: PASS
+  python3 ptyd.py --selftest-ws   # WebSocket handshake+echo, expect: PASS
 Manual check: nc 127.0.0.1 18933, then type echo hi
 </body></html>
