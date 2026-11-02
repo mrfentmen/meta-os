@@ -1105,6 +1105,121 @@ pub fn format_dispatch_announcement(id: &str, jobs: &[String]) -> Option<String>
     Some(format!("DISPATCH:{} -> {} jobs", id, jobs.len()))
 }
 
+/// Status order for the show counts line (DSP-016): these statuses
+/// first, in this order, then any other status alphabetically.
+pub const SHOW_STATUS_ORDER: [&str; 7] = [
+    "open", "claimed", "done", "blocked", "cancelled", "failed-final", "missing",
+];
+
+/// One job entry of a `show_dispatch` report (DSP-016), as the record
+/// stores it plus its current queue state. `deps` are the posted dep
+/// job ids exactly as the record stores them; the renderer translates
+/// them back to plan keys.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DispatchShowJob {
+    pub key: String,
+    pub id: String,
+    pub title: String,
+    pub files: Vec<String>,
+    pub deps: Vec<String>,
+    pub status: String,
+    pub claim: String,
+}
+
+/// A `show_dispatch` report (DSP-016): the dispatch id, the record's
+/// summary, the jobs in posting order, and the per-status counts.
+/// `counts` is carried, not computed: `show_dispatch` counts the
+/// statuses it reads, and this renderer only orders them.
+///
+/// Rust adaptation, stated not hidden: Python takes one untyped
+/// report dict and reads `counts` with a default of empty; the typed
+/// report here always carries its counts, so a missing-counts report
+/// is the empty-counts report, which renders as "0 jobs".
+pub struct DispatchShowReport {
+    pub id: String,
+    pub summary: String,
+    pub jobs: Vec<DispatchShowJob>,
+    pub counts: Vec<(String, usize)>,
+}
+
+/// Render a show_dispatch report as plain lines (DSP-016).
+///
+/// First line names the dispatch id; the summary line follows when
+/// the record carries one. Then one line per job in posting order:
+/// key -> job id, title, the files and deps as posted, and the job's
+/// current state. Plan-local dep ids translate back to plan keys so
+/// the deps read like the plan, not like queue ids; a dep id outside
+/// the plan prints as-is. Claimed jobs name their claim nick; a
+/// missing job says so in its state word. The last line counts jobs
+/// per status in the fixed order, then any other status
+/// alphabetically, so the shape of a half-finished plan is visible at
+/// a glance. Pure string building; it reads no queue and writes
+/// nothing.
+pub fn render_dispatch_show(report: &DispatchShowReport) -> String {
+    let mut lines = vec![format!("dispatch {}:", report.id)];
+    if !report.summary.is_empty() {
+        lines.push(format!("  summary: {}", report.summary));
+    }
+    for job in &report.jobs {
+        let files = if job.files.is_empty() {
+            "none".to_string()
+        } else {
+            job.files.join(", ")
+        };
+        let deps = if job.deps.is_empty() {
+            "none".to_string()
+        } else {
+            job.deps
+                .iter()
+                .map(|dep| {
+                    // Last job wins, matching Python's id -> key dict build.
+                    report
+                        .jobs
+                        .iter()
+                        .rev()
+                        .find(|j| &j.id == dep)
+                        .map(|j| j.key.as_str())
+                        .unwrap_or(dep.as_str())
+                })
+                .collect::<Vec<_>>()
+                .join(", ")
+        };
+        let state = if job.status == "claimed" && !job.claim.is_empty() {
+            format!("claimed by {}", job.claim)
+        } else {
+            job.status.clone()
+        };
+        lines.push(format!(
+            "  {} -> {}: {} (files: {}; deps: {}) now: {}",
+            job.key, job.id, job.title, files, deps, state
+        ));
+    }
+    let mut ordered: Vec<(&str, usize)> = Vec::new();
+    for fixed in SHOW_STATUS_ORDER {
+        if let Some((_, n)) = report.counts.iter().find(|(s, _)| s == fixed) {
+            ordered.push((fixed, *n));
+        }
+    }
+    let mut rest: Vec<(&str, usize)> = report
+        .counts
+        .iter()
+        .filter(|(s, _)| !SHOW_STATUS_ORDER.contains(&s.as_str()))
+        .map(|(s, n)| (s.as_str(), *n))
+        .collect();
+    rest.sort_by(|a, b| a.0.cmp(b.0));
+    ordered.extend(rest);
+    if ordered.is_empty() {
+        lines.push("  counts: 0 jobs".to_string());
+    } else {
+        let parts: Vec<String> = ordered
+            .iter()
+            .map(|(s, n)| format!("{n} {s}"))
+            .collect();
+        lines.push(format!("  counts: {}", parts.join(", ")));
+    }
+    lines.join("\n")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1801,5 +1916,123 @@ mod tests {
     fn announcement_empty_jobs_is_none() {
         let jobs: Vec<String> = vec![];
         assert_eq!(format_dispatch_announcement("d1", &jobs), None);
+    }
+
+    fn show_job(
+        key: &str,
+        id: &str,
+        files: Vec<&str>,
+        deps: Vec<&str>,
+        status: &str,
+        claim: &str,
+    ) -> DispatchShowJob {
+        DispatchShowJob {
+            key: key.into(),
+            id: id.into(),
+            title: format!("Do {key}"),
+            files: files.iter().map(|s| s.to_string()).collect(),
+            deps: deps.iter().map(|s| s.to_string()).collect(),
+            status: status.into(),
+            claim: claim.into(),
+        }
+    }
+
+    #[test]
+    fn show_render_golden_lines() {
+        let report = DispatchShowReport {
+            id: "dsp-show-1".into(),
+            summary: "Build the snapshot in order.".into(),
+            jobs: vec![
+                show_job("base", "j-base", vec!["intel/ingest.py"], vec![], "open", ""),
+                show_job(
+                    "api",
+                    "j-api",
+                    vec!["intel/ingest.py"],
+                    vec!["j-base"],
+                    "claimed",
+                    "tester",
+                ),
+            ],
+            counts: vec![("open".to_string(), 1), ("claimed".to_string(), 1)],
+        };
+        let text = render_dispatch_show(&report);
+        assert!(text.starts_with("dispatch dsp-show-1:\n"), "got: {text}");
+        assert!(
+            text.contains("  summary: Build the snapshot in order.\n"),
+            "got: {text}"
+        );
+        assert!(
+            text.contains(
+                "  base -> j-base: Do base (files: intel/ingest.py; deps: none) now: open"
+            ),
+            "got: {text}"
+        );
+        assert!(
+            text.contains(
+                "  api -> j-api: Do api (files: intel/ingest.py; deps: base) now: claimed by tester"
+            ),
+            "got: {text}"
+        );
+        assert!(text.ends_with("  counts: 1 open, 1 claimed"), "got: {text}");
+    }
+
+    #[test]
+    fn show_render_empty_report_has_no_summary_line() {
+        let report = DispatchShowReport {
+            id: "d-empty".into(),
+            summary: String::new(),
+            jobs: vec![],
+            counts: vec![],
+        };
+        assert_eq!(
+            render_dispatch_show(&report),
+            "dispatch d-empty:\n  counts: 0 jobs"
+        );
+    }
+
+    #[test]
+    fn show_render_claimed_without_nick_and_outside_dep() {
+        let report = DispatchShowReport {
+            id: "d-odd".into(),
+            summary: String::new(),
+            jobs: vec![show_job(
+                "solo",
+                "j-solo",
+                vec![],
+                vec!["j-outside"],
+                "claimed",
+                "",
+            )],
+            counts: vec![
+                ("weird".to_string(), 1),
+                ("done".to_string(), 1),
+                ("open".to_string(), 1),
+            ],
+        };
+        let text = render_dispatch_show(&report);
+        assert!(
+            text.contains(
+                "  solo -> j-solo: Do solo (files: none; deps: j-outside) now: claimed"
+            ),
+            "got: {text}"
+        );
+        // Fixed statuses first in fixed order, then other statuses alphabetically.
+        assert!(
+            text.ends_with("  counts: 1 open, 1 done, 1 weird"),
+            "got: {text}"
+        );
+    }
+
+    #[test]
+    fn show_render_missing_job_says_so() {
+        let report = DispatchShowReport {
+            id: "d-miss".into(),
+            summary: String::new(),
+            jobs: vec![show_job("gone", "j-gone", vec![], vec![], "missing", "")],
+            counts: vec![("missing".to_string(), 1)],
+        };
+        let text = render_dispatch_show(&report);
+        assert!(text.contains("now: missing"), "got: {text}");
+        assert!(text.ends_with("  counts: 1 missing"), "got: {text}");
     }
 }
