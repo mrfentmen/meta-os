@@ -1,0 +1,12 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Notes</title>
+<style>body{font-family:system-ui;background:#111;color:#eee;padding:24px}textarea{width:100%;height:60vh;font-size:15px}</style>
+</head><body>
+<h1>Notes <small>(saved in this browser)</small></h1>
+<textarea id="n" placeholder="Type a note..."></textarea>
+<script>
+(function(){
+  var t=document.getElementById('n');
+  try{t.value=localStorage.getItem('metaos-notes')||''}catch(e){}
+  t.addEventListener('input',function(){try{localStorage.setItem('metaos-notes',t.value)}catch(e){}});
+})();
+</script></body></html>
