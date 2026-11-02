@@ -308,7 +308,7 @@ pub fn task_count() -> usize {
 
 /// Console task: the K3 echo loop grown into the shell (OS-070 +
 /// O-205..O-211, Round 4 R-2/R-3/R-4/R-5/R-6). Line-buffered commands
-/// with echo; `status`, `help`, `uptime`, `mem` and `ps` are real,
+/// with echo; `status`, `help`, `uptime`, `mem`, `ps` and `clear` are real,
 /// everything else is refused with help re-listed. Backspace (0x0E)
 /// erases the last
 /// buffered char and the screen cell; shift (0x2A/0x36 press,
@@ -421,6 +421,17 @@ fn run_command(line: &[u8], truncated: bool) {
                 }
             }
         }
+    } else if line == b"clear" {
+        // RW4-2 interim (Pax bus idx 503): Hana spec text for
+        // clear is still owed, so nothing is invented here —
+        // clear runs the kernel's own vga.rs clear(): the VGA
+        // buffer is blanked, cursor to 0,0, no output line.
+        // The serial transcript is untouched (clear touches
+        // only the VGA buffer). Help does NOT list clear yet:
+        // the ruled help line is exactly "status help uptime
+        // mem ps", and whether clear joins it awaits a
+        // Pax/Hana ruling.
+        unsafe_console_clear();
     } else if line.is_empty() {
         // Empty line: nothing, not an error.
     } else {
@@ -435,6 +446,16 @@ fn unsafe_console_color(spec: crate::vga::ColorSpec) {
     unsafe {
         if let Some(console) = (*core::ptr::addr_of_mut!(crate::CONSOLE)).as_mut() {
             console.set_colors(spec);
+        }
+    }
+}
+
+/// Blank the VGA screen (RW4-2 clear). Same single-CPU terms as
+/// unsafe_console_color: only the console task touches CONSOLE.
+fn unsafe_console_clear() {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(crate::CONSOLE)).as_mut() {
+            console.clear();
         }
     }
 }

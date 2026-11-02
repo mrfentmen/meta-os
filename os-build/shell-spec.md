@@ -112,16 +112,32 @@ Typed: `help`. Output is exactly one line (VERIFIED in
 the repro log):
 
 ```
-commands: status help
+commands: status help uptime mem ps
 ```
 
-`help` lists ONLY real commands. Today that is two.
+`help` lists the ruled command set (Pax bus idx 494/497:
+implemented-and-gate-green wins over the frozen line;
+RW4-2 updates the frozen line to match, nothing stripped).
+`clear` is implemented (RW4-2 interim, kernel-derived)
+but NOT listed here yet: whether it joins the help line
+awaits a Pax/Hana ruling.
+
+### Clear command (RW4-2 interim, kernel-derived — spec text still owed)
+
+Typed: `clear`. Effect: the VGA screen is blanked and the
+cursor returns to 0,0; no output line is printed. This is
+the kernel's own vga.rs clear(), not a spec string: Hana's
+spec text for clear is still owed (Pax bus idx 503), and
+when she supplies it RW4-2 follows hers. The serial
+transcript is untouched. `help` does not list `clear` yet
+— the ruled help line stays `commands: status help uptime mem ps` until Pax/Hana
+rule that clear joins it.
 
 ### Bad input
 
 | Input | Output | Status |
 |---|---|---|
-| Unknown word | `unknown command` on one line, then `commands: status help` on the next | VERIFIED from source (`run_command` else-branch). The old H2 form `unknown command: <first-token>` is SUPERSEDED: the kernel does not echo the token. |
+| Unknown word | `unknown command` on one line, then `commands: status help uptime mem ps` on the next | VERIFIED from source (`run_command` else-branch). The old H2 form `unknown command: <first-token>` is SUPERSEDED: the kernel does not echo the token. |
 | Empty line (Enter with nothing typed) | No output, not an error | VERIFIED from source. |
 | Line longer than 80 bytes | `line too long, truncated to 80` printed first, then the command runs on the first 80 bytes | CODE-INSPECTED (`console_task` 80-byte buffer; `run_command` prints the warning before dispatch). The old H2 limit of 256 and wording "ignored" are SUPERSEDED. |
 
@@ -198,21 +214,33 @@ a kernel change emits it and a log proves it.
 
 ## Command surface
 
-The 8-command surface named in H-2 is frozen here as
-2 running commands and 6 UNIMPLEMENTED slots. This
-spec does NOT invent names or outputs for the 6: no
-kernel code, no earlier spec, and no log on main names
-them, and inventing them would be a mock.
+The 8-command surface named in H-2 is updated here by
+RW4-2 to the kernel actually on main: 5 running commands
+plus `clear` as a kernel-derived interim, 2 slots still
+UNIMPLEMENTED. Every output below is VERIFIED from the
+kernel source on main (`run_command` in sched.rs), except
+`clear`, which is flagged interim rather than spec.
 
 | # | Command | Output | Status |
 |---|---|---|---|
 | 1 | `status` | Two lines, see above | VERIFIED |
-| 2 | `help` | `commands: status help` | VERIFIED |
-| 3–8 | (unnamed) | (none) | UNIMPLEMENTED — no name, no output on record. Pax names them or reduces the surface to 2; Rowan implements only what is named here or by a later Pax ruling. |
+| 2 | `help` | `commands: status help uptime mem ps` | VERIFIED (Pax ruling: ruled line, nothing stripped) |
+| 3 | `uptime` | `uptime <sec>s ticks <ticks>` | VERIFIED |
+| 4 | `mem` | `mem frames_free <n> frames_total <n> heap_free <n>K heap_total <n>K` | VERIFIED |
+| 5 | `ps` | One `ps id <n> state <state> ticks_used <n> prio <n>` line per spawned task slot | VERIFIED |
+| 6 | `clear` | Screen cleared, no output line | KERNEL-DERIVED INTERIM (RW4-2, Pax bus idx 503): runs vga.rs clear(); Hana spec text still owed; NOT listed by `help` yet, pending a Pax/Hana ruling |
+| 7–8 | (unnamed) | (none) | UNIMPLEMENTED — no name, no output on record. Pax names them or reduces the surface; Rowan implements only what is named here or by a later Pax ruling. |
 
-`help` must keep listing only real commands, so until
-a slot is implemented and proven, it stays
-`commands: status help` and nothing longer.
+`help` lists the ruled set `commands: status help uptime mem ps` and nothing
+longer until Pax/Hana rule on `clear` joining it.
+
+RW4-2 note: sections above that still describe the
+pre-RW4-1 console (periodic uptime prints, per-key
+scancode debug lines, no shift/backspace) are stale
+relative to the merged RW4-1 kernel and are NOT silently
+rewritten here — they await Hana acceptance / a Pax
+ruling, like the formats + test pins named in the drift
+table.
 
 ## Acceptance script: the claim-sentence demo, line for line
 
@@ -241,13 +269,13 @@ literally except where the line is a fixed string.
    - later `sleeper: yielded and back` and `C awake`
      (the fault isolated to one task; the rest continue)
 3. Type `help`, Enter. Expect exactly:
-   - `commands: status help`
+   - `commands: status help uptime mem ps`
 4. Type `status`, Enter. Expect exactly, in order:
    - `tasks <count> ticks <ticks> heap_free <kb>K`
    - `STATUS tasks=<count> ticks=<ticks> heap_free_kb=<kb>`
 5. Type an unknown word, Enter. Expect exactly:
    - `unknown command`
-   - `commands: status help`
+   - `commands: status help uptime mem ps`
 6. Type Enter on an empty line. Expect no output.
 7. Uptime lines (`uptime <sec>s ticks <ticks>`) may
    appear between any two steps above. They are
