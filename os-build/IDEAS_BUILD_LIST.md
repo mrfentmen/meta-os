@@ -52,6 +52,7 @@ speed); output compounds over time.
 - [ ] 2d Workshop memory: per-class playbook later runs read first
 
 ## Science Lab — LABORATORY (his upload, 2026-11-01)
+- [ ] MODEL BENCH (boss idea 2026-11-02): neuron-surgery as a program — user door (face) + agent door (tools for OpenCode/agents); shrink-down job (prune/quantise with before/after proof); spec os-build/NEURON_SURGERY_SPEC.md; name + placement (Science Lab bench recommended) = boss's call
 - [ ] 13-agent research team on the agent layer (director = Spark)
 - [ ] 10-step discovery cycle as the lab's loop
 - [ ] Evidence ladder levels 0-6 on every claim the lab makes
