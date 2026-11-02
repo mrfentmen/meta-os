@@ -65,7 +65,7 @@ or BLOCKED with the artifact named.
 | 56 | Calculator | PROVEN (local) | 7*8=56, 9/0=Error, C clears |
 | 57 | Chrome meta-os.pages.dev | DONE (code) | dock target set; guest proof TODO |
 | 58 | Trash restore | DONE (local PASS) | trash.html live via files.py; trash/restore/delete PASS; guest proof TODO |
-| 59 | Settings all controls | DONE (local 14/14) | wallpaper/bg/bar/theme/speed/pause/About-facts all present, keys metaos-*; shell honors theme/bar/wp/bg live; speed/pause via compat mirrors; guest proof TODO |
+| 59 | Settings all controls | PROVEN (guest) | guest-settings.jpg: wallpaper/bg/bar/theme/speed/pause + About live facts 3.06/569M/3G/10.0.2.15/24 |
 | 60-64 | First run + polish | TODO | — |
 | 65-68 | Proof pack | TODO | — |
 | 69-73 | Long tail | PARKED (after tonight) | — |

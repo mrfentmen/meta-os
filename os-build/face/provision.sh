@@ -38,11 +38,24 @@ if [ -f "$SITE_SRC/index.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
       sudo cp -r "$SITE_SRC/$d" "$SITE_DST/$d"
     fi
   done
+  for lab in molecules music3d; do
+    if [ -f "$SITE_SRC/labs/$lab/index.html" ]; then
+      sudo rm -rf "$SITE_DST/labs/$lab"
+      sudo mkdir -p "$SITE_DST/labs"
+      sudo cp -r "$SITE_SRC/labs/$lab" "$SITE_DST/labs/$lab"
+    fi
+  done
   for pack in "$SITE_SRC"/os/worlds/*/pack.json; do
     if [ -f "$pack" ]; then
       world="$(basename "$(dirname "$pack")")"
       sudo mkdir -p "$SITE_DST/os/worlds/$world"
       sudo cp -f "$pack" "$SITE_DST/os/worlds/$world/pack.json"
+    fi
+  done
+  for wav in "$SITE_SRC"/os/worlds/musica/sessions/hn029-chipsynth/normalized/take-006.wav; do
+    if [ -f "$wav" ]; then
+      sudo mkdir -p "$SITE_DST/os/worlds/musica/sessions/hn029-chipsynth/normalized"
+      sudo cp -f "$wav" "$SITE_DST/os/worlds/musica/sessions/hn029-chipsynth/normalized/"
     fi
   done
   for spec in "officina:json" "custos:jsonl"; do
@@ -153,6 +166,9 @@ check "site 18934 /index.html" curl -fs -o /dev/null http://127.0.0.1:18934/inde
 check "site 18934 /surfaces.html" curl -fs -o /dev/null http://127.0.0.1:18934/surfaces.html
 check "site 18934 /logo-studio.html" curl -fs -o /dev/null http://127.0.0.1:18934/logo-studio.html
 check "site 18934 /js/app.js" curl -fs -o /dev/null http://127.0.0.1:18934/js/app.js
+check "site 18934 /labs/molecules/index.html" curl -fs -o /dev/null http://127.0.0.1:18934/labs/molecules/index.html
+check "site 18934 /take-006.wav" curl -fs -o /dev/null http://127.0.0.1:18934/os/worlds/musica/sessions/hn029-chipsynth/normalized/take-006.wav
+check "site 18934 /labs/music3d/index.html" curl -fs -o /dev/null http://127.0.0.1:18934/labs/music3d/index.html
 check "site 18934 /manifest.webmanifest" curl -fs -o /dev/null http://127.0.0.1:18934/manifest.webmanifest
 check "launcher 18931 /launch" python3 -c "import http.client; c=http.client.HTTPConnection('127.0.0.1',18931,timeout=5); c.request('POST','/launch',body='{}',headers={'Content-Type':'application/json'}); assert b'ok' in c.getresponse().read()"
 check "facts 18932 /facts" curl -fs -o /dev/null http://127.0.0.1:18932/facts

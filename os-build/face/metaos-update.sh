@@ -42,6 +42,13 @@ for f in index.html surfaces.html logo-studio.html bus.html styles.css manifest.
     log "site: $f not in $BRANCH, keeping previous copy"
   fi
 done
+for lab in molecules music3d; do
+  git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- "labs/$lab" 2>/dev/null || log "site: labs/$lab not in $BRANCH, skipped"
+done
+if [ -d "$WORK/labs" ]; then
+  mkdir -p "$SITE_DST/labs"
+  cp -r "$WORK/labs/molecules" "$WORK/labs/music3d" "$SITE_DST/labs/" 2>/dev/null || true
+fi
 for d in js vendor design; do
   if git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- "$d" 2>/dev/null; then
     rm -rf "$SITE_DST/$d"
@@ -54,6 +61,7 @@ rm -rf "$SITE_DST/os"
 for p in os/worlds/custos/pack.json os/worlds/dep/pack.json os/worlds/doe/pack.json os/worlds/dsny/pack.json os/worlds/ems/pack.json os/worlds/fdny/pack.json os/worlds/hospital/pack.json os/worlds/mta/pack.json os/worlds/nypd/pack.json os/worlds/officina/pack.json os/worlds/custos/runs os/worlds/officina/runs; do
   git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- "$p" 2>/dev/null || log "site: $p not in $BRANCH, skipped"
 done
+git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- "os/worlds/musica/sessions/hn029-chipsynth/normalized/take-006.wav" 2>/dev/null || log "site: take-006.wav not in $BRANCH, skipped"
 if [ -d "$WORK/os/worlds" ]; then
   mkdir -p "$SITE_DST/os"
   cp -r "$WORK/os/worlds" "$SITE_DST/os/worlds"

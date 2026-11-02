@@ -1,0 +1,24 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">
+<link rel="icon" href="data:,"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Musica</title>
+<style>body{font-family:system-ui;background:#0a0f1c;color:#eee;padding:24px;max-width:640px;margin:auto}
+audio{width:100%;margin:12px 0}#state{padding:8px;background:#16213a;border-radius:8px;min-height:20px}
+small{color:#888}</style></head><body>
+<h1>Musica <small>(generated take, this machine)</small></h1>
+<p>Session hn029-chipsynth, take-006 — a real generated track served from this machine.</p>
+<audio id="a" controls preload="auto"
+  src="http://127.0.0.1:18934/os/worlds/musica/sessions/hn029-chipsynth/normalized/take-006.wav"></audio>
+<div id="state">loading…</div>
+<p><small>Plays end to end: press play (or wait for autoplay); the state line shows progress then "ended". No Apple art; silence in QEMU is the null audio sink, the decode timeline is real.</small></p>
+<script>
+(function(){
+var a=document.getElementById('a'),st=document.getElementById('state');
+function fmt(t){return (Math.round(t*10)/10)+'s';}
+a.addEventListener('loadedmetadata',function(){st.textContent='ready: '+fmt(a.duration)+' — press play';});
+a.addEventListener('play',function(){st.textContent='playing…';});
+a.addEventListener('timeupdate',function(){st.textContent='playing '+fmt(a.currentTime)+' / '+fmt(a.duration);});
+a.addEventListener('ended',function(){st.textContent='ended '+fmt(a.duration)+' — played end to end';});
+a.addEventListener('error',function(){st.textContent='audio unreachable (is :18934 serving the wav?)';});
+a.play().catch(function(){st.textContent+=' (autoplay blocked: press play)';});
+})();
+</script></body></html>
