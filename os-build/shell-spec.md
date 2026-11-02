@@ -240,8 +240,16 @@ literally except where the line is a fixed string.
    - `INT user page-fault addr 0x0000000000000000 err 0x0000000000000004: task killed`
    - later `sleeper: yielded and back` and `C awake`
      (the fault isolated to one task; the rest continue)
-3. Type `help`, Enter. Expect exactly:
-   - `commands: status help`
+3. Type `help`, Enter. Expect exactly (per Pax R-2 ruling,
+   2026-11-01, acceptance step 3 carries this one-word update):
+   - `commands: status help uptime`
+   Note, stated honestly: the kernel on main at 1655d56 prints
+   `commands: status help` only — uptime exists there as the
+   ticker line (`uptime <sec>s ticks <ticks>`), not as a
+   command. Rowan R-2 owns making help print the accepted
+   listing. Until that lands, the line above is the accepted
+   target, and the current kernel output is the known gap,
+   not a pass.
 4. Type `status`, Enter. Expect exactly, in order:
    - `tasks <count> ticks <ticks> heap_free <kb>K`
    - `STATUS tasks=<count> ticks=<ticks> heap_free_kb=<kb>`
