@@ -26,3 +26,5 @@ Cleared+purge PROVEN, inconclusive PROVEN, BOLO shown on dispatch path. Budget/S
 README node counts fixed (one commit); Rust badge left stale deliberately (red, nothing to claim). Forms dry-run with DEL-ONLY fields; FREEZE_CERT drafted from proven claims; X draft written (Del posts); film paths on branch-not-main flagged; DEL-ONLY list recorded. Proof: WAVE3_SUBMISSION_PREP.md.
 ## Section 2 — soak + stability (11-16): RUNNING 2026-11-02
 Wave-2 soak (soak3, wave2 image): 10 start samples, 0 panics, still in window. Fresh soak on Section-1 image RUNNING (soak-w3). Pack drill 10/10 green (hello/exit0 x3/fault/sleepback/readkey each run, 0 panics): WAVE3-pack-drill.log. Verdict + WAVE3_SOAK.md at soak end.
+## Postscript — newcomer R11-282 fixed same day
+Full-suite run showed 56 failing names vs the 55 known set; the newcomer was R11-282 (boot-log index missing this branch's 4 new logs). Fixed with the sanctioned generator (not by hand): 4 additive rows. tests/os-docs-r11.test.mjs now fully green. Failing set is back to the known 55.
