@@ -20,12 +20,13 @@ B3 Buffy: failure injection on the runtime — kill mid-write, ledger
    torn line, registry with a bad entry, budget race. Report format.
 B4 Buffy: restart semantics — runtime dies, runs marked, baton
    records survive (spec §12 drill).
-B5 Pax: job records — spawn writes the assembled brief (orders,
-   skills, budget, deadline) into the run dir before start (spec §4).
+B5 DONE — Spawn writes brief.json (orders, budget, deadline,
+   capabilities) into the run dir before start (slice 1).
 
 ## C. Wake layer (Pax + Rowan)
-C1 Pax: relay-watchman v1 — polls room 1 + the job board file; on a
-   named job, spawns the agent with its brief (spec §4).
+C1 DONE v1 — agents/watchman.mjs polls the job board dir; a named
+   job spawns the agent briefed; result receipt written; claimed
+   jobs never respawn (tests 3/3). Room-1 polling is the next step.
 C2 Pax: timer sweep fallback — agents wake on cadence to sweep.
 C3 Pax: watchman watchdog — a missed heartbeat is a top-tier alarm.
 C4 Rowan: image lane — agent programs pre-installed in the carrier
