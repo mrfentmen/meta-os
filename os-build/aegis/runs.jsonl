@@ -2,3 +2,5 @@
 {"ts":"2026-11-02T11:06:25.565Z","run":"aegis-2026-11-02T11-06-24-812Z","event":"sweep-done","checked":108,"batches":2,"unparseable":0,"findings":0,"bySeverity":{"info":0,"low":0,"medium":0,"high":0,"critical":0}}
 {"ts":"2026-11-02T11:07:19.526Z","run":"aegis-2026-11-02T11-07-19-392Z","event":"sweep-start","root":"meta-os","manifests":23,"lockFiles":["Cargo.lock","kernel/Cargo.lock","os-build/userspace/user/Cargo.lock"],"queries":108,"sourceServer":"osv-mcp 1.0.0"}
 {"ts":"2026-11-02T11:07:20.091Z","run":"aegis-2026-11-02T11-07-19-392Z","event":"sweep-done","checked":108,"batches":2,"unparseable":0,"findings":0,"bySeverity":{"info":0,"low":0,"medium":0,"high":0,"critical":0}}
+{"ts":"2026-11-02T13:43:49.536Z","run":"aegis-2026-11-02T13-43-49-502Z","event":"sweep-start","root":"meta-os","manifests":23,"lockFiles":["Cargo.lock","kernel/Cargo.lock","os-build/userspace/user/Cargo.lock"],"queries":108,"sourceServer":"not configured"}
+{"ts":"2026-11-02T13:43:49.536Z","run":"aegis-2026-11-02T13-43-49-502Z","event":"sweep-blocked","reason":"no OSV server"}
