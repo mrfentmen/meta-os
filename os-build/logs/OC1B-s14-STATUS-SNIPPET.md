@@ -114,7 +114,7 @@ needed, none used).
 
 - §14: 1434b2cf7683d1f56b2b94ec15c9f21e1eb3cb55
 - §15: cdadb4848c8da89f7af1d0aa3dd369e9753c76ea
-- §16: <SHA-16>
+- §16: 275e105c014560931fb5d522efb7be4e079eb30f
 
 ## Tree-integrity incident (unattributed writes, reverted)
 
