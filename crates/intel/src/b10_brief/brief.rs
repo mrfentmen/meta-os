@@ -4406,6 +4406,432 @@ pub fn find_recent_brief(
     None
 }
 
+/// One watchdog alert record, as `build_watchdog_status` reads it:
+/// the alert id, its severity string, its creation time when known,
+/// and whether it is resolved. The caller derives `resolved` from
+/// the store record the way `alert_status` does (a `resolved`
+/// status, or a `resolved_at` time on a pre-WDG-014 record);
+/// anything else counts as open, never hidden.
+#[derive(Debug, Clone, PartialEq)]
+pub struct WatchdogAlert {
+    pub id: String,
+    pub severity: String,
+    pub created_at: Option<i64>,
+    pub resolved: bool,
+}
+
+/// WDG-028, line half only: the one frozen watchdog sentence a
+/// template brief renders, from severity-carrying alert records.
+/// Returns `None` when no record carries a known severity
+/// (`critical`, `warning`, `info`) — the composer then renders no
+/// watchdog line at all, the same gate Python applies before it
+/// calls `build_watchdog_status`. Counts cover unresolved records
+/// only, by severity; the top alert is the highest-severity
+/// unresolved record with a known severity, earliest `created_at`
+/// first, id as the tie-break, and an unknown-severity record is
+/// never promoted to top. A record with no `created_at` sorts after
+/// every dated record of its severity. The full store record
+/// (`counts`, `open`, `resolved`, `total`, `ts`) stays owed to the
+/// store lane that ports `build_watchdog_status` itself; this is
+/// only the line the brief renders.
+pub fn watchdog_status_line(alerts: &[WatchdogAlert]) -> Option<String> {
+    const KNOWN: [&str; 3] = ["critical", "warning", "info"];
+    if !alerts.iter().any(|a| KNOWN.contains(&a.severity.as_str())) {
+        return None;
+    }
+    let mut counts = [0i64; 3];
+    let mut best: Option<(usize, bool, i64, String)> = None;
+    for alert in alerts {
+        if alert.resolved {
+            continue;
+        }
+        let Some(rank) = KNOWN.iter().position(|s| *s == alert.severity) else {
+            continue;
+        };
+        counts[rank] += 1;
+        if alert.id.is_empty() {
+            continue;
+        }
+        let candidate = (
+            rank,
+            alert.created_at.is_none(),
+            alert.created_at.unwrap_or(0),
+            alert.id.clone(),
+        );
+        if best.as_ref().map(|b| candidate < *b).unwrap_or(true) {
+            best = Some(candidate);
+        }
+    }
+    let mut line = format!(
+        "Watchdog: {} critical, {} warning, {} info open",
+        counts[0], counts[1], counts[2]
+    );
+    match best {
+        Some((_, _, _, id)) => line += &format!(" — top alert: {id}"),
+        None => line += " — no open alerts",
+    }
+    Some(line)
+}
+
+/// The snapshot `compose_template_brief` reads, in the normalized
+/// form this module's other functions read: the base window
+/// (messages, jobs, alerts) for the extractors, the stated window
+/// for the window line, and one optional record per additive
+/// section. `None` for a record means the snapshot carries no such
+/// record — the section is skipped, so older briefs keep their
+/// exact shape; a present record, even an empty one, renders its
+/// section's none-reported lines, never a padded section. The
+/// caller maps a non-dict snapshot, non-list jobs, and non-dict
+/// records to the empty / `None` forms here, the same mapping the
+/// `with_*` fillers document; a dict window with no keys maps to
+/// `None`, matching Python's falsy empty dict. `onjoin` is read
+/// only on the onjoin path; `screenshot_messages` feeds the
+/// screenshot digest, and `watchdog_alerts` feeds the watchdog
+/// line, because the base alerts carry no severity.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct TemplateSnapshot {
+    pub base: super::sections::Snapshot,
+    pub window: super::window::WindowInput,
+    pub onjoin: Option<OnjoinSnapshot>,
+    pub screenshot_messages: Vec<ScreenshotMessage>,
+    pub watchdog_alerts: Vec<WatchdogAlert>,
+    pub memory_budget: Option<MemoryBudget>,
+    pub previous_session: Option<PreviousSession>,
+    pub system_state: Option<SystemState>,
+    pub environment: Option<Environment>,
+    pub recovery: Option<RecoveryRecord>,
+    pub daily: Option<Daily>,
+    pub memory_depth: Option<MemoryDepth>,
+    pub federation: Option<Federation>,
+    pub held_decisions: Option<HeldDecisions>,
+    pub source_pointers: Option<Vec<String>>,
+    pub previous_brief: Option<PreviousBrief>,
+    pub priority_order: Option<PriorityOrder>,
+    pub blocked_contacts: Option<BlockedContacts>,
+}
+
+/// BRF-008: the template brief from extractors alone, no LLM.
+/// The output is marked TEMPLATE in its first line, so no reader
+/// mistakes it for a Spark-composed brief. Every fact comes from
+/// the extractors; nothing is invented, nothing is paraphrased
+/// away (blocked reasons stay verbatim). This never calls Spark
+/// and never touches the network.
+///
+/// Shape, in order: the empty-room branch wins for every kind —
+/// an empty window says no activity yet, with the record sections
+/// that are not window activity (memory budget, previous-session
+/// digest on boot, system lines on boot, environment and recovery
+/// on boot, daily, memory depth, federation, held decisions,
+/// sources) carried before it, never hidden behind the empty room.
+/// Otherwise kind `onjoin` (and not boot) renders the four
+/// BRF-002 on-join sections via `onjoin_template_lines`; any
+/// other kind, and a boot brief, keeps the morning shape exactly.
+/// An unknown kind falls back to `morning`, matching Python's
+/// `BRIEF_BUDGETS` lookup. A boot brief opens with its
+/// previous-session digest (when one renders), then the three
+/// system lines — with values, with none, or with health not
+/// reported, never omitted — then environment and recovery when
+/// their records are present. The memory-budget lines follow the
+/// window line with no heading and no blank line, exactly as
+/// Python extends them in place. The additive sections (daily,
+/// memory depth, federation, held decisions, sources, priority
+/// order, blocked contacts, screenshots) render only when their
+/// record or lines are present, in Python's order, and a
+/// single-machine federation record renders no section at all.
+///
+/// Typed-input notes, following this module's convention: a
+/// missing `onjoin` snapshot on the onjoin path renders from the
+/// empty on-join snapshot — the not-stated lines, never a failure.
+/// The system lines read from an all-`None` state when the
+/// snapshot carries no system record, which renders the three
+/// not-reported lines Python renders for a `None` record. The
+/// watchdog line renders only when some alert carries a known
+/// severity, from `watchdog_alerts`, because the base alerts
+/// carry no severity.
+///
+/// Redaction gap, stated plainly, not faked: Python's
+/// `redact_secrets` strips credential-shaped strings (GitHub
+/// tokens, `sk-` keys, AWS ids, Bearer tokens, named
+/// key/token/secret/password assignments) with regexes, while
+/// this crate's `redact_secrets` only redacts `KEY=secret`
+/// assignments per line. The composer applies the crate's
+/// redactor, so a token-shaped string inside a blocked reason
+/// would survive here; full BRF-014 regex redaction is still
+/// owed to the redactor, and this composer gains it when the
+/// redactor does. Nothing here invents a regex pass.
+pub fn compose_template_brief(snapshot: &TemplateSnapshot, boot: bool, kind: &str) -> String {
+    use super::sections::{
+        extract_blocked, extract_decisions, extract_owners, extract_watch_items,
+    };
+    use super::window::window_line;
+    let kind = if brief_budget(kind).is_some() {
+        kind
+    } else {
+        "morning"
+    };
+    let empty_room = snapshot.base.messages.is_empty()
+        && snapshot.base.jobs.is_empty()
+        && snapshot.base.alerts.is_empty();
+    let mut window = window_line(&snapshot.window);
+    let window_stated = match &snapshot.window.source_window {
+        Some(super::window::SourceWindow::Text(t)) => {
+            !t.is_empty()
+                || snapshot
+                    .window
+                    .window_start
+                    .as_ref()
+                    .map(|s| !s.is_empty())
+                    .unwrap_or(false)
+        }
+        Some(super::window::SourceWindow::Dict { .. }) => true,
+        None => snapshot
+            .window
+            .window_start
+            .as_ref()
+            .map(|s| !s.is_empty())
+            .unwrap_or(false),
+    };
+    if !window_stated {
+        window = "Window: empty (no history is available for this boot)".to_string();
+    } else if let Some(super::window::SourceWindow::Dict {
+        messages_kept: Some(0),
+        ..
+    }) = &snapshot.window.source_window
+    {
+        window += " The window is empty.";
+    }
+    let current: Vec<CurrentJob> = snapshot
+        .base
+        .jobs
+        .iter()
+        .map(|j| CurrentJob {
+            id: j.id.clone(),
+            title: j.title.clone(),
+            status: j.status.clone(),
+        })
+        .collect();
+    let pointer_strs: Vec<&str> = match &snapshot.source_pointers {
+        Some(list) => list.iter().map(String::as_str).collect(),
+        None => Vec::new(),
+    };
+    let pointers = source_pointer_lines(Some(&pointer_strs[..]));
+    let redact = |lines: &[String]| -> String {
+        let redacted = redact_secrets(lines);
+        let mut out = redacted.join("\n");
+        out.push('\n');
+        out
+    };
+    if empty_room {
+        let mut lines = vec!["TEMPLATE".to_string(), String::new(), window];
+        if let Some(record) = &snapshot.memory_budget {
+            lines.push(String::new());
+            lines.extend(memory_budget_lines(Some(record)));
+        }
+        if boot {
+            if let Some(digest) = previous_session_digest(snapshot.previous_session.as_ref()) {
+                lines.push(String::new());
+                lines.push(digest);
+            }
+            lines.push(String::new());
+            let state = snapshot.system_state.clone().unwrap_or(SystemState {
+                drivers: None,
+                gateway_healthy: None,
+                skill_apps: None,
+            });
+            lines.extend(system_state_lines(&state));
+            if let Some(env) = &snapshot.environment {
+                lines.push(String::new());
+                lines.extend(environment_lines(Some(env)));
+            }
+            if let Some(record) = &snapshot.recovery {
+                lines.push(String::new());
+                lines.push(recovery_line(Some(record)));
+            }
+        }
+        if let Some(record) = &snapshot.daily {
+            lines.push(String::new());
+            lines.push("Daily brief".to_string());
+            lines.extend(daily_lines(Some(record)));
+        }
+        if let Some(record) = &snapshot.memory_depth {
+            lines.push(String::new());
+            lines.push("Long-term memory".to_string());
+            lines.extend(memory_depth_lines(Some(record)));
+        }
+        if let Some(record) = &snapshot.federation {
+            let fed = federation_lines(Some(record));
+            if !fed.is_empty() {
+                lines.push(String::new());
+                lines.push("Federation".to_string());
+                lines.extend(fed);
+            }
+        }
+        if let Some(record) = &snapshot.held_decisions {
+            lines.push(String::new());
+            lines.push("Held decisions".to_string());
+            lines.extend(held_decisions_lines(Some(record)));
+        }
+        if !pointers.is_empty() {
+            lines.push(String::new());
+            lines.push("Sources".to_string());
+            lines.extend(pointers);
+        }
+        lines.push(String::new());
+        lines.push("no activity yet".to_string());
+        lines.push(String::new());
+        lines.push("This room has no activity yet in this window.".to_string());
+        return redact(&lines);
+    }
+    if kind == "onjoin" && !boot {
+        let empty_onjoin = OnjoinSnapshot::default();
+        let oj = snapshot.onjoin.as_ref().unwrap_or(&empty_onjoin);
+        let mut lines = vec!["TEMPLATE".to_string(), window, String::new()];
+        lines.extend(onjoin_template_lines(oj));
+        return redact(&lines);
+    }
+    let mut lines = vec!["TEMPLATE".to_string(), window];
+    if let Some(previous) = &snapshot.previous_brief {
+        let since = since_last_brief_lines(Some(previous), &current);
+        if !since.is_empty() {
+            lines.push(String::new());
+            lines.push("Since your last brief".to_string());
+            lines.extend(since);
+        }
+    }
+    if let Some(record) = &snapshot.memory_budget {
+        lines.extend(memory_budget_lines(Some(record)));
+    }
+    if boot {
+        if let Some(digest) = previous_session_digest(snapshot.previous_session.as_ref()) {
+            lines.push(digest);
+        }
+        let state = snapshot.system_state.clone().unwrap_or(SystemState {
+            drivers: None,
+            gateway_healthy: None,
+            skill_apps: None,
+        });
+        lines.extend(system_state_lines(&state));
+        if let Some(env) = &snapshot.environment {
+            lines.extend(environment_lines(Some(env)));
+        }
+        if let Some(record) = &snapshot.recovery {
+            lines.push(recovery_line(Some(record)));
+        }
+    }
+    lines.push(String::new());
+    lines.push("Decisions".to_string());
+    let decisions = extract_decisions(&snapshot.base);
+    if decisions.is_empty() {
+        lines.push("Nothing reported in this window".to_string());
+    } else {
+        for decision in &decisions {
+            lines.push(format!("- {}: {}", decision.kind, decision.text));
+        }
+    }
+    lines.push(String::new());
+    lines.push("In flight".to_string());
+    let in_flight: Vec<&super::sections::SnapJob> = snapshot
+        .base
+        .jobs
+        .iter()
+        .filter(|j| j.status == "open" || j.status == "claimed")
+        .collect();
+    if in_flight.is_empty() {
+        lines.push("Nothing reported in this window".to_string());
+    } else {
+        for job in in_flight {
+            lines.push(format!("- {} {} ({})", job.id, job.title, job.status));
+        }
+    }
+    lines.push(String::new());
+    lines.push("Owners".to_string());
+    let owners = extract_owners(&snapshot.base);
+    if owners.is_empty() {
+        lines.push("Nothing reported in this window".to_string());
+    } else {
+        for owner in &owners {
+            let titles: Vec<&str> = owner
+                .jobs
+                .iter()
+                .map(|j| j.title.as_str())
+                .collect();
+            lines.push(format!("- {}: {}", owner.nick, titles.join(", ")));
+        }
+    }
+    lines.push(String::new());
+    lines.push("Blocked and why".to_string());
+    let blocked = extract_blocked(&snapshot.base);
+    if blocked.is_empty() {
+        lines.push("Nothing blocked in this window".to_string());
+    } else {
+        for job in &blocked {
+            lines.push(format!("- {} {}: {}", job.id, job.title, job.reason));
+        }
+    }
+    lines.push(String::new());
+    lines.push("Watch items".to_string());
+    if let Some(line) = watchdog_status_line(&snapshot.watchdog_alerts) {
+        lines.push(line);
+    }
+    let watch_items = extract_watch_items(&snapshot.base);
+    if watch_items.is_empty() {
+        lines.push("Nothing to watch in this window".to_string());
+    } else {
+        for item in &watch_items {
+            lines.push(format!("- {}: {}", item.id, item.summary));
+        }
+    }
+    if let Some(record) = &snapshot.daily {
+        lines.push(String::new());
+        lines.push("Daily brief".to_string());
+        lines.extend(daily_lines(Some(record)));
+    }
+    if let Some(record) = &snapshot.memory_depth {
+        lines.push(String::new());
+        lines.push("Long-term memory".to_string());
+        lines.extend(memory_depth_lines(Some(record)));
+    }
+    let fed = federation_lines(snapshot.federation.as_ref());
+    if !fed.is_empty() {
+        lines.push(String::new());
+        lines.push("Federation".to_string());
+        lines.extend(fed);
+    }
+    if let Some(record) = &snapshot.held_decisions {
+        lines.push(String::new());
+        lines.push("Held decisions".to_string());
+        lines.extend(held_decisions_lines(Some(record)));
+    }
+    if !pointers.is_empty() {
+        lines.push(String::new());
+        lines.push("Sources".to_string());
+        lines.extend(pointers);
+    }
+    if let Some(record) = &snapshot.priority_order {
+        let prio = priority_order_lines(Some(record), &current);
+        if !prio.is_empty() {
+            lines.push(String::new());
+            lines.push("Priority order".to_string());
+            lines.extend(prio);
+        }
+    }
+    if let Some(record) = &snapshot.blocked_contacts {
+        let contacts = blocked_contact_lines(Some(record), &current);
+        if !contacts.is_empty() {
+            lines.push(String::new());
+            lines.push("Blocked contacts".to_string());
+            lines.extend(contacts);
+        }
+    }
+    let refs = extract_screenshot_refs(Some(&snapshot.screenshot_messages[..]));
+    if !refs.is_empty() {
+        lines.push(String::new());
+        lines.push("Screenshots".to_string());
+        lines.extend(screenshot_digest_lines(Some(&refs)));
+    }
+    redact(&lines)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -7648,5 +8074,98 @@ mod tests {
         let lines = system_state_lines(&record);
         assert_eq!(lines[0], "Drivers: not reported in this snapshot");
         assert_eq!(lines[1], "Tools: MCP gateway health not reported in this snapshot");
+    }
+}
+
+#[cfg(test)]
+mod template_brief_tests {
+    use super::super::sections::{SnapJob, SnapMessage, Snapshot};
+    use super::super::window::WindowInput;
+    use super::*;
+
+    fn morning_snapshot() -> TemplateSnapshot {
+        TemplateSnapshot {
+            base: Snapshot {
+                messages: vec![SnapMessage {
+                    nick: "pax".into(),
+                    text: "DECISION: freeze the demo".into(),
+                }],
+                jobs: vec![SnapJob {
+                    id: "1".into(),
+                    title: "brief panel".into(),
+                    status: "open".into(),
+                    claim: String::new(),
+                    note: String::new(),
+                    last_progress_at: None,
+                    claimed_at: None,
+                }],
+                alerts: vec![],
+            },
+            window: WindowInput::default(),
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn compose_template_brief_empty_room_says_no_activity_yet() {
+        let text = compose_template_brief(&TemplateSnapshot::default(), false, "morning");
+        assert!(text.starts_with("TEMPLATE\n"));
+        assert!(text.contains("Window: empty (no history is available for this boot)"));
+        assert!(text.contains("no activity yet"));
+        assert!(text.ends_with("This room has no activity yet in this window.\n"));
+    }
+
+    #[test]
+    fn compose_template_brief_morning_sections_in_order() {
+        let text = compose_template_brief(&morning_snapshot(), false, "morning");
+        assert!(text.starts_with("TEMPLATE\n"));
+        assert!(text.contains("\nDecisions\n- decision: freeze the demo"));
+        assert!(text.contains("\nIn flight\n- 1 brief panel (open)"));
+        assert!(text.contains("\nOwners\nNothing reported in this window"));
+        assert!(text.contains("\nBlocked and why\nNothing blocked in this window"));
+        assert!(text.contains("\nWatch items\nNothing to watch in this window"));
+    }
+
+    #[test]
+    fn compose_template_brief_onjoin_renders_four_sections() {
+        let mut snap = morning_snapshot();
+        snap.onjoin = Some(OnjoinSnapshot {
+            crew_building: "a demo".into(),
+            ..Default::default()
+        });
+        let text = compose_template_brief(&snap, false, "onjoin");
+        assert!(text.starts_with("TEMPLATE\n"));
+        assert!(text.contains("What this crew is building"));
+        assert!(text.contains("a demo"));
+        assert!(!text.contains("\nDecisions\n"));
+    }
+
+    #[test]
+    fn watchdog_status_line_counts_open_and_names_top_alert() {
+        let alerts = vec![
+            WatchdogAlert {
+                id: "A2".into(),
+                severity: "warning".into(),
+                created_at: Some(5),
+                resolved: false,
+            },
+            WatchdogAlert {
+                id: "A1".into(),
+                severity: "critical".into(),
+                created_at: Some(9),
+                resolved: false,
+            },
+            WatchdogAlert {
+                id: "A0".into(),
+                severity: "critical".into(),
+                created_at: Some(1),
+                resolved: true,
+            },
+        ];
+        assert_eq!(
+            watchdog_status_line(&alerts).as_deref(),
+            Some("Watchdog: 1 critical, 1 warning, 0 info open — top alert: A1")
+        );
+        assert_eq!(watchdog_status_line(&[]), None);
     }
 }
