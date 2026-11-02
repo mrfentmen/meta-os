@@ -8,7 +8,7 @@ license = "MIT"
 [workspace]
 
 [dependencies]
-bootloader = { version = "0.9", features = ["map_physical_memory"] }
+bootloader = { version = "0.11" }
 
 [features]
 # Test-only hooks (OS-024/OS-058): boot once with a forced trap to
