@@ -3,7 +3,7 @@
 // Layer 4, service 19: the wall-clock offset. What time it is, as opposed to how long
 // the machine has been up.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs, static
+// Status: RUNS — reached by tests/t77_gaps (73 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs, static
 // arrays, `while`/`if`, slices, `T&` references (reference#46), `as` casts,
 // multi-value returns.
 //
@@ -97,6 +97,12 @@ fn ts_smear_step(mono_ms: i64) -> i64 {
     return step;
 }
 
+// The last accepted round trip, for the health line and for a test that needs to know the
+// fraction field round-tripped exactly rather than approximately.
+fn ts_last_roundtrip_ms() -> i64 {
+    return sync_state.last_roundtrip_ms;
+}
+
 fn ts_pending_ms() -> i64 {
     return sync_state.target_offset_ms - sync_state.offset_ms;
 }
@@ -130,7 +136,10 @@ fn ntp_put_time(out: u8[..48]&, at: i64, unix_ms: i64) {
     if ms < 0 { ms = 0; }
     if secs < 0 { secs = 0; }
     secs = secs + NTP_UNIX_DELTA;
-    let frac = (ms * 4294967) / 1000;        // ms -> 2^32 fraction, integer maths
+    // ms -> 2^32 fraction. The multiplier is 2^32 (4294967296), not 4294967 -- the
+    // shorter constant loses three decimal digits, so a 10 ms timestamp wrote a fraction
+    // that read back as 0 ms and every measurement was skewed by whatever it truncated.
+    let frac = (ms * 4294967296) / 1000;
     put_u32_in48(out, at, secs);
     put_u32_in48(out, at + 4, frac);
 }
@@ -152,7 +161,10 @@ fn ntp_read_time(pkt: const u8[:], at: i64) -> i64 {
     let secs = get_u32(pkt, at);
     let frac = get_u32(pkt, at + 4);
     if secs == 0 && frac == 0 { return 0; }              // "not set" is not 1900
-    let ms = (frac / 4294967);
+    // Rounded to the nearest millisecond, not truncated: the forward conversion floors its
+    // fraction, so a plain floor here turns 10 ms into 9 and every round trip reads 1 ms
+    // long. The half-scale added before the divide makes the pair a round trip again.
+    let ms = (frac * 1000 + 2147483648) / 4294967296;
     return (secs - NTP_UNIX_DELTA) * 1000 + ms;
 }
 

@@ -2,7 +2,7 @@
 //
 // B-L1-113 — Device hot-plug events: add/remove model with subscriber notification.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t77_gaps (73 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT A HOT-PLUG EVENT IS, AND IS NOT
 // ------------------------------------
@@ -146,6 +146,11 @@ fn hp_raise(h: HotPlug&, kind: i64, dev_slot: i64, dev_kind: i64, at_ms: i64) ->
         while i < HP_SUBS {
             if h.subs[i].active && (h.subs[i].mask & (1 << old.kind)) != 0 {
                 h.subs[i].dropped = h.subs[i].dropped + 1;
+                // `delivered` counts the events this subscriber still has waiting, not the
+                // ones it was ever told about: an event counted as delivered and then lost
+                // to the queue would make (delivered + dropped) larger than (raised), which
+                // is a health line that cannot be true.
+                if h.subs[i].delivered > 0 { h.subs[i].delivered = h.subs[i].delivered - 1; }
             }
             i = i + 1;
         }

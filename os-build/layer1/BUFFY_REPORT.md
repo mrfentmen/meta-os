@@ -7,7 +7,29 @@ gate reads, so it only contains what can be checked.
 Updated 2026-11-01 at the end of the build-out (B-L1-147). All 148 tasks are accounted for below,
 one row each, with the artifact that backs the status word.
 
-## STATUS CORRECTION (2026-11-02, Round 4 close — read this first)
+## FINISH-LIST CLOSE (2026-11-02 — read this before the Round 4 section)
+
+The finish list (`BUFFY_FINISH_TONIGHT.md`) superseded the tail of Rounds 4 and 5, and this section
+supersedes every number below it. `FINISH_STATE.md` is the item-by-item post: **BF4 21 DONE / 2
+PARTIAL / 1 NOT STARTED, BF5 13 DONE / 1 PARTIAL / 0 NOT STARTED**, each row naming its artifact.
+
+| Claim | Evidence, measured in this commit |
+|---|---|
+| The corpus runs | `run_native.sh`: **33 of 33 drivers, 1,253 assertions, 0 failed** |
+| The corpus typechecks | `check_services.sh`: **39 programs** (6 roots + 33 tests), 0 errors |
+| The failure matrix has no blank row | `FAILURE_MATRIX.md`: `devices`, `session`, `socket`, `timesync` closed by `t77_gaps` (73 checks) |
+| The shell session is aligned with the kernel's | `K7_ALIGN.md`, line by line against `os-build/logs/K7-boot.txt` |
+| Every status word is current | `audit_status.py`: **101 lines, 0 stale** (6 were stale at the start of this pass) |
+
+**Three more defects, all found by giving four services their first driver:** `login_submit` could
+not open a user session (`user_id = 0`), `hotplug` counted deliveries on raise so it could report
+more delivered than raised, and the NTP fraction scaling dropped the sub-second field so every
+offset was a few milliseconds out. Fixed, tested, and in `SERVICES_FINAL.md` with the other three.
+
+What did **not** change: nothing booted. 33 green programs are 33 host processes against
+`host/host_shim.c`, which still refuses spawn, kill, net send, net recv and `read_key`.
+
+## STATUS CORRECTION (2026-11-02, Round 4 close — read this after the section above)
 
 Round 4 replaced the word TYPECHECKED with runs, and this section is the correction pass: every
 sentence below was produced by a command on this Mac on 2026-11-02. Where the older sections of
@@ -346,7 +368,7 @@ Fourteen tasks, and the honest summary is that the corpus now has a demonstratio
 |---|---|---|
 | BF5-01 boot rehearsal | `BOOT_REHEARSAL.md`, `boot_rehearsal.sh` | 22 services started in boot order against the host runtime: 3 start, 1 hangs, 18 have no entry |
 | BF5-02 failure matrix | `FAILURE_MATRIX.md`, `tests/t74_failure.goose` | green; logd's error-drop fixed |
-| BF5-03 gates re-run | `GATE_RERUN.md` | 32/32 run, 1,180 assertions, 0 failed; no ABI class moved |
+| BF5-03 gates re-run | `GATE_RERUN.md` | 33/33 run, 1,253 assertions, 0 failed; no ABI class moved |
 | BF5-04 supervisor under load | `tests/t75_supervisor_load.goose` | green: 10 services, 3 policies, a crash budget, table quota |
 | BF5-05 shell session | `DEMO_SHELL.md`, `tests/t76_demo_session.goose` | green; shell's silent-failure defect fixed |
 | BF5-06 integration pack | `integration/{bootlog,storage,time}.md` | three pages, each with its call surface and its gap |
@@ -372,7 +394,7 @@ Fourteen tasks, and the honest summary is that the corpus now has a demonstratio
 
 **What is still not true, in the same words as everywhere else in this lane:**
 
-- Nothing in this layer has been in a kernel. 32 green programs are 32 host processes with a
+- Nothing in this layer has been in a kernel. 33 green programs are 33 host processes with a
   substituted syscall surface. `SERVICE_RUNS.md` says so on every row.
 - 18 of the 22 boot-order services have no entry point, so "boots in order" currently means
   "the order is acyclic and three of them start". The other 18 are NOT BUILT, not passing.

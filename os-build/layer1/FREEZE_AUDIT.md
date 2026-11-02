@@ -8,21 +8,21 @@ first two tables, and `DEMO_FACTS.md` is its output.
 
 | Count | Value | Command |
 |---|---|---|
-| Goose files | 114 | `find services -name '*.goose' \| wc -l` |
-| Lines of Goose | 24,369 | `cat $(find services -name '*.goose') \| wc -l` |
+| Goose files | 115 | `find services -name '*.goose' \| wc -l` |
+| Lines of Goose | 24,785 | `cat $(find services -name '*.goose') \| wc -l` |
 | Service directories | 29 | `ls -d services/*/ \| grep -v tests \| grep -v common` |
 | …in the manifest (code + a mapped test) | 25 | `jq '.services \| length' os-build/layer1/services.json` |
 | …placeholders, no code | 4 | `sockets`, `registry`, `devmgr` (README), `build` (empty) |
 | Shared libraries | 18 | `ls -d services/common/*/` |
-| Test drivers | 32 | `ls services/tests/*.goose \| wc -l` |
+| Test drivers | 33 | `ls services/tests/*.goose \| wc -l` |
 | Entry points (`svc_entry`) | 5 | 4 build, 1 typechecks only |
 
 ## Status words, counted
 
 | Status word | Count | What it applies to |
 |---|---|---|
-| **RUNS** | 32 | test drivers that build, execute and exit 0 (`run_native.sh`) — 1,180 assertions, 0 failed |
-| **TYPECHECKS** | 38 | roots + test roots accepted by `goose check` (includes the 32 that also run) |
+| **RUNS** | 33 | test drivers that build, execute and exit 0 (`run_native.sh`) — 1,253 assertions, 0 failed |
+| **TYPECHECKS** | 39 | roots + test roots accepted by `goose check` (includes the 33 that also run) |
 | **BUILDS (not run)** | 4 | `entry_{bootlog,console,logd,time}` — real binaries, no supervisor to call `svc_entry` |
 | **TYPECHECKS (not run)** | 1 | `entry/example` — its `svc_entry` takes a `BootInfo` a host cannot fabricate |
 | **NO ENTRY** | 18 of 22 | boot-order services with no `entry.goose` at all (`BOOT_REHEARSAL.md`) |
@@ -64,5 +64,5 @@ startable as a **process**, and most of the corpus is exactly that.
 
 ## The one-line state of the layer
 
-**32 drivers, 1,180 assertions, 0 failed; 25 services of which 17 need no kernel call; 3 start, 1
+**33 drivers, 1,253 assertions, 0 failed; 25 services of which 17 need no kernel call; 3 start, 1
 hangs, 18 have no entry point; nothing has been started by the kernel.**

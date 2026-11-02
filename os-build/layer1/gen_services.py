@@ -115,8 +115,16 @@ def service_dirs():
 
 
 def test_for(name, rows):
-    """The native run that drives this service, if there is one."""
+    """The native run that drives this service, if there is one.
+
+    Two ways a driver can belong to a service: its file name says so (`t65_fs` drives
+    `fs`), or it imports the service and drives it under another name (`t77_gaps` drives
+    four services the name never mentions). The name alone silently reported those four
+    as undriven while `t77` was green, so the import graph is consulted as well. The
+    name match wins when both apply: it is the more specific claim.
+    """
     best = None
+    best_by_import = None
     for label, (status, ok, bad, _note) in rows.items():
         if not label.startswith("tests/"):
             continue
@@ -125,7 +133,12 @@ def test_for(name, rows):
         if stem == name or stem.startswith(name + "_") or name in stem.split("_"):
             if best is None or ok > rows[best][1]:
                 best = label
-    return best
+            continue
+        reach = closure(["tests/" + base + ".goose"])
+        if any(r.startswith(name + "/") for r in reach):
+            if best_by_import is None or ok > rows[best_by_import][1]:
+                best_by_import = label
+    return best or best_by_import
 
 
 def classify(names):
