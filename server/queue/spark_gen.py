@@ -109,7 +109,8 @@ def build_prompt(product, timestamp, correction=None):
         f'  "timestamp": "{timestamp}",',
         '  "observations": [{"category": "<one of the categories below>", '
         '"description": "<what is visible>", "evidence": "<where in the '
-        'frame>", "confidence": <0..1 or null>}],',
+        'frame>", "confidence": <0..1 or null>, "region": {"x": <0..1000>, '
+        '"y": <0..1000>, "w": <0..1000>, "h": <0..1000>} or null}],',
         '  "assessment": {"category": "<one of the categories below>", '
         '"summary": "<one or two sentences>", "uncertainty": ["<anything '
         'unclear>"], "requires_human_review": <true|false>},',
@@ -122,6 +123,14 @@ def build_prompt(product, timestamp, correction=None):
         "awareness only: never dispatch, never claim certainty beyond "
         "what is visible. When unsure, use indeterminate and set "
         "requires_human_review to true.",
+        "Region gives the bounding box of the observation's subject "
+        "in 0-1000 relative frame coordinates (x, y is the top-left "
+        "corner); use null when the observation concerns the whole "
+        "scene.",
+        "Assessment rule: set the assessment category to the "
+        "strongest observation category your visible evidence "
+        "supports; use a hedge category only when no specific "
+        "observation category is supported.",
         "If people are visible, describe each person's visible "
         "appearance in the observations — clothing, build, and "
         "visible marks. Report any visible marks (tattoos, scars, "
@@ -132,6 +141,13 @@ def build_prompt(product, timestamp, correction=None):
         "hairline\". Marks describe visible appearance only — never "
         "infer identity, a name, or a cause from them.",
     ]
+    if product == "vigiles":
+        lines.append(
+            'Category note: "crowd gathered" means a stationary '
+            "assembled crowd (a rally, an audience, a queue, onlookers "
+            'around an event). Ordinary pedestrian traffic in motion is '
+            '"normal activity".'
+        )
     if correction:
         lines += [
             "CORRECTION: a previous reply for this same frame failed "
