@@ -1,0 +1,43 @@
+$ python3 -m unittest discover -s tests/queue-python
+......................trio_agent: store=injected namespace=trio-test
+...........patrol: PAUSED — budget reserve reached; filing nothing
+......................................................................................................................../private/tmp/oc500-s8/tests/queue-python/test_models.py:72: ResourceWarning: unclosed file <_io.TextIOWrapper name='/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/tmpp0o4kmyl/receipts.jsonl' mode='r' encoding='UTF-8'>
+  lines = open(receipts).read().strip().splitlines()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.................................................................trio_agent: store=injected namespace=trio-test
+trio_agent: relay notify failed (ignored): <urlopen error [Errno 61] Connection refused>
+trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
+.trio_agent: store=injected namespace=trio-test
+trio_agent: trio-d89e4f02685c609758b43e46969da382: model output failed validation (product: missing or not a non-empty string; timestamp: missing or not a string; observations: missing or not an array; assessment: missing or not an object; processing: missing or not an object); one correction retry
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/case.py:632: ResourceWarning: unclosed <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 49631)>
+  function, args, kwargs = self._cleanups.pop()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.trio_agent: store=injected namespace=trio-test
+trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/case.py:632: ResourceWarning: unclosed <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 49635)>
+  function, args, kwargs = self._cleanups.pop()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+.trio_agent: store=injected namespace=trio-test
+trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/case.py:632: ResourceWarning: unclosed <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 49637)>
+  function, args, kwargs = self._cleanups.pop()
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+..trio_agent: store=injected namespace=trio-test
+trio_agent: trio-d89e4f02685c609758b43e46969da382: model output failed validation (product: missing or not a non-empty string; timestamp: missing or not a string; observations: missing or not an array; assessment: missing or not an object; processing: missing or not an object); one correction retry
+trio_agent: trio-d89e4f02685c609758b43e46969da382: correction retry validated
+trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
+.trio_agent: store=injected namespace=trio-test
+trio_agent: trio-d89e4f02685c609758b43e46969da382: model output failed validation (product: missing or not a non-empty string; timestamp: missing or not a string; observations: missing or not an array; assessment: missing or not an object; processing: missing or not an object); one correction retry
+.trio_agent: store=injected namespace=trio-test
+trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
+.trio_agent: store=injected namespace=trio-test
+trio_agent: trio-d89e4f02685c609758b43e46969da382: model output failed validation (product: missing or not a non-empty string; timestamp: missing or not a string; observations: missing or not an array; assessment: missing or not an object; processing: missing or not an object); one correction retry
+.trio_agent: store=injected namespace=trio-test
+trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
+trio_agent: trio-d89e4f02685c609758b43e46969da382: result already present — skipped, not re-billed
+.....................................................................
+----------------------------------------------------------------------
+Ran 296 tests in 4.307s
+
+OK
+exit: 0
