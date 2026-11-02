@@ -1,13 +1,14 @@
-# THE MODEL BENCH — neuron surgery as a Meta OS program
+# META NERVUS — neuron surgery as a Meta OS system
 
 Boss's idea, 2026-11-02: incorporate his neuron-surgery work
 (public repo Mrfentmen/neuron-surgery — single-neuron steering
 in IBM Granite models, ~9,400 steered generations, 1,500-neuron
 layer sweeps, dose windows, the audited layer curve) into Meta
 OS as a program that BOTH a user and the OS's own agents
-(OpenCode included) can drive. Product name: the boss's to
-settle. Placement: STANDALONE SYSTEM (boss's ruling,
-2026-11-02) — not inside Science Lab.
+(OpenCode included) can drive. Name: META NERVUS (boss's
+ruling, 2026-11-02 — nervus, the nerve: the system that works
+on the model's nerves). Placement: STANDALONE SYSTEM (boss's
+ruling, 2026-11-02) — not inside Science Lab.
 
 ## What it is (his formula)
 
@@ -39,7 +40,7 @@ Two doors, one room, one ledger.
 ## The instrument tray (boss's order: "tons of the tools we
 made")
 
-The bench does not start empty. It ships with the boss's own
+Nervus does not start empty. It ships with the boss's own
 existing instruments wired in as its tray — the MCP servers
 and repo tools he already built and uses, sorted by the job
 they do at the bench:
@@ -70,7 +71,7 @@ callable by the user door and the agent door alike.
 
 ## The second job: breaking models down
 
-The bench also shrinks models. From the layer and neuron maps:
+Nervus also shrinks models. From the layer and neuron maps:
 find what does not move behavior, cut it (prune, quantise),
 re-evaluate, and keep a cut only when the before/after receipts
 prove the model still does its job. A smaller local model,
@@ -80,12 +81,12 @@ what makes the local pack practical on smaller machines.
 ## The method is the program's rules (from his repo, verbatim
 discipline)
 
-- Dose windows are real: inert, persona, collapse. The bench
+- Dose windows are real: inert, persona, collapse. Nervus
   labels which zone a steer landed in; it never calls a dose
   "a little" or "a lot" without the window.
 - Layer curves before claims. No single-layer storytelling.
 - Probe dependence: results belong to (neuron, probe) pairs.
-  The bench refuses to report a neuron without its probe.
+  Nervus refuses to report a neuron without its probe.
 - The subspace correction: when the effect is a low-dimensional
   subspace, the record says subspace, never "a neuron".
 - Composition failure is a first-class warning: two good steers
@@ -114,8 +115,8 @@ loops (Imperium patrol, Musica studio, Officina faber).
 
 ## First build (v1)
 
-- [x] Spec (this file). Placement settled: standalone system
-      (boss, 2026-11-02). Name still the boss's to give.
+- [x] Spec (this file). Placement settled: standalone system.
+      Name settled: META NERVUS (boss, 2026-11-02).
 - [ ] The operation set written as tool contracts (sweep,
       steer, ablate, evaluate-delta, map-layers) with the
       ledger record shape.
