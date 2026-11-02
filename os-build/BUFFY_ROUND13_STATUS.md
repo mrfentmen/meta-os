@@ -13,16 +13,17 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | F — Aegis KEV cross-check | **COMPLETE** | 25 / 25; 0 findings to check, feed 2026.10.30 (1,766 entries), control passed | `os-build/round13/aegis/SECTION_F.md` |
 | G — secret hygiene counts | **COMPLETE** | 25 / 25; 241 matches (240 env mentions, **1 bearer review item**), self-check passed | `os-build/round13/aegis/SECTION_G.md` |
 | H — surface/unicode | **COMPLETE** | 25 / 25; 16 scanned (1.9 M chars), 9 missing artifacts, **0 findings** | `os-build/round13/aegis/SECTION_H.md` |
-| I — Aegis OSINT | NOT STARTED | 0 / 25 | — |
-| J — Aegis OPSEC | NOT STARTED | 0 / 25 | — |
+| I — Aegis OSINT | **COMPLETE** | 25 / 25; 15 passes run, 9 not implementable, 1 unavailable; **2 findings** (NXDOMAIN, soft 404) | `os-build/round13/aegis/SECTION_I.md` |
+| J — Aegis OPSEC | **COMPLETE** | 25 / 25; 20 decided, 3 not inspectable, 2 n/a; **4 failures, 6 findings** | `os-build/round13/aegis/SECTION_J.md` |
 | K–O — agent runtime | NOT STARTED | 0 / 125 | — |
 | P — Hands-Free | NOT STARTED | 0 / 25 | — |
 | Q–R — Nuntius | NOT STARTED | 0 / 50 | — |
 | S — userspace | NOT STARTED | 0 / 25 | — |
 | T — federation + closeout | NOT STARTED | 0 / 25 | — |
 
-**Sections A–H:** 185 / 185 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
-(E), 9 missing artifacts (H), 1 review item (G), 4 real observations.
+**Sections A–J:** 235 / 235 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
+(E), 9 missing artifacts (H), 9 unimplemented OSINT angles (I), 1 review item (G), 4 real
+observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J).
 
 ## Method
 
@@ -37,6 +38,8 @@ be regenerated:
 | `os-build/layer1/kev_crosscheck.py` | KEV flags per finding, feed hash, positive control |
 | `os-build/layer1/secret_counts.py` | secret-shape counts over commit ranges and trees, with a self-check |
 | `os-build/layer1/surface_passes.mjs` | surface + confusable passes over named artifacts |
+| `os-build/layer1/osint_passes.py` | OSINT angles parsed from the task list, counts only |
+| `os-build/layer1/opsec_checks.py` | 25 OPSEC checks, mechanical where a command can decide |
 
 ## Limits carried forward
 

@@ -1,0 +1,28 @@
+task      angle                                    domain                       status           result
+R13-201   certificate-transparency issuers         meta-os.pages.dev            SCANNED          {"status": "SCANNED", "certificates": 0, "distinct_issuers": 0, "distinct_names": 0}
+R13-202   certificate-transparency expiry windows  muse-relay-live.pages.dev    SCANNED          {"status": "SCANNED", "certificates": 2, "expired": 0}
+R13-203   DNS record types                         clipraiders.com              SCANNED          {"status": "SCANNED", "rcode": 3, "answers": 0, "record_type_count": 0}
+R13-204   DNS unexpected records                   watchpeoplefight.com         SCANNED          {"status": "SCANNED", "rcode": 0, "answers": 1, "record_type_count": 1}
+R13-205   subdomain names in public CT logs        meta-os.pages.dev            SCANNED          {"status": "SCANNED", "certificates": 0, "note": "crt.sh returned 404 (no rows)"}
+R13-206   response-header names present or absent  muse-relay-live.pages.dev    SCANNED          {"status": "SCANNED", "http": 200, "header_count": 13, "security_headers_present": 2, "has_server_header": tru
+R13-207   search-index visibility                  clipraiders.com              NOT_IMPLEMENTED  {}
+R13-208   store page public text                   watchpeoplefight.com         SCANNED          {"status": "SCANNED", "http": 200, "bytes": 41621, "words": 889, "links": 71, "title_chars": 45}
+R13-209   listing page public text                 meta-os.pages.dev            SCANNED          {"status": "SCANNED", "http": 200, "bytes": 9894, "words": 802, "links": 3, "title_chars": 38}
+R13-210   TLS certificate SAN entries checked agai muse-relay-live.pages.dev    NOT_IMPLEMENTED  {}
+R13-211   certificate-transparency first-seen date clipraiders.com              SCANNED          {"status": "SCANNED", "certificates": 0, "first_not_before": null, "last_not_before": null}
+R13-212   DNS TXT record types present (SPF, DMARC watchpeoplefight.com         SCANNED          {"status": "SCANNED", "txt_answers": 1, "spf": false, "note": "TXT content is not kept; presence only"}
+R13-213   public release notes exposure            meta-os.pages.dev            SCANNED          {"status": "SCANNED", "http": 200, "bytes": 9894, "words": 802, "links": 3, "title_chars": 38}
+R13-214   public image metadata (counts only)      muse-relay-live.pages.dev    NOT_IMPLEMENTED  {}
+R13-215   domain registration public fields (count clipraiders.com              UNAVAILABLE      {"status": "UNAVAILABLE", "code": 404}
+R13-216   hosting headers                          watchpeoplefight.com         SCANNED          {"status": "SCANNED", "http": 200, "header_count": 24, "security_headers_present": 5, "has_server_header": tru
+R13-217   error pages                              meta-os.pages.dev            SCANNED          {"status": "SCANNED", "http": 200, "bytes": 9894, "custom_page": true}
+R13-218   robots/sitemap contents                  muse-relay-live.pages.dev    SCANNED          {"status": "SCANNED", "robots_http": 200, "robots_disallow_rules": 0, "sitemap_http": 200, "sitemap_urls": 0}
+R13-219   public bucket or upload paths            clipraiders.com              NOT_IMPLEMENTED  {}
+R13-220   old deployment URLs still live           watchpeoplefight.com         NOT_IMPLEMENTED  {}
+R13-221   public test pages still live             meta-os.pages.dev            NOT_IMPLEMENTED  {}
+R13-222   public logs reachable by URL             muse-relay-live.pages.dev    NOT_IMPLEMENTED  {}
+R13-223   Wayback Machine snapshot inventory, coun clipraiders.com              SCANNED          {"status": "SCANNED", "snapshots": 0, "years": 0, "by_year": {}}
+R13-224   public key-shaped filenames (names only) watchpeoplefight.com         NOT_IMPLEMENTED  {}
+R13-225   public backup-shaped filenames (names on meta-os.pages.dev            NOT_IMPLEMENTED  {}
+
+tasks=25 NOT_IMPLEMENTED=9 SCANNED=15 UNAVAILABLE=1

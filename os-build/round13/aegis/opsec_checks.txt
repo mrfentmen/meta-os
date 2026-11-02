@@ -1,0 +1,27 @@
+R13-226   commit author metadata                               FAIL             {"commits": 1896, "distinct_author_emails": 7, "distinct_author_names": 7, "consumer_mail_commits": 1422, "by_
+R13-227   file paths in screenshots                            NOT_INSPECTABLE  {"image_files": 182, "why": "pixel content cannot be decided by a command; a human has to look"}
+R13-228   usernames in demo recordings                         NOT_INSPECTABLE  {"recording_files": 49}
+R13-229   local paths in committed logs                        CHECKED          {"matches": 52, "files": 4, "files_read": 52}
+R13-230   timestamps that leak routine                         INFO             {"commits_by_hour_utc": {"11": 34, "10": 64, "15": 19, "14": 36, "09": 350, "08": 222, "07": 131, "06": 75, "0
+R13-231   branch names that leak plans                         FAIL             {"branches": 127, "flagged": 2}
+R13-232   status file wording                                  PASS             {"proven_claims": 0, "log_files_named": 0}
+R13-233   README wording on unfinished features                INFO             {"unbuilt_markers": 0, "note": "markers present are the honest form; zero would be the worry"}
+R13-234   screenshot corners (tabs, docks, names)              NOT_INSPECTABLE  {"image_files": 182}
+R13-235   demo script wording                                  CHECKED          {"home_path": {"matches": 0, "files": 0, "files_read": 6}, "email": {"matches": 0, "files": 0, "files_read": 6
+R13-236   receipt files in the repo                            PASS             {"receipt_named_files": 14, "purchase_shaped": 0, "note": "the 14 are drill/hosted proof receipts, not payment
+R13-237   test fixtures with real-looking data                 CHECKED          {"email": {"matches": 5, "files": 2, "files_read": 408}, "home_path": {"matches": 4, "files": 2, "files_read":
+R13-238   bus message wording (public viewer)                  CHECKED          {"matches": 2, "files": 1, "files_read": 1}
+R13-239   site text on the live page                           CHECKED          {"home_path": {"matches": 0, "files": 0, "files_read": 1}, "email": {"matches": 0, "files": 0, "files_read": 1
+R13-240   store listing wording                                CHECKED          {"home_path": {"matches": 0, "files": 0, "files_read": 1}}
+R13-241   goal file wording                                    NOT_APPLICABLE   {"files": 0}
+R13-242   skill file wording                                   NOT_APPLICABLE   {"files": 0, "why": "the skills directory is outside this repository"}
+R13-243   connector doc wording                                CHECKED          {"home_path": {"matches": 0, "files": 0, "files_read": 16}, "email": {"matches": 0, "files": 0, "files_read": 
+R13-244   error messages that print local paths                CHECKED          {"matches": 0, "files": 0, "files_read": 193}
+R13-245   ledger entries that print values                     PASS             {"entries": 7, "entries_with_value_shape": 0}
+R13-246   alarm wording (small vs big)                         PASS             {"quiet_class": true, "alarm_class": true, "big_severities": ["medium", "high", "critical"]}
+R13-247   finding severity sizing                              INFO             {"by_severity": {"medium": 3, "low": 3, "info": 1}, "entries": 7}
+R13-248   finding dedupe on re-sweep                           FAIL             {"dedupe_logic_present": false, "note": "presence of the key function; a re-sweep count needs two live runs"}
+R13-249   finding closure records                              FAIL             {"closure_field_present": false}
+R13-250   ledger append-only check                             PASS             {"lines_added": 7, "lines_removed": 0}
+
+tasks=25 CHECKED=8 FAIL=4 INFO=3 NOT_APPLICABLE=2 NOT_INSPECTABLE=3 PASS=5
