@@ -1,0 +1,16 @@
+== toolchain ==
+cargo 1.101.0-nightly (31d3246e0 2026-10-27)
+== userspace (hello/sleeper/crasher/readkey) ==
+-- bin hello base 0x600000000000
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+-- bin sleeper base 0x610000000000
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+-- bin crasher base 0x620000000000
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+-- bin readkey base 0x630000000000
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+== kernel ==
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+Created bootimage for `metaos-kernel` at `/private/tmp/oc500-k4/kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin`
+-rwxr-xr-x@ 1 test  wheel  11218944 Nov  2 11:16 kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin
