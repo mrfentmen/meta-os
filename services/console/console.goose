@@ -268,6 +268,10 @@ fn history_init() {
     while i < HISTORY_SLOTS * 256 { history_storage.push(0); i = i + 1; }
 }
 
+// The history ring's depth, computed from the ring itself so a resize cannot drift from
+// the constant. t103 drives this against HISTORY_SLOTS.
+fn history_slots() -> i64 { return msg_capacity(history); }
+
 fn print_banner() {
     put_str("Meta OS console (Layer 4)\n");
     put_str("No shell attached yet: B-L1-87. Enter keeps history only.\n");
