@@ -1,0 +1,43 @@
+== libraries and non-entry services (services/root.goose)
+   (not runnable as a program: no main; exercised through the drivers below)
+
+== drivers (services/tests)
+  RUNS    tests/t104_agenthost_r11 exit 0  pass=42 fail=0
+  RUNS    tests/t105_audit_r11   exit 0  pass=25 fail=0
+  RUNS    tests/t106_board_r11   exit 0  pass=39 fail=0
+  RUNS    tests/t107_bootlog_r11 exit 0  pass=16 fail=0
+  RUNS    tests/t109_callmatrix_r11 exit 0  pass=29 fail=0
+  RUNS    tests/t110_console_r11 exit 0  pass=24 fail=0
+  RUNS    tests/t111_dashboard_r11 exit 0  pass=35 fail=0
+  RUNS    tests/t112_devices_r11 exit 0  pass=44 fail=0
+  RUNS    tests/t114_dhcp_r11    exit 0  pass=41 fail=0
+  FAILS   tests/t115_display_r11 exit 1  pass=41 fail=7  FAIL newline is accepted
+  RUNS    tests/t116_dns_r11     exit 0  pass=50 fail=0
+  RUNS    tests/t117_dock_r11    exit 0  pass=67 fail=0
+  RUNS    tests/t119_fs_r11      exit 0  pass=46 fail=0
+  RUNS    tests/t121_input_r11   exit 0  pass=33 fail=0
+  RUNS    tests/t122_logd_r11    exit 0  pass=23 fail=0
+  RUNS    tests/t123_logfmt_r11  exit 0  pass=25 fail=0
+  RUNS    tests/t125_net_r11     exit 0  pass=55 fail=0
+  RUNS    tests/t126_netcfg_r11  exit 0  pass=61 fail=0
+  RUNS    tests/t127_notify_r11  exit 0  pass=48 fail=0
+  RUNS    tests/t129_session_r11 exit 0  pass=48 fail=0
+  RUNS    tests/t130_settings_r11 exit 0  pass=33 fail=0
+  RUNS    tests/t131_shell_r11   exit 0  pass=23 fail=0
+  FAILS   tests/t132_socket_r11  exit 1  pass=46 fail=5  FAIL sk_bind: a closed handle is E_STATE
+  RUNS    tests/t134_storage_r11 exit 0  pass=38 fail=0
+  RUNS    tests/t135_supervisor_r11 exit 0  pass=79 fail=0
+  RUNS    tests/t136_time_r11    exit 0  pass=41 fail=0
+  RUNS    tests/t137_timesync_r11 exit 0  pass=26 fail=0
+  RUNS    tests/t138_updater_r11 exit 0  pass=47 fail=0
+  RUNS    tests/t139_updater_client_r11 exit 0  pass=51 fail=0
+
+== entry points (services/*/entry.goose)
+  BUILDS  entry/bootlog          (svc_entry; not run: no supervisor)
+  BUILDS  entry/console          (svc_entry; not run: no supervisor)
+  TYPECHECKS entry/example       (svc_entry takes BootInfo; not run)
+  BUILDS  entry/logd             (svc_entry; not run: no supervisor)
+  BUILDS  entry/time             (svc_entry; not run: no supervisor)
+
+ran: 29 programs  RUNS=27  FAILS=2  built-not-run=5
+failed: tests/t115_display_r11 (exit 1) tests/t132_socket_r11 (exit 1)
