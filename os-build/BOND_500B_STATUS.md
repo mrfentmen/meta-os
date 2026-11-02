@@ -208,3 +208,36 @@ Section 5 verification: **203 Science Lab tests pass, 0 fail**
 
 Section 6 verification: **228 Science Lab tests pass, 0 fail**
 (`python3 -m unittest discover -s tests/science-lab`).
+
+## Section 7 — Science Lab — compute, cycle, ladder (CB2-151..175) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-151 | `test_compute_rmse.py` | identical series -> zero error |
+| CB2-152 | `test_compute_rmse.py` | known two-point RMSE matches to 6 places |
+| CB2-153 | `test_compute_rmse.py` | different lengths refused |
+| CB2-154 | `test_compute_rmse.py` | empty series refused |
+| CB2-155 | `test_compute_run_chem.py` | 5-row fixture reproduces exact RMSE |
+| CB2-156 | `test_compute_run_chem.py` | missing target column named |
+| CB2-157 | `test_compute_rows.py` | non-numeric cell reports row index |
+| CB2-158 | `test_compute_rows.py` | row order stable through parse |
+| CB2-159 | `test_cycle_record.py` | new cycle validates against schema |
+| CB2-160 | `test_cycle_transitions.py` | each forward transition accepted |
+| CB2-161 | `test_cycle_transitions.py` | backwards transition rejected |
+| CB2-162 | `test_cycle_transitions.py` | skipped phase rejected |
+| CB2-163 | `test_cycle_prereg.py` | same question/plan -> same hash |
+| CB2-164 | `test_cycle_prereg.py` | changed plan -> different hash |
+| CB2-165 | `test_cycle_prereg.py` | edited plan detected by mismatch |
+| CB2-166 | `test_ladder_levels.py` | level 0 lists required evidence |
+| CB2-167 | `test_ladder_levels.py` | complete evidence promotes 1 -> 2 |
+| CB2-168 | `test_ladder_cap.py` | automated path stops at level 3 |
+| CB2-169 | `test_ladder_cap.py` | fake fixture never promotes |
+| CB2-170 | `test_ladder_levels.py` | removing evidence demotes level |
+| CB2-171 | `test_compute_stats.py` | mean/count hand-checked |
+| CB2-172 | `test_compute_stats.py` | constant series has zero variance |
+| CB2-173 | `test_cycle_prereg.py` | question whitespace collapses before hashing |
+| CB2-174 | `test_cycle_record.py` | cycle dict round-trip |
+| CB2-175 | `test_ladder_levels.py` | level names match 0-6 ladder |
+
+Section 7 verification: **253 Science Lab tests pass, 0 fail**
+(`python3 -m unittest discover -s tests/science-lab`).

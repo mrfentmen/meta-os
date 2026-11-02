@@ -518,15 +518,76 @@ def _resolve_lab_relative(path):
     return candidate
 
 
+def rmse(actual, predicted):
+    """Root-mean-square error; refuses empty or mismatched series."""
+    actual = list(actual)
+    predicted = list(predicted)
+    if not actual or not predicted:
+        raise ValueError("rmse requires non-empty series")
+    if len(actual) != len(predicted):
+        raise ValueError(
+            "rmse requires equal-length series, got %d and %d"
+            % (len(actual), len(predicted)))
+    total = 0.0
+    for a, p in zip(actual, predicted):
+        diff = float(a) - float(p)
+        total += diff * diff
+    return math.sqrt(total / len(actual))
+
+
+def summary_stats(values):
+    """Count, mean, population variance, and standard deviation."""
+    values = [float(v) for v in values]
+    if not values:
+        raise ValueError("summary_stats requires non-empty values")
+    return {
+        "count": len(values),
+        "mean": statistics.mean(values),
+        "variance": statistics.pvariance(values),
+        "stddev": statistics.pstdev(values),
+    }
+
+
+def parse_numeric_rows(rows, column):
+    """Parse one column into ordered (index, value) pairs.
+
+    Non-numeric or missing cells are reported by row index, never
+    silently replaced.
+    """
+    if not isinstance(rows, (list, tuple)):
+        raise TypeError("rows must be a list")
+    if not isinstance(column, str) or not column:
+        raise ValueError("parse_numeric_rows requires a column name")
+    pairs = []
+    bad_rows = []
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            bad_rows.append(index)
+            continue
+        cell = row.get(column)
+        if cell is None or (isinstance(cell, str) and not cell.strip()):
+            bad_rows.append(index)
+            continue
+        try:
+            pairs.append({"index": index, "value": float(cell)})
+        except (TypeError, ValueError):
+            bad_rows.append(index)
+    return {"rows": pairs, "bad_rows": bad_rows}
+
+
 def run_chem(plan=None, **kwargs):
     """Exact monoisotopic mass from a formula, or an honest CSV statistic.
 
     Formula mode: plan carries {"formula": "H2O"}.
     Dataset mode: plan carries {"dataset": <lab-relative csv path>,
     "column": <header name>, "n_rows": 10, "statistic": "mean"}.
+    Rows mode: plan carries {"rows": [...], "target_column": ...,
+    "prediction_column": ...} and returns the RMSE over those rows.
     """
     merged = dict(plan or {})
     merged.update(kwargs)
+    if merged.get("rows") is not None:
+        return _run_chem_rows(merged)
     if "dataset" in merged and merged["dataset"]:
         return _run_chem_dataset(merged)
     formula = merged.get("formula")
@@ -547,6 +608,50 @@ def run_chem(plan=None, **kwargs):
         % (formula.strip(),),
         data_source=merged.get("data_source")
         or "monoisotopic masses (IUPAC)")
+
+
+def _run_chem_rows(merged):
+    rows = merged.get("rows")
+    target = merged.get("target_column")
+    prediction = merged.get("prediction_column")
+    if not isinstance(rows, (list, tuple)):
+        raise ValueError("run_chem rows mode requires a list of rows")
+    if not isinstance(target, str) or not target.strip():
+        raise ValueError("run_chem rows mode requires target_column")
+    if not isinstance(prediction, str) or not prediction.strip():
+        raise ValueError("run_chem rows mode requires prediction_column")
+    for index, row in enumerate(rows):
+        if not isinstance(row, dict):
+            raise ValueError("run_chem row %d is not an object" % index)
+        if target not in row:
+            raise ValueError(
+                "run_chem target column %r missing at row %d"
+                % (target, index))
+        if prediction not in row:
+            raise ValueError(
+                "run_chem prediction column %r missing at row %d"
+                % (prediction, index))
+    actual = parse_numeric_rows(rows, target)
+    predicted = parse_numeric_rows(rows, prediction)
+    bad = sorted(set(actual["bad_rows"] + predicted["bad_rows"]))
+    if bad:
+        raise ValueError(
+            "run_chem non-numeric cell at row(s) %s" % (bad,))
+    actual_values = [p["value"] for p in actual["rows"]]
+    predicted_values = [p["value"] for p in predicted["rows"]]
+    result = rmse(actual_values, predicted_values)
+    text = "rmse(%r vs %r, %d rows) = %r" % (
+        target, prediction, len(actual_values), result)
+    return _dept_record(
+        "chem", merged.get("research_question")
+        or "How closely do predictions track the target over %d rows?"
+        % len(rows),
+        {"target_column": target, "prediction_column": prediction,
+         "rows_used": len(rows), "rmse": result},
+        text, result, merged,
+        original_data=merged.get("original_data")
+        or "in-memory fixture rows (%d)" % len(rows),
+        data_source=merged.get("data_source") or "caller-supplied fixture rows")
 
 
 def _run_chem_dataset(merged):
