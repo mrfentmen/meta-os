@@ -1905,6 +1905,23 @@ pub fn format_brief_time(ts: i64) -> String {
     )
 }
 
+/// OS-103: the age label for one environment line.
+///
+/// `as_of` is the Unix timestamp for when the line's source was
+/// read. A known time formats as `" (as of YYYY-MM-DD HH:MM ET)"`
+/// through `format_brief_time`; `None` yields
+/// `" (snapshot time not reported)"`, so a field whose age is
+/// unknown is never silently presented as current. Python
+/// returns the not-reported label for any non-numeric `as_of`;
+/// Rust timestamps are numeric by type, so the caller passes
+/// `None` for those cases.
+pub fn environment_age_label(as_of: Option<i64>) -> String {
+    match as_of {
+        Some(ts) => format!(" (as of {})", format_brief_time(ts)),
+        None => " (snapshot time not reported)".to_string(),
+    }
+}
+
 /// STR-002 image extensions: the digest lists what the pointer
 /// itself names, so only these extensions count as screenshots.
 /// A `.txt`, `.pdf`, or extension-less pointer is a file share,
@@ -4020,6 +4037,25 @@ mod tests {
         assert_eq!(
             find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(1793000100)),
             None
+        );
+    }
+
+    #[test]
+    fn environment_age_label_known_and_unknown() {
+        // 2026-10-30 08:00 ET (daylight time) and 2026-01-15 08:00
+        // ET (standard time): the label carries the formatted time.
+        assert_eq!(
+            environment_age_label(Some(1793361600)),
+            " (as of 2026-10-30 08:00 ET)"
+        );
+        assert_eq!(
+            environment_age_label(Some(1768482000)),
+            " (as of 2026-01-15 08:00 ET)"
+        );
+        // Unknown age is never presented as current.
+        assert_eq!(
+            environment_age_label(None),
+            " (snapshot time not reported)"
         );
     }
 }
