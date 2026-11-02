@@ -1,0 +1,4 @@
+REFUSED: https://emergency.example.gov/dispatch -> dispatch URL host 'emergency.example.gov' is not loopback: the crew dispatches ONLY to the local SIM
+REFUSED: http://192.0.2.1/hook -> dispatch URL host '192.0.2.1' is not loopback: the crew dispatches ONLY to the local SIMULATED endpo
+ALLOWED: http://127.0.0.1:8935/dispatch-simulated
+ALLOWED: http://localhost:8935/dispatch-simulated
