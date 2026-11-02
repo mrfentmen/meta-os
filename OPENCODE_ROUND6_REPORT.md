@@ -74,6 +74,9 @@ needed; none used).
   7/7 in detached worktree /tmp/merge-tip2 (log
   /tmp/merge-tip2-gate.log, boot /tmp/gate-boot-k4GOIt). Covers the
   userspace-ABI/quitter/manifest window since 21f9be68.
+- `e5ce311b` (merge batch): GATE GREEN 7/7 in detached worktree
+  /tmp/merge-tip3 (log /tmp/merge-tip3-gate.log, boot
+  /tmp/gate-boot-CENl03).
 - No RED this window. Standing rule for the rest of the window:
   each new main tip gets one gate run + one line here.
 ## Blockers for Pax
