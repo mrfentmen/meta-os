@@ -158,21 +158,21 @@
    "watchCadenceMs": 900000
   },
   {
-   "name": "aegis",
-   "lane": "Meta Aegis \u2014 security sweeps over the boss's own ground",
-   "command": [
-    "true"
-   ],
+   "budget": {
+    "maxActions": 40,
+    "maxCalls": 60
+   },
    "capabilities": [
     "osv-check",
     "kev-check",
     "secret-hygiene",
     "unicode-security"
    ],
-   "budget": {
-    "maxActions": 40,
-    "maxCalls": 60
-   },
+   "command": [
+    "true"
+   ],
+   "lane": "Meta Aegis \u2014 security sweeps over the boss's own ground",
+   "name": "aegis",
    "owner": "boss"
   },
   {
@@ -192,6 +192,194 @@
    "lane": "Meta Nervus - model surgery bench (standalone system)",
    "name": "nervus",
    "owner": "boss"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "literature-watch",
+    "experiment-watch",
+    "verification-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "research-director",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "literature-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "literature-researcher",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "literature-watch",
+    "experiment-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "scientific-analyst",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "experiment-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "mathematics-researcher",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "experiment-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "chemistry-researcher",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "experiment-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "biology-researcher",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "experiment-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "physics-researcher",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "literature-watch",
+    "experiment-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "hypothesis-generator",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "experiment-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "computational-scientist",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "experiment-watch",
+    "verification-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "statistician",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "verification-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "scientific-critic",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "verification-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "independent-verifier",
+   "owner": "system: science-lab"
+  },
+  {
+   "budget": {
+    "maxWallMs": 3600000
+   },
+   "capabilities": [
+    "experiment-watch",
+    "verification-watch"
+   ],
+   "command": [
+    "true"
+   ],
+   "lane": "Science Lab (research)",
+   "name": "research-archivist",
+   "owner": "system: science-lab"
   }
  ]
 }
