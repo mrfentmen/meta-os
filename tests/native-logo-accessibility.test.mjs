@@ -3,64 +3,55 @@
 //
 // LOGO-NATIVE-4 (Del direction, Oct 30): VoiceOver state parity
 // for the web LOGO-1/LOGO-2 aria-pressed states, for the native
-// Logo panel. The web swatches toggle aria-pressed and the web
-// pause button toggles aria-pressed, but the native panel only
-// showed the state visually, so VoiceOver never heard which
-// preset was chosen or whether the loop was paused. Static
-// checks on the shipped Swift only: no Swift toolchain exists in
-// this sandbox, so no Mac build run is claimed. Heading, presets,
-// picker, value lines, slider, pause label, and the large-logo
-// note are untouched.
+// Logo panel: the chosen preset carried the isSelected trait and
+// the pause button a Paused/Playing value, so the spoken state
+// followed the stored state exactly.
+//
+// UPDATED 2026-11-01 (boss order): the LOGO-1 color section is
+// removed everywhere. The web swatches and their aria-pressed
+// toggles are gone with js/logo-color.js, and the native Logo
+// panel file (LogoColorPanel.swift) is deleted. What survives:
+// the web pause button still toggles aria-pressed (LOGO-2), and
+// LogoLoopView still speaks no state of its own (hidden from
+// accessibility, as before). These checks pin that split.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 
-const panel = readFileSync(
-  new URL("../native/Sources/MetaTrio/Views/LogoColorPanel.swift", import.meta.url),
-  "utf8",
-);
-const webColor = readFileSync(
-  new URL("../js/logo-color.js", import.meta.url),
-  "utf8",
-);
+const web = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const webAnimation = readFileSync(
   new URL("../js/logo-animation.js", import.meta.url),
   "utf8",
 );
+const loopView = readFileSync(
+  new URL("../native/Sources/MetaTrio/Views/LogoLoopView.swift", import.meta.url),
+  "utf8",
+);
+const panelExists = existsSync(
+  new URL("../native/Sources/MetaTrio/Views/LogoColorPanel.swift", import.meta.url),
+);
+const colorControlsExist = existsSync(
+  new URL("../js/logo-color.js", import.meta.url),
+);
 
-test("logo accessibility: web states being matched are the aria-pressed toggles", () => {
-  assert.ok(webColor.includes('swatch.setAttribute("aria-pressed", String(selected))'));
+test("logo accessibility: the web swatch states are gone with the color controls", () => {
+  assert.equal(colorControlsExist, false, "js/logo-color.js must stay deleted");
+  assert.ok(!web.includes("logo-swatch"), "no swatches remain in the web panel");
+  assert.ok(!web.includes("data-logo-color"), "no swatch color data remains");
+});
+
+test("logo accessibility: the web pause button still toggles aria-pressed", () => {
   assert.ok(webAnimation.includes('pauseButton.setAttribute("aria-pressed", String(paused))'));
+  assert.ok(web.includes('id="logo-pause"'), "pause button untouched");
 });
 
-test("logo accessibility: chosen preset carries isSelected, gated by the same match as its ring", () => {
-  assert.ok(
-    panel.includes(".accessibilityAddTraits(customHex.lowercased() == preset.hex ? .isSelected : [])"),
-    "chosen preset must carry isSelected, and no other preset must",
-  );
-  assert.ok(
-    panel.includes("lineWidth: customHex.lowercased() == preset.hex ? 2 : 0"),
-    "the white ring still keys on the same saved-hex match",
-  );
-  assert.ok(panel.includes(".accessibilityLabel(preset.name)"), "preset name label untouched");
+test("logo accessibility: the native Logo panel is removed with the color section", () => {
+  assert.equal(panelExists, false, "LogoColorPanel.swift must stay deleted");
+  assert.ok(!loopView.includes("accessibilityAddTraits"), "no preset trait remains in the loop view");
 });
 
-test("logo accessibility: pause button carries a Paused/Playing value from the stored pause flag", () => {
-  assert.ok(
-    panel.includes('.accessibilityValue(paused ? "Paused" : "Playing")'),
-    "pause button must speak its state from the same paused flag that drives its label",
-  );
-  assert.ok(panel.includes('paused ? "Resume logo" : "Pause logo"'), "pause label untouched");
-  assert.ok(panel.includes("paused.toggle()"), "pause action untouched");
-});
-
-test("logo accessibility: panel body otherwise untouched", () => {
-  assert.ok(panel.includes('PanelHeading(title: "Logo"'), "Logo heading untouched");
-  assert.ok(panel.includes('ColorPicker("Custom logo color"'), "custom picker untouched");
-  assert.ok(panel.includes('"Logo color: \\(customHex.uppercased())"'), "color value line untouched");
-  assert.ok(panel.includes('Button("Reset to product color")'), "reset button untouched");
-  assert.ok(panel.includes("Slider("), "speed slider untouched");
-  assert.ok(panel.includes('"Rotation speed: \\(min(100, max(0, speedPercent)))%"'), "speed value line untouched");
-  assert.ok(panel.includes('"Large logo stays in the web studio."'), "large-logo note untouched");
+test("logo accessibility: the loop view stays hidden from accessibility, as before", () => {
+  assert.ok(loopView.includes(".accessibilityHidden(true)"));
+  assert.ok(loopView.includes(".allowsHitTesting(false)"));
 });
