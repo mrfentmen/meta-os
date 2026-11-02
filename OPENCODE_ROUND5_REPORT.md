@@ -89,6 +89,16 @@ bytes not yet captured; kernel-lane blocker documented below)
   a sandbox-only path (/opt/muse/...); the drill carries the same
   three names as a /tmp-only stub (repo untouched) and runs
   TRIO_STORE=local, which never calls them.
-## R5-5 soak — TODO
+## R5-5 soak — DONE (73 min, exceeds the 10-min requirement)
+- One headless QEMU run on the R5 tree (readkey spawn held, same
+  config as K7): 73 minutes wall clock, killed cleanly by PID
+  afterwards. Log: os-build/logs/R5-soak-final.txt.
+- Throughout: the three userspace programs cycled at boot (HELLO,
+  sleeper sleep/wake/exit 0 x2, crasher killed in isolation),
+  console answered typed `status` (x2), `mem`, `ps` mid-run
+  (STATUS/tasks/mem-frames/ps-table lines in the log).
+- Pass: no panic, no hang (console answered at minute ~70),
+  no loader-refused, fault stayed isolated to the crasher
+  (single expected `task killed` line).
 ## R5-6 merge-watch — TODO
 ## What remains unverified — TODO
