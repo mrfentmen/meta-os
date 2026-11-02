@@ -6,10 +6,10 @@ driver(s) that import it, their measured result, the failure-specific driver if 
 the restart result. Native numbers: `os-build/layer1/run_native.sh` on this branch tip,
 **86 programs, 86 RUNS, 0 FAILS, 5 built-not-run, 3,804 assertions passed**.
 
-**Restart is not tested anywhere in this section.** A host run has no supervisor and no service
-process to kill: each driver is a single process that exits. The supervisor's restart policy is
-exercised as logic by `tests/t52_supervisor`, `tests/t83_sup_deep` and `tests/t92_sup_load`,
-but no service was killed and restarted. Rows say so rather than claiming a restart.
+**Restart is tested only where a host can start the service.** Three of the 38 directories have a
+runnable `main` (echo, heartbeat, mcp-host). Echo and heartbeat were killed and restarted with
+state behaviour recorded (`RESTART_PROOF.json`); mcp-host is named but not drilled. The other 35
+cannot be started by `services/supervisor.sh` at all and are filed in `RESTART_GAP.md`.
 
 **The audit is mechanical plus a file read.** It checks README presence, the manifest's own status
 word, and whether a driver imports the service; the service's header/status comment was read for
@@ -43,7 +43,7 @@ owed, not claimed.
 | `display` | yes | WRITTEN | `tests/t103_limits_rest`, `tests/t56_input_display`, `tests/t79_limit_drivers` (102p/0f) | `tests/t103_limits_rest` | NOT TESTED (no host supervisor) | contract read still owed |
 | `dns` | yes | WRITTEN | `tests/t116_dns_r11`, `tests/t57_dhcp_dns`, `tests/t79_limit_drivers` (137p/0f) | `tests/t79_limit_drivers` | NOT TESTED (no host supervisor) | contract read still owed |
 | `dock` | yes | WRITTEN | `tests/t117_dock_r11`, `tests/t88_dock`, `tests/t93_face_walkthrough`, `tests/t94_face_failures` (279p/0f) | `tests/t94_face_failures` | NOT TESTED (no host supervisor) | contract read still owed |
-| `echo` | yes | WRITTEN | none | untested | NOT TESTED (no host supervisor) | no native driver; no failure-specific driver |
+| `echo` | yes | WRITTEN | none | untested | PASS — killed/restarted (`RESTART_PROOF.json`) | no native driver; no failure-specific driver |
 | `example` | yes | WRITTEN | none | untested | NOT TESTED (no host supervisor) | no native driver; no failure-specific driver |
 
 ## Cluster 4 — services 16–20
@@ -51,7 +51,7 @@ owed, not claimed.
 | service | README | manifest | drivers (measured) | failure path | restart | gaps |
 |---|---|---|---|---|---|---|
 | `fs` | yes | WRITTEN | `tests/t119_fs_r11`, `tests/t131_shell_r11`, `tests/t65_fs`, `tests/t66_shell`, `tests/t74_failure`, `tests/t76_demo_session`, `tests/t80_limit_drivers2`, `tests/t82_fs_deep` (317p/0f) | `tests/t74_failure` | NOT TESTED (no host supervisor) | contract read still owed |
-| `heartbeat` | yes | WRITTEN | none | untested | NOT TESTED (no host supervisor) | no native driver; no failure-specific driver |
+| `heartbeat` | yes | WRITTEN | none | untested | PASS — killed/restarted (`RESTART_PROOF.json`) | no native driver; no failure-specific driver |
 | `input` | yes | WRITTEN | `tests/t102_keycompose`, `tests/t121_input_r11`, `tests/t56_input_display` (120p/0f) | driver only | NOT TESTED (no host supervisor) | no failure-specific driver |
 | `logd` | yes | WRITTEN | `tests/t122_logd_r11`, `tests/t50_logd`, `tests/t71_rotate`, `tests/t74_failure`, `tests/t76_demo_session`, `tests/t81_logd_deep` (165p/0f) | `tests/t74_failure` | NOT TESTED (no host supervisor) | contract read still owed |
 | `logfmt` | yes | WRITTEN | `tests/t123_logfmt_r11`, `tests/t50_logd`, `tests/t96_logfmt` (94p/0f) | driver only | NOT TESTED (no host supervisor) | no failure-specific driver |
@@ -102,7 +102,8 @@ owed, not claimed.
 - manifest NOT BUILT: **3** (`devmgr`, `registry`, `sockets`)
 - assertions attributed through those drivers: **5853 passed, 0 failed**
 - failure-path tested by a dedicated driver: **24**; driver-only: **7**; untested: **7**
-- restart tested: **0**. Killed-and-restarted service state is **UNTESTED** in this lane.
+- restart tested: **2 of 38** (echo, heartbeat). **35 have no runnable `main`** (`RESTART_GAP.md`);
+  mcp-host is named but not drilled.
 
 **Named untested:** every restart cell above; every service row whose driver column says none;
 the failure path of every row that says "driver only"; and the contract-vs-code read for every

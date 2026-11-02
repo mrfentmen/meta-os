@@ -1,0 +1,17 @@
+{
+  "task": "R12-020",
+  "run": "fp-drill-2026-11-02T15-00-49-200Z",
+  "at": "2026-11-02T15:00:49.203Z",
+  "ok": true,
+  "manifests": 1,
+  "packages": [
+    "left-pad@1.3.0",
+    "is-number@7.0.0",
+    "ansi-regex@5.0.1"
+  ],
+  "checked": 3,
+  "findings": 0,
+  "status": "ran",
+  "source": "stub client, exact clean-answer text; this is a sweep/report drill, not an OSV result",
+  "failure": null
+}

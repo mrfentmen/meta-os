@@ -125,10 +125,12 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     }, agent.budget.maxWallMs);
     handle.done.then(() => clearTimeout(handle._budgetTimer));
   }
-  // STOP file honoured at checkpoints (spec S6).
+  // STOP file honoured at checkpoints (spec S6). The default stays 100 ms; a drill may ask for
+  // a tighter poll, and that choice is visible in the agent object rather than hidden in a test.
+  const stopPollMs = Number(agent.stopPollMs) > 0 ? Number(agent.stopPollMs) : 100;
   handle._stopPoll = setInterval(() => {
     if (fs.existsSync(path.join(runDir, "STOP"))) killAgent(handle, "stop-file");
-  }, 100);
+  }, stopPollMs);
   handle.done.then(() => clearInterval(handle._stopPoll));
   return handle;
 }

@@ -22,3 +22,20 @@
 {"ts":"2026-11-02T14:45:04.552Z","run":"aegis-hosted-2026-11-02T14-45-04-549Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
 {"ts":"2026-11-02T14:46:19.045Z","run":"aegis-hosted-2026-11-02T14-46-19-044Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
 {"ts":"2026-11-02T14:46:19.046Z","run":"aegis-hosted-2026-11-02T14-46-19-044Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T14:51:44.365Z","run":"aegis-hosted-2026-11-02T14-51-44-362Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T14:51:44.373Z","run":"aegis-hosted-2026-11-02T14-51-44-362Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T14:59:10.860Z","run":"history-2026-11-02T14-59-10-859Z","event":"history-scan","commits":1881,"from":"8bd9824b07e48b30f755efa343f5946349ee215d","to":"5e17fc794342fe16c13ecd2561aa8478a20d3503","categoryHits":14}
+{"ts":"2026-11-02T14:59:10.910Z","run":"findings-2026-11-02T14-59-10-908Z","event":"findings-receipts","sweepFindings":0,"written":0,"ledgerLines":1}
+{"ts":"2026-11-02T14:59:15.186Z","run":"liveness-2026-11-02T14-59-10-950Z","event":"liveness","targets":169,"live":168,"dead":0,"unreachable":1}
+{"ts":"2026-11-02T14:59:15.246Z","run":"opsec-2026-11-02T14-59-15-231Z","event":"opsec-checklist","materials":4,"passed":20,"failed":0,"screenshotsUnchecked":112,"findingsFiled":0}
+{"ts":"2026-11-02T15:00:49.203Z","run":"fp-drill-2026-11-02T15-00-49-200Z","event":"false-positive-drill","ok":true,"checked":3,"findings":0}
+{"ts":"2026-11-02T15:01:08.341Z","run":"aegis-2026-11-02T15-01-08-300Z","event":"sweep-start","root":"meta-os","manifests":23,"lockFiles":["Cargo.lock","kernel/Cargo.lock","os-build/userspace/user/Cargo.lock"],"queries":108,"sourceServer":"api.osv.dev"}
+{"ts":"2026-11-02T15:01:09.360Z","run":"aegis-2026-11-02T15-01-08-300Z","event":"sweep-done","checked":108,"batches":2,"unparseable":0,"findings":0,"bySeverity":{"info":0,"low":0,"medium":0,"high":0,"critical":0}}
+{"ts":"2026-11-02T15:01:09.795Z","run":"findings-2026-11-02T15-01-09-793Z","event":"findings-receipts","sweepFindings":0,"written":0,"ledgerLines":2}
+{"ts":"2026-11-02T15:01:09.798Z","run":"aegis-cycle-2026-11-02T15-01-08-260Z","event":"aegis-cycle","ok":true,"sweep":{"state":"ran","exit":0,"ms":1130,"route":"api.osv.dev directly (Pax written exception)","manifests":23,"queried":108,"findings":0,"stderr":""},"kev":{"state":"ran","exit":0,"ms":365,"checked":0,"flagged":0,"unchecked":0,"excluded":10,"stderr":""},"ledger":{"state":"ran","exit":0,"ms":42,"receiptsWritten":0,"sweepFindings":0,"ledgerLines":2,"stderr":""}}
+{"ts":"2026-11-02T15:06:11.250Z","run":"aegis-hosted-2026-11-02T15-06-11-249Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T15:06:11.252Z","run":"aegis-hosted-2026-11-02T15-06-11-249Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T15:07:38.192Z","run":"aegis-hosted-2026-11-02T15-07-38-191Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T15:07:38.194Z","run":"aegis-hosted-2026-11-02T15-07-38-191Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T15:09:55.853Z","run":"aegis-hosted-2026-11-02T15-09-55-852Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T15:09:55.855Z","run":"aegis-hosted-2026-11-02T15-09-55-852Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}

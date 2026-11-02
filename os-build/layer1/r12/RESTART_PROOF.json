@@ -1,0 +1,31 @@
+{
+  "task": "R12-027..R12-034 (restart half, services that run on a host)",
+  "at": "2026-11-02T15:08:30.066Z",
+  "ok": true,
+  "services": [
+    {
+      "service": "heartbeat",
+      "dir": "/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/restart-heartbeat-dmbRJf",
+      "ok": true,
+      "beforeKill": 2,
+      "afterKill": 2,
+      "afterRestart": 3,
+      "grewMs": 51,
+      "stoppedCleanly": true,
+      "recordedStarts": 2,
+      "recordedStops": 1,
+      "note": "append-only heartbeat.log survived the kill and grew after restart; STOP was the clean stop",
+      "wallMs": 2366
+    },
+    {
+      "service": "echo",
+      "dir": "/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/restart-echo-iuzzeO",
+      "ok": true,
+      "answeredBeforeKill": true,
+      "answeredAfterRestart": true,
+      "recordedStarts": 2,
+      "note": "no persistent state; the restart proves the process and its stdio contract, not state survival"
+    }
+  ],
+  "scope": "3 of 38 services have a main a host can run; only echo and heartbeat were drilled here. mcp-host is the third and is named in RESTART_GAP.md; the other 35 cannot be started by supervisor.sh."
+}

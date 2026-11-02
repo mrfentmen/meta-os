@@ -23,3 +23,19 @@ Only commands that ran. A row with no command is not here.
 - No model run: Nervus is the STUB runner, and its receipt says so.
 - No service restart: no host supervisor, nothing was killed and restarted.
 - No voice: the transcription surface is unresolved (R12-040).
+
+## Sections B–D additions
+
+| lane | command | result | evidence |
+|---|---|---|---|
+| History scan | `node aegis/history-scan.mjs` | 1,881 commits, 14 category hits, counts only | `os-build/aegis/HISTORY_SCAN.md` |
+| Finding receipts | `node aegis/findings-receipts.mjs` | 0 sweep findings, batch receipt | `os-build/aegis/FINDINGS_LEDGER.md` |
+| Liveness | `node aegis/check-liveness.mjs` | 169 targets: 168 LIVE, 0 DEAD, 1 UNREACHABLE | `os-build/aegis/LIVENESS.md` |
+| OPSEC | `node aegis/opsec-r12.mjs` | 20 pass, 0 fail, 112 screenshots unchecked | `os-build/aegis/OPSEC_R12.md` |
+| Aegis cycle | `node aegis/cycle.mjs` via hosted runtime | sweep 23/108/0 → KEV 0 → ledger | `r12/AEGIS_CYCLE.json` |
+| False-positive drill | `node aegis/fp-drill.mjs` | 3 clean packages, 0 findings | `r12/FALSE_POSITIVE_DRILL.json` |
+| Imperium baton | `node r12/imperium-baton.mjs` | killed mid-run, resume exit 0, 1 dispatch | `r12/IMPERIUM_BATON.json` |
+| Cadence baton + death | `node r12/baton-proof.mjs` | 1 stage-1, 1 continuation, restart 83 ms | `r12/BATON_PROOF.json` |
+| STOP + budget | `node r12/loop-drills.mjs` | 5 stopped, 3 finished, 0 orphans; cap 20 ms receipt | `r12/LOOPS_DRILL.json` |
+| Service restart | `node r12/restart-proof.mjs` | echo PASS, heartbeat PASS (log grew, STOP clean) | `r12/RESTART_PROOF.json` |
+| Lane suite | 19-file command in STATUS | 119 tests, 119 pass, 0 fail | this run |

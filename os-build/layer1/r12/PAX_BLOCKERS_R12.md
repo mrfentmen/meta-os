@@ -1,31 +1,28 @@
 # Pax — Round 12 blockers (nothing softened)
 
-## Can be cleared by the Mac / OpenCode / Rowan
+## Mac / OpenCode / Rowan
 
-1. **Userspace boot proof.** `hog` and `quitter` compile on nightly `x86_64-unknown-none`.
-   Wiring them, adding them to `BINS`, and producing the first boot log with the hog's refusal
-   and `user exit code 7` is theirs. I did not boot anything.
-2. **Kernel compile and boot.** No kernel crate compile or QEMU log was produced on this host.
-   Any kernel claim still needs the Mac's log.
-3. **Service restart.** A host run has no supervisor and no service process to kill. Restart
-   must be proven on the kernel or by a supervisor harness that really restarts a process.
+1. **Kernel compile and boot.** No kernel crate compile or QEMU log here. Any kernel claim needs
+   the Mac's log.
+2. **Userspace boot proof.** `hog` and `quitter` compile; wiring and the first boot log are theirs.
+3. **35 service restarts.** Only echo, heartbeat and mcp-host have a runnable `main`; the other 35
+   need a supervisor that can call `svc_entry` (K5/K6). Filed in `r12/RESTART_GAP.md`.
 
-## Can be cleared by the boss / Pax
+## Boss / Pax
 
-4. **A real Nervus run.** No model or key exists here. The STUB runner is all that ran; its
-   receipt is labelled stub in every record.
-5. **The voice seam.** `muse-voice-transcribe-1.0` is listed but has no working call surface:
-   `/v1/audio/transcriptions` 404s and audio input returns `model_not_found` (probe 2026-11-02,
-   `os-build/MODEL_INTEGRATION.md`). The record is `r12/VOICE_SEAM.md`.
-6. **Musica and Officina** have no in-tree command, so they stay NOT COVERED in the chaos record.
+4. **Real Nervus run.** No model or key here; the STUB receipts say so in every record.
+5. **Voice seam.** `muse-voice-transcribe-1.0` has no working call surface: 404 on
+   `/v1/audio/transcriptions`, `model_not_found` on audio input (probe 2026-11-02).
+6. **Musica and Officina** have no in-tree command; they remain NOT COVERED in the chaos record.
 
 ## Not blocked — just not done
 
-7. Section B's six live-fire tasks were not started this round.
-8. The baton, budget and watchman-death drills on hosted loops were not run.
-9. The per-service contract-vs-code read is still owed; the cluster reports say so in every row.
+7. R12-023: three loops finish in ~42 ms, before any STOP can land; their guaranteed path is the
+   pre-spawn STOP, proven for every hosted entry.
+8. mcp-host restart is named but not drilled; the echo/heartbeat harness runs it next.
+9. The line-by-line service contract read is still owed; the cluster record says so.
 
-## Not a blocker
+## Closed this round
 
-The 38-service inventory, the native pass, the five Nervus schemas, the Hands-Free end-to-end
-pass and the intake refusals are done and measured. Nothing in those rows needs anyone's key.
+All six Section B tasks, four of six Section C tasks (023 partial), the four hosted-loop drills,
+and restart proof for the two host-runnable services that have state and stdio contracts.

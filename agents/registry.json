@@ -227,6 +227,24 @@
       "hosted": true
     },
     {
+      "name": "aegis-cycle",
+      "lane": "Meta Aegis — unattended cycle: OSV sweep, KEV cross-check, append-only ledger",
+      "command": [
+        "repo:node",
+        "aegis/cycle.mjs"
+      ],
+      "capabilities": [
+        "osv-sweep",
+        "kev-cross-check",
+        "ledger-receipts"
+      ],
+      "budget": {
+        "maxWallMs": 180000
+      },
+      "owner": "boss",
+      "hosted": true
+    },
+    {
       "budget": {
         "maxWallMs": 120000
       },

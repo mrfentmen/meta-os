@@ -19,14 +19,14 @@ const lines = [];
 lines.push("# Aegis watch-target review — " + date);
 lines.push("");
 lines.push("Generated from `" + path.relative(root, targetsFile) + "` by `aegis/watch-review.mjs`.");
-lines.push("**This is a fill-in ledger, not a verdict.** `still ours` and `still live` are blank on purpose:");
-lines.push("only a reviewer can answer them, and `liveness` in the target file is UNVERIFIED until a");
-lines.push("public check replaces it.");
+lines.push("**This is a fill-in ledger, not a verdict.** `still ours` is blank on purpose: only a");
+lines.push("reviewer can answer it. `liveness` is the checked result from `aegis/check-liveness.mjs` and");
+lines.push("is dated in the checked column; ownership is not inferred from liveness.");
 lines.push("");
 lines.push("| target | type | ref | liveness | still ours | still live | notes | checked |");
 lines.push("|---|---|---|---|---|---|---|---|");
 for (const t of doc.targets || []) {
-  lines.push("| `" + t.id + "` | " + t.type + " | " + t.ref + " | " + t.liveness + " |  |  |  |  |");
+  lines.push("| `" + t.id + "` | " + t.type + " | " + t.ref + " | " + t.liveness + " |  |  |  | " + (t.livenessCheckedAt ? String(t.livenessCheckedAt).slice(0, 10) : "") + " |");
 }
 lines.push("");
 lines.push("## Ownership questions for the reviewer");
