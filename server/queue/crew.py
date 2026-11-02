@@ -44,11 +44,22 @@ code. The stages the decisions choose between:
             under the origin division. Findings append to the
             incident record; they never spawn further incidents —
             recursion stops at this one level.
-  RESPONSE  a brief in the v2 contract shape plus per-division
-            recommended actions (recommendations for human decision,
-            in observation language; requires_human_review is true)
-            is packaged and sent to the SIMULATED dispatch endpoint
-            only (see dispatch_url guard below).
+  RESPONSE  on a confirmed RED incident the agent itself packages
+            and sends the dispatch package — a brief in the v2
+            contract shape, the picture (the flagged frame plus
+            the evidence crop when one was captured), the BOLO,
+            and per-division recommended actions in observation
+            language — to the SIMULATED dispatch endpoint only
+            (see dispatch_url guard below). There is NO human
+            verify step in this flow (boss directive,
+            docs/IMPERIUM_AUTO_DISPATCH.md): the brief's
+            requires_human_review stays true as the post-hoc
+            AUDIT flag — the human role is reviewing the
+            append-only record after the fact, not approving the
+            send. One agency policy setting can hold the package
+            for verify instead of sending it
+            (TRIO_CREW_HUMAN_VERIFY, default off — see
+            human_verify_required below).
 
 HARD BOUNDARY — dispatch: the only dispatch target this code can
 send to is the stack's own SIMULATED endpoint, and the URL is
@@ -111,6 +122,27 @@ def check_dispatch_url(url):
 def dispatch_url():
     return check_dispatch_url(
         os.environ.get(DISPATCH_URL_ENV) or DEFAULT_DISPATCH_URL)
+
+
+# Agency policy setting (boss directive 2026-11-01,
+# docs/IMPERIUM_AUTO_DISPATCH.md): the product flow dispatches a
+# confirmed RED package directly, with human review as post-hoc
+# audit. An agency whose policy requires a human verify step
+# before dispatch switches TRIO_CREW_HUMAN_VERIFY on, and the
+# crew then HOLDS the package (recorded on the incident timeline,
+# never sent) for that verify. Default OFF. The flag can only
+# hold a send — it never widens the target: check_dispatch_url
+# still refuses every non-loopback URL either way.
+HUMAN_VERIFY_ENV = "TRIO_CREW_HUMAN_VERIFY"
+_HUMAN_VERIFY_ON = ("1", "true", "yes", "on")
+
+
+def human_verify_required():
+    """True when the agency human-verify policy is switched on
+    (TRIO_CREW_HUMAN_VERIFY set to 1/true/yes/on). Default off:
+    no human verify step gates a dispatch."""
+    return (os.environ.get(HUMAN_VERIFY_ENV) or "").strip().lower() \
+        in _HUMAN_VERIFY_ON
 
 
 def http_dispatch(url):
@@ -294,7 +326,8 @@ class Crew:
     seam too — tests may inject one bound to the same records."""
 
     def __init__(self, records, assess, fetch_snapshot, dispatch,
-                 cameras=(), orchestrator_engine=None, detector=None):
+                 cameras=(), orchestrator_engine=None, detector=None,
+                 human_verify=None):
         self.records = records
         self.assess = assess
         self.fetch_snapshot = fetch_snapshot
@@ -306,6 +339,17 @@ class Crew:
         # production detector — OpenCV Haar when the runtime has
         # cv2, honestly "unavailable" when it does not.
         self.detector = detector
+        # Human-verify policy seam: None reads the agency setting
+        # (human_verify_required, env TRIO_CREW_HUMAN_VERIFY) at
+        # response time; True/False pins it (tests, deployments).
+        self.human_verify = human_verify
+
+    def _human_verify(self):
+        """Whether THIS crew holds RED packages for human verify
+        instead of dispatching them directly."""
+        if self.human_verify is not None:
+            return bool(self.human_verify)
+        return human_verify_required()
 
     @classmethod
     def production(cls, records=None, cameras=()):
@@ -553,8 +597,12 @@ class Crew:
                                 if e.get("result")]
                 elif agent == "response":
                     break
-        # RESPONSE — brief + SIMULATED dispatch (the orchestrator's
-        # prepare_response decision brought us here).
+        # RESPONSE — brief + picture + SIMULATED dispatch (the
+        # orchestrator's prepare_response decision brought us
+        # here). Direct dispatch: the agent sends the package
+        # itself, with no human verify step, unless the agency
+        # human-verify policy is on — then the built package is
+        # held on the record instead of sent.
         record = self.records.get_incident(incident_id)
         brief = build_brief(record, results)
         # EVIDENCE — the BOLO: person evidence built only from
@@ -570,6 +618,12 @@ class Crew:
             record, descriptions,
             (record.get("evidence") or {}).get("files"),
             visible_marks=evidence.extract_visible_marks(observations))
+        # The picture (directive: the package carries it): the
+        # flagged frame's reference, plus the evidence crop's
+        # reference when the flagged path captured one.
+        picture = evidence.picture_refs(
+            (record.get("evidence") or {}).get("files"))
+        verify = self._human_verify()
         package = {
             "simulated": True,
             "kind": "imperium-dispatch-package",
@@ -579,9 +633,16 @@ class Crew:
                            "route) — no real emergency service is "
                            "contacted by this system",
             "brief": brief,
+            "picture": picture,
             "person_evidence": bolo,
             "recommended_actions": recommended_actions(camera, category),
+            # Audit flag, not a gate: the record (brief included)
+            # keeps requires_human_review true so the post-hoc
+            # human audit can find every dispatched incident; it
+            # does not hold the send (see dispatch_mode).
             "requires_human_review": True,
+            "dispatch_mode": "held-for-verify" if verify else "auto",
+            "human_verify": verify,
         }
         self.records.append_timeline(incident_id, {
             "at": crew_common.now_iso(), "step": "brief",
@@ -589,27 +650,44 @@ class Crew:
         self.records.append_timeline(incident_id, {
             "at": crew_common.now_iso(), "step": "bolo",
             "bolo": bolo})
-        try:
-            receipt = self.dispatch(package)
+        if verify:
+            # Agency policy: the package is built and recorded,
+            # and HELD for human verify — the dispatcher is never
+            # called. The held step carries the package itself so
+            # the verify (and the audit) works from the record.
             dispatch_step = {
                 "at": crew_common.now_iso(), "step": "dispatch",
-                "simulated": True,
-                "receipt_id": receipt.get("receipt_id"),
-                "status": "dispatched-simulated",
+                "simulated": True, "held": True,
+                "reason": "agency human-verify policy is on "
+                          f"({HUMAN_VERIFY_ENV}): the package is "
+                          "held for human verify and was NOT sent",
+                "package": package,
+                "status": "held-for-verify",
             }
-            outcome = "dispatched-simulated"
-        except Exception as e:
-            dispatch_step = {
-                "at": crew_common.now_iso(), "step": "dispatch",
-                "simulated": True, "error": str(e)[:200],
-            }
-            outcome = "reported"
+            outcome = "held-for-verify"
+        else:
+            try:
+                receipt = self.dispatch(package)
+                dispatch_step = {
+                    "at": crew_common.now_iso(), "step": "dispatch",
+                    "simulated": True,
+                    "receipt_id": receipt.get("receipt_id"),
+                    "status": "dispatched-simulated",
+                }
+                outcome = "dispatched-simulated"
+            except Exception as e:
+                dispatch_step = {
+                    "at": crew_common.now_iso(), "step": "dispatch",
+                    "simulated": True, "error": str(e)[:200],
+                }
+                outcome = "reported"
         self.records.append_timeline(incident_id, dispatch_step)
         self.records.append_event({
             "at": crew_common.now_iso(), "type": "dispatch",
             "incident_id": incident_id, "camera_id": camera["id"],
             "camera_name": camera["name"], "division": division,
             "simulated": True,
+            "held": bool(dispatch_step.get("held")),
             "receipt_id": dispatch_step.get("receipt_id"),
             "error": dispatch_step.get("error")})
         return {"outcome": outcome, "incident_id": incident_id,
