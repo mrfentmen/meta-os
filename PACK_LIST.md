@@ -1,39 +1,50 @@
-# PACK LIST — pack prerequisites, don't rebuild them (boss 02:28)
+# PACK LIST — pack packages; study the rest, build our own
+# (boss order 02:28, corrected 02:30 EST)
 
-The boss's rule: boot, log in, run programs with everything
-there. Most of the code already exists — find it, pack it, theme
-it. We build the face and the systems; we do NOT build a browser,
-a file manager, or a terminal from scratch.
+The boss's doctrine, in his terms: boot, log in, run programs
+with everything there. Two different things, kept straight:
+
+1. **Packages are packages.** Chrome in the image is an
+   installed app, the same as on any computer. Installing a
+   package is not borrowing code and needs no apology.
+2. **What we build, we build ours.** For the system itself —
+   7 layers, 3 languages (Rust, Goose, Lobster) — we do not copy
+   anyone's code. We STUDY how existing systems solve the
+   problem, reverse engineer the approach, and write our own
+   implementation in our stack. That is the method for the
+   kernel face, the services, all of it.
 
 ## Pack into the carrier image (existing apps, themed)
-- Browser: Chrome where the Mac build allows, else Chromium —
-  either way a real browser, our start page = the face home.
+- Browser: Chrome where the Mac build allows, else Chromium.
 - Terminal: the distro's real terminal (GNOME Terminal / xfce4).
 - Files: the distro's real file manager (Nautilus / Thunar).
-- Code Editor: VS Code OSS build or gedit-class editor — pick
+- Code Editor: VS Code OSS build or a gedit-class editor — pick
   by image weight, record the pick.
 - Notes, Calendar, Calculator: the distro's existing apps,
   themed to the face tokens (Hana's C-section).
 - Media: image viewer + video player from the distro.
 - Settings plumbing: the distro's network/sound/display panels
-  reachable from our Settings window, skinned or framed.
-- Drivers/firmware: the distro's wifi + graphics firmware set,
-  so the image has a real chance on real hardware later.
+  reachable from our Settings window.
+- Drivers/firmware: the distro's wifi + graphics firmware set.
 
-## Rules for packed code
-1. Open-source or freely distributable only; every packed item
-   is named in `THIRD_PARTY.md` with its source and licence —
-   the hackathon rules require external work be credited as a
-   library, and the credit file is how we prove it.
-2. Theme and configure; do not fork-and-claim. Our code is the
-   face, the shell glue, and the systems.
-3. Same rule inside the kernel face: Rowan starts the graphics
-   spike from existing crates (bootloader framebuffer support,
-   font crates, PS/2 handling) — study them, adapt them, credit
-   them in THIRD_PARTY.md. From-zero only where nothing exists.
-4. Every packed app gets a launch proof in the face STATUS.md
-   table (OpenCode face list, task 37) — packed and proven, or
-   listed as not-yet.
+## Study-and-build list (reverse engineer the approach, write ours)
+- Framebuffer boot + pixel drawing (kernel face, Rowan): study
+  how the bootloader hands over a framebuffer and how small
+  Rust kernels draw; write ours in kernel/.
+- Font + text rendering: study bitmap font approaches; ours.
+- PS/2 mouse: study the packet protocol; ours.
+- Window/compositor behaviour: study classic WMs; ours.
+- Ribbon: already ours (js/logo-background.js) — port the math.
+- THIRD_PARTY.md shrinks to the truth: only genuine imported
+  dependencies (crates and the like) get listed, because those
+  are actually in the tree. Packages installed in the image are
+  listed as PACKAGES with versions — a manifest, not a credit
+  ledger for code we did not take.
+
+## Proof rule (unchanged)
+Every packed app gets a launch proof in the face STATUS.md
+table (OpenCode face list, task 37) — packed and proven, or
+listed as not-yet.
 
 Owner: OpenCode (image lane), Hana (theming tokens), Pax
-(THIRD_PARTY.md upkeep on each merge).
+(manifest upkeep on each merge).
