@@ -69,3 +69,15 @@ Cargo check 19/19 crates clean (this tree). Python: queue 128, officina 49, cust
 
 ## Section 3 — model pipeline, live (17-28): DONE with named gaps 2026-11-02
 Queue 141/141 pre-live. Live: wonder chat OK; SAM 2 calls, no box both times (recorded, not invented); Spark reading "structure fire" live; image generated (webp 60KB). Judge-model incident ran end to end but judge_mode stayed deterministic (Spark empty reply x3, direct prompt works) — model side UNPROVEN, fallback PROVEN with named reasons. Spend $0.016. Proof: WAVE3_MODEL_PROOFS.md + wave3-model-proofs/.
+
+## Section 10 — final proofs (91-100): DONE 2026-11-02
+91 branch gate: GATE GREEN 7/7 on this tree (/tmp/wave2branch-gate.log).
+92 node on branch: 1965 pass / 55 fail (same known set).
+93 python on branch: queue 128, officina 49, custos 125 — all OK (branch predates the 141-test additions on main; recorded as-is).
+94 cargo check clean; cargo test RED (same known E0271 x2, supervisor lane).
+95 fresh QEMU boot of branch kernel: ribbon + META OS 0.1 (WAVE2-branch-boot.jpg + serial).
+96 face image rebuilt from branch recipe: same sha f7d8581e (third time); fresh boot to `metaos login:` line 822 (WAVE2-face-fresh-boot.txt).
+97 one Imperium loop from branch tree: Medicus rerun, receipt sim-a85a4e0c03a47dc5 (face-medicus-wave2/).
+98 this STATUS file: sections 1-10 each have proof lines or named gaps above.
+99 tidy: tree clean except intended wave2 artifacts (verified via git status).
+100 what is PROVEN that was not proven when this wave started: the film exists as a 180s mp4; gate+readkey+fetch+shelle2e proven on the combined tree; clean-clone gate green; node 1965/55 + python all-green on-branch; image recipe reproduces byte-identically; Medicus ran live a third time; W6 fetch screen shot on its branch and on combined; bootloader routes both fail with logs; queue 128 (branch) vs 141 (main tip) recorded.
