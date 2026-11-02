@@ -24,37 +24,39 @@ uint8_t sys_read_key(gs_rref)        gs_rref = { gs_rhdr *hdr; gs_stack *stk; }
 | Program | Status | pass | fail | First failure |
 |---|---|---|---|---|
 | `tests/t45_fmt` | **RUNS** | 24 | 0 | — |
-| `tests/t46_ring` | FAILS (exit 1) | 31 | 5 | exit 1 FAIL msg cap |
-| `tests/t47_cfg` | FAILS (exit 1) | 15 | 1 | exit 1 FAIL duplicate key last wins |
-| `tests/t48_boot` | FAILS (exit 1) | 9 | 1 | exit 1 FAIL ticks advance |
-| `tests/t49_bootlog` | FAILS (exit 1) | 11 | 1 | exit 1 FAIL record refuses a short buffer |
-| `tests/t50_logd` | FAILS (exit 1) | 7 | 2 | exit 1 FAIL record ends with newline |
-| `tests/t51_time` | FAILS (exit 1) | 22 | 2 | exit 1 FAIL clock ok |
-| `tests/t52_supervisor` | FAILS (exit 1) | 47 | 6 | exit 1 FAIL entry is restarting |
-| `tests/t53_watchdog` | FAILS (exit 1) | 27 | 1 | exit 1 FAIL dead is reported, not re-escalated |
+| `tests/t46_ring` | **RUNS** | 36 | 0 | — |
+| `tests/t47_cfg` | **RUNS** | 16 | 0 | — |
+| `tests/t48_boot` | **RUNS** | 10 | 0 | — |
+| `tests/t49_bootlog` | **RUNS** | 23 | 0 | — |
+| `tests/t50_logd` | **RUNS** | 19 | 0 | — |
+| `tests/t51_time` | **RUNS** | 24 | 0 | — |
+| `tests/t52_supervisor` | **RUNS** | 53 | 0 | — |
+| `tests/t53_watchdog` | **RUNS** | 28 | 0 | — |
 | `tests/t54_storage` | **RUNS** | 26 | 0 | — |
 | `tests/t55_hash` | **RUNS** | 21 | 0 | — |
-| `tests/t56_input_display` | FAILS (exit 1) | 37 | 11 | exit 1 FAIL caps lock release decodes |
-| `tests/t57_dhcp_dns` | FAILS (exit 1) | 44 | 1 | exit 1 FAIL nxdomain reports its rcode |
+| `tests/t56_input_display` | **RUNS** | 49 | 0 | — |
+| `tests/t57_dhcp_dns` | **RUNS** | 45 | 0 | — |
 | `tests/t58_updater` | **RUNS** | 35 | 0 | — |
 | `tests/t59_agenthost` | **RUNS** | 48 | 0 | — |
-| `tests/t60_audit` | FAILS (exit 1) | 15 | 18 | exit 1 FAIL chain verifies |
+| `tests/t60_audit` | **RUNS** | 33 | 0 | — |
 | `tests/t61_bootorder` | **RUNS** | 24 | 0 | — |
 | `tests/t62_bytes` | **RUNS** | 50 | 0 | — |
 | `tests/t63_str` | **RUNS** | 27 | 0 | — |
-| `tests/t64_hex` | FAILS (exit 1) | 23 | 1 | exit 1 FAIL is_exact rejects non-hex of right length |
-| `tests/t65_fs` | FAILS (exit 1) | 0 | 0 | exit 1 |
-| `tests/t66_shell` | FAILS (exit 1) | 14 | 0 | exit 1 |
-| `tests/t67_net` | FAILS (exit 1) | 81 | 8 | exit 1 FAIL parse it back |
-| `tests/t68_proto` | FAILS (exit 1) | 36 | 5 | exit 1 FAIL parse it as an ARP request |
+| `tests/t64_hex` | **RUNS** | 25 | 0 | — |
+| `tests/t65_fs` | **RUNS** | 70 | 0 | — |
+| `tests/t66_shell` | **RUNS** | 57 | 0 | — |
+| `tests/t67_net` | **RUNS** | 89 | 0 | — |
+| `tests/t68_proto` | **RUNS** | 41 | 0 | — |
 | `tests/t69_callmatrix` | **RUNS** | 28 | 0 | — |
-| `entry/bootlog` | BUILDS, not run | 0 | 0 | exports svc_entry; no supervisor on a host |
-| `entry/console` | BUILDS, not run | 0 | 0 | exports svc_entry; no supervisor on a host |
-| `entry/example` | BUILD FAIL | 0 | 0 | os-build/layer1/host/build/entry_example.c.gen:services/.run_entry_example.goose:4: error: |
-| `entry/logd` | BUILDS, not run | 0 | 0 | exports svc_entry; no supervisor on a host |
-| `entry/time` | BUILDS, not run | 0 | 0 | exports svc_entry; no supervisor on a host |
+| `tests/t70_status` | **RUNS** | 20 | 0 | — |
+| `tests/t71_rotate` | **RUNS** | 48 | 0 | — |
+| `entry/bootlog` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
+| `entry/console` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
+| `entry/example` | TYPECHECKS (not run) | 0 | 0 | svc_entry takes a kernel BootInfo; no host boot block |
+| `entry/logd` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
+| `entry/time` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 
-**25 of 25 drivers run to completion (9 fully green, 16 run and report failures). 702 assertions passed, 63 failed.** Five entry points build but are not run: they export `svc_entry`, and a host process has no supervisor to call it.
+**27 of 27 drivers run to completion, all green: 969 assertions passed, 0 failed** (measured 2026-11-02, `run_native.sh` exit 0). Four entry points **build** and are not run — they export `svc_entry`, and a host process has no supervisor to call it. `entry/example` **typechecks** and is not run: its `svc_entry` takes a `BootInfo`, and a host has no boot block to hand it. The first pass of this table read `4 green, 22 dead`; the section below is what that cost and what it taught, kept because it is the argument for running code instead of typechecking it.
 
 ## What the first pass found, and what fixing it taught
 
