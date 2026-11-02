@@ -100,5 +100,30 @@ bytes not yet captured; kernel-lane blocker documented below)
 - Pass: no panic, no hang (console answered at minute ~70),
   no loader-refused, fault stayed isolated to the crasher
   (single expected `task killed` line).
-## R5-6 merge-watch — TODO
-## What remains unverified — TODO
+## R5-6 merge-watch — DONE (1 new tip gated; watch stays open)
+- `4702e5c` (PREINSTALL spec + Buffy layer-1 slices): GATE GREEN
+  7/7 via clean-clone run of os-build/gate.sh (`sh os-build/gate.sh`
+  from a fresh clone of main @ 4702e5c; log
+  os-build/logs/GATE-boot-main4702e5c.txt, full output
+  os-build/logs/gate-run-main4702e5c.txt). No RED this window.
+- NOTE: the gate on main does not include readkey (R5-2 program
+  is my-branch-only until the kernel-lane fix lands); the gate
+  asserts are identical otherwise.
+- Standing rule for the rest of the window: each new main tip gets
+  one gate run + one line here.
+## What remains unverified
+- R5-2 typed bytes: readkey polls + empty case proven; typed
+  scancodes returned by syscall 5 NOT yet captured (console wins
+  the shared-buffer race once readkey exits; readkey's window is
+  seconds). Blocker: intermittent 8-task exit panic + kernel
+  NX-fault storm (evidence in R5-*.txt), kernel-lane issue.
+- readkey spawn stays HELD (K7/soak/gate ran 7-task) until the
+  kernel-lane fix lands; re-enable = one line + gate re-run.
+- K-all.txt `milestone K3` line is stale vs the truthful
+  `META OS 0.1 (K6)` banner (Milo's file to update).
+- Bare `cargo build` in os-build/userspace/user still links wrong
+  bases by design (Pax ruling); pipeline scripts are the path.
+- Queue suite cannot import on this Mac as committed
+  (dynamic_credentials sandbox-only import); drill used a
+  /tmp-only stub under TRIO_STORE=local.
+- R5-6 watch stays open: gate each new main tip.
