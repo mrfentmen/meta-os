@@ -1,0 +1,78 @@
+{
+  "cycle_id": "CYCLE-EXAMPLE-001",
+  "gate_state": "human-gated",
+  "history": [
+    "6479f42110d7967192cf4502319742d3c1a6fbcf4a94d63cff18daa6cc23fc01",
+    "c19226eda7c82db619b1ddc1574108171cb355394c3d8e6c6084c7a6b004039d",
+    "1671cc6dbd46b4f0b77bac682553ca5f4508a79c978ef4b577caff5093c71967",
+    "48357bc41c6ea02b3453a0df820203b784cb7ef05ffd4679244e66cb56784ab5",
+    "f9e020c4ad927ef74fd7da4a2b78a95d6b5c3f5d281dc3e007921458fa254e04",
+    "91025c3b114e36caa50c1a99df4f6154d9851f8e81c39b3378d52d6141a3780a"
+  ],
+  "inputs": {
+    "compute_results": {
+      "dataset_rows": 1128,
+      "dataset_sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189",
+      "method_difference": "RDKit Wildman-Crippen MolLogP vs paper Daylight CLOGP 4.72 (recorded in gate/GATE_PREP.md)",
+      "prep_observation_NOT_paper_report": {
+        "mae": 0.8438906219086839,
+        "n": 1128,
+        "r2": 0.7247613093988003,
+        "rmse": 1.0993724206558086
+      },
+      "prereg_entry": "2849270d226ce5ace0e0120701cb734a1e158ea1aace6bca93547b1d8c7e17d",
+      "prereg_threshold": "R2 >= 0.5"
+    },
+    "critique": {
+      "critique_entry": "2ae02be3184372418bbe230070b463357d19764835e855759862f9e741967de0",
+      "verdict": "proceed-under-caps: computation stands as an unverified observation; verification requires the independent re-run."
+    },
+    "hypotheses": {
+      "hypotheses_hash": "947f7a4f942d34b50ad5ae8643286968650a85f51255786bec38f20b858efcf3",
+      "ids": [
+        "RH1",
+        "RH2",
+        "RH3"
+      ],
+      "note": "RH1-RH3 carry falsifiers; falsifier-less hypotheses were rejected and logged by the generator (sibling lane)."
+    },
+    "problem_statement": "Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?",
+    "sealed_record": {
+      "computation_claim_entry": "ef287634a407941fe96ef868b2e47b9cda8a387339b606402853d0effeeb9bcc",
+      "levels": {
+        "computation": 2,
+        "reasoning": 1
+      },
+      "not_earned": "Level 3 needs the independent reproduced record; levels 4-6 need human physical experiments and are unreachable by this system alone.",
+      "reasoning_claim_entry": "be1f7a0ea918f7dfbcdff0e8df209660b46f8fb6a5d186069d0282054aafee9c"
+    },
+    "sources": {
+      "brief_entry": "cdb4e0be28f7f0093b21b91e435542b2460ca36ddccde3355c44e8a5d6a9204e",
+      "dropped_claims": [
+        "D1"
+      ],
+      "note": "Brief RI-EXAMPLE-001: paper figure left TO_BE_READ_AT_RUN; prep-run numbers are motivation, not the paper report.",
+      "pinned_claims": [
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "status_entry": "d6446e4fa0ba1fa3fa381441e08af691ad0dca35680c213d5f145600"
+    },
+    "verification": {
+      "claim_cap": 2,
+      "detail": "Generator observation filed (prep-run R2 0.725, RMSE 1.099). The independent verifier has NOT re-executed from the archived inputs (Section 6 lane); no reproduced record exists, so the reproduction claim is capped at ladder level 2.",
+      "outcome": "indeterminate"
+    }
+  },
+  "outputs": {
+    "cheap-computations": "scientific-critic attack filed (2ae02be31843...): descriptor-mismatch and leakage confounds recorded; proceed as unverified observation only",
+    "critic": "verification indeterminate: observation filed, independent re-run pending; claim capped at level 2",
+    "hypotheses": "computation filed as PREP-RUN observation (R2 0.725, RMSE 1.099, n=1128); threshold R2>=0.5 pre-registered at 2849270d226c...",
+    "literature": "hypotheses RH1,RH2,RH3 filed with falsifiers (hash 947f7a4f942d...)",
+    "problem": "brief RI-EXAMPLE-001 filed (3 pinned P1-P3, 1 dropped D1, 0 contested); paper figure stays TO_BE_READ_AT_RUN",
+    "verification": "sealed phases 1-7 bundle at recorded levels (reasoning 1, computation 2 unverified); level 3+ explicitly not earned"
+  },
+  "parked_gate": "wetlab",
+  "phase": "wetlab"
+}

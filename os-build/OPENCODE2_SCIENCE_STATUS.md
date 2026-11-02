@@ -49,3 +49,20 @@ Next: Section 2 — Research Intelligence (11–20), in order.
 - Example records/examples/reasoning_example.json (Delaney RH1-3, prereg R2>=0.5 filed, critique null -> gate blocked honestly, no paper figure hardcoded)
 - Tests test_section3.py 4 OK; full suite 72 OK; hortus 9 OK
 - UNIMPLEMENTED: model judgement calls (synthesize_with_model), live math-symbolic engine beyond deterministic checks
+
+## Section 4 — Computational Lab (31–40) — LANDED 2026-11-02
+- compute.py: run_experiment (clean temp, hashes, exit capture), rerun_same determinism, run_bio/chem/physics/materials (GC, mol wt, range, mixture), assert_sandbox_clean (..,/etc,/Users,network -> PermissionError), crash as record (output_hash null), compare_to_prereg match/no-match/indeterminate, budget + receipt, reproduce_from_record
+- Example records/examples/computation_example.json (Delaney first 10 rows mean -3.989, sha recomputed, gate NOT passed, TO_BE_READ_AT_RUN)
+- Tests test_section4.py 9 OK
+
+## Section 5 — Discovery cycle (41–50) — LANDED 2026-11-02
+- cycle.py extended: check_cycle_budget, recover_cycle (replay, zero dup), generate_report (honest md, ladder guard); cli.py: cycle park/resume/report, advance parks on human-gate/step-8, budget gate
+- Example records/examples/cycle_example.json + cycles/CYCLE-EXAMPLE-001.json + reports/CYCLE-EXAMPLE-001.md (problem..sealing, 6 hashes, parked wetlab, auto_passed false, verification indeterminate)
+- Tests test_section5.py 25 OK
+
+## Section 6 — Verification + Repository (51–60) — LANDED 2026-11-02
+- verify.py: isolation (no narrative), blind re-run (temp, no output peek), compare agree/disagree/indeterminate, disagree caps L2 + dispute (original untouched), rotation enforced, gate_write confirmed/unconfirmed
+- repository.py + schemas/repository.schema.json: file_claim/experiment/cycle/source, query by level/dept/agent/date, show/provenance; cli repo show/provenance
+- Example records/examples/verification_example.json (synthetic, real pipeline, verdict agree, confirmed L2, dispute null)
+- Tests test_section6.py: isolation, blind, caps, rotation, repo — full suite 119 OK
+- Note: records/ledger.jsonl checkpoint stays 5 entries (Sec 3); Sec 4-6 examples carry own hashes verified at creation (7/17 entries noted in files)

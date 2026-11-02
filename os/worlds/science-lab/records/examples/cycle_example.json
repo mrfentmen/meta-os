@@ -1,0 +1,71 @@
+{
+  "claims": [
+    {
+      "entry": "be1f7a0ea918f7dfbcdff0e8df209660b46f8fb6a5d186069d0282054aafee9c",
+      "evidence_level": 1
+    },
+    {
+      "entry": "ef287634a407941fe96ef868b2e47b9cda8a387339b606402853d0effeeb9bcc",
+      "evidence_level": 2
+    }
+  ],
+  "cycle_id": "CYCLE-EXAMPLE-001",
+  "dataset": {
+    "rows": 1128,
+    "sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189"
+  },
+  "gate": {
+    "auto_passed": false,
+    "gate_entry": "11a8b71221de972ca60b468a1d2a514ca08cc847c09fd8100bde879e1d56127c",
+    "note": "Human gate: parked, awaiting an explicit human decision record. No decision filed, none invented.",
+    "parked_gate": "wetlab",
+    "state": "human-gated"
+  },
+  "honesty": [
+    "Every ledger_entry hash above is a real entry_hash from records/ledger.jsonl.",
+    "Prep-run numbers (R2 0.725, RMSE 1.099) are our own observation, NOT the paper figure.",
+    "The reasoning-example chain is incomplete (critique null); the cycle's critic input is the cycle-local record 2ae02be31843.",
+    "Verification is indeterminate: no independent reproduced record exists.",
+    "Nothing is displayed above its recorded level."
+  ],
+  "phases": [
+    {
+      "from": "problem",
+      "ledger_entry": "6479f42110d7967192cf4502319742d3c1a6fbcf4a94d63cff18daa6cc23fc01",
+      "reason": "brief RI-EXAMPLE-001 filed (3 pinned P1-P3, 1 dropped D1, 0 contested); paper figure stays TO_BE_READ_AT_RUN",
+      "to": "literature"
+    },
+    {
+      "from": "literature",
+      "ledger_entry": "c19226eda7c82db619b1ddc1574108171cb355394c3d8e6c6084c7a6b004039d",
+      "reason": "hypotheses RH1,RH2,RH3 filed with falsifiers (hash 947f7a4f942d...)",
+      "to": "hypotheses"
+    },
+    {
+      "from": "hypotheses",
+      "ledger_entry": "1671cc6dbd46b4f0b77bac682553ca5f4508a79c978ef4b577caff5093c71967",
+      "reason": "computation filed as PREP-RUN observation (R2 0.725, RMSE 1.099, n=1128); threshold R2>=0.5 pre-registered at 2849270d226c...",
+      "to": "cheap-computations"
+    },
+    {
+      "from": "cheap-computations",
+      "ledger_entry": "48357bc41c6ea02b3453a0df820203b784cb7ef05ffd4679244e66cb56784ab5",
+      "reason": "scientific-critic attack filed (2ae02be31843...): descriptor-mismatch and leakage confounds recorded; proceed as unverified observation only",
+      "to": "critic"
+    },
+    {
+      "from": "critic",
+      "ledger_entry": "f9e020c4ad927ef74fd7da4a2b78a95d6b5c3f5d281dc3e007921458fa254e04",
+      "reason": "verification indeterminate: observation filed, independent re-run pending; claim capped at level 2",
+      "to": "verification"
+    },
+    {
+      "from": "verification",
+      "ledger_entry": "91025c3b114e36caa50c1a99df4f6154d9851f8e81c39b3378d52d6141a3780a",
+      "reason": "sealed phases 1-7 bundle at recorded levels (reasoning 1, computation 2 unverified); level 3+ explicitly not earned",
+      "to": "sealing"
+    }
+  ],
+  "question": "Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?",
+  "target_id": "delaney-2004-esol"
+}

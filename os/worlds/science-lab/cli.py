@@ -34,6 +34,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 CYCLES_DIR = BASE_DIR / "records" / "cycles"
 LEDGER_PATH = BASE_DIR / "records" / "ledger.jsonl"
+REPORTS_DIR = BASE_DIR / "records" / "reports"
 
 # Fallback evidence ladder, sourced from PACK.md "The evidence
 # ladder" table (LABORATORY section 7). Used only when ladder.py
@@ -220,7 +221,11 @@ def _phase_names() -> list:
 
 
 def _resolve_phase(raw: str) -> str:
-    """Accept '2' or 'literature'; map 1-7 onto the sourced phase names."""
+    """Accept '2' or 'literature'; map 1-7 onto the sourced phase names.
+
+    8 is the silent source gap (maps to cycle.py STEP_8, always blocked);
+    9/10 are the permanently human-gated terminals wetlab/publication.
+    """
     text = str(raw).strip()
     try:
         n = int(text)
@@ -229,6 +234,15 @@ def _resolve_phase(raw: str) -> str:
     phases = _phase_names()
     if 1 <= n <= len(phases):
         return phases[n - 1]
+    if n == 8:
+        mod = _load_sibling_module("cycle")
+        if mod is not None and getattr(mod, "STEP_8", None):
+            return str(mod.STEP_8)
+        return "step-8-unimplemented"
+    if n == 9:
+        return "wetlab"
+    if n == 10:
+        return "publication"
     return text  # unknown: let cycle.py reject it explicitly
 
 
@@ -376,6 +390,56 @@ def cmd_cycle_advance(args: argparse.Namespace) -> int:
     old_phase = record.get("phase")
     target = _resolve_phase(args.to)
     reason = args.reason or ""
+    mod = _load_sibling_module("cycle")
+    step8 = getattr(mod, "STEP_8", "step-8-unimplemented") if mod else \
+        "step-8-unimplemented"
+    gates = tuple(getattr(mod, "HUMAN_GATES", ("wetlab", "publication"))) \
+        if mod else ("wetlab", "publication")
+    if target == step8 or target in gates:
+        # Human gates and the step-8 gap are never transitioned into:
+        # the driver parks the cycle and files a gate record instead.
+        park = getattr(mod, "park_for_human_gate", None) if mod else None
+        if not callable(park):
+            print("error: cycle.py park_for_human_gate() unavailable; "
+                  "refusing to invent the gate step.", file=sys.stderr)
+            return 1
+        try:
+            updated = park(record, target)
+        except ValueError as exc:
+            print(f"blocked: {exc}", file=sys.stderr)
+            return 1
+        updated["updated_at"] = _now_iso()
+        _write_cycle(updated)
+        _append_ledger({
+            "ts": updated["updated_at"],
+            "kind": "cycle.gate-parked",
+            "type": "cycle.gate-parked",
+            "cycle_id": args.id,
+            "from": old_phase,
+            "gate": target,
+            "gate_state": updated.get("gate_state"),
+            "reason": reason,
+        })
+        print(f"parked: cycle {args.id}: {old_phase} -> {target} "
+              f"(gate_state={updated.get('gate_state')}). "
+              f"Resume only via 'cycle resume --id {args.id} --decision ...'.")
+        return 0
+    # Budget gate: an over-cap cycle stops with a receipt, never advances.
+    checker = getattr(mod, "check_cycle_budget", None) if mod else None
+    if callable(checker):
+        cid = str(record.get("cycle_id", record.get("id", args.id)))
+        receipt = str(CYCLES_DIR / (cid + ".budget-receipt.json"))
+        try:
+            ok, msg = checker(record, str(LEDGER_PATH),
+                              receipt_path=receipt)
+        except Exception as exc:
+            print(f"blocked: budget check failed ({exc}); refusing to "
+                  "advance blind.", file=sys.stderr)
+            return 1
+        if not ok:
+            print(f"blocked: {msg} (receipt: {receipt}).",
+                  file=sys.stderr)
+            return 1
     status, payload = _try_cycle_py_transition(record, target, reason)
     if status == "blocked":
         print(f"blocked: {payload}", file=sys.stderr)
@@ -409,6 +473,120 @@ def cmd_cycle_advance(args: argparse.Namespace) -> int:
         "reason": reason,
     })
     print(f"cycle {args.id}: {old_phase} -> {target}")
+    return 0
+
+
+def cmd_cycle_park(args: argparse.Namespace) -> int:
+    """Park a cycle at a human gate or on the step-8 source gap."""
+    record = _read_cycle(args.id)
+    old_phase = record.get("phase")
+    mod = _load_sibling_module("cycle")
+    park = getattr(mod, "park_for_human_gate", None) if mod else None
+    if not callable(park):
+        print("error: cycle.py park_for_human_gate() unavailable; "
+              "refusing to invent the gate step.", file=sys.stderr)
+        return 1
+    try:
+        updated = park(record, args.gate)
+    except ValueError as exc:
+        print(f"blocked: {exc}", file=sys.stderr)
+        return 1
+    now = _now_iso()
+    updated["updated_at"] = now
+    _write_cycle(updated)
+    _append_ledger({
+        "ts": now,
+        "kind": "cycle.gate-parked",
+        "type": "cycle.gate-parked",
+        "cycle_id": args.id,
+        "from": old_phase,
+        "gate": args.gate,
+        "gate_state": updated.get("gate_state"),
+    })
+    print(f"parked: cycle {args.id}: {old_phase} -> {args.gate} "
+          f"(gate_state={updated.get('gate_state')}).")
+    return 0
+
+
+def _parse_decision(raw: str) -> dict:
+    """Parse a resume decision: inline JSON or a path to a JSON file."""
+    text = str(raw).strip()
+    maybe_path = Path(text)
+    if maybe_path.exists() and maybe_path.is_file():
+        try:
+            text = maybe_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            print(f"error: cannot read decision file {maybe_path}: {exc}",
+                  file=sys.stderr)
+            raise SystemExit(1)
+    try:
+        decision = json.loads(text)
+    except json.JSONDecodeError as exc:
+        print(f"error: --decision is not valid JSON ({exc}).",
+              file=sys.stderr)
+        raise SystemExit(1)
+    if not isinstance(decision, dict):
+        print("error: --decision JSON must be an object with keys "
+              "gate/approved/decided_by.", file=sys.stderr)
+        raise SystemExit(1)
+    return decision
+
+
+def cmd_cycle_resume(args: argparse.Namespace) -> int:
+    """Resume a parked cycle with an explicit human decision record."""
+    record = _read_cycle(args.id)
+    decision = _parse_decision(args.decision)
+    mod = _load_sibling_module("cycle")
+    resume = getattr(mod, "resume_with_decision", None) if mod else None
+    if not callable(resume):
+        print("error: cycle.py resume_with_decision() unavailable.",
+              file=sys.stderr)
+        return 1
+    try:
+        updated = resume(record, decision)
+    except ValueError as exc:
+        print(f"blocked: {exc}", file=sys.stderr)
+        return 1
+    now = _now_iso()
+    updated["updated_at"] = now
+    _write_cycle(updated)
+    filed = _append_ledger({
+        "ts": now,
+        "kind": "cycle.gate-decision",
+        "type": "cycle.gate-decision",
+        "cycle_id": args.id,
+        "gate": decision.get("gate"),
+        "approved": decision.get("approved"),
+        "decided_by": decision.get("decided_by"),
+        "gate_state": updated.get("gate_state"),
+    })
+    if updated.get("gate_state") != "open":
+        print(f"recorded: decision filed (entry "
+              f"{str(filed.get('entry_hash', '?'))[:12]}); cycle {args.id} "
+              "remains parked (decision not approved).")
+    else:
+        print(f"resumed: cycle {args.id} (gate_state=open).")
+    return 0
+
+
+def cmd_cycle_report(args: argparse.Namespace) -> int:
+    """Render the cycle's one-page report from its records."""
+    mod = _load_sibling_module("cycle")
+    gen = getattr(mod, "generate_report", None) if mod else None
+    if not callable(gen):
+        print("error: cycle.py generate_report() unavailable.",
+              file=sys.stderr)
+        return 1
+    try:
+        markdown = gen(args.id, cycles_dir=str(CYCLES_DIR),
+                       ledger_path=str(LEDGER_PATH),
+                       reports_dir=str(REPORTS_DIR))
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    path = REPORTS_DIR / f"{args.id}.md"
+    print(str(path))
+    print(markdown)
     return 0
 
 
@@ -572,6 +750,46 @@ def cmd_ladder_show(args: argparse.Namespace) -> int:
 
 
 # ------------------------------------------------------------------
+# repo commands (read the real repository; lazy-load, never break CLI)
+# ------------------------------------------------------------------
+
+def cmd_repo_show(args: argparse.Namespace) -> int:
+    mod = _load_sibling_module("repository")
+    if mod is None or not hasattr(mod, "show_claim"):
+        print("error: repository.py not present; no repository to read.",
+              file=sys.stderr)
+        return 1
+    try:
+        claim = mod.show_claim(args.claim)
+    except LookupError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"error: repository read failed: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(claim, indent=2, sort_keys=True))
+    return 0
+
+
+def cmd_repo_provenance(args: argparse.Namespace) -> int:
+    mod = _load_sibling_module("repository")
+    if mod is None or not hasattr(mod, "provenance"):
+        print("error: repository.py not present; no repository to read.",
+              file=sys.stderr)
+        return 1
+    try:
+        chain = mod.provenance(args.claim)
+    except LookupError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"error: repository read failed: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(chain, indent=2, sort_keys=True))
+    return 0
+
+
+# ------------------------------------------------------------------
 # argparse wiring
 # ------------------------------------------------------------------
 
@@ -600,11 +818,34 @@ def build_parser() -> argparse.ArgumentParser:
                             help="transition a cycle to another phase")
     p_adv.add_argument("--id", required=True, help="cycle id")
     p_adv.add_argument("--to", required=True,
-                       help="target phase: 1-7 (mapped to the sourced names) "
+                       help="target phase: 1-7 (mapped to the sourced names), "
+                            "8 (parks blocked-on-source), 9/10 or "
+                            "wetlab/publication (parks human-gated), "
                             "or a phase name")
     p_adv.add_argument("--reason", required=True,
                        help="reason recorded in history + ledger")
     p_adv.set_defaults(func=cmd_cycle_advance)
+
+    p_park = csub.add_parser("park", help="park a cycle at a human gate "
+                                         "(or the step-8 source gap)")
+    p_park.add_argument("--id", required=True, help="cycle id")
+    p_park.add_argument("--gate", required=True,
+                        help="gate name: wetlab, publication, or "
+                             "step-8-unimplemented")
+    p_park.set_defaults(func=cmd_cycle_park)
+
+    p_resume = csub.add_parser("resume", help="resume a parked cycle with "
+                                             "an explicit human decision")
+    p_resume.add_argument("--id", required=True, help="cycle id")
+    p_resume.add_argument("--decision", required=True,
+                          help="decision record JSON object (or a path to a "
+                               "JSON file) with keys gate/approved/decided_by")
+    p_resume.set_defaults(func=cmd_cycle_resume)
+
+    p_report = csub.add_parser("report", help="render the cycle's one-page "
+                                             "report from its records")
+    p_report.add_argument("--id", required=True, help="cycle id")
+    p_report.set_defaults(func=cmd_cycle_report)
 
     p_exp = sub.add_parser("experiment", help="experiment ledger records")
     esub = p_exp.add_subparsers(dest="cmd", required=True)
@@ -630,6 +871,18 @@ def build_parser() -> argparse.ArgumentParser:
                          type=int,
                          help="run the export guard for this display level")
     p_lshow.set_defaults(func=cmd_ladder_show)
+
+    p_repo = sub.add_parser("repo", help="knowledge repository records")
+    rsub = p_repo.add_subparsers(dest="cmd", required=True)
+
+    p_rshow = rsub.add_parser("show", help="print one filed claim")
+    p_rshow.add_argument("--claim", required=True, help="claim id")
+    p_rshow.set_defaults(func=cmd_repo_show)
+
+    p_rprov = rsub.add_parser("provenance",
+                              help="print a claim's chain back to sources")
+    p_rprov.add_argument("--claim", required=True, help="claim id")
+    p_rprov.set_defaults(func=cmd_repo_provenance)
 
     return p
 
