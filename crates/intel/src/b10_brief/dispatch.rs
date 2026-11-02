@@ -1476,6 +1476,7 @@ pub struct DispatchShowJob {
 /// report dict and reads `counts` with a default of empty; the typed
 /// report here always carries its counts, so a missing-counts report
 /// is the empty-counts report, which renders as "0 jobs".
+#[derive(Debug, Clone, PartialEq)]
 pub struct DispatchShowReport {
     pub id: String,
     pub summary: String,
