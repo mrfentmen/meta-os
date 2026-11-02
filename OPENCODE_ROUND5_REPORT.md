@@ -51,7 +51,20 @@ bytes not yet captured; kernel-lane blocker documented below)
   Evidence logs: `os-build/logs/R5-readkey.txt` (polling, empty,
   exits, panics, storm), plus `R5-dbg.txt`, `R5-bisect*.txt`,
   `R5-cur.txt`, `R5-fdbg.txt`, `R5-storm*.txt` from the trail.
-## R5-3 final K7 session — TODO
+## R5-3 final K7 session — DONE
+- Refreshed `os-build/logs/K7-boot.txt` (2444 bytes) on current
+  main + R5 work: banner `META OS 0.1 (K6)`, alive, all three
+  userspace programs, crasher isolated (`task killed`), typed
+  `help`/`status`/`mem`/`ps`/`uptime`/bogus via drive.py with
+  every real answer (commands list, `tasks 7 ...` + STATUS,
+  `mem frames_free ... heap_total 512K`, 7 `ps id ...` rows,
+  `uptime 141s ...`, `unknown command` + help re-list).
+  0 loader-refused, 0 panic.
+- Scope note: 7 tasks in this run (readkey spawn held per R5-2;
+  the 7 `ps` rows match). `mem`/`ps`/`uptime` answers come from
+  Rowan's merged RW4-1 work — re-run owed if his R-2 surface
+  changes (prompt/backspace/read_key not yet in tree: named
+  missing, log never fakes them).
 ## R5-4 Imperium live loop — TODO
 ## R5-5 soak — TODO
 ## R5-6 merge-watch — TODO
