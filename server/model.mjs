@@ -90,7 +90,7 @@ export function buildSparkPrompt(profile, input) {
     "{",
     `  "product": "${input.product}",`,
     `  "timestamp": "${input.timestamp}",`,
-    '  "observations": [{"category": "<one of the categories below>", "description": "<what is visible>", "evidence": "<where in the frame>", "confidence": <0..1 or null>}],',
+    '  "observations": [{"category": "<one of the categories below>", "description": "<what is visible>", "evidence": "<where in the frame>", "confidence": <0..1 or null>, "region": {"x": <0..1000>, "y": <0..1000>, "w": <0..1000>, "h": <0..1000>} or null}],',
     '  "assessment": {"category": "<one of the categories below>", "summary": "<one or two sentences>", "uncertainty": ["<anything unclear>"], "requires_human_review": <true|false>},',
     `  "processing": {"model": "${SPARK_MODEL}", "latency_ms": null}`,
     "}",
