@@ -2455,6 +2455,168 @@ pub fn brief_text_from_record(record: Option<&StoredBriefText>) -> String {
     format!("{}\n", lines.join("\n"))
 }
 
+/// A stored brief's timestamp as Python carries it: `ts` (or the
+/// `generated_at` fallback) may be an int or a float; a bool is
+/// rejected by Python's `isinstance` check, and a string or
+/// missing key skips the entry. The Rust form can only carry
+/// int/float, so a string timestamp has no Rust form — a store
+/// adapter maps it to `None` (missing), which also falls back to
+/// `generated_at` where Python would skip outright. That is a
+/// malformed-entry edge, not a stored shape: `store_brief`
+/// writes int timestamps.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BriefTs {
+    Int(i64),
+    Float(f64),
+}
+
+impl BriefTs {
+    fn as_f64(self) -> f64 {
+        match self {
+            BriefTs::Int(v) => v as f64,
+            BriefTs::Float(v) => v,
+        }
+    }
+}
+
+/// One brief-index entry as `list_briefs` returns it, oldest
+/// first: `ts` with the `generated_at` fallback. `None` on a
+/// field means the key is missing (or, for a store adapter, that
+/// the value was not an int/float).
+#[derive(Debug, Clone, PartialEq)]
+pub struct BriefIndexEntry {
+    pub ts: Option<BriefTs>,
+    pub generated_at: Option<BriefTs>,
+}
+
+/// A stored brief record as `find_recent_brief` returns it: the
+/// guard fields (`kind`, `source_window`) plus the render fields
+/// `brief_text_from_record` reads. The full record Python
+/// returns carries more (room, model, spend_id), but the guard
+/// only compares kind and window and the caller only renders
+/// text — the rest arrives with `generate_brief`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct StoredBriefRecord {
+    pub kind: String,
+    pub stored: StoredBriefText,
+}
+
+/// The brief store surface `find_recent_brief` reads.
+/// `list_briefs` / `get_brief` themselves are Redis-backed
+/// (`store_brief` / `get_brief` / `list_briefs`, BRF-009) and
+/// land with `generate_brief`; until then the guard runs
+/// against this trait, and tests run against a fake. `Err` on
+/// either call is the Rust form of a Python store exception:
+/// the guard fails open (list failure) or skips the entry (get
+/// failure), never blocks a fresh brief.
+pub trait BriefStore {
+    fn list_briefs(&self, room: &str) -> Result<Vec<BriefIndexEntry>, String>;
+    fn get_brief(&self, room: &str, ts: BriefTs) -> Result<Option<StoredBriefRecord>, String>;
+}
+
+/// Window equality the way Python dict equality does it: a text
+/// window equals only the same text; a dict window equals only
+/// a dict window with equal counts and equal hours — except
+/// that Python numbers compare across int/float, so `Int(24)`
+/// equals `Float(24.0)` here where derived `PartialEq` would
+/// say no. Known gaps, same as the render form: a missing dict
+/// key and a null-valued key both arrive as `None` and compare
+/// equal here, where Python says missing != null; and extra
+/// dict keys have no Rust form and are ignored.
+fn source_window_equal(a: &Option<SourceWindow>, b: &Option<SourceWindow>) -> bool {
+    match (a, b) {
+        (None, None) => true,
+        (Some(SourceWindow::Text(x)), Some(SourceWindow::Text(y))) => x == y,
+        (
+            Some(SourceWindow::Dict {
+                max_messages: am,
+                max_hours: ah,
+                messages_kept: ak,
+                messages_dropped: ad,
+            }),
+            Some(SourceWindow::Dict {
+                max_messages: bm,
+                max_hours: bh,
+                messages_kept: bk,
+                messages_dropped: bd,
+            }),
+        ) => {
+            am == bm
+                && ak == bk
+                && ad == bd
+                && match (ah, bh) {
+                    (None, None) => true,
+                    (Some(WindowHours::Int(x)), Some(WindowHours::Int(y))) => x == y,
+                    (Some(WindowHours::Float(x)), Some(WindowHours::Float(y))) => x == y,
+                    (Some(WindowHours::Int(x)), Some(WindowHours::Float(y))) => (*x as f64) == *y,
+                    (Some(WindowHours::Float(x)), Some(WindowHours::Int(y))) => *x == (*y as f64),
+                    _ => false,
+                }
+        }
+        _ => false,
+    }
+}
+
+/// BRF-028: find a stored brief for the same room, kind, window.
+///
+/// Returns the stored record when one was generated inside the
+/// last 5 minutes, with the same kind and an equal
+/// source_window — or `None`. Entries scan newest first, so
+/// the most recent matching brief wins. A store list failure
+/// returns `None` (fail open): the guard must never block a
+/// fresh brief. Entries with no usable timestamp, a future
+/// timestamp, or an unreadable record are skipped, never
+/// fatal. A `None` record from the store is not a dict in
+/// Python and is skipped the same way.
+pub fn find_recent_brief(
+    store: &dyn BriefStore,
+    room: &str,
+    kind: &str,
+    source_window: &SourceWindow,
+    now: Option<i64>,
+) -> Option<StoredBriefRecord> {
+    let current = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let entries = match store.list_briefs(room) {
+        Ok(entries) => entries,
+        Err(_) => return None,
+    };
+    for entry in entries.iter().rev() {
+        let ts = match entry.ts.or(entry.generated_at) {
+            Some(ts) => ts,
+            None => continue,
+        };
+        let ts_f = ts.as_f64();
+        if ts_f > current as f64 {
+            continue;
+        }
+        if current as f64 - ts_f > BRIEF_REGENERATION_WINDOW_SECONDS as f64 {
+            continue;
+        }
+        let record = match store.get_brief(room, ts) {
+            Ok(record) => record,
+            Err(_) => continue,
+        };
+        let record = match record {
+            Some(record) => record,
+            None => continue,
+        };
+        if record.kind != kind {
+            continue;
+        }
+        if !source_window_equal(&record.stored.source_window, &Some(source_window.clone())) {
+            continue;
+        }
+        return Some(record);
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3639,5 +3801,225 @@ mod tests {
         assert_eq!(next_morning_run(Some(1793620800), 9), 1793628000);
         // Year boundary: 2026-12-31 23:00 EST -> 2027-01-01 08:00 EST.
         assert_eq!(next_morning_run(Some(1798776000), 8), 1798808400);
+    }
+
+    struct FakeBriefStore {
+        list: Result<Vec<BriefIndexEntry>, String>,
+        records: Vec<(BriefTs, StoredBriefRecord)>,
+        fail_get: Vec<BriefTs>,
+    }
+
+    impl BriefStore for FakeBriefStore {
+        fn list_briefs(&self, _room: &str) -> Result<Vec<BriefIndexEntry>, String> {
+            self.list.clone()
+        }
+
+        fn get_brief(&self, _room: &str, ts: BriefTs) -> Result<Option<StoredBriefRecord>, String> {
+            if self.fail_get.iter().any(|f| f.as_f64() == ts.as_f64()) {
+                return Err("store down".to_string());
+            }
+            Ok(self
+                .records
+                .iter()
+                .find(|(t, _)| t.as_f64() == ts.as_f64())
+                .map(|(_, r)| r.clone()))
+        }
+    }
+
+    fn dict_window() -> SourceWindow {
+        SourceWindow::Dict {
+            max_messages: Some(500),
+            max_hours: Some(WindowHours::Int(24)),
+            messages_kept: Some(1),
+            messages_dropped: Some(0),
+        }
+    }
+
+    fn guard_record(kind: &str, window: SourceWindow) -> StoredBriefRecord {
+        StoredBriefRecord {
+            kind: kind.to_string(),
+            stored: StoredBriefText {
+                text: Some("guard brief".to_string()),
+                source_window: Some(window),
+                sections: HashMap::new(),
+            },
+        }
+    }
+
+    fn entry(ts: i64) -> BriefIndexEntry {
+        BriefIndexEntry { ts: Some(BriefTs::Int(ts)), generated_at: None }
+    }
+
+    #[test]
+    fn find_recent_brief_newest_match_wins() {
+        // Oldest first, as list_briefs returns them; the newest
+        // kind+window match wins, and a newer wrong-kind entry
+        // is skipped, not returned.
+        let store = FakeBriefStore {
+            list: Ok(vec![entry(1793000000), entry(1793000100), entry(1793000150)]),
+            records: vec![
+                (BriefTs::Int(1793000000), guard_record("ondemand", dict_window())),
+                (BriefTs::Int(1793000100), guard_record("ondemand", dict_window())),
+                (BriefTs::Int(1793000150), guard_record("morning", dict_window())),
+            ],
+            fail_get: vec![],
+        };
+        let found =
+            find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(1793000200));
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().stored.text.as_deref(), Some("guard brief"));
+        // The match is the 1793000100 record: prove it by giving
+        // that record distinct text through a second store.
+        let store = FakeBriefStore {
+            list: Ok(vec![entry(1793000000), entry(1793000100)]),
+            records: vec![
+                (
+                    BriefTs::Int(1793000000),
+                    StoredBriefRecord {
+                        kind: "ondemand".to_string(),
+                        stored: StoredBriefText {
+                            text: Some("older".to_string()),
+                            source_window: Some(dict_window()),
+                            sections: HashMap::new(),
+                        },
+                    },
+                ),
+                (
+                    BriefTs::Int(1793000100),
+                    StoredBriefRecord {
+                        kind: "ondemand".to_string(),
+                        stored: StoredBriefText {
+                            text: Some("newer".to_string()),
+                            source_window: Some(dict_window()),
+                            sections: HashMap::new(),
+                        },
+                    },
+                ),
+            ],
+            fail_get: vec![],
+        };
+        assert_eq!(
+            find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(1793000200))
+                .unwrap()
+                .stored
+                .text
+                .as_deref(),
+            Some("newer")
+        );
+    }
+
+    #[test]
+    fn find_recent_brief_stale_future_and_boundary() {
+        // Stale (> 300s) and future entries are skipped; exactly
+        // 300s old is inside the window (Python: `> 300` skips).
+        let now = 1793001000;
+        let store = FakeBriefStore {
+            list: Ok(vec![entry(now - 301), entry(now + 10), entry(now - 300)]),
+            records: vec![
+                (BriefTs::Int(now - 301), guard_record("ondemand", dict_window())),
+                (BriefTs::Int(now + 10), guard_record("ondemand", dict_window())),
+                (BriefTs::Int(now - 300), guard_record("ondemand", dict_window())),
+            ],
+            fail_get: vec![],
+        };
+        assert!(find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(now))
+            .is_some());
+        // With only stale and future entries, there is no hit.
+        let store = FakeBriefStore {
+            list: Ok(vec![entry(now - 301), entry(now + 10)]),
+            records: vec![
+                (BriefTs::Int(now - 301), guard_record("ondemand", dict_window())),
+                (BriefTs::Int(now + 10), guard_record("ondemand", dict_window())),
+            ],
+            fail_get: vec![],
+        };
+        assert_eq!(
+            find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(now)),
+            None
+        );
+    }
+
+    #[test]
+    fn find_recent_brief_window_equality() {
+        // A text window never matches a dict window, and a
+        // record with no window never matches a dict window.
+        let store = FakeBriefStore {
+            list: Ok(vec![entry(1793000000)]),
+            records: vec![(
+                BriefTs::Int(1793000000),
+                guard_record("ondemand", SourceWindow::Text("yesterday".to_string())),
+            )],
+            fail_get: vec![],
+        };
+        assert_eq!(
+            find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(1793000100)),
+            None
+        );
+        // Int hours equal float hours, mirroring Python's
+        // `24 == 24.0` dict comparison.
+        let float_window = SourceWindow::Dict {
+            max_messages: Some(500),
+            max_hours: Some(WindowHours::Float(24.0)),
+            messages_kept: Some(1),
+            messages_dropped: Some(0),
+        };
+        let store = FakeBriefStore {
+            list: Ok(vec![entry(1793000000)]),
+            records: vec![(BriefTs::Int(1793000000), guard_record("ondemand", float_window))],
+            fail_get: vec![],
+        };
+        assert!(find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(1793000100))
+            .is_some());
+    }
+
+    #[test]
+    fn find_recent_brief_fail_open_and_skip_unreadable() {
+        // A list failure fails open: no guard hit, fresh brief.
+        let store = FakeBriefStore {
+            list: Err("store down".to_string()),
+            records: vec![],
+            fail_get: vec![],
+        };
+        assert_eq!(
+            find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(1793000100)),
+            None
+        );
+        // A get failure on the newest entry skips it and the
+        // older matching entry still hits.
+        let store = FakeBriefStore {
+            list: Ok(vec![entry(1793000000), entry(1793000100)]),
+            records: vec![
+                (BriefTs::Int(1793000000), guard_record("ondemand", dict_window())),
+                (BriefTs::Int(1793000100), guard_record("ondemand", dict_window())),
+            ],
+            fail_get: vec![BriefTs::Int(1793000100)],
+        };
+        assert!(find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(1793000200))
+            .is_some());
+    }
+
+    #[test]
+    fn find_recent_brief_ts_falls_back_to_generated_at() {
+        // No `ts` key: `generated_at` is the timestamp.
+        let store = FakeBriefStore {
+            list: Ok(vec![BriefIndexEntry {
+                ts: None,
+                generated_at: Some(BriefTs::Int(1793000000)),
+            }]),
+            records: vec![(BriefTs::Int(1793000000), guard_record("ondemand", dict_window()))],
+            fail_get: vec![],
+        };
+        assert!(find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(1793000100))
+            .is_some());
+        // Neither key: the entry is skipped, not fatal.
+        let store = FakeBriefStore {
+            list: Ok(vec![BriefIndexEntry { ts: None, generated_at: None }]),
+            records: vec![],
+            fail_get: vec![],
+        };
+        assert_eq!(
+            find_recent_brief(&store, "build", "ondemand", &dict_window(), Some(1793000100)),
+            None
+        );
     }
 }
