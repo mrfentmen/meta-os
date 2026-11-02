@@ -7,26 +7,15 @@ reason this page under-reports dead code rather than inventing any: a function t
 appears in a comment will not be listed here, and the page says so instead of claiming
 a compiler's answer.
 
-Scanned: 68 service directories, 144 Goose files.
+Scanned: 68 service directories, 147 Goose files.
 
 ## 1. Functions nothing calls
 
 | File | Function | Line |
 |---|---|---|
 | `services/logd/logd.goose` | `log_warn` | 145 |
-| `services/net/arp.goose` | `mac_is_broadcast` | 62 |
-| `services/net/loopback.goose` | `lo_mask` | 40 |
-| `services/net/loopback.goose` | `lo_configured` | 49 |
-| `services/net/loopback.goose` | `lo_route` | 68 |
-| `services/net/loopback.goose` | `lo_source_for` | 80 |
-| `services/input/keymaps2.goose` | `compose_new` | 160 |
-| `services/input/keymaps2.goose` | `compose_dead_for` | 167 |
-| `services/input/keymaps2.goose` | `compose_feed` | 180 |
-| `services/input/keymaps2.goose` | `km_layout_ok` | 263 |
 | `services/shell/shell.goose` | `sh_set_cwd` | 75 |
 | `services/example/example.goose` | `on_stop` | 203 |
-| `services/netcfg/netcfg.goose` | `ip4_mask` | 146 |
-| `services/netcfg/netcfg.goose` | `ip4_subnet_broadcast` | 195 |
 | `services/updater/signature.goose` | `sig_status_name` | 71 |
 | `services/updater/signature.goose` | `sig_signed_len` | 201 |
 | `services/updater/signature.goose` | `sig_trusted_key_count` | 208 |
@@ -40,25 +29,7 @@ Scanned: 68 service directories, 144 Goose files.
 | `services/time/time.goose` | `clock_deadline_in` | 174 |
 | `services/time/time.goose` | `clock_wait` | 200 |
 | `services/time/time.goose` | `ticks_to_us` | 238 |
-| `services/common/bytes/bytes.goose` | `hex_value` | 229 |
-| `services/common/sort/sort.goose` | `sort_i64` | 38 |
-| `services/common/sort/sort.goose` | `sort_pairs` | 70 |
-| `services/common/sort/sort.goose` | `sort_find` | 96 |
-| `services/common/sort/sort.goose` | `sort_spans` | 113 |
 | `services/common/cfg/cfg.goose` | `spans_equal` | 75 |
-| `services/common/enc/enc.goose` | `utf8_validate` | 174 |
-| `services/common/json/json.goose` | `json_find` | 391 |
-| `services/common/json/json.goose` | `json_bool` | 417 |
-| `services/common/json/json.goose` | `json_is_null` | 424 |
-| `services/common/json/json.goose` | `json_begin` | 486 |
-| `services/common/json/json.goose` | `json_kv_str` | 492 |
-| `services/common/json/json.goose` | `json_kv_int` | 530 |
-| `services/common/json/json.goose` | `json_kv_bool` | 561 |
-| `services/common/json/json.goose` | `json_end` | 570 |
-| `services/common/table/table.goose` | `tbl_has` | 134 |
-| `services/common/table/table.goose` | `tbl_next_slot` | 156 |
-| `services/common/table/table.goose` | `tbl_key_copy` | 167 |
-| `services/common/text/text.goose` | `text_trim` | 33 |
 | `services/common/text/text.goose` | `text_find` | 57 |
 | `services/common/text/text.goose` | `text_split` | 80 |
 | `services/common/text/text.goose` | `text_upper` | 104 |
@@ -247,16 +218,26 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/common/bytes/bytes.goose` | `by_starts_with` | 178 | 3 |
 | `services/common/bytes/bytes.goose` | `by_ends_with` | 188 | 3 |
 | `services/common/bytes/bytes.goose` | `by_trim_span` | 206 | 3 |
+| `services/common/bytes/bytes.goose` | `hex_value` | 229 | 11 |
 | `services/common/bytes/bytes.goose` | `by_is_blank` | 240 | 3 |
 | `services/common/bytes/bytes.goose` | `by_all_digits` | 249 | 3 |
 | `services/common/bytes/bytes.goose` | `by_all_hex` | 259 | 2 |
 | `services/common/enc/enc.goose` | `b64_encode` | 63 | 2 |
+| `services/common/enc/enc.goose` | `utf8_validate` | 174 | 17 |
 | `services/common/fmt/fmt.goose` | `append_int_pad` | 104 | 4 |
-| `services/common/fmt/fmt.goose` | `terminate` | 153 | 10 |
+| `services/common/fmt/fmt.goose` | `terminate` | 153 | 11 |
 | `services/common/hash/hash.goose` | `crc32_update` | 70 | 5 |
 | `services/common/hash/hash.goose` | `crc32_start` | 89 | 4 |
 | `services/common/hex/hex.goose` | `hex_encode` | 40 | 3 |
 | `services/common/hex/hex.goose` | `hex_is_exact` | 94 | 4 |
+| `services/common/json/json.goose` | `json_find` | 391 | 12 |
+| `services/common/json/json.goose` | `json_bool` | 417 | 8 |
+| `services/common/json/json.goose` | `json_is_null` | 424 | 6 |
+| `services/common/json/json.goose` | `json_begin` | 486 | 4 |
+| `services/common/json/json.goose` | `json_kv_str` | 492 | 5 |
+| `services/common/json/json.goose` | `json_kv_int` | 530 | 4 |
+| `services/common/json/json.goose` | `json_kv_bool` | 561 | 2 |
+| `services/common/json/json.goose` | `json_end` | 570 | 4 |
 | `services/common/ring/ring.goose` | `ring_len` | 53 | 12 |
 | `services/common/ring/ring.goose` | `ring_cap` | 57 | 1 |
 | `services/common/ring/ring.goose` | `ring_is_full` | 65 | 1 |
@@ -265,6 +246,10 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/common/ring/ring.goose` | `ring_drain` | 133 | 1 |
 | `services/common/ring/ring.goose` | `ring_snapshot` | 146 | 1 |
 | `services/common/ring/ring.goose` | `msg_capacity` | 182 | 2 |
+| `services/common/sort/sort.goose` | `sort_i64` | 38 | 9 |
+| `services/common/sort/sort.goose` | `sort_pairs` | 70 | 3 |
+| `services/common/sort/sort.goose` | `sort_find` | 96 | 4 |
+| `services/common/sort/sort.goose` | `sort_spans` | 113 | 5 |
 | `services/common/status/status.goose` | `status_open` | 64 | 4 |
 | `services/common/status/status.goose` | `status_field` | 89 | 9 |
 | `services/common/status/status.goose` | `status_field_word` | 101 | 3 |
@@ -276,8 +261,12 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/common/str/str.goose` | `st_to_upper` | 169 | 1 |
 | `services/common/str/str.goose` | `st_copy_span` | 198 | 2 |
 | `services/common/str/str.goose` | `st_trim_span` | 209 | 1 |
-| `services/common/table/table.goose` | `tbl_put` | 87 | 36 |
+| `services/common/table/table.goose` | `tbl_put` | 87 | 43 |
+| `services/common/table/table.goose` | `tbl_has` | 134 | 4 |
 | `services/common/table/table.goose` | `tbl_stats` | 150 | 4 |
+| `services/common/table/table.goose` | `tbl_next_slot` | 156 | 3 |
+| `services/common/table/table.goose` | `tbl_key_copy` | 167 | 3 |
+| `services/common/text/text.goose` | `text_trim` | 33 | 9 |
 | `services/console/esc.goose` | `esc_new` | 81 | 1 |
 | `services/console/esc.goose` | `esc_feed` | 113 | 4 |
 | `services/dashboard/dashboard.goose` | `df_set_window` | 108 | 6 |
@@ -329,6 +318,10 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/input/input.goose` | `input_init` | 99 | 1 |
 | `services/input/input.goose` | `input_repeat` | 247 | 3 |
 | `services/input/input.goose` | `input_passthrough` | 275 | 1 |
+| `services/input/keymaps2.goose` | `compose_new` | 166 | 4 |
+| `services/input/keymaps2.goose` | `compose_dead_for` | 173 | 16 |
+| `services/input/keymaps2.goose` | `compose_feed` | 186 | 18 |
+| `services/input/keymaps2.goose` | `km_layout_ok` | 273 | 8 |
 | `services/logd/logd.goose` | `log_error` | 146 | 2 |
 | `services/logd/rotate.goose` | `rot_new` | 55 | 11 |
 | `services/logd/rotate.goose` | `rot_append` | 81 | 24 |
@@ -341,6 +334,7 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/logfmt/logfmt.goose` | `logfmt_render` | 158 | 14 |
 | `services/logfmt/logfmt.goose` | `logfmt_parse` | 261 | 18 |
 | `services/net/arp.goose` | `mac_eq` | 58 | 4 |
+| `services/net/arp.goose` | `mac_is_broadcast` | 62 | 9 |
 | `services/net/arp.goose` | `arp_build` | 66 | 11 |
 | `services/net/arp.goose` | `arp_cache_lookup` | 111 | 11 |
 | `services/net/arp.goose` | `arp_cache_put` | 126 | 7 |
@@ -352,7 +346,11 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/net/icmp.goose` | `icmp_payload_matches` | 103 | 4 |
 | `services/net/ip.goose` | `ip_parse_header` | 104 | 15 |
 | `services/net/ip.goose` | `ip_for_us` | 134 | 4 |
-| `services/net/loopback.goose` | `lo_build` | 109 | 1 |
+| `services/net/loopback.goose` | `lo_mask` | 40 | 4 |
+| `services/net/loopback.goose` | `lo_configured` | 49 | 3 |
+| `services/net/loopback.goose` | `lo_route` | 68 | 19 |
+| `services/net/loopback.goose` | `lo_source_for` | 82 | 7 |
+| `services/net/loopback.goose` | `lo_build` | 111 | 1 |
 | `services/net/packet.goose` | `pkt_add_link` | 72 | 10 |
 | `services/net/packet.goose` | `pkt_set_state` | 107 | 8 |
 | `services/net/packet.goose` | `pkt_send` | 126 | 5 |
@@ -377,6 +375,8 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/net/tcp.goose` | `tcp_timer_given_up` | 313 | 2 |
 | `services/net/udp.goose` | `udp_parse` | 82 | 13 |
 | `services/netcfg/netcfg.goose` | `ip4_broadcast` | 49 | 1 |
+| `services/netcfg/netcfg.goose` | `ip4_mask` | 146 | 21 |
+| `services/netcfg/netcfg.goose` | `ip4_subnet_broadcast` | 195 | 10 |
 | `services/notify/notify.goose` | `nt_post` | 187 | 25 |
 | `services/notify/notify.goose` | `nt_dismiss` | 234 | 11 |
 | `services/notify/notify.goose` | `nt_count` | 266 | 13 |
@@ -498,7 +498,7 @@ the system runs, and every accessor is a promise somebody may rely on later.
 
 | Directory | Unreferenced functions |
 |---|---|
-| `services/common` | 35 |
+| `services/common` | 17 |
 | `services/console` | 8 |
 | `services/display` | 7 |
 | `services/time` | 7 |
@@ -506,14 +506,11 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/supervisor` | 6 |
 | `services/watchdog` | 6 |
 | `services/fs` | 5 |
-| `services/net` | 5 |
 | `services/updater` | 5 |
 | `services/audit` | 4 |
 | `services/dns` | 4 |
-| `services/input` | 4 |
 | `services/socket` | 3 |
 | `services/dhcp` | 2 |
-| `services/netcfg` | 2 |
 | `services/dock` | 1 |
 | `services/example` | 1 |
 | `services/logd` | 1 |
@@ -523,9 +520,9 @@ the system runs, and every accessor is a promise somebody may rely on later.
 
 ## What this census found
 
-- 115 function(s) with no reference at all.
+- 86 function(s) with no reference at all.
 - 38 constant(s) declared and never read.
-- 303 accessor(s) reached only from a driver.
+- 332 accessor(s) reached only from a driver.
 
 The count that matters for the submission is the first: a function nothing calls
 is a claim about the system that the system does not make.

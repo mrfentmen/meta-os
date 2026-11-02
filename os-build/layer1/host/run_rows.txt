@@ -1,3 +1,6 @@
+tests/t100_common|RUNS|55|0|
+tests/t101_netaddr|RUNS|34|0|
+tests/t102_keycompose|RUNS|38|0|
 tests/t45_fmt|RUNS|24|0|
 tests/t46_ring|RUNS|36|0|
 tests/t47_cfg|RUNS|16|0|
