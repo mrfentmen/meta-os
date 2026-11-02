@@ -80,7 +80,7 @@ or BLOCKED with the artifact named.
 | 66 | 60s recording | ADAPTED (frames) | no video capture tool in guest X env; 8 QEMU beat dumps (R6-2) + 18 guest app shots + boot/login series stand in as the frame record |
 | 67a | UTM/hardware boot | BLOCKED (honest) | utmctl has no headless create/import, zero VMs registered, GUI import not drivable from this session; QEMU boots (face-boot1/2/3.txt + all guest proofs) stand as machine-boot evidence |
 | 67b | Toolchain in bake | PROVEN (finding) | guest-toolchain-listing.txt: node /usr/bin/node + git 2.39.5 + chromium present; opencode ABSENT (no binary, 0 dpkg hits) |
-| 67 | Fresh image from script | TODO | build-image.sh needs Linux+sudo, not run this session |
+| 67 | Fresh image from script | PROVEN (local) | face/build-image.sh ran on this Mac (base cached): metaos-face.img 448MB sha256 f7d8581e + seed.iso; fresh QEMU boot: cloud-init finished + `metaos login:` (fresh-boot.txt); the full debootstrap bake (os/build-image.sh) is the part needing root+Linux — not run |
 | 68 | STATUS final | TODO | this file, updated per section |
 | 69 | Lock screen | PROVEN (guest) | guest-lock.jpg: dimmed ribbon + M card + password; unlock flow proven locally |
 | 70 | Notifications | DONE (guest-visible) | bell+lock+search live in guest-desktop-full.jpg topbar (glyphs font-dependent); polling proven locally against live board |
