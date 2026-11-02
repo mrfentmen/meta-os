@@ -2219,6 +2219,165 @@ pub fn with_daily(
     }
 }
 
+/// OS-092 follow-up: the morning-path caller that fills a
+/// snapshot's `memory_depth` record, so a morning brief carries its
+/// Long-term memory section even when the snapshot states only the
+/// raw lists. Returns the record to store as the snapshot's
+/// `memory_depth` value. A hand-stated record wins over a built one:
+/// pass it as `existing` and it is returned unchanged, whatever the
+/// lists say, so a caller that knows its memory better than these
+/// lists is never overwritten. This reads stated lists, never a live
+/// service: there is no memory service in this repo for a filler to
+/// read aged decisions or due commitments from, so a snapshot that
+/// states no usable entry leaves that key out. When the snapshot
+/// states the memory service did not answer, the record carries that
+/// flag alone: the renderer shows no item beside the down line under
+/// the OS-050 honesty rule, so stated lists are not carried into a
+/// record whose lines would never show them. Unlike a hand-stated
+/// empty record, a snapshot that yields nothing usable at all gets
+/// `None`, not an empty record: the OS-092 rule is that a snapshot
+/// with no `memory_depth` record carries no section, so older briefs
+/// keep their exact shape instead of gaining none-reported lines.
+/// One stamp for the whole record, so the section's ages agree
+/// instead of drifting across reads. Never fails: a snapshot that
+/// yields nothing usable returns `None` instead of failing the brief
+/// outright.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for an aged, due, or context value that is
+/// not a list; a non-dict list entry maps to `RawAgedDecision::Other`
+/// or `RawDueCommitment::Other` and is skipped; a non-string or
+/// empty decision or commitment is filtered here, mirroring Python's
+/// filter; a date that is not a non-empty string maps to `None` and
+/// renders as not reported, never guessed; a non-string context item
+/// is dropped by the caller before the list is passed, and an empty
+/// string is filtered here.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RawAgedDecision {
+    /// A dict entry as the caller reads it: the decision verbatim,
+    /// and its original date when the caller could read a non-empty
+    /// string for it (a missing, non-string, or empty date is `None`).
+    Entry {
+        decision: String,
+        original_date: Option<String>,
+    },
+    /// Any other shape: Python's `isinstance(entry, dict)` check
+    /// skips it, so it can never name a decision.
+    Other,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RawDueCommitment {
+    /// A dict entry as the caller reads it: the commitment verbatim,
+    /// and its due date when the caller could read a non-empty
+    /// string for it (a missing, non-string, or empty due is `None`).
+    Entry {
+        commitment: String,
+        due: Option<String>,
+    },
+    /// Any other shape: Python's `isinstance(entry, dict)` check
+    /// skips it, so it can never name a commitment.
+    Other,
+}
+
+pub fn with_memory_depth(
+    existing: Option<&MemoryDepth>,
+    memory_down: bool,
+    aged: Option<&[RawAgedDecision]>,
+    due: Option<&[RawDueCommitment]>,
+    fresh_context: Option<&[String]>,
+    now: Option<i64>,
+) -> Option<MemoryDepth> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let stamp = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let mut added = false;
+    let mut record = MemoryDepth {
+        memory_down: false,
+        aged_decisions: None,
+        due_commitments: None,
+        fresh_context: None,
+        age_label: environment_age_label(Some(stamp)),
+    };
+    if memory_down {
+        record.memory_down = true;
+        added = true;
+    } else {
+        if let Some(aged) = aged {
+            let mut usable: Vec<AgedDecision> = Vec::new();
+            for entry in aged {
+                let (decision, date) = match entry {
+                    RawAgedDecision::Entry {
+                        decision,
+                        original_date,
+                    } => (decision, original_date),
+                    RawAgedDecision::Other => continue,
+                };
+                if decision.is_empty() {
+                    continue;
+                }
+                usable.push(AgedDecision {
+                    decision: decision.clone(),
+                    original_date: date
+                        .as_deref()
+                        .filter(|d| !d.is_empty())
+                        .map(str::to_string),
+                });
+            }
+            if !usable.is_empty() {
+                record.aged_decisions = Some(usable);
+                added = true;
+            }
+        }
+        if let Some(due) = due {
+            let mut usable: Vec<DueCommitment> = Vec::new();
+            for entry in due {
+                let (commitment, due_date) = match entry {
+                    RawDueCommitment::Entry { commitment, due } => (commitment, due),
+                    RawDueCommitment::Other => continue,
+                };
+                if commitment.is_empty() {
+                    continue;
+                }
+                usable.push(DueCommitment {
+                    commitment: commitment.clone(),
+                    due: due_date
+                        .as_deref()
+                        .filter(|d| !d.is_empty())
+                        .map(str::to_string),
+                });
+            }
+            if !usable.is_empty() {
+                record.due_commitments = Some(usable);
+                added = true;
+            }
+        }
+        if let Some(context) = fresh_context {
+            let usable: Vec<String> = context
+                .iter()
+                .filter(|item| !item.is_empty())
+                .cloned()
+                .collect();
+            if !usable.is_empty() {
+                record.fresh_context = Some(usable);
+                added = true;
+            }
+        }
+    }
+    if added {
+        Some(record)
+    } else {
+        None
+    }
+}
+
 /// STR-002: `_format_brief_time` — a stored brief timestamp as
 /// `"YYYY-MM-DD HH:MM ET"` in America/New_York, the zone the
 /// BRF-011 morning schedule uses. This crate has no time
@@ -5782,5 +5941,240 @@ mod tests {
         assert!(lines[0].contains("Overnight results: none reported"));
         assert!(lines[1].contains("Today's queue: job 7 boot shot"));
         assert!(lines[2].contains("Needs your word: none reported"));
+    }
+
+    #[test]
+    fn with_memory_depth_fills_all_three_categories_with_one_stamp() {
+        let aged = vec![RawAgedDecision::Entry {
+            decision: "freeze the demo fixture at noon".into(),
+            original_date: Some("2026-10-01".into()),
+        }];
+        let due = vec![RawDueCommitment::Entry {
+            commitment: "ship the demo cut".into(),
+            due: Some("2026-11-03".into()),
+        }];
+        let context = vec![
+            "the demo room is build only, never a posting room".to_string(),
+        ];
+        let record = with_memory_depth(
+            None,
+            false,
+            Some(&aged),
+            Some(&due),
+            Some(&context),
+            Some(1793093400),
+        )
+        .expect("usable lists yield a memory_depth record");
+        assert_eq!(
+            record.age_label,
+            " (as of 2026-10-27 05:30 ET)"
+        );
+        assert!(!record.memory_down);
+        assert_eq!(
+            record.aged_decisions,
+            Some(vec![AgedDecision {
+                decision: "freeze the demo fixture at noon".into(),
+                original_date: Some("2026-10-01".into()),
+            }])
+        );
+        assert_eq!(
+            record.due_commitments,
+            Some(vec![DueCommitment {
+                commitment: "ship the demo cut".into(),
+                due: Some("2026-11-03".into()),
+            }])
+        );
+        assert_eq!(
+            record.fresh_context,
+            Some(vec![
+                "the demo room is build only, never a posting room".to_string()
+            ])
+        );
+        let lines = memory_depth_lines(Some(&record));
+        assert!(lines[0]
+            .contains("Aged decision: freeze the demo fixture at noon (from 2026-10-01)"));
+        assert!(lines[1].contains("Due commitment: ship the demo cut (due 2026-11-03)"));
+        assert!(lines[2].contains(
+            "Fresh-agent context: the demo room is build only, never a posting room"
+        ));
+    }
+
+    #[test]
+    fn with_memory_depth_hand_stated_record_wins_unchanged() {
+        let stated = MemoryDepth {
+            memory_down: false,
+            aged_decisions: Some(vec![AgedDecision {
+                decision: "Hand-stated decision".into(),
+                original_date: Some("2026-09-01".into()),
+            }]),
+            due_commitments: None,
+            fresh_context: None,
+            age_label: " (as of 2026-10-27 05:30 ET)".to_string(),
+        };
+        let aged = vec![RawAgedDecision::Entry {
+            decision: "stated list decision".into(),
+            original_date: Some("2026-10-01".into()),
+        }];
+        let record = with_memory_depth(
+            Some(&stated),
+            false,
+            Some(&aged),
+            None,
+            None,
+            Some(1793093400),
+        )
+        .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_memory_depth_nothing_usable_gets_no_record() {
+        assert_eq!(
+            with_memory_depth(None, false, None, None, None, Some(1793093400)),
+            None
+        );
+        let aged: Vec<RawAgedDecision> = vec![];
+        assert_eq!(
+            with_memory_depth(None, false, Some(&aged), None, None, Some(1793093400)),
+            None
+        );
+    }
+
+    #[test]
+    fn with_memory_depth_malformed_entries_skipped_never_guessed() {
+        let aged = vec![
+            RawAgedDecision::Entry {
+                decision: String::new(),
+                original_date: None,
+            },
+            RawAgedDecision::Entry {
+                decision: String::new(),
+                original_date: Some("2026-10-01".into()),
+            },
+            RawAgedDecision::Other,
+            RawAgedDecision::Entry {
+                decision: "dateless decision".into(),
+                original_date: Some(String::new()),
+            },
+            RawAgedDecision::Entry {
+                decision: "dated decision".into(),
+                original_date: None,
+            },
+        ];
+        let due = vec![
+            RawDueCommitment::Entry {
+                commitment: String::new(),
+                due: None,
+            },
+            RawDueCommitment::Entry {
+                commitment: String::new(),
+                due: Some("2026-11-03".into()),
+            },
+            RawDueCommitment::Entry {
+                commitment: "dateless commitment".into(),
+                due: Some(String::new()),
+            },
+            RawDueCommitment::Entry {
+                commitment: "dated commitment".into(),
+                due: None,
+            },
+        ];
+        let context = vec!["real context".to_string(), String::new()];
+        let record = with_memory_depth(
+            None,
+            false,
+            Some(&aged),
+            Some(&due),
+            Some(&context),
+            Some(1793093400),
+        )
+        .expect("usable entries yield a memory_depth record");
+        assert_eq!(
+            record.aged_decisions,
+            Some(vec![
+                AgedDecision {
+                    decision: "dateless decision".into(),
+                    original_date: None,
+                },
+                AgedDecision {
+                    decision: "dated decision".into(),
+                    original_date: None,
+                },
+            ])
+        );
+        assert_eq!(
+            record.due_commitments,
+            Some(vec![
+                DueCommitment {
+                    commitment: "dateless commitment".into(),
+                    due: None,
+                },
+                DueCommitment {
+                    commitment: "dated commitment".into(),
+                    due: None,
+                },
+            ])
+        );
+        assert_eq!(record.fresh_context, Some(vec!["real context".to_string()]));
+        let lines = memory_depth_lines(Some(&record));
+        assert!(lines[0].contains(
+            "Aged decision: dateless decision (original date not reported)"
+        ));
+        assert!(lines[1].contains(
+            "Aged decision: dated decision (original date not reported)"
+        ));
+        assert!(lines[2]
+            .contains("Due commitment: dateless commitment (due date not reported)"));
+        assert!(lines[3]
+            .contains("Due commitment: dated commitment (due date not reported)"));
+    }
+
+    #[test]
+    fn with_memory_depth_memory_down_record_carries_no_item_beside_it() {
+        let aged = vec![RawAgedDecision::Entry {
+            decision: "should not show".into(),
+            original_date: Some("2026-10-01".into()),
+        }];
+        let context = vec!["should not show".to_string()];
+        let record = with_memory_depth(
+            None,
+            true,
+            Some(&aged),
+            None,
+            Some(&context),
+            Some(1793093400),
+        )
+        .expect("a down flag alone yields a memory_depth record");
+        assert!(record.memory_down);
+        assert_eq!(record.aged_decisions, None);
+        assert_eq!(record.due_commitments, None);
+        assert_eq!(record.fresh_context, None);
+        assert_eq!(
+            memory_depth_lines(Some(&record)),
+            vec!["Long-term memory: memory service down, so no aged decisions, due commitments, or fresh-agent context are shown"
+                .to_string()]
+        );
+    }
+
+    #[test]
+    fn with_memory_depth_single_category_record_reads_other_categories_none_reported() {
+        let aged = vec![RawAgedDecision::Entry {
+            decision: "freeze the demo fixture".into(),
+            original_date: Some("2026-10-01".into()),
+        }];
+        let record = with_memory_depth(
+            None,
+            false,
+            Some(&aged),
+            None,
+            None,
+            Some(1793093400),
+        )
+        .expect("a usable aged list yields a memory_depth record");
+        let lines = memory_depth_lines(Some(&record));
+        assert!(lines[0]
+            .contains("Aged decision: freeze the demo fixture (from 2026-10-01)"));
+        assert!(lines[1].contains("Due commitments: none reported"));
+        assert!(lines[2].contains("Fresh-agent context: none reported"));
     }
 }
