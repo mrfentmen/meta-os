@@ -88,6 +88,7 @@ import crew_common
 import crew_records
 import evidence
 import judge
+import models
 import orchestrator
 import trio_store
 
@@ -570,7 +571,8 @@ class Crew:
                 if agent == "review":
                     review, verdict = self._run_review(
                         incident_id, camera, division, frame,
-                        first_timestamp, first_category=category)
+                        first_timestamp, first_category=category,
+                        first_result=first_result)
                     if review.get("status") == "ok":
                         results.append(review)
                     if verdict == "confirmed" and not reported:
@@ -678,7 +680,8 @@ class Crew:
     # -- review and reported (executed on the orchestrator's word) --------
 
     def _run_review(self, incident_id, camera, division, frame,
-                    first_timestamp, first_category=None):
+                    first_timestamp, first_category=None,
+                    first_result=None):
         """REVIEW — independent second assessment of the same frame.
         Its timestamp must differ from the patrol job's filing
         timestamp: same product + timestamp + frame would rebuild
@@ -700,14 +703,43 @@ class Crew:
         # independently, and the judge — no human — confirms,
         # clears, or holds the flag inconclusive, with its reasons
         # recorded on the timeline step below.
-        verdict, judge_reasons = judge.combine(
-            division, first_category, review_category,
-            review.get("status") == "ok",
-            crew_common.is_flagged_category)
+        # The ruling: deterministic combine() by default. When
+        # TRIO_JUDGE_MODEL=1, the judge first makes its own prompted
+        # Muse Spark call over both readings (judge.rule_with_model);
+        # a failed call falls back to combine() and the fallback is
+        # named in the recorded reasons. judge_mode on the timeline
+        # step below says which ruling actually decided.
+        judge_mode = "deterministic"
+        verdict = None
+        judge_reasons = None
+        fallback_note = None
+        if os.environ.get("TRIO_JUDGE_MODEL") == "1" and \
+                review.get("status") == "ok":
+            try:
+                verdict, _judge_category, judge_reasons = \
+                    judge.rule_with_model(
+                        division,
+                        first_result or {"category": first_category},
+                        review,
+                        lambda prompt: models.chat_text(
+                            models.SPARK, prompt)[0])
+                judge_mode = "model"
+            except Exception as e:
+                fallback_note = (
+                    f"model judge unavailable ({str(e)[:120]}); "
+                    "deterministic ruling used")
+        if verdict is None:
+            verdict, combine_reasons = judge.combine(
+                division, first_category, review_category,
+                review.get("status") == "ok",
+                crew_common.is_flagged_category)
+            judge_reasons = ([fallback_note] if fallback_note
+                             else []) + combine_reasons
         self.records.append_timeline(incident_id, {
             "at": crew_common.now_iso(), "step": "review",
             "verdict": verdict, "category": review_category,
             "judged_by": "imperium-judge",
+            "judge_mode": judge_mode,
             "judge_reasons": judge_reasons,
             "job_id": review.get("job_id"),
             "model": review.get("model"),
