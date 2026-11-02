@@ -4131,20 +4131,6 @@ pub fn next_morning_run(now: Option<i64>, hour: i64) -> i64 {
     cand_days * 86400 + hour * 3600 - offset
 }
 
-/// Minimal morning-brief composer: sections in frozen order, no invention.
-pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
-    const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
-    let mut text = format!("Morning brief for {room}\n");
-    for k in ORDER {
-        if let Some(v) = sections.get(*k) {
-            if !v.trim().is_empty() {
-                text.push_str(&format!("\n## {k}\n{v}\n"));
-            }
-        }
-    }
-    BriefRecord { room: room.to_string(), ts: 0, text, kind: "morning".to_string() }
-}
-
 /// BRF-028: a stored brief record as `_brief_text_from_record` reads it.
 /// Only the fields that function touches: verbatim `text`, the stored
 /// `source_window` (string or dict form, shared with `window`), and
@@ -4835,6 +4821,170 @@ pub fn compose_template_brief(snapshot: &TemplateSnapshot, boot: bool, kind: &st
         lines.extend(screenshot_digest_lines(Some(&refs)));
     }
     redact(&lines)
+}
+
+/// Render a string the way Python `repr` does for the common cases:
+/// single quotes, with backslash, quote, newline, carriage return,
+/// and tab escaped. Other control characters have no escape here
+/// yet; fixtures do not carry them.
+fn python_str_repr(s: &str) -> String {
+    let mut out = String::from("'");
+    for ch in s.chars() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '\'' => out.push_str("\\'"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            _ => out.push(ch),
+        }
+    }
+    out.push('\'');
+    out
+}
+
+/// BRF-007: Spark composer with template fallback and budget.
+///
+/// Ports `compose_brief`: cap the window first (Python's defaults,
+/// 500 messages / 24 hours, when the caller passes `None`), clamp
+/// an unknown kind to `morning`, then either render the template
+/// brief (no client) or ask the injected client for a Spark brief
+/// from the section data only. The client stands in for
+/// `client.complete(prompt, system=..., lane_feature="brief")`:
+/// it receives the prompt and the system text (`None` when the
+/// caller passes `None` or an empty string, matching Python's
+/// `system_prompt or None`), and returns the Spark text or an
+/// error. A failing client falls back to the template brief,
+/// never a made-up brief, never a silent failure — exactly as
+/// Python's `except Exception` path does. A successful reply is
+/// redacted and trimmed to the kind budget.
+///
+/// Ported oddities, stated plainly:
+/// - An empty Spark reply is NOT a failure here: Python redacts
+///   and trims `""` and returns `""`. Only `compose_spark_brief`
+///   (BRF-026, owed to B11's client trait) turns an empty reply
+///   into the `spark_down` line.
+/// - The prompt renders the sections dict in Python `repr` form
+///   (`{'Decisions': [...], ...}` in Decisions/Blocked/Owners/
+///   Alerts order). The Alerts entries are the snapshot's typed
+///   alerts (`id`/`summary`/`explanation`), the Rust form of
+///   Python's raw alert dicts.
+/// - Redaction is the crate's line redactor (`KEY=secret`
+///   assignments per line), not Python's BRF-014 regex pass, and
+///   a trailing newline on a Spark reply is not preserved by the
+///   line split/join — the same gap already documented on
+///   `compose_template_brief`.
+pub fn compose_brief(
+    snapshot: &TemplateSnapshot,
+    kind: &str,
+    client: Option<&dyn Fn(&str, Option<&str>) -> Result<String, String>>,
+    max_messages: Option<i64>,
+    max_hours: Option<f64>,
+    now: Option<i64>,
+    boot: bool,
+    system_prompt: Option<&str>,
+) -> String {
+    use super::sections::{extract_blocked, extract_decisions, extract_owners};
+    let kind = if brief_budget(kind).is_some() { kind } else { "morning" };
+    let budget = brief_budget(kind).unwrap_or(220);
+    let mut capped = snapshot.clone();
+    let capped_base = super::sections::cap_snapshot_window(
+        &snapshot.base,
+        Some(max_messages.unwrap_or(500)),
+        Some(max_hours.unwrap_or(24.0)),
+        now,
+    );
+    capped.window.source_window = capped_base.source_window.clone();
+    capped.base = capped_base;
+    let template = || trim_to_budget(&compose_template_brief(&capped, boot, kind), budget);
+    let client = match client {
+        None => return template(),
+        Some(c) => c,
+    };
+    let system = system_prompt.filter(|s| !s.is_empty());
+    let decisions = extract_decisions(&capped.base);
+    let blocked = extract_blocked(&capped.base);
+    let owners = extract_owners(&capped.base);
+    let mut dec = String::from("[");
+    for (i, d) in decisions.iter().enumerate() {
+        if i > 0 {
+            dec.push_str(", ");
+        }
+        dec.push_str(&format!(
+            "{{'kind': {}, 'text': {}, 'nick': {}, 'index': {}}}",
+            python_str_repr(&d.kind),
+            python_str_repr(&d.text),
+            python_str_repr(&d.nick),
+            d.index
+        ));
+    }
+    dec.push(']');
+    let mut blk = String::from("[");
+    for (i, b) in blocked.iter().enumerate() {
+        if i > 0 {
+            blk.push_str(", ");
+        }
+        blk.push_str(&format!(
+            "{{'id': {}, 'title': {}, 'reason': {}}}",
+            python_str_repr(&b.id),
+            python_str_repr(&b.title),
+            python_str_repr(&b.reason)
+        ));
+    }
+    blk.push(']');
+    let mut own = String::from("[");
+    for (i, o) in owners.iter().enumerate() {
+        if i > 0 {
+            own.push_str(", ");
+        }
+        let mut jobs = String::from("[");
+        for (j, job) in o.jobs.iter().enumerate() {
+            if j > 0 {
+                jobs.push_str(", ");
+            }
+            let age = match job.last_progress_age {
+                Some(a) => a.to_string(),
+                None => "None".to_string(),
+            };
+            jobs.push_str(&format!(
+                "{{'id': {}, 'title': {}, 'last_progress_age': {}}}",
+                python_str_repr(&job.id),
+                python_str_repr(&job.title),
+                age
+            ));
+        }
+        jobs.push(']');
+        own.push_str(&format!(
+            "{{'nick': {}, 'jobs': {}}}",
+            python_str_repr(&o.nick),
+            jobs
+        ));
+    }
+    own.push(']');
+    let mut alr = String::from("[");
+    for (i, a) in capped.base.alerts.iter().enumerate() {
+        if i > 0 {
+            alr.push_str(", ");
+        }
+        alr.push_str(&format!(
+            "{{'id': {}, 'summary': {}, 'explanation': {}}}",
+            python_str_repr(&a.id),
+            python_str_repr(&a.summary),
+            python_str_repr(&a.explanation)
+        ));
+    }
+    alr.push(']');
+    let prompt = format!(
+        "Write a {kind} brief from this section data only. Do not invent facts. Keep it under {budget} words. Sections: {{'Decisions': {dec}, 'Blocked': {blk}, 'Owners': {own}, 'Alerts': {alr}}}"
+    );
+    match client(&prompt, system) {
+        Err(_) => template(),
+        Ok(text) => {
+            let lines: Vec<String> = text.lines().map(str::to_string).collect();
+            let redacted = redact_secrets(&lines).join("\n");
+            trim_to_budget(&redacted, budget)
+        }
+    }
 }
 
 #[cfg(test)]

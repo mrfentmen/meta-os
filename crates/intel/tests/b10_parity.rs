@@ -17,9 +17,11 @@ fn dj(status: &str) -> push::JobView {
     assert_eq!(brief::format_brief_announcement("main", 3), "BRIEF:main:3");
 }
 #[test] fn test_intel_brief_blocked_contacts_caller_compose() {
-    let mut s = std::collections::HashMap::new();
-    s.insert("held".into(), "a".into());
-    assert!(brief::compose_brief("main", &s).text.contains("Morning brief"));
+    // The old minimal composer is superseded by the BRF-007 port:
+    // no client means the template fallback, marked TEMPLATE.
+    let snap = gen_snapshot();
+    let text = brief::compose_brief(&snap, "morning", None, None, None, None, false, None);
+    assert!(text.starts_with("TEMPLATE"));
 }
 #[test] fn test_intel_brief_boot_environment_redacts() {
     assert_eq!(brief::redact_secrets(&["ROOM_KEY=x".into()]), vec!["ROOM_KEY=<redacted>".to_string()]);
@@ -657,4 +659,107 @@ fn test_intel_brief_store_brief_same_ts_does_not_duplicate_index() {
     brief::store_brief(&store, &mut writer, "main", &gen_record(9)).unwrap();
     assert_eq!(writer.puts.len(), 1);
     assert!(writer.indexes.is_empty());
+}
+
+// ---- B10 T190 partial: compose_brief (BRF-007) ----
+#[test]
+fn test_intel_brief_compose_client_prompt_shape() {
+    let snap = gen_snapshot();
+    let seen = std::cell::RefCell::new(String::new());
+    let client = |prompt: &str, system: Option<&str>| -> Result<String, String> {
+        assert_eq!(system, None);
+        *seen.borrow_mut() = prompt.to_string();
+        Ok("spark words here".to_string())
+    };
+    let text = brief::compose_brief(&snap, "morning", Some(&client), None, None, None, false, None);
+    assert_eq!(text, "spark words here");
+    let prompt = seen.borrow().clone();
+    assert!(
+        prompt.starts_with("Write a morning brief from this section data only. Do not invent facts. Keep it under 220 words. Sections: "),
+        "prompt was: {prompt}"
+    );
+    assert!(
+        prompt.contains("'Decisions': [{'kind': 'done', 'text': 'ship it', 'nick': 'pax', 'index': 0}]"),
+        "prompt was: {prompt}"
+    );
+    assert!(
+        prompt.contains("'Blocked': [{'id': '3', 'title': 'blocked job', 'reason': 'waiting on gate'}]"),
+        "prompt was: {prompt}"
+    );
+    assert!(
+        prompt.contains("'Owners': [{'nick': 'pax', 'jobs': [{'id': '2', 'title': 'claimed job', 'last_progress_age': None}]}]"),
+        "prompt was: {prompt}"
+    );
+    assert!(prompt.contains("'Alerts': []"), "prompt was: {prompt}");
+}
+
+#[test]
+fn test_intel_brief_compose_client_error_falls_back_to_template() {
+    let snap = gen_snapshot();
+    let client = |_prompt: &str, _system: Option<&str>| -> Result<String, String> {
+        Err("spark down".to_string())
+    };
+    let text = brief::compose_brief(&snap, "morning", Some(&client), None, None, None, false, None);
+    assert!(text.starts_with("TEMPLATE"));
+}
+
+#[test]
+fn test_intel_brief_compose_unknown_kind_clamps_to_morning_budget() {
+    let snap = gen_snapshot();
+    let seen = std::cell::RefCell::new(String::new());
+    let long = (0..250).map(|i| format!("w{i}")).collect::<Vec<_>>().join(" ");
+    let client = |prompt: &str, _system: Option<&str>| -> Result<String, String> {
+        *seen.borrow_mut() = prompt.to_string();
+        Ok(long.clone())
+    };
+    let text = brief::compose_brief(&snap, "bogus", Some(&client), None, None, None, false, None);
+    let prompt = seen.borrow().clone();
+    assert!(prompt.contains("Write a morning brief"), "prompt was: {prompt}");
+    assert!(prompt.contains("Keep it under 220 words"), "prompt was: {prompt}");
+    assert!(text.ends_with(" (trimmed)"));
+    assert_eq!(text.split_whitespace().count(), 220);
+}
+
+#[test]
+fn test_intel_brief_compose_empty_spark_reply_stays_empty() {
+    // Ported oddity: unlike compose_spark_brief, an empty reply here
+    // is redacted and trimmed to "", never a failure line.
+    let snap = gen_snapshot();
+    let client = |_prompt: &str, _system: Option<&str>| -> Result<String, String> { Ok(String::new()) };
+    assert_eq!(
+        brief::compose_brief(&snap, "morning", Some(&client), None, None, None, false, None),
+        ""
+    );
+}
+
+#[test]
+fn test_intel_brief_compose_empty_system_prompt_means_none() {
+    let snap = gen_snapshot();
+    let got: std::cell::RefCell<Option<String>> = std::cell::RefCell::new(None);
+    let client = |_prompt: &str, system: Option<&str>| -> Result<String, String> {
+        *got.borrow_mut() = system.map(str::to_string);
+        Ok("x".to_string())
+    };
+    brief::compose_brief(&snap, "morning", Some(&client), None, None, None, false, Some(""));
+    assert_eq!(got.borrow().clone(), None);
+}
+
+#[test]
+fn test_intel_brief_compose_caps_window_before_extracting() {
+    let mut snap = gen_snapshot();
+    snap.base.messages.push(sections::SnapMessage {
+        nick: "old".into(),
+        text: "DONE: ancient".into(),
+        ts: Some(1000),
+    });
+    let seen = std::cell::RefCell::new(String::new());
+    let client = |prompt: &str, _system: Option<&str>| -> Result<String, String> {
+        *seen.borrow_mut() = prompt.to_string();
+        Ok("x".to_string())
+    };
+    // now is 25h past the old message: past the 24h default cap.
+    let _ = brief::compose_brief(&snap, "morning", Some(&client), None, None, Some(1000 + 25 * 3600), false, None);
+    let prompt = seen.borrow().clone();
+    assert!(!prompt.contains("ancient"), "prompt was: {prompt}");
+    assert!(prompt.contains("ship it"), "prompt was: {prompt}");
 }
