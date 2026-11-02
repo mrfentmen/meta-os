@@ -419,3 +419,38 @@ export function systemsHome(systems) {
   }).join("");
   return `<ul class="systems-home">${items}</ul>`;
 }
+
+// BUILD WAVE W1 follow-up (2026-11-02): region boxes on the
+// landed contract. An observation's region is a bounding box in
+// 0-1000 relative frame coordinates {x, y, w, h} (integers, w/h >= 1),
+// or null when the observation is scene-wide (js/schema.js is the
+// gate; spark_gen.py names the same shape). This renderer turns the
+// drawable regions of an assessment's observations into an overlay:
+// one absolutely positioned outline + category label per region,
+// coordinates converted to percentages (value / 10) so the overlay
+// scales with whatever frame it sits on. It draws only what the
+// assessment actually carries: null, missing, or malformed regions
+// are skipped, never invented, and a category label is escaped like
+// every other surface string. A validator-passing box that runs past
+// the frame edge still draws (the frame container clips it); the
+// renderer never silently drops a box the validator accepted. With
+// no drawable region it returns an empty string, so the caller shows
+// the frame alone.
+export function regionBoxes(assessment) {
+  const observations = Array.isArray(assessment?.observations) ? assessment.observations : [];
+  const boxes = [];
+  for (const obs of observations) {
+    const r = obs?.region;
+    if (!r || typeof r !== "object" || Array.isArray(r)) continue;
+    const keys = ["x", "y", "w", "h"];
+    if (!keys.every((k) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] <= 1000)) continue;
+    if (r.w < 1 || r.h < 1) continue;
+    const style = `left:${r.x / 10}%;top:${r.y / 10}%;width:${r.w / 10}%;height:${r.h / 10}%`;
+    boxes.push(
+      `<div class="region-box" style="${style}">`
+      + `<span class="region-box-label">${escapeHtml(obs.category ?? "")}</span></div>`,
+    );
+  }
+  if (boxes.length === 0) return "";
+  return `<div class="region-boxes">${boxes.join("")}</div>`;
+}
