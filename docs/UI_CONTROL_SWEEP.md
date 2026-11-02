@@ -17,7 +17,7 @@ build — not when it merely renders.
 
 ## Counts
 
-- 59 static controls: 42 buttons + 15 inputs + 2 selects — all WORKS.
+- 51 static controls: 35 buttons + 14 inputs + 2 selects — all WORKS.
 - 6 dynamic control templates (rendered per item) — all WORKS.
 - 27 native disclosures — all WORKS (native `<details>` behavior).
 - 2 studio links (same target) — WORKS.
@@ -25,7 +25,7 @@ build — not when it merely renders.
   only in `meta-os/bus.html` (see below).
 - Dead count in this repo's live UI: 0.
 
-## Static buttons (42) — all WORKS
+## Static buttons (35) — all WORKS
 
 Command view (`js/command-map.js` listeners unless noted):
 
@@ -52,11 +52,9 @@ Console view (`js/app.js` listeners unless noted):
 | btn-backend-check | backend health listener (reads endpoint input) |
 | btn-export-log, btn-clear-log | log listeners |
 | btn-contact-add | contacts listener (reads name/role/org) |
-| logo-color-reset | `js/logo-color.js` reset listener |
 | logo-pause | `js/logo-animation.js` pause listener |
-| logo-swatch ×6 | `js/logo-color.js` data-logo-color group listener |
 
-## Static inputs (15) — all WORKS
+## Static inputs (14) — all WORKS
 
 | Control | Evidence |
 | --- | --- |
@@ -68,7 +66,6 @@ Console view (`js/app.js` listeners unless noted):
 | endpoint | read on backend check |
 | interval-seconds | read by sampler |
 | image-input, video-input | change listeners, file inputs |
-| logo-color-picker | `js/logo-color.js` input listener |
 | logo-speed | `js/logo-animation.js` slider listener |
 | contact-name, contact-role, contact-org | read by contacts add |
 | product radio ×3 (vigiles/ignis/medicus) | change listeners, product switch |
