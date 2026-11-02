@@ -2028,6 +2028,197 @@ pub fn daily_lines(record: Option<&Daily>) -> Vec<String> {
     lines
 }
 
+/// OS-075 follow-up: the morning-path caller that fills a
+/// snapshot's daily record.
+///
+/// Before this change no caller in the repo filled `daily`: a
+/// morning brief carried its Daily brief section only when the
+/// snapshot hand-stated a "daily" record, and a snapshot that
+/// only carried the raw lists carried no section at all. Now the
+/// morning path calls this first: a snapshot that carries no
+/// daily record gets one built from itself — "overnight_results"
+/// from the snapshot's own stated overnight-results list
+/// (verbatim non-empty strings, in list order), "todays_queue"
+/// from the snapshot's own jobs list (open or claimed jobs with
+/// both an id and a title, in job order, each job listed once —
+/// a job named twice is one queue item, not two), and
+/// "needs_word" from the snapshot's own stated needs-word list
+/// (verbatim questions, strings or question-plus-job dicts) —
+/// with one as_of stamp for the whole record, so the section's
+/// ages agree instead of drifting across reads. A snapshot that
+/// already carries a daily record gets it back unchanged: a
+/// hand-stated record wins over a built one, so a caller that
+/// knows the day better than these lists is never overwritten.
+/// The two stated lists are passed through, never re-derived:
+/// overnight results are NOT pulled out of DONE markers and
+/// needs-word questions are NOT invented from blocked reasons —
+/// a blocked job's reason is a reason, not a question waiting
+/// on a word, so a snapshot that states no needs-word list
+/// leaves that key out and the line reads none reported rather
+/// than a guessed question. A category with no usable entry
+/// leaves its key out, and `daily_lines` then renders that
+/// category as none reported, so a built record always reads
+/// as a checked section, never a padded one. Unlike
+/// `with_boot_environment`, a snapshot that yields nothing
+/// usable at all gets no record: the OS-075 rule is that a
+/// snapshot with no daily record carries no section, so older
+/// briefs keep their exact shape instead of gaining
+/// none-reported lines. This never fails: a snapshot that
+/// yields nothing usable returns `None` instead of failing
+/// the brief outright.
+///
+/// Typed-input mapping, following this module's convention:
+/// the caller passes `None` for an overnight-results, jobs, or
+/// needs-word value that is not a list, and `None` for a `now`
+/// that is not numeric (Python falls back to the wall clock
+/// then); a non-dict job maps to `RawDailyJob::Other` and is
+/// skipped; a non-string status, id, or title maps to an empty
+/// string and is then filtered; a non-string needs-word entry
+/// maps to `RawNeedsWordEntry::Other` and is skipped; a dict
+/// needs-word entry with a non-string or empty question is
+/// skipped, and a non-string or empty job id on a kept entry
+/// maps to `None`. Note the asymmetry with
+/// `with_memory_budget`: an empty list here does NOT add a
+/// record (Python adds a category only for a non-empty usable
+/// list), so an empty jobs list alone yields no record, while
+/// a usable entry in any one category yields a record whose
+/// other categories read none reported.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RawDailyJob {
+    /// A dict job as the caller reads it: status, id, and title
+    /// verbatim, with a non-string value read as an empty string
+    /// (which the filler then filters out).
+    Job {
+        status: String,
+        id: String,
+        title: String,
+    },
+    /// Any other shape: Python's `isinstance(job, dict)` check
+    /// skips it, so it can never name a queue item.
+    Other,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RawNeedsWordEntry {
+    /// A plain-string question as the caller reads it; an empty
+    /// string is filtered by the filler.
+    Text(String),
+    /// A dict entry as the caller reads it: question verbatim
+    /// (a non-string question reads as an empty string and is
+    /// then filtered), and the job id when stated as a
+    /// non-empty string, else `None`.
+    Entry {
+        question: String,
+        job: Option<String>,
+    },
+    /// Any other shape: Python keeps only strings and dicts, so
+    /// this can never become a question.
+    Other,
+}
+
+pub fn with_daily(
+    existing: Option<&Daily>,
+    overnight_results: Option<&[String]>,
+    jobs: Option<&[RawDailyJob]>,
+    needs_word: Option<&[RawNeedsWordEntry]>,
+    now: Option<i64>,
+) -> Option<Daily> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let stamp = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let mut added = false;
+    let mut record = Daily {
+        overnight_results: None,
+        todays_queue: None,
+        needs_word: None,
+        age_label: environment_age_label(Some(stamp)),
+    };
+    if let Some(results) = overnight_results {
+        let usable: Vec<String> = results
+            .iter()
+            .filter(|item| !item.is_empty())
+            .cloned()
+            .collect();
+        if !usable.is_empty() {
+            record.overnight_results = Some(usable);
+            added = true;
+        }
+    }
+    if let Some(jobs) = jobs {
+        let mut usable: Vec<DailyQueueJob> = Vec::new();
+        let mut seen_ids: Vec<String> = Vec::new();
+        for job in jobs {
+            let (status, id, title) = match job {
+                RawDailyJob::Job { status, id, title } => (status, id, title),
+                RawDailyJob::Other => continue,
+            };
+            if status != "open" && status != "claimed" {
+                continue;
+            }
+            if id.is_empty() || title.is_empty() {
+                continue;
+            }
+            if seen_ids.iter().any(|seen| seen == id) {
+                continue;
+            }
+            seen_ids.push(id.clone());
+            usable.push(DailyQueueJob {
+                id: id.clone(),
+                title: title.clone(),
+            });
+        }
+        if !usable.is_empty() {
+            record.todays_queue = Some(usable);
+            added = true;
+        }
+    }
+    if let Some(needs) = needs_word {
+        let mut usable: Vec<NeedsWordEntry> = Vec::new();
+        for entry in needs {
+            match entry {
+                RawNeedsWordEntry::Text(question) => {
+                    if question.is_empty() {
+                        continue;
+                    }
+                    usable.push(NeedsWordEntry {
+                        question: question.clone(),
+                        job: None,
+                    });
+                }
+                RawNeedsWordEntry::Entry { question, job } => {
+                    if question.is_empty() {
+                        continue;
+                    }
+                    usable.push(NeedsWordEntry {
+                        question: question.clone(),
+                        job: job
+                            .as_deref()
+                            .filter(|j| !j.is_empty())
+                            .map(str::to_string),
+                    });
+                }
+                RawNeedsWordEntry::Other => continue,
+            }
+        }
+        if !usable.is_empty() {
+            record.needs_word = Some(usable);
+            added = true;
+        }
+    }
+    if added {
+        Some(record)
+    } else {
+        None
+    }
+}
+
 /// STR-002: `_format_brief_time` — a stored brief timestamp as
 /// `"YYYY-MM-DD HH:MM ET"` in America/New_York, the zone the
 /// BRF-011 morning schedule uses. This crate has no time
@@ -5401,5 +5592,195 @@ mod tests {
         let budget = record.budget.expect("a usable HANA entry yields a budget");
         assert_eq!(budget.lane, "HANA");
         assert_eq!(budget.as_of, 1793093400);
+    }
+
+    #[test]
+    fn with_daily_fills_all_three_categories_with_one_stamp() {
+        let results = vec!["shipped the brief panel".to_string()];
+        let jobs = vec![
+            RawDailyJob::Job {
+                status: "open".into(),
+                id: "7".into(),
+                title: "boot shot".into(),
+            },
+            RawDailyJob::Job {
+                status: "claimed".into(),
+                id: "8".into(),
+                title: "brief panel".into(),
+            },
+            RawDailyJob::Job {
+                status: "done".into(),
+                id: "9".into(),
+                title: "dispatch poster".into(),
+            },
+        ];
+        let needs = vec![RawNeedsWordEntry::Entry {
+            question: "ship the demo cut?".into(),
+            job: Some("7".into()),
+        }];
+        let record = with_daily(
+            None,
+            Some(&results),
+            Some(&jobs),
+            Some(&needs),
+            Some(1793093400),
+        )
+        .expect("usable lists yield a daily record");
+        assert_eq!(
+            record.age_label,
+            " (as of 2026-10-27 05:30 ET)"
+        );
+        assert_eq!(
+            record.overnight_results,
+            Some(vec!["shipped the brief panel".to_string()])
+        );
+        assert_eq!(
+            record.todays_queue,
+            Some(vec![
+                DailyQueueJob { id: "7".into(), title: "boot shot".into() },
+                DailyQueueJob { id: "8".into(), title: "brief panel".into() },
+            ])
+        );
+        assert_eq!(
+            record.needs_word,
+            Some(vec![NeedsWordEntry {
+                question: "ship the demo cut?".into(),
+                job: Some("7".into()),
+            }])
+        );
+        let lines = daily_lines(Some(&record));
+        assert!(lines[0].contains("Overnight result: shipped the brief panel"));
+        assert!(lines[1].contains("Today's queue: job 7 boot shot"));
+        assert!(lines[2].contains("Today's queue: job 8 brief panel"));
+        assert!(lines[3].contains("Needs your word: ship the demo cut? (job 7)"));
+    }
+
+    #[test]
+    fn with_daily_hand_stated_record_wins_unchanged() {
+        let stated = Daily {
+            overnight_results: Some(vec!["Hand-stated result".to_string()]),
+            todays_queue: None,
+            needs_word: None,
+            age_label: " (as of 2026-10-27 05:30 ET)".to_string(),
+        };
+        let jobs = vec![RawDailyJob::Job {
+            status: "open".into(),
+            id: "7".into(),
+            title: "boot shot".into(),
+        }];
+        let record = with_daily(
+            Some(&stated),
+            None,
+            Some(&jobs),
+            None,
+            Some(1793093400),
+        )
+        .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_daily_nothing_usable_gets_no_record() {
+        let jobs: Vec<RawDailyJob> = vec![];
+        assert_eq!(
+            with_daily(None, None, Some(&jobs), None, Some(1793093400)),
+            None
+        );
+        let blocked = vec![RawDailyJob::Job {
+            status: "blocked".into(),
+            id: "7".into(),
+            title: "watchdog loop".into(),
+        }];
+        assert_eq!(
+            with_daily(None, None, Some(&blocked), None, Some(1793093400)),
+            None
+        );
+    }
+
+    #[test]
+    fn with_daily_malformed_entries_skipped_never_guessed() {
+        let jobs = vec![
+            RawDailyJob::Job {
+                status: "open".into(),
+                id: "7".into(),
+                title: "boot shot".into(),
+            },
+            RawDailyJob::Job {
+                status: "open".into(),
+                id: "7".into(),
+                title: "boot shot".into(),
+            },
+            RawDailyJob::Job {
+                status: "open".into(),
+                id: "8".into(),
+                title: String::new(),
+            },
+            RawDailyJob::Job {
+                status: "claimed".into(),
+                id: String::new(),
+                title: "no id".into(),
+            },
+            RawDailyJob::Job {
+                status: "open".into(),
+                id: "9".into(),
+                title: String::new(),
+            },
+            RawDailyJob::Other,
+        ];
+        let results = vec!["real result".to_string(), String::new()];
+        let needs = vec![
+            RawNeedsWordEntry::Text("plain question".into()),
+            RawNeedsWordEntry::Entry {
+                question: "jobless question".into(),
+                job: None,
+            },
+            RawNeedsWordEntry::Entry {
+                question: String::new(),
+                job: None,
+            },
+            RawNeedsWordEntry::Entry {
+                question: String::new(),
+                job: Some("7".into()),
+            },
+            RawNeedsWordEntry::Other,
+        ];
+        let record = with_daily(
+            None,
+            Some(&results),
+            Some(&jobs),
+            Some(&needs),
+            Some(1793093400),
+        )
+        .expect("usable entries yield a daily record");
+        assert_eq!(
+            record.todays_queue,
+            Some(vec![DailyQueueJob { id: "7".into(), title: "boot shot".into() }])
+        );
+        assert_eq!(
+            record.overnight_results,
+            Some(vec!["real result".to_string()])
+        );
+        assert_eq!(
+            record.needs_word,
+            Some(vec![
+                NeedsWordEntry { question: "plain question".into(), job: None },
+                NeedsWordEntry { question: "jobless question".into(), job: None },
+            ])
+        );
+    }
+
+    #[test]
+    fn with_daily_queue_only_record_reads_other_categories_none_reported() {
+        let jobs = vec![RawDailyJob::Job {
+            status: "open".into(),
+            id: "7".into(),
+            title: "boot shot".into(),
+        }];
+        let record = with_daily(None, None, Some(&jobs), None, Some(1793093400))
+            .expect("a usable queue yields a daily record");
+        let lines = daily_lines(Some(&record));
+        assert!(lines[0].contains("Overnight results: none reported"));
+        assert!(lines[1].contains("Today's queue: job 7 boot shot"));
+        assert!(lines[2].contains("Needs your word: none reported"));
     }
 }
