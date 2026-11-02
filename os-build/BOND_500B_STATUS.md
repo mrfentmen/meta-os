@@ -43,4 +43,36 @@ Section 1 verification, one command per file, all exit 0:
 `test_crew_reading_input.py` 2, `test_crew_cli_parse.py` 3.
 **45 tests pass, 0 fail.**
 
-## Section 2 — Queue Python, judge rules (CB2-026..050) — 0/25
+## Section 2 — Queue Python, judge rules (CB2-026..050) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-026 | `test_judge_combine_edges.py` | agreeing emergency confirmed; one reason |
+| CB2-027 | `test_judge_combine_edges.py` | disagreeing flagged readings confirm; both named (premise said held; real judge confirms two flagged readings) |
+| CB2-028 | `test_judge_combine_edges.py` | either missing reading rules inconclusive |
+| CB2-029 | `test_judge_lookalike_edges.py` | bench-sleeper/baseline shape and ignis steam lookalike clear |
+| CB2-030 | `test_judge_lookalike_edges.py` | crowd gathered never red; real tier is `None` (ungated), not yellow |
+| CB2-031 | `test_judge_model_stub.py` | stubbed confirm maps verdict/category/reasons |
+| CB2-032 | `test_judge_model_stub.py` | unknown outcome rules inconclusive, never coerced |
+| CB2-033 | `test_judge_model_stub.py` | invalid JSON rules inconclusive |
+| CB2-034 | `test_judge_model_stub.py` | missing verdict rules inconclusive |
+| CB2-035 | `test_judge_prompt_shape.py` | both readings present; secret/extra incident fields omitted |
+| CB2-036 | `test_judge_prompt_shape.py` | "never confirm on a guess" and confidence rule appear once |
+| CB2-037 | `test_judge_region_edges.py` | null and full 0-1000 box accepted |
+| CB2-038 | `test_judge_region_edges.py` | 1001 and negative edges refused by `validate_reading` |
+| CB2-039 | `test_judge_region_edges.py` | overlapping boxes still one verdict/reason |
+| CB2-040 | `test_judge_golden_replay.py` | five emergency pairs confirm |
+| CB2-041 | `test_judge_golden_replay.py` | eight non-emergency pairs never confirm |
+| CB2-042 | `test_judge_time_edges.py` | earliest parseable timestamp wins, including offsets |
+| CB2-043 | `test_judge_time_edges.py` | unknown product refused by validator and prompt builder |
+| CB2-044 | `judge.py` | one `build_verdict_record` used by crew; both modes share keys |
+| CB2-045 | `test_judge_record_shape.py` | `judge_mode` limited to deterministic/model |
+| CB2-046 | `test_judge_smoke_shape.py` | staged visible-flame pair confirms and stays red |
+| CB2-047 | `test_judge_never_red_property.py` | seeded 50-pair property: no red tier without an emergency category |
+| CB2-048 | `judge.py` | category strip/lower normalization; mixed case pinned |
+| CB2-049 | `test_judge_normalisation.py` | duplicate identical readings yield one reason, not two confirmations |
+| CB2-050 | `judge_replay.py` | offline JSONL replay prints outcome counts only |
+
+Section 2 verification, one command per file, all exit 0: 36 tests pass,
+0 fail (`test_judge.py`'s existing 11 also pass; `test_crew.py` 21 pass
+against the new verdict builder).

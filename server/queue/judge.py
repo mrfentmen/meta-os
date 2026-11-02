@@ -38,6 +38,7 @@ and the timeline step records which mode ruled (judge_mode).
 """
 
 import json
+from datetime import datetime
 
 # Division -> the service that owns its scenes, and the path
 # suffix its packages route to on the crew's SIMULATED dispatch
@@ -59,16 +60,123 @@ def service_route(division):
     return SERVICES.get(division)
 
 
+VALID_PRODUCTS = frozenset(SERVICES)
+
+
+def _reading_product(reading):
+    if not isinstance(reading, dict):
+        return None
+    product = reading.get("product")
+    if product is None:
+        assessment = reading.get("assessment")
+        if isinstance(assessment, dict):
+            product = assessment.get("product")
+    return product
+
+
+def validate_reading(reading):
+    """Return a named error for a malformed judge reading, or None.
+    Product ids are checked against the three divisions. A region,
+    when present, must be an x/y/w/h box on the 0-1000 contract
+    scale. Missing optional fields are allowed; invented ones are
+    not part of the prompt payload."""
+    if not isinstance(reading, dict):
+        return "reading is not an object"
+    product = _reading_product(reading)
+    if product is not None and product not in VALID_PRODUCTS:
+        return f"unknown product in reading: {product!r}"
+    assessment = reading.get("assessment")
+    observations = []
+    if isinstance(assessment, dict):
+        observations = assessment.get("observations") or []
+    for obs in observations:
+        if not isinstance(obs, dict):
+            continue
+        region = obs.get("region")
+        if region is None:
+            continue
+        if not isinstance(region, dict):
+            return "region is not an x/y/w/h object"
+        for axis in ("x", "y", "w", "h"):
+            value = region.get(axis)
+            if isinstance(value, bool) or not isinstance(
+                    value, (int, float)):
+                return f"region {axis} is not a number"
+            if value < 0 or value > 1000:
+                return f"region {axis} is outside the 0-1000 scale"
+    return None
+
+
+def incident_start(*readings):
+    """The earliest parseable timestamp across the readings, as the
+    original string. Returns None when none carries a timestamp."""
+    best = None
+    best_epoch = None
+    for reading in readings:
+        if not isinstance(reading, dict):
+            continue
+        stamp = reading.get("timestamp")
+        assessment = reading.get("assessment")
+        if stamp is None and isinstance(assessment, dict):
+            stamp = assessment.get("timestamp")
+        if not isinstance(stamp, str) or not stamp:
+            continue
+        text = stamp[:-1] + "+00:00" if stamp.endswith("Z") else stamp
+        try:
+            parsed = datetime.fromisoformat(text)
+        except ValueError:
+            continue
+        if parsed.tzinfo is None:
+            continue
+        epoch = parsed.timestamp()
+        if best_epoch is None or epoch < best_epoch:
+            best_epoch, best = epoch, stamp
+    return best
+
+
+def build_verdict_record(*, at, verdict, category, judge_mode,
+                         judge_reasons, job_id, model, latency_ms,
+                         error, summary, first_timestamp=None,
+                         review_timestamp=None):
+    """One verdict-record builder for both the deterministic and the
+    model path. The two paths emit the identical key set; judge_mode
+    is limited to the two implemented values."""
+    if judge_mode not in ("deterministic", "model"):
+        raise ValueError(f"unknown judge_mode: {judge_mode!r}")
+    return {
+        "at": at, "step": "review", "verdict": verdict,
+        "category": category, "judged_by": "imperium-judge",
+        "judge_mode": judge_mode, "judge_reasons": judge_reasons,
+        "job_id": job_id, "model": model, "latency_ms": latency_ms,
+        "error": error, "summary": summary, "status": None,
+        "started_at": incident_start(
+            {"timestamp": first_timestamp},
+            {"timestamp": review_timestamp}),
+    }
+
+
+def _normalise_category(category):
+    if not isinstance(category, str):
+        return category
+    return category.strip().lower()
+
+
 def combine(division, first_category, review_category, review_ok,
             is_flagged):
     """The judge's ruling on two readings. is_flagged(division,
     category) is the caller's flagged-category check (crew_common).
     Returns (verdict, reasons) — reasons are plain strings the
     caller records on the incident timeline."""
+    review_category = _normalise_category(review_category)
+    first_category = _normalise_category(first_category)
     if not review_ok or review_category is None:
         return "inconclusive", [
             "the review reading failed or carried no category; "
             "the judge does not confirm on a missing reading"]
+    if first_category is None:
+        return "inconclusive", [
+            "the patrol reading carried no category; the judge does "
+            "not confirm on a missing reading"]
     if not is_flagged(division, review_category):
         return "cleared", [
             f"the review reading landed on the baseline category "
@@ -82,10 +190,27 @@ def combine(division, first_category, review_category, review_ok,
         f"flagged readings stand over one"]
 
 
+def _prompt_payload(reading):
+    """Only the fields the judge needs: product, timestamp, and the
+    assessment block. Other incident data is never copied into the
+    prompt."""
+    if not isinstance(reading, dict):
+        return reading
+    payload = {}
+    for key in ("product", "timestamp", "assessment"):
+        if key in reading:
+            payload[key] = reading[key]
+    return payload
+
+
 def build_judge_prompt(division, first_result, review_result):
     """The adjudication prompt for the judge job kind: the judge
     reads BOTH agents' assessments of the same frame and rules.
     JSON only, the verdict shape parse_verdict accepts."""
+    for reading in (first_result, review_result):
+        error = validate_reading(reading)
+        if error:
+            raise ValueError(error)
     route = service_route(division) or {"service": "unknown"}
     return "\n".join([
         f"You are the Imperium judge for {division}. Two agents "
@@ -99,8 +224,8 @@ def build_judge_prompt(division, first_result, review_result):
         '  "reasons": ["<what in the two readings decides it>"],',
         '  "confidence": null',
         '}',
-        f"First reading: {json.dumps(first_result)[:1200]}",
-        f"Second reading: {json.dumps(review_result)[:1200]}",
+        f"First reading: {json.dumps(_prompt_payload(first_result))[:1200]}",
+        f"Second reading: {json.dumps(_prompt_payload(review_result))[:1200]}",
         "confirm = the flag stands and the package goes to the "
         f"{route['service']}; reject = the flag is a look-alike "
         "and the incident closes; investigate = the readings "

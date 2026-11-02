@@ -810,21 +810,20 @@ class Crew:
                 crew_common.is_flagged_category)
             judge_reasons = ([fallback_note] if fallback_note
                              else []) + combine_reasons
-        self.records.append_timeline(incident_id, {
-            "at": crew_common.now_iso(), "step": "review",
-            "verdict": verdict, "category": review_category,
-            "judged_by": "imperium-judge",
-            "judge_mode": judge_mode,
-            "judge_reasons": judge_reasons,
-            "reader": reader,
-            "reader_fallback": reader_fallback,
-            "job_id": review.get("job_id"),
-            "model": review.get("model"),
-            "latency_ms": review.get("latency_ms"),
-            "error": review.get("error"),
-            "summary": _summary_of(review),
-            "status": None,
-        })
+        review_step = judge.build_verdict_record(
+            at=crew_common.now_iso(), verdict=verdict,
+            category=review_category, judge_mode=judge_mode,
+            judge_reasons=judge_reasons, job_id=review.get("job_id"),
+            model=review.get("model"),
+            latency_ms=review.get("latency_ms"),
+            error=review.get("error"), summary=_summary_of(review),
+            first_timestamp=first_timestamp,
+            review_timestamp=review_ts)
+        # Multi-model wiring (main): which reader produced the second
+        # reading, and whether it fell back to the primary model.
+        review_step["reader"] = reader
+        review_step["reader_fallback"] = reader_fallback
+        self.records.append_timeline(incident_id, review_step)
         self.records.append_event({
             "at": crew_common.now_iso(), "type": "review",
             "incident_id": incident_id, "camera_id": camera["id"],
