@@ -1077,6 +1077,34 @@ pub fn request_approval(
     }
 }
 
+/// One frozen-format announcement line for a plan (DSP-010), ported
+/// from `dispatch.py::format_dispatch_announcement`.
+///
+/// Returns `"DISPATCH:<id> -> <n> jobs"` for a dispatch record
+/// stored by `post_plan`, or `None` when the record cannot carry a
+/// line. `<n>` is the number of jobs actually posted, never the
+/// number planned. An id that is blank or contains whitespace yields
+/// `None`, because the FND-020 freeze requires ids with no spaces,
+/// and an empty jobs list yields `None`, because there is nothing
+/// posted to announce. Pure: it posts nothing, claims nothing, and
+/// writes no record.
+///
+/// Rust adaptations, stated not hidden: Python takes an untyped
+/// record dict, so a non-dict record, a non-string id, or a
+/// non-list jobs value also yields `None`; the typed inputs here
+/// cannot carry those shapes, so there is no case for them. Ported
+/// oddity, not fixed: the line says "1 jobs", never "1 job" —
+/// Python formats the count unconditionally.
+pub fn format_dispatch_announcement(id: &str, jobs: &[String]) -> Option<String> {
+    if id.is_empty() || id.chars().any(|ch| ch.is_whitespace()) {
+        return None;
+    }
+    if jobs.is_empty() {
+        return None;
+    }
+    Some(format!("DISPATCH:{} -> {} jobs", id, jobs.len()))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1741,5 +1769,37 @@ mod tests {
         };
         assert!(!request_approval(&large_plan(), false, Some(&mut confirm), false));
         assert_eq!(seen.len(), 1);
+    }
+
+    #[test]
+    fn announcement_counts_posted_jobs() {
+        let jobs = vec!["j1".to_string(), "j2".to_string(), "j3".to_string()];
+        assert_eq!(
+            format_dispatch_announcement("d1", &jobs).as_deref(),
+            Some("DISPATCH:d1 -> 3 jobs")
+        );
+    }
+
+    #[test]
+    fn announcement_single_job_keeps_plural() {
+        let jobs = vec!["j1".to_string()];
+        assert_eq!(
+            format_dispatch_announcement("d1", &jobs).as_deref(),
+            Some("DISPATCH:d1 -> 1 jobs")
+        );
+    }
+
+    #[test]
+    fn announcement_blank_or_spaced_id_is_none() {
+        let jobs = vec!["j1".to_string()];
+        assert_eq!(format_dispatch_announcement("", &jobs), None);
+        assert_eq!(format_dispatch_announcement("   ", &jobs), None);
+        assert_eq!(format_dispatch_announcement("d 1", &jobs), None);
+    }
+
+    #[test]
+    fn announcement_empty_jobs_is_none() {
+        let jobs: Vec<String> = vec![];
+        assert_eq!(format_dispatch_announcement("d1", &jobs), None);
     }
 }
