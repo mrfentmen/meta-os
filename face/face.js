@@ -115,7 +115,7 @@ function loadFS() {
     fs = [
       { id: 1, name: "README.txt", folder: "Home", trashed: false, content: "Meta OS 0.1 (K6)\n\nMeta OS boots on x86_64 in QEMU, drops to ring 3, runs three userspace programs, isolates a fault to one task, and gives you a shell that reports the machine's real state." },
       { id: 2, name: "K7-boot.txt", folder: "Home/logs", trashed: false, content: "META OS 0.1 (K6)\nMETA OS KERNEL - alive (K1)\nHELLO FROM USERSPACE\nsleeper: sleep/wake ok\ncrasher: task killed (isolated)\n(record excerpt — full log: os-build/logs/K7-boot.txt)" },
-      { id: 3, name: "imperium-run.txt", folder: "Home/systems", trashed: false, content: "Imperium live run (Mac, Round 5 R5-4):\nflag -> review -> investigation -> auto-dispatch WITH picture\nreceipt sim-6623d237a90b3d9d (SIMULATED endpoint)" },
+      { id: 3, name: "imperium-run.txt", folder: "Home/systems", trashed: false, content: "Imperium staged run (Mac, Round 5 R5-4 — vision readings staged, dispatch endpoint simulated):\nflag -> review -> investigation -> auto-dispatch WITH picture\nreceipt sim-6623d237a90b3d9d (SIMULATED endpoint)" },
       { id: 4, name: "welcome.txt", folder: "Home", trashed: false, content: "Welcome to Meta OS.\nFiles here persist in this browser. Delete moves a file to Trash; restore brings it back." }
     ];
     localStorage.setItem("metaos-face-fs", JSON.stringify(fs));
@@ -235,7 +235,7 @@ var APPS = {
     title: "Imperium",
     build: function (body) {
       body.innerHTML = '<div style="margin-bottom:8px"><span class="sim-tag">SIMULATED ENDPOINT</span></div>' +
-        '<b>Record of the live run on the Mac (Round 5, R5-4).</b><br>' +
+        '<b>Record of the staged run on the Mac (Round 5, R5-4).</b><br>' +
         'A staged camera feed flagged a person down. The review agreed. The investigation ran. ' +
         'Imperium itself sent the dispatch package <b>with the picture</b> to the simulated receiving desk — no human in the loop.<br><br>' +
         'Receipt: <b>sim-6623d237a90b3d9d</b> &middot; simulated = true<br>' +
@@ -413,7 +413,7 @@ var APPS = {
     build: function (body) {
       body.innerHTML = '<b>Meta OS 0.1 (K6)</b><br><br>' +
         'Meta OS boots on x86_64 in QEMU, drops to ring 3, runs three userspace programs, isolates a fault to one task, and gives you a shell that reports the machine\'s real state — reproduced from a clean checkout by one command, every claim backed by a committed boot log.<br><br>' +
-        '<span style="opacity:.7">This face page is the reference desktop: what the kiosk loads if the web shell wins the spike, and the fidelity target either way (PAX_OS_BUILDOUT A14). Systems: Imperium, Science Lab, Musica, Custos, Officina. Layers: Rust kernel, Goose services, Lobster apps.</span>';
+        '<span style="opacity:.7">This face page is the reference desktop: what the kiosk loads if the web shell wins the spike, and the fidelity target either way (PAX_OS_BUILDOUT A14). Systems: Imperium, Science Lab, Musica, Officina. Custos is retired as a system; its watch idea lives in the OS agents. Layers: Rust kernel, Goose services, Lobster apps.</span>';
     }
   }
 };

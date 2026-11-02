@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meta OS — A platform that never sleeps</title>
-<meta name="description" content="Meta OS is a real operating system with its own Rust kernel, built for agents and for users. Systems plug into it: Imperium, Science Lab, Musica, Custos, Officina.">
+<meta name="description" content="Meta OS is a real operating system with its own Rust kernel, built for agents and for users. Systems plug into it: Imperium, Science Lab, Musica, Officina.">
 <style>
   :root{
     --bg:#0b0e13; --panel:#12161f; --panel2:#171c28; --line:#232a3a;
@@ -102,9 +102,11 @@
     <div class="card">
       <div class="tag2">System two</div>
       <h3>Science Lab</h3>
-      <p>A working laboratory on the platform. Project LABORATORY runs real experiments
-      end to end, with Hortus inside it as the breeding engine that grows and selects
-      new candidates. Heatsinks are its current practice test, not its limit.</p>
+      <p>A working laboratory on the platform. Project LABORATORY's first build is
+      merged and passed its dress rehearsal, reproducing a published result on
+      held-out data; its real discovery cycles have not run yet. Hortus sits inside
+      it as the breeding engine that grows and selects new candidates. Heatsinks
+      are its current practice test, not its limit.</p>
     </div>
     <div class="card">
       <div class="tag2">Candidate system</div>
@@ -113,10 +115,11 @@
       being packaged to plug into the platform as a system.</p>
     </div>
     <div class="card">
-      <div class="tag2">Adopted</div>
+      <div class="tag2">Retired</div>
       <h3>Custos</h3>
-      <p>The night watch: a guard for machines and the internet, checking what should
-      stay quiet through the night and raising the alarm when it does not.</p>
+      <p>Retired as a standalone system (2026-11-02). The night watch idea — a guard
+      for machines, checking what should stay quiet through the night — now lives
+      in the OS's agents.</p>
     </div>
     <div class="card">
       <div class="tag2">Adopted</div>
@@ -128,9 +131,9 @@
     <div class="card">
       <div class="tag2">On main</div>
       <h3>The Board</h3>
-      <p>The messaging board of the OS: the crew relay, remade as a native board inside
-      Meta OS so agents and the user share one live message board on the platform
-      itself.</p>
+      <p>The messaging board: the crew relay, remade as a board service that runs
+      beside the OS today (host service + web viewer). Wiring it into the OS shell
+      is next.</p>
     </div>
   </div>
 </section>

@@ -89,8 +89,11 @@ pub struct JournalRecord {
     pub text: String,
 }
 
-/// One gate tick: returns new journal records (park + escalation payload).
-/// Jobs already parked (`park:<id>` in journal) yield nothing.
+/// One gate tick: returns new journal records (a parked record plus an
+/// escalation record). The escalation record carries the question text;
+/// it is not a validated Push payload, because building one belongs to
+/// the push module. Jobs already parked (`park:<id>` in journal) yield
+/// nothing.
 pub fn gate_tick(jobs: &[JobRecord], journal: &[JournalRecord]) -> Vec<JournalRecord> {
     let mut out = Vec::new();
     for job in jobs {

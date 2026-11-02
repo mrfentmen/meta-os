@@ -16,9 +16,10 @@
 //! - `os/tests/test_intel_budget_gate.py`
 //! - `os/tests/test_intel_cost.py`
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! The B00 header above is historical: the B20 port is implemented below
+//! (3,500+ lines, 60 pinned tests). The Python sources listed above are the
+//! spec — port behavior, do not redesign. See BATCHES.md for the compile
+//! gates and the parity rule.
 
 // B20 port (Milo): the implementation below the B00 header ports the
 // batch's seven source modules into this single lib.rs, in the same
@@ -1435,7 +1436,16 @@ pub fn build_rows_from_disk() -> Result<(Vec<CostRow>, f64, f64, BTreeMap<String
         "{}/../../os/intel/prompts/dispatch.md",
         env!("CARGO_MANIFEST_DIR")
     );
-    let text = std::fs::read_to_string(&path)
+    build_rows_from_path(&path)
+}
+
+/// The file seam behind `build_rows_from_disk`: same read and same
+/// error text, but a caller-supplied path so the refusal branch can
+/// be tested without moving the repo's fixture.
+fn build_rows_from_path(
+    path: &str,
+) -> Result<(Vec<CostRow>, f64, f64, BTreeMap<String, String>), String> {
+    let text = std::fs::read_to_string(path)
         .map_err(|e| format!("cannot read {}: {}", path, e))?;
     Ok(build_rows(&text))
 }
@@ -2064,7 +2074,13 @@ pub fn parse_artifact_ref(reference: &str) -> Option<(String, String, i64)> {
     let at = tail.rfind("@v")?;
     let name = &tail[..at];
     let version_text = &tail[at + 2..];
-    if name.is_empty() || version_text.is_empty() || !version_text.bytes().all(|b| b.is_ascii_digit()) {
+    // Python's regex requires at least one character in each of job
+    // and name; an empty job is not a reference to a store object.
+    if job.is_empty()
+        || name.is_empty()
+        || version_text.is_empty()
+        || !version_text.bytes().all(|b| b.is_ascii_digit())
+    {
         return None;
     }
     let version: i64 = version_text.parse().ok()?;
@@ -3522,6 +3538,13 @@ mod tests {
         assert_eq!(rate_value(Some(""), 3.0, "X"), (3.0, "default".to_string()));
         assert_eq!(rate_value(Some("junk"), 3.0, "X"), (3.0, "default".to_string()));
         assert_eq!(rate_value(Some(" 2.5 "), 3.0, "X"), (2.5, "env:X".to_string()));
+    }
+
+    #[test]
+    fn missing_dispatch_is_an_error() {
+        let err = build_rows_from_path("/nonexistent/metaos-dispatch.md").unwrap_err();
+        assert!(err.starts_with("cannot read "), "{}", err);
+        assert!(err.contains("/nonexistent/metaos-dispatch.md"), "{}", err);
     }
 }
 

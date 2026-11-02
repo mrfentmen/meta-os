@@ -8,7 +8,7 @@
 
 [Live crew viewer](https://muse-relay-live.pages.dev) · [Task list](os-build/TASKS_V3.md) · [OpenCode tasks](os-build/OPENCODE_TASKS_100.md) · [Commit history](https://github.com/Mrfentmen/meta-os/commits/main)
 
-![Node tests: 1877 passing](https://img.shields.io/badge/node%20tests-1965%20passing-brightgreen) ![Rust tests: 1412 passing](https://img.shields.io/badge/rust%20tests-1412%20passing-brightgreen) ![Worlds packs: 9 of 9 valid](https://img.shields.io/badge/worlds%20packs-9%20of%209%20valid-blue) ![Status: in active build](https://img.shields.io/badge/status-in%20active%20build-orange)
+![Node tests: 2071 run, 2016 passing](https://img.shields.io/badge/node%20tests-2071%20run%2C%202016%20passing-brightgreen) ![Rust tests: 2186 passing](https://img.shields.io/badge/rust%20tests-2186%20passing-brightgreen) ![Worlds packs: 9 of 9 valid](https://img.shields.io/badge/worlds%20packs-9%20of%209%20valid-blue) ![Status: in active build](https://img.shields.io/badge/status-in%20active%20build-orange)
 
 Built for the **Meta Global AI Developer Hackathon 2026**, Indie track.
 
@@ -34,10 +34,10 @@ One person directs the build. Del, known as Mrfentmen, makes the calls and does 
 | Meta Imperium | Watches public camera feeds and flags scenes for human review across police, fire, and EMS divisions | Working. The flagship system, and the hackathon submission core |
 | Meta Scientia | A science lab. It forms hypotheses, runs experiments, and grades evidence on a ladder it cannot skip | Part built. The breeding engine and the first gate are ready on a branch and land after the Nov 1 full test |
 | Meta Officina | A workshop. A person describes an invention in rough words and the workshop designs it, tests it, and writes the full pack | Working in main. Stages 1 and 2a are in, with the design loop and a held out proof gate |
-| Meta Custos | A night watch for machines. It patrols certificates, services, and known exploited vulnerabilities | Built and gate checked. It waits on a merge fix where its files overlap the platform files |
+| Meta Custos | RETIRED (2026-11-02) as a standalone system. It was a night watch for machines — patrols of certificates, services, and known exploited vulnerabilities — and that watch idea now lives in the OS's agents | Retired — not a current system |
 | Meta Musica | A music studio that never closes. It composes, keeps the takes it likes, and learns from the ones it keeps | In build now, with a 3D notes scene on the OpenCode task list |
 | Meta Faber | The loop that improves Meta OS itself, one checked change at a time, with a stop switch and a rollback rule | Working in main |
-| Meta OS, the kernel | Our own Rust kernel: boots, draws its own console, schedules tasks, runs ring-3 programs, answers a shell | K1-K5 proven by committed boot logs; K6 proven except that no Goose service has a process yet (`os-build/KERNEL_STATUS.md`) |
+| Meta OS, the kernel | Our own Rust kernel: boots to its own text console, schedules tasks, runs ring-3 programs, answers a shell | K1-K5 proven by committed boot logs; K6 proven except that no Goose service has a process yet (`os-build/KERNEL_STATUS.md`) |
 
 ## Meta Imperium
 
@@ -91,7 +91,9 @@ Model output is never trusted as returned. It must validate against the frozen v
 You need Node.js 24 and Python 3.
 
 ```sh
-# The web console on its own, any static server works
+# The Imperium web console on its own — a browser UI, not the OS
+# (the OS is the kernel in kernel/, booted per kernel/BUILD_LOG.md).
+# Any static server works:
 python3 -m http.server 8000
 # open http://localhost:8000
 
@@ -103,13 +105,13 @@ Camera access needs a secure context: `localhost` counts, as does HTTPS.
 
 ## Test numbers
 
-Every number below was measured on the current main on 2026-11-01. Recheck any of them with the commands in the next table column.
+Every number below was measured on the current main on 2026-11-02. Recheck any of them with the commands in the next table column.
 
 | Suite | Result | Run it with |
 | --- | --- | --- |
-| Node (app, server, eval harnesses) | 2020 run, 1965 pass, 55 fail | `npm test` |
-| Rust workspace | 1412 pass, 0 fail | `cargo test --workspace` |
-| Python job queue | 110 pass | `python3 -m unittest discover -s tests/queue-python` |
+| Node (app, server, eval harnesses) | 2071 run, 2016 pass, 55 fail | `npm test` |
+| Rust workspace | 2186 pass, 0 fail | `cargo test --workspace` |
+| Python job queue | 289 pass | `python3 -m unittest discover -s tests/queue-python` |
 | Python Officina | 49 pass | `python3 -m unittest discover -s tests/officina` |
 | Worlds packs | 9 of 9 valid | `python3 os/worlds/validate_pack.py` |
 | OS loop harness | 12 of 12 pass | `bash os/os/loop-tests/metaos-loop.test.sh` |
@@ -171,9 +173,9 @@ A missing confidence or latency key is rejected even though a null value is acce
 
 | Piece | Used for |
 | --- | --- |
-| Rust | The operating system core and services port, 1412 tests green |
+| Rust | The operating system core and services port, 2186 tests green |
 | Node.js | The app server, the console tooling, and the test suites |
-| Python | The job queue, the agent crew, and the world packs (Imperium divisions, Scientia, Officina, Custos) |
+| Python | The job queue, the agent crew, and the world packs (Imperium divisions, Scientia, Officina, and the retired Custos pack) |
 | Muse Spark 1.3 | Every model assessment, through the Meta Model API |
 | MapLibre GL | The city map in the console, vendored into the repo |
 | Three.js | The demo film city and scenes, and the coming 3D viewers for Scientia compounds and Musica notes |
@@ -203,7 +205,7 @@ A missing confidence or latency key is rejected even though a null value is acce
 
 - The full end to end test on the director's Mac, then submission
 - The three minute platform film, cut from the shot library
-- The Custos merge fix, so the night watch lands in main
+- The night watch, built into the OS's agents (Custos retired as a standalone system on 2026-11-02)
 
 **Next**
 
@@ -220,7 +222,7 @@ A missing confidence or latency key is rejected even though a null value is acce
 
 - **Del (Mrfentmen)** directs. He sets the direction, makes the calls no agent may make, and runs every Mac side proof himself.
 - **Pax** coordinates the build, checks finished work lane by lane, and merges what passes.
-- **Rowan, Hana, and Milo** build in lanes: platform and Custos, interface and Musica and Scientia surfaces, Officina and evaluation.
+- **Rowan, Hana, and Milo** build in lanes: the platform, interface and Musica and Scientia surfaces, Officina and evaluation.
 - **Buffy** built early Rust batches.
 - **OpenCode** runs on the director's Mac and takes the jobs only a Mac can do: compiling, clicking, booting, recording.
 
@@ -280,16 +282,15 @@ operating system, built in the open in this repo:
 
 ## Screens
 
-The boot screen of the face image — the logo is the spinning
-ASCII infinity ribbon, blue, drawn live:
+The face image's boot screen — the desktop design running on the carrier image, drawn by the web renderer. The kernel did not draw this; its own screen today is the text console below.
 
 ![Boot screen](os-build/face/boot-theme-live.png)
 
-The desktop (light theme) on the carrier image:
+The desktop (light theme) of the face, on the carrier image (Debian + browser) — the design, not a kernel-drawn screen:
 
 ![Desktop, light](os-build/captures/face-web/desktop-light.png)
 
-The login:
+The face's login (same carrier image):
 
 ![Login](os-build/captures/face-web/login.png)
 
@@ -318,7 +319,7 @@ own terms. That is a Pax ruling plus a `LICENSE` file, not a sentence in this RE
 
 ## The services layer
 
-The OS above is the image. Under it sits a services layer written in Goose, the systems language, and built here from source: 25 services over 18 shared libraries — a supervisor, logging with rotation and retention, a log-structured filesystem with a checker, storage, time, the call matrix, the network protocol pack, a shell, and the agent host. It is not a sketch. Every module has a test program that imports it, asserts against it, and is compiled to C and run as a real host process, 33 of them in one command:
+The kernel above boots from its own boot image, and the committed QEMU boot logs are the proof. Beside it sits a services layer written in Goose, the systems language, and built here from source: 25 services over 18 shared libraries — a supervisor, logging with rotation and retention, a log-structured filesystem with a checker, storage, time, the call matrix, the network protocol pack, a shell, and the agent host. It is not a sketch. Every module has a test program that imports it, asserts against it, and is compiled to C and run as a real host process, 33 of them in one command:
 
 ```
 ./os-build/layer1/run_native.sh

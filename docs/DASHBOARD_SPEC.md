@@ -576,7 +576,7 @@ Watch item links to its alert card, and non-intel hashes parse to
 nothing and clear the highlight.
 - **Demo mode (DSH-028):** `?demo=1` enlarges type, hides token/setup
   chrome, and pins the four intel panels open. Normal URL is unchanged.
-  On the Meta OS demo image, demo mode is the kiosk default (OS-047).
+  On the carrier demo image (the Debian image that hosts the face for demos), demo mode is the kiosk default (OS-047).
   Implemented (DSH-028): a one-time `?demo=1` check at intelPanel
   load (never a timer, DSH-020) adds `body.demo-mode` — CSS sets
   18px body type, 17px panel type, and hides `#url`, `#token`, and

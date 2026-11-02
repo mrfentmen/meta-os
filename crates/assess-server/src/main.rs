@@ -3,14 +3,14 @@
 //! Sources: `server/README.md`, `server/assess.mjs`, `server/model.mjs`,
 //! `server/queue.mjs`, `server/server.mjs`. Port behavior, do not redesign.
 //!
-//! Real HTTP service (std `TcpListener`, thread per connection — mirrors
-//! plain `node:http` in server.mjs, no framework): POST /api/assess,
-//! GET /api/health, static frontend from the launch directory.
+//! Real HTTP service (std `TcpListener`, thread per connection), no
+//! framework: POST /api/assess, GET /api/health, and the static frontend
+//! from the launch directory. The Node original also serves crew, cameras,
+//! fires and radar; this port does not, so its surface is assess/health/static.
 //! Assessment order (QUEUE-TRANSPORT-3): queue first when
 //! `TRIO_QUEUE_ENABLED=1` (bounded 30x1s poll, fallback to direct Spark
-//! on any queue failure, logged never faked); invalid queue/model
-//! answers are 502, never silent fallbacks. No assessment is ever
-//! invented here: every error path returns an HTTP status + error shape.
+//! on any queue failure, logged never faked); a contract-invalid queue or
+//! model answer is 502, never a silent fallback. No assessment is invented here.
 
 use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
 use serde_json::{json, Value};
@@ -960,5 +960,392 @@ mod tests {
         let err = assess_with_model(&input, Some("dummy"), true, Some("http://127.0.0.1:9/"), &path).unwrap_err();
         assert_eq!(err.code, "model_call_failed");
         assert!(err.message.contains("GUARDRAIL STOP"), "{err:?}");
+    }
+
+    // ---- B134: error paths ------------------------------------------------
+
+    #[test]
+    fn validate_rejects_non_object_bodies() {
+        for body in [json!([]), json!("x"), json!(null), json!(3)] {
+            let errs = validate_assess_request(&body).err().expect("validation must fail");
+            assert_eq!(errs, vec!["request body is not a JSON object".to_string()]);
+        }
+    }
+
+    #[test]
+    fn validate_collects_every_missing_field() {
+        let errs = validate_assess_request(&json!({})).err().expect("validation must fail");
+        assert_eq!(errs.len(), 3, "{errs:?}");
+        assert!(errs[0].contains("product"));
+        assert!(errs[1].contains("timestamp"));
+        assert!(errs[2].contains("image"));
+    }
+
+    #[test]
+    fn image_requires_the_jpeg_magic_bytes() {
+        let png = format!("data:image/jpeg;base64,{}", B64.encode([0x89u8, 0x50, 0x4e, 0x47]));
+        let err = parse_image_data_url(&json!(png)).unwrap_err();
+        assert!(err.contains("JPEG magic bytes"), "{err}");
+    }
+
+    #[test]
+    fn image_rejects_a_non_data_url_and_zero_bytes() {
+        let not_a_url = parse_image_data_url(&json!("http://example/x.jpg")).unwrap_err();
+        assert!(not_a_url.contains("data:image/jpeg"), "{not_a_url}");
+        let empty = format!("data:image/jpeg;base64,{}", B64.encode([0u8; 0]));
+        let zero = parse_image_data_url(&json!(empty)).unwrap_err();
+        assert!(zero.contains("zero bytes"), "{zero}");
+    }
+
+    #[test]
+    fn image_refuses_one_byte_over_the_cap() {
+        let mut frame = vec![0u8; MAX_IMAGE_BYTES + 1];
+        frame[0] = 0xff;
+        frame[1] = 0xd8;
+        frame[2] = 0xff;
+        let url = format!("data:image/jpeg;base64,{}", B64.encode(&frame));
+        let err = parse_image_data_url(&json!(url)).unwrap_err();
+        assert!(err.contains(&MAX_IMAGE_BYTES.to_string()), "{err}");
+    }
+
+    #[test]
+    fn build_job_refuses_bad_product_timestamp_and_empty_frame() {
+        let bad_product = build_queue_job("nope", "t", &[1]).unwrap_err();
+        assert_eq!(bad_product.code, "queue_submit_failed");
+        assert!(bad_product.message.contains("nope"));
+        assert_eq!(build_queue_job("ignis", "", &[1]).unwrap_err().code, "queue_submit_failed");
+        assert_eq!(build_queue_job("ignis", "t", &[]).unwrap_err().code, "queue_submit_failed");
+    }
+
+    #[test]
+    fn submit_refuses_layers_before_any_transport() {
+        let job = build_queue_job("ignis", "2026-10-30T06:00:00.000Z", &[0xff, 0xd8, 0xff]).unwrap();
+        let boom = |_: &str, _: &Value| -> Result<String, QueueError> { panic!("transport called") };
+        let disabled = QueueConfig { enabled: false, url: "http://q".into() };
+        assert_eq!(submit_queue_job(&job, &disabled, &boom).unwrap_err().code, "queue_disabled");
+        let no_url = QueueConfig { enabled: true, url: String::new() };
+        assert_eq!(submit_queue_job(&job, &no_url, &boom).unwrap_err().code, "queue_not_configured");
+        let cfg = QueueConfig { enabled: true, url: "http://q".into() };
+        assert_eq!(submit_queue_job(&json!({}), &cfg, &boom).unwrap_err().code, "queue_submit_failed");
+    }
+
+    #[test]
+    fn parse_refuses_malformed_envelopes() {
+        let jid = "trio-x";
+        let cases = [
+            json!("not an object"),
+            json!({"job_id": "other", "status": "ok", "assessment": {}}),
+            json!({"version": 2, "kind": "trio-assessment-result", "jobId": jid, "status": "pending"}),
+            json!({"version": 1, "kind": "wrong", "jobId": jid, "status": "pending"}),
+            json!({"job_id": jid, "status": "ok"}),
+            json!({"job_id": jid, "status": "pending", "assessment": {}}),
+            json!({"job_id": jid, "status": "failed", "assessment": {}}),
+            json!({"job_id": jid, "status": "what"}),
+        ];
+        for case in cases {
+            let err = parse_queue_result_envelope(&case, jid).unwrap_err();
+            assert_eq!(err.code, "queue_fetch_failed", "{case}");
+            assert!(err.message.contains("malformed"), "{case}: {}", err.message);
+        }
+    }
+
+    #[test]
+    fn fetch_refuses_an_empty_job_id_before_transport() {
+        let cfg = QueueConfig { enabled: true, url: "http://q".into() };
+        let boom = |_: &str, _: &str| -> Result<Value, QueueError> { panic!("transport called") };
+        let err = fetch_queue_result("", &cfg, &boom).unwrap_err();
+        assert_eq!(err.code, "queue_fetch_failed");
+        assert!(err.message.contains("without a job id"), "{}", err.message);
+    }
+
+    #[test]
+    fn model_held_and_not_configured_are_distinct_refusals() {
+        let input = ValidInput {
+            product: "ignis".into(),
+            timestamp: "2026-10-30T06:00:00.000Z".into(),
+            image_bytes: vec![0xff, 0xd8, 0xff],
+            media_type: "image/jpeg".into(),
+        };
+        let held = assess_with_model(&input, Some("k"), false, None, "/tmp/unused-guardrail.json").unwrap_err();
+        assert_eq!(held.code, "held");
+        let no_key = assess_with_model(&input, None, true, None, "/tmp/unused-guardrail.json").unwrap_err();
+        assert_eq!(no_key.code, "not_configured");
+    }
+
+    #[test]
+    fn prompt_refuses_an_unknown_product() {
+        let err = build_spark_prompt("nope", "2026-10-30T06:00:00.000Z").unwrap_err();
+        assert_eq!(err.code, "model_call_failed");
+        assert!(err.message.contains("No prompt profile"), "{}", err.message);
+    }
+
+    // ---- B135: edge cases -------------------------------------------------
+
+    #[test]
+    fn edge_duplicate_json_keys_keep_the_last_value() {
+        let last_bad: Value = serde_json::from_str(r#"{"product":"vigiles","product":"nope"}"#).unwrap();
+        assert!(validate_assess_request(&last_bad).is_err());
+        let last_good: Value = serde_json::from_str(
+            r#"{"product":"nope","product":"vigiles","timestamp":"2026-10-30T06:00:00.000Z","image":"data:image/jpeg;base64,/9j/4A=="}"#,
+        )
+        .unwrap();
+        assert!(validate_assess_request(&last_good).is_ok());
+    }
+
+    #[test]
+    fn edge_poll_out_of_order_returns_done_after_two_pending() {
+        let cfg = QueueConfig { enabled: true, url: "http://q".into() };
+        let calls = std::cell::Cell::new(0u32);
+        let sleeps = std::cell::Cell::new(0u32);
+        let get = |_: &str, _: &str| -> Result<Value, QueueError> {
+            let n = calls.get();
+            calls.set(n + 1);
+            if n < 2 {
+                Ok(json!({"job_id": "trio-x", "status": "pending"}))
+            } else {
+                Ok(json!({"job_id": "trio-x", "status": "ok", "assessment": {"a": 1}}))
+            }
+        };
+        let out = poll_queue_result("trio-x", &cfg, &get, 5, 0, &|_| sleeps.set(sleeps.get() + 1)).unwrap();
+        assert!(matches!(out, QueueResult::Done { .. }));
+        assert_eq!(calls.get(), 3);
+        assert_eq!(sleeps.get(), 2);
+    }
+
+    #[test]
+    fn edge_poll_with_zero_bound_still_fetches_once() {
+        // Pinned as the code is, not as the JS original is: line 377 applies
+        // max_attempts.max(1). Gap G10 records the divergence.
+        let cfg = QueueConfig { enabled: true, url: "http://q".into() };
+        let calls = std::cell::Cell::new(0u32);
+        let get = |_: &str, _: &str| -> Result<Value, QueueError> {
+            calls.set(calls.get() + 1);
+            Ok(json!({"job_id": "trio-x", "status": "pending"}))
+        };
+        assert!(poll_queue_result("trio-x", &cfg, &get, 0, 0, &|_| {}).is_err());
+        assert_eq!(calls.get(), 1);
+    }
+
+    // ---- B143: the HTTP helper module had zero tests ----------------------
+
+    #[test]
+    fn http_content_types_are_the_documented_five() {
+        assert_eq!(content_type_for("html"), Some("text/html; charset=utf-8"));
+        assert_eq!(content_type_for("css"), Some("text/css; charset=utf-8"));
+        assert_eq!(content_type_for("js"), Some("text/javascript; charset=utf-8"));
+        assert_eq!(content_type_for("mjs"), Some("text/javascript; charset=utf-8"));
+        assert_eq!(content_type_for("json"), Some("application/json; charset=utf-8"));
+        assert_eq!(content_type_for("png"), None);
+        assert_eq!(content_type_for(""), None);
+    }
+
+    #[test]
+    fn http_caps_are_the_documented_values() {
+        assert_eq!(MAX_IMAGE_BYTES, 8 * 1024 * 1024);
+        assert_eq!(MAX_BODY_BYTES, 12 * 1024 * 1024);
+        assert_eq!(QUEUE_POLL_INTERVAL_MS, 1000);
+        assert_eq!(QUEUE_POLL_MAX_ATTEMPTS, 30);
+    }
+
+    fn http_round_trip(request: &str, srv: &ServerDeps) -> String {
+        let listener = TcpListener::bind(("127.0.0.1", 0)).unwrap();
+        let addr = listener.local_addr().unwrap();
+        let req = request.to_string();
+        let client = std::thread::spawn(move || {
+            let mut stream = TcpStream::connect(addr).unwrap();
+            stream.write_all(req.as_bytes()).unwrap();
+            let mut out = String::new();
+            stream.read_to_string(&mut out).unwrap();
+            out
+        });
+        let (stream, _) = listener.accept().unwrap();
+        handle_connection(stream, srv);
+        client.join().unwrap()
+    }
+
+    fn live_srv() -> ServerDeps {
+        ServerDeps { env: test_env(), deps: deps_with(stub_ok), doc_root: std::env::temp_dir() }
+    }
+
+    #[test]
+    fn http_routes_refuse_unknown_routes_and_wrong_methods() {
+        let srv = live_srv();
+        let unknown = http_round_trip("GET /api/nope HTTP/1.1\r\nHost: x\r\n\r\n", &srv);
+        assert!(unknown.starts_with("HTTP/1.1 404"), "{unknown}");
+        assert!(unknown.contains("unknown route"), "{unknown}");
+        let wrong = http_round_trip("GET /api/assess HTTP/1.1\r\nHost: x\r\n\r\n", &srv);
+        assert!(wrong.starts_with("HTTP/1.1 405"), "{wrong}");
+        let health = http_round_trip("GET /api/health HTTP/1.1\r\nHost: x\r\n\r\n", &srv);
+        assert!(health.starts_with("HTTP/1.1 200"), "{health}");
+        assert!(health.contains("\"service\":\"meta-trio-assess\""), "{health}");
+    }
+
+    #[test]
+    fn http_static_refuses_traversal_and_missing_files() {
+        let srv = live_srv();
+        let traversal = http_round_trip("GET /../etc/passwd HTTP/1.1\r\nHost: x\r\n\r\n", &srv);
+        assert!(traversal.starts_with("HTTP/1.1 404"), "{traversal}");
+        let missing = http_round_trip("GET /definitely-missing.html HTTP/1.1\r\nHost: x\r\n\r\n", &srv);
+        assert!(missing.starts_with("HTTP/1.1 404"), "{missing}");
+    }
+
+    // ---- B134/B135 close-out: branches the first pass left uncovered ------
+
+    #[test]
+    fn image_refuses_a_non_string_and_bad_base64() {
+        let non_string = parse_image_data_url(&json!(3)).unwrap_err();
+        assert!(non_string.contains("missing or not a string"), "{non_string}");
+        let bad = parse_image_data_url(&json!("data:image/jpeg;base64,!!!!")).unwrap_err();
+        assert!(bad.contains("base64-decode"), "{bad}");
+        let empty_string = parse_image_data_url(&json!("")).unwrap_err();
+        assert!(empty_string.contains("data:image/jpeg"), "{empty_string}");
+    }
+
+    #[test]
+    fn image_accepts_exactly_the_cap() {
+        let mut frame = vec![0u8; MAX_IMAGE_BYTES];
+        frame[0] = 0xff;
+        frame[1] = 0xd8;
+        frame[2] = 0xff;
+        let url = format!("data:image/jpeg;base64,{}", B64.encode(&frame));
+        let (bytes, media) = parse_image_data_url(&json!(url)).unwrap();
+        assert_eq!(bytes.len(), MAX_IMAGE_BYTES);
+        assert_eq!(media, "image/jpeg");
+    }
+
+    #[test]
+    fn fetch_refuses_disabled_and_unconfigured_before_transport() {
+        let boom = |_: &str, _: &str| -> Result<Value, QueueError> { panic!("transport called") };
+        let disabled = QueueConfig { enabled: false, url: "http://q".into() };
+        assert_eq!(fetch_queue_result("trio-x", &disabled, &boom).unwrap_err().code, "queue_disabled");
+        let no_url = QueueConfig { enabled: true, url: String::new() };
+        assert_eq!(fetch_queue_result("trio-x", &no_url, &boom).unwrap_err().code, "queue_not_configured");
+    }
+
+    #[test]
+    fn poll_propagates_a_transport_error_without_retrying() {
+        let cfg = QueueConfig { enabled: true, url: "http://q".into() };
+        let calls = std::cell::Cell::new(0u32);
+        let get = |_: &str, _: &str| -> Result<Value, QueueError> {
+            calls.set(calls.get() + 1);
+            Err(QueueError::new("queue_fetch_failed", "socket closed"))
+        };
+        let err = poll_queue_result("trio-x", &cfg, &get, 5, 0, &|_| {}).unwrap_err();
+        assert_eq!(err.code, "queue_fetch_failed");
+        assert!(err.message.contains("socket closed"), "{}", err.message);
+        assert_eq!(calls.get(), 1);
+    }
+
+    #[test]
+    fn proposed_shape_refuses_a_mismatched_job_and_non_string_error() {
+        let jid = "trio-x";
+        let wrong_job = json!({"version": 1, "kind": "trio-assessment-result", "jobId": "other", "status": "pending"});
+        let err = parse_queue_result_envelope(&wrong_job, jid).unwrap_err();
+        assert_eq!(err.code, "queue_fetch_failed");
+        assert!(err.message.contains("jobId does not match"), "{}", err.message);
+        let bad_error = json!({"version": 1, "kind": "trio-assessment-result", "jobId": jid, "status": "failed", "error": 3});
+        let err = parse_queue_result_envelope(&bad_error, jid).unwrap_err();
+        assert!(err.message.contains("non-string error"), "{}", err.message);
+    }
+
+    fn queue_env() -> Env {
+        Env { trio_queue_enabled: true, trio_queue_url: "http://q".into(), ..test_env() }
+    }
+
+    #[test]
+    fn queue_done_answer_is_returned_without_calling_the_model() {
+        let env = queue_env();
+        let deps = Deps {
+            // If the queue answer were ignored, this stub's refusal would
+            // surface as 503; a 200 proves the queue path won.
+            assess_model: stub_held,
+            queue_post: |_, _| Ok("trio-x".into()),
+            queue_get: |_, _| {
+                Ok(json!({"job_id": "trio-x", "status": "ok", "assessment": canned_output("ignis", "2026-10-30T06:00:00.000Z")}))
+            },
+            poll_interval_ms: 0,
+            max_attempts: 1,
+            sleep_ms: |_| {},
+            log: |_| {},
+        };
+        let (status, body) = handle_assess(&assess_payload(), &env, &deps);
+        assert_eq!(status, 200);
+        assert_eq!(body["assessment"]["category"], "steam or fog");
+    }
+
+    #[test]
+    fn queue_failure_and_submit_failure_fall_back_to_the_direct_path() {
+        let env = queue_env();
+        let failed_result = Deps {
+            assess_model: stub_ok,
+            queue_post: |_, _| Ok("trio-x".into()),
+            queue_get: |_, _| Ok(json!({"job_id": "trio-x", "status": "failed", "error": "boom"})),
+            poll_interval_ms: 0,
+            max_attempts: 1,
+            sleep_ms: |_| {},
+            log: |_| {},
+        };
+        assert_eq!(handle_assess(&assess_payload(), &env, &failed_result).0, 200);
+
+        let no_submit = Deps {
+            assess_model: stub_ok,
+            queue_post: |_, _| Err(QueueError::new("queue_submit_failed", "no queue")),
+            queue_get: |_, _| panic!("get must not be called after a failed submit"),
+            poll_interval_ms: 0,
+            max_attempts: 1,
+            sleep_ms: |_| {},
+            log: |_| {},
+        };
+        assert_eq!(handle_assess(&assess_payload(), &env, &no_submit).0, 200);
+    }
+
+    #[test]
+    fn queue_done_off_contract_is_502() {
+        let env = queue_env();
+        let deps = Deps {
+            assess_model: stub_ok,
+            queue_post: |_, _| Ok("trio-x".into()),
+            queue_get: |_, _| Ok(json!({"job_id": "trio-x", "status": "ok", "assessment": {"not": "a contract"}})),
+            poll_interval_ms: 0,
+            max_attempts: 1,
+            sleep_ms: |_| {},
+            log: |_| {},
+        };
+        let (status, body) = handle_assess(&assess_payload(), &env, &deps);
+        assert_eq!(status, 502);
+        assert!(body["error"].as_str().unwrap().contains("contract"), "{body}");
+    }
+
+    #[test]
+    fn http_refuses_oversize_body_with_413_before_reading() {
+        let srv = live_srv();
+        let req = format!(
+            "POST /api/assess HTTP/1.1\r\nHost: x\r\nContent-Length: {}\r\n\r\n",
+            MAX_BODY_BYTES + 1
+        );
+        let resp = http_round_trip(&req, &srv);
+        assert!(resp.starts_with("HTTP/1.1 413"), "{resp}");
+    }
+
+    #[test]
+    fn http_answers_options_with_204_and_wrong_methods_with_405() {
+        let srv = live_srv();
+        let opts = http_round_trip("OPTIONS /api/assess HTTP/1.1\r\nHost: x\r\n\r\n", &srv);
+        assert!(opts.starts_with("HTTP/1.1 204"), "{opts}");
+        let health = http_round_trip("POST /api/health HTTP/1.1\r\nHost: x\r\nContent-Length: 0\r\n\r\n", &srv);
+        assert!(health.starts_with("HTTP/1.1 405"), "{health}");
+        let static_post = http_round_trip("POST /index.html HTTP/1.1\r\nHost: x\r\nContent-Length: 0\r\n\r\n", &srv);
+        assert!(static_post.starts_with("HTTP/1.1 405"), "{static_post}");
+    }
+
+    #[test]
+    fn http_invalid_json_is_a_400() {
+        let srv = live_srv();
+        let resp = http_round_trip(
+            "POST /api/assess HTTP/1.1\r\nHost: x\r\nContent-Length: 8\r\n\r\nnot json",
+            &srv,
+        );
+        assert!(resp.starts_with("HTTP/1.1 400"), "{resp}");
+        assert!(resp.contains("not valid JSON"), "{resp}");
     }
 }

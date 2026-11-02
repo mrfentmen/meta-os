@@ -1,4 +1,4 @@
-//! Crate `os-memory` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-memory` — Meta OS Rust rebuild port (B17).
 //!
 //! Batch B17 — Memory service. Owner: Milo.
 //! Source files this batch ports:
@@ -6,9 +6,10 @@
 //! - `os/tests/test_intel_brief_memory_depth_caller.py`
 //! - `os/tests/test_os078_memory.py`
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! Ported for the B17 scope: the JSON reader/writer, the journaled store,
+//! the CLI as a library function, and the brief memory-depth slice. The
+//! Python sources listed above are the spec — port behavior, do not
+//! redesign. See BATCHES.md for the compile gates and the parity rule.
 //!
 //! B17 port notes (Milo, gate 1). The store part ports `os/mos/memory.py`
 //! verbatim in behavior: journaled, versioned, per-agent + shared
