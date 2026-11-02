@@ -1,0 +1,69 @@
+{
+  "task": "R12-021",
+  "at": "2026-11-02T15:04:12.198Z",
+  "ok": true,
+  "killedMidRun": true,
+  "batonAtKill": {
+    "state": "queue starting",
+    "artifacts": [],
+    "nextStep": "bring the queue up",
+    "done": [],
+    "ts": "2026-11-02T15:04:11.743Z"
+  },
+  "resume": {
+    "exit": 0,
+    "signal": null,
+    "ms": 244
+  },
+  "dispatchesInRunDir": 1,
+  "receipt": {
+    "ok": true,
+    "resumed": true,
+    "stages": {
+      "queue_service": {
+        "state": "up",
+        "port": 63997,
+        "health": {
+          "ok": true,
+          "service": "trio-queue",
+          "store": "local-sqlite-FALLBACK",
+          "store_fallback": true,
+          "namespace": "hosted-r12",
+          "result_prefix": "trio"
+        }
+      },
+      "agent_once": {
+        "state": "ran",
+        "exit": 0,
+        "report": {
+          "done": [],
+          "failed": [],
+          "skipped": [],
+          "lost": []
+        },
+        "stderr": "trio_agent: WARNING — local SQLite FALLBACK store; jobs live in a file on this machine only\ntrio_agent: store=local-sqlite-FALLBACK namespace=hosted-r12",
+        "note": "zero jobs filed by this pass; no assessment and no model call is claimed"
+      },
+      "dispatch": {
+        "state": "accepted",
+        "http_status": 201,
+        "receipt": {
+          "receipt_id": "sim-36b59c454284fb33",
+          "simulated": true,
+          "received_at": "2026-11-02T15:04:12.190Z",
+          "note": "SIMULATED dispatch endpoint — the package was logged inside this stack; no real emergency service or external system was contacted."
+        },
+        "route": "http://127.0.0.1:63997/dispatch-simulated"
+      }
+    },
+    "runDir": "/Users/test/Desktop/meta-os/os-build/layer1/r12/imperium-baton"
+  },
+  "outputTail": [
+    "imperium hosted: PASS -> /Users/test/Desktop/meta-os/os-build/layer1/r12/imperium-baton/receipt.json",
+    "  queue_service: up",
+    "  agent_once: ran",
+    "  dispatch: accepted",
+    "  dispatches in run dir: 1"
+  ],
+  "note": "real queue service, real resident agent, real /dispatch-simulated; killed by process group"
+}
