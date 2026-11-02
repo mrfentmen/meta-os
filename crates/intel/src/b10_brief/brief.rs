@@ -864,6 +864,242 @@ pub fn held_decisions_lines(record: Option<&HeldDecisions>) -> Vec<String> {
         .collect()
 }
 
+/// One on-join snapshot job: id/title/status plus the `lane` field
+/// `onjoin_template_lines` reads, and claim/note for the owner and
+/// blocked extractors. A missing lane reads as empty, never guessed.
+#[derive(Debug, Clone, PartialEq)]
+pub struct OnjoinJob {
+    pub id: String,
+    pub title: String,
+    pub status: String,
+    pub lane: String,
+    pub claim: String,
+    pub note: String,
+}
+
+/// One newcomer capability record. Python appends `; roles: {roles}`
+/// whenever roles is a string at all — even an empty one — so
+/// `roles` is `Option` here: `None` means not a string, `Some`
+/// (even empty) appends. A caps text that is empty states nothing
+/// and yields no line.
+#[derive(Debug, Clone, PartialEq)]
+pub struct OnjoinCaps {
+    pub caps: String,
+    pub roles: Option<String>,
+}
+
+/// The on-join template snapshot, in the normalized form the
+/// extractors read. `presence` is `None` when the snapshot carries
+/// no presence list at all (then no owner is marked not online);
+/// `Some` (even empty) marks every owner not in the list. The
+/// caller splits bus-string messages into author nicks first,
+/// mirroring `_message_parts`, and maps a non-dict snapshot,
+/// non-list jobs, and a non-dict or non-list-contacts
+/// blocked_contacts record to the empty / `None` forms here —
+/// Python reads all of those as empty, never raising. A dict
+/// presence reaches here as its key list, in key order.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct OnjoinSnapshot {
+    pub crew_building: String,
+    pub jobs: Vec<OnjoinJob>,
+    pub message_authors: Vec<String>,
+    pub presence: Option<Vec<String>>,
+    pub caps: Vec<(String, OnjoinCaps)>,
+    pub blocked_contacts: Option<Vec<BlockedContact>>,
+    pub alerts: Vec<super::sections::SnapAlert>,
+}
+
+/// BRF-018 follow-up: the four BRF-002 on-join sections for a
+/// template brief, in prompt order: What this crew is building,
+/// Your likely lane, What is blocked, Who to ask.
+///
+/// The crew sentence is the snapshot's stated `crew_building`
+/// string when it is non-blank, else the prompt's own not-stated
+/// sentence. The likely-lane line names an open job's `lane`
+/// field in the v2 rule 9 form when the record carries one, and
+/// names a newcomer's capability record verbatim when one is
+/// stated for a newcomer; when neither is stated it says so and
+/// points to the first owner to ask for a first job (or says
+/// plainly that no owner is recorded). Blocked lines quote
+/// reasons verbatim, or read "Nothing blocked in this window".
+/// Who to ask names the claimed-job owners, marking one "not
+/// online in this window" only when the snapshot carries a
+/// presence list that does not name them, plus the
+/// blocked-contact ask nick when the snapshot carries a
+/// blocked_contacts record. The four section lines are plain
+/// lines, not bullets, so the BRF-007 budget trim cannot drop a
+/// blocked job or an ask-nick ahead of any other line; the
+/// additive INT-004 sections below use the morning bullet form,
+/// so under trim they drop first. This never raises.
+///
+/// Faithful quirks, pinned, not fixed: an open job with a title
+/// but no lane still appends its "Open job:" line while leaving
+/// the has-lane-or-caps flag false, so the no-capability lines
+/// follow it too; the blocked-contact label is `{id} {title}`
+/// unstripped, unlike the open-job label, which is stripped.
+pub fn onjoin_template_lines(snapshot: &OnjoinSnapshot) -> Vec<String> {
+    use super::sections::{extract_blocked, extract_owners, extract_watch_items, SnapJob, Snapshot};
+    let snap = Snapshot {
+        messages: Vec::new(),
+        jobs: snapshot
+            .jobs
+            .iter()
+            .map(|j| SnapJob {
+                id: j.id.clone(),
+                title: j.title.clone(),
+                status: j.status.clone(),
+                claim: j.claim.clone(),
+                note: j.note.clone(),
+                last_progress_at: None,
+                claimed_at: None,
+            })
+            .collect(),
+        alerts: snapshot.alerts.clone(),
+    };
+    let mut lines: Vec<String> = Vec::new();
+    lines.push("What this crew is building".to_string());
+    let crew = snapshot.crew_building.trim();
+    if !crew.is_empty() {
+        lines.push(crew.to_string());
+    } else {
+        lines.push("The room's current work is not stated in this window".to_string());
+    }
+    lines.push(String::new());
+    lines.push("Your likely lane".to_string());
+    let mut lane_lines: Vec<String> = Vec::new();
+    let mut has_lane_or_caps = false;
+    if let Some(job) = snapshot.jobs.iter().find(|j| j.status == "open") {
+        if !job.lane.is_empty() {
+            lane_lines.push(format!(
+                "The open job {} belongs to the {} lane",
+                job.title, job.lane
+            ));
+            has_lane_or_caps = true;
+        } else if !job.title.is_empty() {
+            let label = format!("{} {}", job.id, job.title);
+            lane_lines.push(format!("Open job: {}", label.trim()));
+        }
+    }
+    // Newcomers, in presence order: present with no prior message,
+    // duplicates dropped, empty nicks ignored.
+    let mut newcomers: Vec<&str> = Vec::new();
+    if let Some(presence) = &snapshot.presence {
+        for nick in presence {
+            if nick.is_empty()
+                || snapshot.message_authors.iter().any(|a| a == nick)
+                || newcomers.contains(&nick.as_str())
+            {
+                continue;
+            }
+            newcomers.push(nick.as_str());
+        }
+    }
+    for newcomer in &newcomers {
+        let Some((_, record)) = snapshot.caps.iter().find(|(n, _)| n == newcomer) else {
+            continue;
+        };
+        if record.caps.is_empty() {
+            continue;
+        }
+        let mut caps_line = format!("{newcomer}'s capability record lists {}", record.caps);
+        if let Some(roles) = &record.roles {
+            caps_line.push_str(&format!("; roles: {roles}"));
+        }
+        lane_lines.push(caps_line);
+        has_lane_or_caps = true;
+    }
+    let owners = extract_owners(&snap);
+    let ask_nick = owners.first().map(|o| o.nick.as_str()).unwrap_or("");
+    lines.extend(lane_lines);
+    if !has_lane_or_caps {
+        lines.push(
+            "No capability record and no open job lane are stated in this window.".to_string(),
+        );
+        if !ask_nick.is_empty() {
+            lines.push(format!("Ask {ask_nick} for a first job"));
+        } else {
+            lines.push("No owner is recorded in this window".to_string());
+        }
+    }
+    lines.push(String::new());
+    lines.push("What is blocked".to_string());
+    let blocked = extract_blocked(&snap);
+    if blocked.is_empty() {
+        lines.push("Nothing blocked in this window".to_string());
+    } else {
+        for job in &blocked {
+            lines.push(format!("{} {}: {}", job.id, job.title, job.reason));
+        }
+    }
+    lines.push(String::new());
+    lines.push("Who to ask".to_string());
+    let presence_nicks: Option<Vec<&str>> = snapshot
+        .presence
+        .as_ref()
+        .map(|p| p.iter().map(|n| n.as_str()).collect());
+    let mut ask_lines: Vec<String> = Vec::new();
+    for owner in &owners {
+        let titles: Vec<&str> = owner.jobs.iter().map(|j| j.title.as_str()).collect();
+        let mut line = format!("{}: {}", owner.nick, titles.join(", "));
+        if let Some(present) = &presence_nicks {
+            if !present.contains(&owner.nick.as_str()) {
+                line.push_str(" (not online in this window)");
+            }
+        }
+        ask_lines.push(line);
+    }
+    if let Some(contacts) = &snapshot.blocked_contacts {
+        // First entry wins for a repeated job id; an entry with no
+        // job id is skipped, never a contact for an unnamed job.
+        let mut asks: Vec<(&str, &str)> = Vec::new();
+        for contact in contacts {
+            if contact.job_id.is_empty() {
+                continue;
+            }
+            if asks.iter().any(|(id, _)| *id == contact.job_id.as_str()) {
+                continue;
+            }
+            asks.push((contact.job_id.as_str(), contact.ask.as_str()));
+        }
+        for job in &blocked {
+            let label = format!("{} {}", job.id, job.title);
+            match asks.iter().find(|(id, _)| *id == job.id.as_str()) {
+                Some((_, ask)) if !ask.is_empty() => {
+                    ask_lines.push(format!("Ask {ask} about {label}"));
+                }
+                _ => {
+                    ask_lines.push(format!("{label}: owner not reported in this window"));
+                }
+            }
+        }
+    }
+    if ask_lines.is_empty() {
+        lines.push("No owner is recorded in this window".to_string());
+    } else {
+        lines.extend(ask_lines);
+    }
+    // INT-004 additive sections, after the four on-join sections
+    // and only when they have content: a brief with no blocked job
+    // carries no additive Blocked section, and one with no alerts
+    // carries no additive Watch section.
+    if !blocked.is_empty() {
+        lines.push(String::new());
+        lines.push("Blocked and why".to_string());
+        for job in &blocked {
+            lines.push(format!("- {} {}: {}", job.id, job.title, job.reason));
+        }
+    }
+    let watch_items = extract_watch_items(&snap);
+    if !watch_items.is_empty() {
+        lines.push(String::new());
+        lines.push("Watch items".to_string());
+        for item in &watch_items {
+            lines.push(format!("- {}: {}", item.id, item.summary));
+        }
+    }
+    lines
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -1261,5 +1497,88 @@ mod tests {
             held_decisions_lines(None),
             vec!["Held decisions: none reported (snapshot time not reported)"]
         );
+    }
+
+    #[test]
+    fn onjoin_template_lines_four_sections_plus_additive() {
+        use super::super::sections::SnapAlert;
+        let snapshot = OnjoinSnapshot {
+            crew_building: "a trio of 911 apps".into(),
+            jobs: vec![
+                OnjoinJob { id: "7".into(), title: "spark client".into(), status: "open".into(), lane: "ignis".into(), claim: "".into(), note: "".into() },
+                OnjoinJob { id: "9".into(), title: "watchdog loop".into(), status: "blocked".into(), lane: "".into(), claim: "".into(), note: "needs a key".into() },
+                OnjoinJob { id: "3".into(), title: "brief panel".into(), status: "claimed".into(), lane: "".into(), claim: "pax".into(), note: "".into() },
+            ],
+            message_authors: vec!["pax".into()],
+            presence: Some(vec!["milo".into(), "pax".into()]),
+            caps: vec![("milo".into(), OnjoinCaps { caps: "rust, tests".into(), roles: Some("gate".into()) })],
+            blocked_contacts: Some(vec![
+                BlockedContact { job_id: "9".into(), ask: "milo".into() },
+            ]),
+            alerts: vec![SnapAlert { id: "WDG-1".into(), summary: "queue stalled".into(), explanation: "".into() }],
+        };
+        assert_eq!(
+            onjoin_template_lines(&snapshot),
+            vec![
+                "What this crew is building",
+                "a trio of 911 apps",
+                "",
+                "Your likely lane",
+                "The open job spark client belongs to the ignis lane",
+                "milo's capability record lists rust, tests; roles: gate",
+                "",
+                "What is blocked",
+                "9 watchdog loop: needs a key",
+                "",
+                "Who to ask",
+                // pax is in presence, so no not-online mark.
+                "pax: brief panel",
+                "Ask milo about 9 watchdog loop",
+                "",
+                "Blocked and why",
+                "- 9 watchdog loop: needs a key",
+                "",
+                "Watch items",
+                "- WDG-1: queue stalled",
+            ]
+        );
+        // An empty snapshot says everything plainly, never invents.
+        let empty = OnjoinSnapshot::default();
+        assert_eq!(
+            onjoin_template_lines(&empty),
+            vec![
+                "What this crew is building",
+                "The room's current work is not stated in this window",
+                "",
+                "Your likely lane",
+                "No capability record and no open job lane are stated in this window.",
+                "No owner is recorded in this window",
+                "",
+                "What is blocked",
+                "Nothing blocked in this window",
+                "",
+                "Who to ask",
+                "No owner is recorded in this window",
+            ]
+        );
+        // Pinned quirk: an open job with a title but no lane still
+        // appends its "Open job:" line AND the no-capability lines.
+        let title_only = OnjoinSnapshot {
+            jobs: vec![
+                OnjoinJob { id: "7".into(), title: "spark client".into(), status: "open".into(), lane: "".into(), claim: "".into(), note: "".into() },
+                OnjoinJob { id: "3".into(), title: "brief panel".into(), status: "claimed".into(), lane: "".into(), claim: "pax".into(), note: "".into() },
+            ],
+            presence: None,
+            ..OnjoinSnapshot::default()
+        };
+        let lines = onjoin_template_lines(&title_only);
+        assert!(lines.contains(&"Open job: 7 spark client".to_string()));
+        assert!(lines.contains(
+            &"No capability record and no open job lane are stated in this window.".to_string()
+        ));
+        assert!(lines.contains(&"Ask pax for a first job".to_string()));
+        // No presence list at all means no not-online mark.
+        assert!(lines.contains(&"pax: brief panel".to_string()));
+        assert!(!lines.iter().any(|l| l.contains("not online")));
     }
 }
