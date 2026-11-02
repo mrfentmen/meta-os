@@ -822,6 +822,70 @@ pub fn render_plan_detail(plan: &Plan, order: &[String], clamps: &[PlanClamp], w
     Ok(lines.join("\n"))
 }
 
+/// DSP-013 size limits: 12 jobs, 40 distinct files.
+pub const MAX_PLAN_JOBS: usize = 12;
+pub const MAX_PLAN_FILES: usize = 40;
+
+/// DSP-013 size warnings for a parsed plan. Pure function: one warning
+/// per breached limit, jobs warning first, or an empty list inside both
+/// limits. A plan at exactly a limit triggers nothing. Distinct files are
+/// counted by path, so one path owned twice still counts once. The
+/// Python original raises PlanError on a malformed plan shape; the typed
+/// `Plan` here cannot carry that shape, so there is no error case.
+pub fn plan_size_warnings(plan: &Plan) -> Vec<String> {
+    use std::collections::HashSet;
+    let mut warnings = Vec::new();
+    if plan.jobs.len() > MAX_PLAN_JOBS {
+        warnings.push(format!(
+            "plan size guardrail: {} jobs exceeds the {}-job limit; this plan needs a second \
+             confirmation before posting. Split suggestion: break it into smaller plans of at most {} \
+             jobs each (for example one plan per dependency chain), posted in dependency order, and approve \
+             each part separately",
+            plan.jobs.len(),
+            MAX_PLAN_JOBS,
+            MAX_PLAN_JOBS
+        ));
+    }
+    let mut files: HashSet<&str> = HashSet::new();
+    for job in &plan.jobs {
+        for path in &job.files {
+            files.insert(path.as_str());
+        }
+    }
+    if files.len() > MAX_PLAN_FILES {
+        warnings.push(format!(
+            "plan size guardrail: {} files exceeds the {}-file limit; this plan needs a second \
+             confirmation before posting. Split suggestion: break it into smaller plans touching \
+             at most {} files each, posted in dependency order, and approve each part separately",
+            files.len(),
+            MAX_PLAN_FILES,
+            MAX_PLAN_FILES
+        ));
+    }
+    warnings
+}
+
+/// Second-confirmation prompt for a large plan. Names the job count and
+/// the distinct file count. The `warnings` argument mirrors the Python
+/// original, which accepts `plan_size_warnings` output only to keep the
+/// caller from recomputing it; the prompt itself is built from the
+/// counts, so the argument is ignored here too. Pure string building;
+/// posts nothing.
+pub fn large_plan_prompt(plan: &Plan, _warnings: Option<&[String]>) -> String {
+    use std::collections::HashSet;
+    let mut files: HashSet<&str> = HashSet::new();
+    for job in &plan.jobs {
+        for path in &job.files {
+            files.insert(path.as_str());
+        }
+    }
+    format!(
+        "This plan is large ({} jobs, {} files) and needs a second confirmation. Post it anyway? [y/N] ",
+        plan.jobs.len(),
+        files.len()
+    )
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1199,5 +1263,84 @@ mod tests {
         let order = vec!["a".to_string()];
         let err = render_plan_detail(&p, &order, &[], &[]).unwrap_err();
         assert!(err.0.contains("posting order"), "got: {err}");
+    }
+
+    #[test]
+    fn size_warnings_empty_inside_limits() {
+        assert!(plan_size_warnings(&plan()).is_empty());
+    }
+
+    #[test]
+    fn size_warnings_exact_limit_quiet() {
+        let mut jobs = Vec::new();
+        for i in 0..12 {
+            let mut job = cjob(&format!("j{i}"), vec![], "");
+            job.files = (0..4).map(|k| format!("f{k}.py")).collect();
+            jobs.push(job);
+        }
+        // 12 jobs, but only 4 distinct files shared across them.
+        assert!(plan_size_warnings(&cplan(jobs)).is_empty());
+        // 12 jobs, 40 distinct files: still exactly at both limits.
+        let mut jobs = Vec::new();
+        for i in 0..12 {
+            let mut job = cjob(&format!("j{i}"), vec![], "");
+            if i == 0 {
+                job.files = (0..40).map(|k| format!("f{k}.py")).collect();
+            }
+            jobs.push(job);
+        }
+        assert!(plan_size_warnings(&cplan(jobs)).is_empty());
+    }
+
+    #[test]
+    fn size_warnings_job_limit_names_count_and_limit() {
+        let jobs: Vec<PlanJob> = (0..13).map(|i| cjob(&format!("j{i}"), vec![], "")).collect();
+        let warnings = plan_size_warnings(&cplan(jobs));
+        assert_eq!(warnings.len(), 1);
+        assert_eq!(
+            warnings[0],
+            "plan size guardrail: 13 jobs exceeds the 12-job limit; this plan needs a second \
+             confirmation before posting. Split suggestion: break it into smaller plans of at most 12 \
+             jobs each (for example one plan per dependency chain), posted in dependency order, and approve \
+             each part separately"
+        );
+    }
+
+    #[test]
+    fn size_warnings_file_limit_counts_distinct_paths_once() {
+        let mut job = cjob("big", vec![], "");
+        job.files = (0..41).map(|k| format!("f{k}.py")).collect();
+        job.files.push("f0.py".into());
+        job.files.push("f0.py".into());
+        let warnings = plan_size_warnings(&cplan(vec![job]));
+        assert_eq!(warnings.len(), 1);
+        assert!(
+            warnings[0].starts_with("plan size guardrail: 41 files exceeds the 40-file limit;"),
+            "got: {}",
+            warnings[0]
+        );
+    }
+
+    #[test]
+    fn size_warnings_both_breaches_jobs_first() {
+        let mut jobs: Vec<PlanJob> = (0..13).map(|i| cjob(&format!("j{i}"), vec![], "")).collect();
+        jobs[0].files = (0..41).map(|k| format!("f{k}.py")).collect();
+        let warnings = plan_size_warnings(&cplan(jobs));
+        assert_eq!(warnings.len(), 2);
+        assert!(warnings[0].contains("13 jobs"), "got: {}", warnings[0]);
+        assert!(warnings[1].contains("41 files"), "got: {}", warnings[1]);
+    }
+
+    #[test]
+    fn large_plan_prompt_names_counts_and_second_confirmation() {
+        assert_eq!(
+            large_plan_prompt(&plan(), None),
+            "This plan is large (2 jobs, 1 files) and needs a second confirmation. Post it anyway? [y/N] "
+        );
+        let warnings = plan_size_warnings(&plan());
+        assert_eq!(
+            large_plan_prompt(&plan(), Some(&warnings)),
+            "This plan is large (2 jobs, 1 files) and needs a second confirmation. Post it anyway? [y/N] "
+        );
     }
 }
