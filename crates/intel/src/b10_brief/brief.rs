@@ -2691,6 +2691,86 @@ pub fn with_blocked_contacts(
     })
 }
 
+/// INT-027 follow-up: the morning-path caller that fills a
+/// snapshot's `held_decisions` record, so a morning brief carries
+/// its Held decisions section even when the snapshot states only
+/// the waiting questions as a plain stated list. Returns the record
+/// to store as the snapshot's `held_decisions` value. A hand-stated
+/// record wins over a built one: pass it as `existing` and it is
+/// returned unchanged, whatever the inputs say, so a caller that
+/// knows its held list better than this list is never overwritten.
+/// The record exists only when the snapshot states at least one
+/// usable question, so a snapshot that states nothing usable gets
+/// no record at all, and older briefs keep their exact shape
+/// instead of gaining a padded section. This filler reads no
+/// question from the jobs list, and that is the whole point: a
+/// blocked reason or a job title is not a question waiting on a
+/// word, and a filler that derived a held question from either
+/// would be guessing. A question named twice is one decision, not
+/// two: the first listing wins, in stated order. An entry with no
+/// usable question is skipped, never guessed, and a list of only
+/// skipped entries counts as nothing stated, so junk alone never
+/// builds a record. An entry that states a question but no usable
+/// decider nick is still a usable entry: the renderer reads that
+/// decision as decider not reported, which is the stated absence,
+/// not a guessed nick. The record carries one as_of stamp for the
+/// whole record, formed into its age label here, so the section's
+/// age agrees with the other sections instead of drifting across
+/// reads — `now` supplies the stamp, and a missing stamp reads the
+/// current time, the same fallback the other with_* callers use.
+/// Never fails: a builder failure leaves the caller without a
+/// record, so the morning path still produces a brief, just
+/// without this section, instead of failing outright.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `entries` when the snapshot's
+/// held_decision_entries list is missing or not a list — silence
+/// states no questions and yields no record; `Some(&[])` is an
+/// explicitly empty list, which likewise yields no record, since
+/// no usable question is ever a held list. An entry that is not
+/// a dict has no Rust form: the caller omits it, which matches
+/// Python skipping it. An entry with an empty question reads as
+/// no usable question and is skipped here; an entry with an empty
+/// decider reads as no nick stated and is kept, since the renderer
+/// reads that decision as decider not reported.
+pub fn with_held_decisions(
+    existing: Option<&HeldDecisions>,
+    entries: Option<&[HeldDecision]>,
+    now: Option<i64>,
+) -> Option<HeldDecisions> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let stamp = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let stated = entries?;
+    let mut usable: Vec<HeldDecision> = Vec::new();
+    for entry in stated {
+        if entry.question.is_empty() {
+            continue;
+        }
+        if usable.iter().any(|d| d.question == entry.question) {
+            continue;
+        }
+        usable.push(HeldDecision {
+            question: entry.question.clone(),
+            decider: entry.decider.clone(),
+        });
+    }
+    if usable.is_empty() {
+        return None;
+    }
+    Some(HeldDecisions {
+        decisions: usable,
+        age_label: environment_age_label(Some(stamp)),
+    })
+}
+
 /// STR-002: `_format_brief_time` — a stored brief timestamp as
 /// `"YYYY-MM-DD HH:MM ET"` in America/New_York, the zone the
 /// BRF-011 morning schedule uses. This crate has no time
@@ -6775,6 +6855,72 @@ mod tests {
         ];
         assert_eq!(
             with_blocked_contacts(None, Some(&junk), Some(1793093400)),
+            None
+        );
+    }
+
+    #[test]
+    fn with_held_decisions_builds_from_stated_entries_and_renders_lines() {
+        let entries = vec![
+            HeldDecision { question: "Ship the brief panel first?".into(), decider: "del".into() },
+            // A second listing of the same question loses to the first.
+            HeldDecision { question: "Ship the brief panel first?".into(), decider: "pax".into() },
+            // An entry with no usable question is skipped, never guessed.
+            HeldDecision { question: "".into(), decider: "rowan".into() },
+            // A question with no usable decider is still usable: the
+            // renderer reads it as decider not reported.
+            HeldDecision { question: "Which gateway for the demo?".into(), decider: "".into() },
+        ];
+        let record = with_held_decisions(None, Some(&entries), Some(1793093400))
+            .expect("usable entries yield a held-decisions record");
+        assert_eq!(record.decisions.len(), 2);
+        assert_eq!(record.decisions[0].question, "Ship the brief panel first?");
+        assert_eq!(record.decisions[0].decider, "del");
+        assert_eq!(record.decisions[1].question, "Which gateway for the demo?");
+        assert!(record.decisions[1].decider.is_empty());
+        assert_eq!(
+            record.age_label,
+            environment_age_label(Some(1793093400))
+        );
+        let label = record.age_label.clone();
+        assert_eq!(
+            held_decisions_lines(Some(&record)),
+            vec![
+                format!("Held decision: Ship the brief panel first? (waiting on del){label}"),
+                format!("Held decision: Which gateway for the demo? (decider not reported){label}"),
+            ]
+        );
+    }
+
+    #[test]
+    fn with_held_decisions_hand_stated_record_wins_unchanged() {
+        let stated = HeldDecisions {
+            decisions: vec![HeldDecision { question: "Keep the old panel?".into(), decider: "pax".into() }],
+            age_label: " (snapshot time not reported)".into(),
+        };
+        // A hand-stated record wins even when no entries are stated.
+        let record = with_held_decisions(Some(&stated), None, None)
+            .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_held_decisions_silence_or_junk_gets_no_record() {
+        // Silence states no questions.
+        assert_eq!(with_held_decisions(None, None, Some(1793093400)), None);
+        // An explicitly empty list is still no questions.
+        let empty: Vec<HeldDecision> = vec![];
+        assert_eq!(
+            with_held_decisions(None, Some(&empty), Some(1793093400)),
+            None
+        );
+        // Entries with no usable question, alone, are nothing stated.
+        let junk = vec![
+            HeldDecision { question: "".into(), decider: "del".into() },
+            HeldDecision { question: "".into(), decider: "".into() },
+        ];
+        assert_eq!(
+            with_held_decisions(None, Some(&junk), Some(1793093400)),
             None
         );
     }
