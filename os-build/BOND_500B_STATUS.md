@@ -307,3 +307,36 @@ Section 8 verification: **285 Science Lab tests pass, 0 fail**
 
 Section 9 verification: **312 Science Lab tests pass, 0 fail**
 (`python3 -m unittest discover -s tests/science-lab`).
+
+## Section 10 — Nuntius relay — protocol edges (CB2-226..250) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-226 | `relay/relay.test.mjs` | empty message body refused |
+| CB2-227 | `relay/relay.test.mjs` | 2000-char body passes; 2001 refused |
+| CB2-228 | `relay/relay.test.mjs` | nick containing a colon keeps nick/body split |
+| CB2-229 | `relay/relay.test.mjs` | line with no separator refused by parser |
+| CB2-230 | `relay/relay.test.mjs` | emoji and combining body round-trip unchanged |
+| CB2-231 | `relay/relay.test.mjs` | newline body refused |
+| CB2-232 | `relay/relay.test.mjs` | five messages read in post order |
+| CB2-233 | `relay/relay.test.mjs` | same cursor twice returns no duplicates |
+| CB2-234 | `relay/relay.test.mjs` | cursor beyond end returns empty page |
+| CB2-235 | `relay/relay.test.mjs` | negative cursor refused |
+| CB2-236 | `relay/relay.test.mjs` | two concurrent writers lose nothing, per-writer order held |
+| CB2-237 | `relay/relay.test.mjs` | room A message absent from room B |
+| CB2-238 | `relay/relay.test.mjs` | whitespace room name refused |
+| CB2-239 | `relay/relay.test.mjs` | timestamps assigned and non-decreasing |
+| CB2-240 | `relay/relay.test.mjs` | malformed JSON frame refused with named error |
+| CB2-241 | `relay/relay.mjs` | message validation extracted as `validateMessage` |
+| CB2-242 | `relay/relay.test.mjs` | nick length 1 and 40 pass |
+| CB2-243 | `relay/relay.test.mjs` | newline in nick refused |
+| CB2-244 | `relay/relay.test.mjs` | room cap trims oldest, exact count |
+| CB2-245 | `relay/relay.test.mjs` | trimming never drops below 10 retained lines |
+| CB2-246 | `relay/relay.test.mjs` | empty room returns empty list |
+| CB2-247 | `relay/relay.test.mjs` | limit=2 returns oldest two of five |
+| CB2-248 | `relay/relay.test.mjs` | limit=0 refused |
+| CB2-249 | `relay/relay.test.mjs` | 100 posted messages have 100 unique ids |
+| CB2-250 | `relay/relay.test.mjs` | documented exports exist with expected types |
+
+Section 10 verification: **34 relay tests pass, 0 fail**
+(`node --test relay/relay.test.mjs`).
