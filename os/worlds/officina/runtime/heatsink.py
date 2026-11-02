@@ -133,6 +133,14 @@ def simulate(params, conditions=None):
     if conditions.h_w_m2k <= 0 or conditions.dt_k <= 0:
         raise ValueError("conditions need h > 0 and t_base > t_amb")
     violations = []
+    for name, value in (
+        ("fin_height_mm", params.fin_height_mm),
+        ("fin_thickness_mm", params.fin_thickness_mm),
+        ("fin_count", params.fin_count),
+        ("base_thickness_mm", params.base_thickness_mm),
+    ):
+        if value <= 0:
+            violations.append("%s must be > 0 (got %s)" % (name, value))
     lo, hi = FIN_HEIGHT_MM
     if not lo <= params.fin_height_mm <= hi:
         violations.append("fin_height_mm outside [%s, %s]" % (lo, hi))
@@ -145,6 +153,23 @@ def simulate(params, conditions=None):
     lo, hi = BASE_THICKNESS_MM
     if not lo <= params.base_thickness_mm <= hi:
         violations.append("base_thickness_mm outside [%s, %s]" % (lo, hi))
+
+    # A zero or negative dimension has no physics: refuse it with its
+    # name instead of dividing by zero or taking a square root below zero.
+    if any(value <= 0 for value in (
+            params.fin_height_mm, params.fin_thickness_mm,
+            params.fin_count, params.base_thickness_mm)):
+        return SimResult(
+            params=params,
+            conditions=conditions,
+            r_th_c_per_w=float("inf"),
+            heat_w=0.0,
+            fin_efficiency=0.0,
+            volume_mm3=0.0,
+            gap_mm=0.0,
+            feasible=False,
+            violations=tuple(violations),
+        )
 
     # Metres for the physics.
     h_m = params.fin_height_mm / 1000.0
