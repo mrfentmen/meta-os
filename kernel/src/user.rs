@@ -89,6 +89,7 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
         let num = saved(base, SAVED_RAX);
         let a1 = saved(base, SAVED_RDI);
         let a2 = saved(base, SAVED_RSI);
+        let a3 = saved(base, SAVED_RDX);
         match num {
             0 => {
                 println!("user exit code {}", a1);
@@ -129,10 +130,107 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
                     None => u64::MAX,
                 });
             }
+            6 => {
+                // K4: ipc_send is the first three-argument
+                // syscall — the handler previously read only
+                // RAX/RDI/RSI, so the length arrives via RDX
+                // (the frame constant already existed).
+                let n = user_ipc_send(a1, a2, a3);
+                set_return(base, n);
+            }
+            7 => {
+                let n = user_ipc_recv(a1, a2);
+                set_return(base, n);
+            }
             n => {
                 println!("user bad syscall {} refused", n);
                 set_return(base, u64::MAX);
             }
+        }
+    }
+}
+
+/// Serve `ipc_send` (K4, syscall 6): destination id, sender
+/// buffer, length. Validation runs in the design's order — live
+/// destination, then mapped buffer + length range, then box state
+/// — and every refusal changes no mailbox state and returns
+/// `u64::MAX`, the existing refusal sentinel. Success returns 0.
+/// The sender id stamped on the message is kernel-filled from
+/// `current_id()`, never caller-supplied, so a sender cannot be
+/// forged. The buffer is validated as mapped at call time and
+/// refused when unmapped, the `user_write` rule: K3 has not
+/// landed, so there is no demand path to consult, and a faulting
+/// send buffer stays a refusal until a later step revisits it.
+unsafe fn user_ipc_send(dst: u64, buf: u64, len: u64) -> u64 {
+    use crate::tasks::TaskId;
+    let dst_id = TaskId::new(dst);
+    if !crate::sched::task_is_live(dst_id) {
+        println!("user ipc send refused: dead destination {}", dst);
+        return u64::MAX;
+    }
+    if len == 0 || len > crate::sched::IPC_MAX_PAYLOAD as u64 {
+        println!("user ipc send refused: bad length {}", len);
+        return u64::MAX;
+    }
+    if !crate::mem::is_mapped_range(buf, len) {
+        println!("user ipc send refused: unmapped buffer");
+        return u64::MAX;
+    }
+    let bytes = core::slice::from_raw_parts(buf as *const u8, len as usize);
+    let sender = crate::sched::current_id();
+    match crate::sched::ipc_queue(dst_id, sender, bytes) {
+        crate::sched::IpcQueue::Queued => {
+            println!(
+                "user ipc send from {} to {} len {}",
+                sender.as_u64(),
+                dst,
+                len
+            );
+            0
+        }
+        crate::sched::IpcQueue::Dead => {
+            println!("user ipc send refused: dead destination {}", dst);
+            u64::MAX
+        }
+        crate::sched::IpcQueue::Full => {
+            println!("user ipc send refused: full box {}", dst);
+            u64::MAX
+        }
+    }
+}
+
+/// Serve `ipc_recv` (K4, syscall 7): receiver buffer, capacity.
+/// Capacity must cover the 8-byte sender-id header plus the
+/// 64-byte payload, so a message is never truncated. The mapped
+/// check covers the 72-byte worst-case write region (the kernel
+/// writes 8 + payload bytes, and the payload is unknown until
+/// the box is taken, so the full region is validated up front).
+/// Success copies sender id (little-endian `u64`) + payload and
+/// returns `8 + payload_len`; empty box returns `u64::MAX` and
+/// changes nothing. The copy goes straight to the caller's
+/// buffer: all tasks share the one mapper root, so the kernel
+/// writes the caller's own pages in place, never a peer's.
+unsafe fn user_ipc_recv(buf: u64, capacity: u64) -> u64 {
+    if capacity < crate::sched::IPC_RECV_MIN {
+        println!("user ipc recv refused: small buffer {}", capacity);
+        return u64::MAX;
+    }
+    if !crate::mem::is_mapped_range(buf, crate::sched::IPC_RECV_MIN) {
+        println!("user ipc recv refused: unmapped buffer");
+        return u64::MAX;
+    }
+    match crate::sched::ipc_take() {
+        None => {
+            println!("user ipc recv refused: empty box");
+            u64::MAX
+        }
+        Some((sender, bytes, len)) => {
+            let total = 8 + len as u64;
+            let out = core::slice::from_raw_parts_mut(buf as *mut u8, total as usize);
+            out[..8].copy_from_slice(&sender.as_u64().to_le_bytes());
+            out[8..total as usize].copy_from_slice(&bytes[..len]);
+            println!("user ipc recv from {} len {}", sender.as_u64(), len);
+            total
         }
     }
 }

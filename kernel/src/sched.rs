@@ -14,7 +14,7 @@
 use alloc::boxed::Box;
 
 use crate::interrupts;
-use crate::tasks::{Context, TaskId};
+use crate::tasks::{Context, TaskId, TaskState};
 
 /// Tasks the kernel can hold. No reap in K5: slots fill in spawn
 /// order and stay, so spawn order is the table index. Now full at
@@ -35,6 +35,24 @@ static mut ENTRIES: [(TaskId, fn()); MAX_TASKS] =
 /// Sleep deadlines (wake tick), keyed by task id; `u64::MAX` = awake.
 static mut SLEEPS: [(TaskId, u64); MAX_TASKS] =
     [(TaskId::new(0), u64::MAX); MAX_TASKS];
+/// K4 IPC mailboxes, parallel to `IDS` like `SLEEPS`: one message
+/// per row, kernel-owned static storage, no heap, no page sharing.
+/// A box holds either one complete message or nothing; `send`
+/// copies into it and `recv` copies out of it and empties it, so
+/// no sender or receiver ever touches a peer's pages (the K3
+/// shared-mapper precedent: isolation rests on the copy, not on
+/// separate page tables, which this kernel does not have).
+/// Single-CPU soundness as for every other static here: all
+/// accesses run in task or syscall context on the one CPU, never
+/// from IRQ context, and no switch can interleave a send/recv
+/// pair (both are straight-line handler code, no yield inside).
+pub const IPC_MAX_PAYLOAD: usize = 64;
+/// Receive buffer minimum: 8-byte sender-id header + 64 payload.
+pub const IPC_RECV_MIN: u64 = 72;
+static mut IPC_OCCUPIED: [bool; MAX_TASKS] = [false; MAX_TASKS];
+static mut IPC_SENDER: [TaskId; MAX_TASKS] = [TaskId::new(0); MAX_TASKS];
+static mut IPC_LEN: [usize; MAX_TASKS] = [0; MAX_TASKS];
+static mut IPC_BYTES: [[u8; IPC_MAX_PAYLOAD]; MAX_TASKS] = [[0; IPC_MAX_PAYLOAD]; MAX_TASKS];
 static mut NTABLE: usize = 0;
 /// Kernel stack tops parallel to IDS (base + 16 KiB, set at spawn).
 /// `enter_userspace` loads the current task's top into TSS.rsp0.
@@ -210,9 +228,93 @@ pub fn sleep_task(ticks: u64) {
     }
 }
 
+/// True when `id` names a live task: a row exists and its
+/// scheduler state is anything but `Exited`. A sleeping (Blocked)
+/// task is live — a send to it queues normally. Id 0 (the
+/// scheduler context) is never live.
+pub fn task_is_live(id: TaskId) -> bool {
+    unsafe {
+        SCHED
+            .as_ref()
+            .and_then(|s| s.task(id))
+            .map(|t| t.state != TaskState::Exited)
+            .unwrap_or(false)
+    }
+}
+
+/// Outcome of queueing a message. The caller (the `user.rs`
+/// dispatch) has already validated the buffer and length, in the
+/// design's order — live destination, then buffer, then box — so
+/// this step only re-checks liveness and box state at commit time.
+/// The re-check cannot disagree with the dispatch pre-check: the
+/// syscall handler runs straight-line on one CPU with no switch
+/// between the two, so no task can exit or receive in between.
+pub enum IpcQueue {
+    Queued,
+    Dead,
+    Full,
+}
+
+/// Queue `payload` into `dst`'s mailbox, stamped with `sender`.
+/// Refusal changes no mailbox state.
+pub fn ipc_queue(dst: TaskId, sender: TaskId, payload: &[u8]) -> IpcQueue {
+    unsafe {
+        let Some(i) = find_row(dst) else {
+            return IpcQueue::Dead;
+        };
+        if !task_is_live(dst) {
+            return IpcQueue::Dead;
+        }
+        if IPC_OCCUPIED[i] {
+            return IpcQueue::Full;
+        }
+        IPC_SENDER[i] = sender;
+        IPC_LEN[i] = payload.len();
+        IPC_BYTES[i][..payload.len()].copy_from_slice(payload);
+        IPC_OCCUPIED[i] = true;
+        IpcQueue::Queued
+    }
+}
+
+/// Take the current task's queued message, emptying its box, or
+/// `None` when the box is empty. The returned bytes are a copy;
+/// the caller owns them once taken.
+pub fn ipc_take() -> Option<(TaskId, [u8; IPC_MAX_PAYLOAD], usize)> {
+    unsafe {
+        let i = find_row(CUR)?;
+        if !IPC_OCCUPIED[i] {
+            return None;
+        }
+        IPC_OCCUPIED[i] = false;
+        let msg = (IPC_SENDER[i], IPC_BYTES[i], IPC_LEN[i]);
+        IPC_LEN[i] = 0;
+        Some(msg)
+    }
+}
+
+/// Empty one row's mailbox. Called for the current task only.
+fn ipc_clear_current() {
+    unsafe {
+        if let Some(i) = find_row(CUR) {
+            IPC_OCCUPIED[i] = false;
+            IPC_LEN[i] = 0;
+        }
+    }
+}
+
 /// Exit the current task (OS-069): slot to `Exited`, never resumed.
+/// The mailbox is cleared here, before the state change, and this
+/// is the single funnel for every removal path in this kernel:
+/// voluntary exit (syscall 0), a returned task entry (the
+/// trampoline falls through to here), and the ring-3 fault kill
+/// (`page_fault_handler` calls this same function). A queued
+/// message therefore never lingers under a dead id on any path,
+/// and a recycled id (Q-I3) can never inherit one — `reap` has no
+/// caller in K5, and if it ever lands it only frees `Exited`
+/// slots whose boxes are already empty by this clear.
 pub fn exit_task() -> ! {
     unsafe {
+        ipc_clear_current();
         wake_expired();
         let next = SCHED
             .as_mut()
@@ -273,6 +375,8 @@ pub unsafe fn spawn_task(entry: fn(), quantum: u32) -> Option<TaskId> {
     KSTACK_TOPS[i] = top;
     ENTRIES[i] = (id, entry);
     SLEEPS[i] = (id, u64::MAX);
+    IPC_OCCUPIED[i] = false;
+    IPC_LEN[i] = 0;
     NTABLE += 1;
     Some(id)
 }
