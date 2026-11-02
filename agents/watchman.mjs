@@ -39,6 +39,16 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
     return { exists: true, exited: events.includes("exit") };
   }
 
+  // A result file is not proof the job finished: the watchman writes one when its child exits
+  // for ANY reason, including a signal. A signaled result is a killed run, and treating it as
+  // complete made a restart skip the baton (R12-022). Clean exits finish a job, even nonzero.
+  function resultFinished(id) {
+    try {
+      const r = JSON.parse(fs.readFileSync(path.join(resultDir, id + ".result.json"), "utf8"));
+      return r && (r.signal === null || r.signal === undefined);
+    } catch { return false; }
+  }
+
   function lastBell(id) {
     let found = null;
     for (const l of ledger.read()) if (l.event === "bell" && l.id === id) found = l;
@@ -57,7 +67,7 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
   function reconcile() {
     const recovered = [];
     for (const id of [...claimed]) {
-      if (fs.existsSync(path.join(jobsDir, id + ".result.json"))) continue;   // finished
+      if (resultFinished(id)) continue;   // clean exit: finished, even if the code is nonzero
       const bell = lastBell(id);
       if (!bell) {
         claimed.delete(id);
@@ -139,5 +149,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
   console.log("relay-watchman: watching", path.join(HERE, "jobs"));
   const tick = async () => { await w.pollOnce(); };
   await tick();
+  // --once makes the watchman a hosted loop command: one drain, exit 0. A daemon never returns,
+  // so a registry entry pointing at it without this flag would sit until its budget killed it
+  // (R12-009).
+  if (process.argv.includes("--once")) process.exit(0);
   setInterval(tick, 2000);
 }
