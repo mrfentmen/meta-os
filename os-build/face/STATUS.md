@@ -39,7 +39,7 @@ or BLOCKED with the artifact named.
 | 23 | Top bar (app name, clock, icons) | PROVEN | screenshots |
 | 24 | Bar colour white/blue/black | DONE (code) | shell.html applyBar |
 | 25 | Light/dark | PROVEN (local) | shell-restored.png (light) |
-| 26 | Open/drag/close/minimise/snap | PROVEN (local+guest) | local minimized/restored/snap; guest dock-open proven, minimise-toggle pending |
+| 26 | Open/drag/close/minimise/snap | PROVEN (local+guest*) | dock open+toggle-hide/show proven in guest; titlebar min button proven locally only (guest aim missed repeatedly, recorded) |
 | 27 | Right-click menu | PROVEN (local) | ctxmenu verified |
 | 28 | Alt-tab + terminal shortcut | PROVEN (local) | Notes->Terminal->Notes |
 | 29 | Ribbon fps | PROVEN (local) | rAF ~61 frames/500ms on Mac (wallpapers.html, 5 live canvases) |
@@ -49,7 +49,7 @@ or BLOCKED with the artifact named.
 | 35 | Icons same style, no Apple art | DONE (code) | drawn letters, systems share style |
 | 36 | Hover/running/dock-toggle | PROVEN (local) | running dot + toggle minimise/restore verified |
 | 37 | Every entry real target | PROVEN (guest) | guest-dock-clicks.jpg: sweep opened Notes+Chrome(meta-os.pages.dev live)+3rd window, running dots; right-click menu shot too |
-| 38 | Terminal app real shell | PROVEN (guest) | guest-terminal-bash.jpg (relay@metaos bash, echo hello-face roundtrip via ws:18933) |
+| 38 | Terminal app real shell | PROVEN (guest) | guest-terminal-bash.jpg (echo roundtrip) + guest-terminal-connected.jpg (single-client [connected] bash; multi-window lock contention diagnosed) |
 | 39 | First tab status page live facts | PROVEN (guest) | term-status bar cpu 3.21/mem 598M/disk 3G/net 10.0.2.15/24 in guest-terminal-bash.jpg |
 | 40 | clear/scrollback/copy/paste | DONE (code, guest kbd ok) | clear btn, 2000-line cap, select-to-copy, paste event; guest typing proven, mouse unproven (xdotool) |
 | 41 | Dashboard live numbers | PROVEN (guest) | guest-dashboard-live.jpg: load 3.28, 558M/1967M, 3G/14G, 10.0.2.15/24 |
