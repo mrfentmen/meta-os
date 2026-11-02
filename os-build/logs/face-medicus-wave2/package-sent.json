@@ -1,0 +1,77 @@
+{
+  "brief": {
+    "assessment": {
+      "category": "person on ground",
+      "requires_human_review": true,
+      "summary": "stubbed summary: normal activity",
+      "uncertainty": []
+    },
+    "observations": [
+      {
+        "category": "person on ground"
+      },
+      {
+        "category": "person on ground"
+      },
+      {
+        "category": "normal activity"
+      },
+      {
+        "category": "normal activity"
+      },
+      {
+        "category": "normal activity"
+      }
+    ],
+    "processing": {
+      "latency_ms": 0,
+      "model": "none"
+    },
+    "product": "medicus",
+    "timestamp": "2026-11-02T14:02:07.499Z"
+  },
+  "created_at": "2026-11-02T14:02:07.499Z",
+  "destination": "SIMULATED hospital (EMS receiving) endpoint (local stack route) \u2014 no real emergency service is contacted by this system",
+  "dispatch_mode": "judge-confirmed",
+  "incident_id": "incident-725c546b990dd1b4",
+  "judged_by": "imperium-judge",
+  "kind": "imperium-dispatch-package",
+  "person_evidence": {
+    "area": "Manhattan",
+    "camera_name": "Broadway @ 45 St",
+    "category": "person on ground",
+    "direction_note": "Not determined from still frames.",
+    "direction_of_travel": null,
+    "division": "medicus",
+    "face_crops": 0,
+    "flagged_at": "2026-11-02T14:02:07.491Z",
+    "frame_files": [
+      "evidence/incident-725c546b990dd1b4/flag-frame-cam-c-ed9e92.jpg",
+      "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg",
+      "evidence/incident-725c546b990dd1b4/investigation-frame-cam-c-ed9e92.jpg",
+      "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n0-ed9e92.jpg",
+      "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n1-ed9e92.jpg",
+      "evidence/incident-725c546b990dd1b4/investigation-frame-cam-n2-ed9e92.jpg"
+    ],
+    "person_descriptions": [],
+    "visible_marks": []
+  },
+  "picture": {
+    "evidence_crop": null,
+    "frame": "evidence/incident-725c546b990dd1b4/flag-frame-cam-c-ed9e92.jpg"
+  },
+  "receipt_id": "sim-f0e40e1695baefb6",
+  "received_at": "2026-11-02T14:02:07.502Z",
+  "recommended_actions": {
+    "ignis": "For human review: check the recorded frames from Broadway @ 45 St (Manhattan) against the flagged category \"person on ground\". This system is not a certified fire-detection system; a human reviewer decides whether any follow-up is warranted.",
+    "medicus": "For human review: look at the recorded scene from Broadway @ 45 St (Manhattan). The flagged category \"person on ground\" is a scene indicator only \u2014 no diagnosis, cause, severity, or treatment is stated or implied. A human reviewer decides whether any follow-up is warranted.",
+    "vigiles": "For human review: examine the recorded frames from Broadway @ 45 St (Manhattan). The flagged observation category is \"person on ground\" \u2014 a visual category only; it does not establish that an incident or offense occurred. A human reviewer decides whether any follow-up is warranted."
+  },
+  "requires_human_review": true,
+  "service": {
+    "path": "/hospital",
+    "service": "hospital (EMS receiving)"
+  },
+  "service_route": "/default",
+  "simulated": true
+}
