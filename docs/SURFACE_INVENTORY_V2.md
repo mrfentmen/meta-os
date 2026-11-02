@@ -34,7 +34,6 @@ Id-less controls, all WORKS by group listener or native behavior:
 | --- | --- |
 | cmd-product chips ×3 (vigiles/ignis/medicus) | `js/command-map.js` `[data-cmd-product]` group listener |
 | cmd-mode buttons ×3 (city/tactical/incident) | `js/command-map.js` `[data-cmd-mode]` group listener |
-| logo swatches ×6 | `js/logo-color.js` `.logo-swatch[data-logo-color]` group listener |
 | product radios ×3 (vigiles/ignis/medicus) | native radio behavior; selection read by product logic |
 
 ## surfaces.html — new boards (HN-056…HN-069)
