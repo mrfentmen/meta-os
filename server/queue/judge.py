@@ -29,6 +29,12 @@ function is deterministic so it is testable end to end; the
 adjudication prompt below is the judge's own voice for the
 judge job kind (see os-build/IMPERIUM_JUDGE.md for the wiring
 step that gives the judge its own prompted call).
+
+v2 (wired 2026-11-02): rule_with_model() below gives the judge
+its own prompted call. crew.py uses it only when TRIO_JUDGE_MODEL=1
+is set in the environment; the deterministic combine() remains
+the default ruling and the fallback when the model call fails,
+and the timeline step records which mode ruled (judge_mode).
 """
 
 import json
@@ -128,3 +134,18 @@ def parse_verdict(text):
     if not isinstance(reasons, list):
         reasons = []
     return verdict, data.get("category"), [str(r) for r in reasons]
+
+
+def rule_with_model(division, first_result, review_result, chat_fn):
+    """The judge's own prompted ruling (v2). chat_fn(prompt) must
+    return the model's reply text (models.chat_text does, over
+    Muse Spark). Returns (verdict, category, reasons) from
+    parse_verdict — a garbled reply rules inconclusive, never a
+    guess. A transport failure raises to the caller, whose job it
+    is to fall back to combine() and say so on the timeline."""
+    prompt = build_judge_prompt(division, first_result, review_result)
+    text = chat_fn(prompt)
+    verdict, category, reasons = parse_verdict(text)
+    return verdict, category, [
+        f"model judge ruling: {r}" for r in reasons] or [
+        "model judge ruling carried no reasons"]
