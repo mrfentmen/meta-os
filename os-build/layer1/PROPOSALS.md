@@ -111,6 +111,80 @@ absence costs no green check — which is why it is third, not first.
 
 ---
 
+## P3a — the exact numbers, if P3 is ruled yes (2026-11-02)
+
+P3 above says *why* spawn needs a ruling before a declaration. This section says what the
+numbers would be, so the ruling is a yes/no on a concrete ABI instead of a design session.
+Nothing here is declared in `services/`; every line below is a **request**.
+
+### The ask, in numbers
+
+| slot | name | direction |
+|---|---|---|
+| 6 | `sys_spawn` | request |
+| 7 | `sys_kill` | request |
+| 8 | `sys_wait` | request |
+| 9 | `sys_pid` | request — this is P5, promoted to a number |
+
+Four slots out of the ten reserved (6–15), leaving 10–15 for the eleven services still
+outside the freeze. Taking 8 and 9 is the part worth arguing: spawn alone gives the
+supervisor a pid it cannot observe and cannot name itself with.
+
+### The shapes
+
+```goose
+// 6 — start an image. Returns pid > 0, or a negative code. No partial success.
+extern fn sys_spawn(image: i64, len: i64, priority: i64) -> i64 = "sys_spawn";
+
+// 7 — stop a process. Idempotent for a pid that has already exited.
+extern fn sys_kill(pid: i64, sig: i64) -> i64 = "sys_kill";
+
+// 8 — collect an exit. Blocks up to timeout_ms; (pid, code) or (0, E_TIMEOUT).
+extern fn sys_wait(timeout_ms: i64) -> i64, i64 = "sys_wait";
+
+// 9 — who am I. No buffer, no failure, never 0 for a running process.
+extern fn sys_pid() -> i64 = "sys_pid";
+```
+
+`image` is a storage block id plus `len` bytes, not a path: there is no filesystem in the
+K2 kernel and a path would be a promise the kernel cannot keep. `priority` is 0..3 for
+K2's four run queues; anything else is `E_INVAL` rather than a clamp, because a clamped
+priority is a scheduler policy nobody voted for.
+
+### The contract the supervisor already assumes
+
+- Spawn is all-or-nothing: pid > 0 means the image is mapped and the entry point is
+  scheduled. There is no "started but not runnable".
+- `sys_kill` on an exited pid returns `CODE_OK`, not `E_NOTFOUND`. The supervisor's
+  `sup_walk_stopped` retries kills and would otherwise report a false failure.
+- `sys_wait` is the *only* producer for `sup_on_exit(pid, clean, uptime_ms)`. Today that
+  function has no caller outside tests, which is the largest unproven seam in the
+  supervisor: 117 checks prove the state machine, none prove a transition moves a process.
+- `sys_pid` never returns 0 for a running process, so 0 is usable as "unknown" in an
+  audit record.
+
+### What each costs if refused
+
+| slot | refused means |
+|---|---|
+| 6 | the supervisor is a rehearsal, not a supervisor; no service starts |
+| 7 | no stop path at all; a wedged service is a wedged machine |
+| 8 | restarts are counted but never observed; the budget is bookkeeping |
+| 9 | `actor` in the audit log stays caller-supplied, and a crash report cannot name itself |
+
+The four are separable on purpose: 6+7 make a supervisor, 8 makes its restarts real, and 9
+is independence from the caller's honesty. If only one pair can be ruled today, rule 6+7
+and leave 8+9 to the next window — the supervisor degrades to "starts things, cannot see
+them exit", which is what it is today, but with a real process on the other end.
+
+### What this does not ask for
+
+No `mmap`, no `open`, no `fork`, no signals beyond the two the supervisor needs (0 = stop
+now, 1 = stop after the current handler returns). Those are K3/K4 decisions and writing
+their numbers now would freeze a design that has not been argued.
+
+---
+
 ## P4 — a sleep that is not a spin
 
 ```goose

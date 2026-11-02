@@ -1,5 +1,7 @@
 # BOOT_PLAN — loading Layer 4 into the kernel (BF4-12)
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 Written 2026-11-01 night, for the 2026-11-02 ruling on the syscall surface. The
 point of writing it now is that nobody designs a load sequence at 03:00 with a
 build failing. **Nothing in this document has been run against a kernel.** The

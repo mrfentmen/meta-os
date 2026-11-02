@@ -1,5 +1,7 @@
 # Round 6 — the limits are driven, and two services had real bugs (2026-11-02)
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 Round 6 asked for four things: the unproven limits closed, Milo's claim audit
 reconciled, the Lobster pack, and the demo packet re-captured. This is what
 happened, in the same order, with the checks that prove it.
@@ -38,6 +40,14 @@ asserts one of two things and says which:
 not have before: **a named reason.** Twenty constants cannot be settled by any
 driver, and each now says why — `DEAD`, `BITFLAG`, `LAYOUT`, `UNREACHABLE`,
 `BOUNDARY`, `INTERNAL`, `WRAP`, `ENV`, `TRUNCATION`, `NO-HARNESS`.
+
+### The per-service rollup (Round 7 A1–A22)
+
+`LIMITS.md` now opens with a table that answers "is this service closed?" in one
+line, generated from the same rows as the detail tables: limits, exercised, named
+reason, of those DEAD, open, state. All 22 limit-bearing services read `closed` and
+none reads `OPEN` — 55 exercised, 20 with a reason, 0 unaccounted. A reader who only
+wants one service's state no longer has to read 75 rows to find it.
 
 ### The five DEAD constants are findings, not coverage gaps
 

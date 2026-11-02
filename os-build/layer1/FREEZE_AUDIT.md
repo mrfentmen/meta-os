@@ -1,5 +1,7 @@
 # Services freeze audit — the corpus at the H+9 freeze (BF5-07)
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 One page, measured 2026-11-02 on `buffy/layer1-goose-services`. Counts only; no claim here is
 stronger than the command beside it. `gen_demo_facts.py` regenerates every number in this file's
 first two tables, and `DEMO_FACTS.md` is its output.

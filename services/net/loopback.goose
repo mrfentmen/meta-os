@@ -2,7 +2,7 @@
 //
 // B-L1-105 — Loopback v2, the semantics half (the impairment half is tests/harness/link.goose).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t85_net_deep (154 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT v1 DID AND WHY IT WAS NOT ENOUGH
 // -------------------------------------

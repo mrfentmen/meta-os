@@ -1,5 +1,7 @@
 # The state post: BF4 and BF5, item by item (A1)
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 Written 2026-11-02 at the finish-list close, on `buffy/layer1-goose-services`. This is the written
 answer to "did you get it / did you already do it": every id from `BUFFY_TASKS_ROUND4.md` (BF4-01 to
 BF4-24) and `BUFFY_TASKS_ROUND5.md` (BF5-01 to BF5-14), with one of three words and the artifact

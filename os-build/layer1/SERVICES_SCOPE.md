@@ -1,5 +1,7 @@
 # Services layer scope — what L4 is, and what it is not
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 Rewritten 2026-11-02 after Waves 1–2 of Round 4. The first version of this page said the corpus
 had never been compiled and never been run. That is no longer true, and every status word below is
 measured in this checkout on this date, not remembered. Where a number is quoted, the command that

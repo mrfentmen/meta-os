@@ -45,7 +45,7 @@
 
 import common.err.err;
 
-let BO_MAX: i64 = 24;
+let BO_MAX: i64 = 30;
 
 struct BootEntry {
     id: i64,
@@ -57,7 +57,7 @@ struct BootEntry {
 
 // The table, in start order. Read down the `needs` column and every bit is set earlier than
 // the row that needs it -- that property is what `bo_order_ok()` checks at start-up.
-var boot_table: BootEntry[..24] = [
+var boot_table: BootEntry[..30] = [
     BootEntry { id: 2, needs: 0, fatal: true, by_kernel: false, order: 1 },  // bootlog
     BootEntry { id: 3, needs: 4, fatal: true, by_kernel: false, order: 2 },  // devices
     BootEntry { id: 5, needs: 8, fatal: true, by_kernel: false, order: 3 },  // time
@@ -80,6 +80,15 @@ var boot_table: BootEntry[..24] = [
     BootEntry { id: 20, needs: 524576, fatal: false, by_kernel: false, order: 20 },  // timesync
     BootEntry { id: 21, needs: 532784, fatal: false, by_kernel: false, order: 21 },  // updater
     BootEntry { id: 22, needs: 106768, fatal: false, by_kernel: false, order: 22 },  // agenthost
+    // The face layer (2026-11-02, R7). These six start LAST on purpose: none of them is
+    // needed to have a working machine, and each is a thing the session shows. A face
+    // service that hangs at boot must cost the user a settings pane, not a boot.
+    BootEntry { id: 23, needs: 272, fatal: false, by_kernel: false, order: 23 },  // settings
+    BootEntry { id: 24, needs: 8388880, fatal: false, by_kernel: false, order: 24 },  // wallpaper
+    BootEntry { id: 25, needs: 8388880, fatal: false, by_kernel: false, order: 25 },  // dock
+    BootEntry { id: 26, needs: 8487168, fatal: false, by_kernel: false, order: 26 },  // dashboard
+    BootEntry { id: 27, needs: 2622720, fatal: false, by_kernel: false, order: 27 },  // updater_client
+    BootEntry { id: 28, needs: 1328, fatal: false, by_kernel: false, order: 28 },  // board
 ];
 
 // Name per id, in ID order (token 1 is id 1), so a log line can name a service without the
@@ -91,9 +100,9 @@ var boot_table: BootEntry[..24] = [
 // Each token is the service's directory name under `services/`, exactly. `logd`, not `log`:
 // a log line that names a service the manifest does not have costs an hour every time. The
 // boot order data test (`os-build/layer1/bootorder_check.py`) fails on a mismatch.
-let BO_NAMES: const u8[:] = "callmatrix bootlog devices storage time logfmt console logd netcfg net input display audit watchdog session supervisor dhcp dns socket timesync updater agenthost";
+let BO_NAMES: const u8[:] = "callmatrix bootlog devices storage time logfmt console logd netcfg net input display audit watchdog session supervisor dhcp dns socket timesync updater agenthost settings wallpaper dock dashboard updater_client board";
 
-fn bo_count() -> i64 { return 22; }
+fn bo_count() -> i64 { return 28; }
 
 // Copy the name of a service into the caller's buffer. Returns false for an unknown id, or
 // when the name does not fit -- the caller can tell those apart with bo_count/bo_entry, and a
@@ -165,6 +174,18 @@ fn bo_ready(id: i64, running: i64) -> bool {
 }
 
 // The dependency mask of a service, for the error message that says what it is waiting for.
+// The declared position of a service in the start sequence, or 0 for an unknown id.
+// Separate from `bo_at` (order -> id) because both directions get asked: the boot walks
+// the order, and a report names a service and needs its position.
+fn bo_order_of(id: i64) -> i64 {
+    var i: i64 = 0;
+    while i < bo_count() {
+        if boot_table[i].id == id { return boot_table[i].order; }
+        i = i + 1;
+    }
+    return 0;
+}
+
 fn bo_needs(id: i64) -> i64 {
     var i: i64 = 0;
     while i < bo_count() {
@@ -219,10 +240,10 @@ fn bo_order_ok() -> bool {
 }
 
 // The whole sequence as a list of ids, for the supervisor to register from. Returns the count.
-fn bo_sequence(out: i64[..24]&, cap: i64) -> i64 {
+fn bo_sequence(out: i64[..32]&, cap: i64) -> i64 {
     var n: i64 = 0;
     var pos: i64 = 1;
-    while pos <= bo_count() && n < cap && n < 24 {
+    while pos <= bo_count() && n < cap && n < 32 {
         let id = bo_at(pos);
         if id != 0 {
             out[n] = id;

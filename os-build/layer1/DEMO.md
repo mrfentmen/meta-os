@@ -38,9 +38,9 @@ $ echo $?
 ```console
 $ python3 os-build/layer1/bootorder_check.py
 boot order data test
-  parsed: 22 rows, 22 names, bo_count() = 22
+  parsed: 28 rows, 28 names, bo_count() = 28
 
-RESULT: boot order is consistent -- 22 services, dependency order proven, no cycles
+RESULT: boot order is consistent -- 28 services, dependency order proven, no cycles
 NOT PROVEN: that the supervisor starts them in this order. That needs a boot log (B-L1-77).
 $ echo $?
 0
@@ -100,7 +100,7 @@ login:
 ```
 
 Needs: K2 framebuffer, K3 timer, K6 IPC and scheduling, and a real boot. **NOT BUILT.** Numbers
-that are facts in source are written as facts (22 services in the boot table, 21 service ids in
+that are facts in source are written as facts (28 services in the boot table, 30 service ids in
 the matrix, 64 log slots at 10 KiB); numbers that depend on the machine are `⟨n⟩`, because a
 demo that invents a block count is a demo that will be quoted.
 

@@ -12,24 +12,24 @@ disagrees with a number in a report, this file is the one with a command behind 
 
 | Fact | Value | Command that produces it |
 |---|---|---|
-| Goose source files | 118 | `find services -name '*.goose' \| wc -l` |
-| Lines of Goose | 25806 | `cat $(find services -name '*.goose') \| wc -l` |
-| Service directories with a kernel-facing role | 29 | `ls -d services/*/ \| grep -v tests \| grep -v common \| wc -l` |
+| Goose source files | 136 | `find services -name '*.goose' \| wc -l` |
+| Lines of Goose | 30768 | `cat $(find services -name '*.goose') \| wc -l` |
+| Service directories with a kernel-facing role | 35 | `ls -d services/*/ \| grep -v tests \| grep -v common \| wc -l` |
 | Shared libraries under `services/common` | 18 | `ls -d services/common/*/ \| wc -l` |
-| Native test programs | 36 | `ls services/tests/*.goose \| wc -l` |
+| Native test programs | 48 | `ls services/tests/*.goose \| wc -l` |
 
 ## The gate that ran
 
 | Fact | Value | Command that produces it |
 |---|---|---|
-| Test programs that built and ran to exit 0 | **36 of 36** | `./os-build/layer1/run_native.sh` |
+| Test programs that built and ran to exit 0 | **48 of 48** | `./os-build/layer1/run_native.sh` |
 | Test programs that failed | **0** | same |
-| Passing individual checks across those runs | **1352** | `awk -F'|' '/^tests\// {s+=$3} END {print s}' os-build/layer1/host/run_rows.txt` |
+| Passing individual checks across those runs | **2172** | `awk -F'|' '/^tests\// {s+=$3} END {print s}' os-build/layer1/host/run_rows.txt` |
 | Checks that reported FAIL | **0** | same file, column 4 |
 | Entry points that compile to a binary | 4 | `./os-build/layer1/run_native.sh` (entry section) |
 | Entry points that only typecheck | 1 | same |
 | Entry points that failed to build | 0 | same |
-| Whole-corpus typecheck | typechecked: 42 ok, 0 failed (exit 0) | `./os-build/layer1/check_services.sh` |
+| Whole-corpus typecheck | typechecked: 54 ok, 0 failed (exit 0) | `./os-build/layer1/check_services.sh` |
 
 `run_native.sh` is the gate: it compiles each driver with Goose, links it with clang
 against `host/host_shim.c`, and runs it. A test that does not build is a FAILED row,
@@ -39,9 +39,9 @@ not an absent one.
 
 | Fact | Value | Command that produces it |
 |---|---|---|
-| Services that need no kernel call at all | 17 | `python3 os-build/layer1/gen_services.py` then read `services.json` |
+| Services that need no kernel call at all | 23 | `python3 os-build/layer1/gen_services.py` then read `services.json` |
 | Services that need a syscall outside the F1 freeze | 8 | same |
-| Services in the manifest | 25 | `jq '.services \| length' os-build/layer1/services.json` |
+| Services in the manifest | 31 | `jq '.services \| length' os-build/layer1/services.json` |
 
 The freeze is 0 exit, 1 write, 2 sleep, 3 pid, 4 yield, 5 read_key, 6-15 reserved.
 `PROPOSALS.md` holds the exact numbers requested for the ones that do not fit;
@@ -51,19 +51,19 @@ nothing has been allocated.
 
 | Audit | Command | Exit | Summary line |
 |---|---|---|---|
-| source consistency | `os-build/layer1/source_audit.py` | 0 | 118 files audited, 0 finding(s) |
+| source consistency | `os-build/layer1/source_audit.py` | 0 | 136 files audited, 0 finding(s) |
 | error vocabulary | `os-build/layer1/error_audit.py` | 0 | clean: every code used is declared, and nothing redefines one locally |
-| static size | `os-build/layer1/size_audit.py` | 0 | services: 33   resident: 171982 bytes (168.0 KiB)   unknown-element arrays: 0 |
-| boot order DAG | `os-build/layer1/bootorder_check.py` | 0 | RESULT: boot order is consistent -- 22 services, dependency order proven, no cycles |
-| link map | `os-build/layer1/linkmap.py` | 0 | service->service edges: 56 distinct across 26 services |
-| permission table | `os-build/layer1/callmatrix_audit.py` | 0 | clean on permissions; 67 dormant row(s) reported above |
-| status words | `os-build/layer1/audit_status.py` | 0 | status lines checked: 104, stale: 0 |
+| static size | `os-build/layer1/size_audit.py` | 0 | services: 39   resident: 194798 bytes (190.2 KiB)   unknown-element arrays: 0 |
+| boot order DAG | `os-build/layer1/bootorder_check.py` | 0 | RESULT: boot order is consistent -- 28 services, dependency order proven, no cycles |
+| link map | `os-build/layer1/linkmap.py` | 0 | service->service edges: 62 distinct across 32 services |
+| permission table | `os-build/layer1/callmatrix_audit.py` | 0 | clean on permissions; 91 dormant row(s) reported above |
+| status words | `os-build/layer1/audit_status.py` | 0 | status lines checked: 114, stale: 1 |
 
 ## Limits, and how many are actually driven to their edge
 
 | Fact | Value | Command that produces it |
 |---|---|---|
-| Numeric limit constants exercised by a test | 55 of 75 exercised, 20 with a named reason, 0 open | `python3 os-build/layer1/gen_limits.py` |
+| Numeric limit constants exercised by a test | 71 of 91 exercised, 20 with a named reason, 0 open | `python3 os-build/layer1/gen_limits.py` |
 
 `LIMITS.md` names every constant and the test that proves it, and marks the rest
 UNPROVEN with the word itself. A green suite elsewhere says nothing about a specific
@@ -86,9 +86,9 @@ them is measurable from `services/`:
 
 Safe, because each sentence is a row above:
 
-- "36 service programs build and run on this machine, 1352 checks passing."
-- "17 services need no kernel call at all; 8 need a syscall the freeze does not have."
-- "The corpus typechecks as 42 ok, 0 failed."
+- "48 service programs build and run on this machine, 2172 checks passing."
+- "23 services need no kernel call at all; 8 need a syscall the freeze does not have."
+- "The corpus typechecks as 54 ok, 0 failed."
 
 Not safe:
 

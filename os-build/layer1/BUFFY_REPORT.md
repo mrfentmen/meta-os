@@ -1,5 +1,7 @@
 # Layer 4 (Goose services) — running report
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 Branch: `buffy/layer1-goose-services`. Pax merges; I do not merge my own branch.
 Order: `BUFFY_LAYER1_TASKS.md`, tasks B-L1-01 … B-L1-148. This file is the document the merge
 gate reads, so it only contains what can be checked.

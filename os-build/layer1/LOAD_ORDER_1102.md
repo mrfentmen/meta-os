@@ -1,5 +1,7 @@
 # 2026-11-02 load order, and the wire-or-delete input (BF4-24)
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 One page, for the ruling on the syscall surface. It answers one question: **if the boss wires
 exactly three services first, which three, in what order, and what does each cost?**
 

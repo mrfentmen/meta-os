@@ -31,7 +31,7 @@ native output changes that, because the host shim is substituting for a kernel.
 | service | entry | entry proof | native run | checks | calls |
 |---|---|---|---|---|---|
 
-## Class 1b — modules with no kernel calls at all (17)
+## Class 1b — modules with no kernel calls at all (23)
 
 These are libraries every other service links against. They make no `sys_*` call,
 so "runs on the ABI" would be a claim about nothing; what they have is a native
@@ -41,20 +41,26 @@ run that proves the logic, and a caller one layer up that does the syscalls.
 |---|---|---|
 | `agenthost` | tests/t59_agenthost | 48 |
 | `audit` | tests/t60_audit | 33 |
-| `callmatrix` | tests/t69_callmatrix | 28 |
+| `board` | tests/t91_board | 58 |
+| `callmatrix` | tests/t69_callmatrix | 31 |
+| `dashboard` | tests/t89_dashboard | 50 |
 | `devices` | tests/t77_gaps | 73 |
 | `dhcp` | tests/t57_dhcp_dns | 45 |
 | `dns` | tests/t57_dhcp_dns | 45 |
+| `dock` | tests/t88_dock | 61 |
 | `fs` | tests/t65_fs | 75 |
 | `input` | tests/t56_input_display | 49 |
 | `logfmt` | tests/t50_logd | 19 |
-| `netcfg` | tests/t67_net | 89 |
-| `session` | tests/t76_demo_session | 25 |
+| `netcfg` | tests/t85_net_deep | 154 |
+| `session` | tests/t84_session_deep | 106 |
+| `settings` | tests/t86_settings | 67 |
 | `socket` | tests/t77_gaps | 73 |
 | `storage` | tests/t54_storage | 26 |
 | `supervisor` | tests/t52_supervisor | 53 |
 | `timesync` | tests/t77_gaps | 73 |
-| `updater` | tests/t58_updater | 35 |
+| `updater` | tests/t90_updater_client | 62 |
+| `updater_client` | tests/t90_updater_client | 62 |
+| `wallpaper` | tests/t87_wallpaper | 56 |
 | `watchdog` | tests/t53_watchdog | 28 |
 
 ## Class 2 — needs a proposal (8 services)
@@ -62,11 +68,11 @@ run that proves the logic, and a caller one layer up that does the syscalls.
 | service | outside the freeze | native run | checks | what it would take |
 |---|---|---|---|---|
 | `bootlog` | `sys_ticks` | tests/t49_bootlog | 23 | BF4-08 §sys_ticks |
-| `console` | `sys_ticks` | tests/t49_bootlog | 23 | BF4-08 §sys_ticks |
+| `console` | `sys_ticks` | tests/t80_limit_drivers2 | 30 | BF4-08 §sys_ticks |
 | `display` | `sys_ticks` | tests/t56_input_display | 49 | BF4-08 §sys_ticks |
 | `example` | `sys_ticks` | none | 0 | BF4-08 §sys_ticks |
-| `logd` | `sys_ticks` | tests/t50_logd | 19 | BF4-08 §sys_ticks |
-| `net` | `sys_net_recv`, `sys_net_send` | tests/t67_net | 89 | BF4-08 §sys_net_recv |
+| `logd` | `sys_ticks` | tests/t81_logd_deep | 24 | BF4-08 §sys_ticks |
+| `net` | `sys_net_recv`, `sys_net_send` | tests/t85_net_deep | 154 | BF4-08 §sys_net_recv |
 | `shell` | `sys_ticks` | tests/t66_shell | 57 | BF4-08 §sys_ticks |
 | `time` | `sys_ticks` | tests/t51_time | 24 | BF4-08 §sys_ticks |
 

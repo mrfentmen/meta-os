@@ -1,5 +1,7 @@
 # DEMO_FACTS vs the claim audit — reconciliation status (BF5-09)
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 BF5-09 asks for a written reconciliation of any number the two documents state differently. **The
 claim audit is not in this checkout**, so this page cannot reconcile against it. What it does instead
 is give the comparison a fixed shape: the exact numbers this lane stands behind, the command that

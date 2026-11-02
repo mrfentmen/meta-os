@@ -1,5 +1,7 @@
 # Gate re-run after `read_key` landed (BF5-03)
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 Run 2026-11-02, on `buffy/layer1-goose-services`, after Round 4 closed. The point of this page is
 the comparison: what the gates said at the Round-4 close, what they say now, and whether any
 service's ABI class moved because the kernel's `sys_read_key` is real.

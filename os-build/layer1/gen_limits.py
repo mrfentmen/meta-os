@@ -72,9 +72,14 @@ REASONS = {
     "DNS_QUERY_MAX": ("UNREACHABLE", "the 255-byte name cap is checked before any byte is written, and the "
                                       "encoding adds at most 2 bytes, so a packet can never reach 512 here. "
                                       "Defence in depth, not a limit a caller can hit."),
-    "BO_MAX": ("BOUNDARY", "the boot table has 22 rows and the cap is 24; the array can never fill without "
+    "BO_MAX": ("BOUNDARY", "the boot table has 28 rows and the cap is 30; the array can never fill without "
                             "editing the table, so a driver would only prove the table's size."),
-    "DEP_MAX": ("BOUNDARY", "same shape: DEP_MAX is 24 and the service table has 22 entries."),
+    "DEP_MAX": ("BOUNDARY", "the stop plan is capped at DEP_MAX (32) and the boot sequence is 28; the cap "
+                            "cannot be reached without editing the table. DEP_MAX was 24 until R7, which "
+                            "would have silently dropped four services from a stop plan."),
+    "SET_MAX": ("BOUNDARY", "the settings table holds six keys and the cap is 24; the six slots above them are "
+                             "reserved for named profiles, which no function in settings.goose creates yet. A "
+                             "driver cannot fill the table through the public API, so nothing can prove the cap."),
     "SCROLL_MAX": ("INTERNAL", "disp_scroll clamps hist_lines and no accessor returns it, so the clamp has "
                                   "no observable effect through the public surface."),
     "HISTORY_SLOTS": ("INTERNAL", "the console history is a ring: pushes overwrite the oldest entry rather "
@@ -171,6 +176,30 @@ def main():
     A("The converse is not true: a limit can be exercised by a test that never names")
     A("it, and it will still read UNPROVEN here. Treat the top table as a lower bound")
     A("on coverage and the bottom one as the list to check by hand.")
+    A("")
+    # Per-service rollup: Round 7 asks for closure service by service, so the state
+    # of one service has to be one line that can be checked without reading the
+    # whole table. Counted from the same rows as the details below.
+    A("## Per service (Round 7 A1–A22)")
+    A("")
+    A("| service | limits | exercised | named reason | of those DEAD | open | state |")
+    A("|---|---|---|---|---|---|---|")
+    by_svc = {}
+    for r in rows:
+        svc = r[2].split("/")[1] if r[2].startswith("services/") else r[2]
+        by_svc.setdefault(svc, []).append(r)
+    for svc in sorted(by_svc):
+        rs = by_svc[svc]
+        ex = len([r for r in rs if r[3]])
+        nm = len([r for r in rs if not r[3] and r[0] in REASONS])
+        op = len([r for r in rs if not r[3] and r[0] not in REASONS])
+        dead = len([r for r in rs if r[0] in REASONS and REASONS[r[0]][0] == "DEAD"])
+        state = "OPEN" if op else "closed"
+        A("| `%s` | %d | %d | %d | %d | %d | %s |" % (svc, len(rs), ex, nm, dead, op, state))
+    A("")
+    A("A service row is `closed` when every limit it declares is either driven by a")
+    A("test or carries a reason; `OPEN` means at least one has neither, and there are")
+    A("none of those.")
     A("")
     A("## Proven")
     A("")

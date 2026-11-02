@@ -67,22 +67,22 @@ fn main() {
     check("order is consistent (no forward references)", bo_order_ok());
 
     // --- 2. completeness ---
-    check("table holds 22 entries", bo_count() == 22);
+    check("table holds 28 entries", bo_count() == 28);
     var ids_ok: bool = true;
     var i: i64 = 0;
     while i < bo_count() {
         let id = bo_entry(i).id;
-        if id < 1 || id > 22 { ids_ok = false; }
+        if id < 1 || id > 28 { ids_ok = false; }
         i = i + 1;
     }
-    check("every id is in 1..22", ids_ok);
+    check("every id is in 1..28", ids_ok);
     var orders_ok: bool = true;
     var pos: i64 = 1;
     while pos <= bo_count() {
         if order_hits(pos) != 1 { orders_ok = false; }
         pos = pos + 1;
     }
-    check("every order number 1..22 used exactly once", orders_ok);
+    check("every order number 1..28 used exactly once", orders_ok);
 
     // --- 3. readiness, both edges ---
     // log needs console, logfmt and storage. Running all but storage must not be ready.
@@ -92,7 +92,7 @@ fn main() {
     // Clearing any single dependency bit must make it not ready again.
     var any_bit_matters: bool = true;
     var bit: i64 = 0;
-    while bit < 22 {
+    while bit < 28 {
         if (log_needs & (1 << bit)) != 0 {
             if bo_ready(8, log_needs & ~(1 << bit)) { any_bit_matters = false; }
         }
@@ -120,11 +120,11 @@ fn main() {
     check("non-fatal display takes only itself", disp_doom == (1 << 12));
 
     // --- 6. sequence ---
-    var seq: i64[..24] = [0; 24];
-    let n = bo_sequence(seq, 24);
-    check("sequence yields all 22 in order", n == 22);
+    var seq: i64[..32] = [0; 32];
+    let n = bo_sequence(seq, 32);
+    check("sequence yields all 28 in order", n == 28);
     check("sequence starts at bootlog", seq[0] == 2);
-    check("sequence ends at agenthost", seq[n - 1] == 22);
+    check("sequence ends at board", seq[n - 1] == 28);
     var monotone: bool = true;
     var k: i64 = 0;
     while k < n {
@@ -143,7 +143,7 @@ fn main() {
     var small: u8[>..] = [];
     check("bo_name refuses a buffer too small", !bo_name(22, small, 4) && small.len == 0);
     check("bo_name refuses id 0", !bo_name(0, small, 32));
-    check("bo_name refuses id 23", !bo_name(23, small, 32));
+    check("bo_name refuses id 29 (past the table)", !bo_name(29, small, 32));
 
     say("t61 done  pass=");
     var pb: u8[>..] = [];

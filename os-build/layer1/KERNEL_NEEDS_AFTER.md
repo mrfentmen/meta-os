@@ -1,5 +1,7 @@
 # What the services layer needs from the kernel after the hackathon (BF5-10)
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 Planning only. Every item is something this layer already calls, already needs, or already fails
 without — none of it implies new feature work in the services. Ordered by what unblocks the most
 with the least kernel change.
