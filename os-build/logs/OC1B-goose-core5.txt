@@ -1,0 +1,77 @@
+OC1B-384 core-5 bypass: full outputs (all in /tmp services copy; tree untouched)
+
+===== run ./t111.goose (root-placed copy of tests/t111_*.goose) =====
+libtcc: relocating the generated C failed
+tcc: error: unresolved reference to '_sys_write_serial'
+tcc: error: unresolved reference to '_sys_exit'
+
+
+===== run ./t110.goose (root-placed copy of tests/t110_*.goose) =====
+./console/esc.goose:144: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./console/esc.goose:165: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+libtcc: relocating the generated C failed
+tcc: error: unresolved reference to '_sys_write_serial'
+tcc: error: unresolved reference to '_sys_exit'
+tcc: error: unresolved reference to '_sys_write_console'
+
+
+===== run ./t107.goose (root-placed copy of tests/t107_*.goose) =====
+libtcc: relocating the generated C failed
+tcc: error: unresolved reference to '_sys_write_serial'
+tcc: error: unresolved reference to '_sys_ticks'
+tcc: error: unresolved reference to '_sys_exit'
+
+
+===== run ./t114.goose (root-placed copy of tests/t114_*.goose) =====
+./netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dhcp/dhcp.goose:191: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dhcp/dhcp.goose:293: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+libtcc: relocating the generated C failed
+tcc: error: unresolved reference to '_sys_write_serial'
+tcc: error: unresolved reference to '_sys_exit'
+
+
+===== run ./t116.goose (root-placed copy of tests/t116_*.goose) =====
+./t116.goose:40: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:179: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:224: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:228: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:257: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:258: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:259: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:260: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+libtcc: relocating the generated C failed
+tcc: error: unresolved reference to '_sys_write_serial'
+tcc: error: unresolved reference to '_sys_exit'
+
+
+===== checks (root-placed copies) =====
+----- check t111: EXIT recorded in runner md; output:
+
+----- check t110: EXIT recorded in runner md; output:
+./console/esc.goose:144: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./console/esc.goose:165: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+
+----- check t107: EXIT recorded in runner md; output:
+
+----- check t114: EXIT recorded in runner md; output:
+./netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dhcp/dhcp.goose:191: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dhcp/dhcp.goose:293: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+
+----- check t116: EXIT recorded in runner md; output:
+./t116.goose:40: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:179: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:224: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:228: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:257: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:258: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:259: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+./dns/dns.goose:260: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+

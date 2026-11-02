@@ -1,0 +1,48 @@
+OC1B-376 Goose services inventory (all dirs under services/ carrying a service or its tests)
+tree: 94010c76ee095fa6c6bcfa4405cd56a9695f32d3
+date(UTC): 2026-11-02T16:17:21Z
+
+agenthost
+audit
+board
+bootlog
+build
+callmatrix
+common
+console
+dashboard
+devices
+devmgr
+dhcp
+display
+dns
+dock
+echo
+example
+fs
+heartbeat
+hello
+input
+logd
+logfmt
+mcp-host
+net
+netcfg
+notify
+registry
+session
+settings
+shell
+socket
+sockets
+storage
+supervisor
+tests
+time
+timesync
+updater_client
+updater
+wallpaper
+watchdog
+
+count:       42 directories. MANIFEST.md worklist: 21 services + 12 libraries WRITTEN (3 README-only: registry, devmgr, sockets).
