@@ -185,7 +185,7 @@ export function buildPlan(root) {
 
 // `client` is injected: the real one speaks MCP (aegis/osv-client.mjs), the test's is a stub
 // with the same callTool shape. That is also how "blocked" is testable without a network.
-export async function runSweep({ root, outDir, client, runId, sourceServer = "unknown", now = () => new Date() }) {
+export async function runSweep({ root, outDir, client, runId, sourceServer = "unknown", sourceLabel = SWEEP_SOURCE, now = () => new Date() }) {
   const plan = buildPlan(root);
   fs.mkdirSync(outDir, { recursive: true });
   const findingsFile = path.join(outDir, "findings.jsonl");
@@ -198,7 +198,7 @@ export async function runSweep({ root, outDir, client, runId, sourceServer = "un
 
   if (!client) {
     ledger.add(runId, "sweep-blocked", { reason: "no OSV server" });
-    return { status: "blocked", reason: "no OSV server", plan, findings: [], checked: 0, startedAt, findingsFile };
+    return { status: "blocked", reason: "no OSV server", plan, findings: [], checked: 0, startedAt, findingsFile, sourceLabel, sourceServer };
   }
 
   let checked = 0;
@@ -244,7 +244,7 @@ export async function runSweep({ root, outDir, client, runId, sourceServer = "un
       ledger.add(runId, "sweep-cut", { batch: batches + 1, checked, findings: findings.length, reason });
       return {
         status: "cut", reason, plan, findings, checked, batches,
-        startedAt, finishedAt: now().toISOString(), findingsFile, sourceServer, unparseable,
+        startedAt, finishedAt: now().toISOString(), findingsFile, sourceServer, sourceLabel, unparseable,
       };
     }
     batches += 1;
@@ -280,7 +280,7 @@ export async function runSweep({ root, outDir, client, runId, sourceServer = "un
             d.error ? "detail fetch failed: " + d.error : "",
             "declared in " + q.from,
           ].filter(Boolean).join(" | "),
-          source: SWEEP_SOURCE + " " + sourceServer,
+          source: sourceLabel === SWEEP_SOURCE ? SWEEP_SOURCE + " " + sourceServer : sourceLabel,
           run: runId,
           target: q.ecosystem + ":" + q.name + "@" + q.version,
         });
@@ -294,7 +294,7 @@ export async function runSweep({ root, outDir, client, runId, sourceServer = "un
   });
   return {
     status: "ran", plan, findings, checked, batches, unparseable, startedAt,
-    finishedAt: now().toISOString(), findingsFile, sourceServer,
+    finishedAt: now().toISOString(), findingsFile, sourceServer, sourceLabel,
   };
 }
 
@@ -310,7 +310,12 @@ export function renderReport(result, { runId }) {
   lines.push("");
   lines.push("## Source");
   lines.push("");
-  lines.push("- Data source: **" + SWEEP_SOURCE + "** — the boss's own OSV server, not a direct call to api.osv.dev.");
+  lines.push("- Data source: **" + (result.sourceLabel || SWEEP_SOURCE) + "**.");
+  if ((result.sourceLabel || SWEEP_SOURCE) === SWEEP_SOURCE) {
+    lines.push("- Route: the boss's own OSV server, not a direct call to api.osv.dev.");
+  } else {
+    lines.push("- Route: the direct OSV API, under Pax's written exception for this sweep and this repo's manifests only.");
+  }
   lines.push("- Server reports itself as: `" + (result.sourceServer || "unknown") + "`.");
   lines.push("- MCP tool: `scan_packages`, batches of at most " + BATCH + ".");
   lines.push("");
