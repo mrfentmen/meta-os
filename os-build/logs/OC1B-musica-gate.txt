@@ -1,0 +1,7 @@
+OC1B-362 Musica gate-packet runnable check
+tree: 94010c76ee095fa6c6bcfa4405cd56a9695f32d3
+date(UTC): 2026-11-02T16:11:56Z
+command: python3 os/worlds/musica/runtime/gate_packet.py os/worlds/musica --out /tmp/oc14-gp --musica-tests tests/musica-midi.test.mjs --full-suite-note ...
+EXIT=0 WALL=19s. Packet built to /tmp/oc14-gp (tree untouched): ADOPTIONS.md board briefs budget.json catalogues DUET_SCOPE.md library.json pack.json PACK.md README.md records.json test-results.txt 
+test-results.txt: present (    4749 lines). VERDICT: gate-packet runnable, exit 0.
+gate packet written: /tmp/oc14-gp

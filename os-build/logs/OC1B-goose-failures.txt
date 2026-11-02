@@ -1,0 +1,15 @@
+OC1B-389 updater failure excerpts (verbatim, tree-copy repros)
+
+--- 1. runner-shape invocation (cd updater && goose run updater.goose):
+updater.goose:40: error: cannot find the module common.err.err, looked for
+    /private/tmp/gupd/common/err/err.goose
+    /Users/test/mcp-servers/toolchains/goose-src/stdlib/common/err/err.goose
+updater.goose:41: error: cannot find the module common.hash.hash, looked for
+    /private/tmp/gupd/common/hash/hash.goose
+    /Users/test/mcp-servers/toolchains/goose-src/stdlib/common/hash/hash.goose
+
+--- 2. root-placed copy (imports resolve; no main):
+program needs exactly one global fn main()
+
+OC1B-390 classification: RUNNER defect (both layers fail on any machine; service code typechecks clean).
+OC1B-391 defects D1/D2/D3 filed in OC1B-goose-runner.md; no services/ file edited in this lane.

@@ -1,0 +1,8 @@
+OC1B-363 Musica keeper short-form run (overnight pipeline, 4 takes)
+tree: 94010c76ee095fa6c6bcfa4405cd56a9695f32d3
+date(UTC): 2026-11-02T16:12:12Z
+command: python3 os/worlds/musica/runtime/overnight.py --session-dir /tmp/oc14-keeper --brief-file os/worlds/musica/briefs/chipsynth.md --takes 4 --seed-base 17000
+
+overnight takes=4 keepers=4 rejects=0 reject_rate=0.0000 catalogue_delta=4 elapsed=7.2s
+
+report: {"brief_id": "chipsynth", "catalogue_delta": 4, "catalogue_tracks": 4, "clones": 0, "elapsed_s": 7.2, "keeper_rejects": 0, "keepers": 4, "reject_rate": 0.0, "rejects": 0, "rights_violations": 0, "session_id": "oc14-keeper", "takes": 4}

@@ -1,0 +1,13 @@
+{
+ "record": {
+  "id": "SRC-DELANEY-2004",
+  "citation": "Delaney, J. S. (2004). ESOL: Estimating Aqueous Solubility Directly from Molecular Structure. J. Chem. Inf. Comput. Sci. 44(3), 1000-1005. doi:10.1021/ci034243x.",
+  "retrieved_at": "2026-11-02T16:10:00Z",
+  "access_note": "Paper via ACS (paywalled); compound set public via DeepChem mirror \u2014 method inputs openly available, see gate/delaney/SOURCES.md.",
+  "supports_claim": "First reproduction target: the published ESOL model and its reported fit statistics; target numbers pulled at run time, never hardcoded.",
+  "locator": "doi:10.1021/ci034243x; archived compound set gate/delaney/delaney-processed.csv",
+  "content_hash": "621725fdadeb442463dc492406055f5330f9c3cf3e64fc50c56d13416115dece",
+  "stance": "supports"
+ },
+ "lab_validator": []
+}
