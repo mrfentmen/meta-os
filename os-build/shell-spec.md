@@ -1,301 +1,109 @@
-# Meta OS shell spec — complete (Round 4 HN4-1)
+# Meta OS shell spec — boot experience for both citizens (H1)
 
 Branch: `hana/os-shell`. Lane: Hana — shell and experience.
-Round 4 task: HN4-1 (shell-spec.md complete, H-1 to H-4).
-Milo gates, Pax merges. This spec is a SPEC ONLY: it contains
-no kernel code. Rowan's kernel lane owns `kernel/`.
+Sources: `KERNEL_SPEC.md` (the law), `OS_BUILD_TASKS.md` Hana section,
+`OPENCODE_OS_BUILD.md` Section O (OS-205..OS-216).
 
-Status words in this file mean exactly what Round 4 says:
-VERIFIED (seen in a named boot log or read in kernel source
-on main), CODE-INSPECTED (read in kernel source on main, no
-boot log cited), UNIMPLEMENTED (specified here, no kernel
-code on main). No other status words are used.
+## Status — read this first
 
-## The claim this spec serves
+This file is a SPEC ONLY. It contains no kernel code, no framebuffer
+code, and no service code. Nothing in this branch boots.
 
-The adopted claim sentence for the report and the demo, as
-posted by Pax on bus room 1:
-
-> Meta OS boots on x86_64 in QEMU, drops to ring 3, runs
-> three userspace programs, isolates a fault to one task,
-> and gives a shell that reports real state — reproduced
-> from a clean checkout by one command, backed by a
-> committed boot log.
-
-Evidence named: `os-build/logs/K6-repro-main-2026-11-01.txt`
-(the K6 repro on main, typed over the QEMU HMP monitor
-with `sendkey`, i.e. the real PS/2 path) and
-`os-build/logs/K6-boot.txt`. Every VERIFIED line below
-is either in that repro log or in kernel source on main
-(`kernel/src/sched.rs`, `kernel/src/main.rs`,
-`kernel/src/user.rs`). Nothing here is copied from the
-old H1/H2 spec era without re-checking it: several H1/H2
-strings turned out to be wrong against the built kernel,
-and the drift table at the end names each one.
+- The only kernel behavior written anywhere is K1: `kernel/src/main.rs`
+  on `origin/main` prints `META OS KERNEL - alive (K1)` on COM1
+  serial and then spin-halts. That source is WRITTEN, UNCOMPILED,
+  and UNPROVEN: no QEMU boot log showing the line has been seen
+  from this branch or recorded here.
+- Every other behavior in this file is NOT BUILT until a QEMU boot
+  log shows it. The format for each behavior lives in
+  `shell-formats.md`; the behavior itself does not exist yet.
+- What is not real is NOT BUILT, in those words (KERNEL_SPEC.md
+  rule 6, NO MOCKS). There are no placeholder screens, no clickable
+  fakes, and no fixture data in this branch.
 
 ## The two citizens
 
-Meta OS is built for agents AND for users, and the shell
-serves both from the same facts:
+Meta OS is built for agents AND for users. The shell serves both,
+from the same facts, in two forms:
 
-- The USER's console: text on the console, written for
-  eyes. The exact lines are the frozen strings below.
-- The AGENT's structured view: the same facts in a
-  parseable form. Today that form is the STATUS line
-  shape below (serial gets the same text as the
-  console); the JSON record form is specified in
-  `shell-formats.md` and UNIMPLEMENTED as an emitted
-  record, per the agent-record row below.
+- The USER's console: text on the framebuffer console (from K2),
+  written for eyes. Exact lines are defined in `shell-formats.md`.
+- The AGENT's structured view: the same facts as one JSON record
+  per boot and per status, on the serial port, parseable without
+  scraping. Exact fields are defined in `shell-formats.md`.
 
-An agent never needs to scrape the console to learn OS
-state: the STATUS line carries tasks, ticks, and heap
-free directly.
+Rule: the kernel and services emit both forms from the same facts
+at the same time. An agent never scrapes the framebuffer and never
+parses human console text to learn OS state. If a fact is worth
+showing, it is worth emitting in the agent record.
 
-Honesty note on status words: this spec uses the Round
-4 words VERIFIED / CODE-INSPECTED / UNIMPLEMENTED
-(with evidence named) as its operative labels. In the
-old H1/H2 spec's words, anything marked UNIMPLEMENTED
-here was NOT BUILT as a running behaviour, and this
-branch ships no kernel source of its own, so there is
-nothing in this branch that stands UNCOMPILED: the
-kernel code cited here lives on main and is proven
-only by the logs named above.
+## Why this beats the Linux behavior it refers to
 
-## Frozen strings
+Linux behavior, used here as reference only, prints boot lines
+(version, memory, CPU, devices) for humans, and agents learn OS
+state by scraping those lines or by running separate tools
+(`uname`, `uptime`, `free`, `ps`) and parsing their text. Meta OS
+does the same job in one move: the boot facts are emitted once
+for eyes and once as a record, from the same source, so the two
+can never disagree and nothing needs scraping.
 
-These are the exact strings. Rowan copies strings, not
-intentions: where the kernel still prints something else,
-the row says so and names the owner of the fix.
+No Linux code is copied or ported anywhere in this branch. No
+Linux source tree was read for this spec. The reference is
+behavioral only: what a boot shows, and what status answers.
 
-### Boot lines
+## Boot sequence
 
-| String | Status | Evidence / note |
-|---|---|---|
-| `META OS 0.1 (K6)` | UNIMPLEMENTED in kernel as printed | Frozen banner target: milestone names the last PROVEN milestone (K6). Pax confirmed K6, not K7, on bus room 1. |
-| `META OS - milestone K3` | VERIFIED as currently printed | `kernel/src/main.rs:118` on main; the K6 repro log prints this line. DRIFT: Rowan R-1 owns changing it to the frozen banner above. |
-| `META OS KERNEL - alive (K1)` | VERIFIED | `kernel/src/main.rs:119`; present in both K6 logs. The alive line keeps its K1 wording: it names the first milestone, not the current one. |
-| `mem summary: K4 up` | VERIFIED | Present in both K6 logs, after the memory map and heap checks. |
-| `mem region <n>: 0x<start>-0x<end> <reserved\|usable>` and `mem map: <n> regions, usable <k>K reserved <k>K other 0K` | VERIFIED as shape | Counts and addresses vary by machine (the two K6 logs differ); the shape is frozen, the numbers are live, never literal. |
+Each row states what the user sees, what the agent gets, and the
+honest status. NOT BUILT means no boot log proves it.
 
-### Prompt
+| # | Stage | User sees (console) | Agent gets (serial) | Status |
+|---|-------|---------------------|---------------------|--------|
+| 1 | Bootloader hands off to `kernel_main` | Nothing yet | Nothing yet | NOT BUILT |
+| 2 | Serial init, COM1 38400 baud 8N1 | Nothing yet | Nothing yet | NOT BUILT |
+| 3 | K1 alive line | `META OS KERNEL - alive (K1)` | Same line on serial; agent record format specified, emission NOT BUILT | WRITTEN in `kernel/src/main.rs`, UNCOMPILED, UNPROVEN |
+| 4 | K2 framebuffer console | Banner, 4 lines, per `shell-formats.md` | Agent record for the same 4 facts | NOT BUILT |
+| 5 | K3 timer + keyboard | Ticks advance; typed input echoes | `ticks` field advances in status | NOT BUILT |
+| 6 | Shell prompt | `metaos> ` | Prompt has no agent record; agents use the status record | NOT BUILT |
+| 7 | K4 heap | `heap` line in status | `heap` fields in status record | NOT BUILT |
+| 8 | K5 tasks + scheduling | `tasks` count in banner and status | `tasks` field in status record | NOT BUILT |
+| 9 | K6 first userspace program | First Goose service process noted in status | Service list in status record | NOT BUILT |
 
-| String | Status | Evidence / note |
-|---|---|---|
-| (no prompt string) | VERIFIED | `kernel/src/sched.rs` `console_task` prints no prompt before reading input, and the K6 repro log contains zero occurrences of a prompt string. The console accepts typing immediately after boot output. The old H2 prompt `metaos> ` was spec-only, never emitted, and is SUPERSEDED. Do not print it as if it exists. A future prompt string, if one is wanted, is a new Pax ruling, not something this spec invents. |
+## Commands
 
-### Status command
+Today, the real command set is EMPTY. No shell exists yet, so no
+command runs. This is the honest empty state, and it is the
+pattern the shell keeps: `help` lists ONLY real commands, so
+today it would list none (see `shell-formats.md`).
 
-Typed: `status`. Output is exactly two lines, in this order
-(CODE-INSPECTED in `run_command`, VERIFIED in the repro
-log with live values `tasks 7 ticks 805 heap_free 31K`):
+Commands specified for later milestones, all NOT BUILT as running
+commands:
 
-```
-tasks <count> ticks <ticks> heap_free <kb>K
-STATUS tasks=<count> ticks=<ticks> heap_free_kb=<kb>
-```
+- `status`: tasks, ticks, heap — one line each on the console,
+  one record on serial (OS-207, OS-208).
+- `help`: lists what the shell can do today — only real commands
+  (OS-209).
+- Bad input handling (OS-211): unknown command, long line, and
+  empty line are each handled and logged, never crashing the
+  shell. Exact handling strings are in `shell-formats.md`.
 
-- The first line prints in LightCyan on Black, then the
-  console returns to LightGray on Black (CODE-INSPECTED).
-  Serial gets the same text as the console.
-- The numbers are live: tasks is the live task-slot count,
-  ticks is the live timer count, heap_free is free heap
-  in KiB. A gate greps the two-line shape, never the
-  example numbers.
-- The old H2 status shape (`tasks <count>` /
-  `ticks <count>` / `heap <used>/<total> KiB` on
-  separate lines) is SUPERSEDED: the kernel does not
-  print it.
+## Colors and layout
 
-### Help command
-
-Typed: `help`. Output is exactly one line (VERIFIED in
-the repro log):
-
-```
-commands: status help
-```
-
-`help` lists ONLY real commands. Today that is two.
-
-### Bad input
-
-| Input | Output | Status |
-|---|---|---|
-| Unknown word | `unknown command` on one line, then `commands: status help` on the next | VERIFIED from source (`run_command` else-branch). The old H2 form `unknown command: <first-token>` is SUPERSEDED: the kernel does not echo the token. |
-| Empty line (Enter with nothing typed) | No output, not an error | VERIFIED from source. |
-| Line longer than 80 bytes | `line too long, truncated to 80` printed first, then the command runs on the first 80 bytes | CODE-INSPECTED (`console_task` 80-byte buffer; `run_command` prints the warning before dispatch). The old H2 limit of 256 and wording "ignored" are SUPERSEDED. |
-
-### Prompt behaviour: before, during, after
-
-- BEFORE: no prompt is printed. Boot output ends with
-  task output and uptime lines; the console is already
-  accepting keys. Nothing announces "ready".
-- DURING: each accepted key echoes immediately as typed.
-  There is no erase branch in `console_task`: only a
-  newline branch and an append branch exist, so a mistyped
-  line cannot be deleted in the current console
-  (CODE-INSPECTED). Shift is not handled in the scancode
-  table: only the lowercase/digit set decodes, a stated
-  limit carried from the K3 console. Once per 100 ticks
-  the console task prints `uptime <sec>s ticks <ticks>`,
-  even in the middle of a typed line: in the repro log
-  uptime lines land between keystrokes. A demo reader
-  must expect that interleave; it is not an error.
-- AFTER: Enter prints a newline, the command runs, its
-  output prints, and the loop resumes with no prompt.
-  The shell never crashes on bad input: unknown, long,
-  and empty lines are each handled and the loop continues.
-
-### Debug lines present in the current build
-
-The K6 repro log shows, per key press and release:
-
-```
-INT keyboard scancode 0x<hex>
-```
-
-These are the kernel's own debug prints, left in
-deliberately in that log (its header names them work
-item R-3). They are part of what a reader of today's
-logs sees, and they are NOT part of the clean shell
-surface: a future log after R-3 lands will not have
-them. This spec records them as present, not as desired.
-
-### Userspace and fault lines (from the repro log)
-
-These are program/kernel lines a demo reader sees around
-the shell, VERIFIED in the K6 repro log. Pids, addresses,
-and byte counts vary; the shapes are frozen:
-
-```
-HELLO FROM USERSPACE
-user exit code 0
-sleeper: before sleep
-sleeper: pid <n>
-crasher: about to read zero
-INT user page-fault addr 0x0000000000000000 err 0x0000000000000004: task killed
-user bad syscall 99 refused
-sleeper: bad call refused
-```
-
-The fault line is the isolation clause of the claim
-made visible: the faulting task is killed, the other
-tasks keep running (`sleeper: yielded and back`,
-`C awake` follow it in the log).
-
-### Agent record
-
-The H2 JSON record (`record`, `os`, `milestone`,
-`kernel_version`, `memory_kib`, `tasks`, `ticks`,
-`heap_used_kib`, `heap_total_kib`, `status`) is
-UNIMPLEMENTED as an emitted record: the kernel's serial
-output is the same text as the console, not JSON
-(CODE-INSPECTED: the status code comment says serial
-gets the same text). Agents today read the STATUS line
-shape above. The JSON record stays a specified format
-in `shell-formats.md`, not a running behaviour, until
-a kernel change emits it and a log proves it.
-
-## Command surface
-
-The 8-command surface named in H-2 is frozen here as
-2 running commands and 6 UNIMPLEMENTED slots. This
-spec does NOT invent names or outputs for the 6: no
-kernel code, no earlier spec, and no log on main names
-them, and inventing them would be a mock.
-
-| # | Command | Output | Status |
-|---|---|---|---|
-| 1 | `status` | Two lines, see above | VERIFIED |
-| 2 | `help` | `commands: status help` | VERIFIED |
-| 3–8 | (unnamed) | (none) | UNIMPLEMENTED — no name, no output on record. Pax names them or reduces the surface to 2; Rowan implements only what is named here or by a later Pax ruling. |
-
-`help` must keep listing only real commands, so until
-a slot is implemented and proven, it stays
-`commands: status help` and nothing longer.
-
-## Acceptance script: the claim-sentence demo, line for line
-
-This is the script Rowan and OpenCode build against
-(`os-build/tools/drive.py` types each line, then Enter,
-over HMP `sendkey`). Expected output is given as
-shapes; live numbers vary and are never matched
-literally except where the line is a fixed string.
-
-1. Boot. Expect, in order: SeaBIOS lines, `Booting
-   from Hard Disk...`, then:
-   - `META OS - milestone K3` (current kernel; becomes
-     `META OS 0.1 (K6)` when Rowan R-1 lands — the
-     script accepts the frozen banner once it lands and
-     the K3 line until then, and the difference is
-     recorded, not hidden)
-   - `META OS KERNEL - alive (K1)`
-   - memory region lines, `mem map:` shape line,
-     `mem summary: K4 up`
-2. Tasks run. Expect the demo task letters and:
-   - `HELLO FROM USERSPACE`
-   - `user exit code 0`
-   - `sleeper: before sleep`
-   - `crasher: about to read zero`
-   - `INT user page-fault addr 0x0000000000000000 err 0x0000000000000004: task killed`
-   - later `sleeper: yielded and back` and `C awake`
-     (the fault isolated to one task; the rest continue)
-3. Type `help`, Enter. Expect exactly:
-   - `commands: status help`
-4. Type `status`, Enter. Expect exactly, in order:
-   - `tasks <count> ticks <ticks> heap_free <kb>K`
-   - `STATUS tasks=<count> ticks=<ticks> heap_free_kb=<kb>`
-5. Type an unknown word, Enter. Expect exactly:
-   - `unknown command`
-   - `commands: status help`
-6. Type Enter on an empty line. Expect no output.
-7. Uptime lines (`uptime <sec>s ticks <ticks>`) may
-   appear between any two steps above. They are
-   expected, not failures. Keyboard debug lines
-   (`INT keyboard scancode ...`) may appear around
-   typed input until R-3 lands. They are expected in
-   today's logs, not failures.
-
-Pass condition: every fixed string above appears, in
-order, with the two status lines in the frozen shape.
-Fail condition: any fixed string missing, any invented
-command listed by `help`, or any number presented as
-proof without the line it came from.
-
-## Drift table: old H1/H2 spec vs the built kernel
-
-| Old spec string | Kernel reality | Verdict |
-|---|---|---|
-| Prompt `metaos> ` | No prompt printed | SUPERSEDED |
-| Long line "ignored", limit 256 | `line too long, truncated to 80`, buffer 80 | SUPERSEDED |
-| `unknown command: <first-token>` | `unknown command` + help re-list, no token echo | SUPERSEDED |
-| Status as 3 separate lines with `heap <used>/<total> KiB` | 2 lines, `heap_free` form + STATUS form | SUPERSEDED |
-| `help` lists none (`commands: (none yet)`) | `commands: status help` | SUPERSEDED (commands now exist) |
-| Banner `META OS` / `milestone K<n>` 4-line form | Kernel prints `META OS - milestone K3` + alive line; no 4-line banner | SUPERSEDED as printed; frozen banner target is `META OS 0.1 (K6)` (Rowan R-1) |
-| JSON agent record on serial | Serial gets console text, no JSON | UNIMPLEMENTED (format specified, not emitted) |
-| Command set EMPTY | `status` + `help` run | SUPERSEDED |
-
-`shell-formats.md` and `shell-formats.json` still carry
-the old strings, and `tests/os-shell-formats.test.mjs`
-still pins them. This commit deliberately does NOT
-change those files: updating pinned formats and their
-test is a separate Pax/Milo decision, and this spec
-names the drift instead of silently rewriting the pins.
-Follow-up: formats + test update to the frozen strings
-above, or a Pax ruling keeping them as the aspirational
-form.
+OS-212 (colors and layout pass, screenshot in the logs) is
+NOT BUILT. The framebuffer console does not exist yet, so there
+is no screenshot to take and no color scheme to claim. This spec
+reserves the pass for the K2 console and invents no color codes
+for it now: a framebuffer draws glyphs, it is not a serial
+terminal, so ANSI color codes are not assumed here.
 
 ## What this spec does not do
 
 - No kernel code. Rowan's kernel lane owns `kernel/`.
-- No service code. Goose services are a later layer;
-  no Goose syntax is invented here.
-- No home surface. See `home-surface.md`: the home
-  surface stays static and labelled MOCK (H-5, unchanged
-  by this task) until it reads real OS state.
-- No program features. Programs stay warm, not hot.
-- No cybersecurity program. PARKED by the boss's order.
-  It is named only here, once, as parked.
-- No claim without a log or a merge hash behind it.
-  Every VERIFIED line above names its log or its
-  source file on main.
+- No service code. Goose services are a later layer; no Goose
+  syntax is invented here (Goose is the boss's own language and
+  has no public docs to quote).
+- No home surface. See `home-surface.md`: the home surface does
+  not exist until real OS state exists to show.
+- No program features. Per H5, programs stay warm, not hot, until
+  the OS passes K2. This branch adds no program features.
+- No cybersecurity program. PARKED by the boss's order. It is not
+  started here, and it is named only here, once, as parked.
