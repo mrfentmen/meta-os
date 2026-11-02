@@ -77,3 +77,16 @@ test("watch detects a file change and stays quiet when nothing moves", () => {
   const moved = pollWatch(targets, quiet.state);
   assert.equal(moved.changes.length, 1);
 });
+
+test("the graft: a lesson one agent teaches rides into the next agent's brief", async () => {
+  const { teach } = await import("../agents/lessons.mjs");
+  const root = tmp();
+  teach(root, "rowan", "the gate lies when the clone is stale - verify the tree, not the branch");
+  const agent = { name: "milo", command: [NODE, "-e", ""], budget: {} };
+  const h = spawnAgent(agent, { root });
+  await h.done;
+  const brief = JSON.parse(fs.readFileSync(path.join(h.runDir, "brief.json"), "utf8"));
+  assert.equal(brief.sharedLessons.length, 1);
+  assert.equal(brief.sharedLessons[0].agent, "rowan");
+  assert.match(brief.sharedLessons[0].text, /verify the tree/);
+});
