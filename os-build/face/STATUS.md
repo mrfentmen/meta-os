@@ -83,7 +83,7 @@ or BLOCKED with the artifact named.
 | 67 | Fresh image from script | PROVEN (local) | face/build-image.sh ran on this Mac (base cached): metaos-face.img 448MB sha256 f7d8581e + seed.iso; fresh QEMU boot: cloud-init finished + `metaos login:` (fresh-boot.txt); the full debootstrap bake (os/build-image.sh) is the part needing root+Linux — not run |
 | 68 | STATUS final | TODO | this file, updated per section |
 | 69 | Lock screen | PROVEN (guest) | guest-lock.jpg: dimmed ribbon + M card + password; unlock flow proven locally |
-| 70 | Notifications | DONE (guest-visible) | bell+lock+search live in guest-desktop-full.jpg topbar (glyphs font-dependent); polling proven locally against live board |
+| 70 | Notifications | PROVEN (guest+local) | guest badge '1' polling live board :18935; dropdown opens locally (Board/general/Mark-read/empty-state); mark-read+log in code |
 | 71 | Six more wallpapers | PROVEN (local) | 11 total, picker/settings/shell consistent, metaos-wallpaper persists |
 | 72 | Tiling + workspaces | PROVEN (local) | tile.js halves/quarters via FaceTile (right-half proven); workspace.js Alt+1/2 hide/show proven |
 | 73 | Topbar search | PROVEN (local) | search.js: "term" -> 1 hit (Terminal); Files/Notes included |
