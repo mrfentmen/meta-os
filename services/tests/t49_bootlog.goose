@@ -42,7 +42,7 @@ fn main() {
 
     // --- record shape, into the caller's buffer ---
     var rec: u8[>..] = [];
-    check("record builds", record(rec, 3, "storage") == true);
+    check("record builds", record(rec, BL_LINE, 3, "storage") == true);
     check("record is non-empty", rec.len > 0);
     // The level must be visible in the record: a boot log where every line looks the same
     // is a boot log nobody can triage.
@@ -65,11 +65,11 @@ fn main() {
 
     // A record with no room is refused, and the buffer is untouched.
     var tight: u8[>..] = [];
-    check("record refuses a short buffer", record(tight, 3, "storage") == false && tight.len == 0);
+    check("record refuses a short buffer", record(tight, 12, 3, "storage") == false && tight.len == 0);
 
     // An empty message still produces a line (a bare stage marker), not a refusal.
     var bare: u8[>..] = [];
-    check("empty message allowed", record(bare, 1, "") && bare.len > 0);
+    check("empty message allowed", record(bare, BL_LINE, 1, "") && bare.len > 0);
 
     // --- stage writes through the boot log ---
     check("stage writes", stage(2, "console up"));

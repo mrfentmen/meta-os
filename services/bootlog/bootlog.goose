@@ -24,6 +24,7 @@
 // the signature look right would be a mock.
 
 import std;
+import common.fmt.fmt;
 import common.sys.sys;
 
 // ---------------------------------------------------------------------------
@@ -44,10 +45,21 @@ let LEVEL_ERROR = 3;
 
 let TAG = "bootlog";
 
+// One boot record, including its newline. Sized for the longest stage message the
+// boot order produces, with room to spare; a longer one is refused by `record`.
+let BL_LINE: i64 = 200;
+
 // One record: "<ticks> <tag> <level> <message>\n", formatted into a caller
 // buffer and written in a single syscall so a record is never interleaved with
 // another writer's bytes.
-fn record(buf: u8[>..]&, level: i64, msg: const u8[:]) -> bool {
+// `cap` is the caller's limit and it is enforced: a record that does not fit is refused
+// before a byte is written, so the buffer is left EMPTY rather than holding half a line.
+// A half-written boot record is worse than a missing one -- it is the line somebody reads
+// at 3am and believes.
+fn record(buf: u8[>..]&, cap: i64, level: i64, msg: const u8[:]) -> bool {
+    let need = digits_needed(sys_ticks(), 10) + 1 + TAG.len + 1 + digits_needed(level, 10)
+        + 1 + msg.len + 1;
+    if need > room_left(buf, cap) { return false; }
     // The caller passes a fresh builder; format appends, it does not reset.
     format(buf, sys_ticks(), " ", TAG, " ", level, " ", msg, "\n");
     let n = sys_write_serial(buf);
@@ -66,7 +78,7 @@ fn record(buf: u8[>..]&, level: i64, msg: const u8[:]) -> bool {
 // stack: no allocation, nothing shared between calls.
 fn stage(level: i64, msg: const u8[:]) -> bool {
     var line: u8[>..] = [];
-    return record(line, level, msg);
+    return record(line, BL_LINE, level, msg);
 }
 
 // The entry the kernel calls (SERVICE_CONTRACT.md §2). Returns 0 on a clean

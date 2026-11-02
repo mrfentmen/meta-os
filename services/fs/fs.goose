@@ -115,11 +115,17 @@ fn fs_magic_ok(b: u8[..512]&) -> bool {
     return true;
 }
 
+// The magic is the eight-byte field "MOSFS01\0": seven characters and the NUL that
+// pads the header slot. Copying m[i] for i < 8 read one byte past a 7-byte literal,
+// which the bounds check turned into a crash on the first mount -- found by running
+// t65 natively, invisible to the typecheck because the length is a run-time fact.
 fn fs_put_magic(b: u8[..512]&) {
     let m: const u8[:] = "MOSFS01";
     var i: i64 = 0;
     while i < 8 {
-        b[i] = m[i];
+        var c: u8 = 0;
+        if i < m.len { c = m[i]; }
+        b[i] = c;
         i = i + 1;
     }
 }

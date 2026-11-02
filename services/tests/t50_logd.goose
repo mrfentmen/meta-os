@@ -58,7 +58,7 @@ fn main() {
 
     // --- the record format ---
     var rec: u8[>..] = [];
-    check("format builds", format_record(rec, LVL_INFO, "net", "link up"));
+    check("format builds", format_record(rec, SLOT, LVL_INFO, "net", "link up"));
     check("format non-empty", rec.len > 0);
     // Tag and message appear verbatim, in that order.
     check("tag before message", index_of(rec, "net") < index_of(rec, "link up"));
@@ -66,13 +66,17 @@ fn main() {
     // The record ends with a newline: a record without one merges with the next.
     check("record ends with newline", rec[rec.len - 1] == 10);
 
+    // A cap too small for the record must refuse and leave the buffer EMPTY: half a
+    // record is a corrupted line, and a builder cannot be cleared by the caller.
     var tight: u8[>..] = [];
-    check("format refuses a short buffer", format_record(tight, LVL_INFO, "net", "link up") == false
+    check("format refuses a short buffer", format_record(tight, 12, LVL_INFO, "net", "link up") == false
         && tight.len == 0);
 
     // --- an empty message is still a record ---
     var empty: u8[>..] = [];
-    check("empty message formats", format_record(empty, LVL_WARN, "wd", "") && empty.len > 0);
+    check("empty message formats", format_record(empty, SLOT, LVL_WARN, "wd", "") && empty.len > 0);
+    // Even an empty message keeps the terminating newline.
+    check("empty message ends with newline", empty.len > 0 && empty[empty.len - 1] == 10);
 
     // --- the log service buffers, and flush reports whether it drained ---
     let n0 = log(LVL_INFO, "test", "first");

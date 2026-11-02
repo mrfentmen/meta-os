@@ -79,8 +79,12 @@ fn main() {
 
     // Busy for a bounded number of reads; the ticks must have moved by the end, or the
     // kernel is handing back a constant.
+    // Spin until the clock moves, bounded. The original loop ran a fixed 100000
+    // iterations and then asserted a tick had passed -- that asserts how long the
+    // loop takes, not that the clock advances, and it fails on any machine faster
+    // than the one it was written on. This asserts the property and waits for it.
     var spin: i64 = 0;
-    while spin < 100000 {
+    while sys_ticks() == t1 && spin < 100000000 {
         spin = spin + 1;
     }
     let t2 = sys_ticks();

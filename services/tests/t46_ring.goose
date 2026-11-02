@@ -121,7 +121,10 @@ fn main() {
 
     // --- message ring ---
     var mbuf = make_store(64);
-    var mr = msg_init(0, 4);        // 4 slots of msg_capacity() bytes
+    // 4 slots of 16 bytes: `mbuf` above is 64 bytes, and the slot must divide it.
+    // This read msg_init(0, 4) -- a slot of zero -- so "msg cap", both pushes and both
+    // pops were exercising the refusal paths by accident. Found by running it.
+    var mr = msg_init(16, 4);
     check("msg cap", msg_capacity(mr) > 0);
     check("msg empty", msg_len(mr) == 0);
 
@@ -136,9 +139,12 @@ fn main() {
 
     // A frame larger than a slot must be refused: splitting it would hand the consumer two
     // messages it cannot tell apart from two real ones.
+    // 64 bytes against a 16-byte slot: msg_capacity() counts SLOTS, not bytes, so
+    // "capacity + 8" was 12 bytes and fitted inside a slot. The frame has to exceed
+    // slot - 1 to test what this says it tests.
     var big: u8[>..] = [];
     var k: i64 = 0;
-    while k < msg_capacity(mr) + 8 {
+    while k < 64 {
         big.push(65);
         k = k + 1;
     }

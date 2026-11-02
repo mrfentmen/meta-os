@@ -35,6 +35,21 @@ fn ring_init(cap: i64) -> Ring {
     return Ring { head: 0, tail: 0, count: 0, cap: cap };
 }
 
+// Size the caller's store to the ring's capacity, once.
+//
+// The store is a builder the caller owns, and the original contract said the
+// caller "promised" cap bytes -- but nothing made that promise true, and running
+// the corpus found twenty callers who passed a fresh []. Every one of them was a
+// bounds violation waiting at the first write, and the crash surfaced three
+// modules away from the mistake. A fixed ring sizing its own storage to its own
+// capacity is the contract that cannot be got wrong, so the ring does it: the
+// growth happens once, on the first push or read, and costs cap pushes.
+fn ring_reserve(r: Ring&, buf: u8[>..]&) {
+    while buf.len < r.cap {
+        buf.push(0);
+    }
+}
+
 fn ring_len(r: Ring&) -> i64 {
     return r.count;
 }
@@ -68,6 +83,7 @@ fn ring_clear(r: Ring&) {
 // happened. Callers that do want overwrite use ring_push_over.
 fn ring_push(r: Ring&, buf: u8[>..]&, b: u8) -> bool {
     if r.cap <= 0 || r.count >= r.cap { return false; }
+    ring_reserve(r, buf);
     buf[r.tail] = b;
     r.tail = r.tail + 1;
     if r.tail >= r.cap { r.tail = 0; }
@@ -87,6 +103,7 @@ fn ring_push_over(r: Ring&, buf: u8[>..]&, b: u8) -> bool {
         r.count = r.count - 1;
         dropped = true;
     }
+    ring_reserve(r, buf);
     buf[r.tail] = b;
     r.tail = r.tail + 1;
     if r.tail >= r.cap { r.tail = 0; }
@@ -96,11 +113,13 @@ fn ring_push_over(r: Ring&, buf: u8[>..]&, b: u8) -> bool {
 
 fn ring_peek(r: Ring&, buf: u8[>..]&) -> u8, bool {
     if r.count <= 0 { return 0, false; }
+    ring_reserve(r, buf);
     return buf[r.head], true;
 }
 
 fn ring_pop(r: Ring&, buf: u8[>..]&) -> u8, bool {
     if r.count <= 0 { return 0, false; }
+    ring_reserve(r, buf);
     let b = buf[r.head];
     r.head = r.head + 1;
     if r.head >= r.cap { r.head = 0; }

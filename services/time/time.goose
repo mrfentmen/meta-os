@@ -79,20 +79,31 @@ fn elapsed(now: i64, start: i64) -> i64 {
 // measures how bad it is, and if the answer is "bad", the fix is a kernel wait
 // call, recorded as a requirement rather than worked around here.
 
+// Consecutive equal clock reads tolerated before the timer is declared dead.
+//
+// Why a count and not "two reads in a row": the tick reading is coarse relative to
+// a yield. On a fast machine three or more reads can land inside the same millisecond,
+// which is a healthy clock sampled quickly, not a stalled one -- the old two-read test
+// bailed out on exactly that and made every short sleep report failure. The counter
+// still catches a genuinely frozen counter, because a frozen one never advances no
+// matter how many times it is read.
+let STALL_LIMIT: i64 = 100000;
+
 fn sleep_ticks(n: i64) -> bool {
     if n <= 0 { return true; }
     let start = sys_ticks();
     var last = start;
+    var stalled: i64 = 0;
     while elapsed(sys_ticks(), start) < n {
         sys_yield();
         let now = sys_ticks();
-        // A timer that never advances is a kernel fault, not something to spin
-        // on forever: bail out so the failure is visible instead of silent.
+        // A timer that never advances is a kernel fault, not something to spin on
+        // forever: bail out so the failure is visible instead of silent.
         if now == last {
-            // Allow one equality (two reads inside the same tick) before
-            // treating the clock as stalled.
-            sys_yield();
-            if sys_ticks() == now { return false; }
+            stalled = stalled + 1;
+            if stalled > STALL_LIMIT { return false; }
+        } else {
+            stalled = 0;
         }
         last = now;
     }
@@ -234,9 +245,16 @@ fn ticks_to_us(ticks: i64, hz: i64) -> i64, bool {
 // worse than refusing to start.
 fn clock_ok(c: Clock&) -> bool {
     let a = sys_ticks();
+    if a < 0 { return false; }                 // a negative tick is not a clock
+    if c.hz <= 0 { return false; }             // a rate of zero makes every timeout infinite
+    let b = sys_ticks();
+    if b < a { return false; }                 // it went backwards
+    // "Does it advance at all?" cannot be answered by yielding a fixed number of times:
+    // 1000 yields is microseconds, so the original check returned false on any fast
+    // machine, host or kernel. A constant clock never moves, so waiting for movement
+    // and bounding the wait distinguishes the two without assuming a rate.
     var spins: i64 = 0;
-    while spins < 1000 {
-        sys_yield();
+    while spins < 20000000 {
         if sys_ticks() != a { return true; }
         spins = spins + 1;
     }

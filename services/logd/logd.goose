@@ -86,16 +86,26 @@ var written: i64 = 0;         // records actually on the wire
 
 // Format one record into `out`. Returns false if it does not fit, so the caller
 // can count the loss instead of shipping a truncated line.
-fn format_record(out: u8[>..]&, level: i64, tag: const u8[:], msg: const u8[:]) -> bool {
-    // <ticks> <tag> <L> <msg>
-    if !append_int(out, SLOT - 1, sys_ticks()) { return false; }
-    if !append_char(out, SLOT - 1, ' ') { return false; }
-    if !append_str(out, SLOT - 1, tag) { return false; }
-    if !append_char(out, SLOT - 1, ' ') { return false; }
-    if !append_char(out, SLOT - 1, level_letter(level)) { return false; }
-    if !append_char(out, SLOT - 1, ' ') { return false; }
-    if !append_str(out, SLOT - 1, msg) { return false; }
-    return true;
+// `<ticks> <tag> <L> <msg>\n` -- one record, newline included.
+//
+// The newline is not decoration: the console writer and every log reader treat the
+// newline as the record terminator, so a record without one merges with whatever follows
+// it and a single truncated write corrupts two lines instead of one.
+//
+// The size is computed first and the record is refused outright if it will not fit, so a
+// short buffer leaves it EMPTY rather than holding half a line. A caller cannot clear a
+// builder, so a half-written record would be shipped as-is.
+fn format_record(out: u8[>..]&, cap: i64, level: i64, tag: const u8[:], msg: const u8[:]) -> bool {
+    let need = digits_needed(sys_ticks(), 10) + 1 + tag.len + 1 + 1 + 1 + msg.len + 1;
+    if need > room_left(out, cap) { return false; }
+    if !append_int(out, cap, sys_ticks()) { return false; }
+    if !append_char(out, cap, ' ') { return false; }
+    if !append_str(out, cap, tag) { return false; }
+    if !append_char(out, cap, ' ') { return false; }
+    if !append_char(out, cap, level_letter(level)) { return false; }
+    if !append_char(out, cap, ' ') { return false; }
+    if !append_str(out, cap, msg) { return false; }
+    return append_nl(out, cap);
 }
 
 // Queue a record. This is the call every service makes.
@@ -105,7 +115,7 @@ fn log(level: i64, tag: const u8[:], msg: const u8[:]) -> bool {
         return false;
     }
     var rec: u8[>..] = [];
-    if !format_record(rec, level, tag, msg) {
+    if !format_record(rec, SLOT, level, tag, msg) {
         // The message could not fit even an empty record buffer of slot size.
         dropped_long = dropped_long + 1;
         return false;
