@@ -12,7 +12,45 @@ Standing rules: no source edits outside task scope; errors verbatim + stop; 4 bu
   present, all three userspace programs (HELLO, sleeper sleep/wake,
   crasher isolated), `loader refused` count 0, no panic.
   Full run: os-build/logs/gate-run-r5-1.txt.
-## R5-2 read_key end to end — TODO
+## R5-2 read_key end to end — PARTIAL (program proven, typed
+bytes not yet captured; kernel-lane blocker documented below)
+- Delivered: `os-build/userspace/user/src/bin/readkey.rs` (polls
+  syscall 5 in a bounded drain-all loop, prints each scancode byte
+  (decimal), notes the empty case, yields between passes, exits on
+  Enter or bound); `sys_read_key()` wrapper in `user/src/lib.rs`;
+  staged at its own base 0x630000000010 (entry verified in ELF +
+  boot log); kernel task + spawn + 4th ustack slot; build loops
+  (gate.sh + boot-test.sh) build it per-program.
+- PROVEN: loads + enters userspace (`user readkey: entry
+  0x630000000010`), syscall 5 dispatches (no `bad syscall 5`; empty
+  case `readkey: empty` visible in 6+ boots), exits cleanly
+  (`readkey done got=N empties=M` + `user exit code 0` when it runs
+  to bound).
+- Heap fix (REQUIRED, landed): 256 KiB ran dry at the 8th task
+  (`memory allocation of 32768 bytes failed`, red screen) — raised
+  to 512 KiB in `kernel/src/mem.rs`. The old 256 KiB heap cannot
+  hold 8 task stacks. No source beyond this was changed for it.
+- NOT YET PROVEN: typed bytes returned by syscall 5. A full day of
+  drill runs (10+ boots, HMP-level verification, HMP memory reads
+  of the guest ring buffer showing keys never arriving) shows
+  typed scancodes never reaching readkey's polls: the console task
+  wins every race once readkey has exited, and readkey's own
+  polling window (bounded loop, 200+/sec) closes before typed keys
+  arrive.
+- BLOCKER for the typed-bytes half (kernel lane, Rowan/Pax): with
+  readkey ALIVE and spinning, boots intermittently die — EITHER a
+  red-screen panic in `exit_task` (`sched.rs:186`
+  `unreachable_unchecked`, i.e. a switch that returned) at another
+  task's exit, OR a kernel NX-fault storm (`ip 0x202890`, a rodata
+  string address, cur=7, starving all IRQs) shortly after readkey
+  starts polling. NEITHER happens in the 7-task tree (gate GREEN
+  repeatedly, K7 sessions clean). Scheduler-state dumps taken
+  inside `exit_task` show consistent books (cur==schedcur,
+  marked-Exited-then-schedule) in both green and red boots, so the
+  divergence is in CPU reality, not the table — not isolated yet.
+  Evidence logs: `os-build/logs/R5-readkey.txt` (polling, empty,
+  exits, panics, storm), plus `R5-dbg.txt`, `R5-bisect*.txt`,
+  `R5-cur.txt`, `R5-fdbg.txt`, `R5-storm*.txt` from the trail.
 ## R5-3 final K7 session — TODO
 ## R5-4 Imperium live loop — TODO
 ## R5-5 soak — TODO

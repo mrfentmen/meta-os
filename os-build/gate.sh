@@ -17,7 +17,7 @@ qemu-system-x86_64 --version | head -1
 
 echo "== userspace =="
 cd os-build/userspace/user
-for pair in "hello:0x600000000000" "sleeper:0x610000000000" "crasher:0x620000000000"; do
+for pair in "hello:0x600000000000" "sleeper:0x610000000000" "crasher:0x620000000000" "readkey:0x630000000000"; do
   b=${pair%%:*}; base=${pair##*:}
   sed "s/0x620000000000/$base/" link.ld > "/tmp/link-$b.ld"
   RUSTFLAGS="$FLAGS -C link-arg=-T/tmp/link-$b.ld" cargo build --target x86_64-unknown-none --bin "$b"

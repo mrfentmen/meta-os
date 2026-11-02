@@ -523,6 +523,7 @@ pub unsafe fn start_demo_tasks() -> ! {
     spawn_task(crate::user::task_hello, u32::MAX).expect("sched: spawn hello");
     spawn_task(crate::user::task_sleeper, u32::MAX).expect("sched: spawn sleeper");
     spawn_task(crate::user::task_crasher, u32::MAX).expect("sched: spawn crasher");
+    spawn_task(crate::user::task_readkey, u32::MAX).expect("sched: spawn readkey");
     spawn_task(console_task, u32::MAX).expect("sched: spawn console");
     run();
 }

@@ -19,10 +19,11 @@ use crate::memory::{
     ENTRY_WRITABLE,
 };
 
-/// Heap backing store: 256 KiB inside the kernel image (marked
+/// Heap backing store: 512 KiB inside the kernel image (marked
 /// Kernel, never in the usable map, so the allocator can't hand it
-/// out as frames).
-static mut HEAP_BUF: [u8; 256 * 1024] = [0; 256 * 1024];
+/// out as frames). Sized for 8+ task stacks (32 KiB each) plus
+/// Box/Vec headroom — 256 KiB ran dry at the 8th task (R5-2).
+static mut HEAP_BUF: [u8; 512 * 1024] = [0; 512 * 1024];
 /// Frame bitmap: 2048 words cover 131072 frames = 512 MiB of RAM.
 static mut BITMAP: [u64; 2048] = [0; 2048];
 /// Converted regions (bootloader map is small; 64 slots is plenty).
