@@ -120,3 +120,18 @@ Buffy's roster. Clock: H+0 = 2026-11-01 20:12 EST. Hard freeze at
 H+9 = 2026-11-02 05:12 EST; after it, only gate fixes and the
 report. All rulings above are in force. Rowan's HOLD is lifted for
 the R-lane only, by this order.
+
+
+## Boss decision 2026-11-02 (~03:11 EST)
+
+**F1 closed: `kernel/src/syscalls.rs` stays FROZEN.** The boss chose keep-frozen over Rowan's delete recommendation. No wiring, no deletion, no renumbering. Revisit only on the boss's word.
+
+
+## Boss ruling 2026-11-02 (~03:31 EST): NO FREEZE
+
+The 05:12 hard freeze is CANCELLED on the boss's word. Work continues back and forth between the OS and the other programs through the deadline (Wed Nov 4, 9:00 PM ET). FREEZE_CERT.md does not fill at 05:12; it converts to a submission-day state snapshot, filled when the package is assembled. The claim stays exactly as adopted - every addition after this ruling still needs its named boot log before it joins the claim.
+
+
+## Boss ruling 2026-11-02 (~03:53 EST): CUSTOS SCRAPPED AS A SYSTEM
+
+Custos is retired as a separate system/program. The watch idea (rounds, compare, speak only on change; small = quiet note, big = full alarm) is baked into the OS as a capability its agents have, not an app. The design page design/meta-custos-watch.html stays as the record of that face. Systems now: Imperium (one), Science Lab (two), Musica (candidate three), Officina. No crew work on Custos-the-system from this ruling.

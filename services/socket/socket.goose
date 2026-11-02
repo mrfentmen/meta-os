@@ -2,7 +2,7 @@
 //
 // Layer 4, service 17: what a socket means here.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs with
+// Status: RUNS — reached by tests/t77_gaps (73 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs with
 // literals (reference#32), static arrays, `while`/`if`, `T&` references
 // (reference#46), multi-value returns.
 //

@@ -2,7 +2,7 @@
 //
 // Layer 4, service 25: console sessions.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs, static arrays,
+// Status: RUNS — reached by tests/t77_gaps (73 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs, static arrays,
 // `while`/`if`, slices, `T&` references (reference#46), multi-value returns.
 //
 // A session is the thing that owns a console. Not the display service (B-L1-27): the

@@ -29,10 +29,11 @@ Decisions:
                      dispatch endpoint (crew.py's existing path —
                      loopback-only, labelled simulated). The crew
                      sends it directly — no human verify step;
-                     human review is post-hoc audit, and only the
-                     agency verify policy can hold the package
-                     (crew.py's TRIO_CREW_HUMAN_VERIFY, default
-                     off).
+                     human review is post-hoc audit. The judge
+                     (judge.py) rules on the flag before this
+                     step; nothing holds the package for a person
+                     (the old TRIO_CREW_HUMAN_VERIFY hold was
+                     retired 2026-11-02).
   continue_monitoring
                      evidence is insufficient (review could not
                      confirm or clear, or the loop guard tripped):

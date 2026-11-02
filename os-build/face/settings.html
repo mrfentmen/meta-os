@@ -1,0 +1,24 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Settings</title>
+<style>body{font-family:system-ui;background:#111;color:#eee;padding:24px}label{display:block;margin:12px 0}button{font-size:15px;padding:6px 14px}</style>
+</head><body>
+<h1>Settings</h1>
+<label>Bar colour: <select id="bar"><option>black</option><option>white</option><option>blue</option></select></label>
+<label>Theme: <select id="theme"><option>dark</option><option>light</option></select></label>
+<label>Animation speed: <input id="speed" type="range" min="0" max="200" value="100"></label>
+<label><input id="pause" type="checkbox"> Pause animation</label>
+<p><button id="apply">Apply</button> <span id="note"></span></p>
+<script>
+(function(){
+  function get(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
+  function set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+  document.getElementById('bar').value=get('metaos-bar','black');
+  document.getElementById('theme').value=get('metaos-theme','dark');
+  document.getElementById('apply').onclick=function(){
+    set('metaos-bar',document.getElementById('bar').value);
+    set('metaos-theme',document.getElementById('theme').value);
+    set('metaos-speed',document.getElementById('speed').value);
+    set('metaos-paused',document.getElementById('pause').checked?'1':'0');
+    document.getElementById('note').textContent='Saved. Reopen the shell to apply.';
+  };
+})();
+</script></body></html>

@@ -2,7 +2,7 @@
 //
 // B-L1-120 — JSON subset: the flat object the updater and config formats actually use.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t78_lib_limits (27 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // THE SUBSET, NAMED BEFORE THE CODE
 // ---------------------------------
@@ -64,7 +64,10 @@ struct Json {
 }
 
 fn json_parse(text: const u8[:]) -> Json, i64 {
-    var j: Json = Json { nodes: [], count: 0, err_off: 0 };
+    // The array is initialised to its declared length, not to `[]`: an empty array here
+    // made every parse fail at the first node write (index 0 of length 0). Caught by
+    // tests/t78_lib_limits, the first driver this module ever had.
+    var j: Json = Json { nodes: [JNode { .. }; 24], count: 0, err_off: 0 };
     j.count = 0;
     j.err_off = 0;
     var i: i64 = 0;
@@ -108,14 +111,25 @@ fn json_parse(text: const u8[:]) -> Json, i64 {
         if i < 0 { return json_fail(j, key_start); }
         node.key_off = key_start;
         node.key_len = i - 1 - key_start;      // i is just past the closing quote
+        // JSON_KEY_MAX was declared and enforced nowhere, so a 44-byte key parsed as
+        // happily as a 4-byte one. A key past the cap is refused here, where it is
+        // cheap to refuse, instead of at the caller's fixed key buffer.
+        if node.key_len > JSON_KEY_MAX { return json_fail(j, key_start); }
 
         i = json_skip_ws(text, i);
         if i >= text.len || text[i] != ':' { return json_fail(j, i); }
         i = i + 1;
         i = json_skip_ws(text, i);
 
+        // The scan's own code is kept, not collapsed to E_INVAL: "this is out of the
+        // documented subset" (E_UNSUPPORTED, nesting) and "this is malformed" (E_INVAL)
+        // are different answers to a caller deciding whether to try a different format.
         let vcode = json_scan_value(text, i, node);
-        if vcode != CODE_OK { return json_fail(j, i); }
+        if vcode != CODE_OK {
+            var bad: Json = j;
+            bad.err_off = i;
+            return bad, vcode;
+        }
         i = json_skip_value_end(text, i);
 
         // Reject a duplicate key: two values for one name means the reader's answer depends

@@ -2,7 +2,7 @@
 //
 // B-L1-105 — Loopback v2, the semantics half (the impairment half is tests/harness/link.goose).
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t85_net_deep (154 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT v1 DID AND WHY IT WAS NOT ENOUGH
 // -------------------------------------
@@ -65,11 +65,13 @@ fn lo_configured() -> bool {
 // E_NO_ADDRESS when the interface has no address: an unconfigured machine must fail to
 // send rather than pick a route from 0.0.0.0, which is how a packet gets a source address
 // that no reply can reach.
-fn lo_route(dst: Ipv4&, local: Ipv4&, mask: Ipv4&, gw: Ipv4&) -> i64, i64 {
-    if lo_is_loopback(dst) { return 0, CODE_OK; }
-    if ip4_zero(local) { return -1, E_NO_ADDRESS; }
-    if ip4_equal(dst, local) { return 1, CODE_OK; }
-    if ip4_same_subnet(dst, local, mask) { return 2, CODE_OK; }
+fn lo_route(dst: Ipv4, local: Ipv4, mask: Ipv4, gw: Ipv4) -> i64, i64 {
+    let d = dst;
+    let l = local;
+    if lo_is_loopback(d) { return 0, CODE_OK; }
+    if ip4_zero(l) { return -1, E_NO_ADDRESS; }
+    if ip4_equal(d, l) { return 1, CODE_OK; }
+    if ip4_same_subnet(d, l, mask) { return 2, CODE_OK; }
     if ip4_zero(gw) { return -1, E_UNREACHABLE; }
     return 3, CODE_OK;
 }

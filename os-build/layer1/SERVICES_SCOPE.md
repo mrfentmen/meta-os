@@ -10,7 +10,7 @@ produces it is named; `DEMO_FACTS.md` is regenerated from those same commands.
 | Name | What it is | Where | Size | Status word |
 |---|---|---|---|---|
 | **The merged set** | The Goose programs on `main`'s branch tip | `services/{echo,heartbeat,hello,mcp-host,updater}` | 5 files | typechecks; not wired to the kernel |
-| **The corpus** | This lane's layer-4 build-out | `buffy/layer1-goose-services`, `services/` | 111 files, 23,815 lines | **RUNS natively** — 29 drivers, 1,097 assertions, 0 failed |
+| **The corpus** | This lane's layer-4 build-out | `buffy/layer1-goose-services`, `services/` | 115 files, 24,785 lines | **RUNS natively** — 33 drivers, 1,253 assertions, 0 failed |
 | **Layer 4** | The specified system-services tier | `KERNEL_SPEC.md`, `os-build/LAYERS.md` | 25 services in the manifest | the corpus is its implementation |
 
 **The corpus is the L4 implementation, and it executes on a host — not on the kernel.** Those are
@@ -24,7 +24,7 @@ different sentences and the difference is the whole page.
 | …with code and a native test | 25 | `jq '.services \| length' os-build/layer1/services.json` |
 | …placeholders (README only, or empty) | 4 | `sockets`, `registry`, `devmgr` (README), `build` (empty) |
 | Shared libraries under `services/common` | 18 | `ls -d services/common/*/` |
-| Test drivers | 29 | `ls services/tests/*.goose` |
+| Test drivers | 33 | `ls services/tests/*.goose` |
 | Entry points (`svc_entry`) | 5 | 4 build, 1 typechecks only |
 
 The four placeholders are named because a count of 29 directories reads as 29 implemented services
@@ -32,16 +32,16 @@ and that would be false. `PROPOSALS.md` and `BOUNDARIES.md` carry what each of t
 
 ## What is proven, in this lane, on this Mac
 
-- **29 of 29 drivers build and run to exit 0: 1,097 assertions, 0 failed.** `run_native.sh`. Each
+- **33 of 33 drivers build and run to exit 0: 1,253 assertions, 0 failed.** `run_native.sh`. Each
   driver is compiled by Goose to C, linked by clang against `host/host_shim.c`, and executed.
-- **The corpus typechecks as 35 programs** (6 roots + 29 tests), 0 errors. `check_services.sh`.
-- **Eight mechanical audits are green**: source consistency (111 files, 0 findings), error
-  vocabulary (every code declared, no local redefinitions), static size (155.2 KiB resident across
-  33 units), boot order (22 services, DAG proven, no cycles), link map (52 distinct service→service
-  edges), permission table (0 missing permissions, 67 dormant rows named), status words (97 lines,
-  0 stale), limits (22 of 75 constants exercised by a test).
+- **The corpus typechecks as 39 programs** (6 roots + 33 tests), 0 errors. `check_services.sh`.
+- **Eight mechanical audits are green**: source consistency (115 files, 0 findings), error
+  vocabulary (every code declared, no local redefinitions), static size (165.4 KiB resident across
+  33 units), boot order (22 services, DAG proven, no cycles), link map (56 distinct service→service
+  edges), permission table (0 missing permissions, 67 dormant rows named), status words (101 lines,
+  0 stale), limits (26 of 75 constants exercised by a test).
 - **The filesystem, the shell, log rotation, the protocol pack, the supervisor state machine and the
-  permission table all have transcripts.** `TRANSCRIPTS.md`, seven sections, output unedited.
+  permission table all have transcripts.** `TRANSCRIPTS.md`, ten sections, output unedited.
 
 ## What is not proven, and cannot be from here
 

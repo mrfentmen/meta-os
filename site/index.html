@@ -92,7 +92,8 @@
     <div class="card">
       <div class="tag2">System one</div>
       <h3>Imperium</h3>
-      <p>The three services that answer 911, watching real camera feeds with Muse Spark.
+      <p>The three services that answer 911, built to watch camera feeds with Muse Spark.
+      The runs on record use simulated feeds, not live cameras.
       <b>Vigiles</b> for police awareness, <b>Ignis</b> for fire, <b>Medicus</b> for EMS scene
       awareness only: visible signs, never diagnosis. Small signs are recorded and shown.
       Big signs run the full chain. Dispatch goes to a clearly labeled simulated endpoint,
@@ -135,12 +136,25 @@
 </section>
 
 <section>
+  <h2>What is proven today</h2>
+  <p class="sub">The adopted claim (PAX_12H.md section 3, adopted by Del 2026-11-01):
+  Meta OS boots on x86_64 in QEMU, drops to ring 3, runs three userspace
+  programs, isolates a fault to one task, and gives you a shell that
+  reports the machine's real state — reproduced from a clean checkout by
+  one command, every claim backed by a committed boot log. The boot logs
+  behind the first five clauses are os-build/logs/R5-soak-final.txt and
+  os-build/logs/K6-boot.txt; the gate record is 7/7 in
+  OPENCODE_ROUND5_REPORT.md.</p>
+</section>
+
+<section>
   <h2>Where it stands</h2>
   <p class="sub">Stated plainly. Proven means a log or a test on record, not a claim.</p>
   <table>
-    <tr><td><b>K1 boot + serial</b></td><td class="ok">PROVEN</td><td class="own">QEMU boot log carries the alive line, no panic</td></tr>
+    <tr><td><b>K1 boot + serial</b></td><td class="ok">PROVEN</td><td class="own">QEMU boot log carries the alive line, no panic (os-build/logs/K6-boot.txt)</td></tr>
+    <tr><td><b>Goose services on the kernel</b></td><td class="wip">SOURCE ONLY</td><td class="own">they run under the host shim today, 33 of 33 test programs, 1253 checks (os-build/layer1/DEMO_FACTS.md); not on the kernel yet</td></tr>
     <tr><td><b>K2 to K6</b></td><td class="ok">MERGED</td><td class="own">console, interrupts, memory, tasks, syscalls, first services</td></tr>
-    <tr><td><b>OpenCode OS build, 240 tasks</b></td><td class="ok">MERGED</td><td class="own">sections A to Q plus a 3,651 tick soak, zero gaps</td></tr>
+    <tr><td><b>OpenCode OS build, 240 tasks</b></td><td class="ok">MERGED</td><td class="own">sections A to Q plus a 3,651 tick soak</td></tr>
     <tr><td><b>Merged kernel tree</b></td><td class="wip">NEXT PROOF</td><td class="own">Mac compile and QEMU boot of the combined tree</td></tr>
     <tr><td><b>Imperium live flagged path</b></td><td class="wip">UNPROVEN</td><td class="own">has not fired in the wild yet</td></tr>
     <tr><td><b>In-OS messaging board</b></td><td class="ok">MERGED</td><td class="own">board service and viewer on main, tests 9/9; shell wiring is next</td></tr>

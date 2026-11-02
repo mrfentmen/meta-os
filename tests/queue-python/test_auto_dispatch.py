@@ -1,10 +1,11 @@
-"""Tests for Imperium direct dispatch (docs/IMPERIUM_AUTO_DISPATCH.md,
-boss directive 2026-11-01): on a confirmed RED incident the agent
-itself sends the dispatch package — picture included — with NO
-human verify step; human review is the post-hoc audit flag
-(assessment.requires_human_review, kept true). The agency policy
-setting TRIO_CREW_HUMAN_VERIFY (default off) holds the package
-for verify instead of sending it.
+"""Tests for Imperium judge dispatch (docs/IMPERIUM_AUTO_DISPATCH.md
+as amended by os-build/IMPERIUM_JUDGE.md, boss directive
+2026-11-02): on a RED incident the JUDGE rules on the patrol and
+review readings; a confirmed ruling sends the dispatch package —
+picture included — routed to the service that owns the scene.
+No human sits in the loop: the old TRIO_CREW_HUMAN_VERIFY hold
+is retired, and human review remains only the post-hoc audit
+flag (assessment.requires_human_review, kept true).
 
 Run with the queue suite, from the repo root:
 
@@ -54,8 +55,7 @@ def _jpeg_bytes():
     return buf.getvalue()
 
 
-def _make_crew(tmp, assessor, frame=FRAME, detector=None,
-               human_verify=None):
+def _make_crew(tmp, assessor, frame=FRAME, detector=None):
     records = crew_records.CrewRecords(
         directory=os.path.join(tmp, "crew-data"))
     dispatched = []
@@ -66,7 +66,7 @@ def _make_crew(tmp, assessor, frame=FRAME, detector=None,
 
     crew_obj = crew.Crew(records, assessor, lambda camera: frame,
                          dispatch, cameras=ALL_CAMS,
-                         detector=detector, human_verify=human_verify)
+                         detector=detector)
     return crew_obj, records, dispatched
 
 
@@ -76,8 +76,7 @@ class AutoDispatchTests(unittest.TestCase):
         # The policy env vars belong to these tests only: start
         # every test with both unset, whatever the shell carried.
         self._saved_env = {k: os.environ.get(k)
-                           for k in (crew.HUMAN_VERIFY_ENV,
-                                     crew.DISPATCH_URL_ENV)}
+                           for k in (crew.DISPATCH_URL_ENV,)}
         for key in self._saved_env:
             os.environ.pop(key, None)
 
@@ -102,8 +101,13 @@ class AutoDispatchTests(unittest.TestCase):
         self.assertEqual(len(dispatched), 1)
         package = dispatched[0]
         self.assertIs(package["simulated"], True)
-        self.assertEqual(package["dispatch_mode"], "auto")
-        self.assertIs(package["human_verify"], False)
+        self.assertEqual(package["dispatch_mode"], "judge-confirmed")
+        self.assertNotIn("human_verify", package)
+        # The judge routed it: a vigiles package goes to the
+        # (simulated) police endpoint, and the package says so.
+        self.assertEqual(package["service"]["service"], "police")
+        self.assertEqual(package["service"]["path"], "/police")
+        self.assertEqual(package["judged_by"], "imperium-judge")
         # The picture: the flagged frame reference plus the
         # evidence crop reference the flagged path captured.
         picture = package["picture"]
@@ -147,66 +151,40 @@ class AutoDispatchTests(unittest.TestCase):
                          [s["step"] for s in incident["timeline"]])
 
 
-class HumanVerifyPolicyTests(unittest.TestCase):
+class JudgePolicyTests(unittest.TestCase):
+    """Boss directive 2026-11-02: no human sits in the loop. The
+    old TRIO_CREW_HUMAN_VERIFY hold is retired — setting it
+    changes nothing — and the judge's ruling is what the record
+    carries."""
+
     def setUp(self):
         self.tmp = tempfile.mkdtemp(dir=_TMP)
-        self._saved_env = {k: os.environ.get(k)
-                           for k in (crew.HUMAN_VERIFY_ENV,
-                                     crew.DISPATCH_URL_ENV)}
-        for key in self._saved_env:
-            os.environ.pop(key, None)
 
-    def tearDown(self):
-        for key, value in self._saved_env.items():
-            if value is None:
-                os.environ.pop(key, None)
-            else:
-                os.environ[key] = value
-
-    def test_policy_on_holds_package_instead_of_sending(self):
-        crew_obj, records, dispatched = _make_crew(
-            self.tmp, ScriptedAssessor(RED_SCRIPT), human_verify=True)
-        out = crew_obj.check_camera(CAM_A, "vigiles")
-        self.assertEqual(out["outcome"], "held-for-verify")
-        # The dispatcher was never called.
-        self.assertEqual(dispatched, [])
-        incident = records.list_incidents()[0]
-        self.assertEqual(incident["status"], "held-for-verify")
-        # The package was still built (brief + bolo on record) and
-        # the held dispatch step carries it for the verify.
-        steps = [s["step"] for s in incident["timeline"]]
-        self.assertIn("brief", steps)
-        held = [s for s in incident["timeline"]
-                if s["step"] == "dispatch"][0]
-        self.assertIs(held["held"], True)
-        self.assertEqual(held["package"]["incident_id"],
-                         out["incident_id"])
-        self.assertEqual(held["package"]["dispatch_mode"],
-                         "held-for-verify")
-        self.assertIn("flag-frame", held["package"]["picture"]["frame"])
-
-    def test_policy_env_flag_parsing_and_env_hold(self):
-        self.assertFalse(crew.human_verify_required())
-        for value in ("1", "true", "yes", "on", "ON"):
-            with unittest.mock.patch.dict(
-                    os.environ, {crew.HUMAN_VERIFY_ENV: value}):
-                self.assertTrue(crew.human_verify_required(), value)
+    def test_retired_verify_env_no_longer_holds_anything(self):
         with unittest.mock.patch.dict(
-                os.environ, {crew.HUMAN_VERIFY_ENV: "off"}):
-            self.assertFalse(crew.human_verify_required())
-        # A crew that reads the setting from the env holds too.
-        with unittest.mock.patch.dict(
-                os.environ, {crew.HUMAN_VERIFY_ENV: "on"}):
+                os.environ, {"TRIO_CREW_HUMAN_VERIFY": "on"}):
             crew_obj, records, dispatched = _make_crew(
                 self.tmp, ScriptedAssessor(RED_SCRIPT))
             out = crew_obj.check_camera(CAM_A, "vigiles")
-        self.assertEqual(out["outcome"], "held-for-verify")
-        self.assertEqual(dispatched, [])
+        self.assertEqual(out["outcome"], "dispatched-simulated")
+        self.assertEqual(len(dispatched), 1)
+        self.assertFalse(hasattr(crew, "human_verify_required"))
+
+    def test_review_step_carries_the_judges_reasons(self):
+        crew_obj, records, dispatched = _make_crew(
+            self.tmp, ScriptedAssessor(RED_SCRIPT))
+        out = crew_obj.check_camera(CAM_A, "vigiles")
+        incident = records.list_incidents()[0]
+        review = [s for s in incident["timeline"]
+                  if s["step"] == "review"][0]
+        self.assertEqual(review["judged_by"], "imperium-judge")
+        self.assertEqual(review["verdict"], "confirmed")
+        self.assertTrue(review["judge_reasons"])
 
 
 class DispatchUrlPolicyTests(unittest.TestCase):
     def test_env_dispatch_url_non_loopback_refused(self):
-        # The verify policy never widens the target: a non-loopback
+        # Nothing widens the target: a non-loopback
         # URL from the env is refused exactly like a literal one.
         with unittest.mock.patch.dict(
                 os.environ,

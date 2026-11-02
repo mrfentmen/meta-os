@@ -2,7 +2,7 @@
 //
 // B-L1-143 — Gap library 5: a fixed-capacity open-addressed table.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t78_lib_limits (27 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // THE GAP THIS FILLS
 // ------------------
@@ -48,7 +48,9 @@ struct Table {
 }
 
 fn tbl_new() -> Table {
-    var t: Table = Table { entries: [], count: 0, probes: 0, misses: 0 };
+    // Declared length, not `[]`: an empty array made every tbl_new() fail at the first
+    // slot write. Caught by tests/t78_lib_limits, the first driver this module ever had.
+    var t: Table = Table { entries: [Entry { .. }; 32], count: 0, probes: 0, misses: 0 };
     var i: i64 = 0;
     while i < TBL_SLOTS {
         t.entries[i] = Entry { hash: 0, key: tbl_zero_key(), key_len: 0, value: 0 };

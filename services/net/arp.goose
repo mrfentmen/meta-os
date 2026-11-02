@@ -59,7 +59,7 @@ fn mac_eq(x: Mac&, y: Mac&) -> bool {
     return x.m0 == y.m0 && x.m1 == y.m1 && x.m2 == y.m2 && x.m3 == y.m3 && x.m4 == y.m4 && x.m5 == y.m5;
 }
 
-fn mac_is_broadcast(x: Mac&) -> bool {
+fn mac_is_broadcast(x: Mac) -> bool {
     return x.m0 == 0xff && x.m1 == 0xff && x.m2 == 0xff && x.m3 == 0xff && x.m4 == 0xff && x.m5 == 0xff;
 }
 

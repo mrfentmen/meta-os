@@ -86,3 +86,28 @@ test("enforcement: Medicus with requires_human_review true passes; other divisio
   assert.equal(validateAssessment(assessmentFor("vigiles", { review: false }), "vigiles").ok, true);
   assert.equal(validateAssessment(assessmentFor("ignis", { review: false }), "ignis").ok, true);
 });
+
+test("region: a valid bounding box passes; null and absent pass", () => {
+  const withBox = assessmentFor("vigiles", {});
+  withBox.observations[0].region = { x: 100, y: 200, w: 300, h: 400 };
+  assert.equal(validateAssessment(withBox, "vigiles").ok, true);
+  const withNull = assessmentFor("vigiles", {});
+  withNull.observations[0].region = null;
+  assert.equal(validateAssessment(withNull, "vigiles").ok, true);
+  assert.equal(validateAssessment(assessmentFor("vigiles", {}), "vigiles").ok, true);
+});
+
+test("region: malformed boxes are rejected", () => {
+  for (const bad of [{ x: -1, y: 0, w: 10, h: 10 }, { x: 0, y: 0, w: 0, h: 10 }, { x: 0.5, y: 0, w: 10, h: 10 }, { x: 0, y: 0, w: 10 }, "left side", 42]) {
+    const a = assessmentFor("vigiles", {});
+    a.observations[0].region = bad;
+    const check = validateAssessment(a, "vigiles");
+    assert.equal(check.ok, false, JSON.stringify(bad));
+    assert.ok(check.errors.some((e) => e.includes("region")), JSON.stringify(bad));
+  }
+});
+
+test("region: vigiles 'crowd gathered' is a permitted category", () => {
+  const check = validateAssessment(assessmentFor("vigiles", { category: "crowd gathered" }), "vigiles");
+  assert.equal(check.ok, true, check.errors.join("; "));
+});

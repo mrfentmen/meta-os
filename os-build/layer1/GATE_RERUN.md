@@ -8,14 +8,18 @@ service's ABI class moved because the kernel's `sys_read_key` is real.
 
 | Gate | Round-4 close | Now | Command |
 |---|---|---|---|
-| Native run | 29 of 29 | **32 of 32**, 1,180 assertions, 0 failed | `run_native.sh` |
-| Typecheck | 35 programs | **38 programs**, 0 errors | `check_services.sh` |
-| Status words | 97 lines, 0 stale | **100 lines, 0 stale** | `audit_status.py` |
-| Source audit | 111 files, 0 findings | **114 files, 0 findings** | `source_audit.py` |
+| Native run | 29 of 29 | **33 of 33**, 1,253 assertions, 0 failed | `run_native.sh` |
+| Typecheck | 35 programs | **39 programs**, 0 errors | `check_services.sh` |
+| Status words | 97 lines, 0 stale | **101 lines, 0 stale** | `audit_status.py` |
+| Source audit | 111 files, 0 findings | **115 files, 0 findings** | `source_audit.py` |
 | Boot order | 22 services, no cycles | 22 services, no cycles | `bootorder_check.py` |
 | Permission table | 0 missing, 67 dormant | 0 missing, 67 dormant | `callmatrix_audit.py` |
-| Limits | 22 of 75 exercised | 22 of 75 exercised | `gen_limits.py` |
+| Limits | 22 of 75 exercised | **26 of 75 exercised** | `gen_limits.py` |
 | Error vocabulary | clean | clean | `error_audit.py` |
+
+The "now" column is the state at the finish-list close, which is one driver past this page's own
+re-run: `t77_gaps` (73 checks) was written after it, and the last column of this table was measured
+after that. Where this page and `DEMO_FACTS.md` disagree, `DEMO_FACTS.md` is generated and wins.
 
 The three new drivers are `t74_failure` (26), `t75_supervisor_load` (32) and `t76_demo_session` (25),
 and they added 83 assertions between them. Two of the three found something:
@@ -29,8 +33,14 @@ and they added 83 assertions between them. Two of the three found something:
   one behind it: **a failing builtin printed nothing.** `cat nope` returned `E_NOTFOUND` and the
   user saw an empty line, indistinguishable from success. Fixed in `sh_exec`, which now names the
   command and the error when the dispatcher did not already explain itself (`cat: notfound`), so
-  the run was repeated after the fix: still **32 of 32, 1,180 assertions, 0 failed**, and the
-  transcript in `TRANSCRIPTS.md` / `captures/demo-3-shell-session.txt` is the post-fix output.
+  the run was repeated after the fix: still **green**, and the transcript in `TRANSCRIPTS.md` /
+  `captures/demo-3-shell-session.txt` is the post-fix output.
+
+A fourth driver came after this page: `t77_gaps`, the one that gave `devices`, `session`, `socket` and
+`timesync` a driver for the first time. It found three defects of its own — `login_submit` could not
+open a user session at all, `hotplug` reported more events delivered than it had ever raised, and the
+NTP fraction scaling lost the sub-second field — all three fixed, all three named in
+`FAILURE_MATRIX.md` and `SERVICES_FINAL.md`.
 
 ## Did any ABI class change because of `read_key`?
 
@@ -57,11 +67,11 @@ manifest agree by construction.
 
 ## What the re-run does not say
 
-- **Nothing ran on the kernel.** All 32 programs are host processes against `host_shim.c`, which
+- **Nothing ran on the kernel.** All 33 programs are host processes against `host_shim.c`, which
   still refuses `sys_read_key` with "nothing pending" — that refusal is why `console` hangs in
   `BOOT_REHEARSAL.md`.
-- **The gate is still per-program.** Goose resolves imports from the root file, so 38 programs is
-  38 roots + test roots, not 38 services.
+- **The gate is still per-program.** Goose resolves imports from the root file, so 39 programs is
+  39 roots + test roots, not 39 services.
 - **`read_key` landing does not move the run count on its own.** It moves what a *kernel* shell can
   do; the services shell was already using `sh_exec`, which takes a line.
 

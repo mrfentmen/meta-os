@@ -2,7 +2,9 @@
 //
 // B-L1-109 — Supervisor dependency ordering: start and stop in the B-L1-64 graph order.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t61_bootorder (24 checks) and tests/t92_sup_load (27 checks),
+// both exit 0. Measured 2026-11-02 by audit_status.py. The runner drives the real boot order:
+// three full boots of all 28 services, plus two drills with a fatal service dead at step 0.
 //
 // WHAT THIS FILE ADDS TO bootorder.goose
 // --------------------------------------
@@ -34,7 +36,7 @@ import common.err.err;
 import common.fmt.fmt;
 import supervisor.bootorder;
 
-let DEP_MAX: i64 = 24;
+let DEP_MAX: i64 = 32;
 
 struct DepRunner {
     running: i64,        // mask of services RUNNING
@@ -145,7 +147,7 @@ fn deps_retry(r: DepRunner&, id: i64) -> bool {
 // Returns the count. Reverse order is not a preference: stopping a dependency before its
 // dependents hands them errors they have no handler for, and those errors land in the log
 // as failures rather than as shutdowns.
-fn deps_stop_plan(r: DepRunner&, out: i64[..24]&, cap: i64) -> i64 {
+fn deps_stop_plan(r: DepRunner&, out: i64[..32]&, cap: i64) -> i64 {
     var n: i64 = 0;
     var pos = bo_count();
     while pos >= 1 {

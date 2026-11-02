@@ -42,18 +42,18 @@ run that proves the logic, and a caller one layer up that does the syscalls.
 | `agenthost` | tests/t59_agenthost | 48 |
 | `audit` | tests/t60_audit | 33 |
 | `callmatrix` | tests/t69_callmatrix | 28 |
-| `devices` | none | 0 |
+| `devices` | tests/t77_gaps | 73 |
 | `dhcp` | tests/t57_dhcp_dns | 45 |
 | `dns` | tests/t57_dhcp_dns | 45 |
 | `fs` | tests/t65_fs | 75 |
 | `input` | tests/t56_input_display | 49 |
-| `logfmt` | none | 0 |
-| `netcfg` | none | 0 |
+| `logfmt` | tests/t50_logd | 19 |
+| `netcfg` | tests/t67_net | 89 |
 | `session` | tests/t76_demo_session | 25 |
-| `socket` | none | 0 |
+| `socket` | tests/t77_gaps | 73 |
 | `storage` | tests/t54_storage | 26 |
 | `supervisor` | tests/t52_supervisor | 53 |
-| `timesync` | none | 0 |
+| `timesync` | tests/t77_gaps | 73 |
 | `updater` | tests/t58_updater | 35 |
 | `watchdog` | tests/t53_watchdog | 28 |
 
@@ -62,7 +62,7 @@ run that proves the logic, and a caller one layer up that does the syscalls.
 | service | outside the freeze | native run | checks | what it would take |
 |---|---|---|---|---|
 | `bootlog` | `sys_ticks` | tests/t49_bootlog | 23 | BF4-08 §sys_ticks |
-| `console` | `sys_ticks` | none | 0 | BF4-08 §sys_ticks |
+| `console` | `sys_ticks` | tests/t49_bootlog | 23 | BF4-08 §sys_ticks |
 | `display` | `sys_ticks` | tests/t56_input_display | 49 | BF4-08 §sys_ticks |
 | `example` | `sys_ticks` | none | 0 | BF4-08 §sys_ticks |
 | `logd` | `sys_ticks` | tests/t50_logd | 19 | BF4-08 §sys_ticks |

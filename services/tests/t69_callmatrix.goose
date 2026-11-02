@@ -53,10 +53,19 @@ fn main() {
     cm_init();
 
     // --- 1. the table has a row per id, and the count matches the ids ---
-    check("SVC_COUNT is 24", SVC_COUNT == 24);
-    check("every id 1..24 has a non-empty row", rows_populated());
+    check("SVC_COUNT is 31", SVC_COUNT == 31);
+    check("every id 1..31 has a non-empty row", rows_populated());
     check("the appended ids are the ones the work order named",
           SVC_FS == 22 && SVC_SHELL == 23 && SVC_EXAMPLE == 24);
+    // R7 appended the six face services. The check above is kept as the record of the
+    // first append; this one records the second, and both are here so a renumber shows up.
+    check("the face ids are appended, never renumbered",
+          SVC_SETTINGS == 25 && SVC_WALLPAPER == 26 && SVC_DOCK == 27
+          && SVC_DASHBOARD == 28 && SVC_UPDATER_CLIENT == 29 && SVC_BOARD == 30
+          && SVC_NOTIFY == 31);
+    // settings -> storage: the config store is a block. board -> net: it speaks a link.
+    check("settings may call storage", cm_allows(SVC_SETTINGS, SVC_STORAGE));
+    check("board may call net", cm_allows(SVC_BOARD, SVC_NET));
 
     // --- 2. the twelve edges that were missing must be allowed ---
     // fs -> storage: the block API is what a filesystem is made of.

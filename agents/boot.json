@@ -1,0 +1,11 @@
+{
+  "note": "Agent boot order for the supervisor bridge (B1/B2). Shape mirrors BOOT_ORDER.md: every dependency appears earlier. Not an OS service order; the crew lanes in their dependency order.",
+  "boot": [
+    { "agent": "rowan", "needs": [] },
+    { "agent": "hana", "needs": [] },
+    { "agent": "milo", "needs": ["rowan"] },
+    { "agent": "buffy", "needs": ["milo"] },
+    { "agent": "buffy2", "needs": ["buffy"] },
+    { "agent": "pax", "needs": ["buffy", "milo"] }
+  ]
+}

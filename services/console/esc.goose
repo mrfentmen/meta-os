@@ -2,7 +2,7 @@
 //
 // B-L1-107 — Console escape handling: an ANSI subset, as data.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t80_limit_drivers2 (30 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHY THIS IS A SEPARATE FILE FROM console.goose
 // ----------------------------------------------
@@ -73,6 +73,7 @@ struct EscParser {
     params: i64[..4] = [0; 4],
     nparams: i64,
     have: bool,                   // a digit has been seen for the current parameter
+    drop: bool,                   // past the array: consume further parameters, keep none
     last: Seq,
     consumed: i64,                // bytes eaten by the last sequence, for logging
 }
@@ -83,6 +84,7 @@ fn esc_new() -> EscParser {
         params: [0; 4],
         nparams: 0,
         have: false,
+        drop: false,
         last: Seq { kind: 0,
         p1: 0,
         p2: 0,
@@ -96,6 +98,7 @@ fn esc_new() -> EscParser {
     while i < ESC_PARAMS_MAX { p.params[i] = ESC_DEFAULT; i = i + 1; }
     p.nparams = 0;
     p.have = false;
+    p.drop = false;
     p.consumed = 0;
     p.last = Seq { kind: SEQ_NONE, p1: ESC_DEFAULT, p2: ESC_DEFAULT, flags: 0, sgr_set: 0, sgr_clear: 0 };
     return p;
@@ -115,6 +118,7 @@ fn esc_feed(p: EscParser&, c: u8) -> bool {
             p.state = 1;
             p.nparams = 0;
             p.have = false;
+            p.drop = false;
             p.consumed = 1;
             var i: i64 = 0;
             while i < ESC_PARAMS_MAX { p.params[i] = ESC_DEFAULT; i = i + 1; }
@@ -150,6 +154,11 @@ fn esc_feed(p: EscParser&, c: u8) -> bool {
     // state 3: parameters, separated by ';'
     if c >= '0' && c <= '9' {
         if p.nparams == 0 { p.nparams = 1; }
+        // A fifth, sixth, ... parameter has nowhere to go. Dropping it is the
+        // only honest option: the previous code kept writing into the last slot,
+        // so "1;2;3;4;5;6H" arrived as row 1 column 456 -- a hostile sequence
+        // could aim the cursor anywhere by appending digits.
+        if p.drop { p.have = true; return false; }
         let idx = p.nparams - 1;
         var v: i64 = 0;
         if p.have { v = p.params[idx]; }
@@ -159,6 +168,7 @@ fn esc_feed(p: EscParser&, c: u8) -> bool {
     }
     if c == ';' {
         if p.nparams < ESC_PARAMS_MAX { p.nparams = p.nparams + 1; p.params[p.nparams - 1] = ESC_DEFAULT; }
+        else { p.drop = true; }
         p.have = false;
         return false;
     }
@@ -207,6 +217,7 @@ fn esc_final(p: EscParser&, c: u8) -> bool {
 
     p.last = s;
     p.state = 0;
+    p.drop = false;
     return s.kind != SEQ_NONE;
 }
 

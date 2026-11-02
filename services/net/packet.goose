@@ -2,7 +2,7 @@
 //
 // Layer 4, service 13: the packet interface every network service is written against.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: structs with
+// Status: RUNS — reached by tests/t85_net_deep (154 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: structs with
 // literals (reference#32), static arrays, `while`/`if`, slices `a[x..y]`,
 // `T&` references (reference#46), extern fn with symbol (spec#40), multi-value returns.
 //

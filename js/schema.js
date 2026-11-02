@@ -193,6 +193,15 @@ export function validateAssessment(value, expectedProduct) {
         errors.push(`${prefix}.evidence: missing or not a string`);
       }
       checkNullableNumber(obs, "confidence", `${prefix}.confidence`, errors, { min: 0, max: 1 });
+      if (obs.region !== undefined && obs.region !== null) {
+        const r = obs.region;
+        const okBox = isPlainObject(r)
+          && ["x", "y", "w", "h"].every((k) => Number.isInteger(r[k]) && r[k] >= 0 && r[k] <= 1000)
+          && r.w >= 1 && r.h >= 1;
+        if (!okBox) {
+          errors.push(`${prefix}.region: must be null or {x, y, w, h} integers in 0..1000 with w, h >= 1`);
+        }
+      }
     });
   }
 

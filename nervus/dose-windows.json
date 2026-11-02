@@ -1,0 +1,5 @@
+{
+  "note": "The dose-window boundaries are the boss's repo's numbers and are deliberately NOT guessed here. Until this file carries a source and real ranges, a steer record cannot be called measured: nervus/contracts.mjs refuses it. Fill `source` with the repo, file and commit the numbers came from, then the zone ranges.",
+  "source": null,
+  "zones": {}
+}
