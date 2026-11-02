@@ -40,9 +40,12 @@ pub fn sys_yield() -> u64 {
     syscall(4, 0, 0, 0)
 }
 
-/// Raw PS/2 set-1 scancode byte (0..=255), or `u64::MAX` when no key is
-/// pending. Non-blocking by contract: poll, or sleep/yield between polls.
-/// Shares the ring with the kernel console, so a byte read here is consumed.
+/// Read one raw PS/2 set-1 scancode byte via syscall 5 (R-7 kernel
+/// side; R5-2 readkey program side, restored from the unmerged
+/// round-5 branch). Returns the byte (0..=255) or u64::MAX when the
+/// kernel ring buffer is empty; non-blocking, caller polls/yields.
+/// Since R-FP2 the kernel fans scancodes into a dedicated readkey
+/// ring, so reads here never consume the console's copy.
 pub fn sys_read_key() -> u64 {
     syscall(5, 0, 0, 0)
 }
