@@ -340,3 +340,36 @@ Section 9 verification: **312 Science Lab tests pass, 0 fail**
 
 Section 10 verification: **34 relay tests pass, 0 fail**
 (`node --test relay/relay.test.mjs`).
+
+## Section 11 — Nuntius board — store and rendering (CB2-251..275) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-251 | `board/board.test.mjs` | empty title refused |
+| CB2-252 | `board/board.test.mjs` | 2000-char body passes; 2001 refused |
+| CB2-253 | `board/board.test.mjs` | three notes list oldest-first |
+| CB2-254 | `board/board.test.mjs` | note survives a temp store round-trip |
+| CB2-255 | `board/board.test.mjs` | corrupted store raises named error |
+| CB2-256 | `board/board.test.mjs` | wrong-shape JSON refused |
+| CB2-257 | `board/board.test.mjs` | two concurrent notes survive reload |
+| CB2-258 | `board/board.test.mjs` | 50 notes have unique ids |
+| CB2-259 | `board/board.test.mjs` | body HTML escaped by renderer |
+| CB2-260 | `board/board.test.mjs` | script-title markup asserted exactly |
+| CB2-261 | `board/board.mjs` | `renderPost` exported and exact plain markup |
+| CB2-262 | `board/board.test.mjs` | empty-board markup exact |
+| CB2-263 | `board/board.test.mjs` | timestamps present, equal-time sort stable |
+| CB2-264 | `board/board.test.mjs` | delete leaves a tombstone after reload; other notes untouched |
+| CB2-265 | `board/board.test.mjs` | edit preserves id and original timestamp |
+| CB2-266 | `board/board.test.mjs` | unicode note round-trips |
+| CB2-267 | `board/board.test.mjs` | fresh store path creates documented JSONL file |
+| CB2-268 | `board/board.test.mjs` | directory store path refused by name |
+| CB2-269 | `board/board.test.mjs` | note without author refused |
+| CB2-270 | `board/board.test.mjs` | author 40 chars passes; 41 refused |
+| CB2-271 | `board/board.test.mjs` | limit=2 returns oldest two of five |
+| CB2-272 | `board/board.mjs` | `messageToNote` uses nick as author |
+| CB2-273 | `board/board.test.mjs` | duplicate submissions create two notes (no idempotency) |
+| CB2-274 | `board/board.test.mjs` | partial tail raises, never returns partial notes |
+| CB2-275 | `board/board.test.mjs` | documented exports exist with expected types |
+
+Section 11 verification: **38 board tests pass, 0 fail**
+(`node --test board/board.test.mjs`).

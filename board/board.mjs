@@ -34,16 +34,20 @@
 //   request body: at most 16384 bytes of JSON
 //
 // Storage is in-memory unless BOARD_STORE_FILE is set. With a store
-// file, each appended line is written as one JSONL record
-// ({"room": ..., "line": ...}) and the file is replayed on boot, so
-// the board survives a restart. A torn final record is skipped, never
-// fatal.
+// file, each appended line or post is written as one JSONL record and
+// the file is replayed on boot. A corrupted record, wrong shape, or a
+// path that is a directory raises the board's named error instead of
+// returning a partial board as if it were good.
+//
+// GET /rooms/<room>/posts?limit=<1-1000> returns the oldest posts first.
+// renderPost / renderBoard / escapeHtml are exported pure render helpers;
+// messageToNote adapts a relay message line with the nick as author.
 //
 // Run: node board/board.mjs     (port: BOARD_PORT, default 8790)
 // Stdlib only: node:http, node:fs, node:crypto, node:path, node:url.
 
 import { createHash } from "node:crypto";
-import { appendFileSync, existsSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, statSync } from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -55,6 +59,7 @@ export const MAX_NICK_CHARS = 40;
 export const MAX_TEXT_CHARS = 2000;
 export const MAX_TITLE_CHARS = 200;
 export const MAX_TOPIC_CHARS = 64;
+export const MAX_READ_LIMIT = 1000;
 
 const BOARD_DIR = path.dirname(fileURLToPath(import.meta.url));
 const VIEWER_FILE = path.join(BOARD_DIR, "board.html");
@@ -77,6 +82,69 @@ export function notifyId(room, topic, severity, text) {
 
 function nowStamp() {
   return `[ts:${Math.floor(Date.now() / 1000)}]`;
+}
+
+const HTML_ESCAPES = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+export function escapeHtml(value) {
+  return String(value === undefined || value === null ? "" : value).replace(
+    /[&<>"']/g,
+    (character) => HTML_ESCAPES[character]
+  );
+}
+
+export const EMPTY_BOARD_HTML =
+  '<section id="board" class="empty"><p>No notes yet.</p></section>';
+
+export function renderPost(post) {
+  return (
+    `<article class="post" data-id="${escapeHtml(post.id)}">` +
+    `<header><h3>${escapeHtml(post.title)}</h3>` +
+    `<span class="author">${escapeHtml(post.author)}</span></header>` +
+    `<p>${escapeHtml(post.text)}</p></article>`
+  );
+}
+
+export function renderBoard(posts) {
+  const visible = (Array.isArray(posts) ? posts : []).filter(
+    (post) => post && !post.deleted
+  );
+  if (visible.length === 0) return EMPTY_BOARD_HTML;
+  return `<section id="board">${visible.map(renderPost).join("")}</section>`;
+}
+
+export function sortPosts(posts) {
+  return (Array.isArray(posts) ? posts.slice() : []).sort(
+    (a, b) => (Number(a.ts) || 0) - (Number(b.ts) || 0)
+  );
+}
+
+export function messageToNote(line, room = "main") {
+  const match = /^(.*): (.*) \[ts:(\d+)\]$/.exec(String(line));
+  if (!match) {
+    throw new Error("cannot adapt malformed relay message line");
+  }
+  const nick = match[1];
+  const text = match[2];
+  const id = "note-" + createHash("sha256")
+    .update([room, line].join("\n"))
+    .digest("hex")
+    .slice(0, 16);
+  return {
+    id,
+    room,
+    title: `Message from ${nick}`,
+    author: nick,
+    text,
+    ts: Number(match[3]),
+    deleted: false,
+  };
 }
 
 export function createBoardServer(options = {}) {
@@ -106,26 +174,47 @@ export function createBoardServer(options = {}) {
   }
 
   if (storeFile && existsSync(storeFile)) {
+    if (statSync(storeFile).isDirectory()) {
+      throw new Error(`board store path is a directory: ${storeFile}`);
+    }
     const records = readFileSync(storeFile, "utf8").split("\n");
-    for (const record of records) {
-      if (record.trim() === "") continue;
+    records.forEach((record, lineNumber) => {
+      if (record.trim() === "") return;
       let parsed;
       try {
         parsed = JSON.parse(record);
       } catch {
-        console.error("Board: skipped an unparseable store record on boot");
-        continue;
+        throw new Error(
+          `board store corrupted: line ${lineNumber + 1} is not valid JSON`
+        );
       }
-      if (typeof parsed.room === "string" && parsed.post && typeof parsed.post === "object") {
+      const isPost =
+        parsed &&
+        typeof parsed === "object" &&
+        typeof parsed.room === "string" &&
+        parsed.post &&
+        typeof parsed.post === "object" &&
+        typeof parsed.post.id === "string";
+      const isLine =
+        parsed &&
+        typeof parsed === "object" &&
+        typeof parsed.room === "string" &&
+        typeof parsed.line === "string";
+      if (!isPost && !isLine) {
+        throw new Error(
+          `board store corrupted: line ${lineNumber + 1} is not a {room,line} or {room,post} record`
+        );
+      }
+      if (isPost) {
         const list = postsOf(parsed.room);
         const index = list.findIndex((p) => p && p.id === parsed.post.id);
         if (index >= 0) list[index] = parsed.post;
         else list.push(parsed.post);
         touchRoom(parsed.room);
-      } else if (typeof parsed.room === "string" && typeof parsed.line === "string") {
+      } else {
         linesOf(parsed.room).push(parsed.line);
       }
-    }
+    });
   }
 
   function append(room, line) {
@@ -355,8 +444,28 @@ export function createBoardServer(options = {}) {
         }
 
         if (req.method === "GET" && action === "posts") {
-          const list = postsOf(room);
-          replyJson(res, 200, { room, total: list.length, posts: list });
+          const rawLimit = url.searchParams.get("limit");
+          let limit = null;
+          if (rawLimit !== null) {
+            const parsed = Number(rawLimit);
+            if (
+              !Number.isInteger(parsed) ||
+              parsed < 1 ||
+              parsed > MAX_READ_LIMIT
+            ) {
+              replyJson(res, 400, {
+                error: `limit must be an integer from 1 to ${MAX_READ_LIMIT}`,
+              });
+              return;
+            }
+            limit = parsed;
+          }
+          const list = sortPosts(postsOf(room));
+          replyJson(res, 200, {
+            room,
+            total: list.length,
+            posts: limit === null ? list : list.slice(0, limit),
+          });
           return;
         }
       }
