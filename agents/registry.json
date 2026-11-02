@@ -178,7 +178,7 @@
       "command": [
         "true"
       ],
-      "lane": "watch rounds (bus, repo, gateway) — capability demo agent",
+      "lane": "watch rounds (bus, repo, gateway) \u2014 capability demo agent",
       "name": "watch",
       "owner": "boss",
       "watch": [],
@@ -212,7 +212,7 @@
     },
     {
       "name": "aegis",
-      "lane": "Meta Aegis — local passes as a hosted loop; the OSV sweep stays a separate run",
+      "lane": "Meta Aegis \u2014 local passes as a hosted loop; the OSV sweep stays a separate run",
       "command": [
         "repo:node",
         "aegis/hosted.mjs"
@@ -242,7 +242,7 @@
         "repo:node",
         "nervus/hosted.mjs"
       ],
-      "lane": "Meta Nervus — STUB contract run; no model is loaded",
+      "lane": "Meta Nervus \u2014 STUB contract run; no model is loaded",
       "name": "nervus",
       "owner": "boss",
       "hosted": true
@@ -481,7 +481,7 @@
         "handsfree/hosted.mjs",
         "intake"
       ],
-      "lane": "Hands-Free — order intake (text inbox to job files)",
+      "lane": "Hands-Free \u2014 order intake (text inbox to job files)",
       "capabilities": [
         "orders",
         "intake"
@@ -499,7 +499,7 @@
         "handsfree/hosted.mjs",
         "brief"
       ],
-      "lane": "Hands-Free — speakable brief from finished results",
+      "lane": "Hands-Free \u2014 speakable brief from finished results",
       "capabilities": [
         "brief",
         "latency"
@@ -517,7 +517,7 @@
         "handsfree/hosted.mjs",
         "approval"
       ],
-      "lane": "Hands-Free — approval inbox (one request, one answer)",
+      "lane": "Hands-Free \u2014 approval inbox (one request, one answer)",
       "capabilities": [
         "approval",
         "duplicate-detection"
@@ -526,6 +526,24 @@
         "maxWallMs": 60000
       },
       "owner": "system: handsfree",
+      "hosted": true
+    },
+    {
+      "name": "aegis-cycle",
+      "lane": "Meta Aegis \u2014 unattended cycle: OSV sweep, KEV cross-check, append-only ledger",
+      "command": [
+        "repo:node",
+        "aegis/cycle.mjs"
+      ],
+      "capabilities": [
+        "osv-sweep",
+        "kev-cross-check",
+        "ledger-receipts"
+      ],
+      "budget": {
+        "maxWallMs": 180000
+      },
+      "owner": "boss",
       "hosted": true
     }
   ]
