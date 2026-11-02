@@ -171,6 +171,34 @@ def chat_text(model, prompt, max_tokens=1200):
     return text, payload.get("model") or model, latency_ms
 
 
+def chat_image(model, prompt, image_bytes, max_tokens=1600):
+    """One chat call carrying a JPEG frame (Spark or Wonder): the
+    same content shape spark_gen's direct transport uses (a text
+    part plus an image_url part with the JPEG as a data URL).
+    Returns (text, model_reported, latency_ms); raises on any
+    failure — callers never receive a fabricated reply."""
+    if MODELS.get(model, {}).get("surface") not in ("chat",):
+        raise EndpointUnresolvedError(
+            f"{model} is not a chat-surface model in the verified "
+            f"registry: {MODELS.get(model)}")
+    data_url = "data:image/jpeg;base64," + \
+        base64.b64encode(image_bytes).decode()
+    payload, latency_ms = _post(CHAT_ENDPOINT, {
+        "model": model,
+        "messages": [{"role": "user", "content": [
+            {"type": "text", "text": prompt},
+            {"type": "image_url", "image_url": {"url": data_url}},
+        ]}],
+        "max_tokens": max_tokens,
+        }, f"chat-image:{model}")
+    _record_call(f"chat-image:{model}", payload, model, "chat",
+                 latency_ms)
+    text = _chat_content(payload)
+    if text is None:
+        raise RuntimeError(f"{model} response carried no message content")
+    return text, payload.get("model") or model, latency_ms
+
+
 def _responses_text(payload):
     for item in payload.get("output") or []:
         if item.get("type") == "message":
