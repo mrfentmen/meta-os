@@ -459,7 +459,7 @@ Blocked — the named API does not exist:
 Section 14 verification: `cargo test -p guardrail`, `cargo test -p guardrail --doc`,
 and `cargo test -p assess-server` all exit 0.
 
-## Section 15 — Schemas and validators (CB2-351..375) — 10/25 delivered
+## Section 15 — Schemas and validators (CB2-351..375) — 25/25
 
 | Task | File | Result |
 |---|---|---|
@@ -473,17 +473,19 @@ and `cargo test -p assess-server` all exit 0.
 | CB2-363 | `tests/science-lab/test_science_schemas_wellformed.py` | cycle enum == `cycle.ALL_PHASES`, read as data |
 | CB2-364 | `tests/science-lab/test_science_schemas_wellformed.py` | every required hypothesis field is read by `parse_hypothesis` |
 | CB2-375 | `tools/schema_index.py` | Markdown index of schemas and validators, fixture-tested |
+| CB2-351..355 | `server/queue/record_validate.py` | v2 incident record: exact five-key set, observation/assessment/processing fields, region 0..1000, extra keys named |
+| CB2-365..366 | `server/queue/livecam_record_validate.py` | frame (camera id, name, timestamp, sha256) plus reading outcome that must be a category from js/products.js |
+| CB2-367 | `relay/message_validate.mjs` | parsed message: nick 40 / body 2000 caps, control chars, ts non-negative integer |
+| CB2-368 | `board/note_validate.mjs` | note: id, room, title 200, author 40, text 0..2000, ts, tombstone boolean |
+| CB2-369..370 | `os/worlds/science-lab/hortus/record_validate.py` | generation record; duplicate ids, own-parent, unknown parent via `child_parents` |
+| CB2-371..372 | `tests/aegis-secrets-counts.test.mjs` | known counts per pattern; serialised report proven to hold no fixture value |
+| CB2-373..374 | `server/queue/verdict_validate.py` | the builder's real key set, verdict and judge_mode enums |
 
-Not delivered (no dependency-free path found in this pass): CB2-351..355
-(v2 incident validator; `crew_records.validate_incident_record` covers the
-crew shape but not the five-field v2 record), CB2-365..366 (livecam record
-validator), CB2-367 (separate relay message module; `relay.mjs` already has
-`validateMessage`), CB2-368 (board note module), CB2-369..370 (Hortus record
-validator), CB2-371..372 (Aegis counts-only fixtures), CB2-373..374 (verdict
-validator).
+All 25 delivered. Every validator returns named field errors and never
+repairs a record.
 
-Section 15 verification: 6 Science Lab tests, 6 receipt tests, 5 index tests,
-5 node tests, and `tools/validate_science_schemas.py` (0 findings) all pass.
+Section 15 verification: record 21, livecam 18, verdict 14, Hortus 14, Aegis 7,
+relay 43, board 50 tests — every file exits 0.
 
 ## Section 18 — Tooling scripts (CB2-426..450) — 25/25
 
@@ -553,7 +555,7 @@ Not delivered:
 Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 `test_readme_data_index.py` 3 pass.
 
-## Section 16 — Agent layer Node (CB2-376..400) — 12/25 delivered
+## Section 16 — Agent layer Node (CB2-376..400) — 15/25
 
 | Task | File | Result |
 |---|---|---|
@@ -569,17 +571,19 @@ Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 | CB2-398 | `tests/agents-clock-edges.test.mjs` | same inputs give the same times; backward jump flagged, not negative |
 | CB2-399 | `tests/agents-runtime-edges.test.mjs` | torn final ledger line skipped; next record stays whole |
 | CB2-400 | `tests/agents-registry-shape.test.mjs` | every entry has name, owner (badge field), and a string command array |
+| CB2-390 | `tests/agents-lessons-edges.test.mjs` | `teach` refuses empty text and empty agent by name; nothing written |
+| CB2-396 | `tests/agents-safewrite-edges.test.mjs` | `writeIfChanged` reports changed:false on identical bytes; mtime untouched |
+| CB2-397 | `tests/agents-safewrite-edges.test.mjs` | `writeWithinRoot` refuses ../, siblings, and absolute paths |
 
 Not delivered: CB2-378..379 (no job-cost governor; runtime only has a wall-clock
 budget), CB2-382 (no large-change alarm form), CB2-384 (baton has no required
 step-index check), CB2-385 (no resume function), CB2-387..388 (gym runs a fixed
-three-task drill; no drill-file loader or unknown-step refusal), CB2-390 (`teach`
-accepts empty text), CB2-392..393 (bridge is a supervisor verb, not a message
-shaper), CB2-395 (queue.mjs is a package contract; job FIFO lives in room1.mjs,
-not tested here), CB2-396..397 (safe-write has no no-change path and no root
-containment).
+three-task drill; no drill-file loader or unknown-step refusal), CB2-392..393
+(bridge is a supervisor verb, not a message shaper), CB2-395 (queue.mjs is a
+package contract; job FIFO lives in room1.mjs, not tested here).
 
-Section 16 verification: 7 test files, **21 tests pass, 0 fail**.
+Section 16 verification: 8 test files, **34 tests pass, 0 fail** (lessons 6,
+safe-write 10, plus the six original suites).
 
 ## Section 17 — Face tests (CB2-401..425) — 0/25, blocked
 

@@ -33,6 +33,32 @@ export function writeFileLoud(file, data, { fsImpl = fs } = {}) {
   return written;
 }
 
+// CB-396: writing the same bytes twice is not an event. The no-change path returns
+// changed:false and never opens the file, so its mtime stays put and a watcher does not
+// report a change that did not happen. Byte comparison, not a string compare: encoding
+// differences must not read as a change either.
+export function writeIfChanged(file, data, { fsImpl = fs } = {}) {
+  const buf = Buffer.isBuffer(data) ? data : Buffer.from(String(data));
+  let current = null;
+  try { current = fsImpl.readFileSync(file); } catch { /* no readable file yet */ }
+  if (current !== null && current.equals(buf)) return { changed: false, bytes: buf.length };
+  writeFileLoud(file, buf, { fsImpl });
+  return { changed: true, bytes: buf.length };
+}
+
+// CB-397: a write outside the allowed root is refused before the path is opened.
+// The check is path.relative, not a string prefix -- "/root-evil/x" must not pass for
+// "/root", and a resolved "../" escape must not either.
+export function writeWithinRoot(allowedRoot, file, data, { fsImpl = fs } = {}) {
+  const root = path.resolve(allowedRoot);
+  const target = path.resolve(file);
+  const rel = path.relative(root, target);
+  if (rel === "" || rel.startsWith("..") || path.isAbsolute(rel)) {
+    throw new Error("write refused: " + target + " is outside " + root);
+  }
+  return writeFileLoud(target, data, { fsImpl });
+}
+
 // Append is the record path; a short append must not look like a written record.
 export function appendLoud(file, text, { fsImpl = fs } = {}) {
   const buf = Buffer.from(String(text));

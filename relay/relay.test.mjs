@@ -629,3 +629,87 @@ describe("protocol edges", () => {
     assert.equal(mod.formatMessage("pax", "x", 1), "pax: x [ts:1]");
   });
 });
+
+// CB2-367: the parsed-message validator. Static imports must be top-level, and
+// this file's import block is already written, so the module is loaded here.
+const { validateMessageRecord } = await import("../relay/message_validate.mjs");
+
+describe("parsed message validator", () => {
+  test("a well-formed message record passes", () => {
+    assert.deepEqual(
+      validateMessageRecord({ nick: "pax", body: "hello", ts: 1700000000 }),
+      []
+    );
+  });
+
+  test("a missing nick is named", () => {
+    assert.deepEqual(validateMessageRecord({ body: "x", ts: 1 }), [
+      "nick: missing",
+    ]);
+  });
+
+  test("a record that is not an object is refused", () => {
+    assert.deepEqual(validateMessageRecord("pax: hi [ts:1]"), [
+      "message: must be an object",
+    ]);
+  });
+
+  test("body at the cap passes and one over is refused", () => {
+    const atCap = "a".repeat(2000);
+    assert.deepEqual(
+      validateMessageRecord({ nick: "pax", body: atCap, ts: 1 }),
+      []
+    );
+    const over = validateMessageRecord({
+      nick: "pax",
+      body: "a".repeat(2001),
+      ts: 1,
+    });
+    assert.equal(over.length, 1);
+    assert.match(over[0], /^body: must be a single line of 1-2000 chars$/);
+  });
+
+  test("an empty body is refused", () => {
+    assert.deepEqual(validateMessageRecord({ nick: "pax", body: "", ts: 1 }), [
+      "body: must be a single line of 1-2000 chars",
+    ]);
+  });
+
+  test("a newline in the body is refused", () => {
+    const errors = validateMessageRecord({
+      nick: "pax",
+      body: "two\nlines",
+      ts: 1,
+    });
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /^body:/);
+  });
+
+  test("a nil nick and its text never appear in the error list", () => {
+    const secret = "do-not-echo-this";
+    const errors = validateMessageRecord({
+      nick: "pax",
+      body: secret + "\n",
+      ts: 1,
+    });
+    assert.equal(JSON.stringify(errors).includes(secret), false);
+  });
+
+  test("timestamps must be non-negative integers", () => {
+    assert.deepEqual(
+      validateMessageRecord({ nick: "pax", body: "x", ts: -1 }),
+      ["ts: must be a non-negative integer of epoch seconds"]
+    );
+    assert.deepEqual(
+      validateMessageRecord({ nick: "pax", body: "x", ts: 1.5 }),
+      ["ts: must be a non-negative integer of epoch seconds"]
+    );
+  });
+
+  test("an extra field is named", () => {
+    assert.deepEqual(
+      validateMessageRecord({ nick: "pax", body: "x", ts: 1, room: "main" }),
+      ["unexpected field: room"]
+    );
+  });
+});

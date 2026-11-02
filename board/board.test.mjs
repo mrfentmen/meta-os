@@ -631,3 +631,101 @@ describe("board store and rendering edges", () => {
     assert.equal(escapeHtml('<a href="x">&'), "&lt;a href=&quot;x&quot;&gt;&amp;");
   });
 });
+
+// CB2-368: the note validator. Static imports are top-level only and this
+// file's import block is already written, so the module loads here.
+const { validateNoteRecord } = await import("../board/note_validate.mjs");
+
+describe("note validator", () => {
+  // The exact shape messageToNote produces from a relay line.
+  const note = () => ({
+    id: "note-0123456789abcdef",
+    room: "main",
+    title: "Message from pax",
+    author: "pax",
+    text: "hello",
+    ts: 1700000000,
+    deleted: false,
+  });
+
+  test("an adapted relay note passes", () => {
+    assert.deepEqual(validateNoteRecord(note()), []);
+  });
+
+  test("a title-only post passes (empty text is allowed)", () => {
+    assert.deepEqual(validateNoteRecord({ ...note(), text: "" }), []);
+  });
+
+  test("a note without an author is named", () => {
+    const bad = note();
+    delete bad.author;
+    assert.deepEqual(validateNoteRecord(bad), ["author: missing"]);
+  });
+
+  test("an empty title is refused", () => {
+    assert.deepEqual(validateNoteRecord({ ...note(), title: "" }), [
+      "title: must be a single line of 1-200 chars",
+    ]);
+  });
+
+  test("title at the cap passes and one over is refused", () => {
+    assert.deepEqual(
+      validateNoteRecord({ ...note(), title: "t".repeat(200) }),
+      []
+    );
+    assert.deepEqual(
+      validateNoteRecord({ ...note(), title: "t".repeat(201) }),
+      ["title: must be a single line of 1-200 chars"]
+    );
+  });
+
+  test("author at the cap passes and one over is refused", () => {
+    assert.deepEqual(
+      validateNoteRecord({ ...note(), author: "a".repeat(40) }),
+      []
+    );
+    assert.deepEqual(
+      validateNoteRecord({ ...note(), author: "a".repeat(41) }),
+      ["author: must be a single line of 1-40 chars"]
+    );
+  });
+
+  test("text at the cap passes and one over is refused", () => {
+    assert.deepEqual(
+      validateNoteRecord({ ...note(), text: "x".repeat(2000) }),
+      []
+    );
+    assert.deepEqual(
+      validateNoteRecord({ ...note(), text: "x".repeat(2001) }),
+      ["text: must be a single line of 0-2000 chars"]
+    );
+  });
+
+  test("a room with a space is refused", () => {
+    assert.deepEqual(validateNoteRecord({ ...note(), room: "main room" }), [
+      "room: must match [a-z0-9-]{1,32}",
+    ]);
+  });
+
+  test("tombstones remain valid notes", () => {
+    assert.deepEqual(validateNoteRecord({ ...note(), deleted: true }), []);
+  });
+
+  test("a non-boolean tombstone flag is refused", () => {
+    assert.deepEqual(validateNoteRecord({ ...note(), deleted: "yes" }), [
+      "deleted: must be a boolean",
+    ]);
+  });
+
+  test("an extra field is named", () => {
+    assert.deepEqual(validateNoteRecord({ ...note(), pinned: true }), [
+      "unexpected field: pinned",
+    ]);
+  });
+
+  test("the validator never echoes the note text", () => {
+    const secret = "do-not-echo-this";
+    const errors = validateNoteRecord({ ...note(), text: secret + "\n" });
+    assert.equal(JSON.stringify(errors).includes(secret), false);
+  });
+});

@@ -76,7 +76,9 @@ test("A2.1 a run that died mid-flight is marked and resumed from its baton", asy
 test("A2.2 a claim that was never spawned is released and retried", async () => {
   const { dir, jobsDir, w } = setup({ claimed: ["j2"] });
   fs.writeFileSync(path.join(jobsDir, "j2.job.json"), JSON.stringify({ id: "j2", agent: "worker", orders: "retry me" }));
-  assert.deepEqual(w.recovered, [{ id: "j2", action: "unclaimed", reason: "claimed but never spawned" }]);
+  // CB-004: the claim survives the reload and is retried, so the action is
+  // "retry" -- pinned here against the watchman's own ledger.
+  assert.deepEqual(w.recovered, [{ id: "j2", action: "retry", reason: "claimed but never spawned" }]);
   const spawned = await w.pollOnce();
   assert.equal(spawned.length, 1);
   await spawned[0].handle.done;
