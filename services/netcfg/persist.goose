@@ -2,7 +2,7 @@
 //
 // B-L1-104 — Network configuration persistence.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t80_limit_drivers2 (30 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // THE FORMAT IS THE ONE iface_from_config ALREADY READS
 // -----------------------------------------------------
