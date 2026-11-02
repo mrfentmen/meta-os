@@ -11,6 +11,29 @@ by opening the file it names.
 The two PARTIALs and the one NOT STARTED are at the end, together, because they are the only rows
 that need a decision from someone other than me.
 
+## The finish list's own 12 items, A1 to C4
+
+The tables below are keyed to BF4/BF5 because that is how the work was tracked. `BUFFY_FINISH_TONIGHT.md`
+is keyed A/B/C, so here it is in that numbering — same work, the list's headings:
+
+| Id | What the finish list asked | State | Where it is answered |
+|---|---|---|---|
+| **A1** | Checkpoint commit + a written state post, item by item, DONE / PARTIAL / NOT STARTED | **DONE** | checkpoint `40ad49d`; the two BF tables below are the post |
+| **A2** | The BF5-01 deviation closed properly: run it in a Lobster host or state it plainly | **DONE, deviation stated** | `BOOT_REHEARSAL.md` opens with it: the rehearsal ran in the **host runtime**, because there are zero `.lobster` files in this tree. Repeated in `SERVICES_FINAL.md` and `SIGNOFF.md` |
+| **A3** | Whole-corpus `goose check` with `services/root.goose` in place — pass and error count — plus one table of every service with its measured word | **DONE** | `check_services.sh`: **39 ok, 0 failed**, exit 0 (6 roots + 33 test roots). `FINISH_STATUS.md`: 25 services — **24 RUNS, 1 TYPECHECKS, 0 NEITHER**, 1,253 assertions |
+| **B1** | Failure matrix complete: each service's failure modes, each exercised, one table | **DONE** | `FAILURE_MATRIX.md`. The four blank rows (`devices`, `session`, `socket`, `timesync`) were closed by `t77_gaps` (73 checks), which found three defects |
+| **B2** | Supervisor under load: 10 services, mixed crashes, policies firing, quotas — one transcript with counts | **DONE** | `tests/t75_supervisor_load` (32 checks) + `TRANSCRIPTS.md` §BF5-04 |
+| **B3** | Shell driving the real demo commands natively, aligned line by line with the kernel's newest K7 session log | **DONE** | `K7_ALIGN.md` against `os-build/logs/K7-boot.txt`. Checked against main's tip: that is still the newest *full* session — `MERGED-boot-2.txt` (same merge, `a89d505`) ends at `status`, so it cannot be the alignment target |
+| **B4** | Syscall/ABI map regenerated after `read_key` (5); state the final counts | **DONE** | `SERVICES_SYSCALL_MAP.md` + `services.json`: **17 library / 8 need a proposal / 0 host-only**. No class moved — `read_key` was already inside the F1 freeze |
+| **B5** | Integration packs for the first 3 services in load order | **DONE** | `integration/{bootlog,storage,time}.md` + `integration/README.md`: entry point, ABI needs against the frozen table, host shim today, smallest kernel-side change to load each |
+| **C1** | `SERVICES_FINAL.md` for the submission record | **DONE** | `SERVICES_FINAL.md` — six defects named, every claim with its command |
+| **C2** | The freeze audit in one page: counts by status word | **DONE** | `FREEZE_AUDIT.md`, re-measured tonight |
+| **C3** | `DEMO_FACTS`, final: every number the demo says, each with its source | **DONE** | `DEMO_FACTS.md` is generated; `gen_demo_facts.py --check` reports "DEMO_FACTS.md is current" |
+| **C4** | One page: what the layer needs from the kernel after the hackathon, in dependency order | **DONE** | `KERNEL_NEEDS_AFTER.md` |
+
+That is 12 of 12 answered, and the freeze line is not crossed: the list's H+9 freeze is 2026-11-02
+05:12 EST and this pass closed before it.
+
 ## BF4 — Round 4
 
 | Id | What was asked | State | Evidence |
