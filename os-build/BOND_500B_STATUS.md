@@ -484,3 +484,25 @@ validator).
 
 Section 15 verification: 6 Science Lab tests, 6 receipt tests, 5 index tests,
 5 node tests, and `tools/validate_science_schemas.py` (0 findings) all pass.
+
+## Section 18 — Tooling scripts (CB2-426..450) — 25/25
+
+All tools read logs as data; none writes to a log or to `kernel/src`.
+
+| Task | File | Result |
+|---|---|---|
+| CB2-426..430 | `tools/bootlog_parse.py` | banner, alive, panic count, readkey events, status ticks, programs, fault isolation |
+| CB2-431..432 | `tools/bootlog_verdict.py` | four named checks; removing one line flips only that check |
+| CB2-433..435 | `tools/proof_index.py` | Markdown index; non-log files skipped and counted; sorted by filename |
+| CB2-436..438 | `tools/receipt_check.py` | reuses the receipt rules; negative latency and Spark-estimate rules by line |
+| CB2-439..440 | `tools/kernel_census.py` | per-file line table; extension filter configurable |
+| CB2-441..442 | `tools/fetch_screen_parse.py` | tasks/frames/heap; missing memory lines named, never zeroed |
+| CB2-443..444 | `tools/ps_rows_parse.py` | pid/name/state rows; unknown state kept and flagged |
+| CB2-445..446 | `tools/gate_log_check.py` | PASS/FAIL by name; 6 of 7 names the failing check |
+| CB2-447 | `tools/soak_summary.py` | duration, tick range, panic count only |
+| CB2-448 | `tools/log_diff_claims.py` | lists only checks whose pass state changed |
+| CB2-449 | `tools/screendump_note.py` | Markdown proof note, names and values only |
+| CB2-450 | `tests/queue-python/test_bootlog_pipeline.py` | parse -> verdict -> index over three fixture logs |
+
+Section 18 verification: 12 test files, **50 tests pass, 0 fail** (one command
+per file; every exit status checked).
