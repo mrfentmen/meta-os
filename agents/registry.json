@@ -73,7 +73,7 @@
    "command": [
     "true"
    ],
-   "lane": "verification (8GB Mac) Renamed Bond by the boss 2026-11-02 (formerly Buffy 2). Light lanes: BUFFY2_LIGHT_LANES.md.",
+   "lane": "verification (8GB Mac) Renamed Bond by the boss 2026-11-02 (formerly Buffy 2). Light lanes: BOND_LIGHT_LANES.md.",
    "name": "bond",
    "owner": "boss"
   },
