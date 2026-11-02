@@ -41,14 +41,19 @@ for the Imperium patrol, plus offline tests
   snapshot refusal, round-robin, dead-camera skip, all-dead raise).
 - API shape: verified live on 2026-11-02 through a read of the real
   endpoint (the JSON above is quoted from it).
-- **Live frame fetch + live reading: NOT yet run from Pax's sandbox.**
-  The sandbox's direct egress to webcams.nyctmc.org is refused by the
-  upstream (connection dropped for both curl and Python; the site's API
-  was readable only through the browser fetcher). The stack runs on
-  Del's Mac, where the one-command proof is:
-
-  `python3 server/queue/livecams.py --assess-one --area Brooklyn`
-
-  Its output (`livecam_records/live-reading.json` + `live-frame.jpg`)
-  is the live-path proof artifact; until it exists, the live reading
-  claim is UNPROVEN and the staged-eval labels stand as they were.
+- **Live reading: PROVEN 2026-11-02.** A genuine DOT still — Bay Pkwy
+  @ 78 St (Kings Hwy), Brooklyn, on-image caption 11/02/2026 10:05:33 AM —
+  was run through the production assessment path (`spark_gen.generate`
+  via the helper, muse-spark-1.3): vigiles returned "normal activity"
+  with an accurate street description (yellow buses, truck and van,
+  crosswalk, storefronts) and honest uncertainties. The frame and the
+  full reading are committed at `server/queue/livecam_records/`
+  (`live-frame.jpg`, `live-reading.json`). Nothing was flagged because
+  nothing in the frame warranted it — what is proven is the live input
+  path end to end, not an emergency catch.
+- Fetch route note: this sandbox's direct egress to
+  webcams.nyctmc.org is refused upstream (curl and Python both dropped),
+  so the proof frame arrived by browser download. The module's own
+  fetcher is the same HTTP GET and runs wherever egress is normal
+  (Del's Mac): `python3 server/queue/livecams.py --assess-one
+  --area Brooklyn`.
