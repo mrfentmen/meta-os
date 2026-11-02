@@ -19,9 +19,16 @@ label and says the vision readings were staged; the login is a
 demo gate (any password enters) until the real image gate lands
 (face task 19).
 
-Built so far: login, desktop, top bar + clock, dock, window
-manager (drag/focus/close/minimise), Terminal, Dashboard,
+Built so far: login, desktop, top bar + clock, dock (11 apps),
+window manager (drag/focus/close/minimise), Terminal, Dashboard,
 Board (browser-local), Imperium record window, Settings (mode,
-bar colour, wallpaper speed + pause — all persisted), About.
-Next slices (PAX list A4/A5/A13): wallpaper picker variants,
-background-colour setting, Notes/Calendar/Calculator minis.
+bar colour, wallpaper speed + pause, wallpaper variants,
+background colour — all persisted), About, and working mini
+apps: Calculator (buttons + keyboard), Notes (persisted),
+Calendar (events persisted), Files + Trash (a small persisted
+file store: create/open/delete/restore/empty).
+Verified by an automated browser pass (9/9 checks: arithmetic,
+persistence, the full file lifecycle, settings) — rerun via
+Playwright against face/index.html.
+Next slices: Musica window, Science Lab window, boot splash
+sequence (A7).
