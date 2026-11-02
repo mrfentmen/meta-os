@@ -376,3 +376,285 @@ fn test_intel_brief_prompt_unknown_kind_version_and_missing_dir() {
         ""
     );
 }
+
+// ---- B10 T190 partial: generate_brief orchestration (BRF-024/028/009) ----
+// Template path only: the morning composer is compose_template_brief
+// trimmed to budget; the Spark composer arrives with B11. The read
+// fake and the write fake are separate structs because generate
+// takes the store and the writer as separate borrows.
+
+struct FakeReadStore {
+    list: Vec<brief::BriefIndexEntry>,
+    records: Vec<(brief::BriefTs, brief::StoredBriefRecord)>,
+}
+
+impl brief::BriefStore for FakeReadStore {
+    fn list_briefs(&self, _room: &str) -> Result<Vec<brief::BriefIndexEntry>, String> {
+        Ok(self.list.clone())
+    }
+    fn get_brief(
+        &self,
+        _room: &str,
+        ts: brief::BriefTs,
+    ) -> Result<Option<brief::StoredBriefRecord>, String> {
+        let want = match ts {
+            brief::BriefTs::Int(v) => v as f64,
+            brief::BriefTs::Float(v) => v,
+        };
+        Ok(self
+            .records
+            .iter()
+            .find(|(t, _)| {
+                let got = match t {
+                    brief::BriefTs::Int(v) => *v as f64,
+                    brief::BriefTs::Float(v) => *v,
+                };
+                got == want
+            })
+            .map(|(_, r)| r.clone()))
+    }
+}
+
+struct FakeWriter {
+    puts: Vec<brief::GeneratedBriefRecord>,
+    indexes: Vec<Vec<brief::BriefIndexEntry>>,
+}
+
+impl brief::BriefWriter for FakeWriter {
+    fn put_brief(
+        &mut self,
+        _room: &str,
+        _ts: i64,
+        record: &brief::GeneratedBriefRecord,
+    ) -> Result<String, String> {
+        self.puts.push(record.clone());
+        Ok(format!("BRIEF:main:{}", record.generated_at))
+    }
+    fn set_brief_index(
+        &mut self,
+        _room: &str,
+        index: &[brief::BriefIndexEntry],
+    ) -> Result<(), String> {
+        self.indexes.push(index.to_vec());
+        Ok(())
+    }
+}
+
+fn gen_snapshot() -> brief::TemplateSnapshot {
+    brief::TemplateSnapshot {
+        base: sections::Snapshot {
+            messages: vec![
+                sections::SnapMessage { nick: "pax".into(), text: "DONE: ship it".into(), ts: None },
+                sections::SnapMessage { nick: "milo".into(), text: "hello".into(), ts: None },
+            ],
+            jobs: vec![
+                sections::SnapJob { id: "1".into(), title: "open job".into(), status: "open".into(), claim: String::new(), note: String::new(), last_progress_at: None, claimed_at: None },
+                sections::SnapJob { id: "2".into(), title: "claimed job".into(), status: "claimed".into(), claim: "pax".into(), note: String::new(), last_progress_at: None, claimed_at: None },
+                sections::SnapJob { id: "3".into(), title: "blocked job".into(), status: "blocked".into(), claim: String::new(), note: "waiting on gate".into(), last_progress_at: None, claimed_at: None },
+            ],
+            alerts: vec![],
+            source_window: None,
+        },
+        ..Default::default()
+    }
+}
+
+fn gen_window(kept: i64) -> intel::b10_brief::window::SourceWindow {
+    intel::b10_brief::window::SourceWindow::Dict {
+        max_messages: Some(500),
+        max_hours: Some(intel::b10_brief::window::WindowHours::Int(24)),
+        messages_kept: Some(kept),
+        messages_dropped: Some(0),
+    }
+}
+
+#[test]
+fn test_intel_brief_generate_morning_fresh_builds_record_and_stores() {
+    let store = FakeReadStore { list: vec![], records: vec![] };
+    let mut writer = FakeWriter { puts: vec![], indexes: vec![] };
+    let out = brief::generate_morning_brief(&gen_snapshot(), "main", Some(1200), false, &store, &mut writer).unwrap();
+    match out {
+        brief::GenerateBriefOutcome::Fresh { text, record, stored } => {
+            assert!(stored);
+            assert!(text.starts_with("TEMPLATE"));
+            assert_eq!(record.room, "main");
+            assert_eq!(record.generated_at, 1200);
+            assert_eq!(record.kind, "morning");
+            assert_eq!(record.model, "template");
+            assert_eq!(record.spend_id, None);
+            assert_eq!(record.sections.decisions, vec!["done: ship it".to_string()]);
+            assert_eq!(record.sections.in_flight, vec!["1 open job".to_string(), "2 claimed job".to_string()]);
+            assert_eq!(record.sections.owners, vec!["pax: claimed job".to_string()]);
+            assert_eq!(record.sections.blocked, vec!["3 blocked job: waiting on gate".to_string()]);
+            assert!(record.sections.watch_items.is_empty());
+            assert_eq!(record.source_window, Some(gen_window(2)));
+            assert!(!record.boot);
+        }
+        _ => panic!("expected a fresh build, got a guard hit"),
+    }
+    assert_eq!(writer.puts.len(), 1);
+    assert_eq!(writer.puts[0].generated_at, 1200);
+    assert_eq!(writer.indexes.len(), 1);
+    assert_eq!(writer.indexes[0].len(), 1);
+    assert_eq!(writer.indexes[0][0].ts, Some(brief::BriefTs::Int(1200)));
+    assert_eq!(writer.indexes[0][0].kind.as_deref(), Some("morning"));
+}
+
+#[test]
+fn test_intel_brief_generate_morning_guard_hit_returns_stored_no_store() {
+    let store = FakeReadStore {
+        list: vec![brief::BriefIndexEntry {
+            ts: Some(brief::BriefTs::Int(1000)),
+            generated_at: None,
+            kind: Some("morning".into()),
+        }],
+        records: vec![(
+            brief::BriefTs::Int(1000),
+            brief::StoredBriefRecord {
+                kind: "morning".into(),
+                stored: brief::StoredBriefText {
+                    text: Some("stored brief text".into()),
+                    source_window: Some(gen_window(2)),
+                    sections: std::collections::HashMap::new(),
+                },
+            },
+        )],
+    };
+    let mut writer = FakeWriter { puts: vec![], indexes: vec![] };
+    let out = brief::generate_morning_brief(&gen_snapshot(), "main", Some(1200), false, &store, &mut writer).unwrap();
+    match out {
+        brief::GenerateBriefOutcome::GuardHit { text, record } => {
+            assert_eq!(text, "stored brief text");
+            assert_eq!(record.kind, "morning");
+        }
+        _ => panic!("expected a guard hit, got a fresh build"),
+    }
+    assert!(writer.puts.is_empty());
+    assert!(writer.indexes.is_empty());
+}
+
+#[test]
+fn test_intel_brief_generate_morning_dry_run_builds_without_storing() {
+    let store = FakeReadStore { list: vec![], records: vec![] };
+    let mut writer = FakeWriter { puts: vec![], indexes: vec![] };
+    let out = brief::generate_morning_brief(&gen_snapshot(), "main", Some(1200), true, &store, &mut writer).unwrap();
+    match out {
+        brief::GenerateBriefOutcome::Fresh { stored, record, .. } => {
+            assert!(!stored);
+            assert_eq!(record.generated_at, 1200);
+        }
+        _ => panic!("expected a fresh build, got a guard hit"),
+    }
+    assert!(writer.puts.is_empty());
+    assert!(writer.indexes.is_empty());
+}
+
+#[test]
+fn test_intel_brief_generate_boot_skips_guard() {
+    let store = FakeReadStore {
+        list: vec![brief::BriefIndexEntry {
+            ts: Some(brief::BriefTs::Int(1000)),
+            generated_at: None,
+            kind: Some("morning".into()),
+        }],
+        records: vec![(
+            brief::BriefTs::Int(1000),
+            brief::StoredBriefRecord {
+                kind: "morning".into(),
+                stored: brief::StoredBriefText {
+                    text: Some("stored brief text".into()),
+                    source_window: Some(gen_window(2)),
+                    sections: std::collections::HashMap::new(),
+                },
+            },
+        )],
+    };
+    let mut writer = FakeWriter { puts: vec![], indexes: vec![] };
+    let compose = |snap: &brief::TemplateSnapshot, boot: bool, kind: &str| -> String {
+        brief::trim_to_budget(&brief::compose_template_brief(snap, boot, kind), 220)
+    };
+    let out = brief::generate_brief(
+        &gen_snapshot(), "main", "morning", None, Some(1200), false, true, &store, &mut writer, &compose,
+    )
+    .unwrap();
+    match out {
+        brief::GenerateBriefOutcome::Fresh { record, stored, .. } => {
+            assert!(stored);
+            assert!(record.boot);
+        }
+        _ => panic!("a boot brief must skip the guard, got a guard hit"),
+    }
+    assert_eq!(writer.puts.len(), 1);
+}
+
+#[test]
+fn test_intel_brief_generate_invalid_kind_errors_and_stores_nothing() {
+    let store = FakeReadStore { list: vec![], records: vec![] };
+    let mut writer = FakeWriter { puts: vec![], indexes: vec![] };
+    let compose = |snap: &brief::TemplateSnapshot, boot: bool, kind: &str| -> String {
+        brief::trim_to_budget(&brief::compose_template_brief(snap, boot, kind), 220)
+    };
+    let err = brief::generate_brief(
+        &gen_snapshot(), "main", "nope", None, Some(1200), false, false, &store, &mut writer, &compose,
+    )
+    .unwrap_err();
+    assert!(err.contains("invalid brief record"), "{err}");
+    assert!(writer.puts.is_empty());
+    assert!(writer.indexes.is_empty());
+}
+
+fn gen_record(ts: i64) -> brief::GeneratedBriefRecord {
+    brief::GeneratedBriefRecord {
+        room: "main".into(),
+        generated_at: ts,
+        kind: "morning".into(),
+        sections: Default::default(),
+        source_window: Some(gen_window(2)),
+        model: "template".into(),
+        spend_id: None,
+        text: "TEMPLATE x".into(),
+        screenshot_refs: vec![],
+        boot: false,
+    }
+}
+
+#[test]
+fn test_intel_brief_store_brief_appends_and_sorts_index() {
+    let store = FakeReadStore {
+        list: vec![brief::BriefIndexEntry {
+            ts: Some(brief::BriefTs::Int(9)),
+            generated_at: None,
+            kind: Some("morning".into()),
+        }],
+        records: vec![],
+    };
+    let mut writer = FakeWriter { puts: vec![], indexes: vec![] };
+    let key = brief::store_brief(&store, &mut writer, "main", &gen_record(5)).unwrap();
+    assert!(!key.is_empty());
+    assert_eq!(writer.puts.len(), 1);
+    assert_eq!(writer.indexes.len(), 1);
+    let ts: Vec<i64> = writer.indexes[0]
+        .iter()
+        .map(|e| match e.ts {
+            Some(brief::BriefTs::Int(v)) => v,
+            _ => panic!("index entry must carry an int ts"),
+        })
+        .collect();
+    assert_eq!(ts, vec![5, 9]);
+}
+
+#[test]
+fn test_intel_brief_store_brief_same_ts_does_not_duplicate_index() {
+    let store = FakeReadStore {
+        list: vec![brief::BriefIndexEntry {
+            ts: Some(brief::BriefTs::Int(9)),
+            generated_at: None,
+            kind: Some("morning".into()),
+        }],
+        records: vec![],
+    };
+    let mut writer = FakeWriter { puts: vec![], indexes: vec![] };
+    brief::store_brief(&store, &mut writer, "main", &gen_record(9)).unwrap();
+    assert_eq!(writer.puts.len(), 1);
+    assert!(writer.indexes.is_empty());
+}

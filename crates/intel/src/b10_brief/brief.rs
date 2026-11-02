@@ -4270,13 +4270,17 @@ impl BriefTs {
 }
 
 /// One brief-index entry as `list_briefs` returns it, oldest
-/// first: `ts` with the `generated_at` fallback. `None` on a
+/// first: `ts` with the `generated_at` fallback, plus the kind
+/// Python's `store_brief` writes into the index entry. `None` on a
 /// field means the key is missing (or, for a store adapter, that
-/// the value was not an int/float).
+/// the value was not an int/float); `kind: None` is an entry
+/// written before the kind field existed, which the guard never
+/// matches on kind alone (it compares the record's kind).
 #[derive(Debug, Clone, PartialEq)]
 pub struct BriefIndexEntry {
     pub ts: Option<BriefTs>,
     pub generated_at: Option<BriefTs>,
+    pub kind: Option<String>,
 }
 
 /// A stored brief record as `find_recent_brief` returns it: the
@@ -6063,7 +6067,7 @@ mod tests {
     }
 
     fn entry(ts: i64) -> BriefIndexEntry {
-        BriefIndexEntry { ts: Some(BriefTs::Int(ts)), generated_at: None }
+        BriefIndexEntry { ts: Some(BriefTs::Int(ts)), generated_at: None, kind: None }
     }
 
     #[test]
@@ -6221,6 +6225,7 @@ mod tests {
             list: Ok(vec![BriefIndexEntry {
                 ts: None,
                 generated_at: Some(BriefTs::Int(1793000000)),
+                kind: None,
             }]),
             records: vec![(BriefTs::Int(1793000000), guard_record("ondemand", dict_window()))],
             fail_get: vec![],
@@ -6229,7 +6234,7 @@ mod tests {
             .is_some());
         // Neither key: the entry is skipped, not fatal.
         let store = FakeBriefStore {
-            list: Ok(vec![BriefIndexEntry { ts: None, generated_at: None }]),
+            list: Ok(vec![BriefIndexEntry { ts: None, generated_at: None, kind: None }]),
             records: vec![],
             fail_get: vec![],
         };
@@ -8171,4 +8176,309 @@ mod template_brief_tests {
         );
         assert_eq!(watchdog_status_line(&[]), None);
     }
+}
+
+/// BRF-024 / BRF-028 / BRF-009: `generate_brief`,
+/// `generate_morning_brief`, `morning_brief_today`, and
+/// `store_brief` — the brief-generation orchestration, template
+/// path only. The Spark half of `generate_brief` (a client, a
+/// system prompt, a `spark` model label on a Spark-composed
+/// text) stays owed to B11's client trait: the caller supplies
+/// the text composer, and this function applies the Python
+/// ordering around it — cap once, guard, compose, build the
+/// record from the capped snapshot, validate, store unless dry.
+///
+/// `max_hours` is the window in hours after `--since` parsing:
+/// `None` is the BRF-023 default 24h, `Some(h)` is the parsed
+/// `--since` value. It is hours, not the timestamp form this
+/// crate's earlier `parse_since` returns — the two mappings
+/// coexist until the `--since` surface is unified, and this
+/// function's callers pass hours. `now` is a Unix time; `None`
+/// reads the wall clock, as Python's `time.time()` default does.
+/// A boot brief (`boot: true`, OS-049) skips the BRF-028 guard:
+/// a reboot inside 5 minutes still generates fresh, and its
+/// record carries `boot: true`; any other record carries
+/// `boot: false`, the Rust form of Python's absent key.
+///
+/// The guard hit returns the stored record exactly as the
+/// store gave it (`StoredBriefRecord`: kind plus render
+/// fields), with its verbatim text — never a recomposition,
+/// never a new `generated_at`. A fresh build returns the full
+/// record Python stores: room, generated_at, kind, the five
+/// sections from `derive_sections` on the capped snapshot,
+/// the capped source window, `model` (`template` when the text
+/// starts with `TEMPLATE`, else `spark`, exactly as Python
+/// labels it), `spend_id` always `None` on this path (a
+/// template brief spends nothing; a Spark spend id arrives
+/// with the B11 client), the text itself, the screenshot refs
+/// from the capped messages, and the boot flag. A dry run
+/// builds and validates but stores nothing, so a fake clock
+/// can prove the brief without touching the store.
+/// Validation errors return `Err("invalid brief record: ...")`,
+/// mirroring Python's `ValueError` raise, and nothing is
+/// stored on that path — `store_brief` validates again, as
+/// Python's does, before it writes.
+#[derive(Debug, Clone, PartialEq)]
+pub struct GeneratedBriefRecord {
+    pub room: String,
+    pub generated_at: i64,
+    pub kind: String,
+    pub sections: super::sections::Sections,
+    pub source_window: Option<SourceWindow>,
+    pub model: String,
+    pub spend_id: Option<String>,
+    pub text: String,
+    pub screenshot_refs: Vec<ScreenshotRef>,
+    pub boot: bool,
+}
+
+/// The outcome of `generate_brief`: either the BRF-028 guard
+/// hit (stored text, stored record, no new spend, no store
+/// write) or a fresh build (text, full record, whether it
+/// was stored — false on a dry run).
+#[derive(Debug, Clone, PartialEq)]
+pub enum GenerateBriefOutcome {
+    GuardHit {
+        text: String,
+        record: StoredBriefRecord,
+    },
+    Fresh {
+        text: String,
+        record: GeneratedBriefRecord,
+        stored: bool,
+    },
+}
+
+/// The write half of the brief store, beside the `BriefStore`
+/// read trait: `put_brief` stores one record under its room
+/// and timestamp and returns its key (Python's
+/// `_store.put_brief`); `set_brief_index` writes the room's
+/// whole index list (Python's relay `set` of the index key).
+/// A real Redis adapter implements both; tests use a fake.
+pub trait BriefWriter {
+    fn put_brief(
+        &mut self,
+        room: &str,
+        ts: i64,
+        record: &GeneratedBriefRecord,
+    ) -> Result<String, String>;
+    fn set_brief_index(
+        &mut self,
+        room: &str,
+        index: &[BriefIndexEntry],
+    ) -> Result<(), String>;
+}
+
+fn validate_generated_record(record: &GeneratedBriefRecord) -> Vec<String> {
+    let mut errors = Vec::new();
+    if record.room.is_empty() {
+        errors.push("room must be a non-empty string".to_string());
+    }
+    if !BRIEF_KINDS.contains(&record.kind.as_str()) {
+        errors.push(format!("kind must be one of {:?}", BRIEF_KINDS));
+    }
+    if record.source_window.is_none() {
+        errors.push("source_window must be a string or dict".to_string());
+    }
+    if record.model.is_empty() {
+        errors.push("model must be a non-empty string".to_string());
+    }
+    if let Some(spend) = &record.spend_id {
+        if spend.is_empty() {
+            errors.push("spend_id must be a string or null".to_string());
+        }
+    }
+    if record.text.trim().is_empty() {
+        errors.push("text must be a non-empty string".to_string());
+    }
+    errors
+}
+
+/// BRF-009: validate, store, and index one generated brief.
+///
+/// Returns the brief's store key. The index entry is appended
+/// only when no entry already carries this timestamp, then
+/// the index is sorted oldest first — a re-store of the same
+/// timestamp never duplicates its entry. A store failure on
+/// the put, the list read, or the index write propagates;
+/// Python's `store_brief` raises the same way instead of
+/// storing silently.
+pub fn store_brief(
+    store: &dyn BriefStore,
+    writer: &mut dyn BriefWriter,
+    room: &str,
+    record: &GeneratedBriefRecord,
+) -> Result<String, String> {
+    let errors = validate_generated_record(record);
+    if !errors.is_empty() {
+        return Err(format!("invalid brief record: {:?}", errors));
+    }
+    let key = writer.put_brief(room, record.generated_at, record)?;
+    let mut index = store.list_briefs(room)?;
+    let ts = record.generated_at as f64;
+    if !index.iter().any(|e| {
+        e.ts
+            .or(e.generated_at)
+            .map(|t| t.as_f64() == ts)
+            .unwrap_or(false)
+    }) {
+        index.push(BriefIndexEntry {
+            ts: Some(BriefTs::Int(record.generated_at)),
+            generated_at: Some(BriefTs::Int(record.generated_at)),
+            kind: Some(record.kind.clone()),
+        });
+        index.sort_by(|a, b| {
+            let ta = a.ts.or(a.generated_at).map(|t| t.as_f64());
+            let tb = b.ts.or(b.generated_at).map(|t| t.as_f64());
+            ta.partial_cmp(&tb).unwrap_or(std::cmp::Ordering::Equal)
+        });
+        writer.set_brief_index(room, &index)?;
+    }
+    Ok(key)
+}
+
+/// BRF-024: build (and, unless dry_run, store) a brief.
+///
+/// `compose` is the `compose_brief` equivalent for this call:
+/// it takes the capped template snapshot, the boot flag, and
+/// the kind, and returns the finished, budget-trimmed text.
+/// `generate_morning_brief` passes the template composer;
+/// a Spark composer arrives with B11 and must apply the same
+/// budget trim and redaction `compose_brief` applies, because
+/// this function stores the composer's text verbatim.
+#[allow(clippy::too_many_arguments)]
+pub fn generate_brief(
+    snapshot: &TemplateSnapshot,
+    room: &str,
+    kind: &str,
+    max_hours: Option<f64>,
+    now: Option<i64>,
+    dry_run: bool,
+    boot: bool,
+    store: &dyn BriefStore,
+    writer: &mut dyn BriefWriter,
+    compose: &dyn Fn(&TemplateSnapshot, bool, &str) -> String,
+) -> Result<GenerateBriefOutcome, String> {
+    let generated_at = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let hours = max_hours.unwrap_or(24.0);
+    let capped_base =
+        super::sections::cap_snapshot_window(&snapshot.base, Some(500), Some(hours), Some(generated_at));
+    let capped_window = capped_base.source_window.clone();
+    // BRF-028: same room + kind + window inside 5 minutes
+    // returns the stored brief, with no new compose call. A dry
+    // run still returns the stored brief when one exists — it
+    // just does not store a new one — and a guard miss falls
+    // through to a fresh brief below. A boot brief skips the
+    // guard outright (OS-049).
+    if !boot {
+        if let Some(window) = &capped_window {
+            if let Some(recent) = find_recent_brief(store, room, kind, window, Some(generated_at)) {
+                let text = brief_text_from_record(Some(&recent.stored));
+                return Ok(GenerateBriefOutcome::GuardHit { text, record: recent });
+            }
+        }
+    }
+    let mut capped = snapshot.clone();
+    capped.base = capped_base;
+    capped.window.source_window = capped_window.clone();
+    let text = compose(&capped, boot, kind);
+    let sections = super::sections::derive_sections(&capped.base);
+    // STR-002: refs from the same capped messages as the text
+    // and sections, so a --since brief cannot carry a
+    // screenshot from outside its window. The capped base
+    // messages map to the dict form `extract_screenshot_refs`
+    // reads; the template snapshot's own screenshot list is
+    // uncapped, so it is not the source here.
+    let shot_messages: Vec<ScreenshotMessage> = capped
+        .base
+        .messages
+        .iter()
+        .map(|m| ScreenshotMessage::Dict {
+            nick: m.nick.clone(),
+            text: m.text.clone(),
+            ts: m.ts,
+        })
+        .collect();
+    let record = GeneratedBriefRecord {
+        room: room.to_string(),
+        generated_at,
+        kind: kind.to_string(),
+        sections,
+        source_window: capped_window,
+        model: if text.starts_with("TEMPLATE") {
+            "template".to_string()
+        } else {
+            "spark".to_string()
+        },
+        spend_id: None,
+        text: text.clone(),
+        screenshot_refs: extract_screenshot_refs(Some(&shot_messages)),
+        boot,
+    };
+    let errors = validate_generated_record(&record);
+    if !errors.is_empty() {
+        return Err(format!("invalid brief record: {:?}", errors));
+    }
+    let stored = if dry_run {
+        false
+    } else {
+        store_brief(store, writer, room, &record)?;
+        true
+    };
+    Ok(GenerateBriefOutcome::Fresh { text, record, stored })
+}
+
+/// BRF-011: build (and, unless dry_run, store) a morning brief.
+///
+/// Delegates to `generate_brief` with kind `morning` and the
+/// default window, so morning sections are window-consistent
+/// with the morning text. The composer is the template brief,
+/// trimmed to the morning budget — no Spark call on this path,
+/// so the model label is always `template` here.
+pub fn generate_morning_brief(
+    snapshot: &TemplateSnapshot,
+    room: &str,
+    now: Option<i64>,
+    dry_run: bool,
+    store: &dyn BriefStore,
+    writer: &mut dyn BriefWriter,
+) -> Result<GenerateBriefOutcome, String> {
+    let compose = |snap: &TemplateSnapshot, boot: bool, kind: &str| -> String {
+        let budget = brief_budget(kind).unwrap_or(220);
+        trim_to_budget(&compose_template_brief(snap, boot, kind), budget)
+    };
+    generate_brief(
+        snapshot,
+        room,
+        "morning",
+        None,
+        now,
+        dry_run,
+        false,
+        store,
+        writer,
+        &compose,
+    )
+}
+
+/// BRF-011 fix: run TODAY, not tomorrow morning.
+///
+/// Generates and stores a morning brief right now, at the
+/// current time, with no wait for the next 08:00 ET. The 08:00
+/// ET daily cadence is not the today plan — today's build
+/// runs today.
+pub fn morning_brief_today(
+    snapshot: &TemplateSnapshot,
+    room: &str,
+    dry_run: bool,
+    store: &dyn BriefStore,
+    writer: &mut dyn BriefWriter,
+) -> Result<GenerateBriefOutcome, String> {
+    generate_morning_brief(snapshot, room, None, dry_run, store, writer)
 }
