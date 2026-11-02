@@ -49,13 +49,16 @@ or BLOCKED with the artifact named.
 | 35 | Icons same style, no Apple art | DONE (code) | drawn letters, systems share style |
 | 36 | Hover/running/dock-toggle | PROVEN (local) | running dot + toggle minimise/restore verified |
 | 37 | Every entry real target | DONE (staged) | local pages exist; systems via :18934 site stage; guest proof TODO |
-| 38 | Terminal app real shell | PROVEN (local) | shell-terminal.png ([connected]+bash prompt via ws:18933) |
-| 39 | First tab status page live facts | PROVEN (local) | term-status bar (cpu/mem/disk/net, same /facts as Dashboard) |
-| 40 | clear/scrollback/copy/paste | DONE (code) | clear btn, 2000-line cap, select-to-copy, paste event |
-| 41-43 | Dashboard live numbers | TODO (guest) | Mac facts.py is Linux-only (cpu/mem/net ?) by design; guest proof next |
+| 38 | Terminal app real shell | PROVEN (guest) | guest-terminal-bash.jpg (relay@metaos bash, echo hello-face roundtrip via ws:18933) |
+| 39 | First tab status page live facts | PROVEN (guest) | term-status bar cpu 3.21/mem 598M/disk 3G/net 10.0.2.15/24 in guest-terminal-bash.jpg |
+| 40 | clear/scrollback/copy/paste | DONE (code, guest kbd ok) | clear btn, 2000-line cap, select-to-copy, paste event; guest typing proven, mouse unproven (xdotool) |
+| 41 | Dashboard live numbers | PROVEN (guest) | guest-dashboard-live.jpg: load 3.28, 558M/1967M, 3G/14G, 10.0.2.15/24 |
+| 42 | Net card shows DHCP lease | PROVEN (guest) | 10.0.2.15/24 live in dashboard + facts |
+| 43 | 10s series moves under load | PROVEN (guest) | load 2.36 base -> 2.54/2.57 under 2x yes (1-min avg lags, direction correct) |
 | 44-49 | Systems as apps | DONE (staged) | :18934 site server stages surfaces/index/logo-studio + data; dock retargeted; guest proof TODO |
-| 50-51 | Board rooms/post/persist | DONE (local PASS) | board.py :18935 + board.html; curl rooms/post/restart-persist PASS; guest proof TODO |
-| 52 | Files real browser | DONE (local PASS) | files.py :18936 + files.html; selftest PASS; guest proof TODO |
+| 50 | Board rooms/post/receive | PROVEN (guest) | rooms+messages via curl; guest-board-persist.jpg shows post in UI |
+| 51 | Persist across restart | PROVEN (guest svc) | post survives face-board.service restart (file ~/.local/share/metaos/board.json); full image-reboot TODO |
+| 52 | Files real browser | PROVEN (guest) | guest-files-browse.jpg lists real /opt/face; backend curl list/read proven |
 | 53 | Code Editor save real | DONE (local PASS) | editor.html via files.py save; roundtrip PASS; guest proof TODO |
 | 54 | Notes persisted | PROVEN (local) | reload persists via localStorage |
 | 55 | Calendar add+survive | PROVEN (local) | grid+today+add verified, reload persists |
@@ -111,3 +114,9 @@ one cycle; silence = proceed.
   present, so the SHIPPED kernel cmdline drops `console=ttyS0`
   (keeps `console=tty0`). Serial logging is a dev-time variant
   (add it back on the GRUB line); shipped proofs use screendumps.
+
+## Guest notes 2026-11-02
+
+- board.py data dir fix: shipped /opt/face is root-owned, so board.json moved to ~/.local/share/metaos/board.json (XDG). Guest caught it (persist failed -> fixed -> restart-persist PASS).
+- xdotool mouse clicks not delivered to kiosk chromium this session (pointer/focus verified, keyboard fine). Dock/window mouse paths stay PROVEN-local; guest keyboard paths proven. No product change; test-harness issue, recorded.
+- Mac tar staged AppleDouble ._ files to guest; deleted on guest (find -name ._* -delete, 0 remain). Future stage tars use COPYFILE_DISABLE=1.

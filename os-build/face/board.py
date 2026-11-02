@@ -8,7 +8,16 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse, parse_qs
 
 PORT = 18935
-FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "board.json")
+def _data_file():
+    base = os.environ.get("XDG_DATA_HOME") or os.path.join(os.path.expanduser("~"), ".local", "share")
+    d = os.path.join(base, "metaos")
+    try:
+        os.makedirs(d, exist_ok=True)
+        return os.path.join(d, "board.json")
+    except OSError:
+        return os.path.join(os.path.dirname(os.path.abspath(__file__)), "board.json")
+
+FILE = _data_file()
 DEFAULT_ROOMS = ["general", "random", "announce"]
 MAX_TEXT = 500
 MAX_AUTHOR = 32
