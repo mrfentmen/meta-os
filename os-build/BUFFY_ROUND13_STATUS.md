@@ -6,7 +6,7 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | section | state | counts | evidence |
 |---|---|---|---|
 | A — services contract depth | **COMPLETE** | 25 / 25 audited; 39 gaps | `os-build/round13/SECTION_A.md` |
-| B — services failure paths | NOT STARTED | 0 / 25 | — |
+| B — services failure paths | **COMPLETE** | 25 / 25; 23 gaps, 2 observed | `os-build/round13/failures/SECTION_B.md` |
 | C — services restart/state | NOT STARTED | 0 / 25 | — |
 | D — services third ring | NOT STARTED | 0 / 25 | — |
 | E–J — Aegis | NOT STARTED | 0 / 150 | — |
