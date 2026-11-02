@@ -1,0 +1,13 @@
+== patrol -> review -> investigation -> response ==
+outcome: dispatched-simulated
+incident_id: incident-2eceddca76f1e61f
+incidents recorded: 1
+incident status: dispatched-simulated
+timeline steps: flag,decision,review,reported,decision,investigation,evidence,investigation,evidence,investigation,evidence,investigation,evidence,investigation,evidence,decision,brief,bolo,dispatch
+package dispatch_mode: auto
+package human_verify: False
+package simulated: True
+picture.frame: evidence/incident-2eceddca76f1e61f/flag-frame-cam-b-d0966c.jpg
+picture.evidence_crop: evidence/incident-2eceddca76f1e61f/face-crop-cam-b-283674.jpg
+receipt_id: sim-9da0ad66d87add2e
+R6-3 IGNIS LIVE LOOP GREEN: dispatched-simulated with picture
