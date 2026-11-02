@@ -1,0 +1,31 @@
+# OC1B-263 — cut list for the kernel-only rebuild (DEMO_KERNEL_ONLY_PLAN, 8 beats, 180s)
+
+Film: os-build/demo/demo-3min.mp4 (rebuilt this section; 10fps, 1280x720, no audio).
+Every segment's source is a committed file on this branch. In/out seconds
+sum to the plan's beat timings: 22+25+23+22+28+18+26+16 = 180.
+
+| # | segment file | source (committed) | in | out | dur |
+|---|--------------|--------------------|----|-----|-----|
+| 1 | s01-beat1.png | os-build/demo/oc1b-beat1-serial.txt L1-2,19,20,23,26 | 0 | 22 | 22 |
+| 2 | s02-beat2.png | os-build/demo/oc1b-beat1-serial.txt L32-43 | 22 | 47 | 25 |
+| 3 | s03-beat3.png | os-build/demo/oc1b-beat1-serial.txt L34-44 | 47 | 70 | 23 |
+| 4 | s04-beat4.png | os-build/demo/oc1b-beat1-serial.txt L45,48,55-56,75,409-410 | 70 | 92 | 22 |
+| 5 | s05-beat5.png | os-build/logs/OC1B-demo-beat5-serial.txt L2075-2089 | 92 | 120 | 28 |
+| 6a | s06-ribbon.png | os-build/logs/OC1B-demo-beat5-serial.txt L2096-2105 | 120 | 129 | 9 |
+| 6b | s07-fetch.png | os-build/logs/OC1B-demo-beat5-serial.txt L2108-2115 | 129 | 138 | 9 |
+| 7a | s08-live.png | os-build/logs/OC1B-demo-beat6-live.txt (terminal) | 138 | 144 | 6 |
+| 7b | s09-frame.png | os-build/demo/oc1b-beat6-frame.jpg (live still) | 144 | 152 | 8 |
+| 7c | s10-reading.png | os-build/demo/oc1b-beat6-reading.json | 152 | 158 | 6 |
+| 7d | s11-nodispatch.png | os-build/logs/oc1b-chain/live-baseline-chain.json | 158 | 164 | 6 |
+| 8 | s12-close.png | os-build/logs/OC1B-demo-beat5-serial.txt L2078,2088 | 164 | 180 | 16 |
+
+Total: 22+25+23+22+28+9+9+6+8+6+6+16 = 180s.
+
+Build (run from os-build/demo/oc1b-frames/; intermediates in /tmp, never committed):
+  for s in s01:22 s02:25 s03:23 s04:22 s05:28 s06:9 s07:9 s08:6 s09:8 s10:6 s11:6 s12:16; do
+    ffmpeg -y -v error -loop 1 -i ${s%%:*}.png -t ${s##*:} -r 10 -pix_fmt yuv420p /tmp/oc1b-seg/...
+  done
+  ffmpeg concat demuxer -> ../demo-3min.mp4
+SIMULATED label: present on s08 (footer), s10 (footer), s11 (face) = whole beat 7 (138-164).
+No face, no web page, no browser anywhere: all frames are serial-excerpt
+cards or the live DOT still (street, no people per its own reading).
