@@ -1,24 +1,40 @@
-# PREINSTALL — what the Meta OS image ships with (Del's order 2026-11-02 ~00:00)
+# PREINSTALL — what the Meta OS image ships with (Del's order 2026-11-02)
 
-Design target for the starter-kit image face. Concept pictures were made
-2026-11-02 (boot / login / desktop / logo board) and approved as the look:
-**Mac polish + terminal soul + the spinning ASCII Meta logo.**
+Design target for the starter-kit image face: **Mac polish + terminal
+soul + the spinning ASCII ribbon loop, live.**
+
+## The logo and the live background (Del's ruling 2026-11-02 00:00)
+
+- **The Meta OS logo is the spinning ASCII infinity ribbon we already
+  have** — the live loop rendered by `js/logo-background.js` (kernel
+  frames in `kernel/src/logo_frames.rs` come from the same ribbon math).
+  NOT the generated green M icon — that mark is dead, do not use it.
+- The ribbon is **BLUE**. It is not a still picture: it is the **live
+  spinning background** on the boot screen, the login screen, and the
+  desktop wallpaper.
+- **Modes:** dark mode = black bars, white accents. Light mode = white
+  bars, black accents. The top bar can be **white, blue, or black**.
+- **Settings let the user change it:** background color, or pick a
+  different wallpaper. Wallpapers are **live and interactive**, and must
+  look clean and professional.
+- The other eight system marks from the logo board stand (Imperium
+  shield, Vigiles badge, Ignis flame, Medicus cross, Science Lab flask,
+  Musica note, Custos eye, Officina gear-and-wrench). Only the Meta OS
+  M is replaced by the ribbon.
 
 ## The three screens
 
-1. **Boot screen.** Black. The green ASCII Meta logo spinning in the
-   middle (the existing loop from `js/logo-background.js` / kernel
-   `logo_frames`). Under it, a few short white boot lines and a thin
+1. **Boot screen.** Black. The blue ASCII infinity ribbon spinning in
+   the middle. Under it, a few short white boot lines and a thin blue
    progress bar. Nothing else.
-2. **Login screen.** The ASCII logo faint in the dark background. In the
-   middle, one clean glass card: round picture, name **Mrfentmen**, one
-   password box, one arrow button. One small terminal line at the bottom
-   of the screen.
-3. **Home screen (after login).** Dark wallpaper with the faint ASCII
-   logo. Mac-style bar at the top. Mac-style dock at the bottom. A
-   terminal window is one click away and opens already knowing the
-   machine's real state (uptime, memory, what's running). A dashboard
-   window shows CPU / memory / storage / network in plain cards.
+2. **Login screen.** The blue ribbon spinning live in the background.
+   In the middle, one clean glass card: round picture, name
+   **Mrfentmen**, one password box, one sign-in button.
+3. **Home screen (after login).** The ribbon keeps spinning as the
+   wallpaper. Mac-style bar at the top, Mac-style dock at the bottom. A
+   terminal window opens already knowing the machine's real state
+   (uptime, memory, what's running). A dashboard window shows CPU /
+   memory / storage / network in plain cards.
 
 ## On the dock (pre-installed, user-facing)
 
@@ -30,7 +46,7 @@ Design target for the starter-kit image face. Concept pictures were made
 - **Notes**
 - **Calendar**
 - **Calculator**
-- **Settings**
+- **Settings** — includes the background / wallpaper / bar-color choices.
 - **Trash**
 
 ## The systems (pre-installed, each with its logo)
@@ -43,12 +59,6 @@ Design target for the starter-kit image face. Concept pictures were made
 - **Musica** (music note)
 - **Custos** (eye) — night watch for machines/internet.
 - **Officina** (gear + wrench) — the invention workshop.
-- **Meta OS** itself uses the green ribbon **M**.
-
-Logo board concept (2026-11-02): nine rounded-square icons, one accent
-color each — M green, Imperium blue shield, Vigiles navy badge, Ignis
-orange flame, Medicus teal cross, Science Lab purple flask, Musica pink
-note, Custos cyan eye, Officina gold gear-and-wrench.
 
 ## Built in, under the hood
 
@@ -61,6 +71,7 @@ note, Custos cyan eye, Officina gold gear-and-wrench.
 
 This is the face of the starter-kit (Debian carrier) image. The
 bare-metal kernel still wakes up as plain text first; this face is what
-the image shows. Wiring this look into the image is OpenCode finish-list
-group C work on the Mac; the four image checks there (autologin, DHCP,
-dashboard HTTP, updater pull) are what prove the pieces underneath.
+the image shows. The live ribbon renderer already exists on the website;
+wiring it into the image's screens is OpenCode finish-list group C work
+on the Mac, and the four image checks there (autologin, DHCP, dashboard
+HTTP, updater pull) prove the pieces underneath.
