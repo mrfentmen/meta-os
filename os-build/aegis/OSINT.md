@@ -1,6 +1,6 @@
 # Aegis OSINT v1 — public footprint, counts only
 
-Run `osint-2026-11-02T11-12-02-401Z`, 2026-11-02T11:12:02.402Z. Domains named by the boss: `meta-os.pages.dev`, `muse-relay-live.pages.dev`, `clipraiders.com`, `watchpeoplefight.com`.
+Run `osint-2026-11-02T14-40-17-989Z`, 2026-11-02T14:40:17.991Z. Domains named by the boss: `meta-os.pages.dev`, `muse-relay-live.pages.dev`, `clipraiders.com`, `watchpeoplefight.com`.
 
 Sources: **crt.sh** certificate transparency (public log) and **DNS** (public by construction). No host was contacted, no port was probed, and nothing outside these four names was resolved.
 
