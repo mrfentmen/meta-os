@@ -3,7 +3,7 @@
 // B-L1-114 — Session login flow: name and token prompt over the console, checked against
 // the session table.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t77_gaps (73 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT THIS IS, SAID ONCE AND PLAINLY
 // -----------------------------------
@@ -146,12 +146,19 @@ fn login_key(f: LoginFlow&, c: u8) -> i64 {
 //
 // `expected` is the caller's stored token. A zero-length expected token refuses every login:
 // a config that failed to load must not become a login that accepts anything.
-fn login_submit(f: LoginFlow&, expected: const u8[:], owner: i64, now_ms: i64) -> i64, i64 {
+fn login_submit(f: LoginFlow&, expected: const u8[:], owner: i64, who: i64, now_ms: i64) -> i64, i64 {
     if f.state != LG_TOKEN { return SES_NO_SESSION, E_STATE; }
     if expected.len == 0 { return login_fail(f, E_AUTH); }
     if !login_token_eq(f.token[..f.token_len], expected) { return login_fail(f, E_AUTH); }
 
-    let id, code = ses_open(owner, 0, 0, 0, now_ms);
+    // `who` is the id the session belongs to: a user id for a user login, an agent handle
+    // for an agent login. It is a parameter rather than a field on the flow because the
+    // id comes from the caller's user table, and a login flow that carried its own answer
+    // to "who is this" would be a login flow that can lie.
+    var user_id: i64 = 0;
+    var agent: i64 = 0;
+    if owner == OWNER_USER { user_id = who; } else { agent = who; }
+    let id, code = ses_open(owner, user_id, agent, 0, now_ms);
     if code != CODE_OK { f.last_code = code; return SES_NO_SESSION, code; }
     f.state = LG_ACTIVE;
     f.session = id;
