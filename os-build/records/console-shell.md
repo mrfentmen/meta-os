@@ -26,6 +26,7 @@ exact; line ranges approximate. Evidence: typed `status` in `K3-boot.txt`, full 
 | `uptime` | `uptime Ns ticks N` (seconds = ticks / 100) |
 | `mem` | `mem frames_free N frames_total N heap_free NK heap_total NK` |
 | `ps` | one line per spawned slot: `ps id N state <State> ticks_used N prio N` |
+| `clear` | implemented (`sched.rs:535`): blanks the VGA buffer, cursor to 0,0, prints nothing. **Not listed in help**, deliberately, pending a Pax/Hana ruling on the help line |
 | unknown | `unknown command`, then the help listing |
 
 There is **no prompt string**, by ruling: the shell prints none rather than inventing one.
@@ -40,10 +41,18 @@ Drawing is VGA-only, so the serial log stays a clean shell log.
 
 ## Findings
 
-1. **`ps` reports `ticks_used 0` for every task.** The quantum counter exists in the scheduler
-   but nothing accumulates into it, so the column is structurally true and informationally
-   empty (`K7-boot.txt` shows seven zeros). Either accumulate or drop the column.
+1. **`ps` reports current-run quantum usage, not lifetime CPU.** `tasks.rs:686` increments
+   `ticks_used` on every timer tick for the `Running` task, and the counter resets on yield,
+   preemption and exit (`tasks.rs:513/527/617/649`). That is why `K7-boot.txt` shows seven
+   zeros: the snapshot catches each task either `Exited` (reset) or at the start of its
+   quantum. The column is honest but reads as zero at a steady console; a lifetime figure
+   would be new accounting in `tasks.rs`, and `sched.rs:515` says so on purpose. Corrected
+   2026-11-02 after a search of every reader and writer — the earlier note here claimed the
+   counter was never incremented, which was false.
 2. **The shell has no exit/reboot/shutdown command**, and the line buffer is 80 bytes with
    truncation rather than editing.
-3. **`clear` is named in the code's comment but absent from the help listing**; if it exists,
-   help is wrong, and if it does not, the comment is. Recorded rather than guessed.
+3. **`clear` exists and help omits it on purpose.** `sched.rs:535` calls the VGA clear and
+   leaves the serial transcript untouched; the comment there says the ruled help line is
+   exactly `status help uptime mem ps` and that adding `clear` awaits a Pax/Hana ruling. So
+   the omission is a decision, not drift — but it is invisible from the console, which is
+   why it is recorded here.
