@@ -146,3 +146,11 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - Baked file `/tmp/metaos-2026-11-02-oc2b-baked.qcow2`, 1,587,019,776 B (+253.6% vs base), sha 849219f3… (pre-boot). Boot log kept. --version + checkout verified on 2nd boot (persistence YES). Manual pull ran clean, no move in-session.
 - Desktop screendump IMPOSSIBLE (no desktop env in server image) — none claimed. Dashboard in baked image: 000 (no listener; §6 base-200 was lane server context — named). In-image model smoke: endpoint error, no client receipt. Clock/sizes/gaps/filename recorded in `OC2B-oc-verify.md`.
 - Landed: baked, bootable, versioned image with updater. In flight: none. Blocked: model endpoint (server-side), desktop/chromium (needs GUI base image), dashboard server in image.
+
+## Section 5 — Soaks + endurance (OC2B-101–125) — DONE 2026-11-02
+- Soak A (60 min, text tree): checkpoints 10/20/30/45/60, ticks 29k→357k monotonic, heap 255K flat, screendumps 10/30/60m, closing panics 0. Verdict: PASS.
+- Soak B (120 min verdict run, current-main tree = same bits, kernel/ untouched): checkpoints 30/60/90/120 with status+ps (one-shot userspace tasks Exited by design, shell/idle Running), ticks 179k→718k monotonic, screendumps 60/120m, idle mem frames_free 126430/126509 heap 255K (boot-time heap identical — no leak), closing panics 0, warnings 0. Verdict: PASS — text tree soak-stable 2 h.
+- Ribbon endurance (119–120): ABSENT — no ribbon/animate/frame-counter code exists (logo_frames.rs is ASCII text data; `mod framebuffer` = 0; VGA text only). No frames invented; soak screendumps stand as the visual record. Recorded in `OC2B-ribbon-endurance.md`.
+- Crash drill (122): fresh 15-min run, crasher path fired (`task killed` page-fault line in serial), shell answered after (`STATUS tasks=8`). Drill QEMU shut down after.
+- Captures: 5 PNGs, 19–23 KB each (no recompression needed). No file over 1 MB in §5.
+- Landed: both soak verdicts (one line each): A — 60 min clean; B — 2 h clean. In flight: none. Blocked: ribbon (needs Rowan graphics; absence verified, not a gap in method).
