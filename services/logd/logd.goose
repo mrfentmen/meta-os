@@ -205,7 +205,13 @@ fn loss_stats() -> LossStats {
 // ---------------------------------------------------------------------------
 // The service
 // Size the arena once: SLOT * SLOTS zero bytes, then the ring owns them.
-fn storage_init() {
+//
+// Named `logd_init` and NOT `storage_init`: Goose's namespace is flat, and the storage
+// service already defines a `storage_init(block_count)` with different arity. Two
+// definitions of one name in a flat namespace means one of them silently wins, and
+// whichever it is, one service's initializer never runs. This was found by auditing
+// top-level names across the corpus for collisions, not by watching it fail.
+fn logd_init() {
     var i: i64 = 0;
     while i < SLOT * SLOTS { storage.push(0); i = i + 1; }
 }

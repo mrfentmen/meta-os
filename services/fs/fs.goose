@@ -245,8 +245,19 @@ fn empty_inode() -> Inode {
 // Write an inode back into the block `fs_ino_read` just loaded. Refuses to write if the
 // block in `fs_blk` is not the one this inode lives in -- a stale block here is the
 // classic way one file's inode overwrites another's.
+// Write an inode.
+//
+// The block is READ FIRST. That is not redundant with the read the caller usually did
+// just before: any call in between can reload `fs_blk` -- fs_release_inode frees the
+// inode's own data blocks first, and freeing a block loads the BITMAP into the same
+// buffer. Without this read, `fs_bwrite` then wrote the bitmap's bytes over the whole
+// inode-table block, silently destroying every inode in it (root included). The symptom
+// was "create refuses with E_INVAL" after any `rm` that freed a block, because root was
+// no longer a directory.
 fn fs_ino_write(ino: i64, n: Inode&) -> i64 {
     if !ino_valid(ino) { return E_INVAL; }
+    let rc = fs_bread(ino_block(ino));
+    if rc != CODE_OK { return rc; }
     let o = ino_offset(ino);
     p16(fs_blk, o, n.mode);
     p16(fs_blk, o + 2, n.links);

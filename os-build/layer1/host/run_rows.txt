@@ -18,8 +18,8 @@ tests/t61_bootorder|RUNS|24|0|
 tests/t62_bytes|RUNS|50|0|
 tests/t63_str|RUNS|27|0|
 tests/t64_hex|RUNS|25|0|
-tests/t65_fs|FAILS|59|11|exit 1 FAIL entry is gone
-tests/t66_shell|FAILS|48|9|exit 1 FAIL pwd follows the cd
+tests/t65_fs|FAILS|65|5|exit 1 FAIL fsck is clean
+tests/t66_shell|RUNS|57|0|
 tests/t67_net|FAILS|81|8|exit 1 FAIL parse it back
 tests/t68_proto|FAILS|36|5|exit 1 FAIL parse it as an ARP request
 tests/t69_callmatrix|RUNS|28|0|

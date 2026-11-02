@@ -113,14 +113,16 @@ fn path_is_absolute(p: const u8[:]) -> bool {
 
 // Join the cwd path and a component, for `cd`. Bounded and clamped, never allocating.
 fn sh_join(dst: u8[>..]&, cap: i64, base: const u8[:], name: const u8[:]) {
+    // Copy the base verbatim, ROOT SLASH INCLUDED. The earlier version skipped the lone
+    // '/' of the root to avoid a double slash, which turned `cd dir` at `/` into the
+    // relative path "dir" -- the prompt then disagreed with where the shell actually was.
     var i: i64 = 0;
     while i < base.len && dst.len < cap {
-        if !(base.len == 1 && base[0] == '/') || i > 0 {
-            dst.push(base[i]);
-        }
+        dst.push(base[i]);
         i = i + 1;
     }
-    if dst.len > 0 && dst[dst.len - 1] != '/' { if dst.len < cap { dst.push('/'); } }
+    // One separator, added only when the base does not already end in one.
+    if dst.len == 0 || dst[dst.len - 1] != '/' { if dst.len < cap { dst.push('/'); } }
     var k: i64 = 0;
     while k < name.len && dst.len < cap {
         dst.push(name[k]);

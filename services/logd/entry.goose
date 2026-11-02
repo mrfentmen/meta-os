@@ -8,7 +8,7 @@
 import logd.logd;
 
 export "svc_entry" fn service_main() -> i32 {
-    storage_init();
+    logd_init();
     log_info("logd", "sink up");
     log_info("logd", "policy: high-water 48/64, error immediate, explicit flush");
 
