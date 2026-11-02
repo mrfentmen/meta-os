@@ -56,7 +56,7 @@ or BLOCKED with the artifact named.
 | 42 | Net card shows DHCP lease | PROVEN (guest) | 10.0.2.15/24 live in dashboard + facts |
 | 43 | 10s series moves under load | PROVEN (guest) | load 2.36 base -> 2.54/2.57 under 2x yes (1-min avg lags, direction correct) |
 | 44 | Imperium three services | PROVEN (guest) | guest-sys-console.jpg: MAP/CONSOLE tabs, VIGILES/IGNIS/MEDICUS buttons, command panel, offline camera list |
-| 45 | Staged RED full loop in-face | TODO (honest) | drill path proven Mac-lane R5-4 (receipt sim-6623d237) + R6-3 Ignis (receipt sim-9da0ad66) via trio suite to SIMULATED endpoints; guest face has no trio suite/creds/budget and proof tasks carry no spend — in-face trigger not built, not staged |
+| 45 | Staged RED full loop, receipt in face | PROVEN (boss yes) | Medicus 3rd division on Mac: flag/review/investigation/dispatch to SIMULATED :8935, receipt sim-5f894be30820178f judge-confirmed, $0 model spend; receipt posted into guest board, guest-red-receipt.jpg; logs face-medicus/ |
 | 46 | Science Lab real page | PROVEN (guest*) | guest-sys-science.jpg: molecule viewer lists 11 real embedded structures; *3D needs WebGL (absent in guest chromium), honestly text-only |
 | 47 | Musica track end to end | PROVEN (guest) | guest-musica-ended.jpg: take-006 0:07/0:07, state "ended 7.3s — played end to end"; musica.html + staged wav |
 | 48 | Custos + Officina consoles | PROVEN (guest) | guest-sys-imperium.jpg nav + guest-sys-custos.jpg: 34 patrol records by tier, proven heatsink designs |
