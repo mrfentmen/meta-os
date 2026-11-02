@@ -17,9 +17,9 @@
 //! Spec/accept may be given inline or via @file. Never prints the token.
 //!
 //! Backend operations (capabilities registry, overseer, worker, reconcile,
-//! gitops) live in the owning crates (B16/B18/B19/B21/B22) and are not
-//! merged to main yet, so this module dispatches through traits — the
-//! same seam pattern the B21 port uses for its overseer backend. The
+//! gitops) are owned by the other crates (B16/B18/B19/B21/B22); none of them
+//! implements these traits on main yet, so this module dispatches through
+//! traits — the same seam pattern the B21 port uses for its overseer backend. The
 //! `git` module provides a real git backend for the review/merge
 //! commands, which are the only gitops operations this CLI exposes.
 //!

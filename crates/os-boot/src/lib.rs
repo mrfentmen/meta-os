@@ -1,4 +1,4 @@
-//! Crate `os-boot` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-boot` — Meta OS Rust rebuild (B23).
 //!
 //! Batch B23 — Boot glue & deployment. Owner: Milo.
 //! Source files this batch ports:
@@ -51,7 +51,7 @@
 //!
 //! Ported in batch B23 (Milo): the `os/mos/cli.py` command surface
 //! (see the `cli` module), a real git backend for the review/merge
-//! commands (see the `git` module), and the 39 `os/os/` deployment
+//! commands (see the `git` module), and the 47 `os/os/` deployment
 //! assets carried byte-identical under `assets/os/` (see the `carried`
 //! module and its manifest).
 

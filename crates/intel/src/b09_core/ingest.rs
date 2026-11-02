@@ -47,7 +47,9 @@ pub fn messages_from_cursor(store: &[Message], cursor: Option<&str>) -> Snapshot
     SnapshotView { messages, cursor: next }
 }
 
-/// Build a snapshot summary string (room counts + latest ts).
+/// Build a snapshot summary string. This port carries the message count
+/// only; room counts and the latest timestamp are not computed here, so
+/// the Python summary text is not reproduced.
 pub fn snapshot(store: &[Message]) -> String {
     format!("snapshot: {} messages", store.len())
 }

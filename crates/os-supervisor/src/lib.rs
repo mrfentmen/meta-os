@@ -1,4 +1,4 @@
-//! Crate `os-supervisor` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-supervisor` — the B21 port of the supervisor & watchdog layer.
 //!
 //! Batch B21 — Supervisor & watchdog. Owner: Milo.
 //! Source files this batch ports:

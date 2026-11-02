@@ -1,0 +1,22 @@
+TAP version 13
+# Subtest: baton record round-trips
+ok 1 - baton record round-trips
+  ---
+  duration_ms: 4.396585
+  type: 'test'
+  ...
+# Subtest: the pass: agent B continues from agent A's baton, briefed by the watchman
+ok 2 - the pass: agent B continues from agent A's baton, briefed by the watchman
+  ---
+  duration_ms: 168.949484
+  type: 'test'
+  ...
+1..2
+# tests 2
+# suites 0
+# pass 2
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 329.818637

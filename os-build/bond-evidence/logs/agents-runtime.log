@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: registry loads and rejects duplicates and missing commands
+ok 1 - registry loads and rejects duplicates and missing commands
+  ---
+  duration_ms: 4.095892
+  type: 'test'
+  ...
+# Subtest: spawn runs a real child to exit 0 and writes brief + ledger
+ok 2 - spawn runs a real child to exit 0 and writes brief + ledger
+  ---
+  duration_ms: 84.826954
+  type: 'test'
+  ...
+# Subtest: kill is graceful first and lands in the ledger
+ok 3 - kill is graceful first and lands in the ledger
+  ---
+  duration_ms: 7.975821
+  type: 'test'
+  ...
+# Subtest: wall-clock budget stops a runaway agent
+ok 4 - wall-clock budget stops a runaway agent
+  ---
+  duration_ms: 315.89329
+  type: 'test'
+  ...
+# Subtest: STOP file stops the agent at a checkpoint
+ok 5 - STOP file stops the agent at a checkpoint
+  ---
+  duration_ms: 111.877041
+  type: 'test'
+  ...
+# Subtest: watch detects a file change and stays quiet when nothing moves
+ok 6 - watch detects a file change and stays quiet when nothing moves
+  ---
+  duration_ms: 1.52063
+  type: 'test'
+  ...
+# Subtest: the graft: a lesson one agent teaches rides into the next agent's brief
+ok 7 - the graft: a lesson one agent teaches rides into the next agent's brief
+  ---
+  duration_ms: 85.226985
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1453.978271

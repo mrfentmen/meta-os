@@ -1,4 +1,4 @@
-//! Crate `dashboard` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `dashboard` — Meta OS Rust rebuild, batch B15 backend contract.
 //!
 //! Batch B15 — Dashboard backend contract. Owner: Hana.
 //! Source files this batch ports:

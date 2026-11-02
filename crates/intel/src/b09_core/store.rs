@@ -6,8 +6,10 @@
 //! beats. `write_*` validates shape before storing and maintains the index;
 //! raw `put_*` does not. Lifecycle: open -> acknowledged -> resolved;
 //! re-fire inside cooldown advances `last_seen`; resolved re-firing starts a
-//! fresh open occurrence. In Rust: an in-memory [`Store`] with the same key
-//! builders and validation rules (Redis I/O stays at the boundary).
+//! fresh open occurrence. In Rust: an in-memory [`Store`] covering the
+//! brief/alert/spend subset, with the same key builders and validation
+//! rules. The notify/watchdog/boot-status keys are builders only: their
+//! records and all Redis I/O stay at the boundary.
 
 use std::collections::HashMap;
 

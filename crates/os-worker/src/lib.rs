@@ -1,4 +1,4 @@
-//! Crate `os-worker` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-worker` — Meta OS Rust rebuild (B22).
 //!
 //! Batch B22 — Worker runtime & drivers. Owner: Milo.
 //! Source files this batch ports:
@@ -22,7 +22,7 @@
 //! - `os/tests/test_os_worker_units.py`
 //! - `os/tests/test_os_workers_slice.py`
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
+//! Implemented, not a skeleton: the Python/Node sources listed above are
 //! the spec — port behavior, do not redesign. See BATCHES.md for the
 //! compile gates and the parity rule.
 //!

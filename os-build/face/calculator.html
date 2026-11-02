@@ -9,7 +9,7 @@ button.op{background:var(--op)}button:active{filter:brightness(1.2)}
 </style></head><body>
 <h1>Calculator</h1>
 <div id="disp" role="status" aria-live="polite">0</div>
-<div id="keys">
+<div id="keys" role="group" aria-label="Calculator keypad">
 <button data-k="C">C</button><button data-k="neg">+/-</button><button data-k="%">%</button><button class="op" data-k="/">/</button>
 <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="*">x</button>
 <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="-">-</button>
@@ -38,7 +38,12 @@ if(k>='0'&&k<='9'||k==='.')return digit(k);
 if(k==='+'||k==='-'||k==='*'||k==='/')return setOp(k);
 }
 document.getElementById('keys').addEventListener('click',function(e){var b=e.target.closest('button');if(b)key(b.getAttribute('data-k'));});
-document.addEventListener('keydown',function(e){var k=e.key;if(/^[0-9+\-*/.=]$/.test(k)||k==='Enter'||k==='Escape'||k==='Backspace'||k==='%'){e.preventDefault();key(k);}});
+document.addEventListener('keydown',function(e){
+var k=e.key;
+if(k==='x'||k==='X'){e.preventDefault();return key('*');}
+if(k==='Delete'){e.preventDefault();return clear();}
+if(/^[0-9+\-*/.=]$/.test(k)||k==='Enter'||k==='Escape'||k==='Backspace'||k==='%'){e.preventDefault();key(k);}
+});
 show();
 })();
 </script></body></html>

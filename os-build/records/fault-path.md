@@ -8,7 +8,7 @@ disagree, the disagreement is listed at the end.
 
 1. The CPU pushes its frame and the vector's trampoline in `kernel/src/traps.rs` saves the
    scratch registers, passing `(vector, &frame, error_code)` to `dispatch_trampoline`.
-2. `interrupts::dispatch` (`kernel/src/interrupts.rs`, dispatch table around line 300) looks up
+2. `interrupts::dispatch` (`kernel/src/interrupts.rs:401-413`) looks up
    the registered handler for that vector. If none, it prints
    `INT unhandled vector 0x<v> ip 0x<ip>` and **returns**, which means `iretq` resumes the
    faulting instruction. For a genuinely unexpected vector that is a re-fault loop, not a

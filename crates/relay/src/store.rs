@@ -2,11 +2,11 @@
 //! appends return the new line's 0-based index, and an optional JSONL
 //! file persists every appended line and reloads on boot.
 //!
-//! Reload tolerance mirrors the original: blank lines skipped, and a
-//! torn final record (unparseable JSON, or non-string room/line)
-//! is skipped with an error note — it must not stop the relay from
-//! booting. A store-file append failure is likewise logged and the
-//! line stays in memory; the index is still returned.
+//! Reload tolerance mirrors the original: blank lines skipped, and any
+//! unparseable record (bad JSON, or non-string room/line) is skipped
+//! with an error note — wherever it sits in the file. It must not stop
+//! the relay from booting. A store-file append failure is likewise
+//! logged and the line stays in memory; the index is still returned.
 
 use crate::json::{parse_record, record_line};
 use std::collections::HashMap;
@@ -82,8 +82,8 @@ impl RoomStore {
     }
 
     /// Lines after index `since` (`since = -1` returns the whole room;
-    /// any `since < -1` is treated as -1, mirroring the original's
-    /// `Number.isFinite(since) || since < -1` guard).
+    /// any `since < -1` is treated as -1, the same clamp as the
+    /// original's `!Number.isFinite(since) || since < -1` guard).
     pub fn messages_since(&self, room: &str, since: i64) -> &[String] {
         let lines = self.messages(room);
         let since = if since < -1 { -1 } else { since };
