@@ -1,37 +1,43 @@
 # Buffy — Round 12 status
 
-Branch `buffy/round12`, based on main `77e0a10` with the finished round-11 branch merged
-(`fb98bba`). Task list: `BUFFY_TASKS_ROUND12.md` (44 tasks).
+Branch `buffy/round12`, on top of main `77e0a10` and the merged round-11 branch. Task list:
+`BUFFY_TASKS_ROUND12.md` (44 tasks).
 
 | section | state | counts | evidence |
 |---|---|---|---|
 | A — the 14 | **DONE** | 14 / 14 | `os-build/layer1/r12/SECTION_A.md` |
-| B — Aegis live fire | **NOT STARTED** | 0 / 6 | — |
-| C — loops hardened | **PARTIAL** | 1 done, 1 partial / 6 | R12-026 done, R12-023 pre-spawn only; `CHAOS_COVERAGE.md` |
-| D — services second ring | **NOT STARTED** | 0 / 9 | — |
-| E — Nervus + Hands-Free | **NOT STARTED** | 0 / 5 | — |
-| F — proof and closeout | **NOT STARTED** | 0 / 4 | — |
+| B — Aegis live fire | **NOT STARTED** | 0 / 6 | `r12/FINISH.md` |
+| C — loops hardened | **PARTIAL** | 1 done, 1 partial / 6 | STOP pre-spawn only; `r12/CHAOS_COVERAGE.md` |
+| D — services second ring | **COVERED, restart untested** | 9 / 9 | `r12/SECOND_RING.md` |
+| E — Nervus + Hands-Free | **DONE** | 5 / 5 | `r12/VOICE_SEAM.md`, `r12/HANDSFREE_CADENCE.json` |
+| F — proof and closeout | **DONE** | 4 / 4 | `r12/PROOF_LEDGER.md`, `r12/FINISH.md`, `r12/PAX_BLOCKERS_R12.md` |
 
-## Section A numbers
+## Measured on this branch tip
 
-- OSV sweep: 23 manifests, 108 versioned refs, 2 batches, **0 findings** (direct API under Pax's exception).
-- KEV: **0 sweep findings** checked, 0 flagged; 7 non-sweep OSINT records excluded.
-- Second sweep: 108 refs, 0 findings; diff **0 added / 0 removed / 7 unchanged**.
-- OSINT: 4 domains, CT certs 0/2/0/8, distinct names 0/2/0/5, **3 findings**; clipraiders.com does not resolve.
-- Watch targets: **169** (165 repos + 4 pages), all `UNVERIFIED`.
-- Hosted loops: Imperium **PASS** (queue up, agent exit 0, dispatch HTTP 201), Cadence exit 0.
-
-## Tests on this branch tip
+- Native services: **86 programs, 86 RUNS, 0 FAILS, 5 built-not-run, 3,804 assertions passed**.
+- Service inventory: **38**, all with READMEs, **31** with a measured driver, **3** manifest
+  NOT BUILT (`devmgr`, `registry`, `sockets`), **0** restarts tested.
+- Lane test run (18 files):
 
 ```
-node --test (r12-loops, agents-r11, chaos, aegis-r11, aegis-sweep, aegis-findings,
-             handsfree-r11, nervus-r11)
-54 tests, 54 pass, 0 fail
+node --test tests/handsfree.test.mjs tests/handsfree-r11.test.mjs tests/handsfree-cadence.test.mjs \
+  tests/nervus-contracts.test.mjs tests/nervus-ledger-shape.test.mjs tests/nervus-r11.test.mjs \
+  tests/aegis-r11.test.mjs tests/aegis-sweep.test.mjs tests/aegis-findings.test.mjs \
+  tests/agents-runtime.test.mjs tests/agents-watchman.test.mjs tests/agents-baton.test.mjs \
+  tests/agents-restart.test.mjs tests/agents-hardening.test.mjs tests/agents-bridge.test.mjs \
+  tests/agents-r11.test.mjs tests/r12-loops.test.mjs tests/chaos-pack.test.mjs
+  -> 110 tests, 110 pass, 0 fail
 ```
+
+- Aegis: 23 manifests / 108 refs / 0 findings; KEV 0; diff 0/0/7; OSINT 4 domains / 3 findings;
+  169 watch targets UNVERIFIED.
+- Hosted: Imperium PASS (dispatch 201), Cadence exit 0.
+- Hands-Free → Cadence: one order, real child exit 0, brief composed, latency in
+  `r12/HANDSFREE_CADENCE.json`.
+- Nervus: five operations validated; every ledger line `stub:true` and `result.source:STUB`.
 
 ## Not claimed
 
-- No kernel or boot proof: `hog` and `quitter` compile, they are not in `BINS`, and nothing was booted.
-- No assessment from Imperium: no model key exists here; the receipt says exactly that.
-- No mid-run STOP proof for the fast hosted loops (50 ms runs cannot outlive the 100 ms poll); the
-  pre-spawn STOP is the proven path for every loop.
+- No kernel compile or boot; no QEMU log.
+- No model run, no voice transcription, no real dispatch.
+- No service restart and no line-by-line service contract read.

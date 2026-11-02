@@ -1,0 +1,19 @@
+{
+  "task": "R12-038",
+  "ranAt": "2026-11-02T14:51:44.441Z",
+  "path": [
+    "inbox line",
+    "dropOrders job file",
+    "watchman claim+spawn",
+    "agent exit 0",
+    "result file",
+    "briefFromJobs"
+  ],
+  "inboxOrders": 1,
+  "jobsFiled": 1,
+  "runsSpawned": 1,
+  "resultCode": 0,
+  "brief": "1 order ran.\n1 finished, 0 stopped, 0 failed.\nworker finished.\n",
+  "latencyMs": 40,
+  "note": "Host process, real child exit. No kernel, no voice, no model."
+}

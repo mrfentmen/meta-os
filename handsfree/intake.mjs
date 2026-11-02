@@ -5,12 +5,20 @@
 // the inbox and is reported, because an order nobody can parse is an order nobody should run.
 import fs from "node:fs";
 import path from "node:path";
+import { createHash } from "node:crypto";
+
+// A typed order is a line, not a payload. 4096 characters is far beyond any order a person
+// types and far below anything that would turn the inbox into a transfer buffer; a longer line
+// is refused with its length recorded, and the line stays in the inbox for a human to split.
+export const MAX_ORDER_CHARS = 4096;
 
 export const ORDER_REFUSALS = {
   "malformed-no-colon": "the line has no 'agent:' prefix, so the order has no owner",
   "empty-agent": "the line names no agent before the colon",
   "empty-order": "the line names an agent but asks for nothing",
   "not-a-string": "an order must be text",
+  "oversized-order": "the line is longer than one typed order may be",
+  "empty-inbox": "the inbox held no order at all",
 };
 
 export function validateOrder(line) {
@@ -29,6 +37,12 @@ export function parseInbox(text) {  const jobs = [];
   text.split(/\r?\n/).forEach((raw, i) => {
     const line = raw.trim();
     if (!line || line.startsWith("#")) return;
+    if (line.length > MAX_ORDER_CHARS) {
+      // Kept whole so dropOrders can leave it in the inbox; the refusal record carries only a
+      // length and a hash, never the text (R12-039).
+      skipped.push({ line: i + 1, text: line, reason: "oversized-order", length: line.length });
+      return;
+    }
     const at = line.indexOf(":");
     if (at <= 0) {
       skipped.push({ line: i + 1, text: line, reason: "no agent before a colon" });
@@ -47,12 +61,37 @@ export function parseInbox(text) {  const jobs = [];
 
 // Write each order as <id>.job.json, atomically, and mark the lines that were taken. Lines the
 // parser refused stay in the inbox: silently deleting them would turn a typo into a lost order.
-export function dropOrders(inboxFile, jobsDir, { now = Date.now(), source = "handsfree" } = {}) {
+export function dropOrders(inboxFile, jobsDir, { now = Date.now(), source = "handsfree", refugeFile = null } = {}) {
   const text = fs.readFileSync(inboxFile, "utf8");
   const { jobs, skipped } = parseInbox(text);
   fs.mkdirSync(jobsDir, { recursive: true });
   const stamp = new Date(now).toISOString().replace(/[-:.TZ]/g, "").slice(0, 14);
   const written = [];
+  // Every refusal is written down, because a line that silently disappears is worse than a
+  // line that was never accepted (R12-039). The record names the line and the reason; the text
+  // is represented by a short hash, not copied, so an order that mentions something private
+  // does not become a second copy in a log.
+  const refusalFile = refugeFile || inboxFile + ".refusals.jsonl";
+  const at = new Date(now).toISOString();
+  const refusals = [];
+  if (!text.trim()) {
+    refusals.push({ at, event: "refused", reason: "empty-inbox", source });
+  }
+  for (const s of skipped) {
+    const full = typeof s.text === "string" ? s.text : "";
+    refusals.push({
+      at,
+      event: "refused",
+      line: s.line,
+      reason: s.reason,
+      length: full.length,
+      text_hash: createHash("sha256").update(full).digest("hex").slice(0, 16),
+      source,
+    });
+  }
+  if (refusals.length) {
+    fs.appendFileSync(refusalFile, refusals.map((r) => JSON.stringify(r)).join("\n") + "\n");
+  }
 
   jobs.forEach((j, i) => {
     let id = j.agent + "-" + stamp + "-" + i;
@@ -72,7 +111,7 @@ export function dropOrders(inboxFile, jobsDir, { now = Date.now(), source = "han
     fs.appendFileSync(inboxFile + ".done", written.map((w) => JSON.stringify({ ...w, at: new Date(now).toISOString() })).join("\n") + "\n");
   }
   fs.writeFileSync(inboxFile, skipped.length ? skipped.map((s) => s.text).join("\n") + "\n" : "");
-  return { jobs: written, skipped };
+  return { jobs: written, skipped, refusals };
 }
 
 /* ---- CLI: node handsfree/intake.mjs <inbox> <jobsDir> ---- */
