@@ -57,7 +57,7 @@ or BLOCKED with the artifact named.
 | 43 | 10s series moves under load | PROVEN (guest) | load 2.36 base -> 2.54/2.57 under 2x yes (1-min avg lags, direction correct) |
 | 44-49 | Systems as apps | DONE (staged) | :18934 site server stages surfaces/index/logo-studio + data; dock retargeted; guest proof TODO |
 | 50 | Board rooms/post/receive | PROVEN (guest) | rooms+messages via curl; guest-board-persist.jpg shows post in UI |
-| 51 | Persist across restart | PROVEN (guest svc) | survives service restart; full image-reboot TODO with task 61 |
+| 51 | Persist across restart | PROVEN (guest reboot) | both rooms intact after sudo reboot (face-proof-002 + welcome); data in ~/.local/share/metaos survives |
 | 52 | Files real browser | PROVEN (guest) | guest-files-browse.jpg lists real /opt/face; backend curl list/read proven |
 | 53 | Code Editor save real | PROVEN (guest) | files.py save/read roundtrip exact 23B in guest; editor.html points at same API |
 | 54 | Notes persisted | PROVEN (local) | reload persists via localStorage |
@@ -67,7 +67,7 @@ or BLOCKED with the artifact named.
 | 58 | Trash restore | PROVEN (guest) | delete->trash(entry+orig+timestamp)->restore(intact)->empty, all via :18936 in guest |
 | 59 | Settings all controls | PROVEN (guest) | guest-settings.jpg: wallpaper/bg/bar/theme/speed/pause + About live facts 3.06/569M/3G/10.0.2.15/24 |
 | 60 | First-boot welcome, no wizard | PROVEN (guest) | welcome posted to #announce in guest board; persists via board.json |
-| 61 | Sleep/wake + reboot | TODO (reboot test) | needs guest reboot, batched with task 51 |
+| 61 | Sleep/wake + reboot | PROVEN (guest reboot) | sudo reboot: uptime fresh, relay on tty1 autologin no typing, all 7 user services active via linger |
 | 62 | Silent by default | PROVEN (code+guest) | only audio path is musica.html play() which kiosk blocks w/o gesture (shot shows 'press play'); no autoplay anywhere |
 | 63 | Perf pass | PROVEN | stock idle 249M/1967M; face-loaded ~570-635M; ribbon rAF ~122fps Mac; boot-to-login 41.178s < 45s |
 | 64 | Fidelity pass | PROVEN (text) | login glass+avatar+shake, topbar, 16-icon dock, live ribbon all match task specs; closed: favicon 404s, dead dock targets, missing board/settings/terminal-real, music3d-as-Musica |
