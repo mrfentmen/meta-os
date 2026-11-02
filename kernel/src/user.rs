@@ -3,7 +3,7 @@
 #![allow(static_mut_refs)]
 //! Meta OS kernel, Section F (K6): first userspace (OS-076..OS-088).
 //!
-//! Three static ELFs (built by `kernel/build.rs` into OUT_DIR) are
+//! Four static ELFs (built by `kernel/build.rs` into OUT_DIR) are
 //! parsed and mapped at their linked addresses, then entered with
 //! `iretq` at ring 3. Syscalls arrive on `int 0x80` (vector 128);
 //! the handler reads the saved registers, serves write/exit/sleep/
@@ -23,8 +23,10 @@ pub static SLEEPER_ELF: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/sleeper.elf"));
 pub static CRASHER_ELF: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/crasher.elf"));
+pub static READKEY_ELF: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/readkey.elf"));
 
-/// One user stack per userspace task (K6 scope: three programs).
+/// One user stack per userspace task (K6 scope: four programs).
 /// Stacks are FRESH USER pages, not kernel .bss: the bootloader's
 /// kernel mappings are supervisor-only, and ring 3 faults on them
 /// (found live: first `push` faulted err=0x7 on the .bss stack).
@@ -108,17 +110,21 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
                 set_return(base, 0);
             }
             5 => {
-                // R-7: read_key — a getter over the K3 keyboard ring
-                // buffer, no new machinery. Returns the next raw
-                // PS/2 set-1 scancode byte (0..=255, release codes
-                // included, NOT decoded ASCII — decoding stays in
-                // the console task), or u64::MAX when the buffer is
-                // empty (non-blocking; a caller that wants to wait
-                // polls, or sleeps/yields between polls). Valid
-                // returns are all <= 255, so MAX is unambiguous.
-                // Shares the console's buffer: a byte read here is
-                // consumed and is not echoed by the console task.
-                set_return(base, match crate::interrupts::keyboard_read() {
+                // R-7: read_key — a getter over the R-FP2 readkey
+                // ring buffer. Returns the next raw PS/2 set-1
+                // scancode byte (0..=255, release codes included,
+                // NOT decoded ASCII — decoding stays in the console
+                // task), or u64::MAX when the buffer is empty
+                // (non-blocking; a caller that wants to wait polls,
+                // or sleeps/yields between polls). Valid returns are
+                // all <= 255, so MAX is unambiguous. R-FP2: this
+                // ring is fed by the same keyboard_push fan-out as
+                // the console ring but is otherwise independent — a
+                // byte read here is NOT consumed from the console's
+                // copy, so readkey polls can no longer steal typed
+                // bytes from the shell, and the console task's
+                // drain can no longer starve this reader.
+                set_return(base, match crate::interrupts::readkey_read() {
                     Some(scancode) => scancode as u64,
                     None => u64::MAX,
                 });
@@ -405,10 +411,11 @@ pub unsafe fn enter_userspace(entry: u64, user_sp: u64) -> ! {
     );
 }
 
-/// Take a user stack slot (max 3 programs, K6 scope; 4th refused).
+/// Take a user stack slot (max 4 programs, K6 scope + R5-2 readkey;
+/// a 5th is refused, not silently shared).
 fn take_ustack() -> Option<u64> {
     unsafe {
-        if NEXT_USTACK >= 3 {
+        if NEXT_USTACK >= 4 {
             return None;
         }
         let top = map_ustack(NEXT_USTACK)?;
@@ -478,4 +485,8 @@ pub fn task_sleeper() {
 }
 pub fn task_crasher() {
     unsafe { run_elf(CRASHER_ELF, "crasher") };
+}
+/// Kernel task entry for the fourth program (R5-2 follow-up).
+pub fn task_readkey() {
+    unsafe { run_elf(READKEY_ELF, "readkey") };
 }
