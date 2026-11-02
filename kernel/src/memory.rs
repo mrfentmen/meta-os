@@ -591,6 +591,16 @@ impl<'a, T: TableMemory> Mapper<'a, T> {
         self.allocator.allocate()
     }
 
+    /// Return one frame to the backing allocator. The K3 demand
+    /// path uses this when `map_page` fails after a frame was
+    /// allocated, so a failed demand does not leak the leaf frame.
+    /// Intermediate tables `map_page` may have linked on the
+    /// failure path stay linked — that is `map_page`'s documented
+    /// exception, unchanged here.
+    pub fn deallocate_frame(&mut self, frame: PhysAddr) -> bool {
+        self.allocator.deallocate(frame)
+    }
+
     /// Covered frames still free in the backing allocator.
     pub fn free_frames(&self) -> usize {
         self.allocator.free_frames()

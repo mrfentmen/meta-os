@@ -18,8 +18,10 @@ use crate::tasks::{Context, TaskId};
 
 /// Tasks the kernel can hold. No reap in K5: slots fill in spawn
 /// order and stay, so spawn order is the table index. Now full at
-/// 8/8 with readkey (R5-2 follow-up); see `start_demo_tasks`.
-const MAX_TASKS: usize = 8;
+/// 9/9 with demand (K3 build, after readkey); see
+/// `start_demo_tasks`. A 10th task needs another bump plus a heap
+/// review, not a silent spawn refusal.
+const MAX_TASKS: usize = 9;
 /// One task stack: 16 KiB, `u128` cells so the base (and the top) is
 /// always 16-aligned as `Context::initial` demands.
 const STACK_CELLS: usize = 2048;
@@ -744,5 +746,12 @@ pub unsafe fn start_demo_tasks() -> ! {
     // lands exactly full at 8/8 — a 9th task needs a MAX_TASKS
     // bump plus a heap review, not a silent spawn refusal.
     spawn_task(crate::user::task_readkey, u32::MAX).expect("sched: spawn readkey");
+    // K3 build: demand spawns after readkey for the same reason —
+    // every earlier id stays stable (console 7, readkey 8) and
+    // demand takes id 9, the slot the MAX_TASKS bump above opened.
+    // Its promised region is registered by `task_demand` itself,
+    // not here: registration keys on the task id, which only
+    // exists once this spawn returns.
+    spawn_task(crate::user::task_demand, u32::MAX).expect("sched: spawn demand");
     run();
 }

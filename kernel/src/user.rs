@@ -25,6 +25,47 @@ pub static CRASHER_ELF: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/crasher.elf"));
 pub static READKEY_ELF: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/readkey.elf"));
+pub static DEMAND_ELF: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/demand.elf"));
+
+/// K3 demand paging: the one promised page (design §4, build note
+/// `os-build/K3_DEMAND_PAGING_BUILD.md`). Far from every program
+/// base (the 0x6000... sequence), the user stacks (0x5000...),
+/// and the kernel's low mappings: nothing else ever maps here,
+/// so a fault on this page from the demand task is a demand,
+/// never a collision.
+pub const DEMAND_PAGE: u64 = 0x0000_7000_0000_0000;
+/// Promised pages: exactly one, step-1 scope (design §4).
+pub const DEMAND_PAGE_COUNT: u64 = 1;
+
+/// The task registered as the demand program, if any. Set once by
+/// `task_demand` before it loads; read by the fault handler.
+/// Single slot on purpose: step 1 promises one page to one
+/// program, and no other task ever registers.
+static mut DEMAND_TASK: Option<crate::tasks::TaskId> = None;
+
+/// Register the calling task as the demand program. Called by
+/// `task_demand` (which runs as that task) before `run_elf`
+/// enters userspace, so the registration is in place before the
+/// first demand fault can happen.
+pub fn register_demand_region() {
+    unsafe {
+        DEMAND_TASK = Some(crate::sched::current_id());
+    }
+}
+
+/// The promised region for `id`, or `None` for every task except
+/// the registered demand program. The fault handler keys on
+/// this: an unmapped address outside the region is a wild
+/// access, not a demand, even from the demand task itself.
+pub fn demand_region_for(id: crate::tasks::TaskId) -> Option<(u64, u64)> {
+    let registered = unsafe { DEMAND_TASK };
+    if registered == Some(id) {
+        Some((DEMAND_PAGE, DEMAND_PAGE_COUNT))
+    } else {
+        None
+    }
+}
 
 /// One user stack per userspace task (K6 scope: four programs).
 /// Stacks are FRESH USER pages, not kernel .bss: the bootloader's
@@ -411,11 +452,11 @@ pub unsafe fn enter_userspace(entry: u64, user_sp: u64) -> ! {
     );
 }
 
-/// Take a user stack slot (max 4 programs, K6 scope + R5-2 readkey;
-/// a 5th is refused, not silently shared).
+/// Take a user stack slot (max 5 programs, K6 scope + R5-2 readkey
+/// + K3 demand; a 6th is refused, not silently shared).
 fn take_ustack() -> Option<u64> {
     unsafe {
-        if NEXT_USTACK >= 4 {
+        if NEXT_USTACK >= 5 {
             return None;
         }
         let top = map_ustack(NEXT_USTACK)?;
@@ -489,4 +530,13 @@ pub fn task_crasher() {
 /// Kernel task entry for the fourth program (R5-2 follow-up).
 pub fn task_readkey() {
     unsafe { run_elf(READKEY_ELF, "readkey") };
+}
+/// Kernel task entry for the fifth program (K3 demand paging).
+/// Registers this task as the demand program before loading: the
+/// fault handler keys the promised region on the task id, and
+/// `run_elf` enters userspace from this same task, so the
+/// registration is in place before the first demand fault.
+pub fn task_demand() {
+    register_demand_region();
+    unsafe { run_elf(DEMAND_ELF, "demand") };
 }
