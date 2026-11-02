@@ -241,3 +241,36 @@ Section 6 verification: **228 Science Lab tests pass, 0 fail**
 
 Section 7 verification: **253 Science Lab tests pass, 0 fail**
 (`python3 -m unittest discover -s tests/science-lab`).
+
+## Section 8 — Science Lab — verify, repository, ledger, export (CB2-176..200) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-176 | `test_verify_blind.py` | identical blind runs agree and record hashes/time |
+| CB2-177 | `test_verify_blind.py` | numbers beyond tolerance disagree |
+| CB2-178 | `test_verify_tolerance.py` | difference exactly at tolerance passes |
+| CB2-179 | `test_verify_tolerance.py` | different row counts refused |
+| CB2-180 | `test_verify_failure_drill.py` | claimed success with mismatched numbers yields fake_success false |
+| CB2-181 | `test_verify_gate.py` | 0.818 RMSE against 1.5 threshold is a match |
+| CB2-182 | `test_verify_gate.py` | above-threshold RMSE is a no-match |
+| CB2-183 | `test_repository_records.py` | experiment validates against schema before storage |
+| CB2-184 | `test_repository_records.py` | failing schema names the missing field |
+| CB2-185 | `test_repository_records.py` | stored record reads back identical |
+| CB2-186 | `test_repository_listing.py` | three records list in insertion order |
+| CB2-187 | `test_repository_listing.py` | duplicate record id refused |
+| CB2-188 | `test_repository_listing.py` | cycle-id filter over mixed records |
+| CB2-189 | `test_ledger_append.py` | two entries stay intact and ordered |
+| CB2-190 | `test_ledger_append.py` | tampered middle line detected at line 2 |
+| CB2-191 | `test_ledger_read.py` | trailing blank lines ignored, count exact |
+| CB2-192 | `test_export_shape.py` | every documented export section present |
+| CB2-193 | `test_export_shape.py` | missing optional data is explicit null |
+| CB2-194 | `test_export_review.py` | review-page fields enumerated and exported |
+| CB2-195 | `test_export_review.py` | levels 4-6 never automatically confirmed |
+| CB2-196 | `test_verify_gate.py` | matching reproduction assigns level 2 |
+| CB2-197 | `test_repository_schemas_load.py` | all five schemas load and parse |
+| CB2-198 | `test_repository_records.py` | wrong schema type refused |
+| CB2-199 | `test_ledger_read.py` | strict write refuses missing recorded_at |
+| CB2-200 | `test_export_claim_audit.py` | five backed claims plus one flagged unbacked claim |
+
+Section 8 verification: **285 Science Lab tests pass, 0 fail**
+(`python3 -m unittest discover -s tests/science-lab`).

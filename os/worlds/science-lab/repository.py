@@ -11,12 +11,31 @@ Kinds: claims, experiments, cycles, sources.
 
 import json
 import os
+import re
 from datetime import datetime, timezone
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_ROOT = os.path.join(BASE_DIR, "records", "repository")
 
 KINDS = ("claims", "experiments", "cycles", "sources")
+
+SCHEMAS_DIR = os.path.join(BASE_DIR, "schemas")
+SCHEMA_FILE_NAMES = (
+    "cycle.schema.json",
+    "experiment.schema.json",
+    "hypothesis.schema.json",
+    "repository.schema.json",
+    "source.schema.json",
+)
+
+# The strict typed write path validates the record against the schema that
+# owns its shape. Claims and pointers use the repository schema's $defs.
+KIND_SCHEMA = {
+    "claims": ("repository.schema.json", "#/$defs/claim"),
+    "experiments": ("experiment.schema.json", None),
+    "cycles": ("cycle.schema.json", None),
+    "sources": ("source.schema.json", None),
+}
 
 _LEVEL_KEYS = ("level", "evidence_level", "evidenceLevel")
 _DEPT_KEYS = ("department", "dept")
@@ -40,6 +59,120 @@ def _path(kind, base=None):
     root = _root(base)
     os.makedirs(root, exist_ok=True)
     return os.path.join(root, "%s.jsonl" % kind)
+
+
+def load_schemas():
+    """Load every schema file in schemas/. Returns {stem: document}."""
+    out = {}
+    for name in SCHEMA_FILE_NAMES:
+        path = os.path.join(SCHEMAS_DIR, name)
+        with open(path, "r", encoding="utf-8") as fh:
+            out[name.replace(".schema.json", "")] = json.load(fh)
+    return out
+
+
+def load_schema(name):
+    """Load one schema by stem or filename."""
+    filename = name if name.endswith(".json") else "%s.schema.json" % name
+    path = os.path.join(SCHEMAS_DIR, filename)
+    with open(path, "r", encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _resolve_ref(root, ref):
+    if not str(ref).startswith("#/"):
+        raise ValueError("unsupported schema reference %r" % (ref,))
+    node = root
+    for part in str(ref)[2:].split("/"):
+        part = part.replace("~1", "/").replace("~0", "~")
+        node = node[part]
+    return node
+
+
+def _type_ok(value, kind):
+    if kind == "object":
+        return isinstance(value, dict)
+    if kind == "array":
+        return isinstance(value, list)
+    if kind == "string":
+        return isinstance(value, str)
+    if kind == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if kind == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if kind == "boolean":
+        return isinstance(value, bool)
+    if kind == "null":
+        return value is None
+    return True
+
+
+def _validate_node(value, schema, root, path="$"):
+    """Validate the JSON-schema subset the five lab schemas use."""
+    if not isinstance(schema, dict):
+        return []
+    if "$ref" in schema:
+        return _validate_node(value, _resolve_ref(root, schema["$ref"]),
+                              root, path)
+    errors = []
+    for sub in schema.get("allOf", []):
+        errors.extend(_validate_node(value, sub, root, path))
+    if "if" in schema and not _validate_node(value, schema["if"], root, path):
+        errors.extend(_validate_node(value, schema.get("then", {}), root, path))
+    kind = schema.get("type")
+    if kind is not None:
+        kinds = kind if isinstance(kind, list) else [kind]
+        if not any(_type_ok(value, k) for k in kinds):
+            errors.append("%s: expected %s, got %s"
+                          % (path, "/".join(kinds), type(value).__name__))
+            return errors
+    if "const" in schema and value != schema["const"]:
+        errors.append("%s: %r is not the required constant %r"
+                      % (path, value, schema["const"]))
+    if "enum" in schema and value not in schema["enum"]:
+        errors.append("%s: %r is not one of %r"
+                      % (path, value, schema["enum"]))
+    if isinstance(value, str):
+        if len(value) < int(schema.get("minLength", 0)):
+            errors.append("%s: shorter than minLength %s"
+                          % (path, schema["minLength"]))
+        if "pattern" in schema and re.search(schema["pattern"], value) is None:
+            errors.append("%s: does not match pattern %r"
+                          % (path, schema["pattern"]))
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if "minimum" in schema and value < schema["minimum"]:
+            errors.append("%s: below minimum %s" % (path, schema["minimum"]))
+        if "maximum" in schema and value > schema["maximum"]:
+            errors.append("%s: above maximum %s" % (path, schema["maximum"]))
+    if isinstance(value, dict):
+        for key in schema.get("required", []):
+            if key not in value:
+                errors.append("%s: required field %r missing" % (path, key))
+        for key, sub in schema.get("properties", {}).items():
+            if key in value:
+                errors.extend(_validate_node(value[key], sub, root,
+                                             "%s.%s" % (path, key)))
+    if isinstance(value, list) and "items" in schema:
+        for i, item in enumerate(value):
+            errors.extend(_validate_node(item, schema["items"], root,
+                                         "%s[%d]" % (path, i)))
+    return errors
+
+
+def validate_record(kind, record):
+    """Validate a record against its owning schema. Names the failing field."""
+    if kind not in KIND_SCHEMA:
+        raise ValueError("no schema for repository kind %r" % (kind,))
+    if not isinstance(record, dict):
+        raise ValueError("record must be a dict")
+    filename, pointer = KIND_SCHEMA[kind]
+    root = load_schema(filename)
+    schema = _resolve_ref(root, pointer) if pointer else root
+    errors = _validate_node(record, schema, root)
+    if errors:
+        raise ValueError("record for %s fails %s: %s"
+                         % (kind, filename, "; ".join(errors)))
+    return record
 
 
 def _read_all(kind, base=None):
@@ -71,6 +204,12 @@ def _file(kind, entry, base=None):
     filed.setdefault("recorded_at", _utcnow())
     if "date" not in filed:
         filed["date"] = filed["recorded_at"][:10]
+    record_id = _entry_id(entry, kind)
+    if record_id != "?":
+        for existing in _read_all(kind, base):
+            if _entry_id(existing, kind) == record_id:
+                raise ValueError("duplicate %s id %r refused"
+                                 % (kind, record_id))
     path = _path(kind, base)
     with open(path, "a", encoding="utf-8") as fh:
         fh.write(json.dumps(filed, sort_keys=True) + "\n")
@@ -116,6 +255,34 @@ def file_source(source, base=None):
     if not isinstance(source, dict) or not source.get("source_id"):
         raise ValueError("source requires a source_id.")
     return _file("sources", source, base)
+
+
+def write_record(kind, record, base=None):
+    """Strict typed write: validate against the kind's schema, then file.
+
+    Unlike the pointer helpers above, this path refuses any record that
+    fails its schema, and names the failing field in the error.
+    """
+    validate_record(kind, record)
+    return _file(kind, record, base)
+
+
+def list_records(kind, cycle_id=None, base=None):
+    """List one kind in insertion order, optionally filtered by cycle id."""
+    rows = _read_all(kind, base)
+    if cycle_id is None:
+        return rows
+    return [row for row in rows
+            if str(row.get("cycle_id", row.get("cycle"))) == str(cycle_id)]
+
+
+def get_record(kind, record_id, base=None):
+    """Read one record by id, or raise LookupError."""
+    for row in _read_all(kind, base):
+        if _entry_id(row, kind) == str(record_id):
+            return row
+    raise LookupError("no %s record %r in the repository."
+                      % (kind, record_id))
 
 
 def _field(entry, keys):
