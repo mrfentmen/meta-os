@@ -161,6 +161,12 @@ fn wd_check_one(slot: i64, now_ms: i64) -> i64, i64 {
     if slot < 0 || slot >= WD_MAX { return WD_FINE, 0; }
     if watches[slot].handle == 0 { return WD_FINE, 0; }
 
+    // A watch that has already been reported dead stays dead until a beat clears the
+    // flag. Checking the deadline first was the bug: between the escalation and the new
+    // deadline every poll answered WD_FINE, so a service that was just declared dead
+    // read as healthy to anyone who asked again in that window.
+    if watches[slot].reported { return WD_STILL_DEAD, watches[slot].misses; }
+
     let due = watches[slot].deadline_ms;
     if now_ms < due { return WD_FINE, watches[slot].misses; }
 

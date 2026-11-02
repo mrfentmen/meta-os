@@ -45,7 +45,7 @@ let SH_CWD_MAX: i64 = 128;
 let SH_HZ: i64 = 1000;               // the tick rate this shell assumes (Q-B-L1-6)
 
 var sh_cwd: i64 = 0;                 // inode of the current directory
-var sh_cwd_path: u8[..128];          // its path, for the prompt
+var sh_cwd_path: u8[..128] = [0; 128];   // its path, for the prompt
 var sh_cwd_len: i64 = 0;
 var sh_lines: i64 = 0;               // commands executed since start
 var sh_errors: i64 = 0;

@@ -1,25 +1,25 @@
 tests/t45_fmt|RUNS|24|0|
 tests/t46_ring|RUNS|36|0|
-tests/t47_cfg|FAILS|15|1|exit 1 FAIL duplicate key last wins
+tests/t47_cfg|RUNS|16|0|
 tests/t48_boot|RUNS|10|0|
 tests/t49_bootlog|RUNS|23|0|
 tests/t50_logd|RUNS|19|0|
 tests/t51_time|RUNS|24|0|
-tests/t52_supervisor|FAILS|47|6|exit 1 FAIL entry is restarting
-tests/t53_watchdog|FAILS|27|1|exit 1 FAIL dead is reported, not re-escalated
+tests/t52_supervisor|RUNS|53|0|
+tests/t53_watchdog|RUNS|28|0|
 tests/t54_storage|RUNS|26|0|
 tests/t55_hash|RUNS|21|0|
 tests/t56_input_display|FAILS|37|11|exit 1 FAIL caps lock release decodes
-tests/t57_dhcp_dns|FAILS|44|1|exit 1 FAIL nxdomain reports its rcode
+tests/t57_dhcp_dns|RUNS|45|0|
 tests/t58_updater|RUNS|35|0|
 tests/t59_agenthost|RUNS|48|0|
 tests/t60_audit|FAILS|15|18|exit 1 FAIL chain verifies
 tests/t61_bootorder|RUNS|24|0|
 tests/t62_bytes|RUNS|50|0|
 tests/t63_str|RUNS|27|0|
-tests/t64_hex|FAILS|23|1|exit 1 FAIL is_exact rejects non-hex of right length
-tests/t65_fs|FAILS|5|0|exit 1 
-tests/t66_shell|FAILS|15|0|exit 1 
+tests/t64_hex|RUNS|25|0|
+tests/t65_fs|FAILS|59|11|exit 1 FAIL entry is gone
+tests/t66_shell|FAILS|48|9|exit 1 FAIL pwd follows the cd
 tests/t67_net|FAILS|81|8|exit 1 FAIL parse it back
 tests/t68_proto|FAILS|36|5|exit 1 FAIL parse it as an ARP request
 tests/t69_callmatrix|RUNS|28|0|

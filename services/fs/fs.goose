@@ -108,10 +108,14 @@ fn fs_zero(b: u8[..512]&) {
 fn fs_magic_ok(b: u8[..512]&) -> bool {
     let m: const u8[:] = "MOSFS01";
     var i: i64 = 0;
-    while i < 8 {
+    while i < m.len {
         if (b[i] as i64) != (m[i] as i64) { return false; }
         i = i + 1;
     }
+    // The eighth byte is the header's NUL pad and is checked as zero rather than by
+    // reading past the seven-byte literal. The earlier loop compared `i < 8` against a
+    // 7-byte string and crashed on the first mount, which is how this was found.
+    if b[m.len] != 0 { return false; }
     return true;
 }
 

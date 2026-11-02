@@ -258,8 +258,22 @@ fn transition_legal(from: i64, to: i64) -> bool {
     if from == ST_RUNNING && to == ST_FAILED { return true; }
     if from == ST_STOPPING && to == ST_STOPPED { return true; }
     if from == ST_STOPPING && to == ST_FAILED { return true; }
+    // STOPPED -> FAILED added when the native runs exposed it: a crash can be
+    // REPORTED for an entry the table still has as stopped -- the process died
+    // out of band, before the supervisor marked it running. Without this edge the
+    // failure was silently dropped (sup_set_state refused it and the caller ignored
+    // the refusal), so a dead service sat there recorded as stopped-by-choice and
+    // never restarted. Failure has to be reachable from every state, because the
+    // world can put an entry there from any state.
+    if from == ST_STOPPED && to == ST_FAILED { return true; }
     if from == ST_FAILED && to == ST_RESTARTING { return true; }
     if from == ST_FAILED && to == ST_STOPPED { return true; }
+    // RESTARTING -> FAILED: the same out-of-band case one state later. A restart that
+    // is waiting out its backoff can still have its retry budget exhausted (the
+    // decision is made on the attempt count, not the state), and a give-up that cannot
+    // record FAILED leaves the entry parked in RESTARTING forever, which reads as
+    // "about to come back" when nothing is about to happen.
+    if from == ST_RESTARTING && to == ST_FAILED { return true; }
     if from == ST_RESTARTING && to == ST_STARTING { return true; }
     if from == ST_RESTARTING && to == ST_STOPPED { return true; }
     return false;
@@ -455,12 +469,14 @@ fn sup_on_exit(slot: i64, exited_clean: bool, uptime_ms: i64) -> i64, i64 {
     }
     if decision == RT_AFTER {
         table[slot].restarts = table[slot].restarts + 1;
-        sup_set_state(slot, ST_FAILED);
+        // Already FAILED is not an error here: the failure is recorded once, and the
+        // move that matters is FAILED -> RESTARTING.
+        if table[slot].state != ST_FAILED { sup_set_state(slot, ST_FAILED); }
         sup_set_state(slot, ST_RESTARTING);
         return decision, delay;
     }
     // RT_GIVE_UP
-    sup_set_state(slot, ST_FAILED);
+    if table[slot].state != ST_FAILED { sup_set_state(slot, ST_FAILED); }
     return decision, 0;
 }
 

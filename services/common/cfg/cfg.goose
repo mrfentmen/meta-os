@@ -119,10 +119,17 @@ fn parse_pair(text: u8[:], s: i64, e: i64) -> i64, i64, i64, i64, bool {
 // Find a value. `section` may be empty, meaning the top level of the file. The
 // returned span borrows the config text; callers copy it into their own buffer
 // (fmt) or parse it in place (cfg_int / cfg_bool).
+// The LAST matching pair wins, which is the documented rule and the reason this scans to
+// the end instead of returning the first hit. First-wins made the behaviour depend on
+// where the file happened to put the duplicate, and a file that overrides a value later
+// (the way every config format works) silently got the earlier one.
 fn cfg_find(cfg: Config&, section: u8[:], key: u8[:]) -> i64, i64, bool {
     let text = cfg.text;
     var in_wanted = section.len == 0;   // top level when no section asked for
     var i: i64 = 0;
+    var found_vs: i64 = 0;
+    var found_ve: i64 = 0;
+    var found = false;
 
     while i < text.len {
         let end = line_end(text, i);
@@ -139,7 +146,9 @@ fn cfg_find(cfg: Config&, section: u8[:], key: u8[:]) -> i64, i64, bool {
                 let ks, ke, vs, ve, is_pair = parse_pair(text, s, e);
                 if is_pair {
                     if spans_equal_keys(text, ks, ke, key) {
-                        return vs, ve, true;
+                        found_vs = vs;
+                        found_ve = ve;
+                        found = true;
                     }
                 }
             }
@@ -147,6 +156,7 @@ fn cfg_find(cfg: Config&, section: u8[:], key: u8[:]) -> i64, i64, bool {
 
         i = end + 1;    // skip the newline
     }
+    if found { return found_vs, found_ve, true; }
     return 0, 0, false;
 }
 

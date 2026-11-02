@@ -53,9 +53,9 @@ struct FsckReport {
     fixed: i64,         // repairs applied by fsck_fix
 }
 
-var ck_seen_blk: u8[..512];     // one bit per block: reached from some inode
-var ck_seen_ino: u8[..512];     // one bit per inode: named by some entry (or the root)
-var ck_links: u8[..512];        // per-inode entry count, capped at 255
+var ck_seen_blk: u8[..512] = [0; 512];   // one bit per block: reached from some inode
+var ck_seen_ino: u8[..512] = [0; 512];   // one bit per inode: named by some entry (or the root)
+var ck_links: u8[..512] = [0; 512];      // per-inode entry count, capped at 255
 
 fn ck_zero_marks() {
     var i: i64 = 0;

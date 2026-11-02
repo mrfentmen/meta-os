@@ -226,8 +226,13 @@ fn dns_parse_a(pkt: const u8[:], id: i64, out: Answer&) -> i64 {
     let flags = pkt[2];
     if (flags & 0x80) == 0 { return E_CORRUPT; }     // not a response
     out.rcode = (pkt[3] & 0x0F) as i64;
+    // A non-zero rcode is a real ANSWER from a working server, not a parse failure:
+    // NXDOMAIN means the name does not exist and says so definitively. Returning an
+    // error here threw that away -- the caller could not tell "no such name" from "the
+    // wire ate my packet", and would retry a name that will never resolve. The rcode is
+    // reported and the caller decides what it means.
     if out.rcode != RCODE_OK {
-        if out.rcode == RCODE_NXDOMAIN { return E_RESOLVE; }
+        if out.rcode == RCODE_NXDOMAIN { return CODE_OK; }
         return E_RESOLVE;
     }
 

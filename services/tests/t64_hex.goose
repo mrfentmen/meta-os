@@ -75,7 +75,13 @@ fn main() {
         "00000000000000000000000000000000000000000000000000000000000000", 32));
     var long_hex: u8[>..] = [];
     let _ = by_repeat_hex(long_hex, 64, 'a');
-    check("is_exact rejects non-hex of right length", !hex_is_exact(long_hex[..], 32));
+    // 'a' IS a hex digit, so 64 of them is a valid 32-byte string. The earlier version of
+    // this check used 'a' and expected a rejection, which is simply the wrong expectation;
+    // it now asserts the true answer and the non-hex case uses 'g'.
+    check("is_exact accepts 64 hex chars as 32 bytes", hex_is_exact(long_hex[..], 32));
+    var non_hex: u8[>..] = [];
+    let _ = by_repeat_hex(non_hex, 64, 'g');
+    check("is_exact rejects non-hex of right length", !hex_is_exact(non_hex[..], 32));
 
     // --- case-insensitive equality ---
     check("eq_ci same", hex_eq_ci("DEADBEEF", "deadbeef"));

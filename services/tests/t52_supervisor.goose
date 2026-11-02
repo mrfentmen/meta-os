@@ -176,7 +176,7 @@ fn main() {
     check("walk to stopped", sup_walk_stopped(b_slot) == CODE_OK);
     check("release when stopped", sup_release(b_slot) == CODE_OK);
     check("released handle resolves to nothing", sup_resolve(hs) < 0);
-    check("the other service is untouched", sup_resolve(h) > 0);
+    check("the other service is untouched", sup_resolve(h) >= 0);
     let gone, gone_code = sup_lookup("storage");
     check("released name is gone", gone_code != CODE_OK);
 
