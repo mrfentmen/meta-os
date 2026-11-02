@@ -24,7 +24,11 @@ needed; none used).
   assertions re-ran live.
 - Reproducibility: no human trick outside the repo — the PATH
   pin and per-program bases live in gate.sh itself.
-## R6-2 demo capture — BLOCKED (os-build/DEMO_SCRIPT.md not on main as of 1df6311; re-check each fetch. Hana's lane.)
+## R6-2 demo capture — DONE (DEMO_SCRIPT landed; capture 2026-11-02 on merge 28e99285, GATE GREEN)
+- Script: `os-build/DEMO_SCRIPT.md` (H-FP1, 3:00, 6 beats) present on origin/main; merged into this branch as 28e99285; gate GREEN 7/7 on the merged tree (log /tmp/demo-gate.log) before capture.
+- Session: `os-build/demo-capture.sh` (committed) — one QEMU+VNC boot, HMP `screendump` per beat + full serial log. Artifacts in `os-build/logs/demo-beats/`: serial-all.txt (67 lines) + beat1-boot/beat2-ring3/beat3-programs/beat4-fault/beat4b-after-fault/beat5-status/beat5-mem/beat5-ps.ppm + beat6-drill.log/beat6-receipt.txt/beat6-package-sent.json/beat6-incident.json (copies of the R5-imperium record; receipt `sim-6623d237a90b3d9d` re-verified).
+- Honest notes (verified viewing every dump): beats 1-4 print faster than HMP dump latency, so all four boot dumps show the loader/sleeper/crasher window (banners in serial lines 1-2, cut to log per the script's own fallback rule); the `task killed` fault line is serial-only (line 44), the screens show pre/post shell lines; beat 5 pixel-perfect on screen (status ticks 12574 heap 287K, mem 127147/127196, ps 7 rows id-7 Running); beat 6 is the committed record, not a re-run.
+- Ticks note: beat-5 screen shows ticks=12574 (script's example numbers 11739/441232 are illustrative of movement, not assertions).
 ## R6-3 second live loop — DONE (Ignis)
 - Same end-to-end shape as R5-4, different division: Ignis RED
   (`visible flame` x3 on cam-b; note: `visible smoke` is yellow
@@ -60,8 +64,7 @@ needed; none used).
 - No RED this window. Standing rule for the rest of the window:
   each new main tip gets one gate run + one line here.
 ## Blockers for Pax
-1. R6-2 needs Hana's `os-build/DEMO_SCRIPT.md` (absent through
-   1df6311). Nothing to capture against until it lands.
+1. R6-2 CLEARED: `os-build/DEMO_SCRIPT.md` landed on main and the capture above is committed.
 2. R5-2/R6 carry-over: typed bytes via syscall 5 not yet captured;
    intermittent 8-task exit panic + kernel NX-fault storm
    (evidence in R5-*.txt). readkey spawn stays held; one-line
@@ -72,6 +75,6 @@ needed; none used).
    (`dynamic_credentials` sandbox-only import in trio_store.py);
    drills used a /tmp-only stub under TRIO_STORE=local.
 ## What remains unverified
-- Same list as R5 plus: R6-2 capture (blocked), R6-4 freeze
+- Same list as R5 plus: R6-4 freeze
   lines (on the clock). Everything else on this sheet is DONE
   with named logs except R5-2 typed bytes (PARTIAL).
