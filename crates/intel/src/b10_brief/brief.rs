@@ -353,6 +353,7 @@ pub fn build_previous_session(
 /// `None` fields mean "not reported in this snapshot"; a present
 /// but empty list means "none reported" — never padded, never
 /// guessed. A down gateway is reported as down, never omitted.
+#[derive(Debug, Clone, PartialEq)]
 pub struct SystemState {
     pub drivers: Option<Vec<String>>,
     pub gateway_healthy: Option<bool>,
@@ -3021,6 +3022,127 @@ pub fn with_recovery(
         corrupted: corrupted_out,
         recovered: recovered_out,
         sweep_count: sweep_out,
+    })
+}
+
+/// OS-062 follow-up: the boot-path caller that fills a
+/// snapshot's `system_state` record, so a boot brief carries its
+/// three drivers + tools + apps lines even when the snapshot
+/// states only the machine's own stated state. Returns the record
+/// to store as the snapshot's `system_state` value. A hand-stated
+/// record wins over a built one: pass it as `existing` and it is
+/// returned unchanged, whatever the inputs say, so a caller that
+/// knows its machine state better than these flat lists is never
+/// overwritten. The record exists only when the snapshot states
+/// something usable, so a snapshot that states nothing usable
+/// gets no record at all, and older briefs keep their exact shape
+/// instead of gaining a silent record: a boot brief over such a
+/// snapshot still renders the three not-reported lines, as before.
+/// A driver or skill app named twice is one entry, not two: the
+/// first listing wins, in stated order. A name that is not a
+/// non-empty string is skipped, never guessed — and a list of only
+/// skipped names counts as nothing stated, so junk alone never
+/// builds a record. A stated empty list does count: it is the
+/// caller saying none, and it reads "no drivers reported" or "no
+/// skill apps mounted", never "not reported". Gateway health
+/// counts only as a real bool: true reads healthy, false reads
+/// down, and anything else is skipped, never guessed, so a caller
+/// that does not know its gateway health never gets a healthy or
+/// down line it did not state. This still reads stated inputs,
+/// never live machine state: the driver contract (OS-053), the
+/// gateway daemon (OS-058), and the skills loader (OS-065) have
+/// not landed, so a caller that states no drivers, gateway health,
+/// or skill apps gets the not-reported lines even when drivers are
+/// running somewhere else. Never fails: a builder failure leaves
+/// the caller without a record, so the boot path still produces a
+/// brief, just with the not-reported lines, instead of failing
+/// outright.
+///
+/// Stamp note, stated plainly: Python stamps the built record
+/// with one `as_of` for the whole record, but the Rust
+/// `SystemState` carries no stamp field and `system_state_lines`
+/// renders no age, so the stamp has nowhere to go in this crate
+/// and this filler takes no `now` argument, following the
+/// `with_federation` / `with_recovery` precedent for stamp-less
+/// records. If a later slice adds an age field to `SystemState`,
+/// this filler gains the stamp then; nothing here invents one.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `drivers` / `skill_apps` when the
+/// snapshot's list is missing or not a list — silence states no
+/// names; `Some(&[])` is an explicitly empty list, which counts
+/// as a stated none. A list entry that is not a string has no
+/// Rust form: the caller omits it, except that an empty string
+/// stands in for a skipped name, so a list of only empty strings
+/// is junk alone and builds no record, matching Python's
+/// junk-only rule. The caller passes `None` for
+/// `gateway_healthy` when the snapshot's value is missing or not
+/// a bool; `Some(false)` is a stated down gateway, kept, never
+/// omitted.
+pub fn with_system_state(
+    existing: Option<&SystemState>,
+    drivers: Option<&[String]>,
+    gateway_healthy: Option<bool>,
+    skill_apps: Option<&[String]>,
+) -> Option<SystemState> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let mut usable = false;
+    let mut drivers_out: Option<Vec<String>> = None;
+    if let Some(stated) = drivers {
+        if stated.is_empty() {
+            drivers_out = Some(vec![]);
+            usable = true;
+        } else {
+            let mut seen: Vec<&str> = Vec::new();
+            let mut names: Vec<String> = Vec::new();
+            for name in stated {
+                if name.is_empty() || seen.contains(&name.as_str()) {
+                    continue;
+                }
+                seen.push(name.as_str());
+                names.push(name.clone());
+            }
+            if !names.is_empty() {
+                drivers_out = Some(names);
+                usable = true;
+            }
+        }
+    }
+    let mut skill_apps_out: Option<Vec<String>> = None;
+    if let Some(stated) = skill_apps {
+        if stated.is_empty() {
+            skill_apps_out = Some(vec![]);
+            usable = true;
+        } else {
+            let mut seen: Vec<&str> = Vec::new();
+            let mut names: Vec<String> = Vec::new();
+            for name in stated {
+                if name.is_empty() || seen.contains(&name.as_str()) {
+                    continue;
+                }
+                seen.push(name.as_str());
+                names.push(name.clone());
+            }
+            if !names.is_empty() {
+                skill_apps_out = Some(names);
+                usable = true;
+            }
+        }
+    }
+    let mut gateway_out: Option<bool> = None;
+    if let Some(healthy) = gateway_healthy {
+        gateway_out = Some(healthy);
+        usable = true;
+    }
+    if !usable {
+        return None;
+    }
+    Some(SystemState {
+        drivers: drivers_out,
+        gateway_healthy: gateway_out,
+        skill_apps: skill_apps_out,
     })
 }
 
@@ -7420,5 +7542,111 @@ mod tests {
         assert!(record.recovered.is_none());
         assert!(record.sweep_count.is_none());
         assert!(recovery_line(Some(&record)).contains("corrupted record"));
+    }
+
+    #[test]
+    fn with_system_state_builds_all_three_fields_and_renders_lines() {
+        let drivers = vec!["muse-code".to_string(), "relay-driver".to_string()];
+        let apps = vec!["briefing".to_string(), "dispatch".to_string()];
+        let record = with_system_state(None, Some(&drivers), Some(true), Some(&apps))
+            .expect("stated machine state yields a system_state record");
+        assert_eq!(record.drivers, Some(drivers));
+        assert_eq!(record.gateway_healthy, Some(true));
+        assert_eq!(record.skill_apps, Some(apps));
+        assert_eq!(
+            system_state_lines(&record),
+            vec![
+                "Drivers: muse-code, relay-driver available",
+                "Tools: MCP gateway healthy",
+                "Skill apps: briefing, dispatch mounted",
+            ]
+        );
+    }
+
+    #[test]
+    fn with_system_state_hand_stated_record_wins_unchanged() {
+        let stated = SystemState {
+            drivers: Some(vec!["muse-code".to_string()]),
+            gateway_healthy: Some(false),
+            skill_apps: Some(vec![]),
+        };
+        let drivers = vec!["some-other-driver".to_string()];
+        let apps = vec!["briefing".to_string()];
+        let record = with_system_state(Some(&stated), Some(&drivers), Some(true), Some(&apps))
+            .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_system_state_silence_or_junk_gets_no_record() {
+        // Silence states nothing usable.
+        assert_eq!(with_system_state(None, None, None, None), None);
+        // Junk-only lists are nothing stated, never a record.
+        let junk_drivers = vec!["".to_string()];
+        let junk_apps = vec!["".to_string()];
+        assert_eq!(
+            with_system_state(None, Some(&junk_drivers), None, Some(&junk_apps)),
+            None
+        );
+    }
+
+    #[test]
+    fn with_system_state_name_listed_twice_is_one_entry() {
+        let drivers = vec!["muse-code".to_string(), "muse-code".to_string()];
+        let apps = vec![
+            "briefing".to_string(),
+            "briefing".to_string(),
+            "dispatch".to_string(),
+        ];
+        let record = with_system_state(None, Some(&drivers), None, Some(&apps))
+            .expect("stated names yield a record");
+        assert_eq!(record.drivers, Some(vec!["muse-code".to_string()]));
+        assert_eq!(
+            record.skill_apps,
+            Some(vec!["briefing".to_string(), "dispatch".to_string()])
+        );
+    }
+
+    #[test]
+    fn with_system_state_malformed_names_skipped_never_guessed() {
+        let drivers = vec!["muse-code".to_string(), "".to_string()];
+        let apps = vec!["".to_string(), "dispatch".to_string()];
+        let record = with_system_state(None, Some(&drivers), None, Some(&apps))
+            .expect("usable names among junk yield a record");
+        assert_eq!(record.drivers, Some(vec!["muse-code".to_string()]));
+        assert_eq!(record.skill_apps, Some(vec!["dispatch".to_string()]));
+    }
+
+    #[test]
+    fn with_system_state_gateway_down_is_kept_not_omitted() {
+        let record = with_system_state(None, None, Some(false), None)
+            .expect("a stated down gateway yields a record");
+        assert_eq!(record.gateway_healthy, Some(false));
+        let lines = system_state_lines(&record);
+        assert!(lines[1].starts_with("Tools: MCP gateway down"));
+    }
+
+    #[test]
+    fn with_system_state_stated_empty_lists_read_none_not_not_reported() {
+        let empty: Vec<String> = vec![];
+        let record = with_system_state(None, Some(&empty), None, Some(&empty))
+            .expect("stated empty lists yield a record");
+        let lines = system_state_lines(&record);
+        assert_eq!(lines[0], "Drivers: no drivers reported");
+        assert_eq!(lines[1], "Tools: MCP gateway health not reported in this snapshot");
+        assert_eq!(lines[2], "Skill apps: no skill apps mounted");
+    }
+
+    #[test]
+    fn with_system_state_partial_state_builds_partial_record() {
+        let apps = vec!["dispatch".to_string()];
+        let record = with_system_state(None, None, None, Some(&apps))
+            .expect("a stated skill app yields a record");
+        assert_eq!(record.skill_apps, Some(apps));
+        assert!(record.drivers.is_none());
+        assert!(record.gateway_healthy.is_none());
+        let lines = system_state_lines(&record);
+        assert_eq!(lines[0], "Drivers: not reported in this snapshot");
+        assert_eq!(lines[1], "Tools: MCP gateway health not reported in this snapshot");
     }
 }
