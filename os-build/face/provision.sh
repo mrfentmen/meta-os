@@ -5,6 +5,12 @@ set -eu
 SRC="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 DST=/opt/face
 U="${HOME}/.config/systemd/user"
+# 0) clear stale manual servers from earlier dev sessions (exact
+# binary+arg match so this never matches the provision shell itself)
+for pat in "http.server 18900" "launcher.py" "facts.py" "ptyd.py"; do
+  pkill -f "python3 .*/$pat" 2>/dev/null || true
+done
+sleep 1
 # 1) stage face content (skip when already running from DST)
 if [ "$SRC" != "$DST" ]; then
   sudo mkdir -p "$DST"
