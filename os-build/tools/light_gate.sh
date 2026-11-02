@@ -15,11 +15,29 @@
 # Env:   KEEP=1  keep the temp dir even on success (it is always kept on fail)
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="${LIGHT_GATE_ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
 WORK="$(mktemp -d "${TMPDIR:-/tmp}/metaos-light-gate.XXXXXX")"
 LOGS="$WORK/logs"
 CLONE="$WORK/clone"
 KEEP="${KEEP:-0}"
+
+ONLY=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --only) ONLY="${2:-}"; shift 2 || true ;;
+    -h|--help) printf 'usage: light_gate.sh [--only clone|tree|docs|suites|omissions]\n'; exit 0 ;;
+    *) printf 'light_gate: unknown argument: %s\n' "$1" >&2; exit 2 ;;
+  esac
+done
+STAGES="clone tree docs suites omissions"
+if [ -n "$ONLY" ]; then
+  case " $STAGES " in
+    *" $ONLY "*) ;;
+    *) printf 'light_gate: unknown stage: %s (choose: %s)\n' "$ONLY" "$STAGES" >&2; exit 2 ;;
+  esac
+fi
+stage_on() { [ -z "$ONLY" ] || [ "$ONLY" = "$1" ]; }
+CURRENT_STAGE="setup"
 
 PASS=0
 FAIL=0
@@ -38,7 +56,7 @@ cleanup() {
 trap cleanup EXIT
 
 ok()   { PASS=$((PASS + 1)); printf '  ok   %s\n' "$1"; }
-bad()  { FAIL=$((FAIL + 1)); GATE_FAILED=1; printf '  FAIL %s\n' "$1"; }
+bad()  { FAIL=$((FAIL + 1)); GATE_FAILED=1; printf '  FAIL %s\n' "$1"; printf '\nLIGHT GATE: FAIL — stage %s: %s\n' "$CURRENT_STAGE" "$1" >&2; exit 1; }
 warn() { WARN=$((WARN + 1)); printf '  WARN %s\n' "$1"; }
 
 need() {
@@ -73,12 +91,17 @@ printf 'tools:  git %s | node %s | npm %s | python %s\n' \
   "$(npm --version)" \
   "$(python3 -V 2>&1 | awk '{print $2}')"
 
-COMMIT="$(git -C "$ROOT" rev-parse --verify HEAD)"
-printf 'commit: %s\n' "$COMMIT"
+COMMIT=""
+if stage_on clone; then
+  COMMIT="$(git -C "$ROOT" rev-parse --verify HEAD)"
+  printf 'commit: %s\n' "$COMMIT"
+fi
 
 # ---------------------------------------------------------------------------
 # Stage 1 — clean clone
 # ---------------------------------------------------------------------------
+CURRENT_STAGE=clone
+if stage_on clone; then
 printf '\n== clone ==\n'
 if git clone --quiet --no-hardlinks "$ROOT" "$CLONE" 2>"$LOGS/clone.err"; then
   ok "cloned HEAD into a fresh temp dir"
@@ -100,9 +123,13 @@ else
   bad "clone HEAD $CLONE_COMMIT != source HEAD $COMMIT"
 fi
 
+fi
+
 # ---------------------------------------------------------------------------
 # Stage 2 — tree comparison
 # ---------------------------------------------------------------------------
+CURRENT_STAGE=tree
+if stage_on tree; then
 printf '\n== tree ==\n'
 git -C "$ROOT" ls-files | LC_ALL=C sort >"$WORK/root.files"
 git -C "$CLONE" ls-files | LC_ALL=C sort >"$WORK/clone.files"
@@ -146,9 +173,13 @@ else
   fi
 fi
 
+fi
+
 # ---------------------------------------------------------------------------
 # Stage 3 — doc checks (boot logs from gates.md, lane-doc paths)
 # ---------------------------------------------------------------------------
+CURRENT_STAGE=docs
+if stage_on docs; then
 printf '\n== docs ==\n'
 GATES="$ROOT/os-build/gates.md"
 LANE_DOC="$ROOT/os-build/BOND_LIGHT_LANES.md"
@@ -249,9 +280,13 @@ for src in \
   fi
  done
 
+fi
+
 # ---------------------------------------------------------------------------
 # Stage 4 — suites (8GB-safe: Node + Python, no install, no network)
 # ---------------------------------------------------------------------------
+CURRENT_STAGE=suites
+if stage_on suites; then
 printf '\n== suites ==\n'
 
 summarize_node() {
@@ -294,12 +329,17 @@ else
   bad "pytest is not installed; the Python suites cannot be claimed"
 fi
 
+fi
+
 # ---------------------------------------------------------------------------
 # Stage 5 — named omissions (never silent)
 # ---------------------------------------------------------------------------
+CURRENT_STAGE=omissions
+if stage_on omissions; then
 printf '\n== not run (8GB lane) ==\n'
 printf '  SKIP cargo build/check (8GB lane)\n'
 printf '  SKIP QEMU (8GB lane)\n'
+fi
 
 # ---------------------------------------------------------------------------
 # Summary
@@ -309,6 +349,9 @@ if [ "$GATE_FAILED" -eq 0 ]; then
   printf 'LIGHT GATE: PASS — %d ok, %d warn\n' "$PASS" "$WARN"
 else
   printf 'LIGHT GATE: FAIL — %d ok, %d fail, %d warn\n' "$PASS" "$FAIL" "$WARN"
+fi
+if [ -n "$ONLY" ]; then
+  printf 'LIGHT GATE: --only %s (all other stages skipped)\n' "$ONLY"
 fi
 printf 'note: a green light gate is NOT a green full gate.sh (cargo + QEMU stages omitted).\n'
 exit "$GATE_FAILED"

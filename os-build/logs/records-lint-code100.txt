@@ -1,0 +1,155 @@
+records: 170, complete: 17, incomplete: 153
+  agent-runtime-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  agent-runtime-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  agent-runtime-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  agent-runtime-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  agent-runtime-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  agent-runtime-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  agent-runtime-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  agent-runtime.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  assess-server-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  assess-server-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  assess-server-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  assess-server-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  assess-server-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  assess-server-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  assess-server-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  assess-server.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  boot-sequence.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  claim-audit.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  console-shell.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  dashboard-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  dashboard-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  dashboard-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  dashboard-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  dashboard-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  dashboard-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  dashboard-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  dashboard.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  face-wave2-rerun.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  fault-path.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  guardrail-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  guardrail-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  guardrail-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  guardrail-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  guardrail-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  guardrail-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  guardrail-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  guardrail.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  intel-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  intel-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  intel-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  intel-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  intel-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  intel-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  intel-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  intel.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  kernel-index.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-boot-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-boot-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-boot-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-boot-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-boot-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-boot-records.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  os-boot-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-budget-callers.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-budget-changes.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-budget-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-budget-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-budget-gaps.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-budget-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-budget-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-budget.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-identity-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-identity-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-identity-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-identity-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-identity-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  os-identity-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-identity-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-identity.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  os-jobs-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-jobs-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-jobs-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-jobs-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-jobs-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-jobs-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-jobs-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-memory-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-memory-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-memory-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-memory-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-memory-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-memory-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-memory-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-misc-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-misc-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-misc-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-misc-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-misc-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-misc-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-misc-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-supervisor-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-supervisor-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  os-supervisor-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-supervisor-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  os-supervisor-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-supervisor-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-supervisor-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-supervisor.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-worker-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-worker-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  os-worker-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-worker-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-worker-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-worker-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-worker-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-worker.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-workspace-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  os-workspace-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-workspace-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-workspace-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-workspace-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  os-workspace-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  os-workspace-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  python-crew-seam.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  python-dashboard.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  python-evidence-store.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  python-orchestrator.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  python-queue-service.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  python-trio-store.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  python-uplink.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  python-watchman.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  queue-core-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-core-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-core-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-core-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-core-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-core-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-core-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-core.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  queue-store-callers.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-store-changes.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-store-config.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-store-drill.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-store-gaps.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-store-records.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  queue-store-surface.md — scope: expected Scope:, Source: or a Scope/Source/What heading
+  relay-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  relay-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  relay-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  relay-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  relay-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  relay-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  relay-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  relay.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  stack-callers.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  stack-changes.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  stack-config.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  stack-drill.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  stack-gaps.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  stack-records.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  stack-surface.md — date: expected 2026-..-.. or Date: in the first 10 lines; scope: expected Scope:, Source: or a Scope/Source/What heading
+  syscall-path.md — date: expected 2026-..-.. or Date: in the first 10 lines
+  task-lifecycle.md — date: expected 2026-..-.. or Date: in the first 10 lines
+report only: no record was edited
