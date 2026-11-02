@@ -1,0 +1,23 @@
+# OC1B-101 / OC1B-102 — K3 tree under gate (measured 2026-11-02, OpenCode 1)
+
+Branch: origin/rowan/kernel-k3-build
+Exact tip sha: 7bb7207524d831811ce54bc5fcde7b43c2b4bed2
+Subject: "K3 demand paging build (Pax-approved design, Q-D1 decided: map in
+handler; shared-root correction noted; syscalls.rs untouched)"
+
+Diff stat vs opencode/500 merge-base, kernel + pack files only:
+ kernel/build.rs                           |   2 +-
+ kernel/src/interrupts.rs                  | 137 ++++++++++++++++++++++++++++++
+ kernel/src/memory.rs                      |  10 +++
+ kernel/src/sched.rs                       |  13 ++-
+ kernel/src/user.rs                        |  56 +++++++++++-
+ os-build/K3_DEMAND_PAGING_BUILD.md        | 137 ++++++++++++++++++++++++++++++
+ os-build/userspace/user/src/bin/demand.rs |  54 ++++++++++++
+ 7 files changed, 403 insertions(+), 6 deletions(-)
+
+Design doc for this build lives on origin/rowan/kernel-k3-design @
+3ff4ad22fd4ad07c7363c8bb2698983c0b68792e (design only, no kernel code).
+
+OC1B-102 — syscalls.rs untouched confirmation:
+  git diff <merge-base>..7bb72075 -- kernel/src/syscalls.rs
+  output: EMPTY (0 lines). Quoted as empty here. FROZEN holds.

@@ -1,0 +1,31 @@
+# OC1B-127 / OC1B-128 / OC1B-129 — K4 tree under gate (measured 2026-11-02)
+
+Branch: origin/rowan/kernel-k4-build
+Exact tip sha: 4a37f9987bba5a10efb3df7624a25eae8c38fc18
+Subject: "K4 IPC build: mailbox send/recv syscalls 6/7 in user.rs + sched.rs,
+4 Pax review changes in design, build note; syscalls.rs frozen, MAX_TASKS 8,
+uncompiled-unbooted pending Milo gate-1 + Mac gate"
+
+Diff stat vs opencode/500 merge-base, kernel + pack files only:
+ kernel/src/sched.rs       | 106 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ kernel/src/user.rs        |  98 ++++++++++++++++++++++++++++++++++++++++++++++++
+ os-build/K4_IPC_BUILD.md  | 122 +++++++++++++++
+ os-build/K4_IPC_DESIGN.md | 369 ++++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 694 insertions(+), 1 deletion(-)
+
+OC1B-127 dispatch-route confirmation: dispatch entries 6 = ipc_send /
+7 = ipc_recv live in the inline match in kernel/src/user.rs ONLY
+(user.rs:133 `6 =>`, user.rs:141 `7 =>`; third arg via SAVED_RDX,
+user.rs:70/92). No dispatch change anywhere else.
+
+OC1B-128 — syscalls.rs untouched confirmation:
+  git diff <merge-base>..4a37f998 -- kernel/src/syscalls.rs
+  output: EMPTY (0 lines). Quoted as empty here. FROZEN holds.
+
+OC1B-129 — task-table growth check (Pax Q-I1: swap, do not grow):
+  kernel/src/sched.rs:22 on the branch tip: `const MAX_TASKS: usize = 8;`
+  Quoted verbatim. Table NOT grown. The gate-build swap (two demo slots
+  for the talker/listener pair) is NOT in this branch — the build note
+  assigns the swap + the pair itself (Buffy R11-273) outside Rowan.
+  Neither exists on any branch (measured: no origin ref carries
+  talker.rs/listener.rs; only os-build/research/goose-ipc.md mentions IPC).
