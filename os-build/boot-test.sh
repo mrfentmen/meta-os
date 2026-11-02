@@ -22,7 +22,7 @@ checkline() { # checkline <name> <fixed-string>
 
 echo "== userspace =="
 cd os-build/userspace/user
-for pair in "hello:0x600000000000" "sleeper:0x610000000000" "crasher:0x620000000000"; do
+for pair in "hello:0x600000000000" "sleeper:0x610000000000" "crasher:0x620000000000" "readkey:0x630000000000"; do
   b=${pair%%:*}; base=${pair##*:}
   sed "s/= BASE/= $base/" link-base.ld > link.ld
   touch src/bin/$b.rs

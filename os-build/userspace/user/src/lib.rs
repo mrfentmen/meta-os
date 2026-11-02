@@ -40,6 +40,14 @@ pub fn sys_yield() -> u64 {
     syscall(4, 0, 0, 0)
 }
 
+/// Read one raw PS/2 set-1 scancode byte via syscall 5 (R-7 kernel
+/// side; R5-2 readkey program side, restored from the unmerged
+/// round-5 branch). Returns the byte (0..=255) or u64::MAX when the
+/// kernel ring buffer is empty; non-blocking, caller polls/yields.
+pub fn sys_read_key() -> u64 {
+    syscall(5, 0, 0, 0)
+}
+
 /// Print an unsigned decimal. No formatting machinery in userspace.
 pub fn print_u64(mut n: u64) {
     let mut buf = [0u8; 20];

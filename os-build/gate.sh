@@ -17,7 +17,7 @@ qemu-system-x86_64 --version | head -1
 
 echo "== userspace =="
 cd os-build/userspace/user
-for pair in "hello:0x600000000000" "sleeper:0x610000000000" "crasher:0x620000000000"; do
+for pair in "hello:0x600000000000" "sleeper:0x610000000000" "crasher:0x620000000000" "readkey:0x630000000000"; do
   b=${pair%%:*}; base=${pair##*:}
   sed "s/0x620000000000/$base/" link.ld > "/tmp/link-$b.ld"
   RUSTFLAGS="$FLAGS -C link-arg=-T/tmp/link-$b.ld" cargo build --target x86_64-unknown-none --bin "$b"
@@ -51,6 +51,7 @@ check "mem summary: K4 up"       "K4 memory"
 check "HELLO FROM USERSPACE"     "K6 ring 3"
 check "user exit code 0"         "K6 clean exit"
 check "task killed"              "K6 fault isolation"
+check "user readkey: entry"      "readkey spawned (R5-2 follow-up)"
 check "commands: status help"    "shell answered"
 check "STATUS tasks="            "status reported live state"
 if grep -aq "loader refused" "$LOG"; then echo "  FAIL userspace refused"; fail=1; fi
