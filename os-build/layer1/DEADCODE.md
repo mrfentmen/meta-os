@@ -7,7 +7,7 @@ reason this page under-reports dead code rather than inventing any: a function t
 appears in a comment will not be listed here, and the page says so instead of claiming
 a compiler's answer.
 
-Scanned: 68 service directories, 142 Goose files.
+Scanned: 68 service directories, 144 Goose files.
 
 ## 1. Functions nothing calls
 
@@ -27,27 +27,16 @@ Scanned: 68 service directories, 142 Goose files.
 | `services/example/example.goose` | `on_stop` | 203 |
 | `services/netcfg/netcfg.goose` | `ip4_mask` | 146 |
 | `services/netcfg/netcfg.goose` | `ip4_subnet_broadcast` | 195 |
-| `services/updater/delta.goose` | `delta_plan` | 91 |
-| `services/updater/delta.goose` | `delta_verify` | 212 |
-| `services/updater/delta.goose` | `delta_ops_max` | 242 |
-| `services/updater/delta.goose` | `delta_op_name` | 244 |
-| `services/updater/delta.goose` | `delta_plan_line` | 252 |
 | `services/updater/signature.goose` | `sig_status_name` | 71 |
 | `services/updater/signature.goose` | `sig_signed_len` | 201 |
 | `services/updater/signature.goose` | `sig_trusted_key_count` | 208 |
 | `services/updater/updater.goose` | `upd_record_confirm` | 596 |
 | `services/updater/updater.goose` | `upd_record_safe_slot` | 624 |
 | `services/storage/storage.goose` | `storage_wipe` | 148 |
-| `services/time/calendar.goose` | `cal_days_in_month` | 43 |
-| `services/time/calendar.goose` | `cal_make` | 130 |
-| `services/time/calendar.goose` | `cal_month_name` | 136 |
-| `services/time/calendar.goose` | `cal_month_short` | 152 |
-| `services/time/calendar.goose` | `cal_weekday_name` | 168 |
-| `services/time/calendar.goose` | `cal_weekday_short` | 179 |
-| `services/time/calendar.goose` | `zone_count` | 215 |
-| `services/time/calendar.goose` | `zone_find` | 230 |
-| `services/time/calendar.goose` | `zone_offset_min` | 245 |
-| `services/time/calendar.goose` | `cal_format_iso` | 296 |
+| `services/time/calendar.goose` | `zone_count` | 219 |
+| `services/time/calendar.goose` | `zone_find` | 234 |
+| `services/time/calendar.goose` | `zone_offset_min` | 249 |
+| `services/time/calendar.goose` | `cal_format_iso` | 300 |
 | `services/time/time.goose` | `clock_deadline_in` | 174 |
 | `services/time/time.goose` | `clock_wait` | 200 |
 | `services/time/time.goose` | `ticks_to_us` | 238 |
@@ -446,6 +435,11 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/supervisor/supervisor.goose` | `sup_can_start` | 334 | 10 |
 | `services/supervisor/supervisor.goose` | `sup_set_policy` | 372 | 19 |
 | `services/supervisor/supervisor.goose` | `sup_restart_ready` | 501 | 7 |
+| `services/time/calendar.goose` | `cal_days_in_month` | 43 | 10 |
+| `services/time/calendar.goose` | `cal_month_name` | 140 | 14 |
+| `services/time/calendar.goose` | `cal_month_short` | 156 | 5 |
+| `services/time/calendar.goose` | `cal_weekday_name` | 172 | 8 |
+| `services/time/calendar.goose` | `cal_weekday_short` | 183 | 4 |
 | `services/time/time.goose` | `clock_now` | 158 | 2 |
 | `services/time/time.goose` | `deadline_remaining_ms` | 190 | 2 |
 | `services/time/time.goose` | `clock_budget_expired` | 232 | 1 |
@@ -455,6 +449,11 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | `services/timesync/timesync.goose` | `ts_pending_ms` | 106 | 5 |
 | `services/timesync/timesync.goose` | `ntp_build_request` | 118 | 1 |
 | `services/timesync/timesync.goose` | `ntp_apply_reply` | 193 | 12 |
+| `services/updater/delta.goose` | `delta_plan` | 91 | 17 |
+| `services/updater/delta.goose` | `delta_verify` | 217 | 6 |
+| `services/updater/delta.goose` | `delta_ops_max` | 247 | 3 |
+| `services/updater/delta.goose` | `delta_op_name` | 249 | 9 |
+| `services/updater/delta.goose` | `delta_plan_line` | 257 | 3 |
 | `services/updater/signature.goose` | `sig_parse` | 97 | 2 |
 | `services/updater/updater.goose` | `upd_parse_manifest` | 80 | 8 |
 | `services/updater/updater.goose` | `upd_verify_all` | 344 | 2 |
@@ -500,15 +499,15 @@ the system runs, and every accessor is a promise somebody may rely on later.
 | Directory | Unreferenced functions |
 |---|---|
 | `services/common` | 35 |
-| `services/time` | 13 |
-| `services/updater` | 10 |
 | `services/console` | 8 |
 | `services/display` | 7 |
+| `services/time` | 7 |
 | `services/devices` | 6 |
 | `services/supervisor` | 6 |
 | `services/watchdog` | 6 |
 | `services/fs` | 5 |
 | `services/net` | 5 |
+| `services/updater` | 5 |
 | `services/audit` | 4 |
 | `services/dns` | 4 |
 | `services/input` | 4 |
@@ -524,9 +523,9 @@ the system runs, and every accessor is a promise somebody may rely on later.
 
 ## What this census found
 
-- 126 function(s) with no reference at all.
+- 115 function(s) with no reference at all.
 - 38 constant(s) declared and never read.
-- 293 accessor(s) reached only from a driver.
+- 303 accessor(s) reached only from a driver.
 
 The count that matters for the submission is the first: a function nothing calls
 is a claim about the system that the system does not make.

@@ -29,7 +29,7 @@ which is the honest word for a promise. Every cell marked EXERCISED names the te
 | `dns` | t57 (bad label, compression loop) | t61 | — | — | — | — |
 | `socket` | t77 (unbound send, privileged port, port 70000, zero-length, past MTU, 0.0.0.0, port 0, closed handle) | t61 | — | t77 (two queued is the limit, table cap is hard) | — | — |
 | `timesync` | t77 (short packet, client mode, stratum 0, leap 3, no transmit time, two days out, negative delay) | t61 | — | — | — | t77 (a corrupt reply is refused, a good one after it still applies) |
-| `updater` | t58 (unknown key, dup path, short digest) | t61 | t58 (rollback record) | t58 (slot refusal) | — | t58 (digest mismatch) |
+| `updater` | t58 (unknown key, dup path, short digest), t98 (base length, base digest, copy past the base, literal past the pool, unknown op, short output, oversized plan) | t61 | t58 (rollback record), t98 (refused delta is E_ROLLBACK not a write) | t58 (slot refusal), t98 (slot too small) | — | t58 (digest mismatch), t98 (one changed byte) |
 | `agenthost` | t59 (grant on a dead agent, ungranted bit), t97 (quota on a dead handle, impossible quota, blocked call, blocked byte, over-release, table full) | t61 | t59 (agent exit is recorded), t97 (stop twice) | t97 (call rate, window reset, backwards clock, storage limit, row table) | — | — |
 
 `t62`–`t64` (bytes, str, hex) and `t45`–`t48` (format, ring, cfg, boot record) are the libraries the

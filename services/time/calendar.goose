@@ -2,7 +2,7 @@
 //
 // B-L1-110 — Time: civil calendar and zones.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t99_calendar (36 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // THE ONLY HARD PART IS LEAP YEARS, AND IT IS ALREADY SOLVED
 // ----------------------------------------------------------
@@ -127,7 +127,11 @@ fn cal_break(unix_s: i64, offset_min: i64) -> Civil {
 
 // The other direction, for `date -s`. Applies the offset in reverse, so a wall time read
 // from a user and the UTC seconds the clock stores cannot drift apart.
-fn cal_make(c: Civil&, offset_min: i64) -> i64 {
+//
+// `c` is read by value: this function only reads the six fields it needs, and a reference made
+// every caller build a named struct first -- including `cal_make(civil(1970, 1, 1, 0, 0, 0), 0)`,
+// which is the natural way to write a date.
+fn cal_make(c: Civil, offset_min: i64) -> i64 {
     let days = days_from_civil(c.year, c.month, c.day);
     let sod = c.hour * SECS_PER_HOUR + c.minute * SECS_PER_MIN + c.second;
     return days * SECS_PER_DAY + sod - offset_min * SECS_PER_MIN;
