@@ -13,21 +13,22 @@ ROOT="$(pwd)"
 TMP="$(mktemp -d)" || exit 2
 trap 'rm -rf "$TMP"' EXIT
 
+# The docs cross-link and the root manifest names repo-level paths, so the temp tree
+# has to be the real tree. Heavy build outputs and frame packs are excluded, and the
+# excluded directories are recreated empty so existence checks still hold.
 copy_tree() {
-    mkdir -p "$TMP/kernel/src" "$TMP/os-build/layer1" \
-             "$TMP/os-build/userspace/user/src"
-    cp "$ROOT/kernel/src/user.rs" "$TMP/kernel/src/user.rs" || exit 2
-    cp "$ROOT/KERNEL_SPEC.md" "$TMP/KERNEL_SPEC.md" || exit 2
-    cp "$ROOT/os-build/USERSPACE_ABI.md" "$TMP/os-build/USERSPACE_ABI.md" || exit 2
-    cp "$ROOT/os-build/layer1/BOOT_ORDER.md" "$TMP/os-build/layer1/BOOT_ORDER.md" || exit 2
-    cp "$ROOT/os-build/BOOT_MANIFEST.md" "$TMP/os-build/BOOT_MANIFEST.md" || exit 2
-    cp "$ROOT/os-build/boot-manifest.json" "$TMP/os-build/boot-manifest.json" || exit 2
-    cp "$ROOT/os-build/userspace/user/src/lib.rs" \
-       "$TMP/os-build/userspace/user/src/lib.rs" || exit 2
+    ( cd "$ROOT" && tar -cf - \
+        --exclude='./.git' --exclude='node_modules' --exclude='*/target' \
+        --exclude='./eval/*' --exclude='./test-footage/*' --exclude='./native/*' . ) \
+        | ( cd "$TMP" && tar -xf - ) || exit 2
+    mkdir -p "$TMP/eval" "$TMP/test-footage" "$TMP/native"
 }
 
 run_abi() { ( cd "$TMP" && python3 "$ROOT/os-build/layer1/abi_check.py" >/dev/null 2>&1 ); }
 run_manifest() { ( cd "$TMP" && python3 "$ROOT/os-build/layer1/boot_manifest_check.py" >/dev/null 2>&1 ); }
+run_facts() { ( cd "$TMP" && python3 "$ROOT/os-build/layer1/facts_check.py" >/dev/null 2>&1 ); }
+run_link() { ( cd "$TMP" && python3 "$ROOT/os-build/layer1/link_check.py" >/dev/null 2>&1 ); }
+run_root() { ( cd "$TMP" && python3 "$ROOT/os-build/layer1/root_manifest_check.py" >/dev/null 2>&1 ); }
 
 FAILED=0
 expect() { # expect <name> <wanted:pass|fail> <function>
@@ -59,6 +60,27 @@ sed -i.bak 's/| 7 | console | bootlog | no | \*\*yes\*\* |/| 7 | console | bootl
     "$TMP/os-build/BOOT_MANIFEST.md"
 expect "console marked degradable" fail run_manifest
 cp "$ROOT/os-build/BOOT_MANIFEST.md" "$TMP/os-build/BOOT_MANIFEST.md"
+
+echo "== facts_check =="
+expect "clean tree" pass run_facts
+sed -i.bak 's/61660/99999/' "$TMP/os-build/KERNEL_STATUS.md"
+expect "a frame count changed away from its log" fail run_facts
+cp "$ROOT/os-build/KERNEL_STATUS.md" "$TMP/os-build/KERNEL_STATUS.md"
+
+echo "== link_check =="
+expect "clean tree" pass run_link
+# A new record with one dead relative link: the glob picks it up, so this does not
+# depend on which existing document happens to carry a markdown link.
+printf '# Drift test\n\nSee [the deleted record](deleted-record.md).\n' \
+    > "$TMP/os-build/records/drift-link-test.md"
+expect "a link points at a file that is gone" fail run_link
+rm -f "$TMP/os-build/records/drift-link-test.md"
+
+echo "== root_manifest_check =="
+expect "clean tree" pass run_root
+sed -i.bak 's|`kernel/`|`kernel-renamed/`|' "$TMP/os-build/ROOT_MANIFEST.md"
+expect "a manifest path no longer exists" fail run_root
+cp "$ROOT/os-build/ROOT_MANIFEST.md" "$TMP/os-build/ROOT_MANIFEST.md"
 
 python3 - "$TMP/os-build/boot-manifest.json" <<'PY'
 import json, sys
