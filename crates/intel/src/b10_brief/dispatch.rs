@@ -995,6 +995,88 @@ pub fn fallback_plan(goal: &str) -> Result<Plan, PlanError> {
     })
 }
 
+/// Build the interactive approval prompt for a plan, ported from
+/// `dispatch.py::approval_prompt`.
+///
+/// Names the job count ("Post this plan (4 jobs)? [y/N] "), so the
+/// human answers about this plan, not in the abstract. Pure string
+/// building; posts nothing.
+pub fn approval_prompt(plan: &Plan) -> String {
+    format!("Post this plan ({} jobs)? [y/N] ", plan.jobs.len())
+}
+
+/// Decide whether a validated plan may be posted (DSP-007), ported
+/// from `dispatch.py::request_approval`.
+///
+/// The single gate between a plan and the DSP-008 poster. Returns
+/// true only when a human has approved, by exactly one of two routes:
+/// `approve` (the caller already holds a human approval, CLI
+/// --approve flag or dashboard approve action), or `confirm`, a prompt
+/// function called once with [`approval_prompt`] — only a trimmed,
+/// case-insensitive "y" or "yes" approves, any other answer denies,
+/// and a closed prompt denies instead of crashing. With no flag and
+/// no prompt there is no human in the loop, so the answer is false:
+/// non-interactive runs must pass --approve explicitly, and a default
+/// never approves.
+///
+/// DSP-013 second confirmation: when [`plan_size_warnings`] is
+/// non-empty, the first approval alone is not enough. The plan also
+/// needs a second confirmation, by exactly one of two routes:
+/// `confirm_large` (the caller already holds it, CLI --confirm-large
+/// flag), or the `confirm` function called a second time with
+/// [`large_plan_prompt`], answered y/yes. Any other second answer, a
+/// closed prompt on the second call, or no second confirmation at all
+/// denies the large plan, even when the first approval passed.
+/// Never posts, never claims, never touches job state, and never
+/// mutates the plan: approval is a decision, not a side effect.
+///
+/// Rust adaptations, stated not hidden: Python's `confirm` is a
+/// prompt function (input) whose `EOFError` denies; here `confirm`
+/// returns `None` for a closed prompt, which denies the same way.
+/// Python raises `PlanError` on a malformed plan shape; the typed
+/// `Plan` here cannot carry that shape, so there is no error case —
+/// the same note the size-warning port carries.
+pub fn request_approval(
+    plan: &Plan,
+    approve: bool,
+    confirm: Option<&mut dyn FnMut(&str) -> Option<String>>,
+    confirm_large: bool,
+) -> bool {
+    fn is_yes(answer: &str) -> bool {
+        let a = answer.trim().to_ascii_lowercase();
+        a == "y" || a == "yes"
+    }
+    let mut confirm = confirm;
+    let first = if approve {
+        true
+    } else {
+        match confirm.as_mut() {
+            None => return false,
+            Some(f) => match f(&approval_prompt(plan)) {
+                Some(answer) => is_yes(&answer),
+                None => false,
+            },
+        }
+    };
+    if !first {
+        return false;
+    }
+    let warnings = plan_size_warnings(plan);
+    if warnings.is_empty() {
+        return true;
+    }
+    if confirm_large {
+        return true;
+    }
+    match confirm.as_mut() {
+        None => false,
+        Some(f) => match f(&large_plan_prompt(plan, Some(&warnings))) {
+            Some(answer) => is_yes(&answer),
+            None => false,
+        },
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1538,5 +1620,126 @@ mod tests {
     fn fallback_plan_empty_goal_refused() {
         let err = fallback_plan("   \n  ").unwrap_err();
         assert!(err.0.contains("fallback plan: goal must be a non-empty string"), "got: {err}");
+    }
+
+    fn large_plan() -> Plan {
+        // 13 jobs over the 12-job limit, so plan_size_warnings is non-empty.
+        let jobs = (0..13)
+            .map(|i| cjob(&format!("j{i}"), vec![], "Steps: create file intel/a.py."))
+            .collect();
+        cplan(jobs)
+    }
+
+    #[test]
+    fn approval_prompt_names_the_job_count() {
+        assert_eq!(approval_prompt(&plan()), "Post this plan (2 jobs)? [y/N] ");
+    }
+
+    #[test]
+    fn approval_flag_approves_without_prompt() {
+        let mut calls = 0;
+        let mut confirm = |_: &str| {
+            calls += 1;
+            Some("y".to_string())
+        };
+        assert!(request_approval(&plan(), true, Some(&mut confirm), false));
+        assert_eq!(calls, 0);
+    }
+
+    #[test]
+    fn approval_interactive_yes_variants_approve() {
+        for answer in ["y", "Y", "yes", "YES", "  y  ", "Yes"] {
+            let mut confirm = |_: &str| Some(answer.to_string());
+            assert!(
+                request_approval(&plan(), false, Some(&mut confirm), false),
+                "answer {answer:?} should approve"
+            );
+        }
+    }
+
+    #[test]
+    fn approval_interactive_other_answers_deny() {
+        for answer in ["n", "N", "no", "", "maybe", "ye", "yep"] {
+            let mut confirm = |_: &str| Some(answer.to_string());
+            assert!(
+                !request_approval(&plan(), false, Some(&mut confirm), false),
+                "answer {answer:?} should deny"
+            );
+        }
+    }
+
+    #[test]
+    fn approval_prompt_passed_to_confirm_once_for_small_plan() {
+        let mut seen: Vec<String> = Vec::new();
+        let mut confirm = |prompt: &str| {
+            seen.push(prompt.to_string());
+            Some("n".to_string())
+        };
+        assert!(!request_approval(&plan(), false, Some(&mut confirm), false));
+        assert_eq!(seen.len(), 1);
+        assert_eq!(seen[0], approval_prompt(&plan()));
+    }
+
+    #[test]
+    fn approval_closed_prompt_denies_instead_of_crashing() {
+        let mut confirm = |_: &str| None;
+        assert!(!request_approval(&plan(), false, Some(&mut confirm), false));
+    }
+
+    #[test]
+    fn approval_no_prompt_and_no_flag_denies() {
+        assert!(!request_approval(&plan(), false, None, false));
+    }
+
+    #[test]
+    fn approval_gate_does_not_mutate_the_plan() {
+        let before = plan();
+        let mut confirm = |_: &str| Some("y".to_string());
+        assert!(request_approval(&before, true, Some(&mut confirm), false));
+        let mut confirm = |_: &str| Some("y".to_string());
+        assert!(request_approval(&before, false, Some(&mut confirm), false));
+        assert_eq!(before, plan());
+    }
+
+    #[test]
+    fn approval_large_plan_first_approval_alone_denies() {
+        // Flag route, no second confirmation held, no prompt: denied.
+        assert!(!request_approval(&large_plan(), true, None, false));
+        // Prompt route, first yes, second no: denied, prompt called twice.
+        let mut seen: Vec<String> = Vec::new();
+        let mut answers = ["y", "n"].iter();
+        let mut confirm = |prompt: &str| {
+            seen.push(prompt.to_string());
+            answers.next().map(|a| a.to_string())
+        };
+        assert!(!request_approval(&large_plan(), false, Some(&mut confirm), false));
+        assert_eq!(seen.len(), 2);
+        assert_eq!(seen[1], large_plan_prompt(&large_plan(), Some(&plan_size_warnings(&large_plan()))));
+    }
+
+    #[test]
+    fn approval_large_plan_second_confirmation_approves() {
+        assert!(request_approval(&large_plan(), true, None, true));
+        let mut answers = ["y", "yes"].iter();
+        let mut confirm = |_: &str| answers.next().map(|a| a.to_string());
+        assert!(request_approval(&large_plan(), false, Some(&mut confirm), false));
+    }
+
+    #[test]
+    fn approval_large_plan_closed_second_prompt_denies() {
+        let mut answers = [Some("y".to_string()), None].into_iter();
+        let mut confirm = |_: &str| answers.next().flatten();
+        assert!(!request_approval(&large_plan(), false, Some(&mut confirm), false));
+    }
+
+    #[test]
+    fn approval_first_no_skips_second_prompt() {
+        let mut seen: Vec<String> = Vec::new();
+        let mut confirm = |prompt: &str| {
+            seen.push(prompt.to_string());
+            Some("n".to_string())
+        };
+        assert!(!request_approval(&large_plan(), false, Some(&mut confirm), false));
+        assert_eq!(seen.len(), 1);
     }
 }
