@@ -1751,6 +1751,46 @@ pub fn with_memory_budget(
     }
 }
 
+/// OS-103 follow-up: the launch-path caller that fills a boot
+/// snapshot's environment record.
+///
+/// Before this change `build_environment_record` existed but no
+/// caller in the launch path used it: `intel.py brief --boot` —
+/// the path relay-brief.service runs — passed its snapshot
+/// straight to `generate_brief`, so a boot brief carried
+/// environment lines only when the snapshot hand-stated an
+/// "environment" record, and a bare launch snapshot carried
+/// none at all. Now the boot path calls this first: a snapshot
+/// that carries no environment record gets one built from
+/// itself — repo from the checkout at `repo_path`, jobs, bus,
+/// and budget from the snapshot's own lists, one as_of stamp —
+/// so the boot template brief carries all four lines, with any
+/// part that yields nothing usable rendered as not reported,
+/// never padded. A snapshot that already carries an
+/// environment record gets it back unchanged: a hand-stated
+/// record wins over a built one, so a caller that knows its
+/// surroundings better than the builders is never
+/// overwritten. Unlike `with_memory_budget`, Python always
+/// stores the built record — even a bare snapshot gets an
+/// as_of-only record — so this always returns a record; the
+/// builders never raise, so there is no failure path that
+/// drops it, and the boot path still produces a brief.
+pub fn with_boot_environment(
+    existing: Option<&BuiltEnvironmentRecord>,
+    jobs: Option<&[RawEnvironmentJob]>,
+    messages: Option<&[RawMessage]>,
+    budgets: Option<&[RawEnvironmentBudget]>,
+    repo_path: Option<&str>,
+    room: Option<&BusRooms>,
+    lane: Option<&str>,
+    now: Option<i64>,
+) -> BuiltEnvironmentRecord {
+    if let Some(record) = existing {
+        return record.clone();
+    }
+    build_environment_record(jobs, messages, budgets, repo_path, room, lane, now)
+}
+
 /// One aged decision in a memory_depth record: the decision string
 /// plus its original date. `original_date: None` — or an empty string,
 /// which Python reads the same way — means the original date was not
@@ -5299,5 +5339,67 @@ mod tests {
             lines[0],
             "Settled decisions from memory: memory service down, so no settled decisions are shown (as of 2026-10-30 08:00 ET)"
         );
+    }
+
+    #[test]
+    fn with_boot_environment_hand_stated_record_wins_unchanged() {
+        let stated = BuiltEnvironmentRecord {
+            as_of: 1793093400,
+            repo: None,
+            jobs: None,
+            bus: None,
+            budget: None,
+        };
+        let jobs: Vec<RawEnvironmentJob> = vec![];
+        let record = with_boot_environment(
+            Some(&stated),
+            Some(&jobs),
+            None,
+            None,
+            None,
+            None,
+            None,
+            Some(1793361600),
+        );
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_boot_environment_bare_snapshot_gets_stamp_only_record() {
+        let record = with_boot_environment(
+            None, None, None, None, None, None, None, Some(1793093400),
+        );
+        assert_eq!(record.as_of, 1793093400);
+        assert!(record.repo.is_none(), "no repo path leaves repo out");
+        assert!(record.jobs.is_none(), "no jobs list leaves jobs out");
+        assert!(record.bus.is_none(), "no messages list leaves bus out");
+        assert!(record.budget.is_none(), "no budgets list leaves budget out");
+    }
+
+    #[test]
+    fn with_boot_environment_empty_lists_kept_and_one_stamp() {
+        use super::super::window::RawMessage;
+        let jobs: Vec<RawEnvironmentJob> = vec![];
+        let messages: Vec<RawMessage> = vec![];
+        let budgets = budget_budgets();
+        let record = with_boot_environment(
+            None,
+            Some(&jobs),
+            Some(&messages),
+            Some(&budgets),
+            None,
+            Some(&BusRooms::Single("main".into())),
+            Some("HANA"),
+            Some(1793093400),
+        );
+        assert_eq!(record.as_of, 1793093400);
+        assert!(record.repo.is_none(), "no repo path leaves repo out");
+        assert_eq!(record.jobs, Some(vec![]));
+        let bus = record.bus.expect("an empty list is a bus record, not none");
+        assert_eq!(bus.messages, 0);
+        assert_eq!(bus.as_of, 1793093400);
+        let budget = record.budget.expect("a usable HANA entry yields a budget");
+        assert_eq!(budget.lane, "HANA");
+        assert_eq!(budget.as_of, 1793093400);
     }
 }
