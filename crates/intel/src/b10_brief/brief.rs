@@ -688,6 +688,7 @@ pub fn since_last_brief_lines(
 /// the record carries none, so older briefs keep their exact shape.
 /// The order list itself is kept as given; duplicate, empty, and
 /// unknown ids are skipped inside the function, never padded.
+#[derive(Debug, Clone, PartialEq)]
 pub struct PriorityOrder {
     pub order: Vec<String>,
     pub age_label: String,
@@ -2527,6 +2528,78 @@ pub fn with_federation(
     Some(Federation {
         machines: usable_machines,
         trust_events: usable_events,
+    })
+}
+
+/// INT-027 follow-up: the morning-path caller that fills a
+/// snapshot's `priority_order` record, so a morning brief carries its
+/// Priority order section even when the snapshot states only the raw
+/// list of job ids. Returns the record to store as the snapshot's
+/// `priority_order` value. A hand-stated record wins over a built one:
+/// pass it as `existing` and it is returned unchanged, whatever the
+/// inputs say, so a caller that knows its order better than this list
+/// is never overwritten. The record exists only when the snapshot
+/// states at least one usable id, so a snapshot that states nothing
+/// usable gets no record at all, and older briefs keep their exact
+/// shape instead of gaining a padded section. A job id named twice
+/// is one entry, not two: the first listing wins, in stated order.
+/// An id that is not a non-empty string is skipped, never guessed —
+/// and a list of only skipped ids counts as nothing stated, so junk
+/// alone never builds a record. The caller does not filter ids
+/// against the snapshot's jobs list: the renderer already skips an
+/// id with no matching job, and a caller that dropped such ids
+/// would silently rewrite the stated order instead of letting the
+/// section read none reported for it. The record carries one as_of
+/// stamp for the whole record, formed into its age label here, so
+/// the section's age agrees with the other sections instead of
+/// drifting across reads — `now` supplies the stamp, and a missing
+/// stamp reads the current time, the same fallback the other
+/// with_* callers use. This still reads a stated order, never a
+/// guessed one: there is no priority field on a job in this repo
+/// for a filler to derive an order from, so a snapshot that states
+/// no priority_ids gets no section even when its jobs list has an
+/// obvious order to a reader. Never fails: a builder failure leaves
+/// the caller without a record, so the morning path still produces
+/// a brief, just without this section, instead of failing outright.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `priority_ids` when the snapshot's
+/// priority_ids list is missing or not a list — silence states no
+/// order and yields no record; `Some(&[])` is an explicitly empty
+/// list, which likewise yields no record, since no usable id is
+/// ever an order. A list entry that is not a string has no Rust
+/// form: the caller omits it, which matches Python skipping it.
+pub fn with_priority_order(
+    existing: Option<&PriorityOrder>,
+    priority_ids: Option<&[String]>,
+    now: Option<i64>,
+) -> Option<PriorityOrder> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let stamp = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let stated = priority_ids?;
+    let mut seen: Vec<&str> = Vec::new();
+    let mut usable: Vec<String> = Vec::new();
+    for job_id in stated {
+        if job_id.is_empty() || seen.contains(&job_id.as_str()) {
+            continue;
+        }
+        seen.push(job_id.as_str());
+        usable.push(job_id.clone());
+    }
+    if usable.is_empty() {
+        return None;
+    }
+    Some(PriorityOrder {
+        order: usable,
+        age_label: environment_age_label(Some(stamp)),
     })
 }
 
