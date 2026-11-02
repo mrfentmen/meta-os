@@ -494,6 +494,49 @@ boot-proven. Exact points from `kernel/src` on this branch:
   ruling. RW4-2 reconciles the listing; do not treat either
   listing as final until Pax rules.
 
+## Update 2026-11-02 — answered by the first real build and boot
+
+This section answers the questions above from a build that ran on the Mac, not from
+reasoning. Evidence: `kernel/BUILD_LOG.md`, logs in `os-build/logs/`.
+
+- **Q1 (bootloader version + lockfile): ANSWERED.** `kernel/Cargo.lock` is committed and
+  resolves `bootloader 0.9.35` with `map_physical_memory`. The `entry_point!` macro and
+  `&'static BootInfo` signature are unchanged at that version.
+- **Q2 (toolchain pin): ANSWERED.** nightly `1.101.0-nightly (f9ceb4a4d 2026-10-31)`, cargo
+  `1.101.0-nightly (31d3246e0 2026-10-27)`, target `x86_64-unknown-none`, bootimage 0.10.5,
+  QEMU 11.1.3, components `rust-src` and `llvm-tools-preview`. The trap worth recording:
+  `cargo` in the shell is Homebrew's and has no `core` for the target, and nightly cargo
+  spawns the stable `rustc` from `PATH`, so `-Z` is rejected. `build_kernel.sh` pins `RUSTC`
+  and puts the nightly bin directory first.
+- **Q3 (proof capture): ANSWERED.** `os-build/layer1/build_kernel.sh`, serial to a file,
+  proof at `os-build/logs/K1-boot.txt`. The bounded transmit wait added on 2026-11-02 means a
+  missing UART truncates a line instead of hanging the boot (Q3's exact worry).
+- **Q4 (canonical proof string): ANSWERED de facto.** `META OS KERNEL - alive (K1)` is what
+  the code prints, what the logs contain, and what the gate greps. The spec now quotes it.
+- **Q5 (K2 framebuffer API): ANSWERED by reality.** Bootloader 0.9.35 exposes no pixel
+  framebuffer at all; K2 is the VGA text buffer at 0xB8000 via `physical_memory_offset`.
+  See the amendment in `KERNEL_SPEC.md` and `os-build/research/framebuffer.md`.
+- **Q6 (interrupt entry state): ANSWERED in practice.** `main.rs` runs `cli` before the
+  install sequence (`gdt::init`, handlers, gates, `pic_remap`, `pit_set_hz`, `lidt`) and
+  `sti` after, so the bootloader's state cannot leak in.
+- **Q7 (panic detail): FIXED.** The panic handler now writes `PanicInfo` (message and
+  `file:line`) to serial as well as the screen. Verified: `panicked at src/main.rs:143:5`.
+- **Q9 (handler ABI + devices): ANSWERED.** asm trampolines in `traps.rs`, not
+  `extern "x86-interrupt"`; 8259 PIC at 0x20/0x21 and 0xA0/0xA1, PIT ch0 at 0x40/0x43,
+  PS/2 keyboard at 0x60/0x64 — all confirmed by the timer and keyboard proofs.
+- **Q10 (K4 wiring): ANSWERED in code** (`mem.rs` adapter over `memory.rs`): 15-region map,
+  bitmap allocator, 4-level paging, heap. Log: `mem summary: K4 up`.
+- **Q11 (context switch): ANSWERED in code** (`sched.rs::switch_to`), proven by A/B/C plus a
+  200-tick sleep. Note the resume label is a local asm label, so the switch is
+  position-independent-safe only because both sides save `rip` explicitly.
+- **Q12 (syscall transport): ANSWERED** — vector 128 (`int 0x80`), number in saved RAX,
+  arguments in RDI/RSI, ring-3 entry and `iretq` return, proven by the userspace ELF runs.
+  `read_key` (number 5) is implemented in `user.rs`.
+
+Still open, and only the boss or a Mac run can close them: real-hardware UART/PS2/PIT
+behaviour, SMP, and the syscall-table ruling on `syscalls.rs` (frozen; recommendation on
+file at `kernel/SYSCALLS_RS_RECOMMENDATION.md`).
+
 ## What this file is not
 
 - Not a design doc: it asks, it does not decide.

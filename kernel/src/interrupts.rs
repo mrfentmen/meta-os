@@ -444,6 +444,20 @@ pub fn invalid_opcode_handler(frame: &InterruptFrame, error_code: u64) {
 
 pub fn double_fault_handler(frame: &InterruptFrame, error_code: u64) {
     print_exception("double-fault", 8, frame, error_code);
+    // A double fault has no recovery path: the CPU state is already
+    // suspect, and returning through iretq re-executes the faulting
+    // instruction and faults again. That is not a theory — the
+    // `stack-test` drill produced a 3.3 MB log of the same line because
+    // this handler returned. Print once, then halt for good. The hlt
+    // loop is the correct end state for an unrecoverable trap; a
+    // machine that spins here is diagnosable, one that loops forever
+    // floods the only channel that could explain it.
+    serial_write_str("INT double-fault: halting\n");
+    loop {
+        unsafe {
+            core::arch::asm!("hlt", options(nomem, nostack, preserves_flags));
+        }
+    }
 }
 
 pub fn general_protection_handler(frame: &InterruptFrame, error_code: u64) {

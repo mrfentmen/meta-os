@@ -1,0 +1,29 @@
+META OS 0.1 (K6)
+META OS KERNEL - alive (K1)
+K3 timer: 10 ticks after 432353 spins
+mem region 0: 0x0-0x1000 reserved
+mem region 1: 0x1000-0x5000 reserved
+mem region 2: 0x5000-0x15000 reserved
+mem region 3: 0x15000-0x16000 reserved
+mem region 4: 0x16000-0x9e000 reserved
+mem region 5: 0x9e000-0x9f000 reserved
+mem region 6: 0x9f000-0xa0000 reserved
+mem region 7: 0xf0000-0x100000 reserved
+mem region 8: 0x100000-0x2ff000 reserved
+mem region 9: 0x2ff000-0x400000 usable
+mem region 10: 0x400000-0xbf5000 reserved
+mem region 11: 0xbf5000-0x1005000 reserved
+mem region 12: 0x1005000-0xffe0000 usable
+mem region 13: 0xffe0000-0x10000000 reserved
+mem region 14: 0xfffc0000-0x100000000 reserved
+mem region 15: 0xfd00000000-0x10000000000 reserved
+mem map: 16 regions, usable 246640K reserved 12598352K other 0K
+mem frames: 61660 usable total
+mem allocator: 61660 covered frames, 61660 free
+mem probe page ok
+mem heap: 512K total
+mem Box+Vec ok (box 42, vec sum 120)
+mem stress 10k ok, heap free 511K
+mem summary: K4 up
+INT exception double-fault vector 0x0000000000000008 ip 0x000000000099e335 err 0x0000000000000000
+INT double-fault: halting

@@ -427,3 +427,36 @@ re-runnable with one command each, listed in `SERVICES_FINAL.md`), and merge the
 > else), `SIGNOFF.md` is the one-page version.
 >
 > Nothing here has executed. Do not read WRITTEN as working.
+
+## 2026-11-02 — the kernel round (supersedes the paragraph above for the kernel)
+
+The sentence "nothing here has executed" is still true of the services layer. It is no
+longer true of the kernel, and the difference is the whole point of this section.
+
+- **Built and booted.** nightly pinned, bootloader 0.9.35, 8.0 MB image, QEMU 11.1.3.
+  The first build failed twice for toolchain reasons, not code: Homebrew's cargo has no
+  `core` for `x86_64-unknown-none`, and nightly cargo spawns the stable `rustc` from PATH.
+  Both are documented with the fix in `kernel/BUILD_LOG.md` and automated in
+  `os-build/layer1/build_kernel.sh`.
+- **K1-K5 proven, K6 partial.** Logs: `K1-boot.txt` (alive, memory map, 127199 frames,
+  heap stress, A/B/C, sleep/wake, ring-3 ELF, fault isolation), `K2-boot.png` (VGA capture,
+  196 of 2000 cells with glyphs), `K3-boot.txt` (`K3 timer: 10 ticks`, scancode `0x1f`,
+  typed `status` answered). K6 stays partial because no Goose service has a kernel process.
+- **Three kernel fixes this round**, each verified: bounded serial transmit (a wedged UART
+  used to hang the boot), panic detail on serial (`panicked at src/main.rs:143:5`), trap-frame
+  layout asserted at compile time, and the double-fault handler now halts instead of
+  re-faulting (the drill had produced a 3.3 MB loop of one line).
+- **The capture harness is honest about itself.** Getting a keystroke into the guest took
+  three attempts: `-display none` drops `sendkey`, `-vnc` without a client drops it too, and
+  a VNC client must request the framebuffer before QEMU routes input. `vnc_type.py` does that
+  over RFB with the stdlib. The keyboard capture is timing-flaky (one green run in three) and
+  **that is recorded in `BUILD_LOG.md`**, not smoothed over; the harness now promotes a log to
+  evidence only on a full pass.
+- **Root docs corrected.** `os-build/ROOT_MANIFEST.md` separates OS from programs and kills
+  the README's claim that a stock Debian image was the OS. `os-build/QEMU_LIMITS.md` states
+  what a QEMU boot cannot prove. `SCOREBOARD.md` is rewritten against artifacts, with layer 4
+  at HOST because the services are host processes.
+
+Still open and unclaimed: no disk, no filesystem, no NIC, no Gooss service process on the
+kernel, no real-hardware boot.
+

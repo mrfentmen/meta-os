@@ -8,3 +8,4 @@ os-build/userspace/user/target/
 *.ppm
 os-build/logs/*.ppm
 os-build/logs/qemu-monitor.log
+/target/
