@@ -70,6 +70,10 @@ needed; none used).
   (28e99285), and this tip gate — intermediate commits are JUDGE
   dupes/merges, no kernel/tree changes between them that a separate
   boot would distinguish; recorded as one line per the standing rule.
+- `6d8d54ee` (ABI + boot-manifest checkers in check_all): GATE GREEN
+  7/7 in detached worktree /tmp/merge-tip2 (log
+  /tmp/merge-tip2-gate.log, boot /tmp/gate-boot-k4GOIt). Covers the
+  userspace-ABI/quitter/manifest window since 21f9be68.
 - No RED this window. Standing rule for the rest of the window:
   each new main tip gets one gate run + one line here.
 ## Blockers for Pax
