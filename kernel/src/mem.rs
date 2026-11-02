@@ -272,6 +272,35 @@ pub fn heap_free_bytes() -> u64 {
         }
     }
 }
+
+/// Heap total bytes for the mem command (R-5). Mirrors
+/// `heap_free_bytes`; 0 before `mem_init` brings the heap up.
+pub fn heap_total_bytes() -> u64 {
+    unsafe {
+        match (*core::ptr::addr_of!(HEAP)).as_ref() {
+            Some(heap) => heap.total_size() as u64,
+            None => 0,
+        }
+    }
+}
+
+/// Usable frames in the converted memory map for the mem command
+/// (R-5): the same count `mem_init` prints as "usable total".
+pub fn frames_total() -> u64 {
+    unsafe {
+        match (*core::ptr::addr_of!(MAP)).as_ref() {
+            Some(map) => map.total_usable_frames() as u64,
+            None => 0,
+        }
+    }
+}
+
+/// Covered frames still free in the frame allocator for the mem
+/// command (R-5), via the mapper that owns the allocator. 0 when
+/// the mapper is not up yet.
+pub fn frames_free() -> u64 {
+    with_mapper(|mapper, _| mapper.free_frames()).unwrap_or(0) as u64
+}
 /// True when every page of `[start, start+len)` is currently mapped.
 /// Used to validate userspace buffers (OS-080): an unmapped byte
 /// refuses the call instead of faulting the kernel.

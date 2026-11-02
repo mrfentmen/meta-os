@@ -307,9 +307,10 @@ pub fn task_count() -> usize {
 }
 
 /// Console task: the K3 echo loop grown into the shell (OS-070 +
-/// O-205..O-211, Round 4 R-2/R-3/R-4). Line-buffered commands with
-/// echo; `status`, `help` and `uptime` are real, everything else is
-/// refused with help re-listed. Backspace (0x0E) erases the last
+/// O-205..O-211, Round 4 R-2/R-3/R-4/R-5/R-6). Line-buffered commands
+/// with echo; `status`, `help`, `uptime`, `mem` and `ps` are real,
+/// everything else is refused with help re-listed. Backspace (0x0E)
+/// erases the last
 /// buffered char and the screen cell; shift (0x2A/0x36 press,
 /// 0xAA/0xB6 release) shifts letters/digits. No periodic uptime
 /// print: `uptime` runs only as a command (R-4), so a quiet run
@@ -380,17 +381,51 @@ fn run_command(line: &[u8], truncated: bool) {
         );
         unsafe_console_color(ColorSpec(Color::LightGray, Color::Black));
     } else if line == b"help" {
-        println!("commands: status help uptime");
+        println!("commands: status help uptime mem ps");
     } else if line == b"uptime" {
         // R-4: uptime only as a command, same line shape the
         // periodic print used to emit (no new string invented).
         let ticks = interrupts::ticks();
         println!("uptime {}s ticks {}", ticks / 100, ticks);
+    } else if line == b"mem" {
+        // R-5: numbers memory.rs already computes — free/total
+        // frames from the allocator, free/total heap. No new
+        // accounting invented; the getters live in mem.rs.
+        let frames_free = crate::mem::frames_free();
+        let frames_total = crate::mem::frames_total();
+        let heap_free_kb = crate::mem::heap_free_bytes() / 1024;
+        let heap_total_kb = crate::mem::heap_total_bytes() / 1024;
+        println!(
+            "mem frames_free {} frames_total {} heap_free {}K heap_total {}K",
+            frames_free, frames_total, heap_free_kb, heap_total_kb
+        );
+    } else if line == b"ps" {
+        // R-6: one line per spawned task slot (IDS in spawn order,
+        // the scheduler's own table for state/counters). ticks_used
+        // is the current-run quantum usage tasks.rs keeps — there
+        // is no lifetime CPU counter in tasks.rs, so ps reports
+        // ticks_used and does not claim a cumulative total.
+        unsafe {
+            if let Some(sched) = SCHED.as_ref() {
+                for i in 0..NTABLE {
+                    let id = IDS[i];
+                    if let Some(task) = sched.task(id) {
+                        println!(
+                            "ps id {} state {:?} ticks_used {} prio {}",
+                            task.id.as_u64(),
+                            task.state,
+                            task.ticks_used,
+                            task.priority
+                        );
+                    }
+                }
+            }
+        }
     } else if line.is_empty() {
         // Empty line: nothing, not an error.
     } else {
         println!("unknown command");
-        println!("commands: status help uptime");
+        println!("commands: status help uptime mem ps");
     }
 }
 
