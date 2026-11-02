@@ -1,0 +1,49 @@
+{
+ "product": "medicus",
+ "source_frame": "f2b94b32-fc41-42b6-935d-8330374ca05a_2026-11-02T16-07-02.231083p00-00.jpg",
+ "camera_id": "f2b94b32-fc41-42b6-935d-8330374ca05a",
+ "camera_name": "1 Ave @ 110 St",
+ "area": "Manhattan",
+ "assessed_at": "2026-11-02T16:07:02.231083+00:00",
+ "model": "muse-spark-1.3",
+ "latency_ms": 17555,
+ "wall_ms": 17557,
+ "assessment": {
+  "product": "medicus",
+  "timestamp": "2026-11-02T16:07:02.231083+00:00",
+  "observations": [
+   {
+    "category": "normal activity",
+    "description": "wide urban avenue with moving traffic in lanes, parked vehicles on right, flatbed truck on left, buildings and trees on both sides",
+    "evidence": "entire frame showing roadway extending into distance",
+    "confidence": 0.9,
+    "region": null
+   },
+   {
+    "category": "normal activity",
+    "description": "one small upright pedestrian figure on right sidewalk wearing dark clothing, build and facial details not discernible due to distance",
+    "evidence": "far right edge near parked cars",
+    "confidence": 0.55,
+    "region": {
+     "x": 910,
+     "y": 680,
+     "w": 30,
+     "h": 80
+    }
+   }
+  ],
+  "assessment": {
+   "category": "normal activity",
+   "summary": "Street scene shows regular vehicle traffic and a pedestrian on sidewalk with no visible person down, crowd, collision, or blood.",
+   "uncertainty": [
+    "distant small figures are low resolution so fine details unclear"
+   ],
+   "requires_human_review": false
+  },
+  "processing": {
+   "model": "muse-spark-1.3",
+   "latency_ms": null
+  }
+ },
+ "status": "OK"
+}

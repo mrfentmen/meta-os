@@ -1,0 +1,11 @@
+{
+ "camera_id": "f4633287-e3eb-463e-a73c-0917e6243c5b",
+ "camera_name": " Belt Pkwy @  Guy R Brewer Blvd ",
+ "area": "Queens",
+ "image_url": "https://webcams.nyctmc.org/api/cameras/f4633287-e3eb-463e-a73c-0917e6243c5b/image",
+ "fetched_at": "2026-11-02T16:07:02.345449+00:00",
+ "sha256": "5e096fc032aa0cb88fff3e20226b942cf52b907e52473348751da8c585e9a625",
+ "bytes": 23123,
+ "file": "f4633287-e3eb-463e-a73c-0917e6243c5b_2026-11-02T16-07-02.345449p00-00.jpg",
+ "via": "livecams.fetch_snapshot"
+}

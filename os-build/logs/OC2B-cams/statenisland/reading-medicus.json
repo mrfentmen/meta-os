@@ -1,0 +1,35 @@
+{
+ "product": "medicus",
+ "source_frame": "ebd920f9-8522-4ae7-af8f-b887256fdaa1_2026-11-02T16-07-02.697797p00-00.jpg",
+ "camera_id": "ebd920f9-8522-4ae7-af8f-b887256fdaa1",
+ "camera_name": "Amboy Rd @ Annadale Rd",
+ "area": "Staten Island",
+ "assessed_at": "2026-11-02T16:07:02.697797+00:00",
+ "model": "muse-spark-1.3",
+ "latency_ms": 6807,
+ "wall_ms": 6808,
+ "assessment": {
+  "product": "medicus",
+  "timestamp": "2026-11-02T16:07:02.697797+00:00",
+  "observations": [
+   {
+    "category": "normal activity",
+    "description": "Daytime two-lane roadway with turn markings, several vehicles in travel lanes, commercial buildings and clear sidewalks on both sides, no persons on ground visible",
+    "evidence": "center and background roadway with vehicles; sidewalks and buildings on left and right",
+    "confidence": 0.95,
+    "region": null
+   }
+  ],
+  "assessment": {
+   "category": "normal activity",
+   "summary": "Roadway with moving vehicles and no visible person down, crowd, or collision; scene appears to be routine traffic activity.",
+   "uncertainty": [],
+   "requires_human_review": false
+  },
+  "processing": {
+   "model": "muse-spark-1.3",
+   "latency_ms": null
+  }
+ },
+ "status": "OK"
+}

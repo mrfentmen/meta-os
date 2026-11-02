@@ -1,0 +1,49 @@
+{
+ "product": "vigiles",
+ "source_frame": "f2b94b32-fc41-42b6-935d-8330374ca05a_2026-11-02T16-07-02.231083p00-00.jpg",
+ "camera_id": "f2b94b32-fc41-42b6-935d-8330374ca05a",
+ "camera_name": "1 Ave @ 110 St",
+ "area": "Manhattan",
+ "assessed_at": "2026-11-02T16:07:02.231083+00:00",
+ "model": "muse-spark-1.3",
+ "latency_ms": 13628,
+ "wall_ms": 13629,
+ "assessment": {
+  "product": "vigiles",
+  "timestamp": "2026-11-02T16:07:02.231083+00:00",
+  "observations": [
+   {
+    "category": "normal activity",
+    "description": "wide urban avenue in daylight with multiple cars driving in lanes, vehicles parked along right curb, and a flatbed trailer on left; buildings and trees line both sides",
+    "evidence": "center roadway and both sides of frame",
+    "confidence": 0.9,
+    "region": null
+   },
+   {
+    "category": "normal activity",
+    "description": "one person on right sidewalk near parked cars wearing dark clothing; build and facial details indistinct due to distance and resolution",
+    "evidence": "bottom right near dark parked vehicle",
+    "confidence": 0.6,
+    "region": {
+     "x": 915,
+     "y": 775,
+     "w": 35,
+     "h": 85
+    }
+   }
+  ],
+  "assessment": {
+   "category": "normal activity",
+   "summary": "Street scene shows ordinary daytime traffic and a pedestrian on the sidewalk with no visible dispute, contact, or person down.",
+   "uncertainty": [
+    "pedestrian details indistinct due to distance and low resolution"
+   ],
+   "requires_human_review": false
+  },
+  "processing": {
+   "model": "muse-spark-1.3",
+   "latency_ms": null
+  }
+ },
+ "status": "OK"
+}

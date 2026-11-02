@@ -1,0 +1,11 @@
+{
+ "camera_id": "88278063-8891-4144-9295-f5dc9a94d2ea",
+ "camera_name": "3 Ave @ 60 St",
+ "area": "Brooklyn",
+ "image_url": "https://webcams.nyctmc.org/api/cameras/88278063-8891-4144-9295-f5dc9a94d2ea/image",
+ "fetched_at": "2026-11-02T16:07:02.110613+00:00",
+ "sha256": "05ac7f595f3cec821afef8bb323e45a368107cd2bd0a4c4f7a328c74d66c6f0a",
+ "bytes": 15797,
+ "file": "88278063-8891-4144-9295-f5dc9a94d2ea_2026-11-02T16-07-02.110613p00-00.jpg",
+ "via": "livecams.fetch_snapshot"
+}
