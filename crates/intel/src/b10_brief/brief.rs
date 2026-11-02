@@ -688,6 +688,7 @@ pub fn since_last_brief_lines(
 /// the record carries none, so older briefs keep their exact shape.
 /// The order list itself is kept as given; duplicate, empty, and
 /// unknown ids are skipped inside the function, never padded.
+#[derive(Debug, Clone, PartialEq)]
 pub struct PriorityOrder {
     pub order: Vec<String>,
     pub age_label: String,
@@ -1358,6 +1359,7 @@ pub fn environment_lines(env: Option<&Environment>) -> Vec<String> {
 /// non-string name, completion, id, title, or status to an empty
 /// string (or `None` for status), mirroring Python's `isinstance`
 /// checks; empty values are filtered here, never padded.
+#[derive(Debug, Clone, PartialEq)]
 pub struct FederationMachine {
     pub name: String,
     pub completions: Vec<String>,
@@ -1367,6 +1369,7 @@ pub struct FederationMachine {
 /// One cross-machine job: only a job with a non-empty id and a
 /// non-empty title counts; a missing or empty status reads as no
 /// status suffix, never a guessed one.
+#[derive(Debug, Clone, PartialEq)]
 pub struct CrossMachineJob {
     pub id: String,
     pub title: String,
@@ -1376,6 +1379,7 @@ pub struct CrossMachineJob {
 /// One trust event: `kind` is "join" or "refusal"; any other kind is
 /// skipped. A missing machine name skips the event; a refusal with
 /// no detail says the reason is not reported, never an invented one.
+#[derive(Debug, Clone, PartialEq)]
 pub struct TrustEvent {
     pub kind: String,
     pub machine: String,
@@ -1384,6 +1388,7 @@ pub struct TrustEvent {
 
 /// The whole federation record: the joined machines plus the trust
 /// events. The section exists only for a real crew of crews.
+#[derive(Debug, Clone, PartialEq)]
 pub struct Federation {
     pub machines: Vec<FederationMachine>,
     pub trust_events: Vec<TrustEvent>,
@@ -2424,6 +2429,178 @@ pub fn with_previous_session(
     }
     let shutdown_jobs = shutdown_jobs?;
     build_previous_session(last_brief, Some(shutdown_jobs))
+}
+
+/// OS-117 follow-up: the morning-path caller that fills a
+/// snapshot's `federation` record, so a morning brief carries its
+/// Federation section even when the snapshot states only the raw
+/// inputs. Returns the record to store as the snapshot's
+/// `federation` value. A hand-stated record wins over a built one:
+/// pass it as `existing` and it is returned unchanged, whatever the
+/// inputs say, so a caller that knows its federation better than
+/// these lists is never overwritten. This reads stated inputs,
+/// never a live federation: the join flow, trust enforcement,
+/// two-machine drill, and policy ruling have not landed, so a
+/// caller that states no joined machines gets no section even when
+/// other machines exist somewhere else. The section exists only
+/// for a real crew of crews: fewer than two usable machines yields
+/// no record at all, so a single-machine record never renders an
+/// empty section, and trust events without two machines are not a
+/// federation section. The record carries no as_of stamp of its
+/// own — the Federation record holds machines and trust events
+/// only — so unlike the other with_* callers this one takes no
+/// now argument. Never fails: a builder failure leaves the caller
+/// without a record, so the morning path still produces a brief,
+/// just without this section, instead of failing outright.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `machines` when the snapshot's joined
+/// list is missing or not a list — silence states no crew and
+/// yields no record; `Some(&[])` is an explicitly empty list,
+/// which likewise yields no record, since fewer than two machines
+/// is never a federation. A machine entry that is not a dict has
+/// no Rust form: the caller omits it, which matches Python
+/// skipping it. A machine named twice is one machine, not two:
+/// the first listing wins, in stated order. A machine without a
+/// name, a cross-machine job without an id and a title, a trust
+/// event without a machine name, and a trust event of any kind
+/// but join or refusal are skipped, never guessed — a machine
+/// with no completions still counts, and reads "no completions
+/// reported" from the renderer, never a padded title.
+pub fn with_federation(
+    existing: Option<&Federation>,
+    machines: Option<&[FederationMachine]>,
+    trust_events: Option<&[TrustEvent]>,
+) -> Option<Federation> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let machines = machines?;
+    let mut usable_machines: Vec<FederationMachine> = Vec::new();
+    for machine in machines {
+        if machine.name.is_empty() {
+            continue;
+        }
+        if usable_machines.iter().any(|m| m.name == machine.name) {
+            continue;
+        }
+        let completions: Vec<String> = machine
+            .completions
+            .iter()
+            .filter(|t| !t.is_empty())
+            .cloned()
+            .collect();
+        let cross_machine_jobs: Vec<CrossMachineJob> = machine
+            .cross_machine_jobs
+            .iter()
+            .filter(|job| !job.id.is_empty() && !job.title.is_empty())
+            .map(|job| CrossMachineJob {
+                id: job.id.clone(),
+                title: job.title.clone(),
+                status: job.status.clone().filter(|s| !s.is_empty()),
+            })
+            .collect();
+        usable_machines.push(FederationMachine {
+            name: machine.name.clone(),
+            completions,
+            cross_machine_jobs,
+        });
+    }
+    if usable_machines.len() < 2 {
+        return None;
+    }
+    let mut usable_events: Vec<TrustEvent> = Vec::new();
+    if let Some(events) = trust_events {
+        for event in events {
+            if event.kind != "join" && event.kind != "refusal" {
+                continue;
+            }
+            if event.machine.is_empty() {
+                continue;
+            }
+            usable_events.push(TrustEvent {
+                kind: event.kind.clone(),
+                machine: event.machine.clone(),
+                detail: event.detail.clone().filter(|d| !d.is_empty()),
+            });
+        }
+    }
+    Some(Federation {
+        machines: usable_machines,
+        trust_events: usable_events,
+    })
+}
+
+/// INT-027 follow-up: the morning-path caller that fills a
+/// snapshot's `priority_order` record, so a morning brief carries its
+/// Priority order section even when the snapshot states only the raw
+/// list of job ids. Returns the record to store as the snapshot's
+/// `priority_order` value. A hand-stated record wins over a built one:
+/// pass it as `existing` and it is returned unchanged, whatever the
+/// inputs say, so a caller that knows its order better than this list
+/// is never overwritten. The record exists only when the snapshot
+/// states at least one usable id, so a snapshot that states nothing
+/// usable gets no record at all, and older briefs keep their exact
+/// shape instead of gaining a padded section. A job id named twice
+/// is one entry, not two: the first listing wins, in stated order.
+/// An id that is not a non-empty string is skipped, never guessed —
+/// and a list of only skipped ids counts as nothing stated, so junk
+/// alone never builds a record. The caller does not filter ids
+/// against the snapshot's jobs list: the renderer already skips an
+/// id with no matching job, and a caller that dropped such ids
+/// would silently rewrite the stated order instead of letting the
+/// section read none reported for it. The record carries one as_of
+/// stamp for the whole record, formed into its age label here, so
+/// the section's age agrees with the other sections instead of
+/// drifting across reads — `now` supplies the stamp, and a missing
+/// stamp reads the current time, the same fallback the other
+/// with_* callers use. This still reads a stated order, never a
+/// guessed one: there is no priority field on a job in this repo
+/// for a filler to derive an order from, so a snapshot that states
+/// no priority_ids gets no section even when its jobs list has an
+/// obvious order to a reader. Never fails: a builder failure leaves
+/// the caller without a record, so the morning path still produces
+/// a brief, just without this section, instead of failing outright.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `priority_ids` when the snapshot's
+/// priority_ids list is missing or not a list — silence states no
+/// order and yields no record; `Some(&[])` is an explicitly empty
+/// list, which likewise yields no record, since no usable id is
+/// ever an order. A list entry that is not a string has no Rust
+/// form: the caller omits it, which matches Python skipping it.
+pub fn with_priority_order(
+    existing: Option<&PriorityOrder>,
+    priority_ids: Option<&[String]>,
+    now: Option<i64>,
+) -> Option<PriorityOrder> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let stamp = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let stated = priority_ids?;
+    let mut seen: Vec<&str> = Vec::new();
+    let mut usable: Vec<String> = Vec::new();
+    for job_id in stated {
+        if job_id.is_empty() || seen.contains(&job_id.as_str()) {
+            continue;
+        }
+        seen.push(job_id.as_str());
+        usable.push(job_id.clone());
+    }
+    if usable.is_empty() {
+        return None;
+    }
+    Some(PriorityOrder {
+        order: usable,
+        age_label: environment_age_label(Some(stamp)),
+    })
 }
 
 /// STR-002: `_format_brief_time` — a stored brief timestamp as
@@ -6305,5 +6482,142 @@ mod tests {
             .expect("an empty shutdown list yields a clean-shutdown record");
         assert_eq!(record.last_brief_at, "2026-11-02 07:00 ET");
         assert!(record.jobs_completed.is_empty() && record.open_threads.is_empty());
+    }
+
+    #[test]
+    fn with_federation_builds_from_stated_inputs_and_renders_lines() {
+        let machines = vec![
+            FederationMachine {
+                name: "alpha".into(),
+                completions: vec!["Ship it".into(), "".into()],
+                cross_machine_jobs: vec![
+                    CrossMachineJob {
+                        id: "J1".into(),
+                        title: "Cross job".into(),
+                        status: Some("done".into()),
+                    },
+                    CrossMachineJob {
+                        id: "".into(),
+                        title: "No id".into(),
+                        status: None,
+                    },
+                ],
+            },
+            FederationMachine {
+                name: "beta".into(),
+                completions: vec![],
+                cross_machine_jobs: vec![],
+            },
+            // A second alpha listing loses to the first, in order.
+            FederationMachine {
+                name: "alpha".into(),
+                completions: vec!["Second listing".into()],
+                cross_machine_jobs: vec![],
+            },
+            // A nameless machine states no crew member.
+            FederationMachine {
+                name: "".into(),
+                completions: vec!["Ghost work".into()],
+                cross_machine_jobs: vec![],
+            },
+        ];
+        let events = vec![
+            TrustEvent {
+                kind: "join".into(),
+                machine: "alpha".into(),
+                detail: Some("over relay".into()),
+            },
+            TrustEvent {
+                kind: "refusal".into(),
+                machine: "beta".into(),
+                detail: None,
+            },
+            // Any kind but join or refusal is skipped.
+            TrustEvent {
+                kind: "leave".into(),
+                machine: "alpha".into(),
+                detail: Some("walked away".into()),
+            },
+            // A nameless event states no machine.
+            TrustEvent {
+                kind: "join".into(),
+                machine: "".into(),
+                detail: Some("ghost".into()),
+            },
+        ];
+        let record = with_federation(None, Some(&machines), Some(&events))
+            .expect("two usable machines yield a federation record");
+        assert_eq!(record.machines.len(), 2);
+        assert_eq!(record.machines[0].name, "alpha");
+        assert_eq!(record.machines[0].completions, vec!["Ship it"]);
+        assert_eq!(record.machines[0].cross_machine_jobs.len(), 1);
+        assert_eq!(record.machines[1].name, "beta");
+        assert!(record.machines[1].completions.is_empty());
+        assert_eq!(record.trust_events.len(), 2);
+        assert_eq!(
+            federation_lines(Some(&record)),
+            vec![
+                "- alpha: completed Ship it; cross-machine jobs: job J1 Cross job (done)",
+                "- beta: no completions reported",
+                "- Trust: alpha joined the federation: over relay",
+                "- Trust: beta was refused (reason not reported)",
+            ]
+        );
+    }
+
+    #[test]
+    fn with_federation_hand_stated_record_wins_unchanged() {
+        let stated = Federation {
+            machines: vec![FederationMachine {
+                name: "only".into(),
+                completions: vec![],
+                cross_machine_jobs: vec![],
+            }],
+            trust_events: vec![],
+        };
+        // A hand-stated record wins even when it names one machine
+        // and no inputs are stated at all.
+        let record = with_federation(Some(&stated), None, None)
+            .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_federation_silence_or_one_machine_gets_no_record() {
+        let events = vec![TrustEvent {
+            kind: "join".into(),
+            machine: "alpha".into(),
+            detail: None,
+        }];
+        // Silence states no crew.
+        assert_eq!(with_federation(None, None, Some(&events)), None);
+        // An explicitly empty list is still no crew.
+        let empty: Vec<FederationMachine> = vec![];
+        assert_eq!(with_federation(None, Some(&empty), None), None);
+        // One usable machine is not a federation, even with a
+        // trust event beside it.
+        let single = vec![FederationMachine {
+            name: "alpha".into(),
+            completions: vec!["Ship it".into()],
+            cross_machine_jobs: vec![],
+        }];
+        assert_eq!(
+            with_federation(None, Some(&single), Some(&events)),
+            None
+        );
+        // Two listings of one name collapse to one machine.
+        let dupes = vec![
+            FederationMachine {
+                name: "alpha".into(),
+                completions: vec![],
+                cross_machine_jobs: vec![],
+            },
+            FederationMachine {
+                name: "alpha".into(),
+                completions: vec!["Second listing".into()],
+                cross_machine_jobs: vec![],
+            },
+        ];
+        assert_eq!(with_federation(None, Some(&dupes), None), None);
     }
 }
