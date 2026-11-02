@@ -32,6 +32,7 @@ import { ignisReviewByObservationCount } from "./ignis-review-observation-count.
 import { ignisReviewByLatency } from "./ignis-review-latency.js";
 import { ignisReviewBySummary } from "./ignis-review-summary.js";
 import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";
+import { regionBoxes } from "./surfaces.js";
 import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";
 
 const $ = (id) => document.getElementById(id);
@@ -1628,7 +1629,7 @@ function hideInFlight() {
   els.inFlight.hidden = inFlightCount === 0;
 }
 
-function renderLatest(assessment, earlierNote = null) {
+function renderLatest(assessment, earlierNote = null, frameImage = null) {
   latestAssessmentShown = true;
   const product = PRODUCT_BY_ID[assessment.product] || null;
   const wrap = document.createElement("div");
@@ -1712,6 +1713,36 @@ function renderLatest(assessment, earlierNote = null) {
     head.appendChild(flag);
   }
   wrap.appendChild(head);
+
+  // BUILD WAVE W1 live wiring (2026-11-02): when this is a fresh
+  // assessment and the caller hands over the exact frame that was
+  // sent, draw that frame under the head with the assessment's own
+  // region boxes overlaid on it. The boxes are percent positions
+  // from regionBoxes, so they scale with the frame; the frame is
+  // the frozen assessed frame, not the live preview, so a box
+  // stays on the scene it was drawn for. The frame draws ONLY
+  // when it carries at least one drawable region: a scene-wide
+  // assessment needs no frame, and a redisplayed past assessment
+  // (history, restore) carries no frame at all — its log entry
+  // never stored one — so it shows text only, never a guessed
+  // frame. frameImage must be a locally produced data:image URL
+  // (camera canvas, still image, video frame); anything else is
+  // skipped rather than rendered.
+  const boxes = regionBoxes(assessment);
+  if (typeof frameImage === "string" && frameImage.startsWith("data:image/") && boxes !== "") {
+    const frame = document.createElement("div");
+    frame.className = "assessed-frame";
+    const img = document.createElement("img");
+    img.className = "assessed-frame-img";
+    img.src = frameImage;
+    img.alt = "Assessed frame with region boxes";
+    frame.appendChild(img);
+    const overlay = document.createElement("div");
+    overlay.className = "assessed-frame-overlay";
+    overlay.innerHTML = boxes;
+    frame.appendChild(overlay);
+    wrap.appendChild(frame);
+  }
 
   // Native parity: the native panel renders the summary paragraph only
   // when the server reported one, and renders an observation's Evidence
@@ -1937,7 +1968,7 @@ async function submitAssessment(product, timestamp, image, scenarioLabel, source
     if (generation === viewGeneration) {
       updateLastRoundTrip(latencyMs);
       setBackendStatus("connected", `Model backend connected: ${endpoint}`);
-      renderLatest(assessment);
+      renderLatest(assessment, null, image);
       const category = assessment.assessment.category;
       // The history title uses the assessment's own product, not the
       // currently selected one: the user may have switched mid-request.
