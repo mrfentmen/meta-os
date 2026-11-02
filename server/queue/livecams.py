@@ -95,8 +95,12 @@ def list_cameras(fetch=default_fetch, api_url: str = API_URL) -> list[dict]:
 
 def pick(cameras: list[dict], area: str | None = None,
          name_contains: str | None = None, count: int = 1) -> list[dict]:
-    """Deterministic selection: filter, sort by name, take the first N."""
-    chosen = list(cameras)
+    """Deterministic selection: filter, sort by name, take the first N.
+    Offline cameras are dropped here too, so a raw list never yields
+    one; records from parse_cameras carry no isOnline field and are
+    already online-only, so a missing flag means online."""
+    chosen = [c for c in cameras
+              if str(c.get("isOnline", "true")).lower() == "true"]
     if area:
         chosen = [c for c in chosen if c["area"].lower() == area.lower()]
     if name_contains:

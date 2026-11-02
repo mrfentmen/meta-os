@@ -102,6 +102,49 @@ def _receipt(kind, model, surface, usage, latency_ms):
     return line
 
 
+RECEIPT_FIELDS = ("ts", "kind", "model", "surface", "usage",
+                  "latency_ms", "est_cost_usd")
+
+
+def validate_receipt(line):
+    """Validate one receipt record. Raises ValueError naming the
+    missing field, or naming the model id when it is absent/blank —
+    an unattributed model call is a broken receipt, not a record."""
+    if not isinstance(line, dict):
+        raise ValueError("receipt is not a JSON object")
+    missing = [f for f in RECEIPT_FIELDS if f not in line]
+    if missing:
+        raise ValueError(
+            "receipt missing required field(s): " + ", ".join(missing))
+    model = line.get("model")
+    if not isinstance(model, str) or not model.strip():
+        raise ValueError("receipt has no model id")
+    return line
+
+
+def validate_receipts(path):
+    """Validate every JSONL receipt line. Returns the number of
+    records checked; raises ValueError with the line number and the
+    failing field on the first bad record."""
+    count = 0
+    with open(path, encoding="utf-8") as f:
+        for n, raw in enumerate(f, 1):
+            raw = raw.strip()
+            if not raw:
+                continue
+            try:
+                line = json.loads(raw)
+            except ValueError as exc:
+                raise ValueError(
+                    f"receipt line {n} is not JSON: {exc}") from exc
+            try:
+                validate_receipt(line)
+            except ValueError as exc:
+                raise ValueError(f"receipt line {n}: {exc}") from exc
+            count += 1
+    return count
+
+
 def _post(url, body, kind):
     """One guardrailed POST (budget check before the call).
     Returns (payload, latency_ms). Recording happens in

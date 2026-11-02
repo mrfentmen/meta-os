@@ -114,22 +114,41 @@ _VERDICTS = {"confirm": "confirmed", "reject": "cleared",
              "investigate": "inconclusive"}
 
 
+def _extract_json_object(text):
+    """The documented prose tolerance: a judge reply may wrap its
+    JSON object in prose or a markdown fence. Parse the first `{`
+    through the last `}`; anything else returns None. This never
+    guesses a verdict — it only unwraps one object."""
+    if not isinstance(text, str):
+        return None
+    start, end = text.find("{"), text.rfind("}")
+    if start < 0 or end <= start:
+        return None
+    try:
+        return json.loads(text[start:end + 1])
+    except Exception:
+        return None
+
+
 def parse_verdict(text):
     """Parse a judge reply into (verdict, category, reasons).
-    Anything unparseable, or a verdict word outside the three,
-    comes back inconclusive: a garbled judgement never confirms
-    and never clears — it asks for more looking."""
+    A JSON object wrapped in prose or a markdown fence is accepted
+    (the documented tolerance). Anything unparseable, a non-object,
+    or a verdict word outside the three raises ValueError: a garbled
+    judgement is refused at the parser, never silently turned into a
+    ruling."""
     try:
         data = json.loads(text)
     except Exception:
-        return "inconclusive", None, ["the judge's reply was not JSON"]
+        data = _extract_json_object(text)
+        if data is None:
+            raise ValueError("the judge's reply was not JSON") from None
     if not isinstance(data, dict):
-        return "inconclusive", None, ["the judge's reply was not an object"]
+        raise ValueError("the judge's reply was not an object")
     verdict = _VERDICTS.get(str(data.get("verdict") or "").strip().lower())
     if verdict is None:
-        return "inconclusive", None, [
-            f"the judge returned an unknown verdict "
-            f"{data.get('verdict')!r}"]
+        raise ValueError(
+            f"the judge returned an unknown verdict {data.get('verdict')!r}")
     reasons = data.get("reasons")
     if not isinstance(reasons, list):
         reasons = []
@@ -145,7 +164,11 @@ def rule_with_model(division, first_result, review_result, chat_fn):
     is to fall back to combine() and say so on the timeline."""
     prompt = build_judge_prompt(division, first_result, review_result)
     text = chat_fn(prompt)
-    verdict, category, reasons = parse_verdict(text)
+    try:
+        verdict, category, reasons = parse_verdict(text)
+    except ValueError as err:
+        return "inconclusive", None, [
+            f"model judge ruling unusable: {err}"]
     return verdict, category, [
         f"model judge ruling: {r}" for r in reasons] or [
         "model judge ruling carried no reasons"]
