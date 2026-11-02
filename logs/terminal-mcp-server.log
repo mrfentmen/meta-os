@@ -1,6 +1,0 @@
-[2026-11-02T13:10:58.760Z] Loaded security config with 2 allowed paths
-[2026-11-02T13:10:58.761Z] Security module initialized
-[2026-11-02T13:10:58.761Z] Starting MCP Terminal server...
-[2026-11-02T13:10:58.761Z] Current working directory: /Users/test/Desktop/meta-os
-[2026-11-02T13:10:58.761Z] Process arguments: ["/Users/test/.local/node/bin/node","/Users/test/.npm/_npx/3520434043d140a8/node_modules/.bin/terminal-mcp-server"]
-[2026-11-02T13:10:58.765Z] Received request: {"method":"tools/list"}
