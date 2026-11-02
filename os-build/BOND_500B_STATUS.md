@@ -428,3 +428,33 @@ Blocked — the named API does not exist, and inventing it would be fake code:
 
 Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory`
 and `cargo test -p os-budget --doc` both exit 0.
+
+## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 6/25 delivered, 19 blocked
+
+| Task | File | Result |
+|---|---|---|
+| CB2-330 | `crates/assess-server/src/main.rs` | missing product named by `validate_assess_request` |
+| CB2-331 | `crates/assess-server/src/main.rs` | unknown product refused, never defaulted |
+| CB2-335 | `crates/guardrail/tests/section14.rs` | one micro-dollar under passes; at and over the ceiling trip |
+| CB2-336 | `crates/guardrail/tests/section14.rs` | five $0.675 calls total $3.375, hand-checked |
+| CB2-337 | `crates/guardrail/tests/section14.rs` | tripped state refuses; a zeroed ledger resets it |
+| CB2-350 | `crates/guardrail/src/lib.rs` | rustdoc example on `estimate`, runs as a doc test |
+
+Blocked — the named API does not exist:
+- CB2-326..328, 348: `agent-runtime` exposes `Agent::serve_job` and
+  `validate_assessment`; it has no registry loader, duplicate-name check, or
+  draft detection.
+- CB2-329, 332: invalid JSON is rejected at the HTTP layer (already covered by
+  `http_invalid_json_is_a_400`); response-contract checking lives in
+  `agent-runtime::validate_assessment`, not in assess-server.
+- CB2-333, 334, 349: `dashboard` is the brief/contract crate; it has no metrics
+  snapshot or CPU/memory/storage/network card builders.
+- CB2-338..340: `intel` has no single brief-record builder that emits sections.
+- CB2-341..343: `stack` is a service-config planner; it has no push/pop/capacity.
+- CB2-344, 345: `parity-tests` has the harness but no queue-envelope or incident
+  fixture cases yet.
+- CB2-346, 347: region and confidence checks live in
+  `agent-runtime::validate_assessment`, not in assess-server.
+
+Section 14 verification: `cargo test -p guardrail`, `cargo test -p guardrail --doc`,
+and `cargo test -p assess-server` all exit 0.

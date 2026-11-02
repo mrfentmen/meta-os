@@ -77,6 +77,14 @@ pub fn check(state: &GuardrailState) -> Result<(), GuardrailStop> {
     Ok(())
 }
 
+/// Estimated dollar cost for one call, before it is filed.
+///
+/// ```
+/// use guardrail::estimate;
+///
+/// // 200k input at $1.25/M plus 100k output at $4.25/M.
+/// assert!((estimate(200_000, 100_000) - 0.675).abs() < 1e-12);
+/// ```
 pub fn estimate(input_tokens: u64, output_tokens: u64) -> f64 {
     input_tokens as f64 / 1e6 * RATE_IN_PER_M + output_tokens as f64 / 1e6 * RATE_OUT_PER_M
 }

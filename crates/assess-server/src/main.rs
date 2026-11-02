@@ -1339,6 +1339,39 @@ mod tests {
     }
 
     #[test]
+    fn assess_missing_product() {
+        let payload = serde_json::json!({
+            "timestamp": "2026-11-02T00:00:00Z",
+            "image": "data:image/jpeg;base64,/9j/4A=="
+        });
+        let errors = match crate::validate_assess_request(&payload) {
+            Err(errors) => errors,
+            Ok(_) => panic!("missing product must be refused"),
+        };
+        assert!(
+            errors.iter().any(|e| e.starts_with("product:")),
+            "missing product is named: {errors:?}"
+        );
+    }
+
+    #[test]
+    fn assess_unknown_product() {
+        let payload = serde_json::json!({
+            "product": "custos",
+            "timestamp": "2026-11-02T00:00:00Z",
+            "image": "data:image/jpeg;base64,/9j/4A=="
+        });
+        let errors = match crate::validate_assess_request(&payload) {
+            Err(errors) => errors,
+            Ok(_) => panic!("unknown product must be refused"),
+        };
+        assert!(
+            errors.iter().any(|e| e.starts_with("product:")),
+            "unknown product is refused, never defaulted: {errors:?}"
+        );
+    }
+
+    #[test]
     fn http_invalid_json_is_a_400() {
         let srv = live_srv();
         let resp = http_round_trip(
