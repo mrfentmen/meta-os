@@ -2854,6 +2854,176 @@ pub fn with_previous_brief(
     })
 }
 
+/// One stated entry of a snapshot's `sweep_recovered` list, as the
+/// caller reads it: a usable job record (non-empty id and title,
+/// baton step when stated) or an entry that could not be read.
+/// A stated entry that is not a dict, or has no usable id or
+/// title, has no Job form: the caller passes it as Unreadable,
+/// which matches Python skipping it — and, unlike a duplicate
+/// listing, an unreadable entry voids the sweep count, so the
+/// renderer never prints a tidy number over a gap.
+#[derive(Debug, Clone, PartialEq)]
+pub enum SweepRecoveredEntry {
+    Job { id: String, title: String, baton_step: BatonStep },
+    Unreadable,
+}
+
+/// OS-127 follow-up: the boot-path caller that fills a
+/// snapshot's `recovery` record, so a boot brief carries its
+/// in-flight-jobs-recovered line even when the snapshot states
+/// only the lease sweep's own stated outcome. Returns the record
+/// to store as the snapshot's `recovery` value. A hand-stated
+/// record wins over a built one: pass it as `existing` and it is
+/// returned unchanged, whatever the inputs say, so a caller that
+/// knows its recovery better than these lists is never
+/// overwritten. The record exists only for a sweep that actually
+/// reported something, so a snapshot that states no usable sweep
+/// outcome — no recovered jobs, no sweep count, no corrupted
+/// jobs — gets no record at all, and older briefs keep their
+/// exact shape instead of gaining a silent line. A clean
+/// shutdown is a stated sweep count of zero with no recovered
+/// jobs: that builds a record, and it reads "0 recovered"
+/// plainly, because the sweep itself said so — a snapshot with
+/// no sweep count at all never reads zero. A job listed twice
+/// is one recovery, not two: the first listing wins, in sweep
+/// order. A recovered job without an id and a title, and a sweep
+/// count that is not a non-negative int, are skipped, never
+/// guessed — and a skipped recovered entry never turns into a
+/// clean count, because the record then carries no sweep count
+/// to reconcile against. A recovered job with no baton step is
+/// named with no step, never with an invented step: the
+/// renderer reads "step not reported" for it. This still reads
+/// stated inputs, never a live lease sweep: the OS-126
+/// plug-pull drill and the sweep verification have not landed,
+/// so a caller that states no sweep outcome gets no line even
+/// when a sweep ran somewhere else. Never fails: a builder
+/// failure leaves the caller without a record, so the boot path
+/// still produces a brief, just without this line, instead of
+/// failing outright.
+///
+/// The record carries no as_of stamp of its own — the
+/// RecoveryRecord holds corrupted, recovered, and sweep_count
+/// only — so unlike most with_* callers this one takes no now
+/// argument, following the with_federation precedent.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for `recovered` when the snapshot's
+/// sweep_recovered list is missing or not a list — silence
+/// states no recovered jobs; `Some(&[])` is an explicitly empty
+/// list, which likewise states no jobs on its own. A job listed
+/// twice is passed twice and deduped here, first listing wins,
+/// since a duplicate is not a skip. A baton step that is not an
+/// int or a non-empty string has no typed form: the caller
+/// passes `BatonStep::Missing`, which the renderer reads as step
+/// not reported. The caller passes `None` for `sweep_count`
+/// when the snapshot's sweep_count is missing or not an int; a
+/// negative count is ignored here, never guessed, since Python
+/// only accepts a non-negative int. The caller passes `None`
+/// for `corrupted` when the snapshot's sweep_corrupted list is
+/// missing or not a list; a corrupted entry that names nothing
+/// — `CorruptedEntry::Other`, or a Job or Plain entry with no
+/// usable name — is dropped here, since Python appends nothing
+/// for it.
+pub fn with_recovery(
+    existing: Option<&RecoveryRecord>,
+    recovered: Option<&[SweepRecoveredEntry]>,
+    sweep_count: Option<i64>,
+    corrupted: Option<&[CorruptedEntry]>,
+) -> Option<RecoveryRecord> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let mut usable = false;
+    let mut skipped = false;
+    let mut recovered_out: Option<Vec<RecoveredEntry>> = None;
+    if let Some(stated) = recovered {
+        if !stated.is_empty() {
+            let mut seen: Vec<&str> = Vec::new();
+            let mut jobs: Vec<RecoveredEntry> = Vec::new();
+            for entry in stated {
+                match entry {
+                    SweepRecoveredEntry::Job { id, title, baton_step } => {
+                        if id.is_empty() || title.is_empty() {
+                            skipped = true;
+                            continue;
+                        }
+                        if seen.contains(&id.as_str()) {
+                            continue;
+                        }
+                        seen.push(id.as_str());
+                        jobs.push(RecoveredEntry::Job {
+                            id: id.clone(),
+                            title: title.clone(),
+                            baton_step: baton_step.clone(),
+                        });
+                    }
+                    SweepRecoveredEntry::Unreadable => {
+                        skipped = true;
+                    }
+                }
+            }
+            if jobs.is_empty() {
+                // Every stated entry was skipped: the sweep
+                // reported something, but nothing readable —
+                // the record carries an empty recovered list
+                // and no sweep count to reconcile against.
+                recovered_out = Some(vec![]);
+            } else {
+                recovered_out = Some(jobs);
+            }
+            usable = true;
+        }
+    }
+    let mut sweep_out: Option<i64> = None;
+    if let Some(count) = sweep_count {
+        if count >= 0 {
+            if recovered_out.is_none() {
+                recovered_out = Some(vec![]);
+            }
+            // A skipped recovered entry voids the count:
+            // without it the renderer cannot print a clean
+            // count, only an incomplete line. A job listed
+            // twice is not a skip: dedupe never voids a
+            // count on its own.
+            if !skipped {
+                sweep_out = Some(count);
+            }
+            usable = true;
+        }
+    }
+    let mut corrupted_out: Option<Vec<CorruptedEntry>> = None;
+    if let Some(stated) = corrupted {
+        let mut usable_corrupted: Vec<CorruptedEntry> = Vec::new();
+        for entry in stated {
+            match entry {
+                CorruptedEntry::Job { id, title } => {
+                    if !id.is_empty() || !title.is_empty() {
+                        usable_corrupted.push(entry.clone());
+                    }
+                }
+                CorruptedEntry::Plain(s) => {
+                    if !s.is_empty() {
+                        usable_corrupted.push(entry.clone());
+                    }
+                }
+                CorruptedEntry::Other => {}
+            }
+        }
+        if !usable_corrupted.is_empty() {
+            corrupted_out = Some(usable_corrupted);
+            usable = true;
+        }
+    }
+    if !usable {
+        return None;
+    }
+    Some(RecoveryRecord {
+        corrupted: corrupted_out,
+        recovered: recovered_out,
+        sweep_count: sweep_out,
+    })
+}
+
 /// STR-002: `_format_brief_time` — a stored brief timestamp as
 /// `"YYYY-MM-DD HH:MM ET"` in America/New_York, the zone the
 /// BRF-011 morning schedule uses. This crate has no time
@@ -7076,5 +7246,179 @@ mod tests {
             with_previous_brief(None, Some(&junk), Some(1793093400)),
             None
         );
+    }
+
+    #[test]
+    fn with_recovery_builds_from_stated_sweep_and_renders_line() {
+        let recovered = vec![
+            SweepRecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            },
+            SweepRecoveredEntry::Job {
+                id: "6".into(),
+                title: "dispatch poster".into(),
+                baton_step: BatonStep::Number(1),
+            },
+        ];
+        let record = with_recovery(None, Some(&recovered), Some(2), None)
+            .expect("a stated sweep yields a recovery record");
+        assert_eq!(record.sweep_count, Some(2));
+        assert!(record.corrupted.is_none());
+        assert_eq!(
+            recovery_line(Some(&record)),
+            "In-flight jobs recovered at this boot: 2 recovered: \
+             job 5 brief panel (resumed at step 2); \
+             job 6 dispatch poster (resumed at baton step 1)"
+        );
+    }
+
+    #[test]
+    fn with_recovery_clean_shutdown_reads_zero_recovered_plainly() {
+        let empty: Vec<SweepRecoveredEntry> = vec![];
+        let record = with_recovery(None, Some(&empty), Some(0), None)
+            .expect("a stated zero sweep builds a record");
+        assert_eq!(record.sweep_count, Some(0));
+        assert_eq!(record.recovered, Some(vec![]));
+        assert_eq!(
+            recovery_line(Some(&record)),
+            "In-flight jobs recovered at this boot: 0 recovered"
+        );
+    }
+
+    #[test]
+    fn with_recovery_hand_stated_record_wins_unchanged() {
+        let stated = RecoveryRecord {
+            corrupted: Some(vec![]),
+            recovered: Some(vec![RecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            }]),
+            sweep_count: Some(1),
+        };
+        // A hand-stated record wins even when no sweep is stated.
+        let record = with_recovery(Some(&stated), None, None, None)
+            .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_recovery_silence_or_junk_gets_no_record() {
+        // Silence states no sweep outcome.
+        assert_eq!(with_recovery(None, None, None, None), None);
+        // Explicitly empty lists are still no sweep outcome, and
+        // no sweep count never reads zero.
+        let empty: Vec<SweepRecoveredEntry> = vec![];
+        let empty_corrupted: Vec<CorruptedEntry> = vec![];
+        assert_eq!(
+            with_recovery(None, Some(&empty), None, Some(&empty_corrupted)),
+            None
+        );
+        // A corrupted entry that names nothing is junk, not a sweep.
+        let nameless = vec![CorruptedEntry::Other];
+        assert_eq!(
+            with_recovery(None, None, None, Some(&nameless)),
+            None
+        );
+    }
+
+    #[test]
+    fn with_recovery_skipped_entries_void_the_sweep_count() {
+        let recovered = vec![
+            // No id, skipped.
+            SweepRecoveredEntry::Unreadable,
+            // Id but no title, skipped.
+            SweepRecoveredEntry::Unreadable,
+            SweepRecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            },
+            SweepRecoveredEntry::Job {
+                id: "6".into(),
+                title: "dispatch poster".into(),
+                baton_step: BatonStep::Missing,
+            },
+        ];
+        let corrupted = vec![
+            CorruptedEntry::Job { id: "7".into(), title: "watchdog loop".into() },
+            CorruptedEntry::Plain("a bare name".into()),
+        ];
+        let record =
+            with_recovery(None, Some(&recovered), Some(2), Some(&corrupted))
+                .expect("usable jobs plus corrupted entries yield a record");
+        // The skipped entries void the sweep count, so the line
+        // stays incomplete instead of printing a clean count
+        // over a gap.
+        assert_eq!(record.sweep_count, None);
+        assert_eq!(record.recovered.as_ref().map(|v| v.len()), Some(2));
+        assert_eq!(record.corrupted.as_ref().map(|v| v.len()), Some(2));
+        assert!(recovery_line(Some(&record)).contains("corrupted record"));
+    }
+
+    #[test]
+    fn with_recovery_job_listed_twice_is_one_recovery() {
+        let recovered = vec![
+            SweepRecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            },
+            SweepRecoveredEntry::Job {
+                id: "5".into(),
+                title: "a second listing".into(),
+                baton_step: BatonStep::Number(9),
+            },
+        ];
+        let record = with_recovery(None, Some(&recovered), Some(1), None)
+            .expect("a stated sweep yields a recovery record");
+        // Dedupe is not a skip: the count survives.
+        assert_eq!(record.sweep_count, Some(1));
+        let jobs = record.recovered.expect("a recovered list is built");
+        assert_eq!(jobs.len(), 1);
+        assert_eq!(
+            jobs[0],
+            RecoveredEntry::Job {
+                id: "5".into(),
+                title: "brief panel".into(),
+                baton_step: BatonStep::Text("step 2".into()),
+            }
+        );
+        assert!(recovery_line(Some(&record)).contains("1 recovered"));
+    }
+
+    #[test]
+    fn with_recovery_all_skipped_entries_yield_an_unreconciled_record() {
+        let recovered = vec![SweepRecoveredEntry::Unreadable];
+        let record = with_recovery(None, Some(&recovered), Some(1), None)
+            .expect("a stated but unreadable sweep still reports");
+        assert_eq!(record.recovered, Some(vec![]));
+        assert_eq!(record.sweep_count, None);
+        assert!(recovery_line(Some(&record)).contains("no lease sweep count"));
+    }
+
+    #[test]
+    fn with_recovery_negative_sweep_count_is_ignored_never_guessed() {
+        let recovered = vec![SweepRecoveredEntry::Job {
+            id: "5".into(),
+            title: "brief panel".into(),
+            baton_step: BatonStep::Text("step 2".into()),
+        }];
+        let record = with_recovery(None, Some(&recovered), Some(-1), None)
+            .expect("usable jobs alone still yield a record");
+        assert_eq!(record.sweep_count, None);
+        assert!(recovery_line(Some(&record)).contains("no lease sweep count"));
+    }
+
+    #[test]
+    fn with_recovery_corrupted_only_still_builds_a_record() {
+        let corrupted = vec![CorruptedEntry::Plain("a bare name".into())];
+        let record = with_recovery(None, None, None, Some(&corrupted))
+            .expect("stated corrupted jobs alone yield a record");
+        assert!(record.recovered.is_none());
+        assert!(record.sweep_count.is_none());
+        assert!(recovery_line(Some(&record)).contains("corrupted record"));
     }
 }
