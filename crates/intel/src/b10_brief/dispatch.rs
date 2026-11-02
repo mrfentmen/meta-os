@@ -1889,6 +1889,49 @@ pub fn parse_posted_job_id(code: i32, stdout: &str) -> Option<String> {
     None
 }
 
+/// Build one `jobs.main` post argv for a plan job (DSP-008).
+///
+/// This is the argv half of Python's `post_plan` loop: the exact
+/// flag order Python builds, with accept lines newline-joined
+/// (the mos/acceptance.py line format), files and req
+/// comma-joined, and the `--opt=value` form so a title or spec
+/// starting with `-` stays a value, not an option. `--deps`
+/// appears only when there are already-posted real ids, and
+/// `--secret-file` only when a keyring is given.
+///
+/// Rust adaptations, stated not hidden: Python defaults a
+/// missing max_attempts to 3 (`DEFAULT_MAX_ATTEMPTS`); the Rust
+/// `PlanJob` already carries a value, so this uses it as-is and
+/// the caller owns clamping. Python rewrites plan-key deps to
+/// real ids before this point; this takes the real ids as
+/// `real_deps`. The queue call itself stays with the caller, as
+/// with `parse_posted_job_id`; this builds argv only, it posts
+/// nothing and stores no record.
+pub fn build_post_argv(
+    job: &PlanJob,
+    room: &str,
+    real_deps: &[String],
+    secret_file: Option<&str>,
+) -> Vec<String> {
+    let mut argv = vec![
+        "post".to_string(),
+        format!("--title={}", job.title),
+        format!("--spec={}", job.spec),
+        format!("--accept={}", job.accept.join("\n")),
+        format!("--files={}", job.files.join(",")),
+        format!("--req={}", job.req.join(",")),
+        format!("--max-attempts={}", job.max_attempts),
+        format!("--room={room}"),
+    ];
+    if !real_deps.is_empty() {
+        argv.push(format!("--deps={}", real_deps.join(",")));
+    }
+    if let Some(secret) = secret_file {
+        argv.push(format!("--secret-file={secret}"));
+    }
+    argv
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3195,5 +3238,74 @@ mod tests {
         for text in invalid {
             assert!(is_malformed_json(text), "should fail: {text}");
         }
+    }
+
+    fn post_job() -> PlanJob {
+        PlanJob {
+            key: "k".into(),
+            title: "Do it".into(),
+            files: vec!["a.py".into(), "b.py".into()],
+            deps: vec!["a".into()],
+            max_attempts: 3,
+            spec: "Add the line.".into(),
+            accept: vec!["line present".into(), "tests pass".into()],
+            req: vec!["mos/capabilities.find_for".into()],
+        }
+    }
+
+    #[test]
+    fn post_argv_full_order_with_deps_and_secret() {
+        let argv = build_post_argv(
+            &post_job(),
+            "main",
+            &["j-1".to_string()],
+            Some("keyring.json"),
+        );
+        assert_eq!(
+            argv,
+            vec![
+                "post",
+                "--title=Do it",
+                "--spec=Add the line.",
+                "--accept=line present\ntests pass",
+                "--files=a.py,b.py",
+                "--req=mos/capabilities.find_for",
+                "--max-attempts=3",
+                "--room=main",
+                "--deps=j-1",
+                "--secret-file=keyring.json",
+            ]
+            .iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>()
+        );
+    }
+
+    #[test]
+    fn post_argv_omits_empty_deps_and_secret() {
+        let argv = build_post_argv(&post_job(), "main", &[], None);
+        assert!(!argv.iter().any(|a| a.starts_with("--deps=")));
+        assert!(!argv.iter().any(|a| a.starts_with("--secret-file=")));
+        assert_eq!(argv.last().unwrap(), "--room=main");
+    }
+
+    #[test]
+    fn post_argv_dash_title_stays_a_value() {
+        let mut job = post_job();
+        job.title = "-run first".into();
+        let argv = build_post_argv(&job, "main", &[], None);
+        assert_eq!(argv[1], "--title=-run first");
+    }
+
+    #[test]
+    fn post_argv_empty_lists_yield_empty_values() {
+        let mut job = post_job();
+        job.accept = vec![];
+        job.files = vec![];
+        job.req = vec![];
+        let argv = build_post_argv(&job, "main", &[], None);
+        assert!(argv.contains(&"--accept=".to_string()));
+        assert!(argv.contains(&"--files=".to_string()));
+        assert!(argv.contains(&"--req=".to_string()));
     }
 }
