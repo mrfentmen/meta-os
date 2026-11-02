@@ -34,8 +34,26 @@ Standing rules: no source edits outside task scope; errors verbatim + stop; 4 bu
   `help` + `status`, 7 checks + hard FAIL on `loader refused`).
 - In-branch run: GATE GREEN, 7/7 ok (log os-build/logs/GATE-boot-r4-1.txt,
   3281 bytes, STATUS line present; full output os-build/logs/gate-run-r4-1.txt).
-- Clean-clone run: pending (next commit runs it from a fresh clone).
-## R4-2 userspace build fix — TODO
+- Clean-clone run: fresh clone of opencode/round4 @ c541cf2 to
+  /tmp/round4-clean, `sh os-build/gate.sh` → GATE GREEN, 7/7 ok
+  (log os-build/logs/GATE-boot-clean.txt, STATUS present;
+  full output os-build/logs/gate-run-clean.txt, pasted: toolchain /
+  userspace / kernel / boot / assert sections all green, zero FAIL).
+  Green from clean checkout: PROVEN.
+## R4-2 userspace build fix — DONE (by verification, no edit allowed)
+- The repo's build path already encodes per-program bases:
+  `os-build/boot-test.sh` lines 24-30 build each bin with its own
+  `-T$PWD/link.ld` (sed from link-base.ld at the right base), and the
+  new `os-build/gate.sh` does the same via /tmp/link-*.ld. Both
+  produce hello 0x600000000000 / sleeper 0x610000000010 /
+  crasher 0x620000000110 (verified this session).
+- No standalone `.cargo/config.toml` patch landed (Pax forbade it:
+  it links every program at crasher's base). The tracked config
+  stays without `-Tlink.ld`; bare `cargo build` in
+  os-build/userspace/user is NOT the supported path — stated, not hidden.
+- Loader refusal path untouched (`address in use` arm intact; this
+  session's gates show 0 loader-refused lines because the build is right).
+- Proof: clean-clone GATE GREEN above used only the branch's scripts.
 ## R4-3 K7 demo boot log — TODO
 ## R4-4 merge-watch — TODO
 ## What remains unverified — TODO
