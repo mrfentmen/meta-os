@@ -1,0 +1,7 @@
+tests/t68_proto|RUNS|41|0|
+tests/t65_fs|RUNS|75|0|
+entry/bootlog|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
+entry/console|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
+entry/example|TYPECHECKS (not run)|0|0|svc_entry takes a kernel BootInfo; no host boot block
+entry/logd|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
+entry/time|BUILDS (not run)|0|0|svc_entry; no supervisor on a host

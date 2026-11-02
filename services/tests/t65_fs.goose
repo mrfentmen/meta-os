@@ -164,6 +164,26 @@ fn main() {
     check("entry is gone", resolve_fails(root, "/greeting", E_NOTFOUND));
     check("root cannot be unlinked", fs_unlink_path(root, "/..") != CODE_OK);
 
+    // --- delete-while-open: there are no open handles ---
+    // MOSFS01 has no file descriptors. An inode number is not a handle: unlink frees the
+    // inode, so a caller still holding the number must get an error rather than whatever
+    // the block is reused for. A POSIX user expects the opposite, which is why this case
+    // is specified by a test instead of left to the reader of DESIGN.md.
+    let dh, dhc = fs_create_path(root, "/held", MODE_FILE);
+    check("create /held", dhc == CODE_OK);
+    let _ = fs_write(dh, 0, "abc");
+    check("unlink the held file", fs_unlink_path(root, "/held") == CODE_OK);
+    var stale: u8[>..] = [];
+    let stale_n = fs_read(dh, 0, stale, 8);
+    check("a stale inode number reads nothing", stale_n <= 0 && stale.len == 0);
+
+    // --- rename collisions ---
+    let _ = fs_create_path(root, "/collide-a", MODE_FILE);
+    let _ = fs_create_path(root, "/collide-b", MODE_FILE);
+    check("rename onto an existing name refuses",
+          fs_rename(root, "collide-a", "collide-b") == E_STATE);
+    check("and the source keeps its name", !resolve_fails(root, "/collide-a", 0));
+
     // --- size limit ---
     var big: u8[>..] = [];
     var i: i64 = 0;

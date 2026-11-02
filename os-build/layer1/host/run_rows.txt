@@ -18,7 +18,7 @@ tests/t61_bootorder|RUNS|24|0|
 tests/t62_bytes|RUNS|50|0|
 tests/t63_str|RUNS|27|0|
 tests/t64_hex|RUNS|25|0|
-tests/t65_fs|RUNS|70|0|
+tests/t65_fs|RUNS|75|0|
 tests/t66_shell|RUNS|57|0|
 tests/t67_net|RUNS|89|0|
 tests/t68_proto|RUNS|41|0|

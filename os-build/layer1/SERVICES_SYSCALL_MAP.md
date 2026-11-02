@@ -45,7 +45,7 @@ run that proves the logic, and a caller one layer up that does the syscalls.
 | `devices` | none | 0 |
 | `dhcp` | tests/t57_dhcp_dns | 45 |
 | `dns` | tests/t57_dhcp_dns | 45 |
-| `fs` | tests/t65_fs | 70 |
+| `fs` | tests/t65_fs | 75 |
 | `input` | tests/t56_input_display | 49 |
 | `logfmt` | none | 0 |
 | `netcfg` | none | 0 |

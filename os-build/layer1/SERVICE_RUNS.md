@@ -43,20 +43,22 @@ uint8_t sys_read_key(gs_rref)        gs_rref = { gs_rhdr *hdr; gs_stack *stk; }
 | `tests/t62_bytes` | **RUNS** | 50 | 0 | — |
 | `tests/t63_str` | **RUNS** | 27 | 0 | — |
 | `tests/t64_hex` | **RUNS** | 25 | 0 | — |
-| `tests/t65_fs` | **RUNS** | 70 | 0 | — |
+| `tests/t65_fs` | **RUNS** | 75 | 0 | — |
 | `tests/t66_shell` | **RUNS** | 57 | 0 | — |
 | `tests/t67_net` | **RUNS** | 89 | 0 | — |
 | `tests/t68_proto` | **RUNS** | 41 | 0 | — |
 | `tests/t69_callmatrix` | **RUNS** | 28 | 0 | — |
 | `tests/t70_status` | **RUNS** | 20 | 0 | — |
 | `tests/t71_rotate` | **RUNS** | 48 | 0 | — |
+| `tests/t72_hostile` | **RUNS** | 77 | 0 | — |
+| `tests/t73_shell_hard` | **RUNS** | 46 | 0 | — |
 | `entry/bootlog` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/console` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/example` | TYPECHECKS (not run) | 0 | 0 | svc_entry takes a kernel BootInfo; no host boot block |
 | `entry/logd` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/time` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 
-**27 of 27 drivers run to completion, all green: 969 assertions passed, 0 failed** (measured 2026-11-02, `run_native.sh` exit 0). Four entry points **build** and are not run — they export `svc_entry`, and a host process has no supervisor to call it. `entry/example` **typechecks** and is not run: its `svc_entry` takes a `BootInfo`, and a host has no boot block to hand it. The first pass of this table read `4 green, 22 dead`; the section below is what that cost and what it taught, kept because it is the argument for running code instead of typechecking it.
+**29 of 29 drivers run to completion, all green: 1097 assertions passed, 0 failed** (measured 2026-11-02, `run_native.sh` exit 0). 4 entry points **build** and are not run — they export `svc_entry`, and a host process has no supervisor to call it. 1 entry point **typechecks** and is not run: its `svc_entry` takes a kernel `BootInfo`, and a host has no boot block to hand it.
 
 ## What the first pass found, and what fixing it taught
 

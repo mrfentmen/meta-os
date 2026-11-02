@@ -186,7 +186,7 @@
       "entry_status": "no entry",
       "test": "tests/t65_fs",
       "test_status": "RUNS",
-      "checks": 70,
+      "checks": 75,
       "failures": 0,
       "syscalls": [],
       "reachable_modules": 6,
