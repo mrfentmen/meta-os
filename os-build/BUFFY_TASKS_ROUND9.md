@@ -60,10 +60,14 @@ the model, not this lane.
 
 ## D. Agent layer — the two standing TODOs
 
-- D1. Watchman listens to crew room 1: a job file can arrive
-  from the bus (orders posted as job JSON), claimed once,
-  spawned briefed, result posted back. Drill with a real job
-  end to end; ledger lines are the proof.
+- D1. Watchman listens to META NUNTIUS (boss ruling
+  2026-11-02): job orders arrive over the OS's OWN in-repo
+  agent messaging (relay/ — Nuntius, port 8787, its line
+  protocol), claimed once, spawned briefed, result posted
+  back on Nuntius. NEVER the crew's external bus — that bus
+  is the crew's work chat, not a product part, and nothing
+  in the OS points at it. Drill with a real job end to end
+  over Nuntius; ledger lines are the proof.
 - D2. Timer-sweep fallback: the watchman's backup bell — a
   periodic sweep that starts named work whose job file landed
   while the watcher was down. Drill: kill the watchman, land
