@@ -429,3 +429,61 @@ re-runnable with one command each, listed in `SERVICES_FINAL.md`), and merge the
 > else), `SIGNOFF.md` is the one-page version.
 >
 > Nothing here has executed. Do not read WRITTEN as working.
+
+## ROUND 8 CLOSE (2026-11-02 — read this before the round-4 material)
+
+Two commits on `buffy/layer1-goose-services` since the face-layer batch (`9910e53`), both pushed
+and both green on the mechanical gates:
+
+| commit | what |
+|---|---|
+| `00d895d` | `t94_face_failures` — the six face services driven into the failure each one would fail *silently* with (88 checks), plus the defect it found |
+| `ada4a85` | `notify` — the top-bar feed (Round 7 C43–C48), its driver `t95_notify` (77 checks), boot order entry 29, matrix id 31 |
+
+### What the new evidence changed
+
+- **A defect, fixed.** `updater_client` consulted STOP only on `uc_check`, so an update offered
+  before the STOP file appeared could still be applied — `uc_apply` takes no STOP argument. A STOP
+  check now withdraws the offer; `t94` drives the whole window. This is recorded in
+  `FAILURE_MATRIX.md` as a defect rather than a feature, because every rule in that file was true
+  when written and false one call later.
+- **`notify` exists now.** Twelve notes, a 3 s dedupe window that is inclusive at its edge,
+  `E_NO_SPACE` at the ceiling with a count instead of displacing the oldest, and a dismissal that
+  frees the slot while keeping a record in an 8-slot ring with an unbounded total. Contract page:
+  `contracts/notify.md`.
+- **A claim in the boot table was never true.** `bootorder.goose` said its `needs` masks were the
+  call matrix's ids; they are the table's own contiguous 1..29 sequence, and the two id spaces
+  agreed only as far as id 1. The comment now says what the code does. This did not break
+  anything — `bootorder_check.py` only ever proved self-consistency — but a comment that licenses
+  a wrong edit is the kind of thing that costs an hour at 3 a.m.
+- **`contracts/dock.md` said `E_EXISTS` and `E_RANGE`.** Neither code exists; the dock returns
+  `E_STATE` and `E_INVAL`. Corrected against the source.
+
+### Numbers, from the tree
+
+`./os-build/layer1/run_native.sh` — 51 programs, **51 RUNS, 0 FAILS**, 2,399 checks.
+`./os-build/layer1/check_services.sh` — typechecked 57 ok, 0 failed.
+`bootorder_check.py` — 29 services, no cycles. `source_audit.py` — 140 files, 0 findings.
+`callmatrix_audit.py` — clean on permissions, 95 dormant. `reconcile_counts.py` — no stale counts
+in any live doc. `deadcode.py` — `notify` contributes no uncalled function.
+
+### Also this round: the agent runtime (separate branch)
+
+B3/B4 of `AGENT_LAYER_TASKS.md` are done on **`buffy/agent-runtime-harden`** (cut from `main` at
+`63db13c`, commit `249be3d`) — failure injection and restart semantics for `agents/runtime.mjs`.
+Eleven new tests, three defects found: an `ENOENT` spawn took the runtime down (no `error`
+listener), `killAgent` wrote a `stop-request` for a run that had already exited, and two registry
+entries (integer argv, an unsupported watch target) were accepted at load and failed later, one of
+them inside a `setInterval`. Reading: `os-build/AGENT_RUNTIME_REPORT.md`.
+
+**That branch was cut from `main`, not merged into this one.** A merge of `origin/main` into this
+branch produced 54 add/add conflicts across `services/` and `os-build/layer1/`, which means the
+two histories no longer share a usable base — resolving that by hand would rewrite files another
+lane is actively editing. Pax should merge this branch and the runtime branch separately, in
+either order, rather than have one absorb the other.
+
+### For Pax, at the merge gate
+
+Merge on the mechanical gates above and on the claims as `SERVICES_FINAL.md` states them. The
+sentence that must not appear anywhere: that the OS *boots* these services. Nothing starts a
+service; `BOOT_REHEARSAL.md` is a rehearsal of entry points, and 25 of 29 have no entry at all.
