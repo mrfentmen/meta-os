@@ -4,4 +4,4 @@
 # already run. Real Linux apps launch behind the browser via
 # launcher.py; alt-tab reaches them (proven in the recording).
 # Usage (in guest): DISPLAY=:99 sh /tmp/face/spike-a-session.sh
-chromium --no-sandbox --kiosk http://127.0.0.1:18900/shell.html
+chromium --no-sandbox --kiosk http://127.0.0.1:18900/login.html
