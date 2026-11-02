@@ -7,6 +7,37 @@ gate reads, so it only contains what can be checked.
 Updated 2026-11-01 at the end of the build-out (B-L1-147). All 148 tasks are accounted for below,
 one row each, with the artifact that backs the status word.
 
+## STATUS CORRECTION (2026-11-02, Round 4 close — read this first)
+
+Round 4 replaced the word TYPECHECKED with runs, and this section is the correction pass: every
+sentence below was produced by a command on this Mac on 2026-11-02. Where the older sections of
+this file disagree, they are wrong and this section wins. `DEMO_FACTS.md` is generated from the
+same commands and carries each one beside its number.
+
+| Claim | Status word now | Evidence |
+|---|---|---|
+| The corpus executes | **RUNS** | `run_native.sh`: 29 of 29 drivers build and exit 0, **1,097 assertions, 0 failed** |
+| The corpus compiles | **COMPILES** (Goose → C → clang, host target) | same run; every driver is a real binary, not a typecheck |
+| The corpus typechecks | **TYPECHECKED** | `check_services.sh`: **35 programs** (6 roots + 29 tests), 0 errors |
+| A service is started by the kernel | **NOT BUILT** | no `sys_spawn`/`sys_kill` in the corpus (`PROPOSALS.md` P3); nothing starts a service process |
+| The filesystem persists | **NOT BUILT** | RAM backend; the remount test proves one process, not a reboot |
+| Lobster calls a service | **NOT BUILT** | zero `.lobster` files in the repo (`LOBSTER_BINDING.md`) |
+
+What that changes in the ledger below: **B-L1-075** moves from TYPECHECKED to RUNS, **B-L1-076**
+from NOT BUILT to RUNS-on-a-host (not on the kernel), and every "compilation and run" blocked-on
+column for a row that has a green driver is now satisfied by `SERVICE_RUNS.md`. **B-L1-077** stays
+NOT BUILT for the reason it always had: the supervisor needs a process to start.
+
+What it does not change: the layer still has nothing above it. A host process with a substituted
+syscall surface is not a kernel starting a service, and no sentence in this file should be read as
+though it were.
+
+Round 4 also added, all measured: `SERVICES_SYSCALL_MAP.md` (three ABI classes, 17 services need no
+kernel call, 8 need a proposal), `services.json` + `gen_services.py` (the manifest is generated),
+`TRANSCRIPTS.md` (seven transcripts, unedited stdout), `LIMITS.md` (22 of 75 limit constants
+exercised), `PROPOSALS.md` (P1–P8), `BOOT_PLAN.md`, and the hardening suites t72/t73 (123 hostile
+cases across format, config, hash and the shell parser).
+
 ## CORRECTION (2026-11-01, Pax P-5) — read this before the table
 
 The two "bounding facts" this report opened with are both **retired**, and this section replaces
@@ -140,8 +171,8 @@ The rule used for every row, so a reader can audit the table instead of trusting
 | B-L1-072 | Report + ready post. | **WRITTEN** | this file + the room-1 ready post | compilation |
 | B-L1-073 | Bind the packet interface | **NOT BUILT** | needs a Layer 3 packet driver (none in tree) | the binding itself |
 | B-L1-074 | Bind storage | **NOT BUILT** | needs a Layer 3 block driver (RAM backend is the placeholder) | the binding itself |
-| B-L1-075 | First COMPILED pass: | **TYPECHECKED** | `check_services.sh`: 31 programs, 0 errors — the front end accepts the whole corpus | no object file, no link, no binary: TYPECHECKED is not COMPILED |
-| B-L1-076 | First RUN pass: | **NOT BUILT** | blocked: K6 boots userspace on this Mac, but no service host exists in the kernel and no Goose program has been built to run there | every run |
+| B-L1-075 | First COMPILED pass: | **COMPILES** | `run_native.sh`: Goose → C → clang for 29 drivers + 4 entry points; binaries exist and execute (host target) | nothing — see `SERVICE_RUNS.md` |
+| B-L1-076 | First RUN pass: | **RUNS on a host** | 29 of 29 drivers exit 0, 1,097 assertions, 0 failed (`SERVICE_RUNS.md`, `TRANSCRIPTS.md`) | the kernel: no service host exists, so no run happens on metal |
 | B-L1-077 | Supervisor live pass: | **NOT BUILT** | blocked: the supervisor has never started a service; it needs a runner in the kernel and a built binary | every boot |
 | B-L1-078 | Layer 4 sign-off note. | **WRITTEN** | `SIGNOFF.md` | compilation |
 | B-L1-079 | FS design. | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
@@ -221,8 +252,9 @@ code and the numbers are the ones the tools printed, unedited.
 
 | Gate | Command | Exit | Result |
 |---|---|---|---|
-| **Typecheck** | `os-build/layer1/check_services.sh` | 0 | **31 programs (6 roots + 25 tests), 0 errors, 0 failed** |
-| Source audit | `python3 os-build/layer1/source_audit.py` | 0 | 107 files, 0 findings |
+| **Native run** | `os-build/layer1/run_native.sh` | 0 | **29 of 29 drivers, 1,097 assertions, 0 failed** (2026-11-02) |
+| **Typecheck** | `os-build/layer1/check_services.sh` | 0 | **35 programs (6 roots + 29 tests), 0 errors, 0 failed** |
+| Source audit | `python3 os-build/layer1/source_audit.py` | 0 | 111 files, 0 findings |
 | Error registry | `python3 os-build/layer1/error_audit.py --unused` | 0 | 34 codes declared, 34 used, 0 undeclared |
 | Boot order | `python3 os-build/layer1/bootorder_check.py` | 0 | 22 services, deps proven, no cycle |
 | Link map | `python3 os-build/layer1/linkmap.py` | 0 | 26 services, 52 distinct service→service edges |
@@ -296,12 +328,14 @@ show up twice.
 
 ## Queue
 
-Nothing left in this lane. B-L1-01 … 148 are all either done to WRITTEN or explicitly blocked:
+Round 4 closed the run gap. What is left, as of 2026-11-02:
 
-1. **B-L1-75/76/77** need the Goose toolchain and a kernel past K1.
-2. **B-L1-73/74** need a Layer 3 packet driver and block driver.
-3. **The call-matrix edges** need Pax's ruling.
-4. **The supervisor start timeout** needs the `starting_since_ms` field and a runner to prove it.
+1. **B-L1-077** still needs a process to start: `sys_spawn`/`sys_kill` are proposals, not syscalls.
+2. **B-L1-73/74** still need a Layer 3 packet driver and block driver; the RAM backend and the
+   in-memory link are placeholders and say so.
+3. **The supervisor start timeout** needs the `starting_since_ms` field and a runner to prove it.
+4. **Lobster never calls a service.** Zero `.lobster` files in this repo; `LOBSTER_BINDING.md` has
+   the measurement and the shortest path, and claims no round trip.
 
 ## The room-1 post (B-L1-148)
 

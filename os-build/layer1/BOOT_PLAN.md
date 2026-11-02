@@ -17,10 +17,10 @@ RUNS / DEAD. Every claim names its evidence.
 There is no load path. What exists:
 
 - `services/` compiles as one root per service (`services/root_<svc>.goose`);
-  every root and every test typechecks (`check_services.sh`: 32 ok, 0 failed —
-  that count is roots plus test roots, not 32 services).
-- 26 programs **run** natively against `host_shim.c` (`run_rows.txt`: 26 rows,
-  0 failures). That proves logic against a real clock and real memory. It does
+  every root and every test typechecks (`check_services.sh`: 35 ok, 0 failed —
+  that count is roots plus test roots, not 35 services).
+- 29 programs **run** natively against `host_shim.c` (`run_rows.txt`: 29 test
+  rows, 1,097 assertions, 0 failures — measured 2026-11-02). That proves logic against a real clock and real memory. It does
   not prove an image the kernel can load, because the shim is a linker
   substitution: no address space, no privilege boundary, no entry protocol.
 - `services/*/entry.goose` exports `svc_entry` and is built but not run. Five
