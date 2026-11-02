@@ -1,0 +1,53 @@
+# OC1B carrier image record (tasks 282, 291-294, 299)
+
+## Rebuilt image (OC1B-282)
+
+- Path (build-local, NEVER git): /tmp/oc1b-carrier3/metaos-face.img
+- Size: 4211802112 bytes (3.92 GiB actual; 13 GiB virtual, qcow2)
+- sha256: fe039dda564774752bf6c721a712a16940d316329666bfde95bda26f403d3e4f
+  (state after provision + check boot; guest writes append on every boot —
+  the manifest pins this digest for the as-checked image)
+- Base: debian-12-generic-amd64.qcow2 448790528 bytes (cached copy; the
+  recipe re-downloads from CLOUD_URL only when absent)
+
+## Manifest (OC1B-291)
+
+os-build/face/carrier-image.manifest.json (committed). Single part (the
+img above); no split transport was used.
+
+## JOIN note (OC1B-292)
+
+os-build/face/CARRIER_JOIN.md (committed): single-part rejoin = no-op,
+verify with the sha256 above, boot with the recipe's boot line.
+
+## Parts stayed out of git (OC1B-293)
+
+Attestation: `git status --porcelain` on the branch shows no .img,
+no .qcow2, no seed.iso, no face-key, no bootimage binary staged or
+committed. Image parts live only under /tmp/oc1b-carrier3/ (plus the
+untouched /tmp/face-img/ cache). Verified at commit time; the
+closeout largefile sweep re-checks.
+
+## Delta vs wave-2 image (OC1B-294)
+
+- Before: metaos-face.img 448790736 bytes, sha
+  f7d8581ebb05a8b708b9cc4252a50e1b90681cad684d5e8778a95951363167c3
+  (stock Debian + login config; toolchain installed live, not by recipe).
+- After: 4211802112 bytes (+3763011376 bytes: apt toolchain, npm,
+  chromium deps, opencode + freebuff binaries).
+- Toolchain additions, all proven in-guest: opencode 2.2.0, node v18.20.4,
+  npm 9.2.0 (Debian), git 2.39.5, chromium 156.0.8078.73, freebuff 0.2.35.
+- Not carried: the face app (/opt/face) and its services — present only
+  in work.qcow2, absent from the recipe output before and after.
+
+## Carrier verdict (OC1B-299)
+
+The toolchain is IN the image and proven in the guest: opencode 2.2.0
+runs (`opencode v2.2.0`, rc=0), node/git/chromium answer with versions,
+freebuff 0.2.35 installs and runs — all from the recipe's pinned
+provision phase, on a fresh image, over SSH, with the exact outputs
+quoted in OC1B-carrier-checks.md. The verdict STOPS being true at the
+face-app checks: dashboard (286), updater (287), and kiosk startup (290)
+are FAILED/NOT PRESENT because the recipe does not deploy /opt/face.
+Hardware boot (296) is UNPROVEN. The carrier is a toolchain image, not a
+face image — shipped honestly as such.
