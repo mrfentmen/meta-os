@@ -1,13 +1,16 @@
-//! Crate `os-workspace` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-workspace` — the B19 port of the OS-083 artifact store and
+//! MOS safe gitops.
 //!
 //! Batch B19 — Workspace & artifact store. Owner: Milo.
 //! Source files this batch ports:
 //! - `os/mos/artifact_store.py`
 //! - `os/mos/gitops.py`
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! Ported behavior-for-behavior, not a skeleton: `artifact_store` (deposit,
+//! list, read, history, attach, CLI) and `gitops` (review, approve/merge,
+//! reject, worktrees) are implemented in this file with 39 tests. There is
+//! no `[[bin]]`: the CLI is the library function [`run_cli`]. See
+//! BATCHES.md for the compile gates and the parity rule.
 
 // B19 port (Milo): workspace & artifact store, ported behavior-for-behavior
 // from os/mos/artifact_store.py (OS-083) and os/mos/gitops.py (MOS safe git).
@@ -29,7 +32,9 @@
 // - Manifest JSON is read/written with a small built-in JSON value type
 //   (std-only: no serde). Serialization matches Python `json.dump`
 //   with indent=2, sort_keys=True, ensure_ascii=True, plus a trailing
-//   newline, so manifests stay readable by the Python fallback.
+//   newline for ordinary manifest values, so manifests stay readable by
+//   the Python fallback. The parser is stricter than Python's in the edge
+//   cases listed in os-build/records/os-workspace.md.
 
 use std::collections::BTreeMap;
 use std::fmt;
@@ -702,7 +707,9 @@ fn run_git_timed(cmd: &[String], timeout: Duration) -> Result<GitOutput, std::io
 // current version with no new commit.
 // ---------------------------------------------------------------------------
 
-/// Default store root on the image (baked by the image builders).
+/// Default store root on the image (baked by the image builders). Every
+/// function here takes an explicit root, so this constant is informational
+/// today; nothing in the crate falls back to it.
 pub const STORE_ROOT_DEFAULT: &str = "/var/lib/metaos/artifacts";
 /// Manifest file name inside each job directory.
 pub const MANIFEST_NAME: &str = "manifest.json";
@@ -744,7 +751,10 @@ pub struct VersionEntry {
     pub commit: String,
 }
 
-/// One entry attached to a job record by [`attach`].
+/// The shape of one attached-artifact entry. [`attach`] currently builds
+/// this shape directly as [`JsonValue`], so no function in this crate
+/// constructs `AttachedArtifact`; it is a public shape for callers, not a
+/// value this crate returns.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AttachedArtifact {
     pub path: String,
@@ -2058,6 +2068,52 @@ mod tests {
         assert!(json_parse("{\"a\": 1} junk").is_err());
         assert!(json_parse("").is_err());
         assert!(json_parse("\"unterminated").is_err());
+    }
+
+    // -- JSON gap close: the parser had two tests, the fewest of any
+    // -- module; these are the missing cases the manifest path can reach.
+
+    #[test]
+    fn json_parse_escapes_and_surrogate_pairs() {
+        let v = json_parse("\"a\\n\\t\\u00e9\\ud83d\\ude00\"").unwrap();
+        assert_eq!(v.as_str(), Some("a\n\té😀"));
+    }
+
+    #[test]
+    fn json_parse_numbers_nesting_and_literals() {
+        let v = json_parse("{\"a\": [1, -2, 3.5, true, false, null]}").unwrap();
+        let a = v.get("a").and_then(|x| x.as_array()).expect("array");
+        assert_eq!(a[0].as_i64(), Some(1));
+        assert_eq!(a[1].as_i64(), Some(-2));
+        assert_eq!(a[2], JsonValue::Float(3.5));
+        assert_eq!(a[3], JsonValue::Bool(true));
+        assert_eq!(a[4], JsonValue::Bool(false));
+        assert_eq!(a[5], JsonValue::Null);
+    }
+
+    #[test]
+    fn json_parse_rejects_malformed_escapes_and_surrogates() {
+        for bad in [
+            "\"\\q\"",
+            "\"\\ud800\"",
+            "\"\\udc00\"",
+            "\"unterminated",
+            "{",
+            "[1,]",
+        ] {
+            assert!(json_parse(bad).is_err(), "accepted {:?}", bad);
+        }
+    }
+
+    #[test]
+    fn json_compact_serialization_is_sorted() {
+        let v = JsonValue::obj(vec![
+            ("b", JsonValue::Int(2)),
+            ("a", JsonValue::Array(vec![JsonValue::Int(1)])),
+        ]);
+        let mut s = String::new();
+        json_dump_compact(&v, &mut s);
+        assert_eq!(s, "{\"a\": [1], \"b\": 2}");
     }
 
     // -- CLI ------------------------------------------------------------------

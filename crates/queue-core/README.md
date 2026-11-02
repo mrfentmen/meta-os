@@ -24,9 +24,14 @@ and holds no credentials.
 
 ## What it deliberately does NOT do yet
 
-- No JSON parsing: `validate_envelope` takes a parsed `Envelope`. A
-  non-object body is a parse-layer refusal at the HTTP service, not a
-  core case.
+- No JSON parsing: `validate_envelope` takes a parsed `Envelope`. The
+  Python refusals for a non-object body, a missing image object, and a
+  non-string id/timestamp are parse-layer or type-layer cases at the
+  HTTP service, not core cases.
+- No JSON-aware reads: `job_envelope` and `get_result` return the
+  stored string verbatim; Python parses it and returns `None` on a
+  corrupt body. `submit` and `put_result` take the JSON separately, so
+  the body can disagree with the envelope/id they were filed under.
 - No transports (see B02 above); `MemoryBackend` carries the same
   command surface and expiry semantics as `LocalSqliteStore` for tests
   and local use.

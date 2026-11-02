@@ -67,8 +67,8 @@
 //! Storage is in-memory by default. If `RELAY_STORE_FILE` is set,
 //! every appended line is also written to that file as one JSON
 //! record per line (`{"room": ..., "line": ...}`) and the file is
-//! reloaded on boot, so rooms survive a restart. A torn final record
-//! is skipped, never fatal.
+//! reloaded on boot, so rooms survive a restart. Any unparseable
+//! record is skipped, never fatal.
 //!
 //! ## Run
 //!

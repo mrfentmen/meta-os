@@ -1,4 +1,4 @@
-//! Crate `os-jobs` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-jobs` — the Meta OS jobs service, ported from `os/jobs.py`.
 //!
 //! Batch B16 — Jobs service. Owner: Milo.
 //! Source files this batch ports:
@@ -9,24 +9,11 @@
 //! - `os/tests/test_jobs_req.py`
 //! - `os/tests/test_os_jobs_unit.py`
 //!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
-//!
-//! Crate `os-jobs` — Meta OS Rust rebuild skeleton (B00).
-//!
-//! Batch B16 — Jobs service. Owner: Milo.
-//! Source files this batch ports:
-//! - `os/jobs.py`
-//! - `os/tests/test_claims.py`
-//! - `os/tests/test_intel_brief_environment_jobs.py`
-//! - `os/tests/test_jobs.py`
-//! - `os/tests/test_jobs_req.py`
-//! - `os/tests/test_os_jobs_unit.py`
-//!
-//! Skeleton only: no logic yet. The Python/Node sources listed above are
-//! the spec — port behavior, do not redesign. See BATCHES.md for the
-//! compile gates and the parity rule.
+//! Status: **PORTED**. The command layer, the pure helpers, and the jobs
+//! quarter of the brief environment record are implemented below; the five
+//! named Python test files live in `mod tests` with the same name roots.
+//! The crate takes no dependencies; `JobStore` and `Clock` are the seams.
+//! See BATCHES.md for the compile gates and the parity rule.
 //!
 //! Port notes (B16, Milo). `os/jobs.py` is a command-line queue service
 //! whose state lives in an Upstash Redis behind a REST API; the bus

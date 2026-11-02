@@ -8,8 +8,12 @@
 //! - `trio_repo.py` loads `js/products.js` by spawning node. The Rust port
 //!   embeds the three product records so the queue stays offline; the JS
 //!   file remains the source of truth and any id/category drift is a bug.
-//! - `LocalSqliteStore` uses rusqlite (bundled); semantics match the
-//!   Python sqlite3 fallback including NX/XX lease expiry.
+//! - `SqliteStore` (the Rust mirror of Python's `LocalSqliteStore`) uses
+//!   rusqlite (bundled); semantics match the Python sqlite3 fallback
+//!   including NX/XX lease expiry.
+//! - Expiry is integer **seconds** here (`now_secs`), where the Python
+//!   fallback stores a float `time.time()`. The observable difference is
+//!   only inside the sub-second boundary.
 
 use std::collections::{BTreeMap, HashMap};
 use std::sync::{Mutex, MutexGuard};
@@ -91,6 +95,10 @@ pub fn product_profile(product: &str) -> Option<&'static ProductProfile> {
 // Key layout + host resolution (trio_store.py)
 // ---------------------------------------------------------------------------
 
+/// The key namespace. Unlike Python's module-level `NS` (captured at
+/// import), this reads `TRIO_JOB_NS` on every call: changing the
+/// environment between calls changes the namespace. An empty value is
+/// accepted and produces keys beginning with `:`; there is no refusal.
 pub fn namespace() -> String {
     std::env::var("TRIO_JOB_NS").unwrap_or_else(|_| "trio".to_string())
 }

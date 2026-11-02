@@ -51,6 +51,9 @@ impl Default for GuardrailState {
     }
 }
 
+/// Read the ledger. Any read or parse failure returns `Default` —
+/// including an unreadable or corrupt file, which therefore reads as
+/// zero spend. The Python original raises instead (B161 gap G1).
 pub fn load_state(path: &str) -> GuardrailState {
     std::fs::read_to_string(path)
         .ok()
@@ -78,6 +81,8 @@ pub fn estimate(input_tokens: u64, output_tokens: u64) -> f64 {
     input_tokens as f64 / 1e6 * RATE_IN_PER_M + output_tokens as f64 / 1e6 * RATE_OUT_PER_M
 }
 
+/// Count one call and persist it. The ledger `ts` is a fixed literal,
+/// not the current time, and a failed write is ignored (B161 gaps G2/G3).
 pub fn record(state_path: &str, kind: &str, model: &str, input_tokens: u64, output_tokens: u64, latency_ms: u64) -> f64 {
     let mut state = load_state(state_path);
     let est = estimate(input_tokens, output_tokens);
@@ -126,7 +131,11 @@ pub fn unwrap_model_text(content: &str) -> String {
     t
 }
 
-/// `buildSparkPrompt` shape from server/model.mjs, fed by product profile.
+/// `buildSparkPrompt` shape from server/model.mjs, fed by the caller's
+/// product profile. It carries the JSON shape and the core limits; the
+/// Region paragraph, the Assessment rule, the visible-marks paragraph
+/// and the vigiles crowd note in `spark_gen.py` are NOT carried yet
+/// (B161 gaps G4-G7).
 pub fn build_prompt(product: &str, display_name: &str, department: &str, categories: &[&str], limitations: &str, timestamp: &str, correction: Option<&str>) -> String {
     let cats = categories.join(", ");
     let mut lines = vec![

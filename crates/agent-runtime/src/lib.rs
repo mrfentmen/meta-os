@@ -9,6 +9,11 @@
 //! verified against envelope; exactly ONE bounded self-correction retry
 //! carrying validation errors; result envelope written once to
 //! `trio:{jid}:result`; optional relay NOTIFY hook (fire-and-forget).
+//!
+//! Port status (B100, 2026-11-02): the result and validation core is
+//! carried. NOT carried yet: the lease heartbeat, the serve_once poll
+//! loop, the relay POST, and real ISO-8601 timestamps - see
+//! `os-build/records/agent-runtime-gaps.md`.
 
 use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
 use queue_store::{JobStore, StoreBackend};
@@ -16,7 +21,9 @@ use serde_json::Value;
 use sha2::{Digest, Sha256};
 
 pub fn now_iso() -> String {
-    // Millisecond ISO-8601 UTC with Z (no external time crate).
+    // Epoch milliseconds as a decimal string. NOT ISO-8601: the Python
+    // original (`server/queue/trio_agent.py:81-84`) emits ISO-8601, and
+    // this port carries only epoch millis (gap 2 in the gaps record).
     let ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|d| d.as_millis())
@@ -31,15 +38,17 @@ pub fn relay_notify_payload(result: &Value, product: Option<&str>) -> Option<Val
         let category = result
             .get("assessment").and_then(|a| a.get("assessment"))
             .and_then(|a| a.get("category")).and_then(Value::as_str).unwrap_or("?");
+        let text = format!("trio job {jid} product {} completed: category {category}", product.unwrap_or("unknown"));
         Some(serde_json::json!({
             "severity": "info", "topic": "trio-result",
-            "text": format!("trio job {jid} product {} completed: category {category}", product.unwrap_or("unknown"))[..500.min(200)].to_string(),
+            "text": text.chars().take(500).collect::<String>(),
         }))
     } else {
         let err = result.get("error").and_then(Value::as_str).unwrap_or("?");
+        let text = format!("trio job {jid} product {} failed: {err}", product.unwrap_or("unknown"));
         Some(serde_json::json!({
             "severity": "warning", "topic": "trio-result",
-            "text": format!("trio job {jid} product {} failed: {err}", product.unwrap_or("unknown")),
+            "text": text.chars().take(500).collect::<String>(),
         }))
     }
 }
@@ -147,13 +156,17 @@ impl<B: StoreBackend, G: Generator> Agent<B, G> {
 
     fn finish_failed(&mut self, jid: &str, error: &str, model: Option<&String>, latency: Option<u64>, product: Option<&str>) {
         let _ = product;
+        // Char-safe caps: `&error[..500]` panics on a multi-byte boundary,
+        // and the Python original caps by characters (`trio_agent.py:204-213`).
+        let capped: String = error.chars().take(500).collect();
+        let note: String = error.chars().take(200).collect();
         let result = serde_json::json!({
             "job_id": jid, "status": "failed", "assessment": null,
-            "error": &error[..error.len().min(500)],
-            "model": model, "latency_ms": latency, "completed_at": now_iso(),
+            "error": capped, "model": model, "latency_ms": latency,
+            "completed_at": now_iso(),
         });
         self.jobs.put_result(&result);
-        self.jobs.finish(jid, "failed", &error[..error.len().min(200)]);
+        self.jobs.finish(jid, "failed", &note);
     }
 }
 
@@ -399,10 +412,6 @@ mod tests {
     }
 
     fn submit_job(jobs: &mut JobStore<InMemoryStore>, jid: &str) {
-        let env = serde_json::json!({"id": jid, "kind": "trio-assessment", "version": 1, "product": "ignis", "timestamp": "t", "image": {"dataUrl": "data:image/jpeg;base64,/9g=", "byteLength": 2, "sha256": hex::encode(Sha256::digest([0xffu8, 0xd8]))}});
-        // Manually file with correct sha for [0xff,0xd8]: envelope builder needs matching raw.
-        let _ = env;
-        // Build a consistent envelope: raw = [0xff, 0xd8].
         let raw = vec![0xffu8, 0xd8];
         let env = serde_json::json!({"id": jid, "kind": "trio-assessment", "version": 1, "product": "ignis", "timestamp": "t",
             "image": {"dataUrl": format!("data:image/jpeg;base64,{}", B64.encode(&raw)), "byteLength": raw.len(), "sha256": hex::encode(Sha256::digest(&raw))}});

@@ -1,4 +1,4 @@
-//! Crate `os-identity` — Meta OS Rust rebuild skeleton (B00).
+//! Crate `os-identity` — Meta OS Rust rebuild port (B18).
 //!
 //! Batch B18 — Identity & capabilities service. Owner: Milo.
 //! Source files this batch ports:
@@ -37,11 +37,13 @@
 //!   time and would raise at import on a non-numeric stale value.
 //!   [`Config::from_env`] instead falls back to the defaults on a bad
 //!   value (a library must not fail to load over one env var).
-//! - Error paths mirror Python exactly: transport errors propagate
-//!   from every operation EXCEPT `agents` (index read error -> empty
-//!   list) and `active_claims` (jobs read error -> 0). In Rust those
+//! - Error paths mirror Python with two documented deviations:
+//!   transport errors propagate from every operation EXCEPT `agents`
+//!   (index read error -> empty list) and `active_claims` (any job read
+//!   error -> 0; Python would propagate a per-job error). In Rust those
 //!   two are the only infallible fallbacks; everything else returns
-//!   `Result`.
+//!   `Result`. The empty-value and parse rules for the two env vars also
+//!   differ (see `Config::from_env`).
 //! - Python's `active_claims` catches errors only on the jobs-index
 //!   read; a per-job read error would propagate. Here the job reads
 //!   are folded into one fallible [`CapStore::job_claims`] call, so a
@@ -78,7 +80,9 @@ impl Default for Config {
 impl Config {
     /// Read configuration from the environment, as the Python module
     /// does at import time (bad `MUSE_RELAY_CAP_STALE` falls back to
-    /// the default instead of raising; see the port notes).
+    /// the default instead of raising; see the port notes). An empty
+    /// `MUSE_RELAY_CAPNS` is ignored and the default kept, where Python
+    /// would keep the empty string and build `:nick` keys.
     pub fn from_env() -> Self {
         let mut cfg = Config::default();
         if let Ok(ns) = std::env::var("MUSE_RELAY_CAPNS") {
@@ -264,7 +268,9 @@ impl From<StoreError> for RegistryError {
 /// Whether a record counts as fresh at `now`: `now - updated <=
 /// stale_after`. An unparseable `updated` is not fresh (the Python
 /// `ValueError` path returns `False`). A future `updated` is fresh,
-/// since the difference is negative.
+/// since the difference is negative. The subtraction is `i64`: an
+/// extreme negative `updated` can overflow in a debug build, which
+/// Python's arbitrary-precision ints cannot (see behaviour record F3).
 pub fn is_fresh(record: &AgentRecord, now: i64, stale_after: i64) -> bool {
     match record.updated.parse::<i64>() {
         Ok(updated) => now - updated <= stale_after,
@@ -409,8 +415,10 @@ impl<S: CapStore> CapabilityRegistry<S> {
         Ok(out)
     }
 
-    /// How many jobs this nick currently holds claimed. A jobs read
-    /// error yields 0 (the Python `except` path).
+    /// How many jobs this nick currently holds claimed. An index read
+    /// error yields 0 (the Python `except` path); any other job read
+    /// error also yields 0 here, where Python would propagate it (see
+    /// the port notes).
     pub fn active_claims(&self, nick: &str) -> usize {
         match self.store.job_claims() {
             Ok(claims) => claims
