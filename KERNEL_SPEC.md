@@ -82,6 +82,36 @@ index. The K1-K6 milestones below are build steps, not layers.
 - K6: system calls, first userspace program, the Goose services layer
   gets its first process.
 
+## Syscall table (F1 freeze, ruled by Pax 2026-11-01)
+
+The syscall numbers are frozen. A number is never reallocated.
+The authoritative implementation is the inline dispatch in
+`kernel/src/user.rs` (`syscall_handler`, entry via vector 128,
+number in the saved RAX, arguments in RDI/RSI):
+
+- 0 — exit: end the calling task, with its exit code.
+- 1 — write: write a validated user buffer (mapped range checked,
+  one page per call) to the console.
+- 2 — sleep: sleep the calling task for the given tick count.
+- 3 — pid: return the calling task's id.
+- 4 — yield: yield the processor to the scheduler.
+- 5 — read_key: return the next keyboard byte to the caller.
+  Ruled by F1; implementation in `user.rs` is R-lane work
+  (RW4-1). Until it lands, 5 falls in the refusal arm below.
+- 6–15 — reserved. Never allocated without a Pax ruling and a
+  spec update in the same commit.
+- Every other number is refused: the kernel logs
+  `user bad syscall <n> refused`, returns `u64::MAX`, and the
+  task carries on. There is no silent compatibility.
+
+`kernel/src/syscalls.rs` is NOT this table. It carries an older
+set of DRAFT numbers (from the K6 shape document) that conflicts
+with the table above at every number from 2 on, it is not declared
+in `main.rs`, and it is frozen untouched while the boss rules on
+it (2026-11-02; Rowan's recommendation is on file at
+`kernel/SYSCALLS_RS_RECOMMENDATION.md`). Nobody builds userspace
+against the numbers in `syscalls.rs`.
+
 ## Honest scope
 
 A kernel is a long road measured in milestones, not days. Each

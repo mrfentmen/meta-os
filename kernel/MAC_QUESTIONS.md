@@ -404,6 +404,34 @@ no service can trap, run, or exit until these eight adapter points
 are answered. Until then, K6 stays unwired and no syscall, no
 userspace program, and no service exit is claimed to work.
 
+## Update 2026-11-01 ~20:40 EST — Q12 partly answered, its premise moved
+
+The merged tree no longer matches the frame Q12 was written
+in: a live syscall path exists in `kernel/src/user.rs`, and
+Pax's F1 ruling (2026-11-01) settles the number question.
+
+- Number stability: ANSWERED, against this file's guess. The
+  six numbers below were draft numbers for `syscalls.rs`; F1
+  froze a different table (0 exit, 1 write, 2 sleep, 3 pid,
+  4 yield, 5 read_key, 6–15 reserved), now recorded in
+  `KERNEL_SPEC.md`. Do NOT revise the `syscalls.rs` constants
+  to match: the module is frozen and the boss rules on it
+  2026-11-02 (recommendation: `kernel/SYSCALLS_RS_RECOMMENDATION.md`).
+- Syscall transport: answered in the live tree by source —
+  `user.rs` registers its handler for vector 128; the trap
+  frame carries the number (saved RAX) and arguments (RDI/RSI);
+  the handler runs on the calling task's kernel stack
+  (TSS.rsp0) and returns via `iretq`. Status: WRITTEN in
+  source; the standing proof is the merged tree's boot logs,
+  per the spec's proof rule.
+- The remaining Q12 items (user-copy rules, binary loading,
+  tick source, console instance, key semantics) now track the
+  `user.rs` / `sched.rs` / `mem.rs` wiring that actually
+  shipped, not the `syscalls.rs` dispatch. Two specifics
+  changed meaning: syscall 4 in the live table is yield, not
+  ticks; and `read_key` is F1 number 5 in `user.rs` (RW4-1
+  work), not number 3 in `syscalls.rs`.
+
 ## What this file is not
 
 - Not a design doc: it asks, it does not decide.
