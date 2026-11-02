@@ -1656,6 +1656,115 @@ pub fn memory_depth_lines(record: Option<&MemoryDepth>) -> Vec<String> {
     lines
 }
 
+/// One job in a daily record's queue: both fields must be non-empty
+/// to render; a job without both an id and a title is skipped, never
+/// padded.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DailyQueueJob {
+    pub id: String,
+    pub title: String,
+}
+
+/// One needs-word entry in a daily record: a plain question, or a
+/// question plus the job id it waits on. `job: None` — or an empty
+/// string — means no job id was stated, never a guessed job.
+#[derive(Debug, Clone, PartialEq)]
+pub struct NeedsWordEntry {
+    pub question: String,
+    pub job: Option<String>,
+}
+
+/// The whole daily record. `None` for a category means the snapshot
+/// carries no such key at all (or it was not a list), which reads as
+/// that category's none-reported line; `Some(vec![])` means an empty
+/// list, which reads the same way. `age_label` is the record's own
+/// `as_of` time, preformed as `" (as of YYYY-MM-DD HH:MM ET)"`, or
+/// `" (snapshot time not reported)"` when the record gives no time;
+/// this crate has no time dependency, so the caller supplies the
+/// label already formed.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Daily {
+    pub overnight_results: Option<Vec<String>>,
+    pub todays_queue: Option<Vec<DailyQueueJob>>,
+    pub needs_word: Option<Vec<NeedsWordEntry>>,
+    pub age_label: String,
+}
+
+/// OS-075: the daily brief section, in the brief's plain-English
+/// standard. A result or a question is named verbatim from the
+/// record; a queue job without both an id and a title is skipped,
+/// and a needs-word entry without a question is skipped, never
+/// padded. A category with no usable entries reads none reported,
+/// never a padded item, and a record with no usable entry at all
+/// still renders its three none-reported lines, so a reader can
+/// tell the daily section was checked and held nothing, rather
+/// than guessing whether it was checked. Every line carries its
+/// age label, so a stale daily section is never silently presented
+/// as current. The lines are plain lines, not bullets, so the
+/// BRF-007 budget trim never drops a question waiting on a word
+/// ahead of a watch item, and they are redacted by the composer,
+/// not here. They render whenever the snapshot carries a daily
+/// record, in a morning-format brief; a snapshot without the
+/// record carries none, so older briefs keep their exact shape.
+pub fn daily_lines(record: Option<&Daily>) -> Vec<String> {
+    let record = match record {
+        None => return Vec::new(),
+        Some(r) => r,
+    };
+    let age = &record.age_label;
+    let mut lines: Vec<String> = Vec::new();
+    let usable_results: Vec<&str> = record
+        .overnight_results
+        .as_ref()
+        .map(|results| {
+            results.iter().map(String::as_str).filter(|item| !item.is_empty()).collect()
+        })
+        .unwrap_or_default();
+    if usable_results.is_empty() {
+        lines.push(format!("Overnight results: none reported{age}"));
+    } else {
+        lines.extend(
+            usable_results.iter().map(|item| format!("Overnight result: {item}{age}")),
+        );
+    }
+    let usable_queue: Vec<&DailyQueueJob> = record
+        .todays_queue
+        .as_ref()
+        .map(|queue| {
+            queue.iter().filter(|job| !job.id.is_empty() && !job.title.is_empty()).collect()
+        })
+        .unwrap_or_default();
+    if usable_queue.is_empty() {
+        lines.push(format!("Today's queue: none reported{age}"));
+    } else {
+        lines.extend(usable_queue.iter().map(|job| {
+            format!("Today's queue: job {} {}{age}", job.id, job.title)
+        }));
+    }
+    let usable_needs: Vec<String> = record
+        .needs_word
+        .as_ref()
+        .map(|needs| {
+            needs
+                .iter()
+                .filter(|entry| !entry.question.is_empty())
+                .map(|entry| match entry.job.as_deref().filter(|job| !job.is_empty()) {
+                    Some(job) => format!("{} (job {})", entry.question, job),
+                    None => entry.question.clone(),
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    if usable_needs.is_empty() {
+        lines.push(format!("Needs your word: none reported{age}"));
+    } else {
+        lines.extend(
+            usable_needs.iter().map(|item| format!("Needs your word: {item}{age}")),
+        );
+    }
+    lines
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -2399,5 +2508,61 @@ mod tests {
         );
         // No record: no lines, so older briefs keep their shape.
         assert_eq!(memory_depth_lines(None), Vec::<String>::new());
+    }
+
+    #[test]
+    fn daily_lines_results_queue_needs_empty_and_none() {
+        let age = " (snapshot time not reported)";
+        let full = Daily {
+            overnight_results: Some(vec!["shipped the brief panel".into(), "".into()]),
+            todays_queue: Some(vec![
+                DailyQueueJob { id: "7".into(), title: "boot shot".into() },
+                DailyQueueJob { id: "8".into(), title: "brief panel".into() },
+                // No id, no title, or neither: skipped, never padded.
+                DailyQueueJob { id: "".into(), title: "no id".into() },
+                DailyQueueJob { id: "9".into(), title: "".into() },
+            ]),
+            needs_word: Some(vec![
+                NeedsWordEntry {
+                    question: "ship the demo cut?".into(),
+                    job: Some("7".into()),
+                },
+                NeedsWordEntry { question: "go now".into(), job: None },
+                // No question: skipped, never padded.
+                NeedsWordEntry { question: "".into(), job: Some("7".into()) },
+            ]),
+            age_label: age.into(),
+        };
+        assert_eq!(
+            daily_lines(Some(&full)),
+            vec![
+                format!("Overnight result: shipped the brief panel{age}"),
+                format!("Today's queue: job 7 boot shot{age}"),
+                format!("Today's queue: job 8 brief panel{age}"),
+                format!("Needs your word: ship the demo cut? (job 7){age}"),
+                format!("Needs your word: go now{age}"),
+            ]
+        );
+        // A record with no usable entry at all still renders its
+        // three none-reported lines.
+        let empty = Daily {
+            overnight_results: None,
+            todays_queue: Some(vec![]),
+            needs_word: Some(vec![NeedsWordEntry {
+                question: String::new(),
+                job: None,
+            }]),
+            age_label: age.into(),
+        };
+        assert_eq!(
+            daily_lines(Some(&empty)),
+            vec![
+                format!("Overnight results: none reported{age}"),
+                format!("Today's queue: none reported{age}"),
+                format!("Needs your word: none reported{age}"),
+            ]
+        );
+        // No record: no lines, so older briefs keep their shape.
+        assert_eq!(daily_lines(None), Vec::<String>::new());
     }
 }
