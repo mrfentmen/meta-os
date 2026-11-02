@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Calculator</title>
+<style>
+html[data-theme="dark"]{--bg:#111;--fg:#eee;--btn:#222;--op:#2b4a7a}html[data-theme="light"]{--bg:#f4f4f4;--fg:#111;--btn:#fff;--op:#cfe0f7}
+body{font-family:system-ui;background:var(--bg);color:var(--fg);padding:24px;max-width:320px;margin:0 auto}
+#disp{width:100%;box-sizing:border-box;font-size:28px;text-align:right;padding:10px;margin:12px 0;background:var(--btn);color:var(--fg);border:1px solid #555;border-radius:8px;min-height:1.4em;overflow-x:auto}
+#keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+button{font-size:18px;padding:14px 0;border-radius:8px;border:1px solid #555;background:var(--btn);color:var(--fg);cursor:pointer}
+button.op{background:var(--op)}button:active{filter:brightness(1.2)}
+</style></head><body>
+<h1>Calculator</h1>
+<div id="disp" role="status" aria-live="polite">0</div>
+<div id="keys">
+<button data-k="C">C</button><button data-k="neg">+/-</button><button data-k="%">%</button><button class="op" data-k="/">/</button>
+<button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button class="op" data-k="*">x</button>
+<button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button class="op" data-k="-">-</button>
+<button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button class="op" data-k="+">+</button>
+<button data-k="0">0</button><button data-k=".">.</button><button data-k="Backspace">&#9003;</button><button class="op" data-k="=">=</button>
+</div>
+<script>
+(function(){
+try{var t=localStorage.getItem('metaos-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}
+var el=document.getElementById('disp'),acc=null,op=null,cur='0',fresh=true,err=false;
+function show(){el.textContent=cur;}
+function apply(a,b,o){a=Number(a);b=Number(b);if(o==='+')return a+b;if(o==='-')return a-b;if(o==='*')return a*b;if(o==='/'){if(b===0)return NaN;return a/b;}return b;}
+function fmt(n){if(!isFinite(n)||isNaN(n))return'Error';var s=String(Math.round(n*1e10)/1e10);return s;}
+function digit(d){if(err||fresh){cur=(d==='.')?'0.':d;fresh=false;err=false;}else{if(d==='.'&&cur.indexOf('.')>=0)return;if(cur.replace(/[-.]/g,'').length>=12)return;cur=(cur==='0'&&d!=='.')?d:cur+d;}show();}
+function setOp(o){if(err)return;if(op!==null&&!fresh){var r=apply(acc,cur,op);if(!isFinite(r)||isNaN(r)){cur='Error';err=true;acc=null;op=null;show();return;}acc=fmt(r);cur=acc;}else if(fresh&&acc===null){acc=cur;}else if(!fresh){acc=cur;}op=o;fresh=true;show();}
+function equals(){if(err||op===null)return;var r=apply(acc,cur,op);cur=isFinite(r)&&!isNaN(r)?fmt(r):'Error';err=(cur==='Error');acc=null;op=null;fresh=true;show();}
+function clear(){acc=null;op=null;cur='0';fresh=true;err=false;show();}
+function key(k){
+if(k==='Escape'||k==='C')return clear();
+if(k==='Enter'||k==='=')return equals();
+if(k==='Backspace'){if(!fresh&&!err){cur=cur.slice(0,-1)||'0';show();}return;}
+if(k==='neg'){if(!err){cur=cur[0]==='-'?cur.slice(1):(cur!=='0'?'-'+cur:cur);show();}return;}
+if(k==='%'){if(!err){cur=fmt(Number(cur)/100);show();}return;}
+if(k==='x')k='*';
+if(k>='0'&&k<='9'||k==='.')return digit(k);
+if(k==='+'||k==='-'||k==='*'||k==='/')return setOp(k);
+}
+document.getElementById('keys').addEventListener('click',function(e){var b=e.target.closest('button');if(b)key(b.getAttribute('data-k'));});
+document.addEventListener('keydown',function(e){var k=e.key;if(/^[0-9+\-*/.=]$/.test(k)||k==='Enter'||k==='Escape'||k==='Backspace'||k==='%'){e.preventDefault();key(k);}});
+show();
+})();
+</script></body></html>
