@@ -1600,6 +1600,156 @@ pub fn memory_budget_lines(record: Option<&MemoryBudget>) -> Vec<String> {
     lines
 }
 
+/// OS-079 follow-up: the brief-path filler that builds a snapshot's
+/// `memory_budget` record from the snapshot's own lists, so a brief
+/// carries its settled-decisions and spend-vs-budget lines even when
+/// the snapshot states only the raw lists. Returns the record to
+/// store as the snapshot's `memory_budget` value. A hand-stated
+/// record wins over a built one: pass it as `existing` and it is
+/// returned unchanged, whatever the lists say, so a caller that
+/// knows its memory and budgets better than these lists is never
+/// overwritten. This reads stated figures, never a live service:
+/// there is no memory service in this repo for a filler to read
+/// settled decisions from, and no spend ledger for it to read spent
+/// from, so a snapshot that states no settled decisions leaves
+/// that key out and the line reads not reported rather than a
+/// guessed decision, and a snapshot that states no usable budget
+/// entry leaves `budgets` out. Unlike the environment builder, a
+/// snapshot that yields nothing usable at all gets `None`, not an
+/// empty record: the OS-079 rule is that a snapshot with no
+/// `memory_budget` record carries none of the lines, so older
+/// briefs keep their exact shape. One stamp for the whole record,
+/// so the lines' ages agree instead of drifting across reads.
+/// Never fails: a snapshot that yields nothing usable returns
+/// `None` instead of failing the brief outright.
+///
+/// Typed-input mapping, following this module's convention: the
+/// caller passes `None` for a settled-decisions or budgets value
+/// that is not a list, and `None` for a `now` that is not numeric
+/// (Python falls back to the wall clock then); a non-dict budget
+/// entry maps to `RawMemoryBudgetEntry::Other` and is skipped; a
+/// non-string lane maps to an empty string and is then filtered;
+/// a non-int (including a bool) figure maps to `None`; a
+/// non-string decision maps to no element, and an empty-string
+/// decision is filtered here, mirroring Python's filter. Note the
+/// one deliberate asymmetry with `memory_budget_lines`: an empty
+/// decisions list still counts as added here (Python sets `added`
+/// for any list, even an empty one), so it yields a record whose
+/// settled line reads none reported, while no list at all yields
+/// no record and no lines.
+#[derive(Debug, Clone, PartialEq)]
+pub enum RawMemoryBudgetEntry {
+    /// A dict entry as the caller reads it: lane verbatim, and
+    /// each figure when the caller could read an int for it (a
+    /// bool, string, or missing figure is `None`); `held` is true
+    /// only when the entry states it exactly.
+    Entry {
+        lane: String,
+        spent: Option<i64>,
+        cap: Option<i64>,
+        remaining: Option<i64>,
+        held: bool,
+    },
+    /// Any other shape: Python's `isinstance(entry, dict)` check
+    /// skips it, so it can never name a lane.
+    Other,
+}
+
+pub fn with_memory_budget(
+    existing: Option<&MemoryBudget>,
+    memory_down: bool,
+    settled_decisions: Option<&[String]>,
+    budgets: Option<&[RawMemoryBudgetEntry]>,
+    now: Option<i64>,
+) -> Option<MemoryBudget> {
+    if let Some(record) = existing {
+        return Some(record.clone());
+    }
+    let stamp = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let mut added = false;
+    let mut record = MemoryBudget {
+        memory_down: false,
+        settled_decisions: None,
+        budgets: None,
+        age_label: environment_age_label(Some(stamp)),
+    };
+    if memory_down {
+        record.memory_down = true;
+        added = true;
+    }
+    if let Some(decisions) = settled_decisions {
+        record.settled_decisions = Some(
+            decisions
+                .iter()
+                .filter(|d| !d.is_empty())
+                .cloned()
+                .collect(),
+        );
+        added = true;
+    }
+    if let Some(budgets) = budgets {
+        let mut usable: Vec<MemoryBudgetEntry> = Vec::new();
+        for entry in budgets {
+            let (lane, spent, cap, remaining, held) = match entry {
+                RawMemoryBudgetEntry::Entry {
+                    lane,
+                    spent,
+                    cap,
+                    remaining,
+                    held,
+                } => (lane, spent, cap, remaining, held),
+                RawMemoryBudgetEntry::Other => continue,
+            };
+            if lane.is_empty() {
+                continue;
+            }
+            let built = match (spent, cap, remaining) {
+                (Some(s), Some(c), _) if *s >= 0 && *c > 0 => MemoryBudgetEntry {
+                    lane: lane.clone(),
+                    cap: Some(*c),
+                    spent: Some(*s),
+                    remaining: None,
+                    held: *held,
+                    age_label: None,
+                },
+                (_, Some(c), Some(r)) if *r >= 0 && *c > 0 => MemoryBudgetEntry {
+                    lane: lane.clone(),
+                    cap: Some(*c),
+                    spent: None,
+                    remaining: Some(*r),
+                    held: *held,
+                    age_label: None,
+                },
+                (_, _, Some(r)) if *r >= 0 => MemoryBudgetEntry {
+                    lane: lane.clone(),
+                    cap: None,
+                    spent: None,
+                    remaining: Some(*r),
+                    held: *held,
+                    age_label: None,
+                },
+                _ => continue,
+            };
+            usable.push(built);
+        }
+        if !usable.is_empty() {
+            record.budgets = Some(usable);
+            added = true;
+        }
+    }
+    if added {
+        Some(record)
+    } else {
+        None
+    }
+}
+
 /// One aged decision in a memory_depth record: the decision string
 /// plus its original date. `original_date: None` — or an empty string,
 /// which Python reads the same way — means the original date was not
@@ -4963,6 +5113,150 @@ mod tests {
     }
 
     #[test]
+    fn with_memory_budget_builds_from_lists_and_renders_lines() {
+        let budgets = vec![
+            RawMemoryBudgetEntry::Entry {
+                lane: "HANA".into(),
+                spent: Some(120),
+                cap: Some(300),
+                remaining: None,
+                held: true,
+            },
+            RawMemoryBudgetEntry::Entry {
+                lane: "MILO".into(),
+                spent: None,
+                cap: Some(200),
+                remaining: Some(150),
+                held: false,
+            },
+            RawMemoryBudgetEntry::Entry {
+                lane: "PAX".into(),
+                spent: None,
+                cap: None,
+                remaining: Some(75),
+                held: false,
+            },
+            RawMemoryBudgetEntry::Entry {
+                lane: String::new(),
+                spent: Some(10),
+                cap: Some(300),
+                remaining: None,
+                held: false,
+            },
+            RawMemoryBudgetEntry::Entry {
+                lane: "BAD".into(),
+                spent: Some(-5),
+                cap: Some(300),
+                remaining: None,
+                held: false,
+            },
+            RawMemoryBudgetEntry::Other,
+        ];
+        let decisions = vec!["Ship it".to_string(), String::new()];
+        let record = with_memory_budget(
+            None,
+            false,
+            Some(&decisions),
+            Some(&budgets),
+            Some(1793361600),
+        )
+        .expect("usable lists yield a memory_budget record");
+        assert!(!record.memory_down);
+        assert_eq!(
+            record.settled_decisions,
+            Some(vec!["Ship it".to_string()])
+        );
+        let kept = record.budgets.expect("usable entries yield budgets");
+        assert_eq!(kept.len(), 3);
+        assert_eq!(kept[0].lane, "HANA");
+        assert_eq!(kept[0].spent, Some(120));
+        assert_eq!(kept[0].cap, Some(300));
+        assert!(kept[0].held);
+        assert_eq!(kept[1].remaining, Some(150));
+        assert_eq!(kept[1].cap, Some(200));
+        assert_eq!(kept[2].remaining, Some(75));
+        assert_eq!(kept[2].cap, None);
+        let lines = memory_budget_lines(Some(&record));
+        assert_eq!(
+            lines[0],
+            "Settled decisions from memory: Ship it (as of 2026-10-30 08:00 ET)"
+        );
+        assert!(lines[1].contains(
+            "Spend: HANA lane: 120 of 300 budget (180 remaining) — new claims held"
+        ));
+        assert!(lines[2]
+            .contains("Spend: MILO lane: 150 remaining of 200 cap"));
+        assert!(lines[3].contains("Spend: PAX lane: 75 remaining"));
+    }
+
+    #[test]
+    fn with_memory_budget_hand_stated_record_wins_unchanged() {
+        let stated = MemoryBudget {
+            memory_down: false,
+            settled_decisions: Some(vec!["Stated".to_string()]),
+            budgets: None,
+            age_label: " (as of 2026-10-30 08:00 ET)".to_string(),
+        };
+        let budgets = vec![RawMemoryBudgetEntry::Entry {
+            lane: "HANA".into(),
+            spent: Some(120),
+            cap: Some(300),
+            remaining: None,
+            held: false,
+        }];
+        let record = with_memory_budget(
+            Some(&stated),
+            false,
+            None,
+            Some(&budgets),
+            Some(1793361600),
+        )
+        .expect("a hand-stated record is returned");
+        assert_eq!(record, stated);
+    }
+
+    #[test]
+    fn with_memory_budget_nothing_usable_is_none_but_empty_list_counts() {
+        assert_eq!(
+            with_memory_budget(None, false, None, None, Some(1793361600)),
+            None
+        );
+        let malformed = vec![RawMemoryBudgetEntry::Entry {
+            lane: "HANA".into(),
+            spent: Some(-5),
+            cap: Some(300),
+            remaining: None,
+            held: false,
+        }];
+        assert_eq!(
+            with_memory_budget(
+                None,
+                false,
+                None,
+                Some(&malformed),
+                Some(1793361600)
+            ),
+            None
+        );
+        let empty: Vec<String> = vec![];
+        let record = with_memory_budget(
+            None,
+            false,
+            Some(&empty),
+            None,
+            Some(1793361600),
+        )
+        .expect("an empty decisions list still adds a record");
+        assert_eq!(record.settled_decisions, Some(vec![]));
+        let lines = memory_budget_lines(Some(&record));
+        assert_eq!(
+            lines[0],
+            "Settled decisions from memory: none reported (as of 2026-10-30 08:00 ET)"
+        );
+        assert_eq!(lines[1], "Spend vs budget: not reported in this snapshot");
+    }
+
+    #[test]
     fn build_environment_record_keeps_empty_jobs_and_empty_bus_and_one_stamp() {
         use super::super::window::RawMessage;
         let jobs: Vec<RawEnvironmentJob> = vec![];
@@ -4990,5 +5284,19 @@ mod tests {
         assert_eq!(budget.lane, "HANA");
         assert_eq!(budget.as_of, 1793093400);
         let _ = std::fs::remove_dir_all(&non_checkout);
+    }
+
+    #[test]
+    fn with_memory_budget_memory_down_alone_yields_down_record() {
+        let record = with_memory_budget(None, true, None, None, Some(1793361600))
+            .expect("a down memory service adds a record");
+        assert!(record.memory_down);
+        assert_eq!(record.settled_decisions, None);
+        assert_eq!(record.budgets, None);
+        let lines = memory_budget_lines(Some(&record));
+        assert_eq!(
+            lines[0],
+            "Settled decisions from memory: memory service down, so no settled decisions are shown (as of 2026-10-30 08:00 ET)"
+        );
     }
 }
