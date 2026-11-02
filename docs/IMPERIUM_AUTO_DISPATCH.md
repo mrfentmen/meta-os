@@ -52,5 +52,50 @@ deployment decision and a URL change, not a code change.
 
 - Design: SETTLED (2026-10-30), reaffirmed and extended with the
   picture-in-package requirement 2026-11-01.
-- Implementation: IN BUILD (auto-send on RED with the picture
-  attached; human review as audit record, not a gate).
+- Implementation: LANDED (auto-send on RED with the picture
+  attached; human review as audit record, not a gate). See the
+  Implementation section below.
+
+## Implementation
+
+In `server/queue/crew.py` (Response stage), reached on the
+orchestrator's `prepare_response` decision for a confirmed RED
+incident:
+
+- The package now carries a `picture` block
+  (`evidence.picture_refs` in `server/queue/evidence.py`):
+  `{"frame": <flagged frame reference>, "evidence_crop": <first
+  face-crop reference, or null>}`. References point at the
+  incident's own evidence store; a frame or crop the crew did
+  not capture is null, never invented. The BOLO block is
+  unchanged (its key set is pinned).
+- The package is sent by the agent in the same step — no human
+  action is waited on. The package records `"dispatch_mode":
+  "auto"` and `"human_verify": false`. The brief's
+  `assessment.requires_human_review` and the package-level flag
+  stay `true` as the post-hoc AUDIT flag: they mark the incident
+  for human review of the record after dispatch, and gate
+  nothing.
+- Agency policy setting: **`TRIO_CREW_HUMAN_VERIFY`**
+  (env var, parsed by `crew.human_verify_required()`, injectable
+  per-Crew as `human_verify=`). Values `1/true/yes/on` switch it
+  on; unset or anything else is off. Default OFF. When ON, the
+  package is built and recorded but HELD: the dispatcher is
+  never called, the incident's dispatch timeline step carries
+  the package with `"held": true`, the incident status and the
+  check outcome are `held-for-verify`, and the package records
+  `"dispatch_mode": "held-for-verify"`. The flag can only hold
+  a send; it never widens the target.
+- Honesty enforcement is untouched: `crew.check_dispatch_url`
+  still refuses every non-loopback dispatch URL (including one
+  supplied via `TRIO_CREW_DISPATCH_URL`), the simulated endpoint
+  still requires `"simulated": true`, receipts are still
+  `sim-`-prefixed, and SIMULATED stays in the package's
+  destination string, the receipt note, and the UI. No real
+  external or police endpoint is wired anywhere. YELLOW
+  incidents still end at `record_for_review` and never reach
+  the Response stage.
+- Tests: `tests/queue-python/test_auto_dispatch.py` — RED
+  auto-dispatch with picture and crop, picture without a crop,
+  YELLOW never dispatches, non-loopback env URL refused, and
+  the verify policy holding the package (injected and via env).

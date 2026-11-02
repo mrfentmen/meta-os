@@ -115,7 +115,7 @@ fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
             ColorSpec(Color::LightGray, Color::Black),
         ));
     }
-    println!("META OS - milestone K3");
+    println!("META OS 0.1 (K6)");
     println!("META OS KERNEL - alive (K1)");
     #[cfg(feature = "panic-test")]
     panic!("K2 forced panic drill");

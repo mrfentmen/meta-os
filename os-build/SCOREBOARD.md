@@ -19,6 +19,12 @@ agreeing on 445daf8. Main was moving fast during the 17:36-17:38
 landing run (eb7653f -> 83ddfb2 -> a4df8cf -> be83e7e -> 445daf8);
 v4 is branched off the settled tip 445daf8, not off any mid-run tip.
 
+v5 base: main f496bdb, verified 2026-11-01 ~20:35 EST via fetch of
+origin/main in this checkout (branch milo/os-gate, round-4 task doc
+MILO_TASKS_ROUND4.md on main). Corrections ordered in
+os-build/PAX_12H_RESPONSE.md (P-5) applied below; every number in
+v5 was re-checked in this checkout, not inherited from v4.
+
 ## L1 — Boot (Rowan)
 
 - Status: MERGED, PROVEN ON MAIN per Pax's merge verification,
@@ -35,8 +41,15 @@ v4 is branched off the settled tip 445daf8, not off any mid-run tip.
   the combined tree: node fail set = known 56-name baseline,
   custos 125/125, officina 49/49, queue 110/110, hortus 14/14,
   secret scan 0.
-- Unverified: Mac compile + QEMU boot of the merged tree (Mac lane,
-  per Pax). No boot re-run on this VM.
+- v5 CORRECTION (Mac boot, log named): the kernel compiles and boots
+  on the Mac per Buffy's repro log `os-build/logs/K6-repro-main-2026-11-01.txt`
+  (on main). Key lines checked in this checkout: `user hello: entry
+  0x600000000000`, `user sleeper: entry 0x610000000010`, `user crasher:
+  entry 0x620000000110`, `HELLO FROM USERSPACE`, `user exit code 0`,
+  `INT user page-fault ... task killed` (fault isolated to one task),
+  `sleeper: bad call refused`. The Mac run itself was NOT re-run here;
+  the log on main is the evidence, and its key lines are present.
+- Unverified: no boot re-run on this VM.
 
 ## L2 — Kernel core (Rowan)
 
@@ -62,12 +75,21 @@ v4 is branched off the settled tip 445daf8, not off any mid-run tip.
 - Evidence: `kernel/src/interrupts.rs` on main; Rowan's R5 main.rs
   preserved verbatim at `kernel/r5-reference/main.rs` + README
   (checked present), superseded as the live entry by the modular
-  wiring per Pax's merge note, not deleted. `kernel/src/framebuffer.rs`
-  is present on main; whether it is wired into the live entry is
-  NOT verified here — Pax's merge note names the modular set and
-  framebuffer is not listed among it, so the v3 "UNWIRED per Pax's
-  call" note stands until Pax says otherwise.
-- Unverified: any boot, any trap run, any further driver.
+  wiring per Pax's merge note, not deleted.
+- v5 CORRECTION (framebuffer DEAD, not pending): `kernel/src/main.rs`
+  declares exactly 9 modules (gdt, interrupts, mem, memory, sched,
+  tasks, traps, user, vga — checked here); `framebuffer.rs` and
+  `syscalls.rs` are NOT declared. Dead lines, counted here:
+  framebuffer.rs 576 + syscalls.rs 484 = 1,060 dead. `main.rs` header
+  documents "No pixel framebuffer exists under bootloader 0.9.35".
+  The v3 "UNWIRED" note is retired: the framebuffer is DEAD per the
+  PAX_12H_RESPONSE.md ruling, wire-or-delete is a 2026-11-02 call,
+  and nobody spends tonight on it (kill list: framebuffer, graphics,
+  networking, SMP, persistence, package manager, installer,
+  cybersecurity program).
+- Unverified: any boot, any trap run, any further driver. No K7
+  milestone exists: banner ruling is K6 (last PROVEN), K7 only when
+  a gate goes green on a new log.
 
 ## L4 — System services, Goose (Buffy)
 
@@ -76,10 +98,15 @@ v4 is branched off the settled tip 445daf8, not off any mid-run tip.
 - Evidence: sections K+L (OS-153..180) in the merged line: goose
   services + lobster agents, cross-language MCP call live and 7/7
   goose tests per the commit record. The 148-task work order
-  (B-L1-01..148) is still the standing shape. No Goose service
-  branch from Buffy is on the remote (only `buffy/research` @
-  41e4b4c); the merged services arrived via the OpenCode line,
-  not a buffy/* branch. Buffy still standing by per Pax.
+  (B-L1-01..148) is still the standing shape.
+- v5 CORRECTION (L4 split honestly): the merged set above is SMALL —
+  sections K+L only. It is NOT Buffy's corpus: per
+  PAX_12H_RESPONSE.md, Buffy's corpus is TYPECHECK-FAILS, and that
+  verdict is cited from the response doc, not re-measured here.
+  "Buffy standing by" is STALE and retired: Buffy is mid-run —
+  `buffy/pax-12h-plan` @ 55bd4aa (the 12-hour plan doc, 20:05 EST)
+  and `buffy/layer1-goose-services` @ aa86eb2 are both on the remote
+  (checked via ls-remote 2026-11-01 ~20:35 EST).
 - Unverified / absent: goose tests NOT re-run here; Mac compile
   and QEMU boot of the merged tree still open (Mac lane).
 
@@ -131,7 +158,8 @@ v4 is branched off the settled tip 445daf8, not off any mid-run tip.
   Officina stages 1+2a in main, officina 49/49 per Pax's
   verification. Musica pack files on main (Hana HN-026..032 era).
   Parked: no new program branch is landing under the current Pax
-  HOLD; Rowan statuses cite Custos parked; Buffy standing by.
+  HOLD; Rowan statuses cite Custos parked; Buffy is mid-run (see L4),
+  not standing by.
 - Unverified: program counts are Pax-verified, NOT re-run here.
   FROZEN lanes (META OPUS, META MERCATUS, META NUMMUS, META ACTA)
   are not OS layers and do not appear here; their parked states
