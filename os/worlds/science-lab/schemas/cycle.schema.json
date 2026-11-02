@@ -1,0 +1,56 @@
+{
+  "$id": "science-lab/cycle.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Discovery-cycle state record. Phases 1-7 are sourced from the LABORATORY discovery-cycle description (PACK.md build-stage / director-loop text): problem, literature, hypotheses, cheap-computations, critic, verification, sealing. Steps 9-10 (wet-lab validation, publication) are permanently human-gated and never auto-transitioned (PACK.md stages + never-fake rule 8). Source gap: the source text is silent on step 8, so no step-8 behaviour is defined; the enum value 'step-8-unimplemented' is an explicit UNIMPLEMENTED marker that parsers must route around or park on, never invent work under. gate_state: open (auto phases may run), human-gated (parked awaiting a signed human decision record), blocked-on-source (parked on the step-8 source gap or missing required input).",
+  "type": "object",
+  "required": ["cycle_id", "phase", "inputs", "outputs", "gate_state"],
+  "properties": {
+    "cycle_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable cycle identifier, e.g. cycle-2026-001."
+    },
+    "phase": {
+      "type": "string",
+      "enum": [
+        "problem",
+        "literature",
+        "hypotheses",
+        "cheap-computations",
+        "critic",
+        "verification",
+        "sealing",
+        "step-8-unimplemented",
+        "wetlab",
+        "publication"
+      ],
+      "description": "Phases 1-7: problem(1), literature(2), hypotheses(3), cheap-computations(4), critic(5), verification(6), sealing(7). step-8-unimplemented: explicit UNIMPLEMENTED marker for the silent step 8, never a working phase. wetlab(9) and publication(10): human-gated terminal phases, entered only via park_for_human_gate and exited only via resume_with_decision."
+    },
+    "inputs": {
+      "type": "object",
+      "description": "Inputs available to the current phase (problem_statement, sources, hypotheses, compute_results, critique, verification, sealed_record, wetlab_decision)."
+    },
+    "outputs": {
+      "type": "object",
+      "description": "Outputs filed by completed phases, keyed by phase name."
+    },
+    "gate_state": {
+      "type": "string",
+      "enum": ["open", "human-gated", "blocked-on-source"],
+      "description": "open: transitions may proceed. human-gated: parked at wetlab/publication awaiting an explicit human decision record. blocked-on-source: parked on the step-8 source gap or a missing required input."
+    },
+    "parked_at": {
+      "type": "string",
+      "description": "ISO-8601 timestamp of when the cycle was parked, if parked."
+    },
+    "parked_gate": {
+      "type": "string",
+      "description": "Gate name the cycle is parked at (wetlab, publication, or step-8-unimplemented)."
+    },
+    "history": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Ordered list of ledger entry_hashes for this cycle's transitions."
+    }
+  }
+}
