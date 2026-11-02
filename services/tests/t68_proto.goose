@@ -190,7 +190,9 @@ fn main() {
     link_impair(l4, 0, 1, 0);                 // duplicate every send
     let _, _ = link_send(l4, syn[..slen]);
     check("a duplicated send queues two", link_pending(l4) == 2);
-    let _, duped, _, _ = link_stats(l4);
+    // link_stats returns (sent, dropped, duped, delivered); this line used to read the
+    // second value, which is DROPPED, so it was checking the wrong counter.
+    let _, _, duped, _ = link_stats(l4);
     check("the duplicate is counted", duped == 1);
 
     var l5 = link_new();

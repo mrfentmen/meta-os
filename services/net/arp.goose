@@ -68,7 +68,10 @@ fn arp_build(out: u8[..1500]&, op: i64, sha: Mac&, spa: Ipv4&, tha: Mac&, tpa: I
     var i: i64 = 0;
     while i < ARP_LEN { out[i] = 0; i = i + 1; }
     out[0] = 0; out[1] = ARP_HW_ETHER as u8;    // hardware: ethernet
-    out[2] = 0; out[3] = 0x08;                  // protocol: IPv4
+    // Protocol type 0x0800, network byte order: the 0x08 goes FIRST. It was written
+    // the other way round, so every frame this stack built said protocol 0x0008 and
+    // arp_parse -- correctly -- refused it. Build and parse disagreed about one field.
+    out[2] = 0x08; out[3] = 0;
     out[4] = MAC_LEN as u8;
     out[5] = 4;
     out[6] = 0; out[7] = (op & 0xff) as u8;

@@ -192,7 +192,11 @@ fn main() {
     var ref_udp_parse_24 = b();
     let _, short = udp_parse(u, ulen - 1, ref_udp_parse_23, ref_udp_parse_24);
     check("truncated datagram refused", short == E_CORRUPT);
-    var ref_udp_parse_25 = b();
+    // A DIFFERENT address, not the two addresses swapped. The pseudo-header is a sum, so
+    // src/dst swapped produces an identical sum and the checksum legitimately verifies --
+    // that is a property of the one's-complement sum, not a hole. Using the gateway makes
+    // the pseudo-header genuinely different, which is what this check is for.
+    var ref_udp_parse_25 = gw();
     var ref_udp_parse_26 = a();
     let _, wronglen = udp_parse(u, ulen, ref_udp_parse_25, ref_udp_parse_26);
     check("wrong pseudo-header refused", wronglen == E_CORRUPT);

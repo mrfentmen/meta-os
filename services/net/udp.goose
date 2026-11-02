@@ -93,13 +93,15 @@ fn udp_parse(dgram: u8[..1500]&, len: i64, src: Ipv4&, dst: Ipv4&) -> UdpView, i
     if stored == 0 {
         ok = false;                                 // sender did not compute one
     } else {
-        dgram[6] = 0; dgram[7] = 0;
+        // Sum the datagram WITH the checksum in place. Zeroing the field first (the old
+        // code) then requiring the one's-complement to fold to zero is the check for a
+        // packet whose checksum is ZERO, so every well-formed datagram failed to verify
+        // while a checksum of 0x0000 would have passed. Including the field is the
+        // standard check: sender + checksum folds to 0xffff.
         var sum = udp_pseudo_sum(src, dst, len);
         sum = sum + udp_sum16(dgram, 0, len);
         while sum > 0xffff { sum = (sum & 0xffff) + (sum >> 16); }
-        ok = ((~sum) & 0xffff) == 0;
-        dgram[6] = ((stored >> 8) & 0xff) as u8;
-        dgram[7] = (stored & 0xff) as u8;
+        ok = sum == 0xffff;
         if !ok { return none, E_CORRUPT; }
     }
     return UdpView {
