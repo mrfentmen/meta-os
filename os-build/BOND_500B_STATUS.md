@@ -596,3 +596,17 @@ module. The section forbids editing face source, and a test-local fixture
 model would test the fixture rather than the app, so no test was written.
 Unblocking needs one of: extracting the calculator/calendar/notes/window
 logic into an importable module, or agreeing that fixture-model tests count.
+
+Per-task check (2026-11-02):
+- CB2-401..405: there is no `tests/face-apps.test.mjs` and no
+  `tests/kernel-records.test.mjs` in the tree to re-check; the held files are
+  not present, so there is no fixture path to repair.
+- CB2-418..419: `DOCK` carries three systems only (imperium, musica, science).
+  Officina, Aegis, and Nervus have no dock entry, and no app-id -> repo-path
+  map exists, so "all six systems present" cannot be asserted without editing
+  face source. Custos is absent (checked).
+- CB2-420..421: there is no test-mirror copy of the category list to compare
+  with, and `js/products.js` has no per-category definition field: products
+  carry tagline/limitations, while categories are bare strings.
+- CB2-406..417, 422..425: no importable pure logic exists for calculator,
+  calendar, notes, terminal, settings, files, trash, or window state.
