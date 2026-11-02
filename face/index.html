@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta OS</title>
+<link rel="stylesheet" href="face.css">
+</head>
+<body data-product="vigiles">
+<canvas id="logo-background" aria-hidden="true"></canvas>
+<div id="bg-shade"></div>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="glass-card">
+    <div class="avatar">M</div>
+    <div class="login-name">Mrfentmen</div>
+    <input id="pw" type="password" placeholder="Password" autocomplete="off">
+    <button id="login-btn">Log In</button>
+    <div class="login-note">Demo gate — any password enters. The real image gate is OpenCode face task 19.</div>
+  </div>
+</div>
+
+<!-- DESKTOP -->
+<div id="desktop" hidden>
+  <div id="topbar">
+    <div class="tb-left"><span class="tb-mark">&#8734;</span><span class="tb-app">Meta OS</span></div>
+    <div class="tb-center" id="tb-clock"></div>
+    <div class="tb-right"><span id="tb-net">NET &#9679;</span><span id="tb-mode">DARK</span></div>
+  </div>
+
+  <div id="windows"></div>
+
+  <div id="dock"></div>
+</div>
+
+<template id="win-template">
+  <section class="window">
+    <header class="win-bar">
+      <span class="win-title"></span>
+      <span class="win-btns"><button class="win-min" title="Minimise">&#8211;</button><button class="win-close" title="Close">&#10005;</button></span>
+    </header>
+    <div class="win-body"></div>
+  </section>
+</template>
+
+<script src="logo-background.js"></script>
+<script src="face.js"></script>
+</body>
+</html>
