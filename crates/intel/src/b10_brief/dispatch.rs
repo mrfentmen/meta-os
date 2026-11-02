@@ -1633,6 +1633,52 @@ pub fn build_dispatch_show_report(
     }
 }
 
+/// A `show_dispatch` run failed before any job was read (DSP-016).
+/// The message is the full Python `ShowError` text, so callers and
+/// tests see the same words Python raises.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ShowError(pub String);
+
+impl std::fmt::Display for ShowError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+/// Show a posted plan as posted vs current job states (DSP-016).
+///
+/// `record` is the stored dispatch record's jobs, or `None` when
+/// there is no record for this id. A missing record raises
+/// `ShowError` before any job is read: `state_of` is never called.
+/// A present record builds through `build_dispatch_show_report`,
+/// so the classification, counts, and read-only promise are the
+/// builder's. `state_of` reads one job's current queue state fresh
+/// and returns `(status, claim)`; it returns `None` when the job
+/// id is no longer in the queue.
+///
+/// Rust adaptations, stated not hidden: Python reads the record
+/// from `intel.store` and the states from `jobs.job_get`; this
+/// wrapper takes the record and the state lookup as arguments,
+/// so store and queue access stay with the caller. Python's
+/// report also carries room, created_at, latency_ms, order, and
+/// per-job max_attempts and req; the existing `DispatchShowReport`
+/// omits them, so this wrapper does not invent them. Python
+/// formats the id with `!r`; this message uses plain single
+/// quotes, which matches for ordinary ids.
+pub fn show_dispatch(
+    id: &str,
+    summary: &str,
+    record: Option<&[DispatchRecordJob]>,
+    state_of: impl Fn(&str) -> Option<(String, String)>,
+) -> Result<DispatchShowReport, ShowError> {
+    match record {
+        None => Err(ShowError(format!(
+            "dispatch show failed: no dispatch record '{id}' (nothing touched)"
+        ))),
+        Some(jobs) => Ok(build_dispatch_show_report(id, summary, jobs, state_of)),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2490,6 +2536,45 @@ mod tests {
             "got: {text}"
         );
         assert!(text.ends_with("  counts: 1 open, 1 claimed, 1 done, 1 missing"), "got: {text}");
+    }
+
+    #[test]
+    fn show_missing_record_errors_before_any_read() {
+        let reads = std::cell::Cell::new(0);
+        let err = show_dispatch("dsp-gone", "", None, |_id| {
+            reads.set(reads.get() + 1);
+            None
+        })
+        .expect_err("missing record must fail");
+        assert_eq!(
+            err.0,
+            "dispatch show failed: no dispatch record 'dsp-gone' (nothing touched)"
+        );
+        // Python raises before any job is read; the lookup stays untouched.
+        assert_eq!(reads.get(), 0);
+    }
+
+    #[test]
+    fn show_present_record_builds_report() {
+        let record = vec![DispatchRecordJob {
+            key: "base".into(),
+            id: "j-base".into(),
+            title: "Do base".into(),
+            files: vec![],
+            deps: vec![],
+        }];
+        let report = show_dispatch("dsp-show-3", "Build it.", Some(&record), |id| match id {
+            "j-base" => Some(("claimed".to_string(), "tester".to_string())),
+            _ => None,
+        })
+        .expect("present record must show");
+        assert_eq!(report.id, "dsp-show-3");
+        assert_eq!(report.jobs[0].status, "claimed");
+        assert_eq!(report.jobs[0].claim, "tester");
+        assert_eq!(report.counts, vec![("claimed".to_string(), 1)]);
+        let text = render_dispatch_show(&report);
+        assert!(text.contains("now: claimed by tester"), "got: {text}");
+        assert!(text.ends_with("  counts: 1 claimed"), "got: {text}");
     }
 
     // Scripted Spark callable for plan_from_spark tests, mirroring
