@@ -937,6 +937,64 @@ pub fn dry_run_plan(plan: Plan) -> Result<String, PlanError> {
     render_plan_detail(&plan, &order, &clamps, &warnings)
 }
 
+/// The single job key of the DSP-017 fallback plan.
+pub const FALLBACK_JOB_KEY: &str = "fallback-job";
+
+/// Build the DSP-017 fallback plan for a raw goal, ported from
+/// `dispatch.py::fallback_plan`.
+///
+/// Returns a single-job plan: summary, title, and spec are all
+/// marked FALLBACK, and the spec carries the raw goal verbatim
+/// after the FALLBACK marker, so the job is the goal itself,
+/// not a paraphrase of it. The job carries no files, no deps,
+/// and no accept lines — Spark supplied nothing usable to derive
+/// them from, and this function invents neither. The DSP-007
+/// approval gate is where a human decides whether the raw-goal
+/// job posts as-is. The title is the goal's first non-empty
+/// line, trimmed, truncated to 97 chars plus `...` when it runs
+/// over 100 chars. An empty or whitespace-only goal is refused
+/// with `PlanError`. Posts nothing.
+///
+/// Rust adaptation, stated not hidden: Python's fallback dict
+/// has no goal field, while this crate's `Plan` requires one,
+/// so `goal` is filled with the raw goal verbatim — the same
+/// handling `parse_plan` gives its goal argument. Truncation
+/// counts Unicode scalar values, matching Python's slicing.
+pub fn fallback_plan(goal: &str) -> Result<Plan, PlanError> {
+    if goal.trim().is_empty() {
+        return Err(fail("fallback plan: goal must be a non-empty string"));
+    }
+    let first_line = goal
+        .lines()
+        .find(|l| !l.trim().is_empty())
+        .map(|l| l.trim())
+        .unwrap_or("");
+    let title_line = if first_line.chars().count() > 100 {
+        let mut t: String = first_line.chars().take(97).collect();
+        t.push_str("...");
+        t
+    } else {
+        first_line.to_string()
+    };
+    Ok(Plan {
+        goal: goal.to_string(),
+        summary: "FALLBACK plan: Spark returned malformed JSON twice, so no structured plan was produced; this single job carries the raw goal as its spec"
+            .to_string(),
+        jobs: vec![PlanJob {
+            key: FALLBACK_JOB_KEY.to_string(),
+            title: format!("FALLBACK: {title_line}"),
+            files: Vec::new(),
+            deps: Vec::new(),
+            max_attempts: 3,
+            spec: format!(
+                "FALLBACK: Spark returned malformed JSON twice, so no structured plan was produced. Raw goal, verbatim:\n\n{goal}"
+            ),
+            accept: Vec::new(),
+            req: Vec::new(),
+        }],
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1441,5 +1499,44 @@ mod tests {
         p.jobs[1].files = vec!["f.py".into()];
         p.jobs[1].deps = vec![];
         assert!(dry_run_plan(p).is_err());
+    }
+
+    #[test]
+    fn fallback_plan_single_job_carries_raw_goal_verbatim() {
+        let p = fallback_plan("Fix the leak\nsecond line").unwrap();
+        assert_eq!(p.jobs.len(), 1);
+        let j = &p.jobs[0];
+        assert_eq!(j.key, "fallback-job");
+        assert_eq!(j.title, "FALLBACK: Fix the leak");
+        assert_eq!(
+            j.spec,
+            "FALLBACK: Spark returned malformed JSON twice, so no structured plan was produced. Raw goal, verbatim:\n\nFix the leak\nsecond line"
+        );
+        assert!(j.files.is_empty());
+        assert!(j.deps.is_empty());
+        assert_eq!(j.max_attempts, 3);
+        assert!(j.accept.is_empty());
+        assert_eq!(
+            p.summary,
+            "FALLBACK plan: Spark returned malformed JSON twice, so no structured plan was produced; this single job carries the raw goal as its spec"
+        );
+    }
+
+    #[test]
+    fn fallback_plan_title_skips_blank_lines_and_truncates_at_100() {
+        let p = fallback_plan("\n  \nDo the thing").unwrap();
+        assert_eq!(p.jobs[0].title, "FALLBACK: Do the thing");
+        let long = "x".repeat(101);
+        let p = fallback_plan(&long).unwrap();
+        assert_eq!(p.jobs[0].title, format!("FALLBACK: {}...", "x".repeat(97)));
+        let exact = "y".repeat(100);
+        let p = fallback_plan(&exact).unwrap();
+        assert_eq!(p.jobs[0].title, format!("FALLBACK: {exact}"));
+    }
+
+    #[test]
+    fn fallback_plan_empty_goal_refused() {
+        let err = fallback_plan("   \n  ").unwrap_err();
+        assert!(err.0.contains("fallback plan: goal must be a non-empty string"), "got: {err}");
     }
 }
