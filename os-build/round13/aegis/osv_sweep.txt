@@ -1,0 +1,34 @@
+route: https://api.osv.dev/v1/query, direct (osv-mcp is not installed on this host; standing written exception, route stated in the record)
+control crates.io/time@0.1.44 -> 2 ids ['GHSA-wcg3-cvx6-7396', 'RUSTSEC-2020-0071']
+lock Cargo.lock                         refs=107  findings=0   {}
+lock kernel/Cargo.lock                  refs=1    findings=0   {}
+lock os-build/userspace/user/Cargo.lock refs=0    findings=0   {}
+
+per task:
+R13-101   package.json                       exists=True  refs=0    findings=0 {}
+R13-102   package-lock.json                  exists=False refs=0    findings=0 {}
+R13-103   Cargo.toml                         exists=True  refs=0    findings=0 {}
+R13-104   Cargo.lock                         exists=True  refs=107  findings=0 {}
+R13-105   kernel/Cargo.toml                  exists=True  refs=0    findings=0 {}
+R13-106   crates/intel                       exists=True  refs=0    findings=0 {}
+R13-107   crates/queue-core                  exists=True  refs=0    findings=0 {}
+R13-108   crates/os-supervisor               exists=True  refs=0    findings=0 {}
+R13-109   services/MANIFEST.md               exists=False refs=0    findings=0 {}
+R13-110   server/queue requirements          exists=False refs=0    findings=0 {}
+R13-111   science-lab requirements           exists=False refs=0    findings=0 {}
+R13-112   goose toolchain manifest           exists=False refs=0    findings=0 {}
+R13-113   face/package.json                  exists=False refs=0    findings=0 {}
+R13-114   board/package.json                 exists=False refs=0    findings=0 {}
+R13-115   relay/package.json                 exists=False refs=0    findings=0 {}
+R13-116   agents/package.json                exists=False refs=0    findings=0 {}
+R13-117   tests manifests                    exists=False refs=0    findings=0 {}
+R13-118   os/worlds pack manifests           exists=False refs=0    findings=0 {}
+R13-119   docs tooling manifest              exists=False refs=0    findings=0 {}
+R13-120   image build manifest               exists=False refs=0    findings=0 {}
+R13-121   legacy connector manifests         exists=False refs=0    findings=0 {}
+R13-122   custom-skills manifests            exists=False refs=0    findings=0 {}
+R13-123   mcp-gateway/package.json           exists=False refs=0    findings=0 {}
+R13-124   crates/assess-server               exists=True  refs=0    findings=0 {}
+R13-125   crates/* (remaining)               exists=True  refs=0    findings=0 {}
+
+tasks=25 findings_total=0

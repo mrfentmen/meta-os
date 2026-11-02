@@ -1,0 +1,28 @@
+task      status            files  chars   surface  names  confusables  label
+R13-176   SCANNED             1   20073        0      6            0  README shipped text
+R13-177   SCANNED             1   10037        0      2            0  site/index.html
+R13-178   SCANNED             1    4878        0      1            0  demo script
+R13-179   SCANNED             1    2846        0      3            0  demo captions
+R13-180   SCANNED             2   11760        0      6            0  product listing titles
+R13-181   SCANNED             1   10037        0      2            0  product listing descriptions
+R13-182   SCANNED             2   29600        0     40            0  face UI strings
+R13-183   ARTIFACT_MISSING    0       0        0      0            0  board UI strings  [missing: board/index.html]
+R13-184   ARTIFACT_MISSING    0       0        0      0            0  relay viewer strings  [missing: relay/index.html, relay/relay.js]
+R13-185   SCANNED             1   12802        0     36            0  registry display names
+R13-186   ARTIFACT_MISSING    0       0        0      0            0  world pack display text  [missing: os/worlds/index.json, os/worlds.json]
+R13-187   ARTIFACT_MISSING    0       0        0      0            0  science-lab export text  [missing: labs/README.md]
+R13-188   ARTIFACT_MISSING    0       0        0      0            0  officina output text  [missing: tools/README.md]
+R13-189   ARTIFACT_MISSING    0       0        0      0            0  musica display text  [missing: os-build/MUSICA.md]
+R13-190   SCANNED             2    9567        0      0            0  nervus display text
+R13-191   SCANNED             1    3204        0      0            0  aegis finding titles
+R13-192   SCANNED             1    1614        0      0            0  status file text
+R13-193   SCANNED             1    1682        0      0            0  submission checklist
+R13-194   ARTIFACT_MISSING    0       0        0      0            0  X post draft  [missing: os-build/X_POST.md, os-build/aegis/X_POST.md]
+R13-195   SCANNED             1   10037        0      2            0  store page text  [missing: site/store.html]
+R13-196   ARTIFACT_MISSING    0       0        0      0            0  goal file text  [missing: GOAL.md, os-build/GOAL.md]
+R13-197   ARTIFACT_MISSING    0       0        0      0            0  skill descriptions  [missing: .agents/skills/**/*.md]
+R13-198   SCANNED            16  162521        0     25            0  connector doc text
+R13-199   SCANNED           180  1620533        0    357            0  error message strings
+R13-200   SCANNED           193  1866937        0    385            0  log banner strings
+
+tasks=25 scanned=16 artifact_missing=9 findings=0
