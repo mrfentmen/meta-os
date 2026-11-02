@@ -37,6 +37,35 @@ measurably harder than it found it, and the record proves it.
    watch targets (repo tips, listing pages) — rounds, compare,
    speak only on change. The watch idea, aimed at security.
 
+
+## Two more wings (boss order, 2026-11-02: "add OSINT and OPSEC")
+
+6. **OSINT — his own footprint, read the way a stranger reads
+   it.** What the open internet already says about his ground:
+   public repo metadata, DNS records, certificate-transparency
+   logs (which name his domains and subdomains in public),
+   store and listing pages, search-index visibility of things
+   never meant to be public. Sources are public records and
+   indexes only. The point is defensive: find the exposure
+   before someone hostile does.
+   Bounds: reading public records about HIS assets only. No
+   gathering on other people — ever, including people who
+   interact with his stores. No account creation to reach data,
+   no contacting anyone, no social engineering. Addresses and
+   identifiers found in his own public records are reported as
+   COUNTS and locations (which repo, which record), never
+   republished as values — main is a public repo.
+7. **OPSEC — how the operation leaks, checked as practice.**
+   Not a scan: a set of standing checks on how work goes out.
+   Commit metadata in public repos (names and addresses riding
+   in history), machine names, usernames, and file paths inside
+   shipped code, screenshots, and listings, and a pre-publish
+   review of anything public-facing (submission materials, the
+   launch post, store copy) against one question: does this
+   tell a stranger something we did not decide to tell? OPSEC
+   findings file as records like everything else; the fix is a
+   practice change, and practice changes are the boss's call.
+
 ## What it never does
 
 - Never scans, probes, or tests anything that is not the boss's.
@@ -58,6 +87,11 @@ measurably harder than it found it, and the record proves it.
 - [ ] Secret-hygiene count over the meta-os tree (counts only).
 - [ ] The Aegis face: its own window in the OS face (shield-dark,
       findings as records) — after the sweep is real, not before.
+- [ ] OSINT v1: certificate-transparency + DNS review over his
+      named domains; public-repo metadata review (commit
+      addresses present: counts per repo, no values).
+- [ ] OPSEC v1: the pre-publish checklist written, and run once
+      over the hackathon submission materials before Nov 4.
 
 ## Proof obligations
 
