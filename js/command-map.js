@@ -65,6 +65,7 @@ import { prefersReducedMotion } from "./motion.js";
 import { isDemoMode } from "./demo.js";
 import { formatTimeWithZone } from "./timefmt.js";
 import { saveSelection, loadSelection, resolveSelection } from "./restore.js";
+import { FederationNotices } from "./federation.js";
 import { FrameSampler } from "./sampler.js";
 import { downscaleImageToDataURL } from "./image_input.js";
 
@@ -160,6 +161,10 @@ const state = {
   pinReturnFocus: null, // HN-019: element to refocus when the pin card closes
   watch: new WatchList(MAX_WATCHED),
   queue: new IncidentQueue(),
+  // BUILD WAVE W4: the federation's first moment — Medicus
+  // incoming-scene notices derived from open Ignis incidents,
+  // SIMULATED on every surface, closing with their source.
+  federation: new FederationNotices(),
   camState: new Map(), // id -> { flagged, flagByProduct, lastCategory, lastProduct, lastFlagged, lastAt, lastResult, phase, reviewed, errorNote }
   lastSampledId: null,
   sampler: null,
@@ -1268,6 +1273,19 @@ async function assessCamera(id) {
         `Flag raised — ${divisionShortName(product)} · ${cam.name} — ${category} (${incident.priority})`,
       );
     }
+    // BUILD WAVE W4: an open Ignis incident derives a Medicus
+    // incoming-scene notice — same camera, same incident, same
+    // time — labelled SIMULATED on every surface it touches.
+    // A refresh (created false) only re-links the notice's time;
+    // only a genuinely new incident announces itself.
+    if (incident) {
+      const fed = state.federation.add(incident);
+      if (fed.created && fed.notice) {
+        pushActivity(
+          `Federation notice (SIMULATED) — Medicus incoming-scene notice for ${cam.name}: Ignis flag open (${category}). Notice only — no Medicus assessment, no dispatch.`,
+        );
+      }
+    }
     // Nearest-camera handoff, rising edge only: give the operator a
     // second angle on the incident for free. An idle operator gets
     // the view moved; a busy one gets a suggestion on the incident
@@ -1293,7 +1311,10 @@ async function assessCamera(id) {
       }
     }
   } else if (prevDivFlagged) {
-    state.queue.clearForCamera(id, product);
+    const clearedIncident = state.queue.clearForCamera(id, product);
+    // BUILD WAVE W4: a cleared Ignis incident closes its Medicus
+    // notice — no notice outlives its source.
+    if (clearedIncident) state.federation.clearForSource(clearedIncident.id);
     if (state.tracking && state.tracking.cameraId === id && state.queue.openIncidentsForCamera(id).length === 0) {
       state.tracking = null;
       pushActivity(`Stopped tracking — ${cam.name} cleared.`);
@@ -1382,8 +1403,9 @@ function toggleSampling() {
 
 function renderAlerts() {
   const items = state.queue.list();
+  const federationNotices = state.federation.list().filter((notice) => notice.open);
   els.alerts.textContent = "";
-  els.alertsEmpty.hidden = items.length > 0;
+  els.alertsEmpty.hidden = items.length > 0 || federationNotices.length > 0;
   for (const incident of items.slice(0, 30)) {
     const cam = state.byId.get(incident.cameraId);
     if (!cam) continue;
@@ -1478,6 +1500,43 @@ function renderAlerts() {
       renderAlerts();
     });
     li.appendChild(trackBtn);
+    els.alerts.appendChild(li);
+  }
+  // BUILD WAVE W4: the federation's first moment, on the same
+  // Alerts surface as the incident it derives from — one entry
+  // per open notice, always labelled SIMULATED, never a Medicus
+  // assessment and never a dispatch. Selecting one marks it seen
+  // and shows its camera; it creates no incident of its own.
+  for (const notice of federationNotices.slice(0, 30)) {
+    const cam = state.byId.get(notice.cameraId);
+    if (!cam) continue;
+    const li = document.createElement("li");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `cmd-alert cmd-alert--federation${notice.seen ? " cmd-alert--seen" : ""}`;
+    const body = document.createElement("span");
+    body.className = "cmd-alert-body";
+    const title = document.createElement("span");
+    title.className = "cmd-alert-title";
+    title.textContent = cam.name;
+    const divTag = makeDivisionTag(notice.targetProductId);
+    const simTag = document.createElement("span");
+    simTag.className = "cmd-div-tag cmd-div-tag--federation";
+    simTag.textContent = "SIMULATED";
+    const detail = document.createElement("span");
+    detail.className = "cmd-alert-detail";
+    detail.textContent = `Incoming scene notice (SIMULATED) — Ignis flag open: ${notice.category}. Notice only — no Medicus assessment, no dispatch.`;
+    const meta = document.createElement("span");
+    meta.className = "cmd-alert-meta mono";
+    meta.textContent = `${cam.area} · ${fmtTime(notice.timestamp)} · ${notice.seen ? "SEEN" : "UNSEEN"}`;
+    body.append(title, divTag, simTag, detail, meta);
+    btn.append(body);
+    btn.addEventListener("click", () => {
+      state.federation.markSeen(notice.id);
+      selectCamera(notice.cameraId, { pan: true, openCard: true });
+      renderAlerts();
+    });
+    li.appendChild(btn);
     els.alerts.appendChild(li);
   }
   if (items.length > 30) {
