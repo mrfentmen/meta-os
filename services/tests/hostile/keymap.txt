@@ -1,0 +1,8 @@
+# B-L1-132 -- keymap tables (services/input)
+CASE scancode_out_of_range | "map 0x200 = a" | expect E_INVAL | a scancode outside the table is a layout that will index past its row
+CASE duplicate_scancode | "map 0x1E = a\nmap 0x1E = b" | expect E_INVAL | two letter for one key is a layout nobody can predict
+CASE dead_key_with_no_base | "compose acute 0x00 = 0x00" | expect E_INVAL | a pair table entry that maps nothing must be absent, not present and empty
+CASE unknown_layout_id | "layout 99" | expect E_UNSUPPORTED | an unknown layout falls back to US and says so; it must not silently do nothing
+CASE empty_keymap | "" | expect CODE_OK | an empty table is legal; the US table is the default
+CASE control_char_mapping | "map 0x1E = 0x0A" | expect E_INVAL | a printable key mapped to a newline breaks line-oriented input
+CASE valid_shift_pair | "map 0x1E = a\nmap shift 0x1E = A" | expect CODE_OK | the ordinary pair must be accepted
