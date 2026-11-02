@@ -138,3 +138,11 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - node/git/chromium ABSENT from lane build output (verified, quoted lane reference not re-verified). Face-in-chromium BLOCKED at lane end (apt install running when lane closed) → carried UNPROVEN, remediation is §7 bake scope.
 - Verdict table `OC2B-img-verdict.md` (PARTIAL→PROVEN/UNPROVEN). sha re-match confirmed. Gaps listed (bake-in §7, chromium/face). QEMU cmdline verbatim in `OC2B-img-section6.md`.
 - Landed: reproducible image + 90% verification. In flight: face-in-chromium (needs §7 guest session). Blocked: host-forwarded dashboard check (no forwarding set up).
+
+## Section 7 — Bake OpenCode + toolchain into image (OC2B-151–175) — DONE 2026-11-02
+- Install: official script, `opencode --version` 1.19.5 — ONLY under `-cpu max` (default qemu64 CPU → Illegal instruction; rebooted with -cpu max, recorded). Smoke: endpoint UnknownError err_7c808c65, 41.7s, no reply (one attempt, no retry).
+- MCP config shape only (redacted, stub path). LAYERS test blocked on same endpoint error (recorded, not retried).
+- Bake: `/home/relay/bake/meta-os` depth-1 clone (28.9s, 246M) @ b0a66bf. git 2.39.5 installed. Updater service+timer installed+enabled (redacted, no secrets). Toolchain: opencode 1.19.5, git, curl, python3 (node/chromium out of scope — gap).
+- Baked file `/tmp/metaos-2026-11-02-oc2b-baked.qcow2`, 1,587,019,776 B (+253.6% vs base), sha 849219f3… (pre-boot). Boot log kept. --version + checkout verified on 2nd boot (persistence YES). Manual pull ran clean, no move in-session.
+- Desktop screendump IMPOSSIBLE (no desktop env in server image) — none claimed. Dashboard in baked image: 000 (no listener; §6 base-200 was lane server context — named). In-image model smoke: endpoint error, no client receipt. Clock/sizes/gaps/filename recorded in `OC2B-oc-verify.md`.
+- Landed: baked, bootable, versioned image with updater. In flight: none. Blocked: model endpoint (server-side), desktop/chromium (needs GUI base image), dashboard server in image.
