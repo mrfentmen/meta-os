@@ -1152,6 +1152,43 @@ main .product-option:hover {
   border-radius: 6px;
 }
 
+/* BUILD WAVE W1 live wiring: the assessed frame in the latest
+   panel, with region boxes overlaid. The frame is the exact
+   image that was sent, so percent boxes land on the scene they
+   were drawn for; the container clips any validator-accepted
+   box that runs past the frame edge. */
+.assessed-frame {
+  position: relative;
+  margin: 10px 0;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.assessed-frame-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.assessed-frame-overlay {
+  position: absolute;
+  inset: 0;
+}
+.assessed-frame-overlay .region-boxes {
+  position: absolute;
+  inset: 0;
+}
+.region-box {
+  position: absolute;
+  border: 2px solid #ffd166;
+  box-sizing: border-box;
+}
+.region-box-label {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffd166;
+  font-size: 12px;
+  padding: 1px 4px;
+}
+
 .history-item {
   background: rgba(255, 255, 255, 0.025);
   border-top: 1px solid #343a41;
