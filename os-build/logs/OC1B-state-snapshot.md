@@ -44,3 +44,10 @@ be appended to os-build/logs/OC1B-closeout-gate.log). Submission stands on
 the LAST §8 re-proof wave + §1 baseline lineage — owned by the coordinator/
 Pax at merge time, not by this lane. This snapshot records the lane's own
 state only and must not be cited as the submission's gate.
+
+## Coordinator addendum 2026-11-02 (OC1B-459/460/472 upgrades; lanes merged)
+
+- OC1B-488 result: GREEN (s17 lane report + os-build/logs/OC1B-closeout-gate.log on the merged tree). The "RUNNING" note above is superseded.
+- OC1B-472 gate lineage (submission stands on this): §1 baseline @main-3452d244 GREEN 8/8 twice, panic 0 (OC1B-baseline-gate.log, OC1B-baseline-gate2.log); §8 combined-tip @94010c76 GREEN 8/8, serial 1086 lines panic 0 (OC1B-reproof-combined-gate.log); §17 closeout gate GREEN same tree (OC1B-closeout-gate.log); §11 film serials K1/K2 panic 0 (oc1b-beat1-serial.txt, OC1B-demo-beat5-serial.txt).
+- OC1B-460 clause upgrades (coordinator, evidence merged): Boots/ring-3/three-programs/fault-isolation/shell-state → PROVEN via §1 + §8 logs above. Boot-log coverage → PROVEN (§1/§7/§8 committed serials). Clean-checkout → PENDING rehearsal (runbook exists, background run in flight, result to be appended).
+- OC1B-461: kernel-clause reason retired (evidence now merged); clean-checkout reason updates when rehearsal lands.
