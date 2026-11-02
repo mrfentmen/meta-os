@@ -1,0 +1,10 @@
+# OC1B-222 queue suite AFTER all §9 live runs (tree 94010c76)
+
+```
+----------------------------------------------------------------------
+Ran 296 tests in 4.432s
+
+OK
+```
+
+baseline OC1B-201: 296 ran, OK - holding comparison in OC1B-model-proofs.md verdict block

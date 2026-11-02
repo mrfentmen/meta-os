@@ -1,0 +1,2 @@
+EndpointUnresolvedError raised as specified:
+muse-voice-transcribe-1.0: no verified call surface yet (probed 2026-11-02: /v1/audio/transcriptions 404; Responses and chat surfaces returned model_not_found)
