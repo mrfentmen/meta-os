@@ -347,7 +347,7 @@ Merges, the four freezes, the report, and the one job nobody else can do: **keep
 | # | Ask | By | If you decline |
 |---|---|---|---|
 | **P-1** | Approve §3 as the definition of done and as the only claim in the boss's report | H+0:30 | Six lanes aim at six targets and we finish none |
-| **P-2** | Rule F1: syscall 5 = `read_key`, 6–15 reserved, never renumber | H+0:30 | R-5…R-7 wait; kernel shell work stops at the prompt |
+| **P-2** | Rule F1: syscall 5 = `read_key`, 6–15 reserved, never renumber | H+0:30 | R-7 waits; kernel shell work stops at the prompt |
 | **P-3** | Rule F2: banner/status fields, `KEY value` shape, and that `milestone` must name the **last proven** milestone | H+0:45 | The kernel ships a false milestone string on its own first line |
 | **P-4** | Rule F3: Goose root location | H+0:45 | I still fix 72 dialect errors; 225 stay |
 | **P-5** | Order the corrections: scoreboard (Milo) and my report (me), and require `DEAD` for the framebuffer and `TYPECHECK-FAILS` for services | H+1 | Gate 1 certifies fiction again |

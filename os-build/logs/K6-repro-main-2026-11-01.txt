@@ -6,7 +6,7 @@
 # Typed input sent over the QEMU HMP monitor with sendkey (real PS/2 path):
 #   help <ret>  status <ret>
 # Unfiltered. 'INT keyboard scancode 0x..' lines are the kernel's own debug
-# prints on every key, left in deliberately — they are work item R-6.
+# prints on every key, left in deliberately — they are work item R-3.
 
 META OS - milestone K3
 META OS KERNEL - alive (K1)
