@@ -55,7 +55,12 @@ or BLOCKED with the artifact named.
 | 41 | Dashboard live numbers | PROVEN (guest) | guest-dashboard-live.jpg: load 3.28, 558M/1967M, 3G/14G, 10.0.2.15/24 |
 | 42 | Net card shows DHCP lease | PROVEN (guest) | 10.0.2.15/24 live in dashboard + facts |
 | 43 | 10s series moves under load | PROVEN (guest) | load 2.36 base -> 2.54/2.57 under 2x yes (1-min avg lags, direction correct) |
-| 44-49 | Systems as apps | DONE (staged) | :18934 site server stages surfaces/index/logo-studio + data; dock retargeted; guest proof TODO |
+| 44 | Imperium three services | PROVEN (guest) | guest-sys-console.jpg: MAP/CONSOLE tabs, VIGILES/IGNIS/MEDICUS buttons, command panel, offline camera list |
+| 45 | Staged RED full loop in-face | TODO (honest) | drill path proven Mac-lane R5-4 (receipt sim-6623d237) + R6-3 Ignis (receipt sim-9da0ad66) via trio suite to SIMULATED endpoints; guest face has no trio suite/creds/budget and proof tasks carry no spend — in-face trigger not built, not staged |
+| 46 | Science Lab real page | PROVEN (guest*) | guest-sys-science.jpg: molecule viewer lists 11 real embedded structures; *3D needs WebGL (absent in guest chromium), honestly text-only |
+| 47 | Musica track end to end | PROVEN (guest) | guest-musica-ended.jpg: take-006 0:07/0:07, state "ended 7.3s — played end to end"; musica.html + staged wav |
+| 48 | Custos + Officina consoles | PROVEN (guest) | guest-sys-imperium.jpg nav + guest-sys-custos.jpg: 34 patrol records by tier, proven heatsink designs |
+| 49 | Honesty labels intact | PROVEN (guest) | SIMULATED/LIVE-TEST/UNIDENTIFIED/empty-state labels visible in shots; music3d placeholder NOT shipped as Musica (own musica.html instead) |
 | 50 | Board rooms/post/receive | PROVEN (guest) | rooms+messages via curl; guest-board-persist.jpg shows post in UI |
 | 51 | Persist across restart | PROVEN (guest reboot) | both rooms intact after sudo reboot (face-proof-002 + welcome); data in ~/.local/share/metaos survives |
 | 52 | Files real browser | PROVEN (guest) | guest-files-browse.jpg lists real /opt/face; backend curl list/read proven |
