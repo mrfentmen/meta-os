@@ -129,3 +129,6 @@ marked; nothing is asserted on another lane's behalf.
 - OC1B-471 UPGRADED: s17's staleness note is resolved — merged §18 (s1 @ 1cad0158) fixed the README table to 2071/2015/56, verified present on this tree. Remaining 471 inputs: model names (§9 verdict) + film (§11 final cut).
 - OC1B-473 row 1 now READY (created 2026-10-28 confirmed); row 2 PARTIAL (receipts located, verdict pending); row 3 READY-file/§11-final-cut; rows 4/5/6/7 READY per lane.
 - OC1B-474 revised: NOT FULLY READY rows = 2 (§9 verdict), 454-final (§11), 464/465 (runbook+rehearsal, §11). Closed by coordinator: 452, 463, 469.
+
+## Coordinator addendum 2026-11-02, third pass (OC1B-453 FINAL)
+§9 verdicts merged (s9 @ f43a2cb7): truthfully nameable with receipts — muse-spark-1.3 (CHAT path + judge fallbacks), muse-wonder-1.0 (live "WONDEROK" chat receipt; review-reader UNPROVEN 212/213 by token budget, fallback PROVEN — name the model, not the reader), sam-3.1 (live box receipt on ignis-fire-1), Muse Image (112KB webp generation receipt). Receipt dir: os-build/logs/oc1b-model-proofs/ + R5-imperium/receipt.txt. Spend receipts: $0.097 (§9) + $0.1756 (§13), guardrail $0.3108/$75. OC1B-453 READY; OC1B-473 row 2 READY.
