@@ -17,7 +17,8 @@ use crate::interrupts;
 use crate::tasks::{Context, TaskId};
 
 /// Tasks the kernel can hold. No reap in K5: slots fill in spawn
-/// order and stay, so spawn order is the table index.
+/// order and stay, so spawn order is the table index. Now full at
+/// 8/8 with readkey (R5-2 follow-up); see `start_demo_tasks`.
 const MAX_TASKS: usize = 8;
 /// One task stack: 16 KiB, `u128` cells so the base (and the top) is
 /// always 16-aligned as `Context::initial` demands.
@@ -106,6 +107,10 @@ pub unsafe fn switch_to(old: *mut Context, new: *const Context) {
 /// Switch the CPU to `next`, updating `CUR` across the switch: set
 /// before (so the new task is current while it runs), restored
 /// after (this line resumes in the OLD task when it runs again).
+/// The resume side also refreshes TSS.rsp0 (see `refresh_rsp0`):
+/// the task is about to return toward userspace, and rsp0 must be
+/// ITS kernel stack top, not whatever the last `enter_userspace`
+/// left behind.
 unsafe fn goto(next: TaskId) {
     let old = CUR;
     CUR = next;
@@ -113,6 +118,37 @@ unsafe fn goto(next: TaskId) {
     let new_ptr = &CTXS[find_row(next).expect("sched: next task")] as *const Context;
     switch_to(old_ptr, new_ptr);
     CUR = old;
+    refresh_rsp0(old);
+}
+
+/// Refresh TSS.rsp0 for the task resuming on this CPU (R5-2 fix).
+///
+/// TSS.rsp0 is a single per-CPU register, and `enter_userspace`
+/// sets it only once per userspace task, at first entry. Tasks
+/// interleave after that: the last task to enter userspace owns
+/// rsp0 until some other task resumes. A trap from userspace
+/// (syscall, IRQ) then lands on the STALE owner's kernel stack —
+/// the suspended task's call chain gets overwritten by a foreign
+/// trap frame plus handler calls. That is the R5-2 intermittent
+/// pair: a red-screen panic in `exit_task` (a switch that
+/// "returned" through a corrupted stack) and the NX-fault storm
+/// (a corrupted return into a rodata address, cur=7), both only
+/// once a long-lived polling task (readkey) keeps a live victim
+/// stack around while other userspace tasks trap. The 7-task tree
+/// mostly survived because hello/crasher exit at once and sleeper
+/// traps rarely; readkey polls thousands of times, so the
+/// collision window is wide open.
+///
+/// Every task resume passes through `goto` or `back_to_sched`
+/// after the switch, so refreshing here — before the task returns
+/// to userspace — makes rsp0 always the running task's own top.
+/// First runs still go through `enter_userspace`, which sets it.
+/// A `None` row (scheduler context) is skipped, never panicked:
+/// the scheduler never enters userspace.
+unsafe fn refresh_rsp0(id: TaskId) {
+    if let Some(i) = find_row(id) {
+        crate::gdt::set_rsp0(KSTACK_TOPS[i]);
+    }
 }
 
 /// Offset bookkeeping: none — contexts live in their own array, so
@@ -129,12 +165,16 @@ unsafe fn enter(next: TaskId) {
 
 /// Yield back to the scheduler context (nothing else ready, or the
 /// last task exited): the run loop picks up from `SCHED_CTX`.
+/// The resume side refreshes TSS.rsp0 for the re-entered task
+/// (see `refresh_rsp0`): a task woken here returns to userspace
+/// through its suspended syscall, and rsp0 must be its own top.
 unsafe fn back_to_sched() {
     let old = CUR;
     CUR = TaskId::new(0);
     let old_ptr = &mut CTXS[find_row(old).expect("sched: back")] as *mut Context;
     switch_to(old_ptr, &mut SCHED_CTX as *mut Context);
     CUR = old;
+    refresh_rsp0(old);
 }
 
 /// Voluntary yield (OS-065/066): rotate to the next ready task.
@@ -656,5 +696,10 @@ pub unsafe fn start_demo_tasks() -> ! {
     spawn_task(crate::user::task_sleeper, u32::MAX).expect("sched: spawn sleeper");
     spawn_task(crate::user::task_crasher, u32::MAX).expect("sched: spawn crasher");
     spawn_task(console_task, u32::MAX).expect("sched: spawn console");
+    // R5-2 follow-up (Pax assignment): readkey spawns LAST so the
+    // existing ids stay stable (console keeps id 7) and the table
+    // lands exactly full at 8/8 — a 9th task needs a MAX_TASKS
+    // bump plus a heap review, not a silent spawn refusal.
+    spawn_task(crate::user::task_readkey, u32::MAX).expect("sched: spawn readkey");
     run();
 }
