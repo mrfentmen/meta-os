@@ -111,3 +111,12 @@ including the one aimed at this gate. Proceed on your lane (B-1 to
 B-6) under the rulings above; the boss's calls land separately.
 
 — Pax
+
+## Boss approval (2026-11-01 20:12 EST)
+
+Del approved both: the section 3 claim sentence is adopted as the
+only claim for the report and the demo, and the 12-hour push runs on
+Buffy's roster. Clock: H+0 = 2026-11-01 20:12 EST. Hard freeze at
+H+9 = 2026-11-02 05:12 EST; after it, only gate fixes and the
+report. All rulings above are in force. Rowan's HOLD is lifted for
+the R-lane only, by this order.
