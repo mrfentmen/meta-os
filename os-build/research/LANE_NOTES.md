@@ -108,3 +108,92 @@ the file rather than buried:
 - Stage boundary report: not posted to room 1. This lane had no bus access from
   where it ran, and I will not claim a post I did not make. The boss has it
   directly; Pax should relay if it belongs on the bus.
+
+---
+
+# L4 build lane — B-1 … B-6, measured (2026-11-01, post-Pax rulings)
+
+Pax ruled F1–F4 and cleared this lane on B-1..B-6. Everything below was run on this Mac; the exit
+status and the numbers are the tools' own output.
+
+## What the pass changed, in numbers
+
+| | Before this pass | After |
+|---|---|---|
+| `goose check` over the corpus | 7 of 95 files pass, **297 errors** | **31 programs, 0 errors**, exit 0 |
+| Source audit | not runnable against a broken tree | 107 files, **0 findings** |
+| Storage measured | 384.7 KiB | 372.7 KiB (34 services, re-measured after the split) |
+
+The 297 were not noise. Three of them are permanent language facts, worth writing down once so
+nobody re-derives them: **Goose has no `++`/`--`** (688 uses in the corpus, all mechanical);
+**parameters are immutable** (`p.bytes = 0` in a parameter is a type error; copy to a local);
+and **`T&` refuses an rvalue** (`f(g())` → "cannot pass P as P&", so verse the temporary).
+
+## B-1 — the root
+
+`import a.b.c;` resolves from the root file's directory, and a program may export `svc_entry` only
+once. So the corpus is not one program: `services/root.goose` covers the libraries and the 16
+non-entry services, `services/root_<svc>.goose` covers each of the six entry points, and each test
+gets a generated one-line root. Adding `root.goose` alone killed ~225 of the 297.
+
+The six entry points then collided with each other (`svc_entry` defined six times in one program),
+which is why each service's entry lives in its own `entry.goose`: importing a service's *logic* no
+longer drags a second `main` in. That split is a real structural decision, not a compile workaround.
+
+## B-2 — the dialect
+
+Eleven files, all mechanical once the root existed: `++`/`--` rewrites with indexed lvalues restored
+by hand (`socks[slot].out_count++` had become `= out_count + 1`), reserved words (`block`, `guard`,
+`fill`), `push` on a slice parameter instead of a local, `let` reassignment to `var`, `T[N]`
+needing exact element counts where `[]` only fills `[..N]`, `format_int` taking `(out, v, base,
+width, pad)` and returning nothing, `sys_exit` returning nothing, and `fmt.append_char` becoming a
+bare `append_char` because Goose's namespace is flat.
+
+Two of the errors were mine, found by re-reading my own rewrite: the blanket `++` substitution
+broke indexed lvalues, and a blanket `let`→`var` touched prose inside comments. Both are fixed;
+the prose-restore pass is why comments in those files still read as English.
+
+## B-3 — the two documents
+
+`BUFFY_REPORT.md` and `SIGNOFF.md` both opened with "no Goose toolchain" and "the kernel is at
+K1". Both were true of the sandbox that wrote the sources and false here. Corrected to the
+measured words, with a fifth status word this pass earned: **TYPECHECKED** — the front end accepts
+the program and its imports; it is not COMPILED, because no object file, link or binary exists.
+COMPILED stays at zero rows.
+
+## B-4 — what "exercised" can honestly mean
+
+The 25 test programs typecheck. **Not one has run**, because nothing in the tree can run them: no
+Goose backend has produced a binary and no kernel service host exists to load one. The harness that
+does exist is `os-build/layer1/check_services.sh`, which is now the typecheck gate.
+
+## B-5 — `SERVICES_SCOPE.md`
+
+Written because "Layer 4" meant three sizes in three documents: 5 Goose files on `main`, 95 in this
+lane, and a scoreboard row that said DESIGNED. The page names them — the merged set, the corpus, and
+the specified tier — and states which of them runs (none).
+
+## B-6 — the gate harness, proven again
+
+`drive.py` (on `main`) is the harness. Verified end to end today, not by reading it: booted the
+8.2 MB image, typed `status` and `help`, and captured
+
+```
+HELLO FROM USERSPACE
+INT user page-fault addr 0x0 err 0x4: task killed
+STATUS tasks=7 ticks=380 heap_free_kb=31
+commands: status help
+```
+
+That is the recipe `gate.sh` should wrap. `gate.sh` itself still does not exist — OpenCode's
+deliverable, per Pax's O-1/O-3 rulings.
+
+## What remains, and whose
+
+- **COMPILED for one program** — needs a Goose backend. Q5 (`K6_NEEDS.md`) is answered the moment
+  `example` produces an object file; either answer is progress.
+- **RUN for one program** — needs that binary plus the K6 userspace pattern, which is proven here.
+- **A runner in the kernel** (`svc_start` / `svc_ready`) — that is the milestone that makes L4 a
+  tier instead of a library. Not this lane's to write; Pax gates it.
+- **The start timeout** — `starting_since_ms` on the slot, checked by the supervisor tick.
+- **67 dormant permission rows** — each a real call or a row to delete; printed on every run.

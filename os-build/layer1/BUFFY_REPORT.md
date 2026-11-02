@@ -7,14 +7,42 @@ gate reads, so it only contains what can be checked.
 Updated 2026-11-01 at the end of the build-out (B-L1-147). All 148 tasks are accounted for below,
 one row each, with the artifact that backs the status word.
 
-## The two facts that bound everything
+## CORRECTION (2026-11-01, Pax P-5) — read this before the table
 
-1. **No Goose toolchain on this machine.** `goose__toolchain_status` →
-   `Goose toolchain: NOT FOUND / Looked for: goose (from PATH)`. Instructions it gives: clone
-   `aardappel/goose`, `cmake -B build -DCMAKE_BUILD_TYPE=Release -DGOOSE_BUILTIN_LIBS=all`. Until
-   that exists, **nothing in this lane can honestly reach COMPILED** — the work order's own rule.
-2. **The kernel is at K1.** `kernel/src/main.rs` is the skeleton; nothing above K1 exists in the
-   tree. Every service is written against a requirement, not against a running kernel.
+The two "bounding facts" this report opened with are both **retired**, and this section replaces
+them. Pax ruled F1–F4 and ordered this correction; the words below are measured on the Mac tree,
+not inherited.
+
+1. **The Goose toolchain exists, and the corpus typechecks.** The old text said
+   `goose__toolchain_status` = NOT FOUND. That was true of the sandbox that wrote the sources and
+   false of this Mac: `goose` is on `PATH` and runs. Measured now:
+   `os-build/layer1/check_services.sh` → **31 programs (6 roots + 25 tests), 0 errors**, exit 0.
+   It was **297 errors, 7 of 95 files passing** before this pass. Every error was real and every
+   one was a fact about the language, which is what the 22 open questions in `K6_NEEDS.md` wanted.
+2. **The kernel is not at K1.** The merged tree reaches **K6** on this Mac: ring 3 runs, the
+   userspace programs load at their per-program bases, `HELLO FROM USERSPACE` exits 0, and the
+   page-fault path kills one task without taking the machine down
+   (`os-build/logs/K6-repro-main-2026-11-01.txt`, now on `main`). L5/L6 are still unbuilt, so the
+   services layer still has nothing above it to start against — but "the kernel is a skeleton" is
+   no longer the reason.
+
+**What this changes about the status words below.** The vocabulary stays the work order's four
+words plus one measured word this pass earned:
+
+- **TYPECHECKED** — `goose check` accepts the file (and its imports) with zero errors. This is a
+  real check by the real front end. It is **not** COMPILED: there is no object file, no link, no
+  binary, and nothing has executed. Do not read TYPECHECKED as "working".
+- Where a row said WRITTEN only because no toolchain existed, the honest word is now
+  **TYPECHECKED**, and the whole corpus is in that state at once — not file by file.
+- **COMPILED stays at zero rows.** No Goose program in this tree has been compiled to an object
+  file, linked, or run. Five rows (B-L1-73..77) are still the passes that need a driver or a kernel
+  runner.
+
+Three dialect facts worth knowing, because they cost the most errors and they are permanent:
+Goose has no `++`/`--`; parameters are immutable (`p.bytes = 0` in a parameter is a type error, so
+copy to a local first); and `T&` refuses an rvalue — `f(g())` is "cannot pass P as P&", so a
+temporary has to be versed into a local. The first two were mechanical. The third is why the test
+corpus carries `ref_*` and `want_*` locals: they are the versed temporaries, not leftover debris.
 
 Language grounding: `goose-mcp@1.1.0` (npm, publisher `mrfentmen`, MIT, bundled from
 `aardappel/goose` @ `b781587`) — 389 doc sections, 702 stdlib symbols, 57 keywords, 32 samples,
@@ -99,7 +127,7 @@ The rule used for every row, so a reader can audit the table instead of trusting
 | B-L1-059 | Test program: agent host lifecycle + grants (B-L1-39/40). | **WRITTEN** | library + service source; the mechanism's test program is in `tests/` | compilation and run |
 | B-L1-060 | Test program: audit write/read round trip (B-L1-41/42). | **WRITTEN** | library + service source; the mechanism's test program is in `tests/` | compilation and run |
 | B-L1-061 | README completion pass. | **WRITTEN** | library + service source; the mechanism's test program is in `tests/` | compilation and run |
-| B-L1-062 | Source audit pass. | **WRITTEN** | `os-build/layer1/source_audit.py` — 95 files, 0 findings today | compilation |
+| B-L1-062 | Source audit pass. | **TYPECHECKED** | `os-build/layer1/source_audit.py` — 107 files, 0 findings today | codegen, link, run |
 | B-L1-063 | Link map. | **WRITTEN** | `os-build/layer1/LINK_MAP.md` round 1 + round 2 | compilation |
 | B-L1-064 | Boot order. | **WRITTEN** | `BOOT_ORDER.md` + `services/supervisor/bootorder.goose` | compilation |
 | B-L1-065 | Failure plan. | **WRITTEN** | `FAILURE.md`, re-traced in `FAILURE_TRACE.md` | compilation |
@@ -112,9 +140,9 @@ The rule used for every row, so a reader can audit the table instead of trusting
 | B-L1-072 | Report + ready post. | **WRITTEN** | this file + the room-1 ready post | compilation |
 | B-L1-073 | Bind the packet interface | **NOT BUILT** | needs a Layer 3 packet driver (none in tree) | the binding itself |
 | B-L1-074 | Bind storage | **NOT BUILT** | needs a Layer 3 block driver (RAM backend is the placeholder) | the binding itself |
-| B-L1-075 | First COMPILED pass: | **NOT BUILT** | blocked: `goose__toolchain_status` = NOT FOUND on this machine | the whole compile |
-| B-L1-076 | First RUN pass: | **NOT BUILT** | blocked: no kernel above K1 — `kernel/src/main.rs` is the skeleton | every run |
-| B-L1-077 | Supervisor live pass: | **NOT BUILT** | blocked: no kernel — the supervisor has never started a service | every boot |
+| B-L1-075 | First COMPILED pass: | **TYPECHECKED** | `check_services.sh`: 31 programs, 0 errors — the front end accepts the whole corpus | no object file, no link, no binary: TYPECHECKED is not COMPILED |
+| B-L1-076 | First RUN pass: | **NOT BUILT** | blocked: K6 boots userspace on this Mac, but no service host exists in the kernel and no Goose program has been built to run there | every run |
+| B-L1-077 | Supervisor live pass: | **NOT BUILT** | blocked: the supervisor has never started a service; it needs a runner in the kernel and a built binary | every boot |
 | B-L1-078 | Layer 4 sign-off note. | **WRITTEN** | `SIGNOFF.md` | compilation |
 | B-L1-079 | FS design. | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
 | B-L1-080 | FS core. | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
@@ -173,7 +201,7 @@ The rule used for every row, so a reader can audit the table instead of trusting
 | B-L1-133 | Parser hardening: log records (B-L1-28). | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
 | B-L1-134 | Parser hardening: BootInfo block (B-L1-08). | **WRITTEN** | docs under `os-build/layer1/`, source under `services/`; audits clean | compilation and run |
 | B-L1-135 | Programmer's guide. | **WRITTEN** | `GUIDE.md` — 12 rules, each traced to a landed file | nothing mechanical — but also nothing executed |
-| B-L1-136 | Size audit. | **WRITTEN** | `size_audit.py` + `SIZE_AUDIT.md` — 384.7 KiB resident measured | nothing mechanical — but also nothing executed |
+| B-L1-136 | Size audit. | **TYPECHECKED** | `size_audit.py` — 372.7 KiB resident measured across 34 services | nothing mechanical — but also nothing executed |
 | B-L1-137 | Error registry final. | **WRITTEN** | `error_audit.py` + `ERROR_AUDIT.md` — 34 codes, 0 drift | nothing mechanical — but also nothing executed |
 | B-L1-138 | Link map round 2. | **WRITTEN** | `linkmap.py` — drift vs round 1 is measured, not remembered | nothing mechanical — but also nothing executed |
 | B-L1-139 | Boot order data test. | **WRITTEN** | `bootorder_check.py` — 22 services, dependencies proven, no cycles | nothing mechanical — but also nothing executed |
@@ -183,25 +211,37 @@ The rule used for every row, so a reader can audit the table instead of trusting
 | B-L1-143 | Gap library 5. | **WRITTEN** | `common/table` (no consumer yet) | compilation |
 | B-L1-144 | Gap library 6. | **WRITTEN** | `common/sort` (no consumer yet) | compilation |
 | B-L1-145 | Gap library 7. | **WRITTEN** | `common/pool` (no consumer yet) | compilation |
-| B-L1-146 | Source audit round 2. | **WRITTEN** | `source_audit.py` over all 95 files incl. Waves G–J: 0 findings | nothing mechanical — but also nothing executed |
+| B-L1-146 | Source audit round 2. | **TYPECHECKED** | `source_audit.py` over all 107 files incl. Waves G–J: 0 findings; `check_services.sh`: 0 errors | nothing mechanical — but also nothing executed |
 | B-L1-147 | Manifest + report refresh. | **WRITTEN** | this table, `MANIFEST.md`, `SCOREBOARD.md` cross-checked | nothing mechanical — but also nothing executed |
 | B-L1-148 | Final ready post. | **WRITTEN** | the room-1 post in `README-lane.md` queue / this file's tail | nothing mechanical — but also nothing executed |
 ## The gates, as they stand right now
 
-Seven mechanical checks over 95 Goose files. Each was run at the end of the build-out; the exit
-code is the one below, unedited.
+Eight checks over 107 Goose files. Each was run on this Mac after the correction above; the exit
+code and the numbers are the ones the tools printed, unedited.
 
 | Gate | Command | Exit | Result |
 |---|---|---|---|
-| Source audit | `python3 os-build/layer1/source_audit.py` | 0 | 95 files, 0 findings |
+| **Typecheck** | `os-build/layer1/check_services.sh` | 0 | **31 programs (6 roots + 25 tests), 0 errors, 0 failed** |
+| Source audit | `python3 os-build/layer1/source_audit.py` | 0 | 107 files, 0 findings |
 | Error registry | `python3 os-build/layer1/error_audit.py --unused` | 0 | 34 codes declared, 34 used, 0 undeclared |
 | Boot order | `python3 os-build/layer1/bootorder_check.py` | 0 | 22 services, deps proven, no cycle |
-| Link map | `python3 os-build/layer1/linkmap.py` | 0 | 26 services, 75 files, 46 service→service edges |
-| Size audit | `python3 os-build/layer1/size_audit.py` | 0 | 384.7 KiB resident, 0 unresolvable types |
+| Link map | `python3 os-build/layer1/linkmap.py` | 0 | 26 services, 52 distinct service→service edges |
+| Size audit | `python3 os-build/layer1/size_audit.py` | 0 | 372.7 KiB resident, 0 unresolvable types |
 | Parser hardening | `python3 services/tests/hostile/hostile_check.py` | 0 | 93 cases, 10 packs, 34 codes known |
 | Call matrix | `python3 os-build/layer1/callmatrix_audit.py` | 0 | 24 services, 0 missing permissions, 67 dormant (informational) |
 
-All seven are green, and the call matrix only went green after the permissions were added: three ids
+The typecheck gate is the one that changed this layer's status, and it needs its scope stated: it
+checks **per program**, because Goose resolves imports from the root file and a program may export
+`svc_entry` exactly once. So `root.goose` covers the 16 non-entry services and the 17 libraries, a
+`root_<svc>.goose` covers each of the six services that export an entry point (each `svc_entry` was
+moved to its own `entry.goose`, so importing a service's logic does not drag a second `main` in),
+and each test gets a generated one-line root. `source_audit.py` needed two fixes to stay honest
+alongside it: `recursive fn` is a definition (the JSON writer hides behind one) and a syscall
+`extern fn` is visible tree-wide (Goose's namespace is flat and imports are transitive, so a
+per-file extern set reported every `entry.goose` that calls `sys_ticks` as a defect — it reported 8
+before the fix, 0 after).
+
+All eight are green, and the call matrix only went green after the permissions were added: three ids
 appended (`fs` 22, `shell` 23, `example` 24) and twelve edges written into the table
 (`CALLMATRIX_DRIFT.md`, round 2). The auditor's own alias bug was fixed at the same time — the
 `log`/`logd` mapping was declared and never applied, which had made every edge to the log service
@@ -229,7 +269,7 @@ show up twice.
 4. **The boot table named the log service `log` while its directory and manifest say `logd`.**
    Found by `bootorder_check.py` on its first run; fixed in the name table, because that string
    ends up in log lines people grep.
-5. **One service holds 35.5% of this layer's static storage.** `display` is 136.6 KiB of 384.7 KiB
+5. **One service holds 36.6% of this layer's static storage.** `display` is 136.6 KiB of 372.7 KiB
    (four consoles × a 32 KiB history ring, exactly sized to the documented 256 × 128 contract). No
    silent cut made: the real lever is `VCON_MAX`, and that is a product decision. `SIZE_AUDIT.md`.
 6. **Four libraries nobody links.** `common/text`, `table`, `sort`, `pool` (B-L1-142..145) have no
@@ -265,12 +305,13 @@ Nothing left in this lane. B-L1-01 … 148 are all either done to WRITTEN or exp
 
 ## The room-1 post (B-L1-148)
 
-> **Layer 4 is ready for Pax to merge — at WRITTEN, not COMPILED, and the report says so on every
+> **Layer 4 is ready for Pax to merge — typechecked, not compiled, and the report says so on every
 > row.**
 >
-> `buffy/layer1-goose-services`, 148 tasks accounted for: 143 WRITTEN, 5 NOT BUILT (the compile,
-> run and boot passes — no toolchain, no kernel), 0 COMPILED. 95 Goose files across 27 services
-> and 17 `common` libraries. Seven mechanical gates, all green: the call matrix's last 12 missing
+> `buffy/layer1-goose-services`, 148 tasks accounted for: the corpus is **TYPECHECKED** (`goose
+> check`, 31 programs, 0 errors — it was 297 errors before this pass), 5 NOT BUILT (the run and
+> boot passes), 0 COMPILED. 107 Goose files across 27 services and 17 `common` libraries, 22,487
+> lines. Seven mechanical gates, all green: the call matrix's last 12 missing
 > edges are in, with ids appended for `fs`, `shell` and the template, and the auditor's own
 > `log`/`logd` alias bug fixed on the way (`CALLMATRIX_DRIFT.md`, round 2).
 >
