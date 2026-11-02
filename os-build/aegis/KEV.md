@@ -1,6 +1,6 @@
 # Aegis KEV cross-check — no exploited-in-the-wild findings
 
-Run `kev-2026-11-02T14-43-17-817Z`. Catalogue: 1766 entries, released 2026-10-30T17:02:45.3665Z, from https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json.
+Run `kev-2026-11-02T15-01-09-426Z`. Catalogue: 1766 entries, released 2026-10-30T17:02:45.3665Z, from https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json.
 
 | item | count |
 |---|---|

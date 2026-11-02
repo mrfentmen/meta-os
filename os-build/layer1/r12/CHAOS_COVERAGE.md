@@ -11,8 +11,8 @@ in `tests/agents-r11.test.mjs`; this file states which loops they actually cover
 | Hands-Free brief | `handsfree-brief` | PASS | runtime-tested | runtime-tested | n/a (single pass) |
 | Hands-Free approval | `handsfree-approval` | PASS | runtime-tested | runtime-tested | n/a (single pass) |
 | Cadence watch | `watch` (`agents/watchman.mjs --once`) | PASS | runtime-tested | runtime-tested | n/a (one drain) |
-
 | Imperium queue stack | `imperium-patrol` (`server/queue/hosted_imperium.py`) | PASS | n/a (one pass) | n/a (one pass) | n/a (one pass) |
+| Aegis unattended cycle | `aegis-cycle` (`aegis/cycle.mjs`) | PASS | runtime-tested | runtime-tested | n/a (sweep → KEV → ledger) |
 
 ## Named NOT COVERED
 
