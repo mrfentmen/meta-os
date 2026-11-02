@@ -1,0 +1,44 @@
+{
+ "frame": {
+  "camera_id": "88278063-8891-4144-9295-f5dc9a94d2ea",
+  "camera_name": "3 Ave @ 60 St",
+  "area": "Brooklyn",
+  "latitude": 40.642195,
+  "longitude": -74.020635,
+  "source": "NYC DOT public traffic camera",
+  "image_url": "https://webcams.nyctmc.org/api/cameras/88278063-8891-4144-9295-f5dc9a94d2ea/image",
+  "fetched_at": "2026-11-02T16:14:01.487448+00:00",
+  "image_sha256": "aef1cf8eaad71e6a089bc9db7a389afdaaaaf71c7ecab971b3188ff35f947b54",
+  "image_bytes": 16070,
+  "live": true
+ },
+ "reading": [
+  {
+   "product": "vigiles",
+   "timestamp": "2026-11-02T16:14:01.487448+00:00",
+   "observations": [
+    {
+     "category": "normal activity",
+     "description": "Roadway under elevated structure with parked vehicles on the right and no people or disturbance visible",
+     "evidence": "center and right side of frame showing street and parked cars under overpass",
+     "confidence": 0.8,
+     "region": null
+    }
+   ],
+   "assessment": {
+    "category": "normal activity",
+    "summary": "Street scene under elevated structure with vehicles present and no visible people, contact, or disturbance.",
+    "uncertainty": [
+     "Low resolution limits fine detail"
+    ],
+    "requires_human_review": false
+   },
+   "processing": {
+    "model": "muse-spark-1.3",
+    "latency_ms": null
+   }
+  },
+  "muse-spark-1.3",
+  13648
+ ]
+}

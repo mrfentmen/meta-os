@@ -143,3 +143,15 @@ one cycle; silence = proceed.
 
 - Updater was overwriting /opt/face with main on every tick (log: pull bee0e65->c0e981e), wiping unmerged deploys mid-session. /etc/metaos/STOP is now SET on the dev guest; shipped image (metaos-face.img f7d8581e) has no STOP. Full face tree redeployed + chromium profile wiped.
 - Dock-click misses were aim + the updater wipe, not product code: horizontal sweep opens windows first try after redeploy. Tab+Space keyboard activation also proven.
+
+## Carrier toolchain rebuild (OC1B §12, 2026-11-02) — recipe ships the toolchain
+
+Recipe: os-build/face/build-image.sh (+ new os-build/face/provision-toolchain.sh).
+Pins: opencode 2.2.0 (v2 installer), node/git/chromium via Debian bookworm apt,
+freebuff@0.2.35 via npm. Guest CPU `-cpu max` (Bun runtime needs AVX2 under TCG).
+- Before: stock image f7d8581e (448,790,736 B); toolchain live-installed only.
+- After: /tmp/oc1b-carrier3 image fe039dda (4,211,802,112 B) with opencode 2.2.0,
+  node v18.20.4, git 2.39.5, chromium 156.0.8078.73, freebuff 0.2.35 — all
+  proven in-guest (OC1B-carrier-checks.md). Manifest + JOIN: carrier-image.manifest.json,
+  CARRIER_JOIN.md. Checks 1-2 PASS; 3-4 + kiosk FAILED/NOT PRESENT (no /opt/face
+  in recipe output — toolchain image, not face image); hardware UNPROVEN.

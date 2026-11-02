@@ -1,0 +1,33 @@
+{
+ "manifest": "carrier-image",
+ "title": "Carrier image sha256 manifest (OC1B §12, single part)",
+ "image": {
+  "path_build_local": "/tmp/oc1b-carrier3/metaos-face.img",
+  "note": "Image parts NEVER enter git; this manifest is the record.",
+  "size_bytes": 4211802112,
+  "virtual": "13 GiB qcow2",
+  "sha256": "fe039dda564774752bf6c721a712a16940d316329666bfde95bda26f403d3e4f",
+  "base": {
+   "file": "debian-12-generic-amd64.qcow2",
+   "size_bytes": 448790528,
+   "source": "https://cloud.debian.org/images/cloud/bookworm/latest/debian-12-generic-amd64.qcow2"
+  }
+ },
+ "toolchain": {
+  "opencode": "2.2.0 (v2 installer --version pin, /usr/local/bin/opencode)",
+  "node": "v18.20.4 (Debian bookworm apt)",
+  "npm": "9.2.0 (Debian bookworm apt)",
+  "git": "2.39.5 (Debian bookworm apt)",
+  "chromium": "156.0.8078.73 (Debian bookworm apt)",
+  "freebuff": "0.2.35 (npm i -g freebuff@0.2.35, runs in guest)"
+ },
+ "built_from": {
+  "repo": "mrfentmen/meta-os",
+  "branch": "opencode/500-s11",
+  "recipe": "os-build/face/build-image.sh + os-build/face/provision-toolchain.sh",
+  "date": "2026-11-02",
+  "guest_cpu": "-cpu max (TCG arm64 host; Bun runtime needs x86-64-v3/AVX2)",
+  "method": "base copy -> NoCloud seed (build-local key) -> provision boot (apt+installer) -> poweroff -> check boot"
+ },
+ "verify": "shasum -a 256 <image> must equal the sha256 above (as-checked state; guest writes append on boot)"
+}

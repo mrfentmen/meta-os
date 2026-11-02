@@ -1,0 +1,56 @@
+# OC1B carrier build log tail (task 281; full apt chatter trimmed)
+
+== recipe run 3 (definitive; /tmp/oc1b-carrier3; final scripts) ==
+base copy: debian-12-generic-amd64.qcow2 448790528 bytes (cached; recipe downloads only when absent)
+seed: build-local face-key generated, NoCloud metaos-carrier-oc1b
+provision boot: -cpu max, SSH up after cloud-init; provision-toolchain.sh (OPENCODE_VERSION=2.2.0)
+
+== provision-final.log (final script, idempotent re-run, rc=0) ==
+[0m
+[0;2mInstalling [0mopencode [0;2mversion: [0m2.2.0[0m
+#=#=#                                                                         ##O#-#                         
+
+[0;2m                    [0m             ▄     
+[0;2m█▀▀█ █▀▀█ █▀▀█ █▀▀▄ [0m█▀▀▀ █▀▀█ █▀▀█ █▀▀█
+[0;2m█░░█ █░░█ █▀▀▀ █░░█ [0m█░░░ █░░█ █░░█ █▀▀▀
+[0;2m▀▀▀▀ █▀▀▀ ▀▀▀▀ ▀  ▀ [0m▀▀▀▀ ▀▀▀▀ ▀▀▀▀ ▀▀▀▀
+
+
+[0;2mOpenCode includes free models, to start:[0m
+
+cd <project>  [0;2m# Open directory[0m
+opencode      [0;2m# Run command[0m
+
+[0;2mFor more information visit [0mhttps://opencode.ai/v2/docs
+
+
+/usr/local/bin/opencode
+provision: versions
+opencode v2.2.0
+v18.20.4
+git version 2.39.5
+Chromium 156.0.8078.73 built on Debian GNU/Linux 12 (bookworm)
+provision: freebuff attempt (freebuff@0.2.35)
+
+changed 7 packages in 5s
+provision: freebuff installed
+0.2.35
+provision: done
+
+== provision.log tail (first full provision; apt+chromium+installer evidence) ==
+
+[0;2mOpenCode includes free models, to start:[0m
+
+cd <project>  [0;2m# Open directory[0m
+opencode      [0;2m# Run command[0m
+
+[0;2mFor more information visit [0mhttps://opencode.ai/v2/docs
+
+
+/usr/local/bin/opencode
+provision: versions
+/tmp/provision-toolchain.sh: line 27:  9329 Illegal instruction     opencode --version
+
+== image hashes ==
+post-provision (pre-check-boot): f01e2611a144c72cfe5afa97d59118a4a0f6b1b3e55734423498ffad7c77d04c
+as-checked (post check boot): fe039dda564774752bf6c721a712a16940d316329666bfde95bda26f403d3e4f size 4211802112
