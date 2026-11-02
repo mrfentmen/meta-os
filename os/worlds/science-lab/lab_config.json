@@ -1,0 +1,12 @@
+{
+  "endpoint": "file://local - Muse Spark endpoint via helper, key on Mac line1 only",
+  "agents": {
+    "default": {"maxCalls": 50, "maxSpend": 5.0},
+    "research-director": {"maxCalls": 100, "maxSpend": 10.0},
+    "literature-researcher": {"maxCalls": 50, "maxSpend": 5.0},
+    "hypothesis-generator": {"maxCalls": 50, "maxSpend": 5.0},
+    "computational-scientist": {"maxCalls": 50, "maxSpend": 5.0},
+    "independent-verifier": {"maxCalls": 50, "maxSpend": 5.0}
+  },
+  "cycle": {"maxActions": 200}
+}
