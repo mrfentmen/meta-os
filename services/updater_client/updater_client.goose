@@ -122,6 +122,11 @@ fn uc_busy() -> bool {
 // limited", which reads as "we will try again shortly" and is the wrong message.
 // A STOP refusal does not advance the rate clock: when the file is removed, the
 // window that was already running still applies.
+//
+// A STOP that arrives while an update is already OFFERED cancels the offer. The file is
+// read between the offer and the apply, so "checked first" is not enough on its own:
+// an offer left on the table is an apply waiting to happen, and apply takes no STOP
+// argument. Cancelling here is what makes the rule true for the whole window.
 fn uc_check(stop_present: bool, version: i64, digest_ok: bool, signature_ok: bool, now_ms: i64) -> i64 {
     if uc_busy() { return E_STATE; }
     if version < 0 { return E_INVAL; }
@@ -131,6 +136,12 @@ fn uc_check(stop_present: bool, version: i64, digest_ok: bool, signature_ok: boo
     if stop_present {
         uc_stop_refusals = uc_stop_refusals + 1;
         uc_last_code = UC_REFUSED_STOP;
+        // An offer made before the STOP appeared is withdrawn with it. Nothing is
+        // applied and nothing is claimed: the version was never installed.
+        if uc_state == UC_S_AVAILABLE {
+            uc_state = UC_S_IDLE;
+            uc_available = 0;
+        }
         return UC_REFUSED_STOP;
     }
 

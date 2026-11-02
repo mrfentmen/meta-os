@@ -1,5 +1,7 @@
 # Round 7 — the face layer, the supervisor under load, and the counts made honest
 
+> Counts in this file are as of the round it records. Live numbers: `COUNTS.md`.
+
 Branch `buffy/layer1-goose-services`, 2026-11-02. This is the report of what this round
 changed and what it still cannot claim. The live numbers are in `COUNTS.md`; the submission
 page is `SERVICES_FINAL.md`; neither is quoted from memory here.

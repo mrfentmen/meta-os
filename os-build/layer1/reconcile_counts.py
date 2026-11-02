@@ -34,6 +34,10 @@ HISTORICAL = {
     "ROUND6.md", "SIGNOFF.md", "GATE_RERUN.md", "FINISH_STATE.md", "FINISH_STATUS.md",
     "BUFFY_REPORT.md", "RECONCILE_DEMO_FACTS.md", "FREEZE_AUDIT.md", "SERVICES_SCOPE.md",
     "BOOT_PLAN.md", "LOAD_ORDER_1102.md", "KERNEL_NEEDS_AFTER.md",
+    # R7 is a round report: the driver count it quotes was true when it was written, and
+    # t94 has since added one. Rewriting the record would destroy it; the banner is what
+    # keeps a reader from quoting the old number as the live one.
+    "ROUND7.md",
 }
 
 

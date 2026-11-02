@@ -79,6 +79,26 @@ Two of these found defects on their first run: the board parser read `P,<id>,…
 off, and the six new services were outside the manifest, the boot table and the matrix at
 once. Both are recorded in `SERVICES_FINAL.md`'s defect list.
 
+## The face layer's quiet failures, added with `t94`
+
+`t93` walks the happy path through all six face services. `t94_face_failures` (88 checks)
+drives the failure each one would fail *silently* with, and asserts the state did not move
+after the refusal, because a refusal that leaves half of something behind is the defect and
+not the refusal.
+
+| service | failure driven | result |
+|---|---|---|
+| `settings` | an import valid up to its last line and corrupt in it; an out-of-range value mid-file; a blank line; a 32-byte hostname; a hostname with a space | Nothing applied. The staging copy is committed only after the whole blob validates, so the wallpaper and hostname before the bad line survive. |
+| `wallpaper` | ninth registration, 20-byte name, fps 0 and 61, duplicate name, select of an id the registry does not have | Refuses at `WL_MAX` without consuming an id; a select the registry cannot honour leaves the previous wallpaper current, so the screen is never blank. |
+| `settings` → `wallpaper` | an index inside the store's range and inside the registry ceiling that this registry has no entry for | `E_NOTFOUND`, last good wallpaper still current. The store cannot validate against a registry it does not own, so the check belongs at the select. |
+| `dock` | a result for a launch nobody requested, an id that does not exist, thirteenth pin, duplicate and 16-byte names, a restart | `E_STATE` on the unmatched result and the app does not start; `E_NO_SPACE` at `DK_MAX`; a restart empties the dock and ids restart at 1, which is why a result must be matched to a request and not to a number. |
+| `dashboard` | 140% CPU, negative byte rate, kind 5, zero and 60001 ms windows, a sample stamped in the past, a producer restart, a read on a backwards clock | Refused with `E_INVAL` / `E_STATE`; the refused sample never lands; age floors at 0 so no frame can look fresh from the future; a restart leaves all four metrics `DF_NEVER`. |
+| `board` | an unknown record kind (the format has no version byte, so another build's file shows up as a kind this one does not know), a post in a room the file does not define, a post with no text field, fifth room | `E_CORRUPT` / `E_NO_SPACE` and the live board is byte-for-byte what it was; the id counter does not move. |
+| `updater_client` | a STOP file that appears **after** the update was offered, a re-check 1 ms inside the 60 s window, a backwards clock | **A defect.** STOP was consulted on `uc_check` only, so an offer made before the stop could still be applied — `uc_apply` takes no STOP argument and the state stayed `AVAILABLE`. Fixed: a STOP check now withdraws the offer, and `uc_apply` afterwards is `E_STATE`. The rate window is unchanged. |
+
+The STOP defect is the one worth reading twice: every rule in that file was true at the
+moment it was written and false one call later. The test is what made the window visible.
+
 ## What is still unexercised, named
 
 - ~~**`session`** has a driver but no *second* path~~ — **closed in R7**: `t84_session_deep`
@@ -100,7 +120,8 @@ once. Both are recorded in `SERVICES_FINAL.md`'s defect list.
 ## How to reproduce
 
 ```sh
-./os-build/layer1/run_native.sh t74_failure t52_supervisor t58_updater t65_fs t67_net t77_gaps
+./os-build/layer1/run_native.sh t74_failure t52_supervisor t58_updater t65_fs t67_net t77_gaps \
+                               t93_face_walkthrough t94_face_failures
 ./os-build/layer1/boot_rehearsal.sh 5
 ```
 
