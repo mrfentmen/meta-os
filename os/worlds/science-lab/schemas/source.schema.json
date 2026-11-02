@@ -1,0 +1,54 @@
+{
+  "$id": "science-lab/source.schema.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Source record for Research Intelligence (Section 2, tasks 11-13, 16). Filed by the literature-researcher job (see agents/literature-researcher.md and literature.py). A search result is a lead, never evidence: only a retrieved ORIGINAL source with a locator and a content hash is a source record. Each record carries the one-line claim it supports (supports_claim) so the brief assembler can pin claims to sources; unpinned claims are dropped, never filed. stance marks whether the source supports or disputes supports_claim and feeds the contradiction check (mark_contested): opposing stances on the same claim mark it contested, never silently resolved. Model-written synthesis is UNIMPLEMENTED here; briefs are assembled deterministically from these records.",
+  "type": "object",
+  "required": ["id", "citation", "retrieved_at", "access_note", "supports_claim", "locator", "content_hash"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable source identifier within the lab, e.g. SRC-001. Claims cite this id to pin themselves to the record."
+    },
+    "citation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Full bibliographic citation: authors, year, title, venue/container, persistent identifier (DOI/URL) where one exists."
+    },
+    "retrieved_at": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Retrieval date of the original source, ISO-8601 (YYYY-MM-DD or full timestamp). When the source was actually fetched, not when it was published."
+    },
+    "access_note": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Licence / access note: licence terms (e.g. CC-BY, closed), access path (open-access, institutional, paywalled method), and any reuse constraint. A paywalled method is stated here, never hidden."
+    },
+    "supports_claim": {
+      "type": "string",
+      "minLength": 1,
+      "description": "One-line claim this source actually shows, stated as what the source demonstrates (not as established fact). The brief assembler pins brief claims against this line."
+    },
+    "locator": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Locator inside the source: DOI, dataset row range, section/passage reference. A finding whose trail does not end at a locator is unfounded."
+    },
+    "content_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$",
+      "description": "SHA-256 hex digest (64 hex chars) of the retrieved original content. The hash is what makes the source checkable; a search result has no hash and stays a lead."
+    },
+    "stance": {
+      "type": "string",
+      "enum": ["supports", "disputes"],
+      "default": "supports",
+      "description": "Stance of this source toward supports_claim: 'supports' (default) or 'disputes'. Two sources with opposing stances on the same claim line mark the claim contested (literature.mark_contested); the conflict is flagged, never silently resolved."
+    },
+    "title": {
+      "type": "string",
+      "description": "Optional short title of the source for brief display. The citation remains the authoritative reference."
+    }
+  }
+}

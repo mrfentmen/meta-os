@@ -29,3 +29,16 @@ Tests (task 10):
 Still UNIMPLEMENTED (Sections 2-10 queued, in order): Research Intelligence jobs, Reasoning chain jobs, Computational Lab runners, Discovery cycle driver, Verification isolation + Repository, Hortus variant integration, MCP gateway, OS outputs (export/session/archive/board), demo cycle + truth pass. No cycle run filed yet; `records/` holds only .gitkeeps.
 
 Next: Section 2 — Research Intelligence (11–20), in order.
+
+## Section 2 — Research Intelligence (11–20) — LANDED 2026-11-02
+
+- 11/13/16: `literature.py` literature_search (deterministic local only, no network; search_remote/synthesize_with_model UNIMPLEMENTED), assemble_brief (unpinned dropped + ledger `brief-claim-dropped`, phantom citations warned), mark_contested (supports+disputes -> contested, never resolved silently)
+- 12: `schemas/source.schema.json` (citation, retrieved_at, access_note, supports_claim, locator+content_hash, stance supports/disputes)
+- 14: `reproduction_target.json` via find_prior_result() — Delaney 2004 ESOL, 1128 rows sha256 8c06a76f… verified live, qualifies (inputs available / checkable / no paywall on method), target numbers TO_BE_READ_AT_RUN, gate NOT attempted
+- 15: `shelves/` biology/chemistry/physics_math/materials (4 seeds each, only DOI asserted 10.1021/ci034243x, rest plain URLs)
+- 17: check_source_budget (caps from lab_config, receipt on stop under records/literature/)
+- 18: status_record + file_status_record (sources_read, pinned/dropped/contested + counts)
+- 20: `records/examples/research_intelligence_example.json` (Q: Delaney reported RMSE? 3 pinned, 1 dropped TO_BE_READ_AT_RUN, contested [] honest, ledger 2 entries verified, at most L1)
+- 19 tests: test_section2a 26 OK (unpinned dropped, contested marked) + test_section2b 6 OK (budget stop, status counts, target, example honesty)
+- Full suite: 68 tests OK (`discover -s tests/science-lab`); hortus 9 OK; registry loads
+- UNIMPLEMENTED carried: remote adapters (openalex/archive-org/etc), model judgement calls, live paper extraction (run-time per SLICE1 §4)
