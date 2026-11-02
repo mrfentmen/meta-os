@@ -1,0 +1,4 @@
+Meta OS face image parts (built 2026-11-02 via os-build/face/build-image.sh).
+Reassemble: cat metaos-face.img.part-* > metaos-face.img
+Verify: shasum -a 256 metaos-face.img  (expect f7d8581e...)
+Boot: qemu-system-x86_64 -m 2048 -drive file=metaos-face.img,format=qcow2 -cdrom seed.iso -serial file:boot.txt -display none

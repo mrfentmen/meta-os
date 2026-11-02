@@ -1,0 +1,13 @@
+== patrol -> review -> investigation -> response ==
+outcome: dispatched-simulated
+incident_id: incident-725c546b990dd1b4
+incidents recorded: 1
+incident status: dispatched-simulated
+timeline steps: flag,decision,review,reported,decision,investigation,evidence,investigation,evidence,investigation,evidence,investigation,evidence,investigation,evidence,decision,brief,bolo,dispatch
+package dispatch_mode: judge-confirmed
+package human_verify: True
+package simulated: True
+picture.frame: evidence/incident-725c546b990dd1b4/flag-frame-cam-c-ed9e92.jpg
+picture.evidence_crop: None
+receipt_id: sim-5f894be30820178f
+FACE-45 MEDICUS LOOP GREEN: dispatched-simulated with picture

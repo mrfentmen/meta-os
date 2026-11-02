@@ -2,6 +2,7 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
+<link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meta OS</title>
 <style>
@@ -20,14 +21,27 @@
   html[data-theme="light"] .window { background: #fff; color: #111; border-color: #ccc; }
   .window .titlebar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #222; border-radius: 8px 8px 0 0; cursor: move; user-select: none; }
   html[data-theme="light"] .window .titlebar { background: #eee; }
-  .window .titlebar .close { margin-left: auto; cursor: pointer; border: none; background: #c00; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 1; }
+  .window .titlebar .min { margin-left: auto; cursor: pointer; border: none; background: #888; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; line-height: 1; }
+  .window .titlebar .close { margin-left: 0; }
+  .window .titlebar .close { cursor: pointer; border: none; background: #c00; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 1; }
   .window iframe { flex: 1; border: none; border-radius: 0 0 8px 8px; min-height: 300px; background: #fff; }
-  .window .term { flex: 1; min-height: 300px; padding: 8px; font: 13px/1.4 monospace; white-space: pre-wrap; overflow: auto; }
+  .window .term { flex: 1; min-height: 300px; padding: 0; font: 13px/1.4 monospace; display: flex; flex-direction: column; overflow: hidden; }
+  .window .term-status { padding: 6px 8px; font-size: 12px; background: #1a2340; color: #cfe0ff; border-bottom: 1px solid #444; white-space: pre-wrap; }
+  html[data-theme="light"] .window .term-status { background: #dde8ff; color: #123; }
+  .window .term-status .clr { float: right; cursor: pointer; border: 1px solid #888; background: transparent; color: inherit; border-radius: 6px; font-size: 11px; padding: 1px 8px; }
+  .window .term-out { flex: 1; padding: 8px; white-space: pre-wrap; overflow-y: auto; user-select: text; min-height: 220px; }
+  .window .term-hint { padding: 4px 8px; font-size: 11px; opacity: .7; }
   #dock { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 8px 12px; background: color-mix(in srgb, var(--bar) 75%, transparent); border: 1px solid #555; border-radius: 14px; z-index: 50; }
   #dock button { width: 44px; height: 44px; font-size: 22px; border: 1px solid transparent; background: transparent; border-radius: 10px; cursor: pointer; }
   #dock button:hover, #dock button:focus { border-color: var(--accent); }
   #dock button.running::after { content: ""; display: block; width: 4px; height: 4px; border-radius: 50%; background: var(--fg); margin: 1px auto 0; }
   #dock .sep { width: 1px; background: #555; margin: 6px 2px; }
+  .window.snapped-left { top: 0 !important; left: 0 !important; }
+  .window.snapped-right { top: 0 !important; }
+  #ctxmenu { position: fixed; z-index: 100; background: var(--bar); color: var(--fg); border: 1px solid #555; border-radius: 10px; padding: 6px; min-width: 220px; display: none; }
+  #ctxmenu button { display: block; width: 100%; text-align: left; background: transparent; color: inherit; border: none; padding: 8px 10px; font-size: 13px; cursor: pointer; border-radius: 6px; }
+  #ctxmenu button:hover { background: rgba(127,127,127,.25); }
+  #theme-toggle { cursor: pointer; }
 </style>
 </head>
 <body data-product="vigiles">
@@ -35,11 +49,21 @@
 <div id="topbar">
   <span class="ribbon-mark">&#8734;</span>
   <span id="app-name">Finder</span>
+  <input id="shell-search" type="search" placeholder="Search Files Notes apps (Ctrl+K)" aria-label="Search" autocomplete="off">
+  <div id="search-results" hidden></div>
+  <div id="ws-bar" role="tablist" aria-label="Workspaces"></div>
   <span id="clock">--:--</span>
+  <span id="theme-toggle" title="Toggle light/dark" role="button" tabindex="0">&#9681;</span>
+  <span id="lock-btn" title="Lock screen" role="button" tabindex="0" style="cursor:pointer">&#128274;</span>
   <span class="icons"><span id="net">NET</span><span id="bat">BAT</span><span id="snd">SND</span></span>
 </div>
 <div id="desktop"></div>
 <div id="dock" role="toolbar" aria-label="Dock"></div>
+<div id="ctxmenu" role="menu">
+  <button data-act="wallpaper">Next wallpaper</button>
+  <button data-act="bgcolor">Next background colour</button>
+  <button data-act="settings">Open Settings</button>
+</div>
 <script src="vendor-logo-background.js"></script>
 <script>
 "use strict";
@@ -47,26 +71,80 @@
    entry opens something real: repo pages in windows, or a backend
    launch (launcher.py) for real Linux apps behind the browser. */
 const APPS = [
-  { id: "chrome",   icon: "C", name: "Chrome",    kind: "url", target: "surfaces.html" },
+  { id: "chrome",   icon: "C", name: "Chrome",    kind: "url", target: "https://meta-os.pages.dev" },
   { id: "terminal", icon: "T", name: "Terminal",  kind: "term" },
-  { id: "files",    icon: "F", name: "Files", kind: "launch", target: "pcmanfm" },
+  { id: "files",    icon: "F", name: "Files", kind: "url", target: "files.html" },
   { id: "dash",     icon: "D", name: "Dashboard", kind: "url", target: "dashboard.html" },
-  { id: "editor",   icon: "E", name: "Code Editor", kind: "launch", target: "mousepad" },
+  { id: "editor",   icon: "E", name: "Code Editor", kind: "url", target: "editor.html" },
   { id: "notes",    icon: "N", name: "Notes", kind: "url", target: "notes.html" },
-  { id: "calendar", icon: "C", name: "Calendar", kind: "launch", target: "orage" },
-  { id: "calc",     icon: "=", name: "Calculator", kind: "launch", target: "galculator" },
+  { id: "board",    icon: "B", name: "Board", kind: "url", target: "board.html" },
+  { id: "calendar", icon: "C", name: "Calendar", kind: "url", target: "calendar.html" },
+  { id: "calc",     icon: "=", name: "Calculator", kind: "url", target: "calculator.html" },
   { id: "settings",icon: "S", name: "Settings",  kind: "url", target: "settings.html" },
   { id: "trash",    icon: "X", name: "Trash", kind: "url", target: "trash.html" },
   { sep: true },
-  { id: "imperium", icon: "S", name: "Imperium", kind: "url", target: "surfaces.html" },
-  { id: "science",  icon: "F", name: "Science Lab", kind: "url", target: "index.html" },
-  { id: "musica",   icon: "M", name: "Musica", kind: "url", target: "logo-studio.html" },
-  { id: "custos",   icon: "E", name: "Custos", kind: "url", target: "surfaces.html" },
-  { id: "officina", icon: "G", name: "Officina", kind: "url", target: "index.html" },
+  { id: "imperium", icon: "S", name: "Imperium", kind: "url", target: "http://127.0.0.1:18934/surfaces.html" },
+  { id: "science",  icon: "F", name: "Science Lab", kind: "url", target: "http://127.0.0.1:18934/labs/molecules/index.html" },
+  { id: "musica",   icon: "M", name: "Musica", kind: "url", target: "musica.html" },
+  { id: "custos",   icon: "E", name: "Custos", kind: "url", target: "http://127.0.0.1:18934/surfaces.html#board-custos" },
+  { id: "officina", icon: "G", name: "Officina", kind: "url", target: "http://127.0.0.1:18934/index.html" },
 ];
 const desktop = document.getElementById("desktop");
 const dock = document.getElementById("dock");
 let zTop = 20;
+const winsByApp = {};
+/* Theme + bar colour from Settings (localStorage), live. */
+function applyTheme() {
+  let t = "dark";
+  try { t = window.localStorage.getItem("metaos-theme") || "dark"; } catch (e) {}
+  document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
+}
+function applyBar() {
+  let b = "black";
+  try { b = window.localStorage.getItem("metaos-bar") || "black"; } catch (e) {}
+  const bar = document.getElementById("topbar");
+  const dark = document.documentElement.getAttribute("data-theme") !== "light";
+  if (b === "white") { bar.style.background = "#fff"; bar.style.color = "#000"; }
+  else if (b === "blue") { bar.style.background = "#1a3faa"; bar.style.color = "#fff"; }
+  else { bar.style.background = dark ? "#000" : "#fff"; bar.style.color = dark ? "#fff" : "#000"; }
+}
+applyTheme(); applyBar();
+/* Wallpaper from picker/Settings (localStorage), live. All eleven stay in
+   the blue/white/black discipline (vigiles palette); they differ by
+   backdrop tint. Explicit metaos-bg from Settings wins. */
+const WALLPAPERS = {
+  "ribbon-blue": "#020814", "ribbon-dark": "#000000",
+  "ribbon-light": "#eaf2ff", "comet-dense": "#0a1f3d",
+  "wave-slow": "#101010", "ribbon-frost": "#e8f0fd",
+  "ribbon-midnight": "#030712", "ribbon-ghost": "#141414",
+  "comet-sparse": "#0a2548", "comet-pale": "#f2f7ff",
+  "wave-fast": "#0d1b3e",
+};
+function applyWallpaper() {
+  let id = "ribbon-blue";
+  try { id = window.localStorage.getItem("metaos-wallpaper") || "ribbon-blue"; } catch (e) {}
+  if (!WALLPAPERS[id]) id = "ribbon-blue";
+  document.body.dataset.product = "vigiles";
+  let bg = WALLPAPERS[id];
+  try { bg = window.localStorage.getItem("metaos-bg") || bg; } catch (e) {}
+  document.getElementById("logo-background").style.background = bg;
+}
+applyWallpaper();
+window.addEventListener("storage", (e) => {
+  if (e.key === "metaos-wallpaper" || e.key === "metaos-bg") applyWallpaper();
+  if (e.key === "metaos-theme") { applyTheme(); applyBar(); }
+  if (e.key === "metaos-bar") applyBar();
+});
+
+document.getElementById("lock-btn").addEventListener("click", () => { window.location.href = "lock.html"; });
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  let t = "dark";
+  try {
+    t = window.localStorage.getItem("metaos-theme") === "light" ? "dark" : "light";
+    window.localStorage.setItem("metaos-theme", t);
+  } catch (e) {}
+  applyTheme(); applyBar();
+});
 function setClock() {
   const d = new Date();
   const el = document.getElementById("clock");
@@ -81,10 +159,106 @@ async function launchBackend(target) {
     return r.ok;
   } catch (e) { return false; }
 }
+/* Real terminal: WebSocket to ptyd.py ws bridge (127.0.0.1:18933).
+   Status bar shows live facts (same source as Dashboard); below is the
+   live bash session. Scrollback 2000 lines, clear button, copy via
+   selection, paste via Ctrl+Shift+V or paste event. */
+function factsHost() {
+  try { if (location.hostname) return location.hostname; } catch (e) {}
+  return "127.0.0.1";
+}
+function buildTerminal(w) {
+  const box = document.createElement("div");
+  box.className = "term";
+  const st = document.createElement("div");
+  st.className = "term-status";
+  const clr = document.createElement("button");
+  clr.className = "clr"; clr.textContent = "clear";
+  clr.onclick = (ev) => { ev.stopPropagation(); out.textContent = ""; };
+  st.appendChild(clr);
+  const span = document.createElement("span");
+  span.textContent = "Meta OS status: loading\u2026";
+  st.appendChild(span);
+  box.appendChild(st);
+  const out = document.createElement("div");
+  out.className = "term-out";
+  out.tabIndex = 0;
+  out.textContent = "connecting to shell\u2026\r\n";
+  box.appendChild(out);
+  const hint = document.createElement("div");
+  hint.className = "term-hint";
+  hint.textContent = "real bash on this machine via ptyd :18933 (ws). select to copy, ctrl+shift+V to paste.";
+  box.appendChild(hint);
+  const factsURL = "http://" + factsHost() + ":18932/facts";
+  async function pollFacts() {
+    try {
+      const r = await fetch(factsURL);
+      const f = await r.json();
+      span.textContent = "Meta OS status \u2014 cpu " + f.cpu + " \u00b7 mem " + f.mem + " \u00b7 disk " + f.disk + " \u00b7 net " + f.net;
+    } catch (e) { span.textContent = "Meta OS status \u2014 facts unreachable (is facts.py running?)"; }
+  }
+  pollFacts(); const poller = setInterval(pollFacts, 2000);
+  let ws = null;
+  function appendText(txt) {
+    // handle clear-screen + strip colour codes, keep it readable
+    if (txt.indexOf("\u001b[2J") !== -1 || txt.indexOf("\u000c") !== -1) { out.textContent = ""; }
+    txt = txt.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, "");
+    txt = txt.replace(/\u001b[()][0-9A-B]/g, "");
+    txt = txt.replace(/\r(?!\n)/g, "\n");
+    out.textContent += txt;
+    const lines = out.textContent.split("\n");
+    if (lines.length > 2000) out.textContent = lines.slice(lines.length - 2000).join("\n");
+    out.scrollTop = out.scrollHeight;
+  }
+  function connect() {
+    try { ws = new WebSocket("ws://" + factsHost() + ":18933/"); }
+    catch (e) { out.textContent += "\r\n[no websocket support]\r\n"; return; }
+    ws.binaryType = "arraybuffer";
+    ws.onopen = () => { out.textContent += "[connected]\r\n"; out.focus(); };
+    ws.onmessage = (ev) => {
+      let data = ev.data;
+      if (typeof data !== "string") { try { data = new TextDecoder().decode(data); } catch (e) { data = ""; } }
+      appendText(data);
+    };
+    ws.onclose = () => { out.textContent += "\r\n[disconnected \u2014 click to reconnect]\r\n"; };
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  }
+  connect();
+  out.addEventListener("click", () => { if (!ws || ws.readyState > 1) { out.textContent += "[reconnecting\u2026]\r\n"; connect(); } out.focus(); });
+  out.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === "C" || e.key === "c")) return; // native copy
+    if (e.ctrlKey && e.shiftKey && (e.key === "V" || e.key === "v")) return; // paste via event below
+    if (!ws || ws.readyState !== 1) return;
+    let seq = null;
+    if (e.key === "Enter") seq = "\r";
+    else if (e.key === "Backspace") seq = "\x7f";
+    else if (e.key === "Tab") seq = "\t";
+    else if (e.key === "Escape") seq = "\x1b";
+    else if (e.key === "ArrowUp") seq = "\x1b[A";
+    else if (e.key === "ArrowDown") seq = "\x1b[B";
+    else if (e.key === "ArrowRight") seq = "\x1b[C";
+    else if (e.key === "ArrowLeft") seq = "\x1b[D";
+    else if (e.ctrlKey && e.key.length === 1) seq = String.fromCharCode(e.key.toUpperCase().charCodeAt(0) - 64);
+    else if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) seq = e.key;
+    if (seq !== null) { ws.send(seq); e.preventDefault(); }
+  });
+  out.addEventListener("paste", (e) => {
+    try {
+      const txt = (e.clipboardData || window.clipboardData).getData("text");
+      if (txt && ws && ws.readyState === 1) ws.send(txt);
+      e.preventDefault();
+    } catch (err) {}
+  });
+  // stop facts polling when the window closes
+  const gc = setInterval(() => { if (!box.isConnected) { clearInterval(poller); clearInterval(gc); } }, 5000);
+  setTimeout(() => out.focus(), 50);
+  return box;
+}
 function openWindow(app) {
   document.getElementById("app-name").textContent = app.name;
   const w = document.createElement("div");
   w.className = "window";
+  w.dataset.app = app.id;
   w.style.left = (40 + Math.random() * 200) + "px";
   w.style.top = (20 + Math.random() * 120) + "px";
   w.style.width = "560px";
@@ -93,10 +267,15 @@ function openWindow(app) {
   bar.className = "titlebar";
   bar.innerHTML = "<span></span>";
   bar.firstChild.textContent = app.name;
+  const min = document.createElement("button");
+  min.className = "min"; min.textContent = "\u2013";
+  min.setAttribute("aria-label", "Minimise " + app.name);
+  min.onclick = (ev) => { ev.stopPropagation(); minimizeWindow(w); };
+  bar.appendChild(min);
   const close = document.createElement("button");
   close.className = "close"; close.textContent = "x";
   close.setAttribute("aria-label", "Close " + app.name);
-  close.onclick = () => { w.remove(); markRunning(app.id, false); };
+  close.onclick = () => { unregisterWin(app.id, w); w.remove(); refreshRunning(app.id); };
   bar.appendChild(close);
   w.appendChild(bar);
   if (app.kind === "url") {
@@ -105,17 +284,7 @@ function openWindow(app) {
     f.title = app.name;
     w.appendChild(f);
   } else if (app.kind === "term") {
-    const t = document.createElement("div");
-    t.className = "term";
-    t.textContent = "Meta OS shell — relay@metaos\n$ ";
-    t.tabIndex = 0;
-    t.addEventListener("keydown", (e) => {
-      if (e.key.length === 1) { t.textContent += e.key; e.preventDefault(); }
-      else if (e.key === "Enter") { t.textContent += "\n$ "; e.preventDefault(); }
-      else if (e.key === "Backspace") { t.textContent = t.textContent.slice(0, -1); e.preventDefault(); }
-    });
-    w.appendChild(t);
-    setTimeout(() => t.focus(), 50);
+    w.appendChild(buildTerminal(w));
   } else if (app.kind === "launch") {
     const t = document.createElement("div");
     t.className = "term";
@@ -128,7 +297,8 @@ function openWindow(app) {
     });
   }
   desktop.appendChild(w);
-  markRunning(app.id, true);
+  (winsByApp[app.id] = winsByApp[app.id] || []).push(w);
+  refreshRunning(app.id);
   // drag
   let sx = 0, sy = 0, ox = 0, oy = 0, drag = false;
   bar.addEventListener("pointerdown", (e) => {
@@ -141,13 +311,100 @@ function openWindow(app) {
     w.style.left = (ox + e.clientX - sx) + "px";
     w.style.top = Math.max(0, oy + e.clientY - sy) + "px";
   });
-  bar.addEventListener("pointerup", () => { drag = false; });
+  bar.addEventListener("pointerup", (e) => {
+    drag = false;
+    w.classList.remove("snapped-left", "snapped-right");
+    w.style.height = ""; w.style.top = w.style.top;
+    const vw = window.innerWidth;
+    if (e.clientX <= 6) {
+      w.classList.add("snapped-left");
+      w.style.left = "0"; w.style.top = "0";
+      w.style.width = Math.floor(vw / 2) + "px";
+      w.style.height = "100%";
+    } else if (e.clientX >= vw - 6) {
+      w.classList.add("snapped-right");
+      w.style.left = Math.ceil(vw / 2) + "px"; w.style.top = "0";
+      w.style.width = Math.floor(vw / 2) + "px";
+      w.style.height = "100%";
+    }
+  });
   w.addEventListener("pointerdown", () => { w.style.zIndex = ++zTop; });
 }
 function markRunning(id, on) {
   const b = dock.querySelector(`button[data-id="${id}"]`);
   if (b) b.classList.toggle("running", on);
 }
+function refreshRunning(id) {
+  const wins = winsByApp[id] || [];
+  markRunning(id, wins.length > 0);
+}
+function minimizeWindow(w) {
+  w.style.display = "none";
+  refreshRunning(w.dataset.app);
+}
+function toggleApp(app) {
+  const wins = winsByApp[app.id] || [];
+  const vis = wins.filter((w) => w.isConnected && w.style.display !== "none");
+  if (vis.length > 0) { vis.forEach((w) => { w.style.display = "none"; }); refreshRunning(app.id); return; }
+  const hidden = wins.filter((w) => w.isConnected);
+  if (hidden.length > 0) {
+    const w = hidden[hidden.length - 1];
+    w.style.display = ""; w.style.zIndex = ++zTop;
+    document.getElementById("app-name").textContent = app.name;
+    refreshRunning(app.id); return;
+  }
+  openWindow(app);
+}
+function unregisterWin(id, w) {
+  winsByApp[id] = (winsByApp[id] || []).filter((x) => x !== w && x.isConnected);
+}
+/* right-click desktop menu */
+(function () {
+  const menu = document.getElementById("ctxmenu");
+  const bgs = ["#020814", "#0a1f3d", "#101010", "#06281c"];
+  let bgi = 0;
+  document.getElementById("desktop").addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    menu.style.display = "block";
+    menu.style.left = Math.min(e.clientX, window.innerWidth - 240) + "px";
+    menu.style.top = Math.min(e.clientY, window.innerHeight - 140) + "px";
+  });
+  document.addEventListener("pointerdown", (e) => {
+    if (!menu.contains(e.target)) menu.style.display = "none";
+  });
+  menu.addEventListener("click", (e) => {
+    const act = e.target && e.target.dataset ? e.target.dataset.act : null;
+    if (act === "wallpaper" || act === "bgcolor") {
+      bgi = (bgi + 1) % bgs.length;
+      document.getElementById("logo-background").style.background = bgs[bgi];
+    } else if (act === "settings") {
+      const a = APPS.find((x) => x.id === "settings");
+      if (a) openWindow(a);
+    }
+    menu.style.display = "none";
+  });
+})();
+/* alt-tab cycles windows; ctrl+alt+T opens a terminal */
+document.addEventListener("keydown", (e) => {
+  if (e.altKey && !e.ctrlKey && !e.metaKey && e.key === "Tab") {
+    e.preventDefault();
+    const all = Array.prototype.slice.call(document.querySelectorAll(".window"))
+      .filter((w) => w.style.display !== "none");
+    if (all.length < 2) return;
+    all.sort((a, b) => (parseInt(a.style.zIndex || "0", 10) - parseInt(b.style.zIndex || "0", 10)));
+    const wasTop = all[all.length - 1];
+    wasTop.style.zIndex = 20;
+    let z = 21;
+    all.forEach((w) => { if (w !== wasTop) { w.style.zIndex = z; z += 1; } });
+    const nowTop = all.filter((w) => w !== wasTop).sort((a, b) => parseInt(a.style.zIndex, 10) - parseInt(b.style.zIndex, 10))[0];
+    document.getElementById("app-name").textContent = nowTop.querySelector(".titlebar span").textContent;
+  }
+  if (e.ctrlKey && e.altKey && (e.key === "t" || e.key === "T")) {
+    e.preventDefault();
+    const a = APPS.find((x) => x.id === "terminal");
+    if (a) openWindow(a);
+  }
+});
 for (const app of APPS) {
   if (app.sep) {
     const s = document.createElement("div");
@@ -158,9 +415,13 @@ for (const app of APPS) {
   b.title = app.name;
   b.dataset.id = app.id;
   b.setAttribute("aria-label", app.name);
-  b.onclick = () => openWindow(app);
+  b.onclick = () => toggleApp(app);
   dock.appendChild(b);
 }
 </script>
+<script src="notify.js"></script>
+<script src="tile.js"></script>
+<script src="search.js"></script>
+<script src="workspace.js"></script>
 </body>
 </html>

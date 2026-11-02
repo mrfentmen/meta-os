@@ -1,24 +1,180 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Settings</title>
-<style>body{font-family:system-ui;background:#111;color:#eee;padding:24px}label{display:block;margin:12px 0}button{font-size:15px;padding:6px 14px}</style>
-</head><body>
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Settings</title>
+<style>
+html[data-theme="dark"]{--bg:#111;--fg:#eee;--card:#1c1c1c;--input:#222;--border:#444}
+html[data-theme="light"]{--bg:#f4f4f4;--fg:#111;--card:#fff;--input:#fff;--border:#ccc}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg);padding:24px;max-width:640px;margin:0 auto}
+section{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin:16px 0}
+h1{margin:0 0 8px}h2{margin:0 0 8px;font-size:16px}
+label{display:block;margin:12px 0;font-size:14px}
+select,input[type="range"],input[type="color"]{font-size:15px}
+select,input[type="text"]{background:var(--input);color:var(--fg);border:1px solid var(--border);border-radius:6px;padding:6px 10px}
+input[type="range"]{width:200px;vertical-align:middle}
+button{font-size:15px;padding:6px 14px;cursor:pointer}
+#note{min-height:1.4em;margin-left:8px}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:12px;margin-top:8px}
+.fact{background:var(--input);border:1px solid var(--border);border-radius:8px;padding:10px}
+.fact b{display:block;font-size:18px}
+#stamp{font-size:12px;opacity:.75}
+</style>
+</head>
+<body>
 <h1>Settings</h1>
-<label>Bar colour: <select id="bar"><option>black</option><option>white</option><option>blue</option></select></label>
-<label>Theme: <select id="theme"><option>dark</option><option>light</option></select></label>
-<label>Animation speed: <input id="speed" type="range" min="0" max="200" value="100"></label>
+
+<section aria-label="Appearance">
+<h2>Appearance</h2>
+<label>Wallpaper:
+<select id="wallpaper">
+<option value="ribbon-blue">ribbon-blue</option>
+<option value="ribbon-dark">ribbon-dark</option>
+<option value="ribbon-light">ribbon-light</option>
+<option value="comet-dense">comet-dense</option>
+<option value="wave-slow">wave-slow</option>
+<option value="ribbon-frost">ribbon-frost</option>
+<option value="ribbon-midnight">ribbon-midnight</option>
+<option value="ribbon-ghost">ribbon-ghost</option>
+<option value="comet-sparse">comet-sparse</option>
+<option value="comet-pale">comet-pale</option>
+<option value="wave-fast">wave-fast</option>
+</select>
+</label>
+<label>Background colour: <input id="bg" type="color" value="#020814"></label>
+<label>Bar colour:
+<select id="bar">
+<option value="black">black</option>
+<option value="white">white</option>
+<option value="blue">blue</option>
+</select>
+</label>
+<label>Theme:
+<select id="theme">
+<option value="dark">dark</option>
+<option value="light">light</option>
+</select>
+</label>
+</section>
+
+<section aria-label="Animation">
+<h2>Animation</h2>
+<label>Animation speed: <input id="speed" type="range" min="0" max="200" value="100"> <span id="speedval">100</span></label>
 <label><input id="pause" type="checkbox"> Pause animation</label>
-<p><button id="apply">Apply</button> <span id="note"></span></p>
+</section>
+
+<section aria-label="About">
+<h2>About</h2>
+<p>Meta OS face &mdash; live facts from this machine:</p>
+<div class="facts">
+<div class="fact">CPU<b id="cpu">&mdash;</b></div>
+<div class="fact">Memory<b id="mem">&mdash;</b></div>
+<div class="fact">Storage<b id="disk">&mdash;</b></div>
+<div class="fact">Network<b id="net">&mdash;</b></div>
+</div>
+<p id="stamp" role="status"></p>
+<p><button id="refresh" type="button">Refresh facts</button></p>
+</section>
+
+<p><button id="apply" type="button">Apply</button><button id="reset" type="button">Reset defaults</button> <span id="note" role="status"></span></p>
+
 <script>
 (function(){
-  function get(k,d){try{return localStorage.getItem(k)||d}catch(e){return d}}
-  function set(k,v){try{localStorage.setItem(k,v)}catch(e){}}
-  document.getElementById('bar').value=get('metaos-bar','black');
-  document.getElementById('theme').value=get('metaos-theme','dark');
-  document.getElementById('apply').onclick=function(){
-    set('metaos-bar',document.getElementById('bar').value);
-    set('metaos-theme',document.getElementById('theme').value);
-    set('metaos-speed',document.getElementById('speed').value);
-    set('metaos-paused',document.getElementById('pause').checked?'1':'0');
-    document.getElementById('note').textContent='Saved. Reopen the shell to apply.';
-  };
+"use strict";
+var FACTS_URL = "http://127.0.0.1:18932/facts";
+var DEFAULTS = {
+  "metaos-wallpaper": "ribbon-blue",
+  "metaos-bg": "#020814",
+  "metaos-bar": "black",
+  "metaos-theme": "dark",
+  "metaos-speed": "100",
+  "metaos-paused": "0"
+};
+function get(k){ try{ var v = localStorage.getItem(k); return v === null ? DEFAULTS[k] : v; }catch(e){ return DEFAULTS[k]; } }
+function set(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+function bridgeSpeed(v){
+  // vendor-logo-background.js reads 0-100 under legacy keys; mirror it.
+  try{
+    var n = Math.round(Number(v) / 2);
+    if(!isFinite(n)) return;
+    n = Math.max(0, Math.min(100, n));
+    localStorage.setItem("meta-trio-logo-speed", String(n));
+  }catch(e){}
+}
+function bridgePaused(v){
+  try{ localStorage.setItem("meta-trio-logo-paused", v === "1" ? "1" : "0"); }catch(e){}
+}
+var wallpaper = document.getElementById("wallpaper"),
+    bg = document.getElementById("bg"),
+    bar = document.getElementById("bar"),
+    theme = document.getElementById("theme"),
+    speed = document.getElementById("speed"),
+    speedval = document.getElementById("speedval"),
+    pause = document.getElementById("pause"),
+    note = document.getElementById("note");
+
+function applyThemeAttr(){
+  try{ document.documentElement.dataset.theme = theme.value === "light" ? "light" : "dark"; }catch(e){}
+}
+function load(){
+  wallpaper.value = get("metaos-wallpaper");
+  bg.value = get("metaos-bg");
+  bar.value = get("metaos-bar");
+  theme.value = get("metaos-theme");
+  speed.value = get("metaos-speed");
+  speedval.textContent = speed.value;
+  pause.checked = get("metaos-paused") === "1";
+  applyThemeAttr();
+}
+function save(silent){
+  set("metaos-wallpaper", wallpaper.value);
+  set("metaos-bg", bg.value);
+  set("metaos-bar", bar.value);
+  set("metaos-theme", theme.value);
+  set("metaos-speed", speed.value);
+  set("metaos-paused", pause.checked ? "1" : "0");
+  bridgeSpeed(speed.value);
+  bridgePaused(pause.checked ? "1" : "0");
+  applyThemeAttr();
+  if(!silent) note.textContent = "Saved. Reopen the shell to apply.";
+  else note.textContent = "Saved " + new Date().toLocaleTimeString();
+}
+[wallpaper, bg, bar, theme].forEach(function(el){
+  el.addEventListener("change", function(){ save(true); });
+});
+speed.addEventListener("input", function(){ speedval.textContent = speed.value; save(true); });
+pause.addEventListener("change", function(){ save(true); });
+document.getElementById("apply").onclick = function(){ save(false); };
+document.getElementById("reset").onclick = function(){
+  Object.keys(DEFAULTS).forEach(function(k){ set(k, DEFAULTS[k]); });
+  bridgeSpeed(DEFAULTS["metaos-speed"]);
+  bridgePaused(DEFAULTS["metaos-paused"]);
+  load();
+  note.textContent = "Defaults restored.";
+};
+
+async function tickFacts(){
+  var stamp = document.getElementById("stamp");
+  try{
+    var r = await fetch(FACTS_URL);
+    if(!r.ok) throw new Error("http " + r.status);
+    var f = await r.json();
+    document.getElementById("cpu").textContent = f.cpu;
+    document.getElementById("mem").textContent = f.mem;
+    document.getElementById("disk").textContent = f.disk;
+    document.getElementById("net").textContent = f.net;
+    stamp.textContent = "Updated " + new Date().toLocaleTimeString() + " from " + FACTS_URL;
+  }catch(e){
+    stamp.textContent = "facts service unreachable (is facts.py running on :18932?)";
+  }
+}
+document.getElementById("refresh").onclick = tickFacts;
+load();
+tickFacts();
+setInterval(tickFacts, 2000);
 })();
-</script></body></html>
+</script>
+</body>
+</html>
