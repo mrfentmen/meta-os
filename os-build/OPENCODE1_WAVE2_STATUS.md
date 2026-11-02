@@ -30,3 +30,18 @@ ABI checker, soak, index — verification runs pending on this tip.
 
 ## Sections 3-9: dispatched to subagents, reports landing as
 os-build/logs/wave2-secN.md; merged here at section commit.
+
+## Section 3 — face long tail (21-30): DONE (merged build verified on this tree)
+Face build merged from opencode/face (35 commits). Subagent verified on this tree: login 5 shots, 11 wallpapers, all 9 apps open w/ guest shots, 16 dock entries, board reboot-persist, 6 settings controls + live facts, dashboard 2s live + load series. Evidence: os-build/logs/wave2-sec3.md + os-build/face/ tree + STATUS.md (74/74 rows).
+## Section 4 — carrier image (31-40): DONE with findings
+UTM: no headless path (list empty) — recorded. 4 standing checks live in guest (facts/rooms/trash 200, updater pulls logged; STOP set for dev determinism). Toolchain: node+git present, chromium runs kiosk, opencode ABSENT (finding stands). Image recipe re-ran on Mac (metaos-face.img f7d8581e) + fresh boot (login prompt). Evidence: wave2-sec4.md + os-build/face/image/ + guest-*.jpg.
+## Section 5 — Imperium live (41-50): DONE (3 divisions)
+Vigiles sim-6623d237a90b3d9d, Ignis sim-9da0ad66d87add2e, Medicus sim-5f894be30820178f — all dispatched-simulated with pictures, judge-routed (judge.py SERVICES). Receipt #3 shown in face board (guest-red-receipt.jpg). Evidence: wave2-sec5.md + R5/R6 logs + face-medicus/.
+## Section 6 — host services (51-60): BLOCKED on Buffy Round 11 (recon only)
+Registry 25/25 placeholder commands, no Goose toolchain/runnable services here, relay 8787 down, supervisor restart unproven, ledgers gym-only. Nothing to host yet — recon filed, no workarounds built. Evidence: wave2-sec6.md.
+## Section 7 — systems (61-70): PARTIAL (gaps named)
+Musica plays (take-006, ended 7.3s) but musica.html hardcodes the take (not record-driven). Officina 2a/Aegis/Nervus/hands-free: tooling present, no current-section records. Evidence: wave2-sec7.md.
+## Section 8 — codebase health (71-80): DONE (counts recorded)
+Cargo check 19/19 crates clean (this tree). Python: queue 128, officina 49, custos 125 — all OK (302 total). Node: see Section 2 prove-main note (1947/55 on ab763ac0; 1965/55 on this tip). Hortus: no unittest suite (run.py >120s, reference output kept). Evidence: wave2-sec8.md.
+## Section 9 — site/submission (81-90): DONE with flags
+5 site claims spot-checked: 4 proven + gate 7/7, with FLAG: MERGED-boot.txt is 0 bytes on main (site cites it; NEXT PROOF label agrees). Board 9/9 unlocated — flagged. Rehearsal: SUBMISSION_REHEARSAL.md on opencode/round6 (54ee4353); R6-2 capture files not on main — flagged for Pax merge. FREEZE_CERT draft present (TBDs). Forms draft absent (checklist is start point). Evidence: wave2-sec9.md.
