@@ -65,8 +65,8 @@ Parked 2026-11-01 "until the OS is done" — un-parked by the boss
 an institution for a security agent. Starting ground (his own
 arsenal, already built): CISA KEV + OSV vulnerability data,
 secret-hygiene scanner, unicode-security checks — his MCP servers.
-- [ ] Name (his tap)
-- [ ] Spec: what it watches, what it proves, what it never does
+- [x] Name: META AEGIS (his tap, 2026-11-02)
+- [x] Spec: os-build/AEGIS_SPEC.md (watches/proves/never list)
 - [ ] v1: sweep his repos against known-vulnerability data and
       report, receipts in the ledger
 
