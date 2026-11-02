@@ -136,3 +136,9 @@ marked; nothing is asserted on another lane's behalf.
 ## Coordinator addendum 2026-11-02, fourth pass (OC1B-454, OC1B-464)
 - OC1B-454 FINAL: §11's film IS the final cut — os-build/demo/demo-3min.mp4, ffprobe duration=180.000000 (s17 measured on prior cut; s11 rebuilt: 719410 B, sha256 a29bc47dd56e9f583d8af231d8d3908f3a4c4d6218fb1b3492ce5381b3ae13f0). Exactly 180.000s as required. No further cut planned.
 - OC1B-464 path check (on opencode/500 @ this commit): film os-build/demo/demo-3min.mp4 PRESENT (719410 B); runbook os-build/demo/OC1B_RUNBOOK.md PRESENT (69 lines); snapshot os-build/logs/OC1B-state-snapshot.md PRESENT. All three resolve. Rehearsal (465) launched as background clean-clone run, results to follow.
+
+## Coordinator addendum 2026-11-02, fifth pass (OC1B-465, OC1B-466, OC1B-473, OC1B-474)
+- OC1B-465 DONE: full rehearsal from clean clone /tmp/oc500-rehearse (TIP 37e85db3), ~12:44–12:48 EST. Proof: os-build/logs/OC1B-submission-rehearsal.md + OC1B-rehearsal-serial.txt/step1.log/live-frame.jpg/live-reading.json/chain.json.
+- OC1B-466: no failures, no fallbacks invoked, no blocking slow steps (see gaps block in rehearsal md).
+- OC1B-473 readiness revised: all seven rows READY except row 3's final-cut call which §11 already made (film IS final) — submission set READY pending soak final (486) and §20 closeout rows.
+- OC1B-474 revised: NOT FULLY READY rows remaining = soak final verdict (486, soak ends ~13:27) + §20 closeout (493/497/500). Everything else proven or honestly named.

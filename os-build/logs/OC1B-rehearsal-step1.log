@@ -1,0 +1,19 @@
++zsh:1> echo '=== STEP1 film numbers ==='
+=== STEP1 film numbers ===
++zsh:1> ffprobe -v error -show_entries 'format=duration,size' -of 'default=noprint_wrappers=1' os-build/demo/demo-3min.mp4
+duration=180.000000
+size=719410
++zsh:1> sha256sum os-build/demo/demo-3min.mp4
+a29bc47dd56e9f583d8af231d8d3908f3a4c4d6218fb1b3492ce5381b3ae13f0  os-build/demo/demo-3min.mp4
++zsh:1> t=10
++zsh:1> ffmpeg -y -v error -ss 10 -i os-build/demo/demo-3min.mp4 -frames:v 1 /tmp/rb-check-10.png
++zsh:1> echo 't=10 ok'
+t=10 ok
++zsh:1> t=90
++zsh:1> ffmpeg -y -v error -ss 90 -i os-build/demo/demo-3min.mp4 -frames:v 1 /tmp/rb-check-90.png
++zsh:1> echo 't=90 ok'
+t=90 ok
++zsh:1> t=160
++zsh:1> ffmpeg -y -v error -ss 160 -i os-build/demo/demo-3min.mp4 -frames:v 1 /tmp/rb-check-160.png
++zsh:1> echo 't=160 ok'
+t=160 ok
