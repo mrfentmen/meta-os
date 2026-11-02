@@ -396,7 +396,7 @@ Two real gaps were closed in code while pinning the tests:
 Section 12 verification: `cargo test -p queue-core -p queue-store -p relay` and
 `cargo test -p queue-core --doc` both exit 0.
 
-## Section 13 — Rust os-* error paths (CB2-301..325) — 9/25 delivered, 16 blocked
+## Section 13 — Rust os-* error paths (CB2-301..325) — 12/25 delivered, 13 blocked
 
 Delivered against the crates' real public APIs:
 
@@ -411,6 +411,9 @@ Delivered against the crates' real public APIs:
 | CB2-312 | `crates/os-memory/tests/section13.rs` | second free refused with the named error |
 | CB2-313 | `crates/os-memory/tests/section13.rs` | alloc 100+50, free 30 -> 120 outstanding |
 | CB2-325 | `crates/os-budget/src/lib.rs` | rustdoc example on `spend_allowed`/`at_cap`, runs as a doc test |
+| CB2-321 | `crates/os-workspace/tests/section13_workspace.rs` | `..`, absolute, and `..`-job-id deposits refused; nothing written |
+| CB2-322 | `crates/os-workspace/tests/section13_workspace.rs` | deposit then latest and v1 reads are byte-identical; listing agrees |
+| CB2-323 | `crates/os-workspace/tests/section13_workspace.rs` | missing job and empty job both list zero records |
 
 Blocked — the named API does not exist, and inventing it would be fake code:
 - CB2-301, 302, 324: `os-boot` is the agent CLI crate; it has no boot-config type.
@@ -422,12 +425,10 @@ Blocked — the named API does not exist, and inventing it would be fake code:
   policy or backoff sequence to test.
 - CB2-319, 320: `os-worker` has `Worker`/`JobSpec`/drivers, not a task-payload or
   result-order API.
-- CB2-321, 322, 323: `os-workspace` is the artifact store
-  (`deposit`/`list`/`read`); it has no path-entry workspace.
 - CB2-325: only the spend half landed — there is no `remaining()` function.
 
-Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory`
-and `cargo test -p os-budget --doc` both exit 0.
+Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
+-p os-workspace` and `cargo test -p os-budget --doc` both exit 0.
 
 ## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 6/25 delivered, 19 blocked
 
