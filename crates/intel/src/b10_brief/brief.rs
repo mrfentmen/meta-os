@@ -603,6 +603,91 @@ pub fn since_last_brief_lines(
         .collect()
 }
 
+/// A priority-order record for the priority-order lines: the job
+/// ids in priority order, first first, and its age label. Python
+/// derives the label from the record's `as_of` time through
+/// `_environment_age_label`: `" (as of YYYY-MM-DD HH:MM ET)"`, or
+/// `" (snapshot time not reported)"` when the record gives no time.
+/// This crate has no time dependency, so the caller supplies the
+/// label already formed, the same way `PreviousBrief` does.
+///
+/// `None` (no record at all) yields no lines: a snapshot without
+/// the record carries none, so older briefs keep their exact shape.
+/// The order list itself is kept as given; duplicate, empty, and
+/// unknown ids are skipped inside the function, never padded.
+pub struct PriorityOrder {
+    pub order: Vec<String>,
+    pub age_label: String,
+}
+
+/// INT-027 follow-up: the priority-order lines for a morning
+/// brief, closing cold-start gap 1 (no priority order: the brief
+/// lists jobs by section, never by lane task id or dependency
+/// order) for the template brief from a stated record.
+///
+/// A job id in the order is named with its title from the
+/// snapshot's jobs list, in record order, numbered from 1; an id
+/// with no matching job is skipped, never padded with an invented
+/// title, and a job the record does not list is not listed here
+/// at all, never guessed into an order. A duplicate id in the
+/// order is listed once, at its first place. An order list with
+/// no usable entry reads none reported, never a padded order.
+/// Every line carries its age label. The lines are plain lines,
+/// not bullets, so the BRF-007 budget trim never drops the order
+/// ahead of a watch item, and they are redacted by the composer,
+/// not here. This closes gap 1 for the template brief only: a
+/// Spark-composed brief carrying these lines, and an independent
+/// lane member's cold-start re-run, are still owed. The In flight
+/// lines it leaves alone keep their pinned shape.
+pub fn priority_order_lines(
+    record: Option<&PriorityOrder>,
+    current: &[CurrentJob],
+) -> Vec<String> {
+    let record = match record {
+        None => return Vec::new(),
+        Some(r) => r,
+    };
+    // First title wins for a repeated id; a job with no id is
+    // skipped. An id with an empty title still counts as known,
+    // so it renders as its bare id, never a padded title.
+    let mut titles: Vec<(&str, &str)> = Vec::new();
+    for job in current {
+        if job.id.is_empty() {
+            continue;
+        }
+        if titles.iter().any(|(id, _)| *id == job.id.as_str()) {
+            continue;
+        }
+        titles.push((job.id.as_str(), job.title.as_str()));
+    }
+    let mut seen: Vec<&str> = Vec::new();
+    let mut lines: Vec<String> = Vec::new();
+    for job_id in &record.order {
+        if job_id.is_empty() || seen.contains(&job_id.as_str()) {
+            continue;
+        }
+        let Some((_, title)) = titles.iter().find(|(id, _)| *id == job_id.as_str()) else {
+            continue;
+        };
+        seen.push(job_id.as_str());
+        if title.is_empty() {
+            lines.push(format!("Priority {}: {}", lines.len() + 1, job_id));
+        } else {
+            lines.push(format!("Priority {}: {} {}", lines.len() + 1, job_id, title));
+        }
+    }
+    if lines.is_empty() {
+        return vec![format!(
+            "Priority order: none reported{}",
+            record.age_label
+        )];
+    }
+    lines
+        .iter()
+        .map(|l| format!("{l}{}", record.age_label))
+        .collect()
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -863,6 +948,55 @@ mod tests {
         assert_eq!(
             since_last_brief_lines(Some(&unreported), &same),
             vec!["Nothing changed since your last brief (snapshot time not reported)"]
+        );
+    }
+
+    #[test]
+    fn priority_order_lines_record_order_dupes_unknown_and_none() {
+        let record = PriorityOrder {
+            order: vec![
+                "T2".into(),
+                "T1".into(),
+                "T9".into(),
+                "T2".into(),
+                "".into(),
+                "T3".into(),
+            ],
+            age_label: " (as of 2026-10-30 08:00 ET)".into(),
+        };
+        let current = vec![
+            CurrentJob { id: "T1".into(), title: "Alpha".into(), status: "open".into() },
+            CurrentJob { id: "T2".into(), title: "Beta".into(), status: "open".into() },
+            // First title wins for a repeated id; an empty title
+            // still counts as known and renders as a bare id.
+            CurrentJob { id: "T2".into(), title: "Other".into(), status: "open".into() },
+            CurrentJob { id: "T3".into(), title: "".into(), status: "open".into() },
+            CurrentJob { id: "".into(), title: "NoId".into(), status: "open".into() },
+        ];
+        assert_eq!(
+            priority_order_lines(Some(&record), &current),
+            vec![
+                "Priority 1: T2 Beta (as of 2026-10-30 08:00 ET)",
+                "Priority 2: T1 Alpha (as of 2026-10-30 08:00 ET)",
+                "Priority 3: T3 (as of 2026-10-30 08:00 ET)",
+            ]
+        );
+        // No record at all says nothing about an order.
+        assert_eq!(priority_order_lines(None, &current), Vec::<String>::new());
+        // An order with no usable entry reads none reported,
+        // never a padded order.
+        let unusable = PriorityOrder {
+            order: vec!["T9".into(), "".into()],
+            age_label: " (snapshot time not reported)".into(),
+        };
+        assert_eq!(
+            priority_order_lines(Some(&unusable), &current),
+            vec!["Priority order: none reported (snapshot time not reported)"]
+        );
+        let empty = PriorityOrder { order: vec![], age_label: " (snapshot time not reported)".into() };
+        assert_eq!(
+            priority_order_lines(Some(&empty), &current),
+            vec!["Priority order: none reported (snapshot time not reported)"]
         );
     }
 }
