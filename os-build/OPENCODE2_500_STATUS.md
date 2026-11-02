@@ -108,3 +108,26 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - Scripted no-OOB check over ALL packs: clean. GENERATED filename list: one file (build-001 render).
 - Suite 77 OK + gate 14/14.
 - Truth: Officina turns rough words into checked packs and remembers them; nothing built physically. Landed. Nothing blocked.
+
+## Section 17 — Model pipeline live proofs (OC2B-401–425) — DONE 2026-11-02
+- SAM×3 (Wikimedia eval frames): frame1 no-box (honest), frame2 BOX with overlay+mask, frame3 no-box. VARIANCE.md: same frame box-once/no-box-under-other-prompt (matches Pax/OC1 variance). Patrol wiring run exercised with degraded branch.
+- Wonder swap: case1 agree→confirmed, case3 emergency→confirmed/structure-fire/high, case2 transport flake→falls back to combine() (recorded, no retry). COMPARE.md: model agrees with deterministic combine 2/2 where it answered.
+- Judge-v2 live: standalone run fell back (deterministic + named fallback); judge_mode:model PROVEN live in the patrol dry run (same wiring, model reasons quoted). Forced-failure (bad endpoint→401) fallback named. PASS.
+- Image×2 (lab + workshop scenes, GENERATED filenames), magic-byte CHECKS.md PASS. Transcribe: all 3 surfaces 404 (was model_not_found at probe time — verdict uncallable stands, one-line update proposed, file not edited).
+- Patrol dry run: Spark vision→vehicle fire/high, SAM no-box (honest gap), second Spark review, judge confirmed/model, loopback dispatch POST /fire receipt sim-oc2b-patrol-001. PASS.
+- Spend ≈$0.06 attributable (§17), guardrail-wide $0.152/$75 (headroom $74.85). Receipts indexed. Key grep sweep: zero hits required → met (7 key-shaped hits all triaged as other lanes' hashes, none in §17 files).
+- Truth: the pipeline cuts when it cuts and no-boxes honestly, for about six cents. Landed. Flake on record: metered-but-empty responses hit 2/8 calls — all callers must treat empty content as failure, never retry-loop.
+
+## Section 18 — Live cameras on the Mac (OC2B-426–450) — DONE 2026-11-02
+- List: 976 online cameras (Manhattan 377 / Queens 211 / Brooklyn 207 / SI 100 / Bronx 81). Egress: Mac GET 200, 251,050 bytes. No degraded path needed — all frames fresh Mac fetches.
+- 5 borough snapshots (named cam-id frames) + direct by-id fetch. 6/6 readings OK (vigiles×3, ignis, medicus×2), zero UNPROVEN. Slowest: medicus/Manhattan 17,555 ms.
+- Round-robin 5 distinct cameras; staleness: same camera 384 s apart, bytes changed (live, not stale); offline exclusion proven via injected isOnline:false entry. test_livecams: 12 OK. JPEG magic+PIL check PASS. Online-count delta: 976 live vs 1 committed proof capture (+975; committed dir is a single capture, not a census).
+- Frames ≤35 KB each; nothing over 1 MB. Spend $0.04114 (6 assess calls). Exact commands in status per task (livecams.py --assess-one --area ...).
+- Truth: the live path proved on the Mac with real frames and real readings. Landed. Nothing blocked.
+
+## Section 19 — Musica runs + Goose gate-2 (OC2B-451–475) — DONE 2026-11-02
+- Musica: pretty_midi 0.2.11.0 via pip3. Suite 39 pass / 0 fail (prior 37/2 missing-pretty_midi resolved; 2 re-runs PASS). 2 generation paths end-to-end (4 keepers, 4 .mid 178–279 B, all parse via pretty_midi). MAC-ONLY: none.
+- Goose: binary `/Users/test/mcp-servers/toolchains/goose-src/build/goose` (b781587, provenance recorded). run-goose-tests.sh still hardcodes that path (grep count 1 — grepped only, never executed/edited).
+- Gate-2 via `goose check` per file: 53 entries, 10 PASS (6 roots + echo/heartbeat/hello/mcp-host), 40 FAIL (one shared cause: per-file check resolves `import common.*` beside the file — every first-error verbatim for Buffy R12, nothing fixed), 3 SKIP (registry/devmgr/sockets READMEs). node --test with GOOSE=<mac binary>: 4/4 PASS. Path-fix diff sketch as text only.
+- Wall time ~6 min. Artifacts ≤1 MB.
+- Truth: music plays and parses; the goose runner's failure mode is mapped file-by-file for its owner. Landed. Nothing blocked (no fixes made — out of lane by design).
