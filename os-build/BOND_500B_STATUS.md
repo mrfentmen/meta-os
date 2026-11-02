@@ -458,3 +458,29 @@ Blocked — the named API does not exist:
 
 Section 14 verification: `cargo test -p guardrail`, `cargo test -p guardrail --doc`,
 and `cargo test -p assess-server` all exit 0.
+
+## Section 15 — Schemas and validators (CB2-351..375) — 10/25 delivered
+
+| Task | File | Result |
+|---|---|---|
+| CB2-356 | `agents/registry_validate.mjs` | real registry checked: name, command array, owner (the badge-equivalent), optional badge |
+| CB2-357 | `tests/agents-registry-validate.test.mjs` | `["true"]` reported as a draft, never runnable |
+| CB2-358 | `tests/agents-registry-validate.test.mjs` | duplicate names reported with both indexes |
+| CB2-359 | `server/queue/receipt_validate.py` | model, surface/endpoint, latency, estimate-or-null |
+| CB2-360 | `tests/queue-python/test_receipt_validate.py` | Spark without an estimate fails; non-Spark with one fails |
+| CB2-361 | `tests/queue-python/test_receipt_validate.py` | malformed JSON reported with its line number |
+| CB2-362 | `tools/validate_science_schemas.py` | all five schemas loaded; top-level keys checked |
+| CB2-363 | `tests/science-lab/test_science_schemas_wellformed.py` | cycle enum == `cycle.ALL_PHASES`, read as data |
+| CB2-364 | `tests/science-lab/test_science_schemas_wellformed.py` | every required hypothesis field is read by `parse_hypothesis` |
+| CB2-375 | `tools/schema_index.py` | Markdown index of schemas and validators, fixture-tested |
+
+Not delivered (no dependency-free path found in this pass): CB2-351..355
+(v2 incident validator; `crew_records.validate_incident_record` covers the
+crew shape but not the five-field v2 record), CB2-365..366 (livecam record
+validator), CB2-367 (separate relay message module; `relay.mjs` already has
+`validateMessage`), CB2-368 (board note module), CB2-369..370 (Hortus record
+validator), CB2-371..372 (Aegis counts-only fixtures), CB2-373..374 (verdict
+validator).
+
+Section 15 verification: 6 Science Lab tests, 6 receipt tests, 5 index tests,
+5 node tests, and `tools/validate_science_schemas.py` (0 findings) all pass.
