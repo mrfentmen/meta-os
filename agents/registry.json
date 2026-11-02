@@ -158,21 +158,21 @@
    "watchCadenceMs": 900000
   },
   {
-   "budget": {
-    "maxActions": 40,
-    "maxCalls": 60
-   },
+   "name": "aegis",
+   "lane": "Meta Aegis \u2014 security sweeps over the boss's own ground",
+   "command": [
+    "true"
+   ],
    "capabilities": [
     "osv-check",
     "kev-check",
     "secret-hygiene",
     "unicode-security"
    ],
-   "command": [
-    "true"
-   ],
-   "lane": "Meta Aegis \u2014 security sweeps over the boss's own ground",
-   "name": "aegis",
+   "budget": {
+    "maxActions": 40,
+    "maxCalls": 60
+   },
    "owner": "boss"
   },
   {
@@ -192,7 +192,8 @@
    "lane": "Meta Nervus - model surgery bench (standalone system)",
    "name": "nervus",
    "owner": "boss"
-  },
+  }
+,
   {
    "budget": {
     "maxWallMs": 3600000
