@@ -83,7 +83,7 @@ else
     FAILED=1
 fi
 
-for check in abi_check.py boot_manifest_check.py; do
+for check in abi_check.py boot_manifest_check.py failure_table_check.py; do
     if python3 "os-build/layer1/$check" >/dev/null 2>&1; then
         report "$check" "PASS"
     else
