@@ -1,0 +1,177 @@
+{
+  "backends": [
+    "LOCAL-SHELF"
+  ],
+  "call_records": [
+    {
+      "agent": "literature-researcher",
+      "args": {
+        "op": "search",
+        "query": "Delaney aqueous solubility ESOL"
+      },
+      "args_hash": "744066da5a80c01782cad05e902bae4c2bcdf74f00d39be00b6f9293bfc0b2c9",
+      "backend": "LOCAL-SHELF",
+      "cost": 0.0,
+      "cycle_id": "GW-EXAMPLE-001",
+      "kind": "gateway-call",
+      "op": "search",
+      "quarantined_result": {
+        "agent": "literature-researcher",
+        "kind": "gateway-source",
+        "note": "UNCONFIRMED gateway result: not evidence until pinned by the literature job (assemble_brief).",
+        "recorded_at": "2026-11-02T14:06:29.192642Z",
+        "result": {
+          "backend": "LOCAL-SHELF",
+          "matches": [
+            {
+              "citation": "Delaney, J. S. (2004). ESOL: Estimating Aqueous Solubility Directly from Molecular Structure. J. Chem. Inf. Comput. Sci. 44(3), 1000-1005. doi:10.1021/ci034243x.",
+              "claim": "First reproduction target: the published ESOL model and its reported fit statistics; target numbers pulled at run time, never hardcoded.",
+              "licence": "Paper via ACS (paywalled); compound set public via DeepChem mirror \u2014 method inputs openly available, see gate/delaney/SOURCES.md.",
+              "locator": "doi:10.1021/ci034243x; archived compound set gate/delaney/delaney-processed.csv",
+              "shelf": "shelves/chemistry.json"
+            },
+            {
+              "citation": "DeepChem \u2014 open-source deep-learning toolkit for chemistry data and models.",
+              "claim": "Public mirror of the processed Delaney compound set used as the archived reproduction inputs.",
+              "licence": "MIT (open source); dataset file provenance in gate/delaney/SOURCES.md.",
+              "locator": "https://deepchem.io",
+              "shelf": "shelves/chemistry.json"
+            },
+            {
+              "citation": "RDKit \u2014 open-source cheminformatics toolkit.",
+              "claim": "Descriptor computation engine (MolWt, Crippen logP, rotatable bonds, aromatic proportion) for the ESOL reproduction.",
+              "licence": "BSD (open source).",
+              "locator": "https://www.rdkit.org",
+              "shelf": "shelves/chemistry.json"
+            }
+          ],
+          "network": "no external network touched; local shelves only",
+          "op": "search",
+          "query": "Delaney aqueous solubility ESOL",
+          "scores": [
+            4,
+            1,
+            1
+          ],
+          "tool": "openalex"
+        },
+        "status": "unconfirmed",
+        "tool": "openalex"
+      },
+      "result_hash": "17221ce28f16f163e5507fa7693b8df1522f2e5c22273bb3dedfb6be40b88e12",
+      "status": "ok",
+      "timestamp": "2026-11-02T14:06:29.192854Z",
+      "tool": "openalex"
+    },
+    {
+      "agent": "literature-researcher",
+      "args": {
+        "op": "search",
+        "query": "solubility dataset descriptors logP"
+      },
+      "args_hash": "9a283bcb762f61fb4f7c97bff1843a920ee9b4f2164005828f6d361d614de152",
+      "backend": "LOCAL-SHELF",
+      "cost": 0.0,
+      "cycle_id": "GW-EXAMPLE-001",
+      "kind": "gateway-call",
+      "op": "search",
+      "quarantined_result": {
+        "agent": "literature-researcher",
+        "kind": "gateway-source",
+        "note": "UNCONFIRMED gateway result: not evidence until pinned by the literature job (assemble_brief).",
+        "recorded_at": "2026-11-02T14:06:29.193341Z",
+        "result": {
+          "backend": "LOCAL-SHELF",
+          "matches": [
+            {
+              "citation": "Delaney, J. S. (2004). ESOL: Estimating Aqueous Solubility Directly from Molecular Structure. J. Chem. Inf. Comput. Sci. 44(3), 1000-1005. doi:10.1021/ci034243x.",
+              "claim": "First reproduction target: the published ESOL model and its reported fit statistics; target numbers pulled at run time, never hardcoded.",
+              "licence": "Paper via ACS (paywalled); compound set public via DeepChem mirror \u2014 method inputs openly available, see gate/delaney/SOURCES.md.",
+              "locator": "doi:10.1021/ci034243x; archived compound set gate/delaney/delaney-processed.csv",
+              "shelf": "shelves/chemistry.json"
+            },
+            {
+              "citation": "NIST Materials Data Repository.",
+              "claim": "Reference materials datasets for materials-department checks.",
+              "licence": "U.S. public domain (NIST) \u2014 verify at retrieval.",
+              "locator": "https://materialsdata.nist.gov",
+              "shelf": "shelves/materials.json"
+            },
+            {
+              "citation": "RDKit \u2014 open-source cheminformatics toolkit.",
+              "claim": "Descriptor computation engine (MolWt, Crippen logP, rotatable bonds, aromatic proportion) for the ESOL reproduction.",
+              "licence": "BSD (open source).",
+              "locator": "https://www.rdkit.org",
+              "shelf": "shelves/chemistry.json"
+            }
+          ],
+          "network": "no external network touched; local shelves only",
+          "op": "search",
+          "query": "solubility dataset descriptors logP",
+          "scores": [
+            1,
+            1,
+            1
+          ],
+          "tool": "open-library"
+        },
+        "status": "unconfirmed",
+        "tool": "open-library"
+      },
+      "result_hash": "b2b8bfaf22f22865737cbce36e63923bde8c2c03b8be23fedb0983109f36376b",
+      "status": "ok",
+      "timestamp": "2026-11-02T14:06:29.193368Z",
+      "tool": "open-library"
+    },
+    {
+      "agent": "literature-researcher",
+      "args": {
+        "locator": "doi:10.1021/ci034243x",
+        "op": "read"
+      },
+      "args_hash": "b6c803b11b15f6c371014b95f649d45095aed60685af3515f4f1223e298a77d5",
+      "backend": "LOCAL-SHELF",
+      "cost": 0.0,
+      "cycle_id": "GW-EXAMPLE-001",
+      "kind": "gateway-call",
+      "op": "read",
+      "quarantined_result": {
+        "agent": "literature-researcher",
+        "kind": "gateway-source",
+        "note": "UNCONFIRMED gateway result: not evidence until pinned by the literature job (assemble_brief).",
+        "recorded_at": "2026-11-02T14:06:29.193676Z",
+        "result": {
+          "backend": "LOCAL-SHELF",
+          "locator": "doi:10.1021/ci034243x",
+          "network": "no external network touched; local shelves only",
+          "op": "read",
+          "source": {
+            "citation": "Delaney, J. S. (2004). ESOL: Estimating Aqueous Solubility Directly from Molecular Structure. J. Chem. Inf. Comput. Sci. 44(3), 1000-1005. doi:10.1021/ci034243x.",
+            "claim": "First reproduction target: the published ESOL model and its reported fit statistics; target numbers pulled at run time, never hardcoded.",
+            "licence": "Paper via ACS (paywalled); compound set public via DeepChem mirror \u2014 method inputs openly available, see gate/delaney/SOURCES.md.",
+            "locator": "doi:10.1021/ci034243x; archived compound set gate/delaney/delaney-processed.csv",
+            "shelf": "shelves/chemistry.json"
+          },
+          "tool": "openalex"
+        },
+        "status": "unconfirmed",
+        "tool": "openalex"
+      },
+      "result_hash": "9aeb87358f1d4b378e2bcbd8a90fe25f93fae655741e8fd5217079ab23325351",
+      "status": "ok",
+      "timestamp": "2026-11-02T14:06:29.193696Z",
+      "tool": "openalex"
+    }
+  ],
+  "calls_file": "records/gateway/calls.jsonl",
+  "calls_issued": 3,
+  "cycle_id": "GW-EXAMPLE-001",
+  "kind": "gateway-worked-example",
+  "network_note": "No external network touched. Backend LOCAL-SHELF: each call searched/read the lab's own department shelves (shelves/*.json). Results are local leads, quarantined as unconfirmed until the literature job pins them.",
+  "network_touched": false,
+  "offline_note": "Deterministic parts of a cycle can run with the gateway closed (Gateway(cycle, offline_mode=True)); see gateway.Gateway.offline_record(). This pass ran open-local-shelf; no OFFLINE calls were needed.",
+  "pinning": "To confirm: feed quarantined matches into literature.assemble_brief() with validated source records; unpinned claims drop with a log.",
+  "quarantine_note": "Every result has status unconfirmed (gateway-source). Confirmation happens only via literature.assemble_brief pinning; nothing here is confirmed evidence.",
+  "question": "One literature pass for the Delaney (2004) ESOL reproduction target through the controlled gateway.",
+  "recorded_by": "os/worlds/science-lab/gateway.py Gateway.call_tool"
+}

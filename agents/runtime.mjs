@@ -61,6 +61,26 @@ export class Ledger {
   }
 }
 
+// Registry commands must be portable: an absolute path to this checkout would make the file
+// wrong on every other machine. `repo:node` means "this Node, plus a script inside the repo";
+// the script argument is resolved against the repo root, never the run directory.
+export function resolveCommand(command, root) {
+  if (!Array.isArray(command) || command.length === 0) throw new Error("registry: missing command");
+  const out = [...command];
+  if (out[0] === "repo:node") {
+    out[0] = process.execPath;
+    if (out[1] && !path.isAbsolute(out[1])) out[1] = path.join(root, out[1]);
+  }
+  // Any later argument may opt into a repo-relative path (`repo:os-build/...`), which keeps a
+  // registry entry portable without making every argument absolute.
+  for (let i = 1; i < out.length; i++) {
+    if (typeof out[i] === "string" && out[i].startsWith("repo:")) {
+      out[i] = path.join(root, out[i].slice("repo:".length));
+    }
+  }
+  return out;
+}
+
 export function spawnAgent(agent, { root, job = {} } = {}) {
   const runId = agent.name + "-" + Date.now().toString(36);
   const runDir = path.join(root, "runs", runId);
@@ -75,8 +95,9 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     deadline: job.deadline || null, capabilities: agent.capabilities || [],
   };
   fs.writeFileSync(path.join(runDir, "brief.json"), JSON.stringify(brief, null, 2));
-  ledger.add(runId, "spawn", { command: agent.command, lane: brief.lane });
-  const child = spawn(agent.command[0], agent.command.slice(1), {
+  const command = resolveCommand(agent.command, root);
+  ledger.add(runId, "spawn", { command, lane: brief.lane });
+  const child = spawn(command[0], command.slice(1), {
     cwd: agent.cwd || runDir, stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env, AGENT_RUN: runId, AGENT_NAME: agent.name },
   });
@@ -91,7 +112,17 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
   });
   // Budget: wall-clock cap stops the run (spec S9).
   if (agent.budget.maxWallMs) {
-    handle._budgetTimer = setTimeout(() => killAgent(handle, "budget-wall-clock"), agent.budget.maxWallMs);
+    handle._budgetTimer = setTimeout(() => {
+      // The receipt is written BEFORE the kill, so a crash during the kill cannot leave a run
+      // that was stopped by its budget with no record of why (R11-259).
+      const receipt = {
+        run: runId, reason: "budget-wall-clock", capMs: agent.budget.maxWallMs,
+        at: new Date().toISOString(),
+      };
+      ledger.add(runId, "budget-receipt", receipt);
+      try { fs.writeFileSync(path.join(runDir, "receipt.json"), JSON.stringify(receipt, null, 2)); } catch { /* ledger still has it */ }
+      killAgent(handle, "budget-wall-clock");
+    }, agent.budget.maxWallMs);
     handle.done.then(() => clearTimeout(handle._budgetTimer));
   }
   // STOP file honoured at checkpoints (spec S6).

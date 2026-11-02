@@ -1,0 +1,51 @@
+{
+  "cycle_id": "DRESS-REHEARSAL-001",
+  "gate_state": "open",
+  "history": [
+    "ca5fa56ddeeceb691f8a9d48cf5594cd4e90a81d2deeed678e6efaa2012d8333",
+    "2dfa8a9e5c2e6a5d8bad0ca5af9f1a8d0418137a3331528314625439c6392f5d",
+    "8e1afab0e7ab80983e1fbc8b237e6c8fda4cce2eaf92f34a817d356fef05ed7c",
+    "038b4874b63f27c2dff8b09c38db86b82c41d1c5266c4776d0fa49a4d2afeb91",
+    "1900ffe00c6484007545ac0cb72ebbb844a21b21e259552cf7f1f9bfde879cc7",
+    "8b26d9a4bf876e81df50e32b844d5e7507ce218a8830fb48c2c97f5353c895a3"
+  ],
+  "inputs": {
+    "compute_results": {
+      "entry": "e99dd19a3d19c9807bb4dfdfe6b0666e48eac5ab3ffd2c46f7d58dab51838fd4",
+      "n": 20,
+      "rmse": 0.8177471797566775
+    },
+    "critique": {
+      "verdict": "proceed: held-out slice only, no leakage into the prep slice (rows 1-10)."
+    },
+    "hypotheses": {
+      "ids": [
+        "DRESS-H1"
+      ]
+    },
+    "problem_statement": "Can ESOL-style linear model predict solubility for 20 held-out compounds within RMSE 1.5?",
+    "sealed_record": {
+      "levels": {
+        "computation": 2
+      }
+    },
+    "sources": {
+      "brief": "shelves/chemistry.json + gate/delaney/SOURCES.md",
+      "dataset_sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189"
+    },
+    "verification": {
+      "hash_verdict": "agree",
+      "reproduced": true,
+      "verdict": "reproduced"
+    }
+  },
+  "outputs": {
+    "cheap-computations": "held-out slice critique filed",
+    "critic": "re-execution reproduced (agree)",
+    "hypotheses": "held-out RMSE 0.8177 filed (e99dd19a3d19)",
+    "literature": "DRESS-H1 filed with falsifier (RMSE > 1.5 falsifies)",
+    "problem": "dress brief filed (Delaney target reused)",
+    "verification": "sealed at level 2 (confirmed)"
+  },
+  "phase": "sealing"
+}

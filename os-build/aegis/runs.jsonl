@@ -4,3 +4,13 @@
 {"ts":"2026-11-02T11:07:20.091Z","run":"aegis-2026-11-02T11-07-19-392Z","event":"sweep-done","checked":108,"batches":2,"unparseable":0,"findings":0,"bySeverity":{"info":0,"low":0,"medium":0,"high":0,"critical":0}}
 {"ts":"2026-11-02T13:43:49.536Z","run":"aegis-2026-11-02T13-43-49-502Z","event":"sweep-start","root":"meta-os","manifests":23,"lockFiles":["Cargo.lock","kernel/Cargo.lock","os-build/userspace/user/Cargo.lock"],"queries":108,"sourceServer":"not configured"}
 {"ts":"2026-11-02T13:43:49.536Z","run":"aegis-2026-11-02T13-43-49-502Z","event":"sweep-blocked","reason":"no OSV server"}
+{"ts":"2026-11-02T14:12:39.625Z","run":"aegis-hosted-2026-11-02T14-12-39-624Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T14:12:39.627Z","run":"aegis-hosted-2026-11-02T14-12-39-624Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T14:13:02.782Z","run":"aegis-hosted-2026-11-02T14-13-02-781Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T14:13:02.785Z","run":"aegis-hosted-2026-11-02T14-13-02-781Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T14:13:52.748Z","run":"aegis-hosted-2026-11-02T14-13-52-747Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T14:13:52.749Z","run":"aegis-hosted-2026-11-02T14-13-52-747Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T14:13:52.929Z","run":"aegis-hosted-2026-11-02T14-13-52-928Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T14:13:52.931Z","run":"aegis-hosted-2026-11-02T14-13-52-928Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+{"ts":"2026-11-02T14:14:27.310Z","run":"aegis-hosted-2026-11-02T14-14-27-308Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+{"ts":"2026-11-02T14:14:27.313Z","run":"aegis-hosted-2026-11-02T14-14-27-308Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}

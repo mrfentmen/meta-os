@@ -1,0 +1,18 @@
+OFFICINA 2a ACCEPTANCE GATE (W3) — SIMULATED scores only
+branch: main
+tip: 78862a5
+PASS G1-intake-class — class=heatsink-fin-geometry
+PASS G1-intake-target — target=[{'kind': 'target_r_c_per_w', 'value': 2.0, 'source': 'stated'}]
+PASS G1-intake-unknowns — unstated power_w in unknowns, not invented
+PASS G1-intake-preferences — ungradeable 'compact' kept as preference, not graded
+PASS G2-proven — status=proven rounds=4 final R=1.7210
+PASS G2-log-sequential — log rounds [0, 1, 2, 3, 4], exactly one entry per round
+PASS G2-log-reasons — every entry has rule/decision/reason; every round>=1 carries its motivating grade
+PASS G2-log-intake-honest — round 0 is the intake guess, not a graded decision
+PASS G3-heldout-agrees — fresh R=1.7210 held-out R=1.1848, matches record
+PASS G3-heldout-bar — held-out feasible, R 1.1848 <= bar 2.0
+PASS G4-brief-target — final R 1.7210 <= stated target 2.0000
+PASS G5-impossible-unproven — status=unproven: stalled rounds=8, no false proven
+PASS G5-export-discipline — unproven exports proven=false; proven exports with its verification attached
+PASS G6-suite — unittest discover tests/officina rc=0 (OK)
+GATE: PASS (14/14 clauses)

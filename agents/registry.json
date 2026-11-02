@@ -13,7 +13,10 @@
       ],
       "lane": "kernel (L1-L3)",
       "name": "rowan",
-      "owner": "boss"
+      "owner": "boss",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "crew lane has no program in this repo; the placeholder cannot review a kernel"
     },
     {
       "budget": {
@@ -29,7 +32,10 @@
       ],
       "lane": "UI and surfaces (L6)",
       "name": "hana",
-      "owner": "boss"
+      "owner": "boss",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "crew lane has no program in this repo; the placeholder cannot design a surface"
     },
     {
       "budget": {
@@ -45,7 +51,10 @@
       ],
       "lane": "gates and records",
       "name": "milo",
-      "owner": "boss"
+      "owner": "boss",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "crew lane has no program in this repo; the placeholder cannot run a gate"
     },
     {
       "budget": {
@@ -60,7 +69,10 @@
       ],
       "lane": "services (L4, Goose)",
       "name": "buffy",
-      "owner": "boss"
+      "owner": "boss",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "crew lane has no program in this repo; the placeholder cannot run the services lane"
     },
     {
       "budget": {
@@ -75,7 +87,10 @@
       ],
       "lane": "verification (8GB Mac) Renamed Bond by the boss 2026-11-02 (formerly Buffy 2). Light lanes: BOND_LIGHT_LANES.md.",
       "name": "bond",
-      "owner": "boss"
+      "owner": "boss",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "crew lane has no program in this repo; the placeholder cannot run the clean-clone gate"
     },
     {
       "budget": {
@@ -91,7 +106,10 @@
       ],
       "lane": "dispatch and merge",
       "name": "pax",
-      "owner": "boss"
+      "owner": "boss",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "crew lane has no program in this repo; the placeholder cannot merge or dispatch"
     },
     {
       "budget": {
@@ -109,7 +127,10 @@
       ],
       "lane": "Imperium loop (patrol -> review -> investigation -> records -> response)",
       "name": "imperium-patrol",
-      "owner": "system: imperium"
+      "owner": "system: imperium",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "Imperium lives outside this repo; no real command can be named here"
     },
     {
       "budget": {
@@ -125,7 +146,10 @@
       ],
       "lane": "Musica overnight sessions",
       "name": "musica-studio",
-      "owner": "system: musica"
+      "owner": "system: musica",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "Musica lives outside this repo; no real command can be named here"
     },
     {
       "budget": {
@@ -139,7 +163,10 @@
       ],
       "lane": "Officina faber loop",
       "name": "officina-faber",
-      "owner": "system: officina"
+      "owner": "system: officina",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "Officina lives outside this repo; no real command can be named here"
     },
     {
       "budget": {
@@ -151,7 +178,7 @@
       "command": [
         "true"
       ],
-      "lane": "watch rounds (bus, repo, gateway) \u2014 capability demo agent",
+      "lane": "watch rounds (bus, repo, gateway) — capability demo agent",
       "name": "watch",
       "owner": "boss",
       "watch": [],
@@ -178,43 +205,47 @@
         ],
         "total": 3,
         "max": 3
-      }
+      },
+      "hosted": false,
+      "draft": true,
+      "draftReason": "capability demo entry only; `true` proves the runtime, not a watch loop"
     },
     {
       "name": "aegis",
-      "lane": "Meta Aegis \u2014 security sweeps over the boss's own ground",
+      "lane": "Meta Aegis — local passes as a hosted loop; the OSV sweep stays a separate run",
       "command": [
-        "true"
+        "repo:node",
+        "aegis/hosted.mjs"
       ],
       "capabilities": [
-        "osv-check",
-        "kev-check",
-        "secret-hygiene",
-        "unicode-security"
+        "confusables",
+        "lifecycle",
+        "alarm-split"
       ],
       "budget": {
-        "maxActions": 40,
-        "maxCalls": 60
+        "maxWallMs": 120000
       },
-      "owner": "boss"
+      "owner": "boss",
+      "hosted": true
     },
     {
       "budget": {
-        "maxWallMs": 3600000
+        "maxWallMs": 120000
       },
       "capabilities": [
-        "model-surgery",
-        "sweeps",
-        "steering",
-        "model-reduction",
-        "tool-tray"
+        "stub-sweep",
+        "stub-steer",
+        "stub-ablate",
+        "stub-delta"
       ],
       "command": [
-        "true"
+        "repo:node",
+        "nervus/hosted.mjs"
       ],
-      "lane": "Meta Nervus - model surgery bench (standalone system)",
+      "lane": "Meta Nervus — STUB contract run; no model is loaded",
       "name": "nervus",
-      "owner": "boss"
+      "owner": "boss",
+      "hosted": true
     },
     {
       "budget": {
@@ -230,7 +261,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "research-director",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -244,7 +278,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "literature-researcher",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -259,7 +296,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "scientific-analyst",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -273,7 +313,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "mathematics-researcher",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -287,7 +330,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "chemistry-researcher",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -301,7 +347,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "biology-researcher",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -315,7 +364,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "physics-researcher",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -330,7 +382,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "hypothesis-generator",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -344,7 +399,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "computational-scientist",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -359,7 +417,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "statistician",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -373,7 +434,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "scientific-critic",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -387,7 +451,10 @@
       ],
       "lane": "Science Lab (research)",
       "name": "independent-verifier",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
     },
     {
       "budget": {
@@ -402,7 +469,64 @@
       ],
       "lane": "Science Lab (research)",
       "name": "research-archivist",
-      "owner": "system: science-lab"
+      "owner": "system: science-lab",
+      "hosted": false,
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+    },
+    {
+      "name": "handsfree-intake",
+      "command": [
+        "repo:node",
+        "handsfree/hosted.mjs",
+        "intake"
+      ],
+      "lane": "Hands-Free — order intake (text inbox to job files)",
+      "capabilities": [
+        "orders",
+        "intake"
+      ],
+      "budget": {
+        "maxWallMs": 60000
+      },
+      "owner": "system: handsfree",
+      "hosted": true
+    },
+    {
+      "name": "handsfree-brief",
+      "command": [
+        "repo:node",
+        "handsfree/hosted.mjs",
+        "brief"
+      ],
+      "lane": "Hands-Free — speakable brief from finished results",
+      "capabilities": [
+        "brief",
+        "latency"
+      ],
+      "budget": {
+        "maxWallMs": 60000
+      },
+      "owner": "system: handsfree",
+      "hosted": true
+    },
+    {
+      "name": "handsfree-approval",
+      "command": [
+        "repo:node",
+        "handsfree/hosted.mjs",
+        "approval"
+      ],
+      "lane": "Hands-Free — approval inbox (one request, one answer)",
+      "capabilities": [
+        "approval",
+        "duplicate-detection"
+      ],
+      "budget": {
+        "maxWallMs": 60000
+      },
+      "owner": "system: handsfree",
+      "hosted": true
     }
   ]
 }

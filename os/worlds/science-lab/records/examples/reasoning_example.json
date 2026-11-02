@@ -1,0 +1,274 @@
+{
+  "brief": {
+    "claims": [
+      {
+        "claim": "Delaney (2004) ESOL is the first reproduction target; its published equation is re-extracted from the paper text at gate run time.",
+        "pinned_sources": [
+          "S1"
+        ],
+        "status": "pinned"
+      },
+      {
+        "claim": "The archived set holds 1128 data rows with SHA-256 verified against SOURCES.md.",
+        "pinned_sources": [
+          "S2"
+        ],
+        "status": "pinned"
+      },
+      {
+        "claim": "Prep-run observation on this set: paper equation at R2 0.725, RMSE 1.099 (motivation only, not the paper figure).",
+        "pinned_sources": [
+          "S3"
+        ],
+        "status": "pinned"
+      }
+    ],
+    "dropped": [
+      {
+        "claim": "The paper's own reported fit statistics for the Delaney ESOL model (paper text not opened in this run; value left TO_BE_READ_AT_RUN).",
+        "reason": "unpinned: no source states this claim (no supports_claim match, no citation)"
+      }
+    ],
+    "question": "Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?",
+    "sources": [
+      {
+        "access_note": "Shelf entry + gate/delaney/SOURCES.md: paper text itself is paywalled; running the reproduction needs no paywalled access.",
+        "citation": "Delaney, J. S. (2004). ESOL: Estimating Aqueous Solubility Directly from Molecular Structure. J. Chem. Inf. Comput. Sci. 44(3), 1000-1005. doi:10.1021/ci034243x.",
+        "content_hash": "75b43ae1d53b57687d377e1236b4486807b8378d99221e4105046a9f0dab3982",
+        "id": "S1",
+        "locator": "shelves/chemistry.json + gate/GATE_PREP.md",
+        "retrieved_at": "2026-11-01",
+        "supports_claim": "Delaney (2004) ESOL is the first reproduction target; its published equation is re-extracted from the paper text at gate run time."
+      },
+      {
+        "access_note": "Public DeepChem mirror; URL recorded in SOURCES.md.",
+        "citation": "Archived compound set provenance record.",
+        "content_hash": "621725fdadeb442463dc492406055f5330f9c3cf3e64fc50c56d13416115dece",
+        "id": "S2",
+        "locator": "gate/delaney/SOURCES.md",
+        "retrieved_at": "2026-11-01",
+        "supports_claim": "The archived set holds 1128 data rows with SHA-256 verified against SOURCES.md."
+      },
+      {
+        "access_note": "Local prep run output; labels itself PREP RUN, not the gate.",
+        "citation": "Prep-run observation (NOT the gate, NOT the paper report).",
+        "content_hash": "5bc7822384bee278b2fb471c394ab9825bc50128d4e23612feffad307596862b",
+        "id": "S3",
+        "locator": "gate/prep_results.json (labelled PREP RUN)",
+        "retrieved_at": "2026-11-01",
+        "supports_claim": "Prep-run observation on this set: paper equation at R2 0.725, RMSE 1.099 (motivation only, not the paper figure)."
+      }
+    ],
+    "title": "Sourced brief \u2014 Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?"
+  },
+  "chain": {
+    "brief_hash": "15bdb662707909905a42074344b02739a4d1408a766cbad4354527320ed4ebe2",
+    "chain_hash": "8d8c01653bd5e0447eca6606f78ebbe651b2e2353c52d56fbb55da116d190ad5",
+    "critique_hash": null,
+    "critique_id": null,
+    "decomposition_hash": "6cdb179ff7122a37779ce6ace4b35fc6f24b05595f70d3fd1230418818a8e5d3",
+    "evidence_note": "Reasoning alone earns no evidence level; a complete chain supports at most ladder level 1 (existing sources back the assumptions). Computation and independent re-execution move it further.",
+    "hypotheses_hash": "947f7a4f942d34b50ad5ae8643286968650a85f51255786bec38f20b858efcf3",
+    "hypotheses_ids": [
+      "RH1",
+      "RH2",
+      "RH3"
+    ],
+    "hypotheses_validated_by": "local id check only (sibling reasoning.py exposes no hypothesis validator entry point; hypothesis content rules stay sibling-owned)",
+    "kind": "reasoning-chain",
+    "link_fields": {
+      "brief": "brief_hash",
+      "critique": "critique_hash",
+      "decomposition": "decomposition_hash",
+      "hypotheses": "hypotheses_hash",
+      "preregistration": "prereg_hash"
+    },
+    "links": [
+      {
+        "hash": "15bdb662707909905a42074344b02739a4d1408a766cbad4354527320ed4ebe2",
+        "link": "07af13327a97bdd8cb0ce58f3e3129ca4694ca4d641eb00402ac405d9155701f",
+        "prev": "GENESIS",
+        "stage": "brief"
+      },
+      {
+        "hash": "947f7a4f942d34b50ad5ae8643286968650a85f51255786bec38f20b858efcf3",
+        "link": "6f0c46568b6dbf870fbbb54f213e9de64be3a79b7d8b644d3ac40ecd44ac56f2",
+        "prev": "07af13327a97bdd8cb0ce58f3e3129ca4694ca4d641eb00402ac405d9155701f",
+        "stage": "hypotheses"
+      },
+      {
+        "hash": "6cdb179ff7122a37779ce6ace4b35fc6f24b05595f70d3fd1230418818a8e5d3",
+        "link": "107112c58949758738c0276a2e144665878c9b2621f3308ed443e747a1bee26a",
+        "prev": "6f0c46568b6dbf870fbbb54f213e9de64be3a79b7d8b644d3ac40ecd44ac56f2",
+        "stage": "decomposition"
+      },
+      {
+        "hash": "2849270d226ce5ace0e0120701cb734a1e158ea1aace6bca93547b1d8c7e17d7",
+        "link": "8d8c01653bd5e0447eca6606f78ebbe651b2e2353c52d56fbb55da116d190ad5",
+        "prev": "107112c58949758738c0276a2e144665878c9b2621f3308ed443e747a1bee26a",
+        "stage": "preregistration"
+      }
+    ],
+    "prereg_hash": "2849270d226ce5ace0e0120701cb734a1e158ea1aace6bca93547b1d8c7e17d7",
+    "recorded_at": "2026-11-02T13:53:51.426228Z"
+  },
+  "critique": null,
+  "critique_pending": "No compute results exist yet, and the critic phase takes compute_results as input (cycle.REQUIRED_INPUTS['critic']); the scientific-critic's attack on plan+results will be filed before any Computational Lab entry is claimed complete.",
+  "cycle_id": "REASONING-EXAMPLE-001",
+  "decomposition": {
+    "decomposes": "RH1",
+    "math_check": "PENDING sibling mathematics-researcher (task 24): units, identities, edge cases not yet checked.",
+    "steps": [
+      {
+        "checkable": "yes: byte hash compare",
+        "computation": "Re-verify archived dataset SHA-256 against gate/delaney/SOURCES.md.",
+        "id": "D1",
+        "inputs": [
+          "gate/delaney/delaney-processed.csv"
+        ],
+        "output": "match / mismatch verdict"
+      },
+      {
+        "checkable": "yes: rerun from CSV alone",
+        "computation": "Compute the four RDKit descriptors (MolWt, MolLogP, NumRotatableBonds, AromaticProportion) for every row.",
+        "id": "D2",
+        "inputs": [
+          "archived CSV",
+          "RDKit 2026.09.1 per gate/GATE_PREP.md"
+        ],
+        "output": "descriptor table"
+      },
+      {
+        "checkable": "yes: verifier re-extracts independently",
+        "computation": "Apply the published equation with coefficients re-extracted from the paper text at gate run time (never hardcoded).",
+        "id": "D3",
+        "inputs": [
+          "descriptor table",
+          "paper text"
+        ],
+        "output": "predicted log solubility per compound"
+      },
+      {
+        "checkable": "yes: pure function of archived inputs",
+        "computation": "Score predicted vs measured (R2, RMSE, MAE) over all 1128 rows; file every compound the model misses badly.",
+        "id": "D4",
+        "inputs": [
+          "predictions",
+          "measured column"
+        ],
+        "output": "aggregate statistics + worst-miss list"
+      },
+      {
+        "checkable": "yes: clean-dir re-execution",
+        "computation": "Independent Verifier blind re-run from the archived CSV alone, confirming the aggregate error within the pre-stated tolerance.",
+        "id": "D5",
+        "inputs": [
+          "archived CSV",
+          "pre-registered tolerance"
+        ],
+        "output": "agree / disagree / indeterminate comparison record"
+      }
+    ]
+  },
+  "gate": {
+    "check": "gate_to_computational(chain, ledger_path)",
+    "honest_note": "Gate NOT passed to computational: the chain is 4 of 5 stages and no computation has run. Nothing has entered the Computational Lab; no evidence level earned; reasoning alone supports at most ladder level 1.",
+    "msg": "blocked: missing critique -- the scientific-critic's attack on the plan (confounds, leakage, cherry-picking) is a required record, not advice; file it before entering the Computational Lab.",
+    "ok": false,
+    "transition_taken": false
+  },
+  "ground_truth": {
+    "dataset": {
+      "file": "gate/delaney/delaney-processed.csv",
+      "hash_reverified_in_this_run": true,
+      "rows": 1128,
+      "sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189"
+    },
+    "paper_citation": "Delaney, J. S. (2004). ESOL: Estimating Aqueous Solubility Directly from Molecular Structure. J. Chem. Inf. Comput. Sci. 44(3), 1000-1005. doi:10.1021/ci034243x.",
+    "paper_figure": "TO_BE_READ_AT_RUN",
+    "paper_figure_note": "The paper text was not opened in this run, so no reported fit statistic is stated as fact. The gate run extracts it from the source at run time (SLICE1 s.4).",
+    "target_record": "os/worlds/science-lab/reproduction_target.json"
+  },
+  "honesty": [
+    "No paper RMSE/R2 is hardcoded as the paper figure; the paper figure is TO_BE_READ_AT_RUN.",
+    "The pre-registration threshold (R2 >= 0.5) is concrete and was filed to the ledger before any result exists; it cites the prep observation (R2 0.725) as motivation, never as the paper report.",
+    "Every number stated was read live in this run (dataset hash recomputed; prep stats read from gate/prep_results.json).",
+    "Gate NOT attempted beyond the readiness check above; no computation run, no result filed."
+  ],
+  "hypotheses": [
+    {
+      "alternative_explanation": "Descriptor substitution (RDKit Wildman-Crippen MolLogP for Daylight CLOGP 4.72) and set differences move the score below threshold.",
+      "disproof_condition": "R2 < 0.5 on the full archived set under the pre-registered scoring, or the Independent Verifier's re-run from archived inputs disagreeing beyond the pre-stated tolerance.",
+      "evidence_level": 0,
+      "filed_by": "hypothesis-generator",
+      "id": "RH1",
+      "measurable_prediction": "R2 >= 0.5 for predicted-vs-measured log solubility scored over all 1128 archived rows under the pre-registered rule.",
+      "proposed_explanation": "The published Delaney (2004) ESOL equation, applied with RDKit descriptors to the archived 1128-compound set, predicts measured log solubility with R2 >= 0.5.",
+      "research_question": "Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?",
+      "sources": [
+        "S1",
+        "S2",
+        "S3"
+      ]
+    },
+    {
+      "alternative_explanation": "Set composition (smaller processed set versus the paper's 2,874-compound training set) dominates the gap, not the descriptor swap.",
+      "disproof_condition": "Pearson r <= 0.3 between absolute error and MolLogP, or no monotonic trend of error with hydrophobicity.",
+      "evidence_level": 0,
+      "filed_by": "hypothesis-generator",
+      "id": "RH2",
+      "measurable_prediction": "Per-compound absolute error rises with hydrophobicity: Pearson r > 0.3 between absolute error and MolLogP on the archived set.",
+      "proposed_explanation": "Most of any RMSE gap versus the paper's reported standard error comes from the one known method difference: RDKit Wildman-Crippen MolLogP in place of Daylight CLOGP 4.72.",
+      "research_question": "Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?",
+      "sources": [
+        "S1",
+        "S3"
+      ]
+    },
+    {
+      "alternative_explanation": "Misses are uniform across structure classes, implicating a global bias rather than a domain limit.",
+      "disproof_condition": "Fewer than 6 of the 10 filed worst misses fall in those classes, or the misses spread uniformly across classes.",
+      "evidence_level": 0,
+      "filed_by": "hypothesis-generator",
+      "id": "RH3",
+      "measurable_prediction": "At least 6 of the 10 filed worst misses are long aliphatics or fused polyaromatics by structure class.",
+      "proposed_explanation": "The worst misses are dominated by long aliphatic chains and fused polyaromatics, outside a four-descriptor linear model's domain.",
+      "research_question": "Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?",
+      "sources": [
+        "S3"
+      ]
+    }
+  ],
+  "kind": "reasoning-chain-worked-example",
+  "ledger": {
+    "chain_entry_hash": "fa9c6761ba7110bf9cc1e5c2cd4f08be6b7db4b90d7db25ab269a71bd4c5b24a",
+    "chain_prev_hash": "2849270d226ce5ace0e0120701cb734a1e158ea1aace6bca93547b1d8c7e17d7",
+    "file": "records/ledger.jsonl",
+    "prereg_entry_hash": "2849270d226ce5ace0e0120701cb734a1e158ea1aace6bca93547b1d8c7e17d7",
+    "prereg_prev_hash": "74536f38628c62deb9e58f7c0892720a07953f5dbf2300124fb9652d57eeeb7c",
+    "verify": "ok: 5 entries verified"
+  },
+  "prereg_hash": "2849270d226ce5ace0e0120701cb734a1e158ea1aace6bca93547b1d8c7e17d7",
+  "preregistration": {
+    "agent": "statistician",
+    "cycle_id": "REASONING-EXAMPLE-001",
+    "kind": "preregistration",
+    "paper_figure": "TO_BE_READ_AT_RUN",
+    "paper_figure_note": "Per SCIENCE_LAB_W2_SLICE1.md section 4 the paper's reported fit is pulled from the source at gate run time, never hardcoded.",
+    "prep_observation_NOT_paper_report": {
+      "mae": 0.8438906219086839,
+      "note": "Our own prep-run score on this 1128-compound set (gate/prep_results.json, PREP RUN label); NOT the paper's reported statistics.",
+      "r2": 0.7247613093988003,
+      "rmse": 1.0993724206558086
+    },
+    "registered_before_results": true,
+    "sample_rule": "All 1128 archived rows; any unparseable row excluded and counted (prep run observed 0).",
+    "target_id": "delaney-2004-esol",
+    "test": "R2 of published-equation predictions vs measured log solubility, full archived set.",
+    "threshold": "R2 >= 0.5",
+    "threshold_basis": "Pre-registered BEFORE results exist. 0.5 is a fixed, lenient bar chosen with the prep-run observation (R2 0.725 on this set) as motivation -- it is NOT the paper figure."
+  },
+  "question": "Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?",
+  "recorded_by": "os/worlds/science-lab/reasoning_chain.py (build_chain) + sibling-owned jobs represented as filed records",
+  "target_id": "delaney-2004-esol"
+}

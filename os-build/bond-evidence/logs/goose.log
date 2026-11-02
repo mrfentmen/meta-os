@@ -1,0 +1,7 @@
+FAIL: echo round-trips (want [echo: hi] got [])
+FAIL: hello prints (want [HELLO FROM GOOSE] got [services/run-goose-tests.sh: line 19: /Users/test/mcp-servers/toolchains/goose-src/build/goose: No such file or directory])
+FAIL: host lists echo tool (want [{"ok":true,"tools":["echo"]}] got [services/run-goose-tests.sh: line 22: /Users/test/mcp-servers/toolchains/goose-src/build/goose: No such file or directory])
+FAIL: host answers echo (want [{"ok":true,"result":"t"}] got [services/run-goose-tests.sh: line 25: /Users/test/mcp-servers/toolchains/goose-src/build/goose: No such file or directory])
+FAIL: host refuses unknown (want [{"ok":false,"error":"unknown tool"}] got [services/run-goose-tests.sh: line 28: /Users/test/mcp-servers/toolchains/goose-src/build/goose: No such file or directory])
+services/run-goose-tests.sh: line 32: heartbeat.log: No such file or directory
+FAIL: heartbeat beats then stops (want [true] got [false])

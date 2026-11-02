@@ -1,0 +1,314 @@
+TAP version 13
+# Subtest: adoptions file covers 5 candidates with licences and verdicts
+ok 1 - adoptions file covers 5 candidates with licences and verdicts
+  ---
+  duration_ms: 11.358138
+  type: 'test'
+  ...
+# Subtest: adoptions file covers 5 keyless APIs with smoke notes
+ok 2 - adoptions file covers 5 keyless APIs with smoke notes
+  ---
+  duration_ms: 0.559332
+  type: 'test'
+  ...
+# Subtest: audit passes a clean catalogue and catches silence + duplicates
+ok 3 - audit passes a clean catalogue and catches silence + duplicates
+  ---
+  duration_ms: 6946.308535
+  type: 'test'
+  ...
+# Subtest: studio board browses all session catalogues with rights
+ok 4 - studio board browses all session catalogues with rights
+  ---
+  duration_ms: 12718.852725
+  type: 'test'
+  ...
+# Subtest: board shows the live session from real records
+ok 5 - board shows the live session from real records
+  ---
+  duration_ms: 6451.090975
+  type: 'test'
+  ...
+# Subtest: brief chipsynth parses and drives a logged session
+ok 6 - brief chipsynth parses and drives a logged session
+  ---
+  duration_ms: 1866.942218
+  type: 'test'
+  ...
+# Subtest: brief ambient parses and drives a logged session
+ok 7 - brief ambient parses and drives a logged session
+  ---
+  duration_ms: 1503.857584
+  type: 'test'
+  ...
+# Subtest: brief boom-bap parses and drives a logged session
+ok 8 - brief boom-bap parses and drives a logged session
+  ---
+  duration_ms: 1869.253616
+  type: 'test'
+  ...
+# Subtest: cap hit stops the session gracefully, not as an error
+ok 9 - cap hit stops the session gracefully, not as an error
+  ---
+  duration_ms: 223.814252
+  type: 'test'
+  ...
+# Subtest: under the cap the loop runs normally
+ok 10 - under the cap the loop runs normally
+  ---
+  duration_ms: 3210.339704
+  type: 'test'
+  ...
+# Subtest: catalogue exports keepers with licence and provenance
+ok 11 - catalogue exports keepers with licence and provenance
+  ---
+  duration_ms: 7390.122461
+  type: 'test'
+  ...
+# Subtest: demo cut lands on target from labelled keeper excerpts
+ok 12 - demo cut lands on target from labelled keeper excerpts
+  ---
+  duration_ms: 16852.397585
+  type: 'test'
+  ...
+# Subtest: duet scope doc states the rule and its unbuilt status
+ok 13 - duet scope doc states the rule and its unbuilt status
+  ---
+  duration_ms: 1.693613
+  type: 'test'
+  ...
+# Subtest: boards show the honest no-sessions-yet state
+ok 14 - boards show the honest no-sessions-yet state
+  ---
+  duration_ms: 304.183883
+  type: 'test'
+  ...
+# Traceback (most recent call last):
+#   File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 103, in <module>
+#     sys.exit(main())
+#              ~~~~^^
+#   File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 96, in main
+#     manifest = export_session_midi(args.session_dir)
+#   File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 39, in export_session_midi
+#     import pretty_midi
+# ModuleNotFoundError: No module named 'pretty_midi'
+# Subtest: one command bundles tracks, catalogue, and rights
+not ok 15 - one command bundles tracks, catalogue, and rights
+  ---
+  duration_ms: 7839.40761
+  type: 'test'
+  location: '/Users/dtaxk/Desktop/meta-os/tests/musica-export.test.mjs:21:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Command failed: python3 /Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py /Users/dtaxk/Desktop/staging/musica-export-test
+    Traceback (most recent call last):
+      File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 103, in <module>
+        sys.exit(main())
+                 ~~~~^^
+      File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 96, in main
+        manifest = export_session_midi(args.session_dir)
+      File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 39, in export_session_midi
+        import pretty_midi
+    ModuleNotFoundError: No module named 'pretty_midi'
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    genericNodeError (node:internal/errors:983:15)
+    wrappedFn (node:internal/errors:537:14)
+    checkExecSyncError (node:child_process:916:11)
+    execFileSync (node:child_process:952:15)
+    py (file:///Users/dtaxk/Desktop/meta-os/tests/musica-export.test.mjs:16:10)
+    TestContext.<anonymous> (file:///Users/dtaxk/Desktop/meta-os/tests/musica-export.test.mjs:29:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: bundle lists missing files instead of hiding them
+ok 16 - bundle lists missing files instead of hiding them
+  ---
+  duration_ms: 309.57279
+  type: 'test'
+  ...
+# Subtest: gate packet assembles pack, records, catalogues, tests
+ok 17 - gate packet assembles pack, records, catalogues, tests
+  ---
+  duration_ms: 362.982395
+  type: 'test'
+  ...
+# Subtest: blind A/B page hides identities and records the pick
+ok 18 - blind A/B page hides identities and records the pick
+  ---
+  duration_ms: 6824.261376
+  type: 'test'
+  ...
+# Subtest: keeper bar passes real takes and rejects degenerate audio
+ok 19 - keeper bar passes real takes and rejects degenerate audio
+  ---
+  duration_ms: 2967.000507
+  type: 'test'
+  ...
+# Subtest: prompt library reports keeper rates from the logs
+ok 20 - prompt library reports keeper rates from the logs
+  ---
+  duration_ms: 7659.800167
+  type: 'test'
+  ...
+# Subtest: loop renders real WAV takes and logs each one
+ok 21 - loop renders real WAV takes and logs each one
+  ---
+  duration_ms: 4775.692387
+  type: 'test'
+  ...
+# Subtest: loop is deterministic and replays a logged take byte-identically
+ok 22 - loop is deterministic and replays a logged take byte-identically
+  ---
+  duration_ms: 1663.019254
+  type: 'test'
+  ...
+# Traceback (most recent call last):
+#   File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 103, in <module>
+#     sys.exit(main())
+#              ~~~~^^
+#   File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 96, in main
+#     manifest = export_session_midi(args.session_dir)
+#   File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 39, in export_session_midi
+#     import pretty_midi
+# ModuleNotFoundError: No module named 'pretty_midi'
+# Subtest: MIDI export writes the take's own notes via pretty_midi
+not ok 23 - MIDI export writes the take's own notes via pretty_midi
+  ---
+  duration_ms: 4030.047002
+  type: 'test'
+  location: '/Users/dtaxk/Desktop/meta-os/tests/musica-midi.test.mjs:21:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Command failed: python3 /Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py /Users/dtaxk/Desktop/staging/musica-midi-test
+    Traceback (most recent call last):
+      File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 103, in <module>
+        sys.exit(main())
+                 ~~~~^^
+      File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 96, in main
+        manifest = export_session_midi(args.session_dir)
+      File "/Users/dtaxk/Desktop/meta-os/os/worlds/musica/runtime/midi.py", line 39, in export_session_midi
+        import pretty_midi
+    ModuleNotFoundError: No module named 'pretty_midi'
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    genericNodeError (node:internal/errors:983:15)
+    wrappedFn (node:internal/errors:537:14)
+    checkExecSyncError (node:child_process:916:11)
+    execFileSync (node:child_process:952:15)
+    py (file:///Users/dtaxk/Desktop/meta-os/tests/musica-midi.test.mjs:16:10)
+    TestContext.<anonymous> (file:///Users/dtaxk/Desktop/meta-os/tests/musica-midi.test.mjs:26:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    Test.start (node:internal/test_runner/test:944:17)
+    startSubtestAfterBootstrap (node:internal/test_runner/harness:296:17)
+  ...
+# Subtest: museum renders real rejects with reasons
+ok 24 - museum renders real rejects with reasons
+  ---
+  duration_ms: 5656.752859
+  type: 'test'
+  ...
+# Subtest: catalogue tracks normalise to -16 LUFS with before/after
+ok 25 - catalogue tracks normalise to -16 LUFS with before/after
+  ---
+  duration_ms: 9017.289356
+  type: 'test'
+  ...
+# Subtest: overnight pipeline runs and reports honest counts
+ok 26 - overnight pipeline runs and reports honest counts
+  ---
+  duration_ms: 9342.666896
+  type: 'test'
+  ...
+# Subtest: musica pack validates green
+ok 27 - musica pack validates green
+  ---
+  duration_ms: 144.963727
+  type: 'test'
+  ...
+# Subtest: musica pack status is honest partial at HN-045
+ok 28 - musica pack status is honest partial at HN-045
+  ---
+  duration_ms: 2.768332
+  type: 'test'
+  ...
+# Subtest: musica PACK.md states proven and unproven honestly
+ok 29 - musica PACK.md states proven and unproven honestly
+  ---
+  duration_ms: 0.801587
+  type: 'test'
+  ...
+# Subtest: worlds registry lists musica
+ok 30 - worlds registry lists musica
+  ---
+  duration_ms: 0.987717
+  type: 'test'
+  ...
+# Subtest: resume after a simulated mid-take kill loses no takes
+ok 31 - resume after a simulated mid-take kill loses no takes
+  ---
+  duration_ms: 7935.302301
+  type: 'test'
+  ...
+# Subtest: musica is registered as a studio product with honest limitations
+ok 32 - musica is registered as a studio product with honest limitations
+  ---
+  duration_ms: 2.603331
+  type: 'test'
+  ...
+# Subtest: PRODUCTS array is untouched by the Musica registry entry
+ok 33 - PRODUCTS array is untouched by the Musica registry entry
+  ---
+  duration_ms: 0.444056
+  type: 'test'
+  ...
+# Subtest: session report matches the take log
+ok 34 - session report matches the take log
+  ---
+  duration_ms: 5523.40348
+  type: 'test'
+  ...
+# Subtest: rights check rejects tracks with empty rights lines
+ok 35 - rights check rejects tracks with empty rights lines
+  ---
+  duration_ms: 5640.753265
+  type: 'test'
+  ...
+# Subtest: spark builders follow the repo contract and record attempts
+ok 36 - spark builders follow the repo contract and record attempts
+  ---
+  duration_ms: 163.563267
+  type: 'test'
+  ...
+# Subtest: loop with --spark-assist records an attempt per take
+ok 37 - loop with --spark-assist records an attempt per take
+  ---
+  duration_ms: 2794.930375
+  type: 'test'
+  ...
+# Subtest: take-log schema accepts good takes and rejects broken ones
+ok 38 - take-log schema accepts good takes and rejects broken ones
+  ---
+  duration_ms: 134.609851
+  type: 'test'
+  ...
+# Subtest: variation pass rejects a near-identical clone
+ok 39 - variation pass rejects a near-identical clone
+  ---
+  duration_ms: 1741.823993
+  type: 'test'
+  ...
+1..39
+# tests 39
+# suites 0
+# pass 37
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 50131.737119

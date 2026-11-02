@@ -6,8 +6,25 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export function parseInbox(text) {
-  const jobs = [];
+export const ORDER_REFUSALS = {
+  "malformed-no-colon": "the line has no 'agent:' prefix, so the order has no owner",
+  "empty-agent": "the line names no agent before the colon",
+  "empty-order": "the line names an agent but asks for nothing",
+  "not-a-string": "an order must be text",
+};
+
+export function validateOrder(line) {
+  if (typeof line !== "string") return { ok: false, reason: "not-a-string" };
+  const text = line.trim();
+  if (!text) return { ok: false, reason: "empty-order" };
+  const at = text.indexOf(":");
+  if (at < 0) return { ok: false, reason: "malformed-no-colon" };
+  if (at === 0) return { ok: false, reason: "empty-agent" };
+  if (!text.slice(at + 1).trim()) return { ok: false, reason: "empty-order" };
+  return { ok: true, agent: text.slice(0, at).trim(), orders: text.slice(at + 1).trim() };
+}
+
+export function parseInbox(text) {  const jobs = [];
   const skipped = [];
   text.split(/\r?\n/).forEach((raw, i) => {
     const line = raw.trim();
@@ -56,4 +73,14 @@ export function dropOrders(inboxFile, jobsDir, { now = Date.now(), source = "han
   }
   fs.writeFileSync(inboxFile, skipped.length ? skipped.map((s) => s.text).join("\n") + "\n" : "");
   return { jobs: written, skipped };
+}
+
+/* ---- CLI: node handsfree/intake.mjs <inbox> <jobsDir> ---- */
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {
+  const [, , inbox, jobsDir] = process.argv;
+  if (!inbox || !jobsDir) { console.error("usage: intake.mjs <inbox> <jobsDir>"); process.exit(2); }
+  const r = dropOrders(inbox, jobsDir);
+  console.log("handsfree intake: filed " + r.jobs.length + ", refused " + r.skipped.length);
+  for (const s of r.skipped) console.log("  refused line " + s.line + ": " + s.reason);
+  process.exit(r.skipped.length ? 1 : 0);
 }
