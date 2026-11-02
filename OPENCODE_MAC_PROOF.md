@@ -20,11 +20,34 @@ bus-tools/bus-send, tests/test_bus_admin_e2e.py.
    the rust-src and llvm-tools-preview components, and bootimage
    installed. Record `rustc +nightly --version` and
    `qemu-system-x86_64 --version` in the report.
-3. Build the userspace FIRST. kernel/build.rs stages the userspace
-   ELFs with include_bytes and does not build them; it panics with a
-   recovery command if they are missing. From os-build/userspace/user:
-   `cargo build --target x86_64-unknown-none` (bins: hello, sleeper,
-   crasher). Record the result.
+   PATH WARNING (Buffy's finding, 2026-11-01, os-build/PAX_12H.md):
+   on this Mac, Homebrew's stable cargo/rustc sit ahead of the rustup
+   proxies in PATH, so `cargo +nightly` and -Z flags hit the WRONG
+   compiler and the failure reads like "no toolchain". Pin nightly
+   explicitly for every cargo call in this task:
+   NIGHTLY="$(dirname "$(rustup which --toolchain nightly rustc)")"
+   and prefix commands with PATH="$NIGHTLY:$PATH".
+3. Build the userspace FIRST, per program, with its linker script.
+   kernel/build.rs stages the userspace ELFs with include_bytes and
+   does not build them; it panics with a recovery command if they are
+   missing. The tracked config in os-build/userspace/.cargo does NOT
+   pass the linker script, so a plain build links all three programs
+   near 0x201000 and the kernel loader refuses them at boot
+   ("loader refused: address in use") — a known defect, proven and
+   documented in os-build/PAX_12H.md section 0.2. Build each program
+   at its own base (hello 0x600000000000, sleeper 0x610000000000,
+   crasher 0x620000000000): from os-build/userspace/user, for each
+   program, sed its base into a copy of link.ld (the shipped link.ld
+   already carries crasher's base) and build with
+   RUSTFLAGS="-C relocation-model=static -C code-model=large -C link-arg=-no-pie -C link-arg=-T<that copy>"
+   and the pinned PATH from step 2. The full recipe is Appendix A3
+   and Appendix B of os-build/PAX_12H.md; follow it exactly. Do not
+   edit the tracked config or link.ld in this task; the pipeline fix
+   lands separately through Pax.
+   ALSO deliverable in this task: save that exact build+boot recipe
+   as os-build/gate.sh on the report branch (Buffy's Appendix B is
+   the proven draft; adapt the paths to this repo state) so the next
+   proof is one command, not a human who knows the tricks.
 4. Build the kernel image. From kernel/: `cargo +nightly bootimage`.
    Do not edit kernel/.cargo/config.toml (it carries the
    relocation-model=static fix and the build-std list; the merge
@@ -42,6 +65,11 @@ bus-tools/bus-send, tests/test_bus_admin_e2e.py.
    HELLO FROM USERSPACE, sleeper: after sleep, user exit code 0), and
    must contain no panic. Save the best full log as
    os-build/logs/MERGED-boot.txt on the report branch.
+   If a boot log instead shows "loader refused", the per-program
+   build in step 3 was not used or did not take: that is a FAIL
+   verdict for this proof. Report it with the log attached and the
+   exact build commands you ran; do not paper over it and do not
+   hand-edit binaries.
 7. Musica on the Mac: install pretty_midi for the Python the repo
    tests use (it is missing on the Mac; the sandbox needed the same
    install), then from the repo root run
