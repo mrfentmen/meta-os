@@ -1,0 +1,8 @@
+# B-L1-133 -- log records (services/logd)
+CASE record_over_slot | generated:161_bytes | expect E_NOROOM | one record longer than the fixed slot must be refused, never truncated into a valid-looking shorter record
+CASE newline_in_message | "info tag hello\nworld" | expect CODE_OK | a newline in a message must be escaped or split, not break the record boundary
+CASE level_out_of_range | generated:level_99 | expect E_INVAL | an unknown level has no letter and no ordering
+CASE tag_with_nul | "hex:696e666f20740067206d7367" | expect E_INVAL | a NUL in a tag truncates it at the first C consumer
+CASE empty_message | "info tag " | expect CODE_OK | an empty message is a legal record and must round-trip
+CASE control_bytes | "hex:696e666f20742001020a" | expect CODE_OK | control bytes are escaped, not refused: a service logging binary must still be loggable
+CASE invalid_utf8_in_message | "hex:696e666f207420ff0a" | expect CODE_OK | the log carries bytes; UTF-8 validity is the display layer's problem

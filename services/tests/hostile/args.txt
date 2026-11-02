@@ -1,0 +1,11 @@
+# B-L1-130 -- shell argument parser (services/common/args)
+CASE unmatched_quote | "echo \"unterminated" | expect E_SYNTAX | an unterminated quote must not consume the rest of the script
+CASE trailing_backslash | "echo hi\\" | expect E_SYNTAX | a backslash at end of input escapes nothing
+CASE empty_quotes | "echo \"\" x" | expect CODE_OK | an empty argument is a real argument, and dropping it changes argv
+CASE quote_inside_word | "echo ab\"cd\"ef" | expect CODE_OK | adjacent quoting is one word: abcdef
+CASE too_many_args | generated:100_args | expect E_NOROOM | more args than the fixed argv must refuse, not overwrite
+CASE line_too_long | generated:4096_byte_line | expect E_NOROOM | longer than the line buffer must refuse
+CASE escapes_inside_quotes | "echo \"a\\\\b\"" | expect CODE_OK | backslash inside quotes is a literal backslash here, and must survive
+CASE lone_dollar | "echo $" | expect CODE_OK | no expansion is performed; $ is data
+CASE only_spaces | "    " | expect CODE_OK | whitespace with no argv is an empty command, not an error
+CASE redirect_without_target | "echo hi >" | expect E_SYNTAX | a redirection with no file is a truncated command

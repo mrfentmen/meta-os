@@ -14,7 +14,8 @@ Streamable HTTP at `http://127.0.0.1:8931/mcp`. `mcp_call.py` is a
 command-line client: `mcp_call.py list` and
 `mcp_call.py call <tool> '<json args>'`.
 
-The committed `backends.json` is Pax's live config: 105 backends,
+The committed `backends.json` is Pax's live config: 62 backends
+(the boss trimmed the games/media and shop servers out 2026-11-01),
 including the boss's own servers wired 2026-11-01 — `goose__*`
 (goose-mcp 1.1.0, 17 tools), `lobster__*` (lobster-mcp 1.1.0, 16
 tools), `browser__*` (@mrfentmen/browser-mcp, 6 tools) — plus
@@ -38,8 +39,8 @@ they have not been published under those names.
    npm / PyPI packages named in each backend's args.
 3. Trim `backends.json` to the backends you actually installed — the
    gateway skips a backend that fails to start and keeps serving the
-   rest, but a trimmed config boots far faster (105 backends take
-   about 2.5 minutes to all come up).
+   rest, but a trimmed config boots far faster (62 backends take
+   about 1.5 minutes to all come up).
 4. Start: `./start-gateway.sh` — wait until it prints
    `gateway: serving Streamable HTTP on 127.0.0.1:8931/mcp`.
 5. Point your MCP client at `http://127.0.0.1:8931/mcp`, or use

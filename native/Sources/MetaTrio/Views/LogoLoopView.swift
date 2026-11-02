@@ -10,27 +10,27 @@ import SwiftUI
 // aspect, recomputed from the actual view size every frame, so
 // the loop keeps its shape in any window (the web's fixed 1.76
 // was only right at 16:9 and stretched the loop elsewhere).
-// LOGO-NATIVE-1/2 contracts are unchanged: the Logo panel's color,
-// rotation speed slider, and pause button drive this loop under
-// the web panel's own storage keys (meta-trio-logo-color,
-// meta-trio-logo-speed, meta-trio-logo-paused). Speed is a
-// percent, 0 to 100, default 25: 25% is the web background's usual
-// slow drift, 0% is still, 100% is four times that pace. Pause
-// holds the loop on its last frame; Resume restarts it from that
-// frame, never from the start. A speed change or a pause/resume
-// re-bases the phase anchor, so neither jumps the loop, and a
-// clock jump backwards never drives the phase negative. A
-// user-picked color wins over product switches until Reset,
-// reduced motion renders one still frame, and the view ignores
-// pointer input and is hidden from accessibility. The one
-// deliberate difference from the web: the web's specular pass
-// glows through a canvas shadow; here the specular cells are
-// simply overdrawn in the specular color, no shadow. No Swift
-// toolchain exists in this sandbox, so this is checked by
-// inspection and by the static tests in
-// tests/native-logo-animation.test.mjs and
-// tests/native-logo-color.test.mjs; a Mac build run is the real
-// verification. The one-argument onChange form below is
+// The LOGO-NATIVE-2 contract is unchanged: the rotation speed
+// slider and pause button drive this loop under the web panel's
+// own storage keys (meta-trio-logo-speed, meta-trio-logo-paused).
+// Speed is a percent, 0 to 100, default 25: 25% is the web
+// background's usual slow drift, 0% is still, 100% is four times
+// that pace. Pause holds the loop on its last frame; Resume
+// restarts it from that frame, never from the start. A speed
+// change or a pause/resume re-bases the phase anchor, so neither
+// jumps the loop, and a clock jump backwards never drives the
+// phase negative. The tint is always the selected product's own
+// palette: the LOGO-1 custom color (the deleted color model
+// and panel) is gone by the boss's order, so no stored color can
+// override a product switch. Reduced motion renders one still
+// frame, and the view ignores pointer input and is hidden from
+// accessibility. The one deliberate difference from the web: the
+// web's specular pass glows through a canvas shadow; here the
+// specular cells are simply overdrawn in the specular color, no
+// shadow. No Swift toolchain exists in this sandbox, so this is
+// checked by inspection and by the static tests in
+// tests/native-logo-animation.test.mjs; a Mac build run is the
+// real verification. The one-argument onChange form below is
 // deliberate: it is the form this package already builds with.
 
 private struct RibbonVec {
@@ -56,7 +56,6 @@ private struct RibbonSample {
 }
 
 struct LogoLoopView: View {
-    @AppStorage("meta-trio-logo-color") private var customHex: String = ""
     @AppStorage("meta-trio-logo-speed") private var speedPercent: Int = 25
     @AppStorage("meta-trio-logo-paused") private var paused: Bool = false
     @ObservedObject var model: AppModel
@@ -87,7 +86,8 @@ struct LogoLoopView: View {
     private static let angleX = -0.045
     private static let initialAngleY = 0.045
 
-    private static let glyphArray: [Character] = Array(LogoColor.glyphs)
+    // Web GLYPHS string, verbatim (js/logo-background.js).
+    private static let glyphArray: [Character] = Array(" .,:;irsXA253hMHGS#9B&@")
     private static let lightDirection = RibbonVec(x: -0.38, y: 0.62, z: 0.91).normalized()
     private static let halfVector: RibbonVec = {
         let light = LogoLoopView.lightDirection
@@ -96,31 +96,24 @@ struct LogoLoopView: View {
     private static let surfaceSamples: [RibbonSample] = LogoLoopView.buildSurface()
 
     private var palette: [Color] {
-        if LogoColor.isValidHex(customHex) {
-            return LogoColor.buildPalette(baseHex: customHex.lowercased())
-        }
-        return LogoColor.productPalette(for: model.selectedProduct)
+        Self.productPalette(for: model.selectedProduct)
     }
 
     // Web specular colors, verbatim (js/logo-background.js
-    // SPECULARS). A custom color's specular is its own palette's
-    // lightest step, which is the web's mix toward white at 0.9.
+    // SPECULARS).
     private var specularColor: Color {
-        if LogoColor.isValidHex(customHex) {
-            return palette.last ?? .white
-        }
         switch model.selectedProduct {
         case .vigiles:
-            return LogoColor.color(fromHex: "#eafcff") ?? .white
+            return Self.color(fromHex: "#eafcff") ?? .white
         case .ignis:
-            return LogoColor.color(fromHex: "#ffe8e0") ?? .white
+            return Self.color(fromHex: "#ffe8e0") ?? .white
         case .medicus:
-            return LogoColor.color(fromHex: "#e8fbe9") ?? .white
+            return Self.color(fromHex: "#e8fbe9") ?? .white
         case .scienceLab:
-            // HN-077: no web science-lab specular exists yet, so this
-            // follows the documented custom-color rule — the specular is
-            // the derived science-lab palette's lightest step.
-            return LogoColor.productPalette(for: .scienceLab).last ?? .white
+            // HN-077: no web science-lab specular exists yet, so the
+            // specular is the derived science-lab palette's lightest
+            // step.
+            return Self.productPalette(for: .scienceLab).last ?? .white
         }
     }
 
@@ -144,6 +137,100 @@ struct LogoLoopView: View {
     private func phase(at date: Date) -> Double {
         if paused { return anchorPhase }
         return runningPhase(at: date)
+    }
+
+    // Palette helpers, formerly the deleted color model:
+    // only what the product palettes still need lives here now.
+
+    private static func isValidHex(_ value: String) -> Bool {
+        guard value.hasPrefix("#"), value.count == 7 else { return false }
+        return value.dropFirst().allSatisfy { $0.isHexDigit }
+    }
+
+    private static func color(fromHex hex: String) -> Color? {
+        guard isValidHex(hex) else { return nil }
+        let clean = hex.dropFirst()
+        var rgb: UInt64 = 0
+        guard Scanner(string: String(clean)).scanHexInt64(&rgb) else { return nil }
+        return Color(
+            red: Double((rgb >> 16) & 0xff) / 255.0,
+            green: Double((rgb >> 8) & 0xff) / 255.0,
+            blue: Double(rgb & 0xff) / 255.0
+        )
+    }
+
+    private static func rgb(of hex: String) -> (Double, Double, Double)? {
+        guard isValidHex(hex) else { return nil }
+        let clean = hex.dropFirst()
+        var value: UInt64 = 0
+        guard Scanner(string: String(clean)).scanHexInt64(&value) else { return nil }
+        return (
+            Double((value >> 16) & 0xff),
+            Double((value >> 8) & 0xff),
+            Double(value & 0xff)
+        )
+    }
+
+    private static func hexString(r: Double, g: Double, b: Double) -> String {
+        String(format: "#%02x%02x%02x", Int(round(r)), Int(round(g)), Int(round(b)))
+    }
+
+    private static func mix(_ first: String, _ second: String, _ amountSecond: Double) -> String {
+        guard let a = rgb(of: first), let b = rgb(of: second) else { return first }
+        return hexString(
+            r: a.0 + (b.0 - a.0) * amountSecond,
+            g: a.1 + (b.1 - a.1) * amountSecond,
+            b: a.2 + (b.2 - a.2) * amountSecond
+        )
+    }
+
+    // Web buildPalette, verbatim amounts (js/logo-background.js):
+    // still used for the derived science-lab ramp below.
+    private static func buildPalette(baseHex: String) -> [Color] {
+        let hexes = [
+            mix(baseHex, "#020817", 0.88),
+            mix(baseHex, "#020817", 0.72),
+            mix(baseHex, "#020817", 0.53),
+            mix(baseHex, "#020817", 0.31),
+            baseHex,
+            mix(baseHex, "#ffffff", 0.18),
+            mix(baseHex, "#ffffff", 0.38),
+            mix(baseHex, "#ffffff", 0.62),
+            mix(baseHex, "#ffffff", 0.9),
+        ]
+        return hexes.compactMap { color(fromHex: $0) }
+    }
+
+    // Web PALETTES, verbatim (js/logo-background.js).
+    private static func productPalette(for product: ProductID) -> [Color] {
+        let hexes: [String]
+        switch product {
+        case .vigiles:
+            hexes = [
+                "#062258", "#07357f", "#0750bc", "#4f7ec2",
+                "#6a96d8", "#8ab4e8", "#a8c8f0", "#c8ddf8", "#eaf2ff",
+            ]
+        case .ignis:
+            hexes = [
+                "#3d0a08", "#5c1410", "#7f1d18", "#a32424",
+                "#d92b2b", "#e85545", "#f07a68", "#ffa08e", "#ffd9d0",
+            ]
+        case .medicus:
+            hexes = [
+                "#0a2e12", "#123f1c", "#1e5429", "#2f6b3a",
+                "#5da864", "#7cc47f", "#9ad69c", "#bfe8c2", "#e6f9e8",
+            ]
+        case .scienceLab:
+            // HN-077: the web has no science-lab PALETTES entry yet (the
+            // web background falls back to vigiles for unknown products),
+            // so there is no verbatim palette to copy. This ramp is
+            // derived from the science-lab accent #7c5cbf with the same
+            // buildPalette algorithm — a real derived ramp, not a copied
+            // web palette. Replace it with the verbatim palette when the
+            // web gains a science-lab entry.
+            return buildPalette(baseHex: "#7c5cbf")
+        }
+        return hexes.compactMap { color(fromHex: $0) }
     }
 
     // The web ribbon path (loopPoint in js/logo-background.js).

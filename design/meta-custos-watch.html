@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta Custos — Night Watch</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; background: #070604; color: #e8dcc2; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  header { padding: 14px 18px; border-bottom: 1px solid #2b2113; display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+  header h1 { font-size: 15px; margin: 0; letter-spacing: 0.22em; color: #f5a623; }
+  header p { font-size: 11px; color: #9a8a68; margin: 0; }
+  .state { margin-left: auto; font-size: 11px; color: #f5a623; border: 1px solid #6b531f; padding: 4px 10px; border-radius: 999px; }
+  main { display: grid; grid-template-columns: minmax(300px, 460px) 1fr; gap: 0; }
+  #scope { padding: 18px; border-right: 1px solid #2b2113; }
+  canvas { display: block; width: 100%; height: auto; }
+  #wards { padding: 18px; }
+  h2 { font-size: 12px; letter-spacing: 0.18em; color: #9a8a68; margin: 0 0 10px; font-weight: normal; }
+  .ward { display: flex; justify-content: space-between; gap: 10px; padding: 9px 4px; border-bottom: 1px dashed #2b2113; font-size: 13px; }
+  .ward .ok { color: #8fce6e; }
+  .ward .quiet { color: #9a8a68; }
+  #log { padding: 0 18px 18px; font-size: 12px; color: #9a8a68; line-height: 1.9; }
+  #log b { color: #e8dcc2; font-weight: normal; }
+  footer { padding: 10px 18px; font-size: 11px; color: #6e6046; border-top: 1px solid #2b2113; }
+  @media (max-width: 760px) { main { grid-template-columns: 1fr; } #scope { border-right: none; border-bottom: 1px solid #2b2113; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>META CUSTOS · NIGHT WATCH</h1>
+  <p>Watches the machines and the wire while the crew sleeps. Speaks only when something moves.</p>
+  <span class="state">STATE: PARKED — wakes when the OS lands (boss order)</span>
+</header>
+<main>
+  <section id="scope" aria-label="Watch scope">
+    <h2>SWEEP</h2>
+    <canvas id="radar" width="420" height="420"></canvas>
+  </section>
+  <section id="wards" aria-label="Wards">
+    <h2>WARDS UNDER WATCH</h2>
+    <div class="ward"><span>muse-relay crew bus</span><span class="ok">watched — polls on cadence</span></div>
+    <div class="ward"><span>meta-os repository</span><span class="ok">watched — merges via Pax only</span></div>
+    <div class="ward"><span>MCP gateway (62 backends)</span><span class="ok">watched — health on change</span></div>
+    <div class="ward"><span>job sweep boards</span><span class="ok">watched — 3h cadence</span></div>
+    <div class="ward"><span>external sources</span><span class="quiet">quiet — nothing moves</span></div>
+    <div class="ward"><span>suite record</span><span class="quiet">125 / 125 tests at last full run (record)</span></div>
+  </section>
+</main>
+<section id="log" aria-label="Watch log">
+  <h2>WATCH LOG — RECORDS, NOT A LIVE FEED</h2>
+  <div><b>03:12</b> — bus watch: B10 advanced, uncompiled, queue state unchanged.</div>
+  <div><b>02:57</b> — hourly status gathered; corrections issued against stale lines.</div>
+  <div><b>standing</b> — a watch that cries wolf is worse than none: silence means quiet, not dead.</div>
+</section>
+<footer>Custos is system four of Meta OS (adopted 2026-11-01). Design front end, 2026-11-02: night-watch identity — near-black, amber, sparse.</footer>
+<script>
+"use strict";
+const cv = document.getElementById("radar"), ctx = cv.getContext("2d");
+const C = 210, R = 196;
+const blips = [ { a: 0.7, r: 0.45, t: "bus" }, { a: 2.2, r: 0.7, t: "repo" }, { a: 3.6, r: 0.3, t: "gateway" }, { a: 5.3, r: 0.82, t: "boards" } ];
+let sweep = 0;
+function draw() {
+  ctx.clearRect(0, 0, 420, 420);
+  ctx.strokeStyle = "#3a2c14"; ctx.lineWidth = 1;
+  for (const rr of [0.33, 0.66, 1]) { ctx.beginPath(); ctx.arc(C, C, R * rr, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(C - R, C); ctx.lineTo(C + R, C); ctx.moveTo(C, C - R); ctx.lineTo(C, C + R); ctx.stroke();
+  const g = ctx.createConicGradient ? ctx.createConicGradient(sweep, C, C) : null;
+  if (g) {
+    g.addColorStop(0, "rgba(245,166,35,0.20)"); g.addColorStop(0.12, "rgba(245,166,35,0.0)"); g.addColorStop(1, "rgba(245,166,35,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(C, C); ctx.arc(C, C, R, sweep - 0.8, sweep); ctx.closePath(); ctx.fill();
+  }
+  ctx.strokeStyle = "#f5a623"; ctx.beginPath(); ctx.moveTo(C, C);
+  ctx.lineTo(C + R * Math.cos(sweep), C + R * Math.sin(sweep)); ctx.stroke();
+  ctx.fillStyle = "#f5a623"; ctx.font = "10px monospace";
+  for (const b of blips) {
+    const x = C + R * b.r * Math.cos(b.a), y = C + R * b.r * Math.sin(b.a);
+    let d = (sweep - b.a) % (Math.PI * 2); if (d < 0) d += Math.PI * 2;
+    const glow = Math.max(0, 1 - d / 2.2);
+    ctx.globalAlpha = 0.25 + 0.75 * glow;
+    ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+    ctx.fillText(b.t, x + 8, y + 3);
+    ctx.globalAlpha = 1;
+  }
+  sweep += 0.011;
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body>
+</html>

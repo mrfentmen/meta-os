@@ -1,0 +1,33 @@
+== userspace ==
+== kernel ==
+Created bootimage for `metaos-kernel` at `/private/tmp/os-build/kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin`
+== boot (serial to /tmp/os-build/os-build/logs/pipeline-boot.txt) ==
+== milestones ==
+PASS: K1 alive
+PASS: K2 banner
+PASS: K2 console
+PASS: K3 uptime
+PASS: K4 heap
+PASS: K4 summary
+PASS: K5 interleave A
+PASS: K5 interleave B
+PASS: K5 sleep/wake
+PASS: K6 hello
+PASS: K6 sleeper
+PASS: K6 bad call refused
+PASS: K6 user fault kill
+PASS: K expected-line set
+== goose suite ==
+PASS: updater stages release
+goose tests: 7 pass, 0 fail
+== lobster proofs (checked, not just produced) ==
+PASS: lobster hello
+FAIL: lobster memory-1
+PASS: lobster memory-2
+PASS: lobster identity
+PASS: lobster budget
+PASS: lobster MCP call
+== flakes ==
+pipeline: pass=14 fail=1
+PIPELINE pass=14 fail=1
+PIPELINE_EXIT:1

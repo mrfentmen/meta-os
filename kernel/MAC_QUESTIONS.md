@@ -203,6 +203,340 @@ Why: R3's `dispatch()` + `InterruptFrame` contract is written, but
 the entry points that call it do not exist yet. Until Q9 is answered,
 R3 stays unwired and no interrupt is claimed to work.
 
+## Q10 — K4 memory wiring (needed before R5 wires memory.rs)
+
+`kernel/src/memory.rs` (K4, drafted unwired) takes a plain
+`MemoryMap` slice, a bitmap, a `TableMemory` implementation, and a
+heap buffer. It asserts none of the bootloader names below; the R5
+wiring commit must answer them from the Q1-resolved build, not from
+this file.
+
+Needed, at the Q1-resolved toolchain / bootloader version:
+- Memory map source: which BootInfo accessor/field carries the
+  physical memory map, and what its region-kind names are — in
+  particular which kinds the R5 adapter may map to `RegionKind::Usable`
+  (and which it must map to `Reserved`/`Other`, never allocated).
+  The adapter must also state its rule for overlapping regions, if
+  the map can report any.
+- Physical-memory access for tables: how the R5 adapter implements
+  `TableMemory` — how it obtains a writable view of a page-table
+  frame at a physical address (the `map_physical_memory` feature's
+  offset: a fixed value, or read from BootInfo, and the exact way
+  the adapter reads it). `memory.rs` never guesses this address.
+- Heap placement: which usable region the kernel heap buffer lives
+  in, where it sits relative to the kernel image, and how that
+  range is kept out of the frame allocator's hands (reserved region,
+  allocator exclusion, or both — stated, not assumed).
+- Root table: how R5 obtains the current top-level table's physical
+  frame address for `Mapper::new` (register read vs BootInfo value,
+  and the exact source). `memory.rs` takes the root as a parameter
+  and never reads it from hardware.
+- Translation-cache invalidation: what mechanism the Mac build uses
+  after `Mapper::unmap_page` (the module documents that R5 must
+  invalidate, and does not do it itself).
+
+Why: K4's frame allocator, mapper, and heap are written, but none
+of them can run until these five adapter points are answered. Until
+then, K4 stays unwired and no mapped page or heap allocation is
+claimed to work.
+
+## Update 2026-11-01 ~09:18 EST — K5 drafted, Q11 opened
+
+Boss layer order 2026-11-01 ~08:18 (same order as the R2 note above)
+assigns Rowan the Layer 2 kernel-core modules unwired with real
+behavior. `kernel/src/tasks.rs` (K5: task struct + scheduler
+skeleton, written against what K4's draft exposes) landed on
+`rowan/kernel` in the same commit as this note. UNWIRED into
+`main.rs`, UNCOMPILED, no boot claim, no context switch claimed to
+have run — same status as R2/R3/K4.
+
+What did NOT change: `kernel/Cargo.lock` is still absent on main
+(checked this run, live main tip), so Q1 is still unanswered and
+Q11 below is still open. The K5 module therefore imports no
+bootloader type, no `x86_64` crate type, and no K4 type (that
+module is not wired either): its stack and entry addresses are
+plain `u64` boundary values in K4's page units, and the R5 wiring
+commit is the thin adapter that maps them onto K4's `VirtAddr`
+and `FrameAllocator`. The module never asserts a Rust function as
+a switch target — a Rust `fn` cannot switch stacks — so the R5
+wiring commit must supply a real `asm` trampoline under the
+contract stated in the module header. R5 still wires ONE module
+per commit, onto the proven tree only, after a K1 boot log exists.
+
+Open at the Pax merge gate for K5: Q11 below (context-switch ABI
++ initial stack frame + stack sourcing). Milo gate-1 on the K5
+commit is invited on the same review-only basis as R1/R2/R3/K4:
+source-level verification, not a compile, switch, or boot verdict.
+
+## Q11 — Context-switch ABI, initial stack frame, stack sourcing (BLOCKS R5 wiring of K5)
+
+`kernel/src/tasks.rs` records a `Context` (callee-saved registers
+`rbx`, `rbp`, `r12`-`r15`, plus `rsp`, `rip`, `rflags`) and a
+`Stack` range, and `Scheduler` makes pure state decisions. None of
+that moves execution. The switch itself is R5's `asm` trampoline.
+
+Needed, at the Q1-resolved toolchain / bootloader version:
+- Switch ABI: the exact register save/restore order the trampoline
+  must follow, which registers it must preserve beyond the
+  callee-saved set (segment state, if any), and how `rflags` is
+  handled across the switch (which bits the trampoline may set,
+  which it must carry verbatim).
+- Initial stack frame: the exact layout the trampoline builds for
+  a first-run task (where the entry address sits, what return
+  address a task that returns falls into — the exit path, since a
+  task has no caller to return to — and the 16-byte alignment
+  rule at entry, which `Context::initial` already enforces on the
+  stack top).
+- Stack sourcing: which K4 `FrameAllocator` frames back each task
+  stack, how those frames are kept out of the heap buffer and out
+  of other tasks' stacks, and what the R5 adapter does when the
+  allocator is exhausted mid-spawn (spawn already returns `None`
+  on no free slot; the frame-exhaustion answer must match that
+  contract, not invent a fallback stack).
+- Timer hookup: how the R5 wiring calls `Scheduler::on_timer_tick`
+  from the K3 timer interrupt path (which handler, what runs at
+  interrupt level vs deferred), and what the tick rate is, so a
+  quantum in ticks means something measurable in a boot log.
+
+Why: K5's scheduler decisions are written, but no task can run
+until these four adapter points are answered. Until then, K5 stays
+unwired and no context switch or scheduled task is claimed to work.
+
+## Update 2026-11-01 ~09:35 EST — K6 drafted, Q12 opened
+
+Boss layer order 2026-11-01 ~08:18 (same order as the R2 note above)
+assigns Rowan the Layer 2 kernel-core modules unwired with real
+behavior. `kernel/src/syscalls.rs` (K6: syscall dispatch for the six
+v0 calls, first userspace process shape, start block, failure-final
+end records, written against Pax's `os-build/layer1/K6_SERVICE_SHAPE.md`
+DESIGNED shape and what the K2/K3/K4/K5 drafts expose) landed on
+`rowan/kernel` in the same commit as this note. UNWIRED into
+`main.rs`, UNCOMPILED, no boot claim, no trap claimed to have been
+taken, no userspace program claimed to have run — same status as
+R2/R3/K4/K5. Started after Milo gate-1 GREEN on K5 (`rowan/kernel` @
+`4c48fab`, room 1 2026-11-01 ~09:28), the same queue rule K5 followed
+after K4's gate; K4+K5 are now on main (tip `83e6c3a` this run).
+
+What did NOT change: `kernel/Cargo.lock` is still absent on main
+(checked this run, absent from the live main tree), there is still
+no K1 boot log and no `os-build` branch, so Q1 is still unanswered
+and Q12 below is still open. The K6 module therefore imports no
+bootloader type, no `x86_64` crate type, and no K2/K3/K4/K5 type:
+its syscall numbers are Pax's DRAFT numbers from the shape document
+(six calls, no more), its framebuffer geometry mirrors K2's local
+`FramebufferInfo` fields without importing them, and its trap entry,
+privilege transition, user-buffer copy, binary format, and BootInfo
+pointer convention are all left to the R5 wiring commit, which must
+answer them from the Q1-resolved build, not from this file. R5 still
+wires ONE module per commit, onto the proven tree only, after a K1
+boot log exists.
+
+Open at the Pax merge gate for K6: Q12 below (syscall transport +
+privilege transition + user-copy rules + binary loading + start-block
+convention). Milo gate-1 on the K6 commit is invited on the same
+review-only basis as R1/R2/R3/K4/K5: source-level verification, not
+a compile, trap, or boot verdict. Note for the gate: the shape
+document's syscall numbers are DRAFT — if Pax revises them, this
+module's constants change in a follow-up commit, not silently.
+
+## Q12 — Syscall entry, privilege transition, user copy, binary loading (BLOCKS R5 wiring of K6)
+
+`kernel/src/syscalls.rs` (K6, drafted unwired) defines the six-call
+dispatch, the start block, and the failure-final end record. It
+asserts none of the machine facts below; the R5 wiring commit must
+answer them from the Q1-resolved build, not from this file.
+
+Needed, at the Q1-resolved toolchain / bootloader version:
+- Syscall transport: interrupt vector or the `syscall` instruction
+  — which one the Mac build uses. This is the handler-ABI question
+  already open as Q9, answered here for syscalls specifically: if an
+  interrupt vector, which vector, and how the trap frame carries the
+  syscall number, the scalar argument, and the user buffer address
+  and length; if the `syscall` instruction, the `STAR`/`LSTAR`
+  setup, the entry point's source location, and how the number and
+  arguments arrive in registers.
+- Privilege transition: how a service runs in userspace and returns
+  to the kernel — code and data segment selectors for userspace,
+  the kernel stack the trap switches to, how the user stack pointer
+  is saved and restored, and how flags are handled across the
+  transition (which bits the entry may set, which it must carry
+  verbatim). `UserTaskStart` deliberately carries no privilege
+  level, no selector, and no kernel-stack address until these are
+  answered.
+- User-buffer copy rules: how the R5 trap entry validates and
+  copies the write buffer before calling `dispatch` — what address
+  range counts as a valid user buffer against the K4 mappings, what
+  happens on a bad user address (which `EndState` the service gets,
+  and what is logged), and how writes longer than this module's
+  4096-byte per-call cap are chunked (the module faults them; the
+  chunking policy for a service that needs more is the wiring's
+  answer, not an assumption here).
+- Binary loading: how the Goose C-compiled freestanding service
+  binary is loaded as a K5 task — its format, where its entry
+  address comes from, which K4 `FrameAllocator` frames back its
+  stack and how those frames are kept out of the heap buffer and
+  out of other services' stacks, and the register or memory
+  convention that carries the `BootInfoBlock` pointer at start
+  (shape item 2, OPEN). `UserTaskStart` takes entry, stack top,
+  and BootInfo address as plain values and never guesses them.
+- Tick source: confirmation that syscall 4 reads the K3 `ticks()`
+  counter, and the PIT rate actually programmed by `pit_set_hz`,
+  so the `tick_rate_hz` the start block carries matches the rate
+  the counter ticks at. A mismatched rate makes every tick count
+  lie about time.
+- Console instance: which K2 `FramebufferConsole` instance the
+  `write_console` call drives, and how its writes interleave with
+  the kernel's own console writes (one console, or a lock — stated,
+  not assumed).
+- Key semantics: confirmation that `read_key` returns raw K3
+  scancode bytes with no decoding at K6, and that the `NO_KEY`
+  empty-ring sentinel (`u64::MAX`) is returned to userspace
+  unchanged rather than translated. Scancode decoding, if any, is
+  a later layer's job, not K6's.
+- Number stability: the six numbers in this module are Pax's DRAFT
+  numbers from `os-build/layer1/K6_SERVICE_SHAPE.md` item 3. If
+  Pax revises them, the module constants and this question are
+  revised together in a follow-up commit; a service built against
+  other numbers is not silently compatible.
+
+Why: K6's dispatch, start block, and end records are written, but
+no service can trap, run, or exit until these eight adapter points
+are answered. Until then, K6 stays unwired and no syscall, no
+userspace program, and no service exit is claimed to work.
+
+## Update 2026-11-01 ~20:40 EST — Q12 partly answered, its premise moved
+
+The merged tree no longer matches the frame Q12 was written
+in: a live syscall path exists in `kernel/src/user.rs`, and
+Pax's F1 ruling (2026-11-01) settles the number question.
+
+- Number stability: ANSWERED, against this file's guess. The
+  six numbers below were draft numbers for `syscalls.rs`; F1
+  froze a different table (0 exit, 1 write, 2 sleep, 3 pid,
+  4 yield, 5 read_key, 6–15 reserved), now recorded in
+  `KERNEL_SPEC.md`. Do NOT revise the `syscalls.rs` constants
+  to match: the module is frozen and the boss rules on it
+  2026-11-02 (recommendation: `kernel/SYSCALLS_RS_RECOMMENDATION.md`).
+- Syscall transport: answered in the live tree by source —
+  `user.rs` registers its handler for vector 128; the trap
+  frame carries the number (saved RAX) and arguments (RDI/RSI);
+  the handler runs on the calling task's kernel stack
+  (TSS.rsp0) and returns via `iretq`. Status: WRITTEN in
+  source; the standing proof is the merged tree's boot logs,
+  per the spec's proof rule.
+- The remaining Q12 items (user-copy rules, binary loading,
+  tick source, console instance, key semantics) now track the
+  `user.rs` / `sched.rs` / `mem.rs` wiring that actually
+  shipped, not the `syscalls.rs` dispatch. Two specifics
+  changed meaning: syscall 4 in the live table is yield, not
+  ticks; and `read_key` is F1 number 5 in `user.rs` (RW4-1
+  work), not number 3 in `syscalls.rs`.
+
+## Update 2026-11-01 ~21:05 EST — RW4-1 complete (R-8): console + read_key API points
+
+R-1..R-7 are WRITTEN on `rowan/kernel-r1` (R-1 merged to main
+1655d56 with the F1 table and the RW4-3/RW4-5 docs; R-2/R-3/R-4
+and R-5/R-6 gate-1 GREEN per Milo bus notes; R-7 awaiting Milo
+gate-1). All of it is WRITTEN, not compiled, on this VM (no
+cargo/rustc/qemu here) — Mac gate-2 still owed, nothing below is
+boot-proven. Exact points from `kernel/src` on this branch:
+
+- Banner (R-1): `META OS 0.1 (K6)` at `kernel/src/main.rs:118`;
+  the alive line `(K1)` is untouched. Milestone = last proven.
+- Prompt (R-2): NONE, closed by Pax room-1 ruling (bus idx 514):
+  NO-PROMPT STANDS. Hana HN4-1 verified no prompt exists in the
+  frozen shell spec, and the old H2 `metaos> ` string was
+  spec-only, never emitted, and is SUPERSEDED. The Mac build
+  must not expect a prompt string; a prompt only arrives if Del
+  orders one.
+- Console input (`sched.rs` `console_task`, K3 ring buffer via
+  `interrupts::keyboard_read`): backspace 0x0E erases the last
+  buffered char and the screen cell; shift 0x2A/0x36 press and
+  0xAA/0xB6 release, state only, no echo; `decode_scancode
+  (scancode, shift)` shifts letters/digits; line buffer 80
+  bytes, overlong lines print `line too long, truncated to 80`;
+  an empty line prints nothing. No periodic uptime print: a
+  quiet run stays quiet (R-4).
+- Commands, exact output shapes on this branch:
+  - `status`: `tasks {} ticks {} heap_free {}K`, then
+    `STATUS tasks={} ticks={} heap_free_kb={}`
+  - `help`: `commands: status help uptime mem ps`
+  - `uptime`: `uptime {}s ticks {}` (seconds = ticks/100)
+  - `mem`: `mem frames_free {} frames_total {} heap_free {}K
+    heap_total {}K` (getters in `mem.rs`)
+  - `ps`: one line per spawned task slot,
+    `ps id {} state {:?} ticks_used {} prio {}`;
+    `ticks_used` is current-run quantum usage — no lifetime CPU
+    counter exists in `tasks.rs`, so none is claimed
+  - unknown: `unknown command`, then the help listing re-listed
+- Syscall 5 `read_key` (`user.rs`, vector 128 handler, number =
+  saved RAX, args RDI/RSI): returns the next raw PS/2 set-1
+  scancode byte (0..=255, release codes included, NOT decoded
+  ASCII — decoding stays in the console task), or u64::MAX when
+  the ring buffer is empty (non-blocking; a caller that wants
+  to wait polls, or sleeps/yields between polls). It shares the
+  console's K3 ring buffer: a byte read here is consumed and is
+  not echoed by the console task. Unknown numbers print
+  `user bad syscall {} refused` and return u64::MAX.
+- Q12 remainder update: key semantics — ANSWERED in source
+  (read_key + console decode rules above). Console instance —
+  the `sched.rs` console task is the only console, and it shares
+  the K3 ring buffer with read_key. Tick source — the uptime
+  command divides `interrupts::ticks()` by 100 for seconds; the
+  hardware tick rate itself is still a Mac-boot-log question.
+  Still open, unchanged: user-copy rules, binary loading (track
+  the `user.rs` wiring, not the `syscalls.rs` dispatch).
+- Known divergence, NOT resolved here: this branch's help
+  listing (`status help uptime mem ps`) is longer than Hana's
+  frozen HN4-1 listing (`status help`), which predates
+  uptime/mem/ps. Pax accepted `status help uptime` at idx 514
+  and the mem/ps listing was flagged at idx 516 awaiting his
+  ruling. RW4-2 reconciles the listing; do not treat either
+  listing as final until Pax rules.
+
+## Update 2026-11-02 — answered by the first real build and boot
+
+This section answers the questions above from a build that ran on the Mac, not from
+reasoning. Evidence: `kernel/BUILD_LOG.md`, logs in `os-build/logs/`.
+
+- **Q1 (bootloader version + lockfile): ANSWERED.** `kernel/Cargo.lock` is committed and
+  resolves `bootloader 0.9.35` with `map_physical_memory`. The `entry_point!` macro and
+  `&'static BootInfo` signature are unchanged at that version.
+- **Q2 (toolchain pin): ANSWERED.** nightly `1.101.0-nightly (f9ceb4a4d 2026-10-31)`, cargo
+  `1.101.0-nightly (31d3246e0 2026-10-27)`, target `x86_64-unknown-none`, bootimage 0.10.5,
+  QEMU 11.1.3, components `rust-src` and `llvm-tools-preview`. The trap worth recording:
+  `cargo` in the shell is Homebrew's and has no `core` for the target, and nightly cargo
+  spawns the stable `rustc` from `PATH`, so `-Z` is rejected. `build_kernel.sh` pins `RUSTC`
+  and puts the nightly bin directory first.
+- **Q3 (proof capture): ANSWERED.** `os-build/layer1/build_kernel.sh`, serial to a file,
+  proof at `os-build/logs/K1-boot.txt`. The bounded transmit wait added on 2026-11-02 means a
+  missing UART truncates a line instead of hanging the boot (Q3's exact worry).
+- **Q4 (canonical proof string): ANSWERED de facto.** `META OS KERNEL - alive (K1)` is what
+  the code prints, what the logs contain, and what the gate greps. The spec now quotes it.
+- **Q5 (K2 framebuffer API): ANSWERED by reality.** Bootloader 0.9.35 exposes no pixel
+  framebuffer at all; K2 is the VGA text buffer at 0xB8000 via `physical_memory_offset`.
+  See the amendment in `KERNEL_SPEC.md` and `os-build/research/framebuffer.md`.
+- **Q6 (interrupt entry state): ANSWERED in practice.** `main.rs` runs `cli` before the
+  install sequence (`gdt::init`, handlers, gates, `pic_remap`, `pit_set_hz`, `lidt`) and
+  `sti` after, so the bootloader's state cannot leak in.
+- **Q7 (panic detail): FIXED.** The panic handler now writes `PanicInfo` (message and
+  `file:line`) to serial as well as the screen. Verified: `panicked at src/main.rs:143:5`.
+- **Q9 (handler ABI + devices): ANSWERED.** asm trampolines in `traps.rs`, not
+  `extern "x86-interrupt"`; 8259 PIC at 0x20/0x21 and 0xA0/0xA1, PIT ch0 at 0x40/0x43,
+  PS/2 keyboard at 0x60/0x64 — all confirmed by the timer and keyboard proofs.
+- **Q10 (K4 wiring): ANSWERED in code** (`mem.rs` adapter over `memory.rs`): 15-region map,
+  bitmap allocator, 4-level paging, heap. Log: `mem summary: K4 up`.
+- **Q11 (context switch): ANSWERED in code** (`sched.rs::switch_to`), proven by A/B/C plus a
+  200-tick sleep. Note the resume label is a local asm label, so the switch is
+  position-independent-safe only because both sides save `rip` explicitly.
+- **Q12 (syscall transport): ANSWERED** — vector 128 (`int 0x80`), number in saved RAX,
+  arguments in RDI/RSI, ring-3 entry and `iretq` return, proven by the userspace ELF runs.
+  `read_key` (number 5) is implemented in `user.rs`.
+
+Still open, and only the boss or a Mac run can close them: real-hardware UART/PS2/PIT
+behaviour, SMP, and the syscall-table ruling on `syscalls.rs` (frozen; recommendation on
+file at `kernel/SYSCALLS_RS_RECOMMENDATION.md`).
+
 ## What this file is not
 
 - Not a design doc: it asks, it does not decide.

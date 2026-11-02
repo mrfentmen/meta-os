@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta OS — A platform that never sleeps</title>
+<meta name="description" content="Meta OS is a real operating system with its own Rust kernel, built for agents and for users. Systems plug into it: Imperium, Science Lab, Musica, Custos, Officina.">
+<style>
+  :root{
+    --bg:#0b0e13; --panel:#12161f; --panel2:#171c28; --line:#232a3a;
+    --text:#e8ecf4; --dim:#9aa5ba; --accent:#4da3ff; --green:#3fb96f;
+    --amber:#e0a83c; --red:#e05c5c; --violet:#9a7bff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.55}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1020px;margin:0 auto;padding:0 20px}
+  header{padding:64px 0 30px;border-bottom:1px solid var(--line)}
+  .kicker{letter-spacing:.22em;font-size:12px;color:var(--accent);text-transform:uppercase}
+  h1{font-size:52px;margin:10px 0 6px;line-height:1.05}
+  .tag{font-size:20px;color:var(--dim);max-width:640px}
+  .statusbar{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;
+    padding:6px 14px;font-size:13px;color:var(--dim)}
+  .pill b{color:var(--text);font-weight:600}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px;vertical-align:1px}
+  .g{background:var(--green)} .a{background:var(--amber)} .v{background:var(--violet)}
+  section{padding:38px 0 6px}
+  h2{font-size:26px;margin:0 0 8px}
+  .sub{color:var(--dim);max-width:700px;margin:0 0 18px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px}
+  .card h3{margin:0 0 4px;font-size:18px}
+  .card p{margin:6px 0 0;color:var(--dim);font-size:14.5px}
+  .card .tag2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+  table{width:100%;border-collapse:collapse;background:var(--panel);
+    border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  td,th{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;font-size:14.5px}
+  tr:last-child td{border-bottom:none}
+  td.num{color:var(--accent);font-weight:700;width:52px}
+  td.own{color:var(--dim);white-space:nowrap}
+  .ok{color:var(--green);font-weight:600}
+  .wip{color:var(--amber);font-weight:600}
+  .links{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+  .btn{display:inline-block;background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;padding:10px 16px;color:var(--text);font-size:14.5px}
+  .btn:hover{border-color:var(--accent);text-decoration:none}
+  footer{margin-top:46px;padding:26px 0 44px;border-top:1px solid var(--line);
+    color:var(--dim);font-size:13.5px}
+  @media (max-width:560px){h1{font-size:38px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">Meta OS</div>
+  <h1>A platform that never sleeps.</h1>
+  <p class="tag">Meta OS is a real operating system with its own kernel, built for agents
+  and for users. Systems plug into the platform and run on top of it.</p>
+  <div class="statusbar">
+    <span class="pill"><span class="dot g"></span><b>Kernel K1</b>&nbsp;boot proven in QEMU</span>
+    <span class="pill"><span class="dot g"></span><b>K2 to K6</b>&nbsp;merged to main, boot logs on record</span>
+    <span class="pill"><span class="dot a"></span><b>Merged tree</b>&nbsp;Mac compile is the next proof</span>
+    <span class="pill"><span class="dot v"></span><b>Deadline</b>&nbsp;Meta AI Hackathon, Nov 4, 9:00 PM ET</span>
+  </div>
+</header>
+
+<section>
+  <h2>The platform</h2>
+  <p class="sub">Seven layers, bottom to top. The kernel is Rust. Services are written in
+  Goose. The agent runtime and the shell are written in Lobster. Every layer is real code
+  in one public repository.</p>
+  <table>
+    <tr><td class="num">L1</td><td><b>Boot</b></td><td class="own">bootloader 0.9.35, bootimage</td></tr>
+    <tr><td class="num">L2</td><td><b>Kernel core</b></td><td class="own">Rust: memory, scheduling, interrupts</td></tr>
+    <tr><td class="num">L3</td><td><b>Drivers</b></td><td class="own">Rust: console, keyboard, timer</td></tr>
+    <tr><td class="num">L4</td><td><b>System services</b></td><td class="own">Goose</td></tr>
+    <tr><td class="num">L5</td><td><b>Agent runtime</b></td><td class="own">Lobster</td></tr>
+    <tr><td class="num">L6</td><td><b>Shell and apps</b></td><td class="own">Lobster</td></tr>
+    <tr><td class="num">L7</td><td><b>Programs</b></td><td class="own">systems and user programs</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>The systems</h2>
+  <p class="sub">Meta OS is the platform. These are the systems that run on it.</p>
+  <div class="grid">
+    <div class="card">
+      <div class="tag2">System one</div>
+      <h3>Imperium</h3>
+      <p>The three services that answer 911, built to watch camera feeds with Muse Spark.
+      The runs on record use simulated feeds, not live cameras.
+      <b>Vigiles</b> for police awareness, <b>Ignis</b> for fire, <b>Medicus</b> for EMS scene
+      awareness only: visible signs, never diagnosis. Small signs are recorded and shown.
+      Big signs run the full chain. Dispatch goes to a clearly labeled simulated endpoint,
+      never to a real 911 service.</p>
+    </div>
+    <div class="card">
+      <div class="tag2">System two</div>
+      <h3>Science Lab</h3>
+      <p>A working laboratory on the platform. Project LABORATORY runs real experiments
+      end to end, with Hortus inside it as the breeding engine that grows and selects
+      new candidates. Heatsinks are its current practice test, not its limit.</p>
+    </div>
+    <div class="card">
+      <div class="tag2">Candidate system</div>
+      <h3>Musica</h3>
+      <p>Music generation and catalog tooling, built as a product line of its own and
+      being packaged to plug into the platform as a system.</p>
+    </div>
+    <div class="card">
+      <div class="tag2">Adopted</div>
+      <h3>Custos</h3>
+      <p>The night watch: a guard for machines and the internet, checking what should
+      stay quiet through the night and raising the alarm when it does not.</p>
+    </div>
+    <div class="card">
+      <div class="tag2">Adopted</div>
+      <h3>Officina</h3>
+      <p>The invention workshop. It starts from a verbal description when there is no
+      blueprint, iterates on its own, and produces its own designs, schematics and
+      blueprints, researching patents and other sources as it goes.</p>
+    </div>
+    <div class="card">
+      <div class="tag2">On main</div>
+      <h3>The Board</h3>
+      <p>The messaging board of the OS: the crew relay, remade as a native board inside
+      Meta OS so agents and the user share one live message board on the platform
+      itself.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What is proven today</h2>
+  <p class="sub">The adopted claim (PAX_12H.md section 3, adopted by Del 2026-11-01):
+  Meta OS boots on x86_64 in QEMU, drops to ring 3, runs three userspace
+  programs, isolates a fault to one task, and gives you a shell that
+  reports the machine's real state — reproduced from a clean checkout by
+  one command, every claim backed by a committed boot log. The boot logs
+  behind the first five clauses are os-build/logs/R5-soak-final.txt and
+  os-build/logs/K6-boot.txt; the gate record is 7/7 in
+  OPENCODE_ROUND5_REPORT.md.</p>
+</section>
+
+<section>
+  <h2>Where it stands</h2>
+  <p class="sub">Stated plainly. Proven means a log or a test on record, not a claim.</p>
+  <table>
+    <tr><td><b>K1 boot + serial</b></td><td class="ok">PROVEN</td><td class="own">QEMU boot log carries the alive line, no panic (os-build/logs/K6-boot.txt)</td></tr>
+    <tr><td><b>Goose services on the kernel</b></td><td class="wip">SOURCE ONLY</td><td class="own">they run under the host shim today, 33 of 33 test programs, 1253 checks (os-build/layer1/DEMO_FACTS.md); not on the kernel yet</td></tr>
+    <tr><td><b>K2 to K6</b></td><td class="ok">MERGED</td><td class="own">console, interrupts, memory, tasks, syscalls, first services</td></tr>
+    <tr><td><b>OpenCode OS build, 240 tasks</b></td><td class="ok">MERGED</td><td class="own">sections A to Q plus a 3,651 tick soak</td></tr>
+    <tr><td><b>Merged kernel tree</b></td><td class="wip">NEXT PROOF</td><td class="own">Mac compile and QEMU boot of the combined tree</td></tr>
+    <tr><td><b>Imperium live flagged path</b></td><td class="wip">UNPROVEN</td><td class="own">has not fired in the wild yet</td></tr>
+    <tr><td><b>In-OS messaging board</b></td><td class="ok">MERGED</td><td class="own">board service and viewer on main, tests 9/9; shell wiring is next</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Who builds it</h2>
+  <p class="sub">One builder, Mrfentmen, directing a crew of AI agents who coordinate over
+  a shared message bus and merge through a single gatekeeper. Pax dispatches and verifies.
+  Rowan writes kernel code. Milo runs gate checks and the scoreboard. Hana builds shell
+  and apps. Buffy builds services. OpenCode compiles and boot-proves on the Mac.</p>
+  <div class="links">
+    <a class="btn" href="https://github.com/Mrfentmen/meta-os">GitHub repository</a>
+    <a class="btn" href="https://muse-relay-live.pages.dev">Crew relay viewer</a>
+    <a class="btn" href="https://artifacts.watt-mind.com/meta-hackathon-2026/">Hackathon project directory (unofficial)</a>
+  </div>
+</section>
+
+<footer>
+  Meta OS. Built by Mrfentmen and crew for the Meta Global AI Developer Hackathon 2026.
+  Statuses on this page are kept honest: if it says proven, there is a log behind it.
+</footer>
+
+</div>
+</body>
+</html>

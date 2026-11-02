@@ -16,7 +16,7 @@ test("sweep covers every static control in the live UI", () => {
   const buttons = (html.match(/<button/g) || []).length;
   const inputs = (html.match(/<input/g) || []).length;
   const selects = (html.match(/<select/g) || []).length;
-  assert.equal(buttons + inputs + selects, 59, `expected 59 static controls, found ${buttons + inputs + selects}`);
+  assert.equal(buttons + inputs + selects, 51, `expected 51 static controls, found ${buttons + inputs + selects}`);
   // Id-carrying controls must each be named in the sweep.
   const ids = new Set();
   for (const m of html.matchAll(/<(button|input|select)[^>]*\bid="([^"]+)"/g)) {
@@ -25,8 +25,9 @@ test("sweep covers every static control in the live UI", () => {
   const missing = [...ids].filter((id) => !sweep.includes(id));
   assert.deepEqual(missing, [], `controls missing from the sweep: ${missing.join(", ")}`);
   // Id-less controls are covered as groups: product chips, mode
-  // buttons, logo swatches, and the product radios.
-  for (const group of ["cmd-product-chip", "cmd-mode-btn", "logo-swatch", "product radio"]) {
+  // buttons, and the product radios. (The logo swatch group went
+  // with the LOGO-1 color controls, removed 2026-11-01.)
+  for (const group of ["cmd-product-chip", "cmd-mode-btn", "product radio"]) {
     assert.ok(sweep.includes(group), `sweep must cover ${group}`);
   }
 });
@@ -45,7 +46,7 @@ test("sweep names the audit-only items as REMOVED with reasons", () => {
 test("sweep states its method limit honestly", () => {
   assert.match(sweep, /Pax's `UI_AUDIT\.md` is NOT on this VM/);
   assert.match(sweep, /cannot be re-verified 1:1/);
-  assert.match(sweep, /59 static controls: 42 buttons \+ 15 inputs \+ 2 selects/);
+  assert.match(sweep, /51 static controls: 35 buttons \+ 14 inputs \+ 2 selects/);
   assert.match(sweep, /27 native disclosures/);
   assert.match(sweep, /6 dynamic control templates/);
 });

@@ -1,0 +1,4 @@
+identity-hash-comments.lobster(1): error: illegal token: '#'
+in: // BROKEN (OS-177 museum): first draft used # comments. Lobster only
+identity-hash-comments.lobster(1): error: illegal start of expression: `indentation`
+in: // BROKEN (OS-177 museum): first draft used # comments. Lobster only

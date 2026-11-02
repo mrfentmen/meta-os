@@ -218,15 +218,43 @@ export function timelineView(incident) {
 // package logged, receipt id, and the plain statement that no real
 // service was contacted. No receipt exists before a dispatch, so none
 // is shown then.
+//
+// H-FP4 / HN4-2 dispatch card: when the incident carries the dispatch
+// package fields (package.picture, dispatch_mode: auto, receipt id),
+// the card shows them too — picture attached (flagged frame and/or
+// evidence crop, named only when the reference is a non-empty string),
+// dispatch mode auto (sent by the agent, no human verify step), and
+// human review as post-hoc audit of the record, never as a gate.
+// A picture or mode line renders only when the record carries it: a
+// crew incident with a receipt but no package data shows the receipt
+// alone, never a guessed picture or mode. Picture references are
+// never printed as paths — only which parts are attached.
 export function receiptView(incident) {
   const receipt = incident?.receipt_id;
   if (typeof receipt !== "string" || receipt.length === 0) {
     return `<p class="empty-state">No dispatch receipt for this incident.</p>`;
   }
+  const pkg = incident?.package && typeof incident.package === "object" ? incident.package : null;
+  const mode = incident?.dispatch_mode ?? pkg?.dispatch_mode;
+  const picture = incident?.picture ?? pkg?.picture;
+  const hasFrame = typeof picture?.frame === "string" && picture.frame.length > 0;
+  const hasCrop = typeof picture?.evidence_crop === "string" && picture.evidence_crop.length > 0;
+  let extra = "";
+  if (hasFrame || hasCrop) {
+    const parts = [];
+    if (hasFrame) parts.push("flagged frame");
+    if (hasCrop) parts.push("evidence crop");
+    extra += `<span class="dispatch-receipt-picture">Picture attached: ${parts.join(" + ")}</span> `;
+  }
+  if (mode === "auto") {
+    extra += `<span class="dispatch-receipt-mode">dispatch mode auto — sent by the agent, no human verify step</span> `
+      + `<span class="dispatch-receipt-audit">Human review: post-hoc audit of the record.</span> `;
+  }
   return `<div class="dispatch-receipt">`
     + `<span class="dispatch-receipt-label">Dispatch (SIMULATED)</span> `
     + `<span class="dispatch-receipt-id">receipt ${escapeHtml(receipt)}</span> `
-    + `<span class="dispatch-receipt-note">Package logged — no real service contacted.</span></div>`;
+    + `<span class="dispatch-receipt-note">Package logged — no real service contacted.</span> `
+    + extra + `</div>`;
 }
 
 // HN-065 Cost ticker: the incident view shows calls spent and

@@ -37,7 +37,7 @@ One person directs the build. Del, known as Mrfentmen, makes the calls and does 
 | Meta Custos | A night watch for machines. It patrols certificates, services, and known exploited vulnerabilities | Built and gate checked. It waits on a merge fix where its files overlap the platform files |
 | Meta Musica | A music studio that never closes. It composes, keeps the takes it likes, and learns from the ones it keeps | In build now, with a 3D notes scene on the OpenCode task list |
 | Meta Faber | The loop that improves Meta OS itself, one checked change at a time, with a stop switch and a rollback rule | Working in main |
-| The OS image | A bootable Meta OS disk image with the crew tools baked in and a quiet self update | Built. Boot verified in QEMU with zero failed units |
+| Meta OS, the kernel | Our own Rust kernel: boots, draws its own console, schedules tasks, runs ring-3 programs, answers a shell | K1-K5 proven by committed boot logs; K6 proven except that no Goose service has a process yet (`os-build/KERNEL_STATUS.md`) |
 
 ## Meta Imperium
 
@@ -187,6 +187,8 @@ A missing confidence or latency key is rejected even though a null value is acce
 | `server/` | The Node server behind the assess endpoint, with the direct Spark transport |
 | `server/queue/` | The job queue service and the resident agent crew |
 | `os/` | The Meta OS tree: services, the job queue, the dashboard, and the world packs under `os/worlds/` |
+| `kernel/` | The Meta OS kernel: boot, memory, scheduler, syscalls, console, keyboard. Rust, `no_std`. Build recipe in `kernel/BUILD_LOG.md` |
+| `services/` | 25 Goose system services over 18 shared libraries, run as host processes today, not yet booted on the kernel |
 | `crates/` | The Rust workspace: the port of the OS and services to Rust |
 | `native/` | The macOS app shell that hosts the console in a web view |
 | `relay/` | Meta Nuntius, the product's own relay and viewer |
@@ -224,4 +226,24 @@ A missing confidence or latency key is rejected even though a null value is acce
 
 ## License
 
-No license file yet. The code is public to read for the hackathon. All rights stay with the author until a license is added.
+No repository `LICENSE` file exists yet. The position, plainly: the code is public to read for
+the hackathon, and all rights stay with the author until a license is added. One conflict has
+to be settled before any license ships: `kernel/Cargo.toml` declares the kernel crate MIT,
+while the repo contains no MIT text and the kernel links the rust-osdev bootloader under its
+own terms. That is a Pax ruling plus a `LICENSE` file, not a sentence in this README.
+
+## The services layer
+
+The OS above is the image. Under it sits a services layer written in Goose, the systems language, and built here from source: 25 services over 18 shared libraries — a supervisor, logging with rotation and retention, a log-structured filesystem with a checker, storage, time, the call matrix, the network protocol pack, a shell, and the agent host. It is not a sketch. Every module has a test program that imports it, asserts against it, and is compiled to C and run as a real host process, 33 of them in one command:
+
+```
+./os-build/layer1/run_native.sh
+ran: 33 programs  RUNS=33  FAILS=0
+```
+
+1,253 checks, 0 failed, against real memory and a real clock. The table per program is `os-build/layer1/SERVICE_RUNS.md`, the raw runs are `os-build/layer1/TRANSCRIPTS.md`, and the demo surfaces the layer actually drives are `os-build/layer1/DEMO.md`, `DEMO_SHELL.md` and `DEMO_30S.md`.
+
+The honest boundary, stated the same way everywhere in `os-build/layer1/`: **this layer is not booted.** It runs as host processes with a substituted syscall surface — `os-build/layer1/host/host_shim.c` implements ten `sys_*` calls and refuses five on purpose (`sys_spawn`, `sys_kill`, `sys_net_send`, `sys_net_recv`, and `sys_read_key`, which reports nothing pending forever). A restart recorded in a transcript is the supervisor's decision and its bookkeeping, not a process being killed and brought back. No scheduler, no address space, no NIC. That refusal is why the green runs mean something: a shim that faked those calls would make every transcript pass for a reason that does not exist on the kernel.
+
+What the layer needs from the kernel to stop being a host-side corpus is written down, call by call, in `os-build/layer1/SERVICES_SYSCALL_MAP.md` and `KERNEL_NEEDS_AFTER.md`.
+

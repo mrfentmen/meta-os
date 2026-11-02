@@ -162,6 +162,8 @@ class Handler(BaseHTTPRequestHandler):
             json.dumps(package, sort_keys=True).encode()
         ).hexdigest()[:16]
         record = dict(package)
+        record["service_route"] = (
+            self.path[len("/dispatch-simulated"):] or "/default")
         record["receipt_id"] = receipt_id
         record["received_at"] = received_at
         crew_records.CrewRecords().append_dispatch(record)
@@ -175,7 +177,8 @@ class Handler(BaseHTTPRequestHandler):
         })
 
     def do_POST(self):
-        if self.path == "/dispatch-simulated":
+        if self.path == "/dispatch-simulated" or \
+                self.path.startswith("/dispatch-simulated/"):
             self._dispatch_simulated()
             return
         if self.path != "/jobs":

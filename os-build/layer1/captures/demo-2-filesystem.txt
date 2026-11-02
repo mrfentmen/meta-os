@@ -1,0 +1,77 @@
+t65 filesystem
+ok   format 64 blocks
+ok   format with no room refuses
+ok   format too big for the disk refuses
+ok   umount
+ok   reads fail while unmounted
+ok   mount
+ok   stats after mount
+ok   free blocks = 64 - 10 reserved
+ok   root is a directory
+ok   create /hello
+ok   create duplicate refuses
+ok   write 11 bytes
+ok   read back 11
+ok   bytes match
+ok   append 6
+ok   read back 17
+ok   append landed at the end
+ok   offset read
+ok   read past EOF is empty success
+ok   write past EOF refuses (no sparse files)
+ok   mkdir /etc
+ok   create /etc/hostname
+ok   write into a subdirectory file
+ok   mkdir over an existing name refuses
+ok   root has 2 entries
+ok   readdir 0 found
+ok   readdir 0 name
+ok   readdir 0 kind is file
+ok   readdir 1 name
+ok   readdir 1 kind is dir
+ok   readdir past the end stops
+ok   rename
+ok   renamed file resolves
+ok   old name is gone
+ok   resolve /
+ok   empty path refuses
+ok   //etc///hostname collapses
+ok   trailing slash on a dir is fine
+ok   trailing slash on a file is refused
+ok   /.. stays at root
+ok   /../.. stays at root
+ok   /etc/.. is root
+ok   cannot escape upward
+ok   missing name is NOTFOUND
+ok   walking through a file is refused
+ok   13-byte component is refused
+ok   a dot file is an ordinary name
+ok   deep path refuses
+ok   want_dir on a file refuses
+ok   want_dir on a dir is fine
+ok   rmdir a non-empty dir refuses
+ok   unlink missing name refuses
+ok   unlink the file
+ok   entry is gone
+ok   root cannot be unlinked
+ok   create /held
+ok   unlink the held file
+ok   a stale inode number reads nothing
+ok   rename onto an existing name refuses
+ok   and the source keeps its name
+ok   create /big
+ok   2600 bytes refuses (5 blocks = 2560)
+ok   2560 bytes fits exactly
+ok   umount before remount
+ok   remount
+ok   file survives remount
+ok   contents survive remount
+ok   fsck runs
+ok   fsck is clean
+ok   fsck saw the inodes
+ok   plant a leak
+ok   fsck sees the leak
+ok   fsck_fix repairs it
+ok   clean again after the fix
+ok   the disk fills and refuses politely
+t65 done  pass=75 fail=0

@@ -97,6 +97,9 @@ export function buildSparkPrompt(profile, input) {
     `Categories (assessment.category and every observation category must be one of these): ${categories}.`,
     `Limits: ${profile.limitations}`,
     "Describe only what is visible in the image. This is supplementary awareness only: never dispatch, never claim certainty beyond what is visible. When unsure, use indeterminate and set requires_human_review to true.",
+    "Region gives the bounding box of the observation's subject in 0-1000 relative frame coordinates (x, y is the top-left corner); use null when the observation concerns the whole scene.",
+    "Assessment rule: set the assessment category to the strongest observation category your visible evidence supports; use a hedge category only when no specific observation category is supported.",
+    ...(input.product === "vigiles" ? ["Category note: \"crowd gathered\" means a stationary assembled crowd (a rally, an audience, a queue, onlookers around an event). Ordinary pedestrian traffic in motion is \"normal activity\"."] : []),
     "If people are visible, describe each person's visible appearance in the observations — clothing, build, and visible marks. Report any visible marks (tattoos, scars, birthmarks, or blood visible on the face or body) as their own observation whose description begins \"Visible marks:\" and states what is visible and where it is, for example \"Visible marks: tattoo on the left cheek; blood at the hairline\". Marks describe visible appearance only — never infer identity, a name, or a cause from them.",
   ].join("\n");
 }

@@ -1,0 +1,24 @@
+{
+  "run": "surface-2026-11-02T11-21-31-490Z",
+  "ts": "2026-11-02T11:21:31.502Z",
+  "files": [
+    "README.md",
+    "site/index.html",
+    "os-build/DEMO_SCRIPT.md",
+    "os-build/layer1/DEMO_30S.md",
+    "os-build/SUBMISSION_CHECKLIST.md",
+    "os-build/aegis/SWEEP.md",
+    "os-build/aegis/OSINT.md"
+  ],
+  "missing": [],
+  "counts": {
+    "zero-width": 0,
+    "invisible-operator": 0,
+    "bom": 0,
+    "bidi-override": 0,
+    "bidi-isolate": 0,
+    "tag-char": 0,
+    "mixed-script": 0
+  },
+  "hits": []
+}

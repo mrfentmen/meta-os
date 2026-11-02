@@ -1,0 +1,7 @@
+META OS KERNEL - alive (K1)
+META OS 0.1 (K6)
+mem summary: K4 up
+C awake
+HELLO FROM USERSPACE
+sleeper: after sleep
+user exit code 0

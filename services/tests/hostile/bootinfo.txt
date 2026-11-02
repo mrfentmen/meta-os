@@ -1,0 +1,9 @@
+# B-L1-134 -- BootInfo block (services/common/boot)
+CASE magic_wrong | "hex:00000000" | expect E_CORRUPT | a block that is not ours must not be read field by field
+CASE region_count_over_table | generated:map_count_33_against_32_slots | expect E_NOROOM | more regions than the table must refuse, not wrap
+CASE region_zero_length | generated:one_zero_length_region | expect E_INVAL | a zero-length memory region is a free-list entry that can be handed out forever
+CASE regions_overlap | generated:two_overlapping_regions | expect E_CORRUPT | overlapping usable regions mean a page can be allocated twice
+CASE unknown_region_type | generated:type_99 | expect CODE_OK | unknown types are skipped and counted, not fatal: firmware adds types
+CASE entry_size_zero | generated:entry_size_0 | expect E_CORRUPT | a zero-size entry makes the walk loop forever
+CASE no_usable_memory | generated:all_reserved | expect E_INVAL | a machine with no usable memory must fail the boot, not divide by nothing
+CASE valid_two_regions | generated:two_usable_regions | expect CODE_OK | the common case must be accepted

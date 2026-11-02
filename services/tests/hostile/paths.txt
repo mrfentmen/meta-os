@@ -1,0 +1,11 @@
+# B-L1-129 -- FS path parser (services/fs/paths)
+CASE dotdot | "/etc/../boot" | expect E_DENIED | traversal must be refused, not normalised away silently
+CASE absolute | "/etc/hosts" | expect CODE_OK | the FS API accepts absolute paths; the sandbox check is elsewhere
+CASE empty | "" | expect E_INVAL | the empty path is not the root and must not be read as it
+CASE double_slash | "/etc//hosts" | expect E_INVAL | two separators are a different string that some tools normalise and others do not
+CASE trailing_slash | "/etc/" | expect E_INVAL | a trailing slash claims a directory; the API does not infer type from punctuation
+CASE nul_in_name | "hex:2f6574632f686f0a6f737473" | expect E_INVAL | embedded NUL truncates at every C boundary
+CASE name_too_long | generated:300_byte_path | expect E_NOROOM | longer than the fixed path buffer must refuse
+CASE single_dot | "/etc/./hosts" | expect E_INVAL | "." is not normalised here; the caller resolves it
+CASE root | "/" | expect CODE_OK | the root is a legal path
+CASE deepest_legal | "/a/b/c/d/e" | expect CODE_OK | within the depth limit and must be accepted

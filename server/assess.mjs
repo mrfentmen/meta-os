@@ -99,7 +99,7 @@ export function validateAssessRequest(payload) {
     return { ok: false, errors: ["request body is not a JSON object"] };
   }
   if (!isProductId(payload.product)) {
-    errors.push('product: must be one of "vigiles", "ignis", "medicus"');
+    errors.push('product: must be one of "vigiles", "ignis", "medicus", "science-lab"');
   }
   if (!isValidIso8601(payload.timestamp)) {
     errors.push("timestamp: must be a valid ISO-8601 timestamp with timezone");

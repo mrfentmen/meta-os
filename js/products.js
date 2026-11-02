@@ -20,6 +20,7 @@ export const PRODUCTS = [
       "physical contact",
       "person down",
       "possible altercation",
+      "crowd gathered",
       "indeterminate",
     ],
     scenarios: [

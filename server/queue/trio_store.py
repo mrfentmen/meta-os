@@ -38,8 +38,18 @@ import urllib.parse
 import urllib.request
 
 sys.path.insert(0, "/opt/muse/skills/custom-connector-setup/bin")
-from dynamic_credentials import (  # noqa: E402
-    add_surrogate_to_request, dynamic_credential_entry, read_json_response)
+try:
+    from dynamic_credentials import (  # noqa: E402
+        add_surrogate_to_request, dynamic_credential_entry,
+        read_json_response)
+except ImportError:
+    # Off-sandbox (a normal clone, e.g. the Mac): the dynamic-credential
+    # helper is not installed, so the Upstash path cannot resolve its
+    # credential. The import must not kill the module: the local store
+    # (TRIO_STORE=local) never calls these names, and the Upstash path
+    # raises TrioStoreConfigError when it needs them (see _call).
+    add_surrogate_to_request = dynamic_credential_entry = \
+        read_json_response = None
 
 NS = os.environ.get("TRIO_JOB_NS", "trio")
 RESULT_PREFIX = "trio"  # result keys are trio:<jid>:result (bus 424)
@@ -164,6 +174,11 @@ class UpstashStore:
             self.base_url = f"https://{self.host}"
 
     def _call(self, path, data=None, method="GET"):
+        if add_surrogate_to_request is None:
+            raise TrioStoreConfigError(
+                "the Upstash store needs the dynamic_credentials helper, "
+                "which is not available on this machine; use "
+                "TRIO_STORE=local or run where the helper is installed")
         req = urllib.request.Request(self.base_url + "/" + path, data=data,
                                      method=method)
         req.add_header("User-Agent", "trio-queue")

@@ -1,0 +1,9 @@
+# B-L1-128 -- DHCP client (services/dhcp)
+CASE no_magic_cookie | generated:discover_without_236_magic | expect E_INVAL | the cookie is what distinguishes DHCP from a BOOTP packet
+CASE option_overruns_packet | "hex:638253630test" | expect E_INVAL | an option length that runs past the packet is a read past the buffer
+CASE no_message_type | generated:discover_without_option53 | expect E_INVAL | a DHCP packet with no option 53 has no type, and guessing REQUEST is how a client loops
+CASE offer_without_mask | generated:offer_option1_absent | expect E_NO_MASK | a client that invents /24 puts the host on a network nobody chose
+CASE offer_without_server_id | generated:offer_option54_absent | expect E_INVAL | without a server id a REQUEST cannot be addressed, and broadcasting it is a storm
+CASE truncated_header | "hex:01010600" | expect E_INVAL | 4 bytes is not a BOOTP header
+CASE two_offers_different_servers | generated:two_offers | expect CODE_OK | a second offer is legal; the client keeps the first and logs the second
+CASE valid_offer | generated:offer_10_0_0_5_mask_24_gw_1 | expect CODE_OK | the common case must be accepted

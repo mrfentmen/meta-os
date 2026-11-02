@@ -44,11 +44,27 @@ code. The stages the decisions choose between:
             under the origin division. Findings append to the
             incident record; they never spawn further incidents —
             recursion stops at this one level.
-  RESPONSE  a brief in the v2 contract shape plus per-division
-            recommended actions (recommendations for human decision,
-            in observation language; requires_human_review is true)
-            is packaged and sent to the SIMULATED dispatch endpoint
-            only (see dispatch_url guard below).
+  RESPONSE  on a confirmed RED incident the agent itself packages
+            and sends the dispatch package — a brief in the v2
+            contract shape, the picture (the flagged frame plus
+            the evidence crop when one was captured), the BOLO,
+            and per-division recommended actions in observation
+            language — to the SIMULATED dispatch endpoint only
+            (see dispatch_url guard below). There is NO human
+            verify step in this flow (boss directive,
+            docs/IMPERIUM_AUTO_DISPATCH.md): the brief's
+            requires_human_review stays true as the post-hoc
+            AUDIT flag — the human role is reviewing the
+            append-only record after the fact, not approving the
+            send. The ruling on a flag belongs to the JUDGE
+            (judge.py, boss directive 2026-11-02): a second
+            agent weighs the patrol and review readings and
+            confirms, clears, or holds the flag as inconclusive;
+            a confirmed package routes to the service that owns
+            the scene (police / fire / hospital). No human sits
+            in the loop and no setting holds a package for one —
+            the old TRIO_CREW_HUMAN_VERIFY hold was retired by
+            the same directive.
 
 HARD BOUNDARY — dispatch: the only dispatch target this code can
 send to is the stack's own SIMULATED endpoint, and the URL is
@@ -71,6 +87,7 @@ from datetime import datetime, timedelta, timezone
 import crew_common
 import crew_records
 import evidence
+import judge
 import orchestrator
 import trio_store
 
@@ -113,6 +130,13 @@ def dispatch_url():
         os.environ.get(DISPATCH_URL_ENV) or DEFAULT_DISPATCH_URL)
 
 
+# Human verify RETIRED (boss directive 2026-11-02): the package
+# is never held for a person. The judge (judge.py) rules on the
+# flag; a confirmed ruling dispatches. The dispatch target is
+# unchanged — check_dispatch_url still refuses every non-loopback
+# URL, and every destination is a SIMULATED service endpoint.
+
+
 def http_dispatch(url):
     """Build the production dispatcher: POST the package to the
     (loopback-checked) simulated endpoint, return its receipt."""
@@ -125,6 +149,23 @@ def http_dispatch(url):
                      "User-Agent": "MetaImperium-Crew/1.0"})
         with urllib.request.urlopen(req, timeout=15) as resp:
             return json.loads(resp.read().decode("utf-8"))
+
+    return dispatch
+
+
+def routed_dispatch(base_url):
+    """The production dispatcher, routed by service: the package
+    carries its judge-assigned service route (judge.SERVICES) and
+    the POST goes to the SIMULATED endpoint path for that service.
+    The full URL passes the loopback guard either way."""
+    check_dispatch_url(base_url)
+
+    def dispatch(package):
+        route = package.get("service") or {}
+        path = route.get("path") or ""
+        url = check_dispatch_url(base_url.rstrip("/") + path) \
+            if path else base_url
+        return http_dispatch(url)(package)
 
     return dispatch
 
@@ -306,7 +347,6 @@ class Crew:
         # production detector — OpenCV Haar when the runtime has
         # cv2, honestly "unavailable" when it does not.
         self.detector = detector
-
     @classmethod
     def production(cls, records=None, cameras=()):
         store, fell_back = trio_store.open_store(
@@ -321,7 +361,7 @@ class Crew:
         records = records or crew_records.CrewRecords()
         return cls(records, QueueAssessor(jobs),
                    crew_common.fetch_snapshot,
-                   http_dispatch(dispatch_url()), cameras=cameras)
+                   routed_dispatch(dispatch_url()), cameras=cameras)
 
     # -- one patrol check ------------------------------------------------
 
@@ -530,7 +570,7 @@ class Crew:
                 if agent == "review":
                     review, verdict = self._run_review(
                         incident_id, camera, division, frame,
-                        first_timestamp)
+                        first_timestamp, first_category=category)
                     if review.get("status") == "ok":
                         results.append(review)
                     if verdict == "confirmed" and not reported:
@@ -553,8 +593,11 @@ class Crew:
                                 if e.get("result")]
                 elif agent == "response":
                     break
-        # RESPONSE — brief + SIMULATED dispatch (the orchestrator's
-        # prepare_response decision brought us here).
+        # RESPONSE — brief + picture + SIMULATED dispatch (the
+        # orchestrator's prepare_response decision brought us
+        # here). The judge confirmed the flag; the package routes
+        # to the service that owns the scene and is sent. No human
+        # verify step exists in this flow.
         record = self.records.get_incident(incident_id)
         brief = build_brief(record, results)
         # EVIDENCE — the BOLO: person evidence built only from
@@ -570,18 +613,33 @@ class Crew:
             record, descriptions,
             (record.get("evidence") or {}).get("files"),
             visible_marks=evidence.extract_visible_marks(observations))
+        # The picture (directive: the package carries it): the
+        # flagged frame's reference, plus the evidence crop's
+        # reference when the flagged path captured one.
+        picture = evidence.picture_refs(
+            (record.get("evidence") or {}).get("files"))
+        route = judge.service_route(division) or {}
         package = {
             "simulated": True,
             "kind": "imperium-dispatch-package",
             "incident_id": incident_id,
             "created_at": crew_common.now_iso(),
-            "destination": "SIMULATED dispatch endpoint (local stack "
-                           "route) — no real emergency service is "
-                           "contacted by this system",
+            "destination": f"SIMULATED {route.get('service', 'dispatch')} "
+                           "endpoint (local stack route) — no real "
+                           "emergency service is contacted by this "
+                           "system",
+            "service": route,
+            "judged_by": "imperium-judge",
             "brief": brief,
+            "picture": picture,
             "person_evidence": bolo,
             "recommended_actions": recommended_actions(camera, category),
+            # Audit flag, not a gate: the record (brief included)
+            # keeps requires_human_review true so the post-hoc
+            # human audit can find every dispatched incident; it
+            # does not hold the send (see dispatch_mode).
             "requires_human_review": True,
+            "dispatch_mode": "judge-confirmed",
         }
         self.records.append_timeline(incident_id, {
             "at": crew_common.now_iso(), "step": "brief",
@@ -594,6 +652,7 @@ class Crew:
             dispatch_step = {
                 "at": crew_common.now_iso(), "step": "dispatch",
                 "simulated": True,
+                "service": route.get("service"),
                 "receipt_id": receipt.get("receipt_id"),
                 "status": "dispatched-simulated",
             }
@@ -610,6 +669,7 @@ class Crew:
             "incident_id": incident_id, "camera_id": camera["id"],
             "camera_name": camera["name"], "division": division,
             "simulated": True,
+            "service": route.get("service"),
             "receipt_id": dispatch_step.get("receipt_id"),
             "error": dispatch_step.get("error")})
         return {"outcome": outcome, "incident_id": incident_id,
@@ -618,7 +678,7 @@ class Crew:
     # -- review and reported (executed on the orchestrator's word) --------
 
     def _run_review(self, incident_id, camera, division, frame,
-                    first_timestamp):
+                    first_timestamp, first_category=None):
         """REVIEW — independent second assessment of the same frame.
         Its timestamp must differ from the patrol job's filing
         timestamp: same product + timestamp + frame would rebuild
@@ -635,17 +695,20 @@ class Crew:
             review = {"status": "failed", "error": str(e)[:200],
                       "job_id": None}
         review_category = _category_of(review)
-        if review.get("status") == "ok" and review_category is not None \
-                and not crew_common.is_flagged_category(division,
-                                                        review_category):
-            verdict = "cleared"
-        elif review.get("status") == "ok" and review_category is not None:
-            verdict = "confirmed"
-        else:
-            verdict = "inconclusive"
+        # The JUDGE rules on the two readings (judge.py): the
+        # patrol agent flagged it, the review agent read it again
+        # independently, and the judge — no human — confirms,
+        # clears, or holds the flag inconclusive, with its reasons
+        # recorded on the timeline step below.
+        verdict, judge_reasons = judge.combine(
+            division, first_category, review_category,
+            review.get("status") == "ok",
+            crew_common.is_flagged_category)
         self.records.append_timeline(incident_id, {
             "at": crew_common.now_iso(), "step": "review",
             "verdict": verdict, "category": review_category,
+            "judged_by": "imperium-judge",
+            "judge_reasons": judge_reasons,
             "job_id": review.get("job_id"),
             "model": review.get("model"),
             "latency_ms": review.get("latency_ms"),

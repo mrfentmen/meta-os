@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>pty bridge test contract</title>
+<style>body{background:#000;color:#0f0;font-family:monospace;margin:2em;white-space:pre-wrap}</style>
+</head><body>pty bridge test contract (honest scaffolding: browsers cannot do raw TCP)
+
+No WebSocket here on purpose — ptyd.py speaks raw TCP, which the browser
+cannot open. A real terminal window needs a helper (e.g. websockify or a
+native client). This page only records the contract.
+
+<pre>host:     127.0.0.1
+port:     18933
+framing:  none (raw bytes both ways; server pumps pty master &lt;-&gt; socket)
+session:  one client at a time; while busy new conns get "\r\n[busy]\r\n" then close
+shell:    fresh /bin/bash -i per connection on an 80x24 pty
+limit:    fixed 80x24, no resize protocol (winsize set via TIOCSWINSZ after fork)
+cleanup:  server SIGKILLs + reaps child on client disconnect, ready for next
+</pre>
+Run selftest (ssh into the box, Linux guest):
+  python3 ptyd.py --selftest   # expect: PASS
+Manual check: nc 127.0.0.1 18933, then type echo hi
+</body></html>

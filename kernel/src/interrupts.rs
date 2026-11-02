@@ -444,6 +444,20 @@ pub fn invalid_opcode_handler(frame: &InterruptFrame, error_code: u64) {
 
 pub fn double_fault_handler(frame: &InterruptFrame, error_code: u64) {
     print_exception("double-fault", 8, frame, error_code);
+    // A double fault has no recovery path: the CPU state is already
+    // suspect, and returning through iretq re-executes the faulting
+    // instruction and faults again. That is not a theory — the
+    // `stack-test` drill produced a 3.3 MB log of the same line because
+    // this handler returned. Print once, then halt for good. The hlt
+    // loop is the correct end state for an unrecoverable trap; a
+    // machine that spins here is diagnosable, one that loops forever
+    // floods the only channel that could explain it.
+    serial_write_str("INT double-fault: halting\n");
+    loop {
+        unsafe {
+            core::arch::asm!("hlt", options(nomem, nostack, preserves_flags));
+        }
+    }
 }
 
 pub fn general_protection_handler(frame: &InterruptFrame, error_code: u64) {
@@ -451,7 +465,34 @@ pub fn general_protection_handler(frame: &InterruptFrame, error_code: u64) {
 }
 
 pub fn page_fault_handler(frame: &InterruptFrame, error_code: u64) {
-    print_exception("page-fault", 14, frame, error_code);
+    // Mac-build note (opencode/os-build, OS-040): the fault ADDRESS
+    // lives in CR2, which the CPU does not push. Read it here so the
+    // log shows address + error code, not just the faulting ip.
+    let addr: u64;
+    unsafe {
+        core::arch::asm!("mov {}, cr2", out(reg) addr,
+            options(nomem, nostack, preserves_flags));
+    }
+    // OS-085: a ring-3 fault kills only that userspace task — log it,
+    // exit the task, and let the kernel (and the console task) carry
+    // on. Never iret back into the faulting context.
+    if frame.code_segment & 3 == 3 {
+        serial_write_str("INT user page-fault addr 0x");
+        serial_write_hex_u64(addr);
+        serial_write_str(" err 0x");
+        serial_write_hex_u64(error_code);
+        serial_write_str(": task killed\n");
+        crate::sched::exit_task();
+    }
+    serial_write_str("INT exception page-fault vector 0x");
+    serial_write_hex_u64(14);
+    serial_write_str(" addr 0x");
+    serial_write_hex_u64(addr);
+    serial_write_str(" ip 0x");
+    serial_write_hex_u64(frame.instruction_pointer);
+    serial_write_str(" err 0x");
+    serial_write_hex_u64(error_code);
+    serial_write_str("\n");
 }
 
 /// IRQ 0 (vector 32 after the standard remap): count the tick, EOI.
@@ -466,14 +507,27 @@ pub fn timer_handler(_frame: &InterruptFrame, _error_code: u64) {
 }
 
 /// IRQ 1 (vector 33 after the standard remap): read the scancode from
-/// port 0x60, buffer it, print it in hex, EOI. One key press is one
-/// line, so printing here does not flood.
+/// port 0x60, buffer it, EOI. Round 4 R-3: no print per keystroke —
+/// the old per-key debug line is deleted, not hidden behind a
+/// switch, so the console echo is the only per-key output and
+/// typed lines stay readable.
 pub fn keyboard_handler(_frame: &InterruptFrame, _error_code: u64) {
     let scancode = inb(KEYBOARD_DATA);
+    // One line for the first key of the boot, so a log can distinguish
+    // "IRQ1 never fired" (no line, input never reached the controller)
+    // from "the handler ran and dropped it" (line, no echo). It stays
+    // because that distinction cost a full debugging round on 2026-11-02:
+    // QEMU's sendkey against a display-less VM produced no byte at all.
+    static mut SEEN_FIRST: bool = false;
+    unsafe {
+        if !SEEN_FIRST {
+            SEEN_FIRST = true;
+            serial_write_str("K3 keyboard: first scancode 0x");
+            serial_write_hex_u64(scancode as u64);
+            serial_write_str("\n");
+        }
+    }
     keyboard_push(scancode);
-    serial_write_str("INT keyboard scancode 0x");
-    serial_write_hex_u64(scancode as u64);
-    serial_write_str("\n");
     pic_send_eoi(1);
 }
 

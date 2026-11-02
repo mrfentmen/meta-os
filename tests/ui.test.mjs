@@ -46,6 +46,13 @@ function validAssessment(product = "vigiles") {
       summary: "A person is on the ground; the cause is not visible.",
       review: true,
     },
+    "science-lab": {
+      category: "level 1: evidence supported",
+      description: "a computation reproduced end to end",
+      evidence: "structured compute job output",
+      summary: "A computational result reproduced end to end; no discovery claim is made.",
+      review: true,
+    },
   };
   const s = shapes[product] ?? shapes.vigiles;
   return {
@@ -73,12 +80,13 @@ const flush = () => new Promise((resolve) => setImmediate(resolve));
 
 // ---------- trio product configs ----------
 
-test("products: exactly the three trio products, in order", () => {
-  assert.deepEqual(PRODUCT_IDS, ["vigiles", "ignis", "medicus"]);
-  assert.equal(PRODUCTS.length, 3);
+test("products: exactly the four products, in order", () => {
+  assert.deepEqual(PRODUCT_IDS, ["vigiles", "ignis", "medicus", "science-lab"]);
+  assert.equal(PRODUCTS.length, 4);
   assert.equal(PRODUCT_BY_ID.vigiles.displayName, "Meta Vigiles");
   assert.equal(PRODUCT_BY_ID.ignis.displayName, "Meta Ignis");
   assert.equal(PRODUCT_BY_ID.medicus.displayName, "Meta Medicus");
+  assert.equal(PRODUCT_BY_ID["science-lab"].displayName, "Meta Science Lab");
 });
 
 test("products: every product has identity, categories, scenarios, limitations, guidance", () => {
@@ -105,10 +113,11 @@ test("products: scenario sets differ per product", () => {
   assert.ok(!PRODUCT_BY_ID.medicus.scenarios.includes("Visible smoke"));
 });
 
-test("products: isProductId accepts only the trio ids", () => {
+test("products: isProductId accepts the registered product ids", () => {
   assert.equal(isProductId("vigiles"), true);
   assert.equal(isProductId("ignis"), true);
   assert.equal(isProductId("medicus"), true);
+  assert.equal(isProductId("science-lab"), true);
   assert.equal(isProductId("sentinel"), false);
   assert.equal(isProductId(""), false);
   assert.equal(isProductId(null), false);

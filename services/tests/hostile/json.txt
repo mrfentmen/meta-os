@@ -1,0 +1,15 @@
+# B-L1-126 -- JSON subset (services/common/json)
+CASE trailing_comma | "{\"a\":1,}" | expect E_INVAL | accepted by some parsers, rejected by others: the difference is a config that loads on one machine
+CASE duplicate_key | "{\"a\":1,\"a\":2}" | expect E_INVAL | two values for one key makes the reader's answer order-dependent
+CASE unquoted_key | "{a:1}" | expect E_INVAL | not JSON; accepting it means the writer can produce output no other parser reads
+CASE nested_object | "{\"a\":{\"b\":1}}" | expect E_UNSUPPORTED | the subset is flat on purpose; nesting needs a real parser
+CASE nested_array | "{\"a\":[1,2]}" | expect E_UNSUPPORTED | the flat subset has no array values, and half-reading one hides the elements
+CASE trailing_junk | "{\"a\":1} x" | expect E_INVAL | bytes after the object are a second document pretending to be one
+CASE leading_zero | "{\"a\":01}" | expect E_INVAL | one parser reads octal, another decimal; the value must not be ambiguous
+CASE exponent | "{\"a\":1e5}" | expect E_UNSUPPORTED | no exponent support, and silently reading 1 is worse than refusing
+CASE lone_high_surrogate | "{\"a\":\"\\ud800\"}" | expect E_INVAL | a lone surrogate cannot be encoded as UTF-8
+CASE raw_control_byte | "hex:7b2261223a2201227d" | expect E_INVAL | a raw 0x01 inside a string is illegal JSON and hides in every diff
+CASE too_many_keys | generated:25_keys | expect E_NOROOM | 25 keys against a 24-slot table must refuse, not overwrite the 24th
+CASE empty_object | "{}" | expect CODE_OK | legal, and must not be treated as an error
+CASE whitespace_everywhere | "  {  \"a\" : 1 , \"b\" : \"x\" }  " | expect CODE_OK | legal whitespace must be accepted
+CASE escaped_quote | "{\"a\":\"he said \\\"hi\\\"\"}" | expect CODE_OK | an escaped quote is data, not the end of the string

@@ -81,6 +81,14 @@
    "privacy": "summary",
    "severity": "critical",
    "urgency": "urgent"
+  },
+  {
+   "carries": "The watched host label, the negotiated protocol version and cipher suite, the stated baseline minimum, and the drift reason. Local only.",
+   "crosses_bus": false,
+   "kind": "tls-configuration-drift",
+   "privacy": "local",
+   "severity": "warning",
+   "urgency": "routine"
   }
  ],
  "cross_world": {
@@ -144,6 +152,11 @@
    "field": "room_name",
    "label": "Bus room this installation joins",
    "required": true
+  },
+  {
+   "field": "tls_baseline",
+   "label": "TLS baseline for watched hosts: minimum protocol version and forbidden cipher substrings",
+   "required": false
   }
  ],
  "institution_type": "machine infrastructure watch",
@@ -166,7 +179,7 @@
   "parts": [
    {
     "path": "worlds/custos/runtime/patrol.py",
-    "proven": "Pinning tests on injected signals (tests/custos/): certificate tier boundaries, feed matching against the configured inventory, exposure classification, yellow records produce zero escalation calls, red records escalate only to the labelled SIMULATED endpoint, records append and feed entries are not re-alerted across patrols; CT watcher pins: a new cert for a watched domain becomes a yellow certificate-issued record, ct_since bounds a first patrol, seen cert ids are never re-recorded; a failed certificate probe or an unparseable certificate date is an error in the summary, never data and never a patrol crash. One live stage-1 patrol against the real CISA feed (1,766 entries seen; the example inventory matched 5) is committed under worlds/custos/runs/ \u2014 a feed patrol only: the development machine has no direct network path to watched hosts, so host probes are pinned on injected signals, not live ones. UNPROVEN, stated plainly: not yet run on a booted Meta OS image, not wired as a systemd unit, never run inside a real operations room, host probes never yet run live. Live CT evidence: runs/patrol-002.jsonl holds 12 real May-2019 issuances for letsencrypt.org from crt.sh (the public query for that domain caps at 2019; two earlier attempts failed honestly with timeout/proxy errors and were retried, not fabricated).",
+    "proven": "Pinning tests on injected signals (tests/custos/): certificate tier boundaries, feed matching against the configured inventory, exposure classification, yellow records produce zero escalation calls, red records escalate only to the labelled SIMULATED endpoint, records append and feed entries are not re-alerted across patrols; CT watcher pins: a new cert for a watched domain becomes a yellow certificate-issued record, ct_since bounds a first patrol, seen cert ids are never re-recorded; a failed certificate probe or an unparseable certificate date is an error in the summary, never data and never a patrol crash. One live stage-1 patrol against the real CISA feed (1,766 entries seen; the example inventory matched 5) is committed under worlds/custos/runs/ — a feed patrol only: the development machine has no direct network path to watched hosts, so host probes are pinned on injected signals, not live ones. UNPROVEN, stated plainly: not yet run on a booted Meta OS image, not wired as a systemd unit, never run inside a real operations room, host probes never yet run live. Live CT evidence: runs/patrol-002.jsonl holds 12 real May-2019 issuances for letsencrypt.org from crt.sh (the public query for that domain caps at 2019; two earlier attempts failed honestly with timeout/proxy errors and were retried, not fabricated).",
     "what": "The patrol loop: reads the CISA known-exploited-vulnerabilities feed, checks each watched host's TLS certificate expiry, service liveness, and undeclared sensitive-port exposure, and polls Certificate Transparency logs for newly issued certs on watched domains; classifies every observation into the pack's seven categories; appends one record per observation; yellow observations stop at record + flag, red observations run the escalation chain to a labelled SIMULATED endpoint only. Pure classification core plus CLI, no model calls, no changes to watched machines."
    },
    {
@@ -238,6 +251,14 @@
     "escalation outcomes"
    ],
    "watches": "The patrol record: every observation the patrol made, its category and tier, and what the escalation chain did, kept in order as the checkable record of the watch."
+  },
+  {
+   "id": "tls-watch",
+   "inputs": [
+    "TLS handshake with each watched host",
+    "tls_baseline from config"
+   ],
+   "watches": "TLS configuration posture per watched host: the protocol version and cipher suite the host actually negotiated, graded against the installation's stated baseline; drift from the baseline is a yellow record, never an escalation."
   }
  ]
 }

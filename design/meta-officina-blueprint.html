@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta Officina — Workshop</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; color: #dbe9ff; font-family: ui-monospace, Menlo, Consolas, monospace;
+    background-color: #0a2a5e;
+    background-image: linear-gradient(rgba(160,195,255,0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(160,195,255,0.13) 1px, transparent 1px), linear-gradient(rgba(160,195,255,0.05) 5px, transparent 5px), linear-gradient(90deg, rgba(160,195,255,0.05) 5px, transparent 5px);
+    background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px; }
+  header { padding: 14px 18px; border-bottom: 2px solid rgba(219,233,255,0.75); display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+  header h1 { font-size: 15px; margin: 0; letter-spacing: 0.22em; }
+  header p { font-size: 11px; color: #a9c6f5; margin: 0; }
+  .sheet { margin-left: auto; font-size: 11px; border: 1px solid rgba(219,233,255,0.75); padding: 4px 10px; }
+  main { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; padding: 18px; }
+  .card { border: 1.5px solid rgba(219,233,255,0.85); padding: 14px 16px; position: relative; background: rgba(6, 24, 54, 0.35); }
+  .card::before { content: attr(data-no); position: absolute; top: -9px; left: 10px; background: #0a2a5e; padding: 0 6px; font-size: 11px; color: #a9c6f5; }
+  .card h2 { font-size: 13px; letter-spacing: 0.14em; margin: 2px 0 10px; font-weight: normal; }
+  .card p, .card li { font-size: 12px; line-height: 1.8; color: #cfe2ff; }
+  .card ul { margin: 0; padding-left: 16px; }
+  .dim { color: #ffd76e; }
+  .loop { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; font-size: 12px; }
+  .loop span { border: 1px dashed rgba(219,233,255,0.8); padding: 5px 9px; }
+  .loop i { color: #a9c6f5; font-style: normal; }
+  footer { padding: 10px 18px; font-size: 11px; color: #a9c6f5; border-top: 2px solid rgba(219,233,255,0.75); }
+</style>
+</head>
+<body>
+<header>
+  <h1>META OFFICINA · WORKSHOP</h1>
+  <p>The invention workshop. Starts from a spoken description — no blueprint required — and iterates on its own.</p>
+  <span class="sheet">SHEET 01 · SCALE — AS NOTED</span>
+</header>
+<main>
+  <section class="card" data-no="DWG-01">
+    <h2>THE FABER LOOP</h2>
+    <div class="loop">
+      <span>describe</span><i>→</i><span>design</span><i>→</i><span>schematic</span><i>→</i><span>test fit</span><i>→</i><span>revise</span><i>↺</i>
+    </div>
+    <p>Runs as a timed loop on the host (<span class="dim">metaos-loop</span>). One file stops it cold:
+    <span class="dim">/var/lib/metaos/loop/STOP</span>. Harness record: 12 / 12.</p>
+  </section>
+  <section class="card" data-no="DWG-02">
+    <h2>WORKING BOUNDS</h2>
+    <ul>
+      <li>Fin height: <span class="dim">80 mm</span> max</li>
+      <li>Base thickness: <span class="dim">12 mm</span></li>
+      <li>Bounds widened by test, never by hope — suite record: 49 / 49</li>
+    </ul>
+  </section>
+  <section class="card" data-no="DWG-03">
+    <h2>METHOD</h2>
+    <ul>
+      <li>Verbal description in — no drawing needed</li>
+      <li>Generates its own designs, schematics, blueprints, features</li>
+      <li>Researches patents and prior sources before cutting</li>
+      <li>Iterates alone; the boss judges results, not drafts</li>
+    </ul>
+  </section>
+</main>
+<footer>Officina is system five of Meta OS (adopted 2026-11-01). Design front end, 2026-11-02: blueprint identity — drafting blue, white line work, dimension callouts. Figures are records from the merged tree, not live telemetry.</footer>
+</body>
+</html>

@@ -1,0 +1,5 @@
+META OS 0.1 (K6)
+META OS KERNEL - alive (K1)
+META OS KERNEL - panic
+panicked at src/main.rs:143:5:
+K2 forced panic drill

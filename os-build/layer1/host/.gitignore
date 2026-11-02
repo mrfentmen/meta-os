@@ -1,0 +1,2 @@
+# Built binaries, generated C and transcripts are outputs, not sources.
+build/

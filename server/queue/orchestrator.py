@@ -27,7 +27,13 @@ Decisions:
   prepare_response   flag + review survived + investigation done:
                      build the brief and submit it to the SIMULATED
                      dispatch endpoint (crew.py's existing path —
-                     loopback-only, labelled simulated).
+                     loopback-only, labelled simulated). The crew
+                     sends it directly — no human verify step;
+                     human review is post-hoc audit. The judge
+                     (judge.py) rules on the flag before this
+                     step; nothing holds the package for a person
+                     (the old TRIO_CREW_HUMAN_VERIFY hold was
+                     retired 2026-11-02).
   continue_monitoring
                      evidence is insufficient (review could not
                      confirm or clear, or the loop guard tripped):
@@ -474,9 +480,13 @@ def decide(record, guardrail_status=None, evidence_hash=None,
         "submitted to the simulated dispatch endpoint only",
         [{"agent": "response",
           "task": "Build the incident brief from the recorded "
-                  "assessments and submit it to the simulated "
-                  "dispatch endpoint (loopback-only, labelled "
-                  "simulated, requires_human_review stays true)"}],
+                  "assessments and submit it, picture included, "
+                  "to the simulated dispatch endpoint "
+                  "(loopback-only, labelled simulated; the agent "
+                  "sends it with no human verify step — "
+                  "requires_human_review stays true as the "
+                  "post-hoc audit flag, and the agency verify "
+                  "policy may hold the package in the crew)"}],
         sc)
 
 

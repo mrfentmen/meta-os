@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Calendar</title>
+<style>
+:root{color-scheme:dark light}html[data-theme="dark"]{--bg:#111;--fg:#eee;--mut:#999;--cell:#1c1c1c;--acc:#4f7ec2}html[data-theme="light"]{--bg:#f4f4f4;--fg:#111;--mut:#666;--cell:#fff;--acc:#2456a6}
+body{font-family:system-ui;background:var(--bg);color:var(--fg);padding:24px;max-width:560px;margin:0 auto}
+header{display:flex;align-items:center;gap:8px}h1{flex:1;font-size:22px;margin:0}button{font-size:14px;padding:6px 12px;cursor:pointer}
+#grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}
+.dow{text-align:center;font-size:12px;color:var(--mut);padding:4px}
+.day{background:var(--cell);color:var(--fg);border:1px solid transparent;border-radius:8px;min-height:52px;font-size:14px;position:relative;cursor:pointer}
+.day:hover{border-color:var(--acc)}.day.dim{opacity:.35}.day.today{outline:2px solid var(--acc)}
+.dot{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:var(--acc)}
+ul{font-size:14px;padding-left:20px}
+</style></head><body>
+<header><button id="prev" aria-label="Previous month">&lt;</button><h1 id="title"></h1><button id="today">Today</button><button id="next" aria-label="Next month">&gt;</button></header>
+<div id="grid"></div>
+<ul id="list"></ul>
+<script>
+(function(){
+try{var t=localStorage.getItem('metaos-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}
+var KEY='metaos-calendar',cur=new Date();cur.setDate(1);
+function load(){try{return JSON.parse(localStorage.getItem(KEY)||'{}')||{}}catch(e){return{}}}
+function save(d){try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){}}
+function key(y,m,dd){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(dd).padStart(2,'0')}
+function render(){
+var data=load(),y=cur.getFullYear(),m=cur.getMonth();
+document.getElementById('title').textContent=cur.toLocaleString(undefined,{month:'long',year:'numeric'});
+var g=document.getElementById('grid');g.innerHTML='';
+['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d){var s=document.createElement('div');s.className='dow';s.textContent=d;g.appendChild(s);});
+var first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate(),prev=new Date(y,m,0).getDate();
+var now=new Date(),cells=[];
+for(var i=first-1;i>=0;i--)cells.push({d:prev-i,dim:1,mo:m-1});
+for(var d=1;d<=days;d++)cells.push({d:d,dim:0,mo:m});
+var tail=(7-(cells.length%7))%7;for(var t=1;t<=tail;t++)cells.push({d:t,dim:1,mo:m+1});
+cells.forEach(function(c){
+var dt=new Date(y,c.mo,c.d),k=key(dt.getFullYear(),dt.getMonth(),dt.getDate());
+var b=document.createElement('button');b.className='day'+(c.dim?' dim':'')+(k===key(now.getFullYear(),now.getMonth(),now.getDate())?' today':'');b.textContent=c.d;
+if(data[k]&&data[k].length){var s=document.createElement('span');s.className='dot';s.title=data[k].join(', ');b.appendChild(s);}
+b.onclick=function(){var v=prompt('Event on '+k+((data[k]||[]).length?'\nExisting: '+data[k].join(', '):''),'');if(v===null)return;v=v.trim();if(!v)return;data[k]=data[k]||[];data[k].push(v);save(data);render();};
+g.appendChild(b);});
+var ul=document.getElementById('list');ul.innerHTML='';
+Object.keys(data).sort().filter(function(k){return k.indexOf(y+'-'+String(m+1).padStart(2,'0'))===0}).forEach(function(k){
+var li=document.createElement('li');li.textContent=k+': '+data[k].join(', ');ul.appendChild(li);});
+}
+document.getElementById('prev').onclick=function(){cur.setMonth(cur.getMonth()-1);render();};
+document.getElementById('next').onclick=function(){cur.setMonth(cur.getMonth()+1);render();};
+document.getElementById('today').onclick=function(){cur=new Date();cur.setDate(1);render();};
+render();
+})();
+</script></body></html>

@@ -1,0 +1,10 @@
+boot 1 alive=1
+boot 2 alive=1
+boot 3 alive=1
+boot 4 alive=1
+boot 5 alive=1
+boot 6 alive=1
+boot 7 alive=1
+boot 8 alive=1
+boot 9 alive=1
+boot 10 alive=1

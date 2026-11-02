@@ -1,0 +1,34 @@
+t75 supervisor under load
+ok   ten services registered
+ok   slot count matches
+ok   the second service cannot start before the first
+ok   the boot service may start
+ok   start the boot service
+ok   now the second may start
+ok   all ten reach running
+ok   every one reports running
+ok   delta never restarts
+ok   echo always restarts
+ok   on-fail crash asks for a restart
+ok   and it backs off rather than spinning
+ok   the slot is restarting, not running
+ok   restart ready moves it to starting
+ok   and a second ready is refused
+ok   the restarted service can run again
+ok   never-restart crash gives up
+ok   the slot is failed
+ok   the dependent cannot start while it is failed
+ok   a clean exit is left alone
+ok   and the slot is stopped
+ok   always restarts a clean exit
+ok   and does not charge the crash budget
+ok   the third crash on a budget of two gives up
+ok   and the service stays failed
+ok   the restarts were counted
+ok   a long-running service gets its budget back
+ok   the table refuses more services than it holds
+ok   and it never exceeded its capacity
+ok   the refusal did not disturb the ten
+ok   two services are failed after the crashes
+ok   the rest of the ten are still accounted for
+t75 done  pass=32 fail=0

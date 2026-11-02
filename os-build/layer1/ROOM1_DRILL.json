@@ -1,0 +1,77 @@
+{
+  "note": "D1 and D2 drill output. The result files under the room are real; the model-free agent is a two-line node process.",
+  "ts": "2026-11-02T11:16:35.815Z",
+  "root": "room1-drill-NK5UAH",
+  "results": [
+    {
+      "name": "D1 claimed once",
+      "ok": true,
+      "detail": "{\"unclaimed\":[],\"claimed\":[\"d1\"],\"results\":[\"d1\"]}"
+    },
+    {
+      "name": "D1 nothing unclaimed left",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "D1 result posted back to the room",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "D1 result says it ran",
+      "ok": true,
+      "detail": "{\"id\":\"d1\",\"posted\":\"2026-11-02T11:16:35.407Z\",\"ok\":true,\"result\":{\"id\":\"d1\",\"agent\":\"drill-agent\",\"run\":\"drill-agent-mvz5yowm\",\"code\":0,\"signal\":null,\"ledger\":"
+    },
+    {
+      "name": "D1 the agent opened with the order in its brief",
+      "ok": true,
+      "detail": "{\"agent\":\"drill-agent\",\"lane\":null,\"run\":\"drill-agent-mvz5yowm\",\"orders\":\"D1: post, claim, spawn briefed, answer\",\"budge"
+    },
+    {
+      "name": "D1 the agent read the brief and acted",
+      "ok": true,
+      "detail": "/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/room1-drill-NK5UAH/runs/drill-agent-mvz5yowm/done.txt"
+    },
+    {
+      "name": "D1 watchman ledger has the bell",
+      "ok": true,
+      "detail": "bell,job-done"
+    },
+    {
+      "name": "D1 watchman ledger has the completion",
+      "ok": true,
+      "detail": "bell,job-done"
+    },
+    {
+      "name": "D2 while down: job unclaimed",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "D2 while down: nothing ran",
+      "ok": true,
+      "detail": "runs added: 0"
+    },
+    {
+      "name": "D2 after restart: job ran",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "D2 after restart: exactly one run",
+      "ok": true,
+      "detail": "runs added: 1"
+    },
+    {
+      "name": "D2 second poll: still exactly one run",
+      "ok": true,
+      "detail": "runs added: 1"
+    },
+    {
+      "name": "D2 result posted once",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}
