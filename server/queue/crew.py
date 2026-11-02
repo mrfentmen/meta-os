@@ -90,6 +90,7 @@ import evidence
 import judge
 import models
 import orchestrator
+import spark_gen
 import trio_store
 
 # Investigation bound, stated here once: at most this many extra
@@ -457,6 +458,44 @@ class Crew:
                 f"face detection failed: {str(e)[:160]}"
         return entries, detector_name, None
 
+    # -- segmentation (SAM 3.1, flag-gated) --------------------------------
+
+    def _run_segment(self, incident_id, division, category,
+                     first_result, frame):
+        """SEGMENT — SAM 3.1 localises the flagged subject on the
+        flagging frame: the segment record (pixel box + the region
+        on the 0-1000 contract scale) lands on the incident
+        timeline as a "segment" step. Runs only when
+        TRIO_SAM_SEGMENT=1. A SAM failure is recorded as the step's
+        error and never breaks the flag pipeline — the incident
+        stands on its assessments either way, and no region is
+        ever invented here."""
+        prompt_text = None
+        for obs in _observations_of(first_result):
+            if isinstance(obs, dict) and obs.get("description"):
+                prompt_text = obs["description"]
+                break
+        if not prompt_text:
+            prompt_text = category
+        try:
+            record = models.segment(frame, prompt_text)
+            step = {
+                "at": crew_common.now_iso(), "step": "segment",
+                "model": record.get("model") or models.SAM,
+                "prompt": prompt_text,
+                "region": record.get("region"),
+                "box_px": record.get("box_px"),
+                "latency_ms": record.get("latency_ms"),
+            }
+        except Exception as e:
+            step = {
+                "at": crew_common.now_iso(), "step": "segment",
+                "model": models.SAM, "prompt": prompt_text,
+                "error": str(e)[:200],
+            }
+        self.records.append_timeline(incident_id, step)
+        return step
+
     # -- the flag pipeline -------------------------------------------------
 
     def _handle_flag(self, camera, division, frame, first_result,
@@ -509,6 +548,9 @@ class Crew:
             "camera_name": camera["name"], "area": camera.get("area"),
             "division": division, "category": category,
             "priority": priority})
+        if os.environ.get("TRIO_SAM_SEGMENT") == "1":
+            self._run_segment(incident_id, division, category,
+                              first_result, frame)
 
         # ORCHESTRATOR LOOP — from here the sequence is chosen,
         # not scripted: the orchestrator is consulted after every
@@ -692,11 +734,43 @@ class Crew:
         moves the lifecycle (close / investigate / monitoring)."""
         review_ts = _distinct_timestamp(crew_common.now_iso(),
                                         first_timestamp)
-        try:
-            review = self.assess(division, frame, review_ts)
-        except Exception as e:
-            review = {"status": "failed", "error": str(e)[:200],
-                      "job_id": None}
+        # The reader: Muse Spark through the queue by default.
+        # When TRIO_REVIEW_WONDER=1, the second reading is made by
+        # Muse Wonder instead — the registry's designated
+        # multimodal second reader — answering the same assessment
+        # prompt over the same frame, in-process (job_id None: it
+        # is not a queue job). A failed Wonder call falls back to
+        # the Spark queue path and the fallback is named on the
+        # timeline step, the same discipline as the model judge.
+        reader = "spark"
+        reader_fallback = None
+        review = None
+        if os.environ.get("TRIO_REVIEW_WONDER") == "1":
+            try:
+                prompt = spark_gen.build_prompt(division, review_ts)
+                text, wonder_model, wonder_latency = \
+                    models.chat_image(models.WONDER, prompt, frame)
+                parsed = json.loads(spark_gen.unwrap_model_text(text))
+                if not isinstance(parsed, dict):
+                    raise RuntimeError(
+                        "Wonder review text did not parse to a "
+                        "JSON object")
+                review = {"status": "ok", "job_id": None,
+                          "model": wonder_model,
+                          "latency_ms": wonder_latency,
+                          "assessment": parsed, "reader": "wonder"}
+                reader = "wonder"
+            except Exception as e:
+                reader_fallback = (
+                    f"Wonder review unavailable ({str(e)[:120]}); "
+                    "Spark queue reading used")
+                review = None
+        if review is None:
+            try:
+                review = self.assess(division, frame, review_ts)
+            except Exception as e:
+                review = {"status": "failed", "error": str(e)[:200],
+                          "job_id": None}
         review_category = _category_of(review)
         # The JUDGE rules on the two readings (judge.py): the
         # patrol agent flagged it, the review agent read it again
@@ -741,6 +815,8 @@ class Crew:
             "judged_by": "imperium-judge",
             "judge_mode": judge_mode,
             "judge_reasons": judge_reasons,
+            "reader": reader,
+            "reader_fallback": reader_fallback,
             "job_id": review.get("job_id"),
             "model": review.get("model"),
             "latency_ms": review.get("latency_ms"),
