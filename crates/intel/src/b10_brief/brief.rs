@@ -1101,6 +1101,185 @@ pub fn onjoin_template_lines(snapshot: &OnjoinSnapshot) -> Vec<String> {
     lines
 }
 
+/// OS-103: the launch-environment input for a boot brief: the repo
+/// state, the bus state, the claimed jobs, and the budget record.
+/// `None` fields mean "not reported in this snapshot"; a present but
+/// empty value means "none reported" — never padded, never guessed.
+/// Each sub-record carries its own preformed age label, the same
+/// pattern as `PreviousBrief`: `\" (as of YYYY-MM-DD HH:MM ET)\"`,
+/// or `\" (snapshot time not reported)\"` when the record gives no
+/// time. This crate has no time dependency, so the caller supplies
+/// the label already formed. A caller maps a non-string branch,
+/// commit, lane, nick, or title to an empty string, and a non-int
+/// (including a bool) dirty / messages / cap / spent / remaining
+/// value to `None`, mirroring Python's `isinstance` checks.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnvironmentRepo {
+    pub branch: String,
+    pub commit: String,
+    pub dirty: Option<i64>,
+    pub age_label: String,
+}
+
+/// One bus record: non-empty room names only, and the message count
+/// when the record carries an int for it.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnvironmentBus {
+    pub rooms: Vec<String>,
+    pub messages: Option<i64>,
+    pub age_label: String,
+}
+
+/// One job as the working-now line reads it: only `claimed` jobs
+/// with a non-empty claim nick and a non-empty title count.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnvironmentJob {
+    pub status: String,
+    pub claim: String,
+    pub title: String,
+}
+
+/// One budget record: lane plus spent and cap, or remaining directly.
+/// When `remaining` is `None` but cap and spent are both present,
+/// the remaining value is derived as cap minus spent.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnvironmentBudget {
+    pub lane: String,
+    pub cap: Option<i64>,
+    pub spent: Option<i64>,
+    pub remaining: Option<i64>,
+    pub age_label: String,
+}
+
+/// The whole environment record. `jobs: None` means the snapshot
+/// carries no `jobs` key at all, which reads as not reported;
+/// `Some(vec![])` means an empty jobs list, which reads as nobody
+/// holding a claimed job. `working_age_label` is the label from the
+/// environment record's own `as_of` time.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Environment {
+    pub repo: Option<EnvironmentRepo>,
+    pub bus: Option<EnvironmentBus>,
+    pub jobs: Option<Vec<EnvironmentJob>>,
+    pub working_age_label: String,
+    pub budget: Option<EnvironmentBudget>,
+}
+
+/// OS-103: the four launch-environment lines for a boot brief, in
+/// that order, one line each: Repo, Bus, Working now, Budget.
+///
+/// A missing record or a missing field is reported as not reported,
+/// never guessed; an empty jobs list means nobody holds a claimed
+/// job, never a padded name. The lines are redacted by the composer,
+/// not here, and they are not bullet lines, so the BRF-007 budget
+/// trim never drops them ahead of a watch item.
+pub fn environment_lines(env: Option<&Environment>) -> Vec<String> {
+    let env = match env {
+        None => {
+            return vec![
+                "Repo state: not reported in this snapshot".to_string(),
+                "Bus state: not reported in this snapshot".to_string(),
+                "Working now: not reported in this snapshot".to_string(),
+                "Budget: not reported in this snapshot".to_string(),
+            ]
+        }
+        Some(e) => e,
+    };
+    let repo_line = match &env.repo {
+        Some(repo) if !repo.branch.is_empty() && !repo.commit.is_empty() => {
+            let tree = match repo.dirty {
+                Some(0) => ", clean".to_string(),
+                Some(d) if d > 0 => format!(
+                    ", {} uncommitted file{}",
+                    d,
+                    if d != 1 { "s" } else { "" }
+                ),
+                _ => String::new(),
+            };
+            format!(
+                "Repo: {} at {}{}{}",
+                repo.branch, repo.commit, tree, repo.age_label
+            )
+        }
+        _ => "Repo state: not reported in this snapshot".to_string(),
+    };
+    let bus_line = match &env.bus {
+        Some(bus) => {
+            let rooms: Vec<&str> = bus
+                .rooms
+                .iter()
+                .map(String::as_str)
+                .filter(|r| !r.is_empty())
+                .collect();
+            let mut parts: Vec<String> = Vec::new();
+            if let Some(messages) = bus.messages {
+                parts.push(format!("{messages} messages"));
+            }
+            if !rooms.is_empty() {
+                parts.push(format!(
+                    "in room{} {}",
+                    if rooms.len() != 1 { "s" } else { "" },
+                    rooms.join(", ")
+                ));
+            }
+            if parts.is_empty() {
+                "Bus state: not reported in this snapshot".to_string()
+            } else {
+                format!("Bus: {}{}", parts.join(" "), bus.age_label)
+            }
+        }
+        None => "Bus state: not reported in this snapshot".to_string(),
+    };
+    let working_line = match &env.jobs {
+        None => "Working now: not reported in this snapshot".to_string(),
+        Some(jobs) => {
+            let claimed: Vec<String> = jobs
+                .iter()
+                .filter(|j| j.status == "claimed" && !j.claim.is_empty() && !j.title.is_empty())
+                .map(|j| format!("{}: {}", j.claim, j.title))
+                .collect();
+            if claimed.is_empty() {
+                format!(
+                    "Working now: nobody holds a claimed job in this snapshot{}",
+                    env.working_age_label
+                )
+            } else {
+                format!(
+                    "Working now: {}{}",
+                    claimed.join("; "),
+                    env.working_age_label
+                )
+            }
+        }
+    };
+    let budget_line = match &env.budget {
+        Some(budget) => {
+            let remaining = match budget.remaining {
+                Some(r) => Some(r),
+                None => match (budget.cap, budget.spent) {
+                    (Some(cap), Some(spent)) => Some(cap - spent),
+                    _ => None,
+                },
+            };
+            match (budget.lane.is_empty(), remaining) {
+                (false, Some(remaining)) => {
+                    let cap_part = match budget.cap {
+                        Some(cap) => format!(" of {cap} cap"),
+                        None => String::new(),
+                    };
+                    format!(
+                        "Budget: {} lane: {} remaining{}{}",
+                        budget.lane, remaining, cap_part, budget.age_label
+                    )
+                }
+                _ => "Budget: not reported in this snapshot".to_string(),
+            }
+        }
+        None => "Budget: not reported in this snapshot".to_string(),
+    };
+    vec![repo_line, bus_line, working_line, budget_line]
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -1581,5 +1760,111 @@ mod tests {
         // No presence list at all means no not-online mark.
         assert!(lines.contains(&"pax: brief panel".to_string()));
         assert!(!lines.iter().any(|l| l.contains("not online")));
+    }
+
+    #[test]
+    fn environment_lines_full_missing_and_empty() {
+        let full = Environment {
+            repo: Some(EnvironmentRepo {
+                branch: "main".into(),
+                commit: "abc1234".into(),
+                dirty: Some(2),
+                age_label: " (as of 2026-10-30 08:00 ET)".into(),
+            }),
+            bus: Some(EnvironmentBus {
+                rooms: vec!["main".into(), "".into(), "ops".into()],
+                messages: Some(5),
+                age_label: " (snapshot time not reported)".into(),
+            }),
+            jobs: Some(vec![
+                EnvironmentJob { status: "claimed".into(), claim: "milo".into(), title: "gate run".into() },
+                EnvironmentJob { status: "open".into(), claim: "".into(), title: "unclaimed".into() },
+                EnvironmentJob { status: "claimed".into(), claim: "".into(), title: "no nick".into() },
+            ]),
+            working_age_label: " (as of 2026-10-30 08:00 ET)".into(),
+            budget: Some(EnvironmentBudget {
+                lane: "intel".into(),
+                cap: Some(100),
+                spent: Some(30),
+                remaining: None,
+                age_label: " (snapshot time not reported)".into(),
+            }),
+        };
+        assert_eq!(
+            environment_lines(Some(&full)),
+            vec![
+                "Repo: main at abc1234, 2 uncommitted files (as of 2026-10-30 08:00 ET)",
+                "Bus: 5 messages in rooms main, ops (snapshot time not reported)",
+                "Working now: milo: gate run (as of 2026-10-30 08:00 ET)",
+                "Budget: intel lane: 70 remaining of 100 cap (snapshot time not reported)",
+            ]
+        );
+        // No record at all: every line says not reported, never guessed.
+        assert_eq!(
+            environment_lines(None),
+            vec![
+                "Repo state: not reported in this snapshot",
+                "Bus state: not reported in this snapshot",
+                "Working now: not reported in this snapshot",
+                "Budget: not reported in this snapshot",
+            ]
+        );
+        // Clean tree, one file, direct remaining, empty jobs list.
+        let edge = Environment {
+            repo: Some(EnvironmentRepo {
+                branch: "main".into(),
+                commit: "abc1234".into(),
+                dirty: Some(0),
+                age_label: " (snapshot time not reported)".into(),
+            }),
+            bus: Some(EnvironmentBus {
+                rooms: vec![],
+                messages: None,
+                age_label: " (snapshot time not reported)".into(),
+            }),
+            jobs: Some(vec![]),
+            working_age_label: " (snapshot time not reported)".into(),
+            budget: Some(EnvironmentBudget {
+                lane: "intel".into(),
+                cap: None,
+                spent: None,
+                remaining: Some(12),
+                age_label: " (snapshot time not reported)".into(),
+            }),
+        };
+        let lines = environment_lines(Some(&edge));
+        assert_eq!(lines[0], "Repo: main at abc1234, clean (snapshot time not reported)");
+        assert_eq!(lines[1], "Bus state: not reported in this snapshot");
+        assert_eq!(
+            lines[2],
+            "Working now: nobody holds a claimed job in this snapshot (snapshot time not reported)"
+        );
+        assert_eq!(lines[3], "Budget: intel lane: 12 remaining (snapshot time not reported)");
+        // One uncommitted file reads singular; a missing branch or
+        // commit reads as not reported, never a half line.
+        let singular = Environment {
+            repo: Some(EnvironmentRepo {
+                branch: "main".into(),
+                commit: "abc1234".into(),
+                dirty: Some(1),
+                age_label: "".into(),
+            }),
+            bus: None,
+            jobs: None,
+            working_age_label: "".into(),
+            budget: None,
+        };
+        let lines = environment_lines(Some(&singular));
+        assert_eq!(lines[0], "Repo: main at abc1234, 1 uncommitted file");
+        let no_branch = Environment { repo: Some(EnvironmentRepo {
+            branch: "".into(),
+            commit: "abc1234".into(),
+            dirty: None,
+            age_label: "".into(),
+        }), ..singular.clone() };
+        assert_eq!(
+            environment_lines(Some(&no_branch))[0],
+            "Repo state: not reported in this snapshot"
+        );
     }
 }
