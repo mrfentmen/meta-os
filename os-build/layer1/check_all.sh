@@ -63,7 +63,19 @@ else
     report "goose corpus" "SKIP (run_native.sh missing)"
 fi
 
-# 4. Node suite. Known failures exist; the count is reported either way and only a
+# 4. Document-vs-code checks: the userspace ABI spec and the boot manifest both
+#    claim to describe code. If they drift, the claim is the bug.
+for check in abi_check.py boot_manifest_check.py; do
+    if python3 "os-build/layer1/$check" >/dev/null 2>&1; then
+        report "$check" "PASS"
+    else
+        report "$check" "FAIL"
+        python3 "os-build/layer1/$check" 2>&1 | tail -4 | sed 's/^/    /'
+        FAILED=1
+    fi
+done
+
+# 5. Node suite. Known failures exist; the count is reported either way and only a
 #    regression in the pass count fails the script.
 # `node --test tests/` treats the directory as a test file and fails; the
 # files must be named. Node 24's summary lines are "(i) pass 1877" / "(i) fail
