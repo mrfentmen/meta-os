@@ -13,7 +13,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, test } from "node:test";
 
-import { createBoardServer } from "./board.mjs";
+import { createBoardServer, ROOM_RE } from "./board.mjs";
 
 function boot(options) {
   return new Promise((resolve) => {
@@ -42,6 +42,10 @@ async function call(base, method, route, body) {
   }
   return { status: res.status, json, text };
 }
+
+const EDGE = JSON.parse(
+  readFileSync(new URL("../relay/protocol-edge.json", import.meta.url), "utf8")
+);
 
 let board;
 
@@ -164,6 +168,67 @@ test("viewer is served at / and is the Board page", async () => {
   assert.match(res.text, /Meta OS/);
   assert.match(res.text, /Board/);
   assert.match(res.text, /id="composer"/);
+});
+
+test("the shared protocol fixture is refused by the board too", async () => {
+  for (const room of EDGE.invalidRooms) {
+    assert.equal(ROOM_RE.test(room), false, room);
+  }
+  for (const body of EDGE.invalidMessages) {
+    const res = await call(board.base, "POST", "/rooms/main/messages", body);
+    assert.equal(res.status, 400, JSON.stringify(body));
+  }
+});
+
+test("CB-044 a post with an empty title is refused", async () => {
+  const res = await call(board.base, "POST", "/rooms/review/posts", {
+    title: "", author: "pax", text: "no title",
+  });
+  assert.equal(res.status, 400);
+  assert.match(res.json.error, /title/);
+});
+
+test("CB-046 editing another author's post is refused", async () => {
+  const created = await call(board.base, "POST", "/rooms/review/posts", {
+    title: "Kernel note", author: "pax", text: "body",
+  });
+  assert.equal(created.status, 201);
+  const id = created.json.post.id;
+
+  const other = await call(board.base, "PATCH", `/rooms/review/posts/${id}`, {
+    author: "milo", title: "hijacked",
+  });
+  assert.equal(other.status, 403);
+
+  const owner = await call(board.base, "PATCH", `/rooms/review/posts/${id}`, {
+    author: "pax", title: "edited",
+  });
+  assert.equal(owner.status, 200);
+  assert.equal(owner.json.post.title, "edited");
+});
+
+test("CB-048 deleting a post leaves a tombstone", async () => {
+  const created = await call(board.base, "POST", "/rooms/review/posts", {
+    title: "Tombstone note", author: "pax", text: "body",
+  });
+  const id = created.json.post.id;
+
+  const other = await call(board.base, "DELETE", `/rooms/review/posts/${id}`, {
+    author: "milo",
+  });
+  assert.equal(other.status, 403);
+
+  const deleted = await call(board.base, "DELETE", `/rooms/review/posts/${id}`, {
+    author: "pax",
+  });
+  assert.equal(deleted.status, 200);
+  assert.equal(deleted.json.post.deleted, true);
+
+  const list = await call(board.base, "GET", "/rooms/review/posts");
+  const row = list.json.posts.find((p) => p.id === id);
+  assert.ok(row);
+  assert.equal(row.deleted, true);
+  assert.equal(row.deleted_by, "pax");
 });
 
 test("store file persists lines across a restart", async () => {

@@ -122,7 +122,7 @@ export function createRelayServer(options = {}) {
         size += chunk.length;
         if (size > MAX_BODY_BYTES) {
           reject(new Error("request body too large"));
-          req.destroy();
+          req.resume(); // drain so the 400 response can still be sent
           return;
         }
         chunks.push(chunk);
@@ -137,7 +137,9 @@ export function createRelayServer(options = {}) {
     try {
       raw = await readBody(req);
     } catch {
-      sendJson(res, 400, { error: "request body too large or unreadable" });
+      sendJson(res, 400, {
+        error: `request body too large (max ${MAX_BODY_BYTES} bytes) or unreadable`,
+      });
       return null;
     }
     try {
@@ -176,6 +178,14 @@ export function createRelayServer(options = {}) {
           rooms: rooms.size,
           store: storeFile ? "file" : "memory",
         });
+        return;
+      }
+
+      if (req.method === "GET" && url.pathname === "/rooms") {
+        const list = [...rooms.entries()]
+          .map(([room, lines]) => ({ room, count: lines.length }))
+          .sort((a, b) => (a.room < b.room ? -1 : a.room > b.room ? 1 : 0));
+        sendJson(res, 200, { rooms: list });
         return;
       }
 

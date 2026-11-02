@@ -8,12 +8,12 @@
 // yet (see relay/README.md) — this suite is run directly.
 
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { after, before, test } from "node:test";
 
-import { createRelayServer } from "./relay.mjs";
+import { createRelayServer, MAX_BODY_BYTES, ROOM_RE } from "./relay.mjs";
 
 async function start(options) {
   const server = createRelayServer(options);
@@ -36,6 +36,10 @@ async function req(base, method, route, body) {
   }
   return { status: res.status, json, text };
 }
+
+const EDGE = JSON.parse(
+  readFileSync(new URL("./protocol-edge.json", import.meta.url), "utf8")
+);
 
 let main;
 
@@ -161,6 +165,89 @@ test("viewer is served at /", async () => {
   assert.equal(res.status, 200);
   assert.match(res.text, /Meta Nuntius/);
   assert.match(res.text, /Notifications/);
+});
+
+test("posting creates a room once and GET /rooms lists it once", async () => {
+  const created = await req(main.base, "POST", "/rooms/created-room/messages", {
+    nick: "pax",
+    text: "first in a new room",
+  });
+  assert.equal(created.status, 201);
+
+  const list = await req(main.base, "GET", "/rooms");
+  assert.equal(list.status, 200);
+  const matches = list.json.rooms.filter((r) => r.room === "created-room");
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].count, 1);
+});
+
+test("oversized body is refused with the cap in the error", async () => {
+  const res = await req(main.base, "POST", "/rooms/main/messages", {
+    nick: "pax",
+    text: "x".repeat(EDGE.oversizedTextChars),
+  });
+  assert.equal(res.status, 400);
+  assert.match(res.json.error, new RegExp(String(MAX_BODY_BYTES)));
+});
+
+test("concurrent writers never interleave a line", async () => {
+  const posts = [];
+  for (let i = 0; i < 20; i += 1) {
+    posts.push(
+      req(main.base, "POST", "/rooms/concurrent/messages", {
+        nick: `w${i}`,
+        text: `line${i}`,
+      })
+    );
+  }
+  const replies = await Promise.all(posts);
+  assert.equal(replies.every((r) => r.status === 201), true);
+
+  const all = await req(
+    main.base,
+    "GET",
+    "/rooms/concurrent/messages?since=-1"
+  );
+  assert.equal(all.json.total, 20);
+  for (const line of all.json.messages) {
+    assert.match(line, /^w\d+: line\d+ \[ts:\d+\]$/);
+  }
+});
+
+test("path characters are not valid room names", () => {
+  for (const room of EDGE.invalidRooms) {
+    assert.equal(ROOM_RE.test(room), false, room);
+  }
+});
+
+test("history order survives a restart", async () => {
+  const dir = mkdtempSync(path.join(tmpdir(), "nuntius-order-"));
+  const storeFile = path.join(dir, "relay.jsonl");
+  try {
+    const first = await start({ storeFile });
+    for (const [nick, text] of [
+      ["a", "one"],
+      ["b", "two"],
+      ["c", "three"],
+    ]) {
+      await req(first.base, "POST", "/rooms/order/messages", { nick, text });
+    }
+    first.server.close();
+
+    const second = await start({ storeFile });
+    const lines = await req(
+      second.base,
+      "GET",
+      "/rooms/order/messages?since=-1"
+    );
+    assert.equal(lines.json.total, 3);
+    assert.match(lines.json.messages[0], /^a: one \[ts:\d+\]$/);
+    assert.match(lines.json.messages[1], /^b: two \[ts:\d+\]$/);
+    assert.match(lines.json.messages[2], /^c: three \[ts:\d+\]$/);
+    second.server.close();
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("file store persists lines across a restart", async () => {

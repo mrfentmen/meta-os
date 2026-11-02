@@ -53,6 +53,7 @@ export const SEVERITIES = new Set(["info", "warning", "critical"]);
 export const MAX_BODY_BYTES = 16384;
 export const MAX_NICK_CHARS = 40;
 export const MAX_TEXT_CHARS = 2000;
+export const MAX_TITLE_CHARS = 200;
 export const MAX_TOPIC_CHARS = 64;
 
 const BOARD_DIR = path.dirname(fileURLToPath(import.meta.url));
@@ -92,6 +93,18 @@ export function createBoardServer(options = {}) {
     return rooms.get(room);
   }
 
+  /** Room name -> ordered post records (tombstones included). */
+  const posts = new Map();
+
+  function postsOf(room) {
+    if (!posts.has(room)) posts.set(room, []);
+    return posts.get(room);
+  }
+
+  function touchRoom(room) {
+    if (!rooms.has(room)) rooms.set(room, []);
+  }
+
   if (storeFile && existsSync(storeFile)) {
     const records = readFileSync(storeFile, "utf8").split("\n");
     for (const record of records) {
@@ -103,7 +116,13 @@ export function createBoardServer(options = {}) {
         console.error("Board: skipped an unparseable store record on boot");
         continue;
       }
-      if (typeof parsed.room === "string" && typeof parsed.line === "string") {
+      if (typeof parsed.room === "string" && parsed.post && typeof parsed.post === "object") {
+        const list = postsOf(parsed.room);
+        const index = list.findIndex((p) => p && p.id === parsed.post.id);
+        if (index >= 0) list[index] = parsed.post;
+        else list.push(parsed.post);
+        touchRoom(parsed.room);
+      } else if (typeof parsed.room === "string" && typeof parsed.line === "string") {
         linesOf(parsed.room).push(parsed.line);
       }
     }
@@ -120,6 +139,21 @@ export function createBoardServer(options = {}) {
       }
     }
     return lines.length - 1;
+  }
+
+  function savePost(room, post) {
+    touchRoom(room);
+    const list = postsOf(room);
+    const index = list.findIndex((p) => p.id === post.id);
+    if (index >= 0) list[index] = post;
+    else list.push(post);
+    if (storeFile) {
+      try {
+        appendFileSync(storeFile, JSON.stringify({ room, post }) + "\n");
+      } catch (err) {
+        console.error(`Board: store append failed: ${err.message}`);
+      }
+    }
   }
 
   function replyJson(res, status, payload) {
@@ -139,7 +173,7 @@ export function createBoardServer(options = {}) {
         total += chunk.length;
         if (total > MAX_BODY_BYTES) {
           reject(new Error("oversized body"));
-          req.destroy();
+          req.resume(); // drain so the 400 response can still be sent
           return;
         }
         chunks.push(chunk);
@@ -169,6 +203,40 @@ export function createBoardServer(options = {}) {
   async function handlePost(req, res, room, action) {
     const body = await readJson(req, res);
     if (body === undefined) return;
+
+    if (action === "posts") {
+      if (!singleLine(body.title, MAX_TITLE_CHARS)) {
+        replyJson(res, 400, {
+          error: `title must be a single line of 1-${MAX_TITLE_CHARS} chars`,
+        });
+        return;
+      }
+      if (!singleLine(body.author, MAX_NICK_CHARS)) {
+        replyJson(res, 400, {
+          error: `author must be a single line of 1-${MAX_NICK_CHARS} chars`,
+        });
+        return;
+      }
+      const text = body.text === undefined ? "" : body.text;
+      if (text !== "" && !singleLine(text, MAX_TEXT_CHARS)) {
+        replyJson(res, 400, {
+          error: `text must be a single line of 0-${MAX_TEXT_CHARS} chars`,
+        });
+        return;
+      }
+      const list = postsOf(room);
+      const id = "post-" + createHash("sha256")
+        .update([room, body.author, body.title, text, String(Date.now()), String(list.length)].join("\n"))
+        .digest("hex")
+        .slice(0, 16);
+      const post = {
+        id, room, title: body.title, author: body.author, text,
+        ts: Math.floor(Date.now() / 1000), deleted: false,
+      };
+      savePost(room, post);
+      replyJson(res, 201, { post });
+      return;
+    }
 
     if (action === "messages") {
       if (!singleLine(body.nick, MAX_NICK_CHARS)) {
@@ -249,7 +317,7 @@ export function createBoardServer(options = {}) {
 
       if (req.method === "GET" && url.pathname === "/rooms") {
         const list = [...rooms.entries()]
-          .map(([room, lines]) => ({ room, count: lines.length }))
+          .map(([room, lines]) => ({ room, count: lines.length, posts: postsOf(room).length }))
           .sort((a, b) => (a.room < b.room ? -1 : a.room > b.room ? 1 : 0));
         replyJson(res, 200, { rooms: list });
         return;
@@ -267,7 +335,7 @@ export function createBoardServer(options = {}) {
 
         if (
           req.method === "POST" &&
-          (action === "messages" || action === "notify")
+          (action === "messages" || action === "notify" || action === "posts")
         ) {
           await handlePost(req, res, room, action);
           return;
@@ -283,6 +351,60 @@ export function createBoardServer(options = {}) {
             total: lines.length,
             messages: lines.slice(since + 1),
           });
+          return;
+        }
+
+        if (req.method === "GET" && action === "posts") {
+          const list = postsOf(room);
+          replyJson(res, 200, { room, total: list.length, posts: list });
+          return;
+        }
+      }
+
+      if (segments.length === 4 && segments[0] === "rooms" && segments[2] === "posts") {
+        const room = decodeURIComponent(segments[1]);
+        const id = decodeURIComponent(segments[3]);
+        if (!ROOM_RE.test(room)) {
+          replyJson(res, 400, { error: "room name must match [a-z0-9-]{1,32}" });
+          return;
+        }
+        if (req.method === "PATCH" || req.method === "DELETE") {
+          const body = await readJson(req, res);
+          if (body === undefined) return;
+          const post = postsOf(room).find((p) => p.id === id);
+          if (!post || post.deleted) {
+            replyJson(res, 404, { error: "post not found" });
+            return;
+          }
+          if (!singleLine(body.author, MAX_NICK_CHARS) || body.author !== post.author) {
+            replyJson(res, 403, { error: "author does not own this post" });
+            return;
+          }
+          if (req.method === "PATCH") {
+            if (!singleLine(body.title, MAX_TITLE_CHARS)) {
+              replyJson(res, 400, {
+                error: `title must be a single line of 1-${MAX_TITLE_CHARS} chars`,
+              });
+              return;
+            }
+            const text = body.text === undefined ? post.text : body.text;
+            if (text !== "" && !singleLine(text, MAX_TEXT_CHARS)) {
+              replyJson(res, 400, {
+                error: `text must be a single line of 0-${MAX_TEXT_CHARS} chars`,
+              });
+              return;
+            }
+            const updated = { ...post, title: body.title, text, edited_at: Math.floor(Date.now() / 1000) };
+            savePost(room, updated);
+            replyJson(res, 200, { post: updated });
+            return;
+          }
+          const tombstone = {
+            ...post, deleted: true, deleted_by: body.author,
+            deleted_at: Math.floor(Date.now() / 1000),
+          };
+          savePost(room, tombstone);
+          replyJson(res, 200, { post: tombstone });
           return;
         }
       }
