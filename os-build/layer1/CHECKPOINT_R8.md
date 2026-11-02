@@ -92,3 +92,11 @@ corrected in the same file.
 `85d57f9` A3 watchdog · `3983386`/B1-B2 bridge + B3 drill · `c114563` C shapes.
 
 `e4339bc` D Aegis services · `0d42f71` F Lobster round trip · `a3eee7f` E1 limits ledger.
+
+## Follow-up, same day
+
+The seven README gaps this checkpoint named were closed: `board`, `dashboard`, `dock`,
+`notify`, `settings`, `updater_client`, `wallpaper`. `README_AUDIT.md` now records 36 of
+42 directories documented, with the six remaining named and the four standalone programs
+classified consistently with the call matrix. The line above stays as written; this is
+what happened next to it.

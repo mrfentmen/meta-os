@@ -1,59 +1,49 @@
-# Service README audit (E3, 2026-11-02)
+# Service README audit (E3, 2026-11-02; gap closed 2026-11-02)
 
-Measured by walking `services/*/` and checking for a non-empty `README.md`:
+Measured by walking `services/*/` and checking for a `README.md`:
 
-**42 service directories. 29 have a README. 13 do not.** The round's target was 25,
-so the count is met; the 13 that lack one are listed with their reason rather than left
-to be discovered later.
+**42 directories. 36 have a README. 6 do not.**
 
-| directory | README lines | status |
+The round's target was 25, so the count was met at 29. The seven real services the
+first pass named as documentation debt — `board`, `dashboard`, `dock`, `notify`,
+`settings`, `updater_client`, `wallpaper` — now have one, written against the
+drivers that run them.
+
+## The seven that were added
+
+Each README states what the service is, the rules that carry it, its public
+surface, what it deliberately does not do, and the driver that proves it. Each
+driver was re-run on merged `main` before the status line was written:
+
+| service | README | driver, `run_native.sh` |
 |---|---|---|
-| `services/agenthost` | 50 | present |
-| `services/audit` | 50 | present |
-| `services/board` | — | real service, no README — gap named for Pax |
-| `services/bootlog` | 69 | present |
-| `services/build` | — | a `.gitignore` only; not a service |
-| `services/callmatrix` | 50 | present |
-| `services/common` | — | library root: 15 library directories, no single service |
-| `services/console` | 68 | present |
-| `services/dashboard` | — | real service, no README — gap named for Pax |
-| `services/devices` | 58 | present |
-| `services/devmgr` | 50 | present |
-| `services/dhcp` | 52 | present |
-| `services/display` | 51 | present |
-| `services/dns` | 50 | present |
-| `services/dock` | — | real service, no README — gap named for Pax |
-| `services/echo` | — | program documented in its source header |
-| `services/example` | 24 | present |
-| `services/fs` | 34 | present |
-| `services/heartbeat` | — | program documented in its source header |
-| `services/hello` | — | three-line sample, documented by the file itself |
-| `services/input` | 49 | present |
-| `services/logd` | 82 | present |
-| `services/logfmt` | 47 | present |
-| `services/mcp-host` | — | program documented in its source header |
-| `services/net` | 41 | present |
-| `services/netcfg` | 45 | present |
-| `services/notify` | — | real service, no README — gap named for Pax |
-| `services/registry` | 50 | present |
-| `services/session` | 50 | present |
-| `services/settings` | — | real service, no README — gap named for Pax |
-| `services/shell` | 31 | present |
-| `services/socket` | 53 | present |
-| `services/sockets` | 50 | present |
-| `services/storage` | 50 | present |
-| `services/supervisor` | 228 | present |
-| `services/tests` | 37 | present |
-| `services/time` | 97 | present |
-| `services/timesync` | 50 | present |
-| `services/updater` | 47 | present |
-| `services/updater_client` | — | real service, no README — gap named for Pax |
-| `services/wallpaper` | — | real service, no README — gap named for Pax |
-| `services/watchdog` | 90 | present |
+| `settings` | yes | `t86_settings` — `RUNS=1 FAILS=0` |
+| `wallpaper` | yes | `t87_wallpaper` — `RUNS=1 FAILS=0` |
+| `dock` | yes | `t88_dock` — `RUNS=1 FAILS=0` |
+| `dashboard` | yes | `t89_dashboard` — `RUNS=1 FAILS=0` |
+| `updater_client` | yes | `t90_updater_client` — `RUNS=1 FAILS=0` |
+| `board` | yes | `t91_board` — `RUNS=1 FAILS=0` |
+| `notify` | yes | `t95_notify` — `RUNS=1 FAILS=0` |
+
+## The six without one, and why
+
+| directory | reason |
+|---|---|
+| `services/build` | a `.gitignore` only; not a service |
+| `services/common` | library root: 15 library directories, no single service |
+| `services/echo` | a standalone program: no `svc_entry`, not in the boot table. Documented in its source header and called as a child process by the Lobster host |
+| `services/heartbeat` | same: a daemon-shaped program, documented in its header |
+| `services/hello` | three-line sample, documented by the file itself |
+| `services/mcp-host` | same as `echo`: a program, documented in its header |
+
+The four programs are deliberately out of the call matrix too; the reason and the
+check behind it are in `CALLMATRIX_DRIFT.md` ("The four programs the auditor used
+to call unknown"), so the two lists agree rather than needing to be reconciled.
 
 ## What this does not claim
 
-A README's presence is not a review of its contents. The 29 that exist were checked for
-size and read where this lane needed them; they were not edited in this pass. The seven
-real services without one (board, dashboard, dock, notify, settings, updater_client,
-wallpaper) are documentation debt, named here so the next lane can pay it.
+A README's presence is not a review of its contents. The 36 that exist were
+checked for size, and the seven added in this pass were written from the source
+headers, the function surface and a run of their drivers. Nobody has read all 36
+end to end in this lane, and the docs for services that changed after their README
+was written are not re-verified here.
