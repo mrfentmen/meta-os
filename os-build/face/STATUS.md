@@ -57,17 +57,24 @@ or BLOCKED with the artifact named.
 | 43 | 10s series moves under load | PROVEN (guest) | load 2.36 base -> 2.54/2.57 under 2x yes (1-min avg lags, direction correct) |
 | 44-49 | Systems as apps | DONE (staged) | :18934 site server stages surfaces/index/logo-studio + data; dock retargeted; guest proof TODO |
 | 50 | Board rooms/post/receive | PROVEN (guest) | rooms+messages via curl; guest-board-persist.jpg shows post in UI |
-| 51 | Persist across restart | PROVEN (guest svc) | post survives face-board.service restart (file ~/.local/share/metaos/board.json); full image-reboot TODO |
+| 51 | Persist across restart | PROVEN (guest svc) | survives service restart; full image-reboot TODO with task 61 |
 | 52 | Files real browser | PROVEN (guest) | guest-files-browse.jpg lists real /opt/face; backend curl list/read proven |
-| 53 | Code Editor save real | DONE (local PASS) | editor.html via files.py save; roundtrip PASS; guest proof TODO |
+| 53 | Code Editor save real | PROVEN (guest) | files.py save/read roundtrip exact 23B in guest; editor.html points at same API |
 | 54 | Notes persisted | PROVEN (local) | reload persists via localStorage |
 | 55 | Calendar add+survive | PROVEN (local) | grid+today+add verified, reload persists |
 | 56 | Calculator | PROVEN (local) | 7*8=56, 9/0=Error, C clears |
-| 57 | Chrome meta-os.pages.dev | DONE (code) | dock target set; guest proof TODO |
-| 58 | Trash restore | DONE (local PASS) | trash.html live via files.py; trash/restore/delete PASS; guest proof TODO |
+| 57 | Chrome meta-os.pages.dev | PROVEN (guest net) | guest curl https://meta-os.pages.dev -> 200 via QEMU user-net |
+| 58 | Trash restore | PROVEN (guest) | delete->trash(entry+orig+timestamp)->restore(intact)->empty, all via :18936 in guest |
 | 59 | Settings all controls | PROVEN (guest) | guest-settings.jpg: wallpaper/bg/bar/theme/speed/pause + About live facts 3.06/569M/3G/10.0.2.15/24 |
-| 60-64 | First run + polish | TODO | — |
-| 65-68 | Proof pack | TODO | — |
+| 60 | First-boot welcome, no wizard | PROVEN (guest) | welcome posted to #announce in guest board; persists via board.json |
+| 61 | Sleep/wake + reboot | TODO (reboot test) | needs guest reboot, batched with task 51 |
+| 62 | Silent by default | PROVEN (code+guest) | only audio path is musica.html play() which kiosk blocks w/o gesture (shot shows 'press play'); no autoplay anywhere |
+| 63 | Perf pass | PROVEN | stock idle 249M/1967M; face-loaded ~570-635M; ribbon rAF ~122fps Mac; boot-to-login 41.178s < 45s |
+| 64 | Fidelity pass | PROVEN (text) | login glass+avatar+shake, topbar, 16-icon dock, live ribbon all match task specs; closed: favicon 404s, dead dock targets, missing board/settings/terminal-real, music3d-as-Musica |
+| 65 | Screendump set | DONE (partial) | 12 guest-*.jpg committed: desktop, terminal, dashboard, files, board, settings, imperium, custos, console, science, musica-ended, logo-studio |
+| 66 | 60s recording | TODO | no video capture tool in guest; frame series stands in |
+| 67 | Fresh image from script | TODO | build-image.sh needs Linux+sudo, not run this session |
+| 68 | STATUS final | TODO | this file, updated per section |
 | 69-73 | Long tail | PARKED (after tonight) | — |
 | 74 | Bare-metal research note | PROVEN | BARE_METAL_NOTE.md (framebuffer/mouse/compositor/storage+net/ordering) |
 
