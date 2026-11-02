@@ -88,6 +88,23 @@ commands:
 
 ## Colors and layout
 
+### clear — ruled 2026-11-02 (H-FP2, closes the RW4-2 gap)
+
+`clear` is a real kernel console command, and this paragraph is
+its ruling. Typing `clear` blanks the VGA screen and moves the
+cursor to the top-left corner, and it prints no output line of
+its own. It touches only the screen: the serial transcript is
+left exactly as it was, so nothing already printed is lost from
+the record. `help` does not list `clear` yet. The ruled help line
+stays exactly `commands: status help uptime mem ps`, and whether
+`clear` joins that line awaits a Pax ruling — this paragraph
+changes no help text. Source: `kernel/src/sched.rs` (`clear`
+branch and `unsafe_console_clear`, RW4-2 interim comment) and
+`kernel/src/vga.rs` `clear()`. Note: the Commands section above
+predates the built kernel and is not re-ruled here; closing the
+rest of that staleness belongs to the build-out spec-close work,
+not to this paragraph.
+
 OS-212 (colors and layout pass, screenshot in the logs) is
 NOT BUILT. The framebuffer console does not exist yet, so there
 is no screenshot to take and no color scheme to claim. This spec
