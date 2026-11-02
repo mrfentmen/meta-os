@@ -36,6 +36,7 @@ their raw usage with est_cost_usd null.
 """
 
 import base64
+import binascii
 import json
 import os
 import re
@@ -56,6 +57,8 @@ WONDER = "muse-wonder-1.0"
 SAM = "sam-3.1"
 IMAGE = "muse-image-1.0"
 VOICE = "muse-voice-transcribe-1.0"
+MAX_PROMPT_CHARS = 12000
+MAX_IMAGE_BYTES = 10_000_000
 
 MODELS = {
     SPARK: {"surface": "chat", "role": "reasoning + vision assessment"},
@@ -69,6 +72,26 @@ MODELS = {
 class EndpointUnresolvedError(RuntimeError):
     """A model is listed on the account but no call surface for it
     has been verified. Raised instead of guessing an endpoint."""
+
+
+class ModelError(RuntimeError):
+    """A named model transport failure."""
+
+
+class RateLimitError(ModelError):
+    """HTTP 429 from the model surface."""
+
+
+class AuthError(ModelError):
+    """HTTP 401 or 403 from the model surface."""
+
+
+class ServerError(ModelError):
+    """HTTP 5xx from the model surface."""
+
+
+class EmptyResponseError(ModelError):
+    """An empty or unparseable 200 response body."""
 
 
 def _key():
@@ -165,10 +188,25 @@ def _post(url, body, kind):
     try:
         with urllib.request.build_opener(NoRedirect()).open(
                 req, timeout=300) as resp:
-            payload = json.loads(resp.read().decode("utf-8"))
+            raw = resp.read()
+            if not raw:
+                raise EmptyResponseError(
+                    f"model request ({kind}) returned an empty body")
+            try:
+                payload = json.loads(raw.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError) as err:
+                raise EmptyResponseError(
+                    f"model request ({kind}) returned an unparseable "
+                    f"body: {err}") from err
     except urllib.error.HTTPError as e:
-        raise RuntimeError(
-            f"model request ({kind}) failed with HTTP {e.code}")
+        message = f"model request ({kind}) failed with HTTP {e.code}"
+        if e.code == 429:
+            raise RateLimitError(message) from None
+        if e.code in (401, 403):
+            raise AuthError(message) from None
+        if 500 <= e.code < 600:
+            raise ServerError(message) from None
+        raise ModelError(message) from None
     latency_ms = round((time.monotonic() - started) * 1000)
     return payload, latency_ms
 
@@ -202,6 +240,11 @@ def chat_text(model, prompt, max_tokens=1200):
         raise EndpointUnresolvedError(
             f"{model} is not a chat-surface model in the verified "
             f"registry: {MODELS.get(model)}")
+    if not isinstance(prompt, str) or not prompt.strip():
+        raise ValueError("chat prompt is empty")
+    if len(prompt) > MAX_PROMPT_CHARS:
+        raise ValueError(
+            f"chat prompt exceeds {MAX_PROMPT_CHARS} characters")
     payload, latency_ms = _post(CHAT_ENDPOINT, {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
@@ -210,7 +253,8 @@ def chat_text(model, prompt, max_tokens=1200):
     _record_call(f"chat:{model}", payload, model, "chat", latency_ms)
     text = _chat_content(payload)
     if text is None:
-        raise RuntimeError(f"{model} response carried no message content")
+        raise EmptyResponseError(
+            f"{model} response carried no message content")
     return text, payload.get("model") or model, latency_ms
 
 
@@ -271,6 +315,9 @@ def parse_sam_text(text):
     x1, y1, x2, y2, w, h = (int(g) for g in m.groups())
     if w <= 0 or h <= 0 or x2 < x1 or y2 < y1:
         raise ValueError(f"SAM box is malformed: {m.group(0)}")
+    if x1 < 0 or y1 < 0 or x2 > w or y2 > h:
+        raise ValueError(
+            f"SAM box is outside the image bounds: {m.group(0)}")
     region = {
         "x": round(x1 / w * 1000), "y": round(y1 / h * 1000),
         "w": round((x2 - x1) / w * 1000), "h": round((y2 - y1) / h * 1000),
@@ -286,8 +333,16 @@ def parse_sam_text(text):
 
 
 def segment(image_bytes, prompt_text):
-    """SAM 3.1 segmentation of one JPEG. Returns the parse_sam_text
-    record plus the reporting fields. Raises on any failure."""
+    """SAM 3.1 segmentation of one JPEG or PNG. Returns the
+    parse_sam_text record plus the reporting fields. Raises on any
+    failure, including empty or non-image bytes."""
+    if not image_bytes:
+        raise ValueError("segment image is empty")
+    if len(image_bytes) > MAX_IMAGE_BYTES:
+        raise ValueError(
+            f"segment image exceeds {MAX_IMAGE_BYTES} bytes")
+    if detect_image_format(image_bytes) not in ("jpeg", "png"):
+        raise ValueError("segment image is not JPEG or PNG")
     data_url = "data:image/jpeg;base64," + \
         base64.b64encode(image_bytes).decode()
     payload, latency_ms = _post(RESPONSES_ENDPOINT, {
@@ -299,7 +354,7 @@ def segment(image_bytes, prompt_text):
     _record_call("segment:sam-3.1", payload, SAM, "responses", latency_ms)
     text = _responses_text(payload)
     if text is None:
-        raise RuntimeError("SAM response carried no output text")
+        raise EmptyResponseError("SAM response carried no output text")
     record = parse_sam_text(text)
     record["model"] = payload.get("model") or SAM
     record["latency_ms"] = latency_ms
@@ -330,10 +385,20 @@ def generate_image(prompt_text):
     for item in payload.get("output") or []:
         if item.get("type") == "image_generation_call" and \
                 item.get("result"):
-            data = base64.b64decode(item["result"])
-            return data, detect_image_format(data), \
+            try:
+                data = base64.b64decode(item["result"], validate=True)
+            except (binascii.Error, ValueError) as err:
+                raise EmptyResponseError(
+                    f"Muse Image base64 payload is invalid: {err}") \
+                    from err
+            image_format = detect_image_format(data)
+            if image_format == "unknown":
+                raise ValueError(
+                    "Muse Image payload is not a known image format")
+            return data, image_format, \
                 payload.get("model") or IMAGE, latency_ms
-    raise RuntimeError("Muse Image response carried no image result")
+    raise EmptyResponseError(
+        "Muse Image response carried no image result")
 
 
 def transcribe(audio_bytes, audio_format="mp3"):
