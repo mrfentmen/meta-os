@@ -277,6 +277,76 @@ pub fn previous_session_digest(record: Option<&PreviousSession>) -> Option<Strin
     ))
 }
 
+/// OS-051: a stored brief record as `build_previous_session` reads it.
+/// `generated_at` mirrors Python's `.get("generated_at", .get("ts"))`
+/// exactly: outer None means the key is absent (fall through to
+/// `ts`); Some(None) means the key is present but null (the format
+/// fails, so the fallback is `last_brief_at`, never `ts`);
+/// Some(Some(v)) is a numeric timestamp. A float timestamp arrives
+/// already truncated to an int, mirroring Python's `int(ts)` at
+/// format time; a bool timestamp has no Rust form (Python returns
+/// None for it, which the `last_brief_at` fallback covers).
+pub struct StoredBriefInput {
+    pub generated_at: Option<Option<i64>>,
+    pub ts: Option<i64>,
+    pub last_brief_at: Option<String>,
+}
+
+/// OS-051: one shutdown job list entry, as `build_previous_session`
+/// reads it. Only `title` and `status` are inputs; a non-dict entry
+/// has no Rust form (Python skips it), and an empty title is
+/// dropped, mirroring Python's truthiness check.
+pub struct ShutdownJob {
+    pub title: String,
+    pub status: String,
+}
+
+/// OS-051: derive a previous-session record from stored state.
+///
+/// `last_brief` is a stored brief record (or brief index entry);
+/// its `generated_at` (or `ts`) Unix timestamp becomes the
+/// last-brief time, formatted by `format_brief_time`. `jobs` is the
+/// job list as it stood at shutdown: status `done` jobs are the
+/// jobs completed, status `open`/`claimed` jobs are the open
+/// threads — this repo has no separate thread store, so the job
+/// list is the thread list. Returns None when no usable last-brief
+/// time exists, so no digest is ever built on a guessed time.
+/// The returned record is the `previous_session` record a boot
+/// snapshot carries. Order is snapshot order, duplicates kept.
+pub fn build_previous_session(
+    last_brief: Option<&StoredBriefInput>,
+    jobs: Option<&[ShutdownJob]>,
+) -> Option<PreviousSession> {
+    let last_brief = last_brief?;
+    let formatted = match last_brief.generated_at {
+        Some(Some(ts)) => Some(format_brief_time(ts)),
+        Some(None) => None,
+        None => last_brief.ts.map(format_brief_time),
+    };
+    let last_brief_at = match formatted {
+        Some(t) => t,
+        None => match &last_brief.last_brief_at {
+            Some(s) if !s.is_empty() => s.clone(),
+            _ => return None,
+        },
+    };
+    let mut jobs_completed = Vec::new();
+    let mut open_threads = Vec::new();
+    if let Some(jobs) = jobs {
+        for job in jobs {
+            if job.title.is_empty() {
+                continue;
+            }
+            match job.status.as_str() {
+                "done" => jobs_completed.push(job.title.clone()),
+                "open" | "claimed" => open_threads.push(job.title.clone()),
+                _ => {}
+            }
+        }
+    }
+    Some(PreviousSession { last_brief_at, jobs_completed, open_threads })
+}
+
 /// OS-062: the system-state input for a boot brief.
 ///
 /// `None` fields mean "not reported in this snapshot"; a present
@@ -2361,6 +2431,56 @@ mod tests {
         assert_eq!(previous_session_digest(None), None);
         let no_time = PreviousSession { last_brief_at: String::new(), jobs_completed: vec![], open_threads: vec![] };
         assert_eq!(previous_session_digest(Some(&no_time)), None);
+    }
+
+    #[test]
+    fn build_previous_session_splits_done_open_claimed() {
+        // 1793620800 formats as 2026-11-02 07:00 ET (same vector
+        // the next_morning_run tests use).
+        let brief = StoredBriefInput {
+            generated_at: Some(Some(1793620800)),
+            ts: None,
+            last_brief_at: None,
+        };
+        let jobs = vec![
+            ShutdownJob { title: "Ship it".into(), status: "done".into() },
+            ShutdownJob { title: "Thread A".into(), status: "open".into() },
+            ShutdownJob { title: "Thread B".into(), status: "claimed".into() },
+            ShutdownJob { title: "In flight".into(), status: "in_flight".into() },
+            ShutdownJob { title: "".into(), status: "done".into() },
+        ];
+        let got = build_previous_session(Some(&brief), Some(&jobs)).unwrap();
+        assert_eq!(got.last_brief_at, "2026-11-02 07:00 ET");
+        assert_eq!(got.jobs_completed, vec!["Ship it"]);
+        assert_eq!(got.open_threads, vec!["Thread A", "Thread B"]);
+        // Absent generated_at falls through to ts; absent jobs
+        // read as an empty list, never an error.
+        let by_ts = StoredBriefInput {
+            generated_at: None,
+            ts: Some(1793620800),
+            last_brief_at: None,
+        };
+        let got = build_previous_session(Some(&by_ts), None).unwrap();
+        assert_eq!(got.last_brief_at, "2026-11-02 07:00 ET");
+        assert!(got.jobs_completed.is_empty() && got.open_threads.is_empty());
+        // Present-but-null generated_at falls back to last_brief_at,
+        // never to ts: the Python `.get` default only applies when
+        // the key is absent.
+        let null_gen = StoredBriefInput {
+            generated_at: Some(None),
+            ts: Some(1793620800),
+            last_brief_at: Some("2026-10-30 08:00 ET".into()),
+        };
+        let got = build_previous_session(Some(&null_gen), Some(&[])).unwrap();
+        assert_eq!(got.last_brief_at, "2026-10-30 08:00 ET");
+        // No usable time at all -> None, never a guessed time.
+        assert_eq!(build_previous_session(None, Some(&jobs)), None);
+        let no_time = StoredBriefInput {
+            generated_at: None,
+            ts: None,
+            last_brief_at: Some(String::new()),
+        };
+        assert_eq!(build_previous_session(Some(&no_time), None), None);
     }
 
     #[test]
