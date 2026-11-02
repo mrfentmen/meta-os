@@ -32,16 +32,24 @@ milestone is proven; the gate and the reviewer still do that.
 | `MERGED-boot.txt` | 0 | 1 | yes | none | — |
 | `O-shell.txt` | 4610 | 140 | no (display) | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation | `META OS - milestone K3` |
 | `O-shell2.txt` | 11545 | 308 | no (display) | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation | `META OS - milestone K3` |
+| `PROOF-f027175-boot.txt` | 2104 | 63 | yes | K1 alive, K3 timer, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
 | `R5-readkey.txt` | 2675 | 86 | yes | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
 | `R5-soak-final.txt` | 2399 | 71 | yes | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
 | `R5-soak.txt` | 2399 | 71 | yes | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
+| `W6-fetch-serial.txt` | 2564 | 83 | yes | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
+| `W6-gate-9de854d-boot.txt` | 1979 | 60 | yes | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
+| `W6-gate-9de854d-run.txt` | 14696 | 351 | yes | none | — |
+| `WAVE2-boot-tip-serial.txt` | 1934 | 57 | yes | K1 alive, K3 timer, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
 | `face-boot1.txt` | 65749 | 835 | no (display) | none | — |
+| `face-image-wave2-fresh-boot.txt` | 65873 | 844 | no (display) | none | — |
 | `flakes.txt` | 46 | 3 | yes | none | — |
 | `gate-run-main4702e5c.txt` | 14740 | 351 | yes | none | — |
 | `gate-run-r5-1.txt` | 14696 | 351 | yes | none | — |
 | `install-tools.txt` | 1239 | 24 | yes | none | — |
 | `pipeline-boot.txt` | 2501 | 74 | no (display) | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation | `META OS - milestone K3` |
 | `pipeline-run1.txt` | 852 | 34 | yes | none | — |
+| `readkey-gate-419c209-boot.txt` | 18583 | 784 | yes | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
+| `readkey-tworeader-419c209.txt` | 6893 | 276 | yes | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
 | `reboot-loop.txt` | 151 | 11 | yes | none | — |
 | `soak.txt` | 95073 | 3718 | no (display) | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation | `META OS - milestone K3` |
 | `verify-drill.txt` | 886 | 35 | yes | none | — |
