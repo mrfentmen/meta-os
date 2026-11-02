@@ -26,11 +26,11 @@ or BLOCKED with the artifact named.
 
 | # | Task | Status | Artifact |
 |---|---|---|---|
-| 1 | Boot carrier image, record numbers | TODO | — |
-| 2 | Spike A: kiosk web shell | TODO | — |
-| 3 | Spike B: real desktop (openbox class) | TODO | — |
-| 4 | Judge + pick | TODO | — |
-| 5 | Decision in STATUS.md | TODO | — |
+| 1 | Boot carrier image, record numbers | PROVEN | face-vga.png, face-boot1.txt |
+| 2 | Spike A: kiosk web shell | PROVEN | spikeA-kiosk-guest.jpg, spikeA-notes-guest.jpg |
+| 3 | Spike B: real desktop (openbox class) | PROVEN | spikeB-desktop-guest.jpg |
+| 4 | Judge + pick | DONE | table below |
+| 5 | Decision: **Spike A** | DONE | rationale below |
 | 6 | Scaffold os-build/face/ | DONE | this dir + build-image.sh |
 | 7-13 | Image foundation | TODO | — |
 | 14-17 | Boot screen | TODO | — |
@@ -46,3 +46,29 @@ or BLOCKED with the artifact named.
 | 60-64 | First run + polish | TODO | — |
 | 65-68 | Proof pack | TODO | — |
 | 69-74 | Long tail | PARKED (after tonight) | — |
+
+## Spike judgment (task 4) and decision (task 5) — DONE 2026-11-02
+
+Evidence (all in os-build/face/, guest-rendered unless noted):
+- `spikeA-kiosk-guest.jpg`: fullscreen chromium kiosk, live blue
+  ribbon, top bar (∞ Finder, clock, NET/BAT/SND), dock.
+- `spikeA-notes-guest.jpg`: real dock click opened a Notes window
+  (titlebar, close button, top-bar app name switched).
+- `spikeB-desktop-guest.jpg`: openbox + tint2 + lxterminal (real
+  shell `relay@metaos:~$`) + pcmanfm (real files, 11.1 GiB free).
+- `spikeA-desktop-local.png`, `spikeA-terminal-local.png`: the
+  same shell in a desktop browser (terminal window open).
+
+| Criterion | A: kiosk web shell | B: openbox desktop |
+|---|---|---|
+| Time to desktop | ~12 s (chromium first paint) | ~20 s (WM+panel+4 apps) |
+| Mock fidelity | HIGH: pixel-exact bar/dock/windows, live ribbon canvas, light/dark = CSS | LOW: stock decorations, manual tint2 theming |
+| Real apps | Launcher daemon (POST+subprocess, proven pattern); terminal needs a pty bridge (gap, named) | Native: every app real today |
+| Effort to finish | Shell done; harden launcher, add pty bridge + files route | Theme everything to mock quality (big) |
+
+PICK: **Spike A**. Fidelity is the hard requirement (approved
+mocks, "Mac polish"); B's realness gap closes with small
+localhost services — facts (done, live numbers), launcher
+(done), pty bridge + files route (Sections 5/8 work). The
+pty-terminal gap is stated, not hidden. Pax may overrule within
+one cycle; silence = proceed.
