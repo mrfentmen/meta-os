@@ -131,3 +131,10 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - Gate-2 via `goose check` per file: 53 entries, 10 PASS (6 roots + echo/heartbeat/hello/mcp-host), 40 FAIL (one shared cause: per-file check resolves `import common.*` beside the file — every first-error verbatim for Buffy R12, nothing fixed), 3 SKIP (registry/devmgr/sockets READMEs). node --test with GOOSE=<mac binary>: 4/4 PASS. Path-fix diff sketch as text only.
 - Wall time ~6 min. Artifacts ≤1 MB.
 - Truth: music plays and parses; the goose runner's failure mode is mapped file-by-file for its owner. Landed. Nothing blocked (no fixes made — out of lane by design).
+
+## Section 6 — Carrier image rebuild + verification (OC2B-126–150) — DONE 2026-11-02
+- STATUS read: lane STATUS quoted + PARTIALs listed in `OC2B-img-status.md`. Rebuild via lane script `os-build/face/build-image.sh` (Linux debootstrap variant not usable on Mac — recorded, not run). Output `/tmp/oc2b-img-build/metaos-face.img`, 448,790,736 B, sha256 f7d8581e… (byte-identical to face lane's 06:47 build — reproducible YES). No failure (OC2B-144 no-failure line). Wall ~25s (cache-hit). No .img staged.
+- Verified: boot log, desktop screendump (autologin relay, no typing), autologin YES ×2 (incl. 2nd-boot repeat), DHCP 10.0.2.15/24, egress 200, dashboard HTTP 200 local (host-forwarded check: forwarding not set up — blocker noted, not faked), boot times (1st ~178s cloud-init / steady-state 64s), idle mem 212/1967M, clock synced (36s→0s via timesyncd), shutdown 7s clean.
+- node/git/chromium ABSENT from lane build output (verified, quoted lane reference not re-verified). Face-in-chromium BLOCKED at lane end (apt install running when lane closed) → carried UNPROVEN, remediation is §7 bake scope.
+- Verdict table `OC2B-img-verdict.md` (PARTIAL→PROVEN/UNPROVEN). sha re-match confirmed. Gaps listed (bake-in §7, chromium/face). QEMU cmdline verbatim in `OC2B-img-section6.md`.
+- Landed: reproducible image + 90% verification. In flight: face-in-chromium (needs §7 guest session). Blocked: host-forwarded dashboard check (no forwarding set up).
