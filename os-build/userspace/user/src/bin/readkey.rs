@@ -44,8 +44,7 @@ pub extern "C" fn _start() -> ! {
         if i % 100 == 0 {
             sys_write(b"readkey progress ");
             print_u64(i as u64);
-            sys_write(b"
-");
+            sys_write(b"\n");
         }
     }
     sys_write(b"readkey done got=");

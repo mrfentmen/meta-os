@@ -40,6 +40,13 @@ pub fn sys_yield() -> u64 {
     syscall(4, 0, 0, 0)
 }
 
+/// Raw PS/2 set-1 scancode byte (0..=255), or `u64::MAX` when no key is
+/// pending. Non-blocking by contract: poll, or sleep/yield between polls.
+/// Shares the ring with the kernel console, so a byte read here is consumed.
+pub fn sys_read_key() -> u64 {
+    syscall(5, 0, 0, 0)
+}
+
 /// Print an unsigned decimal. No formatting machinery in userspace.
 pub fn print_u64(mut n: u64) {
     let mut buf = [0u8; 20];

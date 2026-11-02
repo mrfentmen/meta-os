@@ -14,6 +14,7 @@ wired** until that list changes — the wiring is a proposal, not an edit.
 | `sleeper` | sleep/wake from userspace | `sleeper: before sleep`, `sleeper: pid <n>`, `sleeper: after sleep` | PROVEN (`K6-boot.txt`) |
 | `crasher` | fault isolation | `crasher: about to read zero`, `INT user page-fault addr 0x0 err 0x4: task killed` | PROVEN (`K6-boot.txt`) |
 | `quitter` | exit status is reported truthfully | `quitter: exiting 7`, `user exit code 7` | **WRITTEN, COMPILES**; needs one line in `BINS` to be wired |
+| `readkey` | syscall 5 returns real scancodes | `readkey: polling syscall 5`, `readkey got <n>`, `readkey: empty` | **WRITTEN, COMPILES**; a diagnostic probe, not for `BINS` |
 | `hog` | allocation is bounded and contained | `hog: allocating`, then either a refusal line or the task killed; the shell must still answer `status` afterwards | **BLOCKED — no allocation syscall exists** |
 | `talker` + `listener` | two tasks can exchange a message | `talker: sent <n>`, `listener: got <n>` | **BLOCKED — no IPC exists** |
 
@@ -53,3 +54,9 @@ userspace crate, then the kernel. No kernel source change beyond that one list e
 `cargo build --target x86_64-unknown-none --bins` in `os-build/userspace/user` succeeds with
 `quitter` present. That is a userspace-crate compile, **not** a kernel boot, and it is not a
 claim that the kernel embedded or ran it.
+
+That build was red when this file was first written: the `readkey` bin imported
+`sys_read_key`, which `lib.rs` never defined, and carried a string literal split across a
+newline. Both are fixed (the wrapper returns `syscall(5, 0, 0, 0)`; the literal is `b"\n"`),
+and the crate now builds all its bins. Recording it because the first version of this page
+claimed a green build it had not run — which is the exact failure mode this repo keeps having.
