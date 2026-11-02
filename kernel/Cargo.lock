@@ -4,9 +4,9 @@ version = 4
 
 [[package]]
 name = "bootloader"
-version = "0.9.35"
+version = "0.10.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e22d5a0b9e11dd5bee9d24a68885de6dc7ed367f897323b1c1286150fd469374"
+checksum = "24e13520aa8580a2850fc9f5390dc6753f1062fb66f90e5a61bd5c72b55df731"
 
 [[package]]
 name = "metaos-kernel"
