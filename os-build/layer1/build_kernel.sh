@@ -19,6 +19,15 @@ export RUSTC="$NIGHTLY_RUSTC"
 export PATH="$(dirname "$NIGHTLY_RUSTC"):$HOME/.cargo/bin:$PATH"
 export RUSTUP_TOOLCHAIN=nightly
 
+# os-boot is the boot-assets crate in the same workspace; a broken member should
+# stop the image build here, with its own name, instead of surfacing later as a
+# confusing kernel error. It is a check, not part of the image link.
+if ! cargo check -q -p os-boot; then
+    echo "build_kernel: os-boot crate does not compile" >&2
+    exit 1
+fi
+echo "build_kernel: os-boot crate ok"
+
 if ! command -v bootimage >/dev/null 2>&1; then
     echo "build_kernel: bootimage missing; run: cargo install bootimage --locked" >&2
     exit 1
