@@ -32,7 +32,11 @@ set -uo pipefail
 cd "$(dirname "$0")/../.." || exit 1
 
 BIN="${KERNEL_BIN:-kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin}"
-LOG="os-build/logs/K3-boot.txt"
+# Capture to a scratch name, then promote to the evidence name only when every
+# check passes. An earlier version wrote K3-boot.txt directly, so a flaky
+# keyboard run overwrote a proven log with a failed one — evidence must never
+# be destroyed by a run that proves nothing.
+LOG="os-build/logs/K3-capture.txt"
 SHOT_BOOT="os-build/logs/K2-boot.ppm"
 SHOT_SHELL="os-build/logs/K2-shell.ppm"
 
@@ -41,19 +45,24 @@ mkdir -p os-build/logs
 rm -f "$LOG" "$SHOT_BOOT" "$SHOT_SHELL"
 
 # Timing: the banner and alive line print before paging, so ~1.2 s is the boot
-# screen. The console task spawns after the scheduler starts, so typing begins
-# at ~2.5 s, before the 2 s attract timer has much to snapshot.
+# screen. The console task spawns only after the scheduler starts, and how long
+# that takes varies with machine load — an attempt at 2.5 s was lost outright on
+# one run and worked on the next. So the same short command is typed at three
+# points instead of trusting one window; a lost attempt costs nothing because
+# every attempt produces the same STATUS line.
 (
     sleep 2.5
-    python3 os-build/layer1/vnc_type.py 127.0.0.1 5909 $'uptime\n' 0.09 || echo "vnc_type: uptime failed" >&2
-    sleep 1.2
-    python3 os-build/layer1/vnc_type.py 127.0.0.1 5909 $'status\n' 0.09 || echo "vnc_type: status failed" >&2
+    python3 os-build/layer1/vnc_type.py 127.0.0.1 5909 $'status\n' 0.09 || echo "vnc_type: attempt 1 failed" >&2
+    sleep 1.6
+    python3 os-build/layer1/vnc_type.py 127.0.0.1 5909 $'status\n' 0.09 || echo "vnc_type: attempt 2 failed" >&2
+    sleep 1.6
+    python3 os-build/layer1/vnc_type.py 127.0.0.1 5909 $'uptime\n' 0.09 || echo "vnc_type: attempt 3 failed" >&2
 ) &
 TYPIST=$!
 {
     sleep 1.2
     echo "screendump $PWD/$SHOT_BOOT"
-    sleep 5.2
+    sleep 7.6
     echo "screendump $PWD/$SHOT_SHELL"
     sleep 0.6
     echo "quit"
@@ -89,7 +98,7 @@ fi
 
 if grep -E "^(uptime [0-9]+s ticks [0-9]+|STATUS tasks=[0-9]+ ticks=[0-9]+)" "$LOG" >/dev/null; then
     echo "prove_k2_k3: K3 KEYBOARD PROVEN — a typed command ran:"
-    grep -E "^(uptime [0-9]+s ticks [0-9]+|STATUS tasks=[0-9]+ ticks=[0-9]+)" "$LOG" | sed 's/^/  /'
+    grep -E "^(uptime [0-9]+s ticks [0-9]+|STATUS tasks=[0-9]+ ticks=[0-9]+)" "$LOG" | tail -3 | sed 's/^/  /'
 else
     echo "prove_k2_k3: K3 KEYBOARD NOT PROVEN — no command output from a keystroke" >&2
     status=1
@@ -108,6 +117,13 @@ if python3 os-build/layer1/screen_evidence.py "${EXISTING[@]}"; then
 else
     echo "prove_k2_k3: K2 NOT PROVEN — screendump is blank" >&2
     status=1
+fi
+
+if [ "$status" -eq 0 ]; then
+    cp "$LOG" os-build/logs/K3-boot.txt
+    echo "prove_k2_k3: promoted $LOG to os-build/logs/K3-boot.txt"
+else
+    echo "prove_k2_k3: proof incomplete; kept $LOG, left K3-boot.txt untouched" >&2
 fi
 
 exit "$status"

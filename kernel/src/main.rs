@@ -91,10 +91,25 @@ fn serial_init() {
     outb(COM1 + 4, 0x0B); // DTR + RTS + OUT2
 }
 
+/// How many status-port reads a transmit wait may take before the kernel
+/// gives up on the UART. At a few ns per read this is tens of milliseconds.
+const SERIAL_TX_SPINS: u32 = 100_000;
+
+/// Write a string to COM1. The wait for the transmit holding register is
+/// bounded on purpose: an unbounded `while inb(...) & 0x20 == 0 {}` hangs the
+/// whole kernel on a missing or wedged UART, and a boot that never reaches
+/// its first line is indistinguishable from a crash. Dropping the rest of the
+/// line after SERIAL_TX_SPINS is the lesser failure — it is visible in the
+/// log as a truncated line, and the machine keeps running.
 fn serial_write_str(s: &str) {
     for byte in s.bytes() {
-        // Wait for the transmit holding register to empty.
-        while inb(COM1 + 5) & 0x20 == 0 {}
+        let mut spins: u32 = 0;
+        while inb(COM1 + 5) & 0x20 == 0 {
+            spins += 1;
+            if spins >= SERIAL_TX_SPINS {
+                return;
+            }
+        }
         outb(COM1, byte);
     }
 }
@@ -214,6 +229,12 @@ fn stack_overflow(depth: u64) -> u64 {
 fn panic(info: &PanicInfo) -> ! {
     use core::fmt::Write as _;
     serial_write_str("META OS KERNEL - panic\n");
+    // The serial log is where a panic is actually read; the screen is for
+    // whoever is standing in front of the machine. `PanicInfo`'s Display is
+    // "panicked at <file>:<line>:\n<message>", so the message and the exact
+    // location reach the log, not just a banner that says something broke.
+    let mut serial = SerialPort;
+    let _ = write!(serial, "{}\n", info);
     // SAFETY: same single-CPU reasoning as `print!`.
     let slot = unsafe { &mut *core::ptr::addr_of_mut!(CONSOLE) };
     if let Some(console) = slot {

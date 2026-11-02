@@ -118,6 +118,22 @@ extern "C" {
     fn trap_128();
 }
 
+// `trap_common` reads its arguments at fixed offsets from the stack it
+// builds: nine register pushes (72 bytes), then the vector and error code it
+// pushed, so the CPU frame starts at rsp+88 and runs rip..ss. Those literals
+// are only correct while `InterruptFrame` has this exact layout. If the struct
+// changes shape, the stub would hand `dispatch` garbage and every handler
+// would print nonsense about a fault that never happened — silently, at boot.
+// These fail the build instead.
+const _: () = {
+    assert!(core::mem::size_of::<InterruptFrame>() == 40);
+    assert!(core::mem::offset_of!(InterruptFrame, instruction_pointer) == 0);
+    assert!(core::mem::offset_of!(InterruptFrame, code_segment) == 8);
+    assert!(core::mem::offset_of!(InterruptFrame, cpu_flags) == 16);
+    assert!(core::mem::offset_of!(InterruptFrame, stack_pointer) == 24);
+    assert!(core::mem::offset_of!(InterruptFrame, stack_segment) == 32);
+};
+
 fn trap_addr(vector: u8) -> u64 {
     let f: unsafe extern "C" fn() = match vector {
         0 => trap_0,

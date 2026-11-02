@@ -37,7 +37,7 @@ One person directs the build. Del, known as Mrfentmen, makes the calls and does 
 | Meta Custos | A night watch for machines. It patrols certificates, services, and known exploited vulnerabilities | Built and gate checked. It waits on a merge fix where its files overlap the platform files |
 | Meta Musica | A music studio that never closes. It composes, keeps the takes it likes, and learns from the ones it keeps | In build now, with a 3D notes scene on the OpenCode task list |
 | Meta Faber | The loop that improves Meta OS itself, one checked change at a time, with a stop switch and a rollback rule | Working in main |
-| The OS image | A bootable Meta OS disk image with the crew tools baked in and a quiet self update | Built. Boot verified in QEMU with zero failed units |
+| Meta OS, the kernel | Our own Rust kernel: boots, draws its own console, schedules tasks, runs ring-3 programs, answers a shell | K1-K5 proven by committed boot logs; K6 proven except that no Goose service has a process yet (`os-build/KERNEL_STATUS.md`) |
 
 ## Meta Imperium
 
@@ -187,6 +187,8 @@ A missing confidence or latency key is rejected even though a null value is acce
 | `server/` | The Node server behind the assess endpoint, with the direct Spark transport |
 | `server/queue/` | The job queue service and the resident agent crew |
 | `os/` | The Meta OS tree: services, the job queue, the dashboard, and the world packs under `os/worlds/` |
+| `kernel/` | The Meta OS kernel: boot, memory, scheduler, syscalls, console, keyboard. Rust, `no_std`. Build recipe in `kernel/BUILD_LOG.md` |
+| `services/` | 25 Goose system services over 18 shared libraries, run as host processes today, not yet booted on the kernel |
 | `crates/` | The Rust workspace: the port of the OS and services to Rust |
 | `native/` | The macOS app shell that hosts the console in a web view |
 | `relay/` | Meta Nuntius, the product's own relay and viewer |
@@ -224,7 +226,11 @@ A missing confidence or latency key is rejected even though a null value is acce
 
 ## License
 
-No license file yet. The code is public to read for the hackathon. All rights stay with the author until a license is added.
+No repository `LICENSE` file exists yet. The position, plainly: the code is public to read for
+the hackathon, and all rights stay with the author until a license is added. One conflict has
+to be settled before any license ships: `kernel/Cargo.toml` declares the kernel crate MIT,
+while the repo contains no MIT text and the kernel links the rust-osdev bootloader under its
+own terms. That is a Pax ruling plus a `LICENSE` file, not a sentence in this README.
 
 ## The services layer
 
