@@ -1,0 +1,28 @@
+# OC2B-026 — KF-01 attempt 1 reproduction: bootloader 0.11.17 (this Mac, second machine)
+Date (UTC): 2026-11-02. Scratch worktree: detached at 67949822 (branch tip opencode2/500).
+QEMU: 11.1.3 (not used — no image produced, see below).
+Toolchain: nightly-aarch64-apple-darwin, RUSTC_BOOTSTRAP=1 (gate.sh method).
+Kernel Cargo pin (scratch only, never on branch): bootloader = "=0.11.17".
+Resolved (scratch Cargo.lock): bootloader 0.11.17, bootloader_api 0.11.17, serde_core 1.0.229.
+Userspace prebuilt per os-build/gate.sh (hello/sleeper/crasher/readkey) — USERSPACE DONE.
+
+Build: cd kernel && cargo build --target x86_64-unknown-none
+Result: FAIL, EXIT=101. No kernel object, no image.
+
+Error signature (scratch /tmp/oc2b-a1-build.log, 41100 lines):
+  error[E0463]: can't find crate for `std`   (x6 instances)
+  error: could not compile `serde_core` (lib) due to 5829 previous errors
+  (then cascade: getrandom/byteorder/once_cell host-side derives fail the same way)
+First failing crate: serde_core v1.0.229. 0.11 dep tree pulls serde/host-side
+derives that cannot build for the no_std kernel target at all.
+
+Match/differ vs Rowan round7 evidence (db0b0020 + SPIKE_BOOTLOADER_RESULT.md + /tmp/spike-build.log):
+  MATCH: failure mode identical — E0463 can't-find-std + serde_core uncompilable.
+  MATCH: serde_core error count identical — 5829 previous errors both runs.
+  MATCH: report text "(x6+ shown)" — this run shows x6 E0463 instances.
+  DIFFER (immaterial): surviving round7 raw log greps x4 E0463 lines (log was
+    appended across attempts / truncated); report prose says x6+. Verdict: MATCH.
+
+OC2B-027 boot: NO IMAGE EXISTS — build stops at dependency compile, before any
+kernel object or disk image. Nothing to boot; no screendump taken (no fake
+capture). QEMU never invoked for this attempt. Serial: none (no boot).

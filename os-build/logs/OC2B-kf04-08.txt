@@ -1,0 +1,44 @@
+# OC2B-051–075 — §3 KF-06/KF-07/KF-08 + graphics support: UNLANDED, absence recorded (this Mac, 2026-11-02)
+Branch: opencode2/500 @ 67949822. QEMU 11.1.3. kernel/ diff vs main: EMPTY (verified at close).
+Scratch builds: NONE started by this session — prior /tmp/oc2b-a1/a2/a3 logs polled only.
+
+Evidence (re-verified this session, both this branch and /private/tmp/round7):
+- kernel/src/main.rs: `mod framebuffer` count = 0. framebuffer.rs exists but UNWIRED
+  (K2 milestone draft, R5 wiring contract pending — no bootloader import).
+- No put_pixel call sites, no GOP/UEFI handover, no red/blue fill drivers.
+- kernel/src/logo_frames.rs is ASCII attract-screen DATA for the text console
+  (46x17 grid, console idle task) — not a kernel-drawn pixel ribbon.
+- Branch pin scan: only spike/bootloader-0.11 carries a non-0.9 pin (0.10.9, the
+  failed spike itself); origin/rowan/* face/kf01 spikes pin 0.9. No graphics tree exists.
+
+Per-task results:
+- OC2B-051 ribbon first boot — ABSENT: no ribbon code landed. No OC2B-kf06-ribbon.png.
+- OC2B-052 ribbon second boot — ABSENT: same. No OC2B-kf06-ribbon2.png.
+- OC2B-053 two animation phases — ABSENT: nothing animates. No phaseA/B pair.
+- OC2B-054 frame counter readings — ABSENT: no boot reports counters.
+- OC2B-055 keypress during ribbon — ABSENT: no ribbon to interrupt.
+- OC2B-056 graphics-fallback boot — ABSENT: no graphics tree, no fallback flag exists.
+  No OC2B-kf08-fallback.png.
+- OC2B-057 fallback reason line — ABSENT: no fallback boot produces one.
+- OC2B-058 status after fallback — ABSENT on graphics tree (no such boot; text-shell
+  status itself stands proven by §1 baseline gate GREEN, OC2B-baseline-gate.txt).
+- OC2B-059 ribbon boot-screen timing — ABSENT: no first drawn frame to time.
+- OC2B-060 gate on graphics tree — BLOCKED: no graphics tree; §1 baseline gate GREEN stands.
+- OC2B-061 5-boot pass table — ABSENT: no graphics tree to boot 5x.
+- OC2B-062 640x480 mode — single text mode only; no selectable graphics mode exists.
+- OC2B-063 warning diff vs text baseline — ABSENT: no graphics boot log to diff (zero-diff vacuous).
+- OC2B-064 ps on graphics tree — ABSENT (same; text-tree userspace proven by baseline gate).
+- OC2B-065 readkey on graphics tree — ABSENT: no graphics boot to type into.
+- OC2B-066 fetch screen — ABSENT: no fetch screen on any tree.
+- OC2B-067 graphics boot time — ABSENT: no graphics boot to time.
+- OC2B-068 graphics regressions — none-found line: no graphics tree exists to regress.
+- OC2B-069 text-to-graphics transition — not-capturable: no graphics phase exists (reason stated).
+- OC2B-070 fresh ribbon on newest tip — ABSENT: same as 051.
+- OC2B-071 index update — DONE in os-build/logs/OC2B-screendump-index.md (§3 rows, absent-verified).
+- OC2B-072/074 status block + blocked list — NOT this lane (status file frozen for KF lane;
+  waiting-on list is this file + report).
+- OC2B-073 checkpoint commit/push — NOT done (lane rules: NEVER push, DO NOT commit).
+- OC2B-075 kernel diff — EMPTY, verified at close of session.
+
+Waiting-on-Rowan: ribbon boot screen (KF-06), animation + keypress (KF-07),
+fallback path (KF-08) — none landed on any branch. No captures fabricated for 051–070.

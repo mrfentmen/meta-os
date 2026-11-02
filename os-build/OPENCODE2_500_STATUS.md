@@ -31,3 +31,21 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - OC2B-024 Mac-only dependency table: QEMU 11.1.3 present | key present (flaky, offline fallback) | disk 699Gi free | pretty_midi NOT YET installed (§19) | goose toolchain path checked §19 (services/BUILD.md).
 - OC2B-025 baseline index: OC2B-004 science 163 OK | OC2B-005 hortus 14 OK | OC2B-006 queue 289 OK | OC2B-007 goose-node 4/0 | OC2B-011 gate GREEN. Fixed numbers for later sections.
 - Landed: branch, parity, baselines, env, dirs. In flight: none. Blocked: smoke-chat message content (metered-but-empty flake; offline path used downstream).
+
+## Section 2 — KF-01/KF-02 support (OC2B-026–050) — DONE 2026-11-02
+- OC2B-026/027: 0.11.17 std-fail reproduced in scratch worktree — MATCH (E0463 x6, serde_core, 41100-line log). No image, no screendump (honest).
+- OC2B-028/029: 0.10.9 API-fail reproduced twice — MATCH (E0433 x2 verbatim, 15 errors). No image, no screendump.
+- OC2B-030/031: candidate = 0.10.9 (no newer version named anywhere). BootInfo framebuffer YES (`pub framebuffer: Optional<FrameBuffer>`, bootloader-0.10.13 registry source). No image, no candidate screendump.
+- OC2B-032: cross-check table `OC2B-kf01-table.md` stands.
+- OC2B-033–038: BLOCKED re-verified — no upgraded-stack branch exists (only spike pins 0.10.9; all rowan/* pin 0.9). No gate/boot/shell/badsyscall/isolation/timing fabricated.
+- Landed: KF-01 reproduction + candidate field proof. In flight: none. Blocked: KF-02 upgraded stack (waiting on Rowan).
+
+## Section 3 — KF-03–KF-08 screendumps and fallback (OC2B-051–075) — DONE 2026-11-02
+- All UNLANDED: `mod framebuffer` = 0 in kernel/, no put_pixel/GOP/fill drivers (`logo_frames.rs` is ASCII text-console data, not pixel ribbon). Per-task absence notes in `OC2B-kf04-08.txt`.
+- Screendump index: zero captures, zero sha claims, zero mismatches (honest). No panic occurred (no boots exist) — no PANIC pair fabricated.
+- Landed: absence verification. In flight: none. Blocked: framebuffer wiring (KF-03), pixel text (KF-04), boot-line re-render (KF-05), ribbon (KF-06), phases+keypress (KF-07), fallback (KF-08) — all waiting on Rowan.
+
+## Section 4 — KF-09/KF-10 windows + Milestone 1 pack (OC2B-076–100) — DONE 2026-11-02
+- All UNLANDED: no window/desktop/topbar/dock code in kernel/ (sole "window" hit is a sched.rs comment). Per-task notes in `OC2B-kf09-11.txt`; absence rows in screendump index.
+- No Milestone-1 pack assembled (no single tree with serial+ribbon+shell exists). kernel/ diff vs main EMPTY (verified). 3-line Pax summary in status per task OC2B-100: KF-01 failures reproduced MATCH on second machine; candidate 0.10.9 carries Optional<FrameBuffer>; everything past KF-01 waits on Rowan's upgraded stack + framebuffer wiring.
+- Landed: absence verification + Pax summary. In flight: none. Blocked: full waiting-on list above.

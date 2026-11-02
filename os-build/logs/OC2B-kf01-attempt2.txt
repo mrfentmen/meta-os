@@ -1,0 +1,30 @@
+# OC2B-028 — KF-01 attempt 2 reproduction: bootloader 0.10.9 (this Mac, second machine)
+Date (UTC): 2026-11-02. Scratch worktree: detached at 67949822 (branch tip opencode2/500).
+QEMU: 11.1.3 (not used — no image produced, see below).
+Toolchain: nightly-aarch64-apple-darwin, RUSTC_BOOTSTRAP=1 (gate.sh method).
+Kernel Cargo pin (scratch only, never on branch): bootloader = "0.10.9" (caret,
+exactly as Rowan's spike commit db0b0020).
+Resolved (scratch Cargo.lock): bootloader 0.10.13 (caret range resolves up —
+same resolution as Rowan's spike lockfile, which also reads 0.10.13).
+Userspace prebuilt per os-build/gate.sh (hello/sleeper/crasher/readkey) — USERSPACE DONE.
+
+Build: cd kernel && cargo build --target x86_64-unknown-none
+Result: FAIL, EXIT=101. Deps compile; kernel source (written for 0.9) does not.
+No kernel object, no image (target/.../debug holds no .bin/bootimage artifacts).
+
+Error signature (scratch /tmp/oc2b-a2-build.log):
+  error[E0433]: cannot find `bootinfo` in `bootloader`   (x2)
+  error[E0408]: variable `KernelStack`/`PageTable`/`Bootloader`/`BootInfo`/
+    `FrameZero`/`InUse` (+ Reserved/Kernel/Usable) is not bound in all patterns (x9)
+  error: could not compile `metaos-kernel` (bin "metaos-kernel")
+    due to 15 previous errors; 7 warnings emitted
+  Explanation set: E0308, E0369, E0408, E0433, E0609.
+
+Match/differ vs Rowan round7 evidence (db0b0020 + /tmp/spike-build-010.log):
+  MATCH on every load-bearing line: E0433 x2 verbatim, E0408 x9 same variable
+  list, 15 errors total, same explanation set, same 7-warnings tail line
+  (byte-identical final error line). Verdict: MATCH.
+
+OC2B-029 boot: NO IMAGE EXISTS — build stops at kernel-source compile, before
+any bootable image. Nothing to boot; no screendump taken (no fake capture).
+QEMU never invoked for this attempt. Serial: none (no boot).
