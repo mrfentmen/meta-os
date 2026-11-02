@@ -2,7 +2,7 @@
 //
 // B-L1-122 — Updater delta manifests: component-level deltas, plan output unchanged in kind.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t98_delta (29 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT "UNCHANGED IN KIND" MEANS
 // ------------------------------
@@ -209,7 +209,12 @@ fn delta_apply(f: DeltaFile&, base: const u8[:], lit: const u8[:], out: u8[>..]&
 
 // Verify the bytes delta_apply produced. Split out so the digest path is one call and the
 // caller can hash into its own buffer.
-fn delta_verify(f: DeltaFile&, content: u8[:], got_digest: u8[..32]) -> i64 {
+//
+// `got_digest` is an OUT parameter, and the reference is what makes that true: it used to be
+// passed by value, so this function computed the digest, compared it, wrote it into its own
+// copy of the caller's array, and returned -- leaving the caller with zeros. Anything that
+// logged "expected X, got Y" would have logged zeros for Y and blamed the update.
+fn delta_verify(f: DeltaFile&, content: u8[:], got_digest: u8[..32]&) -> i64 {
     var digest: u8[>..] = [];
     if !sha256(content, digest, 32) { return E_VERIFY; }
     if digest.len != DL_DIGEST { return E_VERIFY; }
