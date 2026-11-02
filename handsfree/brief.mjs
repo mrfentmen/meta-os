@@ -38,3 +38,10 @@ export function readResults(jobsDir) {
 export function briefFromJobs(jobsDir) {
   return composeBrief(readResults(jobsDir));
 }
+
+/* ---- CLI: node handsfree/brief.mjs <jobsDir> ---- */
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)) {
+  const [, , jobsDir] = process.argv;
+  if (!jobsDir) { console.error("usage: brief.mjs <jobsDir>"); process.exit(2); }
+  process.stdout.write(briefFromJobs(jobsDir));
+}
