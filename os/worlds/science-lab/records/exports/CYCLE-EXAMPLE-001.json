@@ -1,0 +1,100 @@
+{
+  "claims": [
+    {
+      "basis": "sealed_record.levels.reasoning=1 in records/cycles/CYCLE-EXAMPLE-001.json",
+      "claim_id": "CYCLE-EXAMPLE-001-reasoning",
+      "level": 1,
+      "recorded_level": 1,
+      "source": "cycle-record:sealed_record.levels.reasoning",
+      "statement": "Reasoning chain for the cycle question is filed and hash-linked.",
+      "verdict": "filed"
+    },
+    {
+      "basis": "sealed_record.levels.computation=2; verification: indeterminate; claim capped at 2; Generator observation filed (prep-run R2 0.725, RMSE 1.099). The independent verifier has NOT re-executed from the archived inputs (Section 6 lane); no reproduc",
+      "claim_id": "CYCLE-EXAMPLE-001-computation",
+      "level": 2,
+      "recorded_level": 2,
+      "source": "cycle-record:sealed_record.levels.computation",
+      "statement": "Computation observation for the cycle question (prep-run, unverified unless a reproduced record exists).",
+      "verdict": "indeterminate"
+    },
+    {
+      "basis": "ledger entry be1f7a0ea918 in records/examples/cycle_example.json",
+      "claim_id": "CYCLE-EXAMPLE-001-ledger-0",
+      "ledger_entry": "be1f7a0ea918f7dfbcdff0e8df209660b46f8fb6a5d186069d0282054aafee9c",
+      "level": 1,
+      "recorded_level": 1,
+      "source": "example-bundle:cycle_example.json",
+      "statement": "Ledger claim record be1f7a0ea918 at level 1.",
+      "verdict": "filed"
+    },
+    {
+      "basis": "ledger entry ef287634a407 in records/examples/cycle_example.json",
+      "claim_id": "CYCLE-EXAMPLE-001-ledger-1",
+      "ledger_entry": "ef287634a407941fe96ef868b2e47b9cda8a387339b606402853d0effeeb9bcc",
+      "level": 2,
+      "recorded_level": 2,
+      "source": "example-bundle:cycle_example.json",
+      "statement": "Ledger claim record ef287634a407 at level 2.",
+      "verdict": "filed"
+    }
+  ],
+  "claims_by_level": {
+    "1": 2,
+    "2": 2
+  },
+  "cycle_id": "CYCLE-EXAMPLE-001",
+  "display": [
+    {
+      "basis": "sealed_record.levels.reasoning=1 in records/cycles/CYCLE-EXAMPLE-001.json",
+      "claim_id": "CYCLE-EXAMPLE-001-reasoning",
+      "colour": "blue",
+      "level": 1,
+      "statement": "Reasoning chain for the cycle question is filed and hash-linked."
+    },
+    {
+      "basis": "sealed_record.levels.computation=2; verification: indeterminate; claim capped at 2; Generator observation filed (prep-run R2 0.725, RMSE 1.099). The independent verifier has NOT re-executed from the archived inputs (Section 6 lane); no reproduc",
+      "claim_id": "CYCLE-EXAMPLE-001-computation",
+      "colour": "green",
+      "level": 2,
+      "statement": "Computation observation for the cycle question (prep-run, unverified unless a reproduced record exists)."
+    },
+    {
+      "basis": "ledger entry be1f7a0ea918 in records/examples/cycle_example.json",
+      "claim_id": "CYCLE-EXAMPLE-001-ledger-0",
+      "colour": "blue",
+      "level": 1,
+      "statement": "Ledger claim record be1f7a0ea918 at level 1."
+    },
+    {
+      "basis": "ledger entry ef287634a407 in records/examples/cycle_example.json",
+      "claim_id": "CYCLE-EXAMPLE-001-ledger-1",
+      "colour": "green",
+      "level": 2,
+      "statement": "Ledger claim record ef287634a407 at level 2."
+    }
+  ],
+  "export_version": "science-lab-export/1",
+  "gate_state": "human-gated",
+  "generated_at": "2026-11-02T14:15:25.713893Z",
+  "generated_by": "os/worlds/science-lab/export.py export_session",
+  "honesty": [
+    "Generated from records by export_session; no hand-written levels.",
+    "Every claim displays at its recorded level, never higher (ladder.assert_export_allowed checked per claim).",
+    "Levels 4-6 are human-only (amber) and unreachable by this system alone; none is claimed here."
+  ],
+  "parked_gate": "wetlab",
+  "phase": "wetlab",
+  "question": "Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?",
+  "sources": [
+    "records/cycles/CYCLE-EXAMPLE-001.json",
+    "records/ledger.jsonl",
+    "records/repository/claims.jsonl",
+    "records/repository/experiments.jsonl",
+    "records/examples/cycle_example.json"
+  ],
+  "verdicts": {
+    "filed": 3,
+    "indeterminate": 1
+  }
+}
