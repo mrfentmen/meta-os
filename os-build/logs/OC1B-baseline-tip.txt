@@ -1,0 +1,14 @@
+baseline tree (fresh clone of origin/main, /tmp/oc500-baseline):
+sha: 3452d244663f4ad87e51bfe2f0dd3902f90ae087
+
+origin/main tip at clone time:
+3452d244663f4ad87e51bfe2f0dd3902f90ae087
+
+git status (must be clean):
+On branch main
+Your branch is up to date with 'origin/main'.
+
+nothing to commit, working tree clean
+
+worktree opencode/500-s1 tip (proofs committed here):
+94010c76ee095fa6c6bcfa4405cd56a9695f32d3

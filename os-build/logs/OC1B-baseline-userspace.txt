@@ -1,0 +1,5 @@
+OC1B-020 userspace binaries (baseline /tmp/oc500-baseline @ 3452d244, after gate run 1):
+-rwxr-xr-x@ 1 test  wheel  2539200 Nov  2 11:03 os-build/userspace/user/target/x86_64-unknown-none/debug/crasher
+-rwxr-xr-x@ 1 test  wheel  2527632 Nov  2 11:03 os-build/userspace/user/target/x86_64-unknown-none/debug/hello
+-rwxr-xr-x@ 1 test  wheel  2799720 Nov  2 11:04 os-build/userspace/user/target/x86_64-unknown-none/debug/readkey
+-rwxr-xr-x@ 1 test  wheel  2798768 Nov  2 11:03 os-build/userspace/user/target/x86_64-unknown-none/debug/sleeper

@@ -1,0 +1,4 @@
+OC1B-011 bootimage (baseline tree /tmp/oc500-baseline @ 3452d244, built by gate run 1):
+path: kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin
+-rwxr-xr-x@ 1 test  wheel  11202048 Nov  2 11:04 /tmp/oc500-baseline/kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin
+4d0cfaa00e7a8d7b4980eaee0141f3a6fbb5729efe751ee0e6bde1cc02d94c7c  /tmp/oc500-baseline/kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin
