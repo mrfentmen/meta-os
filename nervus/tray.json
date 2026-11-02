@@ -1,0 +1,22 @@
+{
+  "system": "meta-nervus",
+  "version": 1,
+  "note": "The boss's existing instruments, sorted by the job they do at the bench (NEURON_SURGERY_SPEC.md, 'The instrument tray'). Every prefix must exist in mcp-gateway/backends.json; nervus/check-tray.mjs fails the build when one does not.",
+  "tools": [
+    { "tool": "repo-forensics", "prefix": "repoforensics", "group": "know-the-patient", "bench_job": "what this model or code actually is" },
+    { "tool": "worktree-orbit", "prefix": "worktreeorbit", "group": "know-the-patient", "bench_job": "which copies exist and their state" },
+    { "tool": "migration-map", "prefix": "migrationmap", "group": "know-the-patient", "bench_job": "how the tree got here" },
+    { "tool": "evidence-diff", "prefix": "evidencediff", "group": "before-after-proof", "bench_job": "the evaluate-delta receipt" },
+    { "tool": "contract-diff", "prefix": "contractdiff", "group": "before-after-proof", "bench_job": "what the interface did before and after" },
+    { "tool": "test-shape", "prefix": "testshape", "group": "before-after-proof", "bench_job": "are the eval runs themselves shaped right" },
+    { "tool": "flaky-history", "prefix": "flakyhistory", "group": "before-after-proof", "bench_job": "are the eval runs repeatable" },
+    { "tool": "osv", "prefix": "osv", "group": "safety-of-the-stack", "bench_job": "the model stack's dependencies" },
+    { "tool": "cisa-kev", "prefix": "cisakev", "group": "safety-of-the-stack", "bench_job": "exploited-in-the-wild against the stack" },
+    { "tool": "secret-hygiene", "prefix": "secrethygiene", "group": "safety-of-the-stack", "bench_job": "counts only, before anything is published" },
+    { "tool": "deprecation-radar", "prefix": "deprecationradar", "group": "safety-of-the-stack", "bench_job": "rotting APIs under the bench" },
+    { "tool": "release-notes-forge", "prefix": "releasenotes", "group": "records", "bench_job": "operation summaries" },
+    { "tool": "incident-timeline", "prefix": "incidenttimeline", "group": "records", "bench_job": "what happened, in order" },
+    { "tool": "unicode", "prefix": "unicode", "group": "text-integrity", "bench_job": "confusables in steered output" },
+    { "tool": "unicode-security", "prefix": "unicodesecurity", "group": "text-integrity", "bench_job": "invisible characters in published claims" }
+  ]
+}
