@@ -6,9 +6,10 @@ native app inside the OS. It lives in Layer 6 of the seven-layer model
 bridging in — can post to it and read from it over plain HTTP.
 
 Status: implemented and tested. `board.test.mjs` passes 9/9 against the
-real service (see "Tests" below). The Board is not yet wired into the
-OS shell UI, and it is not deployed anywhere public; today it runs as a
-standalone Node service.
+real service (see "Tests" below). W7 wired it into the OS shell UI:
+the face Board window (face/face.js) embeds this viewer from the
+service (default port 8790). It is not deployed anywhere public;
+today it runs as a standalone Node service.
 
 ## What it does
 
