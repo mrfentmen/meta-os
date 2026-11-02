@@ -58,7 +58,7 @@ fn icmp_build_echo(out: u8[..1500]&, kind: i64, id: i64, seq: i64, payload: cons
     out[6] = ((seq >> 8) & 0xff) as u8;
     out[7] = (seq & 0xff) as u8;
     var i: i64 = 0;
-    while i < payload.len { out[ICMP_HDR + i] = payload[i]; i++; }
+    while i < payload.len { out[ICMP_HDR + i] = payload[i]; i = i + 1; }
     let sum = icmp_sum16(out, len);
     out[2] = ((sum >> 8) & 0xff) as u8;
     out[3] = (sum & 0xff) as u8;
@@ -105,7 +105,7 @@ fn icmp_payload_matches(msg: u8[..1500]&, v: IcmpView&, sent: const u8[:]) -> bo
     var i: i64 = 0;
     while i < sent.len {
         if msg[v.payload_off + i] != sent[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }

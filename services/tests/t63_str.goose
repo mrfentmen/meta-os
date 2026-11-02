@@ -18,8 +18,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -29,14 +29,14 @@ fn check(name: const u8[:], cond: bool) {
 fn count_fields(s: const u8[:], sep: u8) -> i64 {
     var sp = st_sep(s, sep);
     var n: i64 = 0;
-    var guard: i64 = 0;
+    var seen: i64 = 0;
     var more = true;
-    while more && guard < 64 {
+    while more && seen < 64 {
         let a, b, found = st_next(sp, s);
-        if !found { more = false; } else { n++; }
-        guard++;
+        if !found { more = false; } else { n = n + 1; }
+        seen = seen + 1;
     }
-    if guard >= 64 { return -1; }   // a splitter that will not terminate is a bug
+    if seen >= 64 { return -1; }   // a splitter that will not terminate is a bug
     return n;
 }
 
@@ -53,7 +53,7 @@ fn by_eq_span(s: const u8[:], a: i64, b: i64, want: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < want.len {
         if s[a + i] != want[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -126,7 +126,7 @@ fn main() {
     let _ = append_int(fb, 32, t_fail);
     say(fb[..]);
     say("\n");
-    if t_fail > 0 { let _ = sys_exit(1); }
+    if t_fail > 0 { sys_exit(1); }
 }
 
 fn first_word_is(s: const u8[:], want: const u8[:]) -> bool {

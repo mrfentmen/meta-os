@@ -40,7 +40,7 @@ let NTP_FRAC: i64 = 4294967296;              // 2^32
 fn ntp_build_request(out: u8[..48]&, transmit_ms: i64) -> i64, i64 {
     if transmit_ms < 0 { return 0, E_INVAL; }
     var i: i64 = 0;
-    while i < NTP_PKT { out[i] = 0; i++; }
+    while i < NTP_PKT { out[i] = 0; i = i + 1; }
     out[0] = 0x23;                 // LI 0, VN 4, mode 3 (client)
     out[1] = 0;                    // stratum 0: unspecified, as a client should say
     out[2] = 6;                    // poll: 64 s, the RFC default
@@ -61,7 +61,7 @@ fn ntp_build_reply(request: const u8[:], out: u8[..48]&, now_ms: i64) -> i64, i6
     if version != 3 && version != 4 { return 0, E_INVAL; }
 
     var i: i64 = 0;
-    while i < NTP_PKT { out[i] = 0; i++; }
+    while i < NTP_PKT { out[i] = 0; i = i + 1; }
     out[0] = 0x24;                 // LI 0, VN 4, mode 4 (server)
     out[1] = 2;                    // stratum 2: a secondary server
     out[2] = request[2];           // poll echoed
@@ -73,7 +73,7 @@ fn ntp_build_reply(request: const u8[:], out: u8[..48]&, now_ms: i64) -> i64, i6
     // originate (24-32) = the client's transmit, echoed byte for byte. The client's whole
     // spoof check rests on this field, so the peer copies rather than recomputes.
     var k: i64 = 0;
-    while k < 8 { out[24 + k] = request[40 + k]; k++; }
+    while k < 8 { out[24 + k] = request[40 + k]; k = k + 1; }
 
     // receive (32-40) and transmit (40-48). A real server's two stamps differ by its own
     // processing time; here they are equal, and the client's delay figure is therefore a

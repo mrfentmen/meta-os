@@ -68,16 +68,26 @@ struct HotPlug {
 }
 
 fn hp_new() -> HotPlug {
-    var h: HotPlug;
+    var h: HotPlug = HotPlug {
+        events: [],
+        head: 0,
+        count: 0,
+        next_seq: 0,
+        next_sub: 0,
+        subs: [],
+        sub_count: 0,
+        raised: 0,
+        dropped: 0,
+    };
     var i: i64 = 0;
     while i < HP_QUEUE {
         h.events[i] = HotEvent { seq: 0, kind: 0, dev_slot: -1, dev_kind: 0, at_ms: 0 };
-        i++;
+        i = i + 1;
     }
     i = 0;
     while i < HP_SUBS {
         h.subs[i] = HotSub { id: 0, mask: 0, active: false, delivered: 0, dropped: 0 };
-        i++;
+        i = i + 1;
     }
     h.head = 0;
     h.count = 0;
@@ -99,7 +109,7 @@ fn hp_subscribe(h: HotPlug&, mask: i64) -> i64 {
     var i: i64 = 0;
     while i < HP_SUBS {
         if !h.subs[i].active { slot = i; break; }
-        i++;
+        i = i + 1;
     }
     if slot < 0 { return -1; }
     let id = h.next_sub;
@@ -118,7 +128,7 @@ fn hp_unsubscribe(h: HotPlug&, id: i64) -> i64 {
             h.sub_count = h.sub_count - 1;
             return CODE_OK;
         }
-        i++;
+        i = i + 1;
     }
     return E_NOTFOUND;
 }
@@ -137,7 +147,7 @@ fn hp_raise(h: HotPlug&, kind: i64, dev_slot: i64, dev_kind: i64, at_ms: i64) ->
             if h.subs[i].active && (h.subs[i].mask & (1 << old.kind)) != 0 {
                 h.subs[i].dropped = h.subs[i].dropped + 1;
             }
-            i++;
+            i = i + 1;
         }
         h.head = (h.head + 1) % HP_QUEUE;
         h.count = h.count - 1;
@@ -157,7 +167,7 @@ fn hp_raise(h: HotPlug&, kind: i64, dev_slot: i64, dev_kind: i64, at_ms: i64) ->
             h.subs[s].delivered = h.subs[s].delivered + 1;
             delivered = delivered + 1;
         }
-        s++;
+        s = s + 1;
     }
     return delivered, CODE_OK;
 }
@@ -190,7 +200,7 @@ fn hp_sub_stats(h: HotPlug&, id: i64, delivered: i64&, dropped: i64&) -> bool {
             dropped = h.subs[i].dropped;
             return true;
         }
-        i++;
+        i = i + 1;
     }
     return false;
 }

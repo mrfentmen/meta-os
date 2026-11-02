@@ -29,32 +29,20 @@ fn t_eq(a: const u8[:], b: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < a.len {
         if a[i] != b[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
 
 let SAMPLE: const u8[:] =
-    "# a comment line\n" +
-    "; another comment style\n" +
-    "\n" +
-    "[net]\n" +
-    "  address = 10.0.0.2   \n" +
-    "  prefix=24\n" +
-    "  dhcp = false\n" +
-    "[time]\n" +
-    "server = pool.example\n" +
-    "rate = 1000\n" +
-    "rate = 2000\n" +
-    "[broken\n" +
-    "k = v\n";
+    "# a comment line\n; another comment style\n\n[net]\n  address = 10.0.0.2   \n  prefix=24\n  dhcp = false\n[time]\nserver = pool.example\nrate = 1000\nrate = 2000\n[broken\nk = v\n";
 
 fn main() {
     say("t47 cfg\n");

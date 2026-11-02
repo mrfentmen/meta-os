@@ -75,7 +75,7 @@ fn ip_build(pkt: u8[..1500]&, src: Ipv4&, dst: Ipv4&, proto: i64, ttl: i64, payl
     if ttl < 1 || ttl > 255 { return 0, E_INVAL; }
 
     var i: i64 = 0;
-    while i < IP_HDR_MIN { pkt[i] = 0; i++; }
+    while i < IP_HDR_MIN { pkt[i] = 0; i = i + 1; }
     pkt[0] = 0x45;                                  // v4, 5 words
     pkt[1] = 0;                                     // DSCP/ECN: best effort
     pkt[2] = ((total >> 8) & 0xff) as u8;
@@ -92,7 +92,7 @@ fn ip_build(pkt: u8[..1500]&, src: Ipv4&, dst: Ipv4&, proto: i64, ttl: i64, payl
     i = 0;
     while i < payload.len {
         pkt[IP_HDR_MIN + i] = payload[i];
-        i++;
+        i = i + 1;
     }
 
     let sum = ip_sum16(pkt, 0, IP_HDR_MIN);

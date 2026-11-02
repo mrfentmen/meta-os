@@ -65,7 +65,7 @@ fn ip4_equal(x: Ipv4&, y: Ipv4&) -> bool {
 // Returns (address, ok). A rejected string yields 0.0.0.0 and ok = false, so a caller
 // that ignores the flag gets an obvious value rather than a plausible wrong one.
 fn ip4_parse(s: const u8[:]) -> Ipv4, bool {
-    var parts: u8[..4];
+    var parts: u8[..4] = [];
     var part_count: i64 = 0;
     var i: i64 = 0;
     var digits_here: i64 = 0;
@@ -79,7 +79,7 @@ fn ip4_parse(s: const u8[:]) -> Ipv4, bool {
             if leading_zero && digits_here > 1 { return ip4_any(), false; }
             if part_count >= 4 { return ip4_any(), false; }
             parts[part_count] = value as u8;
-            part_count++;
+            part_count = part_count + 1;
             value = 0;
             digits_here = 0;
             leading_zero = false;
@@ -88,11 +88,11 @@ fn ip4_parse(s: const u8[:]) -> Ipv4, bool {
             if digits_here >= 3 { return ip4_any(), false; }
             value = value * 10 + ((ch - 0x30) as i64);
             if value > 255 { return ip4_any(), false; }
-            digits_here++;
+            digits_here = digits_here + 1;
         } else {
             return ip4_any(), false;                     // no spaces, no signs, no hex
         }
-        i++;
+        i = i + 1;
     }
     if digits_here == 0 { return ip4_any(), false; }
     if leading_zero && digits_here > 1 { return ip4_any(), false; }
@@ -106,30 +106,31 @@ fn ip4_render(addr: Ipv4&, out: u8[..16]&) -> i64 {
     var n: i64 = 0;
     n = ip4_put_octet(out, n, addr.a);
     if n < 0 { return -1; }
-    out[n] = 0x2E; n++;
+    out[n] = 0x2E; n = n + 1;
     n = ip4_put_octet(out, n, addr.b);
     if n < 0 { return -1; }
-    out[n] = 0x2E; n++;
+    out[n] = 0x2E; n = n + 1;
     n = ip4_put_octet(out, n, addr.c);
     if n < 0 { return -1; }
-    out[n] = 0x2E; n++;
+    out[n] = 0x2E; n = n + 1;
     n = ip4_put_octet(out, n, addr.d);
     if n < 0 { return -1; }
     return n;
 }
 
-fn ip4_put_octet(out: u8[..16]&, at: i64, v: u8) -> i64 {
+fn ip4_put_octet(out: u8[..16]&, at_in: i64, v: u8) -> i64 {
+    var at = at_in;
     if v >= 100 {
         if at + 3 > 16 { return -1; }
-        out[at] = 0x30 + (v / 100); at++;
-        out[at] = 0x30 + ((v % 100) / 10); at++;
-        out[at] = 0x30 + (v % 10); at++;
+        out[at] = 0x30 + (v / 100); at = at + 1;
+        out[at] = 0x30 + ((v % 100) / 10); at = at + 1;
+        out[at] = 0x30 + (v % 10); at = at + 1;
         return at;
     }
     if v >= 10 {
         if at + 2 > 16 { return -1; }
-        out[at] = 0x30 + (v / 10); at++;
-        out[at] = 0x30 + (v % 10); at++;
+        out[at] = 0x30 + (v / 10); at = at + 1;
+        out[at] = 0x30 + (v % 10); at = at + 1;
         return at;
     }
     if at + 1 > 16 { return -1; }
@@ -145,7 +146,7 @@ fn ip4_put_octet(out: u8[..16]&, at: i64, v: u8) -> i64 {
 fn ip4_mask(prefix: i64) -> Ipv4, bool {
     if prefix < 0 || prefix > 32 { return ip4_any(), false; }
     var bits = prefix;
-    var m: u8[..4];
+    var m: u8[..4] = [];
     var i: i64 = 0;
     while i < 4 {
         if bits >= 8 { m[i] = 0xFF; bits = bits - 8; }
@@ -155,7 +156,7 @@ fn ip4_mask(prefix: i64) -> Ipv4, bool {
             m[i] = (0xFF << (8 - bits)) as u8;
             bits = 0;
         }
-        i++;
+        i = i + 1;
     }
     return Ipv4 { a: m[0], b: m[1], c: m[2], d: m[3] }, true;
 }
@@ -220,11 +221,37 @@ struct IfaceCfg {
 }
 
 fn iface_default(name: const u8[:]) -> IfaceCfg {
-    var c: IfaceCfg;
+    var c: IfaceCfg = IfaceCfg {
+        name: [],
+        name_len: 0,
+        configured: false,
+        use_dhcp: false,
+        addr: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        mask: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        gw: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns1: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns2: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        mtu: 0,
+    };
     var i: i64 = 0;
     while i < name.len && i < IF_NAME_MAX - 1 {
         c.name[i] = name[i];
-        i++;
+        i = i + 1;
     }
     c.name[i] = 0;
     c.name_len = i;
@@ -262,12 +289,12 @@ fn iface_from_config(text: u8[:], name: const u8[:]) -> IfaceCfg, i64 {
     var p: i64 = 0;
     while p < prefix.len {
         section.push(prefix[p]);        // u8 in, u8 out: no literal-typing question
-        p++;
+        p = p + 1;
     }
     var i: i64 = 0;
     while i < c.name_len {
         section.push(c.name[i]);
-        i++;
+        i = i + 1;
     }
     let sec = section[..];
 

@@ -24,14 +24,13 @@
 // the signature look right would be a mock.
 
 import std;
+import common.sys.sys;
 
 // ---------------------------------------------------------------------------
 // The kernel boundary. Declarations only: how the call actually reaches the
 // kernel is open question Q9 and is NOT asserted here.
 // ---------------------------------------------------------------------------
 
-extern fn sys_write_serial(s: const u8[:]) -> i64;
-extern fn sys_ticks() -> i64;
 
 // ---------------------------------------------------------------------------
 // Records
@@ -72,15 +71,3 @@ fn stage(level: i64, msg: const u8[:]) -> bool {
 
 // The entry the kernel calls (SERVICE_CONTRACT.md §2). Returns 0 on a clean
 // stop; the supervisor records anything else as a failure.
-export "svc_entry" fn service_main() -> i32 {
-    // Order matters: the first record proves the serial path works at all.
-    stage(LEVEL_INFO, "start");
-    stage(LEVEL_INFO, "serial path up");
-
-    // Boot log retention is a ring in this service's static storage (B-L1-11
-    // provides the ring). Until that library exists the records go straight to
-    // the kernel, which is the honest minimum: nothing is buffered, nothing is
-    // lost silently, and the gap is visible here rather than papered over.
-    stage(LEVEL_INFO, "ready");
-    return 0;
-}

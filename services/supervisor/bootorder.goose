@@ -115,14 +115,14 @@ fn bo_name(id: i64, out: u8[>..]&, cap: i64) -> bool {
                 var k = start;
                 while k < i {
                     out.push(BO_NAMES[k]);
-                    k++;
+                    k = k + 1;
                 }
                 return true;
             }
-            token++;
+            token = token + 1;
             start = -1;
         }
-        i++;
+        i = i + 1;
     }
     return false;
 }
@@ -137,7 +137,7 @@ fn bo_at(order: i64) -> i64 {
     var i: i64 = 0;
     while i < bo_count() {
         if boot_table[i].order == order { return boot_table[i].id; }
-        i++;
+        i = i + 1;
     }
     return 0;
 }
@@ -146,7 +146,7 @@ fn bo_is_fatal(id: i64) -> bool {
     var i: i64 = 0;
     while i < bo_count() {
         if boot_table[i].id == id { return boot_table[i].fatal; }
-        i++;
+        i = i + 1;
     }
     return true;    // an id not in the table is not a service this order knows: treat as fatal
 }
@@ -159,7 +159,7 @@ fn bo_ready(id: i64, running: i64) -> bool {
         if boot_table[i].id == id {
             return (boot_table[i].needs & running) == boot_table[i].needs;
         }
-        i++;
+        i = i + 1;
     }
     return false;
 }
@@ -169,7 +169,7 @@ fn bo_needs(id: i64) -> i64 {
     var i: i64 = 0;
     while i < bo_count() {
         if boot_table[i].id == id { return boot_table[i].needs; }
-        i++;
+        i = i + 1;
     }
     return 0;
 }
@@ -193,7 +193,7 @@ fn bo_cascade(id: i64) -> i64 {
                     changed = true;
                 }
             }
-            i++;
+            i = i + 1;
         }
     }
     return doomed;
@@ -211,9 +211,9 @@ fn bo_order_ok() -> bool {
             if (needs & (1 << boot_table[j].id)) != 0 {
                 if boot_table[j].order >= boot_table[i].order { return false; }
             }
-            j++;
+            j = j + 1;
         }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -226,9 +226,9 @@ fn bo_sequence(out: i64[..24]&, cap: i64) -> i64 {
         let id = bo_at(pos);
         if id != 0 {
             out[n] = id;
-            n++;
+            n = n + 1;
         }
-        pos++;
+        pos = pos + 1;
     }
     return n;
 }

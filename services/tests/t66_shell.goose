@@ -30,8 +30,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -173,7 +173,7 @@ fn main() {
     let _ = append_int(fb, 32, t_fail);
     say(fb[..]);
     say("\n");
-    if t_fail > 0 { let _ = sys_exit(1); }
+    if t_fail > 0 { sys_exit(1); }
 }
 
 // Substring search over a growable's bytes, so the negative assertions above read as one
@@ -187,10 +187,10 @@ fn contains(hay: const u8[:], needle: const u8[:]) -> bool {
         var hit = true;
         while k < needle.len {
             if hay[i + k] != needle[k] { hit = false; break; }
-            k++;
+            k = k + 1;
         }
         if hit { return true; }
-        i++;
+        i = i + 1;
     }
     return false;
 }

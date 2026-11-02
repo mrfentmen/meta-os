@@ -103,8 +103,9 @@ struct Record {
 // line because it is verbose loses the information entirely, while a truncated line
 // still says what happened. The `...` marker is the difference between "the message
 // ended" and "the message was cut".
-fn logfmt_make(level: i64, tag: const u8[:], msg: const u8[:], uptime_ms: i64) -> Record {
-    var r: Record;
+fn logfmt_make(level_in: i64, tag: const u8[:], msg: const u8[:], uptime_ms: i64) -> Record {
+    var level = level_in;
+    var r: Record = Record { uptime_ms: 0, level: 0, tag: [], tag_len: 0, msg: [], msg_len: 0 };
     r.uptime_ms = uptime_ms;
     if level < LV_DEBUG { level = LV_DEBUG; }
     if level > LV_FATAL { level = LV_FATAL; }
@@ -113,7 +114,7 @@ fn logfmt_make(level: i64, tag: const u8[:], msg: const u8[:], uptime_ms: i64) -
     var t: i64 = 0;
     while t < tag.len && t < TAG_MAX - 1 {
         r.tag[t] = tag[t];
-        t++;
+        t = t + 1;
     }
     r.tag[t] = 0;
     r.tag_len = t;
@@ -123,7 +124,7 @@ fn logfmt_make(level: i64, tag: const u8[:], msg: const u8[:], uptime_ms: i64) -
     while m < msg.len {
         if m >= MSG_MAX - 3 { truncated = true; break; }
         r.msg[m] = msg[m];
-        m++;
+        m = m + 1;
     }
     if truncated {
         r.msg[m] = 0x2E;      // .
@@ -160,56 +161,57 @@ fn logfmt_render(r: Record&, out: u8[..200]&) -> i64 {
     // the level column does not move for the first 2.7 hours. Past 10000 s the field
     // grows and the columns shift, which is the right trade -- an uptime should not be
     // truncated to keep a column.
-    if secs < 10 { out[n] = 0x30; n++; }
-    if secs < 100 { out[n] = 0x30; n++; }
-    if secs < 1000 { out[n] = 0x30; n++; }
+    if secs < 10 { out[n] = 0x30; n = n + 1; }
+    if secs < 100 { out[n] = 0x30; n = n + 1; }
+    if secs < 1000 { out[n] = 0x30; n = n + 1; }
     n = logfmt_put_int(out, n, secs);
     if n < 0 { return -1; }
 
-    if n < LINE_MAX { out[n] = 0x2E; n++; } else { return -1; }   // .
+    if n < LINE_MAX { out[n] = 0x2E; n = n + 1; } else { return -1; }   // .
     // milliseconds, always three digits
     var d100 = ms / 100;
     var d10 = (ms % 100) / 10;
     var d1 = ms % 10;
     if n + 3 > LINE_MAX { return -1; }
-    out[n] = 0x30 + (d100 as u8); n++;
-    out[n] = 0x30 + (d10 as u8); n++;
-    out[n] = 0x30 + (d1 as u8); n++;
+    out[n] = 0x30 + (d100 as u8); n = n + 1;
+    out[n] = 0x30 + (d10 as u8); n = n + 1;
+    out[n] = 0x30 + (d1 as u8); n = n + 1;
 
-    if n < LINE_MAX { out[n] = 0x20; n++; } else { return -1; }
-    out[n] = logfmt_level_letter(r.level); n++;
-    if n < LINE_MAX { out[n] = 0x20; n++; } else { return -1; }
+    if n < LINE_MAX { out[n] = 0x20; n = n + 1; } else { return -1; }
+    out[n] = logfmt_level_letter(r.level); n = n + 1;
+    if n < LINE_MAX { out[n] = 0x20; n = n + 1; } else { return -1; }
 
     var t: i64 = 0;
     while t < r.tag_len {
         if n >= LINE_MAX { return -1; }
         out[n] = r.tag[t];
-        n++;
-        t++;
+        n = n + 1;
+        t = t + 1;
     }
     while t < TAG_MAX - 1 {                     // pad the tag column
         if n >= LINE_MAX { return -1; }
         out[n] = 0x20;
-        n++;
-        t++;
+        n = n + 1;
+        t = t + 1;
     }
 
-    if n < LINE_MAX { out[n] = 0x20; n++; } else { return -1; }
+    if n < LINE_MAX { out[n] = 0x20; n = n + 1; } else { return -1; }
     var m: i64 = 0;
     while m < r.msg_len {
         if n >= LINE_MAX { return -1; }
         out[n] = r.msg[m];
-        n++;
-        m++;
+        n = n + 1;
+        m = m + 1;
     }
     if n >= LINE_MAX { return -1; }
     out[n] = 0x0A;
-    n++;
+    n = n + 1;
     return n;
 }
 
 // Decimal, no padding. Returns the new length, or -1 when full.
-fn logfmt_put_int(out: u8[..200]&, at: i64, v: i64) -> i64 {
+fn logfmt_put_int(out: u8[..200]&, at_in: i64, v: i64) -> i64 {
+    var at = at_in;
     if v == 0 {
         if at >= LINE_MAX { return -1; }
         out[at] = 0x30;
@@ -217,20 +219,20 @@ fn logfmt_put_int(out: u8[..200]&, at: i64, v: i64) -> i64 {
     }
     // Digits are produced least-significant first into a scratch buffer, then copied
     // in order: writing them straight out would print the number backwards.
-    var scratch: u8[..24];
+    var scratch: u8[..24] = [];
     var n: i64 = 0;
     var x = v;
     while x > 0 && n < 23 {
         scratch[n] = 0x30 + ((x % 10) as u8);
         x = x / 10;
-        n++;
+        n = n + 1;
     }
     var i = n - 1;
     while i >= 0 {
         if at >= LINE_MAX { return -1; }
         out[at] = scratch[i];
-        at++;
-        i--;
+        at = at + 1;
+        i = i - 1;
     }
     return at;
 }
@@ -254,12 +256,12 @@ fn logfmt_parse(line: const u8[:], out: Record&) -> bool {
     var digits: i64 = 0;
     while i < line.len && line[i] >= 0x30 && line[i] <= 0x39 {
         secs = secs * 10 + ((line[i] - 0x30) as i64);
-        i++;
-        digits++;
+        i = i + 1;
+        digits = digits + 1;
     }
     if digits == 0 || digits > 9 { return false; }
     if i >= line.len || line[i] != 0x2E { return false; }
-    i++;
+    i = i + 1;
 
     // milliseconds: exactly three
     if i + 3 > line.len { return false; }
@@ -268,40 +270,40 @@ fn logfmt_parse(line: const u8[:], out: Record&) -> bool {
     while k < 3 {
         if line[i] < 0x30 || line[i] > 0x39 { return false; }
         ms = ms * 10 + ((line[i] - 0x30) as i64);
-        i++;
-        k++;
+        i = i + 1;
+        k = k + 1;
     }
     if ms > 999 { return false; }
 
     if i >= line.len || line[i] != 0x20 { return false; }
-    i++;
+    i = i + 1;
     if i >= line.len { return false; }
     let level = logfmt_level_of(line[i]);
     if level < 0 { return false; }
-    i++;
+    i = i + 1;
     if i >= line.len || line[i] != 0x20 { return false; }
-    i++;
+    i = i + 1;
 
     // tag: up to TAG_MAX-1 non-space bytes
     var t: i64 = 0;
     while i < line.len && line[i] != 0x20 {
         if t >= TAG_MAX - 1 { return false; }
         out.tag[t] = line[i];
-        t++;
-        i++;
+        t = t + 1;
+        i = i + 1;
     }
     out.tag[t] = 0;
     out.tag_len = t;
     if i >= line.len || line[i] != 0x20 { return false; }
-    i++;
+    i = i + 1;
 
     // message: to newline or end
     var m: i64 = 0;
     while i < line.len && line[i] != 0x0A {
         if m >= MSG_MAX { return false; }
         out.msg[m] = line[i];
-        m++;
-        i++;
+        m = m + 1;
+        i = i + 1;
     }
     out.msg_len = m;
     out.uptime_ms = secs * 1000 + ms;

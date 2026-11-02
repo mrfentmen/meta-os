@@ -42,14 +42,14 @@ struct Argv {
 }
 
 fn args_empty() -> Argv {
-    var a: Argv;
+    var a: Argv = Argv { text: [], len: 0, starts: [], ends: [], count: 0 };
     a.len = 0;
     a.count = 0;
     var i: i64 = 0;
     while i < ARG_MAX {
         a.starts[i] = 0;
         a.ends[i] = 0;
-        i++;
+        i = i + 1;
     }
     return a;
 }
@@ -86,7 +86,7 @@ fn args_parse(line: const u8[:]) -> Argv, i64 {
                 a.ends[a.count - 1] = a.len;
                 in_word = false;
             }
-            i++;
+            i = i + 1;
         } else if c == '\'' {
             if !in_word {
                 if a.count >= ARG_MAX { return args_empty(), E_NOROOM; }
@@ -94,12 +94,12 @@ fn args_parse(line: const u8[:]) -> Argv, i64 {
                 a.count = a.count + 1;
                 in_word = true;
             }
-            i++;
+            i = i + 1;
             var closed = false;
             while i < line.len {
                 if line[i] == '\'' { closed = true; i = i + 1; break; }
                 if !args_put(a, line[i]) { return args_empty(), E_NOROOM; }
-                i++;
+                i = i + 1;
             }
             if !closed { return args_empty(), E_SYNTAX; }
         } else if c == '"' {
@@ -109,7 +109,7 @@ fn args_parse(line: const u8[:]) -> Argv, i64 {
                 a.count = a.count + 1;
                 in_word = true;
             }
-            i++;
+            i = i + 1;
             var closed2 = false;
             while i < line.len {
                 let d = line[i];
@@ -134,7 +134,7 @@ fn args_parse(line: const u8[:]) -> Argv, i64 {
                     }
                 } else {
                     if !args_put(a, d) { return args_empty(), E_NOROOM; }
-                    i++;
+                    i = i + 1;
                 }
             }
             if !closed2 { return args_empty(), E_SYNTAX; }
@@ -156,7 +156,7 @@ fn args_parse(line: const u8[:]) -> Argv, i64 {
                 in_word = true;
             }
             if !args_put(a, c) { return args_empty(), E_NOROOM; }
-            i++;
+            i = i + 1;
         }
     }
 
@@ -176,7 +176,7 @@ fn args_is(a: Argv&, i: i64, lit: const u8[:]) -> bool {
     var k: i64 = 0;
     while k < lit.len {
         if s[k] != lit[k] { return false; }
-        k++;
+        k = k + 1;
     }
     return true;
 }

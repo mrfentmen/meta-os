@@ -44,7 +44,7 @@ struct ArpEntry {
     added_ms: i64,
 }
 
-var arp_table: ArpEntry[..8];
+var arp_table: ArpEntry[..8] = [];
 var arp_drops: i64 = 0;
 
 fn mac(a: i64, b: i64, c: i64, d: i64, e: i64, f: i64) -> Mac {
@@ -66,7 +66,7 @@ fn mac_is_broadcast(x: Mac&) -> bool {
 fn arp_build(out: u8[..1500]&, op: i64, sha: Mac&, spa: Ipv4&, tha: Mac&, tpa: Ipv4&) -> i64, i64 {
     if op != ARP_OP_REQUEST && op != ARP_OP_REPLY { return 0, E_INVAL; }
     var i: i64 = 0;
-    while i < ARP_LEN { out[i] = 0; i++; }
+    while i < ARP_LEN { out[i] = 0; i = i + 1; }
     out[0] = 0; out[1] = ARP_HW_ETHER as u8;    // hardware: ethernet
     out[2] = 0; out[3] = 0x08;                  // protocol: IPv4
     out[4] = MAC_LEN as u8;
@@ -95,9 +95,9 @@ fn arp_parse(pkt: u8[..1500]&, len: i64) -> ArpMsg, i64 {
     return ArpMsg {
         op: op,
         sender_mac: mac(pkt[8] as i64, pkt[9] as i64, pkt[10] as i64, pkt[11] as i64, pkt[12] as i64, pkt[13] as i64),
-        sender_ip: ip4(pkt[14] as i64, pkt[15] as i64, pkt[16] as i64, pkt[17] as i64),
+        sender_ip: ip4(pkt[14] as u8, pkt[15] as u8, pkt[16] as u8, pkt[17] as u8),
         target_mac: mac(pkt[18] as i64, pkt[19] as i64, pkt[20] as i64, pkt[21] as i64, pkt[22] as i64, pkt[23] as i64),
-        target_ip: ip4(pkt[24] as i64, pkt[25] as i64, pkt[26] as i64, pkt[27] as i64),
+        target_ip: ip4(pkt[24] as u8, pkt[25] as u8, pkt[26] as u8, pkt[27] as u8),
     }, CODE_OK;
 }
 
@@ -115,7 +115,7 @@ fn arp_cache_lookup(ipv: Ipv4&, now_ms: i64) -> Mac, bool {
             }
             return arp_table[i].mac, true;
         }
-        i++;
+        i = i + 1;
     }
     return mac_zero(), false;
 }
@@ -130,7 +130,7 @@ fn arp_cache_put(ipv: Ipv4&, macv: Mac&, now_ms: i64) {
             arp_table[i].added_ms = now_ms;
             return;
         }
-        i++;
+        i = i + 1;
     }
     // Free slot first.
     i = 0;
@@ -142,7 +142,7 @@ fn arp_cache_put(ipv: Ipv4&, macv: Mac&, now_ms: i64) {
             arp_table[i].added_ms = now_ms;
             return;
         }
-        i++;
+        i = i + 1;
     }
     // Full: evict the oldest. Refusing here would make the newest host unreachable while a
     // dead entry keeps its slot, which is the wrong failure to hand a user.
@@ -150,7 +150,7 @@ fn arp_cache_put(ipv: Ipv4&, macv: Mac&, now_ms: i64) {
     i = 1;
     while i < ARP_SLOTS {
         if arp_table[i].added_ms < arp_table[oldest].added_ms { oldest = i; }
-        i++;
+        i = i + 1;
     }
     arp_table[oldest].ip = ipv;
     arp_table[oldest].mac = macv;
@@ -163,7 +163,7 @@ fn arp_cache_clear() {
     while i < ARP_SLOTS {
         arp_table[i].used = false;
         arp_table[i].added_ms = 0;
-        i++;
+        i = i + 1;
     }
 }
 
@@ -171,8 +171,8 @@ fn arp_cache_count(now_ms: i64) -> i64 {
     var n: i64 = 0;
     var i: i64 = 0;
     while i < ARP_SLOTS {
-        if arp_table[i].used && now_ms - arp_table[i].added_ms <= ARP_TTL_MS { n++; }
-        i++;
+        if arp_table[i].used && now_ms - arp_table[i].added_ms <= ARP_TTL_MS { n = n + 1; }
+        i = i + 1;
     }
     return n;
 }

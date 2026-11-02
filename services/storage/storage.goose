@@ -41,8 +41,14 @@ struct BlockDev {
     present: bool,
 }
 
-var disk: BlockDev;
-var ram: u8[..32768];
+var disk: BlockDev = BlockDev {
+    block_size: 0,
+    block_count: 0,
+    writes: 0,
+    sealed: false,
+    present: false,
+};
+var ram: u8[..32768] = [];
 
 // ---------------------------------------------------------------------------
 // The contract
@@ -71,7 +77,7 @@ fn storage_init(block_count: i64) -> i64 {
     var i: i64 = 0;
     while i < RAM_BYTES {
         ram[i] = 0;         // a freshly granted region is zeroed, not "probably zero"
-        i++;
+        i = i + 1;
     }
     return CODE_OK;
 }
@@ -92,7 +98,7 @@ fn storage_read(lba: i64, buf: u8[..512]&) -> i64 {
     var i: i64 = 0;
     while i < BLOCK_SIZE {
         buf[i] = ram[base + i];
-        i++;
+        i = i + 1;
     }
     return CODE_OK;
 }
@@ -105,7 +111,7 @@ fn storage_write(lba: i64, buf: u8[..512]&) -> i64 {
     var i: i64 = 0;
     while i < BLOCK_SIZE {
         ram[base + i] = buf[i];
-        i++;
+        i = i + 1;
     }
     disk.writes = disk.writes + 1;
     return CODE_OK;
@@ -144,7 +150,7 @@ fn storage_wipe() -> i64 {
     var i: i64 = 0;
     while i < RAM_BYTES {
         ram[i] = 0;
-        i++;
+        i = i + 1;
     }
     disk.writes = 0;
     disk.sealed = false;

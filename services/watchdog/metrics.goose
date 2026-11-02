@@ -61,11 +61,11 @@ struct Metrics {
 let MET_NAMES: const u8[:] = "calls errors uptime_ms queue";
 
 fn met_new() -> Metrics {
-    var m: Metrics;
+    var m: Metrics = Metrics { slots: [], count: 0, next_id: 0 };
     var i: i64 = 0;
     while i < MET_MAX {
         m.slots[i] = Metric { id: 0, name: met_zero_name(), name_len: 0, kind: MK_GAUGE, value: 0, active: false };
-        i++;
+        i = i + 1;
     }
     m.count = 0;
     m.next_id = 1;
@@ -73,9 +73,9 @@ fn met_new() -> Metrics {
 }
 
 fn met_zero_name() -> u8[..16] {
-    var n: u8[..16];
+    var n: u8[..16] = [];
     var i: i64 = 0;
-    while i < 16 { n[i] = 0; i++; }
+    while i < 16 { n[i] = 0; i = i + 1; }
     return n;
 }
 
@@ -97,7 +97,7 @@ fn met_standard(m: Metrics&, now_ms: i64) -> i64 {
         if i == MET_UPTIME || i == MET_QUEUE { kind = MK_GAUGE; }
         let code = met_register(m, met_standard_name(i), kind);
         if code != CODE_OK { return code; }
-        i++;
+        i = i + 1;
     }
     met_set(m, MET_UPTIME, now_ms);      // uptime is reported as "since", see met_uptime
     met_set(m, MET_QUEUE, 0);
@@ -114,18 +114,18 @@ fn met_register(m: Metrics&, name: const u8[:], kind: i64) -> i64 {
     while i < MET_MAX {
         if m.slots[i].active && met_name_eq(m.slots[i], name) { return -1; }
         if !m.slots[i].active && slot < 0 { slot = i; }
-        i++;
+        i = i + 1;
     }
     if slot < 0 { return -1; }
 
-    var mm: Metric;
+    var mm: Metric = Metric { id: 0, name: [], name_len: 0, kind: 0, value: 0, active: false };
     mm.id = m.next_id;
     m.next_id = m.next_id + 1;
     mm.name = met_zero_name();
     var k: i64 = 0;
     while k < name.len {
         mm.name[k] = name[k];
-        k++;
+        k = k + 1;
     }
     mm.name_len = name.len;
     mm.kind = kind;
@@ -141,7 +141,7 @@ fn met_name_eq(a: Metric&, name: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < name.len {
         if a.name[i] != name[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -205,17 +205,17 @@ fn met_render(m: Metrics&, out: u8[>..]&, cap: i64) -> bool {
     var i: i64 = 0;
     while i < MET_MAX {
         if m.slots[i].active {
-            if !first { if !fmt.append_char(out, cap, ' ') { return false; } }
+            if !first { if !append_char(out, cap, ' ') { return false; } }
             var k: i64 = 0;
             while k < m.slots[i].name_len {
-                if !fmt.append_char(out, cap, m.slots[i].name[k]) { return false; }
-                k++;
+                if !append_char(out, cap, m.slots[i].name[k]) { return false; }
+                k = k + 1;
             }
-            if !fmt.append_char(out, cap, '=') { return false; }
-            if !fmt.append_int(out, cap, m.slots[i].value) { return false; }
+            if !append_char(out, cap, '=') { return false; }
+            if !append_int(out, cap, m.slots[i].value) { return false; }
             first = false;
         }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -239,7 +239,7 @@ fn met_slot_of(m: Metrics&, id: i64) -> i64 {
     var i: i64 = 0;
     while i < MET_MAX {
         if m.slots[i].active && m.slots[i].id == id { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -251,7 +251,7 @@ fn met_id_of(m: Metrics&, name: const u8[:]) -> i64 {
     var i: i64 = 0;
     while i < MET_MAX {
         if m.slots[i].active && met_name_eq(m.slots[i], name) { return m.slots[i].id; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -263,9 +263,9 @@ fn met_totals(m: Metrics&) -> i64, i64, i64 {
     var i: i64 = 0;
     while i < MET_MAX {
         if m.slots[i].active {
-            if m.slots[i].kind == MK_COUNTER { counters++; } else { gauges++; }
+            if m.slots[i].kind == MK_COUNTER { counters = counters + 1; } else { gauges = gauges + 1; }
         }
-        i++;
+        i = i + 1;
     }
     return m.count, counters, gauges;
 }

@@ -26,8 +26,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -37,7 +37,7 @@ fn peer() -> Ipv4 { return ip4(10, 0, 0, 1); }
 
 // Drain the link into `buf` and parse it as TCP. Returns the header; the caller checks
 // whether the parse succeeded by looking at the code it passed in.
-var link_buf: u8[..1500];
+var link_buf: u8[..1500] = [];
 
 fn main() {
     say("t68 protocol pack over the lossy-link harness\n");
@@ -46,22 +46,27 @@ fn main() {
 
     // ================= 1. ARP through the link =================
     var l = link_new();
-    var ab: u8[..1500];
-    let alen, acc = arp_build(ab, 1, mymac, me(), mac_zero(), peer());
+    var ab: u8[..1500] = [];
+    var spa = me();
+    var tha = mac_zero();
+    var tpa = peer();
+    let alen, acc = arp_build(ab, 1, mymac, spa, tha, tpa);
     check("build an ARP request", acc == CODE_OK && alen == 28);
     let _, lc1 = link_send(l, ab[..alen]);
     check("ARP request queued", lc1 == CODE_OK && link_pending(l) == 1);
 
-    var ar: u8[..1500];
-    let rlen, _ = arp_build(ar, 2, peermac, peer(), mymac, me());
+    var ar: u8[..1500] = [];
+    var reply_spa = peer();
+    var reply_tpa = me();
+    let rlen, _ = arp_build(ar, 2, peermac, reply_spa, mymac, reply_tpa);
     let _, _ = link_send(l, ar[..rlen]);
 
     var got: u8[>..] = [];
     let n1, rc1 = link_recv(l, got, 1400);
     check("first packet out is the request", rc1 == CODE_OK && n1 == 28);
-    var rb: u8[..1500];
+    var rb: u8[..1500] = [];
     var i: i64 = 0;
-    while i < n1 { rb[i] = got[i]; i++; }
+    while i < n1 { rb[i] = got[i]; i = i + 1; }
     let m1, mc1 = arp_parse(rb, n1);
     check("parse it as an ARP request", mc1 == CODE_OK && m1.op == 1);
 
@@ -69,23 +74,25 @@ fn main() {
     let n2, rc2 = link_recv(l, got, 1400);
     check("second packet out is the reply", rc2 == CODE_OK && n2 == 28);
     i = 0;
-    while i < n2 { rb[i] = got[i]; i++; }
+    while i < n2 { rb[i] = got[i]; i = i + 1; }
     let m2, mc2 = arp_parse(rb, n2);
     check("parse it as an ARP reply", mc2 == CODE_OK && m2.op == 2);
 
     arp_cache_clear();
-    arp_cache_put(peer(), peermac, 1000);
-    let _, hit = arp_cache_lookup(peer(), 1000);
+    var ref_arp_cache_put_1 = peer();
+    arp_cache_put(ref_arp_cache_put_1, peermac, 1000);
+    var ref_arp_cache_lookup_2 = peer();
+    let _, hit = arp_cache_lookup(ref_arp_cache_lookup_2, 1000);
     check("the learned address is remembered", hit);
 
     // ================= 2. ICMP echo request/reply =================
-    var ic: u8[..1500];
+    var ic: u8[..1500] = [];
     let ilen, icc = icmp_build_echo(ic, ICMP_ECHO_REQUEST, 7, 1, "ping");
     check("build an echo request", icc == CODE_OK && ilen == 12);
     let req, rqc = icmp_parse(ic, ilen);
     check("parse the request", rqc == CODE_OK && req.kind == ICMP_ECHO_REQUEST);
 
-    var ir: u8[..1500];
+    var ir: u8[..1500] = [];
     let ilen2, _ = icmp_build_echo(ir, ICMP_ECHO_REPLY, 7, 1, "ping");
     let rep, rpc = icmp_parse(ir, ilen2);
     check("the reply is ours", rpc == CODE_OK && icmp_is_reply_to(rep, 7, 1));
@@ -93,30 +100,36 @@ fn main() {
     check("the payload comes back byte for byte", icmp_payload_matches(ir, rep, "ping"));
 
     // ================= 3. UDP through the link, plus corruption =================
-    var u: u8[..1500];
-    let ulen, uc = udp_build(u, me(), peer(), 4000, 4001, "hello");
+    var u: u8[..1500] = [];
+    var ref_udp_build_3 = me();
+    var ref_udp_build_4 = peer();
+    let ulen, uc = udp_build(u, ref_udp_build_3, ref_udp_build_4, 4000, 4001, "hello");
     check("build a datagram", uc == CODE_OK && ulen == 13);
     let _, lc2 = link_send(l, u[..ulen]);
     check("datagram queued", lc2 == CODE_OK);
 
     got = [];
     let n3, _ = link_recv(l, got, 1400);
-    var ub: u8[..1500];
+    var ub: u8[..1500] = [];
     i = 0;
-    while i < n3 { ub[i] = got[i]; i++; }
-    let dv, dvc = udp_parse(ub, n3, me(), peer());
+    while i < n3 { ub[i] = got[i]; i = i + 1; }
+    var ref_udp_parse_5 = me();
+    var ref_udp_parse_6 = peer();
+    let dv, dvc = udp_parse(ub, n3, ref_udp_parse_5, ref_udp_parse_6);
     check("parse it back", dvc == CODE_OK && dv.dst_port == 4001 && dv.payload_len == 5);
     check("checksum verified after the trip", dv.checksum_ok);
 
     // The harness never corrupts bytes; the corruption case belongs here, where the
     // expected failure is written next to the bytes.
     ub[dv.payload_off] = ub[dv.payload_off] ^ 0x20;
-    let _, badc = udp_parse(ub, n3, me(), peer());
+    var ref_udp_parse_7 = me();
+    var ref_udp_parse_8 = peer();
+    let _, badc = udp_parse(ub, n3, ref_udp_parse_7, ref_udp_parse_8);
     check("a flipped payload byte is refused", badc == E_CORRUPT);
 
     // ================= 4. TCP: a lost SYN is retransmitted =================
     var l2 = link_new();
-    var syn: u8[..1500];
+    var syn: u8[..1500] = [];
     let slen, scc = tcp_build(syn, 50000, 80, 1000, 0, SYN, 4096, "", me(), peer());
     check("build a SYN", scc == CODE_OK && slen == 20);
 
@@ -139,9 +152,9 @@ fn main() {
     got = [];
     let n4, rc4 = link_recv(l2, got, 1400);
     check("the retransmitted SYN arrives", rc4 == CODE_OK && n4 == 20);
-    var tb: u8[..1500];
+    var tb: u8[..1500] = [];
     i = 0;
-    while i < n4 { tb[i] = got[i]; i++; }
+    while i < n4 { tb[i] = got[i]; i = i + 1; }
     let th, thc = tcp_parse(tb, n4);
     check("it parses as the same segment", thc == CODE_OK && th.seq == 1000 && (th.flags & SYN) != 0);
 
@@ -164,7 +177,7 @@ fn main() {
     while j < LINK_SLOTS {
         let _, qc = link_send(l3, syn[..slen]);
         if qc != CODE_OK { filled = false; }
-        j++;
+        j = j + 1;
     }
     check("the queue accepts LINK_SLOTS packets", filled && link_pending(l3) == LINK_SLOTS);
     let _, over = link_send(l3, syn[..slen]);
@@ -181,9 +194,9 @@ fn main() {
     check("the duplicate is counted", duped == 1);
 
     var l5 = link_new();
-    var pa: u8[..4];
+    var pa: u8[..4] = [];
     pa[0] = 'a'; pa[1] = 'a'; pa[2] = 'a'; pa[3] = 'a';
-    var pb: u8[..4];
+    var pb: u8[..4] = [];
     pb[0] = 'b'; pb[1] = 'b'; pb[2] = 'b'; pb[3] = 'b';
     link_impair(l5, 0, 0, 2);                 // reorder the 2nd send
     let _, _ = link_send(l5, pa[..]);
@@ -210,5 +223,5 @@ fn main() {
     let _ = append_int(fb, 32, t_fail);
     say(fb[..]);
     say("\n");
-    if t_fail > 0 { let _ = sys_exit(1); }
+    if t_fail > 0 { sys_exit(1); }
 }

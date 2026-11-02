@@ -28,17 +28,17 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
 
-fn fill(b: u8[..512]&, v: u8) {
+fn fill_512(b: u8[..512]&, v: u8) {
     var i: i64 = 0;
     while i < 512 {
         b[i] = v;
-        i++;
+        i = i + 1;
     }
 }
 
@@ -46,7 +46,7 @@ fn is_all(b: u8[..512]&, v: u8) -> bool {
     var i: i64 = 0;
     while i < 512 {
         if b[i] != v { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -71,12 +71,12 @@ fn main() {
     var blk: u8[..512] = [];
 
     // --- read before write is zeroes ---
-    fill(blk, 255);
+    fill_512(blk, 255);
     check("read unwritten block", storage_read(3, blk) == CODE_OK);
     check("unwritten block is zeroes, not a copy of the caller's buffer", is_all(blk, 0));
 
     // --- write and read back ---
-    fill(blk, 65);
+    fill_512(blk, 65);
     check("write block 1", storage_write(1, blk) == CODE_OK);
     var back: u8[..512] = [];
     check("read block 1", storage_read(1, back) == CODE_OK);
@@ -86,12 +86,12 @@ fn main() {
     check("block 2 still zero", storage_read(2, back) == CODE_OK && is_all(back, 0));
 
     // --- overwrite ---
-    fill(blk, 66);
+    fill_512(blk, 66);
     check("overwrite block 1", storage_write(1, blk) == CODE_OK);
     check("overwrite visible", storage_read(1, back) == CODE_OK && is_all(back, 66));
 
     // --- out of range, on both paths ---
-    fill(blk, 67);
+    fill_512(blk, 67);
     check("write past the end refused", storage_write(blocks, blk) == E_BAD_BLOCK);
     var junk: u8[..512] = [];
     check("read past the end refused", storage_read(blocks, junk) == E_BAD_BLOCK);
@@ -103,7 +103,7 @@ fn main() {
 
     // --- the write counter moves only for real writes ---
     let _, w0, _ = storage_stats();
-    fill(blk, 69);
+    fill_512(blk, 69);
     let _ = storage_write(4, blk);
     let _, w1, _ = storage_stats();
     check("writes counted", w1 == w0 + 1);
@@ -119,7 +119,7 @@ fn main() {
     // worse than no seal at all.
     let seal = storage_seal();
     check("seal succeeds", seal == CODE_OK);
-    fill(blk, 70);
+    fill_512(blk, 70);
     check("write after seal refused", storage_write(1, blk) == E_READ_ONLY);
     check("read after seal still works", storage_read(1, back) == CODE_OK);
     check("sealed data unchanged", is_all(back, 66));

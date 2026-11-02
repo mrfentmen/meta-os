@@ -33,8 +33,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -45,8 +45,8 @@ fn order_hits(want: i64) -> i64 {
     var n: i64 = 0;
     var i: i64 = 0;
     while i < bo_count() {
-        if bo_entry(i).order == want { n++; }
-        i++;
+        if bo_entry(i).order == want { n = n + 1; }
+        i = i + 1;
     }
     return n;
 }
@@ -55,7 +55,7 @@ fn has_id(id: i64) -> bool {
     var i: i64 = 0;
     while i < bo_count() {
         if bo_entry(i).id == id { return true; }
-        i++;
+        i = i + 1;
     }
     return false;
 }
@@ -73,14 +73,14 @@ fn main() {
     while i < bo_count() {
         let id = bo_entry(i).id;
         if id < 1 || id > 22 { ids_ok = false; }
-        i++;
+        i = i + 1;
     }
     check("every id is in 1..22", ids_ok);
     var orders_ok: bool = true;
     var pos: i64 = 1;
     while pos <= bo_count() {
         if order_hits(pos) != 1 { orders_ok = false; }
-        pos++;
+        pos = pos + 1;
     }
     check("every order number 1..22 used exactly once", orders_ok);
 
@@ -96,7 +96,7 @@ fn main() {
         if (log_needs & (1 << bit)) != 0 {
             if bo_ready(8, log_needs & ~(1 << bit)) { any_bit_matters = false; }
         }
-        bit++;
+        bit = bit + 1;
     }
     check("log needs every dependency bit, not just some", any_bit_matters);
     check("a service with no dependencies is ready at once", bo_ready(2, 0));
@@ -120,7 +120,7 @@ fn main() {
     check("non-fatal display takes only itself", disp_doom == (1 << 12));
 
     // --- 6. sequence ---
-    var seq: i64[..24];
+    var seq: i64[..24] = [];
     let n = bo_sequence(seq, 24);
     check("sequence yields all 22 in order", n == 22);
     check("sequence starts at bootlog", seq[0] == 2);
@@ -129,7 +129,7 @@ fn main() {
     var k: i64 = 0;
     while k < n {
         if !has_id(seq[k]) { monotone = false; }
-        k++;
+        k = k + 1;
     }
     check("every sequenced id exists in the table", monotone);
 
@@ -147,12 +147,12 @@ fn main() {
 
     say("t61 done  pass=");
     var pb: u8[>..] = [];
-    let _ = format_int(pb, 32, t_pass);
+    format_int(pb, t_pass, 10, 0, 0);
     say(pb[..]);
     say(" fail=");
     var fb: u8[>..] = [];
-    let _ = format_int(fb, 32, t_fail);
+    format_int(fb, t_fail, 10, 0, 0);
     say(fb[..]);
     say("\n");
-    if t_fail > 0 { let _ = sys_exit(1); }
+    if t_fail > 0 { sys_exit(1); }
 }

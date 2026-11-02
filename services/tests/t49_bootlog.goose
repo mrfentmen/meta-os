@@ -31,8 +31,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -50,7 +50,7 @@ fn main() {
     var i: i64 = 0;
     while i < rec.len {
         if rec[i] == 51 { saw_level = true; }     // '3'
-        i++;
+        i = i + 1;
     }
     check("record carries the level", saw_level);
 
@@ -59,7 +59,7 @@ fn main() {
     var j: i64 = 0;
     while j + 7 <= rec.len {
         if rec[j] == 115 && rec[j + 1] == 116 && rec[j + 2] == 111 { saw_msg = true; }
-        j++;
+        j = j + 1;
     }
     check("record carries the message", saw_msg);
 
@@ -95,8 +95,8 @@ fn main() {
     var refused_at: i64 = -1;
     var k: i64 = 0;
     while k < 4096 && refused_at < 0 {
-        if insert_byte(65) { filled++; } else { refused_at = filled; }
-        k++;
+        if insert_byte(65) { filled = filled + 1; } else { refused_at = filled; }
+        k = k + 1;
     }
     check("editor refuses when full", refused_at >= 0);
     check("filled a plausible line", filled > 0 && filled < 4096);

@@ -45,7 +45,7 @@ fn dhcp_peer_reply(request: const u8[:], out: u8[..576]&, offer: Ipv4&, server: 
     var i: i64 = 0;
     while i < 240 {
         out[i] = 0;
-        i++;
+        i = i + 1;
     }
 
     out[0] = 2;                       // op = BOOTREPLY
@@ -81,7 +81,7 @@ fn dhcp_peer_reply(request: const u8[:], out: u8[..576]&, offer: Ipv4&, server: 
 
     if at + 1 > PEER_MAX { return 0, E_NOROOM; }
     out[at] = 255;                                         // end
-    at++;
+    at = at + 1;
     return at, CODE_OK;
 }
 
@@ -89,7 +89,7 @@ fn dhcp_peer_copy(src: const u8[:], src_at: i64, dst: u8[..576]&, dst_at: i64, n
     var i: i64 = 0;
     while i < n {
         dst[dst_at + i] = src[src_at + i];
-        i++;
+        i = i + 1;
     }
 }
 

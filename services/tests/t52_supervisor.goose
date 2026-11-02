@@ -32,8 +32,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -61,7 +61,7 @@ fn main() {
     var i: i64 = 0;
     while i < NAME_MAX {
         long.push(97);
-        i++;
+        i = i + 1;
     }
     let l_slot, l_code = sup_register(long, 0, true);
     check("name too long refused", l_code == E_INVAL && l_slot == -1);

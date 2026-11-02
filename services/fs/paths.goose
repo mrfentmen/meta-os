@@ -42,9 +42,9 @@ import fs.fs;
 // `/a/b/`  -> parent `/a`, name `b` (a trailing slash is not a component).
 fn path_split_last(p: const u8[:]) -> i64, i64, i64, i64 {
     var end = p.len;
-    while end > 0 && p[end - 1] == '/' { end--; }         // drop trailing slashes
+    while end > 0 && p[end - 1] == '/' { end = end - 1; }         // drop trailing slashes
     var cut = end;
-    while cut > 0 && p[cut - 1] != '/' { cut--; }         // back to the last slash
+    while cut > 0 && p[cut - 1] != '/' { cut = cut - 1; }         // back to the last slash
     return 0, cut, cut, end;
 }
 
@@ -67,7 +67,7 @@ fn fs_resolve(start: i64, path: const u8[:], want_dir: bool) -> i64, i64 {
     if path.len == 0 { return 0, E_INVAL; }
     if path.len > 255 { return 0, E_INVAL; }
 
-    var chain: i64[..16];
+    var chain: i64[..16] = [];
     var depth: i64 = 0;
     var cur = start;
 
@@ -85,10 +85,10 @@ fn fs_resolve(start: i64, path: const u8[:], want_dir: bool) -> i64, i64 {
     var i: i64 = 0;
     var last_was_name = false;
     while i < path.len {
-        while i < path.len && path[i] == '/' { i++; }     // collapse runs of slashes
+        while i < path.len && path[i] == '/' { i = i + 1; }     // collapse runs of slashes
         if i >= path.len { break; }
         var j = i;
-        while j < path.len && path[j] != '/' { j++; }
+        while j < path.len && path[j] != '/' { j = j + 1; }
         let comp = path[i..j];
 
         if is_dot(comp) {

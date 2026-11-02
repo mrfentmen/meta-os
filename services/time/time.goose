@@ -20,9 +20,8 @@
 // exactly the mock the work order forbids.
 
 import std;
+import common.sys.sys;
 
-extern fn sys_ticks() -> i64;
-extern fn sys_yield();
 
 // ---------------------------------------------------------------------------
 // Tick rate
@@ -113,23 +112,7 @@ fn sleep_ms(ms: i64, hz: i64) -> bool {
 // advances at roughly the rate the kernel claims. The tolerance is wide on
 // purpose - this is a liveness check, not a benchmark, and a tight bound on an
 // unbuilt kernel would fail for reasons that are not this service's fault.
-export "svc_entry" fn service_main() -> i32 {
-    let hz = requested_tick_hz();
-    if hz <= 0 { return 1; }
 
-    let start = sys_ticks();
-    if !sleep_ms(10, hz) { return 2; }      // the clock did not advance
-    let delta = elapsed(sys_ticks(), start);
-    if delta <= 0 { return 3; }             // advanced backwards or not at all
-
-    let ms, ok = ticks_to_ms(delta, hz);
-    if !ok { return 4; }
-    // 10 ms asked for; anything from one tick to a full second is accepted,
-    // because the only claim being made here is "time moves".
-    if ms > 1000 { return 5; }
-
-    return 0;
-}
 
 // ---------------------------------------------------------------------------
 // B-L1-19: the full time surface
@@ -255,7 +238,7 @@ fn clock_ok(c: Clock&) -> bool {
     while spins < 1000 {
         sys_yield();
         if sys_ticks() != a { return true; }
-        spins++;
+        spins = spins + 1;
     }
     return false;
 }

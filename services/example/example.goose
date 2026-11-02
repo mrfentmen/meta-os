@@ -75,9 +75,10 @@ var ex_running: bool = false;
 var ex_ticks: i64 = 0;
 var ex_dropped: i64 = 0;
 var ex_ring: Ring = Ring { head: 0, tail: 0, count: 0, cap: 0 };
-var ex_ring_buf: u8[..EX_RING * 130];
+// Builder, not a fixed array: ring_push takes a builder (typed mismatch otherwise).
+var ex_ring_buf: u8[>..] = [];
 var ex_clock: Clock = Clock { hz: 1000 };
-var ex_cfg_text: u8[..256];
+var ex_cfg_text: u8[..256] = [];
 var ex_cfg_len: i64 = 0;
 
 // ---------------------------------------------------------------------------
@@ -89,11 +90,7 @@ var ex_cfg_len: i64 = 0;
 // argument-pointer delivery A1 assumes, and the one open question Q-B-L1-4 is about. If the
 // answer turns out to be a syscall instead, this signature changes and nothing else does.
 
-export "svc_entry" fn service_main(boot: BootInfo&) -> i32 {
-    let code = run(boot);
-    if code != CODE_OK { return 1; }
-    return 0;
-}
+
 
 // ---------------------------------------------------------------------------
 // The actual service, in the nine steps
@@ -126,7 +123,7 @@ fn run(boot: BootInfo&) -> i64 {
     // 5. Own storage, sized by constants, cleared explicitly.
     ex_ring = ring_init(EX_RING);
     var i: i64 = 0;
-    while i < EX_RING * 130 { ex_ring_buf[i] = 0; i++; }
+    while i < EX_RING * 130 { ex_ring_buf.push(0); i = i + 1; }
 
     // 6/7/8. The loop: build a record, beat, sleep, and check for a stop request.
     let started = clock_uptime_ms(ex_clock);
@@ -145,7 +142,7 @@ fn run(boot: BootInfo&) -> i64 {
         // A budgeted wait, not a spin. The layer has no timer queue yet (Q-B-L1-6); this
         // yields for a tenth of the interval and re-checks.
         let _ = clock_budget(ex_clock, 10);
-        let _ = sys_yield();
+        sys_yield();
     }
 
     let _ = sup_set_state(slot, ST_STOPPED);
@@ -159,14 +156,14 @@ fn run(boot: BootInfo&) -> i64 {
 fn load_config() {
     ex_cfg_len = 0;
     var i: i64 = 0;
-    while i < CFG_TEXT_MAX { ex_cfg_text[i] = 0; i++; }
+    while i < CFG_TEXT_MAX { ex_cfg_text[i] = 0; i = i + 1; }
     let ino, code = fs_resolve(fs_root(), CFG_PATH, false);
     if code != CODE_OK { ex_cfg = cfg_init(ex_cfg_text[0..0]); return; }
     var buf: u8[>..] = [];
     let got, rcode = fs_read(ino, 0, buf, CFG_TEXT_MAX);
     if rcode != CODE_OK { ex_cfg = cfg_init(ex_cfg_text[0..0]); return; }
     i = 0;
-    while i < got { ex_cfg_text[i] = buf[i]; i++; }
+    while i < got { ex_cfg_text[i] = buf[i]; i = i + 1; }
     ex_cfg_len = got;
     ex_cfg = cfg_init(ex_cfg_text[0..ex_cfg_len]);
 }
@@ -181,7 +178,7 @@ fn tick(now_ms: i64) {
     let _ = append_int(rec, EX_REC_MAX, now_ms);
     let _ = append_str(rec, EX_REC_MAX, "ms crc=");
     let sum = crc32(rec[..]);          // integrity over the body, before the checksum text
-    let _ = append_uint(rec, EX_REC_MAX, sum as i64);
+    let _ = append_uint(rec, EX_REC_MAX, sum as u64, 16, 8, '0');
     let _ = append_nl(rec, EX_REC_MAX);
 
     // Ring push per byte: the ring is bytes, not records, so the record boundary is the
@@ -195,7 +192,7 @@ fn tick(now_ms: i64) {
             dropped_any = true;
             break;
         }
-        i++;
+        i = i + 1;
     }
     if dropped_any { ex_dropped = ex_dropped + 1; }
     ex_ticks = ex_ticks + 1;

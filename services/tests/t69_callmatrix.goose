@@ -32,8 +32,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -44,7 +44,7 @@ fn rows_populated() -> bool {
     var i: i64 = 1;
     while i <= SVC_COUNT {
         if cm_mask(i) == 0 { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -99,12 +99,12 @@ fn main() {
 
     say("t69 done  pass=");
     var pb: u8[>..] = [];
-    let _ = format_int(pb, 32, t_pass);
+    format_int(pb, t_pass, 10, 0, 0);
     say(pb[..]);
     say(" fail=");
     var fb: u8[>..] = [];
-    let _ = format_int(fb, 32, t_fail);
+    format_int(fb, t_fail, 10, 0, 0);
     say(fb[..]);
     say("\n");
-    if t_fail > 0 { let _ = sys_exit(1); }
+    if t_fail > 0 { sys_exit(1); }
 }

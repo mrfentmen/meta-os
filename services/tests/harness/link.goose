@@ -49,11 +49,23 @@ struct Link {
 // A clean link. Knobs are set afterwards with link_impair, so a test that wants one
 // impairment does not have to name the other two.
 fn link_new() -> Link {
-    var l: Link;
+    var l: Link = Link {
+        slots: [],
+        lens: [],
+        head: 0,
+        count: 0,
+        drop_every: 0,
+        dup_every: 0,
+        reorder_every: 0,
+        sent: 0,
+        dropped: 0,
+        duped: 0,
+        delivered: 0,
+    };
     var i: i64 = 0;
-    while i < LINK_BYTES { l.slots[i] = 0; i++; }
+    while i < LINK_BYTES { l.slots[i] = 0; i = i + 1; }
     i = 0;
-    while i < LINK_SLOTS { l.lens[i] = 0; i++; }
+    while i < LINK_SLOTS { l.lens[i] = 0; i = i + 1; }
     l.head = 0;
     l.count = 0;
     l.drop_every = 0;
@@ -122,7 +134,7 @@ fn link_recv(l: Link&, out: u8[>..]&, cap: i64) -> i64, i64 {
     var i: i64 = 0;
     while i < n {
         out.push(l.slots[slot * LINK_PKT + i]);
-        i++;
+        i = i + 1;
     }
     l.head = (l.head + 1) % LINK_SLOTS;
     l.count = l.count - 1;
@@ -148,7 +160,7 @@ fn link_put(l: Link&, pkt: const u8[:]) -> i64 {
     var i: i64 = 0;
     while i < pkt.len {
         l.slots[slot * LINK_PKT + i] = pkt[i];
-        i++;
+        i = i + 1;
     }
     l.lens[slot] = pkt.len;
     l.count = l.count + 1;
@@ -156,15 +168,15 @@ fn link_put(l: Link&, pkt: const u8[:]) -> i64 {
 }
 
 fn link_swap(l: Link&, a: i64, b: i64) {
-    var tmp: u8[..1500];
+    var tmp: u8[..1500] = [];
     let an = l.lens[a];
     let bn = l.lens[b];
     var i: i64 = 0;
-    while i < an { tmp[i] = l.slots[a * LINK_PKT + i]; i++; }
+    while i < an { tmp[i] = l.slots[a * LINK_PKT + i]; i = i + 1; }
     i = 0;
-    while i < bn { l.slots[a * LINK_PKT + i] = l.slots[b * LINK_PKT + i]; i++; }
+    while i < bn { l.slots[a * LINK_PKT + i] = l.slots[b * LINK_PKT + i]; i = i + 1; }
     i = 0;
-    while i < an { l.slots[b * LINK_PKT + i] = tmp[i]; i++; }
+    while i < an { l.slots[b * LINK_PKT + i] = tmp[i]; i = i + 1; }
     l.lens[a] = bn;
     l.lens[b] = an;
 }

@@ -32,8 +32,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -43,7 +43,7 @@ fn eq(a: const u8[:], b: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < a.len {
         if a[i] != b[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -57,7 +57,7 @@ fn hex_to_bytes(s: const u8[:], out: u8[..32]&) -> bool {
         let lo = nib(s[i * 2 + 1]);
         if hi < 0 || lo < 0 { return false; }
         out[i] = ((hi * 16) + lo) as u8;
-        i++;
+        i = i + 1;
     }
     return true;
 }

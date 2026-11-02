@@ -30,8 +30,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -65,7 +65,40 @@ fn main() {
     check("ack is a BOOTREPLY", ack[0] == 2);
     check("ack message type", dhcp_message_type(ack) == DHCP_ACK);
 
-    var lease: Lease;
+    var lease: Lease = Lease {
+        addr: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        mask: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        gw: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns1: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns2: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        server_id: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        lease_ms: 0,
+        t1_ms: 0,
+        t2_ms: 0,
+        bound_at_ms: 0,
+        mask_given: false,
+        gw_given: false,
+        dns_given: false,
+        server_given: false,
+    };
     let lc = dhcp_parse(ack, lease);
     check("ack parsed", lc == CODE_OK);
     check("address from yiaddr", lease.addr.a == 192 && lease.addr.d == 50);
@@ -84,19 +117,118 @@ fn main() {
     var zero_ack: u8[..576] = [];
     let _ = build_ack(zero_ack, xid, mac, ip4(0, 0, 0, 0), ip4(255, 255, 255, 0),
         ip4(192, 168, 1, 1), 3600, ip4(192, 168, 1, 1));
-    var bad_lease: Lease;
+    var bad_lease: Lease = Lease {
+        addr: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        mask: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        gw: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns1: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns2: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        server_id: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        lease_ms: 0,
+        t1_ms: 0,
+        t2_ms: 0,
+        bound_at_ms: 0,
+        mask_given: false,
+        gw_given: false,
+        dns_given: false,
+        server_given: false,
+    };
     check("zero address refused", dhcp_parse(zero_ack, bad_lease) != CODE_OK);
 
     // No mask offered: refused rather than classful-guessed.
     var no_mask: u8[..576] = [];
     let _ = build_ack_options(no_mask, xid, mac, ip4(10, 0, 0, 9), 3600, 0);
-    var nl: Lease;
+    var nl: Lease = Lease {
+        addr: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        mask: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        gw: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns1: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns2: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        server_id: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        lease_ms: 0,
+        t1_ms: 0,
+        t2_ms: 0,
+        bound_at_ms: 0,
+        mask_given: false,
+        gw_given: false,
+        dns_given: false,
+        server_given: false,
+    };
     check("missing mask refused", dhcp_parse(no_mask, nl) != CODE_OK);
 
     // A zero lease would renew in a tight loop.
     var zero_lease: u8[..576] = [];
     let _ = build_ack_options(zero_lease, xid, mac, ip4(10, 0, 0, 9), 0, 1);
-    var zl: Lease;
+    var zl: Lease = Lease {
+        addr: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        mask: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        gw: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns1: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns2: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        server_id: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        lease_ms: 0,
+        t1_ms: 0,
+        t2_ms: 0,
+        bound_at_ms: 0,
+        mask_given: false,
+        gw_given: false,
+        dns_given: false,
+        server_given: false,
+    };
     check("zero lease refused", dhcp_parse(zero_lease, zl) != CODE_OK);
 
     // Truncated packet, wrong cookie, wrong op: each refused.
@@ -135,7 +267,7 @@ fn main() {
     let rlen = build_dns_answer(resp, q, qlen, 0x1234, ip4(93, 184, 216, 34), 300);
     check("response built", rlen > qlen);
 
-    var ans: Answer;
+    var ans: Answer = Answer { addr: Ipv4 { a: 0, b: 0, c: 0, d: 0 }, ttl: 0, rcode: 0 };
     let ac = dns_parse_a(resp, 0x1234, ans);
     check("answer parsed", ac == CODE_OK);
     check("answer address", ans.addr.a == 93 && ans.addr.d == 34);
@@ -145,15 +277,15 @@ fn main() {
     // --- refusals ---
     // Wrong transaction id: a reply that does not match the query is not an answer, however
     // plausible it looks (this is the poisoning path).
-    var a2: Answer;
+    var a2: Answer = Answer { addr: Ipv4 { a: 0, b: 0, c: 0, d: 0 }, ttl: 0, rcode: 0 };
     check("wrong id refused", dns_parse_a(resp, 0x9999, a2) != CODE_OK);
 
     // NXDOMAIN is an answer with no address: reported as rcode, not as a bogus 0.0.0.0.
     var nx: u8[..512] = [];
     let nxlen = build_dns_answer(nx, q, qlen, 0x1234, ip4(0, 0, 0, 0), 0);
-    nx[3] = (nx[3] & 0xF0) | RCODE_NXDOMAIN;
+    nx[3] = ((nx[3] & 0xF0) | RCODE_NXDOMAIN) as u8;
     // Recompute: the answer count stays 1 in this helper, so the parse must look at rcode.
-    var a3: Answer;
+    var a3: Answer = Answer { addr: Ipv4 { a: 0, b: 0, c: 0, d: 0 }, ttl: 0, rcode: 0 };
     let nxc = dns_parse_a(nx, 0x1234, a3);
     check("nxdomain reports its rcode", nxc == CODE_OK && a3.rcode == RCODE_NXDOMAIN);
 
@@ -162,7 +294,7 @@ fn main() {
     let blen = build_dns_answer(broken, q, qlen, 0x1234, ip4(1, 2, 3, 4), 60);
     broken[qlen + 2] = 0xFF;      // first byte of the answer name: a pointer past the packet
     broken[qlen + 3] = 0xFF;
-    var a4: Answer;
+    var a4: Answer = Answer { addr: Ipv4 { a: 0, b: 0, c: 0, d: 0 }, ttl: 0, rcode: 0 };
     check("dangling compression pointer refused", dns_parse_a(broken, 0x1234, a4) != CODE_OK);
 
     var r: u8[>..] = [];
@@ -184,7 +316,7 @@ fn build_ack(out: u8[..576]&, xid: i64, mac: u8[..6]&, yiaddr: Ipv4, mask: Ipv4,
     var i: i64 = 0;
     while i < 240 {
         out[i] = 0;
-        i++;
+        i = i + 1;
     }
     out[0] = 2;                 // BOOTREPLY
     out[1] = 1;
@@ -194,7 +326,7 @@ fn build_ack(out: u8[..576]&, xid: i64, mac: u8[..6]&, yiaddr: Ipv4, mask: Ipv4,
     var m: i64 = 0;
     while m < 6 {
         out[28 + m] = mac[m];
-        m++;
+        m = m + 1;
     }
     out[236] = 0x63;
     out[237] = 0x82;
@@ -218,7 +350,7 @@ fn build_ack_options(out: u8[..576]&, xid: i64, mac: u8[..6]&, yiaddr: Ipv4, lea
     var i: i64 = 0;
     while i < 240 {
         out[i] = 0;
-        i++;
+        i = i + 1;
     }
     out[0] = 2;
     out[1] = 1;
@@ -228,7 +360,7 @@ fn build_ack_options(out: u8[..576]&, xid: i64, mac: u8[..6]&, yiaddr: Ipv4, lea
     var m: i64 = 0;
     while m < 6 {
         out[28 + m] = mac[m];
-        m++;
+        m = m + 1;
     }
     out[236] = 0x63;
     out[237] = 0x82;
@@ -287,7 +419,7 @@ fn build_dns_answer(out: u8[..512]&, q: u8[..512]&, qlen: i64, id: i64, addr: Ip
     var i: i64 = 0;
     while i < qlen {
         out[i] = q[i];
-        i++;
+        i = i + 1;
     }
     out[2] = 0x81;              // response, standard query
     out[3] = 0x80;              // recursion available, rcode 0

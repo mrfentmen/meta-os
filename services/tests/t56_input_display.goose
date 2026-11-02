@@ -34,8 +34,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -157,14 +157,14 @@ fn main() {
     var i: i64 = 0;
     while i < 40 {
         let _ = disp_puts(0, "line\n");
-        i++;
+        i = i + 1;
     }
     let hist1 = disp_scroll(0);
     check("scrolling recorded history", hist1 >= 0);
     var j: i64 = 0;
     while j < 900 {
         let _ = disp_puts(0, "more\n");
-        j++;
+        j = j + 1;
     }
     let hist2 = disp_scroll(0);
     check("history is bounded", hist2 >= hist1);

@@ -109,15 +109,15 @@ fn dhcp_build_discover(out: u8[..576]&, xid: i64, mac: u8[..6]&) -> i64 {
     // timers up front, so the ACK carries them and we do not need a second exchange.
     var at = n;
     if at + 9 > 576 { return -1; }
-    out[at] = 55; at++;                     // option 55
-    out[at] = 6; at++;                      // length
-    out[at] = 1; at++;                      // subnet mask
-    out[at] = 3; at++;                      // router
-    out[at] = 6; at++;                      // domain name server
-    out[at] = 51; at++;                     // lease time
-    out[at] = 58; at++;                     // renewal time
-    out[at] = 59; at++;                     // rebinding time
-    out[at] = 255; at++;                    // end
+    out[at] = 55; at = at + 1;                     // option 55
+    out[at] = 6; at = at + 1;                      // length
+    out[at] = 1; at = at + 1;                      // subnet mask
+    out[at] = 3; at = at + 1;                      // router
+    out[at] = 6; at = at + 1;                      // domain name server
+    out[at] = 51; at = at + 1;                     // lease time
+    out[at] = 58; at = at + 1;                     // renewal time
+    out[at] = 59; at = at + 1;                     // rebinding time
+    out[at] = 255; at = at + 1;                    // end
     return at;
 }
 
@@ -128,22 +128,22 @@ fn dhcp_build_request(out: u8[..576]&, xid: i64, mac: u8[..6]&, want: Ipv4&, ser
     var at = n;
     // Option 50: requested address.
     if at + 6 > 576 { return -1; }
-    out[at] = 50; at++;
-    out[at] = 4; at++;
-    out[at] = want.a; at++;
-    out[at] = want.b; at++;
-    out[at] = want.c; at++;
-    out[at] = want.d; at++;
+    out[at] = 50; at = at + 1;
+    out[at] = 4; at = at + 1;
+    out[at] = want.a; at = at + 1;
+    out[at] = want.b; at = at + 1;
+    out[at] = want.c; at = at + 1;
+    out[at] = want.d; at = at + 1;
     // Option 54: which server's offer we are accepting.
     if at + 6 > 576 { return -1; }
-    out[at] = 54; at++;
-    out[at] = 4; at++;
-    out[at] = server.a; at++;
-    out[at] = server.b; at++;
-    out[at] = server.c; at++;
-    out[at] = server.d; at++;
+    out[at] = 54; at = at + 1;
+    out[at] = 4; at = at + 1;
+    out[at] = server.a; at = at + 1;
+    out[at] = server.b; at = at + 1;
+    out[at] = server.c; at = at + 1;
+    out[at] = server.d; at = at + 1;
     if at + 1 > 576 { return -1; }
-    out[at] = 255; at++;
+    out[at] = 255; at = at + 1;
     return at;
 }
 
@@ -152,7 +152,7 @@ fn dhcp_build_header(out: u8[..576]&, xid: i64, mac: u8[..6]&, msg_type: i64) ->
     var i: i64 = 0;
     while i < 240 {
         out[i] = 0;
-        i++;
+        i = i + 1;
     }
     out[0] = 1;         // op = BOOTREQUEST
     out[1] = 1;         // htype = Ethernet
@@ -166,7 +166,7 @@ fn dhcp_build_header(out: u8[..576]&, xid: i64, mac: u8[..6]&, msg_type: i64) ->
     var m: i64 = 0;
     while m < 6 {
         out[28 + m] = mac[m];
-        m++;
+        m = m + 1;
     }
     out[236] = DHCP_MAGIC_0;
     out[237] = DHCP_MAGIC_1;
@@ -231,7 +231,7 @@ fn dhcp_parse(pkt: const u8[:], out: Lease&) -> i64 {
     while i < pkt.len {
         let opt = pkt[i];
         if opt == 255 { break; }                      // end
-        if opt == 0 { i++; continue; }                // pad
+        if opt == 0 { i = i + 1; continue; }                // pad
         if i + 1 >= pkt.len { return E_CORRUPT; }     // a type with no length
         let len = pkt[i + 1] as i64;
         if i + 2 + len > pkt.len { return E_CORRUPT; } // length runs past the packet
@@ -287,7 +287,7 @@ fn dhcp_message_type(pkt: const u8[:]) -> i64 {
     while i + 1 < pkt.len {
         let opt = pkt[i];
         if opt == 255 { return -1; }
-        if opt == 0 { i++; continue; }
+        if opt == 0 { i = i + 1; continue; }
         let len = pkt[i + 1] as i64;
         if i + 2 + len > pkt.len { return -1; }
         if opt == 53 && len >= 1 { return pkt[i + 2] as i64; }
@@ -301,13 +301,53 @@ fn dhcp_message_type(pkt: const u8[:]) -> i64 {
 // ---------------------------------------------------------------------------
 
 fn dhcp_init(mac: u8[..6]&, xid: i64) -> Client {
-    var c: Client;
+    var c: Client = Client {
+        state: 0,
+        xid: 0,
+        mac: [],
+        retries: 0,
+        wait_until_ms: 0,
+        backoff_ms: 0,
+        lease: Lease { addr: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        mask: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        gw: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns1: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        dns2: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        server_id: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        lease_ms: 0,
+        t1_ms: 0,
+        t2_ms: 0,
+        bound_at_ms: 0,
+        mask_given: false,
+        gw_given: false,
+        dns_given: false,
+        server_given: false },
+        last_code: 0,
+    };
     c.state = D_IDLE;
     c.xid = xid;
     var i: i64 = 0;
     while i < 6 {
         c.mac[i] = mac[i];
-        i++;
+        i = i + 1;
     }
     c.retries = 0;
     c.wait_until_ms = 0;
@@ -358,7 +398,7 @@ fn dhcp_step(c: Client&, now_ms: i64, reply_type: i64, offer: Lease&) -> i64, i6
             return DHCP_REQUEST, CODE_OK;
         }
         if now_ms >= c.wait_until_ms {
-            c.retries++;
+            c.retries = c.retries + 1;
             if c.retries > 6 { c.state = D_FAILED; c.last_code = E_TIMEOUT; return -1, E_TIMEOUT; }
             c.wait_until_ms = now_ms + c.backoff_ms;
             c.backoff_ms = c.backoff_ms * 2;
@@ -388,7 +428,7 @@ fn dhcp_step(c: Client&, now_ms: i64, reply_type: i64, offer: Lease&) -> i64, i6
             return DHCP_DISCOVER, E_REFUSED;
         }
         if now_ms >= c.wait_until_ms {
-            c.retries++;
+            c.retries = c.retries + 1;
             if c.retries > 4 { c.state = D_FAILED; c.last_code = E_TIMEOUT; return -1, E_TIMEOUT; }
             c.wait_until_ms = now_ms + c.backoff_ms;
             c.backoff_ms = c.backoff_ms * 2;

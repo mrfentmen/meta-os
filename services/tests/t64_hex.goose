@@ -20,8 +20,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -92,14 +92,14 @@ fn main() {
     let _ = append_int(fb, 32, t_fail);
     say(fb[..]);
     say("\n");
-    if t_fail > 0 { let _ = sys_exit(1); }
+    if t_fail > 0 { sys_exit(1); }
 }
 
 fn by_repeat_hex(dst: u8[>..]&, n: i64, c: u8) -> i64 {
     var i: i64 = 0;
     while i < n {
         dst.push(c);
-        i++;
+        i = i + 1;
     }
     return n;
 }

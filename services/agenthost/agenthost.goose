@@ -83,7 +83,7 @@ fn ah_init() {
         agents[i].gen = 0;
         agents[i].caps = 0;
         agents[i].name_len = 0;
-        i++;
+        i = i + 1;
     }
     ah_inited = true;
 }
@@ -151,7 +151,7 @@ fn ah_spawn(name: const u8[:], caps: i64, now_ms: i64) -> i64, i64 {
     var i: i64 = 0;
     while i < name.len {
         agents[slot].name[i] = name[i];
-        i++;
+        i = i + 1;
     }
     return ah_handle(slot, gen), CODE_OK;
 }
@@ -160,7 +160,7 @@ fn ah_free_slot() -> i64 {
     var i: i64 = 0;
     while i < AH_CAP {
         if agents[i].state == AS_FREE { return i; }
-        i++;
+        i = i + 1;
     }
     return AH_NO_SLOT;
 }
@@ -173,11 +173,11 @@ fn ah_find(name: const u8[:]) -> i64 {
             var same = true;
             while j < name.len {
                 if agents[i].name[j] != name[j] { same = false; }
-                j++;
+                j = j + 1;
             }
             if same { return i; }
         }
-        i++;
+        i = i + 1;
     }
     return AH_NO_SLOT;
 }
@@ -242,7 +242,7 @@ fn ah_down_line(out: u8[>..]&, cap: i64) -> bool {
     var i: i64 = 0;
     while i < AH_DOWN_LINE.len {
         out.push(AH_DOWN_LINE[i]);
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -277,8 +277,8 @@ fn ah_live_count() -> i64 {
     var n: i64 = 0;
     var i: i64 = 0;
     while i < AH_CAP {
-        if agents[i].state != AS_FREE { n++; }
-        i++;
+        if agents[i].state != AS_FREE { n = n + 1; }
+        i = i + 1;
     }
     return n;
 }
@@ -326,9 +326,9 @@ fn ah_list(out: i64[..24]&, cap: i64) -> i64 {
     while i < AH_CAP && n < cap && n < 24 {
         if agents[i].state != AS_FREE {
             out[n] = ah_handle(i, agents[i].gen);
-            n++;
+            n = n + 1;
         }
-        i++;
+        i = i + 1;
     }
     return n;
 }

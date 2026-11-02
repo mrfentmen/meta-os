@@ -27,10 +27,10 @@
 // at both ends, not split on spaces.
 
 struct Config {
-    text: u8[:],
+    text: const u8[:],
 }
 
-fn cfg_init(text: u8[:]) -> Config {
+fn cfg_init(text: const u8[:]) -> Config {
     return Config { text: text };
 }
 
@@ -38,7 +38,7 @@ fn cfg_init(text: u8[:]) -> Config {
 // Character helpers
 // ---------------------------------------------------------------------------
 
-fn is_space(b: u8) -> bool {
+fn cfg_is_space(b: u8) -> bool {
     if b == ' ' { return true; }
     if b == '\t' { return true; }
     if b == '\r' { return true; }
@@ -58,7 +58,7 @@ fn is_comment_start(b: u8) -> bool {
 // End of the line starting at `start` (index of the '\n' or text length).
 fn line_end(text: u8[:], start: i64) -> i64 {
     var i = start;
-    while i < text.len && text[i] != '\n' { i++; }
+    while i < text.len && text[i] != '\n' { i = i + 1; }
     return i;
 }
 
@@ -66,8 +66,8 @@ fn line_end(text: u8[:], start: i64) -> i64 {
 fn trim_span(text: u8[:], s: i64, e: i64) -> i64, i64 {
     var a = s;
     var b = e;
-    while a < b && is_space(text[a]) { a++; }
-    while b > a && is_space(text[b - 1]) { b--; }
+    while a < b && cfg_is_space(text[a]) { a = a + 1; }
+    while b > a && cfg_is_space(text[b - 1]) { b = b - 1; }
     return a, b;
 }
 
@@ -77,7 +77,7 @@ fn spans_equal(text: u8[:], as_: i64, ae: i64, bs: i64, be: i64) -> bool {
     var i: i64 = 0;
     while i < ae - as_ {
         if text[as_ + i] != text[bs + i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -103,7 +103,7 @@ fn parse_pair(text: u8[:], s: i64, e: i64) -> i64, i64, i64, i64, bool {
             eq = i;
             break;
         }
-        i++;
+        i = i + 1;
     }
     if eq < 0 { return 0, 0, 0, 0, false; }
     let ks, ke = trim_span(text, s, eq);
@@ -157,7 +157,7 @@ fn spans_equal_keys(text: u8[:], ks: i64, ke: i64, key: u8[:]) -> bool {
     var i: i64 = 0;
     while i < key.len {
         if text[ks + i] != key[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -171,7 +171,7 @@ fn cfg_get(cfg: Config&, section: u8[:], key: u8[:], out: u8[>..]&, cap: i64) ->
     var i = vs;
     while i < ve {
         out.push(cfg.text[i]);
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -224,7 +224,7 @@ fn spans_equal_lit(text: u8[:], s: i64, e: i64, lit: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < lit.len {
         if text[s + i] != lit[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }

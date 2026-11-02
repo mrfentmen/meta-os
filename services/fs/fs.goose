@@ -54,8 +54,8 @@ let FS_MAX_DEPTH: i64 = 16;
 // second place to change and `t65_fs` fails until it is.
 let MAX_DISK_BLOCKS: i64 = 64;
 
-var fs_blk: u8[..512];
-var fs_blk2: u8[..512];
+var fs_blk: u8[..512] = [];
+var fs_blk2: u8[..512] = [];
 var fs_mounted: bool = false;
 var fs_block_count: i64 = 0;
 var fs_free_blocks: i64 = 0;
@@ -101,7 +101,7 @@ fn fs_zero(b: u8[..512]&) {
     var i: i64 = 0;
     while i < BLK {
         b[i] = 0;
-        i++;
+        i = i + 1;
     }
 }
 
@@ -110,7 +110,7 @@ fn fs_magic_ok(b: u8[..512]&) -> bool {
     var i: i64 = 0;
     while i < 8 {
         if (b[i] as i64) != (m[i] as i64) { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -120,7 +120,7 @@ fn fs_put_magic(b: u8[..512]&) {
     var i: i64 = 0;
     while i < 8 {
         b[i] = m[i];
-        i++;
+        i = i + 1;
     }
 }
 
@@ -270,8 +270,8 @@ fn ino_blocks_used(n: Inode&) -> i64 {
     var c: i64 = 0;
     var i: i64 = 0;
     while i < MAX_FILE_BLOCKS {
-        if ino_block_at(n, i) != 0 { c++; }
-        i++;
+        if ino_block_at(n, i) != 0 { c = c + 1; }
+        i = i + 1;
     }
     return c;
 }
@@ -293,7 +293,7 @@ fn fs_alloc_block() -> i64, i64 {
             found = lba;
             break;          // first fit; the bitmap is 64 bytes, a scan costs nothing
         }
-        lba++;
+        lba = lba + 1;
     }
     if found < 0 { return 0, E_NOROOM; }
     let byte = found / 8;
@@ -340,7 +340,7 @@ fn fs_format(block_count: i64) -> i64 {
         fs_zero(fs_blk);
         let w = fs_bwrite(blk);
         if w != CODE_OK { return w; }
-        blk++;
+        blk = blk + 1;
     }
 
     // Root: an empty directory with no blocks at all (a legal state -- DESIGN.md §5).
@@ -357,7 +357,7 @@ fn fs_format(block_count: i64) -> i64 {
         let byte = lba / 8;
         let bit = lba % 8;
         fs_blk[byte] = ((fs_blk[byte] as i64) | (1 << bit)) as u8;
-        lba++;
+        lba = lba + 1;
     }
     while lba < MAX_DISK_BLOCKS * 8 {
         // Bits past the end of this disk are marked used so a future grow of the device
@@ -367,7 +367,7 @@ fn fs_format(block_count: i64) -> i64 {
             let bit = lba % 8;
             fs_blk[byte] = ((fs_blk[byte] as i64) | (1 << bit)) as u8;
         }
-        lba++;
+        lba = lba + 1;
     }
     let bmw = fs_bwrite(BM_LBA);
     if bmw != CODE_OK { return bmw; }
@@ -487,13 +487,14 @@ fn count_free_blocks() -> i64 {
     var n: i64 = 0;
     var lba = DATA_START;
     while lba < fs_block_count {
-        if !fs_bm_get(lba) { n++; }
-        lba++;
+        if !fs_bm_get(lba) { n = n + 1; }
+        lba = lba + 1;
     }
     return n;
 }
 
-fn fs_set_free_blocks(n: i64) {
+fn fs_set_free_blocks(n_in: i64) {
+    var n = n_in;
     if n < 0 { n = 0; }
     fs_free_blocks = n;
 }
@@ -508,7 +509,7 @@ fn name_ok(name: const u8[:]) -> bool {
     while i < name.len {
         let c = name[i];
         if c == 0 || c == '/' { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -520,7 +521,7 @@ fn ent_matches(off: i64, name: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < name.len {
         if g8(fs_blk, off + 4 + i) != (name[i] as i64) { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -532,11 +533,11 @@ fn ent_put(off: i64, ino: i64, name: const u8[:]) {
     var i: i64 = 0;
     while i < name.len {
         p8(fs_blk, off + 4 + i, name[i] as i64);
-        i++;
+        i = i + 1;
     }
     while i < MAX_NAME {           // zero the tail so a shorter name cannot inherit bytes
         p8(fs_blk, off + 4 + i, 0);
-        i++;
+        i = i + 1;
     }
 }
 
@@ -560,9 +561,9 @@ fn fs_lookup(dir_ino: i64, name: const u8[:]) -> i64, i64 {
             let off = e * DIR_ENT;
             let ino = g16(fs_blk, off);
             if ino != 0 && ent_matches(off, name) { return ino, CODE_OK; }
-            e++;
+            e = e + 1;
         }
-        bi++;
+        bi = bi + 1;
     }
     return 0, CODE_OK;
 }
@@ -600,9 +601,9 @@ fn fs_dir_add(dir_ino: i64, name: const u8[:], ino: i64) -> i64 {
                 ent_put(off, ino, name);
                 return fs_bwrite(lba);
             }
-            e++;
+            e = e + 1;
         }
-        bi++;
+        bi = bi + 1;
     }
     return E_NOROOM;
 }
@@ -631,15 +632,15 @@ fn fs_dir_remove(dir_ino: i64, name: const u8[:]) -> i64, i64 {
                 var k: i64 = 0;
                 while k < MAX_NAME {
                     p8(fs_blk, off + 4 + k, 0);
-                    k++;
+                    k = k + 1;
                 }
                 let wc = fs_bwrite(lba);
                 if wc != CODE_OK { return 0, wc; }
                 return ino, CODE_OK;
             }
-            e++;
+            e = e + 1;
         }
-        bi++;
+        bi = bi + 1;
     }
     return 0, CODE_OK;
 }
@@ -668,7 +669,7 @@ fn fs_readdir(dir_ino: i64, idx: i64, out: u8[>..]&, cap: i64) -> i64, i64, bool
                     var i: i64 = 0;
                     while i < nlen && out.len < cap {
                         out.push((g8(fs_blk, off + 4 + i)) as u8);
-                        i++;
+                        i = i + 1;
                     }
                     // Kind comes from the target inode, not from the entry: a caller
                     // printing "dir" from a flag the creator chose would print a claim,
@@ -676,11 +677,11 @@ fn fs_readdir(dir_ino: i64, idx: i64, out: u8[>..]&, cap: i64) -> i64, i64, bool
                     // it loads into `fs_blk` cannot disturb the iteration above.
                     return ino, ino_mode_of(ino), true;
                 }
-                seen++;
+                seen = seen + 1;
             }
-            e++;
+            e = e + 1;
         }
-        bi++;
+        bi = bi + 1;
     }
     return 0, 0, false;
 }
@@ -705,10 +706,10 @@ fn fs_dirent_count(dir_ino: i64) -> i64 {
         if fs_bread(lba) != CODE_OK { return -1; }
         var e: i64 = 0;
         while e < DIR_PER_BLK {
-            if g16(fs_blk, e * DIR_ENT) != 0 { n++; }
-            e++;
+            if g16(fs_blk, e * DIR_ENT) != 0 { n = n + 1; }
+            e = e + 1;
         }
-        bi++;
+        bi = bi + 1;
     }
     return n;
 }
@@ -725,7 +726,7 @@ fn fs_grow_ino(ino: i64) -> i64, i64 {
     var i: i64 = 0;
     while i < MAX_FILE_BLOCKS {
         if ino_block_at(first, i) == 0 { slot = i; break; }
-        i++;
+        i = i + 1;
     }
     if slot < 0 { return 0, E_NOROOM; }
 
@@ -757,7 +758,7 @@ fn fs_release_inode(ino: i64) -> i64 {
             let fc = fs_free_block(lba);
             if fc != CODE_OK { return fc; }
         }
-        i++;
+        i = i + 1;
     }
     var cleared = empty_inode();
     let wc = fs_ino_write(ino, cleared);
@@ -786,7 +787,7 @@ fn fs_create(parent_ino: i64, name: const u8[:], kind: i64) -> i64, i64 {
         let cand, rc = fs_ino_read(ino);
         if rc != CODE_OK { return 0, rc; }
         if cand.mode == MODE_FREE { found = ino; break; }
-        ino++;
+        ino = ino + 1;
     }
     if found == 0 { return 0, E_NOROOM; }
 
@@ -828,9 +829,9 @@ fn fs_read(ino: i64, off: i64, out: u8[>..]&, cap: i64) -> i64, i64 {
         var o = pos % BLK;
         while o < BLK && pos < n.size && out.len < cap {
             out.push((g8(fs_blk, o)) as u8);
-            o++;
-            pos++;
-            got++;
+            o = o + 1;
+            pos = pos + 1;
+            got = got + 1;
         }
     }
     return got, CODE_OK;
@@ -874,9 +875,9 @@ fn fs_write(ino: i64, off: i64, src: const u8[:]) -> i64, i64 {
         var o = pos % BLK;
         while o < BLK && written < src.len {
             p8(fs_blk, o, (src[written] as i64));
-            o++;
-            pos++;
-            written++;
+            o = o + 1;
+            pos = pos + 1;
+            written = written + 1;
         }
         let bw = fs_bwrite(lba);
         if bw != CODE_OK { return written, bw; }
@@ -909,7 +910,7 @@ fn fs_truncate(ino: i64) -> i64 {
             if fc != CODE_OK { return fc; }
             ino_set_block_at(n, i, 0);
         }
-        i++;
+        i = i + 1;
     }
     n.size = 0;
     return fs_ino_write(ino, n);

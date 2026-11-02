@@ -117,7 +117,7 @@ fn ring_drain(r: Ring&, buf: u8[>..]&, out: u8[>..]&, max: i64) -> i64 {
         let b, ok = ring_pop(r, buf);
         if !ok { break; }
         out.push(b);
-        n++;
+        n = n + 1;
     }
     return n;
 }
@@ -131,7 +131,7 @@ fn ring_snapshot(r: Ring&, buf: u8[>..]&, out: u8[>..]&) -> i64 {
         out.push(buf[pos]);
         pos = pos + 1;
         if pos >= r.cap { pos = 0; }
-        i++;
+        i = i + 1;
     }
     return i;
 }
@@ -177,7 +177,7 @@ fn msg_push(m: MsgRing&, buf: u8[>..]&, msg: const u8[:]) -> bool {
         var b: u8 = 0;
         if i < msg.len { b = msg[i]; }
         if !ring_push(m.ring, buf, b) { return false; }
-        i++;
+        i = i + 1;
     }
     // ring_push advanced tail through the whole slot, so the slot is aligned by
     // construction as long as slot divides cap -- msg_init guarantees that.
@@ -196,7 +196,7 @@ fn msg_pop(m: MsgRing&, buf: u8[>..]&, out: u8[>..]&) -> bool {
         let b, got = ring_pop(m.ring, buf);
         if !got { return false; }
         if i < len { out.push(b); }
-        i++;
+        i = i + 1;
     }
     return true;
 }

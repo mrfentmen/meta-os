@@ -265,7 +265,7 @@ fn km_layout_ok(layout: i64) -> bool, i64 {
     while sc <= 0x56 {
         let c, known = km_char(layout, sc, false, false);
         if known && (c == 0 || c == '\n' || c == '\r') { return false, sc; }
-        sc++;
+        sc = sc + 1;
     }
     return true, 0;
 }

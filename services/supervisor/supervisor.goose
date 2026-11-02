@@ -82,7 +82,7 @@ struct ServiceEntry {
     gen: i64,             // bumped on every (re)assignment of this slot
 }
 
-var table: ServiceEntry[..32];
+var table: ServiceEntry[..32] = [];
 var table_len: i64 = 0;
 
 // Register a service. Registration is start-up only: a table that changes while
@@ -96,7 +96,7 @@ fn sup_register(name: const u8[:], needs: i64, enabled: bool) -> i64, i64 {
     var i: i64 = 0;
     while i < name.len {
         table[table_len].name[i] = name[i];
-        i++;
+        i = i + 1;
     }
     table[table_len].name[i] = 0;
 
@@ -115,7 +115,7 @@ fn sup_register(name: const u8[:], needs: i64, enabled: bool) -> i64, i64 {
     table[table_len].max_ms = 30000;
     table[table_len].gen = 1;
 
-    table_len++;
+    table_len = table_len + 1;
     return table_len - 1, CODE_OK;
 }
 
@@ -168,7 +168,7 @@ fn entry_name_slice(slot: i64) -> const u8[:] {
     // and returning it would be a dangling view. The table is static storage, so a
     // slice into it outlives the call.
     var n: i64 = 0;
-    while n < NAME_MAX && table[slot].name[n] != 0 { n++; }
+    while n < NAME_MAX && table[slot].name[n] != 0 { n = n + 1; }
     return table[slot].name[..n];
 }
 
@@ -206,7 +206,7 @@ fn sup_release(slot: i64) -> i64 {
     var i: i64 = 0;
     while i < NAME_MAX {
         table[slot].name[i] = 0;
-        i++;
+        i = i + 1;
     }
     return CODE_OK;
 }
@@ -218,7 +218,7 @@ fn sup_find(name: const u8[:]) -> i64 {
     var i: i64 = 0;
     while i < table_len {
         if entry_name_matches(i, name) { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -230,7 +230,7 @@ fn entry_name_matches(slot: i64, name: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < name.len {
         if stored[i] != name[i] { return false; }
-        i++;
+        i = i + 1;
     }
     // The stored name is NUL-terminated; a longer stored name must not match a
     // shorter query that happens to be its prefix.
@@ -384,7 +384,7 @@ fn sup_backoff_ms(slot: i64, attempt: i64) -> i64 {
     while i < attempt {
         if d >= cap { return cap; }
         d = d * 2;
-        i++;
+        i = i + 1;
     }
     if d > cap { return cap; }
     return d;

@@ -36,12 +36,14 @@
 // Digits needed for a value in a base, ignoring padding. Used to decide whether
 // a write fits without writing first. Worst case for i64 is 20 bytes ("-9223..."
 // is 20 characters including the sign) and 64 for base 2 of a u64.
+import std;
+
 fn digits_needed(v: i64, base: i64) -> i64 {
     if base < 2 || base > 36 { return 0; }      // caller error, handled by caller
     var n = v;
     var count = 1;
     if n < 0 {
-        count++;
+        count = count + 1;
         // i64's most negative value has no positive counterpart; its magnitude
         // is one more than the largest positive, so it needs one extra digit.
         // Comparing first avoids an overflow abort on a legal input.
@@ -50,7 +52,7 @@ fn digits_needed(v: i64, base: i64) -> i64 {
     }
     while n >= base {
         n = n / base;
-        count++;
+        count = count + 1;
     }
     return count;
 }
@@ -99,11 +101,11 @@ fn append_int(out: u8[>..]&, cap: i64, v: i64) -> bool {
 }
 
 // Signed decimal, right-aligned in `width` characters, zero-padded.
-fn append_int_pad(out: u8[>..]&, cap: i64, v: i64, width: i64, pad: u8) -> bool {
+fn append_int_pad(out: u8[>..]&, cap: i64, v: i64, width: i64, pad_ch: u8) -> bool {
     var need = digits_needed(v, 10);
     if width > need { need = width; }
     if need > room_left(out, cap) { return false; }
-    format_int(out, v, 10, width, pad);
+    format_int(out, v, 10, width, pad_ch);
     return true;
 }
 
@@ -111,7 +113,7 @@ fn append_int_pad(out: u8[>..]&, cap: i64, v: i64, width: i64, pad: u8) -> bool 
 // `append_uint(out, cap, v, 16, 4, '0')`; binary, octal and base 36 are the
 // same call with a different second number, which is why there is no
 // `append_hex` wrapper duplicating it.
-fn append_uint(out: u8[>..]&, cap: i64, v: u64, base: i64, width: i64, pad: u8) -> bool {
+fn append_uint(out: u8[>..]&, cap: i64, v: u64, base: i64, width: i64, pad_ch: u8) -> bool {
     if base < 2 || base > 36 { return false; }
     // Digits for a u64: 64 in base 2, 13 in base 36. Count properly rather than
     // assuming the worst case, so a cap near the edge is not refused for a
@@ -121,11 +123,11 @@ fn append_uint(out: u8[>..]&, cap: i64, v: u64, base: i64, width: i64, pad: u8) 
     let b = base as u64;
     while n >= b {
         n = n / b;
-        need++;
+        need = need + 1;
     }
     if width > need { need = width; }
     if need > room_left(out, cap) { return false; }
-    format_uint(out, v, base, width, pad);
+    format_uint(out, v, base, width, pad_ch);
     return true;
 }
 

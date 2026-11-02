@@ -66,7 +66,7 @@ struct Link {
     received: i64,
     dropped: i64,           // frames refused here (too large, link down, bad length)
 }
-var links: Link[..4];
+var links: Link[..4] = [];
 var link_count: i64 = 0;
 
 fn pkt_add_link(id: i64, mac0: u8, mac1: u8, mac2: u8, mac3: u8, mac4: u8, mac5: u8, mtu: i64) -> i64, i64 {
@@ -91,7 +91,7 @@ fn pkt_add_link(id: i64, mac0: u8, mac1: u8, mac2: u8, mac3: u8, mac4: u8, mac5:
     links[l].received = 0;
     links[l].dropped = 0;
 
-    link_count++;
+    link_count = link_count + 1;
     return l, CODE_OK;
 }
 
@@ -99,7 +99,7 @@ fn pkt_find(id: i64) -> i64 {
     var i: i64 = 0;
     while i < link_count {
         if links[i].id == id { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -127,30 +127,30 @@ fn pkt_send(id: i64, frame: const u8[:]) -> i64 {
     let l = pkt_find(id);
     if l < 0 { return E_NOTFOUND; }
     if links[l].state != LINK_UP {
-        links[l].dropped++;
+        links[l].dropped = links[l].dropped + 1;
         return E_NO_LINK;
     }
     if frame.len < ETH_HDR_MIN {
-        links[l].dropped++;
+        links[l].dropped = links[l].dropped + 1;
         return E_INVAL;          // too short to be a frame at all
     }
     if frame.len > links[l].mtu + ETH_HDR_MIN {
-        links[l].dropped++;
+        links[l].dropped = links[l].dropped + 1;
         return E_INVAL;          // would be fragmented by the interface, which is Layer 3's
     }
     let sent = sys_net_send(links[l].id, frame);
     if sent < 0 {
-        links[l].dropped++;
+        links[l].dropped = links[l].dropped + 1;
         if sent == -2 { return E_NO_LINK; }
         return E_IO;
     }
     // A partial send is a driver bug, not a short frame: a frame either goes or it does
     // not, and pretending half of it went would leave the peer with a broken packet.
     if sent != frame.len {
-        links[l].dropped++;
+        links[l].dropped = links[l].dropped + 1;
         return E_IO;
     }
-    links[l].sent++;
+    links[l].sent = links[l].sent + 1;
     return CODE_OK;
 }
 
@@ -177,10 +177,10 @@ fn pkt_recv(id: i64, out: u8[..1514]&) -> i64, i64 {
     if got < ETH_HDR_MIN || got > FRAME_MAX {
         // A frame shorter than its own header, or larger than the interface allows, is
         // corruption. Refused here rather than passed up for every parser to reject.
-        links[l].dropped++;
+        links[l].dropped = links[l].dropped + 1;
         return 0, E_CORRUPT;
     }
-    links[l].received++;
+    links[l].received = links[l].received + 1;
     return got, CODE_OK;
 }
 
@@ -193,7 +193,7 @@ fn pkt_is_broadcast(mac: u8[..6]&) -> bool {
     var i: i64 = 0;
     while i < 6 {
         if mac[i] != 0xFF { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -211,7 +211,7 @@ fn pkt_for_us(id: i64, frame: const u8[:]) -> bool {
     while i < 6 {
         if frame[i] != 0xFF { all_ff = false; }
         if frame[i] != links[l].mac[i] { same = false; }
-        i++;
+        i = i + 1;
     }
     return all_ff || same;
 }

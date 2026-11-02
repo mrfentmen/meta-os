@@ -65,7 +65,7 @@ fn udp_build(out: u8[..1500]&, src: Ipv4&, dst: Ipv4&, sport: i64, dport: i64, p
     out[5] = (udp_len & 0xff) as u8;
     out[6] = 0; out[7] = 0;
     var i: i64 = 0;
-    while i < payload.len { out[UDP_HDR + i] = payload[i]; i++; }
+    while i < payload.len { out[UDP_HDR + i] = payload[i]; i = i + 1; }
 
     var sum = udp_pseudo_sum(src, dst, udp_len);
     sum = sum + udp_sum16(out, 0, udp_len);

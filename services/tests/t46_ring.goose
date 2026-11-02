@@ -23,8 +23,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -34,7 +34,7 @@ fn make_store(n: i64) -> u8[>..] {
     var i: i64 = 0;
     while i < n {
         s.push(0);
-        i++;
+        i = i + 1;
     }
     return s;
 }
@@ -66,7 +66,7 @@ fn main() {
     var i: i64 = 0;
     while i < 4 {
         let _ = ring_push(r, store, (48 + i) as u8);
-        i++;
+        i = i + 1;
     }
     check("full after 4", ring_is_full(r) == true && ring_space(r) == 0);
     check("push on full refused", ring_push(r, store, 90) == false && ring_len(r) == 4);
@@ -105,12 +105,12 @@ fn main() {
     // --- drain and snapshot ---
     var r3 = make_store(8);
     var rx = ring_init(8);
-    let _ = append3(rx, r3, 65, 66, 67);
+    append3(rx, r3, 65, 66, 67);
     var out: u8[>..] = [];
     check("drain 3", ring_drain(rx, r3, out, 3) == 3 && out.len == 3 && out[2] == 67);
     check("drained", ring_len(rx) == 0);
 
-    let _ = append3(rx, r3, 72, 73, 74);
+    append3(rx, r3, 72, 73, 74);
     var snap: u8[>..] = [];
     check("snapshot 3", ring_snapshot(rx, r3, snap) == 3 && snap.len == 3 && snap[0] == 72);
     check("snapshot does not consume", ring_len(rx) == 3);
@@ -140,7 +140,7 @@ fn main() {
     var k: i64 = 0;
     while k < msg_capacity(mr) + 8 {
         big.push(65);
-        k++;
+        k = k + 1;
     }
     var before = msg_len(mr);
     check("oversize frame refused", msg_push(mr, mbuf, big) == false && msg_len(mr) == before);

@@ -90,7 +90,15 @@ struct DeltaPlan {
 // zero -- the plan is returned anyway so the log can name the file that moved.
 fn delta_plan(dfiles: DeltaFile[..8], count: i64, base_lens: i64[..8], base_digests: u8[..32][..8],
               active_slot: i64) -> DeltaPlan, i64 {
-    var p: DeltaPlan;
+    var p: DeltaPlan = DeltaPlan {
+        action: 0,
+        slot: 0,
+        files: 0,
+        bytes_to_write: 0,
+        bytes_shipped: 0,
+        savings: 0,
+        refused: 0,
+    };
     p.action = UPD_APPLY_NONE;
     p.slot = active_slot;
     p.files = count;
@@ -108,7 +116,7 @@ fn delta_plan(dfiles: DeltaFile[..8], count: i64, base_lens: i64[..8], base_dige
         else if !delta_digest_eq(base_digests[i], dfiles[i].base_digest) { p.refused = p.refused + 1; }
         p.bytes_to_write = p.bytes_to_write + dfiles[i].new_len;
         p.bytes_shipped = p.bytes_shipped + delta_literal_bytes(dfiles[i]);
-        i++;
+        i = i + 1;
     }
     p.savings = p.bytes_to_write - p.bytes_shipped;
     if p.refused > 0 { return p, E_ROLLBACK; }
@@ -124,7 +132,7 @@ fn delta_digest_eq(a: u8[..32], b: u8[..32]) -> bool {
     var i: i64 = 0;
     while i < DL_DIGEST {
         if a[i] != b[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -134,7 +142,7 @@ fn delta_literal_bytes(f: DeltaFile) -> i64 {
     var i: i64 = 0;
     while i < f.nops {
         if f.ops[i].kind == DL_LITERAL { n = n + f.ops[i].lit_len; }
-        i++;
+        i = i + 1;
     }
     return n;
 }
@@ -164,7 +172,7 @@ fn delta_apply(f: DeltaFile&, base: const u8[:], lit: const u8[:], out: u8[>..]&
             var k: i64 = 0;
             while k < op.from_len {
                 out.push(base[op.from_off + k]);
-                k++;
+                k = k + 1;
             }
             produced = produced + op.from_len;
         } else if op.kind == DL_FILL {
@@ -173,7 +181,7 @@ fn delta_apply(f: DeltaFile&, base: const u8[:], lit: const u8[:], out: u8[>..]&
             var k: i64 = 0;
             while k < op.from_len {
                 out.push(op.fill as u8);
-                k++;
+                k = k + 1;
             }
             produced = produced + op.from_len;
         } else if op.kind == DL_LITERAL {
@@ -183,13 +191,13 @@ fn delta_apply(f: DeltaFile&, base: const u8[:], lit: const u8[:], out: u8[>..]&
             var k: i64 = 0;
             while k < op.lit_len {
                 out.push(lit[op.lit_off + k]);
-                k++;
+                k = k + 1;
             }
             produced = produced + op.lit_len;
         } else {
             return produced, E_UNSUPPORTED;
         }
-        i++;
+        i = i + 1;
     }
 
     // The length is the strongest cheap check that the operations add up. The digest is the
@@ -208,7 +216,7 @@ fn delta_verify(f: DeltaFile&, content: u8[:], got_digest: u8[..32]) -> i64 {
     var i: i64 = 0;
     while i < DL_DIGEST {
         got_digest[i] = digest[i];
-        i++;
+        i = i + 1;
     }
     if !delta_digest_eq(got_digest, f.new_digest) { return E_VERIFY; }
     return CODE_OK;
@@ -242,16 +250,16 @@ fn delta_op_name(kind: i64) -> const u8[:] {
 
 // One plan line for the report: "delta plan: slot=B files=3 write=8301 ship=4123 saved=4178".
 fn delta_plan_line(p: DeltaPlan&, out: u8[>..]&, cap: i64) -> bool {
-    if !fmt.append_str(out, cap, "delta plan: slot=") { return false; }
-    if !fmt.append_int(out, cap, p.slot) { return false; }
-    if !fmt.append_str(out, cap, " files=") { return false; }
-    if !fmt.append_int(out, cap, p.files) { return false; }
-    if !fmt.append_str(out, cap, " write=") { return false; }
-    if !fmt.append_int(out, cap, p.bytes_to_write) { return false; }
-    if !fmt.append_str(out, cap, " ship=") { return false; }
-    if !fmt.append_int(out, cap, p.bytes_shipped) { return false; }
-    if !fmt.append_str(out, cap, " saved=") { return false; }
-    if !fmt.append_int(out, cap, p.savings) { return false; }
-    if !fmt.append_str(out, cap, " refused=") { return false; }
-    return fmt.append_int(out, cap, p.refused);
+    if !append_str(out, cap, "delta plan: slot=") { return false; }
+    if !append_int(out, cap, p.slot) { return false; }
+    if !append_str(out, cap, " files=") { return false; }
+    if !append_int(out, cap, p.files) { return false; }
+    if !append_str(out, cap, " write=") { return false; }
+    if !append_int(out, cap, p.bytes_to_write) { return false; }
+    if !append_str(out, cap, " ship=") { return false; }
+    if !append_int(out, cap, p.bytes_shipped) { return false; }
+    if !append_str(out, cap, " saved=") { return false; }
+    if !append_int(out, cap, p.savings) { return false; }
+    if !append_str(out, cap, " refused=") { return false; }
+    return append_int(out, cap, p.refused);
 }

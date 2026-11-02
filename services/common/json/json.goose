@@ -64,13 +64,13 @@ struct Json {
 }
 
 fn json_parse(text: const u8[:]) -> Json, i64 {
-    var j: Json;
+    var j: Json = Json { nodes: [], count: 0, err_off: 0 };
     j.count = 0;
     j.err_off = 0;
     var i: i64 = 0;
     while i < JSON_MAX {
         j.nodes[i] = JNode { key_off: 0, key_len: 0, kind: JV_NULL, val_off: 0, val_len: 0, num: 0, scale: 0 };
-        i++;
+        i = i + 1;
     }
 
     i = json_skip_ws(text, 0);
@@ -81,11 +81,11 @@ fn json_parse(text: const u8[:]) -> Json, i64 {
         j.err_off = i;
         return j, E_UNSUPPORTED;
     }
-    i++;
+    i = i + 1;
     i = json_skip_ws(text, i);
 
     if i < text.len && text[i] == '}' {
-        i++;
+        i = i + 1;
         return json_finish(j, text, i);
     }
 
@@ -94,7 +94,15 @@ fn json_parse(text: const u8[:]) -> Json, i64 {
         i = json_skip_ws(text, i);
         if i >= text.len || text[i] != '"' { return json_fail(j, i); }
 
-        var node: JNode;
+        var node: JNode = JNode {
+            key_off: 0,
+            key_len: 0,
+            kind: 0,
+            val_off: 0,
+            val_len: 0,
+            num: 0,
+            scale: 0,
+        };
         let key_start = i + 1;
         i = json_scan_string(text, i);
         if i < 0 { return json_fail(j, key_start); }
@@ -103,7 +111,7 @@ fn json_parse(text: const u8[:]) -> Json, i64 {
 
         i = json_skip_ws(text, i);
         if i >= text.len || text[i] != ':' { return json_fail(j, i); }
-        i++;
+        i = i + 1;
         i = json_skip_ws(text, i);
 
         let vcode = json_scan_value(text, i, node);
@@ -118,15 +126,15 @@ fn json_parse(text: const u8[:]) -> Json, i64 {
                 j.err_off = node.key_off;
                 return j, E_INVAL;
             }
-            k++;
+            k = k + 1;
         }
         j.nodes[j.count] = node;
         j.count = j.count + 1;
 
         i = json_skip_ws(text, i);
         if i >= text.len { return json_fail(j, i); }
-        if text[i] == ',' { i++; continue; }
-        if text[i] == '}' { i++; break; }
+        if text[i] == ',' { i = i + 1; continue; }
+        if text[i] == '}' { i = i + 1; break; }
         return json_fail(j, i);              // trailing comma, or junk
     }
 
@@ -157,7 +165,7 @@ fn json_skip_ws(text: const u8[:], at: i64) -> i64 {
     var i = at;
     while i < text.len {
         let c = text[i];
-        if c == ' ' || c == '\t' || c == '\n' || c == '\r' { i++; continue; }
+        if c == ' ' || c == '\t' || c == '\n' || c == '\r' { i = i + 1; continue; }
         break;
     }
     return i;
@@ -186,7 +194,7 @@ fn json_scan_string(text: const u8[:], at: i64) -> i64 {
                 var k: i64 = 2;
                 while k < 6 {
                     if json_hex(text[i + k]) < 0 { return -1; }
-                    k++;
+                    k = k + 1;
                 }
                 let cp = json_hex4(text, i + 2);
                 if cp >= 0xD800 && cp <= 0xDBFF {
@@ -195,7 +203,7 @@ fn json_scan_string(text: const u8[:], at: i64) -> i64 {
                     var m: i64 = 8;
                     while m < 12 {
                         if json_hex(text[i + m]) < 0 { return -1; }
-                        m++;
+                        m = m + 1;
                     }
                     let lo = json_hex4(text, i + 8);
                     if lo < 0xDC00 || lo > 0xDFFF { return -1; }
@@ -208,7 +216,7 @@ fn json_scan_string(text: const u8[:], at: i64) -> i64 {
             }
             return -1;
         }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -227,7 +235,7 @@ fn json_hex4(text: const u8[:], at: i64) -> i64 {
         let d = json_hex(text[at + i]);
         if d < 0 { return -1; }
         v = v * 16 + d;
-        i++;
+        i = i + 1;
     }
     return v;
 }
@@ -274,7 +282,7 @@ fn json_scan_value(text: const u8[:], at: i64, node: JNode&) -> i64 {
 fn json_scan_number(text: const u8[:], at: i64, node: JNode&) -> i64 {
     var i = at;
     var neg = false;
-    if text[i] == '-' { neg = true; i++; if i >= text.len { return E_INVAL; } }
+    if text[i] == '-' { neg = true; i = i + 1; if i >= text.len { return E_INVAL; } }
     if text[i] < '0' || text[i] > '9' { return E_INVAL; }
     // A leading zero followed by another digit ("01") is refused: some parsers read it as
     // octal, and a config value that one machine reads as 8 and another as 1 is not a value.
@@ -285,29 +293,29 @@ fn json_scan_number(text: const u8[:], at: i64, node: JNode&) -> i64 {
     while i < text.len && text[i] >= '0' && text[i] <= '9' {
         if digits >= 18 { return E_INVAL; }        // would overflow i64 when scaled
         whole = whole * 10 + ((text[i] - '0') as i64);
-        digits++;
-        i++;
+        digits = digits + 1;
+        i = i + 1;
     }
     var scale: i64 = 0;
     var kind = JV_INT;
     if i < text.len && text[i] == '.' {
         kind = JV_DECIMAL;
-        i++;
+        i = i + 1;
         if i >= text.len || text[i] < '0' || text[i] > '9' { return E_INVAL; }
         var frac: i64 = 0;
         while i < text.len && text[i] >= '0' && text[i] <= '9' {
             if scale >= 9 { return E_INVAL; }      // more precision than the caller asked for
             frac = frac * 10 + ((text[i] - '0') as i64);
-            scale++;
-            i++;
+            scale = scale + 1;
+            i = i + 1;
         }
         // Fold the fraction into `whole` at a fixed scale so json_int can answer in
         // thousandths without a second field per caller.
         // Normalise the fraction to thousandths, so json_int's answer is comparable
         // across "1.5", "1.50" and "1.5001" without a second scale field per caller.
         var k: i64 = scale;
-        while k < 3 { frac = frac * 10; k++; }
-        while k > 3 { frac = frac / 10; k--; }
+        while k < 3 { frac = frac * 10; k = k + 1; }
+        while k > 3 { frac = frac / 10; k = k - 1; }
         whole = whole * 1000 + frac;
         if scale > 3 { scale = 3; }
     }
@@ -325,7 +333,15 @@ fn json_scan_number(text: const u8[:], at: i64, node: JNode&) -> i64 {
 fn json_skip_value_end(text: const u8[:], at: i64) -> i64 {
     // The value scanner already walked it; re-walking is cheap and keeps one source of truth
     // for "where does this value end".
-    var node: JNode;
+    var node: JNode = JNode {
+        key_off: 0,
+        key_len: 0,
+        kind: 0,
+        val_off: 0,
+        val_len: 0,
+        num: 0,
+        scale: 0,
+    };
     if json_scan_value(text, at, node) != CODE_OK { return at; }
     if node.kind == JV_STR { return node.val_off + node.val_len + 1; }
     return at + node.val_len;
@@ -336,7 +352,7 @@ fn json_match(text: const u8[:], at: i64, lit: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < lit.len {
         if text[at + i] != lit[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -346,7 +362,7 @@ fn json_key_eq(text: const u8[:], a: JNode, b: JNode) -> bool {
     var i: i64 = 0;
     while i < a.key_len {
         if text[a.key_off + i] != text[b.key_off + i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -366,11 +382,11 @@ fn json_find(j: Json&, text: const u8[:], key: const u8[:]) -> i64 {
             var k: i64 = 0;
             while k < key.len {
                 if text[j.nodes[i].key_off + k] != key[k] { same = false; break; }
-                k++;
+                k = k + 1;
             }
             if same { return i; }
         }
-        i++;
+        i = i + 1;
     }
     return JSON_NONE;
 }
@@ -413,11 +429,11 @@ fn json_str(j: Json&, text: const u8[:], idx: i64, out: u8[>..]&, cap: i64) -> i
         let c = text[i];
         if c != '\\' {
             out.push(c);
-            produced++;
-            i++;
+            produced = produced + 1;
+            i = i + 1;
             continue;
         }
-        i++;
+        i = i + 1;
         if i >= end { return produced, E_CORRUPT; }
         let e = text[i];
         if e == '"' { out.push('"'); }
@@ -436,8 +452,8 @@ fn json_str(j: Json&, text: const u8[:], idx: i64, out: u8[>..]&, cap: i64) -> i
             else { out.push('?'); }         // see the note above: never a wrong byte
             i = i + 4;
         } else { return produced, E_CORRUPT; }
-        produced++;
-        i++;
+        produced = produced + 1;
+        i = i + 1;
     }
     return produced, CODE_OK;
 }
@@ -449,7 +465,7 @@ fn json_str(j: Json&, text: const u8[:], idx: i64, out: u8[>..]&, cap: i64) -> i
 fn json_wr(out: u8[>..]&, cap: i64, s: const u8[:]) -> bool {
     if out.len + s.len > cap { return false; }
     var i: i64 = 0;
-    while i < s.len { out.push(s[i]); i++; }
+    while i < s.len { out.push(s[i]); i = i + 1; }
     return true;
 }
 
@@ -487,7 +503,7 @@ fn json_escape(out: u8[>..]&, cap: i64, s: const u8[:]) -> bool {
             out.push(json_hex_digit(hi));
             out.push(json_hex_digit(lo));
         } else { out.push(c); }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -505,7 +521,7 @@ fn json_kv_int(out: u8[>..]&, cap: i64, first: bool, key: const u8[:], val: i64)
     return json_wr_int(out, cap, val);
 }
 
-fn json_wr_int(out: u8[>..]&, cap: i64, v: i64) -> bool {
+recursive fn json_wr_int(out: u8[>..]&, cap: i64, v: i64) -> bool {
     if v < 0 {
         if !json_wr(out, cap, "-") { return false; }
         return json_wr_int(out, cap, 0 - v);
@@ -517,14 +533,14 @@ fn json_wr_int(out: u8[>..]&, cap: i64, v: i64) -> bool {
     }
     var digits: i64 = 0;
     var x = v;
-    while x > 0 { digits++; x = x / 10; }
+    while x > 0 { digits = digits + 1; x = x / 10; }
     if out.len + digits > cap { return false; }
-    var buf: u8[..20];
+    var buf: u8[..20] = [];
     var i: i64 = 0;
     x = v;
-    while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i++; }
+    while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i = i + 1; }
     i = 0;
-    while i < digits { out.push(buf[i]); i++; }
+    while i < digits { out.push(buf[i]); i = i + 1; }
     return true;
 }
 

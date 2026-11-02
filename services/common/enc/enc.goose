@@ -109,12 +109,12 @@ fn b64_decode(src: const u8[:], out: u8[>..]&, cap: i64) -> i64, i64 {
     if src.len == 0 { return 0, CODE_OK; }
     if (src.len % 4) != 0 { return 0, E_INVAL; }
 
-    var pad: i64 = 0;
-    if src[src.len - 1] == '=' { pad = pad + 1; }
-    if src[src.len - 2] == '=' { pad = pad + 1; }
-    if pad > 2 { return 0, E_INVAL; }
+    var padn: i64 = 0;
+    if src[src.len - 1] == '=' { padn = padn + 1; }
+    if src[src.len - 2] == '=' { padn = padn + 1; }
+    if padn > 2 { return 0, E_INVAL; }
 
-    let need = (src.len / 4) * 3 - pad;
+    let need = (src.len / 4) * 3 - padn;
     if need > cap { return 0, E_NOROOM; }
 
     var i: i64 = 0;
@@ -176,7 +176,7 @@ fn utf8_validate(s: const u8[:]) -> i64, i64 {
     var points: i64 = 0;
     while i < s.len {
         let b0 = s[i] as i64;
-        if b0 < 0x80 { i++; points++; continue; }
+        if b0 < 0x80 { i = i + 1; points = points + 1; continue; }
 
         var need: i64 = 0;
         var cp: i64 = 0;
@@ -192,13 +192,13 @@ fn utf8_validate(s: const u8[:]) -> i64, i64 {
             let bk = s[i + k] as i64;
             if bk < 0x80 || bk > 0xBF { return points, E_INVAL; }
             cp = (cp << 6) | (bk & 0x3F);
-            k++;
+            k = k + 1;
         }
         if cp < min_cp { return points, E_INVAL; }                   // overlong
         if cp >= 0xD800 && cp <= 0xDFFF { return points, E_INVAL; }  // surrogate
         if cp > 0x10FFFF { return points, E_INVAL; }
         i = i + need + 1;
-        points++;
+        points = points + 1;
     }
     return points, CODE_OK;
 }
@@ -258,7 +258,7 @@ fn utf8_next(s: const u8[:], at: i64) -> i64, i64, bool {
         let bk = s[at + k] as i64;
         if bk < 0x80 || bk > 0xBF { return 0, k, false; }
         cp = (cp << 6) | (bk & 0x3F);
-        k++;
+        k = k + 1;
     }
     if cp >= 0xD800 && cp <= 0xDFFF { return 0, need + 1, false; }
     if cp > 0x10FFFF { return 0, need + 1, false; }

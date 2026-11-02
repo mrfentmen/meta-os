@@ -95,15 +95,22 @@ fn sig_verify_manifest(text: const u8[:], trusted: const u8[:]) -> i64, i64 {
 // (B-L1-131's hostile inputs cover it), and it does no crypto: it splits, decodes Base64, and
 // reports whether the shape is legal.
 fn sig_parse(text: const u8[:]) -> SigBlock, i64 {
-    var b: SigBlock;
+    var b: SigBlock = SigBlock {
+        alg: 0,
+        key_id: [],
+        key_id_len: 0,
+        sig: [],
+        sig_len: 0,
+        line_off: 0,
+    };
     b.alg = 0;
     b.key_id_len = 0;
     b.sig_len = 0;
     b.line_off = -1;
     var i: i64 = 0;
-    while i < SIG_KEY_ID_MAX { b.key_id[i] = 0; i++; }
+    while i < SIG_KEY_ID_MAX { b.key_id[i] = 0; i = i + 1; }
     i = 0;
-    while i < SIG_BYTES_MAX { b.sig[i] = 0; i++; }
+    while i < SIG_BYTES_MAX { b.sig[i] = 0; i = i + 1; }
 
     // Find the last line that starts with "signature ".
     var at: i64 = 0;
@@ -123,7 +130,7 @@ fn sig_parse(text: const u8[:]) -> SigBlock, i64 {
             }
             line_start = at + 1;
         }
-        at++;
+        at = at + 1;
     }
     if found < 0 { return b, E_NOTFOUND; }
     b.line_off = found_start;
@@ -134,21 +141,21 @@ fn sig_parse(text: const u8[:]) -> SigBlock, i64 {
     // signature <alg> <keyid> <b64>
     var p = found_start + 10;                 // past "signature "
     var alg_end = p;
-    while alg_end < found_end && text[alg_end] != ' ' { alg_end++; }
+    while alg_end < found_end && text[alg_end] != ' ' { alg_end = alg_end + 1; }
     if alg_end >= found_end { return b, E_INVAL; }
     if !sig_bytes_eq(text[p..alg_end], "ed25519") { return b, E_CORRUPT; }
     b.alg = SIG_ALG_ED25519;
 
     p = alg_end + 1;
     var kid_end = p;
-    while kid_end < found_end && text[kid_end] != ' ' { kid_end++; }
+    while kid_end < found_end && text[kid_end] != ' ' { kid_end = kid_end + 1; }
     if kid_end >= found_end { return b, E_INVAL; }
     let kid_len = kid_end - p;
     if kid_len == 0 || kid_len > SIG_KEY_ID_MAX { return b, E_INVAL; }
     var k: i64 = 0;
     while k < kid_len {
         b.key_id[k] = text[p + k];
-        k++;
+        k = k + 1;
     }
     b.key_id_len = kid_len;
 
@@ -161,7 +168,7 @@ fn sig_parse(text: const u8[:]) -> SigBlock, i64 {
     var s: i64 = 0;
     while s < 64 {
         b.sig[s] = sig_out[s];
-        s++;
+        s = s + 1;
     }
     b.sig_len = n;
     return b, CODE_OK;
@@ -173,7 +180,7 @@ fn sig_line_matches(text: const u8[:], start: i64, end: i64) -> bool {
     var i: i64 = 0;
     while i < prefix.len {
         if text[start + i] != prefix[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -183,7 +190,7 @@ fn sig_bytes_eq(a: const u8[:], b: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < a.len {
         if a[i] != b[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }

@@ -86,7 +86,7 @@ fn cm_init() {
     while i < SVC_COUNT {
         matrix[i].caller = 0;
         matrix[i].allow = 0;
-        i++;
+        i = i + 1;
     }
     cm_set(SVC_BOOTLOG, cm_bit(SVC_CONSOLE) | cm_bit(SVC_LOG) | cm_bit(SVC_TIME) | cm_bit(SVC_DEVICES));
     cm_set(SVC_CONSOLE, cm_bit(SVC_BOOTLOG) | cm_bit(SVC_LOG));

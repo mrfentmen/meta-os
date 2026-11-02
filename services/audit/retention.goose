@@ -58,7 +58,7 @@ fn ret_policy(max_records: i64, keep_kinds: i64) -> RetPolicy {
 // E_NOROOM when the output does not fit, with `result.kept` counting what was written before
 // the failure -- the caller must discard the partial output, not ship it.
 fn ret_compact(src: const u8[:], p: RetPolicy&, out: u8[>..]&, cap: i64) -> RetResult, i64 {
-    var res: RetResult;
+    var res: RetResult = RetResult { kept: 0, dropped: 0, bytes: 0, protected: 0 };
     res.kept = 0;
     res.dropped = 0;
     res.bytes = 0;
@@ -67,7 +67,15 @@ fn ret_compact(src: const u8[:], p: RetPolicy&, out: u8[>..]&, cap: i64) -> RetR
     // Pass 1: count, and refuse a broken input before writing anything.
     var total: i64 = 0;
     var off: i64 = 0;
-    var head: RecHead;
+    var head: RecHead = RecHead {
+        magic: 0,
+        len: 0,
+        kind: 0,
+        seq: 0,
+        at_ms: 0,
+        actor: 0,
+        digest: 0,
+    };
     while off < src.len {
         let body = head_at(src, off, head);
         if body < 0 { return res, E_CORRUPT; }
@@ -101,7 +109,7 @@ fn ret_compact(src: const u8[:], p: RetPolicy&, out: u8[>..]&, cap: i64) -> RetR
             var i = body_off;
             while i < off + head.len {
                 h = audit_mix(h, src[i] as i64);
-                i++;
+                i = i + 1;
             }
 
             let need = RET_REC_HEAD + (off + head.len - body_off);
@@ -116,7 +124,7 @@ fn ret_compact(src: const u8[:], p: RetPolicy&, out: u8[>..]&, cap: i64) -> RetR
             i = body_off;
             while i < off + head.len {
                 out.push(src[i]);
-                i++;
+                i = i + 1;
             }
 
             prev = h;
@@ -176,7 +184,7 @@ fn ret_put6(out: u8[>..]&, cap: i64, v: i64) {
 fn ret_text(out: u8[>..]&, cap: i64, s: const u8[:]) -> bool {
     if out.len + s.len > cap { return false; }
     var i: i64 = 0;
-    while i < s.len { out.push(s[i]); i++; }
+    while i < s.len { out.push(s[i]); i = i + 1; }
     return true;
 }
 
@@ -189,14 +197,14 @@ fn ret_num(out: u8[>..]&, cap: i64, v: i64) -> bool {
     }
     var digits: i64 = 0;
     var x = v;
-    while x > 0 { digits++; x = x / 10; }
-    var buf: u8[..20];
+    while x > 0 { digits = digits + 1; x = x / 10; }
+    var buf: u8[..20] = [];
     if digits > 20 { return false; }
     var i: i64 = 0;
     x = v;
-    while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i++; }
+    while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i = i + 1; }
     if out.len + digits > cap { return false; }
     i = 0;
-    while i < digits { out.push(buf[i]); i++; }
+    while i < digits { out.push(buf[i]); i = i + 1; }
     return true;
 }

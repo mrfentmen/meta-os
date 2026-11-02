@@ -69,11 +69,20 @@ struct Channel {
 }
 
 fn ch_new() -> Channel {
-    var c: Channel;
+    var c: Channel = Channel {
+        msgs: [],
+        count: 0,
+        next_id: 0,
+        sent: 0,
+        delivered: 0,
+        rejected: 0,
+        expired: 0,
+        full_events: 0,
+    };
     var i: i64 = 0;
     while i < CH_SLOTS {
         c.msgs[i] = Msg { id: 0, from_handle: 0, to_handle: 0, queued_ms: 0, deadline_ms: 0, state: MSG_REJECTED, len: 0, body: ch_zero_body() };
-        i++;
+        i = i + 1;
     }
     c.count = 0;
     c.next_id = 1;
@@ -86,9 +95,9 @@ fn ch_new() -> Channel {
 }
 
 fn ch_zero_body() -> u8[..64] {
-    var b: u8[..64];
+    var b: u8[..64] = [];
     var i: i64 = 0;
-    while i < CH_BODY { b[i] = 0; i++; }
+    while i < CH_BODY { b[i] = 0; i = i + 1; }
     return b;
 }
 
@@ -116,7 +125,16 @@ fn ch_send(c: Channel&, from: i64, to: i64, body: const u8[:], now_ms: i64, ttl_
         return 0, E_BUSY;
     }
 
-    var m: Msg;
+    var m: Msg = Msg {
+        id: 0,
+        from_handle: 0,
+        to_handle: 0,
+        queued_ms: 0,
+        deadline_ms: 0,
+        state: 0,
+        len: 0,
+        body: [],
+    };
     m.id = c.next_id;
     c.next_id = c.next_id + 1;
     m.from_handle = from;
@@ -129,7 +147,7 @@ fn ch_send(c: Channel&, from: i64, to: i64, body: const u8[:], now_ms: i64, ttl_
     var i: i64 = 0;
     while i < body.len {
         m.body[i] = body[i];
-        i++;
+        i = i + 1;
     }
     c.msgs[slot] = m;
     c.count = c.count + 1;
@@ -154,7 +172,7 @@ fn ch_recv(c: Channel&, for_handle: i64, now_ms: i64, out: u8[>..]&, cap: i64) -
     var i: i64 = 0;
     while i < c.msgs[slot].len {
         out.push(c.msgs[slot].body[i]);
-        i++;
+        i = i + 1;
     }
     let id = c.msgs[slot].id;
     c.msgs[slot].state = MSG_DELIVERED;
@@ -175,9 +193,9 @@ fn ch_expire(c: Channel&, now_ms: i64) -> i64 {
             c.msgs[i].len = 0;
             c.expired = c.expired + 1;
             c.count = c.count - 1;
-            n++;
+            n = n + 1;
         }
-        i++;
+        i = i + 1;
     }
     return n;
 }
@@ -190,8 +208,8 @@ fn ch_pending_for(c: Channel&, h: i64) -> i64 {
     var n: i64 = 0;
     var i: i64 = 0;
     while i < CH_SLOTS {
-        if c.msgs[i].state == MSG_QUEUED && c.msgs[i].id != 0 && c.msgs[i].to_handle == h { n++; }
-        i++;
+        if c.msgs[i].state == MSG_QUEUED && c.msgs[i].id != 0 && c.msgs[i].to_handle == h { n = n + 1; }
+        i = i + 1;
     }
     return n;
 }
@@ -211,18 +229,18 @@ fn ch_state_name(s: i64) -> const u8[:] {
 
 // One line per channel: "queued 2 sent 14 delivered 11 rejected 1 expired 2 full 0".
 fn ch_status(c: Channel&, out: u8[>..]&, cap: i64) -> bool {
-    if !fmt.append_str(out, cap, "queued ") { return false; }
-    if !fmt.append_int(out, cap, c.count) { return false; }
-    if !fmt.append_str(out, cap, " sent ") { return false; }
-    if !fmt.append_int(out, cap, c.sent) { return false; }
-    if !fmt.append_str(out, cap, " delivered ") { return false; }
-    if !fmt.append_int(out, cap, c.delivered) { return false; }
-    if !fmt.append_str(out, cap, " rejected ") { return false; }
-    if !fmt.append_int(out, cap, c.rejected) { return false; }
-    if !fmt.append_str(out, cap, " expired ") { return false; }
-    if !fmt.append_int(out, cap, c.expired) { return false; }
-    if !fmt.append_str(out, cap, " full ") { return false; }
-    return fmt.append_int(out, cap, c.full_events);
+    if !append_str(out, cap, "queued ") { return false; }
+    if !append_int(out, cap, c.count) { return false; }
+    if !append_str(out, cap, " sent ") { return false; }
+    if !append_int(out, cap, c.sent) { return false; }
+    if !append_str(out, cap, " delivered ") { return false; }
+    if !append_int(out, cap, c.delivered) { return false; }
+    if !append_str(out, cap, " rejected ") { return false; }
+    if !append_int(out, cap, c.rejected) { return false; }
+    if !append_str(out, cap, " expired ") { return false; }
+    if !append_int(out, cap, c.expired) { return false; }
+    if !append_str(out, cap, " full ") { return false; }
+    return append_int(out, cap, c.full_events);
 }
 
 // ---------------------------------------------------------------------------
@@ -234,7 +252,7 @@ fn ch_free_slot(c: Channel&) -> i64 {
     while i < CH_SLOTS {
         // A delivered or expired slot is reusable: its metadata has already been counted.
         if c.msgs[i].state == MSG_DELIVERED || c.msgs[i].state == MSG_EXPIRED || c.msgs[i].id == 0 { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -252,7 +270,7 @@ fn ch_oldest_for(c: Channel&, h: i64) -> i64 {
                 best_id = c.msgs[i].id;
             }
         }
-        i++;
+        i = i + 1;
     }
     return best;
 }

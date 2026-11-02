@@ -43,7 +43,7 @@ fn hex_encode(dst: u8[>..]&, cap: i64, src: const u8[:], upper: bool) -> i64 {
         let b = src[i];
         dst.push(hex_char((b >> 4) & 0xf, upper));
         dst.push(hex_char(b & 0xf, upper));
-        i++;
+        i = i + 1;
     }
     return i * 2;
 }
@@ -70,7 +70,7 @@ fn hex_decode(dst: u8[>..]&, cap: i64, src: const u8[:]) -> i64 {
     var i: i64 = 0;
     while i < src.len {
         if hex_nibble(src[i]) < 0 { return -1; }
-        i++;
+        i = i + 1;
     }
     i = 0;
     while i < src.len {
@@ -96,7 +96,7 @@ fn hex_is_exact(s: const u8[:], bytes: i64) -> bool {
     var i: i64 = 0;
     while i < s.len {
         if hex_nibble(s[i]) < 0 { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -114,7 +114,7 @@ fn hex_eq_ci(a: const u8[:], b: const u8[:]) -> bool {
         let y = hex_nibble(b[i]);
         if x < 0 || y < 0 { return false; }
         diff = diff | (x ^ y);
-        i++;
+        i = i + 1;
     }
     return diff == 0;
 }

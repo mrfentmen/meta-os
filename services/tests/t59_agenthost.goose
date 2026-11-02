@@ -31,8 +31,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -98,8 +98,11 @@ fn main() {
 
     // --- reap, and the stale handle ---
     // A running agent cannot be reaped: freeing its slot would leave a process with no name
-    // and no record. h2 is the only running one at this point.
-    check("reap refuses a running agent", ah_reap(h2) == E_STATE);
+    // and no record. Nothing was running after the kill and the clean exit, so one is
+    // spawned here to be the refusal case; the original test named h2 before spawning it.
+    let hrun, crun = ah_spawn("watcher", CAP_MSG, 225);
+    check("spawn the running one", crun == CODE_OK && hrun > 0);
+    check("reap refuses a running agent", ah_reap(hrun) == E_STATE);
     check("reap the stopped one", ah_reap(h1) == CODE_OK);
     check("reap the killed one", ah_reap(h0) == CODE_OK);
     check("reaped handle resolves to nothing", ah_resolve(h0) < 0);

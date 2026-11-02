@@ -32,8 +32,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -42,7 +42,28 @@ fn main() {
     say("t48 boot + syscalls\n");
 
     // --- the version gate ---
-    var b: BootInfo;
+    var b: BootInfo = BootInfo {
+        version: 0,
+        serial: SerialInfo { port: 0,
+        baud: 0,
+        data_bits: 0,
+        stop_bits: 0,
+        parity: 0 },
+        framebuffer: FramebufferInfo { address: 0,
+        width: 0,
+        height: 0,
+        stride: 0,
+        pixel_format: 0,
+        glyph_width: 0,
+        glyph_height: 0,
+        cols: 0,
+        rows: 0 },
+        time: TimeInfo { tick_hz: 0,
+        boot_ticks: 0 },
+        memory: MemoryInfo { total_bytes: 0,
+        service_bytes: 0 },
+        reserved: [],
+    };
     b.version = BOOTINFO_VERSION;
     check("version accepted", bootinfo_supported(b) == true);
     b.version = BOOTINFO_VERSION + 1;
@@ -60,7 +81,7 @@ fn main() {
     // kernel is handing back a constant.
     var spin: i64 = 0;
     while spin < 100000 {
-        spin++;
+        spin = spin + 1;
     }
     let t2 = sys_ticks();
     check("ticks advance", t2 > t1);

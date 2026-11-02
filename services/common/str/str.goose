@@ -67,7 +67,7 @@ fn st_next_sep(sp: Split&, s: const u8[:]) -> i64, i64, bool {
     if sp.pos > sp.end { sp.done = true; return 0, 0, false; }
     let from = sp.pos;
     var i = from;
-    while i < sp.end && s[i] != sp.sep { i++; }
+    while i < sp.end && s[i] != sp.sep { i = i + 1; }
     sp.pos = i + 1;                 // step over the separator itself
     if i >= sp.end { sp.done = true; }
     return from, i, true;
@@ -75,10 +75,10 @@ fn st_next_sep(sp: Split&, s: const u8[:]) -> i64, i64, bool {
 
 fn st_next_word(sp: Split&, s: const u8[:]) -> i64, i64, bool {
     var i = sp.pos;
-    while i < sp.end && is_space_byte(s[i]) { i++; }
+    while i < sp.end && str_is_space_byte(s[i]) { i = i + 1; }
     if i >= sp.end { sp.done = true; return 0, 0, false; }
     let from = i;
-    while i < sp.end && !is_space_byte(s[i]) { i++; }
+    while i < sp.end && !str_is_space_byte(s[i]) { i = i + 1; }
     sp.pos = i;
     if i >= sp.end { sp.done = true; }
     return from, i, true;
@@ -96,7 +96,8 @@ fn st_lit_span(s: const u8[:], lit: const u8[:], from: i64) -> i64, i64, i64 {
 // Local byte search: this module must not depend on `common/bytes`, or the day bytes wants
 // str's trimming the two imports form a cycle. Sixty lines duplicated once is cheaper than
 // an import cycle discovered by a linker.
-fn st_find(hay: const u8[:], needle: const u8[:], from: i64) -> i64 {
+fn st_find(hay: const u8[:], needle: const u8[:], from_in: i64) -> i64 {
+    var from = from_in;
     if from < 0 { from = 0; }
     if needle.len == 0 || needle.len > hay.len { return -1; }
     var i = from;
@@ -105,15 +106,15 @@ fn st_find(hay: const u8[:], needle: const u8[:], from: i64) -> i64 {
         var hit = true;
         while k < needle.len {
             if hay[i + k] != needle[k] { hit = false; break; }
-            k++;
+            k = k + 1;
         }
         if hit { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
 
-fn is_space_byte(c: u8) -> bool {
+fn str_is_space_byte(c: u8) -> bool {
     return c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == 0x0b || c == 0x0c;
 }
 
@@ -128,8 +129,8 @@ fn st_count_sep(s: const u8[:], sep: u8) -> i64 {
     var n: i64 = 1;
     var i: i64 = 0;
     while i < s.len {
-        if s[i] == sep { n++; }
-        i++;
+        if s[i] == sep { n = n + 1; }
+        i = i + 1;
     }
     return n;
 }
@@ -139,13 +140,13 @@ fn st_count_word(s: const u8[:]) -> i64 {
     var in_word = false;
     var i: i64 = 0;
     while i < s.len {
-        if is_space_byte(s[i]) {
+        if str_is_space_byte(s[i]) {
             in_word = false;
         } else if !in_word {
-            n++;
+            n = n + 1;
             in_word = true;
         }
-        i++;
+        i = i + 1;
     }
     return n;
 }
@@ -160,7 +161,7 @@ fn st_to_lower(dst: u8[>..]&, cap: i64, s: const u8[:]) -> i64 {
         var c = s[i];
         if c >= 'A' && c <= 'Z' { c = c + 32; }
         dst.push(c);
-        i++;
+        i = i + 1;
     }
     return i;
 }
@@ -171,7 +172,7 @@ fn st_to_upper(dst: u8[>..]&, cap: i64, s: const u8[:]) -> i64 {
         var c = s[i];
         if c >= 'a' && c <= 'z' { c = c - 32; }
         dst.push(c);
-        i++;
+        i = i + 1;
     }
     return i;
 }
@@ -199,7 +200,7 @@ fn st_copy_span(dst: u8[>..]&, cap: i64, s: const u8[:], start: i64, end: i64) -
     var i: i64 = 0;
     while i < span.len && dst.len < cap {
         dst.push(span[i]);
-        i++;
+        i = i + 1;
     }
     return i;
 }
@@ -208,8 +209,8 @@ fn st_copy_span(dst: u8[>..]&, cap: i64, s: const u8[:], start: i64, end: i64) -
 fn st_trim_span(s: const u8[:]) -> i64, i64 {
     var start: i64 = 0;
     var end = s.len;
-    while start < end && is_space_byte(s[start]) { start++; }
-    while end > start && is_space_byte(s[end - 1]) { end--; }
+    while start < end && str_is_space_byte(s[start]) { start = start + 1; }
+    while end > start && str_is_space_byte(s[end - 1]) { end = end - 1; }
     return start, end;
 }
 

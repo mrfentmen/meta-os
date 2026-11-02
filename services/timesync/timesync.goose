@@ -61,7 +61,14 @@ struct SyncState {
     rejects: i64,
 }
 
-var sync_state: SyncState;
+var sync_state: SyncState = SyncState {
+    offset_ms: 0,
+    target_offset_ms: 0,
+    last_sync_ms: 0,
+    last_roundtrip_ms: 0,
+    syncs: 0,
+    rejects: 0,
+};
 
 // ---------------------------------------------------------------------------
 // Wall clock
@@ -107,7 +114,7 @@ fn ntp_build_request(out: u8[..48]&, client_ms: i64) -> i64 {
     var i: i64 = 0;
     while i < NTP_PACKET {
         out[i] = 0;
-        i++;
+        i = i + 1;
     }
     // LI = 0, VN = 4, Mode = 3 (client)
     out[0] = ((NTP_VERSION << 3) | NTP_MODE_CLIENT) as u8;
@@ -191,14 +198,14 @@ fn ntp_apply_reply(pkt: const u8[:], t1_mono: i64, t2_mono: i64) -> i64 {
     let delay = (t2_mono - t1_mono) - (server_send - server_recv);
     if delay < 0 { return E_CORRUPT; }
     if offset > NTP_MAX_OFFSET_MS || offset < -NTP_MAX_OFFSET_MS {
-        sync_state.rejects++;
+        sync_state.rejects = sync_state.rejects + 1;
         return E_INVAL;
     }
 
     sync_state.target_offset_ms = offset;
     sync_state.last_sync_ms = t2_mono;
     sync_state.last_roundtrip_ms = delay;
-    sync_state.syncs++;
+    sync_state.syncs = sync_state.syncs + 1;
     // The applied offset is NOT touched: the smear closes the gap over the next steps.
     return CODE_OK;
 }

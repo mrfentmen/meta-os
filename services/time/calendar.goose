@@ -231,7 +231,7 @@ fn zone_find(name: const u8[:]) -> Zone, bool {
     var i: i64 = 0;
     while i < ZONE_COUNT {
         if cal_bytes_eq(zone_name(i), name) { return zone_at(i), true; }
-        i++;
+        i = i + 1;
     }
     return zone_at(0), false;
 }
@@ -268,7 +268,7 @@ fn cal_bytes_eq(a: const u8[:], b: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < a.len {
         if a[i] != b[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -287,7 +287,7 @@ fn cal_two(out: u8[>..]&, cap: i64, v: i64) -> bool {
 fn cal_push(out: u8[>..]&, cap: i64, s: const u8[:]) -> bool {
     if out.len + s.len > cap { return false; }
     var i: i64 = 0;
-    while i < s.len { out.push(s[i]); i++; }
+    while i < s.len { out.push(s[i]); i = i + 1; }
     return true;
 }
 

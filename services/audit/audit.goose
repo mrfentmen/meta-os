@@ -108,7 +108,7 @@ fn audit_link(kind: i64, seq: i64, at_ms: i64, actor: i64, body: u8[:]) -> i64 {
     var i: i64 = 0;
     while i < body.len {
         h = audit_mix(h, body[i] as i64);
-        i++;
+        i = i + 1;
     }
     return h;
 }
@@ -123,7 +123,7 @@ fn audit_write(kind: i64, actor: i64, at_ms: i64, body: u8[:]) -> i64 {
     let need = 48 + body.len;
     if need > AUD_REC_BUDGET { return AUD_NO_REC; }
     if !audit_room(need) {
-        aud_dropped++;
+        aud_dropped = aud_dropped + 1;
         return AUD_NO_REC;
     }
     let seq = aud_seq + 1;
@@ -140,8 +140,8 @@ fn audit_write(kind: i64, actor: i64, at_ms: i64, body: u8[:]) -> i64 {
     var i: i64 = 0;
     while i < body.len {
         aud_buf[p] = body[i];
-        p++;
-        i++;
+        p = p + 1;
+        i = i + 1;
     }
     aud_used = p;
     aud_seq = seq;
@@ -222,7 +222,15 @@ fn audit_verify_buf(buf: const u8[:]) -> i64, i64 {
     var off: i64 = 0;
     var prev: i64 = 0;
     var ok: i64 = 0;
-    var head: RecHead;
+    var head: RecHead = RecHead {
+        magic: 0,
+        len: 0,
+        kind: 0,
+        seq: 0,
+        at_ms: 0,
+        actor: 0,
+        digest: 0,
+    };
     while off < buf.len {
         // The head is read from the buffer under test, so a copy with one changed byte is
         // verified exactly as if it had been written that way.
@@ -237,11 +245,11 @@ fn audit_verify_buf(buf: const u8[:]) -> i64, i64 {
         var i = body;
         while i < off + head.len {
             h = audit_mix(h, buf[i] as i64);
-            i++;
+            i = i + 1;
         }
         if h != head.digest { return ok, head.seq; }
         prev = head.digest;
-        ok++;
+        ok = ok + 1;
         off = off + head.len;
     }
     return ok, 0;
@@ -289,7 +297,15 @@ fn audit_bytes() -> u8[:] {
 // records, and an index would be a second structure that can disagree with the records.
 fn audit_find(kind: i64, from_seq: i64) -> i64 {
     var off: i64 = 0;
-    var head: RecHead;
+    var head: RecHead = RecHead {
+        magic: 0,
+        len: 0,
+        kind: 0,
+        seq: 0,
+        at_ms: 0,
+        actor: 0,
+        digest: 0,
+    };
     while off < aud_used {
         let body = audit_read_head(off, head);
         if body < 0 { return -1; }
@@ -302,11 +318,19 @@ fn audit_find(kind: i64, from_seq: i64) -> i64 {
 fn audit_count_of(kind: i64) -> i64 {
     var off: i64 = 0;
     var n: i64 = 0;
-    var head: RecHead;
+    var head: RecHead = RecHead {
+        magic: 0,
+        len: 0,
+        kind: 0,
+        seq: 0,
+        at_ms: 0,
+        actor: 0,
+        digest: 0,
+    };
     while off < aud_used {
         let body = audit_read_head(off, head);
         if body < 0 { return n; }
-        if head.kind == kind { n++; }
+        if head.kind == kind { n = n + 1; }
         off = off + head.len;
     }
     return n;
@@ -314,7 +338,15 @@ fn audit_count_of(kind: i64) -> i64 {
 
 // Copy one record's body into the caller's buffer. Returns bytes copied or -1.
 fn audit_body_copy(off: i64, out: u8[>..]&, cap: i64) -> i64 {
-    var head: RecHead;
+    var head: RecHead = RecHead {
+        magic: 0,
+        len: 0,
+        kind: 0,
+        seq: 0,
+        at_ms: 0,
+        actor: 0,
+        digest: 0,
+    };
     let body = audit_read_head(off, head);
     if body < 0 { return -1; }
     var i = body;
@@ -322,8 +354,8 @@ fn audit_body_copy(off: i64, out: u8[>..]&, cap: i64) -> i64 {
     while i < off + head.len {
         if n >= cap { return -1; }
         out.push(aud_buf[i]);
-        n++;
-        i++;
+        n = n + 1;
+        i = i + 1;
     }
     return n;
 }

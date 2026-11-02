@@ -78,10 +78,22 @@ struct EscParser {
 }
 
 fn esc_new() -> EscParser {
-    var p: EscParser;
+    var p: EscParser = EscParser {
+        state: 0,
+        params: [],
+        nparams: 0,
+        have: false,
+        last: Seq { kind: 0,
+        p1: 0,
+        p2: 0,
+        flags: 0,
+        sgr_set: 0,
+        sgr_clear: 0 },
+        consumed: 0,
+    };
     p.state = 0;
     var i: i64 = 0;
-    while i < ESC_PARAMS_MAX { p.params[i] = ESC_DEFAULT; i++; }
+    while i < ESC_PARAMS_MAX { p.params[i] = ESC_DEFAULT; i = i + 1; }
     p.nparams = 0;
     p.have = false;
     p.consumed = 0;
@@ -105,7 +117,7 @@ fn esc_feed(p: EscParser&, c: u8) -> bool {
             p.have = false;
             p.consumed = 1;
             var i: i64 = 0;
-            while i < ESC_PARAMS_MAX { p.params[i] = ESC_DEFAULT; i++; }
+            while i < ESC_PARAMS_MAX { p.params[i] = ESC_DEFAULT; i = i + 1; }
         }
         return false;
     }
@@ -186,7 +198,7 @@ fn esc_final(p: EscParser&, c: u8) -> bool {
             // Colour codes (30-37, 40-47, 90-97, 100-107) are deliberately NOT supported:
             // the framebuffer contract is monochrome until K3 says otherwise, and an
             // attribute the display cannot honour must not be reported as set.
-            i++;
+            i = i + 1;
         }
         if !any { s.kind = SEQ_SGR; s.sgr_set = 0; }   // "ESC [ m" == reset
     } else {
@@ -223,7 +235,7 @@ fn esc_seq(kind: i64) -> Seq {
 fn esc_emit(out: u8[>..]&, cap: i64, s: const u8[:]) -> bool {
     if s.len + 1 > cap { return false; }
     var i: i64 = 0;
-    while i < s.len { out.push(s[i]); i++; }
+    while i < s.len { out.push(s[i]); i = i + 1; }
     return true;
 }
 
@@ -231,13 +243,13 @@ fn esc_put_num(out: u8[>..]&, cap: i64, v: i64) -> bool {
     var digits: i64 = 0;
     var x = v;
     if v <= 0 { if !esc_emit(out, cap, "0") { return false; } return true; }
-    while x > 0 { digits++; x = x / 10; }
+    while x > 0 { digits = digits + 1; x = x / 10; }
     x = v;
     var i: i64 = 0;
-    var buf: u8[..20];
-    while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i++; }
+    var buf: u8[..20] = [];
+    while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i = i + 1; }
     i = 0;
-    while i < digits { if !esc_ch(out, cap, buf[i]) { return false; } i++; }
+    while i < digits { if !esc_ch(out, cap, buf[i]) { return false; } i = i + 1; }
     return true;
 }
 
@@ -303,7 +315,7 @@ fn esc_attrs(out: u8[>..]&, cap: i64, bits: i64) -> bool {
             if !esc_put_num(out, cap, code) { return false; }
             first = false;
         }
-        i++;
+        i = i + 1;
     }
     if first { if !esc_ch(out, cap, '0') { return false; } }
     return esc_ch(out, cap, 'm');

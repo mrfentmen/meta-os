@@ -44,7 +44,7 @@ fn netcfg_render(c: IfaceCfg&, out: u8[>..]&, cap: i64) -> i64 {
     var i: i64 = 0;
     while i < c.name_len {
         if !append_char(out, cap, c.name[i]) { return -1; }
-        i++;
+        i = i + 1;
     }
     if !append_str(out, cap, "]\n") { return -1; }
 
@@ -68,7 +68,7 @@ fn netcfg_render(c: IfaceCfg&, out: u8[>..]&, cap: i64) -> i64 {
         if !append_int(out, cap, c.mtu) { return -1; }
         if !append_char(out, cap, '\n') { return -1; }
     }
-    return used(out);
+    return used(out, cap);
 }
 
 fn netcfg_kv_bool(out: u8[>..]&, cap: i64, key: const u8[:], v: bool) -> bool {
@@ -83,7 +83,7 @@ fn netcfg_kv_ip(out: u8[>..]&, cap: i64, key: const u8[:], addr: Ipv4&) -> bool 
     if ip4_zero(addr) { return true; }
     if !append_str(out, cap, key) { return false; }
     if !append_char(out, cap, '=') { return false; }
-    var text: u8[..16];
+    var text: u8[..16] = [];
     let n = ip4_render(addr, text);
     if n <= 0 { return false; }
     if !append_str(out, cap, text[..n]) { return false; }

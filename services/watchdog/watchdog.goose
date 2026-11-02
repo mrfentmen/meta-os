@@ -50,7 +50,7 @@ struct Watch {
     reported: bool,     // already escalated; do not report the same death twice
 }
 
-var watches: Watch[..32];
+var watches: Watch[..32] = [];
 
 // The watchdog's own handle, when the supervisor has told it. A watchdog that watched itself
 // would report its own scheduling delay as a system failure, and the one thing worse than a
@@ -90,7 +90,7 @@ fn wd_watch(handle: i64, period_ms: i64, grace_ms: i64, miss_allow: i64, now_ms:
             watches[i].reported = false;
             return CODE_OK;
         }
-        i++;
+        i = i + 1;
     }
     return E_NOROOM;
 }
@@ -120,7 +120,7 @@ fn wd_find(handle: i64) -> i64 {
     var i: i64 = 0;
     while i < WD_MAX {
         if watches[i].handle == handle { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -196,7 +196,7 @@ fn wd_next_dead(now_ms: i64) -> i64, i64 {
             let state, misses = wd_check_one(i, now_ms);
             if state == WD_DEAD { return watches[i].handle, misses; }
         }
-        i++;
+        i = i + 1;
     }
     return 0, E_NOTFOUND;
 }
@@ -210,10 +210,10 @@ fn wd_count(now_ms: i64) -> i64, i64, i64 {
     while i < WD_MAX {
         if watches[i].handle != 0 {
             let s, misses = wd_check_one(i, now_ms);
-            if s == WD_DEAD || s == WD_STILL_DEAD { bad++; } else { healthy++; }
+            if s == WD_DEAD || s == WD_STILL_DEAD { bad = bad + 1; } else { healthy = healthy + 1; }
             lateness = lateness + misses;
         }
-        i++;
+        i = i + 1;
     }
     return healthy, bad, lateness;
 }

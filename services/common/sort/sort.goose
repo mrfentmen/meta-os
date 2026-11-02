@@ -43,10 +43,10 @@ fn sort_i64(a: i64[..64]&, n: i64, cap: i64) -> i64 {
         var j = i - 1;
         while j >= 0 && a[j] > v {
             a[j + 1] = a[j];
-            j--;
+            j = j - 1;
         }
         a[j + 1] = v;
-        i++;
+        i = i + 1;
     }
     return CODE_OK;
 }
@@ -56,7 +56,7 @@ fn sorted_ok(a: i64[..64]&, n: i64) -> bool {
     var i: i64 = 1;
     while i < n {
         if a[i - 1] > a[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -78,11 +78,11 @@ fn sort_pairs(keys: i64[..64]&, payload: i64[..64]&, n: i64, cap: i64) -> i64 {
         while j >= 0 && keys[j] > k {
             keys[j + 1] = keys[j];
             payload[j + 1] = payload[j];
-            j--;
+            j = j - 1;
         }
         keys[j + 1] = k;
         payload[j + 1] = p;
-        i++;
+        i = i + 1;
     }
     return CODE_OK;
 }
@@ -120,11 +120,11 @@ fn sort_spans(offs: i64[..64]&, lens: i64[..64]&, n: i64, buf: const u8[:], cap:
         while j >= 0 && span_greater(buf, offs[j], lens[j], o, l) {
             offs[j + 1] = offs[j];
             lens[j + 1] = lens[j];
-            j--;
+            j = j - 1;
         }
         offs[j + 1] = o;
         lens[j + 1] = l;
-        i++;
+        i = i + 1;
     }
     return CODE_OK;
 }
@@ -137,7 +137,7 @@ fn span_greater(buf: const u8[:], ao: i64, al: i64, bo: i64, bl: i64) -> bool {
         let ac = buf[ao + i];
         let bc = buf[bo + i];
         if ac != bc { return ac > bc; }
-        i++;
+        i = i + 1;
     }
     return al > bl;
 }

@@ -48,11 +48,11 @@ struct Table {
 }
 
 fn tbl_new() -> Table {
-    var t: Table;
+    var t: Table = Table { entries: [], count: 0, probes: 0, misses: 0 };
     var i: i64 = 0;
     while i < TBL_SLOTS {
         t.entries[i] = Entry { hash: 0, key: tbl_zero_key(), key_len: 0, value: 0 };
-        i++;
+        i = i + 1;
     }
     t.count = 0;
     t.probes = 0;
@@ -61,9 +61,9 @@ fn tbl_new() -> Table {
 }
 
 fn tbl_zero_key() -> u8[..32] {
-    var k: u8[..32];
+    var k: u8[..32] = [];
     var i: i64 = 0;
-    while i < TBL_KEY_MAX { k[i] = 0; i++; }
+    while i < TBL_KEY_MAX { k[i] = 0; i = i + 1; }
     return k;
 }
 
@@ -74,7 +74,7 @@ fn tbl_hash(key: const u8[:]) -> i64 {
     while i < key.len {
         h = h ^ (key[i] as i64);
         h = (h * 1099511628211) & 0x7FFFFFFFFFFFFFFF;
-        i++;
+        i = i + 1;
     }
     if h == 0 { return 1; }
     return h;
@@ -90,11 +90,11 @@ fn tbl_put(t: Table&, key: const u8[:], value: i64) -> i64, i64 {
     while n < TBL_SLOTS {
         t.probes = t.probes + 1;
         if t.entries[i].hash == 0 {
-            var e: Entry;
+            var e: Entry = Entry { hash: 0, key: [], key_len: 0, value: 0 };
             e.hash = h;
             e.key = tbl_zero_key();
             var k: i64 = 0;
-            while k < key.len { e.key[k] = key[k]; k++; }
+            while k < key.len { e.key[k] = key[k]; k = k + 1; }
             e.key_len = key.len;
             e.value = value;
             t.entries[i] = e;
@@ -106,7 +106,7 @@ fn tbl_put(t: Table&, key: const u8[:], value: i64) -> i64, i64 {
             return i, CODE_OK;
         }
         i = (i + 1) % TBL_SLOTS;
-        n++;
+        n = n + 1;
     }
     return -1, E_NOROOM;
 }
@@ -123,7 +123,7 @@ fn tbl_get(t: Table&, key: const u8[:]) -> i64, bool {
         if t.entries[i].hash == 0 { t.misses = t.misses + 1; return 0, false; }
         if t.entries[i].hash == h && tbl_key_eq(t.entries[i], key) { return t.entries[i].value, true; }
         i = (i + 1) % TBL_SLOTS;
-        n++;
+        n = n + 1;
     }
     t.misses = t.misses + 1;
     return 0, false;
@@ -139,7 +139,7 @@ fn tbl_key_eq(e: Entry&, key: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < key.len {
         if e.key[i] != key[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -156,7 +156,7 @@ fn tbl_next_slot(t: Table&, from: i64) -> i64 {
     if i < 0 { i = 0; }
     while i < TBL_SLOTS {
         if t.entries[i].hash != 0 { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -168,6 +168,6 @@ fn tbl_key_copy(t: Table&, slot: i64, out: u8[>..]&, cap: i64) -> bool {
     let n = t.entries[slot].key_len;
     if out.len + n > cap { return false; }
     var i: i64 = 0;
-    while i < n { out.push(t.entries[slot].key[i]); i++; }
+    while i < n { out.push(t.entries[slot].key[i]); i = i + 1; }
     return true;
 }

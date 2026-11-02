@@ -58,11 +58,21 @@ struct LoginFlow {
 }
 
 fn login_new() -> LoginFlow {
-    var f: LoginFlow;
+    var f: LoginFlow = LoginFlow {
+        state: 0,
+        name: [],
+        name_len: 0,
+        token: [],
+        token_len: 0,
+        attempts: 0,
+        session: 0,
+        started_ms: 0,
+        last_code: 0,
+    };
     var i: i64 = 0;
-    while i < LG_NAME_MAX { f.name[i] = 0; i++; }
+    while i < LG_NAME_MAX { f.name[i] = 0; i = i + 1; }
     i = 0;
-    while i < LG_TOKEN_MAX { f.token[i] = 0; i++; }
+    while i < LG_TOKEN_MAX { f.token[i] = 0; i = i + 1; }
     f.state = LG_IDLE;
     f.name_len = 0;
     f.token_len = 0;
@@ -172,7 +182,7 @@ fn login_token_eq(a: const u8[:], b: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < a.len {
         diff = diff | ((a[i] as i64) ^ (b[i] as i64));
-        i++;
+        i = i + 1;
     }
     return diff == 0;
 }

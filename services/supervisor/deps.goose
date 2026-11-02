@@ -78,7 +78,7 @@ fn deps_step(r: DepRunner&) -> i64, i64 {
                 waiting = true;
             }
         }
-        pos++;
+        pos = pos + 1;
     }
 
     if deps_complete(r) { return 0, CODE_OK; }
@@ -93,7 +93,7 @@ fn deps_complete(r: DepRunner&) -> bool {
     while pos <= bo_count() {
         let id = bo_at(pos);
         if id != 0 && (live & (1 << id)) != 0 && (r.running & (1 << id)) == 0 { return false; }
-        pos++;
+        pos = pos + 1;
     }
     return true;
 }
@@ -153,12 +153,12 @@ fn deps_stop_plan(r: DepRunner&, out: i64[..24]&, cap: i64) -> i64 {
         if id != 0 && (r.running & (1 << id)) != 0 {
             if n < cap && n < DEP_MAX {
                 out[n] = id;
-                n++;
+                n = n + 1;
             }
             r.running = r.running & ~(1 << id);
             r.stopped = r.stopped | (1 << id);
         }
-        pos--;
+        pos = pos - 1;
     }
     return n;
 }
@@ -172,30 +172,30 @@ fn deps_stop_plan(r: DepRunner&, out: i64[..24]&, cap: i64) -> i64 {
 // boot someone can fix from the log alone.
 fn deps_wait_reason(r: DepRunner&, id: i64, out: u8[>..]&, cap: i64) -> bool {
     let needs = bo_needs(id);
-    if needs == 0 { return fmt.append_str(out, cap, "no dependencies"); }
-    if !fmt.append_str(out, cap, "waiting for ") { return false; }
+    if needs == 0 { return append_str(out, cap, "no dependencies"); }
+    if !append_str(out, cap, "waiting for ") { return false; }
 
     var first = true;
     var bit: i64 = 1;
     while bit <= bo_count() {
         if (needs & (1 << bit)) != 0 && (r.running & (1 << bit)) == 0 {
-            if !first { if !fmt.append_str(out, cap, ", ") { return false; } }
+            if !first { if !append_str(out, cap, ", ") { return false; } }
             if !bo_name(bit, out, cap) { return false; }
             first = false;
         }
-        bit++;
+        bit = bit + 1;
     }
-    if first { return fmt.append_str(out, cap, "nothing (ready)"); }
+    if first { return append_str(out, cap, "nothing (ready)"); }
     return true;
 }
 
 // The health line: how far the boot got, in the two numbers that decide whether the machine
 // is usable. "started 12/22 failed 1" tells a reader more than "degraded".
 fn deps_health(r: DepRunner&, out: u8[>..]&, cap: i64) -> bool {
-    if !fmt.append_str(out, cap, "started ") { return false; }
-    if !fmt.append_int(out, cap, r.started_count) { return false; }
-    if !fmt.append_str(out, cap, "/") { return false; }
-    if !fmt.append_int(out, cap, bo_count()) { return false; }
-    if !fmt.append_str(out, cap, " failed ") { return false; }
-    return fmt.append_int(out, cap, r.failed_count);
+    if !append_str(out, cap, "started ") { return false; }
+    if !append_int(out, cap, r.started_count) { return false; }
+    if !append_str(out, cap, "/") { return false; }
+    if !append_int(out, cap, bo_count()) { return false; }
+    if !append_str(out, cap, " failed ") { return false; }
+    return append_int(out, cap, r.failed_count);
 }

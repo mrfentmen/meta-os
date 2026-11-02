@@ -29,8 +29,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -98,7 +98,7 @@ fn main() {
     check("short digest refused", bd_code == E_BAD_MANIFEST);
 
     // --- verification against content ---
-    var cs: ContentSet;
+    var cs: ContentSet = ContentSet { slots: [], len: [] };
     cs.len[0] = 3;
     cs.slots[0] = 97;
     cs.slots[1] = 98;
@@ -135,25 +135,43 @@ fn main() {
     check("record names the target slot", rec.slot == SLOT_B);
     check("record counts what will be written", rec.files == 1 && rec.bytes == 3);
 
-    var block: u8[..512] = [];
-    check("record encodes to a block", upd_record_encode(rec, block) == UPD_REC_BYTES);
-    check("record has a magic", block[0] == 0x4D && block[3] == 0x55);
+    var blk: u8[..512] = [];
+    check("record encodes to a blk", upd_record_encode(rec, blk) == UPD_REC_BYTES);
+    check("record has a magic", blk[0] == 0x4D && blk[3] == 0x55);
 
-    var back: UpdRecord;
-    check("record decodes", upd_record_decode(block, back) == CODE_OK);
+    var back: UpdRecord = UpdRecord {
+        seq: 0,
+        state: 0,
+        slot: 0,
+        version: [],
+        version_len: 0,
+        files: 0,
+        bytes: 0,
+        applied_ms: 0,
+    };
+    check("record decodes", upd_record_decode(blk, back) == CODE_OK);
     check("decoded slot matches", back.slot == SLOT_B);
     check("decoded seq matches", back.seq == rec.seq);
     check("decoded bytes match", back.bytes == 3);
     check("decoded timestamp matches", back.applied_ms == 12345);
 
     // A torn write is caught by the checksum rather than believed.
-    block[12] = (block[12] + 1) as u8;      // flip the slot field
-    var torn: UpdRecord;
-    check("corrupt record refused", upd_record_decode(block, torn) != CODE_OK);
+    blk[12] = (blk[12] + 1) as u8;      // flip the slot field
+    var torn: UpdRecord = UpdRecord {
+        seq: 0,
+        state: 0,
+        slot: 0,
+        version: [],
+        version_len: 0,
+        files: 0,
+        bytes: 0,
+        applied_ms: 0,
+    };
+    check("corrupt record refused", upd_record_decode(blk, torn) != CODE_OK);
 
-    // A block with the wrong magic is not our record, whatever the rest says.
+    // A blk with the wrong magic is not our record, whatever the rest says.
     var other: u8[..512] = [];
-    check("record decodes from a reset block?", upd_record_decode(other, torn) != CODE_OK);
+    check("record decodes from a reset blk?", upd_record_decode(other, torn) != CODE_OK);
 
     // --- the record is not the plan: nothing applied ---
     // Stated as an assertion so a future edit that "helpfully" writes the slot here fails.
@@ -174,7 +192,7 @@ fn push_str(b: u8[>..]&, s: const u8[:]) {
     var i: i64 = 0;
     while i < s.len {
         b.push(s[i]);
-        i++;
+        i = i + 1;
     }
 }
 
@@ -187,7 +205,7 @@ fn to_hex(b: const u8[:], out: u8[>..]&) -> bool {
         let v = b[i] as i64;
         out.push(NIB[(v >> 4) & 0xF]);
         out.push(NIB[v & 0xF]);
-        i++;
+        i = i + 1;
     }
     return true;
 }

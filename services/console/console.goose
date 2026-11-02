@@ -29,20 +29,20 @@ import common.err.err;
 // Storage. All of it static: no heap, and every buffer's size is visible here.
 // ---------------------------------------------------------------------------
 
-let LINE_MAX: i64 = 256;          // longest editable line, including the NUL
+let CONSOLE_LINE_MAX: i64 = 256;          // longest editable line, including the NUL
 let PROMPT: const u8[:] = "meta> ";
 
 // The editable line. `line_len` is the number of bytes in use; the buffer is
 // capacity LINE_MAX and the last byte is reserved so a C shim can always be
 // handed a terminated string.
-var line: u8[..256];
+var line: u8[..256] = [];
 var line_len: i64 = 0;
 var cursor: i64 = 0;
 
 // History: 8 lines of up to 256 bytes, stored in one flat array. The ring library
 // indexes into it; nothing here allocates.
 let HISTORY_SLOTS: i64 = 8;
-var history_storage: u8[..2048];
+var history_storage: u8[>..] = [];
 var history: MsgRing = msg_init(256, 8);
 
 // Escape-sequence state. Arrow keys arrive as ESC [ A/B/C/D; this is the whole
@@ -81,12 +81,12 @@ fn redraw() -> bool {
     var back = line_len - cursor;
     while back > 0 {
         if !put_str(" ") { return false; }
-        back--;
+        back = back - 1;
     }
     back = line_len - cursor;
     while back > 0 {
         if !put_ch(KEY_BS) { return false; }
-        back--;
+        back = back - 1;
     }
     return true;
 }
@@ -97,11 +97,11 @@ fn redraw() -> bool {
 
 // Make room at `at` for one byte, or report that the line is full.
 fn make_room(at: i64) -> bool {
-    if line_len + 1 >= LINE_MAX { return false; }   // keep the NUL byte
+    if line_len + 1 >= CONSOLE_LINE_MAX { return false; }   // keep the NUL byte
     var i = line_len;
     while i > at {
         line[i] = line[i - 1];
-        i--;
+        i = i - 1;
     }
     return true;
 }
@@ -109,8 +109,8 @@ fn make_room(at: i64) -> bool {
 fn insert_byte(c: u8) -> bool {
     if !make_room(cursor) { return false; }
     line[cursor] = c;
-    cursor++;
-    line_len++;
+    cursor = cursor + 1;
+    line_len = line_len + 1;
     return redraw();
 }
 
@@ -119,10 +119,10 @@ fn backspace() -> bool {
     var i = cursor - 1;
     while i < line_len - 1 {
         line[i] = line[i + 1];
-        i++;
+        i = i + 1;
     }
-    cursor--;
-    line_len--;
+    cursor = cursor - 1;
+    line_len = line_len - 1;
     return redraw();
 }
 
@@ -131,15 +131,15 @@ fn delete_forward() -> bool {
     var i = cursor;
     while i < line_len - 1 {
         line[i] = line[i + 1];
-        i++;
+        i = i + 1;
     }
-    line_len--;
+    line_len = line_len - 1;
     return redraw();
 }
 
 fn move_left() -> bool {
     if cursor == 0 { return false; }
-    cursor--;
+    cursor = cursor - 1;
     return put_ch(KEY_BS);
 }
 
@@ -152,7 +152,7 @@ fn move_right() -> bool {
 
 // Kept separate so move_right reads as one idea per step.
 fn advance_cursor() -> bool {
-    cursor++;
+    cursor = cursor + 1;
     return true;
 }
 
@@ -176,7 +176,7 @@ fn push_history() -> bool {
             var i: i64 = 0;
             while i < line_len {
                 if newest[i] != line[i] { same = false; break; }
-                i++;
+                i = i + 1;
             }
             if same { return true; }
         }
@@ -195,7 +195,7 @@ fn msg_peek_last(m: MsgRing&, buf: u8[>..]&, out: u8[>..]&) -> bool {
     var i: i64 = 0;
     while i < len {
         out.push(buf[pos + 1 + i]);
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -206,9 +206,9 @@ fn recall_last() -> bool {
     if !msg_peek_last(history, history_storage, prev) { return false; }
     clear_line();
     var i: i64 = 0;
-    while i < prev.len && i < LINE_MAX - 1 {
+    while i < prev.len && i < CONSOLE_LINE_MAX - 1 {
         line[i] = prev[i];
-        i++;
+        i = i + 1;
     }
     line_len = i;
     cursor = i;
@@ -262,39 +262,13 @@ fn handle_key(c: u8) -> bool {
 // The service
 // ---------------------------------------------------------------------------
 
+// Size the history arena once; the ring writes at absolute offsets.
+fn history_init() {
+    var i: i64 = 0;
+    while i < HISTORY_SLOTS * 256 { history_storage.push(0); i = i + 1; }
+}
+
 fn print_banner() {
     put_str("Meta OS console (Layer 4)\n");
     put_str("No shell attached yet: B-L1-87. Enter keeps history only.\n");
-}
-
-export "svc_entry" fn service_main() -> i32 {
-    print_banner();
-    put_str(PROMPT);
-
-    var running = true;
-    while running {
-        // Poll. There is no blocking key wait in the kernel surface
-        // (Q-B-L1-1), so this loop yields between polls; that is the honest
-        // cost of the current K6 shape. A fresh builder per poll keeps the
-        // loop free of any unverified reset method.
-        var buffer: u8[>..] = [];
-        let got = sys_read_key(buffer);
-        if !got || buffer.len == 0 {
-            sys_yield();
-            continue;
-        }
-
-        var i: i64 = 0;
-        while i < buffer.len {
-            let done = handle_key(buffer[i]);
-            if done {
-                // A completed line. With no shell the honest thing is to say so
-                // rather than to pretend it ran.
-                put_str("[console] line stored; no shell to run it (B-L1-87)\n");
-                put_str(PROMPT);
-            }
-            i++;
-        }
-    }
-    return 0;
 }

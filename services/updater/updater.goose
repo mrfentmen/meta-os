@@ -78,7 +78,15 @@ struct Manifest {
 // is refused, because an update installer that proceeds with the lines it understood is
 // an installer that installs half an update and reports success.
 fn upd_parse_manifest(text: u8[:]) -> Manifest, i64 {
-    var m: Manifest;
+    var m: Manifest = Manifest {
+        version: [],
+        version_len: 0,
+        origin: [],
+        origin_len: 0,
+        slot: 0,
+        count: 0,
+        files: [],
+    };
     m.version_len = 0;
     m.origin_len = 0;
     m.slot = -1;
@@ -88,12 +96,12 @@ fn upd_parse_manifest(text: u8[:]) -> Manifest, i64 {
     while pos < text.len {
         // one line
         var end = pos;
-        while end < text.len && text[end] != 0x0A { end++; }
+        while end < text.len && text[end] != 0x0A { end = end + 1; }
         var s = pos;
         var e = end;
         // trim spaces and CR
-        while s < e && (text[s] == 0x20 || text[s] == 0x09) { s++; }
-        while e > s && (text[e - 1] == 0x20 || text[e - 1] == 0x09 || text[e - 1] == 0x0D) { e--; }
+        while s < e && (text[s] == 0x20 || text[s] == 0x09) { s = s + 1; }
+        while e > s && (text[e - 1] == 0x20 || text[e - 1] == 0x09 || text[e - 1] == 0x0D) { e = e - 1; }
         pos = end + 1;
 
         if s == e { continue; }                  // blank line
@@ -103,9 +111,9 @@ fn upd_parse_manifest(text: u8[:]) -> Manifest, i64 {
         if eq < 0 { return m, E_BAD_MANIFEST; }
         var ks = s;
         var ke = eq;
-        while ke > ks && (text[ke - 1] == 0x20 || text[ke - 1] == 0x09) { ke--; }
+        while ke > ks && (text[ke - 1] == 0x20 || text[ke - 1] == 0x09) { ke = ke - 1; }
         var vs = eq + 1;
-        while vs < e && (text[vs] == 0x20 || text[vs] == 0x09) { vs++; }
+        while vs < e && (text[vs] == 0x20 || text[vs] == 0x09) { vs = vs + 1; }
 
         if match_lit(text, ks, ke, "version") {
             let n = copy16(text, vs, e, m.version);
@@ -140,26 +148,26 @@ fn parse_file_line(text: u8[:], vs: i64, e: i64, m: Manifest&) -> i64 {
     if m.count >= MF_MAX_FILES { return E_BAD_MANIFEST; }
 
     var p = vs;
-    while p < e && text[p] != 0x20 && text[p] != 0x09 { p++; }
+    while p < e && text[p] != 0x20 && text[p] != 0x09 { p = p + 1; }
     let path_len = p - vs;
     if path_len <= 0 || path_len >= MF_PATH_MAX { return E_BAD_MANIFEST; }
     if has_dotdot(text, vs, p) { return E_BAD_MANIFEST; }   // escapes the update root
 
-    while p < e && (text[p] == 0x20 || text[p] == 0x09) { p++; }
+    while p < e && (text[p] == 0x20 || text[p] == 0x09) { p = p + 1; }
     let hex_start = p;
-    while p < e && text[p] != 0x20 && text[p] != 0x09 { p++; }
+    while p < e && text[p] != 0x20 && text[p] != 0x09 { p = p + 1; }
     if p - hex_start != MF_DIGEST_HEX { return E_BAD_MANIFEST; }
     let hex_end = p;
 
-    while p < e && (text[p] == 0x20 || text[p] == 0x09) { p++; }
+    while p < e && (text[p] == 0x20 || text[p] == 0x09) { p = p + 1; }
     var size: i64 = 0;
     var digits: i64 = 0;
     while p < e {
         if text[p] < 0x30 || text[p] > 0x39 { return E_BAD_MANIFEST; }
         size = size * 10 + ((text[p] - 0x30) as i64);
         if size < 0 { return E_BAD_MANIFEST; }             // overflow
-        digits++;
-        p++;
+        digits = digits + 1;
+        p = p + 1;
     }
     if digits == 0 || digits > 12 { return E_BAD_MANIFEST; }
 
@@ -167,7 +175,7 @@ fn parse_file_line(text: u8[:], vs: i64, e: i64, m: Manifest&) -> i64 {
     var i: i64 = 0;
     while i < path_len {
         m.files[slot].path[i] = text[vs + i];
-        i++;
+        i = i + 1;
     }
     m.files[slot].path_len = path_len;
 
@@ -179,7 +187,7 @@ fn parse_file_line(text: u8[:], vs: i64, e: i64, m: Manifest&) -> i64 {
         let lo = hex_val(text[hex_start + d * 2 + 1]);
         if hi < 0 || lo < 0 { return E_BAD_MANIFEST; }
         m.files[slot].digest[d] = ((hi * 16) + lo) as u8;
-        d++;
+        d = d + 1;
     }
     m.files[slot].digest_len = MF_DIGEST_BYTES;
     m.files[slot].size = size;
@@ -191,10 +199,10 @@ fn parse_file_line(text: u8[:], vs: i64, e: i64, m: Manifest&) -> i64 {
         if paths_equal(m.files[j].path, m.files[j].path_len, m.files[slot].path, m.files[slot].path_len) {
             return E_BAD_MANIFEST;
         }
-        j++;
+        j = j + 1;
     }
 
-    m.count++;
+    m.count = m.count + 1;
     return CODE_OK;
 }
 
@@ -203,7 +211,7 @@ fn paths_equal(a: u8[..32]&, alen: i64, b: u8[..32]&, blen: i64) -> bool {
     var i: i64 = 0;
     while i < alen {
         if a[i] != b[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -212,7 +220,7 @@ fn has_dotdot(text: u8[:], s: i64, e: i64) -> bool {
     var i = s;
     while i + 1 < e {
         if text[i] == 0x2E && text[i + 1] == 0x2E { return true; }
-        i++;
+        i = i + 1;
     }
     return false;
 }
@@ -221,7 +229,7 @@ fn find_byte(text: u8[:], s: i64, e: i64, b: u8) -> i64 {
     var i = s;
     while i < e {
         if text[i] == b { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -242,7 +250,7 @@ fn copy16(text: u8[:], s: i64, e: i64, dst: u8[..16]&) -> i64 {
     var i: i64 = 0;
     while i < n {
         dst[i] = text[s + i];
-        i++;
+        i = i + 1;
     }
     return n;
 }
@@ -253,7 +261,7 @@ fn copy64(text: u8[:], s: i64, e: i64, dst: u8[..64]&) -> i64 {
     var i: i64 = 0;
     while i < n {
         dst[i] = text[s + i];
-        i++;
+        i = i + 1;
     }
     return n;
 }
@@ -263,7 +271,7 @@ fn match_lit(text: u8[:], s: i64, e: i64, lit: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < lit.len {
         if text[s + i] != lit[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -328,13 +336,13 @@ fn content_get(cs: ContentSet&, idx: i64, out: u8[..4096]&) -> i64 {
     var i: i64 = 0;
     while i < n {
         out[i] = cs.slots[base + i];
-        i++;
+        i = i + 1;
     }
     return n;
 }
 
 fn upd_verify_all(m: Manifest&, cs: ContentSet&) -> i64, i64 {
-    var buf: u8[..4096];
+    var buf: u8[..4096] = [];
     var verified: i64 = 0;
     var i: i64 = 0;
     while i < m.count {
@@ -342,8 +350,8 @@ fn upd_verify_all(m: Manifest&, cs: ContentSet&) -> i64, i64 {
         if n < 0 { return verified, E_VERIFY; }
         let code = upd_verify_file(m, i, buf[..n]);
         if code != CODE_OK { return verified, code; }
-        verified++;
-        i++;
+        verified = verified + 1;
+        i = i + 1;
     }
     return verified, CODE_OK;
 }
@@ -376,7 +384,15 @@ struct Plan {
 }
 
 fn upd_plan(m: Manifest&, active_slot: i64) -> Plan, i64 {
-    var p: Plan;
+    var p: Plan = Plan {
+        action: 0,
+        target_slot: 0,
+        active_slot: 0,
+        files: 0,
+        bytes: 0,
+        version: [],
+        version_len: 0,
+    };
     p.action = UPD_APPLY_NONE;
     p.target_slot = SLOT_NONE;
     p.active_slot = active_slot;
@@ -395,7 +411,7 @@ fn upd_plan(m: Manifest&, active_slot: i64) -> Plan, i64 {
         if m.files[i].size <= 0 { return p, E_BAD_MANIFEST; }
         total = total + m.files[i].size;
         if total < 0 { return p, E_BAD_MANIFEST; }       // overflow
-        i++;
+        i = i + 1;
     }
 
     p.action = UPD_APPLY_SLOT;
@@ -405,7 +421,7 @@ fn upd_plan(m: Manifest&, active_slot: i64) -> Plan, i64 {
     var v: i64 = 0;
     while v < m.version_len && v < MF_VERSION_MAX {
         p.version[v] = m.version[v];
-        v++;
+        v = v + 1;
     }
     p.version_len = v;
     return p, CODE_OK;
@@ -419,7 +435,7 @@ fn upd_plan(m: Manifest&, active_slot: i64) -> Plan, i64 {
 // fixed layout, with a checksum -- a half-written record read as valid is worse than no
 // record at all, because it sends the next boot to a slot nobody tested.
 //
-// Layout of the 512-byte record block (offsets in bytes):
+// Layout of the 512-byte record blk (offsets in bytes):
 //
 //     0    magic   "MOSU"       4 bytes: not our block -> refuse, never guess
 //     4    format  u32          1; bump in the same commit that changes a field
@@ -463,14 +479,23 @@ struct UpdRecord {
     applied_ms: i64,
 }
 
-var rec_history: UpdRecord[..4];
+var rec_history: UpdRecord[..4] = [];
 var rec_count: i64 = 0;
 var rec_next_seq: i64 = 1;
 
 fn upd_record_make(plan: Plan&, now_ms: i64) -> UpdRecord {
-    var r: UpdRecord;
+    var r: UpdRecord = UpdRecord {
+        seq: 0,
+        state: 0,
+        slot: 0,
+        version: [],
+        version_len: 0,
+        files: 0,
+        bytes: 0,
+        applied_ms: 0,
+    };
     r.seq = rec_next_seq;
-    rec_next_seq++;
+    rec_next_seq = rec_next_seq + 1;
     r.state = R_PENDING;             // never CONFIRMED by the writer: only a boot can say that
     r.slot = plan.target_slot;
     r.files = plan.files;
@@ -479,73 +504,73 @@ fn upd_record_make(plan: Plan&, now_ms: i64) -> UpdRecord {
     var i: i64 = 0;
     while i < plan.version_len && i < 16 {
         r.version[i] = plan.version[i];
-        i++;
+        i = i + 1;
     }
     r.version_len = i;
     return r;
 }
 
 // Encode into a caller block. Returns bytes written (UPD_REC_BYTES) or -1.
-fn upd_record_encode(r: UpdRecord&, block: u8[..512]&) -> i64 {
-    if block.len < UPD_REC_BYTES { return -1; }
+fn upd_record_encode(r: UpdRecord&, blk: u8[..512]&) -> i64 {
+    if blk.len < UPD_REC_BYTES { return -1; }
     var i: i64 = 0;
     while i < UPD_REC_BYTES {
-        block[i] = 0;
-        i++;
+        blk[i] = 0;
+        i = i + 1;
     }
-    block[0] = UPD_REC_MAGIC0;
-    block[1] = UPD_REC_MAGIC1;
-    block[2] = UPD_REC_MAGIC2;
-    block[3] = UPD_REC_MAGIC3;
-    put_u32(block, 4, UPD_REC_FORMAT);
-    put_u32(block, 8, r.state);
-    put_u32(block, 12, r.slot);
+    blk[0] = UPD_REC_MAGIC0;
+    blk[1] = UPD_REC_MAGIC1;
+    blk[2] = UPD_REC_MAGIC2;
+    blk[3] = UPD_REC_MAGIC3;
+    put_u32(blk, 4, UPD_REC_FORMAT);
+    put_u32(blk, 8, r.state);
+    put_u32(blk, 12, r.slot);
     var v: i64 = 0;
     while v < r.version_len && v < 16 {
-        block[16 + v] = r.version[v];
-        v++;
+        blk[16 + v] = r.version[v];
+        v = v + 1;
     }
-    put_u32(block, 32, r.files);
-    put_u32(block, 36, r.bytes);
-    put_u64(block, 40, r.applied_ms);
-    put_u32(block, 48, r.seq);
+    put_u32(blk, 32, r.files);
+    put_u32(blk, 36, r.bytes);
+    put_u64(blk, 40, r.applied_ms);
+    put_u32(blk, 48, r.seq);
 
-    let crc = crc32(block[..UPD_REC_HDR]);
-    put_u32(block, 52, crc as i64);
+    let crc = crc32(blk[..UPD_REC_HDR]);
+    put_u32(blk, 52, crc as i64);
     return UPD_REC_BYTES;
 }
 
 // Decode a block. Every check has a reason, and all of them are refusals rather than
 // repairs: a repaired record is a guess about which slot is safe to boot.
-fn upd_record_decode(block: const u8[:], out: UpdRecord&) -> i64 {
-    if block.len < UPD_REC_BYTES { return E_CORRUPT; }
-    if block[0] != UPD_REC_MAGIC0 || block[1] != UPD_REC_MAGIC1 {
+fn upd_record_decode(blk: const u8[:], out: UpdRecord&) -> i64 {
+    if blk.len < UPD_REC_BYTES { return E_CORRUPT; }
+    if blk[0] != UPD_REC_MAGIC0 || blk[1] != UPD_REC_MAGIC1 {
         return E_CORRUPT;                              // not our block
     }
-    if block[2] != UPD_REC_MAGIC2 || block[3] != UPD_REC_MAGIC3 {
+    if blk[2] != UPD_REC_MAGIC2 || blk[3] != UPD_REC_MAGIC3 {
         return E_CORRUPT;
     }
-    let format = get_u32(block, 4);
+    let format = upd_get_u32(blk, 4);
     if format != UPD_REC_FORMAT { return E_UNSUPPORTED; }   // newer format: do not guess
-    let stored = get_u32(block, 52);
-    let actual = crc32(block[..UPD_REC_HDR]);
+    let stored = upd_get_u32(blk, 52);
+    let actual = crc32(blk[..UPD_REC_HDR]);
     if stored != (actual as i64) { return E_CORRUPT; }      // torn write
 
-    out.state = get_u32(block, 8);
-    out.slot = get_u32(block, 12);
+    out.state = upd_get_u32(blk, 8);
+    out.slot = upd_get_u32(blk, 12);
     if out.slot != SLOT_A && out.slot != SLOT_B { return E_CORRUPT; }
     if out.state != R_PENDING && out.state != R_CONFIRMED && out.state != R_ROLLED_BACK {
         return E_CORRUPT;
     }
-    out.files = get_u32(block, 32);
-    out.bytes = get_u32(block, 36);
-    out.applied_ms = get_u64(block, 40);
-    out.seq = get_u32(block, 48);
+    out.files = upd_get_u32(blk, 32);
+    out.bytes = upd_get_u32(blk, 36);
+    out.applied_ms = get_u64(blk, 40);
+    out.seq = upd_get_u32(blk, 48);
 
     var v: i64 = 0;
-    while v < 16 && block[16 + v] != 0 {
-        out.version[v] = block[16 + v];
-        v++;
+    while v < 16 && blk[16 + v] != 0 {
+        out.version[v] = blk[16 + v];
+        v = v + 1;
     }
     out.version_len = v;
     return CODE_OK;
@@ -554,14 +579,14 @@ fn upd_record_decode(block: const u8[:], out: UpdRecord&) -> i64 {
 fn upd_record_push(r: UpdRecord&) {
     if rec_count < UPD_REC_KEEP {
         rec_history[rec_count] = r;
-        rec_count++;
+        rec_count = rec_count + 1;
         return;
     }
     // Shift down: the history is small and shifts once per update, not per boot.
     var i: i64 = 1;
     while i < UPD_REC_KEEP {
         rec_history[i - 1] = rec_history[i];
-        i++;
+        i = i + 1;
     }
     rec_history[UPD_REC_KEEP - 1] = r;
 }
@@ -569,9 +594,18 @@ fn upd_record_push(r: UpdRecord&) {
 // Confirm the slot that just booted. Called ONCE per boot, after the services report
 // healthy -- a confirmation written before health is a lie the next boot believes.
 fn upd_record_confirm(slot: i64, now_ms: i64) -> i64 {
-    var r: UpdRecord;
+    var r: UpdRecord = UpdRecord {
+        seq: 0,
+        state: 0,
+        slot: 0,
+        version: [],
+        version_len: 0,
+        files: 0,
+        bytes: 0,
+        applied_ms: 0,
+    };
     r.seq = rec_next_seq;
-    rec_next_seq++;
+    rec_next_seq = rec_next_seq + 1;
     r.state = R_CONFIRMED;
     r.slot = slot;
     r.files = 0;
@@ -596,27 +630,27 @@ fn upd_record_safe_slot() -> i64 {
             best_seq = rec_history[i].seq;
             best_slot = rec_history[i].slot;
         }
-        i++;
+        i = i + 1;
     }
     return best_slot;
 }
 
-fn put_u32(block: u8[..512]&, at: i64, v: i64) {
-    block[at] = ((v >> 24) & 0xFF) as u8;
-    block[at + 1] = ((v >> 16) & 0xFF) as u8;
-    block[at + 2] = ((v >> 8) & 0xFF) as u8;
-    block[at + 3] = (v & 0xFF) as u8;
+fn put_u32(blk: u8[..512]&, at: i64, v: i64) {
+    blk[at] = ((v >> 24) & 0xFF) as u8;
+    blk[at + 1] = ((v >> 16) & 0xFF) as u8;
+    blk[at + 2] = ((v >> 8) & 0xFF) as u8;
+    blk[at + 3] = (v & 0xFF) as u8;
 }
 
-fn put_u64(block: u8[..512]&, at: i64, v: i64) {
-    put_u32(block, at, (v >> 32) & 0xFFFFFFFF);
-    put_u32(block, at + 4, v & 0xFFFFFFFF);
+fn put_u64(blk: u8[..512]&, at: i64, v: i64) {
+    put_u32(blk, at, (v >> 32) & 0xFFFFFFFF);
+    put_u32(blk, at + 4, v & 0xFFFFFFFF);
 }
 
-fn get_u32(block: const u8[:], at: i64) -> i64 {
-    return (block[at] as i64 * 16777216) + (block[at + 1] as i64 * 65536) + (block[at + 2] as i64 * 256) + (block[at + 3] as i64);
+fn upd_get_u32(blk: const u8[:], at: i64) -> i64 {
+    return (blk[at] as i64 * 16777216) + (blk[at + 1] as i64 * 65536) + (blk[at + 2] as i64 * 256) + (blk[at + 3] as i64);
 }
 
-fn get_u64(block: const u8[:], at: i64) -> i64 {
-    return (get_u32(block, at) * 4294967296) + get_u32(block, at + 4);
+fn get_u64(blk: const u8[:], at: i64) -> i64 {
+    return (upd_get_u32(blk, at) * 4294967296) + upd_get_u32(blk, at + 4);
 }

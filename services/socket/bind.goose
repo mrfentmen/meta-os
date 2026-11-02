@@ -28,6 +28,7 @@ import common.err.err;
 import net.ip;
 import net.udp;
 import socket.socket;
+import netcfg.netcfg;
 
 let BIND_MTU_PAYLOAD: i64 = 1480;
 
@@ -42,7 +43,7 @@ var bind_sent: i64 = 0;
 var bind_failed: i64 = 0;
 
 // Build one IP/UDP frame for a queued datagram into `frame`. Returns (frame_len, code).
-fn bind_build(frame: u8[..1500]&, from_ip: Ip4&, to_ip: Ip4&, sport: i64, dport: i64, payload: const u8[:]) -> i64, i64 {
+fn bind_build(frame: u8[..1500]&, from_ip: Ipv4&, to_ip: Ipv4&, sport: i64, dport: i64, payload: const u8[:]) -> i64, i64 {
     if payload.len > BIND_MTU_PAYLOAD { return 0, E_NOROOM; }
     let udp_len, ucode = udp_build(frame, from_ip, to_ip, sport, dport, payload);
     if ucode != CODE_OK { return 0, ucode; }
@@ -51,7 +52,7 @@ fn bind_build(frame: u8[..1500]&, from_ip: Ip4&, to_ip: Ip4&, sport: i64, dport:
     var i = udp_len - 1;
     while i >= 0 {
         frame[IP_HDR_MIN + i] = frame[i];
-        i--;
+        i = i - 1;
     }
     let total, icode = ip_build(frame, from_ip, to_ip, IP_PROTO_UDP, 64, frame[IP_HDR_MIN..IP_HDR_MIN + udp_len]);
     if icode != CODE_OK { return 0, icode; }
@@ -61,10 +62,10 @@ fn bind_build(frame: u8[..1500]&, from_ip: Ip4&, to_ip: Ip4&, sport: i64, dport:
 // Send one datagram from a bound socket. This is the whole of "the socket layer talks to
 // the network": resolve the handle, take one queued datagram, build, transmit, and record
 // the result against the socket so `sk_stats` means something.
-fn bind_send_one(h: i64, from_ip: Ip4&, sport: i64) -> i64, i64 {
-    var dg: Datagram;
+fn bind_send_one(h: i64, from_ip: Ipv4&, sport: i64) -> i64, i64 {
+    var dg: Datagram = Datagram { to: Ipv4 { a: 0, b: 0, c: 0, d: 0 }, port: 0, len: 0, data: [] };
     if !sk_take_send(h, dg) { return 0, E_NOTFOUND; }
-    var frame: u8[..1500];
+    var frame: u8[..1500] = [];
     let len, code = bind_build(frame, from_ip, dg.to, sport, dg.port, dg.data[0..dg.len]);
     if code != CODE_OK {
         let _ = sk_send_result(h, false);
@@ -81,7 +82,7 @@ fn bind_send_one(h: i64, from_ip: Ip4&, sport: i64) -> i64, i64 {
 
 // Drain a socket's send queue. Returns (frames attempted, code). E_BUSY when the queue is
 // still non-empty (the caller should drain again), CODE_OK when it emptied.
-fn bind_flush(h: i64, from_ip: Ip4&, sport: i64) -> i64, i64 {
+fn bind_flush(h: i64, from_ip: Ipv4&, sport: i64) -> i64, i64 {
     var attempted: i64 = 0;
     while attempted < 8 {
         let len, code = bind_send_one(h, from_ip, sport);

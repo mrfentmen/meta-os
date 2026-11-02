@@ -28,9 +28,10 @@
 // honest about-face on drawing, which is why every call below says so.
 
 import common.err.err;
+import common.sys.sys;
 
 let VCON_MAX: i64 = 4;
-let LINE_MAX: i64 = 128;        // characters per line, before wrapping
+let DISPLAY_LINE_MAX: i64 = 128;        // characters per line, before wrapping
 let SCROLL_MAX: i64 = 256;      // lines of history per console (beyond the screen)
 
 struct VCon {
@@ -52,7 +53,7 @@ struct VCon {
     name: u8[..16],
 }
 
-var vcons: VCon[..4];
+var vcons: VCon[..4] = [];
 var vcon_count: i64 = 0;
 var active: i64 = 0;            // index into vcons, never a handle: this service owns them
 
@@ -60,7 +61,6 @@ var active: i64 = 0;            // index into vcons, never a handle: this servic
 // so the C shim has ONE definition per call. Not imported: the sys module is a leaf
 // and importing it into a service that also exports a symbol is how link-time
 // surprises start.
-extern fn sys_write_console(s: const u8[:]) -> i64 = "sys_write_console";
 
 // ---------------------------------------------------------------------------
 // Creation
@@ -74,7 +74,7 @@ fn disp_init() {
 fn disp_new(name: const u8[:], cols: i64, rows: i64) -> i64, i64 {
     if vcon_count >= VCON_MAX { return -1, E_NOROOM; }
     if cols <= 0 || rows <= 0 { return -1, E_INVAL; }
-    if cols > LINE_MAX || rows * LINE_MAX > 2048 { return -1, E_INVAL; }
+    if cols > DISPLAY_LINE_MAX || rows * DISPLAY_LINE_MAX > 2048 { return -1, E_INVAL; }
     if name.len == 0 || name.len >= 16 { return -1, E_INVAL; }
 
     let v = vcon_count;
@@ -91,17 +91,17 @@ fn disp_new(name: const u8[:], cols: i64, rows: i64) -> i64, i64 {
     var i: i64 = 0;
     while i < name.len {
         vcons[v].name[i] = name[i];
-        i++;
+        i = i + 1;
     }
     vcons[v].name[i] = 0;
 
     var j: i64 = 0;
     while j < 2048 {
         vcons[v].screen[j] = 0;
-        j++;
+        j = j + 1;
     }
 
-    vcon_count++;
+    vcon_count = vcon_count + 1;
     return v, CODE_OK;
 }
 
@@ -132,13 +132,13 @@ fn disp_scroll(v: i64) -> i64 {
         let pos = (vcons[v].hist_start + vcons[v].hist_used) % 32768;
         vcons[v].hist[pos] = b;
         if vcons[v].hist_used < 32768 {
-            vcons[v].hist_used++;
+            vcons[v].hist_used = vcons[v].hist_used + 1;
         } else {
             vcons[v].hist_start = (vcons[v].hist_start + 1) % 32768;
         }
-        i++;
+        i = i + 1;
     }
-    vcons[v].hist_lines++;
+    vcons[v].hist_lines = vcons[v].hist_lines + 1;
     if vcons[v].hist_lines > SCROLL_MAX { vcons[v].hist_lines = SCROLL_MAX; }
 
     // Shift the screen up by one row.
@@ -147,16 +147,16 @@ fn disp_scroll(v: i64) -> i64 {
         var c: i64 = 0;
         while c < cols {
             vcons[v].screen[(row - 1) * line_bytes + c] = vcons[v].screen[row * line_bytes + c];
-            c++;
+            c = c + 1;
         }
-        row++;
+        row = row + 1;
     }
     // Clear the bottom row: leaving the old text there means the cursor is over
     // characters that are no longer part of the console's content.
     var c2: i64 = 0;
     while c2 < cols {
         vcons[v].screen[(vcons[v].rows - 1) * line_bytes + c2] = 0x20;
-        c2++;
+        c2 = c2 + 1;
     }
     return CODE_OK;
 }
@@ -173,7 +173,7 @@ fn disp_putc(v: i64, ch: u8) -> i64 {
             // After scrolling the cursor stays on the last row.
             vcons[v].cy = vcons[v].rows - 1;
         } else {
-            vcons[v].cy++;
+            vcons[v].cy = vcons[v].cy + 1;
         }
         return CODE_OK;
     }
@@ -191,13 +191,13 @@ fn disp_putc(v: i64, ch: u8) -> i64 {
             disp_scroll(v);
             vcons[v].cy = vcons[v].rows - 1;
         } else {
-            vcons[v].cy++;
+            vcons[v].cy = vcons[v].cy + 1;
         }
     }
     let at = vcons[v].cy * line_bytes + vcons[v].cx;
     if at < 0 || at >= 2048 { return E_NOROOM; }
     vcons[v].screen[at] = ch;
-    vcons[v].cx++;
+    vcons[v].cx = vcons[v].cx + 1;
     if vcons[v].cy * line_bytes + vcons[v].cx > vcons[v].screen_used {
         vcons[v].screen_used = vcons[v].cy * line_bytes + vcons[v].cx;
     }
@@ -209,7 +209,7 @@ fn disp_puts(v: i64, s: const u8[:]) -> i64 {
     while i < s.len {
         let code = disp_putc(v, s[i]);
         if code != CODE_OK { return code; }
-        i++;
+        i = i + 1;
     }
     return CODE_OK;
 }
@@ -250,13 +250,13 @@ fn disp_paint(v: i64) -> i64 {
         var end = cols;
         // Trim trailing spaces so a repaint does not emit a screenful of blanks.
         while end > 0 && (vcons[v].screen[row * cols + (end - 1)] == 0x20 || vcons[v].screen[row * cols + (end - 1)] == 0) {
-            end--;
+            end = end - 1;
         }
         if end > 0 {
             sys_write_console(vcons[v].screen[row * cols .. row * cols + end]);
             sys_write_console("\n");
         }
-        row++;
+        row = row + 1;
     }
     return CODE_OK;
 }

@@ -62,7 +62,7 @@ fn ses_init() {
         sessions[i].state = SS_FREE;
         sessions[i].id = 0;
         sessions[i].gen = 0;
-        i++;
+        i = i + 1;
     }
     ses_inited = true;
     ses_foreground = SES_NO_SESSION;
@@ -73,7 +73,7 @@ fn ses_resolve(id: i64) -> i64 {
     var i: i64 = 0;
     while i < SES_CAP {
         if sessions[i].state != SS_FREE && sessions[i].id == id { return i; }
-        i++;
+        i = i + 1;
     }
     return SES_NO_SESSION;
 }
@@ -82,7 +82,7 @@ fn ses_free_slot() -> i64 {
     var i: i64 = 0;
     while i < SES_CAP {
         if sessions[i].state == SS_FREE { return i; }
-        i++;
+        i = i + 1;
     }
     return SES_NO_SESSION;
 }
@@ -129,7 +129,7 @@ fn ses_attach(id: i64, console: i64, now_ms: i64) -> i64 {
             && sessions[i].console == console {
             return E_BUSY;
         }
-        i++;
+        i = i + 1;
     }
     sessions[slot].console = console;
     sessions[slot].state = SS_ACTIVE;
@@ -247,9 +247,9 @@ fn ses_close_agent_sessions(agent: i64) -> i64 {
     while i < SES_CAP {
         if sessions[i].state != SS_FREE && sessions[i].agent == agent && agent != 0 {
             ses_close(sessions[i].id);
-            n++;
+            n = n + 1;
         }
-        i++;
+        i = i + 1;
     }
     return n;
 }

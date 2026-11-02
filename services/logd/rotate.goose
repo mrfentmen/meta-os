@@ -53,11 +53,18 @@ struct RotStore {
 }
 
 fn rot_new(max_bytes: i64, keep: i64) -> RotStore {
-    var s: RotStore;
+    var s: RotStore = RotStore {
+        segs: [],
+        count: 0,
+        policy: RotPolicy { max_bytes: 0,
+        keep: 0 },
+        dropped_total: 0,
+        rotated_total: 0,
+    };
     var i: i64 = 0;
     while i < ROT_SEG_MAX {
         s.segs[i] = RotSegment { day: 0, seq: 0, bytes: 0, sealed: true };
-        i++;
+        i = i + 1;
     }
     s.count = 0;
     s.policy = RotPolicy { max_bytes: max_bytes, keep: keep };
@@ -96,7 +103,7 @@ fn rot_append(s: RotStore&, day: i64, n: i64) -> i64, i64 {
     var i: i64 = 0;
     while i < s.count {
         if s.segs[i].day == day && s.segs[i].seq >= seq { seq = s.segs[i].seq + 1; }
-        i++;
+        i = i + 1;
     }
     s.segs[new_idx] = RotSegment { day: day, seq: seq, bytes: n, sealed: false };
     s.count = s.count + 1;
@@ -148,7 +155,7 @@ fn rot_shift_out(s: RotStore&) {
     var i: i64 = 1;
     while i < s.count {
         s.segs[i - 1] = s.segs[i];
-        i++;
+        i = i + 1;
     }
     s.count = s.count - 1;
 }
@@ -170,7 +177,7 @@ fn rot_segment_name(service: const u8[:], seg: RotSegment&, out: u8[>..]&, cap: 
     if !rot_push_i64(name, cap, seg.seq) { return -1; }
 
     var i: i64 = 0;
-    while i < name.len { out.push(name[i]); i++; }
+    while i < name.len { out.push(name[i]); i = i + 1; }
     return name.len;
 }
 
@@ -189,7 +196,7 @@ fn rot_export_name(service: const u8[:], day: i64, seq: i64, out: u8[>..]&, cap:
     }
     if !rot_push(name, cap, ".log") { return -1; }
     var i: i64 = 0;
-    while i < name.len { out.push(name[i]); i++; }
+    while i < name.len { out.push(name[i]); i = i + 1; }
     return name.len;
 }
 
@@ -200,7 +207,7 @@ fn rot_stats(s: RotStore&) -> i64, i64, i64, i64 {
     var i: i64 = 0;
     while i < s.count {
         total = total + s.segs[i].bytes;
-        i++;
+        i = i + 1;
     }
     return s.count, total, s.dropped_total, s.rotated_total;
 }
@@ -212,7 +219,7 @@ fn rot_stats(s: RotStore&) -> i64, i64, i64, i64 {
 fn rot_push(out: u8[>..]&, cap: i64, s: const u8[:]) -> bool {
     if out.len + s.len > cap { return false; }
     var i: i64 = 0;
-    while i < s.len { out.push(s[i]); i++; }
+    while i < s.len { out.push(s[i]); i = i + 1; }
     return true;
 }
 
@@ -225,14 +232,14 @@ fn rot_push_i64(out: u8[>..]&, cap: i64, v: i64) -> bool {
     }
     var digits: i64 = 0;
     var x = v;
-    while x > 0 { digits++; x = x / 10; }
+    while x > 0 { digits = digits + 1; x = x / 10; }
     if out.len + digits > cap { return false; }
-    var buf: u8[..20];
+    var buf: u8[..20] = [];
     var i: i64 = 0;
     x = v;
-    while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i++; }
+    while i < digits { buf[digits - 1 - i] = (48 + (x % 10)) as u8; x = x / 10; i = i + 1; }
     i = 0;
-    while i < digits { out.push(buf[i]); i++; }
+    while i < digits { out.push(buf[i]); i = i + 1; }
     return true;
 }
 

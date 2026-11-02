@@ -47,11 +47,11 @@ struct Pool {
 }
 
 fn pool_new() -> Pool {
-    var p: Pool;
+    var p: Pool = Pool { data: [], used: 0, gens: [], live: 0, handed_out: 0, refused: 0 };
     var i: i64 = 0;
-    while i < POOL_BYTES { p.data[i] = 0; i++; }
+    while i < POOL_BYTES { p.data[i] = 0; i = i + 1; }
     i = 0;
-    while i < POOL_BLOCKS { p.gens[i] = 1; i++; }
+    while i < POOL_BLOCKS { p.gens[i] = 1; i = i + 1; }
     p.used = 0;
     p.live = 0;
     p.handed_out = 0;
@@ -72,14 +72,14 @@ fn pool_alloc(p: Pool&) -> i64 {
             p.handed_out = p.handed_out + 1;
             return pool_id(i, p.gens[i]);
         }
-        i++;
+        i = i + 1;
     }
     p.refused = p.refused + 1;
     return -1;
 }
 
-fn pool_id(block: i64, gen: i64) -> i64 {
-    return (gen << 8) | block;
+fn pool_id(blk: i64, gen: i64) -> i64 {
+    return (gen << 8) | blk;
 }
 
 fn pool_block_of(id: i64) -> i64 {
@@ -94,19 +94,19 @@ fn pool_gen_of(id: i64) -> i64 {
 // for a block that was never allocated.
 fn pool_valid(p: Pool&, id: i64) -> bool {
     if id < 0 { return false; }
-    let block = pool_block_of(id);
-    if block < 0 || block >= POOL_BLOCKS { return false; }
-    if (p.used & (1 << block)) == 0 { return false; }
-    return p.gens[block] == pool_gen_of(id);
+    let blk = pool_block_of(id);
+    if blk < 0 || blk >= POOL_BLOCKS { return false; }
+    if (p.used & (1 << blk)) == 0 { return false; }
+    return p.gens[blk] == pool_gen_of(id);
 }
 
 // Free. Returns CODE_OK, or E_INVAL for an id that is stale or was never valid -- a double
 // free is refused rather than silently corrupting the bitmap.
 fn pool_free(p: Pool&, id: i64) -> i64 {
     if !pool_valid(p, id) { return E_INVAL; }
-    let block = pool_block_of(id);
-    p.used = p.used & ~(1 << block);
-    p.gens[block] = p.gens[block] + 1;      // the old id is now stale
+    let blk = pool_block_of(id);
+    p.used = p.used & ~(1 << blk);
+    p.gens[blk] = p.gens[blk] + 1;      // the old id is now stale
     p.live = p.live - 1;
     return CODE_OK;
 }
@@ -121,12 +121,12 @@ fn pool_write(p: Pool&, id: i64, off: i64, src: const u8[:]) -> i64 {
     if !pool_valid(p, id) { return E_INVAL; }
     if off < 0 || src.len < 0 { return E_INVAL; }
     if off + src.len > POOL_BLOCK_BYTES { return E_NOROOM; }
-    let block = pool_block_of(id);
-    let base = block * POOL_BLOCK_BYTES + off;
+    let blk = pool_block_of(id);
+    let base = blk * POOL_BLOCK_BYTES + off;
     var i: i64 = 0;
     while i < src.len {
         p.data[base + i] = src[i];
-        i++;
+        i = i + 1;
     }
     return src.len;
 }
@@ -143,7 +143,7 @@ fn pool_read(p: Pool&, id: i64, off: i64, len: i64, out: u8[>..]&, cap: i64) -> 
     var i: i64 = 0;
     while i < len {
         out.push(p.data[base + i]);
-        i++;
+        i = i + 1;
     }
     return len;
 }

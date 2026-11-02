@@ -31,8 +31,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -167,7 +167,7 @@ fn main() {
     // --- size limit ---
     var big: u8[>..] = [];
     var i: i64 = 0;
-    while i < 2600 { big.push('x'); i++; }
+    while i < 2600 { big.push('x'); i = i + 1; }
     let big_ino, big_code = fs_create_path(root, "/big", MODE_FILE);
     check("create /big", big_code == CODE_OK);
     let bw, bwc = fs_write(big_ino, 0, big[..]);
@@ -215,11 +215,11 @@ fn main() {
         if f_c != CODE_OK {
             stopped = true;
         } else {
-            made++;
+            made = made + 1;
             let w2, w3 = fs_write(f_ok, 0, big[0..512]);
             if w3 != CODE_OK { stopped = true; }
         }
-        slot++;
+        slot = slot + 1;
     }
     check("the disk fills and refuses politely", stopped && made < 40);
 
@@ -232,7 +232,7 @@ fn main() {
     let _ = append_int(fb, 32, t_fail);
     say(fb[..]);
     say("\n");
-    if t_fail > 0 { let _ = sys_exit(1); }
+    if t_fail > 0 { sys_exit(1); }
 }
 
 fn want_dir_ok(start: i64, path: const u8[:]) -> bool {

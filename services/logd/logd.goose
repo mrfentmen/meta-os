@@ -69,7 +69,10 @@ let SLOT: i64 = 160;          // one record, including its newline
 let SLOTS: i64 = 64;          // 10 KiB of retention: a boot's worth of history
 let HIGH_WATER: i64 = 48;     // 3/4 of SLOTS
 
-var storage: u8[..10240];     // SLOT * SLOTS
+// The ring writes at absolute offsets, so its arena is a builder filled to
+// capacity once at start. A fixed array cannot be passed to it (typed mismatch);
+// allocation stops after this call, so the no-heap claim still holds.
+var storage: u8[>..] = [];
 var queue: MsgRing = msg_init(160, 64);
 
 var dropped_full: i64 = 0;    // records refused: queue full
@@ -98,17 +101,17 @@ fn format_record(out: u8[>..]&, level: i64, tag: const u8[:], msg: const u8[:]) 
 // Queue a record. This is the call every service makes.
 fn log(level: i64, tag: const u8[:], msg: const u8[:]) -> bool {
     if level < min_level {
-        dropped_level++;
+        dropped_level = dropped_level + 1;
         return false;
     }
     var rec: u8[>..] = [];
     if !format_record(rec, level, tag, msg) {
         // The message could not fit even an empty record buffer of slot size.
-        dropped_long++;
+        dropped_long = dropped_long + 1;
         return false;
     }
     if !msg_push(queue, storage, rec) {
-        dropped_full++;
+        dropped_full = dropped_full + 1;
         return false;
     }
     // Policy 2: an error record is worth the syscall immediately.
@@ -130,7 +133,7 @@ fn log_error(tag: const u8[:], msg: const u8[:]) -> bool { return log(LVL_ERROR,
 // failed; a negative return is a real failure and stops the flush.
 fn write_record(rec: u8[:]) -> bool {
     var off: i64 = 0;
-    var guard: i64 = 0;
+    var seen: i64 = 0;
     while off < rec.len {
         let n = sys_write_serial(rec[off..rec.len]);
         if n < 0 { return false; }
@@ -138,8 +141,8 @@ fn write_record(rec: u8[:]) -> bool {
             // No progress. Yielding is the only thing available; the guard stops
             // an infinite loop on a dead port.
             sys_yield();
-            guard++;
-            if guard > 1000 { return false; }
+            seen = seen + 1;
+            if seen > 1000 { return false; }
             continue;
         }
         off = off + n;
@@ -157,8 +160,8 @@ fn flush() -> i64 {
         rec = [];
         if !msg_pop(queue, storage, rec) { break; }
         if !write_record(rec[0..rec.len]) { break; }
-        sent++;
-        written++;
+        sent = sent + 1;
+        written = written + 1;
     }
     return sent;
 }
@@ -191,36 +194,10 @@ fn loss_stats() -> LossStats {
 
 // ---------------------------------------------------------------------------
 // The service
-// ---------------------------------------------------------------------------
-
-export "svc_entry" fn service_main() -> i32 {
-    log_info("logd", "sink up");
-    log_info("logd", "policy: high-water 48/64, error immediate, explicit flush");
-
-    // Self-check: prove the round trip works while the port is still the only
-    // thing that matters, then report the queue state honestly.
-    log_info("logd", "self-check queued");
-    let sent = flush();
-    if sent < 3 {
-        // The port refused most of the queue. Returning non-zero hands this to
-        // the supervisor instead of pretending the log works.
-        return 1;
-    }
-
-    // The service loop: with no IPC, the only thing to do is ensure the queue
-    // drains. When the IPC transport exists (Q-B-L1-2), records arrive here and
-    // the loop is unchanged.
-    var spins: i64 = 0;
-    while true {
-        if should_flush() { flush(); }
-        sys_yield();
-        spins++;
-        // A service that only spins is not a service. B-L1-76 makes this loop
-        // real by feeding it records; until then it is honest about being idle.
-        if spins > 1000000 { break; }
-    }
-    flush();
-    log_info("logd", "sink stopping");
-    flush();
-    return 0;
+// Size the arena once: SLOT * SLOTS zero bytes, then the ring owns them.
+fn storage_init() {
+    var i: i64 = 0;
+    while i < SLOT * SLOTS { storage.push(0); i = i + 1; }
 }
+
+// ---------------------------------------------------------------------------

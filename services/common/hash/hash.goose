@@ -58,9 +58,9 @@ fn crc32(data: u8[:]) -> u32 {
             } else {
                 crc = crc >> 1;
             }
-            bit++;
+            bit = bit + 1;
         }
-        i++;
+        i = i + 1;
     }
     return crc ^ 0xFFFFFFFF;
 }
@@ -79,9 +79,9 @@ fn crc32_update(crc: u32, data: u8[:]) -> u32 {
             } else {
                 c = c >> 1;
             }
-            bit++;
+            bit = bit + 1;
         }
-        i++;
+        i = i + 1;
     }
     return c;
 }
@@ -113,7 +113,7 @@ let SHA256_K: u32[..64] = [
 struct Sha256Ctx {
     h: u32[..8],
     // Bytes of the current partial block, and its length.
-    block: u8[..64],
+    blk: u8[..64],
     block_len: i64,
     total_len: u64,     // bytes hashed so far
 }
@@ -124,7 +124,7 @@ fn sha256_init() -> Sha256Ctx {
             0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
             0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
         ],
-        block: [],
+        blk: [],
         block_len: 0,
         total_len: 0,
     };
@@ -142,7 +142,7 @@ fn sha256_maj(x: u32, y: u32, z: u32) -> u32 {
 // the final block is assembled in a local buffer and passed the same way, so
 // there is exactly one implementation of the round function.
 fn sha256_compress(ctx: Sha256Ctx&, data: u8[:], p: i64) {
-    var w: u32[..64];
+    var w: u32[..64] = [];
     var i: i64 = 0;
 
     // First 16 words: big-endian, as the specification requires.
@@ -152,13 +152,13 @@ fn sha256_compress(ctx: Sha256Ctx&, data: u8[:], p: i64) {
              | ((data[b + 1] as u32) << 16)
              | ((data[b + 2] as u32) << 8)
              | (data[b + 3] as u32);
-        i++;
+        i = i + 1;
     }
     while i < 64 {
         let s0 = rotr32(w[i - 15], 7) ^ rotr32(w[i - 15], 18) ^ shr32(w[i - 15], 3);
         let s1 = rotr32(w[i - 2], 17) ^ rotr32(w[i - 2], 19) ^ shr32(w[i - 2], 10);
         w[i] = w[i - 16] + s0 + w[i - 7] + s1;     // unsigned: wraps
-        i++;
+        i = i + 1;
     }
 
     var a = ctx.h[0];
@@ -185,7 +185,7 @@ fn sha256_compress(ctx: Sha256Ctx&, data: u8[:], p: i64) {
         c = b;
         b = a;
         a = t1 + t2;
-        i++;
+        i = i + 1;
     }
 
     ctx.h[0] = ctx.h[0] + a;
@@ -206,13 +206,13 @@ fn sha256_update(ctx: Sha256Ctx&, data: u8[:]) -> bool {
     var i: i64 = 0;
     // Top up a partial block first.
     while i < data.len && ctx.block_len > 0 {
-        ctx.block[ctx.block_len] = data[i];
-        ctx.block_len++;
-        i++;
+        ctx.blk[ctx.block_len] = data[i];
+        ctx.block_len = ctx.block_len + 1;
+        i = i + 1;
         if ctx.block_len == 64 {
-            // Compress the assembled block, then start a fresh one. `block` is a
+            // Compress the assembled block, then start a fresh one. `blk` is a
             // fixed array of 64, so the slice below is exactly one block.
-            sha256_compress(ctx, ctx.block[:], 0);
+            sha256_compress(ctx, ctx.blk[..], 0);
             ctx.block_len = 0;
         }
     }
@@ -225,9 +225,9 @@ fn sha256_update(ctx: Sha256Ctx&, data: u8[:]) -> bool {
 
     // Then keep the tail.
     while i < data.len {
-        ctx.block[ctx.block_len] = data[i];
-        ctx.block_len++;
-        i++;
+        ctx.blk[ctx.block_len] = data[i];
+        ctx.block_len = ctx.block_len + 1;
+        i = i + 1;
     }
     return true;
 }
@@ -241,22 +241,22 @@ fn sha256_final(ctx: Sha256Ctx&, out: u8[>..]&, cap: i64) -> bool {
     let bits = ctx.total_len * 8 as u64;
 
     // 0x80, then zeros, until 8 bytes remain in a 64-byte block.
-    var pad_block: u8[..64];
+    var pad_block: u8[..64] = [];
     var n = ctx.block_len;
     var i: i64 = 0;
-    while i < 64 { pad_block[i] = 0; i++; }
+    while i < 64 { pad_block[i] = 0; i = i + 1; }
     // Copy the tail.
     i = 0;
-    while i < n { pad_block[i] = ctx.block[i]; i++; }
+    while i < n { pad_block[i] = ctx.blk[i]; i = i + 1; }
     pad_block[n] = 0x80;
-    n++;
+    n = n + 1;
 
     if n > 56 {
         // The length does not fit in this block: compress it, then a zero block
         // with only the length.
-        sha256_compress(ctx, pad_block[:], 0);
+        sha256_compress(ctx, pad_block[..], 0);
         i = 0;
-        while i < 64 { pad_block[i] = 0; i++; }
+        while i < 64 { pad_block[i] = 0; i = i + 1; }
         n = 0;
     }
 
@@ -264,10 +264,10 @@ fn sha256_final(ctx: Sha256Ctx&, out: u8[>..]&, cap: i64) -> bool {
     i = 0;
     while i < 8 {
         pad_block[56 + i] = ((bits >> (56 - i * 8)) & 0xFF) as u8;
-        i++;
+        i = i + 1;
     }
 
-    sha256_compress(ctx, pad_block[:], 0);
+    sha256_compress(ctx, pad_block[..], 0);
 
     // Digest: eight big-endian words.
     i = 0;
@@ -275,7 +275,7 @@ fn sha256_final(ctx: Sha256Ctx&, out: u8[>..]&, cap: i64) -> bool {
         let word = ctx.h[i / 4];
         let shift = (3 - (i % 4)) * 8;
         out.push(((word >> shift) & 0xFF) as u8);
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -302,7 +302,7 @@ fn equal_constant_time(a: u8[:], b: u8[:]) -> bool {
     var i: i64 = 0;
     while i < a.len {
         diff = diff | (a[i] ^ b[i]);
-        i++;
+        i = i + 1;
     }
     return diff == 0;
 }

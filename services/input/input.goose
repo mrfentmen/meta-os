@@ -57,7 +57,7 @@ struct KeyEvent {
 // Keys the layer cares about by name, so no service above this one has to know that
 // 0x1C is Enter. Values are the set-1 scancodes, and this list is deliberately tiny:
 // it grows when something needs it, not in anticipation.
-let KEY_ESC: i64 = 0x01;
+let INPUT_KEY_ESC: i64 = 0x01;
 let KEY_BACKSPACE: i64 = 0x0E;
 let KEY_TAB: i64 = 0x0F;
 let KEY_ENTER: i64 = 0x1C;
@@ -86,9 +86,19 @@ struct Decoder {
     dropped: i64,       // events refused because no buffer was offered
 }
 
-var dec: Decoder;
+var dec: Decoder = Decoder {
+    mods: 0,
+    held_sc: 0,
+    held_since_ms: 0,
+    next_repeat_ms: 0,
+    repeat_delay_ms: 0,
+    repeat_rate_ms: 0,
+    dropped: 0,
+};
 
-fn input_init(repeat_delay_ms: i64, repeat_rate_ms: i64) {
+fn input_init(repeat_delay_ms_in: i64, repeat_rate_ms_in: i64) {
+    var repeat_rate_ms = repeat_rate_ms_in;
+    var repeat_delay_ms = repeat_delay_ms_in;
     dec.mods = 0;
     dec.held_sc = -1;
     dec.held_since_ms = 0;
@@ -207,7 +217,7 @@ fn input_decode(sc_raw: i64, now_ms: i64) -> KeyEvent, bool {
     }
 
     let shift = (dec.mods & MOD_SHIFT) != 0;
-    let shift_for_char = shift;
+    var shift_for_char = shift;
     if (dec.mods & MOD_CAPS) != 0 && input_letter(sc) { shift_for_char = !shift; }
 
     let ch = input_char(sc, shift_for_char);
@@ -239,7 +249,7 @@ fn input_repeat(now_ms: i64) -> KeyEvent, bool {
     if now_ms < dec.next_repeat_ms { return KeyEvent { scancode: 0, ch: 0, mods: dec.mods, pressed: false, repeat: false }, false; }
 
     let shift = (dec.mods & MOD_SHIFT) != 0;
-    let shift_for_char = shift;
+    var shift_for_char = shift;
     if (dec.mods & MOD_CAPS) != 0 && input_letter(dec.held_sc) { shift_for_char = !shift; }
     let ch = input_char(dec.held_sc, shift_for_char);
 

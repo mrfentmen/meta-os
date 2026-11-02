@@ -65,11 +65,11 @@ fn quota_default() -> Quota {
 }
 
 fn quota_new() -> Quotas {
-    var qs: Quotas;
+    var qs: Quotas = Quotas { slots: [], count: 0 };
     var i: i64 = 0;
     while i < AH_CAP {
         qs.slots[i] = QuotaSlot { handle: 0, q: quota_default(), window_start_ms: 0, calls_in_window: 0, storage_used: 0, denied_calls: 0, denied_storage: 0, active: false };
-        i++;
+        i = i + 1;
     }
     qs.count = 0;
     return qs;
@@ -168,25 +168,25 @@ fn quota_release(qs: Quotas&, h: i64, n: i64) -> i64 {
 // percentage of an unlimited quota has no meaning, and the raw numbers answer the question.
 fn quota_status(qs: Quotas&, h: i64, out: u8[>..]&, cap: i64) -> bool {
     let slot = quota_slot_of(qs, h);
-    if slot < 0 { return fmt.append_str(out, cap, "no quota"); }
+    if slot < 0 { return append_str(out, cap, "no quota"); }
     let s = qs.slots[slot];
 
-    if !fmt.append_str(out, cap, "calls ") { return false; }
-    if !fmt.append_int(out, cap, s.calls_in_window) { return false; }
-    if !fmt.append_str(out, cap, "/") { return false; }
-    if s.q.call_rate <= 0 { if !fmt.append_str(out, cap, "unlimited") { return false; } }
-    else { if !fmt.append_int(out, cap, s.q.call_rate) { return false; } }
+    if !append_str(out, cap, "calls ") { return false; }
+    if !append_int(out, cap, s.calls_in_window) { return false; }
+    if !append_str(out, cap, "/") { return false; }
+    if s.q.call_rate <= 0 { if !append_str(out, cap, "unlimited") { return false; } }
+    else { if !append_int(out, cap, s.q.call_rate) { return false; } }
 
-    if !fmt.append_str(out, cap, " storage ") { return false; }
-    if !fmt.append_int(out, cap, s.storage_used) { return false; }
-    if !fmt.append_str(out, cap, "/") { return false; }
-    if s.q.storage_bytes <= 0 { if !fmt.append_str(out, cap, "unlimited") { return false; } }
-    else { if !fmt.append_int(out, cap, s.q.storage_bytes) { return false; } }
+    if !append_str(out, cap, " storage ") { return false; }
+    if !append_int(out, cap, s.storage_used) { return false; }
+    if !append_str(out, cap, "/") { return false; }
+    if s.q.storage_bytes <= 0 { if !append_str(out, cap, "unlimited") { return false; } }
+    else { if !append_int(out, cap, s.q.storage_bytes) { return false; } }
 
-    if !fmt.append_str(out, cap, " denied ") { return false; }
-    if !fmt.append_int(out, cap, s.denied_calls) { return false; }
-    if !fmt.append_str(out, cap, "/") { return false; }
-    return fmt.append_int(out, cap, s.denied_storage);
+    if !append_str(out, cap, " denied ") { return false; }
+    if !append_int(out, cap, s.denied_calls) { return false; }
+    if !append_str(out, cap, "/") { return false; }
+    return append_int(out, cap, s.denied_storage);
 }
 
 // (rows, denied_calls_total, denied_storage_total) for the host's own health line.
@@ -199,7 +199,7 @@ fn quota_totals(qs: Quotas&) -> i64, i64, i64 {
             calls = calls + qs.slots[i].denied_calls;
             storage = storage + qs.slots[i].denied_storage;
         }
-        i++;
+        i = i + 1;
     }
     return qs.count, calls, storage;
 }
@@ -219,7 +219,7 @@ fn quota_slot_of(qs: Quotas&, h: i64) -> i64 {
     var i: i64 = 0;
     while i < AH_CAP {
         if qs.slots[i].active && qs.slots[i].handle == h { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -228,7 +228,7 @@ fn quota_free_slot(qs: Quotas&) -> i64 {
     var i: i64 = 0;
     while i < AH_CAP {
         if !qs.slots[i].active { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }

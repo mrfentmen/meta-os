@@ -106,7 +106,7 @@ fn tcp_build(out: u8[..1500]&, sport: i64, dport: i64, seq: i64, ack: i64, flags
     let total = TCP_HDR_MIN + payload.len;
     if total > 1460 + TCP_HDR_MIN { return 0, E_NOROOM; }
     var i: i64 = 0;
-    while i < TCP_HDR_MIN { out[i] = 0; i++; }
+    while i < TCP_HDR_MIN { out[i] = 0; i = i + 1; }
     out[0] = ((sport >> 8) & 0xff) as u8; out[1] = (sport & 0xff) as u8;
     out[2] = ((dport >> 8) & 0xff) as u8; out[3] = (dport & 0xff) as u8;
     out[4] = ((seq >> 24) & 0xff) as u8; out[5] = ((seq >> 16) & 0xff) as u8;
@@ -119,7 +119,7 @@ fn tcp_build(out: u8[..1500]&, sport: i64, dport: i64, seq: i64, ack: i64, flags
     out[16] = 0; out[17] = 0;                           // checksum placeholder
     out[18] = 0; out[19] = 0;                           // urgent pointer
     i = 0;
-    while i < payload.len { out[TCP_HDR_MIN + i] = payload[i]; i++; }
+    while i < payload.len { out[TCP_HDR_MIN + i] = payload[i]; i = i + 1; }
 
     var sum: i64 = 0;
     sum = sum + ((src_ip.a << 8) | src_ip.b);

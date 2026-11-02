@@ -37,7 +37,7 @@ fn by_eq(a: const u8[:], b: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < a.len {
         if a[i] != b[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -52,7 +52,7 @@ fn by_cmp(a: const u8[:], b: const u8[:]) -> i64 {
     while i < n {
         if a[i] < b[i] { return -1; }
         if a[i] > b[i] { return 1; }
-        i++;
+        i = i + 1;
     }
     if a.len < b.len { return -1; }
     if a.len > b.len { return 1; }
@@ -66,7 +66,7 @@ fn by_eq_ci(a: const u8[:], b: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < a.len {
         if lower_ascii(a[i]) != lower_ascii(b[i]) { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -93,7 +93,7 @@ fn by_copy(dst: u8[>..]&, cap: i64, src: const u8[:]) -> i64 {
     var i: i64 = 0;
     while i < src.len && dst.len < cap {
         dst.push(src[i]);
-        i++;
+        i = i + 1;
     }
     return i;
 }
@@ -103,7 +103,7 @@ fn by_fill(dst: u8[>..]&, cap: i64, v: u8, n: i64) -> i64 {
     var i: i64 = 0;
     while i < n && dst.len < cap {
         dst.push(v);
-        i++;
+        i = i + 1;
     }
     return i;
 }
@@ -114,7 +114,7 @@ fn by_clear(dst: u8[>..]&) {
     var i: i64 = 0;
     while i < dst.len {
         dst[i] = 0;
-        i++;
+        i = i + 1;
     }
 }
 
@@ -126,7 +126,8 @@ fn by_clear(dst: u8[>..]&) {
 // `from` is in range -- which is the only answer that keeps a loop using the result from
 // spinning forever: an empty match advances by zero, so a caller that passes a zero-length
 // needle and ignores the no-progress rule has a bug, not a library problem.
-fn by_find(hay: const u8[:], needle: const u8[:], from: i64) -> i64 {
+fn by_find(hay: const u8[:], needle: const u8[:], from_in: i64) -> i64 {
+    var from = from_in;
     if from < 0 { from = 0; }
     if needle.len == 0 { if from <= hay.len { return from; } return -1; }
     if needle.len > hay.len { return -1; }
@@ -136,20 +137,21 @@ fn by_find(hay: const u8[:], needle: const u8[:], from: i64) -> i64 {
         var hit = true;
         while k < needle.len {
             if hay[i + k] != needle[k] { hit = false; break; }
-            k++;
+            k = k + 1;
         }
         if hit { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
 
-fn by_find_byte(hay: const u8[:], b: u8, from: i64) -> i64 {
+fn by_find_byte(hay: const u8[:], b: u8, from_in: i64) -> i64 {
+    var from = from_in;
     if from < 0 { from = 0; }
     var i = from;
     while i < hay.len {
         if hay[i] == b { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -158,7 +160,7 @@ fn by_rfind_byte(hay: const u8[:], b: u8) -> i64 {
     var i = hay.len - 1;
     while i >= 0 {
         if hay[i] == b { return i; }
-        i--;
+        i = i - 1;
     }
     return -1;
 }
@@ -167,8 +169,8 @@ fn by_count_byte(hay: const u8[:], b: u8) -> i64 {
     var n: i64 = 0;
     var i: i64 = 0;
     while i < hay.len {
-        if hay[i] == b { n++; }
-        i++;
+        if hay[i] == b { n = n + 1; }
+        i = i + 1;
     }
     return n;
 }
@@ -178,7 +180,7 @@ fn by_starts_with(hay: const u8[:], prefix: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < prefix.len {
         if hay[i] != prefix[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -189,7 +191,7 @@ fn by_ends_with(hay: const u8[:], suffix: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < suffix.len {
         if hay[start + i] != suffix[i] { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -204,8 +206,8 @@ fn by_ends_with(hay: const u8[:], suffix: const u8[:]) -> bool {
 fn by_trim_span(s: const u8[:]) -> i64, i64 {
     var start: i64 = 0;
     var end = s.len;
-    while start < end && is_space_byte(s[start]) { start++; }
-    while end > start && is_space_byte(s[end - 1]) { end--; }
+    while start < end && is_space_byte(s[start]) { start = start + 1; }
+    while end > start && is_space_byte(s[end - 1]) { end = end - 1; }
     return start, end;
 }
 
@@ -239,7 +241,7 @@ fn by_is_blank(s: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < s.len {
         if !is_space_byte(s[i]) { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -249,7 +251,7 @@ fn by_all_digits(s: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < s.len {
         if !is_digit_byte(s[i]) { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }
@@ -259,7 +261,7 @@ fn by_all_hex(s: const u8[:]) -> bool {
     var i: i64 = 0;
     while i < s.len {
         if !is_hex_byte(s[i]) { return false; }
-        i++;
+        i = i + 1;
     }
     return true;
 }

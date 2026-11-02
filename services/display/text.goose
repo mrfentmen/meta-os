@@ -55,11 +55,11 @@ struct LineList {
 // width <= 0 returns an empty list with overflow=false, which the caller can tell apart
 // from "the text did not fit".
 fn text_wrap(s: const u8[:], width: i64) -> LineList {
-    var out: LineList;
+    var out: LineList = LineList { spans: [], count: 0, overflow: false };
     out.count = 0;
     out.overflow = false;
     var i: i64 = 0;
-    while i < WRAP_MAX_LINES { out.spans[i] = Span { off: 0, len: 0 }; i++; }
+    while i < WRAP_MAX_LINES { out.spans[i] = Span { off: 0, len: 0 }; i = i + 1; }
     if width <= 0 { return out; }
     if s.len == 0 { return out; }        // no text, no lines
 
@@ -70,7 +70,7 @@ fn text_wrap(s: const u8[:], width: i64) -> LineList {
         let at_end = at == s.len;
         let is_nl = !at_end && s[at] == '\n';
         if !at_end && !is_nl && (at - start) < width {
-            at++;
+            at = at + 1;
             continue;
         }
         // Either the line is full, or we hit a newline or the end.
@@ -81,7 +81,7 @@ fn text_wrap(s: const u8[:], width: i64) -> LineList {
             var found = false;
             while back > start {
                 if s[back - 1] == ' ' { found = true; break; }
-                back--;
+                back = back - 1;
             }
             if found {
                 end = back - 1;         // the space is consumed, not carried
@@ -93,11 +93,11 @@ fn text_wrap(s: const u8[:], width: i64) -> LineList {
             return out;
         }
         out.spans[n] = Span { off: start, len: end - start };
-        n++;
+        n = n + 1;
         out.count = n;
 
         if is_nl {
-            at++;                    // the newline is consumed, not part of any span
+            at = at + 1;                    // the newline is consumed, not part of any span
             start = at;
             if at >= s.len { break; }   // a trailing newline does not create an empty last line
         } else if at_end {
@@ -132,7 +132,7 @@ fn text_clip(s: const u8[:], width: i64, out: u8[>..]&, cap: i64) -> i64, bool {
     if s.len <= width {
         if s.len > cap { return 0, true; }
         var i: i64 = 0;
-        while i < s.len { out.push(s[i]); i++; }
+        while i < s.len { out.push(s[i]); i = i + 1; }
         return s.len, false;
     }
 
@@ -140,7 +140,7 @@ fn text_clip(s: const u8[:], width: i64, out: u8[>..]&, cap: i64) -> i64, bool {
         var short: i64 = 0;
         while short < width && short < cap {
             out.push(s[short]);
-            short++;
+            short = short + 1;
         }
         return short, true;
     }
@@ -148,9 +148,9 @@ fn text_clip(s: const u8[:], width: i64, out: u8[>..]&, cap: i64) -> i64, bool {
     let keep = width - ELLIPSIS.len;
     if width > cap { return 0, true; }
     var k: i64 = 0;
-    while k < keep { out.push(s[k]); k++; }
+    while k < keep { out.push(s[k]); k = k + 1; }
     var e: i64 = 0;
-    while e < ELLIPSIS.len { out.push(ELLIPSIS[e]); e++; }
+    while e < ELLIPSIS.len { out.push(ELLIPSIS[e]); e = e + 1; }
     return width, true;
 }
 
@@ -183,7 +183,8 @@ fn scroll_contains(r: ScrollRegion&, row: i64) -> bool {
 // when the region is empty. A repaint from the first visible row is deliberate: the cheap
 // answer (repaint only the last row) leaves the framebuffer inconsistent after a partial
 // write, and consistency is worth one line of pixels.
-fn scroll_push(r: ScrollRegion&, n: i64) -> i64, i64 {
+fn scroll_push(r: ScrollRegion&, n_in: i64) -> i64, i64 {
+    var n = n_in;
     if r.rows == 0 { return 0, E_INVAL; }
     if n <= 0 { return r.bottom, CODE_OK; }
     if n > r.rows { n = r.rows; }      // pushing more than a screenful scrolls a screenful

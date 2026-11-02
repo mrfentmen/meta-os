@@ -99,7 +99,7 @@ fn lo_deliver(src: Ipv4&, dst: Ipv4&, payload: const u8[:], out: u8[>..]&, cap: 
     var i: i64 = 0;
     while i < payload.len {
         out.push(payload[i]);
-        i++;
+        i = i + 1;
     }
     return payload.len, CODE_OK;
 }

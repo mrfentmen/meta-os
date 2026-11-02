@@ -63,7 +63,7 @@ fn ck_zero_marks() {
         ck_seen_blk[i] = 0;
         ck_seen_ino[i] = 0;
         ck_links[i] = 0;
-        i++;
+        i = i + 1;
     }
 }
 
@@ -97,8 +97,8 @@ fn report_init() -> FsckReport {
 // Walk the tree from the root, marking inodes and blocks. Returns the number of problems
 // found during the walk (bad entries, dups, range errors).
 fn ck_walk(r: FsckReport&) -> i64 {
-    var queue: i64[..24];
-    var ents: i64[..32];
+    var queue: i64[..24] = [];
+    var ents: i64[..32] = [];
     var qhead: i64 = 0;
     var qtail: i64 = 0;
     queue[qtail] = fs_root();
@@ -134,7 +134,7 @@ fn ck_walk(r: FsckReport&) -> i64 {
                             var e: i64 = 0;
                             while e < CK_DIR_ENTS {
                                 ents[e] = g16(fs_blk, e * 16);
-                                e++;
+                                e = e + 1;
                             }
                             e = 0;
                             while e < CK_DIR_ENTS {
@@ -162,12 +162,12 @@ fn ck_walk(r: FsckReport&) -> i64 {
                                         }
                                     }
                                 }
-                                e++;
+                                e = e + 1;
                             }
                         }
                     }
                 }
-                bi++;
+                bi = bi + 1;
             }
         }
     }
@@ -221,7 +221,7 @@ fn ck_inodes(r: FsckReport&) -> i64 {
                         r.reachable_blocks = r.reachable_blocks + 1;
                     }
                 }
-                bi++;
+                bi = bi + 1;
             }
 
             // Size vs blocks. A file may use a partly-filled last block, so the legal range
@@ -235,7 +235,7 @@ fn ck_inodes(r: FsckReport&) -> i64 {
                 }
             }
         }
-        ino++;
+        ino = ino + 1;
     }
     return problems;
 }
@@ -258,7 +258,7 @@ fn ck_bitmap(r: FsckReport&) -> i64 {
             r.holes = r.holes + 1;
             problems = problems + 1;
         }
-        lba++;
+        lba = lba + 1;
     }
     return problems;
 }
@@ -301,7 +301,7 @@ fn fsck_fix(r: FsckReport&) -> i64 {
         if code == CODE_OK && n.mode != MODE_FREE && !ck_get(ck_seen_ino, ino) && ino != fs_root() {
             if fs_release_inode(ino) == CODE_OK { r.fixed = r.fixed + 1; }
         }
-        ino++;
+        ino = ino + 1;
     }
     // Leaks: clear the bit. A block nobody points at is free, and freeing it is the
     // conservative repair -- the alternative is an unreachable block forever.
@@ -310,7 +310,7 @@ fn fsck_fix(r: FsckReport&) -> i64 {
         if bitmap_bit_set(lba) && !ck_get(ck_seen_blk, lba) {
             if fs_set_bitmap(lba, false) == CODE_OK { r.fixed = r.fixed + 1; }
         }
-        lba++;
+        lba = lba + 1;
     }
     // Recompute the free count from the bitmap rather than decrementing a number that may
     // already be wrong.

@@ -31,8 +31,8 @@ var t_fail: i64 = 0;
 fn say(s: const u8[:]) { let _ = sys_write_serial(s); }
 
 fn check(name: const u8[:], cond: bool) {
-    if cond { t_pass++; say("ok   "); }
-    else { t_fail++; say("FAIL "); }
+    if cond { t_pass = t_pass + 1; say("ok   "); }
+    else { t_fail = t_fail + 1; say("FAIL "); }
     say(name);
     say("\n");
 }
@@ -73,7 +73,15 @@ fn main() {
     check("body is the body, not the head", body.len == 18);
 
     // A head read at that offset reports the same facts the writer was given.
-    var head: RecHead;
+    var head: RecHead = RecHead {
+        magic: 0,
+        len: 0,
+        kind: 0,
+        seq: 0,
+        at_ms: 0,
+        actor: 0,
+        digest: 0,
+    };
     check("head reads", audit_read_head(at, head) > 0);
     check("head kind", head.kind == AK_DENIED);
     check("head actor", head.actor == 12345);
@@ -95,10 +103,10 @@ fn main() {
     var c: i64 = 0;
     while c < bytes.len && c < 4096 {
         copy[c] = bytes[c];
-        c++;
+        c = c + 1;
     }
 
-    var h4: RecHead;
+    var h4: RecHead = RecHead { magic: 0, len: 0, kind: 0, seq: 0, at_ms: 0, actor: 0, digest: 0 };
     let at4 = audit_find(AK_DENIED, 1);
     let body4 = audit_read_head(at4, h4);
     check("tampering target located", body4 > 0 && h4.seq == 4);
@@ -114,7 +122,15 @@ fn main() {
     check("the original is unaffected", orig_bad == 0 && orig_ok == ok_before);
 
     // --- a head that claims to run past the end is refused ---
-    var past: RecHead;
+    var past: RecHead = RecHead {
+        magic: 0,
+        len: 0,
+        kind: 0,
+        seq: 0,
+        at_ms: 0,
+        actor: 0,
+        digest: 0,
+    };
     let beyond = audit_read_head(audit_used(), past);
     check("read past the end refused", beyond == -1);
     let negative = audit_read_head(-1, past);
@@ -126,7 +142,7 @@ fn main() {
     var k: i64 = 0;
     while k < audit_used() && k < 4096 {
         clipped[k] = bytes[k];
-        k++;
+        k = k + 1;
     }
     let short_ok, short_bad = audit_verify_buf(clipped[..audit_used() - 4]);
     check("truncated buffer is caught", short_bad != 0 || short_ok < ok_before);
@@ -141,9 +157,9 @@ fn main() {
         if audit_write(AK_SERVICE, 0, 1400 + i, "filler record body") == AUD_NO_REC {
             refused = true;
         } else {
-            wrote++;
+            wrote = wrote + 1;
         }
-        i++;
+        i = i + 1;
     }
     check("writer eventually refuses", refused);
     check("drops are counted", audit_dropped_count() >= 1);

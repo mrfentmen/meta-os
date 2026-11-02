@@ -71,7 +71,7 @@ struct Device {
     detail_b: i64,
 }
 
-var devices: Device[..16];
+var devices: Device[..16] = [];
 var device_count: i64 = 0;
 
 // ---------------------------------------------------------------------------
@@ -89,7 +89,7 @@ fn dev_add(kind: i64, name: const u8[:], addr: u64, irq: i64, a: i64, b: i64) ->
     var i: i64 = 0;
     while i < name.len {
         devices[device_count].name[i] = name[i];
-        i++;
+        i = i + 1;
     }
     devices[device_count].name[i] = 0;
     devices[device_count].name_len = name.len;
@@ -100,7 +100,7 @@ fn dev_add(kind: i64, name: const u8[:], addr: u64, irq: i64, a: i64, b: i64) ->
     devices[device_count].detail_a = a;
     devices[device_count].detail_b = b;
 
-    device_count++;
+    device_count = device_count + 1;
     return device_count - 1, CODE_OK;
 }
 
@@ -108,7 +108,7 @@ fn dev_find(kind: i64) -> i64 {
     var i: i64 = 0;
     while i < device_count {
         if devices[i].kind == kind { return i; }
-        i++;
+        i = i + 1;
     }
     return -1;
 }
@@ -132,7 +132,7 @@ fn dev_probe_boot(boot: BootInfo&) -> i64, i64 {
                                  boot.serial.baud as i64, boot.serial.data_bits as i64);
         if code == CODE_OK {
             dev_mark(slot, DS_READY);   // K1 proved it by printing the boot line
-            ok++;
+            ok = ok + 1;
         }
     }
 
@@ -144,7 +144,7 @@ fn dev_probe_boot(boot: BootInfo&) -> i64, i64 {
                                  boot.framebuffer.cols as i64, boot.framebuffer.rows as i64);
         if code == CODE_OK {
             dev_mark(slot, DS_READY);
-            ok++;
+            ok = ok + 1;
         }
     } else {
         let slot, code = dev_add(DEV_FRAMEBUFFER, "framebuffer", 0, -1, 0, 0);
@@ -160,7 +160,7 @@ fn dev_probe_boot(boot: BootInfo&) -> i64, i64 {
         let slot, code = dev_add(DEV_TIMER, "timer", 0, 0, boot.time.tick_hz as i64, 0);
         if code == CODE_OK {
             dev_mark(slot, DS_READY);
-            ok++;
+            ok = ok + 1;
         }
     } else {
         let slot, code = dev_add(DEV_TIMER, "timer", 0, 0, 0, 0);
@@ -232,8 +232,8 @@ fn dev_count_in(state: i64) -> i64 {
     var n: i64 = 0;
     var i: i64 = 0;
     while i < device_count {
-        if devices[i].state == state { n++; }
-        i++;
+        if devices[i].state == state { n = n + 1; }
+        i = i + 1;
     }
     return n;
 }

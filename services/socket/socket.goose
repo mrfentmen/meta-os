@@ -69,7 +69,7 @@ struct Sock {
     sent: i64,
     dropped: i64,
 }
-var socks: Sock[..16];
+var socks: Sock[..16] = [];
 var ephemeral_next: i64 = SK_EPHEMERAL_MIN;
 
 // ---------------------------------------------------------------------------
@@ -114,7 +114,7 @@ fn sk_open() -> i64, i64 {
             socks[i].dropped = 0;
             return sk_handle(i), CODE_OK;
         }
-        i++;
+        i = i + 1;
     }
     return 0, E_NOROOM;
 }
@@ -152,8 +152,8 @@ fn sk_alloc_ephemeral() -> i64 {
             if ephemeral_next > SK_PORT_MAX { ephemeral_next = SK_EPHEMERAL_MIN; }
             return candidate;
         }
-        candidate++;
-        tries++;
+        candidate = candidate + 1;
+        tries = tries + 1;
     }
     return -1;
 }
@@ -162,7 +162,7 @@ fn sk_port_in_use(port: i64) -> bool {
     var i: i64 = 0;
     while i < SK_MAX {
         if socks[i].state != S_CLOSED && socks[i].local_port == port { return true; }
-        i++;
+        i = i + 1;
     }
     return false;
 }
@@ -227,9 +227,9 @@ fn sk_send(h: i64, to: Ipv4&, port: i64, data: const u8[:]) -> i64 {
     var i: i64 = 0;
     while i < data.len {
         socks[slot].out[at].data[i] = data[i];
-        i++;
+        i = i + 1;
     }
-    socks[slot].out_count++;
+    socks[slot].out_count = socks[slot].out_count + 1;
     return CODE_OK;
 }
 
@@ -246,17 +246,17 @@ fn sk_take_send(h: i64, out: Datagram&) -> bool {
     var i: i64 = 0;
     while i < out.len {
         out.data[i] = socks[slot].out[socks[slot].out_head].data[i];
-        i++;
+        i = i + 1;
     }
     socks[slot].out_head = (socks[slot].out_head + 1) % SK_QUEUE;
-    socks[slot].out_count--;
+    socks[slot].out_count = socks[slot].out_count - 1;
     return true;
 }
 
 fn sk_send_result(h: i64, ok: bool) -> i64 {
     let slot = sk_resolve(h);
     if slot < 0 { return E_STATE; }
-    if ok { socks[slot].sent++; } else { socks[slot].dropped++; }
+    if ok { socks[slot].sent = socks[slot].sent + 1; } else { socks[slot].dropped = socks[slot].dropped + 1; }
     return CODE_OK;
 }
 
@@ -273,10 +273,10 @@ fn sk_match(port: i64) -> i64 {
     var i: i64 = 0;
     while i < SK_MAX {
         if socks[i].state != S_CLOSED && socks[i].local_port == port {
-            socks[i].received++;
+            socks[i].received = socks[i].received + 1;
             return sk_handle(i);
         }
-        i++;
+        i = i + 1;
     }
     return 0;
 }

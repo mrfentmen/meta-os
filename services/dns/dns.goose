@@ -72,7 +72,7 @@ fn dns_build_a_query(out: u8[..512]&, name: const u8[:], id: i64) -> i64 {
     var i: i64 = 0;
     while i < 12 {
         out[i] = 0;
-        i++;
+        i = i + 1;
     }
     // id, big-endian: the server echoes it and the caller checks it, so a reply that
     // belongs to somebody else's question cannot be accepted as ours.
@@ -104,12 +104,12 @@ fn dns_build_a_query(out: u8[..512]&, name: const u8[:], id: i64) -> i64 {
             if in_label == 0 { return -1; }       // leading or doubled dot: empty label
             if at + 1 + in_label > DNS_QUERY_MAX { return -1; }
             out[at] = in_label as u8;
-            at++;
+            at = at + 1;
             var k: i64 = 0;
             while k < in_label {
                 out[at] = name[label_start + k];
-                at++;
-                k++;
+                at = at + 1;
+                k = k + 1;
             }
             in_label = 0;
             label_start = i + 1;
@@ -117,34 +117,34 @@ fn dns_build_a_query(out: u8[..512]&, name: const u8[:], id: i64) -> i64 {
             // A label longer than 63 bytes cannot be encoded: the length byte's top two
             // bits are the compression marker, so 64..191 are not lengths at all.
             if in_label >= DNS_LABEL_MAX { return -1; }
-            in_label++;
+            in_label = in_label + 1;
         }
-        i++;
+        i = i + 1;
     }
     // Trailing label (a name without a final dot is the normal case).
     if in_label > 0 {
         if at + 1 + in_label > DNS_QUERY_MAX { return -1; }
         out[at] = in_label as u8;
-        at++;
+        at = at + 1;
         var k2: i64 = 0;
         while k2 < in_label {
             out[at] = name[label_start + k2];
-            at++;
-            k2++;
+            at = at + 1;
+            k2 = k2 + 1;
         }
     }
     // Root terminator.
     if at + 5 > DNS_QUERY_MAX { return -1; }
     out[at] = 0;
-    at++;
+    at = at + 1;
     out[at] = 0;                // QTYPE = A
-    at++;
+    at = at + 1;
     out[at] = 1;
-    at++;
+    at = at + 1;
     out[at] = 0;                // QCLASS = IN
-    at++;
+    at = at + 1;
     out[at] = 1;
-    at++;
+    at = at + 1;
     return at;
 }
 
@@ -168,17 +168,17 @@ fn dns_read_name(pkt: const u8[:], at_start: i64, out: u8[..256]&) -> i64, i64, 
     var out_len: i64 = 0;
     var jumps: i64 = 0;
     var next = -1;              // where to continue, set at the first pointer
-    var guard: i64 = 0;
+    var seen: i64 = 0;
 
-    while guard < 512 {
-        guard++;
+    while seen < 512 {
+        seen = seen + 1;
         if at < 0 || at >= pkt.len { return 0, 0, false; }
         let b = pkt[at];
         if (b & 0xC0) == 0xC0 {                       // compression pointer
             if at + 1 >= pkt.len { return 0, 0, false; }
             let target = ((b & 0x3F) as i64) * 256 + (pkt[at + 1] as i64);
             if next < 0 { next = at + 2; }
-            jumps++;
+            jumps = jumps + 1;
             if jumps > DNS_MAX_JUMPS { return 0, 0, false; }
             // Strictly backwards, always. A forward pointer can loop forever and can read
             // sections the packet has not finished writing; a same-offset pointer is a
@@ -197,13 +197,13 @@ fn dns_read_name(pkt: const u8[:], at_start: i64, out: u8[..256]&) -> i64, i64, 
         if out_len + len + 1 > DNS_NAME_MAX { return 0, 0, false; }
         if out_len > 0 {
             out[out_len] = 0x2E;                       // join labels with dots
-            out_len++;
+            out_len = out_len + 1;
         }
         var k: i64 = 0;
         while k < len {
             out[out_len] = pkt[at + 1 + k];
-            out_len++;
-            k++;
+            out_len = out_len + 1;
+            k = k + 1;
         }
         at = at + 1 + len;
     }
@@ -237,7 +237,7 @@ fn dns_parse_a(pkt: const u8[:], id: i64, out: Answer&) -> i64 {
     if an < 1 { return E_RESOLVE; }                  // no records: name does not resolve
 
     // Skip the question section.
-    var namebuf: u8[..256];
+    var namebuf: u8[..256] = [];
     let q_end, q_len, q_ok = dns_read_name(pkt, 12, namebuf);
     if !q_ok { return E_CORRUPT; }
     if q_end + 4 > pkt.len { return E_CORRUPT; }     // QTYPE + QCLASS
@@ -265,7 +265,7 @@ fn dns_parse_a(pkt: const u8[:], id: i64, out: Answer&) -> i64 {
             return CODE_OK;
         }
         at = at + rdlen;                             // not an A record: skip it properly
-        i++;
+        i = i + 1;
     }
     return E_RESOLVE;
 }
@@ -289,7 +289,19 @@ struct Query {
 }
 
 fn dns_query_init(id: i64, timeout_ms: i64) -> Query {
-    var q: Query;
+    var q: Query = Query {
+        id: 0,
+        state: 0,
+        sent_at_ms: 0,
+        timeout_ms: 0,
+        attempts: 0,
+        result: Answer { addr: Ipv4 { a: 0,
+        b: 0,
+        c: 0,
+        d: 0 },
+        ttl: 0,
+        rcode: 0 },
+    };
     q.id = id;
     q.state = Q_IDLE;
     q.sent_at_ms = 0;
@@ -310,14 +322,14 @@ fn dns_query_expired(q: Query&, now_ms: i64) -> bool {
 fn dns_query_sent(q: Query&, now_ms: i64) {
     q.state = Q_SENT;
     q.sent_at_ms = now_ms;
-    q.attempts++;
+    q.attempts = q.attempts + 1;
 }
 
 // Feed a received packet to the query. A packet that is not our transaction leaves the
 // query exactly as it was: on a busy network, most arriving packets are somebody else's.
 fn dns_query_feed(q: Query&, pkt: const u8[:]) -> i64 {
     if q.state != Q_SENT { return E_STATE; }
-    var a: Answer;
+    var a: Answer = Answer { addr: Ipv4 { a: 0, b: 0, c: 0, d: 0 }, ttl: 0, rcode: 0 };
     let code = dns_parse_a(pkt, q.id, a);
     if code == E_STATE { return E_STATE; }      // not ours; keep waiting
     if code != CODE_OK {
