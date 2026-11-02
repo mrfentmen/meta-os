@@ -1,0 +1,5 @@
+OC1B-353 Musica pretty_midi install record
+tree: 94010c76ee095fa6c6bcfa4405cd56a9695f32d3
+date(UTC): 2026-11-02T16:10:41Z
+NO INSTALL PERFORMED: pretty_midi 0.2.11.post0 already present machine-wide at /Users/test/Library/Python/3.9/lib/python/site-packages/pretty_midi (python3 -m pip show pretty_midi: Name pretty_midi, Version 0.2.11.post0).
+OC1B-366 future-Mac pip line: python3 -m pip install pretty_midi==0.2.11.post0

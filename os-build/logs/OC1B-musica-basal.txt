@@ -1,0 +1,17 @@
+OC1B-351 Musica basal — Bond's exact command reproduced before any change
+tree: 94010c76ee095fa6c6bcfa4405cd56a9695f32d3
+date(UTC): 2026-11-02T16:10:24Z
+command: node --test tests/musica-*.test.mjs
+pretty_midi pre-state: present
+
+✔ rights check rejects tracks with empty rights lines (3796.675167ms)
+✔ spark builders follow the repo contract and record attempts (59.450709ms)
+✔ loop with --spark-assist records an attempt per take (2485.149917ms)
+✔ take-log schema accepts good takes and rejects broken ones (57.8005ms)
+✔ variation pass rejects a near-identical clone (1877.00275ms)
+ℹ tests 39
+ℹ pass 39
+ℹ fail 0
+
+RESULT: 39 pass / 0 fail (39 tests). Bond wave-2: 37/2. Delta: +2 tests in tree since Bond's run, both former pretty_midi failures now pass.
+OC1B-352: basal failures = NONE — pretty_midi 0.2.11.post0 was already present on this Mac (installed machine-wide before this lane; this lane installed nothing). The two Bond failures (ModuleNotFoundError: pretty_midi @ os/worlds/musica/runtime/midi.py:39) cannot reproduce here; the MIDI test passes: 'MIDI export writes the take'"'s own notes via pretty_midi'.
