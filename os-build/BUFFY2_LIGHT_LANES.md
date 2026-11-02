@@ -1,6 +1,10 @@
-# BUFFY 2 — THE LIGHT LANES (8GB machine; Pax, 2026-11-02)
+# BOND — THE LIGHT LANES (8GB machine; Pax, 2026-11-02)
 
-The boss's question: Buffy 2 is on an 8GB laptop — how does
+Renamed by the boss 2026-11-02: the second Buffy is now
+BOND, so the two agents never get confused. Lanes written
+for 'Buffy 2' anywhere mean Bond.
+
+The boss's question: Bond is on an 8GB laptop — how does
 she pull real volume? Answer: the volume lives in text, tests,
 and programs; the RAM-hungry work (full Rust workspace
 builds, emulator runs against the 6 GiB image, model work)
