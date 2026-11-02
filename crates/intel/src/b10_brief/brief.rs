@@ -2086,6 +2086,110 @@ pub fn environment_jobs_record(
     Some(claimed)
 }
 
+/// OS-103 follow-up: the "bus" part of an environment record,
+/// read from the snapshot's own messages list at generation
+/// time.
+///
+/// The caller passes the snapshot's messages list — the same
+/// list the brief composer already sees — and the room or rooms
+/// that list covers, and gets back the dict to store as the
+/// environment record's "bus" value: "rooms" (non-empty strings,
+/// in caller order, duplicates dropped), "messages" (the count
+/// of usable entries), and "as_of" (the stamp passed as `now`,
+/// or the current time). Only dict and string entries count
+/// toward the total; other entries are skipped, never guessed
+/// into a message. The documented snapshot message shape carries
+/// no room field, so rooms come from the caller, never from the
+/// messages: a caller that states no room gets "rooms" as an
+/// empty list, and the Bus line still carries the count, without
+/// a room claim. The count is the count of messages in the passed
+/// list — the snapshot window — never a claim about bus history
+/// beyond that window. Returns `None` when there is no usable
+/// messages list, so the caller leaves "bus" out of the record
+/// and the Bus line reads not reported instead of falsely reading
+/// zero messages; an empty list returns a record with 0 messages,
+/// which renders as an empty window. This is only the bus quarter:
+/// a record carrying only this part still renders repo, jobs, and
+/// budget as not reported. Never fails.
+///
+/// Typed-input mapping, following this module's convention:
+/// the caller passes `None` for a non-list messages value (Python
+/// returns `None` for it) and for a rooms value that is neither a
+/// string nor a list; a non-string room entry maps to
+/// `BusRoom::Other` and is dropped here, and a non-dict,
+/// non-string message maps to `RawMessage::Other` and is skipped
+/// here. A non-int `now` maps to `None` and reads the wall clock,
+/// mirroring Python's fallback to the current time.
+#[derive(Debug, Clone, PartialEq)]
+pub enum BusRoom {
+    /// A room name as stated by the caller.
+    Name(String),
+    /// Any other shape: Python's `isinstance(room, str)` check
+    /// drops it, so it can never name a room.
+    Other,
+}
+
+/// The rooms a bus record covers, as the caller states them:
+/// one room string, or a list of room entries.
+#[derive(Debug, Clone, PartialEq)]
+pub enum BusRooms {
+    Single(String),
+    List(Vec<BusRoom>),
+}
+
+/// One bus part, mirroring Python's record dict: rooms in caller
+/// order, the usable message count, and the stamp.
+#[derive(Debug, Clone, PartialEq)]
+pub struct EnvironmentBusRecord {
+    pub rooms: Vec<String>,
+    pub messages: i64,
+    pub as_of: i64,
+}
+
+pub fn environment_bus_record(
+    messages: Option<&[RawMessage]>,
+    rooms: Option<&BusRooms>,
+    now: Option<i64>,
+) -> Option<EnvironmentBusRecord> {
+    let messages = messages?;
+    let mut room_list: Vec<String> = Vec::new();
+    if let Some(rooms) = rooms {
+        let candidates: Vec<String> = match rooms {
+            BusRooms::Single(room) => vec![room.clone()],
+            BusRooms::List(entries) => entries
+                .iter()
+                .filter_map(|entry| match entry {
+                    BusRoom::Name(name) => Some(name.clone()),
+                    BusRoom::Other => None,
+                })
+                .collect(),
+        };
+        for room in candidates {
+            if !room.is_empty() && !room_list.contains(&room) {
+                room_list.push(room);
+            }
+        }
+    }
+    let count = messages
+        .iter()
+        .filter(|message| {
+            matches!(message, RawMessage::Dict { .. } | RawMessage::Text(_))
+        })
+        .count() as i64;
+    let as_of = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    Some(EnvironmentBusRecord {
+        rooms: room_list,
+        messages: count,
+        as_of,
+    })
+}
+
 /// STR-002 image extensions: the digest lists what the pointer
 /// itself names, so only these extensions count as screenshots.
 /// A `.txt`, `.pdf`, or extension-less pointer is a file share,
@@ -4330,5 +4434,128 @@ mod tests {
         assert!(lines[2].contains("not reported"));
         assert!(lines[3].contains("not reported"));
         let _ = std::fs::remove_dir_all(&path);
+    }
+
+    fn bus_messages() -> Vec<RawMessage> {
+        use super::super::window::RawMessage;
+        vec![
+            RawMessage::Dict {
+                nick: "rowan".into(),
+                text: "hello".into(),
+            },
+            RawMessage::Text("milo: working on it".into()),
+            RawMessage::Dict {
+                nick: "pax".into(),
+                text: "noted".into(),
+            },
+            RawMessage::Other,
+            RawMessage::Other,
+        ]
+    }
+
+    #[test]
+    fn environment_bus_record_count_and_rooms_in_caller_order() {
+        let record = environment_bus_record(
+            Some(&bus_messages()),
+            Some(&BusRooms::List(vec![
+                BusRoom::Name("main".into()),
+                BusRoom::Name("build".into()),
+                BusRoom::Name("main".into()),
+            ])),
+            Some(1793093400),
+        )
+        .expect("a messages list yields a bus record");
+        assert_eq!(record.messages, 3);
+        assert_eq!(record.rooms, vec!["main".to_string(), "build".to_string()]);
+        assert_eq!(record.as_of, 1793093400);
+    }
+
+    #[test]
+    fn environment_bus_record_single_string_and_bad_rooms_dropped() {
+        let messages = bus_messages();
+        let single = environment_bus_record(
+            Some(&messages),
+            Some(&BusRooms::Single("main".into())),
+            Some(1793093400),
+        )
+        .expect("a single room string yields a record");
+        assert_eq!(single.rooms, vec!["main".to_string()]);
+        let mixed = environment_bus_record(
+            Some(&messages),
+            Some(&BusRooms::List(vec![
+                BusRoom::Name("main".into()),
+                BusRoom::Name(String::new()),
+                BusRoom::Other,
+            ])),
+            Some(1793093400),
+        )
+        .expect("a mixed room list yields a record");
+        assert_eq!(mixed.rooms, vec!["main".to_string()]);
+        let unstated = environment_bus_record(
+            Some(&messages),
+            None,
+            Some(1793093400),
+        )
+        .expect("no rooms still yields a record");
+        assert!(unstated.rooms.is_empty());
+        assert_eq!(unstated.messages, 3);
+    }
+
+    #[test]
+    fn environment_bus_record_non_list_returns_none() {
+        assert_eq!(environment_bus_record(None, None, Some(1793093400)), None);
+        let lines = environment_lines(None);
+        assert!(lines[1].contains("not reported"));
+    }
+
+    #[test]
+    fn environment_bus_record_empty_list_is_zero_not_not_reported() {
+        let record = environment_bus_record(
+            Some(&[]),
+            Some(&BusRooms::Single("main".into())),
+            Some(1793093400),
+        )
+        .expect("an empty list yields a record");
+        assert_eq!(record.messages, 0);
+        let env = Environment {
+            repo: None,
+            bus: Some(EnvironmentBus {
+                rooms: record.rooms.clone(),
+                messages: Some(record.messages),
+                age_label: environment_age_label(Some(record.as_of)),
+            }),
+            jobs: None,
+            working_age_label: String::new(),
+            budget: None,
+        };
+        let lines = environment_lines(Some(&env));
+        assert!(lines[1].contains("0 messages"));
+        assert!(!lines[1].contains("not reported"));
+    }
+
+    #[test]
+    fn environment_bus_record_renders_bus_line_and_others_not_reported() {
+        let record = environment_bus_record(
+            Some(&bus_messages()),
+            Some(&BusRooms::Single("main".into())),
+            Some(1793093400),
+        )
+        .expect("a messages list yields a record");
+        let env = Environment {
+            repo: None,
+            bus: Some(EnvironmentBus {
+                rooms: record.rooms.clone(),
+                messages: Some(record.messages),
+                age_label: environment_age_label(Some(record.as_of)),
+            }),
+            jobs: None,
+            working_age_label: String::new(),
+            budget: None,
+        };
+        let lines = environment_lines(Some(&env));
+        assert!(lines[1].contains("Bus: 3 messages in room main"));
+        assert!(lines[0].contains("not reported"));
+        assert!(lines[2].contains("not reported"));
+        assert!(lines[3].contains("not reported"));
     }
 }
