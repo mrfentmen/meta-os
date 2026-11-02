@@ -14,3 +14,5 @@ Queue 141/141 pre-live. Wonder chat OK, SAM 2x no-box (recorded), Spark reading 
 
 ## Section 4 — demo final form (29-37): DONE 2026-11-02
 Beat 6 rebuilt with judge step (receipt sim-8040104f5e0c7d23 filed run, deterministic+fallback named). Film 180.000s exact, t=10/t=160 verified. Runbook written + rehearsed (branch gate GREEN b85Q5D); 4 rehearsal gaps found and fixed/recorded. Proof: os-build/demo/ (mp4, frames, CAPTURE_NOTES, DEMO_RUNBOOK).
+## Section 3 — model pipeline, live (17-28): DONE with one UNPROVEN 2026-11-02
+Queue 277/277 pre-live. Wonder chat OK, SAM 2x no-box (recorded), Spark reading live (structure fire), image generated (webp 43KB). Judge incident: deterministic + named fallback (model empty-reply, direct prompt works) — model-mode UNPROVEN with reason. Spend $0.0216. Proof: WAVE3_MODEL_PROOFS.md + wave3-model-proofs/.
