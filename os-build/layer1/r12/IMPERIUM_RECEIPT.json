@@ -1,0 +1,50 @@
+{
+  "at": "2026-11-02T15:05:34.227Z",
+  "started": "2026-11-02T15:05:34.051Z",
+  "ok": true,
+  "stages": {
+    "queue_service": {
+      "state": "up",
+      "port": 64022,
+      "health": {
+        "ok": true,
+        "service": "trio-queue",
+        "store": "local-sqlite-FALLBACK",
+        "store_fallback": true,
+        "namespace": "hosted-r12",
+        "result_prefix": "trio"
+      }
+    },
+    "agent_once": {
+      "state": "ran",
+      "exit": 0,
+      "report": {
+        "done": [],
+        "failed": [],
+        "skipped": [],
+        "lost": []
+      },
+      "stderr": "trio_agent: WARNING \u2014 local SQLite FALLBACK store; jobs live in a file on this machine only\ntrio_agent: store=local-sqlite-FALLBACK namespace=hosted-r12",
+      "note": "zero jobs filed by this pass; no assessment and no model call is claimed"
+    },
+    "dispatch": {
+      "state": "accepted",
+      "http_status": 201,
+      "receipt": {
+        "receipt_id": "sim-f9dad20ef45d95d0",
+        "simulated": true,
+        "received_at": "2026-11-02T15:05:34.225Z",
+        "note": "SIMULATED dispatch endpoint \u2014 the package was logged inside this stack; no real emergency service or external system was contacted."
+      },
+      "route": "http://127.0.0.1:64022/dispatch-simulated"
+    }
+  },
+  "runDir": "/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/imperium-hosted-60cssnym",
+  "resumed": false,
+  "batonBefore": null,
+  "dispatchesInRunDir": 1,
+  "claims": {
+    "proven": "queue service answered; resident agent one-pass exited 0 or was already done in the baton; /dispatch-simulated accepted exactly one simulated package and returned a receipt",
+    "not_proven": "no assessment, no model call, no patrol cycle; no real emergency service was contacted"
+  }
+}
