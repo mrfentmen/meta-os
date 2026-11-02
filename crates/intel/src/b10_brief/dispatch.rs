@@ -1679,6 +1679,185 @@ pub fn show_dispatch(
     }
 }
 
+/// An undo run failed before any job was touched (DSP-011).
+/// The message is the full Python `UndoError` text, so callers and
+/// tests see the same words Python raises.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UndoError(pub String);
+
+impl std::fmt::Display for UndoError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+/// One job entry in an undo report: a cancelled job, or a job
+/// reported missing (DSP-011).
+#[derive(Debug, Clone, PartialEq)]
+pub struct UndoJob {
+    pub key: String,
+    pub id: String,
+    pub title: String,
+}
+
+/// One claimed job left untouched by an undo (DSP-011), with its claim nick.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UndoClaimedJob {
+    pub key: String,
+    pub id: String,
+    pub title: String,
+    pub claim: String,
+}
+
+/// One non-claimed job left untouched by an undo (DSP-011), with its status.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UndoOtherJob {
+    pub key: String,
+    pub id: String,
+    pub title: String,
+    pub status: String,
+}
+
+/// The report of an `undo_dispatch` run (DSP-011): cancelled jobs,
+/// claimed jobs left untouched, other jobs left untouched, and jobs
+/// missing from the queue, each in record order.
+#[derive(Debug, Clone, PartialEq)]
+pub struct UndoReport {
+    pub id: String,
+    pub cancelled: Vec<UndoJob>,
+    pub untouched_claimed: Vec<UndoClaimedJob>,
+    pub untouched_other: Vec<UndoOtherJob>,
+    pub missing: Vec<UndoJob>,
+}
+
+fn undo_classify(
+    report: &mut UndoReport,
+    key: String,
+    job_id: String,
+    title: String,
+    fields: Option<(String, String)>,
+) {
+    match fields {
+        None => report.missing.push(UndoJob {
+            key,
+            id: job_id,
+            title,
+        }),
+        Some((status, claim)) if status == "claimed" => {
+            report.untouched_claimed.push(UndoClaimedJob {
+                key,
+                id: job_id,
+                title,
+                claim,
+            })
+        }
+        Some((status, _claim)) => report.untouched_other.push(UndoOtherJob {
+            key,
+            id: job_id,
+            title,
+            status,
+        }),
+    }
+}
+
+/// Undo a posted plan: cancel its unclaimed jobs (DSP-011).
+///
+/// `record` is the stored dispatch record's jobs, or `None` when
+/// there is no record for this id. A missing record raises
+/// `UndoError` before any job is touched: `state_of` and `cancel`
+/// are never called. Every job in the record is read fresh from
+/// the queue, so the undo acts on the job's current state, not
+/// the state at posting time. An open job is cancelled through
+/// `cancel` with argv `["cancel", <job id>, "--reason=dispatch
+/// undo <id>"]`; a zero exit code lands it in `cancelled`, while
+/// a nonzero code re-reads the job and classifies its actual
+/// state instead of failing the run, so a claim landing between
+/// the read and the cancel is reported honestly. A claimed job
+/// is work in progress and is left untouched; a done, blocked,
+/// failed-final, or already cancelled job is history and is left
+/// untouched; a job id no longer in the queue is reported as
+/// missing. Nothing else is touched, and a second undo cancels
+/// nothing new: the first run's cancelled jobs come back as
+/// untouched with status cancelled.
+///
+/// The returned `undone_at` is the caller's `now`, the value
+/// Python stores on the record beside the report.
+///
+/// Rust adaptations, stated not hidden: Python reads the record
+/// from `intel.store`, the states from `jobs.job_get`, cancels
+/// through `jobs.main`, and stores the report back on the record
+/// with `put_dispatch`; this wrapper takes the record, the state
+/// lookup, and the cancel call as arguments, and returns the
+/// report with `undone_at`, so store and queue access stay with
+/// the caller. Python formats the id with `!r`; this message
+/// uses plain single quotes, which matches for ordinary ids.
+pub fn undo_dispatch(
+    id: &str,
+    record: Option<&[DispatchRecordJob]>,
+    state_of: impl Fn(&str) -> Option<(String, String)>,
+    cancel: impl Fn(&[String]) -> i32,
+    now: i64,
+) -> Result<(UndoReport, i64), UndoError> {
+    let jobs = match record {
+        None => {
+            return Err(UndoError(format!(
+                "dispatch undo failed: no dispatch record '{id}' (nothing touched)"
+            )))
+        }
+        Some(jobs) => jobs,
+    };
+    let mut report = UndoReport {
+        id: id.to_string(),
+        cancelled: vec![],
+        untouched_claimed: vec![],
+        untouched_other: vec![],
+        missing: vec![],
+    };
+    let reason = format!("dispatch undo {id}");
+    for entry in jobs {
+        match state_of(&entry.id) {
+            None => undo_classify(
+                &mut report,
+                entry.key.clone(),
+                entry.id.clone(),
+                entry.title.clone(),
+                None,
+            ),
+            Some((status, _claim)) if status == "open" => {
+                let argv = vec![
+                    "cancel".to_string(),
+                    entry.id.clone(),
+                    format!("--reason={reason}"),
+                ];
+                if cancel(&argv) == 0 {
+                    report.cancelled.push(UndoJob {
+                        key: entry.key.clone(),
+                        id: entry.id.clone(),
+                        title: entry.title.clone(),
+                    });
+                } else {
+                    let fresh = state_of(&entry.id);
+                    undo_classify(
+                        &mut report,
+                        entry.key.clone(),
+                        entry.id.clone(),
+                        entry.title.clone(),
+                        fresh,
+                    );
+                }
+            }
+            Some((status, claim)) => undo_classify(
+                &mut report,
+                entry.key.clone(),
+                entry.id.clone(),
+                entry.title.clone(),
+                Some((status, claim)),
+            ),
+        }
+    }
+    Ok((report, now))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2575,6 +2754,136 @@ mod tests {
         let text = render_dispatch_show(&report);
         assert!(text.contains("now: claimed by tester"), "got: {text}");
         assert!(text.ends_with("  counts: 1 claimed"), "got: {text}");
+    }
+
+    #[test]
+    fn undo_missing_record_errors_before_any_touch() {
+        let reads = std::cell::Cell::new(0);
+        let cancels = std::cell::Cell::new(0);
+        let err = undo_dispatch(
+            "dsp-gone",
+            None,
+            |_id| {
+                reads.set(reads.get() + 1);
+                None
+            },
+            |_argv| {
+                cancels.set(cancels.get() + 1);
+                0
+            },
+            0,
+        )
+        .expect_err("missing record must fail");
+        assert_eq!(
+            err.0,
+            "dispatch undo failed: no dispatch record 'dsp-gone' (nothing touched)"
+        );
+        // Python raises before any job is touched: no reads, no cancels.
+        assert_eq!(reads.get(), 0);
+        assert_eq!(cancels.get(), 0);
+    }
+
+    #[test]
+    fn undo_cancels_open_leaves_rest() {
+        let record = vec![
+            DispatchRecordJob {
+                key: "base".into(),
+                id: "j-base".into(),
+                title: "Do base".into(),
+                files: vec![],
+                deps: vec![],
+            },
+            DispatchRecordJob {
+                key: "api".into(),
+                id: "j-api".into(),
+                title: "Do api".into(),
+                files: vec![],
+                deps: vec![],
+            },
+            DispatchRecordJob {
+                key: "done".into(),
+                id: "j-done".into(),
+                title: "Did it".into(),
+                files: vec![],
+                deps: vec![],
+            },
+            DispatchRecordJob {
+                key: "gone".into(),
+                id: "j-gone".into(),
+                title: "Was here".into(),
+                files: vec![],
+                deps: vec![],
+            },
+        ];
+        let seen_argv = std::cell::RefCell::new(Vec::new());
+        let (report, undone_at) = undo_dispatch(
+            "dsp-undo-1",
+            Some(&record),
+            |id| match id {
+                "j-base" => Some(("open".to_string(), String::new())),
+                "j-api" => Some(("claimed".to_string(), "tester".to_string())),
+                "j-done" => Some(("done".to_string(), String::new())),
+                _ => None,
+            },
+            |argv| {
+                seen_argv.borrow_mut().push(argv.to_vec());
+                0
+            },
+            1700000000,
+        )
+        .expect("present record must undo");
+        assert_eq!(undone_at, 1700000000);
+        assert_eq!(report.id, "dsp-undo-1");
+        assert_eq!(report.cancelled.len(), 1);
+        assert_eq!(report.cancelled[0].id, "j-base");
+        assert_eq!(report.untouched_claimed.len(), 1);
+        assert_eq!(report.untouched_claimed[0].claim, "tester");
+        assert_eq!(report.untouched_other.len(), 1);
+        assert_eq!(report.untouched_other[0].status, "done");
+        assert_eq!(report.missing.len(), 1);
+        assert_eq!(report.missing[0].id, "j-gone");
+        let argv_seen = seen_argv.borrow();
+        assert_eq!(argv_seen.len(), 1);
+        assert_eq!(
+            argv_seen[0],
+            vec![
+                "cancel".to_string(),
+                "j-base".to_string(),
+                "--reason=dispatch undo dsp-undo-1".to_string()
+            ]
+        );
+    }
+
+    #[test]
+    fn undo_refused_cancel_re_reads_and_classifies() {
+        let record = vec![DispatchRecordJob {
+            key: "base".into(),
+            id: "j-base".into(),
+            title: "Do base".into(),
+            files: vec![],
+            deps: vec![],
+        }];
+        let reads = std::cell::Cell::new(0);
+        let (report, _) = undo_dispatch(
+            "dsp-undo-2",
+            Some(&record),
+            |_id| {
+                reads.set(reads.get() + 1);
+                if reads.get() == 1 {
+                    Some(("open".to_string(), String::new()))
+                } else {
+                    Some(("claimed".to_string(), "racer".to_string()))
+                }
+            },
+            |_argv| 1,
+            0,
+        )
+        .expect("refused cancel must still report");
+        // One read to find it open, one re-read after the refusal.
+        assert_eq!(reads.get(), 2);
+        assert!(report.cancelled.is_empty());
+        assert_eq!(report.untouched_claimed.len(), 1);
+        assert_eq!(report.untouched_claimed[0].claim, "racer");
     }
 
     // Scripted Spark callable for plan_from_spark tests, mirroring
