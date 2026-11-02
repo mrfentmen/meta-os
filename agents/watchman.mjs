@@ -16,9 +16,60 @@ export function createWatchman({ registryFile, root, jobsDir }) {
   const ledger = new Ledger(path.join(root, "watchman.jsonl"));
   const stateFile = path.join(root, "watchman-state.json");
   let claimed = new Set();
-  try { claimed = new Set(JSON.parse(fs.readFileSync(stateFile, "utf8")).claimed || []); } catch {}
-  const save = () => fs.writeFileSync(stateFile, JSON.stringify({ claimed: [...claimed] }, null, 2));
+  // id -> the run it should CONTINUE, when a previous run for the same job died mid-flight.
+  // Persisted, so a second restart still resumes instead of starting over.
+  let resume = {};
+  try {
+    const st = JSON.parse(fs.readFileSync(stateFile, "utf8"));
+    claimed = new Set(st.claimed || []);
+    resume = st.resume || {};
+  } catch {}
+  const save = () => fs.writeFileSync(stateFile, JSON.stringify({ claimed: [...claimed], resume }, null, 2));
   const runs = new Map();
+
+  function runStatus(runDir) {
+    const f = path.join(runDir, "ledger.jsonl");
+    if (!fs.existsSync(f)) return { exists: false, exited: false };
+    const events = new Ledger(f).read().map((l) => l.event);
+    return { exists: true, exited: events.includes("exit") };
+  }
+
+  function lastBell(id) {
+    let found = null;
+    for (const l of ledger.read()) if (l.event === "bell" && l.id === id) found = l;
+    return found;
+  }
+
+  // Reconcile the claims on disk against what the runs on disk say. Two states are reachable
+  // only after a crash, and both used to be permanent:
+  //
+  //   claimed, no bell      the daemon died between claiming the job and spawning it. Nothing
+  //                         ran, so the claim is released and the job is picked up next poll.
+  //   bell, run has no exit the daemon (or the runtime) died mid-run. The run is MARKED with
+  //                         `run-orphaned` -- so the record says the run did not finish by
+  //                         itself -- and the job is re-queued to CONTINUE from that run, which
+  //                         is what the baton is for. Starting over would throw away the work.
+  function reconcile() {
+    const recovered = [];
+    for (const id of [...claimed]) {
+      if (fs.existsSync(path.join(jobsDir, id + ".result.json"))) continue;   // finished
+      const bell = lastBell(id);
+      if (!bell) {
+        claimed.delete(id);
+        recovered.push({ id, action: "unclaimed", reason: "claimed but never spawned" });
+        continue;
+      }
+      const runDir = path.join(root, "runs", bell.run);
+      const st = runStatus(runDir);
+      if (st.exited) continue;   // finished; a missing result file is not a reason to re-run
+      new Ledger(path.join(runDir, "ledger.jsonl")).add(bell.run, "run-orphaned", { seenBy: "watchman-restart" });
+      resume[id] = bell.run;
+      claimed.delete(id);
+      recovered.push({ id, action: "resume", from: bell.run });
+    }
+    if (recovered.length) save();
+    return recovered;
+  }
 
   async function pollOnce() {
     const spawnedNow = [];
@@ -31,6 +82,14 @@ export function createWatchman({ registryFile, root, jobsDir }) {
       const agent = agents.find((a) => a.name === job.agent);
       claimed.add(id); save();
       if (!agent) { ledger.add("watchman", "job-unmatched", { id, agent: job.agent }); continue; }
+      // A job whose previous run died resumes from that run, not from scratch: reconcile()
+      // recorded the run id, and the baton pass below turns it into continuation orders.
+      if (resume[id]) {
+        job = { ...job, continuesFrom: resume[id] };
+        delete resume[id];
+        save();
+        ledger.add("watchman", "resume-from-orphan", { id, from: job.continuesFrom });
+      }
       if (job.continuesFrom) {
         const baton = readBaton(path.join(root, "runs", job.continuesFrom));
         if (baton) {
@@ -52,7 +111,8 @@ export function createWatchman({ registryFile, root, jobsDir }) {
     }
     return spawnedNow;
   }
-  return { pollOnce, ledger, runs };
+  const recovered = reconcile();
+  return { pollOnce, ledger, runs, reconcile, recovered };
 }
 
 /* ---- daemon ---- */

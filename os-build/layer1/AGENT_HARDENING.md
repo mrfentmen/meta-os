@@ -37,21 +37,23 @@ one; `read()` skips a line it cannot parse and keeps the rest. Neither repairs n
 anything — the page says so because "we recovered it" and "we kept what was whole" are different
 claims.
 
-## What still needs a fix (Pax's lane — runtime is his to edit)
+## What still needs a fix
 
-1. **Claim-before-spawn loses a job.** The watchman writes the id into `claimed` *before*
-   `spawnAgent` runs. A daemon crash in that window leaves a job claimed with no run and no
-   result, and it is skipped forever. The fix is a two-phase claim (claim with a run id, reconcile
-   claims that have no run dir) — that is A2's restart drill, not silently patched here.
-2. **STOP is polled, not checkpointed.** The 100 ms interval is the runtime's only STOP surface.
+Two of the three items this report first listed were reachable only after a crash and were
+permanent until A2 landed. Both are now fixed, in `agents/watchman.mjs`:
+
+1. **Claim-before-spawn lost a job** — a claim with no bell is released by `reconcile()` and the
+   job is picked up on the next poll.
+2. **No run reaper** — a bell whose run has no `exit` record is marked `run-orphaned` and the job
+   is re-queued to CONTINUE from that run's baton. Drill: `AGENT_RESTART_DRILL.md`.
+
+Still open, and honestly Pax's to decide (runtime is his to edit):
+
+3. **STOP is polled, not checkpointed.** The 100 ms interval is the runtime's only STOP surface.
    A child that never yields between checkpoints is killed up to 100 ms late with no record of
    where it was. The spec's "honoured at checkpoints" (S6) is satisfied in the weak sense only.
-3. **There is no run reaper.** A runtime that dies without writing `exit` leaves a run directory
-   with a ledger that stops at `spawn`. Nothing marks it. A2's drill will read exactly this
-   state; the fix is a sweep that appends `run-orphaned` on restart.
 4. **Ledger growth is unbounded.** One JSONL per run is fine at this scale; nothing rotates or
-   caps it, and the append-side one-byte read is O(1) only because the file is small. Stated, not
-   solved.
+   caps it, and the append-side one-byte read is O(1) only because the file is small.
 
 ## Evidence, on disk
 
