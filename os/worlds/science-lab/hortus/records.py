@@ -64,6 +64,56 @@ def load_records(path):
     return records
 
 
+def write_generation(path, generation, parent_ids, child_ids):
+    """Append one generation record with its parent and child ids.
+
+    Refuses a child id that already exists in any generation record
+    or repeats inside this one. One call writes exactly one record.
+    """
+    try:
+        generation = int(generation)
+    except (TypeError, ValueError):
+        raise ValueError("generation must be an integer")
+    parents = [str(p) for p in parent_ids]
+    children = [str(c) for c in child_ids]
+    if len(set(children)) != len(children):
+        raise ValueError("generation record repeats a child id")
+    existing = set()
+    if os.path.exists(path):
+        for record in load_records(path):
+            if record.get("kind") == "generation-record":
+                existing.update(str(c) for c in record.get("child_ids", []))
+    duplicate = sorted(existing.intersection(children))
+    if duplicate:
+        raise ValueError("duplicate child id(s) refused: %r" % (duplicate,))
+    record = {
+        "kind": "generation-record",
+        "generation": generation,
+        "parent_ids": parents,
+        "child_ids": children,
+    }
+    parent = os.path.dirname(os.path.abspath(path))
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    with open(path, "a", encoding="utf-8") as fh:
+        fh.write(json.dumps(record, sort_keys=True) + "\n")
+    return record
+
+
+def list_generations(path, generation=None):
+    """List generation records, optionally filtered by generation."""
+    records = []
+    if not os.path.exists(path):
+        return records
+    for record in load_records(path):
+        if record.get("kind") != "generation-record":
+            continue
+        if generation is not None and record.get("generation") != int(generation):
+            continue
+        records.append(record)
+    return records
+
+
 def reconstruct(records):
     """Rebuild the family tree and run shape from raw records.
 

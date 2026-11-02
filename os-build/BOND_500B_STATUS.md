@@ -274,3 +274,36 @@ Section 7 verification: **253 Science Lab tests pass, 0 fail**
 
 Section 8 verification: **285 Science Lab tests pass, 0 fail**
 (`python3 -m unittest discover -s tests/science-lab`).
+
+## Section 9 — Science Lab — Hortus (CB2-201..225) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-201 | `test_hortus_genome.py` | valid fixture parses to four documented fields |
+| CB2-202 | `test_hortus_genome.py` | unknown gene key refused |
+| CB2-203 | `test_hortus_breeding_step.py` | child genes come only from the two parents |
+| CB2-204 | `test_hortus_breeding_step.py` | same parents and seed reproduce same child |
+| CB2-205 | `test_hortus_breeding_step.py` | 10-seed sweep yields at least two outcomes |
+| CB2-206 | `test_hortus_mutation.py` | maximum mutation differs from pure crossover |
+| CB2-207 | `test_hortus_mutation.py` | zero mutation keeps every gene in the parents |
+| CB2-208 | `test_hortus_population.py` | six parents produce configured generation of eight |
+| CB2-209 | `test_hortus_population.py` | population stays size six across five generations |
+| CB2-210 | `test_hortus_verifier.py` | invalid child flags named min_spacing_m constraint |
+| CB2-211 | `test_hortus_verifier.py` | valid reference child passes with no violations |
+| CB2-212 | `test_hortus_records.py` | one generation writes one parent/child record |
+| CB2-213 | `test_hortus_records.py` | duplicate child id refused |
+| CB2-214 | `test_hortus_fitness.py` | reference scores its unpenalised heat exactly |
+| CB2-215 | `test_hortus_fitness.py` | same individual scores identically across calls |
+| CB2-216 | `test_hortus_selection.py` | top-scoring individual always selected |
+| CB2-217 | `test_hortus_selection.py` | selection never exceeds configured parent count |
+| CB2-218 | `test_hortus_five_gen.py` | generation records run 1..5 in order |
+| CB2-219 | `test_hortus_five_gen.py` | every generation passes verify_child |
+| CB2-220 | `test_hortus_calibration.py` | 14 fixture parts load, 10 calibration / 4 validation |
+| CB2-221 | `test_hortus_calibration.py` | missing score skipped and counted |
+| CB2-222 | `test_hortus_genome.py` | genome serialisation round-trips |
+| CB2-223 | `test_hortus_population.py` | empty population refused with named error |
+| CB2-224 | `test_hortus_breeding_step.py` | crossover result pinned exactly |
+| CB2-225 | `test_hortus_records.py` | generation-2 filter over mixed records |
+
+Section 9 verification: **312 Science Lab tests pass, 0 fail**
+(`python3 -m unittest discover -s tests/science-lab`).
