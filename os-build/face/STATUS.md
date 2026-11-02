@@ -44,7 +44,9 @@ or BLOCKED with the artifact named.
 | 28 | Alt-tab + terminal shortcut | PROVEN (local) | Notes->Terminal->Notes |
 | 29-33 | Wallpapers | TODO | — |
 | 34-37 | Dock | TODO | — |
-| 38-40 | Terminal | TODO | — |
+| 38 | Terminal app real shell | PROVEN (local) | shell-terminal.png ([connected]+bash prompt via ws:18933) |
+| 39 | First tab status page live facts | PROVEN (local) | term-status bar (cpu/mem/disk/net, same /facts as Dashboard) |
+| 40 | clear/scrollback/copy/paste | DONE (code) | clear btn, 2000-line cap, select-to-copy, paste event |
 | 41-43 | Dashboard | TODO | — |
 | 44-49 | Systems as apps | TODO | — |
 | 50-51 | Board | TODO | — |

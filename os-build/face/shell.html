@@ -25,7 +25,12 @@
   .window .titlebar .close { margin-left: 0; }
   .window .titlebar .close { cursor: pointer; border: none; background: #c00; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 1; }
   .window iframe { flex: 1; border: none; border-radius: 0 0 8px 8px; min-height: 300px; background: #fff; }
-  .window .term { flex: 1; min-height: 300px; padding: 8px; font: 13px/1.4 monospace; white-space: pre-wrap; overflow: auto; }
+  .window .term { flex: 1; min-height: 300px; padding: 0; font: 13px/1.4 monospace; display: flex; flex-direction: column; overflow: hidden; }
+  .window .term-status { padding: 6px 8px; font-size: 12px; background: #1a2340; color: #cfe0ff; border-bottom: 1px solid #444; white-space: pre-wrap; }
+  html[data-theme="light"] .window .term-status { background: #dde8ff; color: #123; }
+  .window .term-status .clr { float: right; cursor: pointer; border: 1px solid #888; background: transparent; color: inherit; border-radius: 6px; font-size: 11px; padding: 1px 8px; }
+  .window .term-out { flex: 1; padding: 8px; white-space: pre-wrap; overflow-y: auto; user-select: text; min-height: 220px; }
+  .window .term-hint { padding: 4px 8px; font-size: 11px; opacity: .7; }
   #dock { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 8px 12px; background: color-mix(in srgb, var(--bar) 75%, transparent); border: 1px solid #555; border-radius: 14px; z-index: 50; }
   #dock button { width: 44px; height: 44px; font-size: 22px; border: 1px solid transparent; background: transparent; border-radius: 10px; cursor: pointer; }
   #dock button:hover, #dock button:focus { border-color: var(--accent); }
@@ -121,6 +126,101 @@ async function launchBackend(target) {
     return r.ok;
   } catch (e) { return false; }
 }
+/* Real terminal: WebSocket to ptyd.py ws bridge (127.0.0.1:18933).
+   Status bar shows live facts (same source as Dashboard); below is the
+   live bash session. Scrollback 2000 lines, clear button, copy via
+   selection, paste via Ctrl+Shift+V or paste event. */
+function factsHost() {
+  try { if (location.hostname) return location.hostname; } catch (e) {}
+  return "127.0.0.1";
+}
+function buildTerminal(w) {
+  const box = document.createElement("div");
+  box.className = "term";
+  const st = document.createElement("div");
+  st.className = "term-status";
+  const clr = document.createElement("button");
+  clr.className = "clr"; clr.textContent = "clear";
+  clr.onclick = (ev) => { ev.stopPropagation(); out.textContent = ""; };
+  st.appendChild(clr);
+  const span = document.createElement("span");
+  span.textContent = "Meta OS status: loading\u2026";
+  st.appendChild(span);
+  box.appendChild(st);
+  const out = document.createElement("div");
+  out.className = "term-out";
+  out.tabIndex = 0;
+  out.textContent = "connecting to shell\u2026\r\n";
+  box.appendChild(out);
+  const hint = document.createElement("div");
+  hint.className = "term-hint";
+  hint.textContent = "real bash on this machine via ptyd :18933 (ws). select to copy, ctrl+shift+V to paste.";
+  box.appendChild(hint);
+  const factsURL = "http://" + factsHost() + ":18932/facts";
+  async function pollFacts() {
+    try {
+      const r = await fetch(factsURL);
+      const f = await r.json();
+      span.textContent = "Meta OS status \u2014 cpu " + f.cpu + " \u00b7 mem " + f.mem + " \u00b7 disk " + f.disk + " \u00b7 net " + f.net;
+    } catch (e) { span.textContent = "Meta OS status \u2014 facts unreachable (is facts.py running?)"; }
+  }
+  pollFacts(); const poller = setInterval(pollFacts, 2000);
+  let ws = null;
+  function appendText(txt) {
+    // handle clear-screen + strip colour codes, keep it readable
+    if (txt.indexOf("\u001b[2J") !== -1 || txt.indexOf("\u000c") !== -1) { out.textContent = ""; }
+    txt = txt.replace(/\u001b\[[0-9;?]*[a-zA-Z]/g, "");
+    txt = txt.replace(/\u001b[()][0-9A-B]/g, "");
+    txt = txt.replace(/\r(?!\n)/g, "\n");
+    out.textContent += txt;
+    const lines = out.textContent.split("\n");
+    if (lines.length > 2000) out.textContent = lines.slice(lines.length - 2000).join("\n");
+    out.scrollTop = out.scrollHeight;
+  }
+  function connect() {
+    try { ws = new WebSocket("ws://" + factsHost() + ":18933/"); }
+    catch (e) { out.textContent += "\r\n[no websocket support]\r\n"; return; }
+    ws.binaryType = "arraybuffer";
+    ws.onopen = () => { out.textContent += "[connected]\r\n"; out.focus(); };
+    ws.onmessage = (ev) => {
+      let data = ev.data;
+      if (typeof data !== "string") { try { data = new TextDecoder().decode(data); } catch (e) { data = ""; } }
+      appendText(data);
+    };
+    ws.onclose = () => { out.textContent += "\r\n[disconnected \u2014 click to reconnect]\r\n"; };
+    ws.onerror = () => { try { ws.close(); } catch (e) {} };
+  }
+  connect();
+  out.addEventListener("click", () => { if (!ws || ws.readyState > 1) { out.textContent += "[reconnecting\u2026]\r\n"; connect(); } out.focus(); });
+  out.addEventListener("keydown", (e) => {
+    if (e.ctrlKey && e.shiftKey && (e.key === "C" || e.key === "c")) return; // native copy
+    if (e.ctrlKey && e.shiftKey && (e.key === "V" || e.key === "v")) return; // paste via event below
+    if (!ws || ws.readyState !== 1) return;
+    let seq = null;
+    if (e.key === "Enter") seq = "\r";
+    else if (e.key === "Backspace") seq = "\x7f";
+    else if (e.key === "Tab") seq = "\t";
+    else if (e.key === "Escape") seq = "\x1b";
+    else if (e.key === "ArrowUp") seq = "\x1b[A";
+    else if (e.key === "ArrowDown") seq = "\x1b[B";
+    else if (e.key === "ArrowRight") seq = "\x1b[C";
+    else if (e.key === "ArrowLeft") seq = "\x1b[D";
+    else if (e.ctrlKey && e.key.length === 1) seq = String.fromCharCode(e.key.toUpperCase().charCodeAt(0) - 64);
+    else if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) seq = e.key;
+    if (seq !== null) { ws.send(seq); e.preventDefault(); }
+  });
+  out.addEventListener("paste", (e) => {
+    try {
+      const txt = (e.clipboardData || window.clipboardData).getData("text");
+      if (txt && ws && ws.readyState === 1) ws.send(txt);
+      e.preventDefault();
+    } catch (err) {}
+  });
+  // stop facts polling when the window closes
+  const gc = setInterval(() => { if (!box.isConnected) { clearInterval(poller); clearInterval(gc); } }, 5000);
+  setTimeout(() => out.focus(), 50);
+  return box;
+}
 function openWindow(app) {
   document.getElementById("app-name").textContent = app.name;
   const w = document.createElement("div");
@@ -151,17 +251,7 @@ function openWindow(app) {
     f.title = app.name;
     w.appendChild(f);
   } else if (app.kind === "term") {
-    const t = document.createElement("div");
-    t.className = "term";
-    t.textContent = "Meta OS shell — relay@metaos\n$ ";
-    t.tabIndex = 0;
-    t.addEventListener("keydown", (e) => {
-      if (e.key.length === 1) { t.textContent += e.key; e.preventDefault(); }
-      else if (e.key === "Enter") { t.textContent += "\n$ "; e.preventDefault(); }
-      else if (e.key === "Backspace") { t.textContent = t.textContent.slice(0, -1); e.preventDefault(); }
-    });
-    w.appendChild(t);
-    setTimeout(() => t.focus(), 50);
+    w.appendChild(buildTerminal(w));
   } else if (app.kind === "launch") {
     const t = document.createElement("div");
     t.className = "term";
