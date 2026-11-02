@@ -1,0 +1,172 @@
+{
+  "run": "osint-2026-11-02T11-12-02-401Z",
+  "ts": "2026-11-02T11:12:37.079Z",
+  "status": "ran",
+  "domains": [
+    "meta-os.pages.dev",
+    "muse-relay-live.pages.dev",
+    "clipraiders.com",
+    "watchpeoplefight.com"
+  ],
+  "results": [
+    {
+      "domain": "meta-os.pages.dev",
+      "sharedHost": true,
+      "resolved": true,
+      "ct": {
+        "ok": true,
+        "error": null,
+        "certificates": 0,
+        "distinctNames": 0,
+        "issuers": 0,
+        "expiredCertificates": 0,
+        "firstNotBefore": null,
+        "lastNotBefore": null
+      },
+      "dns": {
+        "counts": {
+          "A": 2,
+          "AAAA": 2,
+          "MX": 0,
+          "NS": 2,
+          "TXT": 0,
+          "CNAME": 0,
+          "CAA": 0
+        },
+        "spf": false,
+        "dmarc": false,
+        "missing": [
+          "MX",
+          "TXT",
+          "CNAME",
+          "CAA"
+        ]
+      },
+      "findings": []
+    },
+    {
+      "domain": "muse-relay-live.pages.dev",
+      "sharedHost": true,
+      "resolved": true,
+      "ct": {
+        "ok": true,
+        "error": null,
+        "certificates": 2,
+        "distinctNames": 2,
+        "issuers": 1,
+        "expiredCertificates": 0,
+        "firstNotBefore": "2026-09-20T11:21:10.000Z",
+        "lastNotBefore": "2026-09-20T11:21:10.000Z"
+      },
+      "dns": {
+        "counts": {
+          "A": 2,
+          "AAAA": 2,
+          "MX": 0,
+          "NS": 2,
+          "TXT": 0,
+          "CNAME": 0,
+          "CAA": 0
+        },
+        "spf": false,
+        "dmarc": false,
+        "missing": [
+          "MX",
+          "TXT",
+          "CNAME",
+          "CAA"
+        ]
+      },
+      "findings": []
+    },
+    {
+      "domain": "clipraiders.com",
+      "sharedHost": false,
+      "resolved": false,
+      "ct": {
+        "ok": true,
+        "error": null,
+        "certificates": 0,
+        "distinctNames": 0,
+        "issuers": 0,
+        "expiredCertificates": 0,
+        "firstNotBefore": null,
+        "lastNotBefore": null
+      },
+      "dns": {
+        "counts": {
+          "A": 0,
+          "AAAA": 0,
+          "MX": 0,
+          "NS": 0,
+          "TXT": 0,
+          "CNAME": 0,
+          "CAA": 0
+        },
+        "spf": false,
+        "dmarc": false,
+        "missing": [
+          "A",
+          "AAAA",
+          "MX",
+          "NS",
+          "TXT",
+          "CNAME",
+          "CAA"
+        ]
+      },
+      "findings": [
+        {
+          "severity": "info",
+          "title": "clipraiders.com does not resolve in DNS",
+          "evidence": "No NS answer from the resolver for clipraiders.com. A domain in the boss's own list that does not resolve is worth knowing about (expired, unregistered, or mis-typed); mail findings are deliberately not filed for it because a name that cannot resolve cannot receive mail."
+        }
+      ]
+    },
+    {
+      "domain": "watchpeoplefight.com",
+      "sharedHost": false,
+      "resolved": true,
+      "ct": {
+        "ok": true,
+        "error": null,
+        "certificates": 8,
+        "distinctNames": 5,
+        "issuers": 2,
+        "expiredCertificates": 0,
+        "firstNotBefore": "2026-08-27T11:54:06.000Z",
+        "lastNotBefore": "2026-08-28T07:47:37.000Z"
+      },
+      "dns": {
+        "counts": {
+          "A": 2,
+          "AAAA": 2,
+          "MX": 0,
+          "NS": 2,
+          "TXT": 1,
+          "CNAME": 0,
+          "CAA": 0
+        },
+        "spf": false,
+        "dmarc": false,
+        "missing": [
+          "MX",
+          "CNAME",
+          "CAA"
+        ]
+      },
+      "findings": [
+        {
+          "severity": "medium",
+          "title": "no DMARC record published for watchpeoplefight.com",
+          "evidence": "DNS query for _dmarc.watchpeoplefight.com TXT returned no v=DMARC1 record. Without it, a receiver has no policy telling it what to do with mail that fails SPF/DKIM alignment for this domain."
+        },
+        {
+          "severity": "low",
+          "title": "no SPF record published for watchpeoplefight.com",
+          "evidence": "DNS query for watchpeoplefight.com TXT returned no v=spf1 record, so nothing states which hosts may send mail as this domain."
+        }
+      ]
+    }
+  ]
+}
