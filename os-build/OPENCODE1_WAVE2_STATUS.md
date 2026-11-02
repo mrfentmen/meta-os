@@ -45,3 +45,24 @@ Musica plays (take-006, ended 7.3s) but musica.html hardcodes the take (not reco
 Cargo check 19/19 crates clean (this tree). Python: queue 128, officina 49, custos 125 — all OK (302 total). Node: see Section 2 prove-main note (1947/55 on ab763ac0; 1965/55 on this tip). Hortus: no unittest suite (run.py >120s, reference output kept). Evidence: wave2-sec8.md.
 ## Section 9 — site/submission (81-90): DONE with flags
 5 site claims spot-checked: 4 proven + gate 7/7, with FLAG: MERGED-boot.txt is 0 bytes on main (site cites it; NEXT PROOF label agrees). Board 9/9 unlocated — flagged. Rehearsal: SUBMISSION_REHEARSAL.md on opencode/round6 (54ee4353); R6-2 capture files not on main — flagged for Pax merge. FREEZE_CERT draft present (TBDs). Forms draft absent (checklist is start point). Evidence: wave2-sec9.md.
+
+## Section 10 — final proofs (91-100): DONE 2026-11-02
+91 branch gate: GATE GREEN 7/7 on this tree (/tmp/wave2branch-gate.log).
+92 node: 1965 pass / 55 fail (same known set as main-tip runs).
+93 python: queue 128, officina 49, custos 125 — all OK.
+94 cargo check clean; cargo test RED (known E0271 x2, supervisor lane).
+95 fresh QEMU boot of wave2 recipe image: `metaos login:` line 822 (face-image-wave2-fresh-boot.txt).
+96 face image rebuilt from branch recipe: same sha f7d8581e (deterministic); boots to login; desktop proven on same-recipe running guest.
+97 one Imperium loop from this tree era: Medicus rerun, NEW receipt sim-f0e40e1695baefb6 (face-medicus-wave2/).
+98 this STATUS file: sections 1-10 each have proof lines or named gaps above.
+99 tidy: tree clean except intended wave2 artifacts; no stray files (verified via git status).
+100 what is PROVEN that was not proven when this wave started, one sentence per item:
+- The demo film exists (180s cut + stills + notes) where only stills existed.
+- The readkey pack boots green with typed bytes reaching it (got=7).
+- W6 fetch screen shows live kernel state on real hardware-emulated boot.
+- A clean clone gates green on a post-Custos tip (f027175).
+- The current tip boots to a screendumped text console (2904e743).
+- check_all passes every checker including the ABI gate on current main.
+- Medicus ran live twice (sim-5f894be3, sim-f0e40e16), third division proven.
+- Face long tail closed: lock, notifications, 11 wallpapers, tiling, workspaces, search — guest shots committed.
+- The face image recipe reproduces byte-identically (f7d8581e twice).
