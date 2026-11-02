@@ -8,7 +8,7 @@
 
 [Live crew viewer](https://muse-relay-live.pages.dev) · [Task list](os-build/TASKS_V3.md) · [OpenCode tasks](os-build/OPENCODE_TASKS_100.md) · [Commit history](https://github.com/Mrfentmen/meta-os/commits/main)
 
-![Node tests: 2071 run, 2016 passing](https://img.shields.io/badge/node%20tests-2071%20run%2C%202016%20passing-brightgreen) ![Rust tests: 2186 passing](https://img.shields.io/badge/rust%20tests-2186%20passing-brightgreen) ![Worlds packs: 12 of 12 valid](https://img.shields.io/badge/worlds%20packs-12%20of%2012%20valid-blue) ![Status: in active build](https://img.shields.io/badge/status-in%20active%20build-orange)
+![Node tests: 2071 run, 2015 passing](https://img.shields.io/badge/node%20tests-2071%20run%2C%202015%20passing-brightgreen) ![Rust tests: workspace does not build](https://img.shields.io/badge/rust%20tests-workspace%20does%20not%20build-red) ![Worlds packs: 12 of 12 valid](https://img.shields.io/badge/worlds%20packs-12%20of%2012%20valid-blue) ![Status: in active build](https://img.shields.io/badge/status-in%20active%20build-orange)
 
 Built for the **Meta Global AI Developer Hackathon 2026**, Indie track.
 
@@ -111,17 +111,17 @@ Every number below was measured on the current main on 2026-11-02. Recheck any o
 
 | Suite | Result | Run it with |
 | --- | --- | --- |
-| Node (app, server, eval harnesses) | 2071 run, 2016 pass, 55 fail | `npm test` |
-| Rust workspace | 2186 pass, 0 fail | `cargo test --workspace` |
-| Python job queue | 296 pass, 1 skip | `python3 -m unittest discover -s tests/queue-python` |
+| Node (app, server, eval harnesses) | 2071 run, 2015 pass, 56 fail | `npm test` |
+| Rust workspace | does not build on this tree (intel tests fail to compile: E0063) | `cargo test --workspace` |
+| Python job queue | 296 pass, 0 skip | `python3 -m unittest discover -s tests/queue-python` |
 | Python Officina | 49 pass | `python3 -m unittest discover -s tests/officina` |
 | Python Science Lab | 163 of 163 pass | `python3 -m unittest discover -s tests/science-lab` |
 | Python Hortus | 14 pass | `python3 -m unittest discover -s os/tests -p "test_hortus*.py"` |
-| Rust intel crate | 186 of 186 lib tests pass; b10_parity 53 of 53 | `cargo test -p intel` |
+| Rust intel crate | does not compile (E0063 missing field `spec`), 0 tests run | `cargo test -p intel` |
 | Worlds packs | 12 of 12 valid | `python3 os/worlds/validate_pack.py` |
 | OS loop harness | 11 of 12 pass — the `green cycle` scenario fails and stays on the record | `bash os/os/loop-tests/metaos-loop.test.sh` |
 
-The 55 Node failures are one known set: tests written for the old native SwiftUI screens, which were removed when the native app moved to a web view shell. They say nothing about the running app. Each one is classified as update or carve out in `docs/NATIVE_TEST_PREP.md`, and the crew is working that list now.
+The 56 Node failures are the known native-mirror set (tests written for the old native SwiftUI screens, removed when the native app moved to a web view shell) plus one docs-index gap: R11-282 fails because `os-build/logs/WAVE2-branch-boot-serial.txt` is committed but not named in `os-build/layer1/BOOTLOG_INDEX.md`. They say nothing about the running app. Each one is classified as update or carve out in `docs/NATIVE_TEST_PREP.md`, and the crew is working that list now.
 
 ## Sampling and honesty
 
@@ -178,7 +178,7 @@ A missing confidence or latency key is rejected even though a null value is acce
 
 | Piece | Used for |
 | --- | --- |
-| Rust | The operating system core and services port, 2186 tests green |
+| Rust | The operating system core and services port, workspace green excluding intel (intel tests do not compile: E0063) |
 | Node.js | The app server, the console tooling, and the test suites |
 | Python | The job queue, the agent crew, and the world packs (Imperium divisions, Scientia, Officina, and the retired Custos pack) |
 | Muse Spark 1.3 | Every model assessment, through the Meta Model API |
@@ -236,7 +236,7 @@ A missing confidence or latency key is rejected even though a null value is acce
 Meta OS is not only the systems. Underneath them sits a real
 operating system, built in the open in this repo:
 
-- **A bare-metal kernel** (`kernel/`, Rust, about 5,800 lines across 13 files):
+- **A bare-metal kernel** (`kernel/`, Rust, about 6,000 lines across 13 files):
   boot, memory map and page tables, a scheduler, ring-3
   userspace, fault isolation, and a shell that reports the
   machine's real state. The claim is one sentence and every
@@ -299,7 +299,7 @@ on one named thing outside the code.
 ### The kernel (L1–L3)
 
 Our own bare-metal kernel in `kernel/` (Rust, `no_std`, about
-5,800 lines across 13 files): boot, memory map and page
+6,000 lines across 13 files): boot, memory map and page
 tables, scheduler, ring-3 userspace, fault isolation, a text
 shell that reports the machine's real state.
 
