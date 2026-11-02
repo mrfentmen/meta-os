@@ -2,7 +2,7 @@
 //
 // B-L1-116 — Agent quotas: call rate and storage, as data plus a check.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t97_agent_surface (61 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHAT A QUOTA IS HERE
 // --------------------
@@ -64,8 +64,13 @@ fn quota_default() -> Quota {
     return Quota { call_rate: 60, window_ms: 1000, storage_bytes: 1048576 };
 }
 
+// The slot array is built at full width, not as `slots: []`. The struct's default is a
+// 24-entry array, but a constructor that passes an empty literal REPLACES it with a
+// zero-length array, and the loop below then indexes a table with no slots. Nothing called
+// this function for months, so the crash was invisible; the shape is now the same one
+// `ch_new` uses.
 fn quota_new() -> Quotas {
-    var qs: Quotas = Quotas { slots: [], count: 0 };
+    var qs: Quotas = Quotas { slots: [QuotaSlot { .. }; 24], count: 0 };
     var i: i64 = 0;
     while i < AH_CAP {
         qs.slots[i] = QuotaSlot { handle: 0, q: quota_default(), window_start_ms: 0, calls_in_window: 0, storage_used: 0, denied_calls: 0, denied_storage: 0, active: false };
@@ -78,7 +83,10 @@ fn quota_new() -> Quotas {
 // Attach a quota to an agent. Returns E_NO_AGENT for a handle the host does not resolve --
 // a quota on a slot that does not exist is a limit nobody is subject to.
 fn quota_set(qs: Quotas&, h: i64, q: Quota) -> i64 {
-    if ah_slot_of(h) < 0 { return E_NO_AGENT; }
+    // `ah_resolve`, not `ah_slot_of`: the latter only checks that the handle's arithmetic lands
+    // in range, so it accepts any number that happens to be a valid slot index. A limit on a
+    // slot nobody occupies is a limit nobody is subject to, and it consumes a row.
+    if ah_resolve(h) < 0 { return E_NO_AGENT; }
     if q.window_ms <= 0 && q.call_rate > 0 { return E_INVAL; }
     if q.call_rate < 0 || q.storage_bytes < 0 { return E_INVAL; }
 
