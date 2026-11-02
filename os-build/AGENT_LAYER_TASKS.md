@@ -35,10 +35,12 @@ C5 Fleet: Tailscale join in the image; bell rings across machines
    (version two — after C1 proves on one machine).
 
 ## D. Baton pass (Milo + Pax)
-D1 Milo: baton record format (state, artifacts, next step) — spec.
-D2 Pax: watchman composes the continuation brief from the record.
-D3 Drill: same-program continuation in-window; zero duplicated file
-   changes (spec §5 proof). Cross-program pass is the stretch line.
+D1 DONE — Baton record format built (agents/baton.mjs): state,
+   artifacts, next step. Milo: gate it against the spec.
+D2 DONE — Watchman composes the continuation brief (continuesFrom).
+D3 DONE (host) — Continuation drill passes as a test: agent B's
+   brief carries A's state + next step (tests/agents-baton.test.mjs).
+   Cross-program pass remains the stretch line.
 
 ## E. Host the proven loops (owners keep their lanes)
 E1 Imperium patrol becomes a registry agent (manifest + budget +
