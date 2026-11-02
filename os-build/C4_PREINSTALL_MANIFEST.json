@@ -184,16 +184,6 @@
  ],
  "systems": [
   {
-   "name": "Custos",
-   "preinstall_source": "os-build/PREINSTALL.md systems list",
-   "anchor": {
-    "repo_path": "os/worlds/custos",
-    "files": 13,
-    "bytes": 118521
-   },
-   "note": "Program dir only; tests/custos (12 files, 101480 bytes) is not shipped."
-  },
-  {
    "name": "Officina",
    "preinstall_source": "os-build/PREINSTALL.md systems list",
    "anchor": {
@@ -403,7 +393,8 @@
   "tests/ (not shipped)",
   "Nervus (spec only, boss go pending)",
   "QEMU and the Rust toolchain (dev-carrier tools only, never ship per TOOLS_MANIFEST)",
-  "Eval corpora eval/ignis and eval/medicus (not programs)"
+  "Eval corpora eval/ignis and eval/medicus (not programs)",
+  "Custos (system retired by the boss 2026-11-02; the night-watch idea is folded into the OS's own agents \u2014 not baked)"
  ],
  "open_questions_for_image_lane": [
   "Confirm labs/ is the Science Lab ship set (Milo W2 lane).",
@@ -413,10 +404,10 @@
  ],
  "totals": {
   "agent_runtime_bytes": 24887,
-  "systems_confirmed_bytes": 18003926,
+  "systems_confirmed_bytes": 17885405,
   "dock_and_built_in_confirmed_bytes": 133764,
-  "confirmed_attributable_bytes": 18162577,
-  "including_unconfirmed_labs_anchor_bytes": 22437239,
-  "note": "Confirmed total counts only anchors that exist on main. Everything marked null/TBD is excluded from both totals, so both totals UNDERSTATE the final bake."
+  "confirmed_attributable_bytes": 18044056,
+  "including_unconfirmed_labs_anchor_bytes": 22318718,
+  "note": "Confirmed total counts only anchors that exist on main. Everything marked null/TBD is excluded from both totals, so both totals UNDERSTATE the final bake. Merge note (Pax, 2026-11-02): Custos removed from the systems list per the boss's retirement ruling; its 118521 anchor bytes are subtracted from all three totals."
  }
 }
