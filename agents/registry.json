@@ -189,8 +189,8 @@
    "command": [
     "true"
    ],
-   "lane": "model bench (standalone system; working title, boss names it)",
-   "name": "model-bench",
+   "lane": "Meta Nervus - model surgery bench (standalone system)",
+   "name": "nervus",
    "owner": "boss"
   }
  ]
