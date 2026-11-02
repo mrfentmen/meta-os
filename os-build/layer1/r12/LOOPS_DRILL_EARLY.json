@@ -1,0 +1,161 @@
+{
+  "tasks": [
+    "R12-023",
+    "R12-024"
+  ],
+  "at": "2026-11-02T15:12:54.558Z",
+  "ok": true,
+  "pass": "early",
+  "pollMs": 2,
+  "productionPollMs": 100,
+  "loops": [
+    {
+      "agent": "imperium-patrol",
+      "command": "python3 repo:server/queue/hosted_imperium.py",
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 12,
+      "stoppedReason": "stop-file",
+      "exit": {
+        "code": null,
+        "signal": "SIGTERM"
+      },
+      "timedOut": false,
+      "noOrphan": true,
+      "state": "stopped-mid-run"
+    },
+    {
+      "agent": "watch",
+      "command": "repo:node agents/watchman.mjs --once",
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 8,
+      "stoppedReason": "stop-file",
+      "exit": {
+        "code": null,
+        "signal": "SIGTERM"
+      },
+      "timedOut": false,
+      "noOrphan": true,
+      "state": "stopped-mid-run"
+    },
+    {
+      "agent": "aegis",
+      "command": "repo:node aegis/hosted.mjs",
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 7,
+      "stoppedReason": "stop-file",
+      "exit": {
+        "code": null,
+        "signal": "SIGTERM"
+      },
+      "timedOut": false,
+      "noOrphan": true,
+      "state": "stopped-mid-run"
+    },
+    {
+      "agent": "aegis-cycle",
+      "command": "repo:node aegis/cycle.mjs",
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 8,
+      "stoppedReason": "stop-file",
+      "exit": {
+        "code": null,
+        "signal": "SIGTERM"
+      },
+      "timedOut": false,
+      "noOrphan": true,
+      "state": "stopped-mid-run"
+    },
+    {
+      "agent": "nervus",
+      "command": "repo:node nervus/hosted.mjs",
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 7,
+      "stoppedReason": "stop-file",
+      "exit": {
+        "code": null,
+        "signal": "SIGTERM"
+      },
+      "timedOut": false,
+      "noOrphan": true,
+      "state": "stopped-mid-run"
+    },
+    {
+      "agent": "handsfree-intake",
+      "command": "repo:node handsfree/hosted.mjs intake",
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 8,
+      "stoppedReason": "stop-file",
+      "exit": {
+        "code": null,
+        "signal": "SIGTERM"
+      },
+      "timedOut": false,
+      "noOrphan": true,
+      "state": "stopped-mid-run"
+    },
+    {
+      "agent": "handsfree-brief",
+      "command": "repo:node handsfree/hosted.mjs brief",
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 7,
+      "stoppedReason": "stop-file",
+      "exit": {
+        "code": null,
+        "signal": "SIGTERM"
+      },
+      "timedOut": false,
+      "noOrphan": true,
+      "state": "stopped-mid-run"
+    },
+    {
+      "agent": "handsfree-approval",
+      "command": "repo:node handsfree/hosted.mjs approval",
+      "stopFiledMidRun": true,
+      "stopAfterMs": 5,
+      "durationMs": 7,
+      "stoppedReason": "stop-file",
+      "exit": {
+        "code": null,
+        "signal": "SIGTERM"
+      },
+      "timedOut": false,
+      "noOrphan": true,
+      "state": "stopped-mid-run"
+    }
+  ],
+  "summary": {
+    "loops": 8,
+    "stoppedMidRun": 8,
+    "finishedBeforeStop": 0
+  },
+  "budget": {
+    "name": "nervus",
+    "capMs": 20,
+    "timedOut": false,
+    "stoppedReason": "budget-wall-clock",
+    "receipt": {
+      "ts": "2026-11-02T15:12:54.556Z",
+      "run": "nervus-mvzeelmu",
+      "event": "budget-receipt",
+      "reason": "budget-wall-clock",
+      "capMs": 20,
+      "at": "2026-11-02T15:12:54.556Z"
+    },
+    "fileReceipt": {
+      "run": "nervus-mvzeelmu",
+      "reason": "budget-wall-clock",
+      "capMs": 20,
+      "at": "2026-11-02T15:12:54.556Z"
+    },
+    "ok": true,
+    "registryBudgetUnchanged": 120000
+  },
+  "note": "STOP poll accelerated to 2 ms for the drill; loops that finish in a few ms cannot be halted mid-run under the production 100 ms poll, and their pre-spawn STOP is the proven path. Budget cap is below the real run cost; the runtime receipt records the cap it enforced."
+}
