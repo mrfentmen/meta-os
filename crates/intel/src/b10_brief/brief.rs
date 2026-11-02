@@ -1280,6 +1280,136 @@ pub fn environment_lines(env: Option<&Environment>) -> Vec<String> {
     vec![repo_line, bus_line, working_line, budget_line]
 }
 
+/// OS-117: one machine in a federation record: its name, the titles
+/// its crew completed, and its cross-machine jobs. A caller maps a
+/// non-string name, completion, id, title, or status to an empty
+/// string (or `None` for status), mirroring Python's `isinstance`
+/// checks; empty values are filtered here, never padded.
+pub struct FederationMachine {
+    pub name: String,
+    pub completions: Vec<String>,
+    pub cross_machine_jobs: Vec<CrossMachineJob>,
+}
+
+/// One cross-machine job: only a job with a non-empty id and a
+/// non-empty title counts; a missing or empty status reads as no
+/// status suffix, never a guessed one.
+pub struct CrossMachineJob {
+    pub id: String,
+    pub title: String,
+    pub status: Option<String>,
+}
+
+/// One trust event: `kind` is "join" or "refusal"; any other kind is
+/// skipped. A missing machine name skips the event; a refusal with
+/// no detail says the reason is not reported, never an invented one.
+pub struct TrustEvent {
+    pub kind: String,
+    pub machine: String,
+    pub detail: Option<String>,
+}
+
+/// The whole federation record: the joined machines plus the trust
+/// events. The section exists only for a real crew of crews.
+pub struct Federation {
+    pub machines: Vec<FederationMachine>,
+    pub trust_events: Vec<TrustEvent>,
+}
+
+/// OS-117: the crew-of-crews section lines for a morning brief, one
+/// line per joined machine plus one line per trust event.
+///
+/// A record naming fewer than two usable machines (non-empty name)
+/// returns no lines at all, so a single-machine brief renders the
+/// section absent, never empty-padded. A machine with no completions
+/// says nothing reported, never a padded title; a cross-machine job
+/// without an id and a title is skipped, never guessed; a trust event
+/// without a machine name is skipped, and a refusal without a detail
+/// says the reason is not reported. Completions and job titles are
+/// named verbatim from the record, never re-derived. These are bullet
+/// lines in the section the composer adds, so they are redacted by
+/// the composer, not here, and the BRF-007 budget trim may drop them
+/// like any other section bullet when a brief runs over budget.
+pub fn federation_lines(federation: Option<&Federation>) -> Vec<String> {
+    let federation = match federation {
+        None => return Vec::new(),
+        Some(f) => f,
+    };
+    let usable: Vec<&FederationMachine> = federation
+        .machines
+        .iter()
+        .filter(|m| !m.name.is_empty())
+        .collect();
+    if usable.len() < 2 {
+        return Vec::new();
+    }
+    let mut lines: Vec<String> = Vec::new();
+    for machine in usable {
+        let completions: Vec<&str> = machine
+            .completions
+            .iter()
+            .map(String::as_str)
+            .filter(|t| !t.is_empty())
+            .collect();
+        let mut line = if completions.is_empty() {
+            format!("- {}: no completions reported", machine.name)
+        } else {
+            format!(
+                "- {}: completed {}",
+                machine.name,
+                completions.join(", ")
+            )
+        };
+        let usable_cross: Vec<String> = machine
+            .cross_machine_jobs
+            .iter()
+            .filter(|job| !job.id.is_empty() && !job.title.is_empty())
+            .map(|job| {
+                let status_text = match &job.status {
+                    Some(status) if !status.is_empty() => format!(" ({status})"),
+                    _ => String::new(),
+                };
+                format!("job {} {}{}", job.id, job.title, status_text)
+            })
+            .collect();
+        if !usable_cross.is_empty() {
+            line.push_str(&format!(
+                "; cross-machine jobs: {}",
+                usable_cross.join("; ")
+            ));
+        }
+        lines.push(line);
+    }
+    for event in &federation.trust_events {
+        if event.machine.is_empty() {
+            continue;
+        }
+        let detail_text = match &event.detail {
+            Some(detail) if !detail.is_empty() => format!(": {detail}"),
+            _ => String::new(),
+        };
+        if event.kind == "join" {
+            lines.push(format!(
+                "- Trust: {} joined the federation{}",
+                event.machine, detail_text
+            ));
+        } else if event.kind == "refusal" {
+            if detail_text.is_empty() {
+                lines.push(format!(
+                    "- Trust: {} was refused (reason not reported)",
+                    event.machine
+                ));
+            } else {
+                lines.push(format!(
+                    "- Trust: {} was refused{}",
+                    event.machine, detail_text
+                ));
+            }
+        }
+    }
+    lines
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
