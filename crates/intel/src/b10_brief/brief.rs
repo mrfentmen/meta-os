@@ -226,6 +226,7 @@ pub fn brief_exceeds_budget(text: &str, budget: usize) -> bool {
 }
 
 /// OS-051: a previous-session record carried on a boot snapshot.
+#[derive(Debug, Clone, PartialEq)]
 pub struct PreviousSession {
     pub last_brief_at: String,
     pub jobs_completed: Vec<String>,
