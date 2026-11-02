@@ -9,8 +9,9 @@ import path from "node:path";
 import url from "node:url";
 import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
 import { readBaton, continuationOrders } from "./baton.mjs";
+import { writeBeat } from "./watchdog.mjs";
 
-export function createWatchman({ registryFile, root, jobsDir }) {
+export function createWatchman({ registryFile, root, jobsDir, heartbeatFile = path.join(root, "watchman.heartbeat.json") }) {
   const agents = loadRegistry(registryFile);
   fs.mkdirSync(jobsDir, { recursive: true });
   const ledger = new Ledger(path.join(root, "watchman.jsonl"));
@@ -109,9 +110,15 @@ export function createWatchman({ registryFile, root, jobsDir }) {
           JSON.stringify({ id, agent: job.agent, run: h.runId, code, signal, ledger: path.join(h.runDir, "ledger.jsonl") }, null, 2));
       });
     }
+    // The beat is written after the poll, not before: a beat that lands while the poll is
+    // stuck would claim the relay is alive when the thing it exists to do is not happening.
+    try { writeBeat(heartbeatFile); } catch { /* a heartbeat failure must not stop the relay */ }
     return spawnedNow;
   }
   const recovered = reconcile();
+  // One beat at start-up so a checker run immediately after `node watchman.mjs` sees a live
+  // relay rather than a missing file it would have to treat as an alarm.
+  try { writeBeat(heartbeatFile); } catch {}
   return { pollOnce, ledger, runs, reconcile, recovered };
 }
 
