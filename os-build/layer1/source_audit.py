@@ -22,7 +22,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 SERVICES = os.path.join(ROOT, "services")
 
 CALL_RE = re.compile(r"\b([a-z_][a-z0-9_]*)\s*\(")
-FN_RE = re.compile(r'^(?:extern\s+)?(?:export\s+(?:"[^"]*"\s+)?)?fn\s+([a-zA-Z_][a-zA-Z0-9_]*)')
+FN_RE = re.compile(
+    r'^(?:(?:extern|recursive|inline)\s+)*(?:export\s+(?:"[^"]*"\s+)?)?fn\s+'
+    r'([a-zA-Z_][a-zA-Z0-9_]*)'
+)
+# A syscall extern is declared once in the tree and is visible to every program that
+# links against it, so the call check has to resolve them globally. Goose's namespace
+# is flat and imports are transitive; a per-file extern set would report every entry
+# module that calls `sys_ticks` as a defect, which is exactly what it did.
+EXTERN_RE = re.compile(r'^extern\s+fn\s+([a-zA-Z_][a-zA-Z0-9_]*)')
 STRUCT_RE = re.compile(r"^struct\s+([A-Z][A-Za-z0-9_]*)")
 LET_RE = re.compile(r"^let\s+([A-Z][A-Z0-9_]*)")
 IMPORT_RE = re.compile(r"^import\s+([\w.]+);")
@@ -149,7 +157,17 @@ def err_constants(files):
 std_used = set()
 
 
-def audit_one(path, text, exports, structs, err_names):
+def all_externs(files):
+    names = set()
+    for text in files.values():
+        for line in text.splitlines():
+            m = EXTERN_RE.match(line.strip())
+            if m:
+                names.add(m.group(1))
+    return names
+
+
+def audit_one(path, text, exports, structs, err_names, externs=frozenset()):
     findings = []
     lines = text.splitlines()
 
@@ -181,7 +199,7 @@ def audit_one(path, text, exports, structs, err_names):
         m = FN_RE.match(line.strip())
         if m:
             defined.add(m.group(1))
-    known = set(defined)
+    known = set(defined) | set(externs)
     for mod in imported:
         known |= exports.get(mod, set())
     for i, line in enumerate(lines, 1):
@@ -258,10 +276,13 @@ def main():
     exports = module_exports(files)
     structs = all_structs(files)
     err_names = err_constants(files)
+    externs = all_externs(files)
 
     findings = []
     for path in sorted(files):
-        findings.extend(audit_one(path, files[path], exports, structs, err_names))
+        findings.extend(
+            audit_one(path, files[path], exports, structs, err_names, externs)
+        )
 
     for path, line, msg in findings:
         print(f"{os.path.relpath(path, ROOT)}:{line}: {msg}")
