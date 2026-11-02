@@ -1,0 +1,29 @@
+{
+  "dataset": {
+    "file": "gate/delaney/delaney-processed.csv",
+    "hash_verified_at": "2026-11-02T13:42:26.406740Z",
+    "rows": 1128,
+    "sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189",
+    "source_record": "gate/delaney/SOURCES.md"
+  },
+  "gate_status": "NOT attempted. Prep run only (gate/GATE_PREP.md, gate/prep_results.json). No evidence level earned; a verified gate earns exactly ladder level 3 for the reproduction itself, and no discovery claim.",
+  "kind": "reproduction-target",
+  "paper": {
+    "citation": "Delaney, J. S. (2004). ESOL: Estimating Aqueous Solubility Directly from Molecular Structure. J. Chem. Inf. Comput. Sci. 44(3), 1000-1005. doi:10.1021/ci034243x.",
+    "method_locator": "Delaney (2004) paper text + os/worlds/science-lab/gate/GATE_PREP.md (prep-run reading of the published equation; coefficients re-extracted at gate run time)",
+    "shelf_locator": "shelves/chemistry.json"
+  },
+  "qualifies": {
+    "inputs_available": "Archived compound set present in this checkout (1128 data rows) with SHA-256 matching SOURCES.md, verified above; public retrieval URL recorded in SOURCES.md.",
+    "method_no_paywall": "Running the reproduction needs no paywalled access: the published equation, open RDKit descriptors, and the public compound set (DeepChem mirror, URL in SOURCES.md). The ACS paper text itself is paywalled; the run-time extraction step reads it, but no licence blocks the computation.",
+    "result_checkable": "The paper publishes the model and its own reported fit statistics; the gate re-scores predicted against measured across the full archived set and files every compound where the model misses badly, then hands the archived inputs to the independent verifier for re-execution within a pre-stated tolerance (SLICE1 section 4; gate/GATE_PREP.md)."
+  },
+  "question": "Can the published Delaney (2004) ESOL aqueous-solubility model be reproduced from the archived compound set?",
+  "recorded_at": "2026-11-02T13:42:26.406925Z",
+  "recorded_by": "find_prior_result() in os/worlds/science-lab/literature.py",
+  "target_id": "delaney-2004-esol",
+  "target_numbers": {
+    "note": "Per SCIENCE_LAB_W2_SLICE1.md section 4, target numbers are pulled at run time from the source, never hardcoded. The paper text was not opened by this function.",
+    "reported_fit_statistics": "TO_BE_READ_AT_RUN"
+  }
+}
