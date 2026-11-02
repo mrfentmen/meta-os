@@ -1,0 +1,21 @@
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 1: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 2: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 3: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 4: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 5: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 6: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 7: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 8: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 9: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+qemu-system-x86_64: terminating on signal 15 from pid 2265 (<unknown process>)
+run 10: hello=1 exit0=3 fault=1 sleepback=1 readkey=1 panics=0
+PACKDRILL_DONE

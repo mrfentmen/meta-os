@@ -24,3 +24,5 @@ Cleared+purge PROVEN, inconclusive PROVEN, BOLO shown on dispatch path. Budget/S
 1965/55 reproduced; 31 size files + 25 parity names grouped; update touches ~36 files, carve-out ~6 files losing drift coverage. Pack: os-build/NATIVE_55_DECISION_PACK.md. One-line: the 55 are all native-mirror drift, update-or-carve is Del's call.
 ## Section 8 — README + submission (67-76): DONE (drafts only) 2026-11-02
 README node counts fixed (one commit); Rust badge left stale deliberately (red, nothing to claim). Forms dry-run with DEL-ONLY fields; FREEZE_CERT drafted from proven claims; X draft written (Del posts); film paths on branch-not-main flagged; DEL-ONLY list recorded. Proof: WAVE3_SUBMISSION_PREP.md.
+## Section 2 — soak + stability (11-16): RUNNING 2026-11-02
+Wave-2 soak (soak3, wave2 image): 10 start samples, 0 panics, still in window. Fresh soak on Section-1 image RUNNING (soak-w3). Pack drill 10/10 green (hello/exit0 x3/fault/sleepback/readkey each run, 0 panics): WAVE3-pack-drill.log. Verdict + WAVE3_SOAK.md at soak end.
