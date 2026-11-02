@@ -211,6 +211,27 @@ def build_bolo(record, descriptions, evidence_files,
     }
 
 
+def picture_refs(evidence_files):
+    """The dispatch package's picture block (boss directive
+    2026-11-01, docs/IMPERIUM_AUTO_DISPATCH.md): the flagged
+    frame's reference, plus the first evidence (face) crop's
+    reference when the flagged path captured one. References
+    only — the files themselves stay in the incident's evidence
+    store, and the BOLO keeps its own pinned key set. A frame or
+    crop the crew did not capture is None, never invented: the
+    flag-frame is preferred, an investigation frame stands in
+    only when no flag frame was saved."""
+    files = evidence_files or []
+    frame = next((f["ref"] for f in files
+                  if f.get("kind") == "flag-frame"), None)
+    if frame is None:
+        frame = next((f["ref"] for f in files
+                      if f.get("kind") == "investigation-frame"), None)
+    crop = next((f["ref"] for f in files
+                 if f.get("kind") == "face-crop"), None)
+    return {"frame": frame, "evidence_crop": crop}
+
+
 def frame_ref_name(kind, camera_id, frame_bytes):
     """Evidence file name: kind + camera + a short frame hash, so
     two frames from the same camera never collide and the name
