@@ -123,3 +123,9 @@ marked; nothing is asserted on another lane's behalf.
 ## Coordinator addendum 2026-11-02 (OC1B-452, OC1B-463)
 - OC1B-452 Item 1 DONE: `curl https://api.github.com/repos/Mrfentmen/meta-os` → full_name mrfentmen/meta-os, private False (public), created_at 2026-10-28T10:47:33Z (in event window), pushed_at 2026-11-02T16:22:37Z.
 - OC1B-463 DONE-BY-DRAFT: no prior draft existed (s17 search confirmed); draft written to os-build/logs/OC1B-x-post-draft.md with [TBD] film link + honesty rules. Del posts it himself — NOT posted.
+
+## Coordinator addendum 2026-11-02, second pass (OC1B-453, 471, 473, 474)
+- OC1B-453 UPGRADED: live receipts exist on origin/opencode/500-s9 (UNMERGED): os-build/logs/R5-imperium/receipt.txt, face-medicus-wave2/receipt.txt, face-medicus/receipt.txt, oc1b-model-proofs/*-timeline.json (all-flags, judge x3, sam-failure). Naming waits for s9's final verdicts (§13 still running) — no names claimed ahead of the lane.
+- OC1B-471 UPGRADED: s17's staleness note is resolved — merged §18 (s1 @ 1cad0158) fixed the README table to 2071/2015/56, verified present on this tree. Remaining 471 inputs: model names (§9 verdict) + film (§11 final cut).
+- OC1B-473 row 1 now READY (created 2026-10-28 confirmed); row 2 PARTIAL (receipts located, verdict pending); row 3 READY-file/§11-final-cut; rows 4/5/6/7 READY per lane.
+- OC1B-474 revised: NOT FULLY READY rows = 2 (§9 verdict), 454-final (§11), 464/465 (runbook+rehearsal, §11). Closed by coordinator: 452, 463, 469.
