@@ -77,6 +77,7 @@ Every external effect is an injected seam (assess, fetch_snapshot,
 dispatch), so the whole pipeline is testable offline with stubs —
 the same discipline as trio_agent's injected store.
 """
+import argparse
 import hashlib
 import json
 import os
@@ -106,30 +107,30 @@ MAX_EVIDENCE_FILES = 12
 
 DISPATCH_URL_ENV = "TRIO_CREW_DISPATCH_URL"
 DEFAULT_DISPATCH_URL = "http://127.0.0.1:8935/dispatch-simulated"
-LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
-
-
-class DispatchBoundaryError(RuntimeError):
-    """A dispatch URL that is not the local simulated endpoint."""
+LOOPBACK_HOSTS = crew_common.LOOPBACK_HOSTS
+DispatchBoundaryError = crew_common.DispatchBoundaryError
 
 
 def check_dispatch_url(url):
-    """Refuse any dispatch target that is not loopback. The crew's
-    dispatch step exists to exercise the response pipeline against
-    the stack's SIMULATED endpoint; a real emergency-service
-    endpoint is not a configuration option, here or anywhere."""
-    from urllib.parse import urlparse
-    host = urlparse(url).hostname
-    if host not in LOOPBACK_HOSTS:
-        raise DispatchBoundaryError(
-            f"dispatch URL host {host!r} is not loopback: the crew "
-            "dispatches ONLY to the local SIMULATED endpoint")
-    return url
+    """Backwards-compatible alias for the pure guard in
+    crew_common.py; the check itself lives there so other callers
+    can use it without importing the whole crew."""
+    return crew_common.check_dispatch_url(url)
 
 
 def dispatch_url():
     return check_dispatch_url(
         os.environ.get(DISPATCH_URL_ENV) or DEFAULT_DISPATCH_URL)
+
+
+def build_arg_parser():
+    """The crew's command-line surface. Only the dry-run flag is
+    wired here; the parser is exposed so tests can prove the flag is
+    accepted and unknown flags fail with argparse's usage error."""
+    parser = argparse.ArgumentParser(prog="crew.py")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="walk the record path without dispatch")
+    return parser
 
 
 # Human verify RETIRED (boss directive 2026-11-02): the package
