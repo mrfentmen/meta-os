@@ -1765,6 +1765,304 @@ pub fn daily_lines(record: Option<&Daily>) -> Vec<String> {
     lines
 }
 
+/// STR-002: `_format_brief_time` — a stored brief timestamp as
+/// `"YYYY-MM-DD HH:MM ET"` in America/New_York, the zone the
+/// BRF-011 morning schedule uses. This crate has no time
+/// dependency, so the conversion is done by hand: civil date from
+/// days since the epoch (Howard Hinnant's algorithm), Eastern
+/// daylight time from the second Sunday of March 07:00 UTC to the
+/// first Sunday of November 06:00 UTC, otherwise Eastern standard
+/// time. Python returns None for a non-numeric timestamp; Rust
+/// timestamps are numeric by type, so there is no such case here.
+/// The algorithm was checked against Python's zoneinfo for every
+/// hour of 2026 plus the DST edges, with zero mismatches.
+pub fn format_brief_time(ts: i64) -> String {
+    fn civil_from_days(z: i64) -> (i64, i64, i64) {
+        let z = z + 719468;
+        let era = z.div_euclid(146097);
+        let doe = z - era * 146097;
+        let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+        let y = yoe + era * 400;
+        let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+        let mp = (5 * doy + 2) / 153;
+        let d = doy - (153 * mp + 2) / 5 + 1;
+        let m = if mp < 10 { mp + 3 } else { mp - 9 };
+        let y = if m <= 2 { y + 1 } else { y };
+        (y, m, d)
+    }
+    fn days_from_civil(mut y: i64, m: i64, d: i64) -> i64 {
+        if m <= 2 {
+            y -= 1;
+        }
+        let era = y.div_euclid(400);
+        let yoe = y - era * 400;
+        let mp = if m > 2 { m - 3 } else { m + 9 };
+        let doy = (153 * mp + 2) / 5 + d - 1;
+        let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+        era * 146097 + doe - 719468
+    }
+    // Weekday with Sunday = 0: 1970-01-01 was a Thursday.
+    fn weekday_sunday0(days: i64) -> i64 {
+        (days + 4).rem_euclid(7)
+    }
+    let days = ts.div_euclid(86400);
+    let (year, _, _) = civil_from_days(days);
+    let first_sunday = |month: i64| -> i64 {
+        let first = days_from_civil(year, month, 1);
+        1 + (7 - weekday_sunday0(first)).rem_euclid(7)
+    };
+    let dst_start =
+        days_from_civil(year, 3, first_sunday(3) + 7) * 86400 + 7 * 3600;
+    let dst_end = days_from_civil(year, 11, first_sunday(11)) * 86400 + 6 * 3600;
+    let offset = if dst_start <= ts && ts < dst_end {
+        -4 * 3600
+    } else {
+        -5 * 3600
+    };
+    let local = ts + offset;
+    let local_days = local.div_euclid(86400);
+    let local_secs = local.rem_euclid(86400);
+    let (y, m, d) = civil_from_days(local_days);
+    format!(
+        "{:04}-{:02}-{:02} {:02}:{:02} ET",
+        y,
+        m,
+        d,
+        local_secs / 3600,
+        (local_secs % 3600) / 60
+    )
+}
+
+/// STR-002 image extensions: the digest lists what the pointer
+/// itself names, so only these extensions count as screenshots.
+/// A `.txt`, `.pdf`, or extension-less pointer is a file share,
+/// not a screenshot, and is skipped.
+const IMAGE_EXTENSIONS: &[&str] = &[".png", ".jpg", ".jpeg", ".gif", ".webp"];
+
+/// A raw snapshot message for the screenshot extractor, mirroring
+/// what Python's `_message_parts` accepts, plus the dict entry's
+/// numeric timestamp (None for a bus string, which carries no
+/// time, so no time is claimed for it). This is separate from
+/// `window::RawMessage` because that type carries no timestamp
+/// and the digest needs one. A float timestamp arrives truncated
+/// to an int, mirroring Python's `int(ts)` at format time; a bool
+/// timestamp is not numeric in Python, so the caller passes None
+/// for it.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ScreenshotMessage {
+    /// Dict form: nick/text as the store entry carries them, plus
+    /// the entry's numeric ts when it has one.
+    Dict {
+        nick: String,
+        text: String,
+        ts: Option<i64>,
+    },
+    /// Bus string form: `"nick: text"`, or plain text with no nick.
+    Text(String),
+    /// Any other shape: Python returns `("", "")` with no time.
+    Other,
+}
+
+/// One screenshot ref, mirroring Python's ref dict: one per
+/// distinct image, in snapshot order with a repost moved to its
+/// latest occurrence. `hash` is lowercased, `file` verbatim;
+/// `caption` is the message text with every BLOB pointer removed,
+/// whitespace-collapsed, possibly empty for a pointer-only post.
+/// This digest produces no verdict: whether a screenshot shows a
+/// working or broken build is the SAM pass's call, not this
+/// extractor's, and no verdict field is invented here.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ScreenshotRef {
+    pub nick: String,
+    pub file: String,
+    pub hash: String,
+    pub chunks: u64,
+    pub ts: Option<i64>,
+    pub caption: String,
+}
+
+fn is_hex_byte(b: u8) -> bool {
+    b.is_ascii_hexdigit()
+}
+
+fn is_filename_byte(b: u8) -> bool {
+    matches!(b, b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'.' | b'_' | b'-')
+}
+
+/// Scan one BLOB pointer at `bytes[start..]` where that slice
+/// starts with `"BLOB:"`. Returns (hash, file, chunks, end) on a
+/// match. Mirrors `_BLOB_POINTER_RE` =
+/// `BLOB:([0-9a-fA-F]{16}):([A-Za-z0-9._-]+):(\d+)`.
+fn scan_blob_pointer(bytes: &[u8], start: usize) -> Option<(String, String, u64, usize)> {
+    let mut i = start + 5; // past "BLOB:"
+    let hash_bytes = bytes.get(i..i + 16)?;
+    if !hash_bytes.iter().all(|b| is_hex_byte(*b)) {
+        return None;
+    }
+    let hash: String = hash_bytes.iter().map(|b| *b as char).collect();
+    i += 16;
+    if bytes.get(i) != Some(&b':') {
+        return None;
+    }
+    i += 1;
+    let file_start = i;
+    while i < bytes.len() && is_filename_byte(bytes[i]) {
+        i += 1;
+    }
+    if i == file_start {
+        return None;
+    }
+    let file = std::str::from_utf8(&bytes[file_start..i]).ok()?.to_string();
+    if bytes.get(i) != Some(&b':') {
+        return None;
+    }
+    i += 1;
+    let chunks_start = i;
+    while i < bytes.len() && bytes[i].is_ascii_digit() {
+        i += 1;
+    }
+    if i == chunks_start {
+        return None;
+    }
+    // Digits only by construction; a count too large for u64 reads
+    // as 0 rather than failing the whole brief.
+    let chunks = std::str::from_utf8(&bytes[chunks_start..i])
+        .ok()?
+        .parse::<u64>()
+        .unwrap_or(0);
+    Some((hash, file, chunks, i))
+}
+
+/// All BLOB pointers in a message text, in order. A failed match
+/// at one position advances one byte, mirroring regex finditer.
+fn scan_blob_pointers(text: &str) -> Vec<(String, String, u64)> {
+    let bytes = text.as_bytes();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i + 5 <= bytes.len() {
+        if &bytes[i..i + 5] == b"BLOB:" {
+            if let Some((hash, file, chunks, end)) = scan_blob_pointer(bytes, i) {
+                out.push((hash, file, chunks));
+                i = end;
+                continue;
+            }
+        }
+        i += 1;
+    }
+    out
+}
+
+/// A message text with every BLOB pointer removed (any pointer,
+/// image or not — Python's `sub` removes all regex matches),
+/// whitespace-collapsed. All cut points are ASCII, so the kept
+/// slices are always valid char boundaries.
+fn strip_blob_pointers(text: &str) -> String {
+    let bytes = text.as_bytes();
+    let mut kept = String::new();
+    let mut cursor = 0;
+    let mut i = 0;
+    while i + 5 <= bytes.len() {
+        if &bytes[i..i + 5] == b"BLOB:" {
+            if let Some((_, _, _, end)) = scan_blob_pointer(bytes, i) {
+                kept.push_str(&text[cursor..i]);
+                cursor = end;
+                i = end;
+                continue;
+            }
+        }
+        i += 1;
+    }
+    kept.push_str(&text[cursor..]);
+    kept
+}
+
+/// STR-002: screenshot digest for a brief record. Scans snapshot
+/// messages for BLOB pointers naming an image file, in snapshot
+/// order. Returns [] for an empty or missing message list, never
+/// an error. The same image posted twice (same hash and file)
+/// yields one ref, at its latest occurrence.
+pub fn extract_screenshot_refs(
+    messages: Option<&[ScreenshotMessage]>,
+) -> Vec<ScreenshotRef> {
+    let messages = match messages {
+        None => return Vec::new(),
+        Some(m) => m,
+    };
+    let mut refs: Vec<ScreenshotRef> = Vec::new();
+    for message in messages {
+        let (nick, text, ts) = match message {
+            ScreenshotMessage::Dict { nick, text, ts } => {
+                (nick.clone(), text.clone(), *ts)
+            }
+            ScreenshotMessage::Text(s) => match s.split_once(": ") {
+                Some((nick, text)) => (nick.to_string(), text.to_string(), None),
+                None => (String::new(), s.clone(), None),
+            },
+            ScreenshotMessage::Other => (String::new(), String::new(), None),
+        };
+        let caption = strip_blob_pointers(&text)
+            .split_whitespace()
+            .collect::<Vec<_>>()
+            .join(" ");
+        for (hash, file, chunks) in scan_blob_pointers(&text) {
+            if !IMAGE_EXTENSIONS
+                .iter()
+                .any(|ext| file.to_lowercase().ends_with(ext))
+            {
+                continue;
+            }
+            let hash = hash.to_lowercase();
+            let new_ref = ScreenshotRef {
+                nick: nick.clone(),
+                file: file.clone(),
+                hash: hash.clone(),
+                chunks,
+                ts,
+                caption: caption.clone(),
+            };
+            // Latest rule: a repost drops its earlier ref and moves
+            // to the end, so each screenshot is handed over once.
+            if let Some(idx) = refs
+                .iter()
+                .position(|r| r.hash == hash && r.file == file)
+            {
+                refs.remove(idx);
+            }
+            refs.push(new_ref);
+        }
+    }
+    refs
+}
+
+/// STR-002: one plain line per screenshot ref, in ref order. Each
+/// line names the sender, the file, and the time in ET when the
+/// message carried one, else "time not reported" — never a guessed
+/// time — plus the post's caption when it has one. The lines are
+/// not bullets, so the BRF-007 budget trim drops section bullets
+/// before it ever touches these lines. Returns [] for no refs, so
+/// a brief without screenshots keeps its exact older shape.
+pub fn screenshot_digest_lines(refs: Option<&[ScreenshotRef]>) -> Vec<String> {
+    let refs = match refs {
+        None => return Vec::new(),
+        Some(r) => r,
+    };
+    refs.iter()
+        .map(|r| {
+            let when = r.ts.map(format_brief_time);
+            let mut line = format!(
+                "{} shared {} at {}",
+                r.nick,
+                r.file,
+                when.as_deref().unwrap_or("time not reported")
+            );
+            if !r.caption.is_empty() {
+                line.push_str(&format!(": {}", r.caption));
+            }
+            line
+        })
+        .collect()
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -2564,5 +2862,156 @@ mod tests {
         );
         // No record: no lines, so older briefs keep their shape.
         assert_eq!(daily_lines(None), Vec::<String>::new());
+    }
+
+    #[test]
+    fn brief_time_formats() {
+        // Python test vector, plus winter (EST) and both DST edges.
+        assert_eq!(format_brief_time(1793101200), "2026-10-27 07:40 ET");
+        assert_eq!(format_brief_time(1768478400), "2026-01-15 07:00 ET");
+        assert_eq!(format_brief_time(1772953140), "2026-03-08 01:59 ET");
+        assert_eq!(format_brief_time(1772953200), "2026-03-08 03:00 ET");
+        assert_eq!(format_brief_time(1793512740), "2026-11-01 01:59 ET");
+        assert_eq!(format_brief_time(1793512800), "2026-11-01 01:00 ET");
+    }
+
+    #[test]
+    fn screenshot_refs_found_in_order_with_caption_and_time() {
+        let img_a = "BLOB:0123456789abcdef:dashboard.png:2";
+        let img_b = "BLOB:fedcba9876543210:brief-panel.jpg:1";
+        let got = extract_screenshot_refs(Some(&[
+            ScreenshotMessage::Dict {
+                nick: "milo".into(),
+                text: format!("look at this {img_a}"),
+                ts: Some(1793101200),
+            },
+            ScreenshotMessage::Dict {
+                nick: "rowan".into(),
+                text: img_b.into(),
+                ts: None,
+            },
+            ScreenshotMessage::Dict {
+                nick: "pax".into(),
+                text: "plain message, no image".into(),
+                ts: None,
+            },
+        ]));
+        assert_eq!(got.len(), 2);
+        assert_eq!(got[0].nick, "milo");
+        assert_eq!(got[0].file, "dashboard.png");
+        assert_eq!(got[0].hash, "0123456789abcdef");
+        assert_eq!(got[0].chunks, 2);
+        assert_eq!(got[0].ts, Some(1793101200));
+        assert_eq!(got[0].caption, "look at this");
+        assert_eq!(got[1].nick, "rowan");
+        assert_eq!(got[1].file, "brief-panel.jpg");
+        assert_eq!(got[1].caption, "");
+        assert_eq!(got[1].ts, None);
+    }
+
+    #[test]
+    fn screenshot_refs_bus_string_has_no_time() {
+        let got = extract_screenshot_refs(Some(&[ScreenshotMessage::Text(
+            "milo: BLOB:0123456789abcdef:dashboard.png:2".into(),
+        )]));
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].nick, "milo");
+        assert_eq!(got[0].ts, None);
+    }
+
+    #[test]
+    fn screenshot_refs_skip_non_image_and_bad_pointers() {
+        let got = extract_screenshot_refs(Some(&[
+            ScreenshotMessage::Dict {
+                nick: "milo".into(),
+                text: "file BLOB:0123456789abcdef:notes.txt:1".into(),
+                ts: None,
+            },
+            ScreenshotMessage::Dict {
+                nick: "milo".into(),
+                text: "bad BLOB:abc:dashboard.png:1".into(),
+                ts: None,
+            },
+            ScreenshotMessage::Dict {
+                nick: "milo".into(),
+                text: "upper BLOB:0011223344556677:crew-board.PNG:1".into(),
+                ts: None,
+            },
+            ScreenshotMessage::Dict {
+                nick: "milo".into(),
+                text: "fake.png.txt BLOB:0123456789abcdef:fake.png.txt:1".into(),
+                ts: None,
+            },
+        ]));
+        assert_eq!(
+            got.iter().map(|r| r.file.as_str()).collect::<Vec<_>>(),
+            vec!["crew-board.PNG"]
+        );
+    }
+
+    #[test]
+    fn screenshot_refs_same_image_twice_yields_one_at_latest_post() {
+        let img_a = "BLOB:0123456789abcdef:dashboard.png:2";
+        let img_b = "BLOB:fedcba9876543210:brief-panel.jpg:1";
+        let got = extract_screenshot_refs(Some(&[
+            ScreenshotMessage::Dict {
+                nick: "milo".into(),
+                text: format!("old caption {img_a}"),
+                ts: Some(1793101000),
+            },
+            ScreenshotMessage::Dict {
+                nick: "rowan".into(),
+                text: img_b.into(),
+                ts: Some(1793101100),
+            },
+            ScreenshotMessage::Dict {
+                nick: "milo".into(),
+                text: format!("new caption {img_a}"),
+                ts: Some(1793101200),
+            },
+        ]));
+        assert_eq!(
+            got.iter().map(|r| r.file.as_str()).collect::<Vec<_>>(),
+            vec!["brief-panel.jpg", "dashboard.png"]
+        );
+        assert_eq!(got[1].caption, "new caption");
+        assert_eq!(got[1].ts, Some(1793101200));
+    }
+
+    #[test]
+    fn screenshot_refs_empty_is_empty_not_an_error() {
+        assert_eq!(extract_screenshot_refs(None), Vec::new());
+        assert_eq!(extract_screenshot_refs(Some(&[])), Vec::new());
+    }
+
+    #[test]
+    fn screenshot_digest_lines_name_sender_file_and_time() {
+        let refs = vec![
+            ScreenshotRef {
+                nick: "milo".into(),
+                file: "dashboard.png".into(),
+                hash: "0123456789abcdef".into(),
+                chunks: 2,
+                ts: Some(1793101200),
+                caption: "look at this".into(),
+            },
+            ScreenshotRef {
+                nick: "rowan".into(),
+                file: "brief-panel.jpg".into(),
+                hash: "fedcba9876543210".into(),
+                chunks: 1,
+                ts: None,
+                caption: "".into(),
+            },
+        ];
+        assert_eq!(
+            screenshot_digest_lines(Some(&refs)),
+            vec![
+                "milo shared dashboard.png at 2026-10-27 07:40 ET: look at this",
+                "rowan shared brief-panel.jpg at time not reported",
+            ]
+        );
+        assert_eq!(screenshot_digest_lines(Some(&[])), Vec::<String>::new());
+        assert_eq!(screenshot_digest_lines(None), Vec::<String>::new());
     }
 }
