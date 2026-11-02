@@ -1,0 +1,29 @@
+✔ baton record round-trips (1.60425ms)
+✔ the pass: agent B continues from agent A's baton, briefed by the watchman (72.769459ms)
+✔ drill has exactly three tasks (0.866917ms)
+✔ drill scores 3/3 on a clean agent through the real runtime (48.046542ms)
+✔ a failing agent loses only the spawn task, ledger task still passes (32.684625ms)
+✔ unknown agent throws, nothing recorded (0.654583ms)
+✔ record writes the gym record onto only that entry and appends ledger scores (4.268042ms)
+✔ A2.1 a run that died mid-flight is marked and resumed from its baton (40.786916ms)
+✔ A2.2 a claim that was never spawned is released and retried (38.830958ms)
+✔ A2.3 a completed job is never spawned again by a fresh watchman (34.546375ms)
+✔ A2.4 a finished run whose result file was lost is not re-run (1.654584ms)
+✔ registry loads and rejects duplicates and missing commands (1.619958ms)
+✔ spawn runs a real child to exit 0 and writes brief + ledger (40.2575ms)
+✔ kill is graceful first and lands in the ledger (2.361834ms)
+✔ wall-clock budget stops a runaway agent (303.266041ms)
+✔ STOP file stops the agent at a checkpoint (104.054958ms)
+✔ watch detects a file change and stays quiet when nothing moves (0.575542ms)
+✔ the graft: a lesson one agent teaches rides into the next agent's brief (31.9545ms)
+✔ a job on the board wakes the named agent, briefed, and leaves a result (39.146042ms)
+✔ a claimed job is never spawned twice (38.185792ms)
+✔ a job for an unknown agent is logged, not crashed (1.43875ms)
+ℹ tests 21
+ℹ suites 0
+ℹ pass 21
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1304.066208

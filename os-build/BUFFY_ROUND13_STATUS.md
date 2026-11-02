@@ -16,15 +16,17 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | I — Aegis OSINT | **COMPLETE** | 25 / 25; 15 passes run, 9 not implementable, 1 unavailable; **2 findings** (NXDOMAIN, soft 404) | `os-build/round13/aegis/SECTION_I.md` |
 | J — Aegis OPSEC | **COMPLETE** | 25 / 25; 20 decided, 3 not inspectable, 2 n/a; **4 failures, 6 findings** | `os-build/round13/aegis/SECTION_J.md` |
 | K — agent runtime: supervisor | **COMPLETE** | 25 / 25; 19 observed, 2 refused, 1 not exercised, 3 gaps; **5 findings** | `os-build/round13/agents/SECTION_K.md` |
-| L–O — agent runtime | NOT STARTED | 0 / 100 | — |
+| L — baton-pass proofs | **COMPLETE** | 25 / 25; 4 proven by passing tests, **21 gaps** (no per-loop fixture, no tree diff) | `os-build/round13/agents/SECTION_L.md` |
+| M–O — agent runtime | NOT STARTED | 0 / 75 | — |
 | P — Hands-Free | NOT STARTED | 0 / 25 | — |
 | Q–R — Nuntius | NOT STARTED | 0 / 50 | — |
 | S — userspace | NOT STARTED | 0 / 25 | — |
 | T — federation + closeout | NOT STARTED | 0 / 25 | — |
 
-**Sections A–K:** 260 / 260 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
-(E), 9 missing artifacts (H), 9 unimplemented OSINT angles (I), 1 review item (G), 4 real
-observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J), 5 runtime findings (K).
+**Sections A–L:** 300 / 300 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
+(E), 9 missing artifacts (H), 9 unimplemented OSINT angles (I), 21 baton gaps (L), 1 review
+item (G), 4 real observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J), 5 runtime
+findings (K). Agent suite: 21 tests, 21 pass.
 
 ## Method
 
