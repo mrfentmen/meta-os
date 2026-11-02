@@ -1858,6 +1858,36 @@ pub fn undo_dispatch(
     Ok((report, now))
 }
 
+/// Parse one `jobs.main` post result into the posted job id (DSP-008).
+///
+/// This is the pure half of Python's `_jobs_main_post`: Python captures
+/// only stdout (jobs.py warnings stay on stderr for the operator), and
+/// a post is a failed post when the exit code is nonzero, or when a
+/// zero exit code carries no `JOB <id>` line. Scanning from the last
+/// line back, the first `JOB ` line with a non-empty id wins, so an
+/// empty `JOB ` line is skipped, not returned.
+///
+/// Rust adaptation, stated not hidden: Python calls `jobs.main`
+/// itself and captures its stdout; this function takes the exit code
+/// and the captured stdout as arguments, so the queue call stays with
+/// the caller. The full `post_plan` poster (order, argv, record,
+/// spend ledger, announcement) is still to come; this parser is its
+/// first piece, not a post by itself.
+pub fn parse_posted_job_id(code: i32, stdout: &str) -> Option<String> {
+    if code != 0 {
+        return None;
+    }
+    for line in stdout.lines().rev() {
+        if let Some(rest) = line.strip_prefix("JOB ") {
+            let id = rest.trim();
+            if !id.is_empty() {
+                return Some(id.to_string());
+            }
+        }
+    }
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2884,6 +2914,40 @@ mod tests {
         assert!(report.cancelled.is_empty());
         assert_eq!(report.untouched_claimed.len(), 1);
         assert_eq!(report.untouched_claimed[0].claim, "racer");
+    }
+
+    #[test]
+    fn posted_job_id_zero_code_with_job_line() {
+        assert_eq!(
+            parse_posted_job_id(0, "some note\nJOB j-9\n"),
+            Some("j-9".to_string())
+        );
+    }
+
+    #[test]
+    fn posted_job_id_last_job_line_wins() {
+        assert_eq!(
+            parse_posted_job_id(0, "JOB j-1\nJOB j-2\n"),
+            Some("j-2".to_string())
+        );
+    }
+
+    #[test]
+    fn posted_job_id_empty_job_line_skipped() {
+        assert_eq!(
+            parse_posted_job_id(0, "JOB j-1\nJOB   \n"),
+            Some("j-1".to_string())
+        );
+    }
+
+    #[test]
+    fn posted_job_id_nonzero_code_fails_even_with_job_line() {
+        assert_eq!(parse_posted_job_id(1, "JOB j-9\n"), None);
+    }
+
+    #[test]
+    fn posted_job_id_zero_code_without_job_line_fails() {
+        assert_eq!(parse_posted_job_id(0, "posted, no id line\n"), None);
     }
 
     // Scripted Spark callable for plan_from_spark tests, mirroring
