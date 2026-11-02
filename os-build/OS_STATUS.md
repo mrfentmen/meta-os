@@ -37,6 +37,12 @@ process on the kernel yet. That is the single most important sentence in this fi
 ## What exists and is proven here today
 
 - `kernel/` builds (`build_kernel.sh`), boots, and proves K1-K5 plus most of K6.
+- The userspace ABI, the 22-service boot manifest (plus its JSON form) and the kernel records
+  are specced from the code and checked against it (`USERSPACE_ABI.md`, `BOOT_MANIFEST.md`,
+  `boot-manifest.json`, `records/`); negative tests prove the checkers fail on drift.
+- Five userspace programs build: hello, sleeper, crasher, quitter, readkey, plus the writer
+  and badcall drills. Only the first three are wired into the kernel — the rest need Rowan's
+  `BINS` line and, for two of them, a raised stack-slot cap.
 - `services/` compiles and runs 33 Goose programs as host processes, 0 failures.
 - The double-fault drill now halts after one line instead of re-faulting (it used to emit a
   3.3 MB loop, which is a bug this round found and fixed).
@@ -56,7 +62,8 @@ process on the kernel yet. That is the single most important sentence in this fi
 ```sh
 os-build/layer1/build_kernel.sh      # build + boot + K1 gate
 os-build/layer1/prove_k2_k3.sh       # screen + keyboard + timer evidence
-os-build/layer1/check_all.sh         # kernel, os-boot, Goose corpus, node suite
+os-build/layer1/check_all.sh         # kernel, os-boot, userspace bins, Goose corpus, doc checks
+os-build/layer1/test_checkers.sh     # proves the checkers fail when they should
 ```
 
 ## The next three things, in order

@@ -74,6 +74,15 @@ fi
 
 # 4. Document-vs-code checks: the userspace ABI spec and the boot manifest both
 #    claim to describe code. If they drift, the claim is the bug.
+# 4b. The checkers' own negative tests: a checker that has only printed PASS is
+#     unverified. This mutates temp copies and requires each one to fail.
+if bash os-build/layer1/test_checkers.sh >/dev/null 2>&1; then
+    report "checker self-tests" "PASS"
+else
+    report "checker self-tests" "FAIL"
+    FAILED=1
+fi
+
 for check in abi_check.py boot_manifest_check.py; do
     if python3 "os-build/layer1/$check" >/dev/null 2>&1; then
         report "$check" "PASS"
