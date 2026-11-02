@@ -164,6 +164,13 @@ fn disp_scroll(v: i64) -> i64 {
     return CODE_OK;
 }
 
+// History depth, for the status view and for t103: the clamp in disp_scroll is the limit,
+// and a reader that cannot see the counter cannot test the clamp.
+fn disp_hist_lines(v: i64) -> i64 {
+    if !disp_valid(v) { return -1; }
+    return vcons[v].hist_lines;
+}
+
 fn disp_putc(v: i64, ch: u8) -> i64 {
     if !disp_valid(v) { return E_INVAL; }
     let cols = vcons[v].cols;

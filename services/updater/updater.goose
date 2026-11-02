@@ -332,6 +332,9 @@ fn content_get(cs: ContentSet&, idx: i64, out: u8[..4096]&) -> i64 {
     if idx < 0 || idx >= MF_MAX_FILES { return -1; }
     let n = cs.len[idx];
     if n <= 0 { return -1; }
+    // A slot is UPD_CONTENT_MAX bytes. A longer length is corrupt input, not a bigger read:
+    // copying it would run past `out` and into whatever follows the caller's buffer.
+    if n > UPD_CONTENT_MAX { return -1; }
     let base = idx * UPD_CONTENT_MAX;
     var i: i64 = 0;
     while i < n {
@@ -621,6 +624,10 @@ fn upd_record_confirm(slot: i64, now_ms: i64) -> i64 {
 // The newest CONFIRMED record wins. With no confirmed record at all the answer is
 // SLOT_NONE, and the caller must not invent one: "probably A" is how a machine with a
 // broken fallback boots the broken slot forever.
+// How many records the in-memory history holds (capped at UPD_REC_KEEP). Exposed so the
+// cap is testable without reaching into module state.
+fn upd_record_count() -> i64 { return rec_count; }
+
 fn upd_record_safe_slot() -> i64 {
     var best_seq: i64 = -1;
     var best_slot: i64 = SLOT_NONE;
