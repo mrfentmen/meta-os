@@ -65,18 +65,18 @@ or BLOCKED with the artifact named.
 | 51 | Persist across restart | PROVEN (guest reboot) | both rooms intact after sudo reboot (face-proof-002 + welcome); data in ~/.local/share/metaos survives |
 | 52 | Files real browser | PROVEN (guest) | guest-files-browse.jpg lists real /opt/face; backend curl list/read proven |
 | 53 | Code Editor save real | PROVEN (guest) | files.py save/read roundtrip exact 23B in guest; editor.html points at same API |
-| 54 | Notes persisted | PROVEN (local) | reload persists via localStorage |
-| 55 | Calendar add+survive | PROVEN (local) | grid+today+add verified, reload persists |
-| 56 | Calculator | PROVEN (local) | 7*8=56, 9/0=Error, C clears |
+| 54 | Notes persisted | PROVEN (guest shot) | guest-notes.jpg live page; reload-persist proven locally |
+| 55 | Calendar add+survive | PROVEN (guest shot) | guest-calendar.jpg Nov 2026 today=2; add+persist proven locally |
+| 56 | Calculator | PROVEN (guest shot) | guest-calculator.jpg full keypad; keys proven locally |
 | 57 | Chrome meta-os.pages.dev | PROVEN (guest net) | guest curl https://meta-os.pages.dev -> 200 via QEMU user-net |
-| 58 | Trash restore | PROVEN (guest) | delete->trash(entry+orig+timestamp)->restore(intact)->empty, all via :18936 in guest |
+| 58 | Trash restore | PROVEN (guest) | API cycle proven + guest-trash.jpg live page (empty after restore); guest had stale static trash.html, replaced, re-shot |
 | 59 | Settings all controls | PROVEN (guest) | guest-settings.jpg: wallpaper/bg/bar/theme/speed/pause + About live facts 3.06/569M/3G/10.0.2.15/24 |
 | 60 | First-boot welcome, no wizard | PROVEN (guest) | welcome posted to #announce in guest board; persists via board.json |
 | 61 | Sleep/wake + reboot | PROVEN (guest reboot) | sudo reboot: uptime fresh, relay on tty1 autologin no typing, all 7 user services active via linger |
 | 62 | Silent by default | PROVEN (code+guest) | only audio path is musica.html play() which kiosk blocks w/o gesture (shot shows 'press play'); no autoplay anywhere |
 | 63 | Perf pass | PROVEN | stock idle 249M/1967M; face-loaded ~570-635M; ribbon rAF ~122fps Mac; boot-to-login 41.178s < 45s |
 | 64 | Fidelity pass | PROVEN (text) | login glass+avatar+shake, topbar, 16-icon dock, live ribbon all match task specs; closed: favicon 404s, dead dock targets, missing board/settings/terminal-real, music3d-as-Musica |
-| 65 | Screendump set | DONE (partial) | 12 guest-*.jpg committed: desktop, terminal, dashboard, files, board, settings, imperium, custos, console, science, musica-ended, logo-studio |
+| 65 | Screendump set | PROVEN | 18 guest shots: above + notes/calendar/calculator/wallpapers/trash/editor; boot 3 stages + login dark/shake/entered/light; shell-terminal dark |
 | 66 | 60s recording | TODO | no video capture tool in guest; frame series stands in |
 | 67 | Fresh image from script | TODO | build-image.sh needs Linux+sudo, not run this session |
 | 68 | STATUS final | TODO | this file, updated per section |
