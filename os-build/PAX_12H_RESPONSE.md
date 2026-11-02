@@ -130,3 +130,8 @@ the R-lane only, by this order.
 ## Boss ruling 2026-11-02 (~03:31 EST): NO FREEZE
 
 The 05:12 hard freeze is CANCELLED on the boss's word. Work continues back and forth between the OS and the other programs through the deadline (Wed Nov 4, 9:00 PM ET). FREEZE_CERT.md does not fill at 05:12; it converts to a submission-day state snapshot, filled when the package is assembled. The claim stays exactly as adopted - every addition after this ruling still needs its named boot log before it joins the claim.
+
+
+## Boss ruling 2026-11-02 (~03:53 EST): CUSTOS SCRAPPED AS A SYSTEM
+
+Custos is retired as a separate system/program. The watch idea (rounds, compare, speak only on change; small = quiet note, big = full alarm) is baked into the OS as a capability its agents have, not an app. The design page design/meta-custos-watch.html stays as the record of that face. Systems now: Imperium (one), Science Lab (two), Musica (candidate three), Officina. No crew work on Custos-the-system from this ruling.
