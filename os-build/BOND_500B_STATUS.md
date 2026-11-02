@@ -552,3 +552,31 @@ Not delivered:
 
 Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 `test_readme_data_index.py` 3 pass.
+
+## Section 16 — Agent layer Node (CB2-376..400) — 12/25 delivered
+
+| Task | File | Result |
+|---|---|---|
+| CB2-376 | `tests/agents-runtime-edges.test.mjs` | empty command array refused at load |
+| CB2-377 | `tests/agents-runtime-edges.test.mjs` | placeholder accepted; the registry's own `draft` flag is what marks it (pinned: no runtime detector) |
+| CB2-380 | `tests/agents-watchman-edges.test.mjs` | a content change gives exactly one change note |
+| CB2-381 | `tests/agents-watchman-edges.test.mjs` | three polls with no change stay silent |
+| CB2-383 | `tests/agents-baton-edges.test.mjs` | baton carries job id, step index, state, artifacts |
+| CB2-386 | `tests/agents-baton-edges.test.mjs` | a chain with a changed job id is refused |
+| CB2-389 | `tests/agents-lessons-edges.test.mjs` | one teach writes one JSONL line with agent, text, timestamp |
+| CB2-391 | `tests/agents-lessons-edges.test.mjs` | lessons read in append order and every agent sees them |
+| CB2-394 | `tests/agents-watchdog-edges.test.mjs` | one missed beat is fine; two alarm once, then stay quiet |
+| CB2-398 | `tests/agents-clock-edges.test.mjs` | same inputs give the same times; backward jump flagged, not negative |
+| CB2-399 | `tests/agents-runtime-edges.test.mjs` | torn final ledger line skipped; next record stays whole |
+| CB2-400 | `tests/agents-registry-shape.test.mjs` | every entry has name, owner (badge field), and a string command array |
+
+Not delivered: CB2-378..379 (no job-cost governor; runtime only has a wall-clock
+budget), CB2-382 (no large-change alarm form), CB2-384 (baton has no required
+step-index check), CB2-385 (no resume function), CB2-387..388 (gym runs a fixed
+three-task drill; no drill-file loader or unknown-step refusal), CB2-390 (`teach`
+accepts empty text), CB2-392..393 (bridge is a supervisor verb, not a message
+shaper), CB2-395 (queue.mjs is a package contract; job FIFO lives in room1.mjs,
+not tested here), CB2-396..397 (safe-write has no no-change path and no root
+containment).
+
+Section 16 verification: 7 test files, **21 tests pass, 0 fail**.
