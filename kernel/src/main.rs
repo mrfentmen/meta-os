@@ -39,6 +39,7 @@ macro_rules! println {
 
 mod gdt;
 mod interrupts;
+mod logo_frames;
 mod mem;
 mod memory;
 mod sched;
