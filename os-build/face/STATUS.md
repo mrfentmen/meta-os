@@ -22,7 +22,7 @@ or BLOCKED with the artifact named.
   Locale C.UTF-8 (en_US.UTF-8 NOT generated — fix in task 10).
   Network ens3 10.0.2.15/24 dynamic, default route proto dhcp
   (DHCP proven, QEMU user-net).
-- Missing from stock image (task 11 backlog): node, git.
+- Missing from stock image (task 11 backlog): node, git. DONE via apt (node v18.20.4, git 2.39.5). Locale fixed (en_US.UTF-8). Updater: timer enabled, STOP honoured, real pull cycle proven — see image-status-2026-11-02.md.
 
 | # | Task | Status | Artifact |
 |---|---|---|---|
@@ -32,7 +32,7 @@ or BLOCKED with the artifact named.
 | 4 | Judge + pick | DONE | table below |
 | 5 | Decision: **Spike A** | DONE | rationale below |
 | 6 | Scaffold os-build/face/ | DONE | this dir + build-image.sh |
-| 7-13 | Image foundation | TODO | — |
+| 7-13 | Image foundation | PROVEN | image-status-2026-11-02.md, metaos-update.* |
 | 14-17 | Boot screen | TODO | — |
 | 18-21 | Login | TODO | — |
 | 22-28 | Desktop shell | TODO | — |

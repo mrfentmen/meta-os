@@ -1,0 +1,7 @@
+[Unit]
+Description=Meta OS face updater (passive git pull)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/metaos-update
+User=root
