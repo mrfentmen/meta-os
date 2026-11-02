@@ -9,7 +9,7 @@
 
 use std::path::PathBuf;
 
-const BINS: &[&str] = &["hello", "sleeper", "crasher"];
+const BINS: &[&str] = &["hello", "sleeper", "crasher", "readkey"];
 
 fn main() {
     let kernel_dir = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
