@@ -373,3 +373,58 @@ Section 10 verification: **34 relay tests pass, 0 fail**
 
 Section 11 verification: **38 board tests pass, 0 fail**
 (`node --test board/board.test.mjs`).
+
+## Section 12 — Rust queue/relay error paths (CB2-276..300) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-276..282 | `crates/queue-core/tests/section12.rs` | empty id, unknown kind, priority order, FIFO tie-break, empty dequeue, duplicate id, payload bounds |
+| CB2-283..288 | `crates/queue-store/tests/section12.rs` | record round-trip, append-only violation, missing read, torn tail, insertion order, empty list |
+| CB2-289..294 | `crates/relay/tests/section12.rs` | empty body, first-colon nick split, append order, cursor clamp, room isolation, trim oldest |
+| CB2-295..299 | crate tests | wrong-type deserialisation, missing write field, length after mixed, monotonic timestamps, concurrent appends |
+| CB2-300 | `crates/queue-core/src/lib.rs` | rustdoc example on `PriorityQueue`, runs as a doc test |
+
+Two real gaps were closed in code while pinning the tests:
+- `queue-core`: added `PriorityQueue` enqueue/dequeue and the payload cap.
+- `queue-store`: added the append-only `RecordStore`.
+- `relay`: added the message-line parser and room trimming.
+- **Bug found by CB2-299**: `RecordStore::append` used `writeln!`, which issues a
+  separate syscall for the newline. Two O_APPEND writers interleaved text and
+  newline, gluing records onto one line (~1 in 3 runs). Fixed by writing one
+  buffer in one `write_all`; 25/25 repeat runs now clean.
+
+Section 12 verification: `cargo test -p queue-core -p queue-store -p relay` and
+`cargo test -p queue-core --doc` both exit 0.
+
+## Section 13 — Rust os-* error paths (CB2-301..325) — 9/25 delivered, 16 blocked
+
+Delivered against the crates' real public APIs:
+
+| Task | File | Result |
+|---|---|---|
+| CB2-303 | `crates/os-budget/tests/section13.rs` | at-cap spend allowed; one unit over refused |
+| CB2-304 | `crates/os-budget/tests/section13.rs` | negative amount refused; negative spent has no ratio |
+| CB2-305 | `crates/os-budget/tests/section13.rs` | three-spend sequence checked against hand arithmetic |
+| CB2-306 | `crates/os-identity/tests/section13.rs` | empty and blank nick refused, nothing written |
+| CB2-307 | `crates/os-identity/tests/section13.rs` | same nick re-registers one record, never two |
+| CB2-311 | `crates/os-memory/tests/section13.rs` | zero-byte alloc leaves outstanding at 0 |
+| CB2-312 | `crates/os-memory/tests/section13.rs` | second free refused with the named error |
+| CB2-313 | `crates/os-memory/tests/section13.rs` | alloc 100+50, free 30 -> 120 outstanding |
+| CB2-325 | `crates/os-budget/src/lib.rs` | rustdoc example on `spend_allowed`/`at_cap`, runs as a doc test |
+
+Blocked — the named API does not exist, and inventing it would be fake code:
+- CB2-301, 302, 324: `os-boot` is the agent CLI crate; it has no boot-config type.
+- CB2-308, 309, 310: `os-jobs` has `JobQueue` but no job-with-steps creation or
+  cancel-finished API.
+- CB2-314, 315: `os-misc` holds domain modules (b24..b30); it has no generic
+  string/numeric helper set.
+- CB2-316, 317, 318: `os-supervisor` is the watchdog crate; there is no restart
+  policy or backoff sequence to test.
+- CB2-319, 320: `os-worker` has `Worker`/`JobSpec`/drivers, not a task-payload or
+  result-order API.
+- CB2-321, 322, 323: `os-workspace` is the artifact store
+  (`deposit`/`list`/`read`); it has no path-entry workspace.
+- CB2-325: only the spend half landed — there is no `remaining()` function.
+
+Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory`
+and `cargo test -p os-budget --doc` both exit 0.

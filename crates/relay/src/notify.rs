@@ -18,6 +18,16 @@ pub fn message_line(nick: &str, text: &str, epoch_secs: u64) -> String {
     format!("{}: {} [ts:{}]", nick, text, epoch_secs)
 }
 
+/// Parse a message line on the FIRST `':'` only, trimming one optional
+/// space after it. Returns `(nick, text, epoch_seconds)` or `None`.
+pub fn parse_message_line(line: &str) -> Option<(String, String, u64)> {
+    let (nick, rest) = line.split_once(':')?;
+    let rest = rest.strip_prefix(' ').unwrap_or(rest);
+    let (text, stamp) = rest.rsplit_once(" [ts:")?;
+    let ts = stamp.strip_suffix(']')?.parse::<u64>().ok()?;
+    Some((nick.to_string(), text.to_string(), ts))
+}
+
 /// Format a NOTIFY line exactly as the original stamps it:
 /// `"relay: NOTIFY:<id> <severity> [<topic>] <text> [ts:<epoch-seconds>]"`.
 pub fn notify_line(id: &str, severity: &str, topic: &str, text: &str, epoch_secs: u64) -> String {
@@ -75,6 +85,15 @@ mod tests {
         let c = notify_id("main", "t", "warning", "x");
         assert_ne!(a, b);
         assert_ne!(a, c);
+    }
+
+    #[test]
+    fn parse_first_colon() {
+        assert_eq!(
+            parse_message_line("pa:x: hello: world [ts:42]"),
+            Some(("pa".to_string(), "x: hello: world".to_string(), 42))
+        );
+        assert_eq!(parse_message_line("no separator"), None);
     }
 
     #[test]

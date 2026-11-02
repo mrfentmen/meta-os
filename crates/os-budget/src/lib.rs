@@ -289,6 +289,15 @@ pub fn claim_allowed(spent: &Value, cap: &Value) -> bool {
 /// True when spending `amount` more stays at or under cap. Exactly
 /// reaching the cap is allowed; one unit over is refused. A negative
 /// amount, an unusable cap, or an overflowing sum is refused.
+///
+/// ```
+/// use os_budget::{spend_allowed, at_cap, v_int};
+///
+/// assert!(spend_allowed(&v_int(90), &v_int(100), 10));
+/// assert!(!spend_allowed(&v_int(90), &v_int(100), 11));
+/// assert!(!at_cap(&v_int(99), &v_int(100)));
+/// assert!(at_cap(&v_int(100), &v_int(100)));
+/// ```
 pub fn spend_allowed(spent: &Value, cap: &Value, amount: i64) -> bool {
     if amount < 0 {
         return false;
