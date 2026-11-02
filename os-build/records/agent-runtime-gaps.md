@@ -1,0 +1,22 @@
+# `crates/agent-runtime` — Python behaviours not carried yet (B101)
+
+The crate header names the original: `server/queue/trio_agent.py`
+(`crates/agent-runtime/src/lib.rs:1-6`). The task wording said "the
+`os/` tree", but no `os/` file is named by the crate; the queue agent
+lives under `server/queue/`, so that is the source used here. None of
+the items below are ported by this pass — the list is the deliverable.
+
+| # | Python behaviour | Source lines | Rust state | Task |
+|---|---|---|---|---|
+| G1 | Lease heartbeat: a daemon thread renews the claim every `max(5, min(60, lease/3))` seconds while generating, and stops on a `threading.Event` | `trio_agent.py:230-240` | NOT CARRIED. `serve_job` claims once and never renews; a generation longer than the lease can be claimed by a second agent (`lib.rs:72-89`) | Port a renewal seam (the store already has `renew_claim`) or hand renewal to the caller; do not spawn a hidden thread in the library without a design ruling |
+| G2 | Real ISO-8601 UTC timestamp with milliseconds and `Z` | `trio_agent.py:81-84` | NOT CARRIED. `now_iso` returns epoch milliseconds as a decimal string (`lib.rs:23-33`), so `completed_at` has a different type/shape from the Python envelope | Port a civil-date formatter or add a time dependency by ruling; consumers must not assume both shapes |
+| G3 | Relay NOTIFY: POST `{severity, topic:"trio-result", text}` to `$TRIO_RELAY_URL/rooms/main/notify` on every finished job, 2s timeout, failures logged and swallowed | `trio_agent.py:86-119`, calls at `204-214` and `306-308` | PARTIAL. `relay_notify_payload` builds the body (`lib.rs:35-56`); nothing calls it and nothing POSTs | Decide whether the hook belongs in this crate or the caller; then wire it with a non-fatal error path and a timeout |
+| G4 | `serve_once` polls `open_job_ids()` and returns a report `{done, failed, skipped, lost}`; `main` loops with `--poll-interval` | `trio_agent.py:323-333`, `335-356` | NOT CARRIED. Only `serve_job(jid)` exists; the caller must poll and aggregate | Port the report shape and the single-pass method; leave the infinite loop to the binary |
+| G5 | Image written to a `NamedTemporaryFile`, passed to the transport as a path, and unlinked in `finally` | `trio_agent.py:264-277` | DIFFERENT BY DESIGN. The Rust `Generator` takes `&[u8]` (`lib.rs:60-62`), so no temp file exists | No port needed unless a transport requires a path; record the interface difference |
+| G6 | Catch-all around the serve body converts any unexpected exception into a failed result; a second failure returns `"lost"` | `trio_agent.py:313-320` | PARTIAL. Known failures are handled explicitly, but a panic is not caught (Rust has no exception boundary) | Decide the panic policy at the caller; do not add `catch_unwind` silently |
+| G7 | CLI: `--once`, `--lease` (default 300), `--nick` (default `trio-agent`), `--schema`, `--poll-interval` (5.0) | `trio_agent.py:335-342` | NOT CARRIED. Library only, no binary target | Port in a `main.rs` when the agent process is scheduled; the defaults belong there |
+| G8 | Validation by spawning Node against `js/schema.js` | `trio_agent.py:141-168` | REPLACED. The contract is reimplemented in Rust (`lib.rs:179-278`) | Keep the Rust validator as the single implementation; add parity vectors when `js/schema.js` changes |
+| G9 | Generation through `spark_gen.generate` with a `TypeError` fallback for stubs that reject `correction` | `trio_agent.py:170-202` | REPLACED. `Generator::generate` always takes `correction: Option<&str>` (`lib.rs:60-62`), so no fallback is needed | None; the trait removes the stub-compatibility branch |
+| G10 | Store selection: Upstash, else local SQLite fallback with a loud warning; namespace from `TRIO_JOB_NS` | `trio_agent.py:70-72`, `121-139` | CARRIED ELSEWHERE. `queue-store` owns host resolution, fallback and `TRIO_JOB_NS` (`crates/queue-store/src/lib.rs:9-20`, `:120-124`) | None in this crate; verify the caller chooses the backend |
+| G11 | Structured stderr logging for every skip, race, retry and result | `trio_agent.py:74-75` and calls throughout | NOT CARRIED. The library is silent | Let the caller log `Outcome`; add no logger dependency without a ruling |
+| G12 | Idempotent duplicate submit at the store index (already-submitted job returns `created=false`) | `trio_agent.py` relies on `trio_store.JobStore.submit` | CARRIED in `queue-store` (`crates/queue-store/src/lib.rs:404-421`) | None in this crate |

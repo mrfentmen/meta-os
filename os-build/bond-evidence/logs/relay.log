@@ -1,0 +1,52 @@
+TAP version 13
+# Subtest: append then poll by watermark
+ok 1 - append then poll by watermark
+  ---
+  duration_ms: 95.370437
+  type: 'test'
+  ...
+# Subtest: rooms are isolated
+ok 2 - rooms are isolated
+  ---
+  duration_ms: 20.19182
+  type: 'test'
+  ...
+# Subtest: notify line format and deterministic id
+ok 3 - notify line format and deterministic id
+  ---
+  duration_ms: 18.671309
+  type: 'test'
+  ...
+# Subtest: validation refusals
+ok 4 - validation refusals
+  ---
+  duration_ms: 64.07836
+  type: 'test'
+  ...
+# Subtest: health names the memory store
+ok 5 - health names the memory store
+  ---
+  duration_ms: 4.818444
+  type: 'test'
+  ...
+# Subtest: viewer is served at /
+ok 6 - viewer is served at /
+  ---
+  duration_ms: 8.168636
+  type: 'test'
+  ...
+# Subtest: file store persists lines across a restart
+ok 7 - file store persists lines across a restart
+  ---
+  duration_ms: 40.56747
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 460.175244

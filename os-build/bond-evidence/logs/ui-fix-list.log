@@ -1,0 +1,46 @@
+TAP version 13
+# Subtest: no dead buttons: every button id in index.html has a click handler in js/
+ok 1 - no dead buttons: every button id in index.html has a click handler in js/
+  ---
+  duration_ms: 101.189625
+  type: 'test'
+  ...
+# Subtest: class-wired controls: product chips and mode buttons have click handlers
+ok 2 - class-wired controls: product chips and mode buttons have click handlers
+  ---
+  duration_ms: 0.384254
+  type: 'test'
+  ...
+# Subtest: Alerts are live data: renderAlerts reads the incident queue fed by real assessments
+ok 3 - Alerts are live data: renderAlerts reads the incident queue fed by real assessments
+  ---
+  duration_ms: 0.322114
+  type: 'test'
+  ...
+# Subtest: scoped out: no intel overlay panels on this surface, dispatch stays simulated
+ok 4 - scoped out: no intel overlay panels on this surface, dispatch stays simulated
+  ---
+  duration_ms: 3.09757
+  type: 'test'
+  ...
+# Subtest: scoped out: no credential field in the web UI — the key stays server-side
+ok 5 - scoped out: no credential field in the web UI — the key stays server-side
+  ---
+  duration_ms: 0.688072
+  type: 'test'
+  ...
+# Subtest: branding: the live surface reads Meta Imperium
+ok 6 - branding: the live surface reads Meta Imperium
+  ---
+  duration_ms: 0.251072
+  type: 'test'
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 304.328962
