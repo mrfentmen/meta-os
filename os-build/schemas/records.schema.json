@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "meta-os/records.schema.json",
+  "title": "Meta OS record schemas (CB-051..059)",
+  "$defs": {
+    "incident": {
+      "type": "object",
+      "required": ["incident", "evidence"],
+      "properties": {
+        "incident": {
+          "type": "object",
+          "required": ["id", "simulated", "product", "category", "tier", "timestamp", "camera", "description", "identity"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "simulated": { "type": "boolean" },
+            "product": { "type": "string", "minLength": 1 },
+            "category": { "type": "string", "minLength": 1 },
+            "tier": { "enum": ["red", "yellow", "green"] },
+            "timestamp": { "type": "string", "format": "date-time" },
+            "camera": { "type": "string", "minLength": 1 },
+            "description": { "type": "string", "minLength": 1 },
+            "identity": { "type": "string", "minLength": 1 },
+            "visible_marks": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "evidence": {
+          "type": "object",
+          "required": ["frames"],
+          "properties": {
+            "frames": { "type": "array", "items": { "type": "string" } },
+            "face_boxes": { "type": "array" }
+          }
+        }
+      }
+    },
+    "cycle": {
+      "type": "object",
+      "required": ["cycle_id", "phase", "gate_state", "history", "inputs", "outputs"],
+      "properties": {
+        "cycle_id": { "type": "string", "minLength": 1 },
+        "phase": { "enum": ["problem", "literature", "hypotheses", "compute", "critique", "verification", "wetlab", "publication", "sealing", "sealed"] },
+        "gate_state": { "enum": ["open", "human-gated", "closed"] },
+        "history": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" } },
+        "inputs": { "type": "object" },
+        "outputs": { "type": "object" }
+      }
+    },
+    "aegis-finding": {
+      "type": "object",
+      "required": ["ts", "severity", "title", "evidence", "source", "run"],
+      "properties": {
+        "ts": { "type": "string", "format": "date-time" },
+        "v": { "type": "integer", "minimum": 1 },
+        "severity": { "enum": ["info", "low", "medium", "high", "critical"] },
+        "title": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "evidence": { "type": "string", "minLength": 1, "maxLength": 4000 },
+        "source": { "type": "string", "minLength": 1, "maxLength": 500 },
+        "run": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "target": { "type": "string", "minLength": 1, "maxLength": 500 }
+      }
+    },
+    "model-receipt": {
+      "type": "object",
+      "required": ["ts", "kind", "model", "surface", "usage", "latency_ms", "est_cost_usd"],
+      "properties": {
+        "ts": { "type": "string", "format": "date-time" },
+        "kind": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "surface": { "type": "string", "minLength": 1 },
+        "usage": {
+          "type": "object",
+          "required": ["total_tokens"],
+          "properties": { "total_tokens": { "type": "integer", "minimum": 0 } }
+        },
+        "latency_ms": { "type": "number", "minimum": 0 },
+        "est_cost_usd": { "type": ["number", "null"], "minimum": 0 }
+      }
+    },
+    "registry-entry": {
+      "type": "object",
+      "required": ["name", "lane", "command", "budget"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "lane": { "type": "string", "minLength": 1 },
+        "command": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "budget": { "type": "object", "required": ["maxWallMs"], "properties": { "maxWallMs": { "type": "number", "exclusiveMinimum": 0 } } }
+      }
+    },
+    "boot-log-index-row": {
+      "type": "object",
+      "required": ["file", "lines", "first_marker"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "lines": { "type": "integer", "minimum": 0 },
+        "first_marker": { "type": "string" }
+      }
+    },
+    "proof-ledger-row": {
+      "type": "object",
+      "required": ["program", "command", "count", "evidence"],
+      "properties": {
+        "program": { "type": "string", "minLength": 1 },
+        "command": { "type": "string", "minLength": 1 },
+        "count": { "type": "integer", "minimum": 0 },
+        "evidence": { "type": "string", "minLength": 1 }
+      }
+    },
+    "watch-target": {
+      "type": "object",
+      "required": ["type", "path"],
+      "properties": {
+        "type": { "enum": ["file"] },
+        "path": { "type": "string", "minLength": 1 }
+      }
+    },
+    "baton-handoff": {
+      "type": "object",
+      "required": ["jobId", "authors"],
+      "properties": {
+        "jobId": { "type": "string", "minLength": 1 },
+        "authors": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "state": { "type": "string" }
+      }
+    }
+  }
+}
