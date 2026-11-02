@@ -1,0 +1,422 @@
+{
+ "manifest": "C4",
+ "title": "Agent-programs preinstall list for the carrier image (BUILD WAVE W6, C4)",
+ "source": {
+  "repo": "mrfentmen/meta-os",
+  "main_tip": "4548bc821bf7e5d12fad4c216a23274008284f22",
+  "main_tip_short": "4548bc8",
+  "measured": "2026-11-02",
+  "method": "Sizes are git blob bytes from the main tree at the tip above, summed per repo path. They are NOT baked-image sizes: the image lane (OpenCode) measures and replaces them with baked sizes. Nothing in this file claims a baked image, a boot, or a compile. Re-measured from 84fb161 after main moved mid-run (W1 contract landing + Aegis sweep files); only the Aegis anchors changed.",
+  "human_source": "os-build/PREINSTALL.md (Del's order 2026-11-02) for the item list; agents/registry.json for the agent entries."
+ },
+ "status": "v1, queued with Pax, pending Milo gate-1. W6 fetch screen (rowan/kernel-w6) is kernel-side and is NOT part of this carrier manifest.",
+ "agent_runtime": {
+  "note": "The shared runtime every registry agent runs on. This is the only agent-layer code with a measurable ship size on main.",
+  "files": [
+   {
+    "path": "agents/baton.mjs",
+    "bytes": 1102
+   },
+   {
+    "path": "agents/bridge.mjs",
+    "bytes": 5391
+   },
+   {
+    "path": "agents/lessons.mjs",
+    "bytes": 840
+   },
+   {
+    "path": "agents/runtime.mjs",
+    "bytes": 7243
+   },
+   {
+    "path": "agents/watchdog.mjs",
+    "bytes": 3752
+   },
+   {
+    "path": "agents/watchman.mjs",
+    "bytes": 6559
+   }
+  ],
+  "total_bytes": 24887
+ },
+ "agents": [
+  {
+   "name": "rowan",
+   "lane": "kernel (L1-L3)",
+   "owner": "boss",
+   "capabilities": [
+    "kernel",
+    "gate-runs"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "hana",
+   "lane": "UI and surfaces (L6)",
+   "owner": "boss",
+   "capabilities": [
+    "surfaces",
+    "design",
+    "site"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "milo",
+   "lane": "gates and records",
+   "owner": "boss",
+   "capabilities": [
+    "gate-1",
+    "claim-audit",
+    "scoreboard"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "buffy",
+   "lane": "services (L4, Goose)",
+   "owner": "boss",
+   "capabilities": [
+    "services",
+    "failure-injection"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "buffy2",
+   "lane": "verification (8GB Mac)",
+   "owner": "boss",
+   "capabilities": [
+    "clean-clone-gate",
+    "image-boot-checks"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "pax",
+   "lane": "dispatch and merge",
+   "owner": "boss",
+   "capabilities": [
+    "merge",
+    "dispatch",
+    "watch"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "imperium-patrol",
+   "lane": "Imperium loop (patrol -> review -> investigation -> records -> response)",
+   "owner": "system: imperium",
+   "capabilities": [
+    "patrol",
+    "assess",
+    "dispatch-simulated"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "musica-studio",
+   "lane": "Musica overnight sessions",
+   "owner": "system: musica",
+   "capabilities": [
+    "compose",
+    "keeper-pass",
+    "rights-check"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "officina-faber",
+   "lane": "Officina faber loop",
+   "owner": "system: officina",
+   "capabilities": [
+    "design-iterate"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "watch",
+   "lane": "watch rounds (bus, repo, gateway) \u2014 capability demo agent",
+   "owner": "boss",
+   "capabilities": [
+    "watch"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "aegis",
+   "lane": "Meta Aegis \u2014 security sweeps over the boss's own ground",
+   "owner": "boss",
+   "capabilities": [
+    "osv-check",
+    "kev-check",
+    "secret-hygiene",
+    "unicode-security"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  },
+  {
+   "name": "nervus",
+   "lane": "Meta Nervus - model surgery bench (standalone system)",
+   "owner": "boss",
+   "capabilities": [
+    "model-surgery",
+    "sweeps",
+    "steering",
+    "model-reduction",
+    "tool-tray"
+   ],
+   "program_size_bytes": null,
+   "size_note": "Registry command is the placeholder ['true']; no per-agent binary exists on main yet. Agents share the agent runtime below; image lane replaces this null when agents gain real commands."
+  }
+ ],
+ "systems": [
+  {
+   "name": "Custos",
+   "preinstall_source": "os-build/PREINSTALL.md systems list",
+   "anchor": {
+    "repo_path": "os/worlds/custos",
+    "files": 13,
+    "bytes": 118521
+   },
+   "note": "Program dir only; tests/custos (12 files, 101480 bytes) is not shipped."
+  },
+  {
+   "name": "Officina",
+   "preinstall_source": "os-build/PREINSTALL.md systems list",
+   "anchor": {
+    "repo_path": "os/worlds/officina",
+    "files": 14,
+    "bytes": 217929
+   },
+   "note": "Program dir only; tests/officina (4 files, 26249 bytes) is not shipped."
+  },
+  {
+   "name": "Musica",
+   "preinstall_source": "os-build/PREINSTALL.md systems list",
+   "anchor": {
+    "repo_path": "os/worlds/musica",
+    "files": 125,
+    "bytes": 17580429
+   },
+   "note": "Includes sessions and reference media; the image lane decides which subset ships, so the baked size will differ from this repo total."
+  },
+  {
+   "name": "Science Lab",
+   "preinstall_source": "os-build/PREINSTALL.md systems list",
+   "anchor": {
+    "repo_path": "labs",
+    "files": 82,
+    "bytes": 4274662
+   },
+   "anchor_confirmed": false,
+   "note": "Anchor UNCONFIRMED: labs/ is the candidate dir, but Milo's W2 lane (registry entries not on main yet) must confirm labs/ is the lab's ship set before the image lane budgets it."
+  },
+  {
+   "name": "Aegis",
+   "preinstall_source": "agents/registry.json + BUILD WAVE Buffy Round 9",
+   "anchor": {
+    "repo_path": "aegis",
+    "files": 10,
+    "bytes": 59590
+   },
+   "second_anchor": {
+    "repo_path": "os-build/aegis",
+    "files": 10,
+    "bytes": 27457
+   },
+   "note": "Sweep program + its os-build records dir. Now includes the Round 9 OSINT/SECRETS sweep records landed on main after the first C4 measurement."
+  },
+  {
+   "name": "Imperium",
+   "preinstall_source": "os-build/PREINSTALL.md systems list",
+   "anchor": null,
+   "note": "Size NOT attributable on main: no single Imperium program dir exists; implementation is spread across services/js/server. Image lane attributes it or marks it TBD. docs/IMPERIUM_AUTO_DISPATCH.md exists but is a doc, not the program."
+  },
+  {
+   "name": "Vigiles",
+   "preinstall_source": "os-build/PREINSTALL.md systems list (under Imperium)",
+   "anchor": null,
+   "note": "Size NOT attributable on main: no single Vigiles program dir exists; console tests exist under tests/, implementation is spread across services/js/server."
+  },
+  {
+   "name": "Ignis",
+   "preinstall_source": "os-build/PREINSTALL.md systems list (under Imperium)",
+   "anchor": null,
+   "note": "eval/ignis (13 files, 530522 bytes) is an eval corpus, not the Ignis program; not counted as ship size. Program dir TBD by image lane."
+  },
+  {
+   "name": "Medicus",
+   "preinstall_source": "os-build/PREINSTALL.md systems list (under Imperium)",
+   "anchor": null,
+   "note": "eval/medicus (9 files, 59372 bytes) is an eval corpus, not the Medicus program; not counted as ship size. Program dir TBD by image lane."
+  },
+  {
+   "name": "Nervus (META NERVUS)",
+   "preinstall_source": "os-build/NEURON_SURGERY_SPEC.md",
+   "anchor": null,
+   "excluded": true,
+   "note": "EXCLUDED from the bake: spec only (os-build/NEURON_SURGERY_SPEC.md, 5988 bytes). Boss ruling: standalone system, no build until the boss says go. Listed here so the image lane does not invent it."
+  }
+ ],
+ "dock_and_built_in": [
+  {
+   "name": "Terminal (Meta OS shell)",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": {
+    "repo_path": "services/shell",
+    "files": 2,
+    "bytes": 22134
+   },
+   "note": "Shell service; services/console is a separate service and is not counted here."
+  },
+  {
+   "name": "Dashboard",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": {
+    "repo_path": "services/dashboard",
+    "files": 2,
+    "bytes": 9050
+   }
+  },
+  {
+   "name": "Settings",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": {
+    "repo_path": "services/settings",
+    "files": 2,
+    "bytes": 15489
+   }
+  },
+  {
+   "name": "Board (in-OS messaging)",
+   "preinstall_source": "os-build/PREINSTALL.md built-in list",
+   "anchor": {
+    "repo_path": "board",
+    "files": 4,
+    "bytes": 31896
+   },
+   "note": "Wiring into the shell is W7 (Hana); the board code exists, the shell wiring is pending."
+  },
+  {
+   "name": "Passive updater",
+   "preinstall_source": "os-build/PREINSTALL.md built-in list",
+   "anchor": {
+    "repo_path": "services/updater",
+    "files": 8,
+    "bytes": 45087
+   }
+  },
+  {
+   "name": "Wallpaper / live ribbon background",
+   "preinstall_source": "os-build/PREINSTALL.md logo ruling",
+   "anchor": {
+    "repo_path": "services/wallpaper",
+    "files": 2,
+    "bytes": 10108
+   },
+   "note": "Kernel logo_frames.rs is bare-metal kernel code and is NOT counted in this carrier manifest."
+  },
+  {
+   "name": "Google Chrome",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": null,
+   "note": "External/carrier-supplied; size TBD by image lane."
+  },
+  {
+   "name": "Files",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": null,
+   "note": "No unambiguous repo implementation on main; size TBD by image lane."
+  },
+  {
+   "name": "Code Editor",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": null,
+   "note": "No unambiguous repo implementation on main; size TBD by image lane."
+  },
+  {
+   "name": "Notes",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": null,
+   "note": "No unambiguous repo implementation on main; size TBD by image lane."
+  },
+  {
+   "name": "Calendar",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": null,
+   "note": "No unambiguous repo implementation on main; size TBD by image lane."
+  },
+  {
+   "name": "Calculator",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": null,
+   "note": "No unambiguous repo implementation on main; size TBD by image lane."
+  },
+  {
+   "name": "Trash",
+   "preinstall_source": "os-build/PREINSTALL.md dock list",
+   "anchor": null,
+   "note": "No unambiguous repo implementation on main; size TBD by image lane."
+  }
+ ],
+ "toolchain_baked_in": [
+  {
+   "name": "Node",
+   "preinstall_source": "os-build/PREINSTALL.md built-in list",
+   "size_bytes": null,
+   "note": "External tool; baked size TBD by image lane. TOOLS_MANIFEST sizes are Mac dev-carrier measurements, not ship sizes."
+  },
+  {
+   "name": "OpenCode",
+   "preinstall_source": "os-build/PREINSTALL.md built-in list",
+   "size_bytes": null,
+   "note": "External tool; baked size TBD by image lane."
+  },
+  {
+   "name": "Freebuff",
+   "preinstall_source": "os-build/PREINSTALL.md built-in list",
+   "size_bytes": null,
+   "note": "External tool; baked size TBD by image lane."
+  },
+  {
+   "name": "git",
+   "preinstall_source": "os-build/PREINSTALL.md built-in list",
+   "size_bytes": null,
+   "note": "External tool; baked size TBD by image lane."
+  }
+ ],
+ "excluded_from_bake": [
+  "kernel/ (bare-metal kernel: prints, switches, maps, loads; carries no tools per TOOLS_MANIFEST OS-148 \u2014 not part of the carrier bake)",
+  "tests/ (not shipped)",
+  "Nervus (spec only, boss go pending)",
+  "QEMU and the Rust toolchain (dev-carrier tools only, never ship per TOOLS_MANIFEST)",
+  "Eval corpora eval/ignis and eval/medicus (not programs)"
+ ],
+ "open_questions_for_image_lane": [
+  "Confirm labs/ is the Science Lab ship set (Milo W2 lane).",
+  "Attribute or TBD Imperium / Vigiles / Ignis / Medicus program sizes.",
+  "Decide the Musica ship subset (sessions + reference media vs program only).",
+  "Replace every repo-byte size with a baked-image size after the first bake."
+ ],
+ "totals": {
+  "agent_runtime_bytes": 24887,
+  "systems_confirmed_bytes": 18003926,
+  "dock_and_built_in_confirmed_bytes": 133764,
+  "confirmed_attributable_bytes": 18162577,
+  "including_unconfirmed_labs_anchor_bytes": 22437239,
+  "note": "Confirmed total counts only anchors that exist on main. Everything marked null/TBD is excluded from both totals, so both totals UNDERSTATE the final bake."
+ }
+}
