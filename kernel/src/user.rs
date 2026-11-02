@@ -110,17 +110,21 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
                 set_return(base, 0);
             }
             5 => {
-                // R-7: read_key — a getter over the K3 keyboard ring
-                // buffer, no new machinery. Returns the next raw
-                // PS/2 set-1 scancode byte (0..=255, release codes
-                // included, NOT decoded ASCII — decoding stays in
-                // the console task), or u64::MAX when the buffer is
-                // empty (non-blocking; a caller that wants to wait
-                // polls, or sleeps/yields between polls). Valid
-                // returns are all <= 255, so MAX is unambiguous.
-                // Shares the console's buffer: a byte read here is
-                // consumed and is not echoed by the console task.
-                set_return(base, match crate::interrupts::keyboard_read() {
+                // R-7: read_key — a getter over the R-FP2 readkey
+                // ring buffer. Returns the next raw PS/2 set-1
+                // scancode byte (0..=255, release codes included,
+                // NOT decoded ASCII — decoding stays in the console
+                // task), or u64::MAX when the buffer is empty
+                // (non-blocking; a caller that wants to wait polls,
+                // or sleeps/yields between polls). Valid returns are
+                // all <= 255, so MAX is unambiguous. R-FP2: this
+                // ring is fed by the same keyboard_push fan-out as
+                // the console ring but is otherwise independent — a
+                // byte read here is NOT consumed from the console's
+                // copy, so readkey polls can no longer steal typed
+                // bytes from the shell, and the console task's
+                // drain can no longer starve this reader.
+                set_return(base, match crate::interrupts::readkey_read() {
                     Some(scancode) => scancode as u64,
                     None => u64::MAX,
                 });

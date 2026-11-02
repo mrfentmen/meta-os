@@ -324,8 +324,23 @@ pub fn ticks() -> u64 {
 }
 
 // ---------------------------------------------------------------------------
-// PS/2 keyboard: scancode ring buffer (real port reads)
+// PS/2 keyboard: scancode ring buffers (real port reads)
 // ---------------------------------------------------------------------------
+//
+// Two rings, one fan-out. The console ring below is the K3 ring the
+// console task drains; the R-FP2 readkey ring is its twin. R-FP2
+// (typed-bytes race): the console task drains its ring in a tight
+// loop, so a userspace reader sharing that ring starved —
+// first-poller-wins, and the console almost always polls first.
+// `keyboard_push` therefore copies every scancode into the
+// readkey-only ring too, with the same size and drop policy. The
+// console ring is untouched: the shell still sees every byte it
+// used to, a byte read via syscall 5 is no longer consumed from
+// the console's copy, and a console drain can no longer starve
+// readkey (nor can readkey polls steal console bytes). Each ring
+// drops its own newest byte when full; a full ring never
+// overwrites an unread byte on the other ring. Single CPU,
+// interrupt gate masked, same static-mut reasoning as before.
 
 const KEYBOARD_DATA: u16 = 0x60;
 
@@ -333,6 +348,23 @@ const KEY_BUFFER_LEN: usize = 64;
 static mut KEY_BUFFER: [u8; KEY_BUFFER_LEN] = [0; KEY_BUFFER_LEN];
 static mut KEY_HEAD: usize = 0;
 static mut KEY_TAIL: usize = 0;
+
+const READKEY_BUFFER_LEN: usize = 64;
+static mut READKEY_BUFFER: [u8; READKEY_BUFFER_LEN] = [0; READKEY_BUFFER_LEN];
+static mut READKEY_HEAD: usize = 0;
+static mut READKEY_TAIL: usize = 0;
+
+fn readkey_push(scancode: u8) {
+    unsafe {
+        let next = (READKEY_HEAD + 1) % READKEY_BUFFER_LEN;
+        if next != READKEY_TAIL {
+            READKEY_BUFFER[READKEY_HEAD] = scancode;
+            READKEY_HEAD = next;
+        }
+        // Full buffer drops the newest scancode rather than overwriting
+        // an unread one; dropping is documented, overwriting would lie.
+    }
+}
 
 fn keyboard_push(scancode: u8) {
     unsafe {
@@ -344,9 +376,14 @@ fn keyboard_push(scancode: u8) {
         // Full buffer drops the newest scancode rather than overwriting
         // an unread one; dropping is documented, overwriting would lie.
     }
+    // R-FP2 fan-out: the readkey ring gets its own copy of every
+    // scancode, independent of the console ring's fill state.
+    readkey_push(scancode);
 }
 
-/// Oldest unread scancode, if any. Returns None when the buffer is empty.
+/// Oldest unread console scancode, if any. Returns None when the
+/// console ring is empty. Console-only since R-FP2; syscall 5 reads
+/// the readkey ring via `readkey_read()` instead.
 pub fn keyboard_read() -> Option<u8> {
     unsafe {
         if KEY_HEAD == KEY_TAIL {
@@ -354,6 +391,21 @@ pub fn keyboard_read() -> Option<u8> {
         }
         let scancode = KEY_BUFFER[KEY_TAIL];
         KEY_TAIL = (KEY_TAIL + 1) % KEY_BUFFER_LEN;
+        Some(scancode)
+    }
+}
+
+/// Oldest unread readkey scancode, if any. Returns None when the
+/// readkey ring is empty. This is what syscall 5 serves; the console
+/// task never touches this ring, so its drain cannot starve a
+/// userspace reader.
+pub fn readkey_read() -> Option<u8> {
+    unsafe {
+        if READKEY_HEAD == READKEY_TAIL {
+            return None;
+        }
+        let scancode = READKEY_BUFFER[READKEY_TAIL];
+        READKEY_TAIL = (READKEY_TAIL + 1) % READKEY_BUFFER_LEN;
         Some(scancode)
     }
 }

@@ -14,8 +14,10 @@ pub extern "C" fn _start() -> ! {
     let mut got = 0u32;
     let mut empties = 0u32;
     let mut i = 0u32;
-    // Drain-all per pass, like the console task: whoever polls first
-    // after a keystroke gets it (shared buffer, first-come).
+    // Drain-all per pass. Since R-FP2 the kernel fans each scancode
+    // into a dedicated readkey ring, so this program and the console
+    // task each see every byte — no first-come race, no bytes
+    // stolen from the shell.
     while i < 200000 {
         loop {
             let r = sys_read_key();
