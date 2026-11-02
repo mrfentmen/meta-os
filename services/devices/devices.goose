@@ -4,7 +4,7 @@
 // device is in, and the one query every other service uses instead of poking at
 // raw facts.
 //
-// Status: WRITTEN (not COMPILED). Verified via goose-mcp@1.1.0: struct with
+// Status: RUNS — reached by tests/t77_gaps (73 checks, exit 0). Measured 2026-11-02 by audit_status.py. Verified via goose-mcp@1.1.0: struct with
 // fixed-size fields and literals (reference#32), static arrays T[..k], fixed-size
 // array members, `import` of a sibling module (same form supervisor.goose uses for
 // common.err.err), multi-value returns.
