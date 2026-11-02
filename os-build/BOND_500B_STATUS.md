@@ -580,3 +580,12 @@ not tested here), CB2-396..397 (safe-write has no no-change path and no root
 containment).
 
 Section 16 verification: 7 test files, **21 tests pass, 0 fail**.
+
+## Section 17 — Face tests (CB2-401..425) — 0/25, blocked
+
+`face/face.js` is a classic browser script: zero `export`/`module.exports`,
+87 functions closing over `document` and `localStorage`, and no pure logic
+module. The section forbids editing face source, and a test-local fixture
+model would test the fixture rather than the app, so no test was written.
+Unblocking needs one of: extracting the calculator/calendar/notes/window
+logic into an importable module, or agreeing that fixture-model tests count.
