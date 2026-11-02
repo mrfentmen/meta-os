@@ -2,7 +2,7 @@
 //
 // B-L1-112 — Display text helpers: wrapping, clipping, and scroll regions.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t79_limit_drivers (42 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // WHY THESE ARE PURE FUNCTIONS
 // ----------------------------
@@ -55,7 +55,12 @@ struct LineList {
 // width <= 0 returns an empty list with overflow=false, which the caller can tell apart
 // from "the text did not fit".
 fn text_wrap(s: const u8[:], width: i64) -> LineList {
-    var out: LineList = LineList { spans: [], count: 0, overflow: false };
+    // `spans` has to be constructed at its full size. A `span: []` literal leaves a
+    // zero-length array, and the fill loop below then indexes out of bounds -- the
+    // same defect `json_parse` had, found by t79 driving this function for the
+    // first time. Nothing else in the corpus calls text_wrap, which is why a
+    // module that RUNS had a crash in its first loop.
+    var out: LineList = LineList { spans: [Span { .. }; 16], count: 0, overflow: false };
     out.count = 0;
     out.overflow = false;
     var i: i64 = 0;

@@ -31,6 +31,9 @@ tests/t74_failure|RUNS|26|0|
 tests/t75_supervisor_load|RUNS|32|0|
 tests/t76_demo_session|RUNS|25|0|
 tests/t77_gaps|RUNS|73|0|
+tests/t78_lib_limits|RUNS|27|0|
+tests/t79_limit_drivers|RUNS|42|0|
+tests/t80_limit_drivers2|RUNS|30|0|
 entry/bootlog|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
 entry/console|BUILDS (not run)|0|0|svc_entry; no supervisor on a host
 entry/example|TYPECHECKS (not run)|0|0|svc_entry takes a kernel BootInfo; no host boot block

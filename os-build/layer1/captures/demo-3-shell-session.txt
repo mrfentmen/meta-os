@@ -1,7 +1,3 @@
-Meta OS — demo session (Layer 4 shell against the real filesystem)
-source: services/tests/t76_demo_session.goose, built and run natively (goose -> C -> clang)
-host shim: sys_read_key refused (nothing pending), so the lines were handed to sh_exec
---------------------------------------------------------------------------------
 
 Meta OS — demo session (Layer 4 shell against the real filesystem)
 --------------------------------------------------------------------------------

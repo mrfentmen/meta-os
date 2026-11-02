@@ -2,7 +2,7 @@
 //
 // B-L1-124 — Health metrics: the standard counters and gauges every service reports.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t78_lib_limits (27 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // FOUR NUMBERS, EVERY SERVICE
 // ---------------------------
@@ -61,7 +61,9 @@ struct Metrics {
 let MET_NAMES: const u8[:] = "calls errors uptime_ms queue";
 
 fn met_new() -> Metrics {
-    var m: Metrics = Metrics { slots: [], count: 0, next_id: 0 };
+    // Declared length, not `[]`: an empty array made every met_new() fail at the first
+    // slot write. Caught by tests/t78_lib_limits, the first driver this module ever had.
+    var m: Metrics = Metrics { slots: [Metric { id: 0, name: [0; 16], name_len: 0, kind: 0, value: 0, active: false }; 16], count: 0, next_id: 0 };
     var i: i64 = 0;
     while i < MET_MAX {
         m.slots[i] = Metric { id: 0, name: met_zero_name(), name_len: 0, kind: MK_GAUGE, value: 0, active: false };
@@ -95,8 +97,11 @@ fn met_standard(m: Metrics&, now_ms: i64) -> i64 {
     while i < 4 {
         var kind = MK_COUNTER;
         if i == MET_UPTIME || i == MET_QUEUE { kind = MK_GAUGE; }
-        let code = met_register(m, met_standard_name(i), kind);
-        if code != CODE_OK { return code; }
+        // met_register returns an ID, not a status word: comparing it to CODE_OK made
+        // this loop return after the first metric (id 1 != CODE_OK 0), so "the four
+        // standard metrics" was one metric and a number. Caught by tests/t78_lib_limits.
+        let id = met_register(m, met_standard_name(i), kind);
+        if id < 0 { return E_NOROOM; }
         i = i + 1;
     }
     met_set(m, MET_UPTIME, now_ms);      // uptime is reported as "since", see met_uptime

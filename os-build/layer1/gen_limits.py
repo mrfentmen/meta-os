@@ -49,6 +49,55 @@ OVERRIDES = {
 }
 
 
+# Constants that no driver can settle, with the reason. These are not "probably fine":
+# each one is a claim about why a test cannot exist, and the four DEAD entries are
+# findings -- the limit the name promises is not enforced anywhere.
+REASONS = {
+    # --- DEAD: declared, never read. The limit does not exist. -------------
+    "FS_MAX_DEPTH": ("DEAD", "fs.goose declares it and never reads it: a path of any depth is accepted, "
+                              "bounded only by MAX_INODES. The 16 in the name is not enforced."),
+    "CK_MAX_BLOCKS": ("DEAD", "fsck.goose declares it and sizes its tables from MAX_DISK_BLOCKS instead; "
+                               "a second copy of the number that nothing compares."),
+    "CK_MAX_INODES": ("DEAD", "same: fsck sizes from MAX_INODES. Two names for one number means the table "
+                               "can be sized for the wrong limit and nothing notices."),
+    "EX_NAME_MAX": ("DEAD", "example.goose declares it and never reads it; the service names no records."),
+    "DL_LIT_MAX": ("DEAD", "delta.goose declares the literal cap and never reads it; the copy loop takes a "
+                            "runtime length, so an oversized literal is truncated by the destination array."),
+    # --- Not a capacity at all --------------------------------------------
+    "MOD_CAPS": ("BITFLAG", "a modifier bit for Caps Lock, not a size. It matches the audit on \"CAP\" the "
+                            "same way the CAP_* flags do; nothing can exceed it."),
+    "UPD_CONTENT_MAX": ("LAYOUT", "a stride (index * 4096) over the ContentSet buffer, not a refusal point. "
+                                   "The array is sized 8 * 4096, so the stride cannot be exceeded."),
+    # --- Enforced, but another check always fires first -------------------
+    "DNS_QUERY_MAX": ("UNREACHABLE", "the 255-byte name cap is checked before any byte is written, and the "
+                                      "encoding adds at most 2 bytes, so a packet can never reach 512 here. "
+                                      "Defence in depth, not a limit a caller can hit."),
+    "BO_MAX": ("BOUNDARY", "the boot table has 22 rows and the cap is 24; the array can never fill without "
+                            "editing the table, so a driver would only prove the table's size."),
+    "DEP_MAX": ("BOUNDARY", "same shape: DEP_MAX is 24 and the service table has 22 entries."),
+    "SCROLL_MAX": ("INTERNAL", "disp_scroll clamps hist_lines and no accessor returns it, so the clamp has "
+                                  "no observable effect through the public surface."),
+    "HISTORY_SLOTS": ("INTERNAL", "the console history is a ring: pushes overwrite the oldest entry rather "
+                                     "than refusing, and no accessor exposes the depth."),
+    "HANDLE_GEN_MAX": ("WRAP", "handle arithmetic wraps the generation field at this constant; reaching the "
+                                  "wrap needs 2^k reuses of one slot, which no driver can do in bounded time."),
+    "SK_GEN_MAX": ("WRAP", "sk_open wraps the generation at 255 reuses of a slot; the handle is the only "
+                              "observable, so the test would assert a handle pattern, not a refusal."),
+    "STALL_LIMIT": ("ENV", "only reachable when the kernel's tick stops advancing. The host shim's clock "
+                             "always advances, so sleep_ticks cannot enter the stalled branch here."),
+    "SH_OUT_MAX": ("TRUNCATION", "the output cap is a truncation point: out_str returns false and the "
+                                    "builtin's output is dropped, but sh_exec still returns CODE_OK, so "
+                                    "there is no refusal for a test to assert."),
+    "EX_REC_MAX": ("NO-HARNESS", "the example service has no driver: its entry point takes a BootInfo "
+                                   "that only a supervisor can build, and the record append is inside run()."),
+    "CFG_TEXT_MAX": ("NO-HARNESS", "same service, same reason: the config read happens in run(BootInfo)."),
+    "DL_OPS_MAX": ("LAYOUT", "the operation array's size, also returned by delta_ops_max(); the apply "
+                              "path bounds by the array, so the constant can be read but not exceeded."),
+    "UPD_REC_KEEP": ("INTERNAL", "the update-record history is a ring the module owns: push overwrites the "
+                                    "oldest entry and no accessor returns the depth."),
+}
+
+
 def limit_constants():
     out = []
     for base, _dirs, files in os.walk(SERVICES):
@@ -104,16 +153,16 @@ def main():
 
     proven = [r for r in rows if r[3]]
     unproven = [r for r in rows if not r[3]]
+    explained = [r for r in unproven if r[0] in REASONS]
+    open_ = [r for r in unproven if r[0] not in REASONS]
 
     L = []
     A = L.append
     A("# Limits, and the test that tries to break each one (BF4-17)")
     A("")
     A("Generated by `os-build/layer1/gen_limits.py`. Every numeric limit constant in")
-    A("`services/` is listed. **%d of %d are exercised by a test.** The rest are marked" % (len(proven), len(rows)))
-    A("UNPROVEN, which means exactly that: the code that enforces the limit is written")
-    A("and has never been driven to its edge. A green suite elsewhere says nothing")
-    A("about a specific limit.")
+    A("`services/` is listed. **%d of %d are exercised by a test**, %d more carry a named" % (len(proven), len(rows), len(explained)))
+    A("reason why no driver can settle them, and **%d %s still open**." % (len(open_), "is" if len(open_) == 1 else "are"))
     A("")
     A("Two ways a limit counts as proven: the test names the constant, or the test")
     A("breaks the limit through the public API and the override table says which check")
@@ -131,16 +180,37 @@ def main():
         A("| `%s` | `%s` | `%s` | `%s` | %s |" % (name, value, where, who, how))
     A("")
     if unproven:
-        A("## UNPROVEN — written, never driven to the edge")
-        A("")
-        A("| limit | value | in | what the comment says it is for |")
-        A("|---|---|---|---|")
-        for name, value, where, _who, _how in unproven:
-            A("| `%s` | `%s` | `%s` | %s |" % (name, value, where, comment or "—"))
-        A("")
-        A("Each of these needs one test that asks for limit+1 and asserts the refusal.")
-        A("Until then they are WRITTEN, and the report says so.")
-        A("")
+        if explained:
+            A("## Named reason — no driver can settle these")
+            A("")
+            A("Each row is a claim about why a test cannot exist, which is a different thing")
+            A("from coverage. **DEAD** rows are findings: the limit in the name is enforced")
+            A("nowhere in the source, so the constant is a comment pretending to be a check.")
+            A("")
+            A("| limit | value | in | kind | why no driver can settle it |")
+            A("|---|---|---|---|---|")
+            for name, value, where, _who, _how in explained:
+                kind, why = REASONS[name]
+                A("| `%s` | `%s` | `%s` | %s | %s |" % (name, value, where, kind, why))
+            A("")
+            dead = [n for n in (r[0] for r in explained) if REASONS[n][0] == "DEAD"]
+            if dead:
+                A("The DEAD rows in that table are not 'unproven', they are **not limits**: "
+                  "`%s`. Nothing enforces them, so nothing can refuse at their edge. The fix is to" % ", ".join("`%s`" % n for n in dead))
+                A("enforce the bound where the name promises one, or delete the constant. Both are")
+                A("outside this lane's frozen surface, so they are reported, not patched.")
+                A("")
+        if open_:
+            A("## UNPROVEN — written, never driven to the edge")
+            A("")
+            A("| limit | value | in | what the comment says it is for |")
+            A("|---|---|---|---|")
+            for name, value, where, _who, _how in open_:
+                A("| `%s` | `%s` | `%s` | %s |" % (name, value, where, "—"))
+            A("")
+            A("Each of these needs one test that asks for limit+1 and asserts the refusal.")
+            A("Until then they are WRITTEN, and the report says so.")
+            A("")
     A("## Why this document exists")
     A("")
     A("A quota test is the only kind of test that fails in a way nobody notices: the")
@@ -151,9 +221,9 @@ def main():
 
     with open(DEST, "w", encoding="utf-8") as fh:
         fh.write("\n".join(L) + "\n")
-    print("limits: %d  proven: %d  unproven: %d" % (len(rows), len(proven), len(unproven)))
-    for name, _v, _w, who, _h in unproven:
-        print("  UNPROVEN %s" % name)
+    print("limits: %d  proven: %d  explained: %d  open: %d" % (len(rows), len(proven), len(explained), len(open_)))
+    for name, _v, _w, who, _h in open_:
+        print("  OPEN %s" % name)
     return 0
 
 

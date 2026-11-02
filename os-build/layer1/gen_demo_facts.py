@@ -65,10 +65,18 @@ def limits_line():
     if not os.path.exists(path):
         return "LIMITS.md missing"
     with open(path, encoding="utf-8") as fh:
-        for line in fh:
-            m = re.search(r"\*\*(\d+) of (\d+) are exercised by a test\.\*\*", line)
-            if m:
-                return "%s of %s" % (m.group(1), m.group(2))
+        text = fh.read()
+    # Three numbers, all on the header line: exercised, named-reason, still open.
+    m = re.search(r"\*\*(\d+) of (\d+) are exercised by a test\*\*", text)
+    r = re.search(r"and \*\*(\d+) (?:is|are) still open\*\*", text)
+    e = re.search(r", (\d+) more carry a named", text)
+    if m:
+        out = "%s of %s exercised" % (m.group(1), m.group(2))
+        if e:
+            out += ", %s with a named reason" % e.group(1)
+        if r:
+            out += ", %s open" % r.group(1)
+        return out
     return "count not found"
 
 

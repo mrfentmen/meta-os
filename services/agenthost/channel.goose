@@ -2,7 +2,7 @@
 //
 // B-L1-117 — Agent message channel: agent-to-agent messages, queued, with honest states.
 //
-// Status: WRITTEN (not COMPILED, not RUN).
+// Status: RUNS — reached by tests/t79_limit_drivers (42 checks, exit 0). Measured 2026-11-02 by audit_status.py.
 //
 // THE FOUR STATES, AND WHAT EACH ONE PROMISES
 // -------------------------------------------
