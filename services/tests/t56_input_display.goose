@@ -82,8 +82,13 @@ fn main() {
     let a4, _ = input_decode(0x1E, 70);
     check("caps lock makes it uppercase", a4.ch == 'A');
     check("caps lock does not change a digit", input_char(0x02, false) == '1');
+    // A second PRESS toggles the latch off; a RELEASE is a separate event that must decode
+    // as unpressed and must not toggle. The old pair of checks passed the press code and
+    // expected pressed == false, which would have meant a press that is not a press.
     let caps_off, caps_off_ok = input_decode(KEY_CAPSLOCK, 80);   // and back off
-    check("caps lock release decodes", caps_off_ok && caps_off.pressed == false);
+    check("caps lock second press toggles off", caps_off_ok && caps_off.pressed == true);
+    let caps_rel, caps_rel_ok = input_decode(KEY_CAPSLOCK + 128, 85);
+    check("caps lock release decodes", caps_rel_ok && caps_rel.pressed == false);
     let a5, _ = input_decode(0x1E, 90);
     check("caps lock off returns lowercase", a5.ch == 'a');
 

@@ -53,9 +53,11 @@ struct FsckReport {
     fixed: i64,         // repairs applied by fsck_fix
 }
 
-var ck_seen_blk: u8[..512] = [0; 512];   // one bit per block: reached from some inode
+var ck_seen_blk: u8[..512] = [0; 512];   // one bit per block: owned by some live inode
 var ck_seen_ino: u8[..512] = [0; 512];   // one bit per inode: named by some entry (or the root)
 var ck_links: u8[..512] = [0; 512];      // per-inode entry count, capped at 255
+var ck_dir_blk: u8[..512] = [0; 512];    // one bit per block: already scanned as a directory
+var ck_queue: u8[..512] = [0; 512];      // one bit per inode: already queued for walking
 
 fn ck_zero_marks() {
     var i: i64 = 0;
@@ -63,6 +65,8 @@ fn ck_zero_marks() {
         ck_seen_blk[i] = 0;
         ck_seen_ino[i] = 0;
         ck_links[i] = 0;
+        ck_dir_blk[i] = 0;
+        ck_queue[i] = 0;
         i = i + 1;
     }
 }
@@ -109,7 +113,6 @@ fn ck_walk(r: FsckReport&) -> i64 {
     while qhead < qtail {
         let dir = queue[qhead];
         qhead = qhead + 1;
-        r.reachable_inodes = r.reachable_inodes + 1;
 
         let d, dc = fs_ino_read(dir);
         if dc != CODE_OK { problems = problems + 1; }
@@ -122,12 +125,18 @@ fn ck_walk(r: FsckReport&) -> i64 {
                     if lba < CK_DATA_START || lba >= fs_block_count_value() {
                         r.range_bad = r.range_bad + 1;
                         problems = problems + 1;
-                    } else if ck_get(ck_seen_blk, lba) {
+                    } else if ck_get(ck_dir_blk, lba) {
+                        // The same block is named as the storage of two directories. The
+                        // ownership pass in ck_inodes sees this from the inode side too,
+                        // but saying it here names the pair of directories.
                         r.dups = r.dups + 1;
                         problems = problems + 1;
                     } else {
-                        ck_set(ck_seen_blk, lba);
-                        r.reachable_blocks = r.reachable_blocks + 1;
+                        // Mark the block as scanned, NOT as owned: ownership is decided
+                        // once, in ck_inodes, over every live inode. Marking here as well
+                        // made every directory's own block look owned twice, so a clean
+                        // tree never passed the checker.
+                        ck_set(ck_dir_blk, lba);
                         // Gather the block's entries first: resolving kinds re-reads
                         // `fs_blk`, which would otherwise clobber the block mid-scan.
                         if fs_bread(lba) == CODE_OK {
@@ -174,12 +183,12 @@ fn ck_walk(r: FsckReport&) -> i64 {
     return problems;
 }
 
-// A tiny visited set for queued directories, stored in the top bits of the block mark
-// table (blocks 0..63 can never be directory targets, so bits 64+ are spare).
+// A small visited set for queued directories. It gets its own table: the old version
+// borrowed spare bits of the block mark table, which mixed two facts into one word and
+// made "was this block reached" depend on how many directories had been queued.
 fn ck_queue_seen(ino: i64) -> bool {
-    let n = 64 + (ino % 64);
-    if ck_get(ck_seen_blk, n) { return true; }
-    ck_set(ck_seen_blk, n);
+    if ck_get(ck_queue, ino) { return true; }
+    ck_set(ck_queue, ino);
     return false;
 }
 
@@ -196,12 +205,24 @@ fn ck_inodes(r: FsckReport&) -> i64 {
                 r.orphans = r.orphans + 1;
                 problems = problems + 1;
             }
-            if named {
-                let counted = ck_links[ino] as i64;
-                if counted != n.links {
-                    r.link_bad = r.link_bad + 1;
-                    problems = problems + 1;
-                }
+            // Reachable = named by some entry, or the root, which has no entry. Counted
+            // here rather than in the walk, because the walk only ever sees directories:
+            // the field says "inodes", and a number that counted only directories made
+            // the check that reads it false.
+            if named || ino == fs_root() { r.reachable_inodes = r.reachable_inodes + 1; }
+            // Link count. This filesystem has no hard links: every live inode carries
+            // links == 1, and a directory's name in its parent is not a link. So the check
+            // is "is it still 1", not "does it equal the number of entries naming it" --
+            // the entry count flagged every directory and the root.
+            if n.links != 1 {
+                r.link_bad = r.link_bad + 1;
+                problems = problems + 1;
+            }
+            // Named twice is still corruption, whatever the link field says: unlinking one
+            // name frees the inode and leaves the other entry dangling.
+            if named && (ck_links[ino] as i64) > 1 {
+                r.link_bad = r.link_bad + 1;
+                problems = problems + 1;
             }
 
             var used: i64 = 0;
@@ -305,6 +326,12 @@ fn fsck_fix(r: FsckReport&) -> i64 {
     }
     // Leaks: clear the bit. A block nobody points at is free, and freeing it is the
     // conservative repair -- the alternative is an unreachable block forever.
+    //
+    // The bitmap has to be in `fs_blk` before the first question: `bitmap_bit_set` answers
+    // from that buffer, and the orphan loop above left an inode block there. Asking without
+    // reading first is not a slow path, it is a wrong answer -- every bit came back clear,
+    // so the repair freed nothing and reported success.
+    if fs_read_bitmap() != CODE_OK { return E_CORRUPT; }
     var lba: i64 = CK_DATA_START;
     while lba < fs_block_count_value() {
         if bitmap_bit_set(lba) && !ck_get(ck_seen_blk, lba) {

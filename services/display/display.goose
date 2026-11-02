@@ -74,7 +74,10 @@ fn disp_init() {
 fn disp_new(name: const u8[:], cols: i64, rows: i64) -> i64, i64 {
     if vcon_count >= VCON_MAX { return -1, E_NOROOM; }
     if cols <= 0 || rows <= 0 { return -1, E_INVAL; }
-    if cols > DISPLAY_LINE_MAX || rows * DISPLAY_LINE_MAX > 2048 { return -1, E_INVAL; }
+    // Bound the SCREEN, which is rows x cols. This multiplied rows by the maximum line
+    // width instead, so an 80x25 console was rejected for asking for 3200 cells it never
+    // asked for -- only consoles 16 rows or shorter were accepted.
+    if cols > DISPLAY_LINE_MAX || rows * cols > 2048 { return -1, E_INVAL; }
     if name.len == 0 || name.len >= 16 { return -1, E_INVAL; }
 
     let v = vcon_count;

@@ -204,10 +204,15 @@ fn main() {
     check("clean again after the fix", c3 == CODE_OK && p3 == 0 && fsck_clean(rep3));
 
     // --- filling the disk stops with an error, not a crash ---
+    //
+    // The loop bound is the image's data region (64 - 10 = 54 blocks), not 40: with 40 slots
+    // the disk was never full, so "stopped" could only be false and the check could only
+    // fail. Filling 54 blocks needs at least 54 files, plus one directory block when root's
+    // entries overflow their first block.
     var slot: i64 = 0;
     var made: i64 = 0;
     var stopped: bool = false;
-    while slot < 40 && !stopped {
+    while slot < 60 && !stopped {
         var nm: u8[>..] = [];
         let _ = append_str(nm, 16, "/f");
         let _ = append_int(nm, 16, slot);
@@ -221,7 +226,7 @@ fn main() {
         }
         slot = slot + 1;
     }
-    check("the disk fills and refuses politely", stopped && made < 40);
+    check("the disk fills and refuses politely", stopped && made < 60 && made > 20);
 
     say("t65 done  pass=");
     var pb: u8[>..] = [];

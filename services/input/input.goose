@@ -258,7 +258,10 @@ fn input_repeat(now_ms: i64) -> KeyEvent, bool {
     dec.next_repeat_ms = dec.next_repeat_ms + dec.repeat_rate_ms;
     if dec.next_repeat_ms < now_ms { dec.next_repeat_ms = now_ms + dec.repeat_rate_ms; }
 
-    return KeyEvent { scancode: dec.held_sc, ch: ch, mods: dec.mods, pressed: true, repeat: true }, true;
+    // `pressed: false, repeat: true`. A repeat is the key staying down, not the key going
+    // down: anything that counts presses (a chord, a double-tap, a mode toggle) must not
+    // see one key held for a second as thirty presses.
+    return KeyEvent { scancode: dec.held_sc, ch: ch, mods: dec.mods, pressed: false, repeat: true }, true;
 }
 
 // ---------------------------------------------------------------------------

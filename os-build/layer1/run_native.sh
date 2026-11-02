@@ -104,6 +104,16 @@ for e in services/*/entry.goose; do
     [ -e "$e" ] || continue
     svc="$(basename "$(dirname "$e")")"
     c="$OUT/entry_$svc.c"
+    # An entry whose svc_entry takes a BootInfo cannot be driven from a host process:
+    # there is no kernel to hand it the block. Fabricating one would mean running the
+    # service against a fake boot record and then reporting the result as a run, so those
+    # entries are typechecked (check_services.sh covers the whole corpus) and NOT run.
+    if grep -q 'service_main(boot' "$e"; then
+        skipped=$((skipped + 1))
+        ROWS+=("entry/$svc|TYPECHECKS (not run)|0|0|svc_entry takes a kernel BootInfo; no host boot block")
+        printf '  TYPECHECKS %-19s (svc_entry takes BootInfo; not run)\n' "entry/$svc"
+        continue
+    fi
     {
         printf 'import %s.entry;\n\nfn main() {\n    let rc = service_main();\n    if rc != 0 { sys_exit(rc); }\n}\n' "$svc"
         printf 'import common.sys.sys;\n'
@@ -111,7 +121,7 @@ for e in services/*/entry.goose; do
     if goose -o "$c" --standalone "services/.run_entry_$svc.goose" >"$c.gen" 2>&1 \
        && clang -O1 -w "$c" "$SHIM" -o "$OUT/entry_$svc" >"$c.cc" 2>&1; then
         skipped=$((skipped + 1))
-        ROWS+=("entry/$svc|BUILDS (not run)|0|0|exports svc_entry; no supervisor on a host")
+        ROWS+=("entry/$svc|BUILDS (not run)|0|0|svc_entry; no supervisor on a host")
         printf '  BUILDS  %-22s (svc_entry; not run: no supervisor)\n' "entry/$svc"
     else
         fail=$((fail + 1)); failed+=("entry/$svc (build)")
