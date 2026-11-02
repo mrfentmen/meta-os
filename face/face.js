@@ -16,8 +16,12 @@ var settings = {
   mode: localStorage.getItem("metaos-face-mode") || "dark",
   bar: localStorage.getItem("metaos-face-bar") || "auto",
   speed: +(localStorage.getItem("metaos-face-speed") || 25),
-  paused: localStorage.getItem("metaos-face-paused") === "1"
+  paused: localStorage.getItem("metaos-face-paused") === "1",
+  variant: localStorage.getItem("metaos-face-variant") || "blue",
+  bg: localStorage.getItem("metaos-face-bg") || "default"
 };
+var VARIANTS = { blue: "", deep: "saturate(1.35) brightness(.82)", ice: "brightness(1.3) saturate(.75)", midnight: "brightness(.5) saturate(1.1)", solid: "" };
+var BGS = { default: "", navy: "#0a1633", black: "#000000", slate: "#23272f", sky: "#bcd6f5" };
 function applySettings() {
   document.body.classList.toggle("light", settings.mode === "light");
   var bg, fg;
@@ -29,12 +33,18 @@ function applySettings() {
   document.body.style.setProperty("--bar-bg", bg);
   document.body.style.setProperty("--bar-fg", fg);
   $("#tb-mode").textContent = settings.mode.toUpperCase();
+  var cv = document.getElementById("logo-background");
+  cv.style.filter = VARIANTS[settings.variant] || "";
+  cv.style.display = settings.variant === "solid" ? "none" : "";
+  document.body.style.background = BGS[settings.bg] || "";
   window.dispatchEvent(new CustomEvent("meta-trio-logo-speed", { detail: { speed: settings.speed } }));
   window.dispatchEvent(new CustomEvent("meta-trio-logo-paused", { detail: { paused: settings.paused } }));
   localStorage.setItem("metaos-face-mode", settings.mode);
   localStorage.setItem("metaos-face-bar", settings.bar);
   localStorage.setItem("metaos-face-speed", String(settings.speed));
   localStorage.setItem("metaos-face-paused", settings.paused ? "1" : "0");
+  localStorage.setItem("metaos-face-variant", settings.variant);
+  localStorage.setItem("metaos-face-bg", settings.bg);
 }
 
 /* ---------- clock ---------- */
@@ -96,6 +106,67 @@ function markRunning() {
     d.classList.toggle("running", !!openWins[d.dataset.app]);
   });
   var dc = $("#dash-count"); if (dc) dc.textContent = Object.keys(openWins).length;
+}
+
+/* ---------- tiny filesystem (Files + Trash share it) ---------- */
+function loadFS() {
+  var fs = JSON.parse(localStorage.getItem("metaos-face-fs") || "null");
+  if (!fs) {
+    fs = [
+      { id: 1, name: "README.txt", folder: "Home", trashed: false, content: "Meta OS 0.1 (K6)\n\nMeta OS boots on x86_64 in QEMU, drops to ring 3, runs three userspace programs, isolates a fault to one task, and gives you a shell that reports the machine's real state." },
+      { id: 2, name: "K7-boot.txt", folder: "Home/logs", trashed: false, content: "META OS 0.1 (K6)\nMETA OS KERNEL - alive (K1)\nHELLO FROM USERSPACE\nsleeper: sleep/wake ok\ncrasher: task killed (isolated)\n(record excerpt — full log: os-build/logs/K7-boot.txt)" },
+      { id: 3, name: "imperium-run.txt", folder: "Home/systems", trashed: false, content: "Imperium live run (Mac, Round 5 R5-4):\nflag -> review -> investigation -> auto-dispatch WITH picture\nreceipt sim-6623d237a90b3d9d (SIMULATED endpoint)" },
+      { id: 4, name: "welcome.txt", folder: "Home", trashed: false, content: "Welcome to Meta OS.\nFiles here persist in this browser. Delete moves a file to Trash; restore brings it back." }
+    ];
+    localStorage.setItem("metaos-face-fs", JSON.stringify(fs));
+  }
+  return fs;
+}
+function saveFS(fs) { localStorage.setItem("metaos-face-fs", JSON.stringify(fs)); }
+function buildFiles(body, trashOnly) {
+  var fs = loadFS();
+  body.innerHTML = '<div class="win-sub">' + (trashOnly
+    ? "Deleted files land here. Restore returns them to Files; Empty removes them for good (in this browser)."
+    : "A small working file store in this browser — seeded with the OS's own records. Create, open, delete.") + '</div>' +
+    '<div class="files-list"></div><div class="files-view"></div>' +
+    (trashOnly ? '<div style="margin-top:10px"><button class="mini-btn files-empty">Empty trash</button></div>'
+               : '<div class="board-post"><input placeholder="New file name"><button class="files-new">Create</button></div>');
+  var list = body.querySelector(".files-list"), view = body.querySelector(".files-view");
+  function render() {
+    fs = loadFS();
+    var items = fs.filter(function (f) { return f.trashed === trashOnly; });
+    list.innerHTML = items.length ? "" : '<div style="opacity:.6">' + (trashOnly ? "Trash is empty." : "No files.") + "</div>";
+    items.forEach(function (f) {
+      var row = document.createElement("div"); row.className = "file-row";
+      row.innerHTML = '<span class="file-name"></span><span class="file-folder"></span>';
+      row.querySelector(".file-name").textContent = "📄 " + f.name;
+      row.querySelector(".file-folder").textContent = f.folder;
+      row.addEventListener("click", function () { showFile(f); });
+      list.appendChild(row);
+    });
+  }
+  function showFile(f) {
+    view.innerHTML = '<div class="win-sub" style="margin-top:10px">' + f.folder + "/" + f.name + '</div><pre></pre>' +
+      '<div style="margin-top:8px">' + (trashOnly
+        ? '<button class="mini-btn f-restore">Restore</button>'
+        : '<button class="mini-btn f-del">Delete (to Trash)</button>') + "</div>";
+    view.querySelector("pre").textContent = f.content;
+    var rb = view.querySelector(".f-restore"), db = view.querySelector(".f-del");
+    if (rb) rb.addEventListener("click", function () { f.trashed = false; saveFS(fs); view.innerHTML = ""; render(); });
+    if (db) db.addEventListener("click", function () { f.trashed = true; saveFS(fs); view.innerHTML = ""; render(); });
+  }
+  var nb = body.querySelector(".files-new");
+  if (nb) nb.addEventListener("click", function () {
+    var input = body.querySelector(".board-post input"), name = input.value.trim();
+    if (!name) return;
+    fs.push({ id: Date.now(), name: name, folder: "Home", trashed: false, content: "(new file — created in Files)" });
+    saveFS(fs); input.value = ""; render();
+  });
+  var eb = body.querySelector(".files-empty");
+  if (eb) eb.addEventListener("click", function () {
+    fs = fs.filter(function (f) { return !f.trashed; }); saveFS(fs); view.innerHTML = ""; render();
+  });
+  render();
 }
 
 /* ---------- apps ---------- */
@@ -180,6 +251,119 @@ var APPS = {
         '<span style="opacity:.7">The vision readings in that run were staged. A real camera run is still owed, and this window does not pretend otherwise.</span>';
     }
   },
+  calculator: {
+    title: "Calculator",
+    build: function (body) {
+      body.innerHTML = '<div class="calc"><div class="calc-disp">0</div><div class="calc-grid"></div></div>' +
+        '<div class="win-sub" style="margin-top:8px">Real arithmetic, buttons and keyboard. State lives in this window only.</div>';
+      var disp = body.querySelector(".calc-disp"), cur = "0", prev = null, op = null, fresh = true;
+      function show() { disp.textContent = cur; }
+      function calc(a, b, o) { a = parseFloat(a); b = parseFloat(b); if (o === "+") return String(a + b); if (o === "-") return String(a - b); if (o === "*") return String(a * b); if (o === "/") return b === 0 ? "Error" : String(a / b); return String(b); }
+      function press(k) {
+        if (/[0-9.]/.test(k)) { if (fresh || cur === "0" || cur === "Error") { cur = k === "." ? "0." : k; fresh = false; } else if (k !== "." || !cur.includes(".")) cur += k; }
+        else if ("+-*/".includes(k)) { if (prev !== null && op && !fresh) cur = calc(prev, cur, op); prev = cur; op = k; fresh = true; }
+        else if (k === "=" || k === "Enter") { if (prev !== null && op) { cur = calc(prev, cur, op); prev = null; op = null; fresh = true; } }
+        else if (k === "C" || k === "Escape") { cur = "0"; prev = null; op = null; fresh = true; }
+        else if (k === "Backspace") { cur = cur.length > 1 ? cur.slice(0, -1) : "0"; }
+        show();
+      }
+      var keys = ["C", "(", ")", "/", "7", "8", "9", "*", "4", "5", "6", "-", "1", "2", "3", "+", "0", ".", "=", "⌫"];
+      var grid = body.querySelector(".calc-grid");
+      keys.forEach(function (k) {
+        var b = document.createElement("button"); b.textContent = k; b.className = "calc-btn";
+        b.addEventListener("click", function () { press(k === "⌫" ? "Backspace" : k); });
+        grid.appendChild(b);
+      });
+      body.tabIndex = 0;
+      body.addEventListener("keydown", function (e) { if (/[0-9.+\-*/=]|Enter|Escape|Backspace/.test(e.key)) { press(e.key); e.preventDefault(); } });
+      show();
+    }
+  },
+  notes: {
+    title: "Notes",
+    build: function (body) {
+      var notes = JSON.parse(localStorage.getItem("metaos-face-notes") || "null") ||
+        [{ id: 1, title: "Welcome", text: "Meta OS notes live here.\nThey persist in this browser across reloads.\nThe kernel-face Notes is a Lobster app fed by the Goose settings service — this is its reference UI." }];
+      var active = notes.length ? notes[0].id : null;
+      body.innerHTML = '<div class="notes"><div class="notes-list"></div><div class="notes-main">' +
+        '<input class="notes-title" placeholder="Title"><textarea class="notes-text" placeholder="Write..."></textarea>' +
+        '<div style="margin-top:8px"><button class="mini-btn notes-new">New note</button> <button class="mini-btn notes-del">Delete</button></div></div></div>';
+      var list = body.querySelector(".notes-list"), title = body.querySelector(".notes-title"), text = body.querySelector(".notes-text");
+      function save() { localStorage.setItem("metaos-face-notes", JSON.stringify(notes)); }
+      function render() {
+        list.innerHTML = "";
+        notes.forEach(function (n) {
+          var d = document.createElement("div"); d.className = "notes-item" + (n.id === active ? " on" : "");
+          d.textContent = n.title || "Untitled";
+          d.addEventListener("click", function () { active = n.id; sync(); render(); });
+          list.appendChild(d);
+        });
+        var cur = notes.find(function (n) { return n.id === active; });
+        title.value = cur ? cur.title : ""; text.value = cur ? cur.text : "";
+        title.disabled = text.disabled = !cur;
+      }
+      function sync() { var cur = notes.find(function (n) { return n.id === active; }); if (cur) { cur.title = title.value; cur.text = text.value; } }
+      title.addEventListener("input", function () { sync(); save(); render(); });
+      text.addEventListener("input", function () { sync(); save(); });
+      body.querySelector(".notes-new").addEventListener("click", function () {
+        var n = { id: Date.now(), title: "Untitled", text: "" }; notes.unshift(n); active = n.id; save(); render();
+      });
+      body.querySelector(".notes-del").addEventListener("click", function () {
+        notes = notes.filter(function (n) { return n.id !== active; }); active = notes.length ? notes[0].id : null; save(); render();
+      });
+      render();
+    }
+  },
+  calendar: {
+    title: "Calendar",
+    build: function (body) {
+      var events = JSON.parse(localStorage.getItem("metaos-face-events") || "{}");
+      var view = new Date(); view.setDate(1);
+      body.innerHTML = '<div class="cal-head"><button class="mini-btn cal-prev">&lt;</button><b class="cal-name"></b><button class="mini-btn cal-next">&gt;</button></div>' +
+        '<div class="cal-grid"></div><div class="cal-detail"></div>';
+      var grid = body.querySelector(".cal-grid"), name = body.querySelector(".cal-name"), detail = body.querySelector(".cal-detail");
+      var today = new Date();
+      function key(d) { return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
+      function render() {
+        name.textContent = view.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+        grid.innerHTML = "";
+        ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].forEach(function (d) { var h = document.createElement("div"); h.className = "cal-dow"; h.textContent = d; grid.appendChild(h); });
+        var first = new Date(view), days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+        for (var i = 0; i < first.getDay(); i++) grid.appendChild(document.createElement("div"));
+        for (var dnum = 1; dnum <= days; dnum++) {
+          (function (dn) {
+            var cell = document.createElement("button"); cell.className = "cal-day";
+            var dt = new Date(view.getFullYear(), view.getMonth(), dn);
+            if (dt.toDateString() === today.toDateString()) cell.classList.add("today");
+            cell.textContent = dn + (events[key(dt)] ? " •" : "");
+            cell.addEventListener("click", function () { showDay(dt); });
+            grid.appendChild(cell);
+          })(dnum);
+        }
+      }
+      function showDay(dt) {
+        var k = key(dt), list = events[k] || [];
+        detail.innerHTML = '<div class="win-sub" style="margin-top:10px">' + dt.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) + '</div>' +
+          (list.length ? list.map(function (e) { return "<div>• " + e + "</div>"; }).join("") : '<div style="opacity:.6">No events.</div>') +
+          '<div class="board-post"><input placeholder="Add an event"><button>Add</button></div>';
+        var input = detail.querySelector("input");
+        function add() { if (!input.value.trim()) return; (events[k] = events[k] || []).push(input.value.trim()); localStorage.setItem("metaos-face-events", JSON.stringify(events)); render(); showDay(dt); }
+        detail.querySelector("button").addEventListener("click", add);
+        input.addEventListener("keydown", function (e) { if (e.key === "Enter") add(); });
+      }
+      body.querySelector(".cal-prev").addEventListener("click", function () { view.setMonth(view.getMonth() - 1); render(); });
+      body.querySelector(".cal-next").addEventListener("click", function () { view.setMonth(view.getMonth() + 1); render(); });
+      render();
+    }
+  },
+  files: {
+    title: "Files",
+    build: function (body) { buildFiles(body, false); }
+  },
+  trash: {
+    title: "Trash",
+    build: function (body) { buildFiles(body, true); }
+  },
   settings: {
     title: "Settings",
     build: function (body) {
@@ -188,7 +372,9 @@ var APPS = {
         '<div class="set-row"><span>Top bar colour</span><span class="seg" id="set-bar"><button data-v="auto">Auto</button><button data-v="black">Black</button><button data-v="white">White</button><button data-v="blue">Blue</button></span></div>' +
         '<div class="set-row"><span>Wallpaper speed</span><span class="seg" id="set-speed"><button data-v="10">Calm</button><button data-v="25">Normal</button><button data-v="50">Fast</button></span></div>' +
         '<div class="set-row"><span>Wallpaper motion</span><span class="seg" id="set-paused"><button data-v="0">Running</button><button data-v="1">Paused</button></span></div>' +
-        '<div class="win-sub" style="margin-top:10px">Every control applies now and survives a reload. Wallpaper variants + background colour picker are face tasks A4/A5 — next slice.</div>';
+        '<div class="set-row"><span>Wallpaper</span><span class="seg" id="set-variant"><button data-v="blue">Blue</button><button data-v="deep">Deep</button><button data-v="ice">Ice</button><button data-v="midnight">Midnight</button><button data-v="solid">Solid</button></span></div>' +
+        '<div class="set-row"><span>Background colour</span><span class="seg" id="set-bg"><button data-v="default">Default</button><button data-v="navy">Navy</button><button data-v="black">Black</button><button data-v="slate">Slate</button><button data-v="sky">Sky</button></span></div>' +
+        '<div class="win-sub" style="margin-top:10px">Every control applies now and survives a reload. Variants restyle the one blue ribbon (filters on the same renderer) — the ribbon itself stays the boss\'s blue infinity loop.</div>';
       function wire(id, key, fn) {
         var seg = body.querySelector(id);
         seg.querySelectorAll("button").forEach(function (b) {
@@ -201,6 +387,8 @@ var APPS = {
         wire("#set-bar", "bar", function (v) { settings.bar = v; });
         wire("#set-speed", "speed", function (v) { settings.speed = +v; });
         wire("#set-paused", "paused", function (v) { settings.paused = v === "1"; });
+        wire("#set-variant", "variant", function (v) { settings.variant = v; });
+        wire("#set-bg", "bg", function (v) { settings.bg = v; });
       }
       wireAll();
     }
@@ -218,9 +406,11 @@ var APPS = {
 /* ---------- dock ---------- */
 var DOCK = [
   ["terminal", "&#9002;", "Terminal"], ["dashboard", "&#9638;", "Dashboard"],
+  ["files", "&#128193;", "Files"], ["notes", "&#128221;", "Notes"],
+  ["calendar", "&#128197;", "Calendar"], ["calculator", "&#128425;", "Calculator"],
   ["board", "&#9998;", "Board"], null,
   ["imperium", "&#9960;", "Imperium"], null,
-  ["settings", "&#9881;", "Settings"], ["about", "&#9432;", "About"]
+  ["settings", "&#9881;", "Settings"], ["trash", "&#128465;", "Trash"], ["about", "&#9432;", "About"]
 ];
 DOCK.forEach(function (item) {
   if (item === null) { var s = document.createElement("div"); s.className = "dock-sep"; dockEl.appendChild(s); return; }
