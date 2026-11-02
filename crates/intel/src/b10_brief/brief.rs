@@ -2177,6 +2177,100 @@ pub fn offer_onjoin_brief(
         .collect()
 }
 
+/// BRF-011: next 08:00 ET run time, as a Unix timestamp.
+///
+/// Uses America/New_York, so the 08:00 ET brief stays at 08:00
+/// across daylight-saving changes. Returns the next `hour`:00
+/// strictly after `now` (or after the current time when `now`
+/// is None). Pure std, no timezone crate: the DST window is the
+/// post-2007 US rule — second Sunday of March 07:00 UTC through
+/// first Sunday of November 06:00 UTC — the same window
+/// `format_brief_time` uses. `hour` is a wall-clock hour (8 by
+/// default); 08:00 never falls in the spring gap or the autumn
+/// repeat hour, so the wall-to-UTC conversion is unambiguous.
+pub fn next_morning_run(now: Option<i64>, hour: i64) -> i64 {
+    fn civil_from_days(z: i64) -> (i64, i64, i64) {
+        let z = z + 719468;
+        let era = z.div_euclid(146097);
+        let doe = z - era * 146097;
+        let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+        let y = yoe + era * 400;
+        let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+        let mp = (5 * doy + 2) / 153;
+        let d = doy - (153 * mp + 2) / 5 + 1;
+        let m = if mp < 10 { mp + 3 } else { mp - 9 };
+        let y = if m <= 2 { y + 1 } else { y };
+        (y, m, d)
+    }
+    fn days_from_civil(mut y: i64, m: i64, d: i64) -> i64 {
+        if m <= 2 {
+            y -= 1;
+        }
+        let era = y.div_euclid(400);
+        let yoe = y - era * 400;
+        let mp = if m > 2 { m - 3 } else { m + 9 };
+        let doy = (153 * mp + 2) / 5 + d - 1;
+        let doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+        era * 146097 + doe - 719468
+    }
+    // Weekday with Sunday = 0: 1970-01-01 was a Thursday.
+    fn weekday_sunday0(days: i64) -> i64 {
+        (days + 4).rem_euclid(7)
+    }
+    // Offset in seconds for a UTC instant: -4h inside the DST
+    // window, -5h outside it.
+    fn offset_at(ts: i64) -> i64 {
+        let days = ts.div_euclid(86400);
+        let (year, _, _) = civil_from_days(days);
+        let first_sunday = |month: i64| -> i64 {
+            let first = days_from_civil(year, month, 1);
+            1 + (7 - weekday_sunday0(first)).rem_euclid(7)
+        };
+        let dst_start =
+            days_from_civil(year, 3, first_sunday(3) + 7) * 86400 + 7 * 3600;
+        let dst_end =
+            days_from_civil(year, 11, first_sunday(11)) * 86400 + 6 * 3600;
+        if dst_start <= ts && ts < dst_end {
+            -4 * 3600
+        } else {
+            -5 * 3600
+        }
+    }
+    let now = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let local = now + offset_at(now);
+    let local_days = local.div_euclid(86400);
+    let local_secs = local.rem_euclid(86400);
+    // The candidate is today at `hour`:00 local; strictly-after
+    // means an exact hit rolls to tomorrow, mirroring Python's
+    // `candidate <= current` check.
+    let mut cand_days = local_days;
+    if hour * 3600 <= local_secs {
+        cand_days += 1;
+    }
+    let (year, _, _) = civil_from_days(cand_days);
+    let first_sunday = |month: i64| -> i64 {
+        let first = days_from_civil(year, month, 1);
+        1 + (7 - weekday_sunday0(first)).rem_euclid(7)
+    };
+    let dst_start_day = days_from_civil(year, 3, first_sunday(3) + 7);
+    let dst_end_day = days_from_civil(year, 11, first_sunday(11));
+    // 08:00 is past both 02:00 transitions, so the date-range
+    // check gives the right offset: DST on its start day, EST
+    // on its end day.
+    let offset = if dst_start_day <= cand_days && cand_days < dst_end_day {
+        -4 * 3600
+    } else {
+        -5 * 3600
+    };
+    cand_days * 86400 + hour * 3600 - offset
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -3240,5 +3334,31 @@ mod tests {
         assert_eq!(offers[0].nick, "sam");
         assert_eq!(offers[0].brief_generated, false);
         assert_eq!(offers[0].brief_id, None);
+    }
+
+    #[test]
+    fn next_morning_run_strictly_after_and_dst() {
+        // Vectors computed from Python's zoneinfo implementation
+        // of next_morning_run (America/New_York).
+        // 2026-11-02 07:00 EST -> same day 08:00 EST.
+        assert_eq!(next_morning_run(Some(1793620800), 8), 1793624400);
+        // Exactly 08:00 rolls to tomorrow: strictly after.
+        assert_eq!(next_morning_run(Some(1793624400), 8), 1793710800);
+        // After 08:00 -> tomorrow 08:00.
+        assert_eq!(next_morning_run(Some(1793629800), 8), 1793710800);
+        // Summer EDT, before 08:00 -> same day 08:00 EDT.
+        assert_eq!(next_morning_run(Some(1784116740), 8), 1784116800);
+        // DST start day (spring forward) 07:00 EDT -> 08:00 EDT.
+        assert_eq!(next_morning_run(Some(1772967600), 8), 1772971200);
+        // Day before DST start, after 08:00 -> DST day 08:00 EDT.
+        assert_eq!(next_morning_run(Some(1772892000), 8), 1772971200);
+        // DST end day (fall back) 07:00 EST -> 08:00 EST.
+        assert_eq!(next_morning_run(Some(1793534400), 8), 1793538000);
+        // Day before DST end, after 08:00 -> DST-end day 08:00 EST.
+        assert_eq!(next_morning_run(Some(1793451600), 8), 1793538000);
+        // Custom hour: 07:00 -> same day 09:00 EST.
+        assert_eq!(next_morning_run(Some(1793620800), 9), 1793628000);
+        // Year boundary: 2026-12-31 23:00 EST -> 2027-01-01 08:00 EST.
+        assert_eq!(next_morning_run(Some(1798776000), 8), 1798808400);
     }
 }
