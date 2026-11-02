@@ -36,7 +36,7 @@ class TestReasoning(unittest.TestCase):
                 reasoning.preregister("H9", "t", 1, "s", lp)
 
     def test_missing_critique_blocks_gate(self):
-        chain = rc.build_chain({"id": "b"}, [{"id": "H1"}], [{"step": 1}],
+        chain = rc.build_chain({"id": "b"}, [{"id": "H1"}], {"steps": [{"step": 1}]},
                                "prereghash123", None)
         ok, msg = rc.gate_to_computational(chain)
         self.assertFalse(ok)
@@ -46,7 +46,7 @@ class TestReasoning(unittest.TestCase):
         import json
         d = json.load(open(os.path.join(
             _LAB, "records", "examples", "reasoning_example.json")))
-        self.assertFalse(d["gate"]["allowed"])
+        self.assertFalse(d["gate"]["ok"])
         self.assertIn("TO_BE_READ_AT_RUN", json.dumps(d))
 
 
