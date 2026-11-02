@@ -5,9 +5,13 @@ set -eu
 SRC="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 DST=/opt/face
 U="${HOME}/.config/systemd/user"
-# 1) stage face content
-sudo mkdir -p "$DST"
-sudo cp -r "$SRC/." "$DST/"
+# 1) stage face content (skip when already running from DST)
+if [ "$SRC" != "$DST" ]; then
+  sudo mkdir -p "$DST"
+  sudo cp -r "$SRC/." "$DST/"
+else
+  sudo mkdir -p "$DST"
+fi
 # keep linger best-effort so user services survive logout/reboot
 sudo loginctl enable-linger "$(id -un)" 2>/dev/null || true
 # 2) install user units
