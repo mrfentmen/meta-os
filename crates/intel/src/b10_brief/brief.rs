@@ -1410,6 +1410,124 @@ pub fn federation_lines(federation: Option<&Federation>) -> Vec<String> {
     lines
 }
 
+/// OS-079: one budget lane in a memory_budget record: lane name plus
+/// spent and cap, or remaining directly. A caller maps a non-string
+/// lane to an empty string and a non-int (including a bool) cap /
+/// spent / remaining value to `None`, mirroring Python's `isinstance`
+/// checks; an entry with an empty lane or no usable figure is skipped
+/// here, never guessed. `age_label` is `Some` when the entry carries
+/// its own `as_of` time, preformed like the record label; `None` falls
+/// back to the record's label, mirroring Python's
+/// `entry.get("as_of", record.get("as_of"))`.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MemoryBudgetEntry {
+    pub lane: String,
+    pub cap: Option<i64>,
+    pub spent: Option<i64>,
+    pub remaining: Option<i64>,
+    pub held: bool,
+    pub age_label: Option<String>,
+}
+
+/// The whole memory_budget record. `settled_decisions: None` means the
+/// snapshot carries no `settled_decisions` key at all, which reads as
+/// not reported; `Some(vec![])` means an empty decision list, which
+/// reads as none reported. `budgets: None` means no `budgets` key,
+/// which reads as the not-reported spend line. `age_label` is the
+/// record's own `as_of` time, preformed as
+/// `" (as of YYYY-MM-DD HH:MM ET)"`, or
+/// `" (snapshot time not reported)"` when the record gives no time;
+/// this crate has no time dependency, so the caller supplies the
+/// label already formed.
+#[derive(Debug, Clone, PartialEq)]
+pub struct MemoryBudget {
+    pub memory_down: bool,
+    pub settled_decisions: Option<Vec<String>>,
+    pub budgets: Option<Vec<MemoryBudgetEntry>>,
+    pub age_label: String,
+}
+
+/// OS-079: the settled-decisions line plus one spend-vs-budget line
+/// per lane, opening a brief, right after the window line and before
+/// the digest and the sections. A down memory service is said, never
+/// hidden behind an absent line: with the service down, no settled
+/// decision is shown and none is invented. A missing record field is
+/// reported as not reported, never guessed; an empty decision list
+/// reads none reported, never padded. A record with no usable budget
+/// entry renders the not-reported line instead of a made-up figure.
+/// These are not bullet lines, so the BRF-007 budget trim never drops
+/// them ahead of a watch item, and they are redacted by the composer,
+/// not here. A snapshot without the record carries no lines at all,
+/// so older briefs keep their exact shape.
+pub fn memory_budget_lines(record: Option<&MemoryBudget>) -> Vec<String> {
+    let record = match record {
+        None => return Vec::new(),
+        Some(r) => r,
+    };
+    let settled = if record.memory_down {
+        "Settled decisions from memory: memory service down, so no settled decisions are shown".to_string()
+    } else {
+        match &record.settled_decisions {
+            None => {
+                "Settled decisions from memory: not reported in this snapshot".to_string()
+            }
+            Some(decisions) => {
+                let usable: Vec<&str> = decisions
+                    .iter()
+                    .map(String::as_str)
+                    .filter(|d| !d.is_empty())
+                    .collect();
+                if usable.is_empty() {
+                    "Settled decisions from memory: none reported".to_string()
+                } else {
+                    format!("Settled decisions from memory: {}", usable.join("; "))
+                }
+            }
+        }
+    };
+    let mut lines = vec![format!("{}{}", settled, record.age_label)];
+    let mut budget_lines: Vec<String> = Vec::new();
+    if let Some(budgets) = &record.budgets {
+        for entry in budgets {
+            if entry.lane.is_empty() {
+                continue;
+            }
+            let text = if let (Some(spent), Some(cap)) = (entry.spent, entry.cap) {
+                format!(
+                    "Spend: {} lane: {} of {} budget ({} remaining)",
+                    entry.lane,
+                    spent,
+                    cap,
+                    cap - spent
+                )
+            } else if let (Some(remaining), Some(cap)) = (entry.remaining, entry.cap) {
+                format!(
+                    "Spend: {} lane: {} remaining of {} cap",
+                    entry.lane, remaining, cap
+                )
+            } else if let Some(remaining) = entry.remaining {
+                format!("Spend: {} lane: {} remaining", entry.lane, remaining)
+            } else {
+                continue;
+            };
+            let mut text = text;
+            if entry.held {
+                // OS-085: a lane at cap holds new claims, and the hold
+                // is visible in the budget line itself.
+                text.push_str(" — new claims held");
+            }
+            let age = entry.age_label.as_deref().unwrap_or(&record.age_label);
+            budget_lines.push(format!("{text}{age}"));
+        }
+    }
+    if budget_lines.is_empty() {
+        lines.push("Spend vs budget: not reported in this snapshot".to_string());
+    } else {
+        lines.extend(budget_lines);
+    }
+    lines
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -1995,6 +2113,101 @@ mod tests {
         assert_eq!(
             environment_lines(Some(&no_branch))[0],
             "Repo state: not reported in this snapshot"
+        );
+    }
+
+    #[test]
+    fn memory_budget_lines_settled_spend_and_down() {
+        let full = MemoryBudget {
+            memory_down: false,
+            settled_decisions: Some(vec![
+                "freeze at 05:12".into(),
+                "".into(),
+                "green look carries over".into(),
+            ]),
+            budgets: Some(vec![
+                MemoryBudgetEntry {
+                    lane: "intel".into(),
+                    cap: Some(100),
+                    spent: Some(30),
+                    remaining: None,
+                    held: false,
+                    age_label: None,
+                },
+                MemoryBudgetEntry {
+                    lane: "relay".into(),
+                    cap: Some(50),
+                    spent: None,
+                    remaining: Some(20),
+                    held: true,
+                    age_label: Some(" (as of 2026-10-30 08:00 ET)".into()),
+                },
+                MemoryBudgetEntry {
+                    lane: "".into(),
+                    cap: Some(10),
+                    spent: Some(1),
+                    remaining: None,
+                    held: false,
+                    age_label: None,
+                },
+                MemoryBudgetEntry {
+                    lane: "ghost".into(),
+                    cap: None,
+                    spent: None,
+                    remaining: None,
+                    held: false,
+                    age_label: None,
+                },
+            ]),
+            age_label: " (snapshot time not reported)".into(),
+        };
+        assert_eq!(
+            memory_budget_lines(Some(&full)),
+            vec![
+                "Settled decisions from memory: freeze at 05:12; green look carries over (snapshot time not reported)",
+                "Spend: intel lane: 30 of 100 budget (70 remaining) (snapshot time not reported)",
+                "Spend: relay lane: 20 remaining of 50 cap — new claims held (as of 2026-10-30 08:00 ET)",
+            ]
+        );
+        // No record at all: no lines, so older briefs keep their shape.
+        assert_eq!(memory_budget_lines(None), Vec::<String>::new());
+        // Memory service down: no settled decision is shown, none invented.
+        let down = MemoryBudget {
+            memory_down: true,
+            settled_decisions: Some(vec!["kept".into()]),
+            budgets: None,
+            age_label: " (snapshot time not reported)".into(),
+        };
+        assert_eq!(
+            memory_budget_lines(Some(&down)),
+            vec![
+                "Settled decisions from memory: memory service down, so no settled decisions are shown (snapshot time not reported)",
+                "Spend vs budget: not reported in this snapshot",
+            ]
+        );
+        // Missing key reads not reported; empty list reads none reported.
+        let missing = MemoryBudget {
+            memory_down: false,
+            settled_decisions: None,
+            budgets: Some(vec![]),
+            age_label: "".into(),
+        };
+        assert_eq!(
+            memory_budget_lines(Some(&missing)),
+            vec![
+                "Settled decisions from memory: not reported in this snapshot",
+                "Spend vs budget: not reported in this snapshot",
+            ]
+        );
+        let empty = MemoryBudget {
+            memory_down: false,
+            settled_decisions: Some(vec![]),
+            budgets: None,
+            age_label: "".into(),
+        };
+        assert_eq!(
+            memory_budget_lines(Some(&empty))[0],
+            "Settled decisions from memory: none reported"
         );
     }
 }
