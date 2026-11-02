@@ -348,7 +348,7 @@ pub fn task_count() -> usize {
 
 /// Console task: the K3 echo loop grown into the shell (OS-070 +
 /// O-205..O-211, Round 4 R-2/R-3/R-4/R-5/R-6, R-9 attract). Line-buffered
-/// commands with echo; `status`, `help`, `uptime`, `mem`, `ps` and `clear` are real,
+/// commands with echo; `status`, `help`, `uptime`, `mem`, `ps`, `clear` and `fetch` are real,
 /// everything else is refused with help re-listed. Backspace (0x0E)
 /// erases the last
 /// buffered char and the screen cell; shift (0x2A/0x36 press,
@@ -583,6 +583,13 @@ fn run_command(line: &[u8], truncated: bool) {
         // mem ps", and whether clear joins it awaits a
         // Pax/Hana ruling.
         unsafe_console_clear();
+    } else if line == b"fetch" {
+        // W6 (BUILD WAVE 2026-11-02): kernel-twin fetch screen.
+        // Help does NOT list fetch yet: the ruled help line is
+        // exactly "status help uptime mem ps" (RW4-2 precedent for
+        // clear), and whether fetch joins it awaits a Pax/Hana
+        // ruling, asked on room 1 with this landing.
+        fetch_screen();
     } else if line.is_empty() {
         // Empty line: nothing, not an error.
     } else {
@@ -609,6 +616,42 @@ fn unsafe_console_clear() {
             console.clear();
         }
     }
+}
+
+/// W6 fetch screen (metafetch's kernel twin, text mode): frame 0
+/// from logo_frames.rs, then real status lines. Sequential print
+/// (not side-by-side): the 80x25 VGA screen and the serial log both
+/// receive the same lines in order, and no cursor-position state is
+/// touched, so the shell resumes exactly where it was. Every number
+/// comes from the same getters status/mem/uptime/ps already use
+/// (ticks, task_count, frames, heap); no gate claim, no host claim
+/// beyond bare-metal. WRITTEN, UNCOMPILED: no Rust toolchain on
+/// this VM; Mac build + a QEMU boot log showing `fetch` output
+/// remain the proof (KERNEL_SPEC rule 2).
+fn fetch_screen() {
+    let frame = crate::logo_frames::FRAMES[0];
+    for (i, line) in frame.split('\n').enumerate() {
+        if i >= crate::logo_frames::FRAME_H {
+            break;
+        }
+        println!("{}", line);
+    }
+    let ticks = interrupts::ticks();
+    let frames_free = crate::mem::frames_free();
+    let frames_total = crate::mem::frames_total();
+    let heap_free_kb = crate::mem::heap_free_bytes() / 1024;
+    let heap_total_kb = crate::mem::heap_total_bytes() / 1024;
+    println!("Mrfentmen@metaos");
+    println!("OS: Meta OS 0.1 (K6) x86_64");
+    println!("Host: bare-metal Rust kernel (no_std)");
+    println!("Kernel: META OS KERNEL - alive (K1)");
+    println!("Uptime: {}s ticks {}", ticks / 100, ticks);
+    println!("Tasks: {}", task_count());
+    println!(
+        "Mem: frames_free {} frames_total {} heap_free {}K heap_total {}K",
+        frames_free, frames_total, heap_free_kb, heap_total_kb
+    );
+    println!("Programs: hello sleeper crasher (ring 3)");
 }
 
 /// PS/2 set-1 scancode to ASCII (moved from main.rs for the console
