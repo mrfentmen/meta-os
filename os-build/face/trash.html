@@ -1,7 +1,49 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Trash</title>
-<style>body{font-family:system-ui;background:#111;color:#eee;padding:24px}</style>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{font-family:system-ui;background:#111;color:#eee;padding:24px;max-width:860px;margin:auto}
+table{width:100%;border-collapse:collapse;margin-top:8px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid #333;font-size:14px}
+button{padding:6px 10px;margin:2px;cursor:pointer}
+a{color:#7cc4ff}#status{min-height:1.4em;color:#999}</style>
 </head><body>
-<h1>Trash</h1>
-<p id="msg">The Trash window reads the real trash dir when served from the image; in this static preview it lists what the face build stages.</p>
-<ul id="list"><li>(empty in this preview — the real Trash page lists ~/.local/share/Trash/files on the machine)</li></ul>
-</body></html>
+<h1>Trash <small>(live, this machine)</small></h1>
+<p><button id="refresh">Refresh</button> <button id="empty">Empty trash</button> <a href="files.html">Files</a></p>
+<table><thead><tr><th>Name</th><th>Original path</th><th>Deleted</th><th>Size</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+<p id="status" role="status"></p>
+<script>
+(function(){
+var API="http://127.0.0.1:18936";
+var rows=document.getElementById("rows"),st=document.getElementById("status");
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fmt(n){if(n<1024)return n+" B";if(n<1048576)return (n/1024).toFixed(1)+" K";return (n/1048576).toFixed(1)+" M"}
+function load(){
+  st.textContent="Loading trash...";
+  fetch(API+"/trash").then(function(r){return r.json()}).then(function(d){
+    if(!d.ok){st.textContent="Error: "+(d.error||"request failed");return}
+    rows.innerHTML="";
+    if(!d.entries.length)st.textContent="Trash is empty.";
+    else st.textContent=d.entries.length+" item(s) in ~/.local/share/Trash/files";
+    d.entries.forEach(function(e){
+      var tr=document.createElement("tr");
+      var cells=[e.name,e.orig||"?",e.deleted||"?",e.is_dir?"dir":fmt(e.size)];
+      cells.forEach(function(c,i){var td=document.createElement("td");td.textContent=c;tr.appendChild(td)});
+      var a=document.createElement("td");
+      var r=document.createElement("button");r.textContent="Restore";r.onclick=function(){act("restore",e.name)};
+      var del=document.createElement("button");del.textContent="Delete";del.onclick=function(){act("delete",e.name)};
+      a.appendChild(r);a.appendChild(del);tr.appendChild(a);rows.appendChild(tr);
+    });
+  }).catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+}
+function act(which,name){
+  fetch(API+"/"+which,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:name})})
+  .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?(which+"d "+name):("Error: "+d.error);load();})
+  .catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+}
+document.getElementById("refresh").onclick=load;
+document.getElementById("empty").onclick=function(){
+  if(!confirm("Permanently delete everything in the trash?"))return;
+  fetch(API+"/empty",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"})
+  .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?("Emptied ("+d.removed+" removed)"):("Error: "+d.error);load();});
+};
+load();
+})();
+</script></body></html>
