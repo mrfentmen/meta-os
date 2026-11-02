@@ -22,3 +22,5 @@ Read recipe + sec4 notes. Attempted per recipe on the live guest: apt npm OK; op
 Cleared+purge PROVEN, inconclusive PROVEN, BOLO shown on dispatch path. Budget/STOP-file/supervisor: no mechanism on tree (recorded, not faked). Goose: no Mac runner. Ledger 4/4 lack brief/outcome/receipt (finding). Proof: WAVE3_IMPERIUM_GAPS.md + wave3-imperium-gaps/.
 ## Section 7 — native-55 decision pack (59-66): DONE 2026-11-02 (analysis only, zero changes)
 1965/55 reproduced; 31 size files + 25 parity names grouped; update touches ~36 files, carve-out ~6 files losing drift coverage. Pack: os-build/NATIVE_55_DECISION_PACK.md. One-line: the 55 are all native-mirror drift, update-or-carve is Del's call.
+## Section 8 — README + submission (67-76): DONE (drafts only) 2026-11-02
+README node counts fixed (one commit); Rust badge left stale deliberately (red, nothing to claim). Forms dry-run with DEL-ONLY fields; FREEZE_CERT drafted from proven claims; X draft written (Del posts); film paths on branch-not-main flagged; DEL-ONLY list recorded. Proof: WAVE3_SUBMISSION_PREP.md.
