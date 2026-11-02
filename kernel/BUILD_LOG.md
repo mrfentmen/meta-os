@@ -102,6 +102,15 @@ exists only while a client is connected.
 source. It is 10 bytes: type, one byte incremental flag, then x/y/w/h. Packing incremental
 as a u16 makes 11 and QEMU closes the connection mid-typing.
 
+**The keyboard capture is timing-flaky, and that is recorded rather than hidden.** Three runs
+of `prove_k2_k3.sh` against the same image gave one green run (scancode `0x1f`, typed `status`
+answered) and two where the RFB client connected, reported all seven keys sent, and the guest
+recorded nothing. The console task spawns only after the scheduler starts, and how long that
+takes varies with machine load; the i8042 holds one byte until the ring is drained, so a burst
+that arrives too early is lost. The green capture is committed as `K3-boot.txt`. The harness
+now retries the command at three points and writes to a scratch file, promoting it to the
+evidence name only on a full pass, so a flaky run can never overwrite a proven log again.
+
 ## Timer accuracy (K3, K14)
 
 The PIT divisor is `1_193_182 / 100 = 11931`, so the real rate is 1193182 / 11931 =
