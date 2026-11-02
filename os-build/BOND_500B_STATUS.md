@@ -175,3 +175,36 @@ Section 4 verification: **459 queue-Python tests pass, 0 fail**
 
 Section 5 verification: **203 Science Lab tests pass, 0 fail**
 (`python3 -m unittest discover -s tests/science-lab`).
+
+## Section 6 — Science Lab — reasoning and step chains (CB2-126..150) — 25/25
+
+| Task | File | Result |
+|---|---|---|
+| CB2-126 | `test_reasoning_hypothesis_edges.py` | missing statement rejected with named error |
+| CB2-127 | `test_reasoning_hypothesis_edges.py` | parsed hypothesis validates against schema |
+| CB2-128 | `test_reasoning_variables.py` | two named variables keep order |
+| CB2-129 | `test_reasoning_variables.py` | no variable -> untestable |
+| CB2-130 | `test_reasoning_chain_links.py` | three linked steps keep parent pointers |
+| CB2-131 | `test_reasoning_chain_links.py` | chain cycle rejected |
+| CB2-132 | `test_reasoning_chain_links.py` | missing parent id named |
+| CB2-133 | `test_reasoning_chain_roundtrip.py` | step chain dict round-trip equal |
+| CB2-134 | `test_reasoning_prediction.py` | directional prediction sets direction |
+| CB2-135 | `test_reasoning_prediction.py` | vague prediction needs refinement |
+| CB2-136 | `test_reasoning_step8_block.py` | step 8 always returns blocking UNIMPLEMENTED marker |
+| CB2-137 | `test_reasoning_step8_block.py` | no reasoning function returns a step-8 result |
+| CB2-138 | `test_reasoning_chain_limits.py` | depth 8 allowed; depth 9 refused |
+| CB2-139 | `test_reasoning_chain_limits.py` | empty chain documented form rebuilds |
+| CB2-140 | `test_reasoning_evidence_links.py` | two source ids kept |
+| CB2-141 | `test_reasoning_evidence_links.py` | unknown source id refused |
+| CB2-142 | `test_reasoning_chain_types.py` | unknown step type rejected |
+| CB2-143 | `test_reasoning_chain_types.py` | every documented step type accepted |
+| CB2-144 | `test_reasoning_confidence.py` | unset confidence stays null |
+| CB2-145 | `test_reasoning_confidence.py` | out-of-range confidence rejected |
+| CB2-146 | `test_reasoning_corpus.py` | 8 hypotheses counted by classification |
+| CB2-147 | `test_reasoning_chain_branch.py` | two children kept and visited once |
+| CB2-148 | `test_reasoning_chain_branch.py` | traversal order deterministic |
+| CB2-149 | `test_reasoning_duplicates.py` | same statement flagged |
+| CB2-150 | `test_reasoning_duplicates.py` | whitespace-only difference is duplicate |
+
+Section 6 verification: **228 Science Lab tests pass, 0 fail**
+(`python3 -m unittest discover -s tests/science-lab`).
