@@ -9,6 +9,22 @@ import { createBridge, loadBoot } from "../agents/bridge.mjs";
 const NODE = process.execPath;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// B2.6 used fixed sleeps and failed once on the merged tree. The cause was the test, not the
+// bridge: a budget of 300 ms plus a fixed 500 ms read leaves ~190 ms for SIGTERM, process exit
+// and the ledger append. Measured 24 sequential and 12 concurrent runs at 305-315 ms, so the
+// margin is real but thin, and on a loaded runner it is gone -- the read then finds no `exited`
+// record at all. The bridge cannot report a stale `running` after `handle.done` resolves: it
+// writes `exited` inside that callback and the state is only ever `stopped` or `failed`.
+// So wait for the record instead of guessing when it appears. Every assertion below is unchanged.
+async function waitFor(what, fn, ms = 5000) {
+  const t0 = Date.now();
+  for (;;) {
+    if (fn()) return;
+    if (Date.now() - t0 > ms) assert.fail("timed out after " + ms + "ms waiting for " + what);
+    await sleep(10);
+  }
+}
+
 function setup(boot, extraAgents = []) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "agents-bridge-"));
   const registry = path.join(dir, "registry.json");
@@ -86,19 +102,19 @@ test("B2.5 a STOP during the run kills it and records why (window 2)", async () 
 test("B2.6 an unrequested nonzero exit is a failure; a budget kill is a stop", async () => {
   const { b } = setup([{ agent: "first", needs: [] }]);
   b.start("first");
-  await sleep(60);
+  await waitFor("first to exit", () => b.slots.get("first").state === "stopped");
   assert.equal(b.slots.get("first").state, "stopped");
 
   const crash = "process.exit(3)";
   const { b: b2 } = setup([{ agent: "crashy", needs: [] }], [{ name: "crashy", command: [NODE, "-e", crash], budget: {} }]);
   b2.start("crashy");
-  await sleep(80);
+  await waitFor("crashy to be recorded as failed", () => b2.slots.get("crashy").state === "failed");
   assert.equal(b2.slots.get("crashy").state, "failed");
   assert.equal(b2.ledger.read().find((l) => l.event === "exited").code, 3);
 
   const { b: b3 } = setup([{ agent: "napper", needs: [] }]);
   b3.start("napper");
-  await sleep(500);
+  await waitFor("the budget kill to be recorded", () => b3.ledger.read().some((l) => l.event === "exited"));
   const exit = b3.ledger.read().find((l) => l.event === "exited");
   assert.equal(exit.state, "stopped", "a budget kill is a requested stop, not a failure");
   assert.equal(exit.code, null);
