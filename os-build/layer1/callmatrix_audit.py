@@ -13,10 +13,7 @@ actually exist in the sources, and reports drift in both directions:
   UNKNOWN   an id in the matrix with no service directory, or the reverse.
 
 Scope, stated: only cross-SERVICE imports are edges. `common.*` is a library and is
-deliberately outside the matrix. Elsewhere under services/, a directory is a service
-when it can be booted -- it exports `svc_entry` or it is named in the boot table. The
-four demo programs (hello, heartbeat, echo, mcp-host) do neither, so they are programs
-and are named as such below rather than given rows of invented permissions.
+deliberately outside the matrix; anything else under services/ is a service.
 
 Usage:
     python3 os-build/layer1/callmatrix_audit.py            # report, exit 1 on MISSING only
@@ -41,15 +38,7 @@ LIBRARY_DIRS = {"common", "tests", "build"}
 # names silently is a table that hides a rename.
 ALIASES = {"log": "logd"}
 # Not services: the example is a template for future services, and callmatrix is this table.
-#
-# The four demo programs are here for a different reason, and it is checkable rather than a
-# matter of taste: none exports `svc_entry` and none is named in os-build/layer1/BOOT_ORDER.md
-# (checked 2026-11-02). They call no other service, so a matrix row for them would be empty --
-# and t69 asserts every row has at least one callee. Fabricating a permission to satisfy that
-# invariant would put an edge in the table that no source makes and no boot needs. They are
-# still programs the OS ships, which is why they have regression tests; they are simply not
-# in the service-to-service permission table.
-NOT_SERVICES = {"example", "callmatrix", "hello", "heartbeat", "echo", "mcp-host"}
+NOT_SERVICES = {"example", "callmatrix"}
 
 
 def read(path):
