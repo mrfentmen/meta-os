@@ -315,6 +315,168 @@ pub fn check_no_contradiction(plan: &Plan) -> Result<(), PlanError> {
     Ok(())
 }
 
+/// DSP-026 spec-writing standard: every job spec carries these five
+/// parts, in this order, each with real content (not just the label).
+pub const SPEC_PART_LABELS: [&str; 5] =
+    ["goal", "context", "files", "steps", "out of scope"];
+
+/// Score of one job spec against the DSP-026 standard. `missing` and
+/// `empty` list labels in standard order; `files_part_names_owned` is
+/// `None` when the Files part is absent or no owned files were given.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SpecScore {
+    pub missing: Vec<String>,
+    pub empty: Vec<String>,
+    pub files_part_names_owned: Option<bool>,
+    pub passes: bool,
+}
+
+/// One entry of [`score_plan_specs`]: a [`SpecScore`] tagged with its
+/// job key, in plan order.
+#[derive(Debug, Clone, PartialEq)]
+pub struct JobSpecScore {
+    pub key: String,
+    pub missing: Vec<String>,
+    pub empty: Vec<String>,
+    pub files_part_names_owned: Option<bool>,
+    pub passes: bool,
+}
+
+/// Leftmost whole-word occurrence of `word` at or after `cursor`,
+/// like Python's `\bword\b` search. No regex crate is used.
+fn find_word_label(lowered: &str, cursor: usize, word: &str) -> Option<(usize, usize)> {
+    let bytes = lowered.as_bytes();
+    for (off, _) in lowered[cursor..].match_indices(word) {
+        let start = cursor + off;
+        let end = start + word.len();
+        let before_ok = start == 0 || !is_word_char(bytes[start - 1]);
+        let after_ok = end == bytes.len() || !is_word_char(bytes[end]);
+        if before_ok && after_ok {
+            return Some((start, end));
+        }
+    }
+    None
+}
+
+/// Leftmost match of Python's `out[ -]of[ -]scope\b` at or after
+/// `cursor`. Unlike the single-word labels this pattern has no
+/// leading word boundary, so `out` may sit inside a longer word.
+fn find_out_of_scope(lowered: &str, cursor: usize) -> Option<(usize, usize)> {
+    let bytes = lowered.as_bytes();
+    for (off, _) in lowered[cursor..].match_indices("out") {
+        let start = cursor + off;
+        let mut p = start + 3;
+        if p >= bytes.len() || (bytes[p] != b' ' && bytes[p] != b'-') {
+            continue;
+        }
+        p += 1;
+        if !lowered[p..].starts_with("of") {
+            continue;
+        }
+        p += 2;
+        if p >= bytes.len() || (bytes[p] != b' ' && bytes[p] != b'-') {
+            continue;
+        }
+        p += 1;
+        if !lowered[p..].starts_with("scope") {
+            continue;
+        }
+        let end = p + 5;
+        if end < bytes.len() && is_word_char(bytes[end]) {
+            continue;
+        }
+        return Some((start, end));
+    }
+    None
+}
+
+/// Score one job spec against the DSP-026 standard. Labels are
+/// matched in order, so a spec with the parts shuffled reports the
+/// out-of-order part as missing from its expected position. Never
+/// refuses: a malformed spec scores every part missing. Pure scoring;
+/// posts nothing and never refuses a plan — the parser gate stays
+/// shape-only by design. Matching runs on the lowercased copy, so
+/// indices below are into that copy (identical to Python's for
+/// ASCII specs). Python's non-string-spec branch is unrepresentable
+/// here: `spec` is always a string in the typed plan.
+pub fn score_spec_parts(spec: &str, files: &[String]) -> SpecScore {
+    let lowered = spec.to_lowercase();
+    let mut missing: Vec<String> = Vec::new();
+    let mut empty: Vec<String> = Vec::new();
+    let mut positions: Vec<Option<(usize, usize)>> = Vec::new();
+    let mut cursor = 0usize;
+    for (i, label) in SPEC_PART_LABELS.iter().enumerate() {
+        let found = if i == 4 {
+            find_out_of_scope(&lowered, cursor)
+        } else {
+            find_word_label(&lowered, cursor, label)
+        };
+        match found {
+            Some((start, end)) => {
+                positions.push(Some((start, end)));
+                cursor = end;
+            }
+            None => {
+                positions.push(None);
+                missing.push(label.to_string());
+            }
+        }
+    }
+    let strip: &[char] = &[' ', '\t', '\n', ':', ';', ',', '.', '—', '-'];
+    for (i, pos) in positions.iter().enumerate() {
+        let Some((_, match_end)) = pos else { continue };
+        let end = positions[i + 1..]
+            .iter()
+            .flatten()
+            .next()
+            .map(|(start, _)| *start)
+            .unwrap_or(lowered.len());
+        let content = &lowered[*match_end..end];
+        if content.trim_matches(strip).trim().is_empty() {
+            empty.push(SPEC_PART_LABELS[i].to_string());
+        }
+    }
+    let mut files_part_names_owned = None;
+    if let Some((_, files_end)) = &positions[2] {
+        if !files.is_empty() {
+            let end = positions[3..]
+                .iter()
+                .flatten()
+                .next()
+                .map(|(start, _)| *start)
+                .unwrap_or(lowered.len());
+            let files_part = &lowered[*files_end..end];
+            files_part_names_owned = Some(
+                files.iter().any(|path| files_part.contains(&path.to_lowercase())),
+            );
+        }
+    }
+    let passes = missing.is_empty()
+        && empty.is_empty()
+        && files_part_names_owned != Some(false);
+    SpecScore { missing, empty, files_part_names_owned, passes }
+}
+
+/// Score every job spec in a parsed plan (DSP-026), in plan order,
+/// one entry per job. Python raises `PlanError` on a malformed plan;
+/// the typed `Plan` cannot be malformed that way, so no error case
+/// exists here.
+pub fn score_plan_specs(plan: &Plan) -> Vec<JobSpecScore> {
+    plan.jobs
+        .iter()
+        .map(|job| {
+            let score = score_spec_parts(&job.spec, &job.files);
+            JobSpecScore {
+                key: job.key.clone(),
+                missing: score.missing,
+                empty: score.empty,
+                files_part_names_owned: score.files_part_names_owned,
+                passes: score.passes,
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -417,5 +579,94 @@ mod tests {
         p.jobs[1].max_attempts = 99;
         clamp_attempt_budgets(&mut p);
         assert_eq!((p.jobs[0].max_attempts, p.jobs[1].max_attempts), (3, 10));
+    }
+
+    fn full_spec() -> String {
+        "Goal: add the line. Context: the brief template. Files: intel/brief.py. Steps: add it, run tests. Out of scope: new sections.".into()
+    }
+
+    #[test]
+    fn spec_full_passes() {
+        let s = score_spec_parts(&full_spec(), &["intel/brief.py".to_string()]);
+        assert!(s.missing.is_empty(), "got: {s:?}");
+        assert!(s.empty.is_empty(), "got: {s:?}");
+        assert_eq!(s.files_part_names_owned, Some(true));
+        assert!(s.passes);
+    }
+
+    #[test]
+    fn spec_no_files_given_passes_without_owned_check() {
+        let s = score_spec_parts(&full_spec(), &[]);
+        assert_eq!(s.files_part_names_owned, None);
+        assert!(s.passes);
+    }
+
+    #[test]
+    fn spec_missing_part_fails() {
+        let spec = "Goal: add the line. Context: the brief template. Files: intel/brief.py. Steps: add it, run tests.";
+        let s = score_spec_parts(spec, &["intel/brief.py".to_string()]);
+        assert_eq!(s.missing, vec!["out of scope".to_string()]);
+        assert!(!s.passes);
+    }
+
+    #[test]
+    fn spec_out_of_order_part_fails() {
+        let spec = "Steps: add the line. Goal: add the line. Context: the brief template. Files: intel/brief.py. Out of scope: new sections.";
+        let s = score_spec_parts(spec, &["intel/brief.py".to_string()]);
+        assert!(!s.passes);
+        assert!(s.missing.contains(&"steps".to_string()), "got: {s:?}");
+    }
+
+    #[test]
+    fn spec_empty_part_fails() {
+        let spec = "Goal: add the line. Context: . Files: intel/brief.py. Steps: add it. Out of scope: new sections.";
+        let s = score_spec_parts(spec, &["intel/brief.py".to_string()]);
+        assert_eq!(s.empty, vec!["context".to_string()]);
+        assert!(!s.passes);
+    }
+
+    #[test]
+    fn spec_title_only_fails() {
+        let s = score_spec_parts(
+            "Add uptime line to morning brief.",
+            &["intel/brief.py".to_string()],
+        );
+        assert_eq!(
+            s.missing,
+            vec!["goal", "context", "files", "steps", "out of scope"]
+                .iter()
+                .map(|l| l.to_string())
+                .collect::<Vec<String>>()
+        );
+        assert!(!s.passes);
+    }
+
+    #[test]
+    fn spec_files_part_must_name_owned_file() {
+        let spec = "Goal: add the line. Context: the brief template. Files: intel/other.py. Steps: add it. Out of scope: new sections.";
+        let s = score_spec_parts(spec, &["intel/brief.py".to_string()]);
+        assert_eq!(s.files_part_names_owned, Some(false));
+        assert!(!s.passes);
+    }
+
+    #[test]
+    fn spec_hyphenated_out_of_scope_passes() {
+        let spec = "Goal: add the line. Context: the brief template. Files: intel/brief.py. Steps: add it. Out-of-scope: new sections.";
+        let s = score_spec_parts(spec, &["intel/brief.py".to_string()]);
+        assert!(s.passes, "got: {s:?}");
+    }
+
+    #[test]
+    fn spec_plan_scores_in_plan_order() {
+        let p = cplan(vec![
+            cjob("one", vec!["intel/brief.py"], &full_spec()),
+            cjob("two", vec!["intel/brief.py"], "Add the line."),
+        ]);
+        let scores = score_plan_specs(&p);
+        assert_eq!(scores.len(), 2);
+        assert_eq!(scores[0].key, "one");
+        assert!(scores[0].passes);
+        assert_eq!(scores[1].key, "two");
+        assert!(!scores[1].passes);
     }
 }
