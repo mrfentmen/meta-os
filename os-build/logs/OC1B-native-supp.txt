@@ -1,0 +1,1288 @@
+OC1B-414 supplementary run (non-native hosts + R11-282), tree 94010c76
+command: node --test tests/ui.test.mjs tests/analysis-active-announcement.test.mjs tests/camera-start-pending.test.mjs tests/camera-state-live-region.test.mjs tests/camera-stop-pending.test.mjs tests/panel-assessing-line-clear.test.mjs tests/still-image-assess-button.test.mjs tests/os-docs-r11.test.mjs
+✔ web: analysis-active is a polite, atomic live region (0.508125ms)
+✔ web: sampler-stats stays out of the live regions (it moves every tick) (0.079042ms)
+✔ web: the banner text is still set by updateAnalysisActive, hidden while idle (0.083541ms)
+✖ native: startAnalysis announces the banner's own words when sampling starts (0.322209ms)
+✔ native: stopAnalysis stays silent (the user tapped Stop themselves) (0.060709ms)
+✔ native: analysisStarted posts verbatim, not as a backend or capture failure (0.099125ms)
+✔ web: refreshButtons owns Start disabled from live, pending, and unsupported (0.531542ms)
+✔ web: no direct Start disable outside refreshButtons (0.336917ms)
+✔ web: Start handler sets the pending flag and refreshes before awaiting (1.961333ms)
+✔ web: Start settle paths clear the pending flag exactly once, after the try/catch (0.628292ms)
+✔ web: Stop and Reset clear the pending flag before refreshing (0.579583ms)
+✔ web: init leaves Start to refreshButtons on a camera-less browser (0.152792ms)
+✖ native: Start stays disabled while permission is requested, from state alone (0.813833ms)
+✔ web: camera-state is a polite, atomic live region (1.17475ms)
+✔ web: sampler-stats stays out of the live regions (it moves every tick) (0.157292ms)
+✖ native: camera state still rides the preview accessibilityValue (no change needed) (0.685166ms)
+✔ web: refreshButtons enables Stop while a start is pending, not only while live (0.631625ms)
+✔ web: no direct Stop disable outside refreshButtons (0.500541ms)
+✔ web: Stop is still disabled with no camera live and no start pending (0.087958ms)
+✔ web: the Stop handler cancels a pending start before refreshing (0.1315ms)
+✔ web: Camera.stop invalidates a start still awaiting permission (0.139334ms)
+✖ native: Stop stays enabled while permission is requested, not only while running (0.810625ms)
+✔ native: stopCamera stops the camera, whose stop bumps the start generation (0.100417ms)
+✔ R11-278 the ABI has a worked example for each allocated call, and says they were not executed (0.95825ms)
+✖ R11-282 the boot-log index names every committed log and claims no verdict it did not check (1.008458ms)
+✔ still-image: Clear sets the sending line from the assessing flag, never hides it outright (0.494709ms)
+✔ video: Clear sets the sending line from the assessing flag, never hides it outright (0.080292ms)
+✔ reset: Reset reaches both Clear helpers and hides neither sending line itself (0.074792ms)
+✔ assess settle: the Assess paths still hide their sending line when the request finishes (1.704833ms)
+✖ native: each panel shows its sending line while its assessing flag is true, whatever the input is (0.79675ms)
+✔ still-image: one helper owns the Assess button, requiring a data URL and no assessment in flight (2.734667ms)
+✔ still-image: no read, clear, or settle path sets the button directly, bypassing the helper (0.297958ms)
+✔ still-image: Clear (and therefore Reset) refreshes through the helper (0.49075ms)
+✔ still-image: a read finishing refreshes through the helper, so a mid-request choice cannot enable the button under the request (0.310708ms)
+✔ still-image: the Assess tap and its settle path refresh through the helper (0.463458ms)
+✖ native: the still-image button is already gated on nil image or assessing, so no native change is needed (1.511792ms)
+✔ products: exactly the four products, in order (1.695333ms)
+✔ products: every product has identity, categories, scenarios, limitations, guidance (0.255084ms)
+✔ products: scenario sets differ per product (0.06675ms)
+✔ products: isProductId accepts the registered product ids (0.06475ms)
+✔ schema: accepts a valid v2 assessment (0.348459ms)
+✔ schema: accepts a valid assessment for each product (0.163584ms)
+✔ schema: accepts zero observations, empty uncertainty, null confidence, null latency (0.08375ms)
+✔ schema: accepts an empty evidence string and extra fields (0.063375ms)
+✔ schema: rejects null (0.069875ms)
+✔ schema: rejects an array (0.092ms)
+✔ schema: rejects a string (0.04975ms)
+✔ schema: rejects missing expected product (0.064083ms)
+✔ schema: rejects missing product (0.054ms)
+✔ schema: rejects empty product (0.041375ms)
+✔ schema: rejects wrong product (0.054958ms)
+✔ schema: rejects product of another trio product (0.044708ms)
+✔ schema: rejects missing timestamp (0.033459ms)
+✔ schema: rejects unparseable timestamp (0.032542ms)
+✔ schema: rejects free-form timestamp (Date.parse would accept) (0.030708ms)
+✔ schema: rejects timestamp without T separator (0.035291ms)
+✔ schema: rejects timestamp without timezone (0.043583ms)
+✔ schema: rejects impossible timestamp date (0.038583ms)
+✔ schema: rejects observations not an array (0.03625ms)
+✔ schema: rejects observation not an object (0.033083ms)
+✔ schema: rejects observation missing category (0.034333ms)
+✔ schema: rejects observation empty category (0.033792ms)
+✔ schema: rejects observation missing description (0.047166ms)
+✔ schema: rejects observation missing evidence (0.068583ms)
+✔ schema: rejects observation non-string evidence (0.032792ms)
+✔ schema: rejects confidence missing (0.029291ms)
+✔ schema: rejects confidence above 1 (0.045333ms)
+✔ schema: rejects confidence below 0 (0.027458ms)
+✔ schema: rejects confidence not a number (0.140125ms)
+✔ schema: rejects confidence boolean (JSON true is not a number) (0.191958ms)
+✔ schema: rejects confidence NaN (0.083917ms)
+✔ schema: rejects missing assessment (0.088834ms)
+✔ schema: rejects assessment not an object (0.100917ms)
+✔ schema: rejects assessment missing category (0.041541ms)
+✔ schema: rejects assessment non-string summary (0.029833ms)
+✔ schema: rejects assessment missing uncertainty (0.026667ms)
+✔ schema: rejects assessment uncertainty not an array (0.024833ms)
+✔ schema: rejects assessment uncertainty non-string item (0.0255ms)
+✔ schema: rejects requires_human_review missing (0.025333ms)
+✔ schema: rejects requires_human_review not boolean (0.026875ms)
+✔ schema: rejects requires_human_review numeric 1 is not a boolean (0.024ms)
+✔ schema: rejects missing processing (0.025791ms)
+✔ schema: rejects processing not an object (0.0235ms)
+✔ schema: rejects processing empty model (0.039042ms)
+✔ schema: rejects processing latency missing (0.023166ms)
+✔ schema: rejects processing latency negative (0.020375ms)
+✔ schema: rejects processing latency string (0.022166ms)
+✔ schema: rejects processing latency boolean (0.022ms)
+✔ sampler: skips ticks while a request is in flight (1.661083ms)
+✔ sampler: interval callback drives ticks and stop() halts it (10.305458ms)
+✔ sampler: a rejecting onSample returns 'error' and never wedges inFlight (0.511208ms)
+✔ sampler: onTick observes every outcome (0.221625ms)
+✔ client: sends product with the request and returns the validated v2 assessment (0.904459ms)
+✔ client: wrong-product response throws AssessError kind=invalid (0.811917ms)
+✔ client: HTTP 200 error body throws AssessError kind=invalid with the server message (0.137625ms)
+✔ client: HTTP error status throws AssessError kind=http with the status (0.082541ms)
+✔ client: HTTP error with a server error body includes that message (0.094625ms)
+✔ client: network failure throws AssessError kind=network (0.083583ms)
+✔ client: schema-violating body throws AssessError kind=invalid (0.085167ms)
+✔ client: non-JSON body throws AssessError kind=invalid (0.065917ms)
+✔ health: healthUrlFor swaps /api/assess for /api/health, or appends it to a bare base (0.107333ms)
+✔ health: checkHealth GETs the health route and returns the parsed body (0.15825ms)
+✔ health: network failure throws AssessError kind=network (0.077667ms)
+✔ health: HTTP error status throws AssessError kind=http with the status (0.068041ms)
+✔ health: malformed body throws AssessError kind=invalid, never a partial result (0.072875ms)
+✔ health: the shipped page has the check button and health line (0.364292ms)
+✔ log: export has the documented shape, per-entry product, and top-level product (1.723916ms)
+✔ log: entries keep their own product when the session switches products (0.088709ms)
+✔ log: entries() returns a copy and clear() resets sequence (0.070375ms)
+✔ log: with storage, records are saved and restored with sequence intact (0.15825ms)
+✔ log: clear() removes the saved copy, so a reload starts empty (0.056875ms)
+✔ log: corrupt or malformed saved data is ignored, never fatal (0.090625ms)
+✔ log: an unwritable store never breaks recording (0.079917ms)
+✔ log: rejects an unknown status (0.067708ms)
+✔ image input: only image/* files are accepted (0.047875ms)
+✔ image input: readFileAsDataURL resolves with the reader result (0.105041ms)
+✔ image input: downscaleImageToDataURL draws the image at its own size and returns a JPEG data URL (0.104375ms)
+✔ image input: downscaleImageToDataURL downscales an oversize image to a 1280px longest side, like live capture (0.056ms)
+✔ image input: downscaleImageToDataURL throws when the image has no dimensions yet (0.0685ms)
+✔ image input: readFileAsDataURL rejects when the reader errors (0.09125ms)
+✔ video input: only video/* files are accepted (0.459042ms)
+✔ video input: captureVideoFrame draws the current frame and returns a JPEG data URL (0.084708ms)
+✔ video input: captureVideoFrame downscales an oversize frame to a 1280px longest side, like live capture (0.059375ms)
+✔ video input: native video frame downscales to a 1280px longest side at JPEG 0.8, like live capture (0.368459ms)
+✔ video input: captureVideoFrame throws when the video has no dimensions yet (0.080625ms)
+✔ video input: the shipped page has the video panel elements (0.229917ms)
+✔ video input: a video frame capture failure lands in the web history and backend status, matching the native app (0.683292ms)
+✔ history: past assessments can be shown again from the web history (0.725584ms)
+✔ history: empty history note says analysis is running, matching the native timeline (0.491375ms)
+✔ history: idle empty history note matches the native timeline (0.587125ms)
+✖ camera: web Start says it is waiting for camera permission, matching the native camera (1.232417ms)
+✖ latest: web panel waits for the first assessment, matching the native panel (0.985958ms)
+✔ status: web shows the client-measured last round trip, cleared by Reset (0.935959ms)
+✔ a11y: backend status and latest assessment are polite live regions (0.185375ms)
+✔ a11y: keyboard focus on a product option shows a visible ring (0.662416ms)
+✖ panels: still-image and video panels show an in-panel sending note while assessing, matching the native panels (1.209208ms)
+✖ camera: web shows an analysis-active banner while sampling, matching the native camera panel (0.834791ms)
+✔ camera: a live frame capture failure lands in history and backend status, matching the video path (1.064625ms)
+✔ client: non-http(s) endpoint is rejected before any fetch, matching the native client (0.173333ms)
+✔ client: absolute http(s) endpoint still reaches fetch, and the health check rejects a bad scheme before fetching (0.151ms)
+✔ camera: a no-request failure leaves the last round trip alone and logs a null latency, matching the native client (0.871125ms)
+✔ latest: web panel omits an empty summary, matching the native panel (0.724209ms)
+✔ latest: web observation line omits empty evidence, matching the native panel (0.400416ms)
+✖ latest: native panel carries the observable-evidence note, matching the web panel (0.245792ms)
+✔ latest: web uncertainty section matches the native panel (0.459041ms)
+✔ status: native still-image and video assess show a contacting status while the request is outstanding, matching the web panels (0.630833ms)
+✖ config: web sampling interval clamps to 1–60 like the native Stepper, instead of silently falling back (0.823167ms)
+✔ reset: a request outstanding across Reset logs but does not repaint the cleared view, matching the native app (1.201292ms)
+✔ in-flight: the loading line stays up until the last overlapping request settles, on web and native (0.90525ms)
+✔ reset: native view generation is captured at sample/tap time, so a Reset during video extraction cannot let the result repaint the cleared view (0.355334ms)
+ℹ tests 150
+ℹ suites 0
+ℹ pass 137
+ℹ fail 13
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 177.554083
+
+✖ failing tests:
+
+test at tests/analysis-active-announcement.test.mjs:80:1
+✖ native: startAnalysis announces the banner's own words when sampling starts (0.322209ms)
+  AssertionError [ERR_ASSERTION]: native banner label changed — the announcement must match it
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/analysis-active-announcement.test.mjs:81:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/camera-start-pending.test.mjs:107:1
+✖ native: Start stays disabled while permission is requested, from state alone (0.813833ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /\.disabled\(camera\.state == \.running \|\| camera\.state == \.requestingPermission\)/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/camera-start-pending.test.mjs:108:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /\.disabled\(camera\.state == \.running \|\| camera\.state == \.requestingPermission\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/camera-state-live-region.test.mjs:46:1
+✖ native: camera state still rides the preview accessibilityValue (no change needed) (0.685166ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /\.accessibilityValue\(cameraAccessibilityValue\)/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/camera-state-live-region.test.mjs:47:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /\.accessibilityValue\(cameraAccessibilityValue\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/camera-stop-pending.test.mjs:102:1
+✖ native: Stop stays enabled while permission is requested, not only while running (0.810625ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /\.disabled\(camera\.state != \.running && camera\.state != \.requestingPermission\)/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/camera-stop-pending.test.mjs:103:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /\.disabled\(camera\.state != \.running && camera\.state != \.requestingPermission\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/os-docs-r11.test.mjs:20:1
+✖ R11-282 the boot-log index names every committed log and claims no verdict it did not check (1.008458ms)
+  AssertionError [ERR_ASSERTION]: OC1B-soak-wave2-tail.txt is in the index
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/os-docs-r11.test.mjs:24:32)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/panel-assessing-line-clear.test.mjs:88:1
+✖ native: each panel shows its sending line while its assessing flag is true, whatever the input is (0.79675ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /if model\.stillImageAssessing \{[\s\S]*?Text\("Sending still image…"\)/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/panel-assessing-line-clear.test.mjs:89:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /if model\.stillImageAssessing \{[\s\S]*?Text\("Sending still image…"\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/still-image-assess-button.test.mjs:84:1
+✖ native: the still-image button is already gated on nil image or assessing, so no native change is needed (1.511792ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /\.disabled\(model\.stillImage == nil \|\| model\.stillImageAssessing\)/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/still-image-assess-button.test.mjs:89:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /\.disabled\(model\.stillImage == nil \|\| model\.stillImageAssessing\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/ui.test.mjs:851:1
+✖ camera: web Start says it is waiting for camera permission, matching the native camera (1.232417ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Waiting for camera permission…/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/ui.test.mjs:856:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /Waiting for camera permission…/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/ui.test.mjs:872:1
+✖ latest: web panel waits for the first assessment, matching the native panel (0.985958ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /function renderLatest\(assessment, earlierNote = null\) \{\n\s+latestAssessmentShown = true;/. Input:
+  
+  '// Meta Trio frontend wiring. Connects camera -> sampler -> analysis\n' +
+    '// client -> event display + session log, for whichever of the three\n' +
+    '// products (Vigiles, Ignis, Medicus) is selected. This module contains no\n' +
+    '// detection logic and no sample data: if the backend is unreachable, the\n' +
+    '// UI shows the error and nothing else.\n' +
+    '\n' +
+    'import { Camera, cameraSupported, MAX_FRAME_DIMENSION } from "./camera.js";\n' +
+    'import { FrameSampler } from "./sampler.js";\n' +
+    'import { assessFrame, AssessError, checkHealth } from "./client.js";\n' +
+    'import { SessionLog } from "./log.js";\n' +
+    'import { PRODUCT_BY_ID, isProductId } from "./products.js";\n' +
+    'import { ContactsStore } from "./contacts.js";\n' +
+    'import { ignisLookAlikeScoreboard } from "./ignis-scoreboard.js";\n' +
+    'import { ignisReportedConfidence } from "./ignis-confidence.js";\n' +
+    'import { ignisReviewQueue } from "./ignis-review-queue.js";\n' +
+    'import { ignisEvidenceTransparency } from "./ignis-evidence.js";\n' +
+    'import { ignisUncertaintyDisclosure } from "./ignis-uncertainty.js";\n' +
+    'import { ignisReviewTriage } from "./ignis-review-triage.js";\n' +
+    'import { ignisObservationCategories } from "./ignis-observation-categories.js";\n' +
+    'import { ignisModelAttribution } from "./ignis-model-attribution.js";\n' +
+    'import { ignisFootageSource } from "./ignis-footage-source.js";\n' +
+    'import { ignisScenarioBreakdown } from "./ignis-scenario-breakdown.js";\n' +
+    'import { ignisReviewBySource } from "./ignis-review-source.js";\n' +
+    'import { ignisReviewByModel } from "./ignis-review-model.js";\n' +
+    'import { ignisReviewAuditTrail } from "./ignis-review-audit-trail.js";\n' +
+    'import { ignisReviewByConfidence } from "./ignis-review-confidence.js";\n' +
+    'import { ignisReviewByScenario } from "./ignis-review-scenario.js";\n' +
+    'import { ignisReviewByObservationCategory } from "./ignis-review-observation-category.js";\n' +
+    'import { ignisReviewByEvidence } from "./ignis-review-evidence.js";\n' +
+    'import { ignisReviewByUncertainty } from "./ignis-review-uncertainty.js";\n' +
+    'import { ignisReviewByObservationCount } from "./ignis-review-observation-count.js";\n' +
+    'import { ignisReviewByLatency } from "./ignis-review-latency.js";\n' +
+    'import { ignisReviewBySummary } from "./ignis-review-summary.js";\n' +
+    'import { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";\n' +
+    'import { regionBoxes } from "./surfaces.js";\n' +
+    'import { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";\n' +
+    '\n' +
+    'const $ = (id) => document.getElementById(id);\n' +
+    '\n' +
+    'const els = {\n' +
+    '  video: $("preview"),\n' +
+    '  captureCanvas: $("capture-canvas"),\n' +
+    '  cameraIndicator: $("camera-indicator"),\n' +
+    '  cameraState: $("camera-state"),\n' +
+    '  cameraFacing: $("camera-facing"),\n' +
+    '  analysisActive: $("analysis-active"),\n' +
+    '  btnCameraStart: $("btn-camera-start"),\n' +
+    '  btnCameraStop: $("btn-camera-stop"),\n' +
+    '  btnAnalysisStart: $("btn-analysis-start"),\n' +
+    '  btnAnalysisStop: $("btn-analysis-stop"),\n' +
+    '  btnReset: $("btn-reset"),\n' +
+    '  productBadge: $("product-badge"),\n' +
+    `  productRadios: [...document.querySelectorAll('input[name="product"]')],\n` +
+    '  productDepartment: $("product-department"),\n' +
+    '  productTagline: $("product-tagline"),\n' +
+    '  productCategories: $("product-categories"),\n' +
+    '  productGuidance: $("product-guidance"),\n' +
+    '  productLimitations: $("product-limitations"),\n' +
+    '  endpoint: $("endpoint"),\n' +
+    '  btnBackendCheck: $("btn-backend-check"),\n' +
+    '  backendHealth: $("backend-health"),\n' +
+    '  intervalSeconds: $("interval-seconds"),\n' +
+    '  scenarioSelect: $("scenario-select"),\n' +
+    '  scenarioLabel: $("scenario-label"),\n' +
+    '  samplingDisclosure: $("sampling-disclosure"),\n' +
+    '  backendStatus: $("backend-status"),\n' +
+    '  inFlight: $("in-flight"),\n' +
+    '  samplerStats: $("sampler-stats"),\n' +
+    '  lastRoundTrip: $("last-round-trip"),\n' +
+    '  latest: $("latest-assessment"),\n' +
+    '  history: $("history-list"),\n' +
+    '  historyEmpty: $("history-empty"),\n' +
+    '  btnExport: $("btn-export-log"),\n' +
+    '  btnClearLog: $("btn-clear-log"),\n' +
+    '  logStats: $("log-stats"),\n' +
+    '  logEmpty: $("log-empty"),\n' +
+    '  logStatsByProduct: $("log-stats-by-product"),\n' +
+    '  logStatsFailedByProduct: $("log-stats-failed-by-product"),\n' +
+    '  logStatsByFailure: $("log-stats-by-failure"),\n' +
+    '  logStatsLastOk: $("log-stats-last-ok"),\n' +
+    '  logStatsFirstOk: $("log-stats-first-ok"),\n' +
+    '  logStatsAvgLatency: $("log-stats-avg-latency"),\n' +
+    '  logStatsLatencyRange: $("log-stats-latency-range"),\n' +
+    '  logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),\n' +
+    '  logStatsFirstOkByProduct: $("log-stats-first-ok-by-product"),\n' +
+    '  logStatsLastFailedByProduct: $("log-stats-last-failed-by-product"),\n' +
+    '  logStatsFirstFailedByProduct: $("log-stats-first-failed-by-product"),\n' +
+    '  logStatsAvgLatencyByProduct: $("log-stats-avg-latency-by-product"),\n' +
+    '  logStatsFailuresByProduct: $("log-stats-failures-by-product"),\n' +
+    '  logStatsLatencyRangeByProduct: $("log-stats-latency-range-by-product"),\n' +
+    '  logStatsOkShareByProduct: $("log-stats-ok-share-by-product"),\n' +
+    '  logStatsFailedShareByProduct: $("log-stats-failed-share-by-product"),\n' +
+    '  logStatsEntryShareByProduct: $("log-stats-entry-share-by-product"),\n' +
+    '  logStatsEntryCountByProduct: $("log-stats-entry-count-by-product"),\n' +
+    '  logStatsFirstEntryByProduct: $("log-stats-first-entry-by-product"),\n' +
+    '  logStatsLastEntryByProduct: $("log-stats-last-entry-by-product"),\n' +
+    '  logStatsEntrySpanByProduct: $("log-stats-entry-span-by-product"),\n' +
+    '  logStatsFailedSpanByProduct: $("log-stats-failed-span-by-product"),\n' +
+    '  logStatsOkSpanByProduct: $("log-stats-ok-span-by-product"),\n' +
+    '  logStatsOkSpan: $("log-stats-ok-span"),\n' +
+    '  logStatsFailedSpan: $("log-stats-failed-span"),\n' +
+    '  logStatsEntrySpan: $("log-stats-entry-span"),\n' +
+    '  logStatsOkShare: $("log-stats-ok-share"),\n' +
+    '  logStatsFailedShare: $("log-stats-failed-share"),\n' +
+    '  logStatsMedianLatency: $("log-stats-median-latency"),\n' +
+    '  logStatsFirstEntry: $("log-stats-first-entry"),\n' +
+    '  logStatsLastEntry: $("log-stats-last-entry"),\n' +
+    '  logStatsMedianLatencyByProduct: $("log-stats-median-latency-by-product"),\n' +
+    '  logStatsFailedShareByStatusByProduct: $("log-stats-failed-share-by-status-by-product"),\n' +
+    '  logStatsFailedShareByStatus: $("log-stats-failed-share-by-status"),\n' +
+    '  logStatsFailedShareByStatusWithinProduct: $("log-stats-failed-share-by-status-within-product"),\n' +
+    '  logStatsFirstFailed: $("log-stats-first-failed"),\n' +
+    '  logStatsLastFailed: $("log-stats-last-failed"),\n' +
+    '  logStatsOkLatencyShareByProduct: $("log-stats-ok-latency-share-by-product"),\n' +
+    '  logStatsOkLatencyCount: $("log-stats-ok-latency-count"),\n' +
+    '  logStatsOkLatencyCountByProduct: $("log-stats-ok-latency-count-by-product"),\n' +
+    '  logStatsOkShareOfOkByProduct: $("log-stats-ok-share-of-ok-by-product"),\n' +
+    '  logStatsOkLatencySum: $("log-stats-ok-latency-sum"),\n' +
+    '  logStatsOkLatencySumByProduct: $("log-stats-ok-latency-sum-by-product"),\n' +
+    '  logStatsFailedShareOfFailedByProduct: $("log-stats-failed-share-of-failed-by-product"),\n' +
+    '  logStatsFailedShareOfEntriesByProduct: $("log-stats-failed-share-of-entries-by-product"),\n' +
+    '  logStatsOkShareOfTotalByProduct: $("log-stats-ok-share-of-total-by-product"),\n' +
+    '  logStatsFailedShareByStatusOfEntriesByProduct: $("log-stats-failed-share-by-status-of-entries-by-product"),\n' +
+    '  logStatsFailedShareByStatusOfEntries: $("log-stats-failed-share-by-status-of-entries"),\n' +
+    '  logStatsFailedShareByStatusOfEntriesWithinProduct: $("log-stats-failed-share-by-status-of-entries-within-product"),\n' +
+    '  logStatsOkLatencyCountShareByProduct: $("log-stats-ok-latency-count-share-by-product"),\n' +
+    '  logStatsEntrySpanShareByProduct: $("log-stats-entry-span-share-by-product"),\n' +
+    '  logStatsOkLatencyCountShareOfEntriesByProduct: $("log-stats-ok-latency-count-share-of-entries-by-product"),\n' +
+    '  logStatsOkSpanShareByProduct: $("log-stats-ok-span-share-by-product"),\n' +
+    '  logStatsOkLatencyCountShareOfEntries: $("log-stats-ok-latency-count-share-of-entries"),\n' +
+    '  logStatsFailedSpanShareByProduct: $("log-stats-failed-span-share-by-product"),\n' +
+    '  logStatsOkLatencyCountShareOfOk: $("log-stats-ok-latency-count-share-of-ok"),\n' +
+    '  logStatsOkLatencyCountShareOfOkByProduct: $("log-stats-ok-latency-count-share-of-ok-by-product"),\n' +
+    '  logStatsOkSpanShareOfEntryWindowByProduct: $("log-stats-ok-span-share-of-entry-window-by-product"),\n' +
+    '  logStatsOkLatencyCountShareOfOwnOkByProduct: $("log-stats-ok-latency-count-share-of-own-ok-by-product"),\n' +
+    '  logStatsFailedSpanShareOfEntryWindowByProduct: $("log-stats-failed-span-share-of-entry-window-by-product"),\n' +
+    '  logStatsOkLatencyCountShareOfOwnEntriesByProduct: $("log-stats-ok-latency-count-share-of-own-entries-by-product"),\n' +
+    '  logStatsFailedSpanShareOfEntryWindow: $("log-stats-failed-span-share-of-entry-window"),\n' +
+    '  logStatsOkSpanShareOfEntryWindow: $("log-stats-ok-span-share-of-entry-window"),\n' +
+    '  logStatsFailedSpanShareOfOwnEntryWindowByProduct: $("log-stats-failed-span-share-of-own-entry-window-by-product"),\n' +
+    '  logStatsOkSpanShareOfOwnEntryWindowByProduct: $("log-stats-ok-span-share-of-own-entry-window-by-product"),\n' +
+    '  logStatsOkShareOfOwnEntriesByProduct: $("log-stats-ok-share-of-own-entries-by-product"),\n' +
+    '  logStatsFailedSpanShareOfOwnOkWindowByProduct: $("log-stats-failed-span-share-of-own-ok-window-by-product"),\n' +
+    '  logStatsOkSpanShareOfOwnFailedWindowByProduct: $("log-stats-ok-span-share-of-own-failed-window-by-product"),\n' +
+    '  logStatsOkSpanShareOfFailedWindow: $("log-stats-ok-span-share-of-failed-window"),\n' +
+    '  logStatsFailedSpanShareOfOkWindow: $("log-stats-failed-span-share-of-ok-window"),\n' +
+    '  logStatsEntrySpanShareOfOkWindow: $("log-stats-entry-span-share-of-ok-window"),\n' +
+    '  logStatsEntrySpanShareOfFailedWindow: $("log-stats-entry-span-share-of-failed-window"),\n' +
+    '  logStatsEntrySpanShareOfOwnOkWindowByProduct: $("log-stats-entry-span-share-of-own-ok-window-by-product"),\n' +
+    '  logStatsEntrySpanShareOfOwnFailedWindowByProduct: $("log-stats-entry-span-share-of-own-failed-window-by-product"),\n' +
+    '  logStatsEntrySpanShareOfOkWindowByProduct: $("log-stats-entry-span-share-of-ok-window-by-product"),\n' +
+    '  logStatsEntrySpanShareOfFailedWindowByProduct: $("log-stats-entry-span-share-of-failed-window-by-product"),\n' +
+    '  logStatsFailedSpanShareOfOkWindowByProduct: $("log-stats-failed-span-share-of-ok-window-by-product"),\n' +
+    '  logStatsOkSpanShareOfFailedWindowByProduct: $("log-stats-ok-span-share-of-failed-window-by-product"),\n' +
+    '  ignisScoreboard: $("ignis-scoreboard"),\n' +
+    '  ignisConfidence: $("ignis-confidence"),\n' +
+    '  ignisReviewQueue: $("'... 157813 more characters
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/ui.test.mjs:875:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: `// Meta Trio frontend wiring. Connects camera -> sampler -> analysis\n// client -> event display + session log, for whichever of the three\n// products (Vigiles, Ignis, Medicus) is selected. This module contains no\n// detection logic and no sample data: if the backend is unreachable, the\n// UI shows the error and nothing else.\n\nimport { Camera, cameraSupported, MAX_FRAME_DIMENSION } from "./camera.js";\nimport { FrameSampler } from "./sampler.js";\nimport { assessFrame, AssessError, checkHealth } from "./client.js";\nimport { SessionLog } from "./log.js";\nimport { PRODUCT_BY_ID, isProductId } from "./products.js";\nimport { ContactsStore } from "./contacts.js";\nimport { ignisLookAlikeScoreboard } from "./ignis-scoreboard.js";\nimport { ignisReportedConfidence } from "./ignis-confidence.js";\nimport { ignisReviewQueue } from "./ignis-review-queue.js";\nimport { ignisEvidenceTransparency } from "./ignis-evidence.js";\nimport { ignisUncertaintyDisclosure } from "./ignis-uncertainty.js";\nimport { ignisReviewTriage } from "./ignis-review-triage.js";\nimport { ignisObservationCategories } from "./ignis-observation-categories.js";\nimport { ignisModelAttribution } from "./ignis-model-attribution.js";\nimport { ignisFootageSource } from "./ignis-footage-source.js";\nimport { ignisScenarioBreakdown } from "./ignis-scenario-breakdown.js";\nimport { ignisReviewBySource } from "./ignis-review-source.js";\nimport { ignisReviewByModel } from "./ignis-review-model.js";\nimport { ignisReviewAuditTrail } from "./ignis-review-audit-trail.js";\nimport { ignisReviewByConfidence } from "./ignis-review-confidence.js";\nimport { ignisReviewByScenario } from "./ignis-review-scenario.js";\nimport { ignisReviewByObservationCategory } from "./ignis-review-observation-category.js";\nimport { ignisReviewByEvidence } from "./ignis-review-evidence.js";\nimport { ignisReviewByUncertainty } from "./ignis-review-uncertainty.js";\nimport { ignisReviewByObservationCount } from "./ignis-review-observation-count.js";\nimport { ignisReviewByLatency } from "./ignis-review-latency.js";\nimport { ignisReviewBySummary } from "./ignis-review-summary.js";\nimport { isSupportedImageFile, readFileAsDataURL, downscaleImageToDataURL } from "./image_input.js";\nimport { regionBoxes } from "./surfaces.js";\nimport { isSupportedVideoFile, captureVideoFrame } from "./video_input.js";\n\nconst $ = (id) => document.getElementById(id);\n\nconst els = {\n  video: $("preview"),\n  captureCanvas: $("capture-canvas"),\n  cameraIndicator: $("camera-indicator"),\n  cameraState: $("camera-state"),\n  cameraFacing: $("camera-facing"),\n  analysisActive: $("analysis-active"),\n  btnCameraStart: $("btn-camera-start"),\n  btnCameraStop: $("btn-camera-stop"),\n  btnAnalysisStart: $("btn-analysis-start"),\n  btnAnalysisStop: $("btn-analysis-stop"),\n  btnReset: $("btn-reset"),\n  productBadge: $("product-badge"),\n  productRadios: [...document.querySelectorAll('input[name="product"]')],\n  productDepartment: $("product-department"),\n  productTagline: $("product-tagline"),\n  productCategories: $("product-categories"),\n  productGuidance: $("product-guidance"),\n  productLimitations: $("product-limitations"),\n  endpoint: $("endpoint"),\n  btnBackendCheck: $("btn-backend-check"),\n  backendHealth: $("backend-health"),\n  intervalSeconds: $("interval-seconds"),\n  scenarioSelect: $("scenario-select"),\n  scenarioLabel: $("scenario-label"),\n  samplingDisclosure: $("sampling-disclosure"),\n  backendStatus: $("backend-status"),\n  inFlight: $("in-flight"),\n  samplerStats: $("sampler-stats"),\n  lastRoundTrip: $("last-round-trip"),\n  latest: $("latest-assessment"),\n  history: $("history-list"),\n  historyEmpty: $("history-empty"),\n  btnExport: $("btn-export-log"),\n  btnClearLog: $("btn-clear-log"),\n  logStats: $("log-stats"),\n  logEmpty: $("log-empty"),\n  logStatsByProduct: $("log-stats-by-product"),\n  logStatsFailedByProduct: $("log-stats-failed-by-product"),\n  logStatsByFailure: $("log-stats-by-failure"),\n  logStatsLastOk: $("log-stats-last-ok"),\n  logStatsFirstOk: $("log-stats-first-ok"),\n  logStatsAvgLatency: $("log-stats-avg-latency"),\n  logStatsLatencyRange: $("log-stats-latency-range"),\n  logStatsLastOkByProduct: $("log-stats-last-ok-by-product"),\n  logStatsFirstOkByProduct: $("log-stats-first-ok-by-product"),\n  logStatsLastFailedByProduct: $("log-stats-last-failed-by-product"),\n  logStatsFirstFailedByProduct: $("log-stats-first-failed-by-product"),\n  logStatsAvgLatencyByProduct: $("log-stats-avg-latency-by-product"),\n  logStatsFailuresByProduct: $("log-stats-failures-by-product"),\n  logStatsLatencyRangeByProduct: $("log-stats-latency-range-by-product"),\n  logStatsOkShareByProduct: $("log-stats-ok-share-by-product"),\n  logStatsFailedShareByProduct: $("log-stats-failed-share-by-product"),\n  logStatsEntryShareByProduct: $("log-stats-entry-share-by-product"),\n  logStatsEntryCountByProduct: $("log-stats-entry-count-by-product"),\n  logStatsFirstEntryByProduct: $("log-stats-first-entry-by-product"),\n  logStatsLastEntryByProduct: $("log-stats-last-entry-by-product"),\n  logStatsEntrySpanByProduct: $("log-stats-entry-span-by-product"),\n  logStatsFailedSpanByProduct: $("log-stats-failed-span-by-product"),\n  logStatsOkSpanByProduct: $("log-stats-ok-span-by-product"),\n  logStatsOkSpan: $("log-stats-ok-span"),\n  logStatsFailedSpan: $("log-stats-failed-span"),\n  logStatsEntrySpan: $("log-stats-entry-span"),\n  logStatsOkShare: $("log-stats-ok-share"),\n  logStatsFailedShare: $("log-stats-failed-share"),\n  logStatsMedianLatency: $("log-stats-median-latency"),\n  logStatsFirstEntry: $("log-stats-first-entry"),\n  logStatsLastEntry: $("log-stats-last-entry"),\n  logStatsMedianLatencyByProduct: $("log-stats-median-latency-by-product"),\n  logStatsFailedShareByStatusByProduct: $("log-stats-failed-share-by-status-by-product"),\n  logStatsFailedShareByStatus: $("log-stats-failed-share-by-status"),\n  logStatsFailedShareByStatusWithinProduct: $("log-stats-failed-share-by-status-within-product"),\n  logStatsFirstFailed: $("log-stats-first-failed"),\n  logStatsLastFailed: $("log-stats-last-failed"),\n  logStatsOkLatencyShareByProduct: $("log-stats-ok-latency-share-by-product"),\n  logStatsOkLatencyCount: $("log-stats-ok-latency-count"),\n  logStatsOkLatencyCountByProduct: $("log-stats-ok-latency-count-by-product"),\n  logStatsOkShareOfOkByProduct: $("log-stats-ok-share-of-ok-by-product"),\n  logStatsOkLatencySum: $("log-stats-ok-latency-sum"),\n  logStatsOkLatencySumByProduct: $("log-stats-ok-latency-sum-by-product"),\n  logStatsFailedShareOfFailedByProduct: $("log-stats-failed-share-of-failed-by-product"),\n  logStatsFailedShareOfEntriesByProduct: $("log-stats-failed-share-of-entries-by-product"),\n  logStatsOkShareOfTotalByProduct: $("log-stats-ok-share-of-total-by-product"),\n  logStatsFailedShareByStatusOfEntriesByProduct: $("log-stats-failed-share-by-status-of-entries-by-product"),\n  logStatsFailedShareByStatusOfEntries: $("log-stats-failed-share-by-status-of-entries"),\n  logStatsFailedShareByStatusOfEntriesWithinProduct: $("log-stats-failed-share-by-status-of-entries-within-product"),\n  logStatsOkLatencyCountShareByProduct: $("log-stats-ok-latency-count-share-by-product"),\n  logStatsEntrySpanShareByProduct: $("log-stats-entry-span-share-by-product"),\n  logStatsOkLatencyCountShareOfEntriesByProduct: $("log-stats-ok-latency-count-share-of-entries-by-product"),\n  logStatsOkSpanShareByProduct: $("log-stats-ok-span-share-by-product"),\n  logStatsOkLatencyCountShareOfEntries: $("log-stats-ok-latency-count-share-of-entries"),\n  logStatsFailedSpanShareByProduct: $("log-stats-failed-span-share-by-product"),\n  logStatsOkLatencyCountShareOfOk: $("log-stats-ok-latency-count-share-of-ok"),\n  logStatsOkLatencyCountShareOfOkByProduct: $("log-stats-ok-latency-count-share-of-ok-by-product"),\n  logStatsOkSpanShareOfEntryWindowByProduct: $("log-stats-ok-span-share-of-entry-window-by-product"),\n  logStatsOkLatencyCountShareOfOwnOkByProduct: $("log-stats-ok-latency-count-share-of-own-ok-by-product"),\n  logStatsFailedSpanShareOfEntryWindowByProduct: $("log-stats-failed-span-share-of-entry-window-by-product"),\n  logStatsOkLatencyCountShareOfOwnEntriesByProduct: $("log-stats-ok-latency-count-share-of-own-entries-by-product"),\n  logStatsFailedSpanShareOfEntryWindow: $("log-stats-failed-span-share-of-entry-window"),\n  logStatsOkSpanShareOfEntryWindow: $("log-stats-ok-span-share-of-entry-window"),\n  logStatsFailedSpanShareOfOwnEntryWindowByProduct: $("log-stats-failed-span-share-of-own-entry-window-by-product"),\n  logStatsOkSpanShareOfOwnEntryWindowByProduct: $("log-stats-ok-span-share-of-own-entry-window-by-product"),\n  logStatsOkShareOfOwnEntriesByProduct: $("log-stats-ok-share-of-own-entries-by-product"),\n  logStatsFailedSpanShareOfOwnOkWindowByProduct: $("log-stats-failed-span-share-of-own-ok-window-by-product"),\n  logStatsOkSpanShareOfOwnFailedWindowByProduct: $("log-stats-ok-span-share-of-own-failed-window-by-product"),\n  logStatsOkSpanShareOfFailedWindow: $("log-stats-ok-span-share-of-failed-window"),\n  logStatsFailedSpanShareOfOkWindow: $("log-stats-failed-span-share-of-ok-window"),\n  logStatsEntrySpanShareOfOkWindow: $("log-stats-entry-span-share-of-ok-window"),\n  logStatsEntrySpanShareOfFailedWindow: $("log-stats-entry-span-share-of-failed-window"),\n  logStatsEntrySpanShareOfOwnOkWindowByProduct: $("log-stats-entry-span-share-of-own-ok-window-by-product"),\n  logStatsEntrySpanShareOfOwnFailedWindowByProduct: $("log-stats-entry-span-share-of-own-failed-window-by-product"),\n  logStatsEntrySpanShareOfOkWindowByProduct: $("log-stats-entry-span-share-of-ok-window-by-product"),\n  logStatsEntrySpanShareOfFailedWindowByProduct: $("log-stats-entry-span-share-of-failed-window-by-product"),\n  logStatsFailedSpanShareOfOkWindowByProduct: $("log-stats-failed-span-share-of-ok-window-by-product"),\n  logStatsOkSpanShareOfFailedWindowByProduct: $("log-stats-ok-span-share-of-failed-window-by-product"),\n  ignisScoreboard: $("ignis-scoreboard"),\n  ignisConfidence: $("ignis-confidence"),\n  ignisReviewQueue: $("`... 157813 more characters,
+    expected: /function renderLatest\(assessment, earlierNote = null\) \{\n\s+latestAssessmentShown = true;/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/ui.test.mjs:938:1
+✖ panels: still-image and video panels show an in-panel sending note while assessing, matching the native panels (1.209208ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Text\("Sending still image…"\)/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/ui.test.mjs:950:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /Text\("Sending still image…"\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/ui.test.mjs:966:1
+✖ camera: web shows an analysis-active banner while sampling, matching the native camera panel (0.834791ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /ANALYSIS ACTIVE — sampling one frame every/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/ui.test.mjs:976:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /ANALYSIS ACTIVE — sampling one frame every/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/ui.test.mjs:1115:1
+✖ latest: native panel carries the observable-evidence note, matching the web panel (0.245792ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Text\("Assessments describe observable evidence only\. Each product's limitations notice \(above\) states what its assessments never claim\."\)/. Input:
+  
+  ''
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/ui.test.mjs:1120:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '',
+    expected: /Text\("Assessments describe observable evidence only\. Each product's limitations notice \(above\) states what its assessments never claim\."\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/ui.test.mjs:1216:1
+✖ config: web sampling interval clamps to 1–60 like the native Stepper, instead of silently falling back (0.823167ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Stepper\(value: \$model\.intervalSeconds, in: 1\.\.\.60\)/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/ui.test.mjs:1233:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /Stepper\(value: \$model\.intervalSeconds, in: 1\.\.\.60\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+SUPP exit=1 elapsed=0s

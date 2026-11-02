@@ -1,0 +1,420 @@
+OC1B-4011 group 5 run, tree 94010c76, 2026-11-02T16:07:59Z
+command: node --test <group-5 file list, see OC1B-native-groups.md>
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: facing note exists
+    at file:///private/tmp/oc500-s17/tests/native-camera-facing-note-size.test.mjs:31:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-camera-facing-note-size.test.mjs (96.785333ms)
+✔ native: facing enum has front and rear, mapping to .front and .back (0.613333ms)
+✔ native: facing defaults to front (0.093541ms)
+✔ native: device lookup prefers the chosen position, falls back to the default camera (0.084584ms)
+✔ native: start uses the chosen facing, not the bare default camera (0.070708ms)
+✔ native: setFacing records the choice and restarts a live capture (0.104917ms)
+✖ native: picker offers both facings with the web picker's labels (0.716ms)
+✖ native: picker says plainly that a facing is a preference, not a requirement (0.332625ms)
+✔ web anchor: the camera-state line is a polite live region, so a camera failure set there is read aloud (0.586083ms)
+✔ native: AccessibilityAnnouncement has a cameraFailure that posts the message verbatim (0.090792ms)
+✔ native: setState announces all three failure states in the panel's own words (0.177542ms)
+✖ native: the announced words are exactly the state text the panel shows (0.727583ms)
+✔ native: non-failure states announce nothing (0.136125ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: guidance note exists
+    at file:///private/tmp/oc500-s17/tests/native-camera-guidance-size.test.mjs:29:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-camera-guidance-size.test.mjs (98.893792ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Label("CAMERA LIVE" exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-camera-live-tracking.test.mjs:27:10)
+    at file:///private/tmp/oc500-s17/tests/native-camera-live-tracking.test.mjs:31:15
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-camera-live-tracking.test.mjs (95.134583ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Text("Camera is off.") exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-camera-state-size.test.mjs:37:10)
+    at file:///private/tmp/oc500-s17/tests/native-camera-state-size.test.mjs:41:14
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-camera-state-size.test.mjs (97.21875ms)
+✔ web anchor: the backend-status line is a polite live region, so a capture failure set there is read aloud (0.608708ms)
+✔ native: AccessibilityAnnouncement has a captureFailure that posts the message verbatim (0.107125ms)
+✔ native: a live-sample capture failure announces, verbatim, instead of as a backend failure (0.068625ms)
+✔ native: a video-frame extraction failure announces inside the view-generation guard, with the error on screen (0.12475ms)
+ℹ tests 20
+ℹ suites 0
+ℹ pass 13
+ℹ fail 7
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 124.696167
+
+✖ failing tests:
+
+test at tests/native-camera-facing-note-size.test.mjs:1:1
+✖ tests/native-camera-facing-note-size.test.mjs (96.785333ms)
+  'test failed'
+
+test at tests/native-camera-facing.test.mjs:62:1
+✖ native: picker offers both facings with the web picker's labels (0.716ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Picker\("Camera facing"/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-camera-facing.test.mjs:65:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /Picker\("Camera facing"/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/native-camera-facing.test.mjs:73:1
+✖ native: picker says plainly that a facing is a preference, not a requirement (0.332625ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /A facing is a preference, not a requirement: a Mac with only one camera uses that camera whichever facing is chosen\./. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-camera-facing.test.mjs:74:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /A facing is a preference, not a requirement: a Mac with only one camera uses that camera whichever facing is chosen\./,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/native-camera-failure-announcement.test.mjs:67:1
+✖ native: the announced words are exactly the state text the panel shows (0.727583ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /Text\("Camera permission denied\. Grant access in System Settings → Privacy & Security → Camera, then start the camera again\."\)/. Input:
+  
+  'import AppKit\n' +
+    'import AVKit\n' +
+    'import SwiftUI\n' +
+    '\n' +
+    '// ContentView — the Meta Imperium web app as the native window.\n' +
+    '// The web UI (index.html + js/ served by server/server.mjs) is the\n' +
+    '// single interface now: one UI to maintain instead of a native\n' +
+    '// re-implementation shadowing it. Camera capture, assessment, relay,\n' +
+    '// and the queue keep working through the page: the backend is the\n' +
+    '// same local server the native assess path already used.\n' +
+    '// Camera access in the page triggers the normal macOS TCC prompt;\n' +
+    '// Info.plist already carries NSCameraUsageDescription for it.\n' +
+    '\n' +
+    'struct ContentView: View {\n' +
+    '    @EnvironmentObject var model: AppModel\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n' +
+    '            .frame(minWidth: 1020, minHeight: 660)\n' +
+    '    }\n' +
+    '}\n' +
+    '\n' +
+    '\n' +
+    'struct PanelHeading: View {\n' +
+    '    let title: String\n' +
+    '    let isIgnis: Bool\n' +
+    '    let isVigiles: Bool\n' +
+    '    let isMedicus: Bool\n' +
+    '\n' +
+    '    var body: some View {\n' +
+    '        if isIgnis {\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isVigiles {\n' +
+    '            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n' +
+    '            // console treatment — uppercased monospaced 15pt bold\n' +
+    '            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n' +
+    '            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n' +
+    "            // before the text — the Ignis branch's shape in Vigiles\n" +
+    '            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n' +
+    '            // and the Vigiles branch keeps the original title as its\n' +
+    '            // accessibility label, as the Ignis branch does.\n' +
+    '            HStack(alignment: .top, spacing: 10) {\n' +
+    '                Rectangle()\n' +
+    '                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n' +
+    '                    .frame(width: 3)\n' +
+    '                Text(title.uppercased())\n' +
+    '                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n' +
+    '                    .tracking(1.8)\n' +
+    '            }\n' +
+    '            .accessibilityLabel(title)\n' +
+    '        } else if isMedicus {\n' +
+    '            // OPS-CONSOLE-10: Medicus renders the web Medicus\n' +
+    '            // ops-console rule — uppercased plain 15pt bold with\n' +
+    '            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n' +
+    '            // mono face and no left border, so this branch carries\n' +
+    '            // neither: no mono face, no tick shape, and no\n' +
+    '            // green restyle of anything else. Size and weight stay\n' +
+    '            // 15pt bold, and the original title stays the\n' +
+    '            // accessibility label, as the Ignis and Vigiles branches\n' +
+    '            // do. Body, status, and button treatments are later\n' +
+    '            // slices; this slice is headings only.\n' +
+    '            Text(title.uppercased())\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '                .tracking(1.2)\n' +
+    '                .accessibilityLabel(title)\n' +
+    '        } else {\n' +
+    '            Text(title)\n' +
+    '                .font(.system(size: 15, weight: .bold))\n' +
+    '        }\n' +
+    '    }\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (file:///private/tmp/oc500-s17/tests/native-camera-failure-announcement.test.mjs:68:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1402:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:974:18)
+      at Test.postRun (node:internal/test_runner/test:1542:19)
+      at Test.run (node:internal/test_runner/test:1467:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: "import AppKit\nimport AVKit\nimport SwiftUI\n\n// ContentView — the Meta Imperium web app as the native window.\n// The web UI (index.html + js/ served by server/server.mjs) is the\n// single interface now: one UI to maintain instead of a native\n// re-implementation shadowing it. Camera capture, assessment, relay,\n// and the queue keep working through the page: the backend is the\n// same local server the native assess path already used.\n// Camera access in the page triggers the normal macOS TCC prompt;\n// Info.plist already carries NSCameraUsageDescription for it.\n\nstruct ContentView: View {\n    @EnvironmentObject var model: AppModel\n\n    var body: some View {\n        CommandWebView(rootURL: CommandWebView.root(forAssessEndpoint: model.trimmedEndpoint))\n            .frame(minWidth: 1020, minHeight: 660)\n    }\n}\n\n\nstruct PanelHeading: View {\n    let title: String\n    let isIgnis: Bool\n    let isVigiles: Bool\n    let isMedicus: Bool\n\n    var body: some View {\n        if isIgnis {\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 217 / 255, green: 43 / 255, blue: 43 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isVigiles {\n            // OPS-CONSOLE-7: Vigiles renders the web OPS-CONSOLE-6\n            // console treatment — uppercased monospaced 15pt bold\n            // with 1.8pt tracking (0.12em of 15pt) and a 3pt\n            // Vigiles-blue (#4f7ec2) leading tick with 10pt of room\n            // before the text — the Ignis branch's shape in Vigiles\n            // blue. Medicus takes its own OPS-CONSOLE-10 branch below,\n            // and the Vigiles branch keeps the original title as its\n            // accessibility label, as the Ignis branch does.\n            HStack(alignment: .top, spacing: 10) {\n                Rectangle()\n                    .fill(Color(red: 79 / 255, green: 126 / 255, blue: 194 / 255))\n                    .frame(width: 3)\n                Text(title.uppercased())\n                    .font(.system(size: 15, weight: .bold, design: .monospaced))\n                    .tracking(1.8)\n            }\n            .accessibilityLabel(title)\n        } else if isMedicus {\n            // OPS-CONSOLE-10: Medicus renders the web Medicus\n            // ops-console rule — uppercased plain 15pt bold with\n            // 1.2pt tracking (0.08em of 15pt). The web rule sets no\n            // mono face and no left border, so this branch carries\n            // neither: no mono face, no tick shape, and no\n            // green restyle of anything else. Size and weight stay\n            // 15pt bold, and the original title stays the\n            // accessibility label, as the Ignis and Vigiles branches\n            // do. Body, status, and button treatments are later\n            // slices; this slice is headings only.\n            Text(title.uppercased())\n                .font(.system(size: 15, weight: .bold))\n                .tracking(1.2)\n                .accessibilityLabel(title)\n        } else {\n            Text(title)\n                .font(.system(size: 15, weight: .bold))\n        }\n    }\n}\n",
+    expected: /Text\("Camera permission denied\. Grant access in System Settings → Privacy & Security → Camera, then start the camera again\."\)/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/native-camera-guidance-size.test.mjs:1:1
+✖ tests/native-camera-guidance-size.test.mjs (98.893792ms)
+  'test failed'
+
+test at tests/native-camera-live-tracking.test.mjs:1:1
+✖ tests/native-camera-live-tracking.test.mjs (95.134583ms)
+  'test failed'
+
+test at tests/native-camera-state-size.test.mjs:1:1
+✖ tests/native-camera-state-size.test.mjs (97.21875ms)
+  'test failed'
+GROUP-g5 exit=1 elapsed=1s

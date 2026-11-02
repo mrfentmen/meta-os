@@ -1,0 +1,155 @@
+OC1B-4010 group 4 run, tree 94010c76, 2026-11-02T16:07:59Z
+command: node --test <group-4 file list, see OC1B-native-groups.md>
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: footer disclaimer exists
+    at file:///private/tmp/oc500-s17/tests/native-footer-size.test.mjs:29:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-footer-size.test.mjs (89.868875ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Categories the server may return: exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-settings-categories-size.test.mjs:26:10)
+    at file:///private/tmp/oc500-s17/tests/native-settings-categories-size.test.mjs:30:20
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-settings-categories-size.test.mjs (86.267375ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Text("Assessment endpoint") exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-settings-label-size.test.mjs:29:10)
+    at file:///private/tmp/oc500-s17/tests/native-settings-label-size.test.mjs:33:18
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-settings-label-size.test.mjs (97.385375ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Text(model.backendHealth) exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-settings-note-size.test.mjs:30:10)
+    at file:///private/tmp/oc500-s17/tests/native-settings-note-size.test.mjs:34:16
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-settings-note-size.test.mjs (92.761666ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: PanelHeading(title: "Settings" exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-settings-title-size.test.mjs:32:10)
+    at file:///private/tmp/oc500-s17/tests/native-settings-title-size.test.mjs:36:15
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-settings-title-size.test.mjs (88.33ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: StatusBar exists
+    at file:///private/tmp/oc500-s17/tests/native-statusbar-size.test.mjs:27:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-statusbar-size.test.mjs (87.381375ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 0
+ℹ fail 6
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 107.098542
+
+✖ failing tests:
+
+test at tests/native-footer-size.test.mjs:1:1
+✖ tests/native-footer-size.test.mjs (89.868875ms)
+  'test failed'
+
+test at tests/native-settings-categories-size.test.mjs:1:1
+✖ tests/native-settings-categories-size.test.mjs (86.267375ms)
+  'test failed'
+
+test at tests/native-settings-label-size.test.mjs:1:1
+✖ tests/native-settings-label-size.test.mjs (97.385375ms)
+  'test failed'
+
+test at tests/native-settings-note-size.test.mjs:1:1
+✖ tests/native-settings-note-size.test.mjs (92.761666ms)
+  'test failed'
+
+test at tests/native-settings-title-size.test.mjs:1:1
+✖ tests/native-settings-title-size.test.mjs (88.33ms)
+  'test failed'
+
+test at tests/native-statusbar-size.test.mjs:1:1
+✖ tests/native-statusbar-size.test.mjs (87.381375ms)
+  'test failed'
+GROUP-g4 exit=1 elapsed=0s
