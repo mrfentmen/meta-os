@@ -5,6 +5,7 @@
 //   node agents/runtime.mjs spawn <name>    (run one agent)
 //   node agents/runtime.mjs watch <name>    (watch its targets)
 import { spawn } from "node:child_process";
+import { lessons } from "./lessons.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
@@ -47,6 +48,7 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
   const brief = {
     agent: agent.name, lane: agent.lane || null, run: runId,
     orders: job.orders || "", budget: agent.budget || {},
+    sharedLessons: lessons(root),
     deadline: job.deadline || null, capabilities: agent.capabilities || [],
   };
   fs.writeFileSync(path.join(runDir, "brief.json"), JSON.stringify(brief, null, 2));
