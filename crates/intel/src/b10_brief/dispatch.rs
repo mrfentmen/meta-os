@@ -995,16 +995,235 @@ pub fn fallback_plan(goal: &str) -> Result<Plan, PlanError> {
     })
 }
 
+/// True when text is not parseable JSON (DSP-017 classifier), ported
+/// from `dispatch.py::_is_malformed_json`.
+///
+/// Only this failure triggers a retry in `plan_from_spark` and, on
+/// the second consecutive failure, the fallback: text that parses
+/// as JSON but fails a plan guard is a structured-plan fault, not
+/// a malformed answer, and `validated_plan` reports it.
+///
+/// Rust adaptation, stated not hidden: Python takes any value and
+/// counts a non-string answer as malformed (there is no JSON text
+/// in it to parse); this function takes `&str`, so a non-string
+/// answer never reaches it — the caller maps one to
+/// [`SparkAnswer::Malformed`], exactly as `plan_from_spark`'s
+/// caller already does. Python parses with `json.loads`; this
+/// crate has no JSON dependency, so the check below is a small
+/// syntax validator for the same grammar: objects, arrays,
+/// strings with escapes (including `\uXXXX`), strict numbers
+/// (no leading zeros, no `+1`, no `.5`, no `1.`), the literals
+/// `true`/`false`/`null`, and Python's own extensions `NaN`,
+/// `Infinity`, and `-Infinity`, which `json.loads` accepts.
+/// Trailing text after one value, and trailing commas, are
+/// malformed, matching `json.loads`.
+pub fn is_malformed_json(text: &str) -> bool {
+    let mut parser = JsonParser {
+        chars: text.chars().collect(),
+        pos: 0,
+    };
+    parser.skip_ws();
+    if !parser.value() {
+        return true;
+    }
+    parser.skip_ws();
+    parser.pos != parser.chars.len()
+}
+
+/// Minimal JSON-syntax reader for [`is_malformed_json`]: it checks
+/// shape only and keeps no values.
+struct JsonParser {
+    chars: Vec<char>,
+    pos: usize,
+}
+
+impl JsonParser {
+    fn skip_ws(&mut self) {
+        while matches!(self.peek(), Some(' ') | Some('\t') | Some('\n') | Some('\r')) {
+            self.pos += 1;
+        }
+    }
+
+    fn peek(&self) -> Option<char> {
+        self.chars.get(self.pos).copied()
+    }
+
+    fn bump(&mut self) -> Option<char> {
+        let c = self.peek();
+        if c.is_some() {
+            self.pos += 1;
+        }
+        c
+    }
+
+    fn lit(&mut self, s: &str) -> bool {
+        let want: Vec<char> = s.chars().collect();
+        if self.pos + want.len() > self.chars.len() {
+            return false;
+        }
+        if self.chars[self.pos..self.pos + want.len()] != want[..] {
+            return false;
+        }
+        self.pos += want.len();
+        true
+    }
+
+    fn value(&mut self) -> bool {
+        self.skip_ws();
+        match self.peek() {
+            Some('{') => self.object(),
+            Some('[') => self.array(),
+            Some('"') => self.string(),
+            Some('t') => self.lit("true"),
+            Some('f') => self.lit("false"),
+            Some('n') => self.lit("null"),
+            Some('N') => self.lit("NaN"),
+            Some('I') => self.lit("Infinity"),
+            Some('-') => {
+                let rest: String = self.chars[self.pos..].iter().collect();
+                if rest.starts_with("-Infinity") {
+                    self.pos += "-Infinity".len();
+                    true
+                } else {
+                    self.number()
+                }
+            }
+            Some(c) if c.is_ascii_digit() => self.number(),
+            _ => false,
+        }
+    }
+
+    fn object(&mut self) -> bool {
+        self.bump(); // '{'
+        self.skip_ws();
+        if self.peek() == Some('}') {
+            self.bump();
+            return true;
+        }
+        loop {
+            self.skip_ws();
+            if !self.string() {
+                return false;
+            }
+            self.skip_ws();
+            if self.bump() != Some(':') {
+                return false;
+            }
+            if !self.value() {
+                return false;
+            }
+            self.skip_ws();
+            match self.bump() {
+                Some(',') => continue,
+                Some('}') => return true,
+                _ => return false,
+            }
+        }
+    }
+
+    fn array(&mut self) -> bool {
+        self.bump(); // '['
+        self.skip_ws();
+        if self.peek() == Some(']') {
+            self.bump();
+            return true;
+        }
+        loop {
+            if !self.value() {
+                return false;
+            }
+            self.skip_ws();
+            match self.bump() {
+                Some(',') => continue,
+                Some(']') => return true,
+                _ => return false,
+            }
+        }
+    }
+
+    fn string(&mut self) -> bool {
+        if self.bump() != Some('"') {
+            return false;
+        }
+        loop {
+            match self.bump() {
+                None => return false,
+                Some('"') => return true,
+                Some('\\') => match self.bump() {
+                    Some('"')
+                    | Some('\\')
+                    | Some('/')
+                    | Some('b')
+                    | Some('f')
+                    | Some('n')
+                    | Some('r')
+                    | Some('t') => {}
+                    Some('u') => {
+                        for _ in 0..4 {
+                            match self.bump() {
+                                Some(c) if c.is_ascii_hexdigit() => {}
+                                _ => return false,
+                            }
+                        }
+                    }
+                    _ => return false,
+                },
+                Some(c) if (c as u32) < 0x20 => return false,
+                Some(_) => {}
+            }
+        }
+    }
+
+    fn number(&mut self) -> bool {
+        if self.peek() == Some('-') {
+            self.bump();
+        }
+        match self.peek() {
+            Some('0') => {
+                self.bump();
+            }
+            Some(c) if c.is_ascii_digit() => {
+                while matches!(self.peek(), Some(c) if c.is_ascii_digit()) {
+                    self.bump();
+                }
+            }
+            _ => return false,
+        }
+        if self.peek() == Some('.') {
+            self.bump();
+            match self.peek() {
+                Some(c) if c.is_ascii_digit() => {}
+                _ => return false,
+            }
+            while matches!(self.peek(), Some(c) if c.is_ascii_digit()) {
+                self.bump();
+            }
+        }
+        if matches!(self.peek(), Some('e') | Some('E')) {
+            self.bump();
+            if matches!(self.peek(), Some('+') | Some('-')) {
+                self.bump();
+            }
+            match self.peek() {
+                Some(c) if c.is_ascii_digit() => {}
+                _ => return false,
+            }
+            while matches!(self.peek(), Some(c) if c.is_ascii_digit()) {
+                self.bump();
+            }
+        }
+        true
+    }
+}
+
 /// One Spark answer, as the caller classifies it (DSP-017).
 ///
 /// Python's `plan_from_spark` takes raw answer text and calls
-/// `_is_malformed_json` on it; this crate has no JSON parser yet
-/// (the JSON-text parse of a Spark answer is still owed as its
-/// own slice), so the caller classifies its answer instead: a
-/// `Malformed` answer stands in for text that fails
-/// `_is_malformed_json`, including a non-string answer, and a
-/// `Plan` answer stands in for text that parses and shapes into a
-/// plan. The retry/fallback logic below is unchanged.
+/// [`is_malformed_json`] on it, so the caller classifies its
+/// answer instead: a `Malformed` answer stands in for text that
+/// fails [`is_malformed_json`], including a non-string answer,
+/// and a `Plan` answer stands in for text that parses and shapes
+/// into a plan. The retry/fallback logic below is unchanged.
 pub enum SparkAnswer {
     Malformed,
     Plan(Plan),
@@ -1062,9 +1281,9 @@ pub struct SparkPlan {
 ///
 /// Rust adaptation, stated not hidden: Python's `complete`
 /// returns raw text (or raises, or returns a non-string), and
-/// malformedness is judged inside this function; here the
-/// caller classifies the answer into [`SparkAnswer`] because
-/// the JSON-text parse is still owed (see above). A non-string
+/// malformedness is judged inside this function with
+/// [`is_malformed_json`]; here the caller classifies the answer
+/// into [`SparkAnswer`] with that same function. A non-string
 /// answer maps to `SparkAnswer::Malformed`, matching Python's
 /// rule that there is no JSON text in it to parse.
 pub fn plan_from_spark(
@@ -2333,5 +2552,74 @@ mod tests {
         };
         assert!(plan_from_spark("   ", &mut |g| complete.call(g)).is_err());
         assert_eq!(complete.calls, 0);
+    }
+
+    #[test]
+    fn malformed_json_classifier_accepts_parseable_docs() {
+        // Each parses under Python's json.loads, so none is malformed.
+        let valid = [
+            "{}",
+            "[]",
+            "{\"a\": 1}",
+            "[1, 2.5, -3e+4]",
+            "\"text\"",
+            "123",
+            "-0.5",
+            "true",
+            "false",
+            "null",
+            "NaN",
+            "Infinity",
+            "-Infinity",
+            "[NaN, Infinity]",
+            "{\"a\": [{\"b\": null}]}",
+            "  {\"a\": 1}  ",
+            "\"a\\nb\"",
+            "\"\\u0041\"",
+            "0.5e-2",
+        ];
+        for text in valid {
+            assert!(!is_malformed_json(text), "should parse: {text}");
+        }
+    }
+
+    #[test]
+    fn malformed_json_classifier_rejects_unparseable_docs() {
+        // Each fails under Python's json.loads, so each is malformed.
+        let invalid = [
+            "",
+            "   ",
+            "{",
+            "}",
+            "[1,]",
+            "{\"a\":}",
+            "{\"a\": 1,}",
+            "'single'",
+            "01",
+            "+1",
+            ".5",
+            "1.",
+            "1e",
+            "1e+",
+            "tru",
+            "nul",
+            "nan",
+            "\"unterminated",
+            "\"bad\\x\"",
+            "\"bad\\u12\"",
+            "{\"a\" 1}",
+            "[1 2]",
+            "{\"a\": 1} extra",
+            "{a: 1}",
+            "[1, 2",
+            "\"a\" \"b\"",
+            "-",
+            "-x",
+            "Infinityy",
+            "{\"a\": 1,, \"b\": 2}",
+        ];
+        for text in invalid {
+            assert!(is_malformed_json(text), "should fail: {text}");
+        }
     }
 }
