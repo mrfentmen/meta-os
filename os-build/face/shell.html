@@ -2,7 +2,6 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<link rel="icon" href="data:,">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meta OS</title>
 <style>
@@ -21,9 +20,7 @@
   html[data-theme="light"] .window { background: #fff; color: #111; border-color: #ccc; }
   .window .titlebar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #222; border-radius: 8px 8px 0 0; cursor: move; user-select: none; }
   html[data-theme="light"] .window .titlebar { background: #eee; }
-  .window .titlebar .min { margin-left: auto; cursor: pointer; border: none; background: #888; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 12px; line-height: 1; }
-  .window .titlebar .close { margin-left: 0; }
-  .window .titlebar .close { cursor: pointer; border: none; background: #c00; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 1; }
+  .window .titlebar .close { margin-left: auto; cursor: pointer; border: none; background: #c00; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 11px; line-height: 1; }
   .window iframe { flex: 1; border: none; border-radius: 0 0 8px 8px; min-height: 300px; background: #fff; }
   .window .term { flex: 1; min-height: 300px; padding: 8px; font: 13px/1.4 monospace; white-space: pre-wrap; overflow: auto; }
   #dock { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; padding: 8px 12px; background: color-mix(in srgb, var(--bar) 75%, transparent); border: 1px solid #555; border-radius: 14px; z-index: 50; }
@@ -31,12 +28,6 @@
   #dock button:hover, #dock button:focus { border-color: var(--accent); }
   #dock button.running::after { content: ""; display: block; width: 4px; height: 4px; border-radius: 50%; background: var(--fg); margin: 1px auto 0; }
   #dock .sep { width: 1px; background: #555; margin: 6px 2px; }
-  .window.snapped-left { top: 0 !important; left: 0 !important; }
-  .window.snapped-right { top: 0 !important; }
-  #ctxmenu { position: fixed; z-index: 100; background: var(--bar); color: var(--fg); border: 1px solid #555; border-radius: 10px; padding: 6px; min-width: 220px; display: none; }
-  #ctxmenu button { display: block; width: 100%; text-align: left; background: transparent; color: inherit; border: none; padding: 8px 10px; font-size: 13px; cursor: pointer; border-radius: 6px; }
-  #ctxmenu button:hover { background: rgba(127,127,127,.25); }
-  #theme-toggle { cursor: pointer; }
 </style>
 </head>
 <body data-product="vigiles">
@@ -45,16 +36,10 @@
   <span class="ribbon-mark">&#8734;</span>
   <span id="app-name">Finder</span>
   <span id="clock">--:--</span>
-  <span id="theme-toggle" title="Toggle light/dark" role="button" tabindex="0">&#9681;</span>
   <span class="icons"><span id="net">NET</span><span id="bat">BAT</span><span id="snd">SND</span></span>
 </div>
 <div id="desktop"></div>
 <div id="dock" role="toolbar" aria-label="Dock"></div>
-<div id="ctxmenu" role="menu">
-  <button data-act="wallpaper">Next wallpaper</button>
-  <button data-act="bgcolor">Next background colour</button>
-  <button data-act="settings">Open Settings</button>
-</div>
 <script src="vendor-logo-background.js"></script>
 <script>
 "use strict";
@@ -82,31 +67,6 @@ const APPS = [
 const desktop = document.getElementById("desktop");
 const dock = document.getElementById("dock");
 let zTop = 20;
-const winsByApp = {};
-/* Theme + bar colour from Settings (localStorage), live. */
-function applyTheme() {
-  let t = "dark";
-  try { t = window.localStorage.getItem("metaos-theme") || "dark"; } catch (e) {}
-  document.documentElement.setAttribute("data-theme", t === "light" ? "light" : "dark");
-}
-function applyBar() {
-  let b = "black";
-  try { b = window.localStorage.getItem("metaos-bar") || "black"; } catch (e) {}
-  const bar = document.getElementById("topbar");
-  const dark = document.documentElement.getAttribute("data-theme") !== "light";
-  if (b === "white") { bar.style.background = "#fff"; bar.style.color = "#000"; }
-  else if (b === "blue") { bar.style.background = "#1a3faa"; bar.style.color = "#fff"; }
-  else { bar.style.background = dark ? "#000" : "#fff"; bar.style.color = dark ? "#fff" : "#000"; }
-}
-applyTheme(); applyBar();
-document.getElementById("theme-toggle").addEventListener("click", () => {
-  let t = "dark";
-  try {
-    t = window.localStorage.getItem("metaos-theme") === "light" ? "dark" : "light";
-    window.localStorage.setItem("metaos-theme", t);
-  } catch (e) {}
-  applyTheme(); applyBar();
-});
 function setClock() {
   const d = new Date();
   const el = document.getElementById("clock");
@@ -125,7 +85,6 @@ function openWindow(app) {
   document.getElementById("app-name").textContent = app.name;
   const w = document.createElement("div");
   w.className = "window";
-  w.dataset.app = app.id;
   w.style.left = (40 + Math.random() * 200) + "px";
   w.style.top = (20 + Math.random() * 120) + "px";
   w.style.width = "560px";
@@ -134,15 +93,10 @@ function openWindow(app) {
   bar.className = "titlebar";
   bar.innerHTML = "<span></span>";
   bar.firstChild.textContent = app.name;
-  const min = document.createElement("button");
-  min.className = "min"; min.textContent = "\u2013";
-  min.setAttribute("aria-label", "Minimise " + app.name);
-  min.onclick = (ev) => { ev.stopPropagation(); minimizeWindow(w); };
-  bar.appendChild(min);
   const close = document.createElement("button");
   close.className = "close"; close.textContent = "x";
   close.setAttribute("aria-label", "Close " + app.name);
-  close.onclick = () => { unregisterWin(app.id, w); w.remove(); refreshRunning(app.id); };
+  close.onclick = () => { w.remove(); markRunning(app.id, false); };
   bar.appendChild(close);
   w.appendChild(bar);
   if (app.kind === "url") {
@@ -174,8 +128,7 @@ function openWindow(app) {
     });
   }
   desktop.appendChild(w);
-  (winsByApp[app.id] = winsByApp[app.id] || []).push(w);
-  refreshRunning(app.id);
+  markRunning(app.id, true);
   // drag
   let sx = 0, sy = 0, ox = 0, oy = 0, drag = false;
   bar.addEventListener("pointerdown", (e) => {
@@ -188,100 +141,13 @@ function openWindow(app) {
     w.style.left = (ox + e.clientX - sx) + "px";
     w.style.top = Math.max(0, oy + e.clientY - sy) + "px";
   });
-  bar.addEventListener("pointerup", (e) => {
-    drag = false;
-    w.classList.remove("snapped-left", "snapped-right");
-    w.style.height = ""; w.style.top = w.style.top;
-    const vw = window.innerWidth;
-    if (e.clientX <= 6) {
-      w.classList.add("snapped-left");
-      w.style.left = "0"; w.style.top = "0";
-      w.style.width = Math.floor(vw / 2) + "px";
-      w.style.height = "100%";
-    } else if (e.clientX >= vw - 6) {
-      w.classList.add("snapped-right");
-      w.style.left = Math.ceil(vw / 2) + "px"; w.style.top = "0";
-      w.style.width = Math.floor(vw / 2) + "px";
-      w.style.height = "100%";
-    }
-  });
+  bar.addEventListener("pointerup", () => { drag = false; });
   w.addEventListener("pointerdown", () => { w.style.zIndex = ++zTop; });
 }
 function markRunning(id, on) {
   const b = dock.querySelector(`button[data-id="${id}"]`);
   if (b) b.classList.toggle("running", on);
 }
-function refreshRunning(id) {
-  const wins = winsByApp[id] || [];
-  markRunning(id, wins.length > 0);
-}
-function minimizeWindow(w) {
-  w.style.display = "none";
-  refreshRunning(w.dataset.app);
-}
-function toggleApp(app) {
-  const wins = winsByApp[app.id] || [];
-  const vis = wins.filter((w) => w.isConnected && w.style.display !== "none");
-  if (vis.length > 0) { vis.forEach((w) => { w.style.display = "none"; }); refreshRunning(app.id); return; }
-  const hidden = wins.filter((w) => w.isConnected);
-  if (hidden.length > 0) {
-    const w = hidden[hidden.length - 1];
-    w.style.display = ""; w.style.zIndex = ++zTop;
-    document.getElementById("app-name").textContent = app.name;
-    refreshRunning(app.id); return;
-  }
-  openWindow(app);
-}
-function unregisterWin(id, w) {
-  winsByApp[id] = (winsByApp[id] || []).filter((x) => x !== w && x.isConnected);
-}
-/* right-click desktop menu */
-(function () {
-  const menu = document.getElementById("ctxmenu");
-  const bgs = ["#020814", "#0a1f3d", "#101010", "#06281c"];
-  let bgi = 0;
-  document.getElementById("desktop").addEventListener("contextmenu", (e) => {
-    e.preventDefault();
-    menu.style.display = "block";
-    menu.style.left = Math.min(e.clientX, window.innerWidth - 240) + "px";
-    menu.style.top = Math.min(e.clientY, window.innerHeight - 140) + "px";
-  });
-  document.addEventListener("pointerdown", (e) => {
-    if (!menu.contains(e.target)) menu.style.display = "none";
-  });
-  menu.addEventListener("click", (e) => {
-    const act = e.target && e.target.dataset ? e.target.dataset.act : null;
-    if (act === "wallpaper" || act === "bgcolor") {
-      bgi = (bgi + 1) % bgs.length;
-      document.getElementById("logo-background").style.background = bgs[bgi];
-    } else if (act === "settings") {
-      const a = APPS.find((x) => x.id === "settings");
-      if (a) openWindow(a);
-    }
-    menu.style.display = "none";
-  });
-})();
-/* alt-tab cycles windows; ctrl+alt+T opens a terminal */
-document.addEventListener("keydown", (e) => {
-  if (e.altKey && !e.ctrlKey && !e.metaKey && e.key === "Tab") {
-    e.preventDefault();
-    const all = Array.prototype.slice.call(document.querySelectorAll(".window"))
-      .filter((w) => w.style.display !== "none");
-    if (all.length < 2) return;
-    all.sort((a, b) => (parseInt(a.style.zIndex || "0", 10) - parseInt(b.style.zIndex || "0", 10)));
-    const wasTop = all[all.length - 1];
-    wasTop.style.zIndex = 20;
-    let z = 21;
-    all.forEach((w) => { if (w !== wasTop) { w.style.zIndex = z; z += 1; } });
-    const nowTop = all.filter((w) => w !== wasTop).sort((a, b) => parseInt(a.style.zIndex, 10) - parseInt(b.style.zIndex, 10))[0];
-    document.getElementById("app-name").textContent = nowTop.querySelector(".titlebar span").textContent;
-  }
-  if (e.ctrlKey && e.altKey && (e.key === "t" || e.key === "T")) {
-    e.preventDefault();
-    const a = APPS.find((x) => x.id === "terminal");
-    if (a) openWindow(a);
-  }
-});
 for (const app of APPS) {
   if (app.sep) {
     const s = document.createElement("div");
@@ -292,7 +158,7 @@ for (const app of APPS) {
   b.title = app.name;
   b.dataset.id = app.id;
   b.setAttribute("aria-label", app.name);
-  b.onclick = () => toggleApp(app);
+  b.onclick = () => openWindow(app);
   dock.appendChild(b);
 }
 </script>
