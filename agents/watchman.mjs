@@ -21,15 +21,19 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
   const ledger = new Ledger(path.join(root, "watchman.jsonl"));
   const stateFile = path.join(root, "watchman-state.json");
   let claimed = new Set();
+  // A claim that survived a restart but never spawned. It stays in `claimed`
+  // (the persisted set is the same set on reload) and is retried once.
+  let pending = new Set();
   // id -> the run it should CONTINUE, when a previous run for the same job died mid-flight.
   // Persisted, so a second restart still resumes instead of starting over.
   let resume = {};
   try {
     const st = JSON.parse(fs.readFileSync(stateFile, "utf8"));
     claimed = new Set(st.claimed || []);
+    pending = new Set(st.pending || []);
     resume = st.resume || {};
   } catch {}
-  const save = () => fs.writeFileSync(stateFile, JSON.stringify({ claimed: [...claimed], resume }, null, 2));
+  const save = () => fs.writeFileSync(stateFile, JSON.stringify({ claimed: [...claimed], pending: [...pending], resume }, null, 2));
   const runs = new Map();
 
   function runStatus(runDir) {
@@ -60,8 +64,10 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
       if (fs.existsSync(path.join(jobsDir, id + ".result.json"))) continue;   // finished
       const bell = lastBell(id);
       if (!bell) {
-        claimed.delete(id);
-        recovered.push({ id, action: "unclaimed", reason: "claimed but never spawned" });
+        // CB-004: the claim survives the reload. Keep it in the persisted
+        // set and retry it once, instead of pretending it never happened.
+        pending.add(id);
+        recovered.push({ id, action: "retry", reason: "claimed but never spawned" });
         continue;
       }
       const runDir = path.join(root, "runs", bell.run);
@@ -89,7 +95,8 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
         continue;
       }
       const id = job.id || f.replace(/\.job\.json$/, "");
-      if (claimed.has(id)) continue;
+      if (claimed.has(id) && !pending.has(id)) continue;
+      if (pending.has(id)) { pending.delete(id); save(); }
       const agent = agents.find((a) => a.name === job.agent);
       claimed.add(id); save();
       if (!agent) { ledger.add("watchman", "job-unmatched", { id, agent: job.agent }); continue; }
@@ -129,7 +136,9 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
   // One beat at start-up so a checker run immediately after `node watchman.mjs` sees a live
   // relay rather than a missing file it would have to treat as an alarm.
   try { writeBeat(heartbeatFile); } catch {}
-  return { pollOnce, ledger, runs, reconcile, recovered };
+  return { pollOnce, ledger, runs, reconcile, recovered,
+    // CB-004: read-only view of persisted claims, for restart tests.
+    state: () => ({ claimed: [...claimed], pending: [...pending], resume: { ...resume } }) };
 }
 
 /* ---- daemon ---- */

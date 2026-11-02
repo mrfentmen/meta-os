@@ -90,6 +90,11 @@ export function recordGymResult({ registryFile = REGISTRY_FILE, gymLedgerFile = 
   fs.writeFileSync(registryFile, text);
   const ledger = new Ledger(gymLedgerFile);
   for (const t of result.tasks) ledger.add(result.agent, "gym-task-score", { drill: result.drill, task: t.id, score: t.score, max: t.max });
+  // CB-010: a failed task leaves its own record, with the step named, so a
+  // drill cannot report a total without saying what failed.
+  for (const t of result.tasks) {
+    if (t.score < t.max) ledger.add(result.agent, "gym-fail", { drill: result.drill, task: t.id, score: t.score, max: t.max });
+  }
   ledger.add(result.agent, "gym-total", { drill: result.drill, total: result.total, max: result.max });
   return entry.gym;
 }
