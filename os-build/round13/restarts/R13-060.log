@@ -1,0 +1,17 @@
+# R13-060 heartbeat kill/restart drill
+date: 2026-11-02T15:57:58Z
+source: services/heartbeat/heartbeat.goose
+binary: os-build/layer1/host/build/heartbeat_restart (goose --standalone + clang host shim)
+workdir: os-build/round13/restarts/work.Zaj00S
+run1: started, sleep 2.5s, kill -9
+run1_beats: 3
+run1_sha256: 1028cfa0640db4e72ec8f30feef844de409dc043543ed2f364d8b4c201cb0ff9
+run2: restarted in same workdir, sleep 2.5s, kill -9
+run2_beats: 6
+run2_sha256: 513090850f5f21538e3ab1e8b794215038d698e26cd20eaeb4f98c24a82ec4bb
+final_bytes: 24
+survived: heartbeat.log and its prior beats
+lost: the in-process beat counter (restarts at 0); no timestamp is written
+re-did: run2 appended new beats after the existing bytes; no beat was rewritten
+exit_run1: 137 (SIGKILL, expected)
+exit_run2: 137 (SIGKILL, expected)
