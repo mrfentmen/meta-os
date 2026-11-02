@@ -886,6 +886,57 @@ pub fn large_plan_prompt(plan: &Plan, _warnings: Option<&[String]>) -> String {
     )
 }
 
+/// Full read-only validation pipeline, ported from
+/// `dispatch.py::validated_plan`, over a typed `Plan`.
+///
+/// Runs, in Python's order: file-overlap, contradiction, dependency
+/// graph (posting order), then attempt-budget clamping. Returns the
+/// clamped plan, its posting order, and the clamp reports (one per
+/// job whose budget actually changed, in plan order). Raises the
+/// first failing check's error, so the plan a human approves is
+/// exactly the plan the gates passed. Posts nothing.
+///
+/// Two honest gaps against the Python original, kept visible rather
+/// than papered over: Python takes plan JSON text and strict-parses
+/// it first, while this takes an already-shaped `Plan` — the JSON
+/// text parse is still owed as its own slice. And the clamp range
+/// here is this branch's existing `clamp_attempt_budgets` (1..10),
+/// not Python's 1..5; that divergence predates this slice and is
+/// flagged for Milo/Pax, not silently changed here.
+pub fn validated_plan(mut plan: Plan) -> Result<(Plan, Vec<String>, Vec<PlanClamp>), PlanError> {
+    check_file_overlap(&plan)?;
+    check_no_contradiction(&plan)?;
+    let order = check_dep_graph(&plan)?;
+    let requested: Vec<(String, i64)> = plan.jobs.iter().map(|j| (j.key.clone(), j.max_attempts)).collect();
+    clamp_attempt_budgets(&mut plan);
+    let clamps: Vec<PlanClamp> = requested
+        .into_iter()
+        .zip(plan.jobs.iter())
+        .filter_map(|((key, requested), job)| {
+            if job.max_attempts != requested {
+                Some(PlanClamp { key, requested, clamped: job.max_attempts })
+            } else {
+                None
+            }
+        })
+        .collect();
+    Ok((plan, order, clamps))
+}
+
+/// Validate a plan and render it for a dry run, ported from
+/// `dispatch.py::dry_run_plan`.
+///
+/// Runs `validated_plan`, then renders the clamped plan with
+/// `render_plan_detail` (size warnings included). Returns the detail
+/// string, or the first failing check's error — a dry run shows
+/// either the full valid plan or an error, never a partial plan.
+/// Posts nothing, claims nothing, writes no record.
+pub fn dry_run_plan(plan: Plan) -> Result<String, PlanError> {
+    let (plan, order, clamps) = validated_plan(plan)?;
+    let warnings = plan_size_warnings(&plan);
+    render_plan_detail(&plan, &order, &clamps, &warnings)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1342,5 +1393,53 @@ mod tests {
             large_plan_prompt(&plan(), Some(&warnings)),
             "This plan is large (2 jobs, 1 files) and needs a second confirmation. Post it anyway? [y/N] "
         );
+    }
+
+    #[test]
+    fn validated_plan_returns_clamped_plan_order_and_clamps() {
+        let mut p = plan();
+        p.jobs[1].max_attempts = 99;
+        let (clamped, order, clamps) = validated_plan(p).unwrap();
+        assert_eq!(order, vec!["a".to_string(), "b".to_string()]);
+        assert_eq!(clamped.jobs[1].max_attempts, 10);
+        assert_eq!(clamps, vec![PlanClamp { key: "b".into(), requested: 99, clamped: 10 }]);
+    }
+
+    #[test]
+    fn validated_plan_first_failure_wins() {
+        let mut p = plan();
+        p.jobs[1].files = vec!["f.py".into()];
+        p.jobs[1].deps = vec![];
+        let err = validated_plan(p).unwrap_err();
+        assert!(err.0.contains("file overlap"), "got: {}", err.0);
+    }
+
+    #[test]
+    fn validated_plan_cycle_errors() {
+        let mut p = plan();
+        p.jobs[0].deps = vec!["b".into()];
+        p.jobs[1].deps = vec!["a".into()];
+        p.jobs[1].files = vec!["g.py".into()];
+        let err = validated_plan(p).unwrap_err();
+        assert!(err.0.contains("dependency cycle"), "got: {}", err.0);
+    }
+
+    #[test]
+    fn dry_run_plan_renders_clamped_detail() {
+        let mut p = plan();
+        p.summary = "Do the thing".into();
+        p.jobs[0].max_attempts = 99;
+        assert_eq!(
+            dry_run_plan(p).unwrap(),
+            "Do the thing\njobs in posting order: a -> b\n- a: A (attempts 10)\n  files: f.py\n  deps: none\n  req: none\n  accept: \n- b: B (attempts 3)\n  files: \n  deps: a\n  req: none\n  accept: \nclamped: job 'a': max_attempts 99 -> 10"
+        );
+    }
+
+    #[test]
+    fn dry_run_plan_error_propagates() {
+        let mut p = plan();
+        p.jobs[1].files = vec!["f.py".into()];
+        p.jobs[1].deps = vec![];
+        assert!(dry_run_plan(p).is_err());
     }
 }
