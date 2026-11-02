@@ -1,0 +1,19 @@
+# OC1B-298 clean-checkout rebuild (from detached worktree at §12 commit 460295b8)
+
+worktree: /tmp/oc500-s12clean @ 460295b8 (git status clean at build time)
+workdir: /tmp/oc1b-carrier4 (fresh; base cached, recipe downloads only when absent)
+command: sh os-build/face/build-image.sh /tmp/oc1b-carrier4
+
+== provision versions (guest, verbatim) ==
+opencode v2.2.0
+v18.20.4
+git version 2.39.5
+Chromium 156.0.8078.73 built on Debian GNU/Linux 12 (bookworm)
+freebuff: installed, 0.2.35 (rc=0)
+provision: done (rc=0)
+
+== image ==
+-rw-r--r--@ 1 test  wheel  3300917248 Nov  2 12:40 /tmp/oc1b-carrier4/metaos-face.img
+a1853bbf124ed0415b98ad4ceb570516e6be9527653481a1281823a6bf315e83  /tmp/oc1b-carrier4/metaos-face.img
+
+The recipe needs no local state beyond its two committed scripts, the base URL cache, and standard Mac tools (qemu*, hdiutil, ssh-keygen, curl).
