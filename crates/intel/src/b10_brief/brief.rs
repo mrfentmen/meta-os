@@ -8,6 +8,8 @@
 
 use std::collections::HashMap;
 
+use super::window::RawMessage;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct BriefRecord {
     pub room: String,
@@ -2063,6 +2065,118 @@ pub fn screenshot_digest_lines(refs: Option<&[ScreenshotRef]>) -> Vec<String> {
         .collect()
 }
 
+/// BRF-029: nicks present in the room with no prior message.
+///
+/// A nick counts as new when it appears in the snapshot's
+/// presence list but has authored none of the snapshot's
+/// messages (dict entries or "nick: text" bus strings). Presence
+/// order is kept, duplicates dropped, empty nicks ignored. A
+/// nick that only holds a job claim or a caps entry is still
+/// new — only a prior message counts, so jobs and caps are not
+/// inputs here at all. Returns [] for no messages or no
+/// presence, never an error.
+#[derive(Debug, Clone, PartialEq)]
+pub enum PresenceEntry {
+    /// A presence-list entry, verbatim.
+    Nick(String),
+    /// Any other shape: Python's `isinstance(nick, str)` check
+    /// skips it, so it can never be a new nick.
+    Other,
+}
+
+/// A snapshot presence value: a list, or a dict (whose keys are
+/// the presence list, mirroring `list(presence.keys())`).
+#[derive(Debug, Clone, PartialEq)]
+pub enum Presence {
+    List(Vec<PresenceEntry>),
+    DictKeys(Vec<String>),
+}
+
+pub fn detect_new_nicks(
+    messages: Option<&[RawMessage]>,
+    presence: Option<&Presence>,
+) -> Vec<String> {
+    let mut authors: Vec<String> = Vec::new();
+    if let Some(messages) = messages {
+        for message in messages {
+            let (nick, _text) = super::window::message_parts(message);
+            if !nick.is_empty() && !authors.contains(&nick) {
+                authors.push(nick);
+            }
+        }
+    }
+    let present: Vec<String> = match presence {
+        None => return Vec::new(),
+        Some(Presence::List(entries)) => entries
+            .iter()
+            .filter_map(|e| match e {
+                PresenceEntry::Nick(n) if !n.is_empty() => Some(n.clone()),
+                _ => None,
+            })
+            .collect(),
+        Some(Presence::DictKeys(keys)) => keys
+            .iter()
+            .filter(|k| !k.is_empty())
+            .cloned()
+            .collect(),
+    };
+    let mut new_nicks: Vec<String> = Vec::new();
+    for nick in present {
+        if authors.contains(&nick) || new_nicks.contains(&nick) {
+            continue;
+        }
+        new_nicks.push(nick);
+    }
+    new_nicks
+}
+
+/// BRF-029: one offer record per new nick, mirroring Python's
+/// offer dict: room (empty room reads as "main"), nick, kind
+/// "onjoin", status "offered", offered_at, brief_generated
+/// false, brief_id None. The offer is the whole effect: this
+/// composes no brief text, stores nothing, and posts nothing.
+/// A brief comes into being only when `generate_brief` is
+/// invoked for that nick afterwards. `now` is a Unix time; when
+/// None, the wall clock is read (Python's `time.time()`).
+#[derive(Debug, Clone, PartialEq)]
+pub struct OnjoinOffer {
+    pub room: String,
+    pub nick: String,
+    pub kind: String,
+    pub status: String,
+    pub offered_at: i64,
+    pub brief_generated: bool,
+    pub brief_id: Option<String>,
+}
+
+pub fn offer_onjoin_brief(
+    messages: Option<&[RawMessage]>,
+    presence: Option<&Presence>,
+    room: &str,
+    now: Option<i64>,
+) -> Vec<OnjoinOffer> {
+    let offered_at = match now {
+        Some(t) => t,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs() as i64)
+            .unwrap_or(0),
+    };
+    let clean_room = if room.is_empty() { "main" } else { room };
+    detect_new_nicks(messages, presence)
+        .into_iter()
+        .map(|nick| OnjoinOffer {
+            room: clean_room.to_string(),
+            nick,
+            kind: "onjoin".to_string(),
+            status: "offered".to_string(),
+            offered_at,
+            brief_generated: false,
+            brief_id: None,
+        })
+        .collect()
+}
+
 /// Minimal morning-brief composer: sections in frozen order, no invention.
 pub fn compose_brief(room: &str, sections: &HashMap<String, String>) -> BriefRecord {
     const ORDER: &[&str] = &["held", "priority", "watch", "decisions", "recovery"];
@@ -3013,5 +3127,118 @@ mod tests {
         );
         assert_eq!(screenshot_digest_lines(Some(&[])), Vec::<String>::new());
         assert_eq!(screenshot_digest_lines(None), Vec::<String>::new());
+    }
+
+    #[test]
+    fn new_nick_yields_one_offer_record() {
+        use super::super::window::RawMessage;
+        let messages = vec![
+            RawMessage::Dict {
+                nick: "pax".into(),
+                text: "DECISION: ship the panel".into(),
+            },
+            RawMessage::Text("milo: working on the watchdog".into()),
+        ];
+        let presence = Presence::List(vec![
+            PresenceEntry::Nick("pax".into()),
+            PresenceEntry::Nick("milo".into()),
+            PresenceEntry::Nick("rowan".into()),
+        ]);
+        assert_eq!(
+            detect_new_nicks(Some(&messages), Some(&presence)),
+            vec!["rowan".to_string()]
+        );
+        assert_eq!(
+            offer_onjoin_brief(
+                Some(&messages),
+                Some(&presence),
+                "build",
+                Some(1793000000)
+            ),
+            vec![OnjoinOffer {
+                room: "build".into(),
+                nick: "rowan".into(),
+                kind: "onjoin".into(),
+                status: "offered".into(),
+                offered_at: 1793000000,
+                brief_generated: false,
+                brief_id: None,
+            }]
+        );
+    }
+
+    #[test]
+    fn new_nicks_bus_string_dict_and_empty_presence() {
+        use super::super::window::RawMessage;
+        // A bus-string message counts as prior presence.
+        let messages = vec![RawMessage::Text("rowan: just joined the room".into())];
+        let presence = Presence::List(vec![
+            PresenceEntry::Nick("rowan".into()),
+            PresenceEntry::Nick("buffy".into()),
+        ]);
+        assert_eq!(
+            detect_new_nicks(Some(&messages), Some(&presence)),
+            vec!["buffy".to_string()]
+        );
+        // No messages: a present nick is new (a job claim or caps
+        // entry is not an input here, so it cannot count).
+        assert_eq!(
+            detect_new_nicks(
+                Some(&[]),
+                Some(&Presence::List(vec![PresenceEntry::Nick(
+                    "rowan".into()
+                )]))
+            ),
+            vec!["rowan".to_string()]
+        );
+        // Dict presence: keys are the presence list.
+        let messages = vec![RawMessage::Dict {
+            nick: "rowan".into(),
+            text: "hello".into(),
+        }];
+        assert_eq!(
+            detect_new_nicks(
+                Some(&messages),
+                Some(&Presence::DictKeys(vec![
+                    "rowan".into(),
+                    "sam".into()
+                ]))
+            ),
+            vec!["sam".to_string()]
+        );
+        // No presence, no messages, dupes, empties, non-strings:
+        // none of these yield a nick.
+        assert_eq!(detect_new_nicks(None, None), Vec::<String>::new());
+        assert_eq!(
+            detect_new_nicks(Some(&[]), None),
+            Vec::<String>::new()
+        );
+        let messages = vec![RawMessage::Dict {
+            nick: "pax".into(),
+            text: "hi".into(),
+        }];
+        let presence = Presence::List(vec![
+            PresenceEntry::Nick("pax".into()),
+            PresenceEntry::Nick("pax".into()),
+            PresenceEntry::Nick("".into()),
+            PresenceEntry::Other,
+        ]);
+        assert_eq!(
+            detect_new_nicks(Some(&messages), Some(&presence)),
+            Vec::<String>::new()
+        );
+        assert_eq!(
+            offer_onjoin_brief(Some(&messages), Some(&presence), "build", None),
+            Vec::new()
+        );
+        // An empty room reads as "main", mirroring `room or "main"`.
+        let presence = Presence::List(vec![PresenceEntry::Nick("sam".into())]);
+        let offers =
+            offer_onjoin_brief(Some(&[]), Some(&presence), "", Some(100));
+        assert_eq!(offers.len(), 1);
+        assert_eq!(offers[0].room, "main");
+        assert_eq!(offers[0].nick, "sam");
+        assert_eq!(offers[0].brief_generated, false);
+        assert_eq!(offers[0].brief_id, None);
     }
 }
