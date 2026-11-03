@@ -26,7 +26,8 @@ class TestUnits(unittest.TestCase):
         u = _load("oc2-queue.service")
         self.assertEqual(u["Service"]["Type"], "simple")
         self.assertIn("Restart", u["Service"])
-        self.assertIn("StartLimitBurst", u["Service"])
+        self.assertIn("StartLimitBurst", u["Unit"])
+        self.assertNotIn("StartLimitIntervalSec", dict(u["Service"]))
         self.assertIn("${OC2_QUEUE_PORT}", u["Service"]["ExecStart"])
         env = open(os.path.join(_REPO, "agent-layer",
                                 "env.example")).read()
