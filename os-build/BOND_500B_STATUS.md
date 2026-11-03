@@ -700,30 +700,52 @@ callers now pass the step index they were already working from.
 Section 16 verification: 13 test files, **57 tests pass, 0 fail**; the whole agent
 suite (`node --test tests/agents-*.test.mjs`) is 127/127.
 
-## Section 17 — Face tests (CB2-401..425) — 0/25, blocked
+## Section 17 — Face tests (CB2-401..425) — 16/25 delivered, 9 blocked
 
-`face/face.js` is a classic browser script: zero `export`/`module.exports`,
-87 functions closing over `document` and `localStorage`, and no pure logic
-module. The section forbids editing face source, and a test-local fixture
-model would test the fixture rather than the app, so no test was written.
-Unblocking needs one of: extracting the calculator/calendar/notes/window
-logic into an importable module, or agreeing that fixture-model tests count.
+`face/face.js` was a classic browser script with 87 functions closing over
+`document` and `localStorage`. On Del's call the pure half was extracted into
+`face/logic.mjs` and `face.js` now imports it, so the desktop's rules are
+real functions a Node test can call — not a fixture model of them.
 
-Per-task check (2026-11-02):
-- CB2-401..405: there is no `tests/face-apps.test.mjs` and no
-  `tests/kernel-records.test.mjs` in the tree to re-check; the held files are
-  not present, so there is no fixture path to repair.
-- CB2-418..419: `DOCK` carries three systems only (imperium, musica, science).
-  Officina, Aegis, and Nervus have no dock entry, and no app-id -> repo-path
-  map exists, so "all six systems present" cannot be asserted without editing
-  face source. Custos is absent (checked).
+| Task | File | Result |
+|---|---|---|
+| CB2-406 | `tests/face-calculator-edges.test.mjs` | 8/0 shows `Error`; chained `2 + 3 * 4` is 20, not 14; clear and backspace reset the display |
+| CB2-407 | `tests/face-calculator-edges.test.mjs` | a second decimal point is ignored, the digits after it are kept; a leading dot starts `0.` |
+| CB2-408 | `tests/face-calculator-edges.test.mjs` | 15 entered digits stay exact; past that the display is raw `String()` — `1234567890123450`, `1e+29`, `0.30000000000000004` |
+| CB2-409 | `tests/face-calendar-edges.test.mjs` | Feb 2028 is 29 days, Feb 2026 is 28; Jan 31 + one month is Feb 1; all 24 month lengths pinned |
+| CB2-410 | `tests/face-calendar-edges.test.mjs` | leading blanks equal the first weekday index for five months; a grid is at most six rows |
+| CB2-411 | `tests/face-calendar-edges.test.mjs` | Dec to Jan rolls the year once; twelve shifts are exactly one year; multi-year jumps roll per year |
+| CB2-412 | `tests/face-notes-edges.test.mjs` | create, list newest-first, delete; a missing note reads `null` |
+| CB2-413 | `tests/face-notes-edges.test.mjs` | an empty body is allowed and pinned; whitespace is stored as typed, not trimmed |
+| CB2-414 | `tests/face-notes-edges.test.mjs` | a note serialises with exactly id/title/text and reloads intact; update never rewrites the id |
+| CB2-415 | `tests/face-terminal-commands.test.mjs` | status/help/uptime/mem/ps answer from the table; an unknown word says so and reprints the list |
+| CB2-416 | `tests/face-terminal-commands.test.mjs` | `clear` wipes the window and stays unlisted; the help list is exactly five words |
+| CB2-417 | `tests/face-terminal-commands.test.mjs` | empty and whitespace input print nothing; `sta tus` is an unknown command; non-strings are a no-op |
+| CB2-422 | `tests/face-settings-edges.test.mjs` | a boolean toggle round-trips without mutating the input; an unknown key is refused by name; every documented key is writable |
+| CB2-423 | `tests/face-files-edges.test.mjs` | Files and Trash list their own files; `..`, absolute and drive paths are refused; `withinRoot` answers instead of throwing |
+| CB2-424 | `tests/face-trash-edges.test.mjs` | delete keeps the original folder; restore returns the file to it with content intact; empty removes only trashed files |
+| CB2-425 | `tests/face-window-state.test.mjs` | open raises z; focus moves a window to the front without duplicating; close keeps the order; a focus on an unopened window is named |
+
+Why the face source was edited: the section's no-edit rule existed because
+`face.js` had no importable logic, so the only tests possible would have been
+fixture models. Del chose extraction over fixture models, and the extraction is
+what makes these sixteen tests test the app.
+
+Blocked, with the reason per task:
+- CB2-401..405: the five held node files are not in the tree — there is no
+  `tests/face-apps.test.mjs`, and no `tests/kernel-records.test.mjs`. There is
+  no stale assertion to fix and no fixture path to repair.
+- CB2-418..419: `DOCK` carries three systems (imperium, musica, science).
+  Officina, Aegis and Nervus have no dock entry and no app, so "all six systems
+  present" would need three new windows written to satisfy a test.
 - CB2-420..421: there is no test-mirror copy of the category list to compare
   with, and `js/products.js` has no per-category definition field: products
-  carry tagline/limitations, while categories are bare strings.
-- CB2-406..417, 422..425: no importable pure logic exists for calculator,
-  calendar, notes, terminal, settings, files, trash, or window state.
+  carry tagline/limitations, categories are bare strings.
 
-## Closeout — 460 of 500 delivered, 40 open
+Section 17 verification: eight face files, **21 tests pass, 0 fail**; the two
+existing face files (`face-code100` 9, `face-board-window` 4) still pass.
+
+## Closeout — 476 of 500 delivered, 24 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -735,18 +757,18 @@ one is open for a named reason, not for want of trying.
 | 14 Rust agent/dashboard/intel/stack | 21 | 4 |
 | 15 Schemas and validators | 25 | 0 |
 | 16 Agent layer Node | 23 | 2 |
-| 17 Face tests | 0 | 25 |
+| 17 Face tests | 16 | 9 |
 | 18 Tooling scripts | 25 | 0 |
 | 19 Officina and Musica | 20 | 5 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **460** | **40** |
+| **Total** | **476** | **24** |
 
-### The 40, by the decision that unblocks them
+### The 24, by the decision that unblocks them
 
-1. **Face source (25).** Section 17 forbids editing `face/face.js`, and that
-   file has no exports and 87 functions closing over the DOM. One yes unlocks
-   all 25: either extract the calculator/calendar/notes/terminal/window logic
-   into an importable module, or agree that fixture-model tests count.
+1. **Missing face data (9).** Five held test files are not in the tree, so
+   there is nothing to re-check; three dock systems and the products category
+   definitions do not exist in the face. The extraction answered the other
+   sixteen.
 2. **New APIs or a decision (4, Section 14).** CB2-329 needs a pure entry point
    that sees unparsed bytes; CB2-344/345 need a JSON entry point in the
    zero-dependency `queue-core`, or a Rust incident-record type to pin a key set

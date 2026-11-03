@@ -11,6 +11,9 @@ import { createBoardServer } from "../board/board.mjs";
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..");
 const FACE = path.join(ROOT, "face");
 const faceJs = fs.readFileSync(path.join(FACE, "face.js"), "utf8");
+// The shell's answers moved to the pure module in CB2-415..417, so a rule about
+// the help text has to be read where the text now lives.
+const faceLogic = fs.readFileSync(path.join(FACE, "logic.mjs"), "utf8");
 const indexHtml = fs.readFileSync(path.join(FACE, "index.html"), "utf8");
 const logoJs = fs.readFileSync(path.join(FACE, "logo-background.js"), "utf8");
 
@@ -90,14 +93,15 @@ test("CB-066 the board window renders the service record shape, not sample data"
 });
 
 test("CB-067 terminal help lists exactly the approved commands", () => {
-  const lines = [...faceJs.matchAll(/commands: ([^"'\\]+)/g)].map((m) => m[1].trim());
-  assert.ok(lines.length >= 2, "help and unknown-command replies read");
+  const text = faceJs + "\n" + faceLogic;
+  const lines = [...text.matchAll(/commands: ([^"'\\]+)/g)].map((m) => m[1].trim());
+  assert.ok(lines.length >= 1, "the help reply reads");
   for (const line of lines) assert.equal(line, "status help uptime mem ps");
-  assert.doesNotMatch(faceJs, /commands:.*\b(clear|ls|cat)\b/);
+  assert.doesNotMatch(text, /commands:.*\b(clear|ls|cat)\b/);
 });
 
 test("CB-068 dashboard record cards use fields present in the status payload", () => {
-  const status = faceJs.match(/STATUS tasks (\d+) heap_total (\d+K) milestone (K\d+)/);
+  const status = (faceJs + "\n" + faceLogic).match(/STATUS tasks (\d+) heap_total (\d+K) milestone (K\d+)/);
   assert.ok(status, "the status answer carries the payload");
   const card = faceJs.match(/Machine record<\/h4><div class="big">([^<]+)</);
   assert.ok(card, "machine record card exists");

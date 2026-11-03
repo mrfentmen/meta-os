@@ -5,10 +5,18 @@
 // committed boot log. Nothing here claims to be the kernel itself.
 "use strict";
 
+import {
+  calcKey, initialCalc, monthCells, shiftMonth, dayKey, DOW,
+  terminalAnswer, newNote, updateNote, deleteNote, findNote,
+  setSetting, filesIn, resolvePath, moveToTrash, restoreFromTrash, emptyTrash,
+  initialWindowState, openOrFocus, focusWindow, closeWindow
+} from "./logic.mjs";
+
 var $ = function (s) { return document.querySelector(s); };
 var windowsEl = $("#windows"), dockEl = $("#dock");
 var openWins = {};   // appId -> element
-var zTop = 20, cascade = 0;
+var winState = initialWindowState();   // focus order + top z, from logic.mjs
+var cascade = 0;
 var sessionStart = Date.now();
 
 /* ---------- settings (persisted) ---------- */
@@ -81,13 +89,17 @@ function openApp(id) {
   node.dataset.app = id;
   windowsEl.appendChild(node);
   def.build(node.querySelector(".win-body"));
-  node.querySelector(".win-close").addEventListener("click", function () { node.remove(); delete openWins[id]; markRunning(); });
+  node.querySelector(".win-close").addEventListener("click", function () { node.remove(); delete openWins[id]; winState = closeWindow(winState, id); markRunning(); });
   node.querySelector(".win-min").addEventListener("click", function () { node.hidden = true; });
   dragify(node);
   node.addEventListener("mousedown", function () { focusWin(node); });
   openWins[id] = node; focusWin(node); markRunning();
 }
-function focusWin(w) { w.style.zIndex = ++zTop; document.querySelectorAll(".window").forEach(function (x) { x.classList.toggle("focused", x === w); }); }
+function focusWin(w) {
+  winState = openOrFocus(winState, w.dataset.app);
+  w.style.zIndex = winState.z;
+  document.querySelectorAll(".window").forEach(function (x) { x.classList.toggle("focused", x === w); });
+}
 function dragify(node) {
   var bar = node.querySelector(".win-bar"), sx, sy, ox, oy, on = false;
   bar.addEventListener("mousedown", function (e) {
@@ -134,7 +146,7 @@ function buildFiles(body, trashOnly) {
   var list = body.querySelector(".files-list"), view = body.querySelector(".files-view");
   function render() {
     fs = loadFS();
-    var items = fs.filter(function (f) { return f.trashed === trashOnly; });
+    var items = filesIn(fs, trashOnly);
     list.innerHTML = items.length ? "" : '<div style="opacity:.6">' + (trashOnly ? "Trash is empty." : "No files.") + "</div>";
     items.forEach(function (f) {
       var row = document.createElement("div"); row.className = "file-row";
@@ -146,14 +158,14 @@ function buildFiles(body, trashOnly) {
     });
   }
   function showFile(f) {
-    view.innerHTML = '<div class="win-sub" style="margin-top:10px">' + f.folder + "/" + f.name + '</div><pre></pre>' +
+    view.innerHTML = '<div class="win-sub" style="margin-top:10px">' + resolvePath(f.folder, f.name) + '</div><pre></pre>' +
       '<div style="margin-top:8px">' + (trashOnly
         ? '<button class="mini-btn f-restore">Restore</button>'
         : '<button class="mini-btn f-del">Delete (to Trash)</button>') + "</div>";
     view.querySelector("pre").textContent = f.content;
     var rb = view.querySelector(".f-restore"), db = view.querySelector(".f-del");
-    if (rb) rb.addEventListener("click", function () { f.trashed = false; saveFS(fs); view.innerHTML = ""; render(); });
-    if (db) db.addEventListener("click", function () { f.trashed = true; saveFS(fs); view.innerHTML = ""; render(); });
+    if (rb) rb.addEventListener("click", function () { saveFS(restoreFromTrash(loadFS(), f.id)); view.innerHTML = ""; render(); });
+    if (db) db.addEventListener("click", function () { saveFS(moveToTrash(loadFS(), f.id)); view.innerHTML = ""; render(); });
   }
   var nb = body.querySelector(".files-new");
   if (nb) nb.addEventListener("click", function () {
@@ -164,7 +176,7 @@ function buildFiles(body, trashOnly) {
   });
   var eb = body.querySelector(".files-empty");
   if (eb) eb.addEventListener("click", function () {
-    fs = fs.filter(function (f) { return !f.trashed; }); saveFS(fs); view.innerHTML = ""; render();
+    fs = emptyTrash(loadFS()); saveFS(fs); view.innerHTML = ""; render();
   });
   render();
 }
@@ -181,22 +193,13 @@ var APPS = {
       function print(t) { out.textContent += t + "\n"; body.scrollTop = body.scrollHeight; }
       print("META OS 0.1 (K6)");
       print("META OS KERNEL - alive (K1)");
+      // The answers live in logic.mjs so the command table is testable; the
+      // window only prints what the table returns.
       function answer(cmd) {
         print("> " + cmd);
-        switch (cmd.trim().toLowerCase()) {
-          case "help": print("commands: status help uptime mem ps"); break;
-          case "status": print("STATUS tasks 7 heap_total 512K milestone K6"); break;
-          case "mem": print("mem frames_free 118784 heap_total 512K"); break;
-          case "ps":
-            print("ps id 1 state running (kernel)");
-            print("ps id 4 state sleeping (sleeper)");
-            print("ps id 7 state running (console)");
-            print("ps id 8 state held (readkey - spawn held until its boot proof)"); break;
-          case "uptime": print("uptime 141s ticks 14100"); break;
-          case "clear": out.textContent = ""; break;
-          case "": break;
-          default: print("unknown command"); print("commands: status help uptime mem ps");
-        }
+        var res = terminalAnswer(cmd);
+        if (res.clear) out.textContent = "";
+        res.lines.forEach(print);
       }
       input.addEventListener("keydown", function (e) { if (e.key === "Enter") { answer(input.value); input.value = ""; } });
       setTimeout(function () { input.focus(); }, 50);
@@ -271,17 +274,9 @@ var APPS = {
     build: function (body) {
       body.innerHTML = '<div class="calc"><div class="calc-disp">0</div><div class="calc-grid"></div></div>' +
         '<div class="win-sub" style="margin-top:8px">Real arithmetic, buttons and keyboard. State lives in this window only.</div>';
-      var disp = body.querySelector(".calc-disp"), cur = "0", prev = null, op = null, fresh = true;
-      function show() { disp.textContent = cur; }
-      function calc(a, b, o) { a = parseFloat(a); b = parseFloat(b); if (o === "+") return String(a + b); if (o === "-") return String(a - b); if (o === "*") return String(a * b); if (o === "/") return b === 0 ? "Error" : String(a / b); return String(b); }
-      function press(k) {
-        if (/[0-9.]/.test(k)) { if (fresh || cur === "0" || cur === "Error") { cur = k === "." ? "0." : k; fresh = false; } else if (k !== "." || !cur.includes(".")) cur += k; }
-        else if ("+-*/".includes(k)) { if (prev !== null && op && !fresh) cur = calc(prev, cur, op); prev = cur; op = k; fresh = true; }
-        else if (k === "=" || k === "Enter") { if (prev !== null && op) { cur = calc(prev, cur, op); prev = null; op = null; fresh = true; } }
-        else if (k === "C" || k === "Escape") { cur = "0"; prev = null; op = null; fresh = true; }
-        else if (k === "Backspace") { cur = cur.length > 1 ? cur.slice(0, -1) : "0"; }
-        show();
-      }
+      var disp = body.querySelector(".calc-disp"), state = initialCalc();
+      function show() { disp.textContent = state.cur; }
+      function press(k) { state = calcKey(state, k); show(); }
       var keys = ["C", "(", ")", "/", "7", "8", "9", "*", "4", "5", "6", "-", "1", "2", "3", "+", "0", ".", "=", "⌫"];
       var grid = body.querySelector(".calc-grid");
       keys.forEach(function (k) {
@@ -313,18 +308,20 @@ var APPS = {
           d.addEventListener("click", function () { active = n.id; sync(); render(); });
           list.appendChild(d);
         });
-        var cur = notes.find(function (n) { return n.id === active; });
+        var cur = findNote(notes, active);
         title.value = cur ? cur.title : ""; text.value = cur ? cur.text : "";
         title.disabled = text.disabled = !cur;
       }
-      function sync() { var cur = notes.find(function (n) { return n.id === active; }); if (cur) { cur.title = title.value; cur.text = text.value; } }
+      function sync() {
+        if (findNote(notes, active)) notes = updateNote(notes, active, { title: title.value, text: text.value });
+      }
       title.addEventListener("input", function () { sync(); save(); render(); });
       text.addEventListener("input", function () { sync(); save(); });
       body.querySelector(".notes-new").addEventListener("click", function () {
-        var n = { id: Date.now(), title: "Untitled", text: "" }; notes.unshift(n); active = n.id; save(); render();
+        notes = newNote(notes, Date.now()); active = notes[0].id; save(); render();
       });
       body.querySelector(".notes-del").addEventListener("click", function () {
-        notes = notes.filter(function (n) { return n.id !== active; }); active = notes.length ? notes[0].id : null; save(); render();
+        notes = deleteNote(notes, active); active = notes.length ? notes[0].id : null; save(); render();
       });
       render();
     }
@@ -333,31 +330,28 @@ var APPS = {
     title: "Calendar",
     build: function (body) {
       var events = JSON.parse(localStorage.getItem("metaos-face-events") || "{}");
-      var view = new Date(); view.setDate(1);
+      var view = { year: new Date().getFullYear(), month: new Date().getMonth() };
       body.innerHTML = '<div class="cal-head"><button class="mini-btn cal-prev">&lt;</button><b class="cal-name"></b><button class="mini-btn cal-next">&gt;</button></div>' +
         '<div class="cal-grid"></div><div class="cal-detail"></div>';
       var grid = body.querySelector(".cal-grid"), name = body.querySelector(".cal-name"), detail = body.querySelector(".cal-detail");
       var today = new Date();
-      function key(d) { return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate(); }
       function render() {
-        name.textContent = view.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+        name.textContent = new Date(view.year, view.month, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
         grid.innerHTML = "";
-        ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].forEach(function (d) { var h = document.createElement("div"); h.className = "cal-dow"; h.textContent = d; grid.appendChild(h); });
-        var first = new Date(view), days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
-        for (var i = 0; i < first.getDay(); i++) grid.appendChild(document.createElement("div"));
-        for (var dnum = 1; dnum <= days; dnum++) {
-          (function (dn) {
-            var cell = document.createElement("button"); cell.className = "cal-day";
-            var dt = new Date(view.getFullYear(), view.getMonth(), dn);
-            if (dt.toDateString() === today.toDateString()) cell.classList.add("today");
-            cell.textContent = dn + (events[key(dt)] ? " •" : "");
-            cell.addEventListener("click", function () { showDay(dt); });
-            grid.appendChild(cell);
-          })(dnum);
-        }
+        DOW.forEach(function (d) { var h = document.createElement("div"); h.className = "cal-dow"; h.textContent = d; grid.appendChild(h); });
+        var cells = monthCells(view.year, view.month);
+        for (var i = 0; i < cells.leading; i++) grid.appendChild(document.createElement("div"));
+        cells.days.forEach(function (dn) {
+          var cell = document.createElement("button"); cell.className = "cal-day";
+          var dt = new Date(view.year, view.month, dn);
+          if (dt.toDateString() === today.toDateString()) cell.classList.add("today");
+          cell.textContent = dn + (events[dayKey(dt)] ? " •" : "");
+          cell.addEventListener("click", function () { showDay(dt); });
+          grid.appendChild(cell);
+        });
       }
       function showDay(dt) {
-        var k = key(dt), list = events[k] || [];
+        var k = dayKey(dt), list = events[k] || [];
         detail.innerHTML = '<div class="win-sub" style="margin-top:10px">' + dt.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }) + '</div>' +
           (list.length ? list.map(function (e) { return "<div>• " + e + "</div>"; }).join("") : '<div style="opacity:.6">No events.</div>') +
           '<div class="board-post"><input placeholder="Add an event"><button>Add</button></div>';
@@ -366,8 +360,8 @@ var APPS = {
         detail.querySelector("button").addEventListener("click", add);
         input.addEventListener("keydown", function (e) { if (e.key === "Enter") add(); });
       }
-      body.querySelector(".cal-prev").addEventListener("click", function () { view.setMonth(view.getMonth() - 1); render(); });
-      body.querySelector(".cal-next").addEventListener("click", function () { view.setMonth(view.getMonth() + 1); render(); });
+      body.querySelector(".cal-prev").addEventListener("click", function () { view = shiftMonth(view, -1); render(); });
+      body.querySelector(".cal-next").addEventListener("click", function () { view = shiftMonth(view, 1); render(); });
       render();
     }
   },
@@ -398,12 +392,12 @@ var APPS = {
         });
       }
       function wireAll() {
-        wire("#set-mode", "mode", function (v) { settings.mode = v; });
-        wire("#set-bar", "bar", function (v) { settings.bar = v; });
-        wire("#set-speed", "speed", function (v) { settings.speed = +v; });
-        wire("#set-paused", "paused", function (v) { settings.paused = v === "1"; });
-        wire("#set-variant", "variant", function (v) { settings.variant = v; });
-        wire("#set-bg", "bg", function (v) { settings.bg = v; });
+        wire("#set-mode", "mode", function (v) { settings = setSetting(settings, "mode", v); });
+        wire("#set-bar", "bar", function (v) { settings = setSetting(settings, "bar", v); });
+        wire("#set-speed", "speed", function (v) { settings = setSetting(settings, "speed", +v); });
+        wire("#set-paused", "paused", function (v) { settings = setSetting(settings, "paused", v === "1"); });
+        wire("#set-variant", "variant", function (v) { settings = setSetting(settings, "variant", v); });
+        wire("#set-bg", "bg", function (v) { settings = setSetting(settings, "bg", v); });
       }
       wireAll();
     }
