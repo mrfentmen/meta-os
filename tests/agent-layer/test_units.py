@@ -39,7 +39,17 @@ class TestUnits(unittest.TestCase):
         self.assertIn("--max-checks", u["Service"]["ExecStart"])
         self.assertIn("oc2-queue.service", u["Unit"].get("After", "")
                       + u["Unit"].get("Requires", ""))
+        self.assertIn("oc2-trio.service", u["Unit"].get("After", "")
+                      + u["Unit"].get("Requires", ""))
         self.assertIn("Install", u.sections())
+
+    def test_trio_drains_queue(self):
+        u = _load("oc2-trio.service")
+        self.assertEqual(u["Service"]["Type"], "simple")
+        self.assertIn("trio_agent.py", u["Service"]["ExecStart"])
+        self.assertIn("oc2-queue.service",
+                      u["Unit"].get("After", "") + u["Unit"].get("Requires", ""))
+        self.assertIn("Restart", u["Service"])
 
     def test_queue_starts_uncapped(self):
         u = _load("oc2-queue.service")

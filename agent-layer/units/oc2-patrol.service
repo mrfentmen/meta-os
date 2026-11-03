@@ -1,8 +1,8 @@
 [Unit]
 Description=OC2 agent layer: patrol cycle (bounded run at login + timer)
-After=network-online.target oc2-queue.service
+After=network-online.target oc2-queue.service oc2-trio.service
 Wants=network-online.target
-Requires=oc2-queue.service
+Requires=oc2-queue.service oc2-trio.service
 
 [Service]
 Type=oneshot
