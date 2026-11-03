@@ -36,6 +36,19 @@ loose in the working tree. Merges were done from a separate worktree
 3. `agent-1` `4d91419b` — 8 new tiles, 6 new icons, `metaos-update.sh` site copy,
    `AGENT_1_REPORT.md`. Clean. main `082a6f02`.
 4. My two fixes on top (see below), then `agent-1` again → main `0513ed18`.
+5. My source-tracking and vendor commits, then `agent-1` again → `4e17a7cd`.
+6. `agent-2` `c03f13a1` — pages + shared three.js, 0 conflicts (the deletion of
+   the per-page vendor copies only merges cleanly *because* the root
+   `vendor/three.min.js` was already in main).
+
+**What the image is running right now is older than all of this.** Mounted
+read-only while agent-4's VM was up: `/opt/face/meta-desktop.sh` has **19**
+tiles (repo: 27), `/usr/share/icons/metaos` has **22** icons (repo: 26), there
+is no `/opt/face-site/aegis`, and `session.sh` has no plank guard. Its
+`/etc/os-release` is correct (`Meta OS 1.0 (Ribbon)`, `ID=metaos`) and
+`/opt/face-site/bus.html` plus `notesd.py` and the three native apps are there.
+So the guest needs one re-provision run before the demo shows the 27-tile dock,
+the six new icons, Aegis and the single-dock fix.
 
 After every merge: `git status --porcelain` empty, every tracked `*.json` parses
 (`bad_json=0`), every tracked `*.sh` passes `sh -n`/`bash -n` by its own shebang
@@ -79,12 +92,23 @@ panel has a visible missing-file line naming the port. Its own report says the
 page is not installed on the image yet — that is the one claim that is still
 true and still a gap.
 
-### agent-2 / agent-4 — nothing to review yet
+### agent-2 — merged after review
 
-No commits. Their work is in the shared tree as uncommitted changes, and agent-4
-has a QEMU up (serial `/tmp/agent4-ser.sock`, monitor `/tmp/agent4-mon.sock`,
-repo mounted read-only through virtfs), so it is mid-proof. Do not touch
-`/tmp/metaos.ext4` or start a second VM while that is alive.
+`c03f13a1` — 13 pages, `AGENT_2_REPORT.md`, 13 screenshots. What I checked
+myself: no off-localhost automatic request anywhere (only user-initiated
+anchors and the explicit "Load CID" PubChem fetch), the shared
+`vendor/three.min.js` is present and answers 200, and all four 3D pages run the
+real path on the merged tree (`Caffeine — C8H10N4O2 … 24 atoms, 25 bonds`,
+`Stopped. Press Play.`). Its failure lines name the port in the house style and
+it removed the phone-push feature that called an external worker. Accepted.
+
+### agent-4 — still running, nothing to review
+
+No commit. Its QEMU is alive (serial `/tmp/agent4-ser.sock`, monitor
+`/tmp/agent4-mon.sock`, repo mounted read-only through virtfs). Do not touch
+`/tmp/metaos.ext4` or start a second VM while that is alive. I did borrow one
+`screendump` from its monitor for `captures/dock-live-…T2109Z.png` — read-only,
+no input sent to the guest.
 
 ## What I fixed myself (files nobody was editing at the time)
 
