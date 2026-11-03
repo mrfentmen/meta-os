@@ -170,6 +170,33 @@ class Health(unittest.TestCase):
         shutil.copytree(self.root, root, symlinks=True)
         return root
 
+class LoginHook(unittest.TestCase):
+    """The autostart hook must start the timer, or the cadence never runs."""
+
+    def test_hook_starts_all_four_units(self):
+        tmp = Path(tempfile.mkdtemp(prefix="hook-"))
+        try:
+            bindir = tmp / "bin"
+            bindir.mkdir()
+            calls = tmp / "calls"
+            fake = bindir / "systemctl"
+            fake.write_text('#!/bin/sh\nprintf "%s\\n" "$*" >> "' + str(calls) + '"\n')
+            fake.chmod(0o755)
+            home = tmp / "home"
+            (home / ".config").mkdir(parents=True)
+            env = {**os.environ, "PATH": "%s:%s" % (bindir, os.environ["PATH"]),
+                   "HOME": str(home)}
+            env.pop("SPARK_API_KEY", None)
+            result = subprocess.run(["bash", str(REPO / "agent-layer/meta-agent-login.sh")],
+                                    capture_output=True, text=True, env=env, timeout=60)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            started = calls.read_text().splitlines()
+            for unit in ("oc2-queue.service", "oc2-trio.service",
+                         "oc2-patrol.timer", "oc2-health.timer"):
+                self.assertIn("--user start " + unit, started)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

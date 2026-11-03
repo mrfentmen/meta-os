@@ -4,7 +4,8 @@
 # Runs from /etc/xdg/autostart, so a failure here must not block the desktop.
 # It seeds the per-user env if the account predates the image, imports a key
 # if one is already in the environment (never writes it), then starts the
-# three units the stager enabled.
+# four units the stager enabled (the health one is a timer, so the check cannot
+# drift into never running).
 #
 #   meta-agent-login.sh [--dry-run]
 #
@@ -17,7 +18,7 @@ DRY=0
 
 CONF="${XDG_CONFIG_HOME:-$HOME/.config}/oc2-agent"
 SHARE="${METAOS_AGENT_SHARE:-/usr/share/metaos/agent}"
-UNITS=(oc2-queue.service oc2-trio.service oc2-patrol.timer)
+UNITS=(oc2-queue.service oc2-trio.service oc2-patrol.timer oc2-health.timer)
 rc=0
 
 if [ ! -f "$CONF/env" ] && [ -f "$SHARE/env" ]; then
