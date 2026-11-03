@@ -25,7 +25,9 @@ esac
 
 fail=0
 log="$(mktemp "${TMPDIR:-/tmp}/metaos-precut.XXXXXX")"
-trap 'rm -f "$log"' EXIT
+root=""
+cleanup() { rm -f "$log"; [ -n "$root" ] && rm -rf "$root"; }
+trap cleanup EXIT
 
 echo "== lane"
 if iso/tools/verify_lane.sh >"$log" 2>&1; then
@@ -35,6 +37,22 @@ else
   tail -20 "$log"
   fail=1
 fi
+
+echo "== agent layer"
+root="$(mktemp -d "${TMPDIR:-/tmp}/metaos-precut-root.XXXXXX")"
+mkdir -p "$root/etc" "$root/usr"
+# Stage into a throwaway root and check it: this proves the image would get the
+# runtime, the units and the cadence, not that a branch once said it would.
+if sh agent-layer/stage.sh "$root" >"$log" 2>&1 \
+   && sh agent-layer/stage.sh "$root" --check >>"$log" 2>&1; then
+  echo "AGENT LAYER GREEN"
+else
+  echo "AGENT LAYER RED"
+  tail -10 "$log"
+  fail=1
+fi
+rm -rf "$root"
+root=""
 
 echo "== claims"
 if python3 iso/tools/check_claims.py >"$log" 2>&1; then
