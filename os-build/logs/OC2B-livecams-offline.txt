@@ -1,0 +1,8 @@
+# OC2B-132 — 12/12 livecam offline tests (subset run, no VM, no network)
+subset: test_livecam_record_validate + test_livecams_cli_parse +
+parse_edges + pick + roundrobin + snapshot + livecams + guardrail_refusal
+result: 47 passed, 0 failed (0.22s, build host)
+Covers: record validation, CLI parse, pick/roundrobin determinism,
+snapshot paths, guardrail refusal. Full 629-suite green separately
+(OC2B-queue-suite.txt). Live assess-one (OC2B-134) BLOCKED: needs camera
+network + model key — recorded, not faked.

@@ -1,0 +1,12 @@
+# OC2B-201/202 — Cross-check: §11 film reproduced
+
+Clean worktree file (no re-render, read-only verify):
+`os-build/demo/demo-3min.mp4` (719410 bytes).
+
+- `ffprobe -show_entries format=duration` → `180.000000` EXACT.
+- `shasum -a 256` →
+  `a29bc47dd56e9f583d8af231d8d3908f3a4c4d6218fb1b3492ce5381b3ae13f0`.
+
+Verdict: AGREE — duration matches the §11 claim to the microsecond
+on the committed bytes. No mutation performed (read-only
+ffprobe + shasum); attestation: this file was not written by OC2.
