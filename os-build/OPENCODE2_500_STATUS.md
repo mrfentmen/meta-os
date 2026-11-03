@@ -355,3 +355,7 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Fixes: check.mjs skips .venv/__pycache__/.pyc + 11-path documented allowlist; web check is baseline-enforced (same npm-baseline.txt, 7-min timeout); ci.yml Node step runs npm-gate.mjs (blocking, fails only on NEW failures); readiness comment updated.
 - Proof this tree: secret scan PASS, npm-gate GREEN (56/56 baselined), Python 637 OK, check.mjs READINESS 5/5 exit 0. Negative path verified (synthetic new failure → exit 1).
 - Merges resume one at a time after this lands.
+
+## OC2 S20 — 2026-11-03 — CI deps fix (no VM)
+- Root cause of recurring red: CI's Python job ran the suite on bare setup-python with no deps. 2 tests need PIL at runtime (face-crop + auto-dispatch); reproduced on bare python3.14: 637 ran, FAILED errors=2, both ModuleNotFoundError: PIL. Server code itself degrades honestly (lazy imports) — only the tests need the packages.
+- Fix: `pip install pillow numpy` step before the suite (mirrors install.sh pip fallback). No code touched.
