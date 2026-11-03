@@ -47,8 +47,10 @@ rm -f "$WORK/rootfs/etc/resolv.conf"
 echo "=== repack single squashfs ==="
 mksquashfs "$WORK/rootfs" "$WORK/iso/casper/filesystem.squashfs" -noappend -b 131072 -comp xz -no-progress > /dev/null
 rm -f "$WORK/iso/casper/minimal.squashfs" "$WORK/iso/casper/minimal.standard.squashfs" "$WORK/iso/casper/minimal.standard.live.squashfs"
-chroot-uid-fix() { :; }; du -sb "$WORK/rootfs" | awk '{print $1}' > "$WORK/iso/casper/filesystem.size"
-chroot "$WORK/iso" true 2>/dev/null || true
+du -sb "$WORK/rootfs" | awk '{print $1}' > "$WORK/iso/casper/filesystem.size"
+mount --bind /dev "$WORK/rootfs/dev"
+chroot "$WORK/rootfs" dpkg-query -W -f='${Package} ${Version}\n' > "$WORK/iso/casper/filesystem.manifest" 2>/dev/null
+umount "$WORK/rootfs/dev" 2>/dev/null || true
 echo "=== rewrite install-sources.yaml (single source) ==="
 SZ=$(cat "$WORK/iso/casper/filesystem.size")
 cat > "$WORK/iso/casper/install-sources.yaml" <<YAML
