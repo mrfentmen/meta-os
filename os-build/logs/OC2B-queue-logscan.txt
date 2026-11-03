@@ -1,0 +1,17 @@
+# OC2B-066 — Queue log scan: no secrets at any level
+
+Method: grep for key-material shapes across every new §3 artifact +
+appliance logs (key deliberately ABSENT from env this session, so a
+clean scan is expected — recorded, not assumed):
+
+- `OC2B-queue-e2e.json`, `OC2B-queue-e2e-run.json`,
+  `OC2B-queue-10.jsonl`, `OC2B-queue-nokey.json`,
+  `OC2B-queue-bad.txt` — scanned at commit: 0 hits for
+  `BEGIN ... PRIVATE KEY`, `sk-[A-Za-z0-9]{20,}`, `SPARK_API_KEY\s*=`.
+- Error strings name the missing key (`SPARK_API_KEY is not set...`)
+  as a CONFIG NAME in prose, never a value. That is the honest
+  refusal path, not a leak (same standard as the branch secrets
+  sweeps: names documented, values never assigned).
+- Appliance proof logs: 0 hits (OC2B-logscan.txt, S11).
+
+Verdict: CLEAN — no key material in any §3 log or receipt.

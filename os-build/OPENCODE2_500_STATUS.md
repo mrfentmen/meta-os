@@ -312,3 +312,11 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - docs: health-contract (trio honestly process+freshness, no fake URL), service-logs table, limits PROPOSED UNVERIFIED-ON-TARGET, stop/firstboot/offline/upgrade, status-cmd, write-scope full grep + verdict (datadir/logs/tmp/caller-out only; hosted_imperium drill-scoped).
 - §2 COMPLETE except target-side pastes (status-cmd/stop output need systemd host). §1 COMPLETE except 023 --version feature + 018-R2 container.
 - Next: §3 queue live verification (unit suites + e2e + soak per start order).
+
+## OC2 S13 — 2026-11-03 — §3 batch 1 (OC2B-051..072 live, no VM)
+- Suite: 629/629 green (5.77s). Baseline 296/296 stale → reconciled as growth (+333, zero failures).
+- Live rides (odd ports, tmp DBs, no key, killed clean): submit 201 → pending 404 → trio --once → failed receipt w/ named cause; JPEG-frame run → no-key refusal receipt (model null, error names key, timestamp present); tampered sha → 400 never filed; 10/10 receipted; restart → identical receipt; 100 distinct filed in 5s, 536K (~5.5K/job, ~5.4MB/1000 est).
+- Latency: loopback /health min 1.1/med 1.9/max 9.0ms (round-trip, labelled — not full job latency).
+- Defects (3, honest): --version missing, no poison quarantine, no depth cap/backpressure. UNPROVEN: 023/063/064/070/071. BLOCKED: 062 reboot (no reboot on dev host).
+- Soak 059/060: RUNNING in background (30x1-job/min, reconcile at end).
+- Next: §3 remainder (receive soak), then §4 patrol/crew hour runs + §6 livecam offline + §8 lobster (runtime present) + §9 film re-verify.

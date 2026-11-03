@@ -1,0 +1,12 @@
+{
+  "job_id": "trio-3f4f79f066ae03b6ff46d106dc2d116e",
+  "receipt": {
+    "job_id": "trio-3f4f79f066ae03b6ff46d106dc2d116e",
+    "status": "failed",
+    "assessment": null,
+    "error": "generation failed: SPARK_API_KEY is not set in the environment and TRIO_SPARK_VIA_HELPER is not 1: no generation transport is configured",
+    "model": null,
+    "latency_ms": null,
+    "completed_at": "2026-11-03T07:13:39.744Z"
+  }
+}

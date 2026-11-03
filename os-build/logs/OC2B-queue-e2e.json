@@ -1,0 +1,12 @@
+{
+  "job_id": "trio-f72864186bcd9c57cdbfc50833916997",
+  "receipt": {
+    "job_id": "trio-f72864186bcd9c57cdbfc50833916997",
+    "status": "failed",
+    "assessment": null,
+    "error": "generation failed: image is not a JPEG (magic bytes missing)",
+    "model": null,
+    "latency_ms": null,
+    "completed_at": "2026-11-03T07:13:27.643Z"
+  }
+}

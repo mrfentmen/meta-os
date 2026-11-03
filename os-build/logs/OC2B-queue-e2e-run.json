@@ -1,0 +1,69 @@
+{
+  "port": 18941,
+  "ns": "e2e-live",
+  "steps": [
+    {
+      "step": "health",
+      "data": {
+        "status": 200,
+        "store": "local-sqlite-FALLBACK"
+      }
+    },
+    {
+      "step": "submit",
+      "data": {
+        "status": 201,
+        "jobId": "trio-f72864186bcd9c57cdbfc50833916997"
+      }
+    },
+    {
+      "step": "result-before-process",
+      "data": {
+        "status": 404,
+        "state": "pending"
+      }
+    },
+    {
+      "step": "trio-once",
+      "data": {
+        "rc": 0,
+        "out": "{\"done\": [], \"failed\": [\"trio-f72864186bcd9c57cdbfc50833916997\"], \"skipped\": [], \"lost\": []}"
+      }
+    },
+    {
+      "step": "result-after-process",
+      "data": {
+        "status": 200,
+        "state": "failed",
+        "model": null,
+        "error": "generation failed: image is not a JPEG (magic bytes missing)",
+        "completed_at": "2026-11-03T07:13:27.643Z",
+        "has_assessment": false
+      }
+    },
+    {
+      "step": "tampered-submit",
+      "data": {
+        "status": 400,
+        "body": {
+          "error": "refused job: image.sha256 does not match the decoded frame"
+        }
+      }
+    },
+    {
+      "step": "ten-jobs",
+      "data": {
+        "done": 10,
+        "all_receipted": true
+      }
+    },
+    {
+      "step": "restart-survival",
+      "data": {
+        "status": 200,
+        "state": "failed",
+        "same_receipt": true
+      }
+    }
+  ]
+}

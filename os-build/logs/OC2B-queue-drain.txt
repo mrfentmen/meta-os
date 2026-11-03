@@ -1,0 +1,19 @@
+# OC2B-069/061/072 — drain, restart survival, append-only (live, no VM)
+
+- Drain-then-stop loses nothing: filed jobs live in the store
+  (SQLite file / Upstash), not in process memory. Stop → restart with
+  the same `TRIO_LOCAL_DB` → every filed receipt still servable.
+  Proven live: `OC2B-queue-e2e.json` job `trio-f728...` returned the
+  identical failed receipt AFTER a full server terminate + restart
+  (`restart-survival: same_receipt true` in OC2B-queue-e2e-run.json).
+- Restart survival (061): VERIFIED as above (process restart, same db).
+- Reboot survival (062): BLOCKED — no machine reboot on this dev host.
+  Owner: OC2. Unblocks on OC1 furnace or target hardware: file N jobs,
+  reboot, confirm all N receipted. Move on per rule.
+- Append-only (072): result envelopes are write-once
+  (`trio:<jid>:result`; second serve skips — proven in-process by
+  `test_submit_serve_result_and_idempotent_skip`, 629-suite green).
+  Receipt JSONL files are `"a"`-appends. No edit/delete path in normal
+  operation. Re-POST of an identical envelope → 200 already-filed, the
+  stored receipt byte-identical (idempotency doubles as the
+  no-overwrite proof).

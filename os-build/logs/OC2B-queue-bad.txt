@@ -1,0 +1,1 @@
+tampered-sha POST status=400 body={"error": "refused job: image.sha256 does not match the decoded frame"}
