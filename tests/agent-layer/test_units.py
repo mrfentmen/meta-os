@@ -2,6 +2,7 @@
 import configparser
 import os
 import re
+import sys
 import unittest
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -105,6 +106,67 @@ class TestUnits(unittest.TestCase):
         src = open(os.path.join(_REPO, "agent-layer", "env.example")).read()
         self.assertIn("OC2_CHECKOUT=", src)
         self.assertNotIn("SPARK_API_KEY=", src)
+
+    def test_manifest_fresh(self):
+        import hashlib
+        import io
+        from contextlib import redirect_stdout
+        sys.path.insert(0, os.path.join(_REPO, "agent-layer"))
+        import manifest as man
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            man.main()
+        generated = buf.getvalue()
+        committed = open(os.path.join(_REPO, "agent-layer",
+                                      "MANIFEST.md")).read()
+        self.assertEqual(generated, committed)
+
+    def test_make_seed_script(self):
+        import subprocess
+        import tempfile
+        out = os.path.join(tempfile.mkdtemp(), "seed-test.iso")
+        r = subprocess.run(["sh", os.path.join(_REPO, "agent-layer",
+                                               "make-seed.sh"),
+                            out, "oc2-test-001"],
+                           capture_output=True, text=True, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stderr[-500:])
+        self.assertTrue(os.path.exists(out))
+        self.assertGreater(os.path.getsize(out), 100000)
+
+    def test_verify_dropin_script(self):
+        import shutil
+        import subprocess
+        import tempfile
+        td = tempfile.mkdtemp()
+        units = os.path.join(td, "units")
+        os.makedirs(units)
+        home = os.path.join(td, "home")
+        cfg = os.path.join(home, ".config", "oc2-agent")
+        os.makedirs(cfg)
+        for f in os.listdir(os.path.join(_REPO, "agent-layer", "units")):
+            shutil.copy(os.path.join(_REPO, "agent-layer", "units", f),
+                        os.path.join(units, f))
+        with open(os.path.join(cfg, "env"), "w") as fh:
+            fh.write("OC2_CHECKOUT=/x\n")
+        env = dict(os.environ, HOME=home)
+        r = subprocess.run(["sh", os.path.join(_REPO, "agent-layer",
+                                               "verify-dropin.sh"),
+                            os.path.join(_REPO, "agent-layer",
+                                         "MANIFEST.md"),
+                            units, os.path.join(cfg, "env")],
+                           capture_output=True, text=True, timeout=60,
+                           env=env)
+        self.assertEqual(r.returncode, 0, r.stdout[-500:])
+        with open(os.path.join(units, "oc2-queue.service"), "a") as fh:
+            fh.write("# tamper\n")
+        r2 = subprocess.run(["sh", os.path.join(_REPO, "agent-layer",
+                                                "verify-dropin.sh"),
+                             os.path.join(_REPO, "agent-layer",
+                                          "MANIFEST.md"),
+                             units, os.path.join(cfg, "env")],
+                            capture_output=True, text=True, timeout=60,
+                            env=env)
+        self.assertNotEqual(r2.returncode, 0)
 
 
 if __name__ == "__main__":

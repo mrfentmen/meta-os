@@ -1,0 +1,59 @@
+Nov 03 00:03:43 metaos systemd[438]: Started oc2-queue.service - OC2 agent layer: queue service (local job API 127.0.0.1:8935).
+Nov 03 00:03:43 metaos systemd[438]: Started oc2-trio.service - OC2 agent layer: trio job runner (drains the local queue).
+Nov 03 00:03:48 metaos python3[454]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 03 00:03:48 metaos python3[454]: trio_agent: WARNING — local SQLite FALLBACK store; jobs live in a file on this machine only
+Nov 03 00:03:48 metaos python3[454]: trio_agent: store=local-sqlite-FALLBACK namespace=oc2
+Nov 03 00:03:57 metaos python3[453]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 03 00:03:57 metaos python3[453]: queue_service: store=local-sqlite-FALLBACK fallback=True namespace=oc2
+Nov 03 00:03:57 metaos python3[453]: queue_service: WARNING — local SQLite FALLBACK store; jobs live in a file on this machine only
+Nov 03 00:03:59 metaos python3[455]: patrol: camera list source: nyctmc-live (972 online cameras)
+Nov 03 00:03:59 metaos python3[455]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 03 00:03:59 metaos python3[455]: crew: WARNING — local SQLite FALLBACK store
+Nov 03 00:05:01 metaos systemd[438]: oc2-patrol.service: Main process exited, code=killed, status=15/TERM
+Nov 03 00:05:01 metaos systemd[438]: oc2-patrol.service: Failed with result 'signal'.
+Nov 03 00:05:01 metaos systemd[438]: oc2-patrol.service: Consumed 5.716s CPU time.
+Nov 03 00:05:01 metaos systemd[438]: Stopping oc2-trio.service - OC2 agent layer: trio job runner (drains the local queue)...
+Nov 03 00:05:01 metaos systemd[438]: Stopped oc2-trio.service - OC2 agent layer: trio job runner (drains the local queue).
+Nov 03 00:05:01 metaos systemd[438]: oc2-trio.service: Consumed 1.716s CPU time.
+Nov 03 00:05:01 metaos systemd[438]: Started oc2-trio.service - OC2 agent layer: trio job runner (drains the local queue).
+Nov 03 00:05:02 metaos python3[534]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 03 00:05:02 metaos python3[534]: trio_agent: WARNING — local SQLite FALLBACK store; jobs live in a file on this machine only
+Nov 03 00:05:02 metaos python3[534]: trio_agent: store=local-sqlite-FALLBACK namespace=oc2
+Nov 03 00:05:03 metaos systemd[438]: oc2-patrol.service: Main process exited, code=killed, status=15/TERM
+Nov 03 00:05:03 metaos systemd[438]: oc2-patrol.service: Failed with result 'signal'.
+Nov 03 00:05:03 metaos systemd[438]: oc2-patrol.service: Consumed 1.411s CPU time.
+Nov 03 00:05:08 metaos python3[547]: patrol: camera list source: nyctmc-live (972 online cameras)
+Nov 03 00:05:08 metaos python3[547]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 03 00:05:08 metaos python3[547]: crew: WARNING — local SQLite FALLBACK store
+Nov 03 00:05:22 metaos python3[534]: trio_agent: trio-95262836f282db3f4378d8acef198507: done — normal activity
+Nov 03 00:05:56 metaos python3[534]: trio_agent: trio-395c8e839d77e1154936bdecc940ff64: done — no hazard visible
+Nov 03 00:06:39 metaos python3[534]: trio_agent: trio-8dc27ee5d6522cfb2bfc1575ff10624c: done — normal activity
+Nov 03 00:07:15 metaos python3[534]: trio_agent: trio-41efe7cb3b35f5f066c921d1228bd34c: done — normal activity
+Nov 03 00:07:54 metaos python3[534]: trio_agent: trio-bac8a13c13572cb574772d11e448022e: done — no hazard visible
+Nov 03 00:08:35 metaos python3[534]: trio_agent: trio-d4fceb97ef9b8fc4a8c96a19c6fdda2c: model output failed validation (assessment.requires_human_review: must be true for medicus — every Medicus assessment requires human verification); one correction retry
+Nov 03 00:08:46 metaos python3[534]: trio_agent: trio-d4fceb97ef9b8fc4a8c96a19c6fdda2c: correction retry validated
+Nov 03 00:08:46 metaos python3[534]: trio_agent: trio-d4fceb97ef9b8fc4a8c96a19c6fdda2c: done — normal activity
+Nov 03 00:09:22 metaos python3[534]: trio_agent: trio-3e521b88f88e97981d65c59e0071ea5d: done — normal activity
+Nov 03 00:09:55 metaos python3[534]: trio_agent: trio-d68cfaa441e3bcc10301403017199346: done — no hazard visible
+Nov 03 00:10:32 metaos python3[534]: trio_agent: trio-66a3673ed7023373daaed42abe38af88: model output failed validation (assessment.requires_human_review: must be true for medicus — every Medicus assessment requires human verification); one correction retry
+Nov 03 00:10:42 metaos python3[534]: trio_agent: trio-66a3673ed7023373daaed42abe38af88: correction retry validated
+Nov 03 00:10:42 metaos python3[534]: trio_agent: trio-66a3673ed7023373daaed42abe38af88: done — normal activity
+Nov 03 00:11:19 metaos python3[534]: trio_agent: trio-171a3889e5a9a12338db4ad548e76c50: done — normal activity
+Nov 03 00:11:56 metaos python3[534]: trio_agent: trio-4f75eff2d8f9b10989d5d11328b2f1a6: done — no hazard visible
+Nov 03 00:12:31 metaos python3[534]: trio_agent: trio-ea408ce6fe2401030d41ec17db2efef9: model output failed validation (assessment.requires_human_review: must be true for medicus — every Medicus assessment requires human verification); one correction retry
+Nov 03 00:12:44 metaos python3[534]: trio_agent: trio-ea408ce6fe2401030d41ec17db2efef9: correction retry validated
+Nov 03 00:12:45 metaos python3[534]: trio_agent: trio-ea408ce6fe2401030d41ec17db2efef9: done — normal activity
+Nov 03 00:13:19 metaos python3[534]: trio_agent: trio-632a78eb84b29f76e7b1de5fc91da06f: done — normal activity
+Nov 03 00:13:58 metaos python3[534]: trio_agent: trio-aa1c6c8e407550b0ba7906e9456e14c2: done — steam or fog
+Nov 03 00:14:32 metaos python3[534]: trio_agent: trio-94b489e7ac198d7c4f289308a5df378b: model output failed validation (assessment.requires_human_review: must be true for medicus — every Medicus assessment requires human verification); one correction retry
+Nov 03 00:14:42 metaos python3[534]: trio_agent: trio-94b489e7ac198d7c4f289308a5df378b: correction retry validated
+Nov 03 00:14:42 metaos python3[534]: trio_agent: trio-94b489e7ac198d7c4f289308a5df378b: done — normal activity
+Nov 03 00:15:19 metaos python3[534]: trio_agent: trio-8be62f33df714a60ebaaa62873c8ea49: done — normal activity
+Nov 03 00:15:54 metaos python3[534]: trio_agent: trio-6fcb2c4360a28b0bd806cf66ac99ef34: done — no hazard visible
+Nov 03 00:16:27 metaos python3[534]: trio_agent: trio-5888ca5491fa7161df012aa990258ef6: model output failed validation (assessment.requires_human_review: must be true for medicus — every Medicus assessment requires human verification); one correction retry
+Nov 03 00:16:38 metaos python3[534]: trio_agent: trio-5888ca5491fa7161df012aa990258ef6: correction retry validated
+Nov 03 00:16:38 metaos python3[534]: trio_agent: trio-5888ca5491fa7161df012aa990258ef6: done — normal activity
+Nov 03 00:17:23 metaos python3[534]: trio_agent: trio-989b639013b9fa5dcd0be17517fe92ec: done — normal activity
+Nov 03 00:18:00 metaos python3[534]: trio_agent: trio-4833f5bd964605cd082108bcc0276e08: done — no hazard visible
+Nov 03 00:18:00 metaos python3[547]: patrol: counts: {'checks': 20, 'baseline': 20, 'flagged': 0, 'reported': 0, 'feed_errors': 0, 'job_errors': 0}
+Nov 03 00:18:00 metaos systemd[438]: oc2-patrol.service: Consumed 17.849s CPU time.

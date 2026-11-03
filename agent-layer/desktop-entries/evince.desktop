@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Evince
+GenericName=Document Viewer
+Comment=DEGRADED-OFF: KEEP lists evince but Xubuntu 24.04.5 base ships atril. Hidden until Hana acks. Do not map MIME here.
+Exec=evince %U
+TryExec=evince
+Icon=accessories-document-viewer
+Terminal=false
+Categories=Office;Viewer;GTK;
+StartupNotify=true
+NoDisplay=true
