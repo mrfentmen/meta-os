@@ -250,6 +250,15 @@ BOOT_N=$(grep -ci 'boot image' "$WORK/el-torito.txt" || true)
 [ -n "$BOOT_N" ] || BOOT_N=0
 [ "$BOOT_N" -eq 2 ] || fail "expected exactly 2 El Torito boot images (BIOS + UEFI), found $BOOT_N; see $WORK/el-torito.txt"
 gate "El Torito BIOS + UEFI entries present (2/2)"
+echo "=== GATE 6: initrd UUID matches tree casper-uuid ==="
+UUID_TMPD=$(mktemp -d)
+unmkinitramfs "$WORK/iso/casper/initrd" "$UUID_TMPD/x" >/dev/null 2>&1 || fail "unmkinitramfs failed on built initrd"
+INITRD_UUID=$(cat "$UUID_TMPD/x/main/conf/uuid.conf" 2>/dev/null)
+[ -n "$INITRD_UUID" ] || fail "no baked UUID in built initrd"
+echo "$INITRD_UUID" > "$WORK/iso/.disk/casper-uuid-generic"
+[ "$(cat "$WORK/iso/.disk/casper-uuid-generic")" = "$INITRD_UUID" ] || fail "UUID sync verify failed"
+gate "initrd UUID == tree casper-uuid ($INITRD_UUID)"
+rm -rf "$UUID_TMPD"
 echo "=== export (permissions fixed for macOS bind mounts) ==="
 # OUTDIR is usually a Docker Desktop bind mount from macOS: root-owned files
 # with bare modes can come out unreadable on the Mac side, so the tree and
