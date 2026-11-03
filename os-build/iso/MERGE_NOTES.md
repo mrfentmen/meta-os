@@ -51,3 +51,12 @@ x86_64 pre-registered by Docker Desktop).
   (hostname/branding follow-up for the theme lane).
 - Grub edits now protected by /tmp/grub-fix.sh (must be promoted into
   the lane repo — next commit).
+
+## Probe result: medium EXISTS, casper rejects it (2026-11-0x, serial console)
+Interactive initramfs probe via socket serial (/dev/sr0 present):
+- blkid: /dev/sr0 TYPE=iso9660 LABEL=METAOS_1_0. The disc is there.
+- Kernel cmdline HAS layerfs-path=filesystem.squashfs (verified).
+- No "layers are missing" panic — instead: "Unable to find a medium
+  containing a live file system" → find_livefs rejects a present,
+  labelled, correct-cmdline medium. Diagnosis handed to initrd-forensics
+  lane (stock-vs-rebuilt casper scripts/modules/conf).
