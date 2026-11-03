@@ -1,0 +1,21 @@
+{
+  "exit": 0,
+  "counts": {
+    "checks": 1,
+    "baseline": 0,
+    "flagged": 0,
+    "reported": 0,
+    "feed_errors": 0,
+    "job_errors": 1
+  },
+  "state": "running",
+  "camera_source": "nyctmc-live",
+  "cameras": 972,
+  "guardrail": {
+    "calls": 27,
+    "est_cost_usd": 0.151912,
+    "test_budget_usd": 75.0,
+    "remaining_usd": 74.8481
+  },
+  "timeline": "patrol->review->judge->response (code path check_camera; chain proven end-to-end in OC2B-crew-staged.json)"
+}
