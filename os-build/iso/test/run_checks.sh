@@ -27,7 +27,7 @@ else
 fi
 
 step "shell syntax"
-for pair in "provision.sh sh" "calamares/meta-branding.sh sh" "build_iso.sh bash" "tools/vm_install_proof.sh bash" "test/run_checks.sh bash" "test/verify-base.test.sh bash"; do
+for pair in "provision.sh sh" "calamares/meta-branding.sh sh" "build_iso.sh bash" "tools/vm_install_proof.sh bash" "test/run_checks.sh bash" "test/verify-base.test.sh bash" "test/base-layout.test.sh bash"; do
     set -- $pair
     file="$LANE/$1"
     shell=$2
@@ -45,6 +45,13 @@ if bash "$LANE/test/verify-base.test.sh"; then
     ok "verify-base fixture (match, mismatch, missing sums)"
 else
     bad "verify-base fixture"
+fi
+
+step "base-layout detection (fixture, no ISO)"
+if bash "$LANE/test/base-layout.test.sh"; then
+    ok "base-layout fixture (single, layered, unknown)"
+else
+    bad "base-layout fixture"
 fi
 
 step "QMP harness plumbing (real QEMU framebuffer)"

@@ -24,7 +24,10 @@ reboots to the login screen, proven by VM screendumps.
 | 10 | `tools/vm_install_proof.sh` | **PLUMBING PROVEN** (`--dry`), install path UNRUN | captured `proof/dry-harness/00-harness-dry.png` from a live QEMU framebuffer (720×400 SeaBIOS "no bootable device" screen, 4s after start) |
 | 11 | ISO | **NOT BUILT** | no Linux host, no root, no xorriso/mksquashfs on this Mac |
 | 12 | Install → reboot → login screendumps | **NOT RUN** | blocked on 11 |
+| 13 | Reference base identity + layout | **MEASURED** | `BASE_FACTS.md`: hash matches Canonical SHA256SUMS; layout is layered (`minimal*.squashfs`), no `casper/filesystem.squashfs`; layer sizes sum byte-exactly to `filesystem.size` |
+| 14 | Layered-base refusal in the driver | **PROVEN BY FIXTURE** | `test/base-layout.test.sh`: single supported, layered flagged NOT supported, unknown fails loudly |
 
+Lane gate: **11 pass, 0 fail, 0 skip** (`test/run_checks.sh`).
 Local validator: **42 pass, 0 fail, 0 skip** (`tools/check_configs.py`,
 YAML parsed through ruby's psych because this Mac has no PyYAML —
 no check was silently skipped). Shell syntax: 4/4 scripts clean.
@@ -73,6 +76,13 @@ with `--vnc` available for the typed field; every stage is screendumped.
    without dbus. It is logged to `/var/log/metaos-install.log` in the
    target, and step 6-7 of the hook fail soft with a WARN rather than
    producing a dead install; a boot-time check is still needed.
+6. **The one base ISO on this machine is layered.** Measured, not assumed:
+   `xubuntu-24.04.5-desktop-amd64.iso` ships `casper/minimal*.squashfs`
+   plus `install-sources.yaml`, and **no** `casper/filesystem.squashfs`.
+   Calamares `unpackfs` needs one root, so this base needs a merge step
+   before the installer can work. `BASE_FACTS.md` has the byte-exact
+   evidence, the layer order, and three options; none is built. The driver
+   now refuses a layered base instead of patching the wrong file.
 
 ## What I need from other pens
 

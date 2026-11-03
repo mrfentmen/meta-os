@@ -26,6 +26,22 @@ run.
    name and theme package path so `meta-branding.sh` points at it instead of
    leaving the base greeter.
 
+5. **Base layout decision (new, measured).** The only base ISO on this
+   machine is the official Xubuntu 24.04.5 desktop image, checksum-verified,
+   and it ships **layered** squashfs (`minimal.squashfs` +
+   `minimal.standard.squashfs` + `.live`), not the single
+   `casper/filesystem.squashfs` that Calamares `unpackfs` and every remaster
+   recipe assume. Evidence: `os-build/iso/BASE_FACTS.md` (layer sizes sum
+   byte-exactly to `filesystem.size`; zero calamares in 1,876 debs).
+   - Option A: switch base to one that ships `filesystem.squashfs`
+     (verify with `build_iso.sh --base-info`, do not assume).
+   - Option B (my recommendation): merge the layers at build time into one
+     root image, then the existing recipe works. Needs Linux + root +
+     ~12 GB work dir.
+   - Option C: keep the distro installer and drop the Calamares box — a
+     plan change only you can make.
+   Until this is decided, H+8 cannot start even with a Linux host.
+
 ## What I am NOT claiming
 
 - No ISO exists.

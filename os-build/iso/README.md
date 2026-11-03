@@ -74,10 +74,20 @@ After a build, `--inspect <iso>` (Linux) proves the payload actually landed:
 it extracts the squashfs and checks 12 required paths (theme, plymouthd.conf,
 Calamares settings/modules/branding, in-target hook, autostart entry, icon).
 
-Base ISO is a parameter on purpose: the plan names Xubuntu+bCubic, and the
+Base ISO is a parameter on purpose: the plan names Xubuntu+Cubic, and the
 exact point release is Hana's call for the base lane. The patch path does not
 depend on which flavour's installer ships on the base, because Calamares is
 installed and launched from our own autostart entry.
+
+**Measured base reality — read `BASE_FACTS.md` before building.** The image on
+this machine (`/private/tmp/xubuntu-base.iso`) is the official
+`xubuntu-24.04.5-desktop-amd64.iso` (hash matches Canonical's SHA256SUMS),
+and it ships **layered** install sources: `casper/minimal.squashfs` +
+`minimal.standard.squashfs` + `.live`, selected by `install-sources.yaml`.
+There is **no** `casper/filesystem.squashfs`, and Calamares `unpackfs` cannot
+join layers. `build_iso.sh` detects this (`--base-info`) and refuses a
+layered base rather than patching a file that does not exist; closing it
+needs a merge step (BASE_FACTS option B) or a different base.
 
 ## Prove it
 

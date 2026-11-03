@@ -18,6 +18,12 @@ Branch `buffy/boot-installer` off main `80a7886c`. What landed:
   the front door), and `/usr/share/metaos/` as OC1's theme landing zone.
 - Build driver: `--root` for Hana's Cubic chroot, `--iso` to patch a base ISO
   on Linux (boot images replayed from the base, sha256 printed).
+- Base reality, measured: `/private/tmp/xubuntu-base.iso` is the official
+  24.04.5 desktop image (hash matches Canonical) and it ships **layered**
+  squashfs, no `casper/filesystem.squashfs`. Calamares `unpackfs` cannot
+  join layers, so H+8 needs either a merged root at build time or a base
+  change. `BASE_FACTS.md` has the byte-exact evidence; decision asked of
+  Pax/Hana, not assumed.
 - Proof harness: QMP screendumps at splash / live desktop / installer
   welcome / each walkthrough key / installed login, plus serial log and an
   INDEX.md that says what each frame must show.

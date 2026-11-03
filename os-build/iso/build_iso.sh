@@ -12,6 +12,8 @@
 #                               provision, re-squash, rebuild the ISO with
 #                               its boot images replayed, print the sha256.
 #   --verify-base <iso>         hash-check a base ISO only. Runs on the Mac.
+#   --base-info <iso>           print layout (single vs layered squashfs),
+#                               squashfs images and hash. Runs on the Mac.
 #   --inspect <iso>             Linux: prove the built ISO actually carries
 #                               the Meta payload (theme, calamares, hook,
 #                               autostart) inside its squashfs.
@@ -32,6 +34,55 @@ WORK_DEFAULT="$HERE/work"
 say()  { printf 'build_iso: %s\n' "$*"; }
 die()  { printf 'build_iso: ERROR: %s\n' "$*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
+
+# ---- base layout -------------------------------------------------------
+# Ubuntu flavour ISOs are not uniform any more. Some 24.04 flavour images
+# ship ONE casper/filesystem.squashfs (what unpackfs and every remaster
+# recipe assume); others ship *layered install sources* -- several
+# casper/minimal*.squashfs images selected by casper/install-sources.yaml.
+# Patching the latter with a single-squashfs recipe silently targets a
+# file that does not exist (or worse, the wrong layer). Detect first.
+iso_entries() {
+    local iso=$1
+    if [ -n "${ISO_MOUNT:-}" ] && [ -d "$ISO_MOUNT/casper" ]; then
+        ( cd "$ISO_MOUNT" && find . -type f | sed 's|^\./||' )
+        return 0
+    fi
+    have bsdtar || die "need bsdtar (or a mounted ISO in ISO_MOUNT) to list $iso"
+    bsdtar -tf "$iso" | sed 's|^\./||'
+}
+
+base_layout() {
+    local iso=$1 entries
+    entries=$(iso_entries "$iso")
+    if printf '%s\n' "$entries" | grep -qx 'casper/filesystem.squashfs'; then
+        echo single
+    elif printf '%s\n' "$entries" | grep -q 'casper/install-sources.yaml'; then
+        echo layered
+    elif printf '%s\n' "$entries" | grep -q 'live/filesystem.squashfs'; then
+        echo single-live
+    else
+        echo unknown
+    fi
+}
+
+base_info() {
+    local iso=$1
+    [ -f "$iso" ] || die "ISO not found: $iso"
+    local layout
+    layout=$(base_layout "$iso")
+    say "base: $(basename "$iso") ($(sha256_of "$iso"))"
+    say "layout: $layout"
+    say "casper images:"
+    iso_entries "$iso" | grep -E '^casper/.*\.(squashfs|yaml|size)$' | sed 's/^/  /'
+    case "$layout" in
+        single)        say "supported: unpackfs -> /cdrom/casper/filesystem.squashfs" ;;
+        single-live)   say "supported with a path change: live/filesystem.squashfs" ;;
+        layered)       say "NOT supported by the single-rootfs recipe: layered install sources"
+                       say "options: use a base that ships casper/filesystem.squashfs, or merge layers (out of scope)" ;;
+        *)             say "unknown layout: do not patch this image blindly" ;;
+    esac
+}
 
 sha256_of() {  # portable: coreutils, perl shasum, or openssl
     if have sha256sum; then sha256sum "$1" | awk '{print $1}'
@@ -173,6 +224,16 @@ iso_mode() {
 
     verify_base "$base" "$SUMS_FILE"
 
+    local layout
+    layout=$(base_layout "$base")
+    case "$layout" in
+        single)      say "base layout: one casper/filesystem.squashfs (supported)" ;;
+        single-live) say "base layout: live/filesystem.squashfs (supported)";; 
+        layered)
+            die "$base uses layered install sources (casper/minimal*.squashfs + install-sources.yaml); unpackfs and this patch path expect one casper/filesystem.squashfs. Use a base that ships it, or merge the layers first. Run --base-info for the list." ;;
+        *) die "unrecognised base layout in $base; run --base-info before patching" ;;
+    esac
+
     local work="$WORK_DEFAULT"
     rm -rf "$work"
     mkdir -p "$work/iso_root" "$work/squashfs_root"
@@ -246,6 +307,7 @@ while [ $# -gt 0 ]; do
         --iso) MODE=iso; BASE_ISO=${2:-}; shift || true ;;
         --out) OUT=${2:-}; shift || true ;;
         --verify-base) MODE=verify; BASE_ISO=${2:-}; shift || true ;;
+        --base-info) MODE=baseinfo; BASE_ISO=${2:-}; shift || true ;;
         --inspect) MODE=inspect; BASE_ISO=${2:-}; shift || true ;;
         --sha256sums) SUMS_FILE=${2:-}; shift || true ;;
         --no-verify-base) ALLOW_UNVERIFIED=1 ;;
@@ -260,6 +322,7 @@ case "$MODE" in
     root)   root_mode "$CUBIC_ROOT" ;;
     iso)    iso_mode "$BASE_ISO" "$OUT" ;;
     verify) verify_base "$BASE_ISO" "$SUMS_FILE"; say "base verification complete" ;;
+    baseinfo) base_info "$BASE_ISO" ;;
     inspect) inspect_mode "$BASE_ISO" ;;
     *)      usage 2 ;;
 esac
