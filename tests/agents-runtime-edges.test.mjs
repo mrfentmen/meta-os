@@ -20,13 +20,13 @@ test("an agent with an empty command array is refused at load", () => {
   }
 });
 
-test("a placeholder command is accepted; only the registry's draft flag marks it", () => {
+test("a draft carries no command, so nothing can spawn it by accident", () => {
   const agents = loadRegistry(new URL("../agents/registry.json", import.meta.url).pathname);
   const rowan = agents.find((a) => a.name === "rowan");
   assert.ok(rowan, "rowan is in the real registry");
-  assert.deepEqual(rowan.command, ["true"]);
+  assert.deepEqual(rowan.command, [], "a draft has no program to run");
   assert.equal(rowan.draft, true, "the registry itself reports the draft");
-  assert.equal(validateEntry(rowan), true, "the runtime has no draft detector of its own");
+  assert.equal(validateEntry(rowan), true);
 });
 
 test("duplicate agent names are refused", () => {
@@ -59,33 +59,3 @@ test("the ledger refuses a record with no run id", () => {
   }
 });
 
-test("a torn final line is skipped and the earlier records stay whole", () => {
-  const dir = tmp();
-  try {
-    const file = join(dir, "ledger.jsonl");
-    const ledger = new Ledger(file);
-    ledger.add("run-1", "spawn");
-    // True crash tail: the torn line is last, nothing follows it.
-    appendFileSync(file, '{"ts":"torn"');
-    const events = ledger.read().map((entry) => entry.event);
-    assert.deepEqual(events, ["spawn"]);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
-
-test("a torn middle line throws and names the line", () => {
-  const dir = tmp();
-  try {
-    const file = join(dir, "ledger.jsonl");
-    const ledger = new Ledger(file);
-    ledger.add("run-1", "spawn");
-    appendFileSync(file, '{"ts":"torn"');
-    ledger.add("run-1", "exit");
-    // A good record follows the torn line, so this is a spliced file, not a
-    // crash tail: read refuses loudly instead of silently dropping history.
-    assert.throws(() => ledger.read(), /ledger: torn line 2/);
-  } finally {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});

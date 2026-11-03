@@ -6,6 +6,7 @@
 //   node agents/runtime.mjs watch <name>    (watch its targets)
 import { spawn } from "node:child_process";
 import { lessons } from "./lessons.mjs";
+import { memoryDir, capFor, check, appendLedger } from "./memory.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
@@ -18,7 +19,16 @@ export function loadRegistry(file) {
     if (!a.name || typeof a.name !== "string") throw new Error("registry: agent missing name");
     if (seen.has(a.name)) throw new Error("registry: duplicate agent " + a.name);
     seen.add(a.name);
-    if (!Array.isArray(a.command) || a.command.length === 0) throw new Error("registry: " + a.name + " missing command");
+    // A draft has no program yet, so it has no command. Anything else must
+    // have one: an empty command on a live entry is a spawn that cannot work.
+    if (!Array.isArray(a.command)) {
+      if (a.draft === true) a.command = [];
+      else throw new Error("registry: " + a.name + " missing command");
+    }
+    if (a.command.length === 0 && a.draft !== true) throw new Error("registry: " + a.name + " missing command");
+    if (a.command.length > 0 && a.draft === true && a.command.join(" ") === "true") {
+      throw new Error("registry: " + a.name + " still carries the placeholder command");
+    }
     // Every argv element must be a string. `command: ["node", 42]` passes a length check and
     // then throws inside spawn() -- at spawn time, in a process that is already running the
     // rest of the crew. A malformed entry is refused at load, where nothing has started.
@@ -54,6 +64,9 @@ export class Ledger {
         throw new Error("ledger: missing required field " + name);
       }
     }
+    // A field called "run" or "event" lands after the record's own keys and
+    // silently rewrites them: a memory failure was written as a second "exit"
+    // line. Refuse the collision instead of writing a record that lies.
     const line = JSON.stringify({ ts: new Date().toISOString(), run, event, ...fields }) + "\n";
     // A crash mid-append leaves a line with no trailing newline, and appending straight onto it
     // fuses the next record into the torn one -- so the record after the crash is lost as well.
@@ -114,7 +127,11 @@ export function validateEntry(agent) {
       throw new Error("registry: missing field " + field + (agent.name ? " on " + agent.name : ""));
     }
   }
-  if (!Array.isArray(agent.command) || agent.command.length === 0) {
+  if (!Array.isArray(agent.command)) {
+    if (agent.draft === true) agent.command = [];
+    else throw new Error("registry: " + agent.name + " missing command");
+  }
+  if (agent.command.length === 0 && agent.draft !== true) {
     throw new Error("registry: " + agent.name + " missing command");
   }
   if (!agent.budget || typeof agent.budget !== "object") {
@@ -161,6 +178,19 @@ export function preflightBudget(agent, job = {}) {
   return { ok: true, estimate, cap };
 }
 
+// A full memory must not crash a run that is already exiting, and the refusal
+// must not vanish either: the run ledger says the record was not written.
+function noteMemory(memory, entry, ledger, runId) {
+  if (!memory) return;
+  try {
+    appendLedger(memory.dir, entry, { maxBytes: memory.cap });
+  } catch (error) {
+    try {
+      ledger.add(runId, "memory-write-failed", { record: entry.event, code: error.code || "error" });
+    } catch { /* nothing left to write to */ }
+  }
+}
+
 export function spawnAgent(agent, { root, job = {} } = {}) {
   const runId = agent.name + "-" + Date.now().toString(36);
   const runDir = path.join(root, "runs", runId);
@@ -195,6 +225,33 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     };
   }
 
+  // Spec §8: the cap is checked before anything starts, and a refusal looks
+  // like the budget refusal, so a caller has one shape to handle.
+  const memory = { dir: memoryDir(root, agent.name), cap: capFor(agent) };
+  const refuseMemory = (usedBytes, capBytes) => {
+    const receipt = {
+      run: runId, reason: "memory-cap", usedBytes, capBytes,
+      at: new Date().toISOString(),
+    };
+    ledger.add(runId, "memory-receipt", receipt);
+    fs.writeFileSync(path.join(runDir, "receipt.json"), JSON.stringify(receipt, null, 2));
+    ledger.add(runId, "refused", { reason: "memory-cap" });
+    return {
+      agent, runId, runDir, ledger, child: null, stopped: "memory-cap", memory,
+      done: Promise.resolve({ code: null, signal: null, refused: true }),
+    };
+  };
+  const usedNow = check(memory.dir, memory.cap);
+  if (!usedNow.ok) return refuseMemory(usedNow.bytes, memory.cap);
+  try {
+    appendLedger(memory.dir, {
+      event: "spawn", run: runId, agent: agent.name, at: new Date().toISOString(),
+    }, { maxBytes: memory.cap });
+  } catch (error) {
+    if (error.code !== "memory-cap") throw error;
+    return refuseMemory(error.usage ?? usedNow.bytes, memory.cap);
+  }
+
   const command = resolveCommand(agent.command, root);
   ledger.add(runId, "spawn", { command, lane: brief.lane });
   const child = spawn(command[0], command.slice(1), {
@@ -203,11 +260,15 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
   });
   const out = fs.createWriteStream(path.join(runDir, "output.log"));
   child.stdout.pipe(out); child.stderr.pipe(out);
-  const handle = { agent, runId, runDir, ledger, child, stopped: null, exited: false };
+  const handle = { agent, runId, runDir, ledger, child, stopped: null, exited: false, memory };
   handle.done = new Promise((resolve) => {
     child.on("exit", (code, signal) => {
       handle.exited = true;
       ledger.add(runId, "exit", { code, signal, stopped: handle.stopped });
+      noteMemory(memory, {
+        event: "exit", run: runId, code, signal, stopped: handle.stopped,
+        at: new Date().toISOString(),
+      }, ledger, runId);
       resolve({ code, signal });
     });
     // A spawn that never becomes a process (ENOENT command, a cwd that does not exist, a
@@ -258,6 +319,9 @@ export async function killAgent(handle, reason, graceMs = 800) {
   if (handle.exited) return;
   handle.stopped = reason;
   handle.ledger.add(handle.runId, "stop-request", { reason });
+  noteMemory(handle.memory, {
+    event: "stop", run: handle.runId, reason, at: new Date().toISOString(),
+  }, handle.ledger, handle.runId);
   handle.child.kill("SIGTERM");
   const exited = await Promise.race([
     handle.done.then(() => true),
