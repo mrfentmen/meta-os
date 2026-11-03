@@ -458,7 +458,7 @@ Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
 
 Section 13 is complete: 25 of 25.
 
-## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 15/25 delivered, 10 blocked
+## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 21/25 delivered, 4 blocked
 
 | Task | File | Result |
 |---|---|---|
@@ -477,14 +477,18 @@ Section 13 is complete: 25 of 25.
 | CB2-327 | `crates/agent-runtime/src/registry.rs` | a `["true"]` command loads as a draft, not a runnable agent; a declared `draft` flag agrees |
 | CB2-328 | `crates/agent-runtime/src/registry.rs` | a duplicate name refuses the whole registry, naming both entry indexes |
 | CB2-348 | `crates/agent-runtime/tests/section14_registry.rs` | the real registry, embedded at compile time, loads 28 agents: 23 drafts, 5 runnable |
+| CB2-332 | `crates/assess-server/tests/section14_assess.rs` | the v2 response record carries exactly product, timestamp, observations, assessment, processing; removing any one is refused with that key named |
+| CB2-346 | `crates/agent-runtime/src/lib.rs`, `crates/assess-server/tests/section14_assess.rs` | a region coordinate past 1000 or below 0 is refused with the field and key named; 0 and 1000 are inside the frame; a non-object region and a non-numeric coordinate are refused too |
+| CB2-347 | `crates/assess-server/tests/section14_assess.rs` | confidence as a string is refused, never coerced; null and every number in 0..1 accepted; both ends of the range refused |
 
 Blocked — the named API does not exist:
 - CB2-326..328, 348: closed by building the loader the tasks describe, as
   `crates/agent-runtime/src/registry.rs`. New behaviour, recorded as such. It
   parses with the crate's existing `serde_json`, so no package was added.
-- CB2-329, 332: invalid JSON is rejected at the HTTP layer (already covered by
-  `http_invalid_json_is_a_400`); response-contract checking lives in
-  `agent-runtime::validate_assessment`, not in assess-server.
+- CB2-329: still open. Invalid JSON is rejected at the HTTP layer, already
+  covered by `http_invalid_json_is_a_400`; assess-server has no pure entry point
+  that sees unparsed bytes, so there is nothing here to pin without inventing a
+  parser. Recorded rather than claimed.
 - CB2-333, 334, 349: closed by building the metrics module the tasks describe,
   as `crates/dashboard/src/metrics.rs`. New behaviour, recorded as such. The
   crate has no serde dependency, so the readings are parsed per field rather
@@ -496,15 +500,27 @@ Blocked — the named API does not exist:
   "no activity yet" on an empty window, and the crate exposes no public
   fixture builder, so a populated snapshot would have to invent `SnapMessage`
   and `SnapJob` rows that no real record produced.
-- CB2-341..343: `stack` is a service-config planner; it has no push/pop/capacity.
-- CB2-344, 345: `parity-tests` has the harness but no queue-envelope or incident
-  fixture cases yet.
-- CB2-346, 347: region and confidence checks live in
-  `agent-runtime::validate_assessment`, not in assess-server.
+- CB2-341..343: closed by building the bounded stack the tasks describe, as
+  `crates/stack/src/bounded.rs`. New behaviour, recorded as such: a push onto a
+  full stack and a pop from an empty one each have a named refusal, and five
+  pushes pop back in LIFO order. The crate's existing config planner is
+  untouched.
+- CB2-344, 345: still open. `queue-core` is deliberately zero-dependency, so it
+  takes an already-parsed `Envelope` and has no JSON entry point to hand a shared
+  fixture to; there is also no Rust incident-record type to pin a key set
+  against. A parser or a record type added only to hold a fixture would be the
+  fake this wave forbids.
+- CB2-346, 347: closed. The checks themselves live in
+  `agent-runtime::validate_assessment`; the contract cases are pinned from
+  assess-server, which is the side that refuses a bad record before it reaches a
+  screen.
 
 Section 14 verification: `cargo test -p guardrail`, `cargo test -p guardrail --doc`,
-`cargo test -p assess-server`, `cargo test -p intel --test section14_intel`
-(4 pass), `cargo test -p dashboard --test section14_metrics` (8 pass), and
+`cargo test -p assess-server`, `cargo test -p assess-server --test section14_assess`
+(3 pass), `cargo test -p intel --test section14_intel` (4 pass),
+`cargo test -p dashboard --test section14_metrics` (8 pass),
+`cargo test -p agent-runtime` (47 pass, whole crate),
+`cargo test -p stack` (11 pass: 8 config, 3 bounded), and
 `cargo test -p agent-runtime --test section14_registry` (4 pass) all exit 0.
 
 ## Section 15 — Schemas and validators (CB2-351..375) — 25/25
@@ -557,7 +573,7 @@ All tools read logs as data; none writes to a log or to `kernel/src`.
 Section 18 verification: 12 test files, **50 tests pass, 0 fail** (one command
 per file; every exit status checked).
 
-## Section 19 — Officina and Musica pure code (CB2-451..475) — 15/25 delivered
+## Section 19 — Officina and Musica pure code (CB2-451..475) — 18/25 delivered
 
 Officina's pure modules: `heatsink.py` (simulator + bounds), `design_loop.py`
 (post/claim/score/held-out gate), `brief.py` (rough-words parser + iterator),
@@ -580,6 +596,9 @@ Officina's pure modules: `heatsink.py` (simulator + bounds), `design_loop.py`
 | CB2-473 | `tests/musica-normalize-data.test.mjs` | title transform trims, single-spaces, title-cases |
 | CB2-474 | `tests/musica-normalize-data.test.mjs` | idempotent on every real title; a non-string is refused, never coerced |
 | CB2-454 | `tests/officina/test_officina_loop_record.py` | every amendment names round, change and reason; every decision-log entry carries its round and result; `rounds_used` matches the highest logged round; harness jobs name the violation when failed |
+| CB2-460 | `os/worlds/musica/note_math.mjs` | the 12 pitch classes map to 60..71 from C4; the Bb/Db/Gb/Ab spellings equal their sharps; a flat outside the set (`Cb4`) is refused rather than placed an octave high |
+| CB2-461 | `tests/musica-note-math.test.mjs` | an octave shift moves every note exactly 12 semitones both ways; `transposeOctaves` keeps the spelling where `transpose` normalises it |
+| CB2-462 | `tests/musica-note-math.test.mjs` | `H4`, bare `C`, `C4x`, `C##4`, a non-string, note 128, and a fractional semitone are all refused, never guessed |
 
 Two things the Musica data revealed while pinning these tests:
 - The catalogue's own tracks carry `title`, `take_id`, `duration_s`, `licence`.
@@ -596,14 +615,18 @@ record. The loop's record is not on the job — it is the run file, whose
 The test reads those real files.
 
 Not delivered: CB2-455 (no STOP-file check function), CB2-458 (no schematic module),
-CB2-459 (no enumerated 14-check gate list), CB2-460..462 (no JS note/semitone
-module; the mapping lives in `runtime/theory.py`), CB2-465..466 (no JS
-variation generator; `runtime/compose.py` owns it), CB2-469..470 (the take log
-has a `timestamp` and a `verdict`, not a start/end keeper window).
+CB2-459 (no enumerated 14-check gate list), CB2-465..466 (no JS variation
+generator; `runtime/compose.py` owns it), CB2-469..470 (the take log has a
+`timestamp` and a `verdict`, not a start/end keeper window).
+
+CB2-460..462 note: closed by writing the JS note/semitone module the tasks
+describe, as `os/worlds/musica/note_math.mjs`. New behaviour, recorded as such.
+It refuses spellings the Python theory module resolves (`Cb`, `E#`, `B#`)
+because resolving them without the octave correction plays the wrong pitch.
 
 Section 19 verification: `python3 -m unittest discover -s tests/officina -p
 "test_*.py"` runs the whole Officina tree at **84 tests pass, 0 fail**; the
-loop-record file alone is 7. Musica adds 11 new node tests (4 + 3 + 4), all
+loop-record file alone is 7. Musica adds 14 new node tests (4 + 3 + 4 + 3), all
 passing.
 
 ## Section 20 — Documentation-as-code (CB2-476..500) — 21/25 delivered
@@ -697,7 +720,7 @@ Per-task check (2026-11-02):
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
 
-## Closeout — 448 of 500 delivered, 52 open
+## Closeout — 457 of 500 delivered, 43 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -706,33 +729,36 @@ one is open for a named reason, not for want of trying.
 |---|---|---|
 | 1–12 (Python, relay, board, Rust queue) | 300 | 0 |
 | 13 Rust os-* error paths | 25 | 0 |
-| 14 Rust agent/dashboard/intel/stack | 15 | 10 |
+| 14 Rust agent/dashboard/intel/stack | 21 | 4 |
 | 15 Schemas and validators | 25 | 0 |
 | 16 Agent layer Node | 22 | 3 |
 | 17 Face tests | 0 | 25 |
 | 18 Tooling scripts | 25 | 0 |
-| 19 Officina and Musica | 15 | 10 |
+| 19 Officina and Musica | 18 | 7 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **448** | **52** |
+| **Total** | **457** | **43** |
 
-### The 52, by the decision that unblocks them
+### The 43, by the decision that unblocks them
 
 1. **Face source (25).** Section 17 forbids editing `face/face.js`, and that
    file has no exports and 87 functions closing over the DOM. One yes unlocks
    all 25: either extract the calculator/calendar/notes/terminal/window logic
    into an importable module, or agree that fixture-model tests count.
-2. **New APIs (10, Section 14).** `stack` plans service configs and has no
-   push/pop; `assess-server` has no observation-contract checks; the parity
-   harness has no queue-envelope or incident fixtures. The dashboard metrics
-   cards and the agent registry loader were built for this wave and are now
-   covered, so they left this group.
+2. **New APIs or a decision (4, Section 14).** CB2-329 needs a pure entry point
+   that sees unparsed bytes; CB2-344/345 need a JSON entry point in the
+   zero-dependency `queue-core`, or a Rust incident-record type to pin a key set
+   against; CB2-338 needs a populated fixture whose rows a real record produced.
+   The bounded stack, the observation-contract checks and the response-key
+   contract were built for this wave and are now covered, so they left this
+   group.
 3. **Missing data (4, Section 20).** Nervus has no real-run flag and no ledger
    field on its contracts, and the layer curve (L4 4.6, L8 19.5, L16 12.8,
    L24 10.2) appears in no file. CB2-500 needs a program list the registry
    does not carry.
-4. **Python-only logic (10, Section 19).** Note math, variation and keeper
-   windows live in `runtime/*.py`. A JS copy would be a second implementation
-   to drift, so no test was written against a mirror.
+4. **Python-only logic (7, Section 19).** Variation generators and keeper
+   windows live in `runtime/*.py`; the Officina half is a missing schematic
+   module, a missing gate list, and a missing STOP-file check. A JS copy would be
+   a second implementation to drift, so no test was written against a mirror.
 5. **Missing behaviour (3, Section 16).** No baton step-index check at
    construction, and `bridge.mjs` shapes no messages, so there is no wire
    shape to assert. The change-size rule and the resume function were built

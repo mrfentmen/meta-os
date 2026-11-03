@@ -230,6 +230,29 @@ pub fn validate_assessment(value: &Value, expected_product: &str) -> (bool, Vec<
                     errors.push(format!("{prefix}.evidence: missing or not a string"));
                 }
                 check_nullable_number(o, "confidence", &format!("{prefix}.confidence"), &mut errors, Some(0.0), Some(1.0));
+                // A region is optional, but when present every coordinate must
+                // be a number inside the 0..=1000 frame the record contract
+                // uses. A box outside that frame is a mis-scaled box, not a
+                // different observation, so it is refused rather than clipped.
+                if let Some(region) = o.get("region") {
+                    match region.as_object() {
+                        _ if region.is_null() => {}
+                        None => errors.push(format!("{prefix}.region: must be an object or null")),
+                        Some(r) => {
+                            for (key, value) in r {
+                                match value.as_f64() {
+                                    Some(n) if (0.0..=1000.0).contains(&n) => {}
+                                    Some(_) => errors.push(format!(
+                                        "{prefix}.region.{key}: outside 0..1000"
+                                    )),
+                                    None => errors.push(format!(
+                                        "{prefix}.region.{key}: must be a number"
+                                    )),
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         _ => errors.push("observations: missing or not an array".to_string()),
