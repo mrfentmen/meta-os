@@ -111,6 +111,7 @@ put "$ISO/theme/xfce4-desktop.xml" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xf
 # First-login work: the dock, wallpaper and colours belong to whoever logs in,
 # and that account does not exist until after the install.
 put "$ISO/base/meta-first-login.sh" "/usr/local/bin/meta-first-login" 755
+put "$ISO/base/meta-doctor.py" "/usr/local/bin/meta-doctor" 755
 put "$ISO/base/autostart/meta-first-login.desktop" "/etc/xdg/autostart/meta-first-login.desktop"
 
 # Login screen: greeter config, its backdrop, and the theme it asks for.

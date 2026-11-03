@@ -345,6 +345,16 @@ if first_login.is_file():
 else:
     bad("base: meta-first-login.sh is missing")
 
+doctor = ISO / "base" / "meta-doctor.py"
+if doctor.is_file():
+    ok("base: the doctor ships")
+else:
+    bad("base: meta-doctor.py is missing")
+if "meta-doctor" in read(ISO / "tools" / "apply.sh"):
+    ok("base: apply.sh installs the doctor")
+else:
+    bad("base: apply.sh never installs meta-doctor")
+
 autostart = ISO / "base" / "autostart" / "meta-first-login.desktop"
 if not autostart.is_file():
     bad("base: the first-login autostart entry is missing")

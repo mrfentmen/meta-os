@@ -42,6 +42,26 @@ failure. A marker in `$XDG_CONFIG_HOME/metaos/` makes the second login quiet.
 `xfconf-query` in `tests/test_iso_first_login.py`; never run on a real Xfce
 session.
 
+## Doctor
+
+`meta-doctor` answers "what did the install actually put down?" without a
+screen. One row per part of the lane, in boot order: launchers, dock items,
+splash, boot menu, installer, desktop theme, login screen, start page, the
+agent-status binary, and whether first login has run for this account.
+
+```
+meta-doctor                      # the live system
+meta-doctor --root /tmp/stage    # a staging tree, before it is installed
+meta-doctor --json               # for a script
+```
+
+It exits 1 when anything is missing and names the file. That is the row a
+failed boot needs: not "it did not work", but "login screen: missing
+/etc/lightdm/lightdm-gtk-greeter.conf".
+
+**Status: CODE-INSPECTED.** Run against real staging trees built by
+`apply.sh` in `tests/test_iso_doctor.py`; never run on an installed MetaOS.
+
 ## What this lane does not do
 
 It does not create the ISO, does not run `cubic`, and does not create a user.
