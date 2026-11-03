@@ -106,6 +106,8 @@ install -m755 "$PAYLOAD/apps/metaos-welcome.py" "$ROOT/usr/share/metaos/apps/met
 install -m644 "$PAYLOAD/apps/metaos-welcome.desktop" "$ROOT/usr/share/applications/metaos-welcome.desktop"
 install -m644 "$PAYLOAD/apps/metaos-welcome.desktop" "$ROOT/etc/xdg/autostart/metaos-welcome.desktop"
 install -m644 "$PAYLOAD/greeter/lightdm-gtk-greeter.conf" "$ROOT/etc/lightdm/lightdm-gtk-greeter.conf"
+mkdir -p "$ROOT/etc/lightdm/lightdm.conf.d"
+install -m644 "$PAYLOAD/greeter/10-metaos-live.conf" "$ROOT/etc/lightdm/lightdm.conf.d/10-metaos-live.conf"
 install -m644 "$PAYLOAD/wallpapers/meta-ascii.png" "$ROOT/usr/share/backgrounds/meta-ascii.png" 2>/dev/null || true
 install -m644 "$PAYLOAD/wallpapers/meta-rays.png" "$ROOT/usr/share/backgrounds/meta-rays.png" 2>/dev/null || true
 install -m644 "$PAYLOAD/wallpapers/meta-dusk.png" "$ROOT/usr/share/backgrounds/meta-dusk.png" 2>/dev/null || true

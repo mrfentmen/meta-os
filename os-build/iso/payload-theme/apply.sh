@@ -4,6 +4,8 @@
 set -e
 HERE="$(dirname "$0")"
 install -m644 "$HERE/greeter/lightdm-gtk-greeter.conf" /etc/lightdm/lightdm-gtk-greeter.conf
+mkdir -p /etc/lightdm/lightdm.conf.d
+install -m644 "$HERE/greeter/10-metaos-live.conf" /etc/lightdm/lightdm.conf.d/10-metaos-live.conf
 install -m644 "$HERE/wallpapers/meta-ascii.png" /usr/share/backgrounds/meta-ascii.png
 install -m644 "$HERE/wallpapers/meta-rays.png" /usr/share/backgrounds/meta-rays.png
 install -m644 "$HERE/wallpapers/meta-dusk.png" /usr/share/backgrounds/meta-dusk.png
