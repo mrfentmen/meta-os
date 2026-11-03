@@ -1932,6 +1932,283 @@ pub fn build_post_argv(
     argv
 }
 
+/// A `post_plan` run failed: a refusal before any post, or a failed
+/// post partway through (DSP-008). The message is the full Python
+/// `PostError` text, so callers and tests see the same words Python
+/// raises. Jobs already posted stay posted: jobs.py has no unpost,
+/// and a failed post stores no dispatch record.
+#[derive(Debug, Clone, PartialEq)]
+pub struct PostError(pub String);
+
+impl std::fmt::Display for PostError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+/// One job entry in a dispatch record stored by `post_plan` (DSP-008),
+/// in posting order: the plan key, the real posted job id, and the
+/// posted fields, with deps rewritten from plan keys to real ids.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DispatchPostedJob {
+    pub key: String,
+    pub id: String,
+    pub title: String,
+    pub files: Vec<String>,
+    pub deps: Vec<String>,
+    pub max_attempts: i64,
+    pub req: Vec<String>,
+}
+
+/// The dispatch record `post_plan` returns (DSP-008): the record id,
+/// the plan summary, the room, the creation time, the posting order,
+/// whether every job posted signed, the posting latency, and the
+/// posted jobs in posting order.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DispatchRecord {
+    pub id: String,
+    pub summary: String,
+    pub room: String,
+    pub created_at: i64,
+    pub order: Vec<String>,
+    pub signed: bool,
+    pub latency_ms: i64,
+    pub jobs: Vec<DispatchPostedJob>,
+}
+
+/// The DSP-014 spend-ledger entry for a `post_plan` run: the record
+/// id, the jobs posted, and the latency. Posting makes no Spark call,
+/// so there are no token counts or cost. The caller writes this entry;
+/// a failed write is logged by the caller and never fails the post.
+#[derive(Debug, Clone, PartialEq)]
+pub struct DispatchSpend {
+    pub ts: i64,
+    pub dispatch_id: String,
+    pub jobs_posted: usize,
+    pub latency_ms: i64,
+}
+
+/// Post a validated plan's jobs in topological order (DSP-008).
+///
+/// `order` is the posting order, defaulting to `check_dep_graph` when
+/// omitted; it must cover exactly the plan's jobs, and every dep must
+/// already be posted when its dependent is reached, or `PostError` is
+/// raised before that job is attempted. Each job posts through
+/// `post_one` with the argv `build_post_argv` builds, in the exact
+/// flag order Python builds. `confirm_large`, when false on a plan
+/// that breaches the DSP-013 size guardrail, refuses the post outright
+/// before any job is posted, mirroring the crew-mode refusal: the
+/// poster never lets a large plan through on a single approval.
+/// `secret_file`, when given, is passed through for HMAC signing
+/// (DSP-009) and the record carries `signed=true`; without it, a loud
+/// WARNING goes to stderr and the record carries `signed=false`, unless
+/// `crew_mode` refuses the unsigned post outright first. On full
+/// success the returned record is `{id, summary, room, created_at,
+/// order, signed, latency_ms, jobs}` in posting order, plus the
+/// DSP-014 spend entry. The record id is `dispatch_id` when given,
+/// else `dsp-<created_at>-<first posted job id>`, which is unique per
+/// post even when the clock is frozen. The poster announces nothing
+/// itself, except through `announce` when given: the DISPATCH: line
+/// from `format_dispatch_announcement` is passed to it, and only the
+/// JOB: lines the queue writes per post appear otherwise.
+///
+/// Rust adaptations, stated not hidden: Python posts through
+/// `jobs.main`, stores the record via `intel.store.put_dispatch`,
+/// and writes the spend ledger itself; this function takes the post
+/// call, the clock, and the announcement as arguments and returns the
+/// record and the spend entry, so store, queue, and ledger access stay
+/// with the caller. Python's `post_one` may raise, and the failure
+/// message carries `(ExcType: msg)`; Rust's `post_one` has no
+/// exception channel, so a failed call is `None` and the failure
+/// message carries no reason suffix. Python raises `PlanError` (via
+/// `_fail`) for an empty plan, an order that does not cover the jobs,
+/// and a dep-graph failure; this function folds those into
+/// `PostError`, since it is the poster's error type. Python's
+/// monotonic clock reads seconds as a float; this clock reads
+/// milliseconds, so the latency is the plain difference. `now` is
+/// the creation time, as in `undo_dispatch`. Python formats ids with
+/// `!r`; this message uses plain single quotes, which matches for
+/// ordinary ids.
+pub fn post_plan<P, C, A>(
+    plan: &Plan,
+    order: Option<&[String]>,
+    room: &str,
+    secret_file: Option<&str>,
+    dispatch_id: Option<&str>,
+    post_one: P,
+    now: i64,
+    crew_mode: bool,
+    confirm_large: bool,
+    clock_ms: C,
+    announce: Option<A>,
+) -> Result<(DispatchRecord, DispatchSpend), PostError>
+where
+    P: Fn(&[String]) -> Option<String>,
+    C: Fn() -> i64,
+    A: Fn(&str),
+{
+    let started = clock_ms();
+    if plan.jobs.is_empty() {
+        return Err(PostError(
+            "plan: expected a validated plan with a non-empty jobs list".to_string(),
+        ));
+    }
+    // Python's dict keyed by job key: a duplicate key overwrites in
+    // place, keeping its first position.
+    let mut by_key: Vec<(&str, &PlanJob)> = Vec::new();
+    for job in &plan.jobs {
+        if let Some(slot) = by_key.iter_mut().find(|(k, _)| *k == job.key.as_str()) {
+            slot.1 = job;
+        } else {
+            by_key.push((job.key.as_str(), job));
+        }
+    }
+    let order: Vec<String> = match order {
+        Some(given) => given.to_vec(),
+        None => check_dep_graph(plan).map_err(|e| PostError(e.to_string()))?,
+    };
+    let mut sorted_order = order.clone();
+    sorted_order.sort();
+    let mut sorted_keys: Vec<String> = by_key.iter().map(|(k, _)| k.to_string()).collect();
+    sorted_keys.sort();
+    if sorted_order != sorted_keys {
+        return Err(PostError(
+            "plan: posting order must cover exactly the plan's jobs".to_string(),
+        ));
+    }
+    let size_warnings = plan_size_warnings(plan);
+    if !size_warnings.is_empty() && !confirm_large {
+        return Err(PostError(format!(
+            "dispatch refused: this plan is large and needs a second confirmation before posting ({}); pass confirm_large=True (CLI --confirm-large) after the second human confirmation; nothing posted, no dispatch record stored",
+            size_warnings.join("; ")
+        )));
+    }
+    if crew_mode && secret_file.is_none() {
+        return Err(PostError(
+            "dispatch refused: crew mode requires a --secret-file keyring so every job posts signed; refusing to post unsigned — nothing posted, no dispatch record stored".to_string(),
+        ));
+    }
+    if secret_file.is_none() {
+        eprintln!("WARNING: dispatch posting unsigned — no --secret-file given, so these jobs post without HMAC signatures and a crew verifying signatures sees them as UNSIGNED; pass --secret-file <keyring> to sign, or --crew-mode to refuse unsigned posts outright");
+    }
+    let posted_desc = |posted: &[(String, String)]| -> String {
+        if posted.is_empty() {
+            "none".to_string()
+        } else {
+            posted
+                .iter()
+                .map(|(k, i)| format!("{k} -> {i}"))
+                .collect::<Vec<String>>()
+                .join(", ")
+        }
+    };
+    let mut key_to_id: Vec<(String, String)> = Vec::new();
+    let mut posted: Vec<(String, String)> = Vec::new();
+    for key in &order {
+        let job = by_key
+            .iter()
+            .find(|(k, _)| *k == key.as_str())
+            .map(|(_, j)| *j)
+            .expect("order covers exactly the plan's jobs");
+        let missing: Vec<&str> = job
+            .deps
+            .iter()
+            .filter(|d| !key_to_id.iter().any(|(k, _)| k == *d))
+            .map(|d| d.as_str())
+            .collect();
+        if let Some(first) = missing.first() {
+            return Err(PostError(format!(
+                "dispatch posting failed at plan job '{key}': dep '{first}' is not posted yet — the posting order must place every dep before its dependent; jobs already posted stay posted: {}; no dispatch record stored",
+                posted_desc(&posted)
+            )));
+        }
+        let real_deps: Vec<String> = job
+            .deps
+            .iter()
+            .map(|d| {
+                key_to_id
+                    .iter()
+                    .find(|(k, _)| k == d)
+                    .map(|(_, i)| i.clone())
+                    .expect("dep already posted")
+            })
+            .collect();
+        let argv = build_post_argv(job, room, &real_deps, secret_file);
+        let job_id = match post_one(&argv) {
+            Some(id) if !id.is_empty() => id,
+            _ => {
+                return Err(PostError(format!(
+                    "dispatch posting failed at plan job '{key}': jobs.py post returned no job id; jobs already posted stay posted: {}; no dispatch record stored",
+                    posted_desc(&posted)
+                )));
+            }
+        };
+        key_to_id.push((key.clone(), job_id.clone()));
+        posted.push((key.clone(), job_id));
+    }
+    let created_at = now;
+    let record_id = dispatch_id.map(|s| s.to_string()).unwrap_or_else(|| {
+        format!("dsp-{created_at}-{}", posted[0].1)
+    });
+    let latency_ms = clock_ms() - started;
+    let jobs: Vec<DispatchPostedJob> = order
+        .iter()
+        .map(|key| {
+            let job = by_key
+                .iter()
+                .find(|(k, _)| *k == key.as_str())
+                .map(|(_, j)| *j)
+                .expect("order covers exactly the plan's jobs");
+            DispatchPostedJob {
+                key: key.clone(),
+                id: key_to_id
+                    .iter()
+                    .find(|(k, _)| k == key)
+                    .map(|(_, i)| i.clone())
+                    .expect("job posted"),
+                title: job.title.clone(),
+                files: job.files.clone(),
+                deps: job
+                    .deps
+                    .iter()
+                    .map(|d| {
+                        key_to_id
+                            .iter()
+                            .find(|(k, _)| k == d)
+                            .map(|(_, i)| i.clone())
+                            .expect("dep already posted")
+                    })
+                    .collect(),
+                max_attempts: job.max_attempts,
+                req: job.req.clone(),
+            }
+        })
+        .collect();
+    let record = DispatchRecord {
+        id: record_id.clone(),
+        summary: plan.summary.clone(),
+        room: room.to_string(),
+        created_at,
+        order: order.clone(),
+        signed: secret_file.is_some(),
+        latency_ms,
+        jobs,
+    };
+    let spend = DispatchSpend {
+        ts: created_at,
+        dispatch_id: record_id,
+        jobs_posted: posted.len(),
+        latency_ms,
+    };
+    if let Some(announce) = announce {
+        let ids: Vec<String> = posted.iter().map(|(_, i)| i.clone()).collect();
+        if let Some(line) = format_dispatch_announcement(&record.id, &ids) {
+            announce(&line);
+        }
+    }
+    Ok((record, spend))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -3307,5 +3584,245 @@ mod tests {
         assert!(argv.contains(&"--accept=".to_string()));
         assert!(argv.contains(&"--files=".to_string()));
         assert!(argv.contains(&"--req=".to_string()));
+    }
+
+    #[test]
+    fn post_plan_posts_in_order_and_builds_record() {
+        let count = std::cell::Cell::new(0usize);
+        let argvs: std::cell::RefCell<Vec<Vec<String>>> = std::cell::RefCell::new(Vec::new());
+        let post_one = |argv: &[String]| {
+            argvs.borrow_mut().push(argv.to_vec());
+            count.set(count.get() + 1);
+            Some(format!("job-{}", count.get()))
+        };
+        let tick = std::cell::Cell::new(5000i64);
+        let clock = || {
+            let v = tick.get();
+            tick.set(v + 250);
+            v
+        };
+        let announced: std::cell::RefCell<Vec<String>> = std::cell::RefCell::new(Vec::new());
+        let announce = |line: &str| announced.borrow_mut().push(line.to_string());
+        let (record, spend) = post_plan(
+            &plan(),
+            None,
+            "main",
+            None,
+            None,
+            post_one,
+            1_700_000_000,
+            false,
+            false,
+            clock,
+            Some(announce),
+        )
+        .unwrap();
+        assert_eq!(record.id, "dsp-1700000000-job-1");
+        assert_eq!(record.room, "main");
+        assert_eq!(record.created_at, 1_700_000_000);
+        assert_eq!(record.order, vec!["a".to_string(), "b".to_string()]);
+        assert!(!record.signed);
+        assert_eq!(record.latency_ms, 250);
+        assert_eq!(record.jobs[0].id, "job-1");
+        assert_eq!(record.jobs[1].deps, vec!["job-1".to_string()]);
+        assert_eq!(record.jobs[1].max_attempts, 3);
+        assert_eq!(spend.ts, 1_700_000_000);
+        assert_eq!(spend.dispatch_id, record.id);
+        assert_eq!(spend.jobs_posted, 2);
+        assert_eq!(spend.latency_ms, 250);
+        assert_eq!(
+            announced.borrow().clone(),
+            vec!["DISPATCH:dsp-1700000000-job-1 -> 2 jobs".to_string()]
+        );
+        assert!(argvs.borrow()[1].contains(&"--deps=job-1".to_string()));
+    }
+
+    #[test]
+    fn post_plan_empty_plan_refused() {
+        let err = post_plan(
+            &cplan(vec![]),
+            None,
+            "main",
+            None,
+            None,
+            |_: &[String]| Some("job-1".into()),
+            0,
+            false,
+            false,
+            || 0,
+            None::<fn(&str)>,
+        )
+        .unwrap_err();
+        assert!(err.0.contains("non-empty"), "got: {err}");
+    }
+
+    #[test]
+    fn post_plan_crew_mode_refuses_unsigned_before_any_post() {
+        let count = std::cell::Cell::new(0usize);
+        let post_one = |_: &[String]| {
+            count.set(count.get() + 1);
+            Some("job-1".into())
+        };
+        let err = post_plan(
+            &plan(),
+            None,
+            "main",
+            None,
+            None,
+            post_one,
+            0,
+            true,
+            false,
+            || 0,
+            None::<fn(&str)>,
+        )
+        .unwrap_err();
+        assert!(err.0.contains("crew mode requires"), "got: {err}");
+        assert_eq!(count.get(), 0);
+    }
+
+    #[test]
+    fn post_plan_order_must_cover_jobs() {
+        let err = post_plan(
+            &plan(),
+            Some(&["a".to_string()]),
+            "main",
+            None,
+            None,
+            |_: &[String]| Some("job-1".into()),
+            0,
+            false,
+            false,
+            || 0,
+            None::<fn(&str)>,
+        )
+        .unwrap_err();
+        assert!(err.0.contains("must cover exactly"), "got: {err}");
+    }
+
+    #[test]
+    fn post_plan_missing_dep_refused_before_post() {
+        let count = std::cell::Cell::new(0usize);
+        let post_one = |_: &[String]| {
+            count.set(count.get() + 1);
+            Some("job-1".into())
+        };
+        let err = post_plan(
+            &plan(),
+            Some(&["b".to_string(), "a".to_string()]),
+            "main",
+            None,
+            None,
+            post_one,
+            0,
+            false,
+            false,
+            || 0,
+            None::<fn(&str)>,
+        )
+        .unwrap_err();
+        assert!(err.0.contains("is not posted yet"), "got: {err}");
+        assert!(err.0.contains("'b'"), "got: {err}");
+        assert!(err.0.contains("'a'"), "got: {err}");
+        assert!(err.0.contains("stay posted: none"), "got: {err}");
+        assert_eq!(count.get(), 0);
+    }
+
+    #[test]
+    fn post_plan_failed_post_names_posted() {
+        let count = std::cell::Cell::new(0usize);
+        let post_one = |_: &[String]| {
+            count.set(count.get() + 1);
+            if count.get() == 1 {
+                Some("job-1".into())
+            } else {
+                None
+            }
+        };
+        let err = post_plan(
+            &plan(),
+            None,
+            "main",
+            None,
+            None,
+            post_one,
+            0,
+            false,
+            false,
+            || 0,
+            None::<fn(&str)>,
+        )
+        .unwrap_err();
+        assert!(err.0.contains("returned no job id"), "got: {err}");
+        assert!(err.0.contains("a -> job-1"), "got: {err}");
+    }
+
+    fn big_plan(n: usize) -> Plan {
+        Plan {
+            goal: "g".into(),
+            summary: String::new(),
+            jobs: (0..n)
+                .map(|i| PlanJob {
+                    key: format!("j{i}"),
+                    title: format!("J{i}"),
+                    files: vec![],
+                    deps: vec![],
+                    max_attempts: 3,
+                    spec: String::new(),
+                    accept: vec![],
+                    req: vec![],
+                })
+                .collect(),
+        }
+    }
+
+    #[test]
+    fn post_plan_large_refused_without_confirm() {
+        let count = std::cell::Cell::new(0usize);
+        let post_one = |_: &[String]| {
+            count.set(count.get() + 1);
+            Some("job-1".into())
+        };
+        let err = post_plan(
+            &big_plan(13),
+            None,
+            "main",
+            None,
+            None,
+            post_one,
+            0,
+            false,
+            false,
+            || 0,
+            None::<fn(&str)>,
+        )
+        .unwrap_err();
+        assert!(err.0.contains("dispatch refused: this plan is large"), "got: {err}");
+        assert_eq!(count.get(), 0);
+    }
+
+    #[test]
+    fn post_plan_large_posts_with_confirm() {
+        let count = std::cell::Cell::new(0usize);
+        let post_one = |_: &[String]| {
+            count.set(count.get() + 1);
+            Some(format!("job-{}", count.get()))
+        };
+        let (record, _) = post_plan(
+            &big_plan(13),
+            None,
+            "main",
+            None,
+            None,
+            post_one,
+            0,
+            false,
+            true,
+            || 0,
+            None::<fn(&str)>,
+        )
+        .unwrap();
+        assert_eq!(record.jobs.len(), 13);
+        assert_eq!(count.get(), 13);
     }
 }
