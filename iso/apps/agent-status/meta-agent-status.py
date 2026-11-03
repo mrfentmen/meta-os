@@ -4,14 +4,14 @@
 Reads files. Writes nothing. Starts nothing. Every number printed here is
 read from a file on disk, and a file that is absent is reported absent.
 
-    meta-agent-status [--root DIR] [--json] [--stale-after SECONDS]
+    meta-agent-status [--root DIR] [--json] [--stale-after SECONDS] [--strict]
 
 The root defaults to $METAOS_ROOT, or /opt/metaos when that is unset.
 Freshness is the heartbeat file's modification time, not a field inside it.
 
 Exit codes
     0  every required row was read
-    1  a required row is missing or unreadable
+    1  a required row is missing or unreadable (or stale, with --strict)
     2  bad usage
 """
 
@@ -121,6 +121,8 @@ def main(argv=None):
     parser.add_argument("--root", default=os.environ.get("METAOS_ROOT", DEFAULT_ROOT))
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--stale-after", type=float, default=DEFAULT_STALE)
+    parser.add_argument("--strict", action="store_true",
+                        help="treat a stale heartbeat as a failure")
     args = parser.parse_args(argv)
 
     root = Path(args.root).expanduser()
@@ -128,6 +130,8 @@ def main(argv=None):
     rows = [read_row(p, root, args.stale_after, now) for p in probe_table()]
 
     failed = [r for r in rows if r["need"] == REQUIRED and r["status"] in ("missing", "unreadable")]
+    if args.strict:
+        failed += [r for r in rows if r["status"] == "stale"]
     result = {"root": str(root), "ok": not failed, "rows": rows}
 
     if args.json:

@@ -5,7 +5,7 @@
 # anything. Point --root at a Cubic chroot, or at a staging directory when
 # you only want to inspect the tree it would produce.
 #
-#   iso/tools/apply.sh --root DIR [--user NAME] [--dry-run]
+#   iso/tools/apply.sh --root DIR [--dry-run] [--verify] [--revert]
 #
 # Every source is required. A missing one is reported by name and the run
 # exits 1, because a half-applied base is worse than an untouched one.
@@ -15,27 +15,30 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ISO="$(cd "$HERE/.." && pwd)"
 
 ROOT=""
-USER_NAME="meta"
 DRY=0
+VERIFY=0
+REVERT=0
 copied=0
 planned=0
 fail=0
 
 usage() {
   cat <<'USAGE'
-usage: iso/tools/apply.sh --root DIR [--user NAME] [--dry-run]
+usage: iso/tools/apply.sh --root DIR [--dry-run] [--verify] [--revert]
 
   --root DIR    target root (a Cubic chroot or a staging directory)
-  --user NAME   user that receives the Plank dock items (default: meta)
   --dry-run     print what would be installed, write nothing
+  --verify      run meta-doctor against the root after installing
+  --revert      remove exactly the files the last install recorded
 USAGE
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --root)    ROOT="${2:-}"; shift 2 ;;
-    --user)    USER_NAME="${2:-}"; shift 2 ;;
     --dry-run) DRY=1; shift ;;
+    --verify)  VERIFY=1; shift ;;
+    --revert)  REVERT=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "apply: unknown argument $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -57,9 +60,34 @@ if [ ! -d "$ROOT" ]; then
   echo "apply: not a directory: $ROOT" >&2
   exit 2
 fi
-if [ -z "$USER_NAME" ]; then
-  echo "apply: --user cannot be empty" >&2
-  exit 2
+MANIFEST="$ROOT/var/lib/metaos/apply-manifest.txt"
+
+# Revert removes what the last run recorded and nothing else. A guessed list
+# would sooner or later delete a file the base image owns.
+if [ "$REVERT" = "1" ]; then
+  if [ ! -f "$MANIFEST" ]; then
+    echo "apply: no manifest at $MANIFEST, nothing to revert"
+    exit 0
+  fi
+  removed=0
+  while IFS= read -r rel; do
+    [ -n "$rel" ] || continue
+    if [ -f "$ROOT$rel" ]; then
+      rm -f "$ROOT$rel" && removed=$((removed + 1))
+    fi
+  done < "$MANIFEST"
+  rm -f "$MANIFEST"
+  # Only our own tree: nothing else is pruned, because empty directories
+  # elsewhere belong to the base image.
+  find "$ROOT/usr/share/metaos" -type d -empty -delete 2>/dev/null || true
+  echo "apply: removed $removed file(s)"
+  exit 0
+fi
+
+MANIFEST_TMP=""
+if [ "$DRY" != "1" ]; then
+  MANIFEST_TMP="$(mktemp "${TMPDIR:-/tmp}/metaos-apply.XXXXXX")"
+  trap 'rm -f "$MANIFEST_TMP"' EXIT
 fi
 
 put() {
@@ -77,13 +105,14 @@ put() {
   mkdir -p "$(dirname "$ROOT$dst")"
   if install -m "$mode" "$src" "$ROOT$dst"; then
     copied=$((copied + 1))
+    [ -n "$MANIFEST_TMP" ] && printf '%s\n' "$dst" >> "$MANIFEST_TMP"
   else
     echo "FAILED   $dst" >&2
     fail=$((fail + 1))
   fi
 }
 
-echo "apply: root $ROOT, user $USER_NAME"
+echo "apply: root $ROOT"
 
 for f in "$ISO"/plymouth/metaos/*; do
   put "$f" "/usr/share/plymouth/themes/metaos/$(basename "$f")"
@@ -100,8 +129,11 @@ done
 for f in "$ISO"/apps/desktop/*.desktop; do
   put "$f" "/usr/share/applications/$(basename "$f")"
 done
+# Dock items go to a shared directory, never to a home guessed at install
+# time: Calamares creates the account after this runs, with a name the user
+# types. meta-first-login copies them into the real $HOME at first login.
 for f in "$ISO"/apps/plank/*.dockitem; do
-  put "$f" "/home/$USER_NAME/.config/plank/dock1/launchers/$(basename "$f")"
+  put "$f" "/usr/share/metaos/dock/$(basename "$f")"
 done
 
 put "$ISO/apps/agent-status/meta-agent-status.py" "/usr/local/bin/meta-agent-status" 755
@@ -109,10 +141,41 @@ put "$ISO/apps/chromium/meta-start.html" "/usr/share/metaos/start/meta-start.htm
 put "$ISO/apps/chromium/tokens.css" "/usr/share/metaos/start/tokens.css"
 put "$ISO/apps/chromium/policies.json" "/etc/chromium/policies/managed/metaos.json"
 
+put "$ISO/theme/wallpaper/meta-wallpaper.png" "/usr/share/metaos/theme/meta-wallpaper.png"
+put "$ISO/theme/gtk/metaos.css" "/usr/share/metaos/theme/gtk.css"
+put "$ISO/theme/xfce4-desktop.xml" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+
+# First-login work: the dock, wallpaper and colours belong to whoever logs in,
+# and that account does not exist until after the install.
+put "$ISO/base/meta-first-login.sh" "/usr/local/bin/meta-first-login" 755
+put "$ISO/base/meta-doctor.py" "/usr/local/bin/meta-doctor" 755
+put "$ISO/base/autostart/meta-first-login.desktop" "/etc/xdg/autostart/meta-first-login.desktop"
+
+# Login screen: greeter config, its backdrop, and the theme it asks for.
+put "$ISO/theme/lightdm/lightdm-gtk-greeter.conf" "/etc/lightdm/lightdm-gtk-greeter.conf"
+put "$ISO/theme/wallpaper/greeter-wallpaper.png" "/usr/share/metaos/theme/greeter-wallpaper.png"
+put "$ISO/theme/lightdm/themes/MetaOS/index.theme" "/usr/share/themes/MetaOS/index.theme"
+put "$ISO/theme/lightdm/themes/MetaOS/gtk-3.0/gtk.css" "/usr/share/themes/MetaOS/gtk-3.0/gtk.css"
+
+# Boot menu: the theme lives where GRUB looks, and a drop-in sets it without
+# touching the base image's own /etc/default/grub.
+put "$ISO/boot/grub/themes/metaos/theme.txt" "/boot/grub/themes/metaos/theme.txt"
+put "$ISO/boot/grub/themes/metaos/meta-grub.png" "/boot/grub/themes/metaos/meta-grub.png"
+put "$ISO/boot/grub/metaos-theme.cfg" "/etc/default/grub.d/metaos-theme.cfg"
+
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"
-else
-  echo "apply: $copied file(s) installed, $fail missing"
+  [ "$fail" -eq 0 ] || exit 1
+  exit 0
+fi
+
+mkdir -p "$(dirname "$MANIFEST")" && install -m 644 "$MANIFEST_TMP" "$MANIFEST" || fail=$((fail + 1))
+echo "apply: $copied file(s) installed, $fail missing, manifest $MANIFEST"
+
+if [ "$VERIFY" = "1" ] && [ "$fail" -eq 0 ]; then
+  echo
+  echo "apply: verifying the tree"
+  python3 "$ISO/base/meta-doctor.py" --root "$ROOT" || fail=$((fail + 1))
 fi
 
 [ "$fail" -eq 0 ] || exit 1

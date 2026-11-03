@@ -1,0 +1,17 @@
+# MetaOS base package manifest — the format frozen in
+# metaos-contracts/PACKAGES.md: one apt package per line, `#fetch <url> <dest>`
+# for files. A lane appends its own lines and never edits another lane's.
+#
+# Binaries the Xubuntu 24.04.5 base image already provides. Listed so the
+# desktop entries can be checked against something real: a launcher for a
+# program nobody installs is a dead icon.
+#base: thunar xfce4-terminal xfce4-settings-manager chromium
+
+# Lane: theme and shell
+plank
+fonts-inter
+lightdm-gtk-greeter
+
+# Lane: boot and install
+plymouth
+calamares

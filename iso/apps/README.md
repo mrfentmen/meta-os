@@ -4,7 +4,9 @@ Launch configs only — no app is rewritten, no stub ships. Xubuntu already
 has `thunar`, `xfce4-terminal`, `xfce4-settings-manager` and `chromium`;
 this lane makes them MetaOS: our names, our dock, our start page.
 
-**Label: CODE-INSPECTED.** The configs are parsed and checked by
+**Label: CODE-INSPECTED.** Verify the whole lane with
+`iso/tools/verify_lane.sh`, which runs the static checker and every ISO test
+file and ends in `LANE GREEN` or `LANE RED`. The configs are parsed and checked by
 `iso/tools/check_iso_config.py`. Nothing here has been clicked in a live
 session — this Mac has no VM, so the H+6 line "each app opens from the dock,
 does its job, closes clean" stays **UNPROVEN** until a VM run.

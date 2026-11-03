@@ -3,14 +3,14 @@
 Two lanes from `METAOS_1.0_12H_PLAN.md`: **boot + installer** and **core apps**.
 Everything below is on branch `bond/12h`, committed, checked, and labelled.
 
-## RK-007 — boot proof: BLOCKED on this machine
+## RK-007 — boot proof: runs on the 32GB MacBook
 
 | Step | State |
 |---|---|
 | userspace ELFs (hello/sleeper/crasher/readkey) | BUILT on `bond/rk007` |
 | kernel ELF (`metaos-kernel`, bootloader_api 0.11.17) | BUILT, 4.8 MB, no errors |
 | host-side image builder (`os-build/layer1/rk007-builder`) | **COMPILED, image produced** — 6,784,000 bytes, boot sector ends `55aa` |
-| boot in QEMU | **BLOCKED** — no QEMU on this Mac, and the boss ruled out running it here |
+| boot in QEMU | **BLOCKED on this machine only** — boots are run on the 32GB MacBook; see `os-build/BOOT_ON_32GB_MAC.md` |
 
 The 0.11 flow is confirmed by the build itself: `bootloader_api` is the only
 kernel dependency and the host `bootloader` crate supplies BiosBoot. The
@@ -18,7 +18,7 @@ builder needs `nightly`, `rust-src` **and `llvm-tools-preview`**. All three are
 present here now; the third was missing until this run, and without it
 `bootloader`'s build script dies with `failed to get llvm tools: NotFound`.
 
-To finish RK-007, someone with QEMU runs:
+To finish RK-007, run this on the 32GB MacBook. `iso/tools/boot_kit.sh --build` does all four build steps; the commands are kept here so the procedure is readable without the script:
 
 ```sh
 cd os-build/layer1/rk007-builder && cargo +nightly build
