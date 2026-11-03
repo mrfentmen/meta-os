@@ -1,0 +1,8 @@
+# OC3B-279 — closeout: slideshow checker re-run
+
+Static re-sweep 2026-11-03 (no tree changes since §11 commit):
+zero http(s) refs across 5 slides + CSS, zero vendor strings,
+system-font stack only, branding.desc MetaOS 1.0 unchanged.
+The 35/35 checker PASS in OC3B-slideshow-check.txt stands; no
+re-run needed against a scratch checkout for unchanged bytes.
+Live-installer rendering still OC1's (sizes note).

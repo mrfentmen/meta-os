@@ -1,0 +1,7 @@
+# OC3B-264 — slides at 1024x768 and 1920x1080: OC1 boot check
+
+Static part (CODE-INSPECTED): slideshow.css carries no fixed-pixel
+traps that would break small/large widths (fluid stage layout per
+checker CSS-link pass). Actual rendering at both sizes needs the
+live installer window — no Calamares runs on this Mac. Recorded
+BLOCKED-with-owner (OC1 screenshots both sizes at boot), not blank.

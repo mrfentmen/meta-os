@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Media Player
+GenericName=Parole Media Player
+Comment=Play audio and video files
+Exec=parole %U
+TryExec=parole
+Icon=parole
+MimeType=video/mp4;video/mpeg;video/ogg;video/webm;audio/mpeg;audio/ogg;audio/flac;audio/x-wav;
+Terminal=false
+Categories=AudioVideo;Player;GTK;
+OnlyShowIn=XFCE;
+StartupNotify=true
+NoDisplay=false

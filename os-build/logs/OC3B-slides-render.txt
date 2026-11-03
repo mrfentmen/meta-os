@@ -1,0 +1,19 @@
+# OC3B-253/254/255/256/263 — slides render/static sweep (from the 35/35 run)
+
+Source: same checker run as OC3B-slideshow-check.txt (scratch git
+checkout, main@c38c6187, 35 pass / 0 fail).
+
+- 253 offline: per-slide zero http(s) URLs + CSS zero web URLs.
+  Slides + CSS are local files only. Live-installer rendering is
+  OC1's boot screenshot, named not claimed.
+- 254 no http(s): grep-equivalent inside the checker (URL scan per
+  slide + CSS). Result: none found. branding.desc documents URLs
+  deliberately absent (no public domain yet; support/release-notes
+  URLs off in welcome.conf).
+- 255 palette: checker pixel/color gate passes Meta palette only;
+  no flavour/vendor words in visible strings of any slide.
+- 256 strings: zero Ubuntu/Apple/vendor words in visible strings
+  across all five slides + CSS.
+- 263 web fonts: none. Font stack is system-ui, Segoe UI, Roboto,
+  Arial, Noto Sans (system fonts only, verified in slideshow.css).
+  No @import, no remote font URLs.

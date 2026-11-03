@@ -1,0 +1,3 @@
+# OC3B-112/113 — screenshot file and save path: pointer
+
+Taken at OC1 first boot with the committed screenshooter entry; save target ~/Pictures per the operator doc. Boot proof owned by OC1.

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>About MetaOS</title>
+<style>
+:root{--bg:#070B16;--ink:#EDF5FF;--dim:#9DB4D0;--blue:#1877F2;--line:#1C2A45}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 Verdana,system-ui,sans-serif;padding:48px 24px;max-width:720px;margin:0 auto}
+h1{font-size:32px;margin:0 0 4px}.sub{color:var(--dim);margin:0 0 28px}
+table{border-collapse:collapse;width:100%;margin:0 0 22px}td{border:1px solid var(--line);padding:9px 12px;vertical-align:top}
+td.k{color:var(--dim);width:34%}p.dim{color:var(--dim);font-size:13.5px}
+</style>
+</head>
+<body>
+<h1>About MetaOS 1.0</h1>
+<p class="sub">A Xubuntu-based Xfce desktop, Meta-branded, built to demo on.</p>
+<table>
+<tr><td class="k">System</td><td>MetaOS 1.0 — Xubuntu 24.04 "Noble" base, Xfce desktop</td></tr>
+<tr><td class="k">Kernel</td><td>Linux amd64 (Debian-image route: linux-image-amd64). The bare-metal Rust kernel is the 2.0 track, not this image.</td></tr>
+<tr><td class="k">Base</td><td>Xubuntu core remaster (Cubic route); Debian live-build route carries the same package set</td></tr>
+<tr><td class="k">Track split</td><td>1.0 = this remaster, demonstrable now. 2.0 = bare-metal Rust kernel + Goose services + Lobster agent runtime (K1–K6 build steps; not booted here)</td></tr>
+</table>
+<p class="dim">Kernel/base strings describe the build inputs on record. Running-kernel proof comes from OC1's boot serials, not from this page.</p>
+</body>
+</html>

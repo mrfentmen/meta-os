@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Atril
+GenericName=Document Viewer
+Comment=View PDF files (base-observed binary on Xubuntu 24.04.5; KEEP line still says evince pending Hana ack — see README)
+Exec=atril %U
+TryExec=atril
+Icon=accessories-document-viewer
+Terminal=false
+Categories=Office;Viewer;GTK;
+StartupNotify=true

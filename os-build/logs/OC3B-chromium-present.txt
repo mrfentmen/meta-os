@@ -1,0 +1,13 @@
+# OC3B-001/002 — Chromium in the target image: BLOCKED with owner
+
+- Evidence searched: ISO top-level file list (925 entries, bsdtar-read,
+  no squashfs tooling on this Mac) — zero chromium/firefox hits in
+  pool/ or elsewhere; `os/os/live-build/.../metaos.list.chroot` names
+  `chromium` (Debian route); Hana slice-1 `packages.txt` does NOT list
+  any browser (base slice = tools only, browser presumably from the
+  Xubuntu base or a later slice).
+- Verdict: package presence on the BOOTED image is unconfirmable from
+  here. BLOCKED — owner: whoever owns the Cubic-route provision step
+  (Hana/ISO lane), to confirm `chromium` installed + record version.
+- OC3B-002 version line: intentionally blank until that confirmation.
+  No version is guessed here.
