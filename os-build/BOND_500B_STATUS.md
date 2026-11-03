@@ -510,7 +510,7 @@ All tools read logs as data; none writes to a log or to `kernel/src`.
 Section 18 verification: 12 test files, **50 tests pass, 0 fail** (one command
 per file; every exit status checked).
 
-## Section 19 — Officina and Musica pure code (CB2-451..475) — 8/25 delivered
+## Section 19 — Officina and Musica pure code (CB2-451..475) — 14/25 delivered
 
 Officina's pure modules: `heatsink.py` (simulator + bounds), `design_loop.py`
 (post/claim/score/held-out gate), `brief.py` (rough-words parser + iterator),
@@ -526,14 +526,31 @@ Officina's pure modules: `heatsink.py` (simulator + bounds), `design_loop.py`
 | CB2-471 | `os/worlds/officina/spec_validate.py` | four fields, numeric, in range; bool refused |
 | CB2-472 | `tests/officina/test_officina_spec_validate.py` | non-numeric field named |
 | CB2-475 | `tests/officina/test_officina_pack_shape.py` | pack.json parses; every declared runtime part exists |
+| CB2-463 | `tests/musica-catalogue-edges.test.mjs` | every published track has a title and duration; key and tempo joined from its take record |
+| CB2-464 | `os/worlds/musica/catalogue_validate.mjs` | duplicate take ids refused, naming both indexes |
+| CB2-467 | `tests/musica-library-data.test.mjs` | real library round-trips; keeper list length and keeper rate match the counts |
+| CB2-468 | `os/worlds/musica/catalogue_validate.mjs` | a holding with no licence line is flagged `rights missing` |
+| CB2-473 | `tests/musica-normalize-data.test.mjs` | title transform trims, single-spaces, title-cases |
+| CB2-474 | `tests/musica-normalize-data.test.mjs` | idempotent on every real title; a non-string is refused, never coerced |
+
+Two things the Musica data revealed while pinning these tests:
+- The catalogue's own tracks carry `title`, `take_id`, `duration_s`, `licence`.
+  Key and tempo live on the take record, so CB2-463 joins the two by
+  `take_id` instead of inventing fields the studio never writes.
+- `gate-packet/library.json` holdings carry no licence field. CB2-468 pins the
+  validator that requires one and proves it flags the gap on a fixture; the
+  published file is not repaired here, because rewriting studio output to
+  satisfy a test would be exactly the fake the wave forbids.
 
 Not delivered: CB2-454 (DesignJob has no iteration/change/result record),
 CB2-455 (no STOP-file check function), CB2-458 (no schematic module),
-CB2-459 (no enumerated 14-check gate list), CB2-460..470 and 473..474
-(Musica has Python runtime modules; there are no JS note/catalogue/variation/
-library/keeper/normalise modules for those node tests to import).
+CB2-459 (no enumerated 14-check gate list), CB2-460..462 (no JS note/semitone
+module; the mapping lives in `runtime/theory.py`), CB2-465..466 (no JS
+variation generator; `runtime/compose.py` owns it), CB2-469..470 (the take log
+has a `timestamp` and a `verdict`, not a start/end keeper window).
 
-Section 19 verification: 4 test files, **19 tests pass, 0 fail**.
+Section 19 verification: 7 test files, **30 tests pass, 0 fail** — the four
+Officina files unchanged at 19, plus 11 new Musica tests (4 + 3 + 4).
 
 ## Section 20 — Documentation-as-code (CB2-476..500) — 19/25 delivered
 
