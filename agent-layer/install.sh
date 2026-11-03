@@ -2,7 +2,12 @@
 # OC2 agent-layer installer — idempotent. Safe to re-run; every step guards.
 # Usage: sh agent-layer/install.sh
 set -u
-ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# Repo root: the directory containing agent-layer/install.sh's parent.
+# (Do NOT use `git rev-parse` here — it depends on $PWD, not the script.)
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" >/dev/null 2>&1 && pwd)"
+ROOT="$(dirname "$SCRIPT_DIR")"
+ROOT="$(dirname "$ROOT")"
+[ -f "$ROOT/agent-layer/install.sh" ] || ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 CONF="$HOME/.config/oc2-agent"
 UNITDIR="$HOME/.config/systemd/user"
 MARK="# oc2-agent SPARK_API_KEY import (managed by agent-layer/install.sh)"
@@ -13,6 +18,7 @@ echo "== OC2 agent layer install (root: $ROOT) =="
 command -v python3 >/dev/null || { echo "FAIL: python3 missing"; exit 1; }
 
 # 2. Deps (user site; cv2 optional — evidence.py degrades without it).
+# (Needs pip3: `sudo apt-get install -y python3-pip` on minimal images.)
 pip3 install --user pillow numpy 2>&1 | tail -n 1
 
 # 3. Env file (non-secrets). Create once; otherwise only refresh OC2_CHECKOUT.
