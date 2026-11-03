@@ -1,11 +1,11 @@
 # Molecule viewer — sources (NB-037, NB-030, NB-031)
 
 Viewer: `labs/molecules/index.html`. Three.js r152 UMD vendored at
-`labs/molecules/vendor/three.min.js` (downloaded from
-`unpkg three@0.152.2`, 633,338 bytes; license in
-`vendor/LICENSE-three.txt`). No Three.js copy existed anywhere in this
-tree (checked: no film dir, no three.js files), so vendoring fresh was
-the only option. Orbit controls and labels are hand-rolled in the page.
+`vendor/three.min.js` (one shared copy for all four 3D pages; the former
+per-page copies were byte-identical, md5 cd7f71f8, and were removed
+2026-11-03. Originally downloaded from `unpkg three@0.152.2`, 633,338
+bytes; license in `vendor/LICENSE-three.txt`). Orbit controls and labels
+are hand-rolled in the page.
 
 ## Embedded structures (offline JSON in `data/`)
 

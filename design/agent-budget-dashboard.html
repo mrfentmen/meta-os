@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agent Token-Budget Simulator</title>
+<link rel="icon" href="data:,">
 <style>
   :root { color-scheme: dark; --bg:#070b16; --panel:#0e1527; --line:#27406e; --text:#edf5ff; --muted:#8291ac; --blue:#1877f2; }
   body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,system-ui,sans-serif; padding:24px; }
@@ -93,16 +94,25 @@ function demoData() {
   ];
 }
 const $ = (id) => document.getElementById(id);
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) =>
+    ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+}
 function fmt(n) { return n.toLocaleString("en-US"); }
 function money(n) { return "$" + n.toFixed(2); }
 function refresh() {
   let runs;
   try { runs = JSON.parse($("runs").value || "[]"); }
-  catch (e) { $("summary").innerHTML = "<span class=halted>Bad JSON: " + e.message + "</span>"; return; }
+  catch (e) { $("summary").innerHTML = "<span class=halted>Bad JSON: " + esc(e.message) + "</span>"; return; }
   const cap = +$("cap").value, win = +$("win").value;
   $("capv").textContent = fmt(cap);
   $("winv").textContent = fmt(win);
   const p = simulate(runs, cap, win);
+  if (!runs.length) {
+    $("summary").innerHTML = "<div class=big>$0.00</div><div>no runs pasted — projection is zeros. Paste ledger JSON or press Load demo.</div>";
+    $("byagent").querySelector("tbody").innerHTML = "";
+    return;
+  }
   $("summary").innerHTML =
     "<div class=big>" + money(p.cost) + "</div>" +
     "<div>saved vs uncapped: <span class=saved>" + money(p.saved) + "</span></div>" +
@@ -112,13 +122,14 @@ function refresh() {
   tb.innerHTML = "";
   for (const [name, a] of Object.entries(p.byAgent)) {
     const tr = document.createElement("tr");
-    tr.innerHTML = "<td>" + name + "</td><td>" + a.runs + "</td><td>" + a.halted + "</td><td>" + fmt(a.tokens) + "</td><td>" + money(a.cost) + "</td>";
+    tr.innerHTML = "<td>" + esc(name) + "</td><td>" + a.runs + "</td><td>" + a.halted + "</td><td>" + fmt(a.tokens) + "</td><td>" + money(a.cost) + "</td>";
     tb.appendChild(tr);
   }
 }
 $("demo").addEventListener("click", () => { $("runs").value = JSON.stringify(demoData(), null, 1); refresh(); });
 $("clear").addEventListener("click", () => { $("runs").value = "[]"; refresh(); });
 $("cap").addEventListener("input", refresh);
+$("runs").addEventListener("input", refresh);
 $("win").addEventListener("input", refresh);
 $("runs").value = JSON.stringify(demoData(), null, 1);
 refresh();

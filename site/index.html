@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meta OS — A platform that never sleeps</title>
+<link rel="icon" href="data:,">
 <meta name="description" content="Meta OS is a real operating system with its own Rust kernel, built for agents and for users. Systems plug into it: Imperium, Science Lab, Musica, Officina.">
 <style>
   :root{
@@ -36,12 +37,13 @@
   .card h3{margin:0 0 4px;font-size:18px}
   .card p{margin:6px 0 0;color:var(--dim);font-size:14.5px}
   .card .tag2{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
-  table{width:100%;border-collapse:collapse;background:var(--panel);
+  table{width:100%;table-layout:fixed;border-collapse:collapse;background:var(--panel);
     border:1px solid var(--line);border-radius:12px;overflow:hidden}
   td,th{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;font-size:14.5px}
   tr:last-child td{border-bottom:none}
   td.num{color:var(--accent);font-weight:700;width:52px}
-  td.own{color:var(--dim);white-space:nowrap}
+  td{overflow-wrap:anywhere}
+  td.own{color:var(--dim);white-space:normal}
   .ok{color:var(--green);font-weight:600}
   .wip{color:var(--amber);font-weight:600}
   .links{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}

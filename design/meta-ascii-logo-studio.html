@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#070b16">
   <title>Meta Symbol | ASCII Studio</title>
+  <link rel="icon" href="data:,">
   <style>
     :root {
       color-scheme: dark;
@@ -570,6 +571,16 @@
     const statusDot = document.getElementById('status-dot');
     const ctx = canvas.getContext('2d', { alpha: true, desynchronized: true });
 
+    // No-2D guard: a missing canvas context must say so on the page,
+    // not die in the console. Everything below needs ctx, so it runs
+    // inside the guard; without a context the header, the message,
+    // and the (inert) controls are all the page shows.
+    if (!ctx) {
+      statusLabel.textContent = 'RENDER UNAVAILABLE';
+      scene.innerHTML = '<p role="alert" style="padding:24px">The ASCII studio needs a 2D canvas context, and this browser did not provide one. Nothing is drawn — no placeholder image substituted.</p>';
+    }
+    if (ctx) {
+
     // STUDIO-REDUCED-MOTION (Hana Agent1): the console's loop
     // behind the panels renders one still frame under Reduce
     // Motion (js/logo-background.js), but this studio kept
@@ -1130,6 +1141,7 @@
     setPaused(storedPaused());
     resizeCanvas();
     renderFrame();
+    } // end if (ctx)
   </script>
 </body>
 </html>
