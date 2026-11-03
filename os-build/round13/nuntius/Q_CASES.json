@@ -1,6 +1,6 @@
 {
   "tool": "relay/relay.round13.test.mjs",
-  "ran_at": "2026-11-03T01:51:30.455Z",
+  "ran_at": "2026-11-03T01:55:57.977Z",
   "counts": {
     "total": 25,
     "ok": 17,
@@ -58,7 +58,7 @@
     {
       "task": "R13-410",
       "case": "fast producer burst",
-      "outcome": "200 accepted in 68 ms",
+      "outcome": "200 accepted in 73 ms",
       "finding": "no rate limit or backpressure: every post in the burst was accepted"
     },
     {

@@ -24,9 +24,9 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | Q — Nuntius relay | **COMPLETE** | 25 / 25; **25 tests pass**, 8 findings | `os-build/round13/nuntius/SECTION_Q.md` |
 | R — Nuntius board | **COMPLETE** | 25 / 25; **25 tests pass**, 4 findings, DOM dumps in `dom/` | `os-build/round13/nuntius/SECTION_R.md` |
 | S — userspace | **WRITTEN — CHECK BLOCKED** | 25 / 25 sources; 19 implemented, 1 partial, 6 ABI-blocked; `cargo check` blocked on this host's toolchain | `os-build/round13/userspace/SECTION_S.md` |
-| T — federation + closeout | NOT STARTED | 0 / 25 | — |
+| T — federation + closeout | **COMPLETE** | 15 SIMULATED drills + 10 closeout docs; 19 labelled records | `os-build/round13/federation/SECTION_T.md`, `FINISH.md` |
 
-**Sections A–S:** 475 / 475 addressed (S is written and committed; its `cargo check` is a host-toolchain gap, so nothing in S is called compiled or booted) — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
+**Sections A–T:** 500 / 500 addressed (S is written and committed; its `cargo check` is a host-toolchain gap, so nothing in S is called compiled or booted) — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
 (E), 9 missing artifacts (H), 9 unimplemented OSINT angles (I), 21 baton gaps (L), 1 review
 item (G), 4 real observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J), 5 runtime
 findings (K), 4 loop findings (M–O: no restart supervisor, a missing cwd kills the caller,

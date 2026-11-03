@@ -17,7 +17,7 @@ Every case drives the real server on a loopback ephemeral port, or the real CLI 
 | R13-407 | empty message | 400 for empty text |  |
 | R13-408 | malformed frame | 400 with a JSON error |  |
 | R13-409 | slow consumer | 50 buffered lines survived a late first read | the backlog is served in one response; nothing caps or trims it |
-| R13-410 | fast producer burst | 200 accepted in 68 ms | no rate limit or backpressure: every post in the burst was accepted |
+| R13-410 | fast producer burst | 200 accepted in 73 ms | no rate limit or backpressure: every post in the burst was accepted |
 | R13-411 | viewer reconnect | watermark resumed with no gap and no repeat |  |
 | R13-412 | backlog trim behaviour | no trim: 200 of 200 retained | rooms grow without bound; there is no trim, cap or eviction path in relay.mjs |
 | R13-413 | nick parsing | nick 'a:b' is recorded, but a first-colon reader sees 'a' | the line format is not escaped: a colon in the nick makes the line ambiguous for any reader |

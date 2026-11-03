@@ -1,0 +1,443 @@
+{
+  "tool": "federation/sim.mjs",
+  "label": "SIMULATED",
+  "ran_at": "2026-11-03T01:55:57.409Z",
+  "counts": {
+    "drills": 15,
+    "records": 19,
+    "handoffs": 4
+  },
+  "all_records_labelled_simulated": true,
+  "handoff_pairs_linked": true,
+  "rows": [
+    {
+      "task": "R13-476",
+      "mode": "routine",
+      "target": "nypd",
+      "event": "routine event: noise complaint on a residential block",
+      "correlation": null,
+      "records": [
+        0
+      ],
+      "response": "unit assigned, scene logged (simulated)"
+    },
+    {
+      "task": "R13-477",
+      "mode": "routine",
+      "target": "fdny",
+      "event": "routine event: smoke reported from a basement vent",
+      "correlation": null,
+      "records": [
+        1
+      ],
+      "response": "engine queued, exposure noted (simulated)"
+    },
+    {
+      "task": "R13-478",
+      "mode": "routine",
+      "target": "ems",
+      "event": "routine event: fall on a stairway, one casualty",
+      "correlation": null,
+      "records": [
+        2
+      ],
+      "response": "medic assigned, ETA logged (simulated)"
+    },
+    {
+      "task": "R13-479",
+      "mode": "routine",
+      "target": "hospital",
+      "event": "routine event: incoming patient, triage requested",
+      "correlation": null,
+      "records": [
+        3
+      ],
+      "response": "bed reserved, triage noted (simulated)"
+    },
+    {
+      "task": "R13-480",
+      "mode": "routine",
+      "target": "dsny",
+      "event": "routine event: missed collection on a route",
+      "correlation": null,
+      "records": [
+        4
+      ],
+      "response": "route amended, debris noted (simulated)"
+    },
+    {
+      "task": "R13-481",
+      "mode": "routine",
+      "target": "dep",
+      "event": "routine event: hydrant pressure below normal",
+      "correlation": null,
+      "records": [
+        5
+      ],
+      "response": "crew queued, main checked (simulated)"
+    },
+    {
+      "task": "R13-482",
+      "mode": "routine",
+      "target": "doe",
+      "event": "routine event: school transport delay",
+      "correlation": null,
+      "records": [
+        6
+      ],
+      "response": "transport flagged, school notified (simulated)"
+    },
+    {
+      "task": "R13-483",
+      "mode": "routine",
+      "target": "mta",
+      "event": "routine event: signal fault on one line",
+      "correlation": null,
+      "records": [
+        7
+      ],
+      "response": "service notice drafted (simulated)"
+    },
+    {
+      "task": "R13-484",
+      "mode": "routine",
+      "target": "musica",
+      "event": "routine event: session take flagged for review",
+      "correlation": null,
+      "records": [
+        8
+      ],
+      "response": "session paused, take logged (simulated)"
+    },
+    {
+      "task": "R13-485",
+      "mode": "routine",
+      "target": "officina",
+      "event": "routine event: bench part out of tolerance",
+      "correlation": null,
+      "records": [
+        9
+      ],
+      "response": "bench queued, part logged (simulated)"
+    },
+    {
+      "task": "R13-486",
+      "mode": "routine",
+      "target": "science-lab",
+      "event": "routine event: run finished with a null result",
+      "correlation": null,
+      "records": [
+        10
+      ],
+      "response": "run queued, sample logged (simulated)"
+    },
+    {
+      "task": "R13-487",
+      "mode": "handoff",
+      "target": "fdny -> hospital",
+      "event": "incoming patients warning",
+      "correlation": "corr-11-fdny-hospital",
+      "records": [
+        11,
+        12
+      ],
+      "response": "bed reserved, triage noted (simulated)"
+    },
+    {
+      "task": "R13-488",
+      "mode": "handoff",
+      "target": "nypd -> fdny",
+      "event": "fire-risk event handed over",
+      "correlation": "corr-13-nypd-fdny",
+      "records": [
+        13,
+        14
+      ],
+      "response": "engine queued, exposure noted (simulated)"
+    },
+    {
+      "task": "R13-489",
+      "mode": "handoff",
+      "target": "dsny -> dep",
+      "event": "storm-debris event handed over",
+      "correlation": "corr-15-dsny-dep",
+      "records": [
+        15,
+        16
+      ],
+      "response": "crew queued, main checked (simulated)"
+    },
+    {
+      "task": "R13-490",
+      "mode": "handoff",
+      "target": "mta -> doe",
+      "event": "transit disruption handed over",
+      "correlation": "corr-17-mta-doe",
+      "records": [
+        17,
+        18
+      ],
+      "response": "transport flagged, school notified (simulated)"
+    }
+  ],
+  "records": [
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 0,
+      "at": "2026-11-03T01:55:57.407Z",
+      "drill": "routine",
+      "world": "nypd",
+      "kind": "police",
+      "event": "routine event: noise complaint on a residential block",
+      "response": "unit assigned, scene logged (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 1,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "fdny",
+      "kind": "fire",
+      "event": "routine event: smoke reported from a basement vent",
+      "response": "engine queued, exposure noted (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 2,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "ems",
+      "kind": "medical",
+      "event": "routine event: fall on a stairway, one casualty",
+      "response": "medic assigned, ETA logged (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 3,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "hospital",
+      "kind": "care",
+      "event": "routine event: incoming patient, triage requested",
+      "response": "bed reserved, triage noted (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 4,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "dsny",
+      "kind": "sanitation",
+      "event": "routine event: missed collection on a route",
+      "response": "route amended, debris noted (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 5,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "dep",
+      "kind": "water",
+      "event": "routine event: hydrant pressure below normal",
+      "response": "crew queued, main checked (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 6,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "doe",
+      "kind": "schools",
+      "event": "routine event: school transport delay",
+      "response": "transport flagged, school notified (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 7,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "mta",
+      "kind": "transit",
+      "event": "routine event: signal fault on one line",
+      "response": "service notice drafted (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 8,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "musica",
+      "kind": "studio",
+      "event": "routine event: session take flagged for review",
+      "response": "session paused, take logged (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 9,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "officina",
+      "kind": "fabrication",
+      "event": "routine event: bench part out of tolerance",
+      "response": "bench queued, part logged (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 10,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "routine",
+      "world": "science-lab",
+      "kind": "research",
+      "event": "routine event: run finished with a null result",
+      "response": "run queued, sample logged (simulated)",
+      "correlated": null
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 11,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "handoff",
+      "world": "fdny",
+      "to": "hospital",
+      "kind": "fire",
+      "event": "incoming patients warning",
+      "response": "engine queued, exposure noted (simulated)",
+      "correlated": "corr-11-fdny-hospital",
+      "direction": "sent",
+      "note": "fdny warns the hospital of incoming patients"
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 12,
+      "at": "2026-11-03T01:55:57.408Z",
+      "drill": "handoff",
+      "world": "hospital",
+      "from": "fdny",
+      "kind": "care",
+      "event": "incoming patients warning",
+      "response": "bed reserved, triage noted (simulated)",
+      "correlated": "corr-11-fdny-hospital",
+      "direction": "received",
+      "linked": 11,
+      "note": "fdny warns the hospital of incoming patients"
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 13,
+      "at": "2026-11-03T01:55:57.409Z",
+      "drill": "handoff",
+      "world": "nypd",
+      "to": "fdny",
+      "kind": "police",
+      "event": "fire-risk event handed over",
+      "response": "unit assigned, scene logged (simulated)",
+      "correlated": "corr-13-nypd-fdny",
+      "direction": "sent",
+      "note": "a fire-risk event originates in the nypd world"
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 14,
+      "at": "2026-11-03T01:55:57.409Z",
+      "drill": "handoff",
+      "world": "fdny",
+      "from": "nypd",
+      "kind": "fire",
+      "event": "fire-risk event handed over",
+      "response": "engine queued, exposure noted (simulated)",
+      "correlated": "corr-13-nypd-fdny",
+      "direction": "received",
+      "linked": 13,
+      "note": "a fire-risk event originates in the nypd world"
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 15,
+      "at": "2026-11-03T01:55:57.409Z",
+      "drill": "handoff",
+      "world": "dsny",
+      "to": "dep",
+      "kind": "sanitation",
+      "event": "storm-debris event handed over",
+      "response": "route amended, debris noted (simulated)",
+      "correlated": "corr-15-dsny-dep",
+      "direction": "sent",
+      "note": "storm debris blocks a drain"
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 16,
+      "at": "2026-11-03T01:55:57.409Z",
+      "drill": "handoff",
+      "world": "dep",
+      "from": "dsny",
+      "kind": "water",
+      "event": "storm-debris event handed over",
+      "response": "crew queued, main checked (simulated)",
+      "correlated": "corr-15-dsny-dep",
+      "direction": "received",
+      "linked": 15,
+      "note": "storm debris blocks a drain"
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 17,
+      "at": "2026-11-03T01:55:57.409Z",
+      "drill": "handoff",
+      "world": "mta",
+      "to": "doe",
+      "kind": "transit",
+      "event": "transit disruption handed over",
+      "response": "service notice drafted (simulated)",
+      "correlated": "corr-17-mta-doe",
+      "direction": "sent",
+      "note": "school transport depends on the line"
+    },
+    {
+      "label": "SIMULATED",
+      "simulated": true,
+      "seq": 18,
+      "at": "2026-11-03T01:55:57.409Z",
+      "drill": "handoff",
+      "world": "doe",
+      "from": "mta",
+      "kind": "schools",
+      "event": "transit disruption handed over",
+      "response": "transport flagged, school notified (simulated)",
+      "correlated": "corr-17-mta-doe",
+      "direction": "received",
+      "linked": 17,
+      "note": "school transport depends on the line"
+    }
+  ],
+  "what_this_proves": "the drill harness runs, the handoffs link, and the SIMULATED label survives into every record",
+  "what_this_does_not_prove": "that any world agent exists, that anything was dispatched, or that any routing is exercised"
+}
