@@ -9,12 +9,14 @@ Everything below is on branch `bond/12h`, committed, checked, and labelled.
 |---|---|
 | userspace ELFs (hello/sleeper/crasher/readkey) | BUILT on `bond/rk007` |
 | kernel ELF (`metaos-kernel`, bootloader_api 0.11.17) | BUILT, 4.8 MB, no errors |
-| host-side image builder (`os-build/layer1/rk007-builder`) | WRITTEN, stage crates compiled on nightly |
+| host-side image builder (`os-build/layer1/rk007-builder`) | **COMPILED, image produced** — 6,784,000 bytes, boot sector ends `55aa` |
 | boot in QEMU | **BLOCKED** — no QEMU on this Mac, and the boss ruled out running it here |
 
 The 0.11 flow is confirmed by the build itself: `bootloader_api` is the only
 kernel dependency and the host `bootloader` crate supplies BiosBoot. The
-builder needs `nightly` + `rust-src`; both are installed.
+builder needs `nightly`, `rust-src` **and `llvm-tools-preview`**. All three are
+present here now; the third was missing until this run, and without it
+`bootloader`'s build script dies with `failed to get llvm tools: NotFound`.
 
 To finish RK-007, someone with QEMU runs:
 
@@ -25,6 +27,38 @@ qemu-system-x86_64 -drive format=raw,file=/tmp/metaos.img -nographic -no-reboot 
 ```
 
 and files the serial log verbatim. No kernel code was touched; nothing was patched.
+
+## Measured 2026-11-03: the builder works, the boot is what is missing
+
+Run on this Mac, in `os-build/layer1/rk007-builder`:
+
+```
+rustup component add llvm-tools-preview --toolchain nightly
+cargo +nightly build                     # Finished dev profile, 0 errors
+./target/debug/rk007-builder \
+  ../../../kernel/target/x86_64-unknown-none/debug/metaos-kernel \
+  /tmp/metaos-rk007.img
+# rk007-builder: image /tmp/metaos-rk007.img (6784000 bytes)
+```
+
+The artifact is a real BIOS disk image: it opens with `31 c0 8e d8 8e c0`
+(clear ax, load the segment registers) and its first sector ends `55 aa` at
+offset 510, the boot signature the firmware looks for.
+
+What this proves: the kernel ELF, the host-side builder crate and the 0.11
+BIOS stages all work together, and an image can be produced from source on
+this machine. What it does **not** prove: that the image boots. That needs
+QEMU, which this machine does not have.
+
+Two defects were found by running it instead of reading it:
+
+1. The builder called `create_disk_image(path)` and then `.display()` on the
+   result. That method returns `()`, so the crate had never compiled.
+2. `llvm-tools-preview` was not installed, so the bootloader build script
+   panicked before the builder's own code was ever reached.
+
+Both are fixed on `bond/rk007`. The image is a build artifact and is not
+committed. Commands above assume the kernel ELF was built first.
 
 ## H+2 — Plymouth splash: CODE-INSPECTED
 
