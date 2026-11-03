@@ -72,6 +72,7 @@ PROGRAMS = [
     ("sleeper", 0x610000000000),
     ("crasher", 0x620000000000),
     ("readkey", 0x630000000000),
+    ("demand", 0x640000000000),
 ]
 
 TARGET = "x86_64-unknown-none"
