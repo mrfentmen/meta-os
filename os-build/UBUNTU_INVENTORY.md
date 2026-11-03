@@ -72,7 +72,7 @@ make the code worse at explaining why the base is Debian.
 | File | Why it says Ubuntu |
 |---|---|
 | `os-build/face/launcher.py:5,12` | documents which base version the allow-list was verified against |
-| `/etc/skel/.bashrc:120` | "wins over Ubuntu's `\u@\h` prompt above" |
+| ~~`/etc/skel/.bashrc:120`~~ | **fixed in the source, not yet on the image.** The appended block now reads "wins over the base image's `\u@\h` prompt", and `tools/fix_terminal_prompt.sh` also patches `/home/meta/.bashrc` (it only knew `/home/ubuntu`, which no longer exists, and its receipt grep errored on the missing path). Re-run that tool against the image to rewrite the line that is on there now. |
 | `payload-theme/panel/xfce4-panel.xml:6` | geometry copied from the Xubuntu panel |
 | `payload-theme/apply.sh:133,158-166` | font fallbacks and the `os-release` symlink note |
 | `payload-theme/theme_proof.sh` | the proof's own allow-lists |
