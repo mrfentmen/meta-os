@@ -93,6 +93,32 @@ pub struct Preview {
     pub irreversible: Vec<String>,
 }
 
+/// Whole-goal preview for the Intent UI: which tasks can run now,
+/// which wait on dependencies, plus the operation plan with its
+/// danger flags — shown BEFORE anything commits.
+#[derive(Debug)]
+pub struct GoalPreview {
+    pub ready: Vec<String>,
+    pub waiting: Vec<String>,
+    pub steps: Vec<String>,
+    pub irreversible: Vec<String>,
+}
+
+pub fn preview_goal(goal: &crate::tasks::Goal, ops: &[Op]) -> GoalPreview {
+    use crate::tasks::TaskState;
+    let mut ready = Vec::new();
+    let mut waiting = Vec::new();
+    for t in &goal.tasks {
+        match t.state {
+            TaskState::Ready => ready.push(t.id.clone()),
+            TaskState::Pending | TaskState::Running => waiting.push(t.id.clone()),
+            _ => {}
+        }
+    }
+    let p = preview(ops);
+    GoalPreview { ready, waiting, steps: p.steps, irreversible: p.irreversible }
+}
+
 pub fn preview(ops: &[Op]) -> Preview {
     Preview {
         steps: ops.iter().map(|o| o.name.clone()).collect(),
@@ -174,5 +200,20 @@ mod tests {
         let p = preview(&ops());
         assert_eq!(p.steps.len(), 3);
         assert_eq!(p.irreversible, vec!["send-launch-email"]);
+    }
+
+    #[test]
+    fn goal_preview_splits_ready_and_waiting() {
+        use crate::tasks::{Goal, TaskState};
+        let mut g = Goal::new("g", "ship", vec!["live".into()]);
+        g.add_task("a", "A", vec![], None);
+        g.add_task("b", "B", vec!["a".into()], None);
+        g.by_id_mut("a").unwrap().state = TaskState::Done;
+        g.refresh();
+        let gp = preview_goal(&g, &ops());
+        assert_eq!(gp.ready, vec!["b"]);
+        assert!(gp.waiting.is_empty());
+        assert_eq!(gp.steps.len(), 3);
+        assert_eq!(gp.irreversible, vec!["send-launch-email"]);
     }
 }
