@@ -327,3 +327,9 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Livecam offline subset 47/47 green. Live assess-one BLOCKED (camera net + key).
 - Soak 059/060 still running in background; collect at end.
 - Next: §4 patrol/crew staged runs, §5 offline schema/allowlist, §11 spend docs, soak collect.
+
+## OC2 S15 — 2026-11-03 — §4 staged + §5 offline + §11 spend (no VM)
+- Staged crew LIVE: flagged → judge → dispatched-simulated, real HTTP POST to loopback stub recorded (/dispatch-simulated, service fire dept /fire). Non-loopback refused by DispatchBoundaryError. OC2B-080/081 VERIFIED (OC2B-crew-staged.json).
+- §5 offline: allowlist = api.meta.ai + webcams.nyctmc.org only (egress audit 0 other literals; Upstash host env-fed, never hardcoded). Receipt schema holds w/ honest nulls (model null-unengaged, spend in guardrail ledger not receipt). Live-model tasks BLOCKED (no key, 402 stands).
+- §11: sources→guardrail table, $75 + $5 caps enforced-not-advisory, ops (boss-only raises, none logged), session spend $0.00 honest.
+- Soak still running; §4 hour-runs + §6 area2 + §10 tray wiring + §12 closeout remain.

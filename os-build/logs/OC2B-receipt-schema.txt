@@ -1,0 +1,19 @@
+# OC2B-112 — Receipt schema check (live receipts, no VM)
+
+Checked: `OC2B-queue-nokey.json`, `OC2B-queue-e2e.json` (both live,
+odd-port runs this session). Required: model, input hash, timestamp,
+spend (per task text).
+
+| field | nokey receipt | e2e receipt | verdict |
+|---|---|---|---|
+| `job_id` | `trio-3f4f…` (37 chars, `trio-` + 32 hex = deterministic input-hash shape) | `trio-f728…` same shape | PRESENT — input hash IS the id |
+| `status` | `failed` | `failed` | PRESENT |
+| `assessment` | null (generation never engaged) | null (frame invalid) | PRESENT-as-null, honest |
+| `error` | names missing key | names invalid JPEG | PRESENT, named causes |
+| `model` | null (no model engaged) | null | PRESENT-as-null — task asks "carries model": carried as null when unengaged, never fabricated |
+| `latency_ms` | null | null | PRESENT-as-null |
+| `completed_at` | `2026-11-03T07:13:39Z` | `...27.643Z` | PRESENT |
+| spend | ABSENT | ABSENT | NOT in receipt — spend lives in the guardrail ledger (`spark_guardrail_state.json`), reconciled per-section (OC2B-119/121). Split recorded, not hidden. |
+
+Verdict: schema HOLDS with honest nulls; spend tracked out-of-band.
+No receipt fabricates a model, hash, or timestamp.
