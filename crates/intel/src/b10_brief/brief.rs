@@ -4987,6 +4987,118 @@ pub fn compose_brief(
     }
 }
 
+/// BRF-026: Spark-only brief, or the spark_down failure line.
+///
+/// Port of Python's `compose_spark_brief`: unlike `compose_brief`,
+/// this never falls back to a template. A client of None, a raising
+/// client, or an empty Spark reply all count as Spark down and yield
+/// the canned spark_down one-liner; otherwise the Spark text is
+/// redacted and trimmed to the kind budget. Python applies no window
+/// cap on this path, so none is applied here. The prompt block
+/// mirrors `compose_brief`'s Spark prompt verbatim.
+pub fn compose_spark_brief(
+    snapshot: &TemplateSnapshot,
+    kind: &str,
+    client: Option<&dyn Fn(&str, Option<&str>) -> Result<String, String>>,
+    system_prompt: Option<&str>,
+) -> String {
+    use super::sections::{extract_blocked, extract_decisions, extract_owners};
+    let kind = if brief_budget(kind).is_some() { kind } else { "morning" };
+    let budget = brief_budget(kind).unwrap_or(220);
+    let spark_down = || failure_copy_for_kind("spark_down").unwrap_or("").to_string();
+    let client = match client {
+        None => return spark_down(),
+        Some(c) => c,
+    };
+    let system = system_prompt.filter(|s| !s.is_empty());
+    let decisions = extract_decisions(&snapshot.base);
+    let blocked = extract_blocked(&snapshot.base);
+    let owners = extract_owners(&snapshot.base);
+    let mut dec = String::from("[");
+    for (i, d) in decisions.iter().enumerate() {
+        if i > 0 {
+            dec.push_str(", ");
+        }
+        dec.push_str(&format!(
+            "{{'kind': {}, 'text': {}, 'nick': {}, 'index': {}}}",
+            python_str_repr(&d.kind),
+            python_str_repr(&d.text),
+            python_str_repr(&d.nick),
+            d.index
+        ));
+    }
+    dec.push(']');
+    let mut blk = String::from("[");
+    for (i, b) in blocked.iter().enumerate() {
+        if i > 0 {
+            blk.push_str(", ");
+        }
+        blk.push_str(&format!(
+            "{{'id': {}, 'title': {}, 'reason': {}}}",
+            python_str_repr(&b.id),
+            python_str_repr(&b.title),
+            python_str_repr(&b.reason)
+        ));
+    }
+    blk.push(']');
+    let mut own = String::from("[");
+    for (i, o) in owners.iter().enumerate() {
+        if i > 0 {
+            own.push_str(", ");
+        }
+        let mut jobs = String::from("[");
+        for (j, job) in o.jobs.iter().enumerate() {
+            if j > 0 {
+                jobs.push_str(", ");
+            }
+            let age = match job.last_progress_age {
+                Some(a) => a.to_string(),
+                None => "None".to_string(),
+            };
+            jobs.push_str(&format!(
+                "{{'id': {}, 'title': {}, 'last_progress_age': {}}}",
+                python_str_repr(&job.id),
+                python_str_repr(&job.title),
+                age
+            ));
+        }
+        jobs.push(']');
+        own.push_str(&format!(
+            "{{'nick': {}, 'jobs': {}}}",
+            python_str_repr(&o.nick),
+            jobs
+        ));
+    }
+    own.push(']');
+    let mut alr = String::from("[");
+    for (i, a) in snapshot.base.alerts.iter().enumerate() {
+        if i > 0 {
+            alr.push_str(", ");
+        }
+        alr.push_str(&format!(
+            "{{'id': {}, 'summary': {}, 'explanation': {}}}",
+            python_str_repr(&a.id),
+            python_str_repr(&a.summary),
+            python_str_repr(&a.explanation)
+        ));
+    }
+    alr.push(']');
+    let prompt = format!(
+        "Write a {kind} brief from this section data only. Do not invent facts. Keep it under {budget} words. Sections: {{'Decisions': {dec}, 'Blocked': {blk}, 'Owners': {own}, 'Alerts': {alr}}}"
+    );
+    match client(&prompt, system) {
+        Err(_) => spark_down(),
+        Ok(text) => {
+            if text.is_empty() {
+                return spark_down();
+            }
+            let lines: Vec<String> = text.lines().map(str::to_string).collect();
+            let redacted = redact_secrets(&lines).join("\n");
+            trim_to_budget(&redacted, budget)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -5038,6 +5150,32 @@ mod tests {
         assert_eq!(brief_budget("ondemand"), Some(300));
         assert_eq!(brief_budget("daily"), None);
         assert_eq!(BRIEF_REGENERATION_WINDOW_SECONDS, 300);
+    }
+
+    #[test]
+    fn compose_spark_brief_no_client_no_template() {
+        let snap = TemplateSnapshot::default();
+        let down = failure_copy_for_kind("spark_down").unwrap();
+        assert_eq!(compose_spark_brief(&snap, "morning", None, None), down);
+        let raising = |_: &str, _: Option<&str>| -> Result<String, String> {
+            Err("boom".into())
+        };
+        assert_eq!(compose_spark_brief(&snap, "morning", Some(&raising), None), down);
+        let empty = |_: &str, _: Option<&str>| -> Result<String, String> { Ok(String::new()) };
+        assert_eq!(compose_spark_brief(&snap, "morning", Some(&empty), None), down);
+        let ok = |_: &str, _: Option<&str>| -> Result<String, String> {
+            Ok("spark words".into())
+        };
+        assert_eq!(compose_spark_brief(&snap, "morning", Some(&ok), None), "spark words");
+        let leaky = |_: &str, _: Option<&str>| -> Result<String, String> {
+            Ok("API_TOKEN=abc\nhello".into())
+        };
+        let out = compose_spark_brief(&snap, "morning", Some(&leaky), None);
+        assert!(out.contains("API_TOKEN=<redacted>"));
+        assert!(out.contains("hello"));
+        assert!(!out.starts_with("TEMPLATE"));
+        // Unknown kind falls back to the morning budget, like Python.
+        assert_eq!(compose_spark_brief(&snap, "daily", Some(&ok), None), "spark words");
     }
 
     #[test]
