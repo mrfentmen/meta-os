@@ -209,3 +209,9 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - `install.sh`: idempotent (env create-once + checkout refresh, unit link, enable, linger attempt w/ recorded fallback, marker-guarded profile hook for key import, preflight compile + port check). Syntax-checked; full systemd exercise needs the Linux target (Phase D).
 - `README.md`: order, key handoff, health/stop commands, proof-log recipe. Tests `tests/agent-layer/test_units.py`: 7 OK (parse, daemon caps, bounded+ordered, timer, no-secret regexes, installer guards, env defaults).
 - Landed. Nothing blocked. (systemd enable/linger exercise deferred to Phase D guest proof.)
+
+## 12H Phase C — Goose/Lobster runtimes — DONE 2026-11-02
+- Goose `/Users/test/mcp-servers/toolchains/goose-src/build/goose` (b781587, runtime 3901ec457ba9): `goose check root.goose` exit 0 (warnings only, known redundant-cast class, same as OC2B gate-2). Provenance + gate table already in `os-build/logs/OC2B-goose-gate2.md`.
+- Lobster `lobster-src/bin/lobster` (v2026-10-29T23:29:26-07:00|6c1389c): trivial program prints LOBSTER-OK, exit 0.
+- Ship decision: reference both binaries by path+version in the bake (binaries live outside the repo; sizes recorded at bake time; no binaries committed).
+- Landed. Nothing blocked.
