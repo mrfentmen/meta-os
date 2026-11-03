@@ -37,8 +37,10 @@ UNITS = (
     "oc2-patrol.timer",
     "oc2-health.service",
     "oc2-health.timer",
+    "oc2-watchman.service",
 )
-SESSION_SERVICES = ("oc2-queue.service", "oc2-trio.service", "oc2-patrol.service")
+SESSION_SERVICES = ("oc2-queue.service", "oc2-trio.service",
+                    "oc2-patrol.service", "oc2-watchman.service")
 TIMERS = ("oc2-patrol.timer", "oc2-health.timer")
 BEAT_REL = Path(".local/state/oc2-agent/watchman.heartbeat.json")
 

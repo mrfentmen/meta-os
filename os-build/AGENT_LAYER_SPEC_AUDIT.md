@@ -21,6 +21,7 @@ found for that promise).
 | 8 | per-agent memory with a size cap, append-only | `agents/memory.mjs`, wired into `spawnAgent`: allowlisted records only, cap checked before the process starts, spawn/stop/exit lines written, ledger appends with no rewrite call | CODE-INSPECTED — 16 tests, no drill |
 | 9 | budgets: actions, calls, spend, wall clock; no self-raise | `preflightBudget` in `runtime.mjs`, `agents/clock.mjs`, `budget` fields in the registry | CODE-INSPECTED |
 | 10 | watch targets, wake only on change | `runtime.mjs` watch path, `watchman.mjs` | CODE-INSPECTED |
+| 10 | speak only on change | `agents/notify.mjs`: alarm dedupe by key over a 15-minute window, quiet notes always land, three sinks | CODE-INSPECTED — 10 tests |
 | 11 | append-only JSONL receipt per run | `Ledger` in `runtime.mjs`, `ledger.jsonl` per run | CODE-INSPECTED |
 | 12 | crash contained to its run, baton kept | `reconcile()` in `watchman.mjs`, `agents/deadends.mjs` | CODE-INSPECTED |
 | 13 | capability allowlist, labelled simulation only | `agents/grants.mjs`, `agents/tools.mjs` | CODE-INSPECTED |

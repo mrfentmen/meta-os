@@ -18,7 +18,7 @@ DRY=0
 
 CONF="${XDG_CONFIG_HOME:-$HOME/.config}/oc2-agent"
 SHARE="${METAOS_AGENT_SHARE:-/usr/share/metaos/agent}"
-UNITS=(oc2-queue.service oc2-trio.service oc2-patrol.timer oc2-health.timer)
+UNITS=(oc2-queue.service oc2-trio.service oc2-patrol.timer oc2-health.timer oc2-watchman.service)
 rc=0
 
 if [ ! -f "$CONF/env" ] && [ -f "$SHARE/env" ]; then
@@ -27,6 +27,19 @@ if [ ! -f "$CONF/env" ] && [ -f "$SHARE/env" ]; then
   else
     mkdir -p "$CONF" && cp "$SHARE/env" "$CONF/env" \
       || { echo "agent-login: could not seed $CONF/env" >&2; rc=1; }
+  fi
+fi
+
+# The watchman runs from the payload but reads its registry and writes its
+# board in the user's own state directory, which outlives a reinstall.
+STATE="${XDG_STATE_HOME:-$HOME/.local/state}/oc2-agent"
+if [ "$DRY" = "1" ]; then
+  echo "would seed  $STATE/registry.json"
+else
+  mkdir -p "$STATE/jobs" || { echo "agent-login: could not create $STATE" >&2; rc=1; }
+  if [ ! -f "$STATE/registry.json" ] && [ -f "$SHARE/agents/registry.json" ]; then
+    cp "$SHARE/agents/registry.json" "$STATE/registry.json" \
+      || { echo "agent-login: could not seed the registry" >&2; rc=1; }
   fi
 fi
 

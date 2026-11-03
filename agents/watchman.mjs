@@ -10,6 +10,7 @@ import url from "node:url";
 import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
 import { readBaton, continuationOrders } from "./baton.mjs";
 import { writeBeat } from "./watchdog.mjs";
+import { createNotifier } from "./notify.mjs";
 import {
   claimContinue,
   continueDecision,
@@ -26,6 +27,8 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
   const agents = loadRegistry(registryFile);
   fs.mkdirSync(jobsDir, { recursive: true });
   const ledger = new Ledger(path.join(root, "watchman.jsonl"));
+  // One notifier for the whole relay: alarms dedupe by key, notes always land.
+  const notify = createNotifier(root);
   const stateFile = path.join(root, "watchman-state.json");
   let claimed = new Set();
   // A claim that survived a restart but never spawned. It stays in `claimed`
@@ -116,7 +119,12 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
       if (pending.has(id)) { pending.delete(id); save(); }
       const agent = agents.find((a) => a.name === job.agent);
       claimed.add(id); save();
-      if (!agent) { ledger.add("watchman", "job-unmatched", { id, agent: job.agent }); continue; }
+      if (!agent) {
+        ledger.add("watchman", "job-unmatched", { id, agent: job.agent });
+        notify({ severity: "note", key: "job:" + id + ":unmatched", title: "Job names no agent",
+                 body: "job " + id + " asked for " + job.agent });
+        continue;
+      }
       // A job whose previous run died resumes from that run, not from scratch: reconcile()
       // recorded the run id, and the baton pass below turns it into continuation orders.
       if (resume[id]) {
@@ -137,13 +145,47 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
           ledger.add("watchman", "baton-missing", { id, from: job.continuesFrom });
         }
       }
+      // A draft has no program. Spawning it would start nothing and file a
+      // finished job; refuse it here, by name.
+      if (agent.draft === true || !Array.isArray(agent.command) || agent.command.length === 0) {
+        ledger.add("watchman", "job-refused", { id, agent: job.agent, reason: "draft-agent" });
+        notify({ severity: "note", key: "job:" + id + ":draft",
+                 title: "No program for " + job.agent,
+                 body: "the registry entry is a draft; nothing was started" });
+        fs.writeFileSync(path.join(resultDir, id + ".result.json"),
+          JSON.stringify({ id, agent: job.agent, refused: "draft-agent",
+                           finishedAt: new Date().toISOString() }, null, 2));
+        continue;
+      }
       const runStartedAt = Date.now();
       const h = spawnAgent(agent, { root, job });
       runs.set(id, h);
+      // A refused spawn (budget or memory) has no child and never will. Recording a bell and
+      // a job-done for it made a job that never ran look finished. Name the refusal, write a
+      // result that says so, and leave the job claimed so the poll does not spin on it.
+      if (h.stopped) {
+        ledger.add("watchman", "job-refused", { id, agent: job.agent, run: h.runId, reason: h.stopped });
+        notify({ severity: "alarm", key: "job:" + id + ":refused",
+                 title: "Agent job refused: " + job.agent,
+                 body: (job.orders || "(no orders)") + " — " + h.stopped });
+        fs.writeFileSync(path.join(resultDir, id + ".result.json"),
+          JSON.stringify({ id, agent: job.agent, run: h.runId, refused: h.stopped,
+                           finishedAt: new Date().toISOString() }, null, 2));
+        continue;
+      }
       ledger.add("watchman", "bell", { id, agent: job.agent, run: h.runId });
       spawnedNow.push({ id, handle: h });
       h.done.then(({ code, signal }) => {
         ledger.add("watchman", "job-done", { id, run: h.runId, code, signal });
+        // A signal or a nonzero exit is an alarm; a clean exit is a quiet note.
+        // Both are deduplicated by job id, so a retry storm cannot ring forever.
+        const failed = signal !== null || (code !== 0 && code !== null);
+        notify(failed
+          ? { severity: "alarm", key: "job:" + id + ":failed",
+              title: "Agent job failed: " + job.agent,
+              body: "exit " + code + (signal ? " signal " + signal : "") }
+          : { severity: "note", key: "job:" + id + ":done",
+              title: "Agent job finished: " + job.agent, body: "exit " + code });
         // A run may ask to continue instead of finishing. The request is bounded before a
         // new job is written, and it is queued before the request file is archived -- so a
         // crash in between replays an idempotent write, never loses the continuation.
@@ -170,6 +212,8 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
             } else {
               continuation.reason = verdict.reason;
               ledger.add("watchman", "continue-refused", { id, run: h.runId, reason: verdict.reason });
+              notify({ severity: "note", key: "job:" + id + ":continue-refused",
+                       title: "Continue refused", body: verdict.reason });
             }
             claimContinue(h.runDir);
           }
@@ -198,8 +242,20 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
 /* ---- daemon ---- */
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileURLToPath(import.meta.url))) {
   const HERE = path.dirname(url.fileURLToPath(import.meta.url));
-  const w = createWatchman({ registryFile: path.join(HERE, "registry.json"), root: HERE, jobsDir: path.join(HERE, "jobs") });
-  console.log("relay-watchman: watching", path.join(HERE, "jobs"));
+  // The image keeps the code read-only under /usr/share and writes state in the
+  // user's own directory, so the CLI has to accept a root. Defaults stay HERE,
+  // which is what every existing caller and test expects.
+  const arg = (name) => {
+    const i = process.argv.indexOf(name);
+    return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : null;
+  };
+  const root = arg("--root") ? path.resolve(arg("--root")) : HERE;
+  const jobsDir = arg("--jobs") ? path.resolve(arg("--jobs")) : path.join(root, "jobs");
+  const registryFile = arg("--registry")
+    ? path.resolve(arg("--registry"))
+    : path.join(HERE, "registry.json");
+  const w = createWatchman({ registryFile, root, jobsDir });
+  console.log("relay-watchman: watching", jobsDir);
   const tick = async () => { await w.pollOnce(); };
   await tick();
   // --once makes the watchman a hosted loop command: one drain, exit 0. A daemon never returns,

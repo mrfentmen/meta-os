@@ -65,3 +65,29 @@ a lane owner supplies the watchman's start command, nothing guesses one.
 Tests: `python3 tests/test_agent_health.py` — real staged roots, a real
 listening socket, real child processes.
 
+## Notifications
+
+`agents/notify.mjs` is the layer's one voice. A job refused, failed or finished
+writes a notice; the watchman calls it, and nothing else decides on its own
+what is worth saying.
+
+Three sinks, in order of reach:
+
+| Sink | When | Where it lands |
+|---|---|---|
+| `journal` | always | `~/.local/state/oc2-agent/notices.jsonl`, one line per notice |
+| `desktop` | a session has `DISPLAY` or `WAYLAND_DISPLAY` | `notify-send`, `critical` for an alarm |
+| `webhook` | only when `METAOS_NOTIFY_WEBHOOK` is set | one JSON POST, 3 s timeout |
+
+An alarm with the same key is suppressed for 15 minutes after it rings. It is
+still written to the journal, marked `suppressed: true` — quiet, not silent.
+Notes are never suppressed.
+
+A dead webhook does not throw and is not recorded as delivered; the notice
+says which sinks answered.
+
+Not wired: the health probe's failure goes to the journal through systemd, not
+through this module, because it is Python and a second notifier is a second
+set of rules. `METAOS_NOTIFY_WEBHOOK` is not in `.env.example` yet — it belongs
+to whoever owns that file.
+

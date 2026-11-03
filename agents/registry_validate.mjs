@@ -49,12 +49,24 @@ export function validateRegistry(doc) {
         seen.set(key, index);
       }
     }
-    if (!Array.isArray(entry.command) || entry.command.length === 0) {
-      errors.push({ index, field: "command", message: "command must be a non-empty array" });
+    // A draft has no program yet, so no command. A live entry must have one,
+    // and no entry may carry a placeholder: ["true"] was a command that spawned
+    // nothing and still filed a finished job.
+    if (!Array.isArray(entry.command)) {
+      if (entry.draft !== true) {
+        errors.push({ index, field: "command", message: "command must be an array" });
+      }
+    } else if (entry.command.length === 0) {
+      if (entry.draft !== true) {
+        errors.push({ index, field: "command", message: "command must be a non-empty array" });
+      }
     } else if (!entry.command.every(isNonEmptyString)) {
       errors.push({ index, field: "command", message: "every command part must be a non-empty string" });
     } else if (commandIsPlaceholder(entry.command)) {
-      drafts.push({ index, name: entry.name, reason: "placeholder command" });
+      errors.push({
+        index, field: "command",
+        message: "placeholder command: a draft has no command, a live entry has a real one",
+      });
     }
     if (!isNonEmptyString(entry.owner)) {
       errors.push({ index, field: "owner", message: "owner must be a non-empty string" });

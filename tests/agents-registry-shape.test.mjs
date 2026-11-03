@@ -14,7 +14,7 @@ test("every registry entry has name, owner (the badge field), and a command arra
     assert.ok(agent.name.trim().length > 0);
     assert.equal(typeof agent.owner, "string", agent.name);
     assert.ok(Array.isArray(agent.command), agent.name);
-    assert.ok(agent.command.length > 0, agent.name);
+    if (agent.draft !== true) assert.ok(agent.command.length > 0, agent.name);
     for (const part of agent.command) assert.equal(typeof part, "string", agent.name);
     if (agent.badge !== undefined) assert.equal(typeof agent.badge, "string", agent.name);
   }
