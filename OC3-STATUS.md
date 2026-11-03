@@ -110,3 +110,17 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
   clipboard/charmap/disk-GUI absent with CLI fallback named.
 - 148 nothing to hand. 133 handoff written. 142 three defects, all
   owned. 127/129/149 interactive BLOCKED-with-owner (OC1).
+
+## §7 verdict (OC3B-166) — DONE static, playback with OC1
+- 151 inventory with exact byte counts; 152/153 structural
+  verification via ffprobe (180.000s film, 1.5s loop, codecs present).
+- 154 wallpapers pixel-verified at native sizes. 155 placed-path
+  contract recorded, installer owns it. 156 tour = 60s script beats.
+- 157/158 script written with per-beat timing; live timing is OC1's
+  overwrite, not mine. 159/160/163/164/165 honesty + licenses
+  audited (SIMULATED present where it belongs; all-original pack).
+- 161 launcher authored + tour.html written (offline, 0 external
+  refs). 162 handoff written. 168/169/170 1.4 MB counted, no budget
+  to check against — sent to Pax. 171 closing line per cut plan.
+- 172 stutter check OC1. 173 silent-by-cut-design + beds licensed.
+  174 offline (local files only). 167 two defects, both owned.
