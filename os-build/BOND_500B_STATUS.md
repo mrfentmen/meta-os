@@ -742,8 +742,9 @@ Blocked, with the reason per task:
   with, and `js/products.js` has no per-category definition field: products
   carry tagline/limitations, categories are bare strings.
 
-Section 17 verification: eight face files, **21 tests pass, 0 fail**; the two
-existing face files (`face-code100` 9, `face-board-window` 4) still pass.
+Section 17 verification: eight new face files, **16 tests pass, 0 fail**
+(3 + 3 + 3 + 1 + 1 + 1 + 3 + 1); the two existing face files
+(`face-code100` 9, `face-board-window` 4) still pass.
 
 ## Closeout — 476 of 500 delivered, 24 open
 
