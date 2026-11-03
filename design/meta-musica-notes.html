@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meta Musica — 3D Notes</title>
+<link rel="icon" href="data:,">
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; background: #05070c; color: #d7e5f2; font-family: ui-monospace, Menlo, Consolas, monospace; }
@@ -41,7 +42,7 @@
 <canvas id="view"></canvas>
 <div id="fps">frame rate: measuring…</div>
 <footer>Dark room, one accent color (cyan voice 1, amber voice 2). Audio: WebAudio sine tones, equal temperament A4 = 440 Hz. All geometry built from primitives in this file; no external models.</footer>
-<script src="vendor/three.min.js"></script>
+<script src="../vendor/three.min.js"></script>
 <script>
 "use strict";
 // Placeholder melody: C major up and down. Voice 2 a diatonic third below.
@@ -156,15 +157,80 @@ function update(dt) {
   fpsAcc += dt; fpsN++;
   if (fpsAcc >= 1) {
     fpsShown = Math.round(fpsN / fpsAcc);
-    document.getElementById("fps").textContent = "frame rate: ~" + fpsShown + " fps (headless Chromium on this Mac)";
+    document.getElementById("fps").textContent = "frame rate: ~" + fpsShown + " fps (measured in this window)";
     fpsAcc = 0; fpsN = 0;
   }
 }
 
 function setView(t, p, d) { theta = t; phi = p; dist = d; }
 
+// No-WebGL audio path: the placeholder scale through the same tone() voice
+// on a timer. 3D-only buttons are disabled with their reason; tempo keeps
+// working because it only retunes this scheduler.
+function audioOnly() {
+  const metaEl = document.getElementById("meta");
+  let timer = null, idx = 0;
+  function ensure() {
+    if (!audio) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) {
+        metaEl.textContent = "No WebGL and no WebAudio in this browser — the scale as text: " + SCALE.join(" ");
+        return false;
+      }
+      audio = new AC();
+    }
+    if (audio.state === "suspended") audio.resume();
+    return true;
+  }
+  function tick() {
+    if (!audio) return;
+    const n = SCALE[idx % SCALE.length];
+    tone(FREQ[n], audio.currentTime, beatLen() * 0.95);
+    metaEl.textContent = "Playing (audio only, no 3D) — sounding: " + n;
+    idx += 1;
+  }
+  document.getElementById("btn-play").addEventListener("click", function () {
+    if (!ensure() || timer) return;
+    playing = true; idx = 0; tick();
+    timer = setInterval(tick, beatLen() * 1000);
+  });
+  document.getElementById("btn-pause").addEventListener("click", function () {
+    if (timer) { clearInterval(timer); timer = null; }
+    playing = false;
+    metaEl.textContent = "Stopped (audio only, no 3D). Press Play.";
+  });
+  document.getElementById("btn-restart").addEventListener("click", function () { idx = 0; });
+  document.getElementById("tempo").addEventListener("input", function (e) {
+    bpm = Number(e.target.value);
+    document.getElementById("tempo-val").textContent = bpm + " bpm";
+    if (timer) { clearInterval(timer); timer = setInterval(tick, beatLen() * 1000); }
+  });
+  ["btn-labels", "btn-v1", "btn-v2", "btn-side", "btn-top", "btn-end"].forEach(function (id) {
+    const b = document.getElementById(id);
+    if (b) { b.disabled = true; b.title = "needs the 3D view"; }
+  });
+}
+
 function init() {
   const cv = document.getElementById("view");
+  // Honest WebGL fallback, same contract as labs/molecules: no 3D context
+  // means say so instead of leaving a blank canvas. ?force2d=1 exercises it.
+  if (!window.THREE) {
+    document.getElementById("meta").textContent =
+      "3D library missing (the shared vendor/three.min.js did not load on 18934). Notes cannot be drawn — audio still plays: press Play.";
+    audioOnly();
+    return;
+  }
+  let gl = null;
+  try {
+    gl = cv.getContext("webgl2") || cv.getContext("webgl");
+  } catch (e) { gl = null; }
+  if (!gl || new URLSearchParams(location.search).has("force2d")) {
+    document.getElementById("meta").textContent =
+      "3D unavailable in this browser (no WebGL context). The note field cannot be drawn — nothing is faked in its place. Press Play: the synth still sounds.";
+    audioOnly();
+    return;
+  }
   renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x05070c);
