@@ -127,6 +127,19 @@ poll after the file is gone writes `job-resumed` and runs it. The hold is in
 `watchman-state.json`, so a restart does not quietly release it. A halt holds
 work; it does not throw it away.
 
+## The relay budget
+
+`~/.local/state/oc2-agent/budget.json` caps how many runs start per hour:
+
+    { "maxSpawnsPerHour": 30 }
+
+The login hook seeds it at 30 if the file is absent (an existing file is never
+touched). The watchman counts `bell` lines from the last hour and, past the
+ceiling, leaves the job on the board with one `relay-budget` line and an alarm,
+rather than refusing it — an hour later the starts it competed with are gone and
+the work still runs. Raising the number takes effect on the next poll; no
+restart. No file means no ceiling.
+
 ## Tasking itself
 
 A run that finishes its work can write `next` on its baton — an order, not a

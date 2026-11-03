@@ -232,6 +232,34 @@ class LoginHook(unittest.TestCase):
         finally:
             shutil.rmtree(tmp, ignore_errors=True)
 
+    def test_hook_seeds_a_relay_budget_once_and_never_overwrites_it(self):
+        tmp = Path(tempfile.mkdtemp(prefix="hook-budget-"))
+        try:
+            bindir = tmp / "bin"
+            bindir.mkdir()
+            fake = bindir / "systemctl"
+            fake.write_text("#!/bin/sh\nexit 0\n")
+            fake.chmod(0o755)
+            home = tmp / "home"
+            (home / ".config").mkdir(parents=True)
+            env = {**os.environ, "PATH": "%s:%s" % (bindir, os.environ["PATH"]),
+                   "HOME": str(home)}
+            env.pop("SPARK_API_KEY", None)
+            budget = home / ".local" / "state" / "oc2-agent" / "budget.json"
+
+            subprocess.run(["bash", str(REPO / "agent-layer/meta-agent-login.sh")],
+                           capture_output=True, text=True, env=env, timeout=60)
+            self.assertTrue(budget.is_file(), "the first login seeds a ceiling")
+            self.assertEqual(json.loads(budget.read_text())["maxSpawnsPerHour"], 30)
+
+            # A person who lowered it keeps their number across the next login.
+            budget.write_text('{"maxSpawnsPerHour": 3}\n')
+            subprocess.run(["bash", str(REPO / "agent-layer/meta-agent-login.sh")],
+                           capture_output=True, text=True, env=env, timeout=60)
+            self.assertEqual(json.loads(budget.read_text())["maxSpawnsPerHour"], 3)
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

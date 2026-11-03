@@ -24,6 +24,7 @@ found for that promise).
 | 7 | bus-shaped messaging, named rooms | `agents/room1.mjs`, `agents/bridge.mjs` | PARTIAL — files exist; only `room1.mjs` was skimmed |
 | 8 | per-agent memory with a size cap, append-only | `agents/memory.mjs`, wired into `spawnAgent`: allowlisted records only, cap checked before the process starts, spawn/stop/exit lines written, ledger appends with no rewrite call | CODE-INSPECTED — 16 tests, no drill |
 | 9 | budgets: actions, calls, spend, wall clock; no self-raise | `preflightBudget` in `runtime.mjs`, `agents/clock.mjs`, `budget` fields in the registry | CODE-INSPECTED |
+| 9 | the relay as a whole has a ceiling | `budget.json` (`maxSpawnsPerHour`), counted from `bell` lines, seeded at login with 30; past it a job waits and one alarm is raised per hour | CODE-INSPECTED — 4 budget tests and 1 login-hook test pass |
 | 10 | watch targets, wake only on change | `runtime.mjs` watch path, `watchman.mjs` | CODE-INSPECTED |
 | 10 | speak only on change | `agents/notify.mjs`: alarm dedupe by key over a 15-minute window, quiet notes always land, three sinks | CODE-INSPECTED — 10 tests |
 | 11 | append-only JSONL receipt per run | `Ledger` in `runtime.mjs`, `ledger.jsonl` per run | CODE-INSPECTED |

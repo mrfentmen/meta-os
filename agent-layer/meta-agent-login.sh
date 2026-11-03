@@ -2,10 +2,11 @@
 # meta-agent-login.sh — bring the agent layer up for this session.
 #
 # Runs from /etc/xdg/autostart, so a failure here must not block the desktop.
-# It seeds the per-user env if the account predates the image, imports a key
-# if one is already in the environment (never writes it), then starts the
-# four units the stager enabled (the health one is a timer, so the check cannot
-# drift into never running).
+# It seeds the per-user env if the account predates the image, seeds the
+# registry and the relay budget when they are absent, imports a key if one is
+# already in the environment (never writes it), then starts the five units the
+# stager enabled (health and patrol are timers, so a cadence cannot drift into
+# never running).
 #
 #   meta-agent-login.sh [--dry-run]
 #
@@ -35,11 +36,20 @@ fi
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/oc2-agent"
 if [ "$DRY" = "1" ]; then
   echo "would seed  $STATE/registry.json"
+  echo "would seed  $STATE/budget.json"
 else
   mkdir -p "$STATE/jobs" || { echo "agent-login: could not create $STATE" >&2; rc=1; }
   if [ ! -f "$STATE/registry.json" ] && [ -f "$SHARE/agents/registry.json" ]; then
     cp "$SHARE/agents/registry.json" "$STATE/registry.json" \
       || { echo "agent-login: could not seed the registry" >&2; rc=1; }
+  fi
+  # A relay that keeps moving on its own needs a ceiling from the first login,
+  # not after somebody notices the bill. An existing file is never touched: a
+  # person who lowered it keeps their number.
+  if [ ! -f "$STATE/budget.json" ]; then
+    printf '{\n  "maxSpawnsPerHour": %s\n}\n' "${METAOS_RELAY_MAX_SPAWNS:-30}" \
+      > "$STATE/budget.json" \
+      || { echo "agent-login: could not seed the relay budget" >&2; rc=1; }
   fi
 fi
 

@@ -109,8 +109,33 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
     return recovered;
   }
 
+  // A relay-wide ceiling on how fast work starts. Per-agent budgets bound one
+  // run; this bounds the relay, which is what stops a self-tasking chain (or a
+  // person with a shell loop) from spending a machine overnight. It is read
+  // fresh on every poll, so raising it needs no restart.
+  function relayLimit() {
+    try {
+      const n = Number(JSON.parse(fs.readFileSync(path.join(root, "budget.json"), "utf8")).maxSpawnsPerHour);
+      return Number.isFinite(n) && n >= 0 ? n : null;
+    } catch { return null; }
+  }
+
+  function spawnsThisHour() {
+    const since = Date.now() - 3600 * 1000;
+    let count = 0;
+    for (const entry of ledger.read()) {
+      if (entry.event !== "bell") continue;
+      const ts = Date.parse(entry.ts);
+      if (Number.isFinite(ts) && ts >= since) count += 1;
+    }
+    return count;
+  }
+  let budgetRefusedHour = null;
+
   async function pollOnce() {
     const spawnedNow = [];
+    const limit = relayLimit();
+    const used = limit === null ? 0 : spawnsThisHour();
     for (const f of fs.readdirSync(jobsDir).filter((x) => x.endsWith(".job.json")).sort()) {
       const jobPath = path.join(jobsDir, f);
       let job;
@@ -178,6 +203,23 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
       // honours a STOP inside a run, but a job written while the agent is
       // halted would otherwise start anyway -- a stop that only stops work
       // already begun is not a stop.
+      // Out of headroom: hold the job on the board. It is not refused -- an
+      // hour from now the starts it is competing with are gone, and the work
+      // should still be there. One line and one alarm per hour, not per poll.
+      if (limit !== null && used + spawnedNow.length >= limit) {
+        claimed.delete(id);
+        save();
+        const hour = new Date().toISOString().slice(0, 13);
+        if (budgetRefusedHour !== hour) {
+          budgetRefusedHour = hour;
+          ledger.add("watchman", "relay-budget", { id, limit, used: used + spawnedNow.length });
+          notify({ severity: "alarm", key: "relay:budget:" + hour,
+                   title: "Relay budget spent",
+                   body: limit + " start(s) this hour; job " + id + " waits on the board" });
+        }
+        continue;
+      }
+
       if (isStopped(root, job.agent)) {
         // Hold it, do not judge it. The ledger says once why the job is waiting,
         // and no result file is written -- nothing ran and nothing was refused.
