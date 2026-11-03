@@ -275,6 +275,19 @@ impl<'a> FramebufferConsole<'a> {
         self.fb.info().height / FONT_HEIGHT
     }
 
+    /// Move the cursor (demo splash: lets the boot spin redraw the
+    /// same rows instead of scrolling; mirrors vga.rs set_pos).
+    /// Clamped inside the screen; a sub-cell screen parks at 0,0.
+    pub fn set_pos(&mut self, row: usize, col: usize) {
+        if self.rows() == 0 || self.cols() == 0 {
+            self.row = 0;
+            self.col = 0;
+            return;
+        }
+        self.row = row.min(self.rows() - 1);
+        self.col = col.min(self.cols() - 1);
+    }
+
     /// Move to the start of the next line, scrolling when past the bottom.
     fn newline(&mut self) {
         self.col = 0;
