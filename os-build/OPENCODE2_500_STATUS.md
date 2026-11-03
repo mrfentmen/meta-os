@@ -254,3 +254,9 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Observed (not touched): `/private/tmp/isowork/metaos-1.0.iso` rebuilt 00:29 (4,259,762,176 B) with `metaos-1.0.iso.sha256` + `metaos-1.0.iso.sha256-fixed` posted beside it. No OC3-STATUS.md yet; mvm5 QEMU quiet.
 - Cross-check: recomputed sha256 locally → `6d3793eb…70dde` MATCHES both posted files (the -fixed file notes a uuid-fixed rebuild — deterministic-build hygiene, recorded not claimed by me).
 - Verdict so far: artifact integrity AGREE. Bootability/login/apps are OC3's proofs when they post them — not verified by me, no VM run on my side per boss order.
+
+## OC2 no-VM build batch (wallpaper check + seed/verify tooling) — DONE 2026-11-03
+- OC1 wallpaper reproducibility cross-check: `python3 iso/tools/make_wallpaper.py --check` exit 0 — all 3 PNGs (meta, greeter, grub) byte-current vs tokens.json. Deterministic stdlib generator; AGREE that committed assets match their recipe. (Visual quality unjudged — not my lane.)
+- `agent-layer/make-seed.sh`: rebuilds the NoCloud CIDATA seed ISO (macOS hdiutil + Linux genisoimage/xorrisofs paths, instance-id param, keypair bootstrap). Tested on Mac: ISO builds, CIDATA label mounts.
+- `agent-layer/verify-dropin.sh`: OC3-side check (sha vs MANIFEST, enabled/active state, no-key-material). Tested with fixtures: clean tree exit 0, tampered file exit 1, systemd parts explicitly SKIP without a user manager.
+- Tests: 12 agent-layer tests green (incl. 2 script tests + manifest freshness). No VM booted, no builds, no model calls for any of this.
