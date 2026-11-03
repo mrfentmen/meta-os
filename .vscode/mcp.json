@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "docs-rs": {
+      "command": "npx",
+      "args": ["@nuskey8/docs-rs-mcp@latest", "-y"]
+    }
+  }
+}
