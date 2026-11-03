@@ -163,3 +163,15 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
   to configure — OC1 confirms with a stick.
 - 242 three items, all owned elsewhere or boot-bound. 247/248
   unknown schemes: absence recorded as the safe default.
+
+## §11 verdict (OC3B-267) — DONE static, live render OC1's
+- 251 baseline 35/35 PASS (scratch git checkout; one env FAIL
+  explained, re-ran clean). 252 deliberate no-op (copy substantive).
+- 253/254 offline + no-http(s) swept. 255 palette Meta-only.
+  256 zero vendor strings. 263 system fonts only.
+- 257 spec recorded (slideshow key FATAL-if-absent, kept).
+  258 file set IS the list; HTML-vs-QML fork named with ISO owner.
+- 259/260 wiring + owner in wiring note. 261/262 branding.desc
+  MetaOS 1.0 correct. 264 sizes OC1 boot. 265/266 imagery original.
+- 271/272 welcome copy PASS, 273/274 finish copy reboot honest.
+- 268 two watch items, both owned. 269 handoff written, 270 PENDING.
