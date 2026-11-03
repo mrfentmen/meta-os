@@ -1,33 +1,58 @@
-# The ISO lane
+# iso/ — the MetaOS 1.0 lane
 
-| Directory | What it holds | Label |
+Everything that becomes the ISO. Four screens, one palette, and a checker that
+refuses to let them disagree.
+
+## The four surfaces
+
+The machine shows the ring four times before anyone logs in. Each is separate,
+and each is generated from `contracts/tokens.json`:
+
+| Surface | Built from | Lives in |
 |---|---|---|
-| `plymouth/` | splash theme: descriptor, script, ring asset | CODE-INSPECTED |
-| `calamares/` | preseeded installer: branding, module order, presets | CODE-INSPECTED |
-| `apps/` | five launchers, five dock items, Chromium policy, start page | CODE-INSPECTED |
-| `apps/agent-status/` | the agent-layer status reader | CODE-INSPECTED |
-| `contracts/` | the frozen `tokens.json`, pinned by sha256 | VERIFIED (sha matches) |
-| `tools/` | checker, token generator, installer, boot kit, verdict | see below |
+| Boot menu | `tools/tokens_to_grub.py` | `boot/grub/` |
+| Splash | `plymouth/metaos/` | `plymouth/` |
+| Installer | `calamares/` | `calamares/` |
+| Login | `tools/tokens_to_gtk.py` | `theme/lightdm/` |
+| Desktop | `tools/make_wallpaper.py`, `tools/tokens_to_gtk.py` | `theme/` |
 
-Nothing in this tree has been booted on the 8GB machine, and that machine
-never boots. The boot procedure for the machine that does is
-`os-build/BOOT_ON_32GB_MAC.md`.
+`contracts/tokens.json` is vendored from `opencode1/metaos-1.0` and pinned by
+sha256 in `contracts/PIN.md`. Changing a colour means changing the pin, and
+then the checker will make every surface regrow from it.
 
-## The tools
+## Directories
 
-| Tool | What it does |
+| Path | What it is |
 |---|---|
-| `tools/check_iso_config.py` | 66 static checks over every file here; exits 1 on any failure |
-| `tools/verify_lane.sh` | the lane gate: the checker plus every `tests/test_iso_*.py` |
-| `tools/tokens_to_css.mjs` | generates the CSS from the frozen contract; `--check` proves it is current |
-| `tools/apply.sh` | installs the whole lane into a base root; `--dry-run`, idempotent |
-| `tools/boot_kit.sh` | checks prerequisites, builds userspace + kernel + image, prints the QEMU line |
-| `tools/boot_log_verdict.py` | turns a serial log into PASS/FAIL per boot marker |
+| `base/` | package manifest, first-login step, doctor |
+| `boot/` | GRUB theme and the drop-in that selects it |
+| `calamares/` | installer branding, module order, preseeded answers |
+| `apps/` | five launchers, five dock items, Chromium policy and start page |
+| `plymouth/` | splash descriptor, script and ring asset |
+| `theme/` | wallpapers, GTK sheet, login screen |
+| `contracts/` | the frozen palette and its pin |
+| `tools/` | generators, the static checker, the installer, the gate, the boot kit |
 
-Run the gate first, always:
+## Commands
 
 ```
-iso/tools/verify_lane.sh
+iso/tools/check_iso_config.py            static checks, 92 of them
+iso/tools/check_iso_config.py --json     same, machine readable
+iso/tools/verify_lane.sh                 checker plus every test; says LANE GREEN
+
+iso/tools/apply.sh --root DIR            install the lane into a chroot or a staging tree
+iso/tools/apply.sh --root DIR --verify   install, then run the doctor on it
+iso/tools/apply.sh --root DIR --revert   remove exactly what the last run wrote
+
+iso/tools/boot_kit.sh --check            what the boot machine is missing
+iso/tools/boot_kit.sh --build --out DIR  userspace, kernel, builder, image
+iso/tools/boot_log_verdict.py boot.txt   PASS/FAIL rows for a serial log
 ```
 
-It ends in `LANE GREEN` or `LANE RED` and exits non-zero on red.
+## What a green run means
+
+A green `verify_lane.sh` means the files are well formed, point at things that
+exist, and the generators produce exactly what is committed. It does not mean
+anything has booted. Nothing on this machine can boot a VM, so every visual
+claim in this lane is CODE-INSPECTED until the 32GB MacBook runs
+`os-build/BOOT_ON_32GB_MAC.md` and someone looks at the screen.

@@ -5,6 +5,7 @@ into a temp directory, breaks exactly one thing, and asserts the checker names
 that break. The baseline case proves the copy passes untouched.
 """
 
+import json
 import shutil
 import struct
 import subprocess
@@ -186,6 +187,32 @@ class CheckerRuleTest(unittest.TestCase):
         out = self.check()
         self.assertEqual(out.returncode, 1)
         self.assertIn("rewrites the kernel command line", out.stdout)
+
+
+    def test_json_output_is_machine_readable(self):
+        out = subprocess.run(
+            [sys.executable, str(self.root / "tools" / "check_iso_config.py"), "--json"],
+            capture_output=True, text=True, timeout=180)
+        data = json.loads(out.stdout)
+        self.assertEqual(out.returncode, 0, data["fail"][:3])
+        self.assertEqual(data["counts"]["fail"], 0)
+        self.assertGreaterEqual(data["counts"]["pass"], 90)
+
+    def test_slideshow_colour_outside_the_contract_is_named(self):
+        path = self.root / "calamares" / "branding" / "meta" / "show.qml"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            'border.color: "#1877F2"', 'border.color: "#123456"'), encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("slideshow colours outside the contract", out.stdout)
+
+    def test_slideshow_without_the_calamares_import_is_named(self):
+        path = self.root / "calamares" / "branding" / "meta" / "show.qml"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "import calamares.slideshow 1.0", "// no module"), encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("no calamares.slideshow import", out.stdout)
 
 
 if __name__ == "__main__":

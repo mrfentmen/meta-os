@@ -81,5 +81,32 @@ class ApplyTest(unittest.TestCase):
         self.assertEqual(first, second)
 
 
+    def test_manifest_lists_what_was_installed(self):
+        run(["--root", str(self.root)])
+        manifest = self.root / "var/lib/metaos/apply-manifest.txt"
+        self.assertTrue(manifest.is_file())
+        listed = manifest.read_text(encoding="utf-8").splitlines()
+        self.assertIn("/usr/share/applications/meta-files.desktop", listed)
+        self.assertGreaterEqual(len(listed), 30)
+
+    def test_revert_removes_exactly_what_it_wrote(self):
+        run(["--root", str(self.root)])
+        out = run(["--root", str(self.root), "--revert"])
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertFalse((self.root / "usr/share/metaos/theme/meta-wallpaper.png").exists())
+        self.assertFalse((self.root / "var/lib/metaos/apply-manifest.txt").exists())
+        self.assertEqual([p for p in self.root.rglob("*") if p.is_file()], [])
+
+    def test_revert_without_a_manifest_is_quiet(self):
+        out = run(["--root", str(self.root), "--revert"])
+        self.assertEqual(out.returncode, 0, out.stderr)
+        self.assertIn("nothing to revert", out.stdout)
+
+    def test_verify_runs_the_doctor(self):
+        out = run(["--root", str(self.root), "--verify"])
+        self.assertEqual(out.returncode, 0, out.stdout + out.stderr)
+        self.assertIn("13 passed, 0 failed", out.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

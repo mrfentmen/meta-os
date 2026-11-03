@@ -21,22 +21,26 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ISO = Path(__file__).resolve().parents[1]
+AS_JSON = "--json" in sys.argv[1:]
 passes, fails, skips = [], [], []
 
 
 def ok(msg):
     passes.append(msg)
-    print("PASS  " + msg)
+    if not AS_JSON:
+        print("PASS  " + msg)
 
 
 def bad(msg):
     fails.append(msg)
-    print("FAIL  " + msg)
+    if not AS_JSON:
+        print("FAIL  " + msg)
 
 
 def skip(msg):
     skips.append(msg)
-    print("SKIP  " + msg)
+    if not AS_JSON:
+        print("SKIP  " + msg)
 
 
 def read(path):
@@ -178,10 +182,46 @@ if brand:
     else:
         ok("calamares: sidebar colours are all hex")
     slideshow = brand.get("slideshow")
-    if slideshow and (branding.parent / slideshow).is_file():
-        ok("calamares: slideshow file exists")
-    else:
+    if not slideshow or not (branding.parent / slideshow).is_file():
         bad("calamares: slideshow %r does not exist" % slideshow)
+    else:
+        ok("calamares: slideshow file exists")
+        if not str(slideshow).endswith(".qml"):
+            bad("calamares: slideshow %r is not a QML presentation" % slideshow)
+        else:
+            body = read(branding.parent / slideshow)
+            if "import calamares.slideshow 1.0" not in body:
+                bad("calamares: the slideshow has no calamares.slideshow import")
+            else:
+                ok("calamares: the slideshow imports the Calamares module")
+            count = body.count("Slide {")
+            if count >= 3 and "goToNextSlide" in body:
+                ok("calamares: the slideshow has %d slides and advances" % count)
+            else:
+                bad("calamares: the slideshow has %d slide(s) or never advances" % count)
+            try:
+                contract = json.loads(read(ISO / "contracts" / "tokens.json"))
+            except Exception:  # noqa: BLE001
+                contract = {}
+            if contract:
+                allowed = {value.upper() for value in contract.values()}
+                stray = sorted({hit.upper() for hit in
+                                re.findall(r"#[0-9A-Fa-f]{6}\b", body)} - allowed)
+                if stray:
+                    bad("calamares: slideshow colours outside the contract: %s"
+                        % ", ".join(stray))
+                else:
+                    ok("calamares: the slideshow uses only contract colours")
+
+slideshow_gen = subprocess.run(
+    [sys.executable, str(ISO / "tools" / "tokens_to_slideshow.py"), "--check"],
+    capture_output=True, text=True,
+)
+if slideshow_gen.returncode == 0:
+    ok("calamares: the slideshow is exactly what the generator produces")
+else:
+    bad("calamares: the slideshow is stale (%s)"
+        % (slideshow_gen.stdout + slideshow_gen.stderr).strip())
 
 settings_path = cal / "settings.conf"
 try:
@@ -505,6 +545,22 @@ else:
         ok("apps: search field has an accessible label")
     else:
         bad("apps: search field has no aria-label")
+    if 'href="#main"' in html and 'id="main"' in html and "a.skip" in html:
+        ok("apps: the start page has a skip link to its content")
+    else:
+        bad("apps: the start page has no skip link")
+    if ":focus-visible" in html:
+        ok("apps: the start page has a keyboard-only focus style")
+    else:
+        bad("apps: the start page has no :focus-visible style")
+    if "prefers-reduced-motion" in html:
+        ok("apps: the start page honours reduced motion")
+    else:
+        bad("apps: the start page ignores prefers-reduced-motion")
+    if re.search(r"outline:\s*none", html):
+        bad("apps: the start page removes an outline without a replacement")
+    else:
+        ok("apps: the start page never removes an outline")
     remote_css = re.findall(r"@import\s+url\(['\"]?(https?://[^)'\"]+)", html)
     remote_font = re.findall(r"@font-face", html)
     if remote_css:
@@ -774,10 +830,17 @@ else:
     ok("no TODO/FIXME/PLACEHOLDER markers in the ISO lane")
 
 # --- summary -----------------------------------------------------------
-print()
-print("%d passed, %d failed, %d skipped" % (len(passes), len(fails), len(skips)))
-if fails:
-    for note in fails:
-        print("  failed: " + note)
-    sys.exit(1)
-sys.exit(0)
+if AS_JSON:
+    print(json.dumps({
+        "counts": {"pass": len(passes), "fail": len(fails), "skip": len(skips)},
+        "pass": passes,
+        "fail": fails,
+        "skip": skips,
+    }, indent=2))
+else:
+    print()
+    print("%d passed, %d failed, %d skipped" % (len(passes), len(fails), len(skips)))
+    if fails:
+        for note in fails:
+            print("  failed: " + note)
+sys.exit(1 if fails else 0)
