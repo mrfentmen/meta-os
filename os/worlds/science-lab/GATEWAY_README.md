@@ -64,11 +64,24 @@ refusal, and the cycle runs its deterministic parts only.
 state (`records/gateway/<cycle>.offline.json`) so the record says
 the cycle ran offline.
 
-## Honesty
+## Backends
 
-Backend is always named. Today only `LOCAL-SHELF` exists: calls are
-answered from the lab's own department shelves (`shelves/*.json`),
-with `cost 0.0` and `network: no external network touched`. There is
-no live-network path in this module. See the worked example
-`records/examples/gateway_example.json` (hashes re-verifiable) and
-the tests `tests/science-lab/test_section8.py`.
+Backend is always named in the record. Two exist:
+
+- `LOCAL-SHELF` (default): calls are answered from the lab's own
+  department shelves (`shelves/*.json`), with `cost 0.0` and
+  `network: no external network touched`.
+- `MCP-GATEWAY` (`Gateway(backend="mcp-gateway")`, added 2026-11-02):
+  calls go live through the boss's own local MCP gateway
+  (127.0.0.1:8931) to the same nine allowlisted servers — keyless,
+  `cost 0.0`, records carry `backend: "MCP-GATEWAY"`. Translation
+  and transport live in `mcp_backends.py`; allowlist, scopes,
+  budget, offline mode, and quarantine apply unchanged, and a
+  transport failure is recorded as `backend-error` and raised —
+  never answered with fabricated data. Live smoke record:
+  `records/gateway/mcp_smoke_2026-11-02.json` (10/10 calls answered
+  2026-11-02). Tests: `tests/science-lab/test_gateway_mcp_backend.py`.
+
+See the worked example `records/examples/gateway_example.json`
+(hashes re-verifiable) and the tests
+`tests/science-lab/test_section8.py`.
