@@ -133,6 +133,16 @@ pub(crate) fn fb_clear() {
     }
 }
 
+/// Move the framebuffer cursor (demo splash: mirrors vga.rs set_pos
+/// so the boot spin redraws the same rows instead of scrolling).
+pub(crate) fn fb_set_pos(row: usize, col: usize) {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(FB_CONSOLE)).as_mut() {
+            console.set_pos(row, col);
+        }
+    }
+}
+
 /// Recolor the framebuffer console in VGA terms (KF-03: called
 /// beside the VGA recolor by the shell status block).
 pub(crate) fn fb_set_colors(spec: ColorSpec) {
@@ -326,6 +336,7 @@ fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     }
     interrupts::enable();
     prove_timer();
+    boot_splash();
     // Section D: frames, mapper, heap (IDT is live, so a stray fault
     // prints instead of triple-faulting).
     unsafe {
@@ -377,6 +388,80 @@ fn prove_timer() {
             got, spins
         );
     }
+}
+
+/// Boot splash (demo): the spinning Meta loop in blue on black,
+/// version in white, straight through the print path so serial,
+/// VGA, and the framebuffer console all show it. Twelve frames at
+/// ~8 fps (~1.5 s), then colors restore and boot continues. No
+/// snapshot needed: nothing worth keeping is on screen yet.
+fn boot_splash() {
+    use crate::logo_frames::{FRAMES, FRAME_H};
+    let blue = ColorSpec(Color::LightBlue, Color::Black);
+    let white = ColorSpec(Color::White, Color::Black);
+    let normal = ColorSpec(Color::LightGray, Color::Black);
+    // Draw at row 3, centred on the 160-column framebuffer (the
+    // screen the demo actually shows): the 46-wide loop starts at
+    // column 57. Rows are padded to full frame width so each frame
+    // overwrites the last with no per-frame clear (a full
+    // framebuffer fill is slow).
+    const TOP: usize = 3;
+    const LEFT: usize = 57;
+    unsafe {
+        if let Some(c) = (*core::ptr::addr_of_mut!(CONSOLE)).as_mut() {
+            c.clear();
+            c.set_colors(blue);
+        }
+    }
+    crate::fb_clear();
+    crate::fb_set_colors(blue);
+    let start = interrupts::ticks();
+    let mut shown: usize = usize::MAX;
+    while interrupts::ticks().wrapping_sub(start) < (FRAMES.len() as u64) * 10 {
+        let want = ((interrupts::ticks().wrapping_sub(start)) / 10) as usize;
+        if want != shown && want < FRAMES.len() {
+            shown = want;
+            unsafe {
+                if let Some(c) = (*core::ptr::addr_of_mut!(CONSOLE)).as_mut() {
+                    c.set_pos(TOP, 0);
+                }
+            }
+            crate::fb_set_pos(TOP, 0);
+            for (i, line) in FRAMES[shown].split('\n').enumerate() {
+                if i >= FRAME_H {
+                    break;
+                }
+                for _ in 0..LEFT {
+                    print!(" ");
+                }
+                println!("{line:<46}");
+            }
+            unsafe {
+                if let Some(c) = (*core::ptr::addr_of_mut!(CONSOLE)).as_mut() {
+                    c.set_colors(white);
+                }
+            }
+            crate::fb_set_colors(white);
+            for _ in 0..LEFT {
+                print!(" ");
+            }
+            println!("{:<46}", "META OS 0.1");
+            unsafe {
+                if let Some(c) = (*core::ptr::addr_of_mut!(CONSOLE)).as_mut() {
+                    c.set_colors(blue);
+                }
+            }
+            crate::fb_set_colors(blue);
+        }
+    }
+    unsafe {
+        if let Some(c) = (*core::ptr::addr_of_mut!(CONSOLE)).as_mut() {
+            c.clear();
+            c.set_colors(normal);
+        }
+    }
+    crate::fb_clear();
+    crate::fb_set_colors(normal);
 }
 
 /// Test-only drill (OS-031, `stack-test` builds): recurse with 2 KiB
