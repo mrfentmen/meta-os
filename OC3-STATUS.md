@@ -216,3 +216,16 @@ boot and is named with its owner — no silent gaps.
 4. Constraints honored: no boots, no other lane's tree/branch
    touched (main read via git archive/show only), no main pushes
    (this commit lands on opencode/agent3-oc3 only).
+
+## Pax-out decisions (2026-11-03, OC3B-decisions.md) — decided, not blocked
+- D1/D7 scope: no office suite, archiver GUI, printing, clipman,
+  charmap, webcam, or mail client in 1.0 (explicit cuts, CLI
+  fallbacks named where they exist).
+- D2 collisions resolved with winners (OC2 agent-status, theme
+  welcome/livebg, OC2 thunar, Atril). D3/D4 defaults: PDF→atril,
+  browser→chromium (recorded edits for file owners).
+- D5 ship the 11 launchers + pages. D6 ship pavucontrol, sink
+  assumed. D8 budgets: payload ≤25MB, ISO working cap ≤5GB.
+- Theme-complete checklist defined (6 boxes, mechanical).
+- NOT taken (wrong lane): r11/round12 merges, F1/syscalls, LICENSE,
+  submission, installer fixes, rootfs 7/7 — deciders named, no wait.
