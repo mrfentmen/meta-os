@@ -5,6 +5,7 @@
 [workspace]
 resolver = "2"
 members = [
+    "crates/agent-ops",
     "crates/agent-runtime",
     "crates/assess-server",
     "crates/dashboard",
