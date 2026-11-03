@@ -2469,6 +2469,40 @@ impl Worker {
         }
         report
     }
+
+    /// Run forever until the process is interrupted, exactly the Python
+    /// `run_loop`: every cycle is one [`Worker::run_once`], a cycle
+    /// error is swallowed and the loop continues after `interval_secs`,
+    /// and `KeyboardInterrupt` stops the worker. Rust has no
+    /// catch-unwind boundary here (a panicking handler aborts the
+    /// cycle like any caller panic) and no signal handling in the
+    /// library: `max_cycles` bounds the loop for tests and callers
+    /// that drive shutdown themselves (`None` is the Python behavior,
+    /// forever). Sleeps only between cycles, never after the last.
+    pub fn run_loop<B: WorkerBackend, F>(
+        &self,
+        backend: &mut B,
+        mut handler: F,
+        interval_secs: u64,
+        max_cycles: Option<u64>,
+    ) where
+        F: FnMut(&str, &str, &str, &str) -> Result<(String, String), HandlerError>,
+    {
+        let mut cycles = 0u64;
+        loop {
+            if let Some(n) = max_cycles {
+                if cycles >= n {
+                    break;
+                }
+            }
+            let _ = self.run_once(backend, &mut handler);
+            cycles += 1;
+            if max_cycles.is_some_and(|n| cycles >= n) {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_secs(interval_secs));
+        }
+    }
 }
 
 // ============================================================

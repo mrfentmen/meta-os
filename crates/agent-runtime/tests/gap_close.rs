@@ -204,13 +204,15 @@ fn relay_payload_needs_a_job_id() {
 }
 
 #[test]
-fn now_iso_is_epoch_millis_not_iso8601() {
-    // Documents gap G2: the name promises ISO, the code returns digits.
+fn now_iso_is_iso8601_utc_with_millis() {
+    // Gap G2 carried: the name promises ISO and the code delivers it
+    // (`trio_agent.py:81-84` shape, 24 chars, Zulu).
     let value = now_iso();
-    assert!(!value.is_empty());
-    assert!(value.chars().all(|c| c.is_ascii_digit()), "{value}");
-    assert!(value.len() >= 13, "epoch millis should be at least 13 digits: {value}");
-    assert!(!value.contains('T'), "not ISO-8601: {value}");
+    assert_eq!(value.len(), 24, "{value}");
+    assert!(value.ends_with('Z'), "{value}");
+    assert_eq!(value.chars().nth(10), Some('T'), "{value}");
+    let (ok, _) = validate_assessment(&with_timestamp(&value), "ignis");
+    assert!(ok, "now_iso output must itself validate: {value}");
 }
 
 #[test]

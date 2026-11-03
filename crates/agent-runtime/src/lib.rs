@@ -10,10 +10,13 @@
 //! carrying validation errors; result envelope written once to
 //! `trio:{jid}:result`; optional relay NOTIFY hook (fire-and-forget).
 //!
-//! Port status (B100, 2026-11-02): the result and validation core is
-//! carried. NOT carried yet: the lease heartbeat, the serve_once poll
-//! loop, the relay POST, and real ISO-8601 timestamps - see
-//! `os-build/records/agent-runtime-gaps.md`.
+//! Port status (B04 work, 2026-11-03): the result and validation core is
+//! carried, and so are the lease heartbeat (a scoped renewal thread using
+//! [`heartbeat_interval_secs`], stopped on every exit path), the
+//! `serve_once` poll loop ([`ServeReport`]), the relay POST
+//! ([`relay_notify`], env-gated with swallowed errors, 2s timeout), and
+//! real ISO-8601 timestamps ([`now_iso`]).
+//! See `os-build/records/agent-runtime-gaps.md` for the original gap list.
 
 pub mod registry;
 
@@ -21,17 +24,74 @@ use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
 use queue_store::{JobStore, StoreBackend};
 use serde_json::Value;
 use sha2::{Digest, Sha256};
+use std::io::{Read, Write};
+use std::net::{TcpStream, ToSocketAddrs};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Mutex,
+};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+/// Relay POST timeout, matching the Python transport's `timeout=2`.
+const RELAY_TIMEOUT: Duration = Duration::from_secs(2);
+
+/// Heartbeat slice: the renewal thread wakes this often to check the
+/// stop flag, so `join` after `stop` never blocks longer than this.
+const HEARTBEAT_POLL: Duration = Duration::from_millis(50);
+
+/// Lease-renewal interval in seconds, exactly the Python rule
+/// (`trio_agent.py`: `max(5.0, min(60.0, self.lease / 3))`): a third
+/// of the lease, clamped to [5, 60].
+pub fn heartbeat_interval_secs(lease: u64) -> f64 {
+    (lease as f64 / 3.0).clamp(5.0, 60.0)
+}
+
+/// Current UTC time as ISO-8601 with milliseconds and `Z`, the shape
+/// the Python original emits (`datetime.now(timezone.utc).isoformat(
+/// timespec="milliseconds")` with `+00:00` replaced by `Z`):
+/// `YYYY-MM-DDTHH:MM:SS.mmmZ`, always 24 characters. Std only: the
+/// calendar math is the days-to-civil inversion, no date dependency.
 pub fn now_iso() -> String {
-    // Epoch milliseconds as a decimal string. NOT ISO-8601: the Python
-    // original (`server/queue/trio_agent.py:81-84`) emits ISO-8601, and
-    // this port carries only epoch millis (gap 2 in the gaps record).
-    let ms = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
+    let ms = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
         .map(|d| d.as_millis())
         .unwrap_or(0);
-    // Format via libc seconds is overkill for parity; keep epoch millis.
-    format!("{ms}")
+    format_iso_millis(ms)
+}
+
+/// Format Unix epoch milliseconds as `YYYY-MM-DDTHH:MM:SS.mmmZ`.
+/// Pre-epoch input saturates to the epoch. Pure and unit-tested.
+pub fn format_iso_millis(ms_total: u128) -> String {
+    let secs = (ms_total / 1000) as i64;
+    let millis = (ms_total % 1000) as u32;
+    let days = secs.div_euclid(86_400);
+    let secs_of_day = secs.rem_euclid(86_400);
+    let (year, month, day) = civil_from_days(days);
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}.{:03}Z",
+        year,
+        month,
+        day,
+        secs_of_day / 3600,
+        (secs_of_day % 3600) / 60,
+        secs_of_day % 60,
+        millis
+    )
+}
+
+/// Days since 1970-01-01 to (year, month, day): Howard Hinnant's
+/// civil_from_days inversion, valid for the whole Unix range.
+fn civil_from_days(z: i64) -> (i64, u32, u32) {
+    let z = z + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
+    let m = (if mp < 10 { mp + 3 } else { mp - 9 }) as u32;
+    (if m <= 2 { y + 1 } else { y }, m, d)
 }
 
 pub fn relay_notify_payload(result: &Value, product: Option<&str>) -> Option<Value> {
@@ -55,9 +115,85 @@ pub fn relay_notify_payload(result: &Value, product: Option<&str>) -> Option<Val
     }
 }
 
+/// POST a relay payload to `{base}/rooms/main/notify` over plain HTTP
+/// with a 2s connect/read/write timeout, mirroring the Python hook's
+/// `urllib.request.urlopen(req, timeout=2)`. Only `http://` bases are
+/// supported (the relay URL is local configuration); anything else, a
+/// DNS/connect failure, or a short write is an `Err` the caller
+/// swallows — a relay problem must never fail or delay a job.
+pub fn relay_post(base: &str, payload: &Value) -> Result<(), String> {
+    let rest = base
+        .strip_prefix("http://")
+        .ok_or_else(|| "relay base is not plain http://".to_string())?;
+    let (host_port, prefix) = match rest.find('/') {
+        Some(i) => (&rest[..i], rest[i..].trim_end_matches('/').to_string()),
+        None => (rest, String::new()),
+    };
+    if host_port.is_empty() {
+        return Err("relay base has no host".to_string());
+    }
+    let host = host_port.split(':').next().unwrap_or(host_port);
+    let mut addrs = format!("{host_port}")
+        .to_socket_addrs()
+        .map_err(|e| format!("relay resolve failed: {e}"))?;
+    let addr = addrs.next().ok_or_else(|| "relay host resolves to nothing".to_string())?;
+    let mut stream = TcpStream::connect_timeout(&addr, RELAY_TIMEOUT)
+        .map_err(|e| format!("relay connect failed: {e}"))?;
+    stream.set_read_timeout(Some(RELAY_TIMEOUT)).ok();
+    stream.set_write_timeout(Some(RELAY_TIMEOUT)).ok();
+    let body = serde_json::to_string(payload).map_err(|e| e.to_string())?;
+    let req = format!(
+        "POST {prefix}/rooms/main/notify HTTP/1.1\r\nHost: {host}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{body}",
+        body.len()
+    );
+    stream
+        .write_all(req.as_bytes())
+        .map_err(|e| format!("relay write failed: {e}"))?;
+    let mut buf = [0u8; 512];
+    let _ = stream.read(&mut buf);
+    Ok(())
+}
+
+/// Best-effort NOTIFY after a job result is written, exactly the Python
+/// `_relay_notify` hook: env `TRIO_RELAY_URL` unset or empty means no
+/// hook (the agent behaves as before); every failure is swallowed.
+/// Reads the environment on every call, like the original.
+pub fn relay_notify(result: &Value, product: Option<&str>) {
+    let base = std::env::var("TRIO_RELAY_URL").unwrap_or_default();
+    let base = base.trim().trim_end_matches('/').to_string();
+    if base.is_empty() {
+        return;
+    }
+    relay_notify_to(&base, result, product);
+}
+
+/// The env-independent half of [`relay_notify`]: build the payload and
+/// POST it, swallowing every failure. Testable without touching the
+/// process environment.
+pub fn relay_notify_to(base: &str, result: &Value, product: Option<&str>) {
+    let Some(payload) = relay_notify_payload(result, product) else {
+        return;
+    };
+    let _ = relay_post(base, &payload);
+}
+
 /// Outcome of serving one job.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Outcome { Done, Failed, Skipped, Lost }
+
+/// One poll/serve cycle report, mirroring the Python `serve_once`
+/// report dict's keys: done, failed, skipped, lost.
+#[derive(Debug, Default, PartialEq, Eq)]
+pub struct ServeReport {
+    /// Job ids finished with an assessment.
+    pub done: Vec<String>,
+    /// Job ids finished as failed.
+    pub failed: Vec<String>,
+    /// Job ids skipped: result already present, never re-billed.
+    pub skipped: Vec<String>,
+    /// Job ids lost: claim race lost (or vanished mid-serve).
+    pub lost: Vec<String>,
+}
 
 pub trait Generator {
     fn generate(&mut self, product: &str, image: &[u8], timestamp: &str, correction: Option<&str>) -> Result<(Value, String, u64), String>;
@@ -70,9 +206,27 @@ pub struct Agent<B: StoreBackend, G: Generator> {
     pub gen: G,
 }
 
-impl<B: StoreBackend, G: Generator> Agent<B, G> {
+impl<B: StoreBackend + Send, G: Generator> Agent<B, G> {
+    /// Poll the namespace index for open jobs and serve each one,
+    /// returning the report (`done`, `failed`, `skipped`, `lost`) the
+    /// Python `serve_once` returns. The infinite `--poll-interval` loop
+    /// stays with the binary; this is the single pass.
+    pub fn serve_once(&mut self) -> ServeReport {
+        let mut report = ServeReport::default();
+        for jid in self.jobs.open_job_ids() {
+            match self.serve_job(&jid) {
+                Outcome::Done => report.done.push(jid),
+                Outcome::Failed => report.failed.push(jid),
+                Outcome::Skipped => report.skipped.push(jid),
+                Outcome::Lost => report.lost.push(jid),
+            }
+        }
+        report
+    }
+
     pub fn serve_job(&mut self, jid: &str) -> Outcome {
-        // Idempotency before claim.
+        // Idempotency before any claim or call: an existing result
+        // means this deterministic job was already answered.
         if self.jobs.get_result(jid).is_some() {
             self.jobs.finish(jid, "done", "idempotent skip: result already present, not re-billed");
             return Outcome::Skipped;
@@ -80,21 +234,54 @@ impl<B: StoreBackend, G: Generator> Agent<B, G> {
         if !self.jobs.claim(jid, &self.nick.clone(), self.lease) {
             return Outcome::Lost;
         }
-        // Idempotency again under lease.
-        if self.jobs.get_result(jid).is_some() {
-            self.jobs.finish(jid, "done", "idempotent skip: result already present, not re-billed");
-            return Outcome::Skipped;
-        }
-        let mut product: Option<String> = None;
-        let res = self.serve_claimed(jid, &mut product);
-        res
+        // Lease heartbeat while generating: a scoped thread renews the
+        // claim every `heartbeat_interval_secs(lease)` seconds and stops
+        // on the flag set on every exit path below (Python: a daemon
+        // `threading.Thread` joined with timeout=2). The store is
+        // shared through a mutex of the mutable borrow so renewal runs
+        // concurrently with generation without redesigning the
+        // `&mut self` serve API; renewal stops silently when the claim
+        // is gone, exactly like the Python thread's early return.
+        let stop = AtomicBool::new(false);
+        let nick = self.nick.clone();
+        let lease = self.lease;
+        let jid_owned = jid.to_string();
+        let cell = Mutex::new(&mut self.jobs);
+        std::thread::scope(|s| {
+            s.spawn(|| {
+                heartbeat_loop(&cell, &stop, &jid_owned, &nick, lease);
+            });
+            let mut product: Option<String> = None;
+            let outcome =
+                Self::serve_claimed_body(&cell, &mut self.gen, &self.nick, &jid_owned, &mut product);
+            stop.store(true, Ordering::SeqCst);
+            outcome
+        })
     }
 
-    fn serve_claimed(&mut self, jid: &str, product_out: &mut Option<String>) -> Outcome {
-        let env = match self.jobs.job_envelope(jid) {
+    fn serve_claimed_body(
+        jobs: &Mutex<&mut JobStore<B>>,
+        gen: &mut G,
+        nick: &str,
+        jid: &str,
+        product_out: &mut Option<String>,
+    ) -> Outcome {
+        // Idempotency again after the claim (the queue is the source of
+        // truth: re-check under lease before any generation call).
+        // The guard drops before the branch: `finish` below locks again.
+        let already = jobs.lock().unwrap().get_result(jid);
+        if already.is_some() {
+            jobs.lock().unwrap().finish(jid, "done", "idempotent skip: result already present, not re-billed");
+            return Outcome::Skipped;
+        }
+        // Drop the guard before branching: `finish_failed` locks the
+        // same mutex, and a guard held across the `match` would
+        // deadlock the missing-envelope arm on this thread.
+        let env = jobs.lock().unwrap().job_envelope(jid);
+        let env = match env {
             Some(e) => e,
             None => {
-                self.finish_failed(jid, "job envelope missing or unparseable in the store", None, None, None);
+                Self::finish_failed(jobs, jid, "job envelope missing or unparseable in the store", None, None, None);
                 return Outcome::Failed;
             }
         };
@@ -103,33 +290,36 @@ impl<B: StoreBackend, G: Generator> Agent<B, G> {
         *product_out = Some(product.clone());
         let data_url = env.get("image").and_then(|i| i.get("dataUrl")).and_then(Value::as_str).unwrap_or("");
         if !data_url.starts_with("data:image/jpeg;base64,") {
-            self.finish_failed(jid, "envelope image is not a JPEG data URL", None, None, Some(&product));
+            Self::finish_failed(jobs, jid, "envelope image is not a JPEG data URL", None, None, Some(&product));
             return Outcome::Failed;
         }
         let raw = match B64.decode(data_url.splitn(2, ',').nth(1).unwrap_or("")) {
             Ok(b) => b,
             Err(_) => {
-                self.finish_failed(jid, "envelope image does not base64-decode", None, None, Some(&product));
+                Self::finish_failed(jobs, jid, "envelope image does not base64-decode", None, None, Some(&product));
                 return Outcome::Failed;
             }
         };
         let digest = hex::encode(Sha256::digest(&raw));
         if env.get("image").and_then(|i| i.get("sha256")).and_then(Value::as_str) != Some(digest.as_str()) {
-            self.finish_failed(jid, "frame sha256 mismatch against the envelope", None, None, Some(&product));
+            Self::finish_failed(jobs, jid, "frame sha256 mismatch against the envelope", None, None, Some(&product));
             return Outcome::Failed;
         }
-        let (mut assessment, mut model, mut latency) = match self.gen.generate(&product, &raw, &timestamp, None) {
+        let (mut assessment, mut model, mut latency) = match gen.generate(&product, &raw, &timestamp, None) {
             Ok(t) => t,
             Err(e) => {
-                self.finish_failed(jid, &format!("generation failed: {e}"), None, None, Some(&product));
+                Self::finish_failed(jobs, jid, &format!("generation failed: {e}"), None, None, Some(&product));
                 return Outcome::Failed;
             }
         };
         let (mut ok, mut errors) = validate_assessment(&assessment, &product);
         if !ok {
-            // Exactly ONE correction retry.
-            let correction = errors.join("; ");
-            match self.gen.generate(&product, &raw, &timestamp, Some(&correction)) {
+            // Bounded self-correction: exactly ONE retry, carrying the
+            // first five validation errors as the correction (Python:
+            // `"; ".join(errors[:5])`). A second counted call, never
+            // a third.
+            let correction: String = errors.iter().take(5).cloned().collect::<Vec<_>>().join("; ");
+            match gen.generate(&product, &raw, &timestamp, Some(&correction)) {
                 Ok((a2, m2, l2)) => {
                     assessment = a2; model = m2;
                     latency = latency.saturating_add(l2);
@@ -137,13 +327,14 @@ impl<B: StoreBackend, G: Generator> Agent<B, G> {
                     ok = v.0; errors = v.1;
                 }
                 Err(e) => {
-                    self.finish_failed(jid, &format!("generation failed: {e}"), Some(&model), Some(latency), Some(&product));
+                    Self::finish_failed(jobs, jid, &format!("generation failed: {e}"), Some(&model), Some(latency), Some(&product));
                     return Outcome::Failed;
                 }
             }
         }
         if !ok {
-            self.finish_failed(jid, &format!("model output failed validateAssessment (after one correction retry): {}", errors.join("; ")), Some(&model), Some(latency), Some(&product));
+            let detail: String = errors.iter().take(5).cloned().collect::<Vec<_>>().join("; ");
+            Self::finish_failed(jobs, jid, &format!("model output failed validateAssessment (after one correction retry): {detail}"), Some(&model), Some(latency), Some(&product));
             return Outcome::Failed;
         }
         let result = serde_json::json!({
@@ -151,13 +342,13 @@ impl<B: StoreBackend, G: Generator> Agent<B, G> {
             "error": null, "model": model, "latency_ms": latency,
             "completed_at": now_iso(),
         });
-        self.jobs.put_result(&result);
-        self.jobs.finish(jid, "done", &format!("assessment by {}", self.nick));
+        jobs.lock().unwrap().put_result(&result);
+        relay_notify(&result, Some(&product));
+        jobs.lock().unwrap().finish(jid, "done", &format!("assessment by {nick}"));
         Outcome::Done
     }
 
-    fn finish_failed(&mut self, jid: &str, error: &str, model: Option<&String>, latency: Option<u64>, product: Option<&str>) {
-        let _ = product;
+    fn finish_failed(jobs: &Mutex<&mut JobStore<B>>, jid: &str, error: &str, model: Option<&String>, latency: Option<u64>, product: Option<&str>) {
         // Char-safe caps: `&error[..500]` panics on a multi-byte boundary,
         // and the Python original caps by characters (`trio_agent.py:204-213`).
         let capped: String = error.chars().take(500).collect();
@@ -167,8 +358,51 @@ impl<B: StoreBackend, G: Generator> Agent<B, G> {
             "error": capped, "model": model, "latency_ms": latency,
             "completed_at": now_iso(),
         });
-        self.jobs.put_result(&result);
-        self.jobs.finish(jid, "failed", &note);
+        jobs.lock().unwrap().put_result(&result);
+        relay_notify(&result, product);
+        jobs.lock().unwrap().finish(jid, "failed", &note);
+    }
+}
+
+/// Renew the claim every `interval_secs` until `stop` is set or renewal
+/// fails (lease lost: the thread exits, like the Python thread's early
+/// return). Sleeps in [`HEARTBEAT_POLL`] slices so a set flag stops the
+/// thread promptly; [`heartbeat_loop`] uses the Python interval rule.
+pub fn heartbeat_loop<B: StoreBackend>(
+    jobs: &Mutex<&mut JobStore<B>>,
+    stop: &AtomicBool,
+    jid: &str,
+    nick: &str,
+    lease: u64,
+) {
+    heartbeat_loop_every(jobs, stop, jid, nick, lease, heartbeat_interval_secs(lease));
+}
+
+/// [`heartbeat_loop`] with an explicit interval: the test seam (the
+/// production interval's 5s floor would make renewal unobservable in a
+/// fast test).
+pub fn heartbeat_loop_every<B: StoreBackend>(
+    jobs: &Mutex<&mut JobStore<B>>,
+    stop: &AtomicBool,
+    jid: &str,
+    nick: &str,
+    lease: u64,
+    interval_secs: f64,
+) {
+    let mut waited = 0.0;
+    let step = HEARTBEAT_POLL.as_secs_f64();
+    loop {
+        std::thread::sleep(HEARTBEAT_POLL);
+        if stop.load(Ordering::SeqCst) {
+            return;
+        }
+        waited += step;
+        if waited + 1e-9 >= interval_secs {
+            waited = 0.0;
+            if !jobs.lock().unwrap().renew_claim(jid, nick, lease) {
+                return;
+            }
+        }
     }
 }
 
