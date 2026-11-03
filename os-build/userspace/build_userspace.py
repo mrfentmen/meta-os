@@ -20,11 +20,24 @@ base) that the plain build never used either.
 Fix: for each program in `kernel/build.rs`'s BINS list, generate a
 link script from `link-base.ld` with BASE replaced by that program's
 base, build that one bin with `cargo rustc` passing the generated
-script as the link script, and verify the resulting ELF's entry
-address equals its base. The entry check is the safety property:
+script as the link script, and verify the resulting ELF's first
+LOAD segment address equals its base and its entry point lies
+inside the loaded image. The LOAD check is the safety property:
 if the link-arg handling ever changes (config rustflags, linker
 choice), a bin linked at the wrong address FAILS HERE, loudly, and
-is never silently staged as a good build.
+is never silently staged as a good build. The loader maps LOAD
+segments, not the entry point alone, so first-LOAD == base is the
+loader-relevant property (a colliding LOAD is what the loader
+refuses with "address in use").
+
+Note (Milo gate-1 RED on 5d3f0d1): entry == base is too strict
+for multi-function bins and must NOT be reinstated. Sleeper's
+entry was base + 0xa40, yet its .text / first LOAD started exactly
+at base: other .text sections precede .ltext._start in link order,
+so _start is not the first thing linked. Hello passed entry == base
+by luck (_start first). The corrected check therefore verifies
+first LOAD == base, entry inside the loaded range, and no overlap
+between programs' loaded ranges.
 
 Bases: hello / sleeper / crasher keep exactly the bases named in
 `link-base.ld`'s comment; readkey takes the next slot in the same
@@ -42,9 +55,10 @@ changes no kernel code, no loader code, and does not touch
 stale, unused by this script).
 
 Status: written on a VM with no cargo, so UNCOMPILED here. Milo
-gate-1 must run this script and confirm the entry lines; Mac/Buffy
-boot proof (gate pack L1-L5 in `os-build/ROWAN_TEST_PREP.md`) is
-still owed after that. Merge is Pax's call.
+gate-1 must run this script and confirm the first-LOAD / entry
+lines; Mac/Buffy boot proof (gate pack L1-L5 in
+`os-build/ROWAN_TEST_PREP.md`) is still owed after that. Merge is
+Pax's call.
 """
 
 import struct
@@ -87,6 +101,7 @@ def main(argv):
                       file=sys.stderr)
                 return 2
         selected = [(name, known[name]) for name in wanted]
+    seen_ranges = {}  # name -> (first LOAD vaddr, loaded end)
     for name, base in selected:
         # Substitute exactly the placement line, not the comment text:
         # ". = BASE;" must occur exactly once in the template.
@@ -113,28 +128,89 @@ def main(argv):
                   file=sys.stderr)
             return result.returncode
         elf = (user_dir / "target" / TARGET / profile / name)
-        entry, etype = read_elf_entry(elf)
-        print(f"   entry 0x{entry:x} type {etype} (want base 0x{base:x})")
-        if entry != base:
-            print(f"FAIL: {name} entry 0x{entry:x} != base 0x{base:x} -- "
-                  "link script was not applied; do not stage this ELF",
-                  file=sys.stderr)
+        info = read_elf_load_info(elf)
+        entry, etype, first_load, load_end = info
+        print(f"   entry 0x{entry:x} type {etype} first LOAD 0x{first_load:x} "
+              f"end 0x{load_end:x} (want first LOAD == base 0x{base:x})")
+        ok, reason = check_elf_at_base(info, base)
+        if not ok:
+            print(f"FAIL: {name} {reason} -- "
+                  "link script was not applied or entry is stray; "
+                  "do not stage this ELF", file=sys.stderr)
             return 1
-        print(f"   {name} OK: entry == base 0x{base:x}")
-    print("all selected programs linked at distinct bases, entries verified")
+        for prev_name, (plo, phi) in seen_ranges.items():
+            if first_load < phi and plo < load_end:
+                print(f"FAIL: {name} loaded range [0x{first_load:x}, "
+                      f"0x{load_end:x}) overlaps {prev_name} "
+                      f"[0x{plo:x}, 0x{phi:x}) -- do not stage this ELF",
+                      file=sys.stderr)
+                return 1
+        seen_ranges[name] = (first_load, load_end)
+        print(f"   {name} OK: first LOAD == base 0x{base:x}, "
+              f"entry inside loaded image")
+    print("all selected programs linked at distinct bases, "
+          "first LOADs verified")
     return 0
 
 
 def read_elf_entry(path):
     """Return (e_entry, e_type) of a 64-bit little-endian ELF."""
-    data = Path(path).read_bytes()[:64]
+    entry, etype, _, _ = read_elf_load_info(path)
+    return entry, etype
+
+
+def read_elf_load_info(path):
+    """Return (e_entry, e_type, first LOAD p_vaddr, loaded end).
+
+    first LOAD is the minimum p_vaddr over PT_LOAD segments and the
+    loaded end is the maximum p_vaddr + p_memsz over them -- the
+    range the kernel loader actually maps for this ELF.
+    """
+    data = Path(path).read_bytes()
     if len(data) < 64 or data[:4] != b"\x7fELF":
         raise ValueError(f"not an ELF file: {path}")
     if data[4] != 2 or data[5] != 1:
         raise ValueError(f"not a 64-bit little-endian ELF: {path}")
     etype = struct.unpack_from("<H", data, 16)[0]
     entry = struct.unpack_from("<Q", data, 24)[0]
-    return entry, etype
+    phoff = struct.unpack_from("<Q", data, 32)[0]
+    phentsize = struct.unpack_from("<H", data, 54)[0]
+    phnum = struct.unpack_from("<H", data, 56)[0]
+    if phnum == 0 or phentsize < 56:
+        raise ValueError(f"no usable program headers: {path}")
+    loads = []
+    for i in range(phnum):
+        off = phoff + i * phentsize
+        p_type = struct.unpack_from("<I", data, off)[0]
+        if p_type != 1:  # PT_LOAD
+            continue
+        p_vaddr = struct.unpack_from("<Q", data, off + 16)[0]
+        p_memsz = struct.unpack_from("<Q", data, off + 40)[0]
+        loads.append((p_vaddr, p_vaddr + p_memsz))
+    if not loads:
+        raise ValueError(f"no PT_LOAD segments: {path}")
+    first_load = min(v for v, _ in loads)
+    load_end = max(e for _, e in loads)
+    return entry, etype, first_load, load_end
+
+
+def check_elf_at_base(info, base):
+    """Check (entry, etype, first_load, load_end) against a link base.
+
+    Returns (True, "") or (False, reason). The loader-relevant
+    property is first LOAD == base; the entry only has to lie
+    inside the loaded image, because _start need not be the first
+    thing linked (Milo gate-1 RED on 5d3f0d1: sleeper _start at
+    base + 0xa40 with first LOAD exactly at base).
+    """
+    entry, _, first_load, load_end = info
+    if first_load != base:
+        return False, (f"first LOAD 0x{first_load:x} != base 0x{base:x} "
+                       "-- link script was not applied")
+    if not (first_load <= entry < load_end):
+        return False, (f"entry 0x{entry:x} outside loaded range "
+                       f"[0x{first_load:x}, 0x{load_end:x})")
+    return True, ""
 
 
 if __name__ == "__main__":

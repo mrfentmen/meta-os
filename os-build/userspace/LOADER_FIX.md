@@ -43,12 +43,19 @@ loader change, `syscalls.rs` untouched):
 
 For each program it generates `link-<bin>.ld` from `link-base.ld`,
 builds that one bin with `cargo rustc` passing the generated script,
-and verifies the ELF entry address equals its base. The entry check
-is what makes a wrong build loud instead of silent: if the link
-script ever stops applying, the script fails rather than staging a
-colliding ELF. The committed `link.ld` is left untouched (stale,
-unused by this script); the generated `link-<bin>.ld` files are
-working-tree artifacts — do not hand-edit or commit them.
+and verifies the ELF's first LOAD segment address equals its base
+and its entry point lies inside the loaded image, with no overlap
+between programs' loaded ranges. The LOAD check is what makes a
+wrong build loud instead of silent: if the link script ever stops
+applying, the script fails rather than staging a colliding ELF.
+Entry == base is deliberately NOT the check: Milo gate-1 RED on
+5d3f0d1 showed sleeper's entry at base + 0xa40 while its first
+LOAD started exactly at base (other .text sections precede
+.ltext._start in link order). The loader maps LOAD segments, so
+first LOAD == base is the loader-relevant property. The committed
+`link.ld` is left untouched (stale, unused by this script); the
+generated `link-<bin>.ld` files are working-tree artifacts — do
+not hand-edit or commit them.
 
 ## Usage
 
@@ -63,8 +70,9 @@ from `os-build/userspace/user/target/`.
 
 ## Gates (from `os-build/ROWAN_TEST_PREP.md`, Part 2)
 
-- L1 static: every ELF entry outside the kernel image range,
-  distinct per-program bases — the script prints entry per bin.
+- L1 static: every ELF first LOAD outside the kernel image range,
+  distinct per-program bases, entry inside its loaded image — the
+  script prints entry + first LOAD per bin.
 - L2 build: this script is the repo build step, not a hand edit.
 - L3 boot: zero `address in use` refusals across all four programs.
 - L4 runtime: each program's output visible; K3 demand leg and K4
