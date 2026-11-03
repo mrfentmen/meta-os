@@ -1,5 +1,7 @@
 .sentinel-cron.lock
 server/queue/crew-data/
+# Real env files are never committed; only .env.example is tracked.
+.env
 # Build outputs (never commit; rebuild from source)
 kernel/target/
 os-build/userspace/user/target/
