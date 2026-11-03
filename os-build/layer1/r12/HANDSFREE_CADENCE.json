@@ -1,6 +1,6 @@
 {
   "task": "R12-038",
-  "ranAt": "2026-11-03T03:11:28.322Z",
+  "ranAt": "2026-11-02T15:14:02.089Z",
   "path": [
     "inbox line",
     "dropOrders job file",
@@ -14,6 +14,6 @@
   "runsSpawned": 1,
   "resultCode": 0,
   "brief": "1 order ran.\n1 finished, 0 stopped, 0 failed.\nworker finished.\n",
-  "latencyMs": 98,
+  "latencyMs": 52,
   "note": "Host process, real child exit. No kernel, no voice, no model."
 }
