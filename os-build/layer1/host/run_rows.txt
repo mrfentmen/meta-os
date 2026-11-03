@@ -29,6 +29,8 @@ tests/t136_time_r11|RUNS|41|0|
 tests/t137_timesync_r11|RUNS|26|0|
 tests/t138_updater_r11|RUNS|47|0|
 tests/t139_updater_client_r11|RUNS|51|0|
+tests/t140_r13_failpaths_b|RUNS|9|0|
+tests/t141_clipboard|RUNS|20|0|
 tests/t45_fmt|RUNS|24|0|
 tests/t46_ring|RUNS|36|0|
 tests/t47_cfg|RUNS|16|0|

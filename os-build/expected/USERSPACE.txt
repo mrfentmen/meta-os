@@ -1,0 +1,5 @@
+HELLO FROM USERSPACE
+sleeper: sleeping 5 ticks
+sleeper: woke, sleep returned
+crasher: about to read zero
+task killed

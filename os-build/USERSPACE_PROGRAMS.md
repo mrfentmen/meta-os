@@ -1,5 +1,11 @@
 # Userspace programs — spec first, one program per proof
 
+**Build pipeline (fixed 2026-11-02):** programs are built with
+`os-build/userspace/build.sh`, which gives each one its own link base from
+`bases.txt` and verifies the ELF headers. Before this, every bin linked at the
+same address and the kernel refused 3 of 4 with `address in use`. Proof:
+`os-build/logs/K6-bases-fixed.txt` and `os-build/userspace/BASES.md`.
+
 Lane rule: a program's expected boot-log lines are written **before** the program, and the
 program is done when the log matches the spec. Sources live in
 `os-build/userspace/user/src/bin/`; the kernel embeds them through `kernel/build.rs`, whose
@@ -13,12 +19,28 @@ wired** until that list changes — the wiring is a proposal, not an edit.
 | `hello` | ring 3 runs at all | `HELLO FROM USERSPACE`, `user exit code 0` | PROVEN (`K6-boot.txt`) |
 | `sleeper` | sleep/wake from userspace | `sleeper: before sleep`, `sleeper: pid <n>`, `sleeper: after sleep` | PROVEN (`K6-boot.txt`) |
 | `crasher` | fault isolation | `crasher: about to read zero`, `INT user page-fault addr 0x0 err 0x4: task killed` | PROVEN (`K6-boot.txt`) |
-| `quitter` | exit status is reported truthfully | `quitter: exiting 7`, `user exit code 7` | **WRITTEN, COMPILES**; needs one line in `BINS` to be wired |
+| `quitter` | exit status is reported truthfully | `quitter: exiting 7`, `user exit code 7` | **BUILT at 0x6400…, base verified**; needs one line in `BINS` to be wired |
 | `readkey` | syscall 5 returns real scancodes | `readkey: polling syscall 5`, `readkey got <n>`, `readkey: empty` | **WRITTEN, COMPILES**; a diagnostic probe, not for `BINS` |
 | `writer` | the one-page write cap is enforced | `writer: alive`, `writer: oversize returned 0`, `writer: cap returned 19` | **WRITTEN, COMPILES**; probe, not for `BINS` |
 | `badcall` | reserved numbers 6-15 refuse, not just 99 | `user bad syscall 6 refused` / `15` / `99`, then `badcall: 6 returned 18446744073709551615` and `badcall: survived all three` | **WRITTEN, COMPILES**; wiring proposal |
 | `hog` | allocation is bounded and contained | `hog: allocating`, then the task killed by the fault; the shell must still answer `status` afterwards | **WRITTEN, COMPILES**; fault-containment drill, not an allocator test — no allocation syscall exists (wiring proposal: `os-build/userspace/WIRING_PROPOSAL_R12.md`) |
 | `talker` + `listener` | two tasks can exchange a message | `talker: sent <n>`, `listener: got <n>` | **BLOCKED — no IPC exists** |
+| `abiprobe` | the six-call contract itself | `abiprobe: checks 9 failures 0`, `abiprobe: ABI OK` | **WRITTEN, BUILT** at 0x6818…, base verified; diagnostic, needs `BINS` + a fifth stack slot |
+| `selfinfo` | syscall 3 identity survives sleep | `selfinfo: pid <n>`, `selfinfo: identity held` | **WRITTEN, BUILT** at 0x6819…, base verified; diagnostic |
+| `writechain` | repeated and chunked writes | `writechain: failures 0`, `writechain: OK` | **WRITTEN, BUILT** at 0x681a…, base verified; diagnostic |
+| `yielder` | a yield returns to the same task | `yielder: yields 8 failures 0`, `yielder: identity stable` | **WRITTEN, BUILT** at 0x681b…, base verified; diagnostic |
+
+## The corpus is now fully buildable (2026-11-02)
+
+All 36 bins in `user/src/bin/` are in `bases.txt` and build. `verify_bases.py` reads the real
+ELF headers and reports every image disjoint, at its manifest base, entry inside its own
+image; the measured table is `os-build/USERSPACE_BUILD_STATUS.md`. The 32 that were previously
+unlisted had no slot at all, so this is the first time the whole corpus has been checked rather
+than the four programs the kernel happens to embed.
+
+`lib.rs` gained the pieces a real program needs: `sys_write_all` (splits at the kernel's
+4096-byte cap instead of being refused), `print_hex`, and `print_i64` (including `i64::MIN`).
+`abiprobe` is the program that checks those claims from ring 3 rather than in prose.
 
 ## Why two of the six are blocked, and why that is the deliverable
 

@@ -50,6 +50,29 @@ pub fn sys_read_key() -> u64 {
     syscall(5, 0, 0, 0)
 }
 
+/// One page. The kernel's write arm refuses anything larger instead of
+/// truncating, so a caller that wants to emit more must split.
+pub const WRITE_CAP: usize = 4096;
+
+/// Write every byte, splitting at `WRITE_CAP`.
+///
+/// Returns the number of bytes the kernel confirmed. A refusal (0) or a short
+/// write stops the loop and is reported honestly through the return value --
+/// this never pretends a dropped tail was written.
+pub fn sys_write_all(mut buf: &[u8]) -> usize {
+    let mut done = 0usize;
+    while !buf.is_empty() {
+        let n = if buf.len() > WRITE_CAP { WRITE_CAP } else { buf.len() };
+        let r = sys_write(&buf[..n]) as usize;
+        if r == 0 {
+            break;
+        }
+        done += r;
+        buf = &buf[r..];
+    }
+    done
+}
+
 /// Print an unsigned decimal. No formatting machinery in userspace.
 pub fn print_u64(mut n: u64) {
     let mut buf = [0u8; 20];
@@ -64,6 +87,30 @@ pub fn print_u64(mut n: u64) {
         n /= 10;
     }
     sys_write(&buf[i..]);
+}
+
+/// Print 16 lowercase hex digits, no prefix. Fixed width so two values can be
+/// compared by eye in a boot log.
+pub fn print_hex(mut n: u64) {
+    let digits = b"0123456789abcdef";
+    let mut buf = [0u8; 16];
+    let mut i = 16;
+    while i > 0 {
+        i -= 1;
+        buf[i] = digits[(n & 0xF) as usize];
+        n >>= 4;
+    }
+    sys_write(&buf);
+}
+
+/// Print a signed decimal; `i64::MIN` is handled without overflowing.
+pub fn print_i64(n: i64) {
+    if n < 0 {
+        sys_write(b"-");
+        print_u64((n as i128).unsigned_abs() as u64);
+    } else {
+        print_u64(n as u64);
+    }
 }
 
 pub fn sys_bad() -> u64 {
