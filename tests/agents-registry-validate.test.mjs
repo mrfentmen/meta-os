@@ -8,24 +8,28 @@ import { validateRegistry } from "../agents/registry_validate.mjs";
 const HERE = dirname(fileURLToPath(import.meta.url));
 const registry = JSON.parse(readFileSync(join(HERE, "..", "agents", "registry.json"), "utf8"));
 
-test("the real registry has names, commands, and an owner on every entry", () => {
+test("every live entry has a command and every draft has none", () => {
   const result = validateRegistry(registry);
   assert.deepEqual(result.errors, []);
   assert.ok(result.ok);
   for (const agent of registry.agents) {
     assert.equal(typeof agent.name, "string");
-    assert.ok(Array.isArray(agent.command) && agent.command.length > 0);
+    assert.ok(Array.isArray(agent.command), agent.name + " command must be an array");
+    if (agent.draft !== true) {
+      assert.ok(agent.command.length > 0, agent.name + " is live but has no command");
+    }
     assert.equal(typeof agent.owner, "string");
   }
+  const placeholder = registry.agents.filter((a) => a.command.join(" ") === "true");
+  assert.deepEqual(placeholder, [], "no entry may carry the placeholder command");
 });
 
-test("a placeholder command is reported as a draft, not runnable", () => {
+test("a placeholder command is an error, not a draft", () => {
   const result = validateRegistry({
     agents: [{ name: "rowan", command: ["true"], owner: "boss" }],
   });
-  assert.deepEqual(result.errors, []);
-  assert.equal(result.drafts.length, 1);
-  assert.equal(result.drafts[0].name, "rowan");
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((e) => e.field === "command" && /placeholder/.test(e.message)));
 });
 
 test("duplicate agent names are reported", () => {

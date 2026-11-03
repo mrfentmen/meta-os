@@ -145,6 +145,18 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
           ledger.add("watchman", "baton-missing", { id, from: job.continuesFrom });
         }
       }
+      // A draft has no program. Spawning it would start nothing and file a
+      // finished job; refuse it here, by name.
+      if (agent.draft === true || !Array.isArray(agent.command) || agent.command.length === 0) {
+        ledger.add("watchman", "job-refused", { id, agent: job.agent, reason: "draft-agent" });
+        notify({ severity: "note", key: "job:" + id + ":draft",
+                 title: "No program for " + job.agent,
+                 body: "the registry entry is a draft; nothing was started" });
+        fs.writeFileSync(path.join(resultDir, id + ".result.json"),
+          JSON.stringify({ id, agent: job.agent, refused: "draft-agent",
+                           finishedAt: new Date().toISOString() }, null, 2));
+        continue;
+      }
       const runStartedAt = Date.now();
       const h = spawnAgent(agent, { root, job });
       runs.set(id, h);

@@ -20,13 +20,13 @@ test("an agent with an empty command array is refused at load", () => {
   }
 });
 
-test("a placeholder command is accepted; only the registry's draft flag marks it", () => {
+test("a draft carries no command, so nothing can spawn it by accident", () => {
   const agents = loadRegistry(new URL("../agents/registry.json", import.meta.url).pathname);
   const rowan = agents.find((a) => a.name === "rowan");
   assert.ok(rowan, "rowan is in the real registry");
-  assert.deepEqual(rowan.command, ["true"]);
+  assert.deepEqual(rowan.command, [], "a draft has no program to run");
   assert.equal(rowan.draft, true, "the registry itself reports the draft");
-  assert.equal(validateEntry(rowan), true, "the runtime has no draft detector of its own");
+  assert.equal(validateEntry(rowan), true);
 });
 
 test("duplicate agent names are refused", () => {

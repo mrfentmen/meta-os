@@ -23,9 +23,7 @@
         "kernel",
         "gate-runs"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "kernel (L1-L3)",
       "name": "rowan",
       "owner": "boss",
@@ -42,9 +40,7 @@
         "design",
         "site"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "UI and surfaces (L6)",
       "name": "hana",
       "owner": "boss",
@@ -61,9 +57,7 @@
         "claim-audit",
         "scoreboard"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "gates and records",
       "name": "milo",
       "owner": "boss",
@@ -79,9 +73,7 @@
         "services",
         "failure-injection"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "services (L4, Goose)",
       "name": "buffy",
       "owner": "boss",
@@ -97,9 +89,7 @@
         "clean-clone-gate",
         "image-boot-checks"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "verification (8GB Mac) Renamed Bond by the boss 2026-11-02 (formerly Buffy 2). Light lanes: BOND_LIGHT_LANES.md.",
       "name": "bond",
       "owner": "boss",
@@ -116,9 +106,7 @@
         "dispatch",
         "watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "dispatch and merge",
       "name": "pax",
       "owner": "boss",
@@ -137,9 +125,7 @@
         "assess",
         "dispatch-simulated"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Imperium loop (patrol -> review -> investigation -> records -> response)",
       "name": "imperium-patrol",
       "owner": "system: imperium",
@@ -156,9 +142,7 @@
         "keeper-pass",
         "rights-check"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Musica overnight sessions",
       "name": "musica-studio",
       "owner": "system: musica",
@@ -173,9 +157,7 @@
       "capabilities": [
         "design-iterate"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Officina faber loop",
       "name": "officina-faber",
       "owner": "system: officina",
@@ -190,9 +172,7 @@
       "capabilities": [
         "watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "watch rounds (bus, repo, gateway) \u2014 capability demo agent",
       "name": "watch",
       "owner": "boss",
@@ -271,9 +251,7 @@
         "experiment-watch",
         "verification-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "research-director",
       "owner": "system: science-lab",
@@ -288,9 +266,7 @@
       "capabilities": [
         "literature-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "literature-researcher",
       "owner": "system: science-lab",
@@ -306,9 +282,7 @@
         "literature-watch",
         "experiment-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "scientific-analyst",
       "owner": "system: science-lab",
@@ -323,9 +297,7 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "mathematics-researcher",
       "owner": "system: science-lab",
@@ -340,9 +312,7 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "chemistry-researcher",
       "owner": "system: science-lab",
@@ -357,9 +327,7 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "biology-researcher",
       "owner": "system: science-lab",
@@ -374,9 +342,7 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "physics-researcher",
       "owner": "system: science-lab",
@@ -392,9 +358,7 @@
         "literature-watch",
         "experiment-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "hypothesis-generator",
       "owner": "system: science-lab",
@@ -409,9 +373,7 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "computational-scientist",
       "owner": "system: science-lab",
@@ -427,9 +389,7 @@
         "experiment-watch",
         "verification-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "statistician",
       "owner": "system: science-lab",
@@ -444,9 +404,7 @@
       "capabilities": [
         "verification-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "scientific-critic",
       "owner": "system: science-lab",
@@ -461,9 +419,7 @@
       "capabilities": [
         "verification-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "independent-verifier",
       "owner": "system: science-lab",
@@ -479,9 +435,7 @@
         "experiment-watch",
         "verification-watch"
       ],
-      "command": [
-        "true"
-      ],
+      "command": [],
       "lane": "Science Lab (research)",
       "name": "research-archivist",
       "owner": "system: science-lab",

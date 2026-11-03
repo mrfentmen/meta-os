@@ -19,7 +19,16 @@ export function loadRegistry(file) {
     if (!a.name || typeof a.name !== "string") throw new Error("registry: agent missing name");
     if (seen.has(a.name)) throw new Error("registry: duplicate agent " + a.name);
     seen.add(a.name);
-    if (!Array.isArray(a.command) || a.command.length === 0) throw new Error("registry: " + a.name + " missing command");
+    // A draft has no program yet, so it has no command. Anything else must
+    // have one: an empty command on a live entry is a spawn that cannot work.
+    if (!Array.isArray(a.command)) {
+      if (a.draft === true) a.command = [];
+      else throw new Error("registry: " + a.name + " missing command");
+    }
+    if (a.command.length === 0 && a.draft !== true) throw new Error("registry: " + a.name + " missing command");
+    if (a.command.length > 0 && a.draft === true && a.command.join(" ") === "true") {
+      throw new Error("registry: " + a.name + " still carries the placeholder command");
+    }
     a.budget = a.budget || {};
     if (a.budget.maxWallMs != null && !(a.budget.maxWallMs > 0)) throw new Error("registry: " + a.name + " bad maxWallMs");
     if (a.budget.maxCostUsd != null && !(a.budget.maxCostUsd >= 0)) throw new Error("registry: " + a.name + " bad maxCostUsd");
@@ -85,7 +94,11 @@ export function validateEntry(agent) {
       throw new Error("registry: missing field " + field + (agent.name ? " on " + agent.name : ""));
     }
   }
-  if (!Array.isArray(agent.command) || agent.command.length === 0) {
+  if (!Array.isArray(agent.command)) {
+    if (agent.draft === true) agent.command = [];
+    else throw new Error("registry: " + agent.name + " missing command");
+  }
+  if (agent.command.length === 0 && agent.draft !== true) {
     throw new Error("registry: " + agent.name + " missing command");
   }
   if (!agent.budget || typeof agent.budget !== "object") {
