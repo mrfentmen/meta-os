@@ -215,3 +215,12 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Lobster `lobster-src/bin/lobster` (v2026-10-29T23:29:26-07:00|6c1389c): trivial program prints LOBSTER-OK, exit 0.
 - Ship decision: reference both binaries by path+version in the bake (binaries live outside the repo; sizes recorded at bake time; no binaries committed).
 - Landed. Nothing blocked.
+
+## 12H Phase D — acceptance proof (fresh boot, no hand-holding) — DONE 2026-11-02
+- Guest: carrier-image bake (`metaos-2026-11-02-oc2b-baked` + agent-layer from branch tip), `-cpu max`, autologin relay. First SSH login 22:44, units started 22:40:21-37 (journal timestamps precede any login — PROVEN no hand-holding).
+- Boot sequence from journal (`OC2-proof-journal.txt`): queue up (local SQLite FALLBACK, Upstash unconfigured — honest), trio up, patrol on 972 live NYCTMC cameras.
+- Fresh-boot found TWO packaging bugs, both fixed on branch + re-proven: (1) queue needs node (trio_repo shells out; no fallback) → apt nodejs in installer; (2) patrol env empty (installer refresh only handled checkout path) → full defaults backfill. Plus (3) StartLimit* belonged in [Unit] (systemd ignored them, warned); (4) installer hardcoded unit list (skipped trio twice) → derived from shipped dir; (5) patrol Requires trio (undrained queue = 20/20 job-errors with exact "is trio_agent.py running?" reason).
+- No-key path: 20/20 assessment-failed LOUD (`SPARK_API_KEY ... no generation transport`), zero spend, pause-by-failure (never silent). Key handoff: `set-environment` (memory-only, dies on reboot; profile hook wires login shells). Key provisioning onto the box = Hana/Pax first-boot lane — marked gap, nothing baked.
+- Assessed run after handoff: 7 checks, 7 baselines, 0 errors; guardrail 22 calls, $0.155044, $74.845 remaining; crew assessment logged (incl. medicus requires_human_review validation + correction-retry discipline firing twice, both validated).
+- Proof artifacts: `os-build/logs/OC2-proof-{journal.txt,crew-status.json}` (journal from boot, first SSH 4 min after unit start).
+- Acceptance: fresh boot runs a patrol cycle with no hand-holding; crew assessment logged; spend tracked. DONE on carrier image; re-proof on Hana's base when it lands (recorded, not claimed).
