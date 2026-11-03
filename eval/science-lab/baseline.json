@@ -5,7 +5,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: biology-researcher can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: biology-researcher can read <records>"
       },
       "id": "sl-check-biology-researcher",
       "kind": "check",
@@ -14,7 +14,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: chemistry-researcher can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: chemistry-researcher can read <records>"
       },
       "id": "sl-check-chemistry-researcher",
       "kind": "check",
@@ -23,7 +23,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: computational-scientist can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: computational-scientist can read <records>"
       },
       "id": "sl-check-computational-scientist",
       "kind": "check",
@@ -32,7 +32,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: hypothesis-generator can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: hypothesis-generator can read <records>"
       },
       "id": "sl-check-hypothesis-generator",
       "kind": "check",
@@ -41,7 +41,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: independent-verifier can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: independent-verifier can read <records>"
       },
       "id": "sl-check-independent-verifier",
       "kind": "check",
@@ -50,7 +50,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: literature-researcher can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: literature-researcher can read <records>"
       },
       "id": "sl-check-literature-researcher",
       "kind": "check",
@@ -59,7 +59,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: mathematics-researcher can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: mathematics-researcher can read <records>"
       },
       "id": "sl-check-mathematics-researcher",
       "kind": "check",
@@ -68,7 +68,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: physics-researcher can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: physics-researcher can read <records>"
       },
       "id": "sl-check-physics-researcher",
       "kind": "check",
@@ -77,7 +77,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: research-archivist can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: research-archivist can read <records>"
       },
       "id": "sl-check-research-archivist",
       "kind": "check",
@@ -86,7 +86,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: research-director can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: research-director can read <records>"
       },
       "id": "sl-check-research-director",
       "kind": "check",
@@ -95,7 +95,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: scientific-analyst can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: scientific-analyst can read <records>"
       },
       "id": "sl-check-scientific-analyst",
       "kind": "check",
@@ -104,7 +104,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: scientific-critic can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: scientific-critic can read <records>"
       },
       "id": "sl-check-scientific-critic",
       "kind": "check",
@@ -113,7 +113,7 @@
     {
       "detail": {
         "exit": 0,
-        "stdout": "ok: statistician can read /tmp/sl-eval-g33ieikd/records"
+        "stdout": "ok: statistician can read <records>"
       },
       "id": "sl-check-statistician",
       "kind": "check",

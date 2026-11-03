@@ -45,7 +45,11 @@ def check_scenario(sc, records):
     proc = run_hosted(sc["agent"], records, check=True)
     ok = (proc.returncode == sc["expected_exit"]
           and proc.stdout.startswith("ok: %s can read " % sc["agent"]))
-    return ok, {"exit": proc.returncode, "stdout": proc.stdout.strip()[:200]}
+    # Normalize the temp-dir records path out of the echo, so the
+    # report JSON is byte-identical across runs (the committed
+    # baseline.json is compared verbatim, not just by pass counts).
+    stdout = proc.stdout.replace(str(records), "<records>").strip()[:200]
+    return ok, {"exit": proc.returncode, "stdout": stdout}
 
 
 def duty_scenario(sc, records):
