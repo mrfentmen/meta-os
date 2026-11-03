@@ -107,6 +107,62 @@ function tally(rows) {
   return counts;
 }
 
+// A failed run left a baton; a refused one never started. Only the first is
+// retryable -- re-queuing a refusal would spin on the same missing entry.
+// The new job carries `continuesFrom`, so the watchman resumes from the run
+// that died instead of starting the work over.
+export function retryJob({ root, id }) {
+  const jobsDir = path.join(root, "jobs");
+  const jobFile = path.join(jobsDir, id + ".job.json");
+  const resultFile = path.join(jobsDir, id + ".result.json");
+  if (!fs.existsSync(jobFile)) return { ok: false, reason: "no job " + id };
+  let job;
+  try {
+    job = JSON.parse(fs.readFileSync(jobFile, "utf8"));
+  } catch {
+    return { ok: false, reason: "job " + id + " does not parse; fix it by hand" };
+  }
+  if (!fs.existsSync(resultFile)) {
+    return { ok: false, reason: "job " + id + " has no result yet; it has not failed" };
+  }
+  let result;
+  try {
+    result = JSON.parse(fs.readFileSync(resultFile, "utf8"));
+  } catch {
+    return { ok: false, reason: "result for " + id + " does not parse" };
+  }
+  if (result.refused) {
+    return { ok: false, reason: "job " + id + " was refused (" + result.refused + "); fix the entry, do not re-queue" };
+  }
+  if (result.signal == null && result.code === 0) {
+    return { ok: false, reason: "job " + id + " finished cleanly; nothing to retry" };
+  }
+  if (!result.run) {
+    return { ok: false, reason: "result for " + id + " names no run; no baton to continue from" };
+  }
+
+  const base = id.replace(/-r\d+$/, "");
+  const attempt = Number((id.match(/-r(\d+)$/) || [])[1] || 1);
+  const nextId = base + "-r" + (attempt + 1);
+  const nextFile = path.join(jobsDir, nextId + ".job.json");
+  // Idempotent: asking twice returns the same retry instead of stacking them.
+  if (fs.existsSync(nextFile)) {
+    return { ok: true, id: nextId, continuesFrom: result.run, existing: true };
+  }
+
+  const next = {
+    ...job,
+    id: nextId,
+    retryOf: id,
+    continuesFrom: result.run,
+    createdAt: new Date().toISOString(),
+  };
+  const tmp = nextFile + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(next, null, 2));
+  fs.renameSync(tmp, nextFile);
+  return { ok: true, id: nextId, continuesFrom: result.run, existing: false };
+}
+
 /* ---- CLI ---- */
 const HERE = path.dirname(url.fileURLToPath(import.meta.url));
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileURLToPath(import.meta.url))) {
@@ -118,6 +174,17 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
   if (!fs.existsSync(path.join(root, "jobs"))) {
     console.error("jobs: no board at " + path.join(root, "jobs"));
     process.exit(2);
+  }
+  const retryId = arg("--retry");
+  if (retryId) {
+    const out = retryJob({ root, id: retryId });
+    if (!out.ok) {
+      console.error("jobs: " + out.reason);
+      process.exit(1);
+    }
+    console.log("jobs: " + (out.existing ? "already re-queued " : "re-queued ")
+      + out.id + " from run " + out.continuesFrom);
+    process.exit(0);
   }
   const result = board({ root });
   if (process.argv.includes("--json")) {

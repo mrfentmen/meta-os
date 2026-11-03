@@ -1,6 +1,6 @@
 # Chaos coverage — hosted loops (R12-010)
 
-Date: 2026-11-02. Drills are the Round-11 pack (`tests/chaos-pack.test.mjs`) plus the loop drills
+Date: 2026-11-03. Drills are the Round-11 pack (`tests/chaos-pack.test.mjs`) plus the loop drills
 in `tests/agents-r11.test.mjs`; this file states which loops they actually cover.
 
 | loop | registry entry | STOP (pre-spawn) | in-run STOP | budget receipt | baton |
@@ -13,11 +13,17 @@ in `tests/agents-r11.test.mjs`; this file states which loops they actually cover
 | Cadence watch | `watch` (`agents/watchman.mjs --once`) | PASS | runtime-tested | runtime-tested | n/a (one drain) |
 | Imperium queue stack | `imperium-patrol` (`server/queue/hosted_imperium.py`) | PASS | n/a (one pass) | n/a (one pass) | n/a (one pass) |
 | Aegis unattended cycle | `aegis-cycle` (`aegis/cycle.mjs`) | PASS | runtime-tested | runtime-tested | n/a (sweep → KEV → ledger) |
+| Officina faber loop | `officina-faber` (`design_loop.py`) | PASS | runtime-tested | runtime-tested | n/a (bounded loop) |
+| Musica overnight | `musica-studio` (`os/worlds/musica/hosted.mjs`) | PASS | runtime-tested | runtime-tested | n/a (one session) |
+| Science Lab duties | `research-archivist`, `research-director`, `scientific-critic`, `independent-verifier`, `scientific-analyst`, `literature-researcher`, `computational-scientist` | PASS | runtime-tested | runtime-tested | n/a (one duty) |
 
 ## Named NOT COVERED
 
-- **Musica — NOT COVERED.** Draft entry, no in-tree command.
-- **Officina — NOT COVERED.** Draft entry, no in-tree command.
+- **Officina — NOT COVERED by the chaos pack.** Its loop is hosted and its STOP path is drilled
+  with every other hosted entry, but the pack has no Officina-specific fault case.
+
+Musica is no longer in this list: `musica-studio` is a hosted entry that runs the real overnight
+pipeline, and the pre-spawn STOP drill covers it like every other hosted loop.
 
 ## What "PASS" means here
 

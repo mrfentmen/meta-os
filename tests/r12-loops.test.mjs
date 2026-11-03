@@ -26,7 +26,8 @@ test("R12-009 the Cadence entry is the watchman one-pass command, not a placehol
 test("R12-010 the coverage record names every hosted loop and both uncovered programs", () => {
   const md = fs.readFileSync(path.join(ROOT, "os-build", "layer1", "r12", "CHAOS_COVERAGE.md"), "utf8");
   for (const a of hosted) assert.ok(md.includes("`" + a.name + "`"), a.name + " is in the coverage record");
-  assert.match(md, /Musica[\s\S]*NOT COVERED/);
+  // Musica became a hosted loop, so it is in the table above rather than under "NOT COVERED".
+  assert.ok(md.includes("`musica-studio`"), "musica-studio is in the coverage record");
   assert.match(md, /Officina[\s\S]*NOT COVERED/);
 });
 
