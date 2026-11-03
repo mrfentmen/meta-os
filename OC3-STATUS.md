@@ -52,3 +52,15 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
   018 handoff written, 019 acceptance PENDING, 020 self-install fallback
   written, 021 quiet honestly bounded (packet capture: OC1), 022 no
   extensions, 024 three defects filed (one BLOCKED dep, two watch items).
+
+## §2 verdict (OC3B-045) — DONE static, interactive checks with OC1
+- 026 package recorded (xfce4 KEEP), version explicitly NOT guessed.
+- 029/030 theming wired by config (MetaOS xsettings + icons), UI-string
+  audit clean; dev-doc Xubuntu mentions out of scope by design.
+- 034/041/044/043 recorded as CODE-INSPECTED with keys named.
+- 037/038 no new entry (two already exist); 038 answered from the
+  Exec line, observation deferred. 039/040 written.
+- 027/028/032/033/035/036/042/047/048/049 BLOCKED-with-owner (OC1 boot),
+  all in one basics file. 031 home defaults: watch item for first boot.
+- 046 two defects + one all-clear. Handoff doc written; no shared
+  files touched.
