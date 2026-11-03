@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent Token-Budget Simulator</title>
+<style>
+  :root { color-scheme: dark; --bg:#070b16; --panel:#0e1527; --line:#27406e; --text:#edf5ff; --muted:#8291ac; --blue:#1877f2; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:Inter,system-ui,sans-serif; padding:24px; }
+  h1 { font-size:18px; margin:0 0 4px; }
+  p.sub { color:var(--muted); font-size:12px; margin:0 0 16px; max-width:70ch; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:1100px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .card h2 { font-size:13px; margin:0 0 10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  textarea { width:100%; min-height:130px; background:#04060c; color:var(--text); border:1px solid var(--line); border-radius:8px; font-family:monospace; font-size:11px; }
+  label.row { display:flex; justify-content:space-between; font-size:12px; margin:10px 0 4px; }
+  input[type=range] { width:100%; accent-color:var(--blue); }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th,td { text-align:right; padding:5px 8px; border-bottom:1px solid var(--line); }
+  th:first-child,td:first-child { text-align:left; }
+  .big { font-size:22px; font-weight:700; }
+  .saved { color:#20d6a3; } .halted { color:#ff9a3d; }
+  button { background:var(--blue); color:#fff; border:0; border-radius:8px; padding:7px 14px; cursor:pointer; font-size:12px; margin-right:8px; }
+  .note { font-size:11px; color:var(--muted); margin-top:10px; }
+</style>
+</head>
+<body>
+<h1>Agent Token-Budget Simulator</h1>
+<p class="sub">What-if engine over run records. Paste ledger runs as JSON
+(<code>[{"agent":"coder","tokens":10000,"cost_usd":0.10}, ...]</code>),
+set caps, see projected spend. Canonical core:
+<code>crates/agent-ops/src/budgetsim.rs</code> (tested, 21+ green) — the
+math below mirrors it line for line and is UI-only.</p>
+<div class="grid">
+  <div class="card">
+    <h2>Runs</h2>
+    <textarea id="runs" spellcheck="false"></textarea>
+    <div style="margin-top:8px">
+      <button id="demo">Load demo</button>
+      <button id="clear">Clear</button>
+    </div>
+    <div class="note">Demo data is synthetic and labeled as such. Paste real
+    ledger exports for real answers. Nothing leaves this page.</div>
+  </div>
+  <div class="card">
+    <h2>Policy</h2>
+    <label class="row"><span>Per-run token cap</span><output id="capv"></output></label>
+    <input type="range" id="cap" min="1000" max="100000" step="1000" value="20000">
+    <label class="row"><span>Window token cap</span><output id="winv"></output></label>
+    <input type="range" id="win" min="5000" max="500000" step="5000" value="200000">
+  </div>
+  <div class="card">
+    <h2>Projection</h2>
+    <div id="summary"></div>
+  </div>
+  <div class="card">
+    <h2>Per-agent</h2>
+    <table id="byagent"><thead><tr><th>Agent</th><th>Runs</th><th>Halted</th><th>Tokens</th><th>Cost $</th></tr></thead><tbody></tbody></table>
+  </div>
+</div>
+<script>
+// Mirrors crates/agent-ops/src/budgetsim.rs simulate(). Flat per-token
+// price assumed from each record (cost_usd / tokens).
+function simulate(runs, perRunCap, windowCap) {
+  let uncappedTokens = 0, uncappedCost = 0;
+  for (const r of runs) { uncappedTokens += r.tokens; uncappedCost += r.cost_usd; }
+  let billed = 0, cost = 0, halted = 0, seen = 0;
+  const byAgent = {};
+  for (const r of runs) {
+    if (billed >= windowCap) break;
+    seen++;
+    let take = Math.min(r.tokens, perRunCap);
+    if (take < r.tokens) halted++;
+    if (billed + take > windowCap) { take = windowCap - billed; halted++; }
+    billed += take;
+    if (r.tokens > 0) cost += r.cost_usd * (take / r.tokens);
+    const a = byAgent[r.agent] || (byAgent[r.agent] = { runs:0, halted:0, tokens:0, cost:0 });
+    a.runs++;
+    if (take < r.tokens) a.halted++;
+    a.tokens += take;
+    if (r.tokens > 0) a.cost += r.cost_usd * (take / r.tokens);
+  }
+  return { seen, halted, billed, cost, uncappedTokens, uncappedCost, saved: Math.max(0, uncappedCost - cost), byAgent };
+}
+function demoData() {
+  return [
+    {agent:"coder", tokens:12000, cost_usd:0.12},
+    {agent:"browser", tokens:48000, cost_usd:0.48},
+    {agent:"coder", tokens:8000, cost_usd:0.08},
+    {agent:"analyst", tokens:30000, cost_usd:0.30},
+    {agent:"browser", tokens:15000, cost_usd:0.15},
+    {agent:"coder", tokens:22000, cost_usd:0.22}
+  ];
+}
+const $ = (id) => document.getElementById(id);
+function fmt(n) { return n.toLocaleString("en-US"); }
+function money(n) { return "$" + n.toFixed(2); }
+function refresh() {
+  let runs;
+  try { runs = JSON.parse($("runs").value || "[]"); }
+  catch (e) { $("summary").innerHTML = "<span class=halted>Bad JSON: " + e.message + "</span>"; return; }
+  const cap = +$("cap").value, win = +$("win").value;
+  $("capv").textContent = fmt(cap);
+  $("winv").textContent = fmt(win);
+  const p = simulate(runs, cap, win);
+  $("summary").innerHTML =
+    "<div class=big>" + money(p.cost) + "</div>" +
+    "<div>saved vs uncapped: <span class=saved>" + money(p.saved) + "</span></div>" +
+    "<div>runs seen " + p.seen + " · halted <span class=halted>" + p.halted + "</span></div>" +
+    "<div>tokens billed " + fmt(p.billed) + " / uncapped " + fmt(p.uncappedTokens) + "</div>";
+  const tb = $("byagent").querySelector("tbody");
+  tb.innerHTML = "";
+  for (const [name, a] of Object.entries(p.byAgent)) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = "<td>" + name + "</td><td>" + a.runs + "</td><td>" + a.halted + "</td><td>" + fmt(a.tokens) + "</td><td>" + money(a.cost) + "</td>";
+    tb.appendChild(tr);
+  }
+}
+$("demo").addEventListener("click", () => { $("runs").value = JSON.stringify(demoData(), null, 1); refresh(); });
+$("clear").addEventListener("click", () => { $("runs").value = "[]"; refresh(); });
+$("cap").addEventListener("input", refresh);
+$("win").addEventListener("input", refresh);
+$("runs").value = JSON.stringify(demoData(), null, 1);
+refresh();
+</script>
+</body>
+</html>
