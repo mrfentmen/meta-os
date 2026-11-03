@@ -14,6 +14,8 @@
 - `agent-layer/desktop-entries/thunar.desktop` sha256 `2ae2d8c3ceba18a687077385f392be51f164bb84931a6dd6001572f8a85e262c` → /usr/share/applications/thunar.desktop
 - `agent-layer/env.example` sha256 `9d541b7139e7d085c192020ffcc1c8f7f864bb5fc614e069b8b88c75f5238a22` → ~/.config/oc2-agent/env (template only, never keys)
 - `agent-layer/install.sh` sha256 `ec8bd4d718b60bb0cabb9f2364e239885d7fd3c565caa09f460273a771283dd1` → run: sh agent-layer/install.sh (idempotent)
+- `agent-layer/units/oc2-health.service` sha256 `bcf91e38a34eb3efaed06250c35abb933da3449ff1ddaf2362c917ad9eaf7ea3` → ~/.config/systemd/user/oc2-health.service
+- `agent-layer/units/oc2-health.timer` sha256 `c486b2af2fbe6bc22a81241ff31020bdc723f7a36b7c951d58b712dbf8957a7d` → ~/.config/systemd/user/oc2-health.timer
 - `agent-layer/units/oc2-patrol.service` sha256 `23c4e7e3fb8fdbce875e2291589d07bb309ce9d08dc9a0e42211c641b7a32aa6` → ~/.config/systemd/user/oc2-patrol.service
 - `agent-layer/units/oc2-patrol.timer` sha256 `3cc61523deaabecffaf980bf736683073e8ef85cd148576fff3072ee4f02dcbc` → ~/.config/systemd/user/oc2-patrol.timer
 - `agent-layer/units/oc2-queue.service` sha256 `d20f9672794a163715650f5d0ab864dd16e26ed1f9c80c4a3678650b820cd22e` → ~/.config/systemd/user/oc2-queue.service
