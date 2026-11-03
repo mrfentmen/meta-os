@@ -11,6 +11,7 @@ Exit 0 when every check passes, 1 when any fails.
 """
 
 import configparser
+import hashlib
 import json
 import re
 import subprocess
@@ -321,6 +322,65 @@ else:
         bad("apps: start page loads remote assets: %s" % ", ".join(remote))
     else:
         ok("apps: start page loads no remote assets (works offline)")
+
+# --- frozen colour contract -------------------------------------------
+tokens_path = ISO / "contracts" / "tokens.json"
+pin_path = ISO / "contracts" / "PIN.md"
+css_file = ISO / "apps" / "chromium" / "tokens.css"
+
+tokens = None
+try:
+    tokens = json.loads(read(tokens_path))
+    ok("tokens: frozen contract vendored (%d colours)" % len(tokens))
+except Exception as exc:  # noqa: BLE001
+    bad("tokens: contract does not parse (%s)" % exc)
+
+if tokens:
+    not_hex = [k for k, v in tokens.items() if not re.fullmatch(r"#[0-9A-Fa-f]{6}", str(v))]
+    if not_hex:
+        bad("tokens: not hex colours: %s" % ", ".join(not_hex))
+    else:
+        ok("tokens: every colour is a 6-digit hex value")
+    if set(tokens) >= {"blue", "white", "black"}:
+        ok("tokens: blue, white and black are present")
+    else:
+        bad("tokens: the contract is missing blue/white/black")
+
+try:
+    pin = read(pin_path)
+    digest = hashlib.sha256(read(tokens_path).encode("utf-8")).hexdigest()
+    if digest in pin:
+        ok("tokens: vendored file matches its recorded sha256")
+    else:
+        bad("tokens: sha256 does not match PIN.md (contract edited without a pin update)")
+except FileNotFoundError:
+    bad("tokens: PIN.md is missing")
+
+if css_file.is_file():
+    ok("tokens: tokens.css exists")
+else:
+    bad("tokens: tokens.css is missing (run node iso/tools/tokens_to_css.mjs)")
+
+gen = subprocess.run(
+    ["node", str(ISO / "tools" / "tokens_to_css.mjs"), "--check"],
+    capture_output=True, text=True,
+)
+if gen.returncode == 0:
+    ok("tokens: tokens.css is exactly what the generator produces")
+else:
+    bad("tokens: tokens.css is stale (%s)" % (gen.stderr.strip() or gen.stdout.strip()))
+
+if start_page.is_file():
+    page = read(start_page)
+    raw = re.findall(r"#[0-9a-fA-F]{3,8}\b", page)
+    if raw:
+        bad("apps: start page carries raw hex colours: %s" % ", ".join(raw))
+    else:
+        ok("apps: start page carries no raw colours, only token variables")
+    if 'href="tokens.css"' in page:
+        ok("apps: start page links the generated token stylesheet")
+    else:
+        bad("apps: start page does not link tokens.css")
 
 # --- no stub markers ---------------------------------------------------
 bad_marks = []

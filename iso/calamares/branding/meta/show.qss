@@ -3,20 +3,20 @@
    No artwork is referenced: this is type and colour only. */
 
 QWidget {
-    background-color: #0d1117;
-    color: #f5f7fa;
+    background-color: #070B16;
+    color: #EDF5FF;
     font-family: "DejaVu Sans", sans-serif;
 }
 
 #mainText {
     font-size: 26px;
     font-weight: bold;
-    color: #f5f7fa;
+    color: #EDF5FF;
     margin-bottom: 12px;
 }
 
 #secondaryText {
     font-size: 14px;
-    color: #9fb0c3;
+    color: rgba(237, 245, 255, 0.62);
     line-height: 150%;
 }

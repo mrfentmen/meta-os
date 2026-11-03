@@ -7,8 +7,8 @@
 # Label: CODE-INSPECTED. It has not been booted — this machine cannot
 # run QEMU/VM. The base lane (Hana) proves it on the H+2 cut.
 
-Window.SetBackgroundTopColor(0.043, 0.067, 0.094);
-Window.SetBackgroundBottomColor(0.020, 0.031, 0.047);
+Window.SetBackgroundTopColor(0.027, 0.043, 0.086);
+Window.SetBackgroundBottomColor(0.012, 0.020, 0.039);
 
 screen_width = Window.GetWidth();
 screen_height = Window.GetHeight();
@@ -20,7 +20,7 @@ ring_sprite.SetX(screen_width / 2 - ring.GetWidth() / 2);
 ring_sprite.SetY(screen_height / 2 - ring.GetHeight() / 2 - 24);
 ring_sprite.SetZ(10);
 
-title = Image.Text("MetaOS", 0.961, 0.969, 0.980);
+title = Image.Text("MetaOS", 0.929, 0.961, 1.000);
 title_sprite = Sprite();
 title_sprite.SetImage(title);
 title_sprite.SetX(screen_width / 2 - title.GetWidth() / 2);

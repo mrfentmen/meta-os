@@ -63,3 +63,20 @@ file-level check and says nothing about a running system.
 - Plymouth visible on a real boot — needs the base VM.
 - Clean install to a fresh disk, rebooting to the login screen — needs the VM.
 - Each app opened from the dock and closed clean — needs the VM session.
+
+## Amendment adopted — build to the frozen contract (d835b59a)
+
+The plan's decoupling amendment says Bond builds pages to `tokens.json`, never
+to OpenCode 1's CSS. That is now true here:
+
+- `iso/contracts/tokens.json` is a vendored copy of `metaos-contracts/tokens.json`
+  at `opencode1/metaos-1.0` `953b41f4`, pinned by sha256 in `iso/contracts/PIN.md`.
+- `iso/tools/tokens_to_css.mjs` generates `iso/apps/chromium/tokens.css`; the
+  start page links it and carries **no hex of its own**. The checker fails if the
+  CSS is stale or the page grows a raw colour.
+- The splash and the installer sidebar now use the same contract values
+  (`#070B16`, `#EDF5FF`, `#1877F2`), so one ISO does not ship two palettes.
+
+The frozen app set has five IDs. Four ship. `agent-status` has **no binary on
+main**, so no launcher is shipped for it — named BLOCKED in `iso/apps/README.md`
+rather than a `.desktop` pointing at nothing.

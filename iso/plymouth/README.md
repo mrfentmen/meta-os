@@ -30,9 +30,9 @@ draws the old one.
 
 ## What the script does, plainly
 
-- Background: `#0b1118` top to `#05080c` bottom (ink black).
+- Background: `#070B16` top to `#03050a` bottom (the contract's black).
 - Ring: centred, 24 px above centre, opacity 0.72 ± 0.18, sine pulse.
-- Title: "MetaOS" at 0.961/0.969/0.980 white, 24 px below centre, opacity
+- Title: "MetaOS" at the contract white (0.929/0.961/1.000), 24 px below centre, opacity
   rises with real boot progress (0.55 → 1.0). A stalled boot looks stalled.
 
 ## Check it without booting

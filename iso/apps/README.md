@@ -17,6 +17,7 @@ does its job, closes clean" stays **UNPROVEN** until a VM run.
 | `plank/meta-*.dockitem` | `~/.config/plank/dock1/launchers/` | the dock order |
 | `chromium/policies.json` | `/etc/chromium/policies/managed/metaos.json` | start page, no first-run tab |
 | `chromium/meta-start.html` | `/usr/share/metaos/start/` | the start page itself, works offline |
+| `chromium/tokens.css` | `/usr/share/metaos/start/` | generated from the frozen contract, never hand-edited |
 
 ## Install
 
@@ -25,6 +26,7 @@ install -d /usr/share/applications /usr/share/metaos/start \
            /etc/chromium/policies/managed
 cp iso/apps/desktop/*.desktop          /usr/share/applications/
 cp iso/apps/chromium/meta-start.html   /usr/share/metaos/start/
+cp iso/apps/chromium/tokens.css        /usr/share/metaos/start/
 cp iso/apps/chromium/policies.json     /etc/chromium/policies/managed/metaos.json
 install -d /home/"$USER"/.config/plank/dock1/launchers
 cp iso/apps/plank/*.dockitem /home/"$USER"/.config/plank/dock1/launchers/
@@ -35,6 +37,10 @@ four apps in the order listed.
 
 ## Choices worth knowing
 
+- Colours come from `iso/contracts/tokens.json`, the frozen contract on
+  `opencode1/metaos-1.0` (pinned in `iso/contracts/PIN.md`). The page links a
+  generated `tokens.css` and carries no hex of its own, so the theme lane can
+  recolor it without either of us touching the other's files.
 - The start page is `file://` and self-contained: no fonts, images or
   scripts from the network, so it renders on a machine with no cable.
 - The search box posts to DuckDuckGo. It is the one thing on the page that
@@ -43,3 +49,14 @@ four apps in the order listed.
   tab is turned off, so the first window is ours.
 - Dock items point at the `.desktop` files by absolute path, which is what
   Plank reads; renaming an app means editing its dockitem too.
+
+## The fifth app — named, not faked
+
+The frozen launcher set is `files, terminal, settings, browser, agent-status`
+(`metaos-contracts/APPS.md`). The first four have real binaries on Xubuntu and
+ship here. **`agent-status` does not exist on main yet** — no binary, no
+script — so no launcher is shipped for it. A `.desktop` pointing at a program
+that is not there is a stub, and this lane does not ship stubs.
+
+Status: **BLOCKED**, waiting on an agent-status entry point. When one lands,
+it gets `meta-agent-status.desktop` (with `TryExec=`) and the fifth dock item.
