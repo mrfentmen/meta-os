@@ -11,6 +11,10 @@ Checks, each printed as PASS/FAIL:
   4. No new file in this slice contains a forbidden artwork term or a
      credential-looking assignment.
   5. The working tree touches no frozen path (kernel/src/syscalls.rs).
+  6. Base-flow wiring (slice 2): cubic-spec.md names the three cut
+     steps in order — packages.txt, then metaos-theme/apply.sh, then
+     dexubuntu/apply-in-chroot.sh — names verify-rootfs.sh as the
+     gate, and both dexubuntu scripts pass `sh -n`.
 
 Exit 0 only if every check passes. This validates internal
 consistency only — it does not prove an ISO boots (see README.md).
@@ -111,6 +115,27 @@ def main():
                   term not in text.lower())
         check(f"no credential assignment in {path.relative_to(BASE)}",
               cred_re.search(text) is None)
+
+    # 6. base-flow wiring (slice 2)
+    spec = (BASE / "cubic-spec.md").read_text()
+    pkg_pos = spec.find("packages.txt")
+    theme_pos = spec.find("metaos-theme/apply.sh")
+    dex_pos = spec.find("dexubuntu/apply-in-chroot.sh")
+    check("flow: packages step named", pkg_pos >= 0)
+    check("flow: theme step named after packages",
+          theme_pos > pkg_pos >= 0)
+    check("flow: dexubuntu step named after theme",
+          dex_pos > theme_pos > pkg_pos)
+    check("flow: verify-rootfs.sh named as gate",
+          "verify-rootfs.sh" in spec)
+    for script_name in ("dexubuntu/apply-in-chroot.sh",
+                        "dexubuntu/verify-rootfs.sh"):
+        syntax = subprocess.run(["sh", "-n", str(BASE / script_name)],
+                                capture_output=True, text=True)
+        check(f"flow: {script_name} sh -n clean",
+              syntax.returncode == 0, syntax.stderr.strip())
+    check("flow: hplus4 evidence prep present",
+          (BASE / "hplus4-evidence-prep.md").is_file())
 
     # 5. frozen path untouched
     status = subprocess.run(["git", "-C", str(BASE.parent.parent),
