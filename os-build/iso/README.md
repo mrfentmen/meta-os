@@ -60,6 +60,20 @@ rebuild with `-boot_image any replay`, so the base ISO's El Torito and hybrid
 MBR are reused instead of hand-written per release. Output sha256 is written
 next to the ISO.
 
+**The base hash is checked before anything is extracted.** A patched ISO
+inherits every byte of its base, so building on an unverified download is a
+supply-chain hole. `build_iso.sh` looks for `<iso>.sha256` or a `SHA256SUMS`
+beside the base, and refuses without one unless you pass `--no-verify-base`
+(which logs the sha256 and a WARN). Verify a download without building:
+
+```sh
+os-build/iso/build_iso.sh --verify-base <base.iso> --sha256sums <file>
+```
+
+After a build, `--inspect <iso>` (Linux) proves the payload actually landed:
+it extracts the squashfs and checks 12 required paths (theme, plymouthd.conf,
+Calamares settings/modules/branding, in-target hook, autostart entry, icon).
+
 Base ISO is a parameter on purpose: the plan names Xubuntu+bCubic, and the
 exact point release is Hana's call for the base lane. The patch path does not
 depend on which flavour's installer ships on the base, because Calamares is
@@ -68,9 +82,13 @@ installed and launched from our own autostart entry.
 ## Prove it
 
 ```sh
-# Everything that can be checked without root or Linux:
-os-build/iso/tools/check_configs.py          # 37 assertions, exit 0 = structure only
+# One command, everything runnable here (used by Milo/Pax as the lane gate):
+os-build/iso/test/run_checks.sh
+
+# Or individually:
+os-build/iso/tools/check_configs.py          # 42 assertions, exit 0 = structure only
 os-build/iso/build_iso.sh --check            # same + tool readiness on this host
+os-build/iso/test/verify-base.test.sh        # base-hash gate fixture, 4 behaviours
 
 # Harness plumbing, no ISO needed (committed artifact: proof/dry-harness/):
 os-build/iso/tools/vm_install_proof.sh --dry --work os-build/iso/proof/dry-harness

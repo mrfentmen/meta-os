@@ -22,7 +22,8 @@ Branch `buffy/boot-installer` off main `80a7886c`. What landed:
   welcome / each walkthrough key / installed login, plus serial log and an
   INDEX.md that says what each frame must show.
 
-**Labels, not vibes.** Configs: 37/37 local checks pass (structure only).
+**Labels, not vibes.** Configs: 42/42 local checks pass (structure only), and
+`test/run_checks.sh` runs the whole local gate in one command.
 ISO: **NOT BUILT**. Install: **NOT RUN**. The only real VM artifact so far
 is a dry-run framebuffer capture proving the harness works — it is not a
 Meta boot and I am not calling it one.

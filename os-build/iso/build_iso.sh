@@ -8,9 +8,18 @@
 #   --root <cubic-root>         provision a Cubic chroot, stop there.
 #                               Then press Generate in Cubic, by hand.
 #   --iso <base.iso> [--out F]  full patch on a Linux host as root:
-#                               extract, unsquash, provision, re-squash,
-#                               rebuild the ISO with its boot images
-#                               replayed, print the sha256.
+#                               verify the base hash, extract, unsquash,
+#                               provision, re-squash, rebuild the ISO with
+#                               its boot images replayed, print the sha256.
+#   --verify-base <iso>         hash-check a base ISO only. Runs on the Mac.
+#   --inspect <iso>             Linux: prove the built ISO actually carries
+#                               the Meta payload (theme, calamares, hook,
+#                               autostart) inside its squashfs.
+#
+#   --sha256sums FILE           sums file to verify --iso against; default
+#                               looks for <iso>.sha256 or SHA256SUMS beside it
+#   --no-verify-base            patch an unverified ISO (explicit opt-out;
+#                               the build prints a WARN and the sha256)
 #
 # Claim label: WRITTEN, UNRUN. XORRISO/mksquashfs are not on the build Mac;
 # --check is the only mode proven locally.
@@ -24,8 +33,92 @@ say()  { printf 'build_iso: %s\n' "$*"; }
 die()  { printf 'build_iso: ERROR: %s\n' "$*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
 
+sha256_of() {  # portable: coreutils, perl shasum, or openssl
+    if have sha256sum; then sha256sum "$1" | awk '{print $1}'
+    elif have shasum; then shasum -a 256 "$1" | awk '{print $1}'
+    elif have openssl; then openssl dgst -sha256 "$1" | awk '{print $NF}'
+    else return 1; fi
+}
+
+# A patched ISO inherits every byte of its base. Building on an unverified
+# download and then shipping the result is a supply-chain hole, so the hash
+# is checked BEFORE any extraction. Opting out is explicit and logged.
+verify_base() {
+    local iso=$1 sums=${2:-}
+    [ -f "$iso" ] || die "base ISO not found: $iso"
+    if [ "$ALLOW_UNVERIFIED" = "1" ]; then
+        say "WARN: base ISO verification skipped (--no-verify-base). sha256: $(sha256_of "$iso")"
+        return 0
+    fi
+    local base
+    base=$(basename "$iso")
+    if [ -z "$sums" ]; then
+        local cand
+        for cand in "$iso.sha256" "$(dirname "$iso")/$base.sha256" "$(dirname "$iso")/SHA256SUMS"; do
+            if [ -f "$cand" ]; then sums=$cand; break; fi
+        done
+    fi
+    if [ -z "$sums" ]; then
+        die "no SHA256SUMS beside $base; pass --sha256sums FILE or --no-verify-base"
+    fi
+    [ -f "$sums" ] || die "sums file not found: $sums"
+    local expect
+    expect=$(awk -v b="$base" '$2 == b || $2 == "*" b { print $1; exit }' "$sums")
+    [ -n "$expect" ] || die "no line for $base in $sums"
+    local got
+    got=$(sha256_of "$iso") || die "no sha256 tool (sha256sum, shasum, openssl)"
+    if [ "$expect" != "$got" ]; then
+        die "base ISO hash mismatch: sums say $expect, file is $got — refusing to patch"
+    fi
+    say "base ISO sha256 verified: $got ($sums)"
+}
+
+# Post-build payload check. The VM run proves boot; this proves the build
+# actually wrote our files into the image instead of silently skipping a copy.
+inspect_mode() {
+    local iso=$1
+    [ -f "$iso" ] || die "ISO not found: $iso"
+    have xorriso || die "--inspect needs xorriso"
+    have unsquashfs || die "--inspect needs unsquashfs (squashfs-tools)"
+    local tmp
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    say "inspecting $iso (sha256 $(sha256_of "$iso"))"
+    xorriso -osirrox on -indev "$iso" -extract /casper/filesystem.squashfs "$tmp/fs.squashfs" >/dev/null 2>&1 \
+        || die "no casper/filesystem.squashfs inside $iso"
+    unsquashfs -l "$tmp/fs.squashfs" > "$tmp/list.txt" 2>/dev/null \
+        || die "unsquashfs -l failed on the extracted squashfs"
+    local missing=0 checked=0 f
+    for f in \
+        usr/share/plymouth/themes/metaos/metaos.plymouth \
+        usr/share/plymouth/themes/metaos/metaos.script \
+        usr/share/plymouth/themes/metaos/logo.png \
+        usr/share/plymouth/themes/metaos/wordmark.png \
+        usr/share/plymouth/themes/metaos/dot.png \
+        etc/plymouth/plymouthd.conf \
+        etc/calamares/settings.conf \
+        etc/calamares/modules/meta-branding.conf \
+        etc/calamares/branding/metaos/branding.desc \
+        usr/local/lib/metaos/meta-branding.sh \
+        etc/xdg/autostart/metaos-install.desktop \
+        usr/share/metaos/installer.png ; do
+        checked=$((checked + 1))
+        # Directory entries end in / in unsquashfs -l output; accept both.
+        if grep -qx -e "$f" -e "/$f" -e "$f/" -e "/$f/" "$tmp/list.txt"; then
+            printf '  [OK]      %s\n' "$f"
+        else
+            printf '  [MISSING] %s\n' "$f"
+            missing=1
+        fi
+    done
+    if [ "$missing" = "1" ]; then
+        die "payload incomplete in $iso"
+    fi
+    say "payload complete: all $checked required paths present inside the squashfs"
+}
+
 usage() {
-    sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,34p' "$0" | sed 's/^# \{0,1\}//'
     exit "${1:-2}"
 }
 
@@ -41,7 +134,7 @@ check_mode() {
     fi
 
     say "tool readiness (build modes need root on Linux):"
-    for t in xorriso unsquashfs mksquashfs chroot sha256sum; do
+    for t in xorriso unsquashfs mksquashfs chroot sha256sum shasum openssl; do
         if have "$t"; then
             printf '  %-12s %s\n' "$t" "$(command -v "$t")"
         else
@@ -77,6 +170,8 @@ iso_mode() {
     for t in xorriso unsquashfs mksquashfs chroot; do
         have "$t" || die "missing tool: $t (apt-get install xorriso squashfs-tools)"
     done
+
+    verify_base "$base" "$SUMS_FILE"
 
     local work="$WORK_DEFAULT"
     rm -rf "$work"
@@ -141,6 +236,8 @@ MODE=""
 BASE_ISO=""
 OUT="$HERE/metaos-1.0-amd64.iso"
 CUBIC_ROOT=""
+SUMS_FILE=""
+ALLOW_UNVERIFIED=0
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -148,6 +245,10 @@ while [ $# -gt 0 ]; do
         --root) MODE=root; CUBIC_ROOT=${2:-}; shift || true ;;
         --iso) MODE=iso; BASE_ISO=${2:-}; shift || true ;;
         --out) OUT=${2:-}; shift || true ;;
+        --verify-base) MODE=verify; BASE_ISO=${2:-}; shift || true ;;
+        --inspect) MODE=inspect; BASE_ISO=${2:-}; shift || true ;;
+        --sha256sums) SUMS_FILE=${2:-}; shift || true ;;
+        --no-verify-base) ALLOW_UNVERIFIED=1 ;;
         -h|--help) usage 0 ;;
         *) die "unknown argument: $1 (try --help)" ;;
     esac
@@ -155,8 +256,10 @@ while [ $# -gt 0 ]; do
 done
 
 case "$MODE" in
-    check) check_mode ;;
-    root)  root_mode "$CUBIC_ROOT" ;;
-    iso)   iso_mode "$BASE_ISO" "$OUT" ;;
-    *)     usage 2 ;;
+    check)  check_mode ;;
+    root)   root_mode "$CUBIC_ROOT" ;;
+    iso)    iso_mode "$BASE_ISO" "$OUT" ;;
+    verify) verify_base "$BASE_ISO" "$SUMS_FILE"; say "base verification complete" ;;
+    inspect) inspect_mode "$BASE_ISO" ;;
+    *)      usage 2 ;;
 esac

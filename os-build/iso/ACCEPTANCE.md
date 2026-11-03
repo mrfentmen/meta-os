@@ -45,6 +45,7 @@ the frames exist. Before that: `BLOCKED — no Linux build host`.
 ## H+8 — "Calamares preseeded + clean install, reboots to login (Buffy)"
 
 ```sh
+os-build/iso/build_iso.sh --inspect metaos-1.0-amd64.iso   # payload landed?
 os-build/iso/tools/vm_install_proof.sh --iso metaos-1.0-amd64.iso \
      --keys ret,ret,ret,ret --reboot
 ```
@@ -71,9 +72,14 @@ install not run` (never `done`).
 
 ## What is already true, without a Linux host
 
-- `tools/check_configs.py` — 37 assertions, 0 fail, 0 skip: YAML parses,
-  module refs complete, preseed values asserted, assets hashed, no shipped
-  font or Apple-adjacent value.
+- `test/run_checks.sh` — the lane gate: validator, shell syntax, base-hash
+  fixture and a real QEMU dry frame in one command (9 checks).
+- `tools/check_configs.py` — 42 assertions, 0 fail, 0 skip: YAML parses,
+  module refs complete, exec-order chains, preseed values asserted, no
+  base-flavour strings in shipped values, assets hashed, no shipped font or
+  Apple-adjacent value, 12-dot splash ring intact.
+- `test/verify-base.test.sh` — the base-ISO hash gate refuses a tampered or
+  unsummed image; opt-out is explicit.
 - `tools/vm_install_proof.sh --dry` — real QEMU framebuffer capture; proves
   the harness, nothing about MetaOS.
 

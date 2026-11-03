@@ -232,6 +232,12 @@ def check_plymouth():
     else:
         record(PASS, "plymouth refresh hook", "present")
 
+    dots = re.findall(r"dot(\d+) = Sprite\(dot_image\)", script)
+    if len(dots) != 12 or dots != [str(i) for i in range(12)]:
+        record(FAIL, "plymouth progress ring", f"expected dot0..dot11, found {dots}")
+    else:
+        record(PASS, "plymouth progress ring", "12 dots, dot0..dot11")
+
 
 def check_preseed(parsed):
     checks = [
@@ -292,6 +298,60 @@ def check_hook_path_crossref():
         record(PASS, "autostart exec", "calamares launched from autostart")
     else:
         record(FAIL, "autostart exec", "no calamares exec line in provision.sh")
+
+
+def check_sequence_order(parsed):
+    """Calamares exec order is load-bearing: mount needs the partitions to
+    exist, unpackfs needs the mount, bootloader needs the unpack, and our
+    shellprocess must run after the target exists. These are the chains the
+    installer breaks in ways a config-shape check cannot see."""
+    data = parsed.get("calamares/settings.conf")
+    if data is None:
+        record(SKIP, "exec order", "settings.conf did not parse")
+        return
+    order = {}
+    for block in data.get("sequence") or []:
+        for name in block.get("exec") or []:
+            order.setdefault(name, len(order))
+    chains = [
+        ["partition", "mount", "unpackfs", "bootloader", "meta-branding", "finished"],
+        ["unpackfs", "users", "bootloader"],
+        ["locale", "localecfg"],
+    ]
+    for chain in chains:
+        present = [m for m in chain if m in order]
+        if len(present) < 2:
+            record(FAIL, "exec order", "chain absent from exec: " + " < ".join(chain))
+            continue
+        idx = [order[m] for m in present]
+        if idx != sorted(idx):
+            record(FAIL, "exec order", "out of order: " + " < ".join(present))
+        else:
+            record(PASS, "exec order", " < ".join(present))
+
+
+FLAVOURS = re.compile(r"\b(Ubuntu|Xubuntu|Lubuntu|Kubuntu|KDE neon)\b", re.IGNORECASE)
+
+
+def check_no_flavour_leak(parsed):
+    """The installed product must not introduce itself as its base flavour.
+    Comments are skipped: they legitimately explain where a key came from."""
+    leaks = []
+    targets = [os.path.join(CAL, "branding", "metaos", "branding.desc")]
+    targets += sorted(
+        os.path.join(MODS, f) for f in os.listdir(MODS) if f.endswith(".conf")
+    )
+    for path in targets:
+        for lineno, line in enumerate(read(path).splitlines(), 1):
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if FLAVOURS.search(line):
+                leaks.append(f"{os.path.relpath(path, ISO)}:{lineno}")
+    if leaks:
+        record(FAIL, "no base-flavour strings in shipped values", ", ".join(leaks))
+    else:
+        record(PASS, "no base-flavour strings in shipped values", f"{len(targets)} files")
 
 
 def check_manifest():
@@ -412,6 +472,8 @@ def main():
     check_settings(parsed)
     check_branding(parsed)
     check_preseed(parsed)
+    check_sequence_order(parsed)
+    check_no_flavour_leak(parsed)
     check_plymouth()
     check_hook_path_crossref()
     check_manifest()

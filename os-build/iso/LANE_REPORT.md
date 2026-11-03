@@ -17,13 +17,15 @@ reboots to the login screen, proven by VM screendumps.
 | 5 | Branding `branding.desc`, `stylesheet.qss`, 3 images | WRITTEN, UNRUN | productName MetaOS, images at 256/128/640×400, stylesheet present |
 | 6 | `calamares/meta-branding.sh` (runs in target chroot) | WRITTEN, UNRUN | `sh -n` clean; path cross-checked against `provision.sh` and `meta-branding.conf` |
 | 7 | `provision.sh` (host → chroot payload install) | WRITTEN, UNRUN | `sh -n` clean; installs theme, config, hook, autostart, initramfs rebuild |
-| 8 | `build_iso.sh` (`--check`, `--root`, `--iso`) | WRITTEN, UNRUN | `bash -n` clean; `--check` runs here and reports the missing Linux tools honestly |
+| 8 | `build_iso.sh` (`--check`, `--root`, `--iso`, `--verify-base`, `--inspect`) | WRITTEN, UNRUN | `bash -n` clean; `--verify-base` fixture-tested here (4/4 behaviours); `--check` reports missing Linux tools honestly |
+| 8a | Base-ISO hash gate | **PROVEN BY FIXTURE** | `test/verify-base.test.sh`: match passes, tamper refused, missing sums refused, opt-out explicit |
+| 8b | `test/run_checks.sh` one-command gate | **RUN HERE** | 9 pass, 0 fail, 0 skip on this Mac |
 | 9 | `tools/qmp.py` | **PROVEN LOCALLY** | drove a real QEMU instance: `screendump`, `quit` |
 | 10 | `tools/vm_install_proof.sh` | **PLUMBING PROVEN** (`--dry`), install path UNRUN | captured `proof/dry-harness/00-harness-dry.png` from a live QEMU framebuffer (720×400 SeaBIOS "no bootable device" screen, 4s after start) |
 | 11 | ISO | **NOT BUILT** | no Linux host, no root, no xorriso/mksquashfs on this Mac |
 | 12 | Install → reboot → login screendumps | **NOT RUN** | blocked on 11 |
 
-Local validator: **37 pass, 0 fail, 0 skip** (`tools/check_configs.py`,
+Local validator: **42 pass, 0 fail, 0 skip** (`tools/check_configs.py`,
 YAML parsed through ruby's psych because this Mac has no PyYAML —
 no check was silently skipped). Shell syntax: 4/4 scripts clean.
 Python syntax: 3/3 files compile.
