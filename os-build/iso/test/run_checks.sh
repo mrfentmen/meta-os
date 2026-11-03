@@ -34,7 +34,7 @@ else
 fi
 
 step "shell syntax"
-for pair in "provision.sh sh" "merge-layers.sh sh" "finalize-iso-tree.sh sh" "grub-fix.sh sh" "calamares/meta-branding.sh sh" "build_iso.sh bash" "tools/vm_install_proof.sh bash" "test/run_checks.sh bash" "test/verify-base.test.sh bash" "test/base-layout.test.sh bash"; do
+for pair in "provision.sh sh" "merge-layers.sh sh" "finalize-iso-tree.sh sh" "grub-fix.sh sh" "calamares/meta-branding.sh sh" "build_iso.sh bash" "tools/vm_install_proof.sh bash" "test/run_checks.sh bash" "test/verify-base.test.sh bash" "test/base-layout.test.sh bash" "test/test_stages.sh bash"; do
     set -- $pair
     file="$LANE/$1"
     shell=$2
@@ -59,6 +59,13 @@ if bash "$LANE/test/base-layout.test.sh"; then
     ok "base-layout fixture (single, layered, unknown)"
 else
     bad "base-layout fixture"
+fi
+
+step "build-stage fixtures (mocked tools, no root, no mounts)"
+if bash "$LANE/test/test_stages.sh"; then
+    ok "test_stages fixture (arg parsing, gates, order, splash PNG)"
+else
+    bad "test_stages fixture"
 fi
 
 step "QMP harness plumbing (real QEMU framebuffer)"
