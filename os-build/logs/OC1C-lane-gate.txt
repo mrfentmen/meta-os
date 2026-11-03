@@ -1,0 +1,283 @@
+
+== config validator ==
+MetaOS boot/installer lane — config validation
+lane root: iso
+  [PASS] yaml parse — 21 files
+  [PASS] settings -> module configs — 19 modules, all present
+  [PASS] settings -> instance configs — 1 instance(s)
+  [PASS] settings branding — metaos
+  [PASS] settings disable-cancel — true
+  [PASS] branding productName — MetaOS
+  [PASS] branding image productLogo — productLogo.png 256x256
+  [PASS] branding image productIcon — productIcon.png 128x128
+  [PASS] branding image productWelcome — productWelcome.png 640x400
+  [PASS] branding stylesheet — present
+  [PASS] preseed welcome not blocking — calamares/modules/welcome.conf
+  [PASS] preseed keyboard us — calamares/modules/keyboard.conf
+  [PASS] preseed timezone pinned via region+zone, no bogus language key — calamares/modules/locale.conf
+  [PASS] preseed partition: erase + no swap + efi block — calamares/modules/partition.conf
+  [PASS] preseed user meta, no autologin, sudo group — calamares/modules/users.conf
+  [PASS] preseed unpack from /cdrom/casper — calamares/modules/unpackfs.conf
+  [PASS] preseed no network installs during setup — calamares/modules/packages.conf
+  [PASS] preseed in-target hook, absolute path — calamares/modules/meta-branding.conf
+  [PASS] preseed reboot pre-checked — calamares/modules/finished.conf
+  [PASS] exec order — partition < mount < unpackfs < bootloader < meta-branding
+  [PASS] exec order — unpackfs < users < bootloader
+  [PASS] exec order — locale < localecfg
+  [PASS] no base-flavour strings in shipped values — 20 files
+  [PASS] plymouth module — script
+  [PASS] plymouth ImageDir — /usr/share/plymouth/themes/metaos
+  [PASS] plymouth ScriptFile — metaos.script
+  [PASS] plymouth image refs
+  [PASS] plymouth brace/paren balance — balanced
+  [PASS] plymouth determinism — no rng/date/fs/fonts
+  [PASS] plymouth refresh hook — present
+  [PASS] plymouth progress bar — bar-crop fill present
+  [PASS] hook path crossref — /usr/local/lib/metaos/meta-branding.sh
+  [PASS] autostart exec — calamares launched from autostart
+  [PASS] asset manifest — 7 assets match sha256
+  [PASS] original assets (fonts/icons) — no font or .icns files shipped
+  [PASS] original assets (strings) — no Apple-adjacent values outside comments
+  [PASS] sh -n provision.sh — syntax ok
+  [PASS] sh -n calamares/meta-branding.sh — syntax ok
+  [PASS] bash -n build_iso.sh — syntax ok
+  [PASS] bash -n tools/vm_install_proof.sh — syntax ok
+  [PASS] python syntax — 3 files
+  [PASS] png headers — all readable
+
+42 pass, 0 fail, 0 skip
+PASS on structure only. ISO build and VM install remain UNRUN on this host.
+PASS  check_configs.py
+
+== installer slideshow (static, offline) ==
+MetaOS installer slideshow — static validation
+slides dir: calamares/branding/metaos/slideshow
+  [PASS] slide count — 5 slides: slide-01-welcome.html, slide-02-desktop.html, slide-03-apps.html, slide-04-agents.html, slide-05-done.html
+  [PASS] shared CSS — slideshow.css present
+  [PASS] brand colors in CSS — #1877F2 #EDF5FF #070B16
+  [PASS] git tree — 4363 committed files
+  [PASS] slide-01-welcome.html parses — balanced tags
+  [PASS] slide-01-welcome.html links CSS — slideshow.css
+  [PASS] slide-01-welcome.html img src — 0 image(s), all committed
+  [PASS] slide-01-welcome.html offline — no http(s): URLs
+  [PASS] slide-01-welcome.html visible strings — no flavour/vendor words
+  [PASS] slide-01-welcome.html copy — no placeholder text
+  [PASS] slide-02-desktop.html parses — balanced tags
+  [PASS] slide-02-desktop.html links CSS — slideshow.css
+  [PASS] slide-02-desktop.html img src — 0 image(s), all committed
+  [PASS] slide-02-desktop.html offline — no http(s): URLs
+  [PASS] slide-02-desktop.html visible strings — no flavour/vendor words
+  [PASS] slide-02-desktop.html copy — no placeholder text
+  [PASS] slide-03-apps.html parses — balanced tags
+  [PASS] slide-03-apps.html links CSS — slideshow.css
+  [PASS] slide-03-apps.html img src — 0 image(s), all committed
+  [PASS] slide-03-apps.html offline — no http(s): URLs
+  [PASS] slide-03-apps.html visible strings — no flavour/vendor words
+  [PASS] slide-03-apps.html copy — no placeholder text
+  [PASS] slide-04-agents.html parses — balanced tags
+  [PASS] slide-04-agents.html links CSS — slideshow.css
+  [PASS] slide-04-agents.html img src — 0 image(s), all committed
+  [PASS] slide-04-agents.html offline — no http(s): URLs
+  [PASS] slide-04-agents.html visible strings — no flavour/vendor words
+  [PASS] slide-04-agents.html copy — no placeholder text
+  [PASS] slide-05-done.html parses — balanced tags
+  [PASS] slide-05-done.html links CSS — slideshow.css
+  [PASS] slide-05-done.html img src — 0 image(s), all committed
+  [PASS] slide-05-done.html offline — no http(s): URLs
+  [PASS] slide-05-done.html visible strings — no flavour/vendor words
+  [PASS] slide-05-done.html copy — no placeholder text
+  [PASS] CSS offline — no http(s): URLs
+
+35 pass, 0 fail
+PASS — slideshow is static-clean. Live-installer rendering still UNRUN.
+PASS  check_slideshow.py
+
+== shell syntax ==
+PASS  sh -n provision.sh
+PASS  sh -n merge-layers.sh
+PASS  sh -n finalize-iso-tree.sh
+PASS  sh -n grub-fix.sh
+PASS  sh -n calamares/meta-branding.sh
+PASS  bash -n build_iso.sh
+PASS  bash -n tools/vm_install_proof.sh
+PASS  bash -n test/run_checks.sh
+PASS  bash -n test/verify-base.test.sh
+PASS  bash -n test/base-layout.test.sh
+PASS  bash -n test/test_stages.sh
+
+== base-ISO verification logic (fixture, no network) ==
+PASS  matching hash passes (exit 0)
+PASS  tampered ISO refused (exit 1)
+PASS  no sums file refused (exit 1)
+PASS  explicit opt-out accepted (exit 0)
+verify-base fixture: all 4 behaviours hold
+PASS  verify-base fixture (match, mismatch, missing sums)
+
+== base-layout detection (fixture, no ISO) ==
+PASS  single-squashfs base is supported (exit 0, saw layout: single)
+PASS  layered base is flagged, not patched (exit 0, saw layout: layered)
+PASS  layered base says NOT supported (exit 0, saw NOT supported by the single-rootfs recipe)
+PASS  unrecognisable base fails loudly (exit 1)
+base-layout fixture: all 4 behaviours hold
+PASS  base-layout fixture (single, layered, unknown)
+
+== build-stage fixtures (mocked tools, no root, no mounts) ==
+
+== build_iso.sh argument parsing + preflight (native, no fakes) ==
+PASS  verify rejects missing ISO (exit 1)
+PASS  unknown flag rejected (exit 1)
+PASS  no args prints usage (exit 2)
+PASS  --iso refuses non-Linux host (exit 1)
+
+== build_iso.sh --iso gates under faked Linux+root (ISO_MOUNT fixtures) ==
+PASS  layered base refused without merge (exit 1)
+PASS  unknown layout refused (exit 1)
+PASS  missing xorriso refused before any work (exit 1)
+
+== build_iso.sh --iso stage order (static: verify first, replay last) ==
+PASS  verify_base precedes everything (line 225)
+PASS  layout detected after verify (line 228)
+PASS  xorriso extract after layout gate (line 242)
+PASS  unsquash after extract (line 256)
+PASS  provision after unsquash (line 259)
+PASS  mksquashfs after provision (line 267)
+PASS  xorriso rebuild last (line 284)
+PASS  El Torito replayed from base (line 285)
+PASS  rebuild keeps -overwrite on
+PASS  mksquashfs forwards detected compression args
+
+== provision.sh argument parsing + preflight ==
+PASS  no args prints usage (exit 2)
+PASS  unknown flag rejected before root checks (exit 2)
+PASS  non-root refused even with valid flags (exit 1)
+PASS  non-rootfs dir refused as root (exit 1)
+
+== provision.sh payload lands with --no-packages --no-initramfs (fake root) ==
+PASS  provision fixture run (exit 0)
+PASS  provision log records completion
+PASS  no chroot/network in --no-packages --no-initramfs path
+PASS  both --no-* flags honoured
+PASS  payload landed: usr/share/plymouth/themes/metaos/metaos.plymouth
+PASS  payload landed: etc/plymouth/plymouthd.conf
+PASS  payload landed: etc/calamares/settings.conf
+PASS  payload landed: usr/local/lib/metaos/meta-branding.sh
+PASS  payload landed: etc/xdg/autostart/metaos-install.desktop
+PASS  branding hook is executable
+
+== finalize-iso-tree.sh + grub-fix.sh (fixture tree, real runs) ==
+PASS  finalize rejects missing tree arg (exit 1)
+PASS  finalize fixture run (exit 0)
+PASS  layerfs-path present (x2)
+PASS  serial console present (x2)
+PASS  Meta branding strings replace Xubuntu
+PASS  .disk/info rewritten
+PASS  finalize is idempotent (exactly-once, no double insert)
+PASS  clobbered grub.cfg loses layerfs (test setup)
+PASS  grub-fix restores layerfs+console (exit 0)
+PASS  grub-fix restores exact counts (no duplication)
+PASS  grub-fix is idempotent
+PASS  grub-fix fails loudly on missing file
+PASS  finalize tolerates missing tree (skips info; merge grub assert is the loud gate)
+PASS  finalize without .disk skips info, still exits 0 (exit 0)
+
+== merge-layers.sh stage order (static: asserted in pipeline order) ==
+PASS  env gates first (unset ISO aborts) (line 14)
+PASS  tool install before any work (line 18)
+PASS  xorriso extract (line 22)
+PASS  unsquash minimal layer (line 31)
+PASS  rsync overlay after unsquash (line 37)
+PASS  GATE 1 rootfs sanity (line 40)
+PASS  chroot smoke test (line 67)
+PASS  provision package install (line 70)
+PASS  GATE 2 five packages (line 75)
+PASS  Meta payload via provision.sh (line 90)
+PASS  payload gate (line 91)
+PASS  .live layer transplant (line 99)
+PASS  initramfs rebuild (line 164)
+PASS  GATE 3 casper count (line 168)
+PASS  grub finalize call (line 176)
+PASS  grub assert (line 193)
+PASS  manifest regen (line 205)
+PASS  mksquashfs repack (line 211)
+PASS  GATE 4 size gate (line 213)
+PASS  install-sources rewrite (line 222)
+PASS  xorriso rebuild (line 243)
+PASS  GATE 5 El Torito (line 251)
+PASS  GATE 6 UUID sync (line 258)
+PASS  export ALL-DONE last (line 277)
+
+== merge-layers.sh flags (static) ==
+PASS  both squashfs layers use -exclude-file (x2)
+PASS  no bare -ef flag (exclude-file gotcha held)
+PASS  .live transplant is WARN-tolerant (|| true)
+PASS  mksquashfs flag: -noappend
+PASS  mksquashfs flag: -b 131072
+PASS  mksquashfs flag: -comp xz
+PASS  mksquashfs flag: -no-progress
+PASS  xorriso rebuild flag: -boot_image any replay
+PASS  xorriso rebuild flag: -overwrite on
+PASS  xorriso rebuild flag: -rm_r /
+PASS  xorriso rebuild flag: -map "$WORK/iso" /
+PASS  initramfs rebuilt for newest kver
+PASS  GATE 3 threshold >= 40 casper files
+PASS  GATE 4 threshold > 1 GiB
+PASS  GATE 5 wants exactly 2 boot images
+PASS  UUID baked via unmkinitramfs
+PASS  UUID read from initrd uuid.conf
+PASS  UUID sync verified by re-read
+PASS  tree UUID written exactly once (x1)
+PASS  finalize-iso-tree.sh invoked exactly once (x1)
+PASS  grub-finalize (line 176) precedes UUID-sync (line 263)
+PASS  unset SRCDIR aborts
+PASS  unset WORK aborts
+PASS  unset OUTDIR aborts
+PASS  host tools pinned (xorriso/squashfs/rsync/initramfs)
+PASS  foreign-arch emulator staged conditionally
+
+== merge-layers.sh gates fire on bad inputs (static: fail messages) ==
+PASS  gate: rootfs sanity
+PASS  gate: package check
+PASS  gate: sibling provision.sh
+PASS  gate: payload presence
+PASS  gate: kernel detection
+PASS  gate: base initrd presence
+PASS  gate: grub layerfs
+PASS  gate: grub console
+PASS  gate: manifest non-empty
+PASS  gate: manifest calamares
+PASS  gate: repack present
+PASS  gate: repack size
+PASS  gate: xorriso output
+PASS  gate: El Torito count
+PASS  gate: unmkinitramfs
+PASS  gate: baked UUID
+PASS  gate: UUID verify
+PASS  gate: qemu static
+PASS  gate: chroot smoke
+
+== python generators/validators (py_compile + splash PNG asserts) ==
+PASS  py_compile generate-splash.py (exit 0)
+PASS  py_compile check_configs.py (exit 0)
+PASS  py_compile qmp.py (exit 0)
+NOTE  metaos-theme/wallpapers/gen.py absent on this branch (not tested)
+
+== recolor script maps Papirus blues on a fixture tree (offline) ==
+PASS  recolor fixture run (exit 0) (exit 0)
+PASS  front tone mapped #5294e2 -> #1877F2
+PASS  back tone mapped #4877b1 -> #1360C4
+PASS  no source tones left in scope
+PASS  symlink alias preserved
+PASS  out-of-scope file untouched
+PASS  splash generator emits spec PNGs to tempdir (exit 0)
+
+== summary ==
+124 pass, 0 fail
+STAGE FIXTURES: PASS (merge-layers.sh never executed; no network/mounts/root)
+PASS  test_stages fixture (arg parsing, gates, order, splash PNG)
+
+== QMP harness plumbing (real QEMU framebuffer) ==
+PASS  dry screendump captured (864015 bytes)
+
+== summary ==
+17 pass, 0 fail, 0 skip
+LANE LOCAL GATE: PASS on everything runnable here. ISO build + install remain UNRUN.
