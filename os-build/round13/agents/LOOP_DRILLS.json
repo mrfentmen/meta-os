@@ -1,0 +1,1829 @@
+{
+  "tool": "os-build/layer1/loop_drills.mjs",
+  "ran_at": "2026-11-03T01:41:40.324Z",
+  "loops": {
+    "aegis": {
+      "command": [
+        "../../.local/node/bin/node",
+        "aegis/hosted.mjs"
+      ],
+      "note": "aegis/hosted.mjs — local passes; the OSV sweep stays a separate run",
+      "hangs": false,
+      "draft": false
+    },
+    "nervus": {
+      "command": [
+        "../../.local/node/bin/node",
+        "nervus/hosted.mjs"
+      ],
+      "note": "nervus/hosted.mjs — STUB contract run, no model loaded",
+      "hangs": false,
+      "draft": false
+    },
+    "handsfree": {
+      "command": [
+        "../../.local/node/bin/node",
+        "handsfree/hosted.mjs",
+        "approval"
+      ],
+      "note": "handsfree/hosted.mjs approval — clears its own drill state each run",
+      "hangs": false,
+      "draft": false
+    },
+    "imperium": {
+      "command": [
+        "python3",
+        "server/queue/patrol.py",
+        "--once",
+        "--max-checks",
+        "1"
+      ],
+      "note": "server/queue/patrol.py — registry entry is draft:true; the script is real and hangs",
+      "hangs": true,
+      "draft": true
+    },
+    "cadence": {
+      "absent": true,
+      "reason": "no cadence entry in agents/registry.json and no cadence script in the repo"
+    }
+  },
+  "counts": {
+    "M": {
+      "total": 25,
+      "OBSERVED-GAP": 9,
+      "OBSERVED": 12,
+      "GAP": 4
+    },
+    "N": {
+      "total": 25,
+      "OBSERVED": 21,
+      "OBSERVED-GAP": 2,
+      "GAP": 2
+    },
+    "O": {
+      "total": 25,
+      "OBSERVED": 11,
+      "GAP": 5,
+      "OBSERVED-GAP": 9
+    }
+  },
+  "rows": [
+    {
+      "section": "M",
+      "task": "R13-301",
+      "loop": "aegis",
+      "mode": "stop@start of the run",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "phase": "start of the run",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 5,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:48.632Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42748,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "verdict": "halted by the pre-spawn gate (the only arm that can win at this run length); runtime poll missed a <36ms run"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-302",
+      "loop": "aegis",
+      "mode": "budget@17% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "17% of measured cost",
+        "measured_ms": 36,
+        "measured_basis": "median-of-3",
+        "cap_ms": 6,
+        "cap_note": "17% of 36 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:48.688Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42749,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-303",
+      "loop": "nervus",
+      "mode": "stop@start of the run",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "phase": "start of the run",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 5,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:48.690Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42750,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "verdict": "halted by the pre-spawn gate (the only arm that can win at this run length); runtime poll missed a <32ms run"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-304",
+      "loop": "nervus",
+      "mode": "budget@31% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "31% of measured cost",
+        "measured_ms": 32,
+        "measured_basis": "median-of-3",
+        "cap_ms": 10,
+        "cap_note": "31% of 32 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:48.737Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42751,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-305",
+      "loop": "handsfree",
+      "mode": "stop@start of the run",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "phase": "start of the run",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 2,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:48.739Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42752,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "verdict": "halted by the pre-spawn gate (the only arm that can win at this run length); runtime poll missed a <34ms run"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-306",
+      "loop": "handsfree",
+      "mode": "budget@45% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "45% of measured cost",
+        "measured_ms": 34,
+        "measured_basis": "median-of-3",
+        "cap_ms": 15,
+        "cap_note": "45% of 34 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:48.795Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42754,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-307",
+      "loop": "imperium",
+      "mode": "stop@start of the run",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "start of the run",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 400,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:48.798Z",
+        "stop_seen": true,
+        "halt_reason": "stop-file",
+        "events": [
+          "spawn",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42762,
+          "err": "ESRCH"
+        },
+        "ledger_ts": "2026-11-03T01:40:49.205Z",
+        "verdict": "halted by the runtime poll, reason recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-308",
+      "loop": "imperium",
+      "mode": "budget@59% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "59% of measured cost",
+        "measured_ms": 4000,
+        "measured_basis": "timeout-ceiling",
+        "cap_ms": 2360,
+        "cap_note": "59% of 4000 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:51.580Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42770,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-309",
+      "loop": "cadence",
+      "mode": "stop",
+      "status": "GAP",
+      "detail": {
+        "phase": "start of the run",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none",
+        "what_would_make_it_real": "a script and a registry entry for the cadence loop"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-310",
+      "loop": "cadence",
+      "mode": "budget",
+      "status": "GAP",
+      "detail": {
+        "phase": "73% of measured cost",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none",
+        "what_would_make_it_real": "a script and a registry entry for the cadence loop"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-311",
+      "loop": "aegis",
+      "mode": "stop@during the OSV sweep call, before findings are written",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "phase": "during the OSV sweep call, before findings are written",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 20,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:51.589Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42773,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "verdict": "halted by the pre-spawn gate (the only arm that can win at this run length); runtime poll missed a <36ms run"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-312",
+      "loop": "aegis",
+      "mode": "budget@87% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "87% of measured cost",
+        "measured_ms": 36,
+        "measured_basis": "median-of-3",
+        "cap_ms": 31,
+        "cap_note": "87% of 36 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:51.677Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42774,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-313",
+      "loop": "nervus",
+      "mode": "stop@during the ledger append",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "phase": "during the ledger append",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 22,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:51.679Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42775,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "verdict": "halted by the pre-spawn gate (the only arm that can win at this run length); runtime poll missed a <32ms run"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-314",
+      "loop": "nervus",
+      "mode": "budget@21% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "21% of measured cost",
+        "measured_ms": 32,
+        "measured_basis": "median-of-3",
+        "cap_ms": 7,
+        "cap_note": "21% of 32 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:51.722Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42776,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-315",
+      "loop": "handsfree",
+      "mode": "stop@during brief composition",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "phase": "during brief composition",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 15,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:51.724Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42777,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "verdict": "halted by the pre-spawn gate (the only arm that can win at this run length); runtime poll missed a <34ms run"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-316",
+      "loop": "handsfree",
+      "mode": "budget@35% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "35% of measured cost",
+        "measured_ms": 34,
+        "measured_basis": "median-of-3",
+        "cap_ms": 12,
+        "cap_note": "35% of 34 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:51.774Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42778,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-317",
+      "loop": "imperium",
+      "mode": "stop@during the review step, between patrol and judge",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "during the review step, between patrol and judge",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 1200,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:51.777Z",
+        "stop_seen": true,
+        "halt_reason": "stop-file",
+        "events": [
+          "spawn",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42785,
+          "err": "ESRCH"
+        },
+        "ledger_ts": "2026-11-03T01:40:53.002Z",
+        "verdict": "halted by the runtime poll, reason recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-318",
+      "loop": "imperium",
+      "mode": "budget@49% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "49% of measured cost",
+        "measured_ms": 4000,
+        "measured_basis": "timeout-ceiling",
+        "cap_ms": 1960,
+        "cap_note": "49% of 4000 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:54.978Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42793,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-319",
+      "loop": "cadence",
+      "mode": "stop",
+      "status": "GAP",
+      "detail": {
+        "phase": "during the brief send, after composition",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none",
+        "what_would_make_it_real": "a script and a registry entry for the cadence loop"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-320",
+      "loop": "cadence",
+      "mode": "budget",
+      "status": "GAP",
+      "detail": {
+        "phase": "63% of measured cost",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none",
+        "what_would_make_it_real": "a script and a registry entry for the cadence loop"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-321",
+      "loop": "aegis",
+      "mode": "stop@during the findings-to-ledger write",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "phase": "during the findings-to-ledger write",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 31,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:54.985Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42796,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "verdict": "halted by the pre-spawn gate (the only arm that can win at this run length); runtime poll missed a <36ms run"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-322",
+      "loop": "aegis",
+      "mode": "budget@77% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "77% of measured cost",
+        "measured_ms": 36,
+        "measured_basis": "median-of-3",
+        "cap_ms": 28,
+        "cap_note": "77% of 36 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:55.066Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42797,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-323",
+      "loop": "nervus",
+      "mode": "stop@the final record write",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "phase": "the final record write",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 29,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:55.069Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42798,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "verdict": "halted by the pre-spawn gate (the only arm that can win at this run length); runtime poll missed a <32ms run"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-324",
+      "loop": "nervus",
+      "mode": "budget@11% of measured cost",
+      "status": "OBSERVED",
+      "detail": {
+        "phase": "11% of measured cost",
+        "measured_ms": 32,
+        "measured_basis": "median-of-3",
+        "cap_ms": 4,
+        "cap_note": "11% of 32 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:40:55.110Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42799,
+          "err": "ESRCH"
+        },
+        "verdict": "budget receipt written, kill recorded, no orphan"
+      }
+    },
+    {
+      "section": "M",
+      "task": "R13-325",
+      "loop": "handsfree",
+      "mode": "stop@the intake read, before any job is started",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "phase": "the intake read, before any job is started",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 1,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:40:55.112Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42800,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "verdict": "halted by the pre-spawn gate (the only arm that can win at this run length); runtime poll missed a <34ms run"
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-326",
+      "loop": "mid",
+      "mode": "mid",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "watchman killed mid-cycle",
+        "phase_at_kill": "poll-start 6",
+        "killed_at": "2026-11-03T01:40:55.496Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:40:55.444Z)",
+          "detect_ms": 248,
+          "age_ms": 355
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 53 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-327",
+      "loop": "between",
+      "mode": "between",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "watchman killed between cycles",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:40:56.079Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:40:56.037Z)",
+          "detect_ms": 274,
+          "age_ms": 362
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 55 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-328",
+      "loop": "watchdog",
+      "mode": "watchdog",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "case": "watchdog killed mid-cycle",
+        "killed_at": "2026-11-03T01:40:56.631Z",
+        "checker_process": "killed",
+        "next_check_when_rerun": "dead",
+        "detect_ms": null,
+        "restart_outcome": "NONE",
+        "finding": "the alarm has no watcher of its own: kill the checker and no beat, no line, no restart happens"
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-329",
+      "loop": "both",
+      "mode": "both",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "both watchers killed",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:40:56.811Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:40:56.777Z)",
+          "detect_ms": 273,
+          "age_ms": 357
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 53 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-330",
+      "loop": "baton",
+      "mode": "baton",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "watchman killed during a baton pass",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:40:57.421Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:40:57.382Z)",
+          "detect_ms": 272,
+          "age_ms": 351
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-331",
+      "loop": "stop",
+      "mode": "stop",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "watchman killed during a STOP drill",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:40:58.014Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:40:57.977Z)",
+          "detect_ms": 301,
+          "age_ms": 377
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-332",
+      "loop": "budget",
+      "mode": "budget",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "watchman killed during a budget kill",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:40:58.639Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:40:58.600Z)",
+          "detect_ms": 299,
+          "age_ms": 376
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-333",
+      "loop": "stale",
+      "mode": "stale",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "watchman restarts onto a stale job file",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:40:59.254Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:40:59.216Z)",
+          "detect_ms": 273,
+          "age_ms": 362
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-334",
+      "loop": "missing",
+      "mode": "missing",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "watchman restarts onto a missing job file",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:40:59.860Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:40:59.821Z)",
+          "detect_ms": 271,
+          "age_ms": 357
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": [
+          "claim released and the job re-filed on the next poll"
+        ]
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-335",
+      "loop": "corrupt",
+      "mode": "corrupt",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "watchman restarts onto a corrupt job file",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:00.458Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:00.420Z)",
+          "detect_ms": 276,
+          "age_ms": 366
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 55 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": [
+          "torn job file refused and logged as job-unreadable, not skipped silently"
+        ]
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-336",
+      "loop": "watchdog",
+      "mode": "restart-x2",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "case": "watchdog restarts the watchman twice in a row",
+        "watchdog_policy": "none — watchdog.mjs is a one-shot beat/check CLI; checkBeat raises one alarm and never spawns",
+        "restart_outcome": "NONE",
+        "finding": "nothing in this repo restarts the watchman; a death is detected only if someone runs the checker",
+        "named_module": "agents/watchdog.mjs"
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-337",
+      "loop": "load",
+      "mode": "load",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "detection time at load",
+        "phase_at_kill": "poll-end 5",
+        "killed_at": "2026-11-03T01:41:01.189Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:01.179Z)",
+          "detect_ms": 301,
+          "age_ms": 357
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-338",
+      "loop": "idle",
+      "mode": "idle",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "detection time at idle",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:01.826Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:01.788Z)",
+          "detect_ms": 273,
+          "age_ms": 366
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 54 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-339",
+      "loop": "locked",
+      "mode": "locked",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "restart path with the ledger locked",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:02.435Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:02.397Z)",
+          "detect_ms": 297,
+          "age_ms": 373
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": [
+          "a read-only ledger surfaced as poll-error EACCES: permission denied, open '/Users/test/Desktop/meta-os/os-build/round13/ag and the watchman kept polling"
+        ]
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-340",
+      "loop": "no-entry",
+      "mode": "no-entry",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "restart path with the registry missing an entry",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:03.049Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:03.010Z)",
+          "detect_ms": 275,
+          "age_ms": 365
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": [
+          "unknown agent recorded as job-unmatched and the claim is retained"
+        ]
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-341",
+      "loop": "draft",
+      "mode": "draft",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "restart path with a draft loop running",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:03.659Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:03.623Z)",
+          "detect_ms": 300,
+          "age_ms": 373
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": [
+          "the watchman spawned a draft:true agent; draft is not a fence at spawn"
+        ]
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-342",
+      "loop": "aegis",
+      "mode": "aegis",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "restart path during an aegis sweep",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:04.265Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:04.226Z)",
+          "detect_ms": 300,
+          "age_ms": 378
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 55 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-343",
+      "loop": "watchman",
+      "mode": "cadence",
+      "status": "GAP",
+      "detail": {
+        "case": "restart path during a cadence brief",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none"
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-344",
+      "loop": "handsfree",
+      "mode": "handsfree",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "restart path during a handsfree intake",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:04.892Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:04.851Z)",
+          "detect_ms": 273,
+          "age_ms": 355
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 57 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-345",
+      "loop": "renamed",
+      "mode": "renamed",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "false death (process renamed)",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:05.478Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:05.334Z)",
+          "detect_ms": 160,
+          "age_ms": 358
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 55 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": [
+          "a moved beat file is indistinguishable from a dead relay: this is a false-death path"
+        ]
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-346",
+      "loop": "chaos",
+      "mode": "chaos",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "death during a chaos drill",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:05.969Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:05.934Z)",
+          "detect_ms": 302,
+          "age_ms": 377
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 56 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-347",
+      "loop": "watchman",
+      "mode": "federation",
+      "status": "GAP",
+      "detail": {
+        "case": "death during a federation drill",
+        "reason": "no federation module exists in this repo; nothing federates, so nothing can die under it",
+        "named_module": "none"
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-348",
+      "loop": "stop-present",
+      "mode": "stop-present",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "death with STOP already present",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:06.592Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:06.553Z)",
+          "detect_ms": 274,
+          "age_ms": 353
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 55 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": [
+          "no STOP file is honoured at the watchman level; the child runtime owns it"
+        ]
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-349",
+      "loop": "budget-spent",
+      "mode": "budget-spent",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "death with budget already spent",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:07.194Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:07.153Z)",
+          "detect_ms": 273,
+          "age_ms": 352
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 57 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "N",
+      "task": "R13-350",
+      "loop": "final",
+      "mode": "final",
+      "status": "OBSERVED",
+      "detail": {
+        "case": "death on the final step of a job",
+        "phase_at_kill": "poll-end 2",
+        "killed_at": "2026-11-03T01:41:07.786Z",
+        "detection": {
+          "state": "dead",
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:07.750Z)",
+          "detect_ms": 273,
+          "age_ms": 353
+        },
+        "restart_outcome": "manual respawn only (no supervisor) — second watchman started in 57 ms, ledger lines 0",
+        "restart_auto": false,
+        "findings": []
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-351",
+      "loop": "aegis",
+      "mode": "kill mid-run",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "kill mid-run",
+        "killed_alive": true,
+        "events": [
+          "spawn",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM"
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42947,
+          "err": "ESRCH"
+        },
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-352",
+      "loop": "nervus",
+      "mode": "STOP file mid-run",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "STOP file mid-run",
+        "pre_spawn_gate": "REFUSED: stop-filed",
+        "pre_spawn_detail": "stop file present before spawn",
+        "mid_run_delay_ms": 10,
+        "alive_when_stop_filed": true,
+        "stop_requested_at": "2026-11-03T01:41:12.337Z",
+        "stop_seen": false,
+        "halt_reason": "run-ended-before-poll",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42948,
+          "err": "ESRCH"
+        },
+        "ledger_ts": null,
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-353",
+      "loop": "handsfree",
+      "mode": "budget set below cost",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "budget set below cost",
+        "measured_ms": 34,
+        "measured_basis": "median-of-1",
+        "cap_ms": 17,
+        "cap_note": "50% of 34 ms",
+        "fired": true,
+        "halt_reason": "budget-wall-clock",
+        "receipt_at": "2026-11-03T01:41:12.398Z",
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": false
+        },
+        "orphan": {
+          "checked": true,
+          "orphan": false,
+          "pid": 42949,
+          "err": "ESRCH"
+        },
+        "cap_actual": 17,
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-354",
+      "loop": "imperium",
+      "mode": "input file removed mid-run",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "input file removed mid-run",
+        "events": [
+          "spawn",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": true
+        },
+        "hung": true,
+        "python_left": [],
+        "finding": "patrol.py takes no input-file argument in this invocation and still does not terminate",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-355",
+      "loop": "cadence",
+      "mode": "duplicate start attempt",
+      "status": "GAP",
+      "detail": {
+        "fault": "duplicate start attempt",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-356",
+      "loop": "aegis",
+      "mode": "watchman killed during cycle",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "watchman killed during cycle",
+        "detection": {
+          "state": "dead",
+          "detect_ms": 326,
+          "alarm": "ALARM watchman heartbeat lost: last beat 0.4s ago (limit 0.3s, last 2026-11-03T01:41:15.599Z)"
+        },
+        "finding": "the loop is unaffected by the watchman's death: they share no state, so a dead relay does not stop a running loop",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-357",
+      "loop": "nervus",
+      "mode": "ledger write interrupted",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "ledger write interrupted",
+        "torn_lines_before": 1,
+        "torn_lines_after": 1,
+        "records_appended_after_torn": 5,
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "file_restored": true,
+        "finding": "the loop appended after a torn line and left it in place: a reader that throws on one bad line loses every record after it",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-358",
+      "loop": "handsfree",
+      "mode": "network route down (osv route)",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "network route down (osv route)",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "env_injection": "not available: spawnAgent builds env from process.env with no override hook, so a route-down cannot be injected through the runtime",
+        "named_module": "aegis/run-sweep.mjs exits 3 when AEGIS_OSV_MCP is unset (blocked, not crashed)",
+        "finding": "the env path is exercised by run-sweep.mjs, not by the hosted loop",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-359",
+      "loop": "imperium",
+      "mode": "clock skew injected",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "fault": "clock skew injected",
+        "injection": "none available: no faketime hook and no clock seam in the loop",
+        "named_module": "agents/clock.mjs",
+        "finding": "clock.mjs has elapsedMs(), which is the place a skew guard would live; the loop does not call it",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-360",
+      "loop": "cadence",
+      "mode": "oversized input",
+      "status": "GAP",
+      "detail": {
+        "fault": "oversized input",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-361",
+      "loop": "aegis",
+      "mode": "empty input",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "fault": "empty input",
+        "loop": "aegis",
+        "available": false,
+        "reason": "aegis takes no input file or text argument, so this fault has no subject in it",
+        "named_module": "aegis/hosted.mjs",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-362",
+      "loop": "nervus",
+      "mode": "malformed input",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "fault": "malformed input",
+        "loop": "nervus",
+        "available": false,
+        "reason": "nervus takes no input file or text argument, so this fault has no subject in it",
+        "named_module": "nervus/hosted.mjs",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-363",
+      "loop": "handsfree",
+      "mode": "slow dependency",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "fault": "slow dependency",
+        "injection": "none available: neither the runtime nor the loop exposes a dependency seam to slow down",
+        "finding": "a slow dependency can only be simulated by editing the loop, which would test the edit",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-364",
+      "loop": "imperium",
+      "mode": "restart during drill",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "restart during drill",
+        "distinct_runs": true,
+        "codes": [
+          null,
+          null
+        ],
+        "finding": "two copies run without contention: no lock, no claim, no singleton guard on the imperium loop",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-365",
+      "loop": "cadence",
+      "mode": "second drill overlapping",
+      "status": "GAP",
+      "detail": {
+        "fault": "second drill overlapping",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-366",
+      "loop": "aegis",
+      "mode": "receipt directory missing",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "fault": "receipt directory missing",
+        "removed_dir": null,
+        "reason": "os-build/aegis holds committed nested evidence or exceeds the 4 MB snapshot cap; deleting it to test mkdirSync would delete records, so it was not removed",
+        "named_module": "os-build/aegis",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-367",
+      "loop": "nervus",
+      "mode": "job file corrupted",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "fault": "job file corrupted",
+        "note": "covered by the Section N corrupt-job drill against the real watchman; this loop reads no job files",
+        "loop_reads_jobs": false,
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-368",
+      "loop": "handsfree",
+      "mode": "registry entry missing",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "fault": "registry entry missing",
+        "refused": false,
+        "reason": null,
+        "note": "spawnHosted does not consult the registry, so a missing entry is not a fence here; the check lives in watchman.mjs",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-369",
+      "loop": "imperium",
+      "mode": "command exits nonzero",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "fault": "command exits nonzero",
+        "events": [
+          "spawn",
+          "stop-request",
+          "exit"
+        ],
+        "exit": {
+          "code": null,
+          "signal": "SIGTERM",
+          "timedOut": true
+        },
+        "note": "the loop hung and was stopped by the drill ceiling, so no exit code was produced — not a nonzero-exit observation",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-370",
+      "loop": "cadence",
+      "mode": "command hangs past timeout",
+      "status": "GAP",
+      "detail": {
+        "fault": "command hangs past timeout",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-371",
+      "loop": "aegis",
+      "mode": "partial output written",
+      "status": "OBSERVED-GAP",
+      "detail": {
+        "fault": "partial output written",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "note": "the loop's receipt is written with writeFileSync, which is not atomic: a kill inside the write leaves a truncated receipt. This run completed, so the window was not hit",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-372",
+      "loop": "nervus",
+      "mode": "state file truncated",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "state file truncated",
+        "truncated_state": true,
+        "readable_after_run": true,
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "file_restored": true,
+        "finding": "a truncated previous receipt is overwritten with a valid one on the next run",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-373",
+      "loop": "handsfree",
+      "mode": "env var missing",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "env var missing",
+        "events": [
+          "spawn",
+          "exit"
+        ],
+        "exit": {
+          "code": 0,
+          "signal": null,
+          "timedOut": false
+        },
+        "env_injection": "not available: spawnAgent builds env from process.env with no override hook, so a route-down cannot be injected through the runtime",
+        "named_module": "aegis/run-sweep.mjs exits 3 when AEGIS_OSV_MCP is unset (blocked, not crashed)",
+        "finding": "the env path is exercised by run-sweep.mjs, not by the hosted loop",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-374",
+      "loop": "imperium",
+      "mode": "working dir moved",
+      "status": "OBSERVED",
+      "detail": {
+        "fault": "working dir moved",
+        "probe_exit": 7,
+        "probe_output": "{\"uncaught\":\"ENOENT\",\"syscall\":\"spawn /Users/test/.local/node/bin/node\"}",
+        "finding": "a missing working directory kills the process that called spawnAgent: there is no 'error' listener on the child, so the runtime reports a bad cwd as an uncaught exception",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    },
+    {
+      "section": "O",
+      "task": "R13-375",
+      "loop": "cadence",
+      "mode": "drill repeated back-to-back",
+      "status": "GAP",
+      "detail": {
+        "fault": "drill repeated back-to-back",
+        "reason": "no cadence entry in agents/registry.json and no cadence script in the repo",
+        "named_module": "none",
+        "not_covered": "Musica (musica-studio) and Officina (officina-faber) stay NOT COVERED: both registry entries are draft:true with the reason that they live outside this repo, and their command is the placeholder `true`"
+      }
+    }
+  ]
+}

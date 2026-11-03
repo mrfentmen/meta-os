@@ -17,16 +17,19 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | J — Aegis OPSEC | **COMPLETE** | 25 / 25; 20 decided, 3 not inspectable, 2 n/a; **4 failures, 6 findings** | `os-build/round13/aegis/SECTION_J.md` |
 | K — agent runtime: supervisor | **COMPLETE** | 25 / 25; 19 observed, 2 refused, 1 not exercised, 3 gaps; **5 findings** | `os-build/round13/agents/SECTION_K.md` |
 | L — baton-pass proofs | **COMPLETE** | 25 / 25; 4 proven by passing tests, **21 gaps** (no per-loop fixture, no tree diff) | `os-build/round13/agents/SECTION_L.md` |
-| M–O — agent runtime | NOT STARTED | 0 / 75 | — |
+| M — agent runtime: STOP/budget | **COMPLETE** | 25 / 25; 12 observed, 9 observed-gap, 4 gaps | `os-build/round13/agents/SECTION_M.md` |
+| N — agent runtime: death/recovery | **COMPLETE** | 25 / 25; 21 observed, 2 observed-gap, 2 gaps | `os-build/round13/agents/SECTION_N.md` |
+| O — chaos over the loops | **COMPLETE** | 25 / 25; 11 observed, 9 observed-gap, 5 gaps | `os-build/round13/agents/SECTION_O.md` |
 | P — Hands-Free | NOT STARTED | 0 / 25 | — |
 | Q–R — Nuntius | NOT STARTED | 0 / 50 | — |
 | S — userspace | NOT STARTED | 0 / 25 | — |
 | T — federation + closeout | NOT STARTED | 0 / 25 | — |
 
-**Sections A–L:** 300 / 300 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
+**Sections A–O:** 375 / 375 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
 (E), 9 missing artifacts (H), 9 unimplemented OSINT angles (I), 21 baton gaps (L), 1 review
 item (G), 4 real observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J), 5 runtime
-findings (K). Agent suite: 21 tests, 21 pass.
+findings (K), 4 loop findings (M–O: no restart supervisor, a missing cwd kills the caller,
+no singleton guard, no injectable env/clock seam). Agent suite: 21 tests, 21 pass.
 
 ## Method
 
@@ -44,6 +47,7 @@ be regenerated:
 | `os-build/layer1/osint_passes.py` | OSINT angles parsed from the task list, counts only |
 | `os-build/layer1/opsec_checks.py` | 25 OPSEC checks, mechanical where a command can decide |
 | `os-build/layer1/agent_drills.mjs` | 25 runtime drills with real spawns, budgets, STOP files and ledgers |
+| `os-build/layer1/loop_drills.mjs` | 75 loop drills: STOP/budget arms, real watchman deaths, chaos faults |
 
 ## Limits carried forward
 
@@ -55,3 +59,13 @@ be regenerated:
   exception should read those 50 rows as BLOCKED.
 - R13-152 (one bearer-shaped token, history only, no longer in the tree) is filed for human
   review. Counts cannot close it and Aegis does not auto-fix.
+
+- Only four loops are runnable: aegis, nervus and three handsfree roles. **There is no cadence
+  loop in this repo**, and `imperium-patrol` is a draft registry entry whose command is `true`.
+  The Imperium drills used the real `server/queue/patrol.py`, which **never terminates**
+  (`--once --max-checks 1`, still running at 15 s), so its budget rows measure a 4 s ceiling,
+  not a run cost.
+- Nothing restarts the watchman. Detection exists (`agents/watchdog.mjs` alarms once, exit 2);
+  recovery does not. Every Section N restart is a manual respawn by the drill.
+- A missing working directory kills the process that called `spawnAgent`: `runtime.mjs` attaches
+  no `'error'` listener to `spawn()`. Proved in a child probe (R13-374), exit 7, uncaught ENOENT.
