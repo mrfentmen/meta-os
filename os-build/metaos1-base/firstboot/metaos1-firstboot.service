@@ -1,0 +1,13 @@
+[Unit]
+Description=MetaOS 1.0 first-boot base defaults (Hana lane, slice 1)
+# Runs once: skipped on every later boot by the done-marker.
+ConditionPathExists=!/var/lib/metaos1-firstboot.done
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/metaos1-firstboot
+
+[Install]
+WantedBy=multi-user.target
