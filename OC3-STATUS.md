@@ -229,3 +229,12 @@ boot and is named with its owner — no silent gaps.
 - Theme-complete checklist defined (6 boxes, mechanical).
 - NOT taken (wrong lane): r11/round12 merges, F1/syscalls, LICENSE,
   submission, installer fixes, rootfs 7/7 — deciders named, no wait.
+
+## Next-built (2026-11-03): oc3-build-payload.sh — one-command re-cut
+- `os-build/logs/oc3-build-payload.sh [TIP]`: extracts OC3 15 + frozen
+  theme trees at any tip, packs install-relative tarball, prints sha.
+  Verified live: 150 files, reproducible (df7292d0 test build, then
+  removed to avoid snapshot pile-up; committed snapshot stays the
+  staged deliverable until the declared-complete re-cut).
+- Trigger-to-post is now: run script, record sha in a 5-line proof,
+  commit, push branch. No session needed.
