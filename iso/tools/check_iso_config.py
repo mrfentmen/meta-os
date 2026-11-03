@@ -729,6 +729,33 @@ else:
 GREETER_CONF = ISO / "theme" / "lightdm" / "lightdm-gtk-greeter.conf"
 GREETER_THEME = ISO / "theme" / "lightdm" / "themes" / "MetaOS" / "index.theme"
 GREETER_CSS = ISO / "theme" / "lightdm" / "themes" / "MetaOS" / "gtk-3.0" / "gtk.css"
+# --- wallpaper pack -----------------------------------------------------
+for pack_name, (want_w, want_h) in {
+    "meta-wallpaper-2560x1440.png": (2560, 1440),
+    "meta-wallpaper-1366x768.png": (1366, 768),
+}.items():
+    path = ISO / "theme" / "wallpaper" / pack_name
+    if not path.is_file():
+        bad("theme: %s is missing (run make_wallpaper.py)" % pack_name)
+        continue
+    head = path.read_bytes()[:33]
+    if head[:8] != b"\x89PNG\r\n\x1a\n":
+        bad("theme: %s is not a PNG" % pack_name)
+        continue
+    got_w, got_h, depth, colour = struct.unpack(">IIBB", head[16:26])
+    if (got_w, got_h) == (want_w, want_h) and depth == 8 and colour == 6:
+        ok("theme: %s is %dx%d RGBA" % (pack_name, want_w, want_h))
+    else:
+        bad("theme: %s is %dx%d depth %d colour %d"
+            % (pack_name, got_w, got_h, depth, colour))
+
+login_path = ISO / "base" / "meta-first-login.sh"
+login_body = read(login_path) if login_path.is_file() else ""
+if "meta-wallpaper-$RES.png" in login_body:
+    ok("theme: first login picks the wallpaper size the screen reports")
+else:
+    bad("theme: first login does not choose a wallpaper size")
+
 GREETER_BG = "/usr/share/metaos/theme/greeter-wallpaper.png"
 
 greeter_wall = ISO / "theme" / "wallpaper" / "greeter-wallpaper.png"

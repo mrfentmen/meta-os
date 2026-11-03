@@ -85,7 +85,18 @@ done
 # 2. Wallpaper, for every backdrop property Xfce has, whatever the monitor is
 #    called. Setting only monitor0 works on the machine it was written for and
 #    nowhere else.
-WALL="$SHARE/theme/meta-wallpaper.png"
+WALL_DIR="$SHARE/theme"
+WALL="$WALL_DIR/meta-wallpaper.png"
+# Pick the file that matches the attached screen. Scaling a ring up is what
+# makes it soft, and the ring is the whole design.
+if [ -f "$WALL" ] && command -v xrandr >/dev/null 2>&1; then
+  RES=$(xrandr --current 2>/dev/null | awk '/ connected primary/ {print $4; exit}' | cut -d+ -f1)
+  [ -n "${RES:-}" ] || RES=$(xrandr --current 2>/dev/null | awk '/ connected/ {print $3; exit}' | cut -d+ -f1)
+  if [ -n "${RES:-}" ] && [ -f "$WALL_DIR/meta-wallpaper-$RES.png" ]; then
+    WALL="$WALL_DIR/meta-wallpaper-$RES.png"
+  fi
+fi
+echo "first-login: wallpaper $(basename "$WALL")"
 if [ ! -f "$WALL" ]; then
   echo "first-login: $WALL is missing" >&2
   fail=1

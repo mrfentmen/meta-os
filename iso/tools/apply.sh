@@ -142,6 +142,8 @@ put "$ISO/apps/chromium/tokens.css" "/usr/share/metaos/start/tokens.css"
 put "$ISO/apps/chromium/policies.json" "/etc/chromium/policies/managed/metaos.json"
 
 put "$ISO/theme/wallpaper/meta-wallpaper.png" "/usr/share/metaos/theme/meta-wallpaper.png"
+put "$ISO/theme/wallpaper/meta-wallpaper-2560x1440.png" "/usr/share/metaos/theme/meta-wallpaper-2560x1440.png"
+put "$ISO/theme/wallpaper/meta-wallpaper-1366x768.png" "/usr/share/metaos/theme/meta-wallpaper-1366x768.png"
 put "$ISO/theme/gtk/metaos.css" "/usr/share/metaos/theme/gtk.css"
 put "$ISO/theme/xfce4-desktop.xml" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
 

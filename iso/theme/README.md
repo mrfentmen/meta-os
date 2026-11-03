@@ -7,7 +7,7 @@ by hand.
 
 | File | Generator | What it is |
 |---|---|---|
-| `wallpaper/meta-wallpaper.png` | `iso/tools/make_wallpaper.py` | 1920x1080 RGBA. Contract black falling to near-black, one blue ring at 30% of the height, soft glow |
+| `wallpaper/meta-wallpaper.png` | `iso/tools/make_wallpaper.py` | 1920x1080 RGBA, and the same art at 2560x1440 and 1366x768. First login keeps the one that matches the screen. Contract black falling to near-black, one blue ring at 30% of the height, soft glow |
 | `gtk/metaos.css` | `iso/tools/tokens_to_gtk.py` | `@define-color meta_*` for every token, plus the window, button, entry, menu and selection rules |
 
 Both read `iso/contracts/tokens.json` — the contract vendored from
