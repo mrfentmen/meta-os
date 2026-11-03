@@ -166,9 +166,14 @@ Format per entry (append, newest first):
   verify PASS/FAIL — operator <nick> — notes <anything odd>
 ```
 
-No entries yet: no deploy of a dashboard batch has been logged
-under this runbook. The first entry is also DOC-018's acceptance
-evidence, once Buffy completes it.
+- 2026-11-03 00:22 EST — commit 4bef226a — marker "Meta Imperium — Visual Event Assessment Prototype" (`<title>` in root index.html, rendered in the browser tab) —
+  method `wrangler pages deploy .pages-trio-dist --project-name=meta-trio-demo` (pinned script: `os/docs/deploy-trio-frontend.sh`) — version id 224a7ff1-3f58-4dbc-b35b-2ee267e16972 ("Current Version ID" from wrangler) —
+  URL https://meta-trio-demo.openlane.workers.dev/ —
+  verify PASS — operator Buffy (agent3-deploy lane) —
+  notes: Trio demo frontend on a NEW project; `muse-relay-live` untouched. Dist set: root index.html, styles.css, manifest.webmanifest, icon-180.png, surfaces.html, logo-studio.html, design/meta-ascii-logo-studio.html, js/, vendor/maplibre/. server/ excluded (needs keys, stays local); bus.html excluded (Rowan's viewer lane). No secrets in dist (grep gate in script). `/` and js/css/manifest/maplibre assets return HTTP 200 with marker present; .html pages 307 to extensionless canonical then 200. Static host has no `/api/assess`, so the UI shows its honest disconnected state until pointed at a live server. Platform note: wrangler placed this on Workers-backed Static Assets (workers.dev URL, version id, no `.pages.dev` domain issued; `wrangler pages deployment list` reports project-not-found — that command does not cover this project type).
+- DOC-018 scope honesty: this entry does NOT by itself close DOC-018. The acceptance is Buffy running a *dashboard batch* through this runbook to `muse-relay-live` with the §1 gates including Pax review (§1.5) — none of that happened here (no Pax review; gate 1 `cmp bus.html index.html` FAILS on this tree, the files differ). What this entry does contribute: the first operator-session wrangler deploy on record, a pinned command + script (deploy tooling now exists), and the first recorded deployment id. `muse-relay-live`'s previous production deployment id (§5 INT-031 field) is still unrecorded.
+
+Rollback state (2026-11-03): `meta-trio-demo` has exactly one deployment, so there is no previous production deployment to roll back to — treat rollback as redeploy-the-previous-dist fallback until a second deployment exists, and no dashboard restore has been run for this project. `muse-relay-live` rollback remains platform-confirmed but project-unproven (see §0/§5).
 
 ## 7. What this runbook does not cover
 
