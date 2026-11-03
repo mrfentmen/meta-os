@@ -78,9 +78,17 @@ fn main() {
     check("set: empty is INVAL", clip_set(zero[..0], 1) == E_INVAL);
     check("set: negative owner is INVAL", clip_set("x", -1) == E_INVAL);
 
-    // Unowned content may be cleared by anyone; after a clear, ownership is gone.
-    check("clear: unowned clears for any caller", clip_clear(77) == CODE_OK);
-    check("clear: generation still monotonic", clip_generation() == 4);
+    // The value is owned by session 1, so a different session is refused and
+    // nothing changes. There is no "unowned content" state to test: clip_set
+    // requires an owner, and -1 only describes an empty clipboard (which
+    // clip_clear reports as NOTFOUND before ownership is consulted).
+    check("clear: second foreign clear is denied", clip_clear(77) == E_DENIED);
+    check("clear: denial left content and generation",
+        clip_len_get() == 4 && clip_generation() == 3);
+    check("clear: owner clears", clip_clear(1) == CODE_OK);
+    check("clear: empty and generation moved",
+        clip_len_get() == 0 && clip_generation() == 4);
+    check("clear: clearing empty is NOTFOUND", clip_clear(1) == E_NOTFOUND);
 
     say("t141 done  pass=");
     var pb: u8[>..] = [];

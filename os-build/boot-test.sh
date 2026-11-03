@@ -21,6 +21,12 @@ checkline() { # checkline <name> <fixed-string>
 }
 
 echo "== userspace =="
+# Manifest coverage first: a bin with no slot is a program that would never be
+# built, and no ELF check can see it because there is no ELF.
+python3 "$ROOT/os-build/userspace/check_manifest.py"
+# Two pipelines exist (build.sh and build_userspace.py). They must agree on
+# every shared base before either one stages an ELF for the kernel.
+python3 "$ROOT/os-build/userspace/compare_builders.py"
 # One link base per program, verified against the ELF headers. This replaced
 # the old sed-into-link-base.ld loop, which no other build used and which left
 # plain cargo builds linking all four programs at the same address.
