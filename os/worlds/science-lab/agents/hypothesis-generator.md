@@ -1,13 +1,13 @@
 # hypothesis-generator — lab-local job definition
 
-Status: **SPEC (job definition).** The agent has not run. No lab
+Status: **HOSTED (bounded check duty via hosted.py).** The full research job has not run. No lab
 experiment record has been filed. The Delaney stage 1 gate has not
 been attempted.
 
 - **nick:** `hypothesis-generator`
 - **registry name:** `hypothesis-generator` (`agents/registry.json`,
   owner `system: science-lab`, lane `Science Lab (research)`,
-  command `["true"]` — stub, runs nothing)
+  command `["python3", "repo:os/worlds/science-lab/hosted.py", "--agent", "hypothesis-generator"]` — bounded check duty over existing records only)
 - **role (verbatim from `os/worlds/science-lab/pack.json`):**
 
   > Drafts three to five competing hypotheses per problem, each with a measurable prediction, an alternative explanation, and a disproof condition. A hypothesis without a disproof condition cannot be filed. Never verifies its own work.

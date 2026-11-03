@@ -13,9 +13,10 @@ Exit 0 when the duty ran and the receipt was written. Exit 1 when a record
 the duty must read is missing or torn: a broken tree must not look like a
 quiet one. Exit 2 on a usage error or an agent with no duty.
 
-Agents whose duty needs material this repo does not hold (a physics corpus,
-a biology dataset) are NOT listed here. They stay drafts in the registry,
-because a duty that has nothing real to read would be a placeholder.
+The six discipline duties are checks over the cycle and claim records that
+do ship: where a discipline has no hypothesis record on disk, the duty
+reports zero matches instead of inventing one. A duty that finds nothing
+real to read says so; it never files a design, a verdict, or a level.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -208,6 +210,215 @@ def duty_computational(records, _args):
     return ([{"check": "compute-provenance", "cycles": findings}], 0)
 
 
+def _cycle_text(cycle):
+    """The cycle prose a discipline duty can actually match against."""
+    inputs = cycle.get("inputs") or {}
+    results = inputs.get("compute_results") or {}
+    outputs = cycle.get("outputs") or {}
+    return " ".join([
+        str(inputs.get("problem_statement", "")),
+        str(results.get("method_difference", "")),
+        str((inputs.get("hypotheses") or {}).get("note", "")),
+        str(outputs.get("hypotheses", "")),
+        str(outputs.get("literature", "")),
+    ])
+
+
+def _cycle_hypothesis_ids(cycle):
+    hyps = (cycle.get("inputs") or {}).get("hypotheses") or {}
+    return list(hyps.get("ids") or [])
+
+
+def _has_disproof_statement(cycle):
+    """True when the cycle prose says its hypotheses carry falsifiers."""
+    return "falsif" in _cycle_text(cycle).lower()
+
+
+def _repository_rows(records, name):
+    path = records / "repository" / name
+    if not path.exists():
+        return []
+    rows = []
+    with open(path, encoding="utf-8") as fh:
+        for number, line in enumerate(fh, 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rows.append(json.loads(line))
+            except json.JSONDecodeError as exc:
+                raise SystemExit("error: %s line %d does not parse: %s"
+                                 % (name, number, exc))
+    return rows
+
+
+def _duty_discipline(records, agent, signals, engine_note):
+    """One discipline's design audit, over cycle records only.
+
+    A hypothesis counts as matching when the cycle prose names the
+    discipline's engine or subject; the duty reports the cycle-level
+    falsifier statement and never executes a design, never files one,
+    and never promotes anything. Zero matches is a real answer: no
+    hypothesis record for that discipline ships on disk.
+    """
+    cycles = _cycles(records)
+    rows = []
+    for cycle in cycles:
+        text = _cycle_text(cycle).lower()
+        matched = [s for s in signals if s in text]
+        if not matched:
+            continue
+        results = (cycle.get("inputs") or {}).get("compute_results") or {}
+        for hid in _cycle_hypothesis_ids(cycle):
+            rows.append({
+                "cycle": cycle.get("cycle_id"),
+                "hypothesis": hid,
+                "design_signal": matched,
+                "has_disproof_statement": _has_disproof_statement(cycle),
+                "method_difference": str(results.get("method_difference", ""))[:160],
+            })
+    return ([{
+        "check": "discipline-design-audit",
+        "agent": agent,
+        "cycles_scanned": len(cycles),
+        "matching_hypotheses": len(rows),
+        "hypotheses_with_design_signal": rows,
+        "engine_note": engine_note,
+        "full_record_note": ("No full hypothesis record file ships on disk, "
+                             "so per-record design and disproof texts cannot "
+                             "be audited here; only the cycle-level falsifier "
+                             "statement is reported."),
+    }], 0)
+
+
+def duty_mathematics(records, _args):
+    return _duty_discipline(
+        records, "mathematics-researcher",
+        ("sympy", "scipy", "mathematical"),
+        "Light engines SymPy/SciPy named in the agent definition; a design "
+        "without a disproof condition is not filed, and no design is "
+        "executed here.")
+
+
+def duty_chemistry(records, _args):
+    return _duty_discipline(
+        records, "chemistry-researcher",
+        ("rdkit", "esol", "solubility", "chemistry"),
+        "Light engine RDKit named in the agent definition; a design without "
+        "a disproof condition is not filed, and no design is executed here.")
+
+
+def duty_biology(records, _args):
+    return _duty_discipline(
+        records, "biology-researcher",
+        ("gbif", "uniprot", "rcsb", "biology"),
+        "GBIF/UniProt/RCSB depth adapters are stage-2 UNIMPLEMENTED; "
+        "designs are limited to currently available sources and say so, "
+        "and no design is executed here.")
+
+
+def duty_physics(records, _args):
+    return _duty_discipline(
+        records, "physics-researcher",
+        ("gnina", "openmm", "psi4", "physics"),
+        "Heavy GPU engines GNINA/OpenMM/Psi4 are stage-4 GPU-gated "
+        "UNIMPLEMENTED unless del opens the GPU gate; never claimed here, "
+        "and no design is executed here.")
+
+
+def duty_generator(records, _args):
+    """Audit the hypothesis ids cycles name. Report only, never a verdict.
+
+    Full hypothesis records (measurable_prediction, alternative_
+    explanation, evidence_level, status) do not ship on disk, so
+    per-record field checks cannot run; cycle ids are not generator
+    filings, so the 3-5-per-problem rule gets no count verdict here.
+    """
+    cycles = _cycles(records)
+    per_cycle = []
+    total = 0
+    with_statement = 0
+    for cycle in cycles:
+        ids = _cycle_hypothesis_ids(cycle)
+        stated = _has_disproof_statement(cycle)
+        total += len(ids)
+        if stated:
+            with_statement += len(ids)
+        per_cycle.append({
+            "cycle": cycle.get("cycle_id"),
+            "hypothesis_ids": ids,
+            "count": len(ids),
+            "disproof_statement": stated,
+        })
+    return ([{
+        "check": "hypothesis-filing-audit",
+        "cycles": per_cycle,
+        "total_ids": total,
+        "with_disproof_statement": with_statement,
+        "without_disproof_statement": total - with_statement,
+    }], 0)
+
+
+def duty_statistician(records, _args):
+    """Re-apply recorded thresholds to recorded figures; outcome is
+    match / no-match / indeterminate, no adjectives.
+
+    Same pattern as duty_analyst, extended to the claim verdicts and
+    the reproduction records: a threshold met with reproduction still
+    pending stays indeterminate, because the cycle itself says so.
+    """
+    cycles = _cycles(records)
+    claims = _repository_rows(records, "claims.jsonl")
+    by_cycle = {str(c.get("cycle_id")): c for c in claims if c.get("cycle_id")}
+    rows = []
+    for cycle in cycles:
+        results = (cycle.get("inputs") or {}).get("compute_results") or {}
+        verification = (cycle.get("inputs") or {}).get("verification") or {}
+        observation = results.get("prep_observation_NOT_paper_report") or {}
+        if _numeric(observation.get("r2")):
+            figure = {"n": observation.get("n"), "r2": observation.get("r2"),
+                      "rmse": observation.get("rmse"), "mae": observation.get("mae")}
+            threshold = _threshold(results.get("prereg_threshold"))
+            threshold_kind = "R2"
+            met = None if threshold is None else observation["r2"] >= threshold
+        elif _numeric(results.get("rmse")):
+            figure = {"n": results.get("n"), "rmse": results.get("rmse")}
+            basis = str((by_cycle.get(str(cycle.get("cycle_id"))) or {}).get("basis", ""))
+            found = re.search(r"<=\s*([0-9.]+)", basis)
+            threshold = float(found.group(1)) if found else None
+            threshold_kind = "RMSE"
+            met = None if threshold is None else results["rmse"] <= threshold
+        else:
+            continue
+        recorded = verification.get("outcome") or verification.get("verdict")
+        claim_verdict = (by_cycle.get(str(cycle.get("cycle_id"))) or {}).get("verdict")
+        if recorded in (None, "indeterminate") or met is None:
+            audit = "indeterminate"
+        elif claim_verdict == "match" and met:
+            audit = "match"
+        elif recorded == "reproduced" and met:
+            audit = "match"
+        else:
+            audit = "no-match"
+        rows.append({
+            "cycle": cycle.get("cycle_id"),
+            "figure": figure,
+            "threshold": threshold,
+            "threshold_kind": threshold_kind,
+            "threshold_met": met,
+            "recorded_verification": recorded,
+            "recorded_claim_verdict": claim_verdict,
+            "audit": audit,
+        })
+    repro = [{"experiment_id": e.get("experiment_id"),
+              "cycle": e.get("cycle_id"),
+              "verification_status": e.get("verification_status")}
+             for e in _repository_rows(records, "experiments.jsonl")
+             if e.get("verification_status")]
+    return ([{"check": "statistical-audit", "cycles": rows,
+              "reproduction_records": repro}], 0)
+
+
 DUTIES = {
     "research-archivist": duty_archivist,
     "research-director": duty_director,
@@ -216,6 +427,12 @@ DUTIES = {
     "scientific-analyst": duty_analyst,
     "literature-researcher": duty_literature,
     "computational-scientist": duty_computational,
+    "mathematics-researcher": duty_mathematics,
+    "chemistry-researcher": duty_chemistry,
+    "biology-researcher": duty_biology,
+    "physics-researcher": duty_physics,
+    "hypothesis-generator": duty_generator,
+    "statistician": duty_statistician,
 }
 
 

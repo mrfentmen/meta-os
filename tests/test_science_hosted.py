@@ -47,7 +47,9 @@ class HostedDutyTest(unittest.TestCase):
         self.assertEqual(len(receipts), len(names))
 
     def test_an_agent_with_no_duty_is_refused(self):
-        out = run(["--agent", "biology-researcher", "--records", str(self.records)], env=self.env)
+        # All 13 science-lab agents are hosted since the tools first slice;
+        # refusal is now proven with a name that has no duty at all.
+        out = run(["--agent", "no-such-agent", "--records", str(self.records)], env=self.env)
         self.assertEqual(out.returncode, 2)
         self.assertIn("stays a draft", out.stderr)
 
