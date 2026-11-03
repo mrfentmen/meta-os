@@ -47,6 +47,7 @@ iso/tools/apply.sh --root DIR --revert   remove exactly what the last run wrote
 iso/tools/boot_kit.sh --check            what the boot machine is missing
 iso/tools/boot_kit.sh --build --out DIR  userspace, kernel, builder, image
 iso/tools/boot_log_verdict.py boot.txt   PASS/FAIL rows for a serial log
+python3 iso/tools/release_gate.py          every open box in the 1.0 checklist
 ```
 
 ## Proofs
