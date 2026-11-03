@@ -55,6 +55,17 @@ check() {
   n=$(grep -rl "autologin-user=$OLD" "$ROOT/etc/lightdm" 2>/dev/null | wc -l | tr -d ' ')
   if [ "$n" = 0 ]; then say "autologin" ok ""; else say "autologin" no "$n lightdm conf(s) still say $OLD"; fi
 
+  # The GECOS field (5th colon field) is the display name a person sees in the
+  # greeter, in finger/getent, and in anything that prints a full name. Renaming
+  # the account does not touch it, and it said "Ubuntu" for weeks after the
+  # rename because nothing checked it.
+  g=$(grep -c "^$NEW:[^:]*:[^:]*:[^:]*:[Uu]buntu:" "$ROOT/etc/passwd" 2>/dev/null || true)
+  if [ "${g:-0}" = 0 ]; then
+    say "display name" ok ""
+  else
+    say "display name" no "passwd still gives $NEW the full name Ubuntu"
+  fi
+
   say "done" ok ""
   [ "$fail" = 0 ] || { echo "rename_user --check: FAIL"; exit 1; }
   echo "rename_user --check: PASS"
@@ -94,6 +105,17 @@ fi
 if [ -d "$ROOT/home/$NEW" ]; then
   sed -i "s|^$NEW:\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):/home/$OLD:|$NEW:\1:\2:\3:\4:/home/$NEW:|" "$ROOT/etc/passwd"
 fi
+
+# 3b. the display name. Field 5 of passwd is the GECOS name; leaving it as
+#     "Ubuntu" is Ubuntu's name still printed on a Meta account.
+for db in passwd passwd-; do
+  f="$ROOT/etc/$db"
+  [ -f "$f" ] || continue
+  if grep -q "^$NEW:[^:]*:[^:]*:[^:]*:[Uu]buntu:" "$f" 2>/dev/null; then
+    sed -i "s/^\($NEW:[^:]*:[^:]*:[^:]*:\)[Uu]buntu:/\1Meta:/" "$f"
+    echo "  display name -> Meta in /etc/$db"
+  fi
+done
 
 # 4. autologin + live-session username
 for f in $(grep -rl "autologin-user=$OLD" "$ROOT/etc/lightdm" 2>/dev/null); do

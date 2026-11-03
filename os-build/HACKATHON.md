@@ -36,9 +36,12 @@ first agentic OS from Meta's side of the fence.
 
 | Claim | Receipt |
 |---|---|
-| Meta identity, not Ubuntu | `debrand.sh --check` → 14 PASS |
-| No `ubuntu` user or home | `rename_user.sh --check` → PASS, `grep -r /home/ubuntu` → 0 |
-| Apps open as windows, no URL | 8 tiles through `meta-app`, WebKit binding verified in-guest |
+| Meta identity, not Ubuntu | `sh os-build/identity/debrand.sh --check` → PASS, plus `lsb_release -a` on the image reading `Meta OS 1.0 (Ribbon)` / `ribbon` / `MetaOS` |
+| No `ubuntu` user or home | `rename_user.sh --check` → PASS, `grep -r /home/ubuntu` → 0, the account is `meta` |
+| The OS boots | `proof_boot.sh` → PASS, framebuffer 1920×1080 not single-colour, capture `captures/proof-boot-1920x1080-20261103T203318Z.png` |
+| Apps open as windows, no URL | **Board only, proven by capture** (`captures/app-window-board-2026-11-03.png`). The other tiles use the same `meta-app` line — say "same mechanism", not "all verified" |
+| Calendar has a real backend | `notesd --selftest` inside the image → 11/11 PASS (note survives restart, ICS export, import, settings) |
+| The agent registry is not decorative | 24 agents, 23 live, 1 draft, 0 missing entry files (checked from `agents/registry.json`) |
 | Agents can think and act | `evals/agentic/report-*` → 8/8 + relay, 43 model calls |
 | Runs inside the OS, not just on my Mac | in-guest self-test 8/8, `meta-code` exit 0 |
 | Key never in the repo | image `/etc/metaos/agent.env`, root 0600, sha-verified |
@@ -54,8 +57,20 @@ first agentic OS from Meta's side of the fence.
 - **Not a sandbox.** The agent's tool guard is a denylist, not a jail.
 - **The eval is 8 tasks.** It is a demonstration that the loop works, not a
   benchmark. Do not put it on a slide as a percentage of general capability.
-- **Musica audio** is only real once Milo lands the GStreamer path. Until then,
-  say "it opens and the decode timeline runs" — not "it plays".
+- **Musica audio.** GStreamer, the WAV decoder and the PulseAudio output plugin
+  are all on the image and the file it plays exists (`take-006.wav`, 320 KB, valid
+  RIFF/WAVE). The VM used to have **no sound card at all**; `show_os.sh` now adds
+  one. Say "it decodes and plays through a virtual sound card" — do not say
+  "hi-fi" and do not claim audio works if you booted without that device.
+- **3D is software-rendered.** This host's QEMU has no GPU 3D backend
+  (`none`, `curses`, `cocoa`, `dbus` only). Mesa's software rasteriser draws it.
+  Never say "GPU accelerated".
+- **Aegis has no screen.** The security engine is real, its receipts are real,
+  and there is no page to open it from yet.
+- **The messaging app is not installed.** `bus.html` exists in the repo and is
+  not on the image, so there is nothing to click.
+- **Not every dock tile has been clicked.** Board has. The rest are the same
+  command line — that is inference, and if a judge asks, say so.
 
 ## The three questions you will be asked
 
@@ -68,6 +83,21 @@ first agentic OS from Meta's side of the fence.
 3. *"What is still Ubuntu?"* — apt, the package names, `ID_LIKE=debian`, and the
    XFCE binaries. That is deliberate: it is compatibility, not branding. Say it
    before they find it.
+
+## What a judge will click first
+
+In this order, because it is the order they will use:
+
+1. the dock — are those tiles real apps or bookmarks?
+2. Board or Calendar — is there a backend or a mock?
+3. Trio — does the product actually exist behind the brand?
+4. Agents — can you show a run, or only a screenshot of one?
+5. Security — "where is your security app?" (answer: the engine is here, the
+   screen is not — yet)
+6. Terminal — `cat /etc/os-release`, `uname -a`, and whether `apt` says Ubuntu
+
+Have those six open in your head. Nothing else on this page matters if one of
+them collapses live.
 
 ## If you have 30 more minutes
 
