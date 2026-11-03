@@ -147,6 +147,13 @@ if [ -d "$PAYLOAD/wallpapers/studio-loop" ]; then
   mkdir -p "$ROOT/usr/share/backgrounds/metaos-studio"
   cp "$PAYLOAD/wallpapers/studio-loop/"*.jpg "$ROOT/usr/share/backgrounds/metaos-studio/" 2>/dev/null || true
 fi
+# ------------------------------------------------- native surface shell
+# meta-app opens a Meta surface in its own GTK window: no address bar, no
+# tabs, no visible 127.0.0.1. Without it the dock skips every surface tile.
+META_APP_SRC="$HERE/../../face/native/meta-app.py"
+[ -f "$META_APP_SRC" ] || fail "meta-app.py missing at $META_APP_SRC (dock surface tiles would vanish)"
+install -m755 "$META_APP_SRC" "$ROOT/usr/local/bin/meta-app"
+say "installed /usr/local/bin/meta-app"
 gate_payload_imperium=1
 
 # ---------------------------------------------------------------- agent layer
