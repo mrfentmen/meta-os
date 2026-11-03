@@ -1,0 +1,4 @@
+# OC2B-059/060 — 30-min soak (1 job/min x30, trio --once each)
+filed=30 receipted=30 errors=0 wall=1800s
+zero-unreceipted=True
+SOAK-COMPLETE

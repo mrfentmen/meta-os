@@ -333,3 +333,8 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - §5 offline: allowlist = api.meta.ai + webcams.nyctmc.org only (egress audit 0 other literals; Upstash host env-fed, never hardcoded). Receipt schema holds w/ honest nulls (model null-unengaged, spend in guardrail ledger not receipt). Live-model tasks BLOCKED (no key, 402 stands).
 - §11: sources→guardrail table, $75 + $5 caps enforced-not-advisory, ops (boss-only raises, none logged), session spend $0.00 honest.
 - Soak still running; §4 hour-runs + §6 area2 + §10 tray wiring + §12 closeout remain.
+
+## OC2 S16 — 2026-11-03 — soak complete + main sync (no VM)
+- Soak 059/060 VERIFIED: 30 filed / 30 receipted / 0 errors / 1800s wall, zero-unreceipted=True (OC2B-queue-soak.txt). Collected from background run, server killed clean after.
+- Main sync: Pax merged S14+S15 as TRUE merges (d2ad5e4f, 23462be5) + bond watchdog-cadence (JS agent runtime, zero overlap with my watchdog.sh). Pax applied my checker's finding (oc2-health orphan → manifest fixup commits). Branch fast-forwarded to edc894ab, clean.
+- §3 queue section: COMPLETE except 062 reboot (BLOCKED), 023/063/064/070/071 needs-feature (filed as defects).
