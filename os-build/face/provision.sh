@@ -330,5 +330,5 @@ else
   if [ -f "$SITE_DST/aegis/index.html" ]; then echo "site aegis/index.html: OK"; else echo "site aegis/index.html: FAIL"; FAIL=1; fi
 fi
 
-echo "next: start the desktop: metaos-session.sh (launches the browser kiosk)"
+echo "next: log in — the Meta OS session (session.sh) builds the panel and dock, starts face.target, then execs startxfce4; kiosk.sh only runs if /etc/metaos/kiosk exists"
 exit "$FAIL"
