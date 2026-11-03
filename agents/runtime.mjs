@@ -6,6 +6,7 @@
 //   node agents/runtime.mjs watch <name>    (watch its targets)
 import { spawn } from "node:child_process";
 import { lessons } from "./lessons.mjs";
+import { memoryDir, capFor, check, appendLedger } from "./memory.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
@@ -128,6 +129,19 @@ export function preflightBudget(agent, job = {}) {
   return { ok: true, estimate, cap };
 }
 
+// A full memory must not crash a run that is already exiting, and the refusal
+// must not vanish either: the run ledger says the record was not written.
+function noteMemory(memory, entry, ledger, runId) {
+  if (!memory) return;
+  try {
+    appendLedger(memory.dir, entry, { maxBytes: memory.cap });
+  } catch (error) {
+    try {
+      ledger.add(runId, "memory-write-failed", { event: entry.event, code: error.code || "error" });
+    } catch { /* nothing left to write to */ }
+  }
+}
+
 export function spawnAgent(agent, { root, job = {} } = {}) {
   const runId = agent.name + "-" + Date.now().toString(36);
   const runDir = path.join(root, "runs", runId);
@@ -162,6 +176,33 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     };
   }
 
+  // Spec §8: the cap is checked before anything starts, and a refusal looks
+  // like the budget refusal, so a caller has one shape to handle.
+  const memory = { dir: memoryDir(root, agent.name), cap: capFor(agent) };
+  const refuseMemory = (usedBytes, capBytes) => {
+    const receipt = {
+      run: runId, reason: "memory-cap", usedBytes, capBytes,
+      at: new Date().toISOString(),
+    };
+    ledger.add(runId, "memory-receipt", receipt);
+    fs.writeFileSync(path.join(runDir, "receipt.json"), JSON.stringify(receipt, null, 2));
+    ledger.add(runId, "refused", { reason: "memory-cap" });
+    return {
+      agent, runId, runDir, ledger, child: null, stopped: "memory-cap", memory,
+      done: Promise.resolve({ code: null, signal: null, refused: true }),
+    };
+  };
+  const usedNow = check(memory.dir, memory.cap);
+  if (!usedNow.ok) return refuseMemory(usedNow.bytes, memory.cap);
+  try {
+    appendLedger(memory.dir, {
+      event: "spawn", run: runId, agent: agent.name, at: new Date().toISOString(),
+    }, { maxBytes: memory.cap });
+  } catch (error) {
+    if (error.code !== "memory-cap") throw error;
+    return refuseMemory(error.usage ?? usedNow.bytes, memory.cap);
+  }
+
   const command = resolveCommand(agent.command, root);
   ledger.add(runId, "spawn", { command, lane: brief.lane });
   const child = spawn(command[0], command.slice(1), {
@@ -170,10 +211,14 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
   });
   const out = fs.createWriteStream(path.join(runDir, "output.log"));
   child.stdout.pipe(out); child.stderr.pipe(out);
-  const handle = { agent, runId, runDir, ledger, child, stopped: null };
+  const handle = { agent, runId, runDir, ledger, child, stopped: null, memory };
   handle.done = new Promise((resolve) => {
     child.on("exit", (code, signal) => {
       ledger.add(runId, "exit", { code, signal, stopped: handle.stopped });
+      noteMemory(memory, {
+        event: "exit", run: runId, code, signal, stopped: handle.stopped,
+        at: new Date().toISOString(),
+      }, ledger, runId);
       resolve({ code, signal });
     });
   });
@@ -208,6 +253,9 @@ export async function killAgent(handle, reason, graceMs = 800) {
   if (!handle.child) return;
   handle.stopped = reason;
   handle.ledger.add(handle.runId, "stop-request", { reason });
+  noteMemory(handle.memory, {
+    event: "stop", run: handle.runId, reason, at: new Date().toISOString(),
+  }, handle.ledger, handle.runId);
   handle.child.kill("SIGTERM");
   const exited = await Promise.race([
     handle.done.then(() => true),
