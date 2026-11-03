@@ -267,7 +267,7 @@ const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPat
 if (isMain) {
   const port = Number(process.env.PORT ?? 8080);
   const server = createAssessServer();
-  server.listen(port, () => {
+  server.listen(port, "127.0.0.1", () => {
     const status = modelStatus();
     console.log(`meta-trio-assess listening on http://localhost:${port}`);
     console.log(`POST /api/assess  GET /api/health  GET /api/cameras  GET /api/fires  GET /api/weather/radar/:z/:x/:y.png  static web app on /`);

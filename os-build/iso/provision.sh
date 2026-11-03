@@ -115,6 +115,21 @@ cp -r "$PAYLOAD/gtk/." "$ROOT/usr/share/themes/" 2>/dev/null || { mkdir -p "$ROO
 install -m644 "$PAYLOAD/terminal/metaos-welcome.sh" "$ROOT/etc/bash.bashrc.d/metaos.sh"
 gate_payload_welcome=1
 
+# ------------------------------------------------- imperium app (cooked in, no hosting)
+say "installing Imperium app: local web UI + localhost-only backend"
+REPO_ROOT="$(CDPATH= cd -- "$HERE/../.." && pwd)"
+mkdir -p "$ROOT/usr/share/metaos/imperium" "$ROOT/usr/share/metaos/server"
+cp "$REPO_ROOT/imperium/index.html" "$ROOT/usr/share/metaos/imperium/index.html"
+cp -r "$REPO_ROOT/js" "$ROOT/usr/share/metaos/imperium/js"
+cp -r "$REPO_ROOT/vendor" "$ROOT/usr/share/metaos/imperium/vendor"
+cp "$REPO_ROOT/styles.css" "$ROOT/usr/share/metaos/imperium/styles.css"
+cp "$REPO_ROOT/icon-180.png" "$ROOT/usr/share/metaos/imperium/icon-180.png"
+cp "$REPO_ROOT/server/"*.mjs "$ROOT/usr/share/metaos/server/"
+install -m755 "$PAYLOAD/apps/metaos-imperium.py" "$ROOT/usr/share/metaos/apps/metaos-imperium.py"
+install -m644 "$PAYLOAD/apps/metaos-imperium.desktop" "$ROOT/usr/share/applications/metaos-imperium.desktop"
+# NOTE: backend binds 127.0.0.1 only (server.mjs); wrapper spawns it per-login.
+
+
 # ---------------------------------------------------------------- packages
 if [ "$WITH_PACKAGES" = "1" ]; then
     if chroot "$ROOT" sh -c 'command -v calamares >/dev/null 2>&1'; then

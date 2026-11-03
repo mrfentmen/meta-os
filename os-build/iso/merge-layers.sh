@@ -67,13 +67,13 @@ mount --bind /dev "$WORK/rootfs/dev"; mount -t proc none "$WORK/rootfs/proc"; mo
 chroot "$WORK/rootfs" true || fail "chroot smoke test failed (foreign-arch? qemu-user-static missing?)"
 echo "=== provision in chroot ==="
 chroot "$WORK/rootfs" apt-get update -qq
-DEBIAN_FRONTEND=noninteractive chroot "$WORK/rootfs" apt-get install -y -qq calamares plank fonts-inter user-setup casper nodejs python3-gi > /dev/null
+DEBIAN_FRONTEND=noninteractive chroot "$WORK/rootfs" apt-get install -y -qq calamares plank fonts-inter user-setup casper nodejs python3-gi libwebkit2gtk-4.1-0 gir1.2-webkit2-4.1 > /dev/null
 # casper: live-boot scripts for the single-squashfs layout (reinstalled so
 # they match the merged tree, not the layered base). user-setup: provides
 # user-setup-apply, without which casper-bottom/25adduser creates no live
 # user and the greeter shows only "Other..." (live-build failure, fixed).
-echo "=== GATE 2: provision packages installed (calamares+plank+fonts+user-setup+casper) ==="
-for p in calamares plank fonts-inter user-setup casper; do
+echo "=== GATE 2: provision packages installed (calamares+plank+fonts+user-setup+casper+node+gi+webkit) ==="
+for p in calamares plank fonts-inter user-setup casper nodejs python3-gi libwebkit2gtk-4.1-0 gir1.2-webkit2-4.1; do
   st=$(chroot "$WORK/rootfs" dpkg-query -W -f='${Status}' "$p" 2>/dev/null || true)
   ver=$(chroot "$WORK/rootfs" dpkg-query -W -f='${Version}' "$p" 2>/dev/null || true)
   [ "$st" = "install ok installed" ] || fail "package $p not installed (status: ${st:-missing})"
