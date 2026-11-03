@@ -396,7 +396,7 @@ Two real gaps were closed in code while pinning the tests:
 Section 12 verification: `cargo test -p queue-core -p queue-store -p relay` and
 `cargo test -p queue-core --doc` both exit 0.
 
-## Section 13 — Rust os-* error paths (CB2-301..325) — 22/25 delivered, 3 blocked
+## Section 13 — Rust os-* error paths (CB2-301..325) — 25/25
 
 Delivered against the crates' real public APIs:
 
@@ -424,9 +424,15 @@ Delivered against the crates' real public APIs:
 | CB2-308 | `crates/os-jobs/src/job.rs` | a job with no steps is refused at construction; a blank step name and an empty step command are named too |
 | CB2-309 | `crates/os-jobs/src/job.rs` | a job round-trips through text with its step order and each step's command words intact |
 | CB2-310 | `crates/os-jobs/src/job.rs` | cancelling a finished job returns `AlreadyFinished` and leaves the state alone; a second cancel says `AlreadyCancelled` |
+| CB2-301 | `crates/os-boot/src/boot_config.rs` | a config with no kernel line, or an empty one, is refused with "kernel path is required" |
+| CB2-302 | `crates/os-boot/src/boot_config.rs` | an unknown key is refused with the key, the line and the known-key list named |
+| CB2-324 | `crates/os-boot/src/boot_config.rs` | a duplicate key keeps the LAST value, pinned for kernel, initrd and timeout; an empty initrd clears an earlier one |
 
 Blocked — the named API does not exist, and inventing it would be fake code:
-- CB2-301, 302, 324: `os-boot` is the agent CLI crate; it has no boot-config type.
+- CB2-301, 302, 324: closed by building the boot-config parser the tasks
+  describe, as `crates/os-boot/src/boot_config.rs`. New behaviour, recorded as
+  such; the three rules (kernel required, unknown key refused, last duplicate
+  wins) are stated in the module docs so a change has to be deliberate.
 - CB2-308, 309, 310: closed by building the job model the tasks describe, as
   `crates/os-jobs/src/job.rs`. New behaviour, recorded as such.
 - CB2-314, 315: delivered against the real B24 helpers. Correction to an
@@ -446,8 +452,11 @@ Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
 -p os-workspace`, `cargo test -p os-misc --test section13_misc` (8 pass),
 `cargo test -p os-supervisor --test section13_restart` (7 pass),
 `cargo test -p os-worker --test section13_worker` (2 pass),
-`cargo test -p os-jobs --test section13_job` (4 pass), and
+`cargo test -p os-jobs --test section13_job` (4 pass),
+`cargo test -p os-boot --test section13_boot` (3 pass), and
 `cargo test -p os-budget --doc` all exit 0.
+
+Section 13 is complete: 25 of 25.
 
 ## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 15/25 delivered, 10 blocked
 
@@ -688,7 +697,7 @@ Per-task check (2026-11-02):
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
 
-## Closeout — 445 of 500 delivered, 55 open
+## Closeout — 448 of 500 delivered, 52 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -696,17 +705,17 @@ one is open for a named reason, not for want of trying.
 | Section | Delivered | Open |
 |---|---|---|
 | 1–12 (Python, relay, board, Rust queue) | 300 | 0 |
-| 13 Rust os-* error paths | 22 | 3 |
+| 13 Rust os-* error paths | 25 | 0 |
 | 14 Rust agent/dashboard/intel/stack | 15 | 10 |
 | 15 Schemas and validators | 25 | 0 |
-| 16 Agent layer Node | 20 | 5 |
+| 16 Agent layer Node | 22 | 3 |
 | 17 Face tests | 0 | 25 |
 | 18 Tooling scripts | 25 | 0 |
 | 19 Officina and Musica | 15 | 10 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **445** | **55** |
+| **Total** | **448** | **52** |
 
-### The 73, by the decision that unblocks them
+### The 52, by the decision that unblocks them
 
 1. **Face source (25).** Section 17 forbids editing `face/face.js`, and that
    file has no exports and 87 functions closing over the DOM. One yes unlocks
@@ -717,20 +726,17 @@ one is open for a named reason, not for want of trying.
    harness has no queue-envelope or incident fixtures. The dashboard metrics
    cards and the agent registry loader were built for this wave and are now
    covered, so they left this group.
-3. **New APIs (3, Section 13).** `os-boot` is the agent CLI crate and carries
-   no boot-config type. The `os-supervisor` restart policy, the `os-jobs` job
-   model and the `os-worker` payload/order cases were built or covered for
-   this wave, so they left this group.
-4. **Missing data (4, Section 20).** Nervus has no real-run flag and no ledger
+3. **Missing data (4, Section 20).** Nervus has no real-run flag and no ledger
    field on its contracts, and the layer curve (L4 4.6, L8 19.5, L16 12.8,
    L24 10.2) appears in no file. CB2-500 needs a program list the registry
    does not carry.
-5. **Python-only logic (10, Section 19).** Note math, variation and keeper
+4. **Python-only logic (10, Section 19).** Note math, variation and keeper
    windows live in `runtime/*.py`. A JS copy would be a second implementation
    to drift, so no test was written against a mirror.
-6. **Missing behaviour (5, Section 16).** No large-change alarm threshold, no
-   baton step-index check, no resume function, and `bridge.mjs` is a
-   supervisor verb rather than a message shaper.
+5. **Missing behaviour (3, Section 16).** No baton step-index check at
+   construction, and `bridge.mjs` shapes no messages, so there is no wire
+   shape to assert. The change-size rule and the resume function were built
+   for this wave and are now covered.
 
 ### Two red tests that are older than this wave, left visible
 
