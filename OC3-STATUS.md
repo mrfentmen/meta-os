@@ -87,3 +87,14 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
 - 091 a11y gap honestly recorded with a named decider.
 - 086 no new launcher (exists); TryExec suggestion filed, not edited.
 - 087/088 handoff + ops written. 093 two gaps + all-clear.
+
+## §5 verdict (OC3B-116) — DONE static, playback with OC1
+- 101 inventory: viewers committed, binaries TryExec-guarded, webcam
+  honestly absent, audio plumbing UNCONFIRMED (not claimed either way).
+- 102-105/112/113/119: pointer files to OC1 boot proofs. 106 audio:
+  unconfirmed, named. 107/108 launchers authored + handoff written.
+- 109 brand audit clean (UI strings). 110 ops written. 111 tool
+  committed. 114 absent-on-record. 115 bounded quiet claim (no
+  packet-capture pretended). 118/123/124 gaps named with filler
+  package + policy owner. 120/121 entry committed, mute test OC1.
+  122 no separate lane needed. 117 three defects, all owned.
