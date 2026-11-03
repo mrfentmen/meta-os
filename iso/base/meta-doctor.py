@@ -164,6 +164,10 @@ def rows(root, home):
     put("PASS" if ask.is_file() and os.access(ask, os.X_OK) else "FAIL",
         "meta-ask", str(ask))
 
+    halt = root / "usr/local/bin/meta-halt"
+    put("PASS" if halt.is_file() and os.access(halt, os.X_OK) else "FAIL",
+        "meta-halt", str(halt))
+
     put("SKIP", "base image programs",
         "installed by the base, not by this tree: thunar xfce4-terminal "
         "xfce4-settings-manager chromium")
