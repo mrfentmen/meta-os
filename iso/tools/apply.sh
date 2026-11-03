@@ -138,6 +138,7 @@ done
 
 put "$ISO/apps/agent-status/meta-agent-status.py" "/usr/local/bin/meta-agent-status" 755
 put "$ISO/apps/agent-status/meta-ask.py" "/usr/local/bin/meta-ask" 755
+put "$ISO/apps/agent-status/meta-halt.py" "/usr/local/bin/meta-halt" 755
 put "$ISO/apps/chromium/meta-start.html" "/usr/share/metaos/start/meta-start.html"
 put "$ISO/apps/chromium/tokens.css" "/usr/share/metaos/start/tokens.css"
 put "$ISO/apps/chromium/policies.json" "/etc/chromium/policies/managed/metaos.json"

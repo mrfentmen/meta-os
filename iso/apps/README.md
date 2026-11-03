@@ -22,6 +22,7 @@ does its job, closes clean" stays **UNPROVEN** until a VM run.
 | `chromium/tokens.css` | `/usr/share/metaos/start/` | generated from the frozen contract, never hand-edited |
 | `agent-status/meta-agent-status.py` | `/usr/local/bin/` | the agent-layer status reader: heartbeat, board, notices |
 | `agent-status/meta-ask.py` | `/usr/local/bin/` | hands one piece of work to a named agent (`meta-ask --list`) |
+| `agent-status/meta-halt.py` | `/usr/local/bin/` | pauses an agent and resumes it (`meta-halt watch`, `meta-halt --clear watch`) |
 | `welcome/meta-welcome.py` | `/usr/local/bin/` | the first-login welcome window |
 
 ## Install

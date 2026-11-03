@@ -65,13 +65,22 @@ def live_agents(agents):
             and isinstance(a.get("command"), list) and a.get("command")]
 
 
-def render_list(agents):
+def halted_names(root):
+    """Who a person has paused. An agent with a stop file cannot take work."""
+    try:
+        return {p.name[:-len(".STOP")] for p in (root / "stop").glob("*.STOP")}
+    except OSError:
+        return set()
+
+
+def render_list(agents, halted=frozenset()):
     live = live_agents(agents)
     drafts = [a for a in agents if isinstance(a, dict) and a.get("draft") is True]
     lines = ["agents that can work (%d):" % len(live)]
     width = max([len(a["name"]) for a in live] or [4])
     for agent in live:
-        lines.append("  %-*s  %s" % (width, agent["name"], agent.get("lane") or ""))
+        note = "  [halted]" if agent["name"] in halted else ""
+        lines.append("  %-*s  %s%s" % (width, agent["name"], agent.get("lane") or "", note))
     if drafts:
         lines.append("")
         lines.append("drafts, no program yet (%d): %s"
@@ -167,7 +176,7 @@ def main(argv=None):
         return 1
 
     if args.list:
-        print(render_list(agents))
+        print(render_list(agents, halted_names(root)))
         return 0
 
     orders = args.orders if args.orders is not None else args.text
