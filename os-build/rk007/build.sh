@@ -21,8 +21,16 @@ export PATH="$(dirname "$NIGHTLY_RUSTC"):$HOME/.cargo/bin:$PATH"
 export RUSTUP_TOOLCHAIN=nightly
 echo "build: $(rustc --version)"
 
-echo "build: userspace (hello, sleeper, crasher, readkey)"
-( cd os-build/userspace/user && cargo build --target x86_64-unknown-none --bins ) || exit 1
+echo "build: userspace (hello, sleeper, crasher, readkey) - per-program link bases"
+# NOT a plain `cargo build --bins`: that links every program at the
+# same default address (RK-007 proof: entry 0x201160, inside the
+# kernel image range) and the kernel loader refuses all four with
+# "address in use". build_userspace.py links each program at its
+# own base (hello 0x600000000000, sleeper 0x610000000000, crasher
+# 0x620000000000, readkey 0x630000000000) in the debug profile
+# kernel/build.rs stages from, and fails the build loudly if any
+# program's first LOAD lands off its base.
+python3 os-build/userspace/build_userspace.py || exit 1
 for b in hello sleeper crasher readkey; do
     p="os-build/userspace/user/target/x86_64-unknown-none/debug/$b"
     [ -f "$p" ] || { echo "build: missing $p" >&2; exit 1; }

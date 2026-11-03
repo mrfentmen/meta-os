@@ -54,11 +54,11 @@ changes no kernel code, no loader code, and does not touch
 `syscalls.rs` (FROZEN) or the committed `link.ld` (left as-is,
 stale, unused by this script).
 
-Status: written on a VM with no cargo, so UNCOMPILED here. Milo
-gate-1 must run this script and confirm the first-LOAD / entry
-lines; Mac/Buffy boot proof (gate pack L1-L5 in
-`os-build/ROWAN_TEST_PREP.md`) is still owed after that. Merge is
-Pax's call.
+Status: wired into the RK-007 pipeline 2026-11-03 (Pax) -
+`os-build/rk007/build.sh` runs this script as its userspace step,
+so the proof build can no longer stage colliding ELFs. Still
+owed: a boot of the fixed pipeline showing zero "address in use"
+refusals (gate pack L1-L5 in `os-build/ROWAN_TEST_PREP.md`).
 """
 
 import struct
