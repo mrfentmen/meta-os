@@ -1,0 +1,31 @@
+{
+ "service": "imperium-patrol",
+ "state": "running",
+ "reason": null,
+ "at": "2026-11-03T05:18:00.445Z",
+ "camera_source": "nyctmc-live",
+ "cameras": 972,
+ "interval_s": 20.0,
+ "counts": {
+  "checks": 20,
+  "baseline": 20,
+  "flagged": 0,
+  "reported": 0,
+  "feed_errors": 0,
+  "job_errors": 0
+ },
+ "last_camera_id": "068461e2-c62f-4ce4-adac-5f9efe92af1d",
+ "guardrail": {
+  "calls": 63,
+  "est_cost_usd": 0.434292,
+  "test_budget_usd": 75.0,
+  "remaining_usd": 74.5657
+ },
+ "paused_cameras": [],
+ "last_check": {
+  "camera_id": "068461e2-c62f-4ce4-adac-5f9efe92af1d",
+  "camera_name": "Bushwick Ave @ De Kalb Ave",
+  "division": "ignis",
+  "outcome": "baseline"
+ }
+}
