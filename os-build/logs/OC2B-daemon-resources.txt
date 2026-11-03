@@ -1,0 +1,12 @@
+# OC2B-088/089 — Daemon resources (measured idle, bounded busy)
+
+Idle (live, odd port, build host): queue_service RSS ~17MB, 0.0% CPU
+(`ps aux` sample, process healthy + serving /health 200).
+Busy: single serve pass completes in <5s wall (e2e/10-job/100-file runs);
+no in-code RSS accounting — enforcement is cgroup caps (OC2B-limits.md,
+UNVERIFIED-ON-TARGET) + $ governor.
+Budget verdict for the hour runs: spend $0.00 (no key; guardrail ledger
+unchanged apart from $0 estimates). Sustained-load profile ships with
+the hour/soak logs (counts + walls, not sampled RSS) — labelled.
+No daemon exceeded budget this session (nothing to exceed: $0 spend,
+17MB-class RSS).

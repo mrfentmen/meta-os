@@ -1,0 +1,18 @@
+{
+  "dispatch_url": "http://127.0.0.1:18957/dispatch-simulated",
+  "loopback_only": true,
+  "outcome": "dispatched-simulated",
+  "steps": [
+    "patrol",
+    "review",
+    "judge",
+    "response"
+  ],
+  "recorded_http_path": "/dispatch-simulated",
+  "recorded_package_service": {
+    "service": "fire department",
+    "path": "/fire"
+  },
+  "non_loopback_refused_by": "DispatchBoundaryError",
+  "timeline_order": "patrol->review->judge->response"
+}
