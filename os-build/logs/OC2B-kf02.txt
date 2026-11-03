@@ -1,0 +1,37 @@
+# OC2B-033–038 — KF-02 support: BLOCKED, no upgraded stack exists (this Mac, 2026-11-02)
+Branch checked: opencode2/500 @ 67949822. QEMU 11.1.3 present.
+
+CHECK FIRST (per task): searched every local + remote branch for any
+bootloader/kf/framebuffer work newer than the spike:
+- `git branch -a` bootloader/kf/framebuffer/face matches: spike/bootloader-0.11,
+  origin/spike/bootloader-0.11, origin/rowan/kernel-face-spike,
+  origin/rowan/kernel-face-spike-2, origin/rowan/kernel-kf01-spike.
+- Corrected pin scan (every branch's kernel/Cargo.toml): the ONLY non-0.9 pin
+  anywhere is the spike branch itself (bootloader "0.10.9", tip db0b0020 —
+  the failed-spike evidence state, no source rewrite, no boot).
+- origin/rowan/kernel-kf01-spike: kernel/ diff vs main is EMPTY (doc-only commit
+  8e725f4b, pins no version, claims no boot).
+- spike tip kernel/src/main.rs: `mod framebuffer` count = 0; its kernel/src
+  diff vs main is deletions-only (older code, not newer).
+- origin/rowan/kernel-face-spike(-2): older code than main (485 deletions),
+  not an upgrade.
+- Branch kernel/src/main.rs: `mod framebuffer` count = 0 (framebuffer.rs
+  exists, UNWIRED — Rowan R2 lane, not KF-02).
+
+Conclusion: NO UPGRADED STACK EXISTS beyond the spike. There is no branch Rowan
+names as the upgraded stack; gate.sh has no new target to run against.
+
+Waiting-on-Rowan list (OC2B-033–038 all blocked on the same item):
+1. OC2B-033 gate.sh on upgraded stack — BLOCKED: no upgraded-stack branch.
+2. OC2B-034 triple boot + alive lines — BLOCKED: same (no boots to triple-run;
+   absence-proofs: no OC2B-kf02-boot1..3 logs produced, honestly skipped).
+3. OC2B-035 shell screendump — BLOCKED: same (no OC2B-kf02-shell.png).
+4. OC2B-036 bad-syscall-99 refusal — BLOCKED: same (no OC2B-kf02-badsyscall.txt).
+5. OC2B-037 crasher isolation — BLOCKED: same (no OC2B-kf02-isolation.txt).
+6. OC2B-038 timing vs c7aeb162 — BLOCKED twice over: no upgraded stack to time,
+   AND no c7aeb162 timing baseline exists (c7aeb162 is a task-list commit; the
+   §1 baseline gate log OC2B-baseline-gate.txt records GREEN with no timing
+   numbers). Comparison UNPROVEN by construction.
+
+Skipped to OC2B-049 per task instructions. No gate output, no boot logs, no
+screendumps fabricated for any of 033–038.

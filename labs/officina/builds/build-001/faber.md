@@ -1,0 +1,1 @@
+FABER GAP (OC2B-381/382): no faber loop exists in this tree — grep for 'faber' over os/, server/, services/, labs/ (*.py) returns zero files, so no faber module takes packs as input. Loop not run; no cycles, no stop reason, no final state to record. The pack stands on the 2a held-out gate + the 2c bounds check instead.

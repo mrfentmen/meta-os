@@ -1,0 +1,13 @@
+{
+ "error": "ValueError: SAM output carried no <|box;...|> segment",
+ "est_cost_usd": null,
+ "kind": "segment:sam-3.1",
+ "latency_ms": null,
+ "mode": "OFFLINE",
+ "model": "sam-3.1",
+ "note": "OFFLINE: no live model call succeeded (tried once; failure logged once; never retried). No model text was produced; callers use the deterministic template marked OFFLINE.",
+ "prompt_sha256": "589e70b6d0517b029ab0f46b49e428b13c27b34ce2020e269ed2d8603986e8fb",
+ "surface": "responses",
+ "ts": "2026-11-02T16:14:11.359716Z",
+ "usage": null
+}

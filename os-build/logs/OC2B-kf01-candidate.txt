@@ -1,0 +1,27 @@
+# OC2B-030/031 — KF-01 candidate rebuild in clean tree (this Mac, 2026-11-02)
+Clean scratch worktree: detached at 67949822 (/tmp/oc2b-kf01-a3), no carryover.
+Candidate rule (task): no newer upgrade candidate is named anywhere — not in
+Rowan's spike record (0.11.17 std-fail, 0.10.9 API-fail), not in KERNEL_FACE.md
+(8e725f4b: "pins no bootloader version"). The attempted fallback pin 0.10.9
+is therefore the rebuild candidate. Recorded here: no version newer than
+0.10.9 is named as a candidate.
+
+Pin (scratch only): bootloader = "0.10.9" → resolved bootloader 0.10.13
+(same caret resolution as Rowan's spike lockfile).
+Userspace prebuilt per gate.sh — USERSPACE DONE.
+Build: cd kernel && cargo build --target x86_64-unknown-none
+Result: FAIL, EXIT=101 — identical to OC2B-028: 15 previous errors,
+7 warnings, E0433 x2 + E0408 x9. Clean-tree confirmation of attempt 2.
+No image produced (no .bin/bootimage artifacts in target/.../debug).
+
+BootInfo framebuffer field (OC2B-030 yes/no): YES.
+Field: `pub framebuffer: Optional<FrameBuffer>` —
+bootloader 0.10.13 src/boot_info.rs:40 ("Information about the framebuffer
+for screen output if available"). Reference: 0.9.35 BootInfo has NO
+framebuffer field (memory_map / recursive_page_table_addr /
+physical_memory_offset only); 0.11.17 carries it via bootloader_api
+src/info.rs:33 (`pub framebuffer: Optional<FrameBuffer>`). Field presence
+read from the published crate sources, since no candidate image boots.
+
+OC2B-031 boot: NO IMAGE EXISTS — nothing to boot, no candidate screendump
+taken (no fake capture). QEMU never invoked. Serial: none (no boot).

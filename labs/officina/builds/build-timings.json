@@ -1,0 +1,24 @@
+{
+  "build-001": {
+    "2a_s": 0.001,
+    "2b_s": 0.0052,
+    "2c_s": 0.0,
+    "status": "proven",
+    "proven": true,
+    "rounds": 4,
+    "R": 1.721,
+    "pack_ok": true,
+    "mem_seq": 4
+  },
+  "build-002": {
+    "2a_s": 0.0006,
+    "2b_s": 0.0029,
+    "2c_s": 0.0,
+    "status": "proven",
+    "proven": true,
+    "rounds": 2,
+    "R": 1.0623,
+    "pack_ok": true,
+    "mem_seq": 5
+  }
+}

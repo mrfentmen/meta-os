@@ -1,0 +1,3 @@
+[OFFLINE critic objection - authored by the runner; NOT a Muse Wonder output. No live second-model call succeeded.]
+
+Strongest objection to the 5.204 g/cm^3 rule-of-mixtures density: the rule of mixtures is an idealization - it assumes the phase densities are exact, the fractions are volume fractions that sum to exactly 1, and mixing introduces no porosity or interaction volume. A mass-fraction / volume-fraction slip, or unmodeled voids, would shift the observed density outside the tolerance band while the arithmetic still 'matches'. The MATCH verdict is therefore bounded to 'the runner evaluates the textbook formula correctly at the stated inputs' - it says nothing about any real composite coupon.

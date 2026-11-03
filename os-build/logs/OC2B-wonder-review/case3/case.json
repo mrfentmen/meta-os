@@ -1,0 +1,45 @@
+{
+  "note": "emergency/flame tier case: structure fire vs visible flame",
+  "division": "ignis",
+  "first_reading": {
+    "status": "ok",
+    "product": "ignis",
+    "assessment": {
+      "assessment": {
+        "category": "structure fire",
+        "summary": "Small house fully involved, flames at roof and walls, large dark smoke plume."
+      }
+    },
+    "observations": [
+      {
+        "category": "structure fire",
+        "description": "Small house fully involved, flames at roof and walls, large dark smoke plume."
+      }
+    ]
+  },
+  "review_reading": {
+    "status": "ok",
+    "product": "ignis",
+    "assessment": {
+      "assessment": {
+        "category": "visible flame",
+        "summary": "Bright flames along the structure with heavy smoke; active fire."
+      }
+    },
+    "observations": [
+      {
+        "category": "visible flame",
+        "description": "Bright flames along the structure with heavy smoke; active fire."
+      }
+    ]
+  },
+  "model": "muse-wonder-1.0 via models.chat_text",
+  "verdict": "confirmed",
+  "judge_category": "structure fire",
+  "judge_reasons": [
+    "model judge ruling: Both readings independently describe flames on a structure with heavy dark smoke",
+    "model judge ruling: First reading specifies a small house fully involved with flames at roof and walls and a large dark smoke plume",
+    "model judge ruling: Second reading corroborates bright flames along the structure as an active fire"
+  ],
+  "tier": "high"
+}

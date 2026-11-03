@@ -1,0 +1,27 @@
+# OC2B-039–045 — KF-03/KF-04/KF-05 support: UNLANDED, absence recorded (this Mac, 2026-11-02)
+Branch: opencode2/500 @ 67949822. Checked branch kernel/ AND round7 scratch tree.
+
+Greps (both trees):
+- kernel/src/main.rs: `mod framebuffer` count = 0 (both). framebuffer.rs exists
+  but is UNWIRED (Rowan R2 draft, local boundary types, no bootloader import).
+- main.rs module docs (both): "No pixel framebuffer exists under bootloader
+  0.9.35". vga.rs: VGA text buffer only, same statement.
+- round7 kernel/src: only framebuffer mentions are the same absence comments.
+- No pixel/ribbon code in either tree (no put_pixel call sites, no ribbon,
+  no GOP/UEFI handover, no red/blue fill drivers).
+
+Per-task results:
+- OC2B-039 first-frame screendump — ABSENT: no framebuffer wiring landed.
+  No OC2B-kf03-first.png.
+- OC2B-040 red-screen fill — ABSENT: no red fill exists. Absence note (this file).
+- OC2B-041 blue fill — ABSENT: same. Absence note (this file).
+- OC2B-042 resolution/pitch/pixel-format — ABSENT: no boot reports them (no
+  framebuffer boot exists). Nothing copied from source (per task: values must
+  come from boot output, not source).
+- OC2B-043 pixel-text screendump — ABSENT: no pixel text landed.
+- OC2B-044 second pixel-text frame — ABSENT: same.
+- OC2B-045 graphics re-render of boot lines — ABSENT: same.
+
+Waiting-on-Rowan: framebuffer wiring (KF-03), pixel text (KF-04), boot-line
+re-render (KF-05) — all in Rowan's lane, none landed on any branch (see
+OC2B-kf02.txt branch scan). No captures fabricated for any of 039–045.

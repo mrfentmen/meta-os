@@ -1,0 +1,40 @@
+# OC2B-076–100 — §4 KF-09/KF-10/KF-11 windows + Milestone 1 pack: UNLANDED, absence recorded (this Mac, 2026-11-02)
+Branch: opencode2/500 @ 67949822. QEMU 11.1.3. kernel/ diff vs main: EMPTY (verified at close).
+Scratch builds: NONE started by this session.
+
+Evidence (re-verified this session):
+- No window/desktop/topbar/dock code in kernel/src (only match: sched.rs "collision
+  window" comment). No window.rs; main.rs has no shell-window path.
+- framebuffer/pixel/ribbon: absent per OC2B-kf03.txt + OC2B-kf04-08.txt (same greps).
+- No graphics tree on any branch (see pin scan in OC2B-kf02.txt, re-verified this session).
+
+Per-task results:
+- OC2B-076 window primitives — ABSENT: not landed. No OC2B-kf09-window.png.
+- OC2B-077 two overlapping windows — limit note: windowing itself unlanded, nothing to overlap.
+- OC2B-078 shell-in-window status — ABSENT. No OC2B-kf10-status.png.
+- OC2B-079 window mem — ABSENT. No OC2B-kf10-mem.png.
+- OC2B-080 window ps — ABSENT. No OC2B-kf10-ps.png.
+- OC2B-081 bad command in window — ABSENT. No OC2B-kf10-badcmd.png.
+- OC2B-082 bad-syscall-99 in window — ABSENT. No OC2B-kf10-badsyscall.png.
+- OC2B-083 Milestone 1 pack candidate — ABSENT: no single tree carries ribbon + shell-window.
+  No os-build/logs/OC2B-kf11-pack/ directory created.
+- OC2B-084 pack sha verification — N/A: no pack exists.
+- OC2B-085 gate on pack tree — N/A: no pack tree (baseline gate GREEN stands).
+- OC2B-086 desktop top bar — ABSENT: no bar drawn. No OC2B-kf-topbar.png.
+- OC2B-087 dock + icon count — ABSENT: no dock drawn. No OC2B-kf-dock.png.
+- OC2B-088 60-char wrap/scroll — ABSENT: no window shell to type into.
+- OC2B-089 5-minute uptime — ABSENT: no window shell to leave up.
+- OC2B-090 status ticks 60s apart — ABSENT: same.
+- OC2B-091 help line — ABSENT: no window shell to screendump (expected line from the
+  task text is not quoted here as measured — nothing measured).
+- OC2B-092 clear before/after — ABSENT: no pair taken.
+- OC2B-093 window-vs-text mem cross-check — ABSENT: no window output to compare.
+- OC2B-094 waiting-on list — THIS FILE: KF-09 windows, KF-10 window shell, KF-11 pack,
+  topbar/dock — all in Rowan's lane, none landed on any branch.
+- OC2B-095 index update — DONE in os-build/logs/OC2B-screendump-index.md (§4 rows, absent-verified).
+- OC2B-096 graphics-vs-text image size — ABSENT: no graphics image exists to weigh.
+- OC2B-097/100 status block + paste-ready summary — NOT this lane (status file frozen for KF lane).
+- OC2B-098 checkpoint commit/push — NOT done (lane rules: NEVER push, DO NOT commit).
+- OC2B-099 kernel diff — EMPTY, verified at close of session.
+
+No captures fabricated for any of 076–093/096.

@@ -1,0 +1,102 @@
+{
+  "stage": "2c-blueprint-pack",
+  "artefact_class": "heatsink-fin-geometry",
+  "dimensions": {
+    "fin_height_mm": 25.0,
+    "fin_thickness_mm": 1.2000000000000002,
+    "fin_count": 21,
+    "base_thickness_mm": 4.0,
+    "footprint_mm": 50.0
+  },
+  "materials": [
+    {
+      "part": "fins + base",
+      "name": "aluminium",
+      "thermal_conductivity_w_mk": 205.0,
+      "note": "matches the simulator's k; no alloy, finish, or fastener specified \u2014 unstated, not graded"
+    }
+  ],
+  "steps": [
+    {
+      "n": 1,
+      "action": "cut base plate",
+      "detail": "50 x 50 mm aluminium plate to base_thickness_mm = 4.00 mm",
+      "dims": [
+        "base_thickness_mm",
+        "footprint_mm"
+      ]
+    },
+    {
+      "n": 2,
+      "action": "form fins",
+      "detail": "21 straight rectangular fins, t=1.20 mm, H=25.00 mm, full 50 mm depth",
+      "dims": [
+        "fin_count",
+        "fin_thickness_mm",
+        "fin_height_mm"
+      ]
+    },
+    {
+      "n": 3,
+      "action": "deburr and gap-check",
+      "detail": "clear every channel; drawn gap 1.240 mm must stay >= 1.0 mm floor",
+      "dims": [
+        "fin_count",
+        "fin_thickness_mm"
+      ]
+    },
+    {
+      "n": 4,
+      "action": "inspect against bounds",
+      "detail": "every dimension inside the widened bounds (H in [5.0, 80.0], t in [0.5, 3.0], N in [4, 30], base in [2.0, 12.0]); run check_pack before any build",
+      "dims": [
+        "fin_height_mm",
+        "fin_thickness_mm",
+        "fin_count",
+        "base_thickness_mm",
+        "footprint_mm"
+      ]
+    },
+    {
+      "n": 5,
+      "action": "thermal acceptance (simulated)",
+      "detail": "held-out gate re-score from the parameters; a pass is a simulation result, not a measured heatsink \u2014 a human decides whether anything gets built",
+      "dims": []
+    }
+  ],
+  "bounds": {
+    "fin_height_mm": [
+      5.0,
+      80.0
+    ],
+    "fin_thickness_mm": [
+      0.5,
+      3.0
+    ],
+    "fin_count": [
+      4,
+      30
+    ],
+    "base_thickness_mm": [
+      2.0,
+      12.0
+    ],
+    "footprint_mm": [
+      50.0,
+      50.0
+    ]
+  },
+  "provenance": {
+    "rough_words": "a heatsink for a cramped enclosure, no taller than 25mm, about 50mm square, no fan, under 2 degrees per watt",
+    "rounds_used": 6,
+    "proven": true,
+    "status": "proven",
+    "final_r_th_c_per_w": 1.891486126958238,
+    "verification_proven": true
+  },
+  "concept_render": {
+    "present": false,
+    "note": "no concept render generated for this pack"
+  },
+  "generated_utc": "2026-11-02T16:10:09.594921+00:00"
+}

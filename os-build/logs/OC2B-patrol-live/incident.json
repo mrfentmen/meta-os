@@ -1,0 +1,307 @@
+{
+  "id": "incident-a59ece55ba7e0a46",
+  "status": "dispatched-simulated",
+  "evidence": {
+    "frame_sha256": "3378e2617df09aeb578259bc438e29e1535012839ad9fe177ba9a3e921c07a0e",
+    "detector": "unavailable",
+    "files": [
+      {
+        "ref": "evidence/incident-a59ece55ba7e0a46/flag-frame-dryrun-cam-1-3378e2.jpg",
+        "kind": "flag-frame",
+        "sha256": "3378e2617df09aeb578259bc438e29e1535012839ad9fe177ba9a3e921c07a0e",
+        "bytes": 252107,
+        "camera_id": "dryrun-cam-1"
+      },
+      {
+        "ref": "evidence/incident-a59ece55ba7e0a46/investigation-frame-dryrun-cam-1-3378e2.jpg",
+        "kind": "investigation-frame",
+        "sha256": "3378e2617df09aeb578259bc438e29e1535012839ad9fe177ba9a3e921c07a0e",
+        "bytes": 252107,
+        "camera_id": "dryrun-cam-1"
+      },
+      {
+        "ref": "evidence/incident-a59ece55ba7e0a46/investigation-frame-dryrun-cam-1-3378e2.jpg",
+        "kind": "investigation-frame",
+        "sha256": "3378e2617df09aeb578259bc438e29e1535012839ad9fe177ba9a3e921c07a0e",
+        "bytes": 252107,
+        "camera_id": "dryrun-cam-1"
+      }
+    ]
+  },
+  "created_at": "2026-11-02T16:11:29.699Z",
+  "camera": {
+    "id": "dryrun-cam-1",
+    "name": "Dry run (staged frame)",
+    "area": "scratch",
+    "latitude": 40.758,
+    "longitude": -73.9855
+  },
+  "division": "ignis",
+  "category": "vehicle fire",
+  "priority": "high",
+  "patrol_job_id": "trio-ba0c4999d4365654bb2023ed5b4187c8",
+  "timeline": [
+    {
+      "at": "2026-11-02T16:11:29.699Z",
+      "step": "flag",
+      "division": "ignis",
+      "category": "vehicle fire",
+      "priority": "high",
+      "job_id": "trio-ba0c4999d4365654bb2023ed5b4187c8",
+      "model": "muse-spark-1.3",
+      "latency_ms": 9929,
+      "summary": "Front of parked sedan fully involved in flame with dark smoke rising, consistent with active vehicle fire on road shoulder.",
+      "frame_sha256": "3378e2617df09aeb578259bc438e29e1535012839ad9fe177ba9a3e921c07a0e"
+    },
+    {
+      "at": "2026-11-02T16:11:29.700Z",
+      "step": "decision",
+      "agent": "orchestrator",
+      "decision": "investigate",
+      "reason": "flagged category \"vehicle fire\" is outside the ignis baseline set and no independent review has been recorded yet",
+      "actions": [
+        {
+          "agent": "review",
+          "task": "Independent second assessment of the flagged frame (review survival rule: the flag stands only if this reading also lands outside the baseline set)"
+        }
+      ],
+      "actions_count": 1,
+      "status": "under_review"
+    },
+    {
+      "at": "2026-11-02T16:11:41.778Z",
+      "step": "review",
+      "verdict": "confirmed",
+      "category": "vehicle fire",
+      "judged_by": "imperium-judge",
+      "judge_mode": "model",
+      "judge_reasons": [
+        "model judge ruling: Both readings independently agree on vehicle fire with 0.97-0.98 confidence",
+        "model judge ruling: Both describe bright orange flames engulfing front hood/engine area and front wheel of black sedan",
+        "model judge ruling: Both describe thick dark gray to black smoke column rising above flames in overlapping regions"
+      ],
+      "job_id": "trio-a79d7366b5effb7a7088a36880a44bc3",
+      "model": "muse-spark-1.3",
+      "latency_ms": 8054,
+      "error": null,
+      "summary": "Black sedan on roadway with front fully involved in flames and thick dark smoke rising above it.",
+      "status": null
+    },
+    {
+      "at": "2026-11-02T16:11:41.779Z",
+      "step": "reported",
+      "status": "reported"
+    },
+    {
+      "at": "2026-11-02T16:11:41.779Z",
+      "step": "decision",
+      "agent": "orchestrator",
+      "decision": "investigate",
+      "reason": "the flag survived review and no investigation has been recorded; additional evidence is gathered before any response is prepared",
+      "actions": [
+        {
+          "agent": "investigation",
+          "task": "Assess the incident camera under the other divisions' lenses, then up to 3 nearest cameras under the origin division (bounded by MAX_INVESTIGATION_CALLS)"
+        }
+      ],
+      "actions_count": 1,
+      "status": "investigating"
+    },
+    {
+      "at": "2026-11-02T16:11:41.780Z",
+      "step": "investigation",
+      "kind": "cross-lens",
+      "camera_id": "dryrun-cam-1",
+      "camera_name": "Dry run (staged frame)",
+      "division": "vigiles",
+      "category": "indeterminate",
+      "flagged": false,
+      "frame_sha256": "3378e2617df09aeb578259bc438e29e1535012839ad9fe177ba9a3e921c07a0e",
+      "job_id": "trio-5a52aa72978719809338b19e996d7e7e",
+      "model": "muse-spark-1.3",
+      "latency_ms": 9416,
+      "error": null,
+      "status": "investigating"
+    },
+    {
+      "at": "2026-11-02T16:11:41.780Z",
+      "step": "evidence",
+      "files": [
+        "evidence/incident-a59ece55ba7e0a46/investigation-frame-dryrun-cam-1-3378e2.jpg"
+      ]
+    },
+    {
+      "at": "2026-11-02T16:11:51.200Z",
+      "step": "investigation",
+      "kind": "cross-lens",
+      "camera_id": "dryrun-cam-1",
+      "camera_name": "Dry run (staged frame)",
+      "division": "medicus",
+      "category": "indeterminate",
+      "flagged": false,
+      "frame_sha256": "3378e2617df09aeb578259bc438e29e1535012839ad9fe177ba9a3e921c07a0e",
+      "job_id": "trio-5be156945e4e3e67f431cc714ba57ac3",
+      "model": "muse-spark-1.3",
+      "latency_ms": 9913,
+      "error": null,
+      "status": null
+    },
+    {
+      "at": "2026-11-02T16:11:51.200Z",
+      "step": "evidence",
+      "files": [
+        "evidence/incident-a59ece55ba7e0a46/investigation-frame-dryrun-cam-1-3378e2.jpg"
+      ]
+    },
+    {
+      "at": "2026-11-02T16:12:01.117Z",
+      "step": "decision",
+      "agent": "orchestrator",
+      "decision": "prepare_response",
+      "reason": "flagged, confirmed by independent review, and investigated; the response brief is prepared and submitted to the simulated dispatch endpoint only",
+      "actions": [
+        {
+          "agent": "response",
+          "task": "Build the incident brief from the recorded assessments and submit it, picture included, to the simulated dispatch endpoint (loopback-only, labelled simulated; the agent sends it with no human verify step \u2014 requires_human_review stays true as the post-hoc audit flag, and the agency verify policy may hold the package in the crew)"
+        }
+      ],
+      "actions_count": 1,
+      "status": "response_prepared"
+    },
+    {
+      "at": "2026-11-02T16:12:01.118Z",
+      "step": "brief",
+      "brief": {
+        "product": "ignis",
+        "timestamp": "2026-11-02T16:12:01.118Z",
+        "observations": [
+          {
+            "category": "vehicle fire",
+            "description": "Black sedan parked on road shoulder with front compartment and front wheel engulfed in fire and smoke rising",
+            "evidence": "center-right of frame on asphalt beside guardrail",
+            "confidence": 0.98,
+            "region": {
+              "x": 280,
+              "y": 304,
+              "w": 720,
+              "h": 388
+            }
+          },
+          {
+            "category": "visible flame",
+            "description": "Large bright orange flames consuming front hood, bumper area and front tire with smaller flames near windshield and roof",
+            "evidence": "left-center of frame over front of vehicle",
+            "confidence": 0.98,
+            "region": {
+              "x": 275,
+              "y": 123,
+              "w": 359,
+              "h": 610
+            }
+          },
+          {
+            "category": "dark smoke",
+            "description": "Thick dark gray to black smoke column rising vertically from burning front of vehicle",
+            "evidence": "upper center of frame above flames",
+            "confidence": 0.95,
+            "region": {
+              "x": 311,
+              "y": 0,
+              "w": 210,
+              "h": 335
+            }
+          },
+          {
+            "category": "visible flame",
+            "description": "Bright orange flames engulfing the front hood, engine area and front wheel of a black sedan",
+            "evidence": "center-left of frame at the front of the vehicle",
+            "confidence": 0.97,
+            "region": {
+              "x": 295,
+              "y": 150,
+              "w": 360,
+              "h": 600
+            }
+          },
+          {
+            "category": "dark smoke",
+            "description": "Thick dark gray to black smoke column rising vertically above the flames",
+            "evidence": "center-top of frame above the front of the vehicle",
+            "confidence": 0.95,
+            "region": {
+              "x": 350,
+              "y": 0,
+              "w": 230,
+              "h": 310
+            }
+          },
+          {
+            "category": "vehicle fire",
+            "description": "Black four-door sedan stopped on roadway with front compartment fully involved in fire and smoke",
+            "evidence": "center to right of frame occupying middle roadway",
+            "confidence": 0.97,
+            "region": {
+              "x": 295,
+              "y": 0,
+              "w": 705,
+              "h": 725
+            }
+          }
+        ],
+        "assessment": {
+          "category": "vehicle fire",
+          "summary": "A vehicle on fire on a roadway with no people visible; occupancy and collision cannot be confirmed from what is visible.",
+          "uncertainty": [
+            "Exact fuel source and extent of interior involvement unclear",
+            "Cause of fire not visible",
+            "No people visible to assess activity",
+            "Whether scene is staged cannot be determined",
+            "vehicle interior obscured by smoke and reflections so occupancy cannot be determined",
+            "no collision damage visible beyond fire"
+          ],
+          "requires_human_review": true
+        },
+        "processing": {
+          "model": "muse-spark-1.3",
+          "latency_ms": 37312
+        }
+      }
+    },
+    {
+      "at": "2026-11-02T16:12:01.119Z",
+      "step": "bolo",
+      "bolo": {
+        "division": "ignis",
+        "category": "vehicle fire",
+        "camera_name": "Dry run (staged frame)",
+        "area": "scratch",
+        "flagged_at": "2026-11-02T16:11:29.699Z",
+        "frame_files": [
+          "evidence/incident-a59ece55ba7e0a46/flag-frame-dryrun-cam-1-3378e2.jpg",
+          "evidence/incident-a59ece55ba7e0a46/investigation-frame-dryrun-cam-1-3378e2.jpg",
+          "evidence/incident-a59ece55ba7e0a46/investigation-frame-dryrun-cam-1-3378e2.jpg"
+        ],
+        "face_crops": 0,
+        "person_descriptions": [
+          "Black sedan parked on road shoulder with front compartment and front wheel engulfed in fire and smoke rising",
+          "Large bright orange flames consuming front hood, bumper area and front tire with smaller flames near windshield and roof",
+          "Thick dark gray to black smoke column rising vertically from burning front of vehicle",
+          "Bright orange flames engulfing the front hood, engine area and front wheel of a black sedan",
+          "Thick dark gray to black smoke column rising vertically above the flames",
+          "Black four-door sedan stopped on roadway with front compartment fully involved in fire and smoke"
+        ],
+        "visible_marks": [],
+        "direction_of_travel": null,
+        "direction_note": "Not determined from still frames."
+      }
+    },
+    {
+      "at": "2026-11-02T16:12:01.132Z",
+      "step": "dispatch",
+      "simulated": true,
+      "service": "fire department",
+      "receipt_id": "sim-oc2b-patrol-001",
+      "status": "dispatched-simulated"
+    }
+  ]
+}

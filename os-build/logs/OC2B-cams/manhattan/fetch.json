@@ -1,0 +1,11 @@
+{
+ "camera_id": "f2b94b32-fc41-42b6-935d-8330374ca05a",
+ "camera_name": "1 Ave @ 110 St",
+ "area": "Manhattan",
+ "image_url": "https://webcams.nyctmc.org/api/cameras/f2b94b32-fc41-42b6-935d-8330374ca05a/image",
+ "fetched_at": "2026-11-02T16:07:02.231083+00:00",
+ "sha256": "56018a35c73f6b2092eacaa885f1beb309b08cc03b57f7a8f5ac7652d5c535f4",
+ "bytes": 25347,
+ "file": "f2b94b32-fc41-42b6-935d-8330374ca05a_2026-11-02T16-07-02.231083p00-00.jpg",
+ "via": "livecams.fetch_snapshot"
+}

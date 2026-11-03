@@ -1,0 +1,13 @@
+{
+ "error": "RuntimeError: muse-spark-1.3 response carried no message content",
+ "est_cost_usd": null,
+ "kind": "chat:muse-spark-1.3",
+ "latency_ms": null,
+ "mode": "OFFLINE",
+ "model": "muse-spark-1.3",
+ "note": "OFFLINE: no live model call succeeded (tried once; failure logged once; never retried). No model text was produced; callers use the deterministic template marked OFFLINE.",
+ "prompt_sha256": "2b5fd3897f80b894f126b21ddee353ba4057a0813a6f5bb2e486ad79d6611884",
+ "surface": "chat",
+ "ts": "2026-11-02T16:14:03.465578Z",
+ "usage": null
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Incropera Fins chapter (MEngr 503 course notes PDF)",
+    "url": "https://courses.washington.edu/mengr503/Fins_Incropera.pdf",
+    "kind": "primary",
+    "topic": "fin efficiency, adiabatic tip",
+    "status": "alive (serves application/pdf)"
+  },
+  {
+    "title": "Teertstra, Natural convection modeling of heat sinks using web-based tools (Electronics Cooling, 2000)",
+    "url": "https://www.electronics-cooling.com/2000/09/natural-convection-modeling-of-heat-sinks-using-web-based-tools/",
+    "kind": "primary",
+    "topic": "natural-convection fin spacing",
+    "status": "alive (full text fetched 2026-11-02)"
+  },
+  {
+    "title": "Ahmadi, Mostafavi & Bahrami, Natural convection from rectangular interrupted fins (IJTS 82, 2014, PDF)",
+    "url": "https://www.sfu.ca/~mbahrami/pdf/pdf/2014/Natural%20convection%20from%20rectangular%20interrupted%20fins.pdf",
+    "kind": "primary",
+    "topic": "straight-fin vs interrupted fins",
+    "status": "alive (serves application/pdf)"
+  },
+  {
+    "title": "ATS, How to Select a Heat Sink (on-demand webinar page, qats.com)",
+    "url": "https://www.qats.com/cms/2011/08/29/how-to-select-a-heat-sink-an-ats-on-demand-thermal-management-webinar/",
+    "kind": "secondary",
+    "topic": "heat-sink selection guidance",
+    "status": "dead (HTTP 500 on re-fetch 2026-11-02, twice)"
+  },
+  {
+    "title": "Bar-Cohen & Rohsenow, Thermally Optimum Spacing of Vertical, Natural Convection Cooled, Parallel Plates (Semantic Scholar record)",
+    "url": "https://www.semanticscholar.org/paper/Thermally-Optimum-Spacing-of-Vertical%2C-Natural-Bar-Cohen-Rohsenow/273257d7df3dab5a1633e80a990d11f01f364137",
+    "kind": "secondary",
+    "topic": "optimum-spacing paper record",
+    "status": "unverified (index page, not independently fetched)"
+  }
+]

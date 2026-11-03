@@ -1,0 +1,55 @@
+{
+  "final_best_score": 108.83519082164118,
+  "final_mean_score": 88.08847041546362,
+  "genome": [
+    33.742829,
+    60.0,
+    0.930736,
+    4.613564
+  ],
+  "genome_sha256": "e258d573537ee6ee241fa61d7161dd0ad160a2c7eb348ec9dce5328e9adf8a65",
+  "organism_id": 151,
+  "verdict": {
+    "beat_margin": 1.05,
+    "champion_status": "rejected",
+    "checks": [
+      {
+        "beat_reference": true,
+        "champion_heat_w": 290.6063615858877,
+        "env": "heldout-forced-air",
+        "feasible": false,
+        "mass_ok": false,
+        "passed": false,
+        "reference_heat_w": 52.1901028583223,
+        "spacing_ok": true
+      },
+      {
+        "beat_reference": true,
+        "champion_heat_w": 103.61363429544241,
+        "env": "heldout-still-air-hot",
+        "feasible": false,
+        "mass_ok": false,
+        "passed": false,
+        "reference_heat_w": 15.737597400413396,
+        "spacing_ok": true
+      },
+      {
+        "beat_reference": true,
+        "champion_heat_w": 135.5742725296709,
+        "env": "heldout-other-alloy",
+        "feasible": false,
+        "mass_ok": false,
+        "passed": false,
+        "reference_heat_w": 23.026795872851356,
+        "spacing_ok": true
+      }
+    ],
+    "passed": false,
+    "reference_genome": [
+      10.0,
+      25.0,
+      1.5,
+      3.0
+    ]
+  }
+}

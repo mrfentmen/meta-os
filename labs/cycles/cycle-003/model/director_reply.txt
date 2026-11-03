@@ -1,0 +1,7 @@
+[OFFLINE director plan - NOT a Muse Spark output. No live model call succeeded; the failure is logged once in model_calls/call_log.md. The approach below is the deterministic template authored by the runner.]
+
+Question: rule-of-mixtures density check (Al/Cu [0.6,0.4])
+Target: rule-of-mixtures density rho = sum(f_i * rho_i) = 5.204 g/cm^3 at inputs {"densities": [2.7, 8.96], "fractions": [0.6, 0.4]}.
+Approach: (1) pre-register plan hash BEFORE any result; (2) run compute.run_materials once, deterministically, seed recorded; (3) score with compute.compare_to_prereg against the pre-registered band; (4) mandatory critic, answered with evidence; (5) independent clean-dir re-run must agree bit-for-bit.
+
+What the model changed about this work: NOTHING. No live call succeeded, so no model suggestion was adopted, altered, or rejected. Every step above is the runner's template.

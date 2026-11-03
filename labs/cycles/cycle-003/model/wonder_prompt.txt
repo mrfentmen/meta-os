@@ -1,0 +1,13 @@
+Read the attached cycle figure (model/figure.png; numeric table in
+model/figure_data.json) from a materials density check and report what
+it shows.
+
+Figure: three bars. Bar 1: Al component, fraction 0.6, density 2.70.
+Bar 2: Cu component, fraction 0.4, density 8.96. Bar 3: mixture,
+observed rule-of-mixtures density. Red horizontal line: pre-registered
+expected value 5.204 g/cm^3, tolerance band +-0.001.
+
+Reply with: (1) the value you read off bar 3 to three decimals,
+(2) whether the red expected line passes through bar 3 within the
+band, (3) one sentence on what the figure does and does not prove.
+Numbers only where a number is asked; no adjectives about importance.

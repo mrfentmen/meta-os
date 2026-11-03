@@ -1,0 +1,22 @@
+{
+ "abs_diff_J": 2.857021426002601e-26,
+ "cycle": "cycle-004",
+ "expected_E_J": 3.972892e-19,
+ "inputs": {
+  "file": "inputs.json",
+  "params": {
+   "c": 299792458,
+   "eV_J": 1.602176634e-19,
+   "h": 6.62607015e-34,
+   "lambda_m": 5e-07
+  },
+  "sha256": "69f345dc5ecc00f5543e292e2c417998ddf137c30c72b2f5a19a3739cad18845"
+ },
+ "observed_E_J": 3.972891714297857e-19,
+ "observed_E_eV": 2.479683968664005,
+ "runner": "E = h*c/lambda (stdlib)",
+ "script": "run.py",
+ "seed": 500004,
+ "tolerance_J": 1e-24,
+ "verdict": "match"
+}

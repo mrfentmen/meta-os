@@ -1,0 +1,27 @@
+{
+ "comparison": {
+  "detail": "observed=55.19375906810931 expected=55.1938 tolerance=0.001",
+  "observed": 55.19375906810931,
+  "observed_metric": "range_m",
+  "target": 55.1938,
+  "verdict": "match"
+ },
+ "cycle": "cycle-002",
+ "expected_range_m": 55.1938,
+ "inputs": {
+  "file": "inputs.json",
+  "params": {
+   "angle_deg": 30,
+   "g": 9.80665,
+   "g_source": "NIST standard gravity 9.80665 m/s^2 exact (shelf physics_math.json locator https://physics.nist.gov/cuu/Constants)",
+   "v0": 25
+  },
+  "sha256": "e42bf80fb6a36f1c38844028642aadfe27adea028e01d367d40dbe0613be3e25"
+ },
+ "observed_range_m": 55.19375906810931,
+ "record_text": "output: range(v0=25.0, angle=30.0 deg, g=9.80665) = 55.193759 m",
+ "runner": "os/worlds/science-lab/compute.py run_physics",
+ "script": "run.py",
+ "seed": 500002,
+ "tolerance_m": 0.001
+}

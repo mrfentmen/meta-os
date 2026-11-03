@@ -1,0 +1,13 @@
+{
+ "error": "RuntimeError: muse-wonder-1.0 response carried no message content",
+ "est_cost_usd": null,
+ "kind": "chat:muse-wonder-1.0",
+ "latency_ms": null,
+ "mode": "OFFLINE",
+ "model": "muse-wonder-1.0",
+ "note": "OFFLINE: no live model call succeeded (tried once; failure logged once; never retried). No model text was produced; callers use the deterministic template marked OFFLINE.",
+ "prompt_sha256": "c66f22f36d1ec04d802cbdcab07c81db90326524da56ae0fcb00e43f3072ff59",
+ "surface": "chat",
+ "ts": "2026-11-02T16:14:17.087625Z",
+ "usage": null
+}

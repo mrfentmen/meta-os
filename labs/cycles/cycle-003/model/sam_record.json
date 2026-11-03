@@ -1,0 +1,7 @@
+{
+ "box": null,
+ "note": "OFFLINE: no live SAM call succeeded (tried once); no box invented. Source image archived unmodified; overlay step records no-box as-is.",
+ "overlay": "no",
+ "overlay_file": "model/sam_overlay.png",
+ "overlay_note": "no box returned (OFFLINE, tried once), so no box is drawn and none is invented; overlay file is the unmodified source image labs/molecules/shots/nb-caffeine-sf.png copied byte-for-byte."
+}
