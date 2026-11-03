@@ -98,6 +98,47 @@ def rows(root, home):
             "%d entry/entries all resolve" % len(entries) if not unresolved
             else "missing " + ", ".join(unresolved))
 
+    agent_units = root / "usr/lib/systemd/user"
+    wanted_units = ("oc2-queue.service", "oc2-trio.service",
+                    "oc2-patrol.service", "oc2-patrol.timer")
+    missing = [u for u in wanted_units if not (agent_units / u).is_file()]
+    put("PASS" if not missing else "FAIL", "agent units",
+        "%d of %d in %s" % (len(wanted_units) - len(missing),
+                            len(wanted_units), agent_units)
+        if not missing else "missing " + ", ".join(missing))
+
+    wants = root / "etc/systemd/user"
+    links = ([wants / "default.target.wants" / u for u in wanted_units[:3]]
+             + [wants / "timers.target.wants" / wanted_units[3]])
+    torn = [str(p.relative_to(root)) for p in links
+            if not p.is_symlink() and not p.is_file()]
+    put("PASS" if not torn else "FAIL", "agent enabled",
+        "4 links" if not torn else "missing " + ", ".join(torn))
+
+    agent_payload = root / "usr/share/metaos/agent"
+    runtime = ("server/queue/queue_service.py", "server/queue/patrol.py",
+               "server/queue/trio_agent.py", "js/products.js", "js/schema.js")
+    missing = [rel for rel in runtime if not (agent_payload / rel).is_file()]
+    put("PASS" if not missing else "FAIL", "agent runtime",
+        "all %d files" % len(runtime) if not missing
+        else "missing " + ", ".join(missing))
+
+    env = root / "etc/skel/.config/oc2-agent/env"
+    if not env.is_file():
+        put("FAIL", "agent env", str(env))
+    else:
+        env_body = env.read_text(encoding="utf-8", errors="replace")
+        secret = ("SPARK_API_KEY" in env_body or "sk-" in env_body
+                  or "BEGIN PRIVATE" in env_body)
+        pinned = "OC2_CHECKOUT=/usr/share/metaos/agent" in env_body
+        put("PASS" if pinned and not secret else "FAIL", "agent env",
+            "checkout pinned, no secret" if pinned and not secret
+            else ("contains a secret" if secret else "OC2_CHECKOUT not the payload"))
+
+    hook = root / "usr/local/bin/meta-agent-login"
+    put("PASS" if hook.is_file() and os.access(hook, os.X_OK) else "FAIL",
+        "agent login hook", str(hook))
+
     exe = root / "usr/local/bin/meta-agent-status"
     put("PASS" if exe.is_file() and os.access(exe, os.X_OK) else "FAIL",
         "meta-agent-status", str(exe))

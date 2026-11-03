@@ -89,7 +89,7 @@ echo "=== Meta payload (provision.sh, no initramfs yet) ==="
 [ -d "$SCRIPT_DIR/calamares" ] || fail "calamares/ payload missing beside merge-layers.sh"
 sh "$SCRIPT_DIR/provision.sh" "$WORK/rootfs" --no-initramfs
 echo "=== payload gate (theme, calamares, hook, autostart) ==="
-for f in usr/share/plymouth/themes/metaos/metaos.plymouth etc/calamares/settings.conf usr/local/lib/metaos/meta-branding.sh etc/xdg/autostart/metaos-install.desktop usr/share/metaos/imperium/index.html usr/share/metaos/apps/metaos-imperium.py usr/share/applications/metaos-imperium.desktop etc/xdg/autostart/metaos-livebg.desktop usr/share/backgrounds/meta-ascii.png; do
+for f in usr/share/plymouth/themes/metaos/metaos.plymouth etc/calamares/settings.conf usr/local/lib/metaos/meta-branding.sh etc/xdg/autostart/metaos-install.desktop usr/share/metaos/imperium/index.html usr/share/metaos/apps/metaos-imperium.py usr/share/applications/metaos-imperium.desktop etc/xdg/autostart/metaos-livebg.desktop usr/share/backgrounds/meta-ascii.png usr/share/metaos/agent/server/queue/queue_service.py usr/lib/systemd/user/oc2-queue.service etc/xdg/autostart/meta-agent-login.desktop; do
   [ -e "$WORK/rootfs/$f" ] || fail "payload missing in rootfs: $f (provision.sh did not land it?)"
 done
 gate "Meta payload present in rootfs"
