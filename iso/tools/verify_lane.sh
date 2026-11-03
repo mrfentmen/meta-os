@@ -33,6 +33,10 @@ echo "== static checker"
 python3 iso/tools/check_iso_config.py || fail=1
 
 echo
+echo "== claims"
+python3 iso/tools/check_claims.py || fail=1
+
+echo
 echo "== tests"
 for t in tests/test_iso_*.py; do
   [ -f "$t" ] || continue
