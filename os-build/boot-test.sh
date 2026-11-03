@@ -60,6 +60,16 @@ checkline "K6 bad call refused" "user bad syscall 99 refused"
 checkline "K6 user fault kill" "task killed"
 check "$ROOT/os-build/expected/K-all.txt" "K expected-line set"
 
+# Absence check, not a presence check: the K6 failure mode was the loader
+# refusing programs, which no expected-line file can catch.
+if grep -aq "loader refused" "$BOOTLOG"; then
+  echo "FAIL: loader refused a program ($(grep -ac 'loader refused' "$BOOTLOG") line(s))"
+  fail=$((fail+1))
+else
+  echo "PASS: no loader refusals"
+  pass=$((pass+1))
+fi
+
 echo "== goose suite =="
 sh services/run-goose-tests.sh | tail -2
 
