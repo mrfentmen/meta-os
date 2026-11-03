@@ -843,9 +843,18 @@ pub unsafe fn start_demo_tasks() -> ! {
     spawn_task(task_a, u32::MAX).expect("sched: spawn A");
     spawn_task(task_b, u32::MAX).expect("sched: spawn B");
     spawn_task(task_c, u32::MAX).expect("sched: spawn C");
-    spawn_task(crate::user::task_hello, u32::MAX).expect("sched: spawn hello");
+    // K4 pair+swap (K4_PAIR_SWAP.md): hello and crasher are swapped
+    // OUT of this boot for the IPC gate pair, in their exact slots,
+    // so every other id stays stable — talker takes hello's slot
+    // (id 4), listener takes crasher's slot (id 6), console keeps
+    // id 7, readkey stays LAST at id 8. The table still lands
+    // exactly full at 8/8 (MAX_TASKS unchanged), and the userspace
+    // stack budget still holds at 4 (sleeper, talker, listener,
+    // readkey). Hello/crasher still build and stage via build.rs;
+    // they simply do not boot here, and their proofs live on main.
+    spawn_task(crate::user::task_talker, u32::MAX).expect("sched: spawn talker");
     spawn_task(crate::user::task_sleeper, u32::MAX).expect("sched: spawn sleeper");
-    spawn_task(crate::user::task_crasher, u32::MAX).expect("sched: spawn crasher");
+    spawn_task(crate::user::task_listener, u32::MAX).expect("sched: spawn listener");
     spawn_task(console_task, u32::MAX).expect("sched: spawn console");
     // R5-2 follow-up (Pax assignment): readkey spawns LAST so the
     // existing ids stay stable (console keeps id 7) and the table

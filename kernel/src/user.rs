@@ -3,7 +3,7 @@
 #![allow(static_mut_refs)]
 //! Meta OS kernel, Section F (K6): first userspace (OS-076..OS-088).
 //!
-//! Four static ELFs (built by `kernel/build.rs` into OUT_DIR) are
+//! Six static ELFs (built by `kernel/build.rs` into OUT_DIR) are
 //! parsed and mapped at their linked addresses, then entered with
 //! `iretq` at ring 3. Syscalls arrive on `int 0x80` (vector 128);
 //! the handler reads the saved registers, serves write/exit/sleep/
@@ -19,6 +19,8 @@ pub static HELLO_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/hello.el
 pub static SLEEPER_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/sleeper.elf"));
 pub static CRASHER_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/crasher.elf"));
 pub static READKEY_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/readkey.elf"));
+pub static TALKER_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/talker.elf"));
+pub static LISTENER_ELF: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/listener.elf"));
 
 /// One user stack per userspace task (K6 scope: four programs).
 /// Stacks are FRESH USER pages, not kernel .bss: the bootloader's
@@ -579,4 +581,13 @@ pub fn task_crasher() {
 /// Kernel task entry for the fourth program (R5-2 follow-up).
 pub fn task_readkey() {
     unsafe { run_elf(READKEY_ELF, "readkey") };
+}
+/// Kernel task entries for the K4 IPC gate pair (K4_PAIR_SWAP.md):
+/// talker sends one message to the listener's fixed id and exits;
+/// listener polls `ipc_recv`, prints the payload, and exits.
+pub fn task_talker() {
+    unsafe { run_elf(TALKER_ELF, "talker") };
+}
+pub fn task_listener() {
+    unsafe { run_elf(LISTENER_ELF, "listener") };
 }

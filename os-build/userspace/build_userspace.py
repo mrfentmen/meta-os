@@ -41,13 +41,14 @@ between programs' loaded ranges.
 
 Bases: hello / sleeper / crasher keep exactly the bases named in
 `link-base.ld`'s comment; readkey takes the next slot in the same
-0x10_0000_0000 spacing. All four sit far above the 0.11 kernel image
+0x10_0000_0000 spacing, and talker / listener take the next two.
+All six sit far above the 0.11 kernel image
 range (0x200000-0xbfba2c per the RK-007 diagnosis) and far from the
 physmap, and no two share a page.
 
 Usage (from the repo root):
     python3 os-build/userspace/build_userspace.py [--release] [bin ...]
-Default builds all four BINS in order, dev profile. The generated
+Default builds all six BINS in order, dev profile. The generated
 `link-<bin>.ld` files are working-tree artifacts: do not hand-edit
 them (edit `link-base.ld`) and do not commit them. This script
 changes no kernel code, no loader code, and does not touch
@@ -72,6 +73,8 @@ PROGRAMS = [
     ("sleeper", 0x610000000000),
     ("crasher", 0x620000000000),
     ("readkey", 0x630000000000),
+    ("talker", 0x640000000000),
+    ("listener", 0x650000000000),
 ]
 
 TARGET = "x86_64-unknown-none"

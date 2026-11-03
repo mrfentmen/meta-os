@@ -50,6 +50,24 @@ pub fn sys_read_key() -> u64 {
     syscall(5, 0, 0, 0)
 }
 
+/// Send one message via syscall 6 (K4 IPC, design §6). `dest` is
+/// the peer's fixed spawn-order id from the gate build's loader
+/// table; `msg` is 1..=64 bytes. Returns 0 on success,
+/// `u64::MAX` on any refusal (dead destination, unmapped buffer,
+/// length out of range, full box).
+pub fn sys_ipc_send(dest: u64, msg: &[u8]) -> u64 {
+    syscall(6, dest, msg.as_ptr() as u64, msg.len() as u64)
+}
+
+/// Receive one message via syscall 7 (K4 IPC, design §6). `buf`
+/// must hold at least 72 bytes (8-byte sender header + up to 64
+/// payload). Returns the total bytes copied (9..=72) on success,
+/// `u64::MAX` when the box is empty or the call is refused. The
+/// caller polls, yielding between polls, never spinning.
+pub fn sys_ipc_recv(buf: &mut [u8]) -> u64 {
+    syscall(7, buf.as_ptr() as u64, buf.len() as u64, 0)
+}
+
 /// Print an unsigned decimal. No formatting machinery in userspace.
 pub fn print_u64(mut n: u64) {
     let mut buf = [0u8; 20];
