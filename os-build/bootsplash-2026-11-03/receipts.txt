@@ -1,0 +1,5 @@
+META OS KERNEL - alive (K1)
+mem summary: K4 up
+HELLO FROM USERSPACE
+demand: zero-fill confirmed
+demand: writeback OK, touching outside region
