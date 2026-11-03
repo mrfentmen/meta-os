@@ -65,3 +65,21 @@ with a committed log on opencode/500. Total live spend ≈$0.29.
 This status file's final commit is tagged opencode1-500-final on
 opencode/500 (tag object = the commit; verify: `git rev-parse
 opencode1-500-final` == `git rev-parse origin/opencode/500`).
+
+## Pax prompt response (OPENCODE1_PROMPT.md, answered 2026-11-02 ~20:35 EST)
+Post-tag commit: the prompt is newer than opencode1-500-final; this answers
+it without reopening the 500.
+1. §19 rehearsal: CLOSED (465 DONE clean-clone, 466 no gaps; 452/453/463/
+   464/469 all READY in walk.md). The PARTIAL the prompt cites predates the
+   coordinator closeout — resolved, see commits after 37e85db3.
+2. §7 soak: CLOSED (486: attempt 2 COMPLETED 2h20m measured, panics=0,
+   drive gap + supplement owned in OC1B-soak-summary.md).
+3. Film on MERGED main: VERIFIED 2026-11-02 — origin/main film ffprobe
+   180.000000s, 719410 B, sha256 a29bc47d (byte-identical to the §11
+   final); CAPTURE_NOTES lines checked: both beat serials present with
+   panic 0, beat-7 frame/reading/chain present, cut list present. No line
+   off; no re-capture needed.
+4. §16 run 2: BLOCKED, re-filed — zero goose/runner changes on main since
+   94010c76; Buffy's D1–D3 fix has not landed; no run 2 attempted.
+5. Stopping point stands: all 500 tasks have verdicts (493 pass above);
+   nothing further in task order except Rowan/Buffy-gated BLOCKED rows.
