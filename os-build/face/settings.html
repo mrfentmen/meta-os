@@ -84,6 +84,8 @@ button{font-size:15px;padding:6px 14px;cursor:pointer}
 (function(){
 "use strict";
 var FACTS_URL = "http://127.0.0.1:18932/facts";
+var SETTINGS_URL = "http://127.0.0.1:18937/settings";
+var SETTINGS_PATH = "~/.config/metaos/settings.json";
 var DEFAULTS = {
   "metaos-wallpaper": "ribbon-blue",
   "metaos-bg": "#020814",
@@ -138,8 +140,54 @@ function save(silent){
   bridgeSpeed(speed.value);
   bridgePaused(pause.checked ? "1" : "0");
   applyThemeAttr();
+  // Persist through the daemon so settings survive an epiphany profile wipe.
+  persistRemote(silent);
   if(!silent) note.textContent = "Saved. Reopen the shell to apply.";
   else note.textContent = "Saved " + new Date().toLocaleTimeString();
+}
+function currentMap(){
+  return {
+    "metaos-wallpaper": wallpaper.value,
+    "metaos-bg": bg.value,
+    "metaos-bar": bar.value,
+    "metaos-theme": theme.value,
+    "metaos-speed": speed.value,
+    "metaos-paused": pause.checked ? "1" : "0"
+  };
+}
+function persistRemote(silent){
+  var payload = currentMap();
+  fetch(SETTINGS_URL, {method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(payload)}).then(function(r){
+    return r.json().then(function(d){return {ok: r.ok, d: d};});
+  }).then(function(x){
+    if(x.ok && x.d.ok){
+      note.textContent = silent
+        ? ("Saved " + new Date().toLocaleTimeString() + " to this machine (" + (x.d.path || SETTINGS_PATH) + ").")
+        : ("Saved to this machine (" + (x.d.path || SETTINGS_PATH) + "). Reopen the shell to apply.");
+    } else {
+      note.textContent = "Saved in this browser only (backend unreachable on 18937).";
+    }
+  }).catch(function(){
+    note.textContent = "Saved in this browser only (backend unreachable on 18937).";
+  });
+}
+function restoreRemote(){
+  // Daemon wins: after the epiphany profile is deleted, localStorage is
+  // empty and these values bring theme/bar/wallpaper back.
+  fetch(SETTINGS_URL).then(function(r){
+    return r.json().then(function(d){return {ok: r.ok, d: d};});
+  }).then(function(x){
+    if(!x.ok || !x.d.ok) return;
+    var s = x.d.settings || {};
+    var known = 0;
+    Object.keys(DEFAULTS).forEach(function(k){
+      if(s[k] !== undefined && s[k] !== null){ set(k, String(s[k])); known++; }
+    });
+    if(x.d.path) SETTINGS_PATH = x.d.path;
+    if(known){ load(); note.textContent = "Restored " + known + " setting(s) from this machine (" + SETTINGS_PATH + ")."; }
+  }).catch(function(){ /* localStorage keeps instant paint; nothing to restore */ });
 }
 [wallpaper, bg, bar, theme].forEach(function(el){
   el.addEventListener("change", function(){ save(true); });
@@ -167,11 +215,12 @@ async function tickFacts(){
     document.getElementById("net").textContent = f.net;
     stamp.textContent = "Updated " + new Date().toLocaleTimeString() + " from " + FACTS_URL;
   }catch(e){
-    stamp.textContent = "facts service unreachable (is facts.py running on :18932?)";
+    stamp.textContent = "backend unreachable on 18932 (is facts.py running?)";
   }
 }
 document.getElementById("refresh").onclick = tickFacts;
 load();
+restoreRemote();
 tickFacts();
 setInterval(tickFacts, 2000);
 })();

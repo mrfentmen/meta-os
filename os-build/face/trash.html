@@ -31,18 +31,19 @@ function load(){
       var del=document.createElement("button");del.textContent="Delete";del.onclick=function(){act("delete",e.name)};
       a.appendChild(r);a.appendChild(del);tr.appendChild(a);rows.appendChild(tr);
     });
-  }).catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+  }).catch(function(){st.textContent="backend unreachable on 18936 (is files.py running?)";});
 }
 function act(which,name){
   fetch(API+"/"+which,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:name})})
   .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?(which+"d "+name):("Error: "+d.error);load();})
-  .catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+  .catch(function(){st.textContent="backend unreachable on 18936 (is files.py running?)";});
 }
 document.getElementById("refresh").onclick=load;
 document.getElementById("empty").onclick=function(){
   if(!confirm("Permanently delete everything in the trash?"))return;
   fetch(API+"/empty",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"})
-  .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?("Emptied ("+d.removed+" removed)"):("Error: "+d.error);load();});
+  .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?("Emptied ("+d.removed+" removed)"):("Error: "+d.error);load();})
+  .catch(function(){st.textContent="backend unreachable on 18936 (is files.py running?)";});
 };
 load();
 })();

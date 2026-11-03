@@ -12,23 +12,25 @@ button{padding:8px 12px}</style>
 <div id="rooms"></div>
 <div id="log"></div>
 <form id="f"><input id="author" placeholder="name" size="8"><input id="text" placeholder="Message..." autocomplete="off"><button>Post</button></form>
+<p id="status" role="status"></p>
 <script>
 (function(){
 var API="http://127.0.0.1:18935",room="general";
-var roomsEl=document.getElementById("rooms"),log=document.getElementById("log");
+var roomsEl=document.getElementById("rooms"),log=document.getElementById("log"),st=document.getElementById("status");
 var author=document.getElementById("author"),text=document.getElementById("text");
+function unreachable(){st.textContent="backend unreachable on 18935 (is board.py running?)";}
 function loadRooms(){fetch(API+"/rooms").then(function(r){return r.json()}).then(function(d){
 if(!d.rooms)return;if(d.rooms.indexOf(room)<0)room=d.rooms[0]||room;
 roomsEl.innerHTML="";d.rooms.forEach(function(n){var b=document.createElement("button");
 b.textContent="#"+n;if(n===room)b.className="on";
-b.onclick=function(){room=n;poll()};roomsEl.appendChild(b)})})}
+b.onclick=function(){room=n;poll()};roomsEl.appendChild(b)})}).catch(function(){unreachable();})}
 function poll(){fetch(API+"/messages?room="+encodeURIComponent(room)).then(function(r){return r.json()})
-.then(function(d){if(!d.messages)return;log.innerHTML=d.messages.map(function(m){
+.then(function(d){if(!d.messages)return;st.textContent="";log.innerHTML=d.messages.map(function(m){
 return "<div class=msg><b>"+esc(m.author)+"</b> <span>#"+m.id+"</span> "+esc(m.text)+"</div>"}).join("");
-log.scrollTop=log.scrollHeight;loadRooms()}).catch(function(){})}
+log.scrollTop=log.scrollHeight;loadRooms()}).catch(function(){unreachable();})}
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 document.getElementById("f").onsubmit=function(e){e.preventDefault();
 fetch(API+"/post",{method:"POST",headers:{"Content-Type":"application/json"},
-body:JSON.stringify({room:room,author:author.value||"anon",text:text.value})}).then(function(){text.value="";poll()})};
+body:JSON.stringify({room:room,author:author.value||"anon",text:text.value})}).then(function(){text.value="";poll()}).catch(function(){unreachable();})};
 loadRooms();poll();setInterval(poll,2000)})();
 </script></body></html>

@@ -1,0 +1,17 @@
+[Unit]
+Description=Meta OS spinning wallpaper (ASCII infinity loop)
+After=graphical-session.target
+PartOf=graphical-session.target
+# These two live in [Unit], not [Service]: systemd ignores (and warns about)
+# them anywhere else, which is a rate limit that silently does not exist.
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/share/metaos/apps/meta-live.py
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=default.target

@@ -12,8 +12,16 @@ Two proof scripts back the whole thing:
 | `os-build/tools/proof_boot.sh` | boots detached, polls the framebuffer, fails if the screen stays one colour | `sh os-build/tools/proof_boot.sh --timeout 180` |
 | `os-build/tools/proof_session.sh` | inside the guest: 9 rows over the loopback services, fails with `DEAD ports:` | `bash /opt/face/proof_session.sh` |
 
-Latest boot capture: `os-build/captures/proof-boot-1920x1080-20261103T203318Z.png`
-— 1920×1080, not single-colour, PASS.
+Latest boot capture: `os-build/captures/proof-boot-1920x1080-20261103T205318Z.png`
+— 1920×1080, not single-colour, PASS. It is taken early, so it shows the
+top bar and the wallpaper and **no dock yet**.
+
+The dock, on a live guest at 21:09 UTC: `os-build/captures/dock-live-1920x1080-20261103T2109Z.png`.
+That frame is the honest "what the desktop looks like" picture: `Meta OS` top
+bar, the animated ASCII wallpaper filling the 1920×1080 screen, a terminal
+window with the prompt `metaos` in blue, and the plank dock along the bottom
+with roughly twenty tile icons. Captured off the running guest's QEMU monitor
+(`screendump`), not staged.
 
 ---
 
@@ -37,7 +45,8 @@ sh os-build/tools/show_os.sh
 
 **On screen:** a QEMU window, then the Meta OS desktop — top bar with the Meta
 mark and the clock, the dock at the bottom, the animated ASCII Meta symbol
-filling the whole screen as wallpaper.
+filling the whole screen as wallpaper. All four of those are in
+`captures/dock-live-1920x1080-20261103T2109Z.png` if the live boot misbehaves.
 
 **Say:** "This is Meta OS 1.0, codename Ribbon. It boots from a single image."
 
@@ -60,7 +69,8 @@ id
 - `NAME="Meta OS"`, `VERSION="1.0 (Ribbon)"`, `ID=metaos`
 - `Description: Meta OS 1.0 (Ribbon)`, `Codename: ribbon`
 - the account is `meta`, not `ubuntu`
-- the prompt reads `metaos` in blue
+- the prompt reads `metaos` in blue (visible in
+  `captures/dock-live-1920x1080-20261103T2109Z.png`)
 
 **Say:** "Base is Debian; the identity, session, theme, services and apps are
 ours."
@@ -150,8 +160,9 @@ The base is Debian — we say so, because a judge will check."
 
 - a rewritten Linux
 - a new kernel in this image
-- that Aegis (security) has a screen — it does not yet
-- that the messaging app is installed — `bus.html` is not on the image yet
+- that Aegis is finished — the page exists and the tile is wired, but the
+  nightly image install was not proven
+- that Messages is a working messenger — it is a relay client with no relay
 - that all dock tiles were clicked and verified — only Board has been
 - GPU 3D
 
@@ -161,11 +172,11 @@ The base is Debian — we say so, because a judge will check."
 
 | Beat | Blocked on |
 |---|---|
-| Aegis security dashboard | the page does not exist (agent-3 is building it) |
-| Messaging app | `bus.html` not installed on the image (agent-1/2) |
-| Boards / Imperium world packs | `surfaces.html` has no tile yet (agent-1) |
+| Aegis security dashboard | page + tile exist (`aegis-page/`, self-test PASS); copy landing on the image is unproven |
+| Messaging app | `bus.html` ships with a tile, but it needs a relay REST URL + token; offline it says `Status: not connected` |
 | 3D fps numbers | measurement (agent-4) |
-| Every tile clicked | per-tile proof (agent-1) |
+| Every tile clicked | per-tile proof; 27 tiles exist, Board is the only one with a capture |
+| Icons are all distinct | several tiles share a shield glyph, so the dock reads repetitive |
 
 ---
 

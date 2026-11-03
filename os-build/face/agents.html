@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meta OS — Agents</title>
+<style>
+  :root { --bg:#0c1219; --panel:#121b26; --line:#22303f; --fg:#e8eef6;
+          --dim:#8ba0b8; --accent:#1877f2; --ok:#23af46; --warn:#e88c23; --bad:#cd2d2d; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--fg);
+         font: 13px/1.45 ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { display:flex; align-items:center; gap:12px; padding:10px 14px;
+           border-bottom:1px solid var(--line); background:var(--panel); position:sticky; top:0; }
+  h1 { font-size:14px; margin:0; font-weight:600; letter-spacing:.02em; }
+  .pill { font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid var(--line);
+          color:var(--dim); }
+  .pill.on { color:var(--ok); border-color:var(--ok); }
+  .pill.off { color:var(--bad); border-color:var(--bad); }
+  .pill.warn { color:var(--warn); border-color:var(--warn); }
+  main { display:grid; grid-template-columns: 1fr 1.2fr 1.4fr; gap:10px; padding:10px; }
+  @media (max-width: 1100px) { main { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
+  section { background:var(--panel); border:1px solid var(--line); border-radius:10px;
+            padding:10px; min-height:120px; }
+  h2 { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim);
+       margin:0 0 8px; font-weight:600; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:8px;
+         padding:6px 8px; border:1px solid transparent; border-radius:8px; }
+  .row:hover { border-color:var(--line); }
+  .row.sel { border-color:var(--accent); }
+  .row.clickable { cursor:pointer; }
+  .name { font-weight:600; }
+  .lane { color:var(--dim); font-size:11px; }
+  .reason { color:var(--warn); font-size:11px; }
+  button { background:transparent; color:var(--fg); border:1px solid var(--line);
+           border-radius:8px; padding:4px 9px; cursor:pointer; font-size:12px; }
+  button:hover { border-color:var(--accent); }
+  button.primary { background:var(--accent); border-color:var(--accent); }
+  button:disabled { opacity:.45; cursor:default; }
+  textarea, input, select { width:100%; background:var(--bg); color:var(--fg);
+    border:1px solid var(--line); border-radius:8px; padding:6px 8px; font:inherit; }
+  textarea { min-height:56px; resize:vertical; }
+  .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size:11px; }
+  pre { margin:0; white-space:pre-wrap; word-break:break-word; }
+  #runlog { max-height:46vh; overflow-y:auto; background:var(--bg);
+            border:1px solid var(--line); border-radius:8px; padding:8px; }
+  .empty { color:var(--dim); font-style:italic; padding:6px 2px; }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:2px 10px; font-size:11px; color:var(--dim); }
+  .kv b { color:var(--fg); font-weight:500; }
+  .notice { border-left:2px solid var(--line); padding:2px 0 2px 8px; margin-bottom:6px; }
+  .notice.alarm { border-color:var(--bad); }
+  .status-line { margin-left:auto; font-size:11px; color:var(--dim); }
+  .form { display:grid; gap:6px; margin-top:10px; padding-top:10px; border-top:1px solid var(--line); }
+  .subhead { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--dim);
+             margin:10px 0 4px; font-weight:600; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Meta Agent Status</h1>
+  <span class="pill" id="relay-pill">relay ?</span>
+  <span class="pill" id="queue-pill">queue ?</span>
+  <span class="status-line" id="stamp"></span>
+</header>
+
+<main>
+  <section>
+    <h2>Who can take work</h2>
+    <div id="agents"><div class="empty">reading the registry…</div></div>
+  </section>
+
+  <section>
+    <h2>On the board</h2>
+    <div id="jobs"><div class="empty">no relay state yet</div></div>
+    <div class="subhead">Runs (newest first)</div>
+    <div id="runs"><div class="empty">no runs yet</div></div>
+    <div class="form">
+      <label class="mono" for="orders">give an agent a job</label>
+      <select id="agent-select"></select>
+      <textarea id="orders" placeholder="sweep the tree for stray licenses"></textarea>
+      <button class="primary" id="submit">Give this to an agent</button>
+      <div class="mono" id="submit-out"></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What just happened</h2>
+    <div class="subhead" style="margin-top:0">Selected run</div>
+    <div class="kv" id="runmeta"><div class="empty">pick a run to watch it live</div></div>
+    <pre class="mono" id="runlog"><div class="empty">no run selected</div></pre>
+    <div class="mono lane" id="runstate"></div>
+    <div class="subhead">Notices</div>
+    <div id="notices"><div class="empty">nothing yet</div></div>
+  </section>
+</main>
+
+<script>
+/* Live console for the relay. Every panel reads 127.0.0.1:18940 (metaosd);
+   nothing on this page comes from a hardcoded list — agents, jobs, runs,
+   halts and logs are all fetched. An empty relay looks empty, not healthy.
+   Live log: plain 2 s poll of GET /runs/<id> (no SSE — one tiny interval,
+   paused when nothing is selected, so the port is never hammered). */
+const API = "http://127.0.0.1:18940";
+const $ = (id) => document.getElementById(id);
+
+function el(tag, props = {}, kids = []) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "text") n.textContent = v;
+    else if (k === "class") n.className = k;
+    else n.setAttribute(k, v);
+  }
+  for (const k of kids) n.appendChild(k);
+  return n;
+}
+function ago(ms) {
+  if (ms == null) return "";
+  const s = Math.round(ms / 1000);
+  if (s < 60) return s + "s";
+  if (s < 3600) return Math.round(s / 60) + "m";
+  return Math.round(s / 3600) + "h";
+}
+
+let selectedRun = null;
+let pendingWatch = null; // {agent, since} — auto-select the run a submit starts
+let logTimer = null;
+
+async function get(path) {
+  const r = await fetch(API + path, { cache: "no-store" });
+  if (!r.ok) throw new Error(path + " → " + r.status);
+  return r.json();
+}
+async function post(path, obj) {
+  const r = await fetch(API + path, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(obj),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j && (j.error || j.output)) || (path + " → " + r.status));
+  return j;
+}
+
+function renderStatus(st) {
+  const relay = $("relay-pill");
+  relay.textContent = st.stateDirExists ? "relay up" : "relay: no state dir";
+  relay.className = "pill " + (st.stateDirExists ? "on" : "off");
+  relay.title = st.stateDir;
+
+  const q = $("queue-pill");
+  q.textContent = "queue " + (st.queueUrl || "");
+  q.title = "submissions go to " + st.queueUrl;
+
+  const hb = (st.heartbeat || []).map((h) => `${h.file} ${ago(h.ageSeconds * 1000)} old`);
+  $("stamp").textContent = hb.length ? hb.join("  ·  ") : "no heartbeat file yet";
+
+  const box = $("notices");
+  box.textContent = "";
+  if (!st.notices || !st.notices.length) {
+    box.appendChild(el("div", { class: "empty", text: "no notices yet — the relay has not spoken" }));
+  } else {
+    for (const n of st.notices.slice().reverse()) {
+      const line = el("div", { class: "notice" + (n.level === "alarm" ? " alarm" : "") });
+      line.appendChild(el("div", { class: "mono", text: (n.ts || "").replace("T", " ").slice(0, 19) }));
+      line.appendChild(el("div", { text: n.message || n.text || JSON.stringify(n) }));
+      box.appendChild(line);
+    }
+  }
+}
+
+function renderAgents(a) {
+  const box = $("agents");
+  box.textContent = "";
+  const sel = $("agent-select");
+  sel.textContent = "";
+  if (!a.ok) {
+    box.appendChild(el("div", { class: "empty", text: a.error || "no registry" }));
+    return;
+  }
+  for (const ag of a.agents) {
+    const row = el("div", { class: "row" });
+    const left = el("div");
+    left.appendChild(el("div", { class: "name", text: ag.name }));
+    left.appendChild(el("div", { class: "lane", text: ag.lane || "no lane" }));
+    // A draft is an explicit refusal with its reason on screen, not a
+    // silent omission: the registry names why there is no program.
+    if (ag.draft) {
+      left.appendChild(el("div", { class: "reason", text: "draft — " + (ag.draftReason || "no program yet") }));
+    }
+    row.appendChild(left);
+    if (ag.draft) {
+      row.appendChild(el("span", { class: "pill warn", text: "draft" }));
+    } else if (ag.halted) {
+      row.appendChild(el("span", { class: "pill off", text: "halted" }));
+      const b = el("button", { text: "resume" });
+      b.onclick = async () => {
+        try { await post("/resume", { agent: ag.name }); } catch (e) { /* next refresh says */ }
+        refreshSlow();
+      };
+      row.appendChild(b);
+    } else {
+      const b = el("button", { text: "halt" });
+      b.onclick = async () => {
+        try { await post("/halt", { agent: ag.name }); } catch (e) { /* next refresh says */ }
+        refreshSlow();
+      };
+      row.appendChild(b);
+      sel.appendChild(el("option", { value: ag.name, text: ag.name }));
+    }
+    box.appendChild(row);
+  }
+  if (a.agents.length === 0) {
+    box.appendChild(el("div", { class: "empty", text: "registry has no agents" }));
+  }
+  if (!sel.options.length) {
+    sel.appendChild(el("option", { value: "", text: "no live agents — all drafts or halted" }));
+  }
+}
+
+function renderJobs(j) {
+  const box = $("jobs");
+  box.textContent = "";
+  if (!j.files || !j.files.length) {
+    box.appendChild(el("div", { class: "empty", text: "board is empty (" + j.stateDir + ")" }));
+  } else {
+    for (const f of j.files) {
+      const row = el("div", { class: "row mono" });
+      row.appendChild(el("span", { text: f.name }));
+      row.appendChild(el("span", { class: "lane", text: ago(Date.now() - f.mtimeMs) + " ago" }));
+      box.appendChild(row);
+    }
+  }
+  if (j.halted && j.halted.length) {
+    box.appendChild(el("div", { class: "lane", text: "halted: " + j.halted.join(", ") }));
+  }
+}
+
+function runState(r) {
+  if (r.refused) return { text: "refused: " + r.refused, cls: "pill warn" };
+  if (r.running) return { text: "running", cls: "pill on" };
+  if (r.signal) return { text: "killed: " + r.signal, cls: "pill off" };
+  if (r.exitCode !== null && r.exitCode !== 0) return { text: "failed: exit " + r.exitCode, cls: "pill off" };
+  if (r.exitCode === 0) return { text: "done: exit 0", cls: "pill on" };
+  return { text: "queued", cls: "pill" };
+}
+
+function renderRuns(r) {
+  const box = $("runs");
+  box.textContent = "";
+  const runs = (r && r.runs) || [];
+  if (!runs.length) {
+    box.appendChild(el("div", { class: "empty", text: "no runs yet — give an agent a job" }));
+    return;
+  }
+  for (const run of runs.slice(0, 30)) {
+    const st = runState(run);
+    const row = el("div", { class: "row mono clickable" + (selectedRun === run.run ? " sel" : "") });
+    const left = el("div");
+    left.appendChild(el("div", { class: "name", text: run.run }));
+    const sub = run.agent + (run.orders ? " — " + run.orders.slice(0, 80) : "");
+    left.appendChild(el("div", { class: "lane", text: sub }));
+    row.appendChild(left);
+    row.appendChild(el("span", { class: st.cls, text: st.text }));
+    row.onclick = () => { selectedRun = run.run; startLogPoll(); refreshRuns(); };
+    box.appendChild(row);
+    // A submit waits for its run: the first run for that agent starting after
+    // the submit is this job's, so select it without a click.
+    if (pendingWatch && run.agent === pendingWatch.agent && run.startTime &&
+        Date.parse(run.startTime) >= pendingWatch.since) {
+      selectedRun = run.run;
+      pendingWatch = null;
+      startLogPoll();
+    }
+  }
+}
+
+// The log view polls GET /runs/<id> every 2 s while a run is selected and
+// stops when none is. Auto-scroll follows the tail unless the person scrolled
+// up to read — then their position is left alone.
+async function pollRunLog() {
+  if (!selectedRun) return;
+  let d;
+  try {
+    d = await get("/runs/" + encodeURIComponent(selectedRun) + "?n=200");
+  } catch (e) {
+    $("runstate").textContent = "log unreachable: " + String(e.message || e);
+    return;
+  }
+  const meta = $("runmeta");
+  meta.textContent = "";
+  const kv = (k, v) => {
+    meta.appendChild(el("span", { text: k }));
+    meta.appendChild(el("b", { text: String(v == null ? "—" : v) }));
+  };
+  kv("run", d.run);
+  kv("agent", d.agent || "—");
+  kv("exit", d.exit.refused ? ("refused: " + d.exit.refused)
+    : (d.exit.code == null ? (d.result ? "see result" : "running") : ("exit " + d.exit.code)));
+  if (d.meta && d.meta.durationMs != null) kv("took", (d.meta.durationMs / 1000).toFixed(1) + "s");
+  if (d.result && d.result.id) kv("job", d.result.id);
+  if (d.orders) kv("orders", d.orders.slice(0, 160));
+  const log = $("runlog");
+  const nearBottom = log.scrollHeight - log.scrollTop - log.clientHeight < 60;
+  log.textContent = "";
+  const lines = (d.stdout && d.stdout.lines) || [];
+  log.appendChild(el("div", { text: lines.join("\n") || "(no output yet)" }));
+  if (d.stderr && d.stderr.lines && d.stderr.lines.length) {
+    log.appendChild(el("div", { class: "reason", text: "--- stderr ---" }));
+    log.appendChild(el("div", { text: d.stderr.lines.join("\n") }));
+  }
+  if (nearBottom) log.scrollTop = log.scrollHeight;
+  const st = runState({
+    refused: d.exit.refused, running: d.exit.code == null && !d.exit.refused && !d.result,
+    signal: d.exit.signal, exitCode: d.exit.code,
+  });
+  $("runstate").textContent = st.text +
+    (d.stdout && d.stdout.truncated ? " · showing last 200 lines" : "") +
+    " · updates every 2 s";
+}
+
+function startLogPoll() {
+  if (logTimer) clearInterval(logTimer);
+  pollRunLog();
+  logTimer = setInterval(pollRunLog, 2000);
+}
+
+async function refreshSlow() {
+  try {
+    renderStatus(await get("/status"));
+  } catch (e) {
+    $("relay-pill").textContent = "backend unreachable on 18940 (metaosd unreachable)";
+    $("relay-pill").className = "pill off";
+    $("stamp").textContent = String(e.message || e);
+  }
+  try {
+    renderAgents(await get("/agents"));
+  } catch (e) {
+    $("agents").textContent = "backend unreachable on 18940 — registry: " + String(e.message || e);
+  }
+  try {
+    renderJobs(await get("/jobs"));
+  } catch (e) {
+    $("jobs").textContent = "backend unreachable on 18940 — board: " + String(e.message || e);
+  }
+}
+
+async function refreshRuns() {
+  try {
+    renderRuns(await get("/runs?limit=30"));
+  } catch (e) {
+    $("runs").textContent = "backend unreachable on 18940 — runs: " + String(e.message || e);
+  }
+}
+
+$("submit").onclick = async () => {
+  const out = $("submit-out");
+  const agent = $("agent-select").value;
+  const orders = $("orders").value.trim();
+  if (!agent || !orders) { out.textContent = "pick an agent and write the orders"; return; }
+  out.textContent = "sending through metaosd to agents/submit.mjs…";
+  try {
+    const j = await post("/jobs", { agent, orders });
+    // Say exactly what the relay said. A draft still refuses here (the select
+    // only lists live agents, but the wire re-checks): a refused job must not
+    // look accepted.
+    if (j.ok && j.id) {
+      out.textContent = "accepted: job " + j.id + " for " + agent + " — watching for its run…";
+      pendingWatch = { agent, since: Date.now() - 1000 };
+      $("orders").value = "";
+    } else {
+      out.textContent = "refused: " + (j.error || j.output || JSON.stringify(j));
+    }
+    refreshSlow(); refreshRuns();
+  } catch (e) {
+    out.textContent = "refused: " + String(e.message || e);
+  }
+};
+
+refreshSlow(); refreshRuns();
+setInterval(refreshSlow, 5000);
+setInterval(refreshRuns, 5000);
+</script>
+</body>
+</html>

@@ -18,7 +18,7 @@ a.addEventListener('loadedmetadata',function(){st.textContent='ready: '+fmt(a.du
 a.addEventListener('play',function(){st.textContent='playing…';});
 a.addEventListener('timeupdate',function(){st.textContent='playing '+fmt(a.currentTime)+' / '+fmt(a.duration);});
 a.addEventListener('ended',function(){st.textContent='ended '+fmt(a.duration)+' — played end to end';});
-a.addEventListener('error',function(){st.textContent='audio unreachable (is :18934 serving the wav?)';});
+a.addEventListener('error',function(){st.textContent='backend unreachable on 18934 (is :18934 serving the wav?)';});
 a.play().catch(function(){st.textContent+=' (autoplay blocked: press play)';});
 })();
 </script></body></html>
