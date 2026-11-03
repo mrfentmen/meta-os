@@ -31,3 +31,11 @@ unzip
 zip
 
 # REMOVE (none in slice 1)
+
+# ADD (theme lane — appended by Pax 2026-11-03 per Milo QA H4-4: these are
+# named in the frozen contract metaos-contracts/PACKAGES.md and in
+# iso/base/metaos.packages but were missing here; the cut-2 base flow
+# consumes THIS list plus iso/base/metaos.packages — both, not either/or)
+plank
+fonts-inter
+lightdm-gtk-greeter
