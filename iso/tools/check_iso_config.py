@@ -244,7 +244,21 @@ if locale_cfg:
         bad("calamares: locale.conf has no region/zone")
 
 # --- desktop entries ---------------------------------------------------
-APPS = {"thunar", "xfce4-terminal", "xfce4-settings-manager", "chromium"}
+# Binaries the base image already supplies.
+SYSTEM_APPS = {"thunar", "xfce4-terminal", "xfce4-settings-manager", "chromium"}
+# Binaries this lane ships. The value is the file that must exist.
+SHIPPED_APPS = {"meta-agent-status": Path("apps") / "agent-status" / "meta-agent-status.py"}
+APPS = SYSTEM_APPS | set(SHIPPED_APPS)
+
+# The frozen launcher set, `metaos-contracts/APPS.md`: id -> launcher stem.
+# A missing id is a named gap, and this table is how it gets named.
+FROZEN_APPS = {
+    "files": "meta-files",
+    "terminal": "meta-terminal",
+    "settings": "meta-settings",
+    "browser": "meta-browser",
+    "agent-status": "meta-agent-status",
+}
 desktop_dir = ISO / "apps" / "desktop"
 entries = sorted(desktop_dir.glob("*.desktop"))
 if not entries:
@@ -265,7 +279,7 @@ for entry in entries:
         continue
     binary = got.get("Exec", "").split()[0]
     if binary not in APPS:
-        bad("apps: %s runs %r, which is not one of the four shipped apps"
+        bad("apps: %s runs %r, which is neither a system app nor a shipped one"
             % (entry.name, binary))
     else:
         ok("apps: %s runs %s" % (entry.name, binary))
@@ -283,6 +297,26 @@ for item in items:
         ok("apps: %s points at %s" % (item.name, target))
     else:
         bad("apps: %s points at %r, which is not a shipped launcher" % (item.name, launcher))
+
+# Every frozen id must have a launcher and a dock item. This is the rule that
+# would have named the missing fifth app the day the contract was frozen.
+launcher_stems = {entry.stem for entry in entries}
+dock_stems = {item.stem for item in items}
+for app_id, stem in sorted(FROZEN_APPS.items()):
+    if stem in launcher_stems:
+        ok("apps: frozen id %r ships %s.desktop" % (app_id, stem))
+    else:
+        bad("apps: frozen id %r has no launcher (%s.desktop)" % (app_id, stem))
+    if stem in dock_stems:
+        ok("apps: frozen id %r has a dock item" % app_id)
+    else:
+        bad("apps: frozen id %r has no dock item (%s.dockitem)" % (app_id, stem))
+
+for binary, rel in sorted(SHIPPED_APPS.items()):
+    if (ISO / rel).is_file():
+        ok("apps: %s is backed by %s" % (binary, rel))
+    else:
+        bad("apps: %s is declared but %s is missing" % (binary, rel))
 
 # --- chromium policy and start page ------------------------------------
 policy_path = ISO / "apps" / "chromium" / "policies.json"

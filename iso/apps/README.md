@@ -18,6 +18,7 @@ does its job, closes clean" stays **UNPROVEN** until a VM run.
 | `chromium/policies.json` | `/etc/chromium/policies/managed/metaos.json` | start page, no first-run tab |
 | `chromium/meta-start.html` | `/usr/share/metaos/start/` | the start page itself, works offline |
 | `chromium/tokens.css` | `/usr/share/metaos/start/` | generated from the frozen contract, never hand-edited |
+| `agent-status/meta-agent-status.py` | `/usr/local/bin/` | the agent-layer status reader |
 
 ## Install
 
@@ -30,6 +31,7 @@ cp iso/apps/chromium/tokens.css        /usr/share/metaos/start/
 cp iso/apps/chromium/policies.json     /etc/chromium/policies/managed/metaos.json
 install -d /home/"$USER"/.config/plank/dock1/launchers
 cp iso/apps/plank/*.dockitem /home/"$USER"/.config/plank/dock1/launchers/
+install -m 755 iso/apps/agent-status/meta-agent-status.py /usr/local/bin/meta-agent-status
 ```
 
 After that, `chromium` opens on the Meta start page and the dock shows the
@@ -50,13 +52,28 @@ four apps in the order listed.
 - Dock items point at the `.desktop` files by absolute path, which is what
   Plank reads; renaming an app means editing its dockitem too.
 
-## The fifth app — named, not faked
+## The fifth app — agent-status
 
 The frozen launcher set is `files, terminal, settings, browser, agent-status`
-(`metaos-contracts/APPS.md`). The first four have real binaries on Xubuntu and
-ship here. **`agent-status` does not exist on main yet** — no binary, no
-script — so no launcher is shipped for it. A `.desktop` pointing at a program
-that is not there is a stub, and this lane does not ship stubs.
+(`metaos-contracts/APPS.md`). All five ship here now. The first four are
+Xubuntu binaries; the fifth is ours:
+
+    meta-agent-status [--root DIR] [--json] [--stale-after SECONDS]
+
+It reads the local agent layer and prints what it finds: how many agents the
+registry holds, how old the watchman heartbeat is, how many jobs are queued,
+and how many lines the gym ledger, the inbox and the refusal log carry. It
+writes nothing and starts nothing. A file that is absent prints `absent`, and
+a required file that is missing makes the command exit 1 with the row named.
+
+`--root` defaults to `$METAOS_ROOT`, or `/opt/metaos` when that is unset, so
+the reader works on a checkout (`--root .`) and on an installed system
+without a code change. `--json` is the machine-readable form for the agent
+layer itself to consume.
+
+The launcher uses `Terminal=true` because the program prints a table. Tests:
+`python3 tests/test_iso_agent_status.py` (9 cases, real directories, no
+mock).
 
 Status: **BLOCKED**, waiting on an agent-status entry point. When one lands,
 it gets `meta-agent-status.desktop` (with `TryExec=`) and the fifth dock item.
