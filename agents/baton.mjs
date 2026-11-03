@@ -44,6 +44,22 @@ export function handoffChain(links) {
   return { jobId, authors };
 }
 
+// CB2-385: what a resumed job still has to do. `stepIndex` is the index of the
+// last step the baton records as DONE, so the remaining steps are the ones
+// after it: a resumed job continues, it never re-runs what already ran.
+// A baton with no usable step index cannot be resumed — guessing zero would
+// silently restart the job from the top — so it is refused by name.
+export function stepsRemaining(baton, steps) {
+  if (!Array.isArray(steps) || steps.length === 0) {
+    throw new Error("baton resume: a step list is required");
+  }
+  if (!baton || !Number.isInteger(baton.stepIndex) || baton.stepIndex < -1) {
+    throw new Error("baton resume: baton has no usable step index");
+  }
+  if (baton.stepIndex >= steps.length) return [];
+  return steps.slice(baton.stepIndex + 1);
+}
+
 export function continuationOrders(fromRun, baton, extra = "") {
   return [
     "Continuation of run " + fromRun + " — pick up the baton, do not restart.",

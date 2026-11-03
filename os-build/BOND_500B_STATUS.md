@@ -605,7 +605,7 @@ Not delivered:
 Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 `test_readme_data_index.py` 3 pass; 7 new Aegis tests pass (3 + 4).
 
-## Section 16 — Agent layer Node (CB2-376..400) — 20/25
+## Section 16 — Agent layer Node (CB2-376..400) — 22/25
 
 | Task | File | Result |
 |---|---|---|
@@ -629,13 +629,17 @@ Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 | CB2-387 | `agents/gym.mjs` | `loadDrillFile` refuses an unknown step type with the type and index named |
 | CB2-388 | `tests/agents-gym-edges.test.mjs` | drill file runs through the real `spawnAgent`; one score per declared step |
 | CB2-395 | `tests/agents-queue-edges.test.mjs` | three posted jobs drain in id order, once each; a second drain runs nothing |
+| CB2-382 | `agents/runtime.mjs`, `tests/agents-watchman-edges.test.mjs` | `LARGE_CHANGE_BYTES` threshold in the runtime; a change at the boundary takes the alarm form, a small one stays a note, a delete is always an alarm with no byte delta |
+| CB2-385 | `agents/baton.mjs`, `tests/agents-baton-resume.test.mjs` | `stepsRemaining` resumes after the last done step; a step-run log proves no completed step runs twice; a baton with no usable index is refused, never restarted from zero |
 
-Not delivered: CB2-382 (no large-change alarm form), CB2-384 (baton has no required
-step-index check), CB2-385 (no resume function), CB2-392..393 (bridge is a
-supervisor verb, not a message shaper).
+Not delivered: CB2-384 — `writeBaton` has six callers (a drill script and five
+tests) that build a baton with no step index, so requiring one at construction
+is a behaviour change that breaks them, not a test. CB2-392..393 — `bridge.mjs`
+is the supervisor verb (start/stop/boot); it shapes no messages, so there is
+no wire shape to assert.
 
-Section 16 verification: 11 test files, **50 tests pass, 0 fail**; the whole agent
-suite (`node --test tests/agents-*.test.mjs`) is 120/120.
+Section 16 verification: 13 test files, **56 tests pass, 0 fail**; the whole agent
+suite (`node --test tests/agents-*.test.mjs`) is 126/126.
 
 ## Section 17 — Face tests (CB2-401..425) — 0/25, blocked
 

@@ -228,12 +228,26 @@ export function watchState(target) {
   throw new Error("watch: unsupported target type " + target.type);
 }
 
+// A change is a quiet note unless it moved at least this many bytes. A file
+// that appears or disappears is never quiet: a create or a delete is the whole
+// change, whatever its size. The threshold is here, not in a caller, so every
+// watcher sizes a change the same way.
+export const LARGE_CHANGE_BYTES = 4096;
+
+function classifyChange(from, to, threshold = LARGE_CHANGE_BYTES) {
+  if (!from.exists || !to.exists) return { kind: "alarm", deltaBytes: null, reason: from.exists ? "deleted" : "created" };
+  const deltaBytes = Math.abs(to.size - from.size);
+  return { kind: deltaBytes >= threshold ? "alarm" : "note", deltaBytes, reason: null };
+}
+
 export function pollWatch(targets, prev = {}) {
   const now = {}, changes = [];
   for (const t of targets) {
     const key = t.type + ":" + t.path;
     now[key] = watchState(t);
-    if (prev[key] && JSON.stringify(prev[key]) !== JSON.stringify(now[key])) changes.push({ key, from: prev[key], to: now[key] });
+    if (prev[key] && JSON.stringify(prev[key]) !== JSON.stringify(now[key])) {
+      changes.push({ key, from: prev[key], to: now[key], ...classifyChange(prev[key], now[key]) });
+    }
   }
   return { state: now, changes };
 }
