@@ -116,6 +116,20 @@ a job. `--max-continues N` sets the continuation bound for that job.
 Both read `$METAOS_AGENT_STATE`, else `$XDG_STATE_HOME/oc2-agent` — the same
 directory the units pass to the watchman.
 
+## Tasking itself
+
+A run that finishes its work can write `next` on its baton — an order, not a
+note. The watchman puts that order on the board for the same agent, stamped
+`proposedBy` with the run that asked. That is the relay deciding its own next
+step instead of waiting for a person.
+
+It is bounded on purpose. One proposal per finished job unless the job sets
+`maxProposals`; a proposal that repeats the orders just answered is refused by
+name (`proposal-echo`); a job that already asked to continue is not asked
+again; and a failed run proposes nothing. Every decision is one ledger line
+(`proposal-queued`, `proposal-refused`, `proposal-error`) and the proposer's own
+counter is written back, so the ceiling survives a restart.
+
 ## After a failure
 
 A job that exits non-zero is retried **once**, on the next poll, with its baton

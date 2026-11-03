@@ -26,6 +26,7 @@ import { assertGranted, checkPath, narrowGrants, normalizeGrants } from "./grant
 import { assertFresh, recordDeadEnd } from "./deadends.mjs";
 import { recordApplied, appliedCounts } from "./learning.mjs";
 import { continueDecision, writeContinue } from "./continue.mjs";
+import { proposeJob } from "./jobs.mjs";
 
 function must(condition, message) {
   if (!condition) throw new Error(message);
@@ -227,6 +228,29 @@ export const JUDGMENT_DRILLS = [
       recordApplied(dir, { agent: "milo", lesson: "2026-01-01T00:00:00.000Z", outcome: "refuted" });
       const counts = appliedCounts(dir);
       must(counts["2026-01-01T00:00:00.000Z"] === 2, "count was " + counts["2026-01-01T00:00:00.000Z"]);
+    },
+  },
+  {
+    id: "self-tasking",
+    what: "a finished run can order its own next job once, and cannot echo or exceed the limit",
+    async run({ root }) {
+      const dir = fs.mkdtempSync(path.join(root, "propose-"));
+      const jobs = path.join(dir, "jobs");
+      fs.mkdirSync(jobs);
+      fs.writeFileSync(
+        path.join(jobs, "d1.job.json"),
+        JSON.stringify({ id: "d1", agent: "watch", orders: "sweep the first shelf" }),
+      );
+      const first = proposeJob({ root: dir, id: "d1", runId: "run-1", next: "sweep the second shelf" });
+      must(first.ok === true, "a clean finish could not propose: " + first.reason);
+      const landed = JSON.parse(fs.readFileSync(path.join(jobs, first.id + ".job.json"), "utf8"));
+      must(landed.orders === "sweep the second shelf", "the order was not carried");
+      must(landed.agent === "watch", "the proposal went to another agent");
+
+      const echo = proposeJob({ root: dir, id: "d1", runId: "run-2", next: "sweep the first shelf" });
+      must(echo.ok === false && echo.reason === "proposal-echo", "an echo was allowed: " + echo.reason);
+      const capped = proposeJob({ root: dir, id: first.id, runId: "run-3", next: "sweep the third shelf" });
+      must(capped.ok === false && capped.reason === "proposal-limit", "the one-hop cap did not hold: " + capped.reason);
     },
   },
   {
