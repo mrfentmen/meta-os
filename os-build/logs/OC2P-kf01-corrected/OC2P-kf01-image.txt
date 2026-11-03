@@ -1,0 +1,150 @@
+===== OC2P-002 IMAGE LOG =====
+date: 2026-11-03T04:26:45Z
+kernel ELF: /tmp/oc2b-kf01-correct/kernel/target/x86_64-unknown-none/debug/metaos-kernel
+-rwxr-xr-x@ 1 test  wheel  14720088 Nov  2 23:26 /tmp/oc2b-kf01-correct/kernel/target/x86_64-unknown-none/debug/metaos-kernel
+
+===== imgtool crate =====
+[package]
+name = "imgtool"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bootloader = "=0.11.17"
+
+[workspace]
+--- src/main.rs ---
+// OC2P-002 minimal host-side image tool (tooling only, NOT part of the repo).
+// RK-008 step 6: host-side image via `bootloader` crate BiosBoot path.
+use std::path::PathBuf;
+
+fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    if args.len() != 3 {
+        eprintln!("usage: imgtool <kernel-elf> <out-img>");
+        std::process::exit(2);
+    }
+    let kernel = PathBuf::from(&args[1]);
+    let out = PathBuf::from(&args[2]);
+    println!("imgtool: kernel={} out={}", kernel.display(), out.display());
+    let boot = bootloader::BiosBoot::new(&kernel);
+    match boot.create_disk_image(&out) {
+        Ok(()) => println!("imgtool: IMAGE OK {}", out.display()),
+        Err(e) => {
+            eprintln!("imgtool: IMAGE FAIL {:?}", e);
+            std::process::exit(1);
+        }
+    }
+}
+
+===== cargo build (host tool, default stable toolchain) =====
+rustc: rustc 1.99.1 (58cf8f9c3 2026-10-13) (Homebrew) | cargo: cargo 1.99.1 (5f94df478 2026-08-27) (Homebrew)
+    Updating crates.io index
+     Locking 59 packages to highest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.27
+   Compiling libc v0.2.191
+   Compiling serde_core v1.0.229
+   Compiling serde v1.0.229
+   Compiling getrandom v0.4.3
+   Compiling cfg-if v1.0.5
+   Compiling radium v0.7.0
+   Compiling tap v1.0.1
+   Compiling bitflags v2.13.2
+   Compiling zmij v1.0.23
+   Compiling rustix v1.1.6
+   Compiling thiserror v1.0.69
+   Compiling wyz v0.5.1
+   Compiling crc-catalog v2.5.0
+   Compiling funty v2.0.0
+   Compiling log v0.4.35
+   Compiling serde_json v1.0.154
+   Compiling anyhow v1.0.104
+   Compiling llvm-tools v0.1.1
+   Compiling crc v3.4.0
+   Compiling bootloader v0.11.17
+   Compiling byteorder v1.5.0
+   Compiling bitflags v1.3.2
+   Compiling bitvec v1.1.1
+   Compiling once_cell v1.21.4
+   Compiling fastrand v2.5.0
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling errno v0.3.14
+   Compiling syn v3.0.9
+   Compiling syn v2.0.119
+   Compiling uuid v1.29.0
+   Compiling fatfs v0.3.6
+   Compiling gpt v3.1.0
+error: failed to run custom build command for `bootloader v0.11.17`
+
+Caused by:
+  process didn't exit successfully: `/private/tmp/oc2p-img/target/debug/build/bootloader-8af3abee25e37524/build-script-build` (exit status: 101)
+  --- stderr
+  error: the `-Z` flag is only accepted on the nightly channel of Cargo, but this is the `stable` channel
+  See https://doc.rust-lang.org/book/appendix-07-nightly-rust.html for more information about Rust release channels.
+  error: the `-Z` flag is only accepted on the nightly channel of Cargo, but this is the `stable` channel
+  See https://doc.rust-lang.org/book/appendix-07-nightly-rust.html for more information about Rust release channels.
+  error: the `-Z` flag is only accepted on the nightly channel of Cargo, but this is the `stable` channel
+  See https://doc.rust-lang.org/book/appendix-07-nightly-rust.html for more information about Rust release channels.
+  error: the `-Z` flag is only accepted on the nightly channel of Cargo, but this is the `stable` channel
+  See https://doc.rust-lang.org/book/appendix-07-nightly-rust.html for more information about Rust release channels.
+  error: the `-Z` flag is only accepted on the nightly channel of Cargo, but this is the `stable` channel
+  See https://doc.rust-lang.org/book/appendix-07-nightly-rust.html for more information about Rust release channels.
+
+  thread '<unnamed>' (12108529) panicked at /Users/test/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bootloader-0.11.17/build.rs:100:9:
+  failed to build uefi bootloader
+  note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+  thread '<unnamed>' (12108534) panicked at /Users/test/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bootloader-0.11.17/build.rs:300:9:
+  failed to build bios stage-3
+
+  thread 'main' (12108502) panicked at /Users/test/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bootloader-0.11.17/build.rs:16:29:
+  called `Result::unwrap()` on an `Err` value: Any { .. }
+warning: build failed, waiting for other jobs to finish...
+imgtool-build-exit=101
+
+===== RETRY: imgtool build under nightly (bootloader build.rs needs nightly cargo for -Zbuild-std) =====
+cargo: /Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/bin/cargo cargo 1.101.0-nightly (31d3246e0 2026-10-27)
+rust-toolchain context: bootloader-0.11.17/rust-toolchain.toml pins nightly + rust-src + llvm-tools-preview + x86_64-unknown-none
+added target: x86_64-unknown-uefi (for uefi stage; BiosBoot path still used for image)
+   Compiling funty v2.0.0
+   Compiling crc v3.4.0
+   Compiling byteorder v1.5.0
+   Compiling bootloader v0.11.17
+   Compiling bitflags v1.3.2
+   Compiling once_cell v1.21.4
+   Compiling fastrand v2.5.0
+   Compiling bitvec v1.1.1
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling syn v3.0.9
+   Compiling syn v2.0.119
+   Compiling fatfs v0.3.6
+   Compiling errno v0.3.14
+   Compiling uuid v1.29.0
+   Compiling gpt v3.1.0
+   Compiling tempfile v3.27.0
+   Compiling thiserror-impl v1.0.69
+   Compiling serde_derive v1.0.229
+   Compiling bincode v1.3.3
+   Compiling serde-big-array v0.5.1
+   Compiling bootloader-boot-config v0.11.17
+   Compiling mbrman v0.5.4
+   Compiling imgtool v0.1.0 (/private/tmp/oc2p-img)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 35.39s
+imgtool-build-nightly-exit=0 / 0
+-rwxr-xr-x@ 1 test  wheel  4093976 Nov  2 23:27 /tmp/oc2p-img/target/debug/imgtool
+
+===== imgtool run: BiosBoot image from kernel ELF =====
+imgtool: kernel=/tmp/oc2b-kf01-correct/kernel/target/x86_64-unknown-none/debug/metaos-kernel out=/tmp/oc2p-kf01/metaos-bios.img
+imgtool: IMAGE OK /tmp/oc2p-kf01/metaos-bios.img
+imgtool-run-exit=0
+
+===== image artifact =====
+-rw-r--r--@ 1 test  wheel  17269760 Nov  2 23:27 /tmp/oc2p-kf01/metaos-bios.img
+/tmp/oc2p-kf01/metaos-bios.img: DOS/MBR boot sector; partition 1 : ID=0x20, active, start-CHS (0x0,0,0), end-CHS (0x0,0,0), startsector 1, 961 sectors; partition 2 : ID=0xc, active, start-CHS (0x0,0,0), end-CHS (0x0,0,0), startsector 962, 32768 sectors
+size=17269760 bytes
+boot-signature=0x550xaa (want 0x55 0xaa)
+first-16=31c08ed88ec08ed08ee08ee8fcbc007c
