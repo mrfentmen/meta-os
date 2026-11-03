@@ -29,3 +29,10 @@ iso/tools/apply.sh --root <chroot> --verify
 
 A boot that reaches the greeter without `apply.sh` having run proves the base
 image boots, not that this lane works. Both are needed.
+
+## Wallpapers, per screen
+
+`os-build/WALLPAPER_BOOT_CHECK.md` covers every wallpaper file at its own
+resolution: `H2-grub.png`, `H4-greeter-<WxH>.png`, `H6-desktop-<WxH>.png`.
+Those shots belong to the same cuts as the rows above; this plan lists the
+cut-level ones, that page lists the per-screen ones.

@@ -1,0 +1,55 @@
+{
+  "tokens_sha256": "e686df3b8e971e7ab377acc4a02b5bdf458295832e21487482c3d42d8559aac7",
+  "files": {
+    "theme/wallpaper/meta-wallpaper.png": {
+      "sha256": "7766da24036aab6c1d81ce51caef112df023fdfaaa031c12f47eb812ba060c21",
+      "width": 1920,
+      "height": 1080
+    },
+    "theme/wallpaper/meta-wallpaper-2560x1440.png": {
+      "sha256": "fe59b61546cab2d150e0778e3e56da0c92dab60c45481570f98bebdbf4561f09",
+      "width": 2560,
+      "height": 1440
+    },
+    "theme/wallpaper/meta-wallpaper-3840x2160.png": {
+      "sha256": "12136b7b47b5e228e690ccdb8fcdaf54370be295e1949efec1e2a5eedaf5829d",
+      "width": 3840,
+      "height": 2160
+    },
+    "theme/wallpaper/meta-wallpaper-1366x768.png": {
+      "sha256": "08d17f07765d8b0c75dbfabadf218afe5dc4d9a2e1b93507a29634713ec6429e",
+      "width": 1366,
+      "height": 768
+    },
+    "theme/wallpaper/greeter-wallpaper.png": {
+      "sha256": "bb4d12d934dc490d57ae4c08e7890503a3e5f1e26b68005ace685be9cbf72d96",
+      "width": 1920,
+      "height": 1080
+    },
+    "theme/wallpaper/greeter-wallpaper-2560x1440.png": {
+      "sha256": "6053e592872bef9e1302ccc2f7e0a7cc0de1743bbeca43e1abdb7f4b0286aaef",
+      "width": 2560,
+      "height": 1440
+    },
+    "theme/wallpaper/greeter-wallpaper-3840x2160.png": {
+      "sha256": "761c62223ab10cd92841b0c06df845e6f90039beaecf646d8f55eef08397b8a3",
+      "width": 3840,
+      "height": 2160
+    },
+    "theme/wallpaper/greeter-wallpaper-1366x768.png": {
+      "sha256": "cabaf943294993fabfe37826f62c9c0961aada33765ff0b5846cc96abba934f9",
+      "width": 1366,
+      "height": 768
+    },
+    "theme/wallpaper/greeter-active.png": {
+      "sha256": "bb4d12d934dc490d57ae4c08e7890503a3e5f1e26b68005ace685be9cbf72d96",
+      "width": 1920,
+      "height": 1080
+    },
+    "boot/grub/themes/metaos/meta-grub.png": {
+      "sha256": "f48fe1dd4bc529d04c9599b5e3325e9c438df31c31225f6e97f38d5506712237",
+      "width": 1920,
+      "height": 1080
+    }
+  }
+}

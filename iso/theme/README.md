@@ -32,7 +32,9 @@ same palette:
 
 | File | What it is |
 |---|---|
-| `wallpaper/greeter-wallpaper.png` | the ring again, dimmer, smaller and higher, so the name and password fields stay readable |
+| `wallpaper/greeter-wallpaper.png` | the ring again, dimmer, smaller and higher, so the name and password fields stay readable. Ships at 1080p, 1440p, 4K and 1366 |
+| `lightdm/meta-greeter-setup.sh` | reads the kernel's preferred mode and copies the matching file to `greeter-active.png` |
+| `lightdm/lightdm.conf.d/90-metaos-greeter.conf` | runs that script before the greeter draws |
 | `lightdm/lightdm-gtk-greeter.conf` | `background`, `theme-name=MetaOS`, Inter 10, Adwaita icons |
 | `lightdm/themes/MetaOS/index.theme` | names the theme directory the config asks for |
 | `lightdm/themes/MetaOS/gtk-3.0/gtk.css` | translucent panels, blue buttons, token colours for text and errors |

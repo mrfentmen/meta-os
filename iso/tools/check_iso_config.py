@@ -697,9 +697,11 @@ elif tokens:
     else:
         bad("theme: gtk.css has %d hex value(s) for %d token(s)" % (len(hexes), len(tokens)))
 
-for tool, label in (("make_wallpaper.py", "wallpaper"),
-                    ("tokens_to_gtk.py", "gtk.css"),
-                    ("tokens_to_grub.py", "grub theme")):
+for tool, label in (
+        ("make_wallpaper.py", "wallpaper"),
+        ("tokens_to_gtk.py", "gtk.css"),
+        ("tokens_to_grub.py", "grub theme"),
+    ):
     run = subprocess.run([sys.executable, str(ISO / "tools" / tool), "--check"],
                          capture_output=True, text=True)
     if run.returncode == 0:
@@ -732,6 +734,7 @@ GREETER_CSS = ISO / "theme" / "lightdm" / "themes" / "MetaOS" / "gtk-3.0" / "gtk
 # --- wallpaper pack -----------------------------------------------------
 for pack_name, (want_w, want_h) in {
     "meta-wallpaper-2560x1440.png": (2560, 1440),
+    "meta-wallpaper-3840x2160.png": (3840, 2160),
     "meta-wallpaper-1366x768.png": (1366, 768),
 }.items():
     path = ISO / "theme" / "wallpaper" / pack_name
@@ -756,7 +759,74 @@ if "meta-wallpaper-$RES.png" in login_body:
 else:
     bad("theme: first login does not choose a wallpaper size")
 
+# --- greeter wallpaper pack --------------------------------------------
+GREETER_SIZES = {
+    "greeter-wallpaper.png": (1920, 1080),
+    "greeter-wallpaper-2560x1440.png": (2560, 1440),
+    "greeter-wallpaper-3840x2160.png": (3840, 2160),
+    "greeter-wallpaper-1366x768.png": (1366, 768),
+}
+base_bytes = None
+for name, (want_w, want_h) in GREETER_SIZES.items():
+    path = ISO / "theme" / "wallpaper" / name
+    if not path.is_file():
+        bad("lightdm: %s is missing (run make_wallpaper.py)" % name)
+        continue
+    head = path.read_bytes()[:33]
+    if head[:8] != b"\x89PNG\r\n\x1a\n":
+        bad("lightdm: %s is not a PNG" % name)
+        continue
+    got_w, got_h, depth, colour = struct.unpack(">IIBB", head[16:26])
+    if (got_w, got_h) == (want_w, want_h) and depth == 8 and colour == 6:
+        ok("lightdm: %s is %dx%d RGBA" % (name, want_w, want_h))
+    else:
+        bad("lightdm: %s is %dx%d depth %d colour %d"
+            % (name, got_w, got_h, depth, colour))
+    if name == "greeter-wallpaper.png":
+        base_bytes = path.read_bytes()
+
+active = ISO / "theme" / "wallpaper" / "greeter-active.png"
+if not active.is_file():
+    bad("lightdm: greeter-active.png is missing (the greeter would have no backdrop)")
+elif base_bytes is not None and active.read_bytes() != base_bytes:
+    bad("lightdm: greeter-active.png is not the default greeter art")
+elif base_bytes is not None:
+    ok("lightdm: greeter-active.png starts as the 1080p greeter")
+
+setup = ISO / "theme" / "lightdm" / "meta-greeter-setup.sh"
+if not setup.is_file():
+    bad("lightdm: meta-greeter-setup.sh is missing")
+else:
+    body = read(setup)
+    if "card*-*/modes" in body and "greeter-active.png" in body:
+        ok("lightdm: the greeter picker reads the kernel mode, then rewrites the active file")
+    else:
+        bad("lightdm: the greeter picker does not detect a mode")
+
+drop = ISO / "theme" / "lightdm" / "lightdm.conf.d" / "90-metaos-greeter.conf"
+if drop.is_file() and "greeter-setup-script=/usr/local/bin/meta-greeter-setup" in read(drop):
+    ok("lightdm: the seat runs the picker before the greeter")
+else:
+    bad("lightdm: no drop-in wires greeter-setup-script")
+
+apply_body = read(ISO / "tools" / "apply.sh")
+for needle in ("/usr/local/bin/meta-greeter-setup", "90-metaos-greeter.conf",
+               "greeter-active.png", "meta-wallpaper-3840x2160.png"):
+    if needle in apply_body:
+        ok("lightdm: apply.sh installs %s" % needle)
+    else:
+        bad("lightdm: apply.sh never installs %s" % needle)
+
+greeter_conf = ISO / "theme" / "lightdm" / "lightdm-gtk-greeter.conf"
+conf_body = read(greeter_conf) if greeter_conf.is_file() else ""
+found = re.search(r"(?m)^background=(.+)$", conf_body)
+if found and found.group(1).strip().endswith("greeter-active.png"):
+    ok("lightdm: the greeter config points at the active wallpaper")
+else:
+    bad("lightdm: greeter background is not greeter-active.png")
+
 GREETER_BG = "/usr/share/metaos/theme/greeter-wallpaper.png"
+GREETER_ACTIVE = "/usr/share/metaos/theme/greeter-active.png"
 
 greeter_wall = ISO / "theme" / "wallpaper" / "greeter-wallpaper.png"
 if not greeter_wall.is_file():
@@ -779,7 +849,7 @@ else:
         bad("lightdm: greeter conf has no [greeter] section")
     else:
         greeter = cfg["greeter"]
-        if greeter.get("background") == GREETER_BG:
+        if greeter.get("background") == GREETER_ACTIVE:
             ok("lightdm: greeter uses the MetaOS backdrop")
         else:
             bad("lightdm: greeter background is %r" % greeter.get("background"))
@@ -883,7 +953,7 @@ def channel(name):
 
 
 parsed = {name: channel(name) for name in REQUIRED_CHANNELS}
-if all(parsed.values()):
+if all(node is not None for node in parsed.values()):
     ok("shell: all %d xfconf channels exist and parse" % len(REQUIRED_CHANNELS))
 
 panel = parsed.get("xfce4-panel.xml")

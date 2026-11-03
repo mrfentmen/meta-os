@@ -44,7 +44,7 @@ builder path that `boot_kit.sh` takes as an argument.
 
 ## What a merge does and does not buy
 
-A merge buys: 125 static checks, 11 test files, a lane that installs into a
+A merge buys: 138 static checks, 11 test files, a lane that installs into a
 staging tree, verifies itself, and reverts cleanly.
 
 A merge does not buy: a single proven pixel. Every visual claim in this lane is
