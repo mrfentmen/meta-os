@@ -1,0 +1,15 @@
+    Checking user v0.1.0 (/Users/test/Desktop/meta-os/os-build/userspace/user)
+error: the option `Z` is only accepted on the nightly compiler
+
+help: consider switching to a nightly toolchain: `rustup default nightly`
+
+note: selecting a toolchain with `+toolchain` arguments require a rustup proxy; see <https://rust-lang.github.io/rustup/concepts/index.html>
+
+note: for more information about Rust's stability policy, see <https://doc.rust-lang.org/book/appendix-07-nightly-rust.html#unstable-features>
+
+error: 1 nightly option were parsed
+
+error: could not compile `user` (lib)
+
+Caused by:
+  process didn't exit successfully: `rustc --crate-name user --edition=2021 src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat,unused-externs-silent --crate-type lib --emit=dep-info,metadata -C panic=abort -C embed-bitcode=no -C debuginfo=2 --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values())' -C metadata=54e0c626278bf567 -C extra-filename=-a6f43af68f8dfc15 --out-dir /Users/test/Desktop/meta-os/os-build/userspace/user/target/x86_64-unknown-none/debug/build/user/a6f43af68f8dfc15/out --target x86_64-unknown-none -C incremental=/Users/test/Desktop/meta-os/os-build/userspace/user/target/x86_64-unknown-none/debug/incremental -L dependency=/Users/test/Desktop/meta-os/os-build/userspace/user/target/x86_64-unknown-none/debug/build/core/2acf4ac638c1a040/out -L dependency=/Users/test/Desktop/meta-os/os-build/userspace/user/target/debug/build/user/a6f43af68f8dfc15/out --extern 'noprelude,nounused:compiler_builtins=/Users/test/Desktop/meta-os/os-build/userspace/user/target/x86_64-unknown-none/debug/build/compiler_builtins/dc09eebac8ef74c7/out/libcompiler_builtins-dc09eebac8ef74c7.rlib' --extern 'noprelude,nounused:core=/Users/test/Desktop/meta-os/os-build/userspace/user/target/x86_64-unknown-none/debug/build/core/2acf4ac638c1a040/out/libcore-2acf4ac638c1a040.rlib' -Z unstable-options -C relocation-model=static -C code-model=large -C link-arg=-no-pie --force-warn=unused_crate_dependencies` (exit status: 1)

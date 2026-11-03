@@ -23,10 +23,10 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | P — Hands-Free intake | **COMPLETE** | 25 / 25; **25 tests pass**, 14 findings, 3 fences checked | `os-build/round13/handsfree/SECTION_P.md` |
 | Q — Nuntius relay | **COMPLETE** | 25 / 25; **25 tests pass**, 8 findings | `os-build/round13/nuntius/SECTION_Q.md` |
 | R — Nuntius board | **COMPLETE** | 25 / 25; **25 tests pass**, 4 findings, DOM dumps in `dom/` | `os-build/round13/nuntius/SECTION_R.md` |
-| S — userspace | NOT STARTED | 0 / 25 | — |
+| S — userspace | **WRITTEN — CHECK BLOCKED** | 25 / 25 sources; 19 implemented, 1 partial, 6 ABI-blocked; `cargo check` blocked on this host's toolchain | `os-build/round13/userspace/SECTION_S.md` |
 | T — federation + closeout | NOT STARTED | 0 / 25 | — |
 
-**Sections A–R:** 450 / 450 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
+**Sections A–S:** 475 / 475 addressed (S is written and committed; its `cargo check` is a host-toolchain gap, so nothing in S is called compiled or booted) — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
 (E), 9 missing artifacts (H), 9 unimplemented OSINT angles (I), 21 baton gaps (L), 1 review
 item (G), 4 real observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J), 5 runtime
 findings (K), 4 loop findings (M–O: no restart supervisor, a missing cwd kills the caller,
@@ -52,6 +52,7 @@ be regenerated:
 | `handsfree/intake_cases.test.mjs` | 25 intake cases; asserts no line is silently dropped, records the rest |
 | `relay/relay.round13.test.mjs` | 25 relay cases against the live loopback service and its CLI |
 | `board/board.round13.test.mjs` | 25 board cases, with the served HTML + render JSON dumped as evidence |
+| `os-build/userspace/user/src/bin/*.rs` | 25 kernel userspace programs; compile proof is the Mac gate's |
 
 ## Limits carried forward
 
@@ -80,3 +81,10 @@ be regenerated:
 - Intake has no size cap, no case normalisation, no verb check and no duplicate check. A pasted
   log, a pasted error and a timestamped line each become orders whose "agent" is `12`, `Error`
   and `2026-11-02 14` (R13-397..399). A spoken `STOP` is filed as work, not as a stop (R13-389).
+
+- `cargo check` for the userspace crate cannot pass on this host: the installed cargo is Homebrew
+  1.99.1 with no `x86_64-unknown-none` core, and `rustup run nightly` still resolves a stable rustc
+  that refuses `-Z build-std`. Both attempts are in `os-build/round13/userspace/CARGO_CHECK.txt`.
+  Nothing in Section S is compiled, and no boot behaviour is claimed.
+- Six Section S programs name syscalls the ABI does not have (argv, spawn, wait, kill, mmap,
+  process list). They are committed as executable gap records; `PROPOSALS.md` carries the proposal.
