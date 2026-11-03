@@ -1,0 +1,33 @@
+# MetaOS 1.0 -- Calamares branding descriptor.
+#
+# Original assets only: productLogo/productIcon/productWelcome are drawn by
+# assets/make_assets.py (ring mark + 5x7 block wordmark). No Apple artwork,
+# icons, layouts or fonts are referenced anywhere in this lane.
+#
+# URLs are deliberately absent. There is no public MetaOS domain yet, and a
+# dead "Support"/"Release notes" link in the installer is worse than no link;
+# welcome.conf therefore sets showSupportUrl/showReleaseNotesUrl false. When
+# the boss names the domain, add the three strings here and flip those two
+# keys -- nothing else changes.
+
+componentName: metaos
+
+strings:
+    productName:         "MetaOS"
+    shortProductName:    "MetaOS"
+    version:             "1.0"
+    shortVersion:        "1.0"
+    versionedName:       "MetaOS 1.0"
+    shortVersionedName:  "MetaOS 1.0"
+    bootloaderEntryName: "MetaOS"
+
+images:
+    productLogo:    "productLogo.png"
+    productIcon:    "productIcon.png"
+    productWelcome: "productWelcome.png"
+
+style:
+    sidebarBackground:    "#0B1220"
+    sidebarText:          "#FFFFFF"
+    sidebarTextSelect:    "#3FA9F5"
+    sidebarTextHighlight: "#3FA9F5"

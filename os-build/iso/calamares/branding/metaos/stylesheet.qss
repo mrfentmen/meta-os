@@ -1,0 +1,93 @@
+/* MetaOS 1.0 Calamares stylesheet -- intentionally small.
+ *
+ * Cosmetic only: every rule below is colour/spacing. No rule changes
+ * geometry or hides a widget, so a Calamares version bump cannot turn
+ * this file into a broken installer layout. Colours are the Meta
+ * palette used by the splash and the desktop theme.
+ */
+
+QWidget {
+    background-color: #0B1220;
+    color: #E8EEF7;
+}
+
+QLabel {
+    color: #E8EEF7;
+    background: transparent;
+}
+
+QLabel#heading,
+QLabel[heading="true"] {
+    color: #FFFFFF;
+    font-size: 18px;
+}
+
+QPushButton {
+    background-color: #3FA9F5;
+    color: #06101C;
+    border: 0;
+    border-radius: 4px;
+    padding: 6px 18px;
+    min-width: 96px;
+}
+
+QPushButton:disabled {
+    background-color: #21435C;
+    color: #7F94A8;
+}
+
+QPushButton#quitButton,
+QPushButton[flat="true"] {
+    background-color: transparent;
+    color: #B9C7D8;
+}
+
+QProgressBar {
+    border: 1px solid #21435C;
+    border-radius: 3px;
+    background-color: #101B2B;
+    text-align: center;
+    color: #E8EEF7;
+}
+
+QProgressBar::chunk {
+    background-color: #3FA9F5;
+    border-radius: 2px;
+}
+
+QListView,
+QTreeView,
+QTableView {
+    background-color: #101B2B;
+    alternate-background-color: #13223A;
+    selection-background-color: #1F5F8C;
+    selection-color: #FFFFFF;
+    border: 1px solid #21435C;
+}
+
+QLineEdit,
+QPlainTextEdit,
+QComboBox,
+QSpinBox {
+    background-color: #101B2B;
+    border: 1px solid #21435C;
+    border-radius: 3px;
+    padding: 4px;
+    color: #FFFFFF;
+}
+
+QLineEdit:focus,
+QComboBox:focus {
+    border-color: #3FA9F5;
+}
+
+QScrollBar:vertical {
+    background: #101B2B;
+    width: 10px;
+}
+
+QScrollBar::handle:vertical {
+    background: #21435C;
+    border-radius: 5px;
+    min-height: 24px;
+}
