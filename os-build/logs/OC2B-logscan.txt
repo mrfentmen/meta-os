@@ -1,0 +1,3 @@
+# OC2B-022 — log scan: no secrets at any level
+
+CLEAN: 0 key-material hits across appliance proof logs

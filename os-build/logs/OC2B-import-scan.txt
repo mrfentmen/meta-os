@@ -1,0 +1,73 @@
+NOTE: host python is 3.9.6, which lacks sys.stdlib_module_names (3.10+). Below, 'third-party-or-unknown' = every non-sibling import, INCLUDING stdlib names (argparse, json, os, ...). True third-party surface = PIL, numpy, optional cv2 (+ node sidecar, not a pip import).
+
+host python: 3.9.6
+== server/queue/crew.py
+   sibling: ['crew_common', 'crew_records', 'evidence', 'judge', 'models', 'orchestrator', 'spark_gen', 'trio_store']
+   third-party-or-unknown: ['argparse', 'datetime', 'hashlib', 'json', 'os', 'time', 'urllib']
+== server/queue/crew_common.py
+   sibling: []
+   third-party-or-unknown: ['base64', 'datetime', 'hashlib', 'json', 'math', 'os', 'subprocess', 'urllib']
+== server/queue/crew_records.py
+   sibling: []
+   third-party-or-unknown: ['json', 'os', 'threading']
+== server/queue/evidence.py
+   sibling: []
+   third-party-or-unknown: ['PIL', 'cv2', 'hashlib', 'io', 'numpy']
+== server/queue/hosted_imperium.py
+   sibling: []
+   third-party-or-unknown: ['argparse', 'datetime', 'json', 'os', 'socket', 'subprocess', 'sys', 'tempfile', 'time', 'urllib']
+== server/queue/judge.py
+   sibling: []
+   third-party-or-unknown: ['datetime', 'json']
+== server/queue/judge_replay.py
+   sibling: ['crew_common', 'judge']
+   third-party-or-unknown: ['argparse', 'json', 'os', 'sys']
+== server/queue/livecam_record_validate.py
+   sibling: ['record_validate', 'trio_repo']
+   third-party-or-unknown: ['datetime', 're']
+== server/queue/livecams.py
+   sibling: ['spark_gen']
+   third-party-or-unknown: ['__future__', 'argparse', 'datetime', 'hashlib', 'json', 'math', 'os', 'sys', 'urllib']
+== server/queue/livehunt.py
+   sibling: ['crew', 'crew_common', 'crew_records', 'patrol', 'spark_gen', 'spark_guardrail']
+   third-party-or-unknown: ['__future__', 'argparse', 'json', 'os', 'sys', 'tempfile']
+== server/queue/models.py
+   sibling: ['spark_guardrail']
+   third-party-or-unknown: ['base64', 'binascii', 'datetime', 'json', 'os', 're', 'sys', 'time', 'urllib']
+== server/queue/orchestrator.py
+   sibling: ['crew_common', 'spark_guardrail']
+   third-party-or-unknown: []
+== server/queue/patrol.py
+   sibling: ['crew', 'crew_common', 'crew_records', 'spark_guardrail']
+   third-party-or-unknown: ['argparse', 'json', 'os', 'sys', 'time']
+== server/queue/queue_service.py
+   sibling: ['crew_records', 'trio_repo', 'trio_store']
+   third-party-or-unknown: ['argparse', 'base64', 'datetime', 'hashlib', 'http', 'json', 'os', 'sys']
+== server/queue/receipt_validate.py
+   sibling: []
+   third-party-or-unknown: ['__future__', 'json', 'sys']
+== server/queue/record_validate.py
+   sibling: []
+   third-party-or-unknown: ['datetime']
+== server/queue/spark_gen.py
+   sibling: ['spark_guardrail', 'trio_repo']
+   third-party-or-unknown: ['base64', 'json', 'os', 'subprocess', 'sys', 'time', 'urllib']
+== server/queue/spark_guardrail.py
+   sibling: []
+   third-party-or-unknown: ['datetime', 'json', 'os', 'threading']
+== server/queue/supervisor.py
+   sibling: ['crew_records', 'spark_guardrail']
+   third-party-or-unknown: ['argparse', 'collections', 'datetime', 'json', 'os', 'sys', 'time']
+== server/queue/trio_agent.py
+   sibling: ['spark_gen', 'trio_repo', 'trio_store']
+   third-party-or-unknown: ['argparse', 'base64', 'datetime', 'hashlib', 'json', 'os', 'subprocess', 'sys', 'tempfile', 'threading', 'time', 'urllib']
+== server/queue/trio_repo.py
+   sibling: []
+   third-party-or-unknown: ['json', 'os', 'subprocess']
+== server/queue/trio_store.py
+   sibling: []
+   third-party-or-unknown: ['dynamic_credentials', 'json', 'os', 'sqlite3', 'sys', 'threading', 'time', 'urllib']
+== server/queue/verdict_validate.py
+   sibling: []
+   third-party-or-unknown: ['datetime']
+node sidecar (not a pip import): trio_repo + crew_common shell out to node for js/products.js / js/schema.js

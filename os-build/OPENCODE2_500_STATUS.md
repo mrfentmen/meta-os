@@ -298,3 +298,17 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Filed OC2P-proof-index-S8S9.md (rows 29-48) + LAND_WALLS upkeep checkboxes (all x).
 - MANIFEST unchanged (output identical). Sweeps: fences 0, secrets 0.
 - Still parked: KF-02/dashboard/GUI/re-proof (OC1 furnace), evince ack (Hana), merges (Pax).
+
+## OC2 S11 — 2026-11-03 — §1 batch 1 (OC2B-001..011,013..017,020..022,024,026..031,044/045,047..049,241..243 — no VM)
+- packaging: 23-module inventory + AST import scan (py_compile clean), pins (py3.9.6/pillow11.3.0/numpy2.0.2/node24), 16-path manifest, licenses (stdlib+PIL+numpy+node PERMITTED; cv2 VERIFY+not-shipped), perms table, uninstall/rollback/logging/systemd-units/service-order/datadir docs.
+- entry points: chmod +x ×4 (were 644; units call python3 explicitly so runtime never broke), --help 4/4 exit 0, cold start <1s to /health 200 (odd port, killed clean), --version 0/4 → OC2B-023 UNPROVEN needs-feature (owner OC2, deferred, named).
+- config: 1 absolute dev-home path (env.example placeholder, installer rewrites) → 010 pass-with-note. secrets: branch 0 hits, appliance logs 0 hits.
+- autostart: 3 entries + TryExec check (interpreter-only caveat + ${} expansion caveat, OPEN for OC1) + handoffs (tray: Bond owns, accept/ship OPEN).
+- datadir: CrewRecords makedirs VERIFIED (/tmp scratch, removed). ports: loopback-only VERIFIED (bind + live 200). 018 container: BLOCKED (daemon up, image unstaged; R2 later).
+- suite 32/32. fences 0. parked: §1-025 commit comes with S12; §2-§12 per start order.
+
+## OC2 S12 — 2026-11-03 — §2 batch (OC2B-026..049 + watchdog, no VM)
+- watchdog: new agent-layer/watchdog.sh (dead/hung restart, cause logging, cap→BLOCKED exit 2, no systemd needed) + 4 fixture tests (kill -9 → dead-exit-137 restart; false health → hung-health-fail; cap=1+2kills → exit 2 + .blocked; clean exit 0 propagates). Suite 36/36.
+- docs: health-contract (trio honestly process+freshness, no fake URL), service-logs table, limits PROPOSED UNVERIFIED-ON-TARGET, stop/firstboot/offline/upgrade, status-cmd, write-scope full grep + verdict (datadir/logs/tmp/caller-out only; hosted_imperium drill-scoped).
+- §2 COMPLETE except target-side pastes (status-cmd/stop output need systemd host). §1 COMPLETE except 023 --version feature + 018-R2 container.
+- Next: §3 queue live verification (unit suites + e2e + soak per start order).

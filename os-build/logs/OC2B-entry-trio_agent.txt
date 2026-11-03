@@ -1,0 +1,11 @@
+usage: trio_agent.py [-h] [--once] [--lease LEASE] [--nick NICK]
+                     [--schema SCHEMA] [--poll-interval POLL_INTERVAL]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --once                one poll/serve pass, then exit
+  --lease LEASE
+  --nick NICK
+  --schema SCHEMA
+  --poll-interval POLL_INTERVAL
+exit=0 (run trio_agent)

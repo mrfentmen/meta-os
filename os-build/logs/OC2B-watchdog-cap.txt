@@ -1,0 +1,23 @@
+# OC2B-034/036/037 — Watchdog cap, kill-9, hang (proven by test, no VM)
+
+Proof: `tests/agent-layer/test_watchdog.py` — 4 tests green
+(`test_syntax_ok`, `test_dead_restart_then_cap_blocked`,
+`test_hung_restart_then_cap_blocked`, `test_clean_exit_propagates`;
+suite 36/36 OK this session). Supervised subject: `sleep 60` snippets
+in tmp; no services, no network, no systemd touched.
+
+- OC2B-034 (never restart-loops): MAX_RESTARTS=1, two consecutive kills
+  → watchdog exit 2 + `svc.blocked` written with cause. Cap enforced.
+- OC2B-036 (kill -9 detected within interval): `kill -9` on the service
+  pid → next 1s poll detects dead (`kill -0` fail), restarts, logs
+  `restart #1 cause=dead-exit-137`, new pid differs from killed pid.
+- OC2B-037 (hung detected via health, not process table): live `sleep`
+  pid + `false` health snippet → restart logged
+  `cause=hung-health-fail` (process was alive; health failed) → cap →
+  exit 2 + `.blocked`.
+
+Sample alert line (OC2B-092/093): the `.blocked` file content IS the
+alert payload — `hung-health-fail` / `dead-exit-137` + `restarts=N`
+in `svc.log` with UTC timestamp, e.g.
+`...Z svc BLOCKED cause=hung-health-fail restarts=2 (cap 1)`.
+Names the daemon (svc), the cause, the owner (OC2 lane via state dir).

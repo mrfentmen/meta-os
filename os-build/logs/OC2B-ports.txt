@@ -1,0 +1,17 @@
+# OC2B-044/045 — ports bind table + localhost-only (static + live, no VM)
+
+Code grep (`server/queue/queue_service.py`): the service binds
+127.0.0.1 only (no 0.0.0.0 / `::` bind in the tree). Loopback-checked
+dispatch default `http://127.0.0.1:8935/dispatch-simulated`
+(`crew_common` loopback guard).
+
+Live: `queue_service.py --port 18937` → `GET 127.0.0.1:18937/health`
+→ 200 `{"ok": true, "service": "trio-queue", ...}`. Server reached
+ONLY via loopback; killed after, verified no process remains.
+
+- OC2B-044: single bound port per service instance (queue `--port`,
+  default 8935; no second bind in code). No two services share a port
+  (queue 8935; trio/patrol bind none — trio polls the queue, patrol
+  runs oneshot + exits).
+- OC2B-045: CONFIRMED localhost-only (bind address + live loopback
+  health check; no non-loopback listener evidenced).

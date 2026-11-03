@@ -1,0 +1,66 @@
+server/queue/crew_common.py:181:    with urllib.request.urlopen(req, timeout=timeout) as resp:
+server/queue/crew_common.py:222:        with urllib.request.urlopen(req, timeout=timeout) as resp:
+server/queue/crew_records.py:76:        os.makedirs(self.dir, exist_ok=True)
+server/queue/crew_records.py:87:            with open(self._incidents_path) as f:
+server/queue/crew_records.py:95:        with open(tmp, "w") as f:
+server/queue/crew_records.py:164:        os.makedirs(path_dir, exist_ok=True)
+server/queue/crew_records.py:165:        with open(os.path.join(path_dir, name), "wb") as f:
+server/queue/crew_records.py:231:            with open(self._events_path, "a") as f:
+server/queue/crew_records.py:242:            with open(self._dispatches_path, "a") as f:
+server/queue/crew_records.py:254:            with open(tmp, "w") as f:
+server/queue/crew_records.py:261:            with open(self._status_path) as f:
+server/queue/crew_records.py:289:    with open(path) as f:
+server/queue/crew.py:153:        with urllib.request.urlopen(req, timeout=15) as resp:
+server/queue/evidence.py:123:    image = Image.open(io.BytesIO(jpeg_bytes))
+server/queue/hosted_imperium.py:63:    with urllib.request.urlopen(req, timeout=timeout) as res:
+server/queue/hosted_imperium.py:69:        with open(os.path.join(run_dir, "baton.json")) as f:
+server/queue/hosted_imperium.py:84:    with open(tmp, "w") as f:
+server/queue/hosted_imperium.py:98:    os.makedirs(run_dir, exist_ok=True)
+server/queue/hosted_imperium.py:124:    service = subprocess.Popen(
+server/queue/hosted_imperium.py:193:            with open(os.path.join(run_dir, "dispatch-log.jsonl"), "a") as f:
+server/queue/hosted_imperium.py:222:        with open(dispatch_log) as f:
+server/queue/hosted_imperium.py:236:    os.makedirs(os.path.dirname(out), exist_ok=True)
+server/queue/hosted_imperium.py:237:    with open(out, "w") as f:
+server/queue/judge_replay.py:43:    with open(args.path) as handle:
+server/queue/livecams.py:56:    with opener.open(req, timeout=_TIMEOUT_S) as resp:
+server/queue/livecams.py:237:    os.makedirs(out_dir, exist_ok=True)
+server/queue/livecams.py:244:        with open(frame_path, "wb") as fh:
+server/queue/livecams.py:251:        with open(record_path, "w", encoding="utf-8") as fh:
+server/queue/livecams.py:267:        with open(path, "wb") as fh:
+server/queue/livehunt.py:110:            with os.fdopen(fd, "wb") as fh:
+server/queue/livehunt.py:148:            with open(manifest_path, encoding="utf-8") as fh:
+server/queue/livehunt.py:169:            with open(path, "rb") as fh:
+server/queue/livehunt.py:262:        os.makedirs(os.path.dirname(os.path.abspath(out_path)),
+server/queue/livehunt.py:264:        with open(out_path, "w", encoding="utf-8") as fh:
+server/queue/models.py:121:        with open(_receipts_path(), "a", encoding="utf-8") as f:
+server/queue/models.py:153:    with open(path, encoding="utf-8") as f:
+server/queue/models.py:189:        with urllib.request.build_opener(NoRedirect()).open(
+server/queue/patrol.py:72:        with open(os.path.join(directory, PAUSED_FEEDS_FILE)) as f:
+server/queue/receipt_validate.py:79:    with open(path, "r", encoding="utf-8") as fh:
+server/queue/spark_gen.py:196:        with urllib.request.build_opener(NoRedirect()).open(
+server/queue/spark_gen.py:266:    with open(image_path, "rb") as f:
+server/queue/spark_guardrail.py:39:        with open(path) as f:
+server/queue/spark_guardrail.py:45:    with open(path, "w") as f:
+server/queue/supervisor.py:157:        with open(paused_feeds_path(directory)) as f:
+server/queue/supervisor.py:169:    with open(tmp, "w") as f:
+server/queue/trio_agent.py:116:        with urllib.request.urlopen(req, timeout=2) as resp:
+server/queue/trio_agent.py:145:            with open(data_path, "w") as f:
+server/queue/trio_agent.py:148:            with open(script, "w") as f:
+server/queue/trio_store.py:191:                with urllib.request.urlopen(req, timeout=30) as resp:
+server/queue/trio_store.py:252:        self._db = sqlite3.connect(path, check_same_thread=False)
+
+# OC2B-040 verdict (reviewed line by line, no VM):
+# - crew_records.*: makedirs + reads/writes/appends ALL under self.dir
+#   (datadir: $TRIO_CREW_DATA_DIR else server/queue/crew-data/). tmp files
+#   beside targets (same dir). PASS.
+# - hosted_imperium.*: writes run_dir only (drill harness, caller-provided
+#   dir) + one service Popen. Drill-scoped, not a deployed service. NOTED.
+# - livecams.*: frame/record/snapshot writes ALL under out_dir (--out,
+#   default livecam_records). PASS.
+# - livehunt.*: fdopen tmp + reads + caller-provided out_path. PASS.
+# - models._receipt: append to _receipts_path() (datadir). PASS.
+# - patrol/validators/replay/record_validate: reads only (datadir or
+#   CLI-given paths). PASS.
+# - urlopen.*: network READS (egress audited in OC2B-111; loopback/API only).
+# VERDICT: no service writes outside its data dir, log path (stdout/stderr
+# journal), tmpfile, or caller-provided out dir. No violation.

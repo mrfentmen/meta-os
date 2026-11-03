@@ -1,0 +1,20 @@
+# OC2B-029 TryExec check (static, NO VM)
+
+Every autostart entry carries TryExec (3/3). NoDisplay=true on all three.
+No entry can fail the boot: worst case the session skips it.
+
+| entry | TryExec target | present-in-ISO? |
+|---|---|---|
+| OC2B-autostart-queue.desktop | /usr/bin/python3 | PRESENT — python3 in base layer |
+| OC2B-autostart-patrol.desktop | /usr/bin/python3 | PRESENT — same guarantee |
+| OC2B-autostart-tray.desktop | meta-agent-status | PRESENT-IFF desktop lane ships (Bond owns the binary; OC2 byte-copy ready, TryExec degrades-off otherwise) |
+
+CAVEATS (honest, for OC1):
+1. TryExec guards the INTERPRETER, not the script args. OC1 must guarantee
+   the packaged scripts exist at their installed paths
+   (`${OC2_CHECKOUT}/server/queue/*.py` per §1 manifest) and the env file
+   exists — TryExec does not check those.
+2. XDG Exec does NOT reliably expand `${...}` (spec has field codes, not
+   shell vars). If OC1's launcher passes them literally, ship a wrapper
+   (e.g. `/usr/local/bin/oc2-queue-start`) and repoint Exec+TryExec at it.
+   OC2 does not invent the wrapper path unilaterally — OPEN for OC1.
