@@ -60,3 +60,11 @@ Interactive initramfs probe via socket serial (/dev/sr0 present):
   containing a live file system" → find_livefs rejects a present,
   labelled, correct-cmdline medium. Diagnosis handed to initrd-forensics
   lane (stock-vs-rebuilt casper scripts/modules/conf).
+
+## Build artifact record
+- metaos-1.0.iso (4.1 GB, 2026-11-03 ~05:0x UTC build): single
+  filesystem.squashfs + user-setup + Meta theme + rebuilt initrd
+  (casper present, 50 files) + grub layerfs-path/console.
+  sha256: 942018bdd579cede444118c50d7b92fbe028aaac7f2d57cf5efb4adb8d1ba578
+  Status: boots to initramfs, medium-found rejected (see probe above).
+  Superseded-by: next build after forensics fix. Do NOT ship.
