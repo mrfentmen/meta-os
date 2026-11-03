@@ -89,6 +89,24 @@ pub enum JobError {
     UnknownState(String),
 }
 
+// A command word may contain a space (`sh -c "echo hi"`), which the line
+// format would otherwise split into two words. Escaping keeps the round trip
+// lossless without a dependency: percent-encode the four characters that would
+// break a line, `%` first so the escape itself survives.
+fn encode_word(word: &str) -> String {
+    word.replace('%', "%25")
+        .replace(' ', "%20")
+        .replace('\t', "%09")
+        .replace('\n', "%0A")
+}
+
+fn decode_word(word: &str) -> String {
+    word.replace("%0A", "\n")
+        .replace("%09", "\t")
+        .replace("%20", " ")
+        .replace("%25", "%")
+}
+
 /// An ordered job.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Job {
@@ -170,7 +188,8 @@ impl Job {
         out.push_str(&format!("title {}\n", self.title));
         out.push_str(&format!("state {}\n", self.state.as_str()));
         for step in &self.steps {
-            out.push_str(&format!("step {} :: {}\n", step.name, step.command.join(" ")));
+            let words: Vec<String> = step.command.iter().map(|w| encode_word(w)).collect();
+            out.push_str(&format!("step {} :: {}\n", step.name, words.join(" ")));
         }
         out
     }
@@ -199,7 +218,8 @@ impl Job {
                 let (name, command) = rest
                     .split_once(" :: ")
                     .ok_or_else(|| JobError::BadLine(raw.to_string()))?;
-                let words: Vec<&str> = command.split_whitespace().collect();
+                let decoded: Vec<String> = command.split_whitespace().map(decode_word).collect();
+                let words: Vec<&str> = decoded.iter().map(String::as_str).collect();
                 steps.push(Step::new(name, &words)?);
             } else {
                 return Err(JobError::BadLine(raw.to_string()));

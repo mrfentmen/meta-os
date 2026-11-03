@@ -67,8 +67,13 @@ fn job_step_order_roundtrip() {
     let again = Job::from_text(&started.to_text()).expect("parses");
     assert_eq!(again.state(), JobState::Running);
 
-    // A damaged record is refused by name, never half-read.
-    assert!(matches!(Job::from_text("job j\nstep a :: sh\n"), Err(JobError::NoSteps)));
+    // A damaged record is refused by name, never half-read. A record with a
+    // header but no steps is the empty job; a truncated one is a bad line.
+    assert!(matches!(
+        Job::from_text("job j\ntitle t\nstate pending\n"),
+        Err(JobError::NoSteps),
+    ));
+    assert!(matches!(Job::from_text("job j\nstep a :: sh\n"), Err(JobError::BadLine(_))));
     assert!(matches!(Job::from_text("nonsense\n"), Err(JobError::BadLine(_))));
     assert!(matches!(
         Job::from_text("job j\ntitle t\nstate nowhere\nstep a :: sh\n"),
