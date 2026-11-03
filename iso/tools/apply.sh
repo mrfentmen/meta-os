@@ -187,6 +187,30 @@ put "$ISO/apps/welcome/meta-welcome.py" "/usr/local/bin/meta-welcome" 755
 put "$ISO/apps/welcome/welcome.css" "/usr/share/metaos/welcome/welcome.css"
 put "$ISO/apps/welcome/palette.json" "/usr/share/metaos/welcome/palette.json"
 
+# Agent layer: the doctor checks it, provision.sh stages it, so apply.sh
+# stages it too — same stage.sh, same layout, or the three disagree about
+# what a clean install contains. stage.sh writes no manifest of its own,
+# so snapshot the root around it and record the new paths in the apply
+# manifest: revert then removes exactly what this run wrote, no more.
+AGENT_LAYER="$(cd "$ISO/.." && pwd)/agent-layer"
+if [ "$DRY" != "1" ]; then
+  if [ -f "$AGENT_LAYER/stage.sh" ]; then
+    echo "apply: staging agent layer"
+    BEFORE="$(mktemp "${TMPDIR:-/tmp}/metaos-apply-before.XXXXXX")"
+    AFTER="$(mktemp "${TMPDIR:-/tmp}/metaos-apply-after.XXXXXX")"
+    find "$ROOT" \( -type f -o -type l \) | sort > "$BEFORE"
+    sh "$AGENT_LAYER/stage.sh" "$ROOT" || fail=$((fail + 1))
+    find "$ROOT" \( -type f -o -type l \) | sort > "$AFTER"
+    if [ -n "$MANIFEST_TMP" ]; then
+      comm -13 "$BEFORE" "$AFTER" | sed "s|^$ROOT||" >> "$MANIFEST_TMP"
+    fi
+    rm -f "$BEFORE" "$AFTER"
+  else
+    echo "MISSING  $AGENT_LAYER/stage.sh" >&2
+    fail=$((fail + 1))
+  fi
+fi
+
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"
   [ "$fail" -eq 0 ] || exit 1
