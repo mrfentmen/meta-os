@@ -477,7 +477,7 @@ impl<'a> FramebufferConsole<'a> {
         // One centred window: drop shadow, white frame, blue title
         // bar, black interior.
         let win_w = (sw - 96).min(920);
-        let win_h = (sh - 160).min(540);
+        let win_h = (sh - 190).min(540);
         let win_x = (sw - win_w) / 2;
         let win_y = 76usize;
         self.fb.fill_rect(win_x + 10, win_y + 10, win_w, win_h, SHADOW);
