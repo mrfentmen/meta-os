@@ -6,6 +6,20 @@ import fs from "node:fs";
 import path from "node:path";
 
 export function writeBaton(runDir, baton) {
+  // CB-005: a finished job has nothing to continue. Refuse the handoff and
+  // leave the reason on disk instead of overwriting the baton with a lie.
+  if (baton && baton.finished === true) {
+    const refusal = { refused: "baton", reason: "job already finished", ts: new Date().toISOString() };
+    try { fs.writeFileSync(path.join(runDir, "baton-refused.json"), JSON.stringify(refusal, null, 2)); } catch { /* refusal still thrown */ }
+    throw new Error("baton refused: job already finished");
+  }
+  // CB2-384: a baton is a step pointer, so the index is part of what makes one.
+  // Without it the next worker cannot tell what is done, and guessing zero would
+  // silently restart the job; refuse at construction instead of writing a baton
+  // nobody can resume. -1 means "nothing done yet" and is a real value.
+  if (!baton || !Number.isInteger(baton.stepIndex) || baton.stepIndex < -1) {
+    throw new Error("baton refused: missing step index");
+  }
   const full = { state: "", artifacts: [], nextStep: "", ...baton, ts: new Date().toISOString() };
   fs.writeFileSync(path.join(runDir, "baton.json"), JSON.stringify(full, null, 2));
   return full;
@@ -14,6 +28,43 @@ export function writeBaton(runDir, baton) {
 export function readBaton(runDir) {
   try { return JSON.parse(fs.readFileSync(path.join(runDir, "baton.json"), "utf8")); }
   catch { return null; }
+}
+
+// CB-006: a handoff chain keeps ONE job id and records each author in order.
+// A changed job id is a new job, not a continuation, so it is refused.
+export function handoffChain(links) {
+  if (!Array.isArray(links) || links.length === 0) {
+    throw new Error("baton chain: at least one link is required");
+  }
+  const jobId = links[0].jobId;
+  if (!jobId) throw new Error("baton chain: link 0 missing jobId");
+  const authors = [];
+  for (let i = 0; i < links.length; i++) {
+    if (links[i].jobId !== jobId) {
+      throw new Error("baton chain: job id changed at link " + i);
+    }
+    if (!links[i].author) {
+      throw new Error("baton chain: missing author at link " + i);
+    }
+    authors.push(links[i].author);
+  }
+  return { jobId, authors };
+}
+
+// CB2-385: what a resumed job still has to do. `stepIndex` is the index of the
+// last step the baton records as DONE, so the remaining steps are the ones
+// after it: a resumed job continues, it never re-runs what already ran.
+// A baton with no usable step index cannot be resumed — guessing zero would
+// silently restart the job from the top — so it is refused by name.
+export function stepsRemaining(baton, steps) {
+  if (!Array.isArray(steps) || steps.length === 0) {
+    throw new Error("baton resume: a step list is required");
+  }
+  if (!baton || !Number.isInteger(baton.stepIndex) || baton.stepIndex < -1) {
+    throw new Error("baton resume: baton has no usable step index");
+  }
+  if (baton.stepIndex >= steps.length) return [];
+  return steps.slice(baton.stepIndex + 1);
 }
 
 export function continuationOrders(fromRun, baton, extra = "") {

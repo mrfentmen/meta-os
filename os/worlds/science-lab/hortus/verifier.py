@@ -63,6 +63,40 @@ HELD_OUT_ENVS = (
 )
 
 
+def verify_child(child, env=None):
+    """Check one child against the documented feasibility constraints.
+
+    child may be a genome or {"genome": ...}. Returns every violated
+    constraint by name (min_spacing_m / mass_cap_kg) with the actual
+    value and the limit. A valid child has an empty violations list.
+    """
+    genome = (child.get("genome", child) if isinstance(child, dict)
+              else child)
+    genome = model.parse_genome(genome)
+    env = env or model.TRAIN_ENV
+    geo = model.geometry(genome, env)
+    violations = []
+    if not geo["spacing_ok"]:
+        violations.append({
+            "constraint": "min_spacing_m",
+            "actual": geo["spacing_m"],
+            "limit": env["min_spacing_m"],
+        })
+    if not geo["mass_ok"]:
+        violations.append({
+            "constraint": "mass_cap_kg",
+            "actual": geo["mass_kg"],
+            "limit": env["mass_cap_kg"],
+        })
+    return {
+        "passed": not violations,
+        "violations": violations,
+        "violation_names": [v["constraint"] for v in violations],
+        "genome": list(genome),
+        "env": env["name"],
+    }
+
+
 def verify_champion(genome, reference=model.REFERENCE_GENOME,
                     held_out_envs=HELD_OUT_ENVS):
     """Re-score a candidate genome under the held-out envs.

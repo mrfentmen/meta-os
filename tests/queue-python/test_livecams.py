@@ -72,6 +72,13 @@ class PickTests(unittest.TestCase):
         self.assertEqual([c["name"] for c in got],
                          sorted(c["name"] for c in got))
 
+    def test_pick_area_all_offline_is_empty_not_an_error(self):
+        raw = [{"id": "off-1", "name": "Offline A", "area": "Bronx",
+                "isOnline": "false", "imageUrl": "https://x/a"},
+               {"id": "off-2", "name": "Offline B", "area": "Bronx",
+                "isOnline": False, "imageUrl": "https://x/b"}]
+        self.assertEqual(livecams.pick(raw, area="Bronx"), [])
+
 
 class SnapshotTests(unittest.TestCase):
     def setUp(self):

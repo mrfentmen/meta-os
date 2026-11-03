@@ -34,16 +34,20 @@
 //   request body: at most 16384 bytes of JSON
 //
 // Storage is in-memory unless BOARD_STORE_FILE is set. With a store
-// file, each appended line is written as one JSONL record
-// ({"room": ..., "line": ...}) and the file is replayed on boot, so
-// the board survives a restart. A torn final record is skipped, never
-// fatal.
+// file, each appended line or post is written as one JSONL record and
+// the file is replayed on boot. A corrupted record, wrong shape, or a
+// path that is a directory raises the board's named error instead of
+// returning a partial board as if it were good.
+//
+// GET /rooms/<room>/posts?limit=<1-1000> returns the oldest posts first.
+// renderPost / renderBoard / escapeHtml are exported pure render helpers;
+// messageToNote adapts a relay message line with the nick as author.
 //
 // Run: node board/board.mjs     (port: BOARD_PORT, default 8790)
 // Stdlib only: node:http, node:fs, node:crypto, node:path, node:url.
 
 import { createHash } from "node:crypto";
-import { appendFileSync, existsSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, statSync } from "node:fs";
 import http from "node:http";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -53,7 +57,9 @@ export const SEVERITIES = new Set(["info", "warning", "critical"]);
 export const MAX_BODY_BYTES = 16384;
 export const MAX_NICK_CHARS = 40;
 export const MAX_TEXT_CHARS = 2000;
+export const MAX_TITLE_CHARS = 200;
 export const MAX_TOPIC_CHARS = 64;
+export const MAX_READ_LIMIT = 1000;
 
 const BOARD_DIR = path.dirname(fileURLToPath(import.meta.url));
 const VIEWER_FILE = path.join(BOARD_DIR, "board.html");
@@ -78,6 +84,69 @@ function nowStamp() {
   return `[ts:${Math.floor(Date.now() / 1000)}]`;
 }
 
+const HTML_ESCAPES = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;",
+};
+
+export function escapeHtml(value) {
+  return String(value === undefined || value === null ? "" : value).replace(
+    /[&<>"']/g,
+    (character) => HTML_ESCAPES[character]
+  );
+}
+
+export const EMPTY_BOARD_HTML =
+  '<section id="board" class="empty"><p>No notes yet.</p></section>';
+
+export function renderPost(post) {
+  return (
+    `<article class="post" data-id="${escapeHtml(post.id)}">` +
+    `<header><h3>${escapeHtml(post.title)}</h3>` +
+    `<span class="author">${escapeHtml(post.author)}</span></header>` +
+    `<p>${escapeHtml(post.text)}</p></article>`
+  );
+}
+
+export function renderBoard(posts) {
+  const visible = (Array.isArray(posts) ? posts : []).filter(
+    (post) => post && !post.deleted
+  );
+  if (visible.length === 0) return EMPTY_BOARD_HTML;
+  return `<section id="board">${visible.map(renderPost).join("")}</section>`;
+}
+
+export function sortPosts(posts) {
+  return (Array.isArray(posts) ? posts.slice() : []).sort(
+    (a, b) => (Number(a.ts) || 0) - (Number(b.ts) || 0)
+  );
+}
+
+export function messageToNote(line, room = "main") {
+  const match = /^(.*): (.*) \[ts:(\d+)\]$/.exec(String(line));
+  if (!match) {
+    throw new Error("cannot adapt malformed relay message line");
+  }
+  const nick = match[1];
+  const text = match[2];
+  const id = "note-" + createHash("sha256")
+    .update([room, line].join("\n"))
+    .digest("hex")
+    .slice(0, 16);
+  return {
+    id,
+    room,
+    title: `Message from ${nick}`,
+    author: nick,
+    text,
+    ts: Number(match[3]),
+    deleted: false,
+  };
+}
+
 export function createBoardServer(options = {}) {
   const storeFile =
     options.storeFile !== undefined
@@ -92,21 +161,60 @@ export function createBoardServer(options = {}) {
     return rooms.get(room);
   }
 
+  /** Room name -> ordered post records (tombstones included). */
+  const posts = new Map();
+
+  function postsOf(room) {
+    if (!posts.has(room)) posts.set(room, []);
+    return posts.get(room);
+  }
+
+  function touchRoom(room) {
+    if (!rooms.has(room)) rooms.set(room, []);
+  }
+
   if (storeFile && existsSync(storeFile)) {
+    if (statSync(storeFile).isDirectory()) {
+      throw new Error(`board store path is a directory: ${storeFile}`);
+    }
     const records = readFileSync(storeFile, "utf8").split("\n");
-    for (const record of records) {
-      if (record.trim() === "") continue;
+    records.forEach((record, lineNumber) => {
+      if (record.trim() === "") return;
       let parsed;
       try {
         parsed = JSON.parse(record);
       } catch {
-        console.error("Board: skipped an unparseable store record on boot");
-        continue;
+        throw new Error(
+          `board store corrupted: line ${lineNumber + 1} is not valid JSON`
+        );
       }
-      if (typeof parsed.room === "string" && typeof parsed.line === "string") {
+      const isPost =
+        parsed &&
+        typeof parsed === "object" &&
+        typeof parsed.room === "string" &&
+        parsed.post &&
+        typeof parsed.post === "object" &&
+        typeof parsed.post.id === "string";
+      const isLine =
+        parsed &&
+        typeof parsed === "object" &&
+        typeof parsed.room === "string" &&
+        typeof parsed.line === "string";
+      if (!isPost && !isLine) {
+        throw new Error(
+          `board store corrupted: line ${lineNumber + 1} is not a {room,line} or {room,post} record`
+        );
+      }
+      if (isPost) {
+        const list = postsOf(parsed.room);
+        const index = list.findIndex((p) => p && p.id === parsed.post.id);
+        if (index >= 0) list[index] = parsed.post;
+        else list.push(parsed.post);
+        touchRoom(parsed.room);
+      } else {
         linesOf(parsed.room).push(parsed.line);
       }
-    }
+    });
   }
 
   function append(room, line) {
@@ -120,6 +228,21 @@ export function createBoardServer(options = {}) {
       }
     }
     return lines.length - 1;
+  }
+
+  function savePost(room, post) {
+    touchRoom(room);
+    const list = postsOf(room);
+    const index = list.findIndex((p) => p.id === post.id);
+    if (index >= 0) list[index] = post;
+    else list.push(post);
+    if (storeFile) {
+      try {
+        appendFileSync(storeFile, JSON.stringify({ room, post }) + "\n");
+      } catch (err) {
+        console.error(`Board: store append failed: ${err.message}`);
+      }
+    }
   }
 
   function replyJson(res, status, payload) {
@@ -139,7 +262,7 @@ export function createBoardServer(options = {}) {
         total += chunk.length;
         if (total > MAX_BODY_BYTES) {
           reject(new Error("oversized body"));
-          req.destroy();
+          req.resume(); // drain so the 400 response can still be sent
           return;
         }
         chunks.push(chunk);
@@ -169,6 +292,40 @@ export function createBoardServer(options = {}) {
   async function handlePost(req, res, room, action) {
     const body = await readJson(req, res);
     if (body === undefined) return;
+
+    if (action === "posts") {
+      if (!singleLine(body.title, MAX_TITLE_CHARS)) {
+        replyJson(res, 400, {
+          error: `title must be a single line of 1-${MAX_TITLE_CHARS} chars`,
+        });
+        return;
+      }
+      if (!singleLine(body.author, MAX_NICK_CHARS)) {
+        replyJson(res, 400, {
+          error: `author must be a single line of 1-${MAX_NICK_CHARS} chars`,
+        });
+        return;
+      }
+      const text = body.text === undefined ? "" : body.text;
+      if (text !== "" && !singleLine(text, MAX_TEXT_CHARS)) {
+        replyJson(res, 400, {
+          error: `text must be a single line of 0-${MAX_TEXT_CHARS} chars`,
+        });
+        return;
+      }
+      const list = postsOf(room);
+      const id = "post-" + createHash("sha256")
+        .update([room, body.author, body.title, text, String(Date.now()), String(list.length)].join("\n"))
+        .digest("hex")
+        .slice(0, 16);
+      const post = {
+        id, room, title: body.title, author: body.author, text,
+        ts: Math.floor(Date.now() / 1000), deleted: false,
+      };
+      savePost(room, post);
+      replyJson(res, 201, { post });
+      return;
+    }
 
     if (action === "messages") {
       if (!singleLine(body.nick, MAX_NICK_CHARS)) {
@@ -249,7 +406,7 @@ export function createBoardServer(options = {}) {
 
       if (req.method === "GET" && url.pathname === "/rooms") {
         const list = [...rooms.entries()]
-          .map(([room, lines]) => ({ room, count: lines.length }))
+          .map(([room, lines]) => ({ room, count: lines.length, posts: postsOf(room).length }))
           .sort((a, b) => (a.room < b.room ? -1 : a.room > b.room ? 1 : 0));
         replyJson(res, 200, { rooms: list });
         return;
@@ -267,7 +424,7 @@ export function createBoardServer(options = {}) {
 
         if (
           req.method === "POST" &&
-          (action === "messages" || action === "notify")
+          (action === "messages" || action === "notify" || action === "posts")
         ) {
           await handlePost(req, res, room, action);
           return;
@@ -283,6 +440,80 @@ export function createBoardServer(options = {}) {
             total: lines.length,
             messages: lines.slice(since + 1),
           });
+          return;
+        }
+
+        if (req.method === "GET" && action === "posts") {
+          const rawLimit = url.searchParams.get("limit");
+          let limit = null;
+          if (rawLimit !== null) {
+            const parsed = Number(rawLimit);
+            if (
+              !Number.isInteger(parsed) ||
+              parsed < 1 ||
+              parsed > MAX_READ_LIMIT
+            ) {
+              replyJson(res, 400, {
+                error: `limit must be an integer from 1 to ${MAX_READ_LIMIT}`,
+              });
+              return;
+            }
+            limit = parsed;
+          }
+          const list = sortPosts(postsOf(room));
+          replyJson(res, 200, {
+            room,
+            total: list.length,
+            posts: limit === null ? list : list.slice(0, limit),
+          });
+          return;
+        }
+      }
+
+      if (segments.length === 4 && segments[0] === "rooms" && segments[2] === "posts") {
+        const room = decodeURIComponent(segments[1]);
+        const id = decodeURIComponent(segments[3]);
+        if (!ROOM_RE.test(room)) {
+          replyJson(res, 400, { error: "room name must match [a-z0-9-]{1,32}" });
+          return;
+        }
+        if (req.method === "PATCH" || req.method === "DELETE") {
+          const body = await readJson(req, res);
+          if (body === undefined) return;
+          const post = postsOf(room).find((p) => p.id === id);
+          if (!post || post.deleted) {
+            replyJson(res, 404, { error: "post not found" });
+            return;
+          }
+          if (!singleLine(body.author, MAX_NICK_CHARS) || body.author !== post.author) {
+            replyJson(res, 403, { error: "author does not own this post" });
+            return;
+          }
+          if (req.method === "PATCH") {
+            if (!singleLine(body.title, MAX_TITLE_CHARS)) {
+              replyJson(res, 400, {
+                error: `title must be a single line of 1-${MAX_TITLE_CHARS} chars`,
+              });
+              return;
+            }
+            const text = body.text === undefined ? post.text : body.text;
+            if (text !== "" && !singleLine(text, MAX_TEXT_CHARS)) {
+              replyJson(res, 400, {
+                error: `text must be a single line of 0-${MAX_TEXT_CHARS} chars`,
+              });
+              return;
+            }
+            const updated = { ...post, title: body.title, text, edited_at: Math.floor(Date.now() / 1000) };
+            savePost(room, updated);
+            replyJson(res, 200, { post: updated });
+            return;
+          }
+          const tombstone = {
+            ...post, deleted: true, deleted_by: body.author,
+            deleted_at: Math.floor(Date.now() / 1000),
+          };
+          savePost(room, tombstone);
+          replyJson(res, 200, { post: tombstone });
           return;
         }
       }

@@ -25,6 +25,35 @@ export const TASKS = [
   { id: "ledger-complete", what: "run ledger reads back spawn then exit, in order, no torn lines" },
 ];
 
+// CB-387: a drill file names its steps; each step is one check this module really
+// performs against the runtime. An unknown type is refused at load with the type
+// named -- a drill that silently skips a step reports a score it did not earn.
+export const STEP_TYPES = ["registry-entry", "spawn", "ledger-readable"];
+
+export function loadDrillFile(file) {
+  const drill = JSON.parse(fs.readFileSync(file, "utf8"));
+  if (!drill || typeof drill !== "object" || Array.isArray(drill)) {
+    throw new Error("gym drill: file must hold an object");
+  }
+  if (typeof drill.id !== "string" || drill.id.trim() === "") {
+    throw new Error("gym drill: missing id");
+  }
+  if (!Array.isArray(drill.steps) || drill.steps.length === 0) {
+    throw new Error("gym drill: steps must be a non-empty array");
+  }
+  drill.steps.forEach((step, i) => {
+    if (!step || typeof step !== "object" || Array.isArray(step)) {
+      throw new Error("gym drill: step " + i + " must be an object");
+    }
+    if (!STEP_TYPES.includes(step.type)) {
+      throw new Error(
+        "gym drill: unknown step type " + JSON.stringify(step.type) + " at step " + i
+      );
+    }
+  });
+  return drill;
+}
+
 // Run one drill. runRoot defaults to a temp dir so drill runs never litter
 // the repo; the scores themselves persist via the gym ledger + registry.
 export async function runGymDrill({ registryFile = REGISTRY_FILE, agentName, runRoot = null } = {}) {
@@ -69,6 +98,66 @@ export async function runGymDrill({ registryFile = REGISTRY_FILE, agentName, run
   };
 }
 
+// CB-388: run a drill file against the REAL runtime -- spawnAgent is imported,
+// never mocked -- and score each declared step. The result has the same shape as
+// runGymDrill, so recordGymResult writes it without a second code path.
+export async function runDrillFile({ file, registryFile = REGISTRY_FILE, agentName = null, runRoot = null } = {}) {
+  const drill = loadDrillFile(file);
+  const agents = loadRegistry(registryFile);
+  const wanted = agentName || drill.agent;
+  const agent = agents.find((a) => a.name === wanted);
+  if (!agent) throw new Error("gym: no such agent: " + wanted);
+  const root = runRoot || fs.mkdtempSync(path.join(os.tmpdir(), "gym-drill-"));
+
+  const needsRun = drill.steps.some(
+    (step) => step.type === "spawn" || step.type === "ledger-readable"
+  );
+  let handle = null;
+  let exit = null;
+  let events = [];
+  if (needsRun) {
+    handle = spawnAgent(agent, { root, job: { orders: drill.orders || "gym drill file" } });
+    exit = await handle.done;
+    events = handle.ledger.read();
+  }
+
+  const results = [];
+  drill.steps.forEach((step, i) => {
+    let score = 0;
+    if (step.type === "registry-entry") {
+      score = agent.name && Array.isArray(agent.command) && agent.command.length > 0 && agent.budget ? 1 : 0;
+    } else if (step.type === "spawn") {
+      let briefOk = false;
+      try {
+        const brief = JSON.parse(fs.readFileSync(path.join(handle.runDir, "brief.json"), "utf8"));
+        briefOk = brief.agent === agent.name;
+      } catch {
+        briefOk = false;
+      }
+      score = exit.code === 0 && briefOk ? 1 : 0;
+    } else if (step.type === "ledger-readable") {
+      const names = events.map((event) => event.event);
+      score = names[0] === "spawn" && names[names.length - 1] === "exit" && names.length >= 2 ? 1 : 0;
+    }
+    results.push({
+      id: step.id || step.type + "-" + i,
+      type: step.type,
+      score,
+      max: 1,
+    });
+  });
+
+  return {
+    drill: drill.id,
+    agent: agent.name,
+    at: new Date().toISOString(),
+    tasks: results,
+    total: results.reduce((sum, task) => sum + task.score, 0),
+    max: results.reduce((sum, task) => sum + task.max, 0),
+    runDir: handle ? handle.runDir : null,
+  };
+}
+
 // Write the drill record onto the agent's registry entry (other entries and
 // fields untouched) and append the scores to the gym ledger.
 export function recordGymResult({ registryFile = REGISTRY_FILE, gymLedgerFile = GYM_LEDGER_FILE, result }) {
@@ -90,6 +179,11 @@ export function recordGymResult({ registryFile = REGISTRY_FILE, gymLedgerFile = 
   fs.writeFileSync(registryFile, text);
   const ledger = new Ledger(gymLedgerFile);
   for (const t of result.tasks) ledger.add(result.agent, "gym-task-score", { drill: result.drill, task: t.id, score: t.score, max: t.max });
+  // CB-010: a failed task leaves its own record, with the step named, so a
+  // drill cannot report a total without saying what failed.
+  for (const t of result.tasks) {
+    if (t.score < t.max) ledger.add(result.agent, "gym-fail", { drill: result.drill, task: t.id, score: t.score, max: t.max });
+  }
   ledger.add(result.agent, "gym-total", { drill: result.drill, total: result.total, max: result.max });
   return entry.gym;
 }
@@ -107,8 +201,16 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
       recordGymResult({ result });
       console.log("recorded on registry entry", name, "+ gym ledger");
     }
+  } else if (cmd === "drill-file" && name) {
+    const result = await runDrillFile({ file: name });
+    for (const t of result.tasks) console.log(t.id, t.score + "/" + t.max);
+    console.log("total", result.total + "/" + result.max);
+    if (flag === "--record") {
+      recordGymResult({ result });
+      console.log("recorded on registry entry", result.agent, "+ gym ledger");
+    }
   } else {
-    console.error("usage: gym.mjs tasks | drill <name> [--record]");
+    console.error("usage: gym.mjs tasks | drill <name> [--record] | drill-file <file> [--record]");
     process.exit(1);
   }
 }

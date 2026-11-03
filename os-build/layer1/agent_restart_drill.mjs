@@ -29,7 +29,7 @@ const events = (f) => (fs.existsSync(f) ? new Ledger(f).read().map((l) => l.even
 const runDir = path.join(root, "runs", "r-old");
 fs.mkdirSync(runDir, { recursive: true });
 new Ledger(path.join(runDir, "ledger.jsonl")).add("r-old", "spawn", { lane: "drill" });
-writeBaton(runDir, { state: "west wall half built", artifacts: ["wall.txt"], nextStep: "finish the west wall" });
+writeBaton(runDir, { stepIndex: 0, state: "west wall half built", artifacts: ["wall.txt"], nextStep: "finish the west wall" });
 new Ledger(path.join(root, "watchman.jsonl")).add("watchman", "bell", { id: "j1", agent: "worker", run: "r-old" });
 fs.writeFileSync(stateFile, JSON.stringify({ claimed: ["j1"], resume: {} }));
 fs.writeFileSync(path.join(jobsDir, "j1.job.json"), JSON.stringify({ id: "j1", agent: "worker", orders: "mind the gate" }));

@@ -139,6 +139,19 @@ SOURCE_SCHEMA_PATH = os.path.join(BASE_DIR, "schemas", "source.schema.json")
 
 EXPORT_VERSION = "science-lab-export/1"
 
+# Sections every session export carries, even when the value is null.
+EXPORT_SECTIONS = (
+    "export_version", "cycle_id", "question", "phase", "gate_state",
+    "parked_gate", "claims", "claims_by_level", "verdicts", "display",
+    "sources", "honesty", "generated_at", "generated_by",
+)
+
+# Fields the review page consumes from an exported session document.
+REVIEW_FIELDS = (
+    "cycle_id", "phase", "gate_state", "claims", "claims_by_level",
+    "verdicts", "display", "sources", "honesty",
+)
+
 # Task 82: evidence-level colour bands. 4+ is amber AND human-only:
 # levels 4-6 require qualified-human physical experiments
 # (ladder.MAX_AUTOMATED_LEVEL = 3); this system never displays them
@@ -243,10 +256,11 @@ def colour_for(level):
 
 
 def claim_display(claim):
-    """One claim -> {claim_id, statement, level, colour, basis}.
+    """One claim -> display row with level, colour, bias, and auto flag.
 
     claim needs level (recorded) + statement + basis. The display level
-    IS the recorded level (guarded); 4+ renders amber human-only.
+    IS the recorded level (guarded); 4+ renders amber human-only and is
+    never marked automatically confirmed.
     """
     if not isinstance(claim, dict):
         raise ValueError("claim_display requires a claim dict")
@@ -265,6 +279,10 @@ def claim_display(claim):
         "level": level,
         "colour": colour_for(level),
         "basis": str(basis),
+        "automatically_confirmed": bool(
+            level <= 3
+            and str(claim.get("verdict", "")).strip().lower()
+            in ("confirmed", "reproduced", "agree")),
     }
 
 
@@ -472,6 +490,10 @@ def export_session(cycle_id, exports_dir=None, write=True):
                 "export blocked: claim %r displays at %r above recorded "
                 "%r" % (claim.get("claim_id"), claim["level"],
                         claim["recorded_level"]))
+        claim["automatically_confirmed"] = bool(
+            int(claim["level"]) <= 3
+            and str(claim.get("verdict", "")).strip().lower()
+            in ("confirmed", "reproduced", "agree"))
     verdicts = {}
     for claim in claims:
         verdicts[claim["verdict"]] = verdicts.get(claim["verdict"], 0) + 1
@@ -515,6 +537,36 @@ def export_session(cycle_id, exports_dir=None, write=True):
         os.makedirs(out_dir, exist_ok=True)
         _write_json(os.path.join(out_dir, "%s.json" % cycle_id), doc)
     return doc
+
+
+def audit_claim_backing(claims):
+    """Flag exported claims that carry no backing record id.
+
+    A claim is backed when it names an experiment, source, cycle, or
+    explicit backing record id. Claims without one are reported, never
+    silently dropped.
+    """
+    if not isinstance(claims, list):
+        raise ValueError("audit_claim_backing requires a claims list")
+    backing_keys = ("backing_record_id", "record_id", "experiment_id",
+                    "source_id", "source_ids", "experiment_ids", "cycle_id")
+    flagged = []
+    for claim in claims:
+        if not isinstance(claim, dict):
+            flagged.append({"claim_id": None,
+                            "reason": "claim is not a dict"})
+            continue
+        backed = any(claim.get(key) for key in backing_keys)
+        if not backed:
+            flagged.append({
+                "claim_id": claim.get("claim_id", claim.get("id")),
+                "reason": "claim carries no backing record id",
+            })
+    return {
+        "claims_checked": len(claims),
+        "flagged": flagged,
+        "ok": not flagged,
+    }
 
 
 # ----------------------------------------------------------------------

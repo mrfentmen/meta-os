@@ -14,9 +14,12 @@ use std::fs::{self, OpenOptions};
 use std::io::{self, Write};
 use std::path::PathBuf;
 
+pub const MAX_LINES_PER_ROOM: usize = 1000;
+
 pub struct RoomStore {
     rooms: HashMap<String, Vec<String>>,
     store_file: Option<PathBuf>,
+    max_lines: usize,
 }
 
 impl RoomStore {
@@ -25,7 +28,14 @@ impl RoomStore {
         RoomStore {
             rooms: HashMap::new(),
             store_file: None,
+            max_lines: MAX_LINES_PER_ROOM,
         }
+    }
+
+    pub fn with_max_lines(max_lines: usize) -> Self {
+        let mut store = Self::memory();
+        store.max_lines = max_lines.max(1);
+        store
     }
 
     /// Store backed by a JSONL file: existing records reload on boot.
@@ -36,6 +46,7 @@ impl RoomStore {
         let mut store = RoomStore {
             rooms: HashMap::new(),
             store_file: Some(store_file.clone()),
+            max_lines: MAX_LINES_PER_ROOM,
         };
         if store_file.exists() {
             let text = fs::read_to_string(&store_file)?;
@@ -59,8 +70,12 @@ impl RoomStore {
     /// Append a line to a room; returns its 0-based index.
     pub fn append(&mut self, room: &str, line: &str) -> usize {
         let lines = self.rooms.entry(room.to_string()).or_default();
-        let index = lines.len();
         lines.push(line.to_string());
+        if lines.len() > self.max_lines {
+            let excess = lines.len() - self.max_lines;
+            lines.drain(0..excess);
+        }
+        let index = lines.len() - 1;
         if let Some(path) = &self.store_file {
             let record = record_line(room, line);
             let result = OpenOptions::new()

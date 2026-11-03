@@ -168,6 +168,78 @@ export const PRODUCTS = [
   },
 ];
 
+// One line per category, in the same words the app shows. A category without a
+// definition is a word the operator cannot act on, so `definitionFor` refuses it
+// instead of returning an empty string that renders as a blank row.
+export const CATEGORY_DEFINITIONS = {
+  // Vigiles
+  "normal activity": "Ordinary movement or stillness with no hazard indicated.",
+  "energetic movement": "Fast or large motion that may be play, sport, or urgency.",
+  "ambiguous gesture": "A movement whose intent cannot be read from the frame alone.",
+  "staged verbal dispute": "An argument performed for the camera, with no physical contact.",
+  "physical contact": "People touching in a way that may be contact or collision.",
+  "person down": "A person on the ground, whatever the cause.",
+  "possible altercation": "Contact or posture that resembles a fight and may not be one.",
+  "crowd gathered": "A stationary assembled crowd: a rally, an audience, a queue, onlookers. Ordinary pedestrian traffic in motion is normal activity.",
+  indeterminate: "The frame does not support a category at all.",
+
+  // Ignis
+  "visible smoke": "Smoke is visible in the frame.",
+  "visible flame": "Flame is visible in the frame.",
+  "steam or fog": "Vapour that resembles smoke and is not burning.",
+  "flame-like lighting": "Lighting that looks like flame and is not fire.",
+  "obscured or distant hazard": "A hazard is suggested but the view does not settle it.",
+  "no hazard visible": "Neither smoke nor flame is visible.",
+  "electrical fire indicators": "Sparks or arcing from wiring, an outlet, or a panel.",
+  "gas fire indicators": "A blue flame jet from a gas pipe, stove, or line.",
+  "cooking oil fire indicators": "Flames rising from a fryer or a pan of oil.",
+  "metal fire indicators": "An intensely bright white flame with a shower of sparks.",
+  "battery fire indicators": "A battery venting sparks and intense flame.",
+  "vehicle fire": "A vehicle with flame or heavy smoke.",
+  "structure fire": "A building with flame or heavy smoke at its windows.",
+  "smoldering fire": "Material producing smoke with no visible flame.",
+  "dark smoke": "Thick dark smoke from fuel, plastics, or rubber.",
+  "brown smoke": "Brown smoke from burning wood or building framing.",
+
+  // Medicus
+  "person on ground": "A person on the ground, seen from a safe distance.",
+  "crowd gathered around a person": "People standing around someone on the ground.",
+  "vehicle collision scene": "Vehicles and people after a collision.",
+  "blocked crew access": "The scene cannot be reached by the usual route.",
+  "person motionless": "A person not moving, who may simply be resting.",
+  "person down in roadway": "A person on the ground in a travelled lane.",
+  "person slumped in vehicle": "A person slumped over inside a parked vehicle.",
+  "person in or near water": "A person at the edge of, or in, water.",
+  "person trapped or pinned": "A person held by a vehicle or debris.",
+  "bystander aid in progress": "Untrained people giving aid at the scene.",
+  "multi-person incident scene": "More than one person down in one scene.",
+  "blood visible at scene": "Blood visible on a person or on the ground.",
+
+  // Science Lab evidence ladder
+  "level 0: idea": "A hypothesis filed, with no evidence yet.",
+  "level 1: evidence supported": "A claim with retrieved sources behind it.",
+  "level 2: computationally tested": "A claim with a signed compute job behind it.",
+  "level 3: independently reproduced": "A claim another party re-ran and reproduced.",
+  "level 4: experimentally validated": "A claim tested in a physical experiment.",
+  "level 5: independently replicated": "A level 4 claim replicated by another group.",
+  "level 6: established application": "A claim in established use.",
+
+  // Musica studio briefs
+  chipsynth: "Fast square-wave chip music: bright leads, driving bass, noise hats.",
+  ambient: "Slow pad music with a sparse melody and quiet hats.",
+  "boom-bap": "Sampled-feel drum loops under a laid-back melodic line.",
+};
+
+// Throws on a category nobody defined: a blank definition in the UI is a lie of
+// omission, and this is the one place that can refuse it.
+export function definitionFor(category) {
+  const text = CATEGORY_DEFINITIONS[category];
+  if (typeof text !== "string" || text.trim() === "") {
+    throw new Error("products: no definition for category " + JSON.stringify(category));
+  }
+  return text;
+}
+
 export const PRODUCT_BY_ID = Object.fromEntries(PRODUCTS.map((p) => [p.id, p]));
 
 export const PRODUCT_IDS = PRODUCTS.map((p) => p.id);

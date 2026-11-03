@@ -34,6 +34,10 @@ fn plan_job(key: &str, files: &[&str], deps: &[&str]) -> PlanJob {
         files: files.iter().map(|f| f.to_string()).collect(),
         deps: deps.iter().map(|d| d.to_string()).collect(),
         max_attempts: 3,
+        // The shape-only parser fills neither: spec and accept stay empty
+        // unless a fuller parse reads them.
+        spec: String::new(),
+        accept: Vec::new(),
     }
 }
 

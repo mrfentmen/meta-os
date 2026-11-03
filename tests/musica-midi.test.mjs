@@ -3,7 +3,7 @@
 // take record must gain midi_file in take-log format.
 import test from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { readFileSync, existsSync, rmSync} from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,6 +11,10 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const runtime = join(root, "os/worlds/musica/runtime");
 const staging = join(root, "..", "staging", "musica-midi-test");
+const probe = spawnSync("python3", ["-c", "import pretty_midi"], { encoding: "utf8" });
+const MIDI_SKIP = probe.status === 0
+  ? false
+  : "pretty_midi is not installed; install it to run the MIDI export test (no fake pass)";
 
 function py(script, args) {
   return execFileSync("python3", [join(runtime, script), ...args], {
@@ -18,7 +22,7 @@ function py(script, args) {
   });
 }
 
-test("MIDI export writes the take's own notes via pretty_midi", () => {
+test("MIDI export writes the take's own notes via pretty_midi", { skip: MIDI_SKIP }, () => {
   rmSync(staging, { recursive: true, force: true });
   py("compose.py", ["--session-dir", staging, "--brief-id", "chipsynth",
     "--takes", "2", "--seed-base", "17000"]);

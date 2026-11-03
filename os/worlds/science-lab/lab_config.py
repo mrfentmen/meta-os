@@ -13,9 +13,20 @@ DEFAULT_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "
 
 
 def load_config(path=DEFAULT_CONFIG_PATH):
-    """Load lab config JSON. Returns dict with endpoint/agents/cycle."""
+    """Load lab config JSON. Returns dict with endpoint/agents/cycle.
+
+    `name` is required and named in the error when absent. Unknown
+    top-level keys are ignored (the documented behaviour), and empty
+    optional sections receive their documented defaults.
+    """
     with open(path, "r", encoding="utf-8") as fh:
         cfg = json.load(fh)
+    if not isinstance(cfg, dict):
+        raise ValueError("lab config must be a JSON object")
+    name = cfg.get("name")
+    if not isinstance(name, str) or not name.strip():
+        raise ValueError("lab config missing required field 'name'")
+    cfg["name"] = name.strip()
     cfg.setdefault("endpoint", "file://local - Muse Spark endpoint via helper, key on Mac line1 only")
     cfg.setdefault("agents", {}).setdefault("default", {"maxCalls": 50, "maxSpend": 5.0})
     cfg.setdefault("cycle", {}).setdefault("maxActions", 200)

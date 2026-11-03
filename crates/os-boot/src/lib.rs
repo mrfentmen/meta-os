@@ -55,6 +55,7 @@
 //! assets carried byte-identical under `assets/os/` (see the `carried`
 //! module and its manifest).
 
+pub mod boot_config;
 pub mod carried;
 pub mod cli;
 pub mod git;

@@ -12,3 +12,4 @@ hex = "0.4"
 rand = "0.8"
 tempfile = "3"
 os-misc = { path = "../os-misc" }
+queue-core = { path = "../queue-core" }

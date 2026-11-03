@@ -53,6 +53,9 @@ import math
 
 # Genome layout: (n_fins, fin_height_mm, fin_thickness_mm,
 # base_thickness_mm). Bounds are the search space Hortus may use.
+GENE_NAMES = ("n_fins", "fin_height_mm", "fin_thickness_mm",
+              "base_thickness_mm")
+
 GENE_BOUNDS = (
     (2.0, 40.0),    # n_fins (rounded to int when scored)
     (4.0, 60.0),    # fin height, mm
@@ -142,6 +145,40 @@ def calibrated_held_out_envs():
             env["h_w_per_m2k"] * CALIBRATED_H_MULTIPLIER)
         envs.append(scaled)
     return tuple(envs)
+
+
+def parse_genome(payload):
+    """Parse a genome from a named dict or a 4-value sequence.
+
+    Unknown gene keys are refused rather than ignored; all four
+    documented genes are required. Returns a tuple of floats in
+    GENE_NAMES order.
+    """
+    if isinstance(payload, dict):
+        unknown = sorted(set(payload) - set(GENE_NAMES))
+        if unknown:
+            raise ValueError("genome has unknown gene key(s): %r" % (unknown,))
+        missing = [name for name in GENE_NAMES if name not in payload]
+        if missing:
+            raise ValueError("genome is missing gene(s): %r" % (missing,))
+        values = [payload[name] for name in GENE_NAMES]
+    elif isinstance(payload, (list, tuple)):
+        values = list(payload)
+        if len(values) != len(GENE_NAMES):
+            raise ValueError("genome needs %d values, got %d"
+                             % (len(GENE_NAMES), len(values)))
+    else:
+        raise ValueError("genome must be a dict or a sequence")
+    try:
+        return tuple(float(v) for v in values)
+    except (TypeError, ValueError):
+        raise ValueError("genome values must be numeric")
+
+
+def genome_to_dict(genome):
+    """Serialise a genome to its documented named fields."""
+    values = parse_genome(genome)
+    return dict(zip(GENE_NAMES, values))
 
 
 def clamp_genome(genome):

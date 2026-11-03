@@ -1,0 +1,570 @@
+{
+  "root": "/Users/dtaxk/Desktop/meta-os/os-build/logs",
+  "generated_at": "2026-11-02T15:47:46.653Z",
+  "files": [
+    {
+      "file": "BOOT_DIFF.md",
+      "size": 1612,
+      "sha256": "b14709ecf3d3553c036a98e7fafbf76d750e25f7b504b4c6de42da527490fa3e",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "GATE-boot-main4702e5c.txt",
+      "size": 1979,
+      "sha256": "3ec6f78189cedb3c8c5b8e840ddc588635b7cda7f04ee935dd8c119da780bb67",
+      "claim": "Gate boot capture for main `4702e5c`; STATUS at line 59"
+    },
+    {
+      "file": "K1-boot-run1.txt",
+      "size": 484,
+      "sha256": "0646c3673cffc950413d27ddd07c420da11ec3a5053ecdea094e80331d25cf86",
+      "claim": "K1 alive, run 1 of 3; SeaBIOS prefix only before it"
+    },
+    {
+      "file": "K1-boot-run2.txt",
+      "size": 484,
+      "sha256": "0646c3673cffc950413d27ddd07c420da11ec3a5053ecdea094e80331d25cf86",
+      "claim": "K1 alive, run 2 of 3"
+    },
+    {
+      "file": "K1-boot-run3.txt",
+      "size": 484,
+      "sha256": "0646c3673cffc950413d27ddd07c420da11ec3a5053ecdea094e80331d25cf86",
+      "claim": "K1 alive, run 3 of 3"
+    },
+    {
+      "file": "K1-boot.txt",
+      "size": 1851,
+      "sha256": "6ff7650f1cd2ae83f305aad21397e7ab2b5c1c3df8b7e3cb3ae1b6e4053999fb",
+      "claim": "K1 alive line on a later tree; also reaches K4/K6 lines, so it is not a K1-only capture"
+    },
+    {
+      "file": "K16-doublefault-fixed.txt",
+      "size": 1134,
+      "sha256": "9f669481e8b29c28740e8a74f0ddf11c54a9d236bb0440562eee80c06f0d4b68",
+      "claim": "Post-fix double-fault shape: timer line + memory up, no 34k-line loop — the current handler's behaviour"
+    },
+    {
+      "file": "K2-boot.png",
+      "size": 3271,
+      "sha256": "4bb3fc2d44b35be6cdb349cf76918ea9940eb8e971db7faefb52d954766763f5",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "K2-boot.txt",
+      "size": 533,
+      "sha256": "25c12a40cb8197aca7a610a9ab612419a16d05b36d3d08ff15e479cc65a08ec2",
+      "claim": "K2 banner + alive line; also carries `META OS KERNEL - panic` at line 13, so this capture includes a panic"
+    },
+    {
+      "file": "K2-console.png",
+      "size": 2705,
+      "sha256": "ec99cd64c27336df8881485ee7a3db8bcf078d67cbb5e005cb4d09c7e768d020",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "K2-panic-drill.txt",
+      "size": 533,
+      "sha256": "64fffdc3ebf36c229bbc602707525335f38e6e7216852a2ca2f585dd2d4f732b",
+      "claim": "K2 panic drill: banner, alive line, `META OS KERNEL - panic`"
+    },
+    {
+      "file": "K2-panic.png",
+      "size": 3079,
+      "sha256": "467e2518cf94df316135f515269c2e10e7a7b4b0992ae4bef7bd2a67e96097b9",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "K2-shell.png",
+      "size": 7941,
+      "sha256": "d622d57751474ba39af47440b043cc6cafd39afcb6e15bd7307c38526a271312",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "K3-boot.txt",
+      "size": 2018,
+      "sha256": "f17072400272314e90c5790d1bf34aec5bda3381a39f8dca29df85fa36e69dcb",
+      "claim": "K3 timer line (`K3 timer: 10 ticks after 407902 spins`), then K4 memory, K6 userspace and a typed `STATUS`"
+    },
+    {
+      "file": "K3-break.txt",
+      "size": 829,
+      "sha256": "0de401e368ae9afa1ce4ec52ea4af4948bf928b5d83db14c4d1570ce0688e1b5",
+      "claim": "K3 `int3`/breakpoint drill capture"
+    },
+    {
+      "file": "K3-doublefault.txt",
+      "size": 3357768,
+      "sha256": "fad4d3d9ec2d12d0aa136207883d08aa2063a1882ccbfaaa3807ad57c01d0013",
+      "claim": "Pre-fix double-fault loop (one repeated line). **Not current behaviour** — the handler now halts after one line (`kernel/src/interrupts.rs:445-461`)"
+    },
+    {
+      "file": "K3-fault.txt",
+      "size": 180733,
+      "sha256": "315d3a8d200c59b70eb3c83f0a81751571316610052d66e94fcd0a1d10f3a8ef",
+      "claim": "K3 page-fault drill at `0xdeadbeef`; repeated exception lines show the old return-after-fault behaviour"
+    },
+    {
+      "file": "K4-boot.txt",
+      "size": 3050,
+      "sha256": "a1aa51ebb4e8043beccd9704157d051d794110f9878ce0181160546a635852c3",
+      "claim": "K4 memory bring-up (`mem summary: K4 up`) plus 58 seconds of `uptime` lines"
+    },
+    {
+      "file": "K4-guard.txt",
+      "size": 501352,
+      "sha256": "ccebd88b626e5707c9b7e23b3cfa81a3ae1b888b85bdf85323d737bbcd799d1f",
+      "claim": "Guard-test capture: repeated page faults at the probe address `0x700000000000`"
+    },
+    {
+      "file": "K5-boot.txt",
+      "size": 1629,
+      "sha256": "392e6092c9cce1bdb371c56305f5942434348176c4ca11a0a62a2f7ec98ea1cc",
+      "claim": "K5 scheduler capture: `C sleeping 200 ticks`, `uptime` tick lines. **No K5 banner exists** — the banner string is the old K3 milestone"
+    },
+    {
+      "file": "K6-boot.txt",
+      "size": 2827,
+      "sha256": "bec1d05aefe1e8124cbc065bd3b710428071c5c69397295a5f609c394780d8f5",
+      "claim": "K6 ring-3 run: `HELLO FROM USERSPACE`, `user exit code 0`, uptime lines"
+    },
+    {
+      "file": "K6-debug.txt",
+      "size": 2363,
+      "sha256": "07080cc258cc252af9d55568d3ff4209dffdf108d66b6f7d935ddea91f188c3c",
+      "claim": "K6 debug capture: memory up + uptime; no userspace marker in the first 73 lines"
+    },
+    {
+      "file": "K6-repro-main-2026-11-01.txt",
+      "size": 3803,
+      "sha256": "60b58c6fdb30fe04f15f11f8faaab02538fe139761360724ebcd3dd19d64a7ff",
+      "claim": "Fresh K6 repro on `main` with the linker-flag fix; typed `STATUS tasks=7 ticks=805 heap_free_kb=31` at line 101"
+    },
+    {
+      "file": "K7-boot.txt",
+      "size": 2444,
+      "sha256": "1c12aca59fa4a4a760e547ec869b581a9db93910d52800f20fba1ceb85f20941",
+      "claim": "K7 demo session log (typed `STATUS`, `uptime`); **no K7 banner** — see the K7 note below"
+    },
+    {
+      "file": "K9-panic-detail.txt",
+      "size": 121,
+      "sha256": "cde154ecb5cdf69834d62063f4ae9ec6ce6015498f91b9d71228d912d1bfeffb",
+      "claim": "Panic-detail capture: alive line, then `META OS KERNEL - panic`"
+    },
+    {
+      "file": "MERGED-boot-2.txt",
+      "size": 2017,
+      "sha256": "56a9262e138065ab1d406f1a89b3a4b9d8fbbe005f0f7fa752d21e9f8f80d3a2",
+      "claim": "Merge capture with the full K6 set: hello entry, `HELLO FROM USERSPACE`, user page-fault `task killed` (line 45), `user bad syscall 99 refused` (line 52), `STATUS tasks=7` (line 60)"
+    },
+    {
+      "file": "MERGED-boot.txt",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "claim": "**EMPTY FILE.** Zero content; it proves nothing. Fill or delete it"
+    },
+    {
+      "file": "O-shell.png",
+      "size": 9549,
+      "sha256": "e76c8807e0ca33553757a22109266bf53fa0725c09aad6c48265351b300c8f9c",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "O-shell.txt",
+      "size": 4610,
+      "sha256": "53c8edc1830b620dd818e2e8f2c1837f20d9aabc32b79989c94f76007e3d945e",
+      "claim": "Shell session capture (uptime/STATUS)"
+    },
+    {
+      "file": "O-shell2.txt",
+      "size": 11545,
+      "sha256": "26fe9143c13825ed4fba05ddf40bfc43b86b2d61862086904dd716cc2e159e65",
+      "claim": "Longer shell session capture"
+    },
+    {
+      "file": "PROOF-f027175-boot.txt",
+      "size": 2104,
+      "sha256": "1573440074e4f4391fe16c9f8d8a9983177272a7769de634d8427c8b5bef21dd",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "PROOF-f027175.md",
+      "size": 490,
+      "sha256": "47f13aff7141a6f86fa819c029a2ec905d08b4d5e5dd48ae23d0f455c9312965",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "R5-imperium/drill.log",
+      "size": 712,
+      "sha256": "03c3b085bf428f61a60ba6675ff980618036fa2cd7ab10b05007d1453a0ed4c9",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "R5-imperium/incident.json",
+      "size": 14103,
+      "sha256": "86dbd1890c4ab37172e39eebb0be89baa6ebdc68c2ce5c934baff4a2c885b7c9",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "R5-imperium/package-sent.json",
+      "size": 3715,
+      "sha256": "0ccc53e2f8ee7eb8d14640caaae1167c853204a1e5ab75f88f910e164376400d",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "R5-imperium/receipt.txt",
+      "size": 47,
+      "sha256": "41fc7a0f2dfc998b2f7b08a57bb0f8a7a9e85f82ff998f2ec8127d115e2ed929",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "R5-readkey.txt",
+      "size": 2675,
+      "sha256": "95e0d169c42b4025ca7f45794549a52405b168669ffbadca5461ca22f7c49f69",
+      "claim": "`user readkey: ... entry 0x630000000010`, `readkey: polling syscall 5`, `readkey: empty` — syscall 5 observed live at R5"
+    },
+    {
+      "file": "R5-soak-final.txt",
+      "size": 2399,
+      "sha256": "6063d78af45608229048a30ee978d836e9e135e8dd272e4d621b31e2391b8c8b",
+      "claim": "Final soak capture; same STATUS shape"
+    },
+    {
+      "file": "R5-soak.txt",
+      "size": 2399,
+      "sha256": "6063d78af45608229048a30ee978d836e9e135e8dd272e4d621b31e2391b8c8b",
+      "claim": "Readkey/soak run; STATUS at lines 57 and 60"
+    },
+    {
+      "file": "W6-fetch-screen.jpg",
+      "size": 33022,
+      "sha256": "d7f3a50c1e54c04c09c9b232f9c5a23f52e467c1ef4e3d54e78dc9f559446127",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "W6-fetch-serial.txt",
+      "size": 2564,
+      "sha256": "a7156a5114aa537af3906e6fd932513a7a6219401433033c2469801e1c74ed13",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "W6-gate-9de854d-boot.txt",
+      "size": 1979,
+      "sha256": "878b97edd5d7458d00701d9d387d76b4de8335aa2560616dfce0309ab8a212f4",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "W6-gate-9de854d-run.txt",
+      "size": 14696,
+      "sha256": "53d308c64347f2fb07450213891e0eccce6af609094bd5966d665d5f9cb2185f",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE2-boot-tip-serial.txt",
+      "size": 1934,
+      "sha256": "f3da4b979a2f789ab2cc87a85931bca8e9778781feb55acf35df19efc9af7586",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE2-boot-tip.jpg",
+      "size": 20007,
+      "sha256": "4938bf4fd2ffc0d730af7db79675422c8beb0f57692fae61a83fc25bb0b3f868",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE2-branch-boot-serial.txt",
+      "size": 1934,
+      "sha256": "0d139e6a637ba9698fa14a109b0872097490ebe9a9ce6e17ec10701fd49c2285",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE2-branch-boot.jpg",
+      "size": 20095,
+      "sha256": "225c02b66476bc189a90599376a85a91e9ed97566a6bf717ca1feea7c9021d9a",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE2-face-fresh-boot.txt",
+      "size": 65872,
+      "sha256": "a4875d2ed3cd6372b58bf0c96cb28eb9eb2e8c038c42c9f0e753d84abecfc904",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE2_PROOF_INDEX.md",
+      "size": 1408,
+      "sha256": "b71b260c467db0184e0c4d92fc357b9ebbdd1fbb62afc0c8e4b48b5dbfca4b1a",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE3-combined-gate.log",
+      "size": 15500,
+      "sha256": "836c7448fea2ac9a8ecca43992535d0e6f2c9ee404053c079340d42fb5863bea",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE3-combined-serial.txt",
+      "size": 9617,
+      "sha256": "a7ba23b4c186859bdd368e7058798438013f5b8f73fcf7e92a16205f5d359d2e",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE3-w3_fetch.jpg",
+      "size": 33112,
+      "sha256": "fa98237cfed8615edc927cc83fda54de0ea0cf727bf3feb96ee55fd89b6e4a13",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE3-w3_s1.jpg",
+      "size": 37572,
+      "sha256": "422d8f6fad793eb3b7267c0969ae07ba9686f61743085067cd3cf5bb9af7aa0c",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE3-w3_s2.jpg",
+      "size": 50606,
+      "sha256": "41402eee34bebe53993c441a00b244633455e0ebc138468ef1de97ebc11cb66c",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE3_KERNEL_PROOF.md",
+      "size": 1879,
+      "sha256": "65317274283e80fc91860153595455e12c20d564ff55286bb278ee733d5fd7e0",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "WAVE3_MODEL_PROOFS.md",
+      "size": 3508,
+      "sha256": "f3d37fc43f8bc9b98adcf8399bfd83af491e7509dc77e60b70a0c2c4064370af",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-boot1.txt",
+      "size": 65749,
+      "sha256": "d670993236a91f5b93dd6250226bc957bbc0a6c87f7fb343c7634a1b87f9e9be",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-image-wave2-fresh-boot.txt",
+      "size": 65873,
+      "sha256": "1e5687f1c7691075cd367251c63cfe49ae3fc73bd6e89e857ee8fe796d6b4809",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-medicus/drill.log",
+      "size": 671,
+      "sha256": "87a413e1a5419800b9f46007e1f38eeb856102551d1c55ec147ebb78769b1032",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-medicus/incident.json",
+      "size": 10569,
+      "sha256": "4a4a0b9e1b92e31c05e00bf29ee1c75c1575ffa7fb3ce66621258eae5d949303",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-medicus/package-sent.json",
+      "size": 3148,
+      "sha256": "e870dc6d87c33e2a79042f49e24c2b084461fb00206a1e937d77807fe68214de",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-medicus/receipt.txt",
+      "size": 47,
+      "sha256": "1c5d872b461463ab19d07e56ec49039f1456e4665bbfb92e504c6d098d9d82c8",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-medicus-wave2/drill.log",
+      "size": 671,
+      "sha256": "0c431dc3838ee1790a52cd7be39554e4641bd9579ca1ad7933ec01fbbd509b3a",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-medicus-wave2/incident.json",
+      "size": 10569,
+      "sha256": "701906fb1a8946d67983ea298ae0ede4249ac3ff2cbfb0f587e86db9f07751fd",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-medicus-wave2/package-sent.json",
+      "size": 3148,
+      "sha256": "2578529ff4e6907c7d956e8e9e7cea13c26e876d89dbdd3aa34827cedef1aada",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "face-medicus-wave2/receipt.txt",
+      "size": 47,
+      "sha256": "953c5075f2af5e9fbee8eff22522b8239121be46dbe7f9df8bf7d44ebb3ff8a6",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "flakes.txt",
+      "size": 46,
+      "sha256": "be6c8ea88de60ef40f2643dadcc4c5b60f1df383349a2510abd66835e8a27d98",
+      "claim": "Flake record: timestamp + `pipeline: pass=14 fail=1`"
+    },
+    {
+      "file": "gate-run-main4702e5c.txt",
+      "size": 14740,
+      "sha256": "617ec73d8a7286711ca29a61900557c3dc0cacbb34da3ff068f7abefe61c3b79",
+      "claim": "Full gate transcript for main `4702e5c`: toolchain, userspace, kernel, boot, assert stages"
+    },
+    {
+      "file": "gate-run-r5-1.txt",
+      "size": 14696,
+      "sha256": "8fbd419c6e8c64061406bffa85fc8cc1931adff644f2607663bc4a81ea4e7fc0",
+      "claim": "Full gate transcript for the R5 run"
+    },
+    {
+      "file": "install-tools.txt",
+      "size": 1239,
+      "sha256": "e01fd9feca29a148b22959377124d00eb66949d860bb816b73db4d5b2a312ede",
+      "claim": "Tool availability check (qemu/jq/ripgrep, ...)"
+    },
+    {
+      "file": "pipeline-boot.txt",
+      "size": 2501,
+      "sha256": "e9dc22f9f39f1737b7eb2b6e50b35f4f45d6660ec39776878c6ecbe1dee8c4cd",
+      "claim": "Pipeline boot capture; K6 userspace + uptime"
+    },
+    {
+      "file": "pipeline-run1.txt",
+      "size": 852,
+      "sha256": "1473172cbd9d4e267802b7c0eab8ddf7f2eba8e8186bc7ac7940b20562aa6c3e",
+      "claim": "Pipeline run: userspace + kernel build, then boot/check lines (`PASS: K2 banner` at line 7)"
+    },
+    {
+      "file": "pipeline-screen.png",
+      "size": 9513,
+      "sha256": "6aae7d92779baed1fd5b9e8484711f0a56a52577e8e3226dfa4ec5d046ec1ee8",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "readkey-gate-419c209-boot.txt",
+      "size": 18583,
+      "sha256": "88ca5479c71281abef83ca29fe9faaa48fc7299cc326d041bc7778af156b839d",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "readkey-tworeader-419c209.txt",
+      "size": 6893,
+      "sha256": "318c9428b8a7100cbf7993b896bbc7ae53fe621d14c9128625877a532c13c219",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "reboot-loop.txt",
+      "size": 151,
+      "sha256": "87c2ae0f7d5f116f822bbecb0897fc33dcea58df6dcd95ace4e4e39ce3751208",
+      "claim": "Reboot loop: three boots, each `alive=1`"
+    },
+    {
+      "file": "records-lint-code100.txt",
+      "size": 19857,
+      "sha256": "9e9334ec512d14ac086bb1999fc422f13fdd0e2d50b74a077974b20f48f7c236",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "soak.txt",
+      "size": 95073,
+      "sha256": "794a8fa12e846647991b9375cbdc5a303ea781ab9acdf9976a5fcc612ecbde8b",
+      "claim": "Long soak capture; not summarised here beyond its size"
+    },
+    {
+      "file": "verify-drill.txt",
+      "size": 886,
+      "sha256": "a125d0bdebb1ea68504c7096b277eb5e61296021e4e24e6a393ac245d574b5c2",
+      "claim": "Verify drill: build stages and a `PASS: K2 banner` line"
+    },
+    {
+      "file": "wave2-sec3.md",
+      "size": 5198,
+      "sha256": "a9f3e2ac83b6dcffa80dab40453107f0e6e3f03a56ed3aa038836754a9515246",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave2-sec4.md",
+      "size": 2208,
+      "sha256": "c49ee0c1910840e6181cee5acfad519b230fc771d4c5bb8be70d60801f392c41",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave2-sec5.md",
+      "size": 2687,
+      "sha256": "014d2e31c02f90b72e2cc61ecf969f5c20d7f670d19b8d7f54bb4f3af10da1c1",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave2-sec6.md",
+      "size": 3828,
+      "sha256": "3916a0f0a1ae3b100e44145ca35bea355045fadce1b2d837acef4f84cb768a70",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave2-sec7.md",
+      "size": 4141,
+      "sha256": "fe4263476f0cc519df74b93d58b3c881b7fc7108e0e1f2b4729d7b7cd53445c8",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave2-sec8.md",
+      "size": 1705,
+      "sha256": "d588baacd9bf2ae979d734a12ccf7fb81b2f03d3a7960d4c1615a2d289585349",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave2-sec9.md",
+      "size": 3864,
+      "sha256": "f680367c58ea7b94e1328816da312021ed38a7be79f47a4a3d353073d812c373",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave3-model-proofs/drill.log",
+      "size": 671,
+      "sha256": "47fcc583b5bb413e93014edfc9ffed932cfbba924e1192d06378c063c1efb51d",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave3-model-proofs/incident.json",
+      "size": 10697,
+      "sha256": "f0ab0ee0ac1a0bc8e62532726c70a333cebf9269fab42fe585e28abf05a9d2f8",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave3-model-proofs/package-sent.json",
+      "size": 3137,
+      "sha256": "bac7502c326c7ed53afef2a9f4088123ed87e968a8109193ac7fb7fac89047bb",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave3-model-proofs/receipt.txt",
+      "size": 47,
+      "sha256": "af39238946bfcf65821c37db8e1e268d59f0d37437de88974ce542b088c51d46",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave3-model-proofs/receipts-chat-wonder-sam-image.jsonl",
+      "size": 1379,
+      "sha256": "2e01ce87508066366012087b0baef6be91406033a33da527b95fb7a9130b2070",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave3-model-proofs/receipts-server-default.jsonl",
+      "size": 1773,
+      "sha256": "b958828d9aa985a5a1c5dcc8b23ba86a861bd7d4f4e506829cb5e093c9c5ace2",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave3-model-proofs/w3-gen.webp",
+      "size": 60266,
+      "sha256": "64eec94114f609fcad3dd21f5fec9531b2e4a7d5b27d8eae81a0ecf8f31cd768",
+      "claim": "not indexed; no claim stated"
+    },
+    {
+      "file": "wave3-model-proofs/w3-spark-reading.json",
+      "size": 1318,
+      "sha256": "b3687a0a9c6749fe6a83b11274e81f53670d7e8e6a6902f077929b3ce9d4e0ec",
+      "claim": "not indexed; no claim stated"
+    }
+  ]
+}

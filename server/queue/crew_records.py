@@ -51,6 +51,25 @@ def data_dir():
         QUEUE_DIR, "crew-data")
 
 
+REQUIRED_INCIDENT_KEYS = (
+    "id", "status", "evidence", "created_at", "camera", "division",
+    "category", "priority", "patrol_job_id", "timeline",
+)
+
+
+def validate_incident_record(record):
+    """Pure shape check for one incident record. Returns a list of
+    named errors: missing required fields and unexpected fields.
+    It never mutates the record and never guesses a missing value."""
+    if not isinstance(record, dict):
+        return ["incident record is not an object"]
+    errors = [f"missing required field: {key}"
+              for key in REQUIRED_INCIDENT_KEYS if key not in record]
+    errors += [f"unexpected field: {key}" for key in record
+               if key not in REQUIRED_INCIDENT_KEYS]
+    return errors
+
+
 class CrewRecords:
     def __init__(self, directory=None):
         self.dir = directory or data_dir()
@@ -244,17 +263,29 @@ class CrewRecords:
         return None
 
 
+def parse_jsonl(text):
+    """Parse JSONL text into (records, partial). A torn final line
+    (crash mid-append) is returned as `partial`, never raised; every
+    intact line before it is returned. A bad line earlier in the
+    file is skipped, matching the reader's long-standing tolerance."""
+    records = []
+    partial = None
+    lines = text.splitlines()
+    for index, raw in enumerate(lines):
+        line = raw.strip()
+        if not line:
+            continue
+        try:
+            records.append(json.loads(line))
+        except ValueError:
+            if index == len(lines) - 1:
+                partial = line
+    return records, partial
+
+
 def _tail_jsonl(path, limit):
     if not os.path.exists(path):
         return []
-    out = []
     with open(path) as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                out.append(json.loads(line))
-            except ValueError:
-                continue  # a torn final line is skipped, never fatal
+        out, _partial = parse_jsonl(f.read())
     return out[-limit:]

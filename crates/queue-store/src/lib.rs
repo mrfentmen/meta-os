@@ -16,10 +16,83 @@
 //!   only inside the sub-second boundary.
 
 use std::collections::{BTreeMap, HashMap};
+use std::fmt;
+use std::fs::{self, OpenOptions};
+use std::io::{self, Write};
+use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde_json::Value;
+
+/// Append-only JSONL record store. One JSON object per line, keyed by `id`.
+#[derive(Debug)]
+pub struct RecordStore {
+    path: PathBuf,
+    partial_line: Option<String>,
+}
+
+#[derive(Debug)]
+pub struct RecordError(pub String);
+
+impl fmt::Display for RecordError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::error::Error for RecordError {}
+
+impl RecordStore {
+    pub fn open(path: impl AsRef<Path>) -> io::Result<Self> {
+        let path = path.as_ref().to_path_buf();
+        if path.is_dir() {
+            return Err(io::Error::new(io::ErrorKind::InvalidInput, "record store path is a directory"));
+        }
+        let mut partial_line = None;
+        if path.exists() {
+            for line in fs::read_to_string(&path)?.lines() {
+                if line.trim().is_empty() {
+                    continue;
+                }
+                if serde_json::from_str::<Value>(line).ok().and_then(|v| v.get("id").and_then(Value::as_str).map(str::to_string)).is_none() {
+                    partial_line = Some(line.to_string());
+                }
+            }
+        }
+        Ok(Self { path, partial_line })
+    }
+
+    pub fn partial_line(&self) -> Option<&str> {
+        self.partial_line.as_deref()
+    }
+
+    pub fn append(&self, record: &Value) -> Result<(), RecordError> {
+        let id = record.get("id").and_then(Value::as_str).filter(|id| !id.is_empty())
+            .ok_or_else(|| RecordError("record is missing required string field 'id'".to_string()))?;
+        if self.get(id).is_some() {
+            return Err(RecordError(format!("append-only violation: duplicate id '{id}'")));
+        }
+        let mut line = serde_json::to_string(record).map_err(|e| RecordError(e.to_string()))?;
+        // One buffer, one write: `writeln!` issues a separate syscall for the
+        // newline, and two O_APPEND writers can interleave those and glue
+        // records onto one line. A single write_all keeps each record whole.
+        line.push('\n');
+        let mut file = OpenOptions::new().create(true).append(true).open(&self.path)
+            .map_err(|e| RecordError(e.to_string()))?;
+        file.write_all(line.as_bytes()).map_err(|e| RecordError(e.to_string()))
+    }
+
+    pub fn get(&self, id: &str) -> Option<Value> {
+        self.list().into_iter().find(|r| r.get("id").and_then(Value::as_str) == Some(id))
+    }
+
+    pub fn list(&self) -> Vec<Value> {
+        let Ok(text) = fs::read_to_string(&self.path) else { return Vec::new() };
+        text.lines().filter_map(|line| serde_json::from_str::<Value>(line).ok())
+            .filter(|v| v.get("id").and_then(Value::as_str).is_some()).collect()
+    }
+}
 
 // ---------------------------------------------------------------------------
 // Repo layer (trio_repo.py)
@@ -407,6 +480,14 @@ impl<B: StoreBackend> JobStore<B> {
         let raw = self.backend.get(&envelope_key(&self.ns, jid))?;
         serde_json::from_str::<Value>(&raw).ok().filter(|v| v.is_object())
     }
+    pub fn len(&mut self) -> usize {
+        self.open_job_ids().len()
+    }
+
+    pub fn is_empty(&mut self) -> bool {
+        self.len() == 0
+    }
+
     pub fn open_job_ids(&mut self) -> Vec<String> {
         self.backend.zrange(&index_key(&self.ns)).into_iter()
             .filter(|jid| self.backend.hgetall(&job_key(&self.ns, jid)).get("status").map(|s| s == "open").unwrap_or(false))

@@ -176,6 +176,60 @@ pub struct Envelope {
     pub image: EnvelopeImage,
 }
 
+/// Maximum accepted decoded image payload, inclusive.
+pub const MAX_IMAGE_BYTES: usize = 1_000_000;
+
+/// Priority queue used by the queue surface. Highest priority pops first;
+/// equal priorities pop in FIFO insertion order.
+///
+/// ```
+/// use queue_core::PriorityQueue;
+/// let mut q = PriorityQueue::new();
+/// q.push("low", 1);
+/// q.push("high", 5);
+/// q.push("also-high", 5);
+/// assert_eq!(q.pop(), Some("high"));
+/// assert_eq!(q.pop(), Some("also-high"));
+/// assert_eq!(q.pop(), Some("low"));
+/// assert_eq!(q.pop(), None);
+/// ```
+pub struct PriorityQueue<T> {
+    entries: Vec<(i64, u64, T)>,
+    next_seq: u64,
+}
+
+impl<T> PriorityQueue<T> {
+    pub fn new() -> Self {
+        Self {
+            entries: Vec::new(),
+            next_seq: 0,
+        }
+    }
+
+    pub fn push(&mut self, item: T, priority: i64) {
+        self.entries.push((priority, self.next_seq, item));
+        self.next_seq += 1;
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        let index = self
+            .entries
+            .iter()
+            .enumerate()
+            .max_by_key(|(_, entry)| (entry.0, std::cmp::Reverse(entry.1)))
+            .map(|(index, _)| index)?;
+        Some(self.entries.remove(index).2)
+    }
+
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+}
+
 /// Deterministic job id — mirrors `buildQueueJob` in server/queue.mjs:
 /// `trio-` + first 32 hex of sha256(product + "\0" + timestamp + "\0" + frame).
 pub fn deterministic_job_id(product: &str, timestamp: &str, frame: &[u8]) -> String {
@@ -204,6 +258,12 @@ pub fn validate_envelope(env: &Envelope, product_ids: &[&str]) -> Option<String>
     }
     if env.timestamp.is_empty() {
         return Some("envelope has no timestamp".to_string());
+    }
+    if env.image.byte_length > MAX_IMAGE_BYTES {
+        return Some(format!(
+            "image.byteLength exceeds the {} byte cap",
+            MAX_IMAGE_BYTES
+        ));
     }
     let data_url = &env.image.data_url;
     let Some(b64) = data_url.strip_prefix("data:image/jpeg;base64,") else {
@@ -434,6 +494,14 @@ impl<B: Backend> JobStore<B> {
             }
         }
         out
+    }
+
+    pub fn len(&mut self) -> usize {
+        self.open_job_ids().len()
+    }
+
+    pub fn is_empty(&mut self) -> bool {
+        self.len() == 0
     }
 
     pub fn get_result(&mut self, jid: &str) -> Option<String> {

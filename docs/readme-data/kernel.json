@@ -1,0 +1,8 @@
+{
+  "name": "Meta OS kernel",
+  "purpose": "Our own Rust kernel: boots to its own text console, schedules tasks, runs ring-3 programs, and answers a shell.",
+  "status": "VERIFIED",
+  "proof": "K1-K5 proven by committed boot logs in os-build/logs/; see os-build/KERNEL_STATUS.md",
+  "limits": "K6 is proven except that no Goose service has a process yet. K7 and later are not claimed.",
+  "notes": "Kernel source is Rowan's lane; this repository reads it as data only for proof checks."
+}

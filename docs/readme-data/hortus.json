@@ -1,0 +1,8 @@
+{
+  "name": "Hortus",
+  "purpose": "The breeding engine inside the Science Lab: a seeded genetic algorithm over a closed-form heatsink model.",
+  "status": "CODE-INSPECTED",
+  "proof": "tests/science-lab/test_hortus_*.py and hortus/records/hortus-demo-run.jsonl",
+  "limits": "A toy model, not physics truth; champions are candidates capped at evidence level 2 and filed as predictions.",
+  "notes": "Rung-2 calibration exists against 14 real catalogue parts; it has never been checked against a measured physical sink."
+}

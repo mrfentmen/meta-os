@@ -286,6 +286,37 @@ pub fn claim_allowed(spent: &Value, cap: &Value) -> bool {
     !at_cap(spent, cap)
 }
 
+/// True when spending `amount` more stays at or under cap. Exactly
+/// reaching the cap is allowed; one unit over is refused. A negative
+/// amount, an unusable cap, or an overflowing sum is refused.
+///
+/// ```
+/// use os_budget::{spend_allowed, at_cap, v_int};
+///
+/// assert!(spend_allowed(&v_int(90), &v_int(100), 10));
+/// assert!(!spend_allowed(&v_int(90), &v_int(100), 11));
+/// assert!(!at_cap(&v_int(99), &v_int(100)));
+/// assert!(at_cap(&v_int(100), &v_int(100)));
+/// ```
+pub fn spend_allowed(spent: &Value, cap: &Value, amount: i64) -> bool {
+    if amount < 0 {
+        return false;
+    }
+    let Some(spent_i) = spent.usable_int() else {
+        return false;
+    };
+    let Some(cap_i) = cap.usable_int() else {
+        return false;
+    };
+    if spent_i < 0 || cap_i <= 0 {
+        return false;
+    }
+    match spent_i.checked_add(amount) {
+        Some(total) => total <= cap_i,
+        None => false,
+    }
+}
+
 /// One of "warning", "capped", "ok", or "unbudgeted" for a dict
 /// entry; a non-dict is unbudgeted.
 pub fn budget_state(entry: &Value) -> &'static str {

@@ -16,6 +16,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
+DRY_RUN=0
+case "${1:-}" in
+  --dry-run) DRY_RUN=1 ;;
+  "") ;;
+  *) echo "usage: parity_lane.sh [--dry-run]" >&2; exit 2 ;;
+esac
+
 PASS=0
 FAIL=0
 SKIP=0
@@ -25,6 +32,17 @@ skip() { echo "SKIP  $*"; SKIP=$((SKIP + 1)); }
 
 echo "== Lane 4: parity reading =="
 echo "root: $ROOT"
+echo
+
+if [ "$DRY_RUN" = 1 ]; then
+  echo "DRY RUN — would compare:"
+  echo "  Stage 1: goose typecheck over services/*/*.goose (or COMPILE fallback)"
+  echo "  Stage 2: node --test tests/product-parity.test.mjs"
+  echo "  Stage 2: python3 -m pytest os/tests/test_bustools_parity.py -q"
+  echo "  Stage 3: cargo test -p intel --test b13_parity -j1 (only PARITY_RUST=1)"
+  echo "dry run: nothing compared"
+  exit 0
+fi
 echo
 
 # ---------------------------------------------------------------------------

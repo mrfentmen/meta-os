@@ -12,7 +12,7 @@ const READER = "const fs=require('fs');const b=JSON.parse(fs.readFileSync('brief
 
 test("baton record round-trips", () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "baton-test-"));
-  writeBaton(dir, { state: "s", nextStep: "n" });
+  writeBaton(dir, { stepIndex: 0, state: "s", nextStep: "n" });
   const b = readBaton(dir);
   assert.equal(b.state, "s"); assert.equal(b.nextStep, "n");
   assert.equal(readBaton(path.join(dir, "nope")), null);

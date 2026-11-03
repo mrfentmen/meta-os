@@ -1,0 +1,8 @@
+{
+  "name": "Meta Scientia (Science Lab)",
+  "purpose": "Forms hypotheses, runs experiments, and grades evidence on a ladder it cannot skip.",
+  "status": "CODE-INSPECTED",
+  "proof": "tests/science-lab/ (literature, reasoning, compute, cycle, verify, repository, Hortus, gateway)",
+  "limits": "UNIMPLEMENTED items carried in the open: remote gateway adapters, live spend metering, and any automation above evidence level 3. Levels 4-6 stay human-only.",
+  "notes": "Built and merged; the shipped code is real Python with tests, not a mock."
+}

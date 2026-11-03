@@ -2295,3 +2295,39 @@ mod tests {
         );
     }
 }
+
+/// Allocation accounting for the memory store's buffers. It tracks
+/// bytes separately from the journaled key/value entries and refuses
+/// an over-release instead of letting the outstanding count wrap.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct AllocationLedger {
+    allocated: u64,
+    released: u64,
+}
+
+impl AllocationLedger {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn allocate(&mut self, bytes: u64) {
+        self.allocated = self.allocated.saturating_add(bytes);
+    }
+
+    pub fn release(&mut self, bytes: u64) -> Result<(), MemoryError> {
+        let outstanding = self.outstanding();
+        if bytes > outstanding {
+            return Err(MemoryError(format!(
+                "release of {} bytes exceeds outstanding {}",
+                bytes, outstanding
+            )));
+        }
+        self.released += bytes;
+        Ok(())
+    }
+
+    pub fn outstanding(&self) -> u64 {
+        self.allocated - self.released
+    }
+}
+

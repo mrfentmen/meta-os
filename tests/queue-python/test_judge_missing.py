@@ -50,9 +50,10 @@ class ParseVerdictEdgeTests(unittest.TestCase):
         self.assertEqual(
             judge.parse_verdict('{"verdict": "  CONFIRM  "}')[0], "confirmed")
 
-    def test_json_scalars_are_not_objects(self):
+    def test_json_scalars_are_refused_as_non_objects(self):
         for bad in ("42", '"confirm"', "null", "true", "[1, 2]"):
-            self.assertEqual(judge.parse_verdict(bad)[0], "inconclusive", bad)
+            with self.assertRaises(ValueError, msg=bad):
+                judge.parse_verdict(bad)
 
     def test_non_list_reasons_become_an_empty_list(self):
         verdict, category, reasons = judge.parse_verdict(
@@ -67,12 +68,11 @@ class ParseVerdictEdgeTests(unittest.TestCase):
             '{"verdict": "investigate", "reasons": [1, null, {"a": 1}]}')
         self.assertEqual(reasons, ["1", "None", "{'a': 1}"])
 
-    def test_unknown_verdict_quotes_the_offending_value(self):
-        verdict, category, reasons = judge.parse_verdict(
-            '{"verdict": "dispatch", "category": "person down"}')
-        self.assertEqual(verdict, "inconclusive")
-        self.assertIsNone(category)
-        self.assertIn("dispatch", reasons[0])
+    def test_unknown_verdict_is_refused_and_quotes_the_value(self):
+        with self.assertRaises(ValueError) as raised:
+            judge.parse_verdict(
+                '{"verdict": "dispatch", "category": "person down"}')
+        self.assertIn("dispatch", str(raised.exception))
 
 
 class PromptEdgeTests(unittest.TestCase):
@@ -83,7 +83,7 @@ class PromptEdgeTests(unittest.TestCase):
 
     def test_long_readings_are_cut_at_the_prompt_limit(self):
         text = judge.build_judge_prompt(
-            "vigiles", {"summary": "a" * 3000}, {})
+            "vigiles", {"assessment": {"summary": "a" * 3000}}, {})
         self.assertNotIn("a" * 3000, text)
         self.assertIn("a" * 100, text)
 

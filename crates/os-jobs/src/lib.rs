@@ -73,6 +73,8 @@ pub const NICKCLAIM_TTL: u64 = 120;
 /// construction, as the Python test pins.
 pub const PRESENCE_TTL: u64 = 120;
 
+pub mod job;
+
 /// A state-backend failure. [`FakeStore`] never produces one; a real
 /// transport maps its failures here.
 #[derive(Debug, Clone, PartialEq, Eq)]

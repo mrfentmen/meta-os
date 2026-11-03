@@ -10,6 +10,7 @@ The machine routes around it or parks blocked-on-source, never invents
 step-8 work.
 """
 
+import hashlib
 import json
 import os
 
@@ -100,6 +101,22 @@ def can_transition(cycle, target_phase):
             "blocked: phase %r requires inputs %r; file them first."
             % (target_phase, missing),
         )
+    current = cycle.get("phase")
+    if target_phase in PHASES and current in PHASES:
+        current_index = PHASES.index(current)
+        target_index = PHASES.index(target_phase)
+        if target_index < current_index:
+            return (
+                False,
+                "blocked: backwards transition %r -> %r; the cycle moves "
+                "forward only." % (current, target_phase),
+            )
+        if target_index > current_index + 1:
+            return (
+                False,
+                "blocked: cannot skip from %r to %r; the next phase is %r."
+                % (current, target_phase, PHASES[current_index + 1]),
+            )
     return (True, "ok: %r -> %r" % (cycle.get("phase"), target_phase))
 
 
@@ -550,3 +567,76 @@ def generate_report(cycle_id, cycles_dir=None, ledger_path=None,
     with open(out, "w", encoding="utf-8") as fh:
         fh.write(markdown + "\n")
     return markdown
+
+
+# ----------------------------------------------------------------------
+# Section 7: pre-registration hashing and dict round-trip.
+# ----------------------------------------------------------------------
+
+def normalize_question(text):
+    """Collapse leading/trailing and repeated whitespace."""
+    if not isinstance(text, str):
+        return ""
+    return " ".join(text.split())
+
+
+def preregistration_hash(question, plan):
+    """Deterministic hash of the normalised question plus plan."""
+    payload = json.dumps(
+        {"question": normalize_question(question), "plan": plan},
+        sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def set_preregistration(cycle, plan):
+    """Attach a pre-registration hash to a cycle record."""
+    if not isinstance(cycle, dict):
+        raise TypeError("cycle must be an object")
+    question = (cycle.get("inputs") or {}).get("problem_statement")
+    if not isinstance(question, str) or not question.strip():
+        raise ValueError("pre-registration requires a problem_statement")
+    cycle["preregistration"] = {
+        "question": normalize_question(question),
+        "plan": plan,
+        "hash": preregistration_hash(question, plan),
+    }
+    return cycle
+
+
+def verify_preregistration(cycle):
+    """True iff the stored hash matches the current question and plan."""
+    if not isinstance(cycle, dict):
+        return False
+    record = cycle.get("preregistration")
+    if not isinstance(record, dict):
+        return False
+    question = record.get("question")
+    plan = record.get("plan")
+    expected = record.get("hash")
+    if not isinstance(expected, str) or not expected:
+        return False
+    return preregistration_hash(question, plan) == expected
+
+
+def cycle_to_dict(cycle):
+    """A JSON-safe copy of a cycle record."""
+    if not isinstance(cycle, dict):
+        raise TypeError("cycle must be an object")
+    return json.loads(json.dumps(cycle, sort_keys=True))
+
+
+def cycle_from_dict(payload):
+    """Rebuild a cycle record from its dict form."""
+    if not isinstance(payload, dict):
+        raise ValueError("cycle payload must be an object")
+    return cycle_to_dict(payload)
+
+
+def validate_cycle_against_schema(cycle):
+    """Validate a cycle record against schemas/cycle.schema.json."""
+    from literature import validate_against_schema
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        "schemas", "cycle.schema.json")
+    with open(path, "r", encoding="utf-8") as fh:
+        schema = json.load(fh)
+    return validate_against_schema(cycle, schema)

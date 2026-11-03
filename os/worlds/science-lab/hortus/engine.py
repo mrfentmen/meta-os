@@ -63,6 +63,127 @@ def _tournament(rng, population, size=3):
     return max(contenders, key=lambda org: org.score)
 
 
+def _as_genome(individual):
+    if isinstance(individual, Organism):
+        return tuple(individual.genome)
+    if isinstance(individual, dict):
+        return model.parse_genome(individual.get("genome", individual))
+    return model.parse_genome(individual)
+
+
+def fitness(genome, env=None):
+    """Deterministic fitness for one individual (the model scorer)."""
+    return model.score(model.parse_genome(genome), env or model.TRAIN_ENV)
+
+
+def _mutate_with_rate(rng, genome, rate, sigma_fraction=0.08,
+                      gene_bounds=None):
+    child = []
+    for value, (lo, hi) in zip(genome,
+                               gene_bounds or model.GENE_BOUNDS):
+        if rng.random() < rate:
+            sigma = sigma_fraction * (hi - lo)
+            value = value + rng.gauss(0.0, sigma)
+        child.append(min(max(value, lo), hi))
+    return tuple(child)
+
+
+def mutate_step(genome, seed, mutation_rate=1.0, gene_bounds=None):
+    """One seeded mutation step. Rate 0 returns the genome unchanged."""
+    genome = _as_genome(genome)
+    rate = float(mutation_rate)
+    if not 0.0 <= rate <= 1.0:
+        raise ValueError("mutation_rate must be between 0 and 1")
+    if rate == 0.0:
+        return tuple(genome)
+    return _mutate_with_rate(random.Random(seed), genome, rate,
+                             gene_bounds=gene_bounds)
+
+
+def breeding_step(parent_a, parent_b, seed, mutation_rate=0.0,
+                  gene_bounds=None):
+    """One pure breeding step: crossover, then optional mutation.
+
+    With mutation_rate 0 every child gene comes from one of the two
+    parents. Fixed parents and seed reproduce the same child.
+    """
+    a = _as_genome(parent_a)
+    b = _as_genome(parent_b)
+    if len(a) != len(b):
+        raise ValueError("parents have different genome lengths")
+    rate = float(mutation_rate)
+    if not 0.0 <= rate <= 1.0:
+        raise ValueError("mutation_rate must be between 0 and 1")
+    rng = random.Random(seed)
+    child = _crossover(rng, a, b)
+    if rate > 0.0:
+        child = _mutate_with_rate(rng, child, rate,
+                                  gene_bounds=gene_bounds)
+    return {
+        "genome": child,
+        "parent_genomes": [a, b],
+        "seed": seed,
+        "mutation_rate": rate,
+    }
+
+
+def select_parents(population, parent_count, env=None):
+    """Deterministic top-score selection, capped at the requested count."""
+    if not population:
+        raise ValueError("select_parents refuses an empty population")
+    try:
+        parent_count = int(parent_count)
+    except (TypeError, ValueError):
+        raise ValueError("parent_count must be an integer")
+    if parent_count < 0:
+        raise ValueError("parent_count must be >= 0")
+    scored = [(fitness(individual, env), _as_genome(individual))
+              for individual in population]
+    scored.sort(key=lambda pair: pair[0], reverse=True)
+    return [genome for _, genome in scored[:min(parent_count, len(scored))]]
+
+
+def population_step(population, population_size, seed, env=None,
+                    mutation_rate=0.0, elite_count=2, gene_bounds=None):
+    """One pure generation step returning exactly population_size genomes.
+
+    Elites are the top scored individuals; the rest are tournament
+    selected, crossed, and optionally mutated. An empty population is
+    refused with a named error.
+    """
+    if not population:
+        raise ValueError("population_step refuses an empty population")
+    try:
+        population_size = int(population_size)
+        elite_count = int(elite_count)
+    except (TypeError, ValueError):
+        raise ValueError("population_size and elite_count must be integers")
+    if population_size < 1:
+        raise ValueError("population_size must be >= 1")
+    if elite_count < 1:
+        raise ValueError("elite_count must be >= 1")
+    rate = float(mutation_rate)
+    if not 0.0 <= rate <= 1.0:
+        raise ValueError("mutation_rate must be between 0 and 1")
+    genomes = [_as_genome(individual) for individual in population]
+    scored = [(fitness(genome, env), genome) for genome in genomes]
+    ranked = sorted(scored, key=lambda pair: pair[0], reverse=True)
+    survivors = [genome for _, genome in ranked[:min(elite_count,
+                                                      population_size)]]
+    rng = random.Random(seed)
+    while len(survivors) < population_size:
+        contenders_a = rng.sample(scored, min(3, len(scored)))
+        contenders_b = rng.sample(scored, min(3, len(scored)))
+        parent_a = max(contenders_a, key=lambda pair: pair[0])[1]
+        parent_b = max(contenders_b, key=lambda pair: pair[0])[1]
+        child = _crossover(rng, parent_a, parent_b)
+        if rate > 0.0:
+            child = _mutate_with_rate(rng, child, rate,
+                                      gene_bounds=gene_bounds)
+        survivors.append(child)
+    return survivors
+
+
 def run_evolution(records_path, seed=20261101, generations=300,
                   population_size=48, env=None, elite_count=2,
                   verify=True, held_out_envs=None, model_label=None,

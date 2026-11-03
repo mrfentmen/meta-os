@@ -62,10 +62,10 @@ class ParseVerdictTests(unittest.TestCase):
             '{"verdict": "investigate", "reasons": []}')[0],
             "inconclusive")
 
-    def test_garbage_never_confirms(self):
+    def test_garbage_raises(self):
         for bad in ("not json", "[]", '{"verdict": "send it"}', '{}'):
-            self.assertEqual(judge.parse_verdict(bad)[0], "inconclusive",
-                             bad)
+            with self.assertRaises(ValueError, msg=bad):
+                judge.parse_verdict(bad)
 
 
 class PromptTests(unittest.TestCase):

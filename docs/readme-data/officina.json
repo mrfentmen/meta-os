@@ -1,0 +1,8 @@
+{
+  "name": "Meta Officina",
+  "purpose": "An invention workshop: rough words become a structured brief, a simulator scores designs, and a held-out gate decides what counts as proven.",
+  "status": "CODE-INSPECTED",
+  "proof": "tests/officina/ (heatsink, design loop, brief, spec validator, pack shape)",
+  "limits": "Design aid only. It never orders a build, ships a part, or presents a simulated score as a measured result.",
+  "notes": "Stages 1 and 2a are in main; the held-out gate can reject a design the loop liked."
+}

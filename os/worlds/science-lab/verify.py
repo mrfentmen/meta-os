@@ -396,6 +396,114 @@ def gate_write(result, verification):
     }
 
 
+def gate_decision(rmse, threshold):
+    """Decide match/no-match for a reproduction against a stated threshold.
+
+    A match is at or below the threshold and supports evidence level 2
+    (computationally tested). A no-match supports level 0 and never
+    enters as confirmed.
+    """
+    try:
+        rmse = float(rmse)
+        threshold = float(threshold)
+    except (TypeError, ValueError):
+        raise ValueError("gate_decision requires numeric rmse and threshold")
+    if threshold < 0:
+        raise ValueError("gate_decision threshold must be >= 0")
+    if rmse < 0:
+        raise ValueError("gate_decision rmse must be >= 0")
+    matched = rmse <= threshold
+    return {
+        "decision": "match" if matched else "no-match",
+        "match": matched,
+        "rmse": rmse,
+        "threshold": threshold,
+        "evidence_level": 2 if matched else 0,
+    }
+
+
+def assign_evidence_level(rmse, threshold):
+    """Evidence level from a reproduction: 2 on match, 0 otherwise."""
+    return gate_decision(rmse, threshold)["evidence_level"]
+
+
+def failure_drill(claim, reproduced):
+    """Drill a claimed success against independently reproduced numbers.
+
+    claim: {"success": bool, "numbers": [..]}
+    reproduced: {"numbers": [..]} or a bare numbers list.
+
+    fake_success is True only when the success claim survives the
+    numbers check. A success claim with mismatched numbers therefore
+    yields fake_success False and is never accepted.
+    """
+    if not isinstance(claim, dict):
+        raise ValueError("failure_drill requires a claim dict")
+    claimed_success = bool(claim.get("success", claim.get("claimed_success")))
+    claimed_numbers = claim.get("numbers")
+    rerun_numbers = (reproduced.get("numbers")
+                     if isinstance(reproduced, dict) else reproduced)
+    if not isinstance(claimed_numbers, list) or not isinstance(rerun_numbers, list):
+        raise ValueError("failure_drill requires numbers lists on both sides")
+    if len(claimed_numbers) != len(rerun_numbers):
+        raise ValueError("failure_drill numbers have different lengths")
+    matched = all(abs(float(a) - float(b)) <= 1e-9
+                  for a, b in zip(claimed_numbers, rerun_numbers))
+    stands = bool(claimed_success and matched)
+    return {
+        "claimed_success": claimed_success,
+        "numbers_match": matched,
+        "fake_success": stands,
+        "accepted": stands,
+        "verdict": "success" if stands else "mismatch",
+    }
+
+
+def compare_runs(original, reproduced, tolerance=1e-6):
+    """Compare two numeric runs row by row under an explicit tolerance.
+
+    original/reproduced: {"numbers": [..]} or bare numbers lists.
+    Equal row counts are required. A difference exactly at tolerance
+    passes; anything beyond it is a disagreement. Returns a recorded
+    comparison with both run hashes and the worst absolute difference.
+    """
+    try:
+        tolerance = float(tolerance)
+    except (TypeError, ValueError):
+        raise ValueError("compare_runs requires a numeric tolerance")
+    if tolerance < 0:
+        raise ValueError("compare_runs tolerance must be >= 0")
+    first = original.get("numbers") if isinstance(original, dict) else original
+    second = reproduced.get("numbers") if isinstance(reproduced, dict) else reproduced
+    if not isinstance(first, list) or not isinstance(second, list):
+        raise ValueError("compare_runs requires numbers lists on both sides")
+    if len(first) != len(second):
+        raise ValueError(
+            "compare_runs refused: row counts differ (%d vs %d); "
+            "runs with different row counts are not comparable."
+            % (len(first), len(second)))
+    try:
+        diffs = [abs(float(a) - float(b)) for a, b in zip(first, second)]
+    except (TypeError, ValueError):
+        raise ValueError("compare_runs requires numeric rows")
+    worst = max(diffs) if diffs else 0.0
+    agree = worst <= tolerance
+    return {
+        "verdict": AGREE if agree else DISAGREE,
+        "agree": agree,
+        "rows": len(first),
+        "max_difference": worst,
+        "tolerance": tolerance,
+        "original_hash": _sha256_hex(_canonical({"numbers": first})),
+        "re_run_hash": _sha256_hex(_canonical({"numbers": second})),
+        "diff": ("agree: %d rows within tolerance %g (worst %g)"
+                 % (len(first), tolerance, worst) if agree else
+                 "disagree: %d rows; worst difference %g exceeds "
+                 "tolerance %g" % (len(first), worst, tolerance)),
+        "compared_at": _utcnow(),
+    }
+
+
 __all__ = [
     "FORBIDDEN_INPUT_KEYS",
     "PRODUCER_KEYS",
@@ -411,4 +519,8 @@ __all__ = [
     "handle_disagreement",
     "check_rotation",
     "gate_write",
+    "gate_decision",
+    "assign_evidence_level",
+    "failure_drill",
+    "compare_runs",
 ]

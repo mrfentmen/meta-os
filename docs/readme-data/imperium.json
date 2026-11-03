@@ -1,0 +1,8 @@
+{
+  "name": "Meta Imperium",
+  "purpose": "Watches public camera feeds and flags scenes for human review across police, fire, and EMS divisions.",
+  "status": "VERIFIED",
+  "proof": "server/queue/livecam_records/ (live NYC DOT reading) and os-build/demo/EVAL4.md",
+  "limits": "Flags only, never confirms. Dispatch goes to a labelled simulated loopback endpoint only; the code refuses every non-loopback URL. Frames are sampled, so events between samples are not seen.",
+  "notes": "The flagship system and the hackathon submission core."
+}

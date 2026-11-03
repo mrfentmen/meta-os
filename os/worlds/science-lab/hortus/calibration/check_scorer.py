@@ -68,6 +68,33 @@ def load_parts(path=PARTS_PATH):
     return data["parts"]
 
 
+def load_parts_report(path=PARTS_PATH):
+    """Load parts, skipping entries without a measured score.
+
+    Returns {"parts", "count", "skipped", "skipped_count"}. A
+    skipped entry is reported by index and part_id, never silently
+    dropped.
+    """
+    with open(path, "r", encoding="utf-8") as fh:
+        data = json.load(fh)
+    parts, skipped = [], []
+    for index, part in enumerate(data.get("parts", [])):
+        if part.get("measured_thermal_resistance_c_per_w") is None:
+            skipped.append({
+                "index": index,
+                "part_id": part.get("part_id"),
+                "reason": "missing measured_thermal_resistance_c_per_w",
+            })
+            continue
+        parts.append(part)
+    return {
+        "parts": parts,
+        "count": len(parts),
+        "skipped": skipped,
+        "skipped_count": len(skipped),
+    }
+
+
 def prediction_env(h_multiplier):
     """Environment for one datasheet prediction: natural
     convection at the (possibly scaled) nominal coefficient,
