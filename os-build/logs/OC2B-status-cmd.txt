@@ -1,0 +1,7 @@
+for u in oc2-queue oc2-trio oc2-patrol; do printf '%s %s\n' "$u" "$(systemctl --user is-active "$u" 2>&1)"; done; ls "${TRIO_CREW_DATA_DIR:-$HOME/.local/share/metaos/crew-data}"/*.blocked 2>/dev/null && echo BLOCKED-FILE-PRESENT || echo no-blocked-files
+# Expected shape (one line per service + blocked verdict):
+# oc2-queue active
+# oc2-trio active
+# oc2-patrol inactive       <- oneshot: inactive after a clean exit-0 run is HEALTHY; check journal for exit status
+# no-blocked-files          <- else: $STATE_DIR/*.blocked paths, owning service is BLOCKED
+# Run on target, paste output at commit. (NO VM in this lane's dev loop.)

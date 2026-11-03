@@ -306,3 +306,9 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - autostart: 3 entries + TryExec check (interpreter-only caveat + ${} expansion caveat, OPEN for OC1) + handoffs (tray: Bond owns, accept/ship OPEN).
 - datadir: CrewRecords makedirs VERIFIED (/tmp scratch, removed). ports: loopback-only VERIFIED (bind + live 200). 018 container: BLOCKED (daemon up, image unstaged; R2 later).
 - suite 32/32. fences 0. parked: §1-025 commit comes with S12; §2-§12 per start order.
+
+## OC2 S12 — 2026-11-03 — §2 batch (OC2B-026..049 + watchdog, no VM)
+- watchdog: new agent-layer/watchdog.sh (dead/hung restart, cause logging, cap→BLOCKED exit 2, no systemd needed) + 4 fixture tests (kill -9 → dead-exit-137 restart; false health → hung-health-fail; cap=1+2kills → exit 2 + .blocked; clean exit 0 propagates). Suite 36/36.
+- docs: health-contract (trio honestly process+freshness, no fake URL), service-logs table, limits PROPOSED UNVERIFIED-ON-TARGET, stop/firstboot/offline/upgrade, status-cmd, write-scope full grep + verdict (datadir/logs/tmp/caller-out only; hosted_imperium drill-scoped).
+- §2 COMPLETE except target-side pastes (status-cmd/stop output need systemd host). §1 COMPLETE except 023 --version feature + 018-R2 container.
+- Next: §3 queue live verification (unit suites + e2e + soak per start order).
