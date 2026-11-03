@@ -27,3 +27,14 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
 
 - T2: re-cut ISO with OC1 theme + OC2 drop-ins when both posted (copy by sha, record sha, publish new bytes + sha here). No boot — hand off to OC1.
 - T3: installer config static check only (unattended seed, firstboot script). Boot test is OC1's lane.
+
+## §9 verdict (OC3B-220) — DONE static, boot checks deferred to OC1
+- 201 inventory committed. 202 eight entries authored (oc3b-desktop/).
+  203/206/207/208/209/210 all-pass, output committed (OC3B-desktop-test.txt).
+- 204 Exec-on-image, 205 icon-resolve, 211 targets-run, 216/217 menu-opens,
+  222/223 persist-across-reboot/upgrade: DEFERRED — OC1 boot checks, named.
+- 212 handoff written with copy-only + sha instructions.
+- 213 pins proposed, approval OC1/theme. 215/218/219 structures recorded.
+- 221 defects filed (3, one is office-suite-has-no-source).
+- 224 ownership recorded. No shared files touched; OC2/ISO/theme entries
+  referenced, never rewritten.

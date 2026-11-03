@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Display
+GenericName=Display Settings
+Comment=Set resolution and arrangement
+Exec=xfce4-display-settings
+TryExec=xfce4-display-settings
+Icon=preferences-desktop-display
+Terminal=false
+Categories=Settings;GTK;
+OnlyShowIn=XFCE;
+StartupNotify=true
+NoDisplay=false
