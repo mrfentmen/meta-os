@@ -11,7 +11,7 @@ found for that promise).
 | § | Promise | Code | Label |
 |---|---|---|---|
 | 1 | an agent has identity, lane, capabilities, budget, owner | `agents/registry.json` | CODE-INSPECTED |
-| 3 | registry, one entry per agent | `registry.json`, `registry_validate.mjs`, `loadRegistry`/`validateEntry` in `runtime.mjs` | CODE-INSPECTED — but the crew entries carry `command: ["true"]`, `draft: true` and a `draftReason`, so they are **DRAFT**, not agents that can work |
+| 3 | registry, one entry per agent | `registry.json`, `registry_validate.mjs`, `loadRegistry`/`validateEntry` in `runtime.mjs` | CODE-INSPECTED — 7 live entries with real programs, 16 drafts with **no command at all** (a placeholder is now a validation error) |
 | 4 | watchman wakes a named agent with the job in hand | `agents/watchman.mjs` (polls a jobs dir, writes a heartbeat through `watchdog.mjs`) | CODE-INSPECTED |
 | 4 | timer sweep as backup | `node agents/watchman.mjs --once` drains the board once and exits | CODE-INSPECTED — the command exists; no unit in the image schedules it |
 | 4 | who watches the watchman | `agents/watchdog.mjs` (`check`, `supervise`, restart budget) | UNPROVEN — the mechanism has tests, no cadence ran it before `oc2-health.timer` |
@@ -34,9 +34,10 @@ receipts, the watchman and now memory caps all have real code. The sweep has a
 command (`--once`) but nothing schedules it, and the image has no such unit —
 so no agent wakes on a clock yet.
 
-The crew entries being `draft` matters: the registry validates and lists them,
-but a draft entry runs `true`, so a spawn of "rowan" succeeds and does nothing.
-Any claim that the crew runs from this registry would be wrong.
+The registry no longer lists the crew (rowan, hana, milo, buffy, bond, pax):
+they are people working on the project, not processes. What remains is 7 live
+agents with real programs and 16 drafts that carry no command, so nothing can
+spawn them by accident.
 
 ## Not verified here
 

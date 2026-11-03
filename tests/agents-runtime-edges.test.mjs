@@ -22,11 +22,11 @@ test("an agent with an empty command array is refused at load", () => {
 
 test("a draft carries no command, so nothing can spawn it by accident", () => {
   const agents = loadRegistry(new URL("../agents/registry.json", import.meta.url).pathname);
-  const rowan = agents.find((a) => a.name === "rowan");
-  assert.ok(rowan, "rowan is in the real registry");
-  assert.deepEqual(rowan.command, [], "a draft has no program to run");
-  assert.equal(rowan.draft, true, "the registry itself reports the draft");
-  assert.equal(validateEntry(rowan), true);
+  const patrol = agents.find((a) => a.name === "imperium-patrol");
+  assert.ok(patrol, "imperium-patrol is in the real registry");
+  assert.deepEqual(patrol.command, [], "a draft has no program to run");
+  assert.equal(patrol.draft, true, "the registry itself reports the draft");
+  assert.equal(validateEntry(patrol), true);
 });
 
 test("duplicate agent names are refused", () => {
