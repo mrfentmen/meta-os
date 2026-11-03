@@ -652,3 +652,66 @@ Per-task check (2026-11-02):
   carry tagline/limitations, while categories are bare strings.
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
+
+## Closeout — 427 of 500 delivered, 73 open
+
+Every delivered line above rests on a real API or a real data file. Every open
+one is open for a named reason, not for want of trying.
+
+| Section | Delivered | Open |
+|---|---|---|
+| 1–12 (Python, relay, board, Rust queue) | 300 | 0 |
+| 13 Rust os-* error paths | 14 | 11 |
+| 14 Rust agent/dashboard/intel/stack | 8 | 17 |
+| 15 Schemas and validators | 25 | 0 |
+| 16 Agent layer Node | 20 | 5 |
+| 17 Face tests | 0 | 25 |
+| 18 Tooling scripts | 25 | 0 |
+| 19 Officina and Musica | 14 | 11 |
+| 20 Documentation-as-code | 21 | 4 |
+| **Total** | **427** | **73** |
+
+### The 73, by the decision that unblocks them
+
+1. **Face source (25).** Section 17 forbids editing `face/face.js`, and that
+   file has no exports and 87 functions closing over the DOM. One yes unlocks
+   all 25: either extract the calculator/calendar/notes/terminal/window logic
+   into an importable module, or agree that fixture-model tests count.
+2. **New APIs (17, Section 14).** `dashboard` is a 61-line stub with zero
+   public functions and no metrics type; `stack` plans service configs and has
+   no push/pop; `agent-runtime` has no registry loader. Building these is new
+   feature work, not test work.
+3. **New APIs (11, Section 13).** `os-boot` is the agent CLI crate (no boot
+   config type), `os-jobs` has no job-with-steps API, `os-supervisor` has no
+   restart policy or backoff sequence, `os-worker` has no payload type.
+4. **Missing data (4, Section 20).** Nervus has no real-run flag and no ledger
+   field on its contracts, and the layer curve (L4 4.6, L8 19.5, L16 12.8,
+   L24 10.2) appears in no file. CB2-500 needs a program list the registry
+   does not carry.
+5. **Python-only logic (11, Section 19).** Note math, variation and keeper
+   windows live in `runtime/*.py`. A JS copy would be a second implementation
+   to drift, so no test was written against a mirror.
+6. **Missing behaviour (5, Section 16).** No large-change alarm threshold, no
+   baton step-index check, no resume function, and `bridge.mjs` is a
+   supervisor verb rather than a message shaper.
+
+### Two red tests that are older than this wave, left visible
+
+- `tests/musica-budget.test.mjs` — the cap-hit path prints its takes but never
+  the `budget stop` line. A real bug in the budget module.
+- `tests/musica-export.test.mjs` — crashes when `pretty_midi` is absent.
+  `tests/musica-midi.test.mjs` skips for exactly this reason; export does not.
+
+Neither was skipped or patched to green: a green run that hides a real gap is
+worse than a red one that names it.
+
+### One break repaired on the way
+
+`cargo test -p intel` did not compile: `PlanJob` gained `spec` and `accept`
+while two test fixtures still built the old field set, so none of the crate's
+suites could run. Both fixtures now fill the two fields empty — what the
+shape-only parser leaves them as — and the crate is green at 124 passed.
+
+`cargo check --workspace` exits 0. It still prints pre-existing dead-code
+warnings (140 in `parity-tests`, 2 in `intel`); none were introduced here and
+none were silenced.
