@@ -172,3 +172,12 @@ The Science Lab reproduced four results and honored one failure at the levels it
 ## KF-01 correction note (main 4b8d0105, Pax) — appended 2026-11-02
 - The 0.11.17 spike pinned the host crate, not `bootloader_api` — recorded attempt malformed, budget unconsumed. My Sec 2 MATCH reproductions stand as reproductions; the "0.11 dead end" conclusion is WITHDRAWN.
 - Owed: corrected attempt-1 (build/boot/screendump/verbatim logs) when Rowan lands pin+RK-008 rewrite on `rowan/bootloader-spike` (still @1f006090 wrong pin — checked). KF-01 BLOCKED until then. Full note: `os-build/logs/OC2B-kf01-correction.md`.
+
+## 12H Phase D — acceptance proof (fresh boot, no hand-holding) — DONE 2026-11-02
+- Guest: carrier-image bake (`metaos-2026-11-02-oc2b-baked` + agent-layer from branch tip), `-cpu max`, autologin relay. First SSH login 22:44, units started 22:40:21-37 (journal timestamps precede any login — PROVEN no hand-holding).
+- Boot sequence from journal (`OC2-proof-journal.txt`): queue up (local SQLite FALLBACK, Upstash unconfigured — honest), trio up, patrol on 972 live NYCTMC cameras.
+- Fresh-boot found TWO packaging bugs, both fixed on branch + re-proven: (1) queue needs node (trio_repo shells out; no fallback) → apt nodejs in installer; (2) patrol env empty (installer refresh only handled checkout path) → full defaults backfill. Plus (3) StartLimit* belonged in [Unit] (systemd ignored them, warned); (4) installer hardcoded unit list (skipped trio twice) → derived from shipped dir; (5) patrol Requires trio (undrained queue = 20/20 job-errors with exact "is trio_agent.py running?" reason).
+- No-key path: 20/20 assessment-failed LOUD (`SPARK_API_KEY ... no generation transport`), zero spend, pause-by-failure (never silent). Key handoff: `set-environment` (memory-only, dies on reboot; profile hook wires login shells). Key provisioning onto the box = Hana/Pax first-boot lane — marked gap, nothing baked.
+- Assessed run after handoff: 7 checks, 7 baselines, 0 errors; guardrail 22 calls, $0.155044, $74.845 remaining; crew assessment logged (incl. medicus requires_human_review validation + correction-retry discipline firing twice, both validated).
+- Proof artifacts: `os-build/logs/OC2-proof-{journal.txt,crew-status.json}` (journal from boot, first SSH 4 min after unit start).
+- Acceptance: fresh boot runs a patrol cycle with no hand-holding; crew assessment logged; spend tracked. DONE on carrier image; re-proof on Hana's base when it lands (recorded, not claimed).
