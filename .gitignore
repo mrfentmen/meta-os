@@ -16,3 +16,6 @@ kernel/target/
 os-build/aegis/SECRETS.json
 os-build/aegis/SECRETS.md
 os-build/aegis/r11/run-secrets.txt
+
+# RK-007 builder output: 1,092 files of compiler cache, not source.
+os-build/layer1/rk007-builder/target/
