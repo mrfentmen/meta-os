@@ -10,6 +10,7 @@ import url from "node:url";
 import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
 import { readBaton, continuationOrders } from "./baton.mjs";
 import { writeBeat } from "./watchdog.mjs";
+import { createNotifier } from "./notify.mjs";
 import {
   claimContinue,
   continueDecision,
@@ -26,6 +27,8 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
   const agents = loadRegistry(registryFile);
   fs.mkdirSync(jobsDir, { recursive: true });
   const ledger = new Ledger(path.join(root, "watchman.jsonl"));
+  // One notifier for the whole relay: alarms dedupe by key, notes always land.
+  const notify = createNotifier(root);
   const stateFile = path.join(root, "watchman-state.json");
   let claimed = new Set();
   // A claim that survived a restart but never spawned. It stays in `claimed`
@@ -116,7 +119,12 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
       if (pending.has(id)) { pending.delete(id); save(); }
       const agent = agents.find((a) => a.name === job.agent);
       claimed.add(id); save();
-      if (!agent) { ledger.add("watchman", "job-unmatched", { id, agent: job.agent }); continue; }
+      if (!agent) {
+        ledger.add("watchman", "job-unmatched", { id, agent: job.agent });
+        notify({ severity: "note", key: "job:" + id + ":unmatched", title: "Job names no agent",
+                 body: "job " + id + " asked for " + job.agent });
+        continue;
+      }
       // A job whose previous run died resumes from that run, not from scratch: reconcile()
       // recorded the run id, and the baton pass below turns it into continuation orders.
       if (resume[id]) {
@@ -145,6 +153,9 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
       // result that says so, and leave the job claimed so the poll does not spin on it.
       if (h.stopped) {
         ledger.add("watchman", "job-refused", { id, agent: job.agent, run: h.runId, reason: h.stopped });
+        notify({ severity: "alarm", key: "job:" + id + ":refused",
+                 title: "Agent job refused: " + job.agent,
+                 body: (job.orders || "(no orders)") + " — " + h.stopped });
         fs.writeFileSync(path.join(resultDir, id + ".result.json"),
           JSON.stringify({ id, agent: job.agent, run: h.runId, refused: h.stopped,
                            finishedAt: new Date().toISOString() }, null, 2));
@@ -154,6 +165,15 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
       spawnedNow.push({ id, handle: h });
       h.done.then(({ code, signal }) => {
         ledger.add("watchman", "job-done", { id, run: h.runId, code, signal });
+        // A signal or a nonzero exit is an alarm; a clean exit is a quiet note.
+        // Both are deduplicated by job id, so a retry storm cannot ring forever.
+        const failed = signal !== null || (code !== 0 && code !== null);
+        notify(failed
+          ? { severity: "alarm", key: "job:" + id + ":failed",
+              title: "Agent job failed: " + job.agent,
+              body: "exit " + code + (signal ? " signal " + signal : "") }
+          : { severity: "note", key: "job:" + id + ":done",
+              title: "Agent job finished: " + job.agent, body: "exit " + code });
         // A run may ask to continue instead of finishing. The request is bounded before a
         // new job is written, and it is queued before the request file is archived -- so a
         // crash in between replays an idempotent write, never loses the continuation.
@@ -180,6 +200,8 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
             } else {
               continuation.reason = verdict.reason;
               ledger.add("watchman", "continue-refused", { id, run: h.runId, reason: verdict.reason });
+              notify({ severity: "note", key: "job:" + id + ":continue-refused",
+                       title: "Continue refused", body: verdict.reason });
             }
             claimContinue(h.runDir);
           }

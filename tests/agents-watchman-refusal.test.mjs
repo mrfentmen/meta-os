@@ -55,6 +55,12 @@ test("an over-cap spawn is refused, not written as a bell and a done", async () 
   assert.equal(refusal.reason, "memory-cap");
 
   const result = JSON.parse(fs.readFileSync(path.join(jobs, "j1.result.json"), "utf8"));
+  await new Promise((resolve) => setTimeout(resolve, 60));
+  const notices = fs.readFileSync(path.join(root, "notices.jsonl"), "utf8")
+    .trim().split("\n").map((line) => JSON.parse(line));
+  const alarm = notices.find((notice) => notice.key === "job:j1:refused");
+  assert.ok(alarm, "a refused job raises a notice");
+  assert.equal(alarm.severity, "alarm");
   assert.equal(result.refused, "memory-cap");
   assert.equal(result.code, undefined);
 });
