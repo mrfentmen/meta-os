@@ -182,3 +182,14 @@ The Science Lab reproduced four results and honored one failure at the levels it
 ## Live MCP gateway setup (prompt item 1 prereq) — DONE 2026-11-02
 - Built here (was absent on this Mac): venv (python3.14, mcp==1.30.0 — latest 2.3.0 crashes committed gateway.py), 9 lab servers installed to `mcp-gateway/lab-servers/` (35M, NOT committed), trimmed `mcp-gateway/lab-backends.json` (committed, 4K), gateway RUNNING (PID file `/tmp/oc2b-gateway.pid`), smoke 9/9 searches + reads (3 reads needed one arg correction each). `backends.json` untouched (sha verified). Full record: `os-build/logs/OC2B-gateway-setup.md`.
 - Two live-read map flags for cycle work: open-library reads require `m0_key` (not `key`); gbif keys must be strings. Fix in the lab call layer when wiring reads, not in the smoke.
+
+## Prompt follow-up — live-gateway cycles 006–007 (OPENCODE2_PROMPT item 1) — DONE 2026-11-02
+- Preregs committed FIRST (`206adc79` precedes all result commits). Gateway live (PID-held, 9/9 backends).
+- Cycle-006 (chem, Delaney rerun + live literature): openalex search+get_work (W2076498053, DOI 10.1021/ci034243x, pinned, backend=MCP-GATEWAY, $0). RMSE 1.0994 in prereg band [1.049,1.149] → MATCH. Bit-for-bit clean-dir re-run agrees. Level L3.
+- Cycle-007 (bio, GC-content + live GBIF provenance): match_species+get_species (Panthera leo usageKey 5219404, string-coerced, pinned, $0). gc 0.5166666667 vs prereg 31/60 ±1e-9 → MATCH. Bit-for-bit re-run agrees. Level L3.
+- Quarantine held (envelopes unconfirmed until pin; only stable IDs in results). No transport errors, one attempt per call. Spend $0.00 (keyless servers, no model calls).
+- Ledger + repository updated (2 entries, levels 3/3). Suite 205 OK (10 new live-cycle tests). Figure for 006 byte-identical to cycle-001 (same computation — stated, not hidden).
+- Truth: two more reproductions at L3, this time with live-sourced provenance. Landed. Nothing blocked.
+
+## Prompt follow-up — Officina parity (OPENCODE2_PROMPT item 2) — DONE 2026-11-02
+- `git diff main -- os/worlds/officina/runtime/` is EMPTY: 2b/2c/2d modules + tests on this branch are identical to the merged main (Pax blob-verified @0b18be64). No new work required; 2a gate pattern already followed (§14–16). Landed by parity.

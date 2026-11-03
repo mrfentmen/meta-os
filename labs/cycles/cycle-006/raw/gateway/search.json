@@ -1,0 +1,25 @@
+{
+ "agent": "literature-researcher",
+ "kind": "gateway-source",
+ "note": "UNCONFIRMED gateway result: not evidence until pinned by the literature job (assemble_brief).",
+ "recorded_at": "2026-11-03T02:31:16.329340Z",
+ "result": {
+  "backend": "MCP-GATEWAY",
+  "matches": [],
+  "network": "boss's local MCP gateway http://127.0.0.1:8931/mcp; keyless public servers; no credentials held by the lab",
+  "op": "search",
+  "payload_form": "text",
+  "query": "Estimating aqueous solubility directly from molecular structure",
+  "remote_args": {
+   "limit": 3,
+   "query": "Estimating aqueous solubility directly from molecular structure"
+  },
+  "remote_tool": "openalex__search_works",
+  "result": {
+   "raw_text": "OpenAlex found 178508 work(s) for \"Estimating aqueous solubility directly from molecular structure\":\n\n1. ESOL: Estimating Aqueous Solubility Directly from Molecular Structure\nYear: 2004\nDOI: https://doi.org/10.1021/ci034243x\nCitations: 1103\nOpen access: no\nVenue: Journal of Chemical Information and Computer Sciences\nAuthors: John S. Delaney\nTopics: Solubility, Aqueous solution, Molecule, Chemistry, Linear regression, Thermodynamics, Molecular descriptor, Octanol\n\n2. Estimating Aqueous Solubility Directly From Molecular Structure Using Machine Learning Approach\nYear: 2021\nDOI: https://doi.org/10.1109/i-smac52330.2021.9640774\nCitations: 6\nOpen access: no\nVenue: International Conference on I-SMAC (IoT in Social, Mobile, Analytics and Cloud) (I-SMAC)\nAuthors: Anurag Dutta, Rahul Karmakar\nTopics: Solubility, Predictability, Molecule, Aqueous solution, Physical property, Work (physics), Chemistry, Materials science\n\n3. Prediction of aqueous solubility of a strongly soluble solute from molecular simulation\nYear: 2023\nDOI: https://doi.org/10.1063/5.0159402\nCitations: 6\nOpen access: yes (https://pubs.aip.org/aip/jcp/article-pdf/doi/10.1063/5.0159402/18063041/044114_1_5.0159402.pdf)\nVenue: The Journal of Chemical Physics\nAuthors: James Carruthers, Mauro Ferrario, Jamshed Anwar\nTopics: Solubility, Aqueous solution, Chemistry, Molecular dynamics, Thermodynamics, Chemical engineering, Chromatography, Materials science"
+  },
+  "tool": "openalex"
+ },
+ "status": "unconfirmed",
+ "tool": "openalex"
+}

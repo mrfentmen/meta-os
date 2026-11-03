@@ -1,0 +1,68 @@
+{
+ "base_counts": {
+  "A": 14,
+  "C": 15,
+  "G": 16,
+  "T": 15
+ },
+ "comparison": {
+  "detail": "observed=0.5166666666666667 expected=0.5166666666666667 tolerance=1e-09",
+  "observed": 0.5166666666666667,
+  "observed_metric": "gc_fraction",
+  "target": 0.5166666666666667,
+  "verdict": "match"
+ },
+ "cycle": "cycle-007",
+ "expected_gc_fraction": 0.5166666666666667,
+ "inputs": {
+  "params": {
+   "expected_gc_fraction": 0.5166666666666667,
+   "length": 60,
+   "organism": "Panthera leo",
+   "organism_usage_key": 5219404,
+   "research_question": "What is the GC-content of the frozen 60-mer reference sequence?",
+   "sequence_file": "inputs/sequence.txt",
+   "tolerance": 1e-09
+  },
+  "plan_file": "inputs/plan.json",
+  "plan_sha256": "a3d5082ab971e174b573bf28d7b0eeb66fbfbeab2866b851f11aa420c882db0a",
+  "sequence_file": "inputs/sequence.txt",
+  "sequence_sha256": "649935f1de25bf7516148dd6787eb3bce132cac227161ded2b16c106275c26c8"
+ },
+ "observed_gc_count": 31,
+ "observed_gc_fraction": 0.5166666666666667,
+ "observed_length": 60,
+ "provenance": {
+  "backend": "MCP-GATEWAY",
+  "calls": 2,
+  "calls_file": "gateway-calls.jsonl",
+  "gateway": "boss local MCP gateway 127.0.0.1:8931",
+  "model_spend_usd": 0.0,
+  "network": "keyless public servers; no credentials held; no model calls",
+  "payload_forms": [
+   "json",
+   "json"
+  ],
+  "payloads": [
+   "gateway/search.json",
+   "gateway/read.json"
+  ],
+  "pinned": true,
+  "pinned_identifiers": {
+   "organism": "Panthera leo",
+   "usageKey": "5219404"
+  },
+  "remote_tools": [
+   "gbif__match_species",
+   "gbif__get_species"
+  ],
+  "wire_read_args": {
+   "key": "5219404"
+  }
+ },
+ "record_text": "output: GC-content 0.516667 (31/60)",
+ "runner": "os/worlds/science-lab/compute.py run_bio",
+ "script": "run.py",
+ "seed": 500007,
+ "tolerance": 1e-09
+}
