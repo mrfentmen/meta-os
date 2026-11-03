@@ -552,7 +552,7 @@ has a `timestamp` and a `verdict`, not a start/end keeper window).
 Section 19 verification: 7 test files, **30 tests pass, 0 fail** — the four
 Officina files unchanged at 19, plus 11 new Musica tests (4 + 3 + 4).
 
-## Section 20 — Documentation-as-code (CB2-476..500) — 19/25 delivered
+## Section 20 — Documentation-as-code (CB2-476..500) — 21/25 delivered
 
 | Task | File | Result |
 |---|---|---|
@@ -561,17 +561,28 @@ Officina files unchanged at 19, plus 11 new Musica tests (4 + 3 + 4).
 | CB2-492 | `tests/readme-data.test.mjs` | no file contains `Custos` |
 | CB2-493 | `tools/readme_data_index.py` | Markdown table (name, status, proof), fixture- and real-tree-tested |
 | CB2-499 | `docs/readme-data/face.json` | face is the design running in a carrier/browser; kernel graphics in progress |
+| CB2-497 | `tests/aegis-watch-data.test.mjs` | every target the Aegis watch builder emits is a local file path; a pasted URL is a path, never a fetch |
+| CB2-498 | `tests/aegis-findings-shape.test.mjs` | finding carries the documented key set, severity from `SEVERITIES`, and no `value` field; bad severity refused with the ledger untouched |
+
+Correction to an earlier note in this file: `nervus/contracts.mjs` **does**
+exist. It holds the five operations as data with `requires` (inputs) and
+`produces` (outputs). What it does not hold is the third thing CB2-494 asks
+for — a real-run-required flag — so the operation table cannot be asserted
+against a field nobody wrote.
 
 Not delivered:
-- CB2-494..496: no Nervus contract files or layer-curve fixture exist in the tree;
-  `nervus/` holds only `tray.json` and `dose-windows.json`.
-- CB2-497: Aegis ships `aegis/watch-targets.mjs` (code), not a domain data file.
-- CB2-498: no Aegis findings record type exists to pin a shape against.
+- CB2-494: `nervus/contracts.mjs` has `requires` and `produces` per operation
+  but no real-run-required flag; `stub-runner.mjs` marks its own output STUB
+  in prose, which is not a contract field.
+- CB2-495: no contract carries a ledger field; `RECORD_FIELDS` is
+  model_hash/operation/probe/result with no ledger name.
+- CB2-496: the layer curve (L4 4.6, L8 19.5, L16 12.8, L24 10.2) appears in no
+  Nervus file — `nervus/*.mjs` has none of those values.
 - CB2-500: `agents/registry.json` lists agent nicks, not programs, so a
   program-file set cannot be matched against it without inventing a mapping.
 
 Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
-`test_readme_data_index.py` 3 pass.
+`test_readme_data_index.py` 3 pass; 7 new Aegis tests pass (3 + 4).
 
 ## Section 16 — Agent layer Node (CB2-376..400) — 20/25
 
