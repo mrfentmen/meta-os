@@ -72,7 +72,7 @@ if [ "$REVERT" = "1" ]; then
   removed=0
   while IFS= read -r rel; do
     [ -n "$rel" ] || continue
-    if [ -f "$ROOT$rel" ]; then
+    if [ -f "$ROOT$rel" ] || [ -L "$ROOT$rel" ]; then
       rm -f "$ROOT$rel" && removed=$((removed + 1))
     fi
   done < "$MANIFEST"
@@ -186,6 +186,22 @@ put "$ISO/apps/terminal/terminalrc" "/etc/xdg/xfce4/terminal/terminalrc"
 put "$ISO/apps/welcome/meta-welcome.py" "/usr/local/bin/meta-welcome" 755
 put "$ISO/apps/welcome/welcome.css" "/usr/share/metaos/welcome/welcome.css"
 put "$ISO/apps/welcome/palette.json" "/usr/share/metaos/welcome/palette.json"
+
+# Agent layer: runtime, six units, env template, login hook and the health
+# cadence. One stager, so this path and provision.sh cannot drift apart.
+if [ "$DRY" = "1" ]; then
+  echo "would stage  agent layer (runtime, 6 units, cadence)"
+else
+  mkdir -p "$ROOT/etc" "$ROOT/usr"
+  if sh "$ISO/../agent-layer/stage.sh" "$ROOT" >/dev/null; then
+    # Record what the stager wrote, or --revert leaves 59 files behind.
+    sh "$ISO/../agent-layer/stage.sh" "$ROOT" --list >> "$MANIFEST_TMP"
+    echo "apply: agent layer staged"
+  else
+    echo "FAILED   agent layer" >&2
+    fail=$((fail + 1))
+  fi
+fi
 
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"

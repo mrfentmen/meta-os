@@ -9,6 +9,7 @@
 #
 #   stage.sh <root>            stage into <root>
 #   stage.sh <root> --check    verify an already staged root
+#   stage.sh <root> --list     print every path staged, for apply.sh's manifest
 #
 # Layout inside <root>:
 #   /usr/share/metaos/agent/server/queue/*.py   runtime (REPO_ROOT = agent/)
@@ -37,6 +38,8 @@ usage() {
 [ -n "$ROOT" ] || { usage; exit 2; }
 if [ "${2:-}" = "--check" ]; then
   MODE=check
+elif [ "${2:-}" = "--list" ]; then
+  MODE=list
 elif [ -n "${2:-}" ]; then
   usage
   exit 2
@@ -54,6 +57,25 @@ CHECKOUT=/usr/share/metaos/agent
 fail=0
 say() { echo "agent-stage: $*"; }
 bad() { echo "agent-stage: FAIL $*" >&2; fail=1; }
+
+if [ "$MODE" = "list" ]; then
+  # apply.sh records what it installed so --revert can remove exactly that.
+  # Printing the staged paths here keeps the two from drifting: the stager is
+  # the only thing that knows what it wrote.
+  [ -d "$ROOT" ] || { echo "agent-stage: not a directory: $ROOT" >&2; exit 2; }
+  {
+    find "$ROOT$PAYLOAD" -type f 2>/dev/null | sed "s|^$ROOT||"
+    for f in "$ROOT$UNITS"/*.service "$ROOT$UNITS"/*.timer \
+             "$ROOT$SKEL_ENV" "$ROOT$HOOK" "$ROOT$ENTRY" \
+             "$ROOT$HEALTH"; do
+      [ -f "$f" ] && echo "${f#$ROOT}"
+    done
+    for l in "$ROOT$WANTS"/*/*; do
+      [ -L "$l" ] && echo "${l#$ROOT}"
+    done
+  } | sort -u
+  exit 0
+fi
 
 if [ "$MODE" = "check" ]; then
   for unit in oc2-queue.service oc2-trio.service oc2-patrol.service \

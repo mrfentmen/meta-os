@@ -59,3 +59,13 @@ green gate read as a working ISO.
    `/opt/metaos`, and that default is the one guess in the app.
 3. Run one boot on the 32GB MacBook: `iso/tools/boot_kit.sh --check` first, it
    names every missing tool before anything compiles.
+
+## Known duplicate, not fixed here
+
+Three welcome programs are in the tree. `apply.sh` installs
+`iso/apps/welcome/meta-welcome.py`. Two orphans remain:
+`metaos-theme/apps/metaos-welcome.py` and
+`os-build/iso/payload-theme/apps/metaos-welcome.py`. Both are OC1's files and
+carry hardcoded hexes, so this lane does not delete them. One of the two
+should go before a cut, or the next reader has to work out which one ships.
+
