@@ -1,0 +1,7 @@
+{
+  "room": "html",
+  "total": 1,
+  "messages": [
+    "attacker: <script>alert(1)</script><img src=x onerror=alert(2)> [ts:1793670690]"
+  ]
+}

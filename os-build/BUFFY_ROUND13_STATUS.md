@@ -21,11 +21,12 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | N — agent runtime: death/recovery | **COMPLETE** | 25 / 25; 21 observed, 2 observed-gap, 2 gaps | `os-build/round13/agents/SECTION_N.md` |
 | O — chaos over the loops | **COMPLETE** | 25 / 25; 11 observed, 9 observed-gap, 5 gaps | `os-build/round13/agents/SECTION_O.md` |
 | P — Hands-Free intake | **COMPLETE** | 25 / 25; **25 tests pass**, 14 findings, 3 fences checked | `os-build/round13/handsfree/SECTION_P.md` |
-| Q–R — Nuntius | NOT STARTED | 0 / 50 | — |
+| Q — Nuntius relay | **COMPLETE** | 25 / 25; **25 tests pass**, 8 findings | `os-build/round13/nuntius/SECTION_Q.md` |
+| R — Nuntius board | **COMPLETE** | 25 / 25; **25 tests pass**, 4 findings, DOM dumps in `dom/` | `os-build/round13/nuntius/SECTION_R.md` |
 | S — userspace | NOT STARTED | 0 / 25 | — |
 | T — federation + closeout | NOT STARTED | 0 / 25 | — |
 
-**Sections A–P:** 400 / 400 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
+**Sections A–R:** 450 / 450 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
 (E), 9 missing artifacts (H), 9 unimplemented OSINT angles (I), 21 baton gaps (L), 1 review
 item (G), 4 real observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J), 5 runtime
 findings (K), 4 loop findings (M–O: no restart supervisor, a missing cwd kills the caller,
@@ -49,6 +50,8 @@ be regenerated:
 | `os-build/layer1/agent_drills.mjs` | 25 runtime drills with real spawns, budgets, STOP files and ledgers |
 | `os-build/layer1/loop_drills.mjs` | 75 loop drills: STOP/budget arms, real watchman deaths, chaos faults |
 | `handsfree/intake_cases.test.mjs` | 25 intake cases; asserts no line is silently dropped, records the rest |
+| `relay/relay.round13.test.mjs` | 25 relay cases against the live loopback service and its CLI |
+| `board/board.round13.test.mjs` | 25 board cases, with the served HTML + render JSON dumped as evidence |
 
 ## Limits carried forward
 
