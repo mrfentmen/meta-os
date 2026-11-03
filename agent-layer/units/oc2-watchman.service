@@ -1,0 +1,14 @@
+[Unit]
+Description=MetaOS agent layer: relay watchman (rings the bell for named jobs)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=-%h/.config/oc2-agent/env
+ExecStart=/usr/bin/node /usr/share/metaos/agent/agents/watchman.mjs --root %h/.local/state/oc2-agent
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

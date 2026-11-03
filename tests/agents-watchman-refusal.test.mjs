@@ -6,8 +6,13 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
+import { spawnSync } from "node:child_process";
+import url from "node:url";
+
 import { createWatchman } from "../agents/watchman.mjs";
 import { memoryDir, writeRecord } from "../agents/memory.mjs";
+
+const REPO = path.dirname(path.dirname(url.fileURLToPath(import.meta.url)));
 
 function tmp() {
   return fs.mkdtempSync(path.join(os.tmpdir(), "meta-watchman-"));
@@ -86,4 +91,23 @@ test("a valid job still rings the bell and completes", async () => {
   const result = JSON.parse(fs.readFileSync(path.join(jobs, "j3.result.json"), "utf8"));
   assert.equal(result.refused, undefined);
   assert.equal(result.code, 0);
+});
+
+test("the CLI writes its state where --root points, not next to the code", () => {
+  const root = tmp();
+  fs.mkdirSync(path.join(root, "jobs"));
+  const registry = path.join(root, "registry.json");
+  fs.writeFileSync(registry, JSON.stringify({ agents: [] }));
+  fs.writeFileSync(
+    path.join(root, "jobs", "j9.job.json"),
+    JSON.stringify({ id: "j9", agent: "nobody" })
+  );
+  const run = spawnSync(process.execPath, [
+    path.join(REPO, "agents", "watchman.mjs"),
+    "--root", root, "--registry", registry, "--once",
+  ], { encoding: "utf8" });
+  assert.equal(run.status, 0, run.stderr);
+  assert.ok(fs.existsSync(path.join(root, "watchman.heartbeat.json")));
+  assert.ok(fs.existsSync(path.join(root, "watchman.jsonl")));
+  assert.equal(fs.existsSync(path.join(REPO, "agents", "watchman.jsonl")), false);
 });

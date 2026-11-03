@@ -101,7 +101,8 @@ def rows(root, home):
     agent_units = root / "usr/lib/systemd/user"
     wanted_units = ("oc2-queue.service", "oc2-trio.service",
                     "oc2-patrol.service", "oc2-patrol.timer",
-                    "oc2-health.service", "oc2-health.timer")
+                    "oc2-health.service", "oc2-health.timer",
+                    "oc2-watchman.service")
     missing = [u for u in wanted_units if not (agent_units / u).is_file()]
     put("PASS" if not missing else "FAIL", "agent units",
         "%d of %d in %s" % (len(wanted_units) - len(missing),

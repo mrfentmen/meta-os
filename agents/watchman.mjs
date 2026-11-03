@@ -208,8 +208,20 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
 /* ---- daemon ---- */
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileURLToPath(import.meta.url))) {
   const HERE = path.dirname(url.fileURLToPath(import.meta.url));
-  const w = createWatchman({ registryFile: path.join(HERE, "registry.json"), root: HERE, jobsDir: path.join(HERE, "jobs") });
-  console.log("relay-watchman: watching", path.join(HERE, "jobs"));
+  // The image keeps the code read-only under /usr/share and writes state in the
+  // user's own directory, so the CLI has to accept a root. Defaults stay HERE,
+  // which is what every existing caller and test expects.
+  const arg = (name) => {
+    const i = process.argv.indexOf(name);
+    return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : null;
+  };
+  const root = arg("--root") ? path.resolve(arg("--root")) : HERE;
+  const jobsDir = arg("--jobs") ? path.resolve(arg("--jobs")) : path.join(root, "jobs");
+  const registryFile = arg("--registry")
+    ? path.resolve(arg("--registry"))
+    : path.join(HERE, "registry.json");
+  const w = createWatchman({ registryFile, root, jobsDir });
+  console.log("relay-watchman: watching", jobsDir);
   const tick = async () => { await w.pollOnce(); };
   await tick();
   // --once makes the watchman a hosted loop command: one drain, exit 0. A daemon never returns,

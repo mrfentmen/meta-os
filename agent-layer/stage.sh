@@ -79,7 +79,8 @@ fi
 
 if [ "$MODE" = "check" ]; then
   for unit in oc2-queue.service oc2-trio.service oc2-patrol.service \
-             oc2-patrol.timer oc2-health.service oc2-health.timer; do
+             oc2-patrol.timer oc2-health.service oc2-health.timer \
+             oc2-watchman.service; do
     [ -f "$ROOT$UNITS/$unit" ] && say "unit $unit" || bad "unit missing: $UNITS/$unit"
   done
   for unit in oc2-queue.service oc2-trio.service oc2-patrol.service; do
@@ -93,7 +94,8 @@ if [ "$MODE" = "check" ]; then
   [ -f "$ROOT$HEALTH" ] && say "health cadence: probe + timer present" || bad "health probe missing: $HEALTH"
 
   for rel in server/queue/queue_service.py server/queue/patrol.py \
-             server/queue/trio_agent.py js/products.js js/schema.js; do
+             server/queue/trio_agent.py js/products.js js/schema.js \
+             agents/watchman.mjs agents/runtime.mjs agents/registry.json; do
     [ -f "$ROOT$PAYLOAD/$rel" ] && say "runtime $rel" || bad "runtime missing: $PAYLOAD/$rel"
   done
 
@@ -148,6 +150,12 @@ cp "$REPO"/server/queue/*.py "$ROOT$PAYLOAD/server/queue/"
 [ -f "$REPO/server/queue/README.md" ] && cp "$REPO/server/queue/README.md" "$ROOT$PAYLOAD/server/queue/"
 [ -d "$REPO/server/queue/livecam_records" ] && cp -R "$REPO/server/queue/livecam_records" "$ROOT$PAYLOAD/server/queue/"
 cp "$REPO/js/products.js" "$REPO/js/schema.js" "$ROOT$PAYLOAD/js/"
+
+# The agent runtime runs from the read-only payload; only its state directory
+# is writable, and that lives in the user's home.
+say "agent runtime -> $PAYLOAD/agents"
+mkdir -p "$ROOT$PAYLOAD/agents"
+cp "$REPO"/agents/*.mjs "$REPO/agents/registry.json" "$ROOT$PAYLOAD/agents/"
 
 say "units -> $UNITS"
 mkdir -p "$ROOT$UNITS"

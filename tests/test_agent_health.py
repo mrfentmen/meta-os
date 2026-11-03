@@ -73,9 +73,9 @@ class Health(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
         rows = self.rows(result)
         self.assertEqual(rows["units"]["state"], "pass")
-        self.assertEqual(rows["units"]["detail"], "6 units")
+        self.assertEqual(rows["units"]["detail"], "7 units")
         self.assertEqual(rows["enabled"]["state"], "pass")
-        self.assertEqual(rows["enabled"]["detail"], "5 links")
+        self.assertEqual(rows["enabled"]["detail"], "6 links")
         self.assertEqual(rows["queue"]["state"], "pass")
         self.assertEqual(rows["watchman"]["state"], "absent")
 
