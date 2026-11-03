@@ -76,3 +76,14 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
   autostart/ssh-config). 067 hook strings clean; binary menu strings
   are OC1 screenshots. 057/058/065 BLOCKED-with-owner (OC1 boot).
 - 069 one suggestion + all-clear. No shared files touched.
+
+## §4 verdict (OC3B-093 pattern; 076..100 batch) — DONE static, screens with OC1
+- 076 inventory from shipped xfconf channels, no invented panels.
+- 078 wallpaper pin verified in xfce4-desktop.xml (last-image +
+  zoomed style); sticks-by-construction, screenshot still OC1's.
+- Theme keys + clock verified in shipped configs; per-screen
+  behavior (079/082/083/084) and persist/reboot (090) with OC1.
+- 085 UI-string audit clean (dev docs out of scope by rule).
+- 091 a11y gap honestly recorded with a named decider.
+- 086 no new launcher (exists); TryExec suggestion filed, not edited.
+- 087/088 handoff + ops written. 093 two gaps + all-clear.
