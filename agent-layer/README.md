@@ -45,3 +45,23 @@ and start the units at login.
 
 Lingering is not enabled: `loginctl enable-linger` needs root after install.
 The layer runs for the session, which is what the desktop needs.
+
+## Scheduled health check
+
+`oc2-health.timer` runs `meta-agent-health.py` two minutes after login and
+every five minutes after that. One run checks six things: the six units exist,
+the five enable links are whole, the queue answers on its loopback port, and
+how old the watchman heartbeat is. It writes
+`~/.local/state/oc2-agent/health.json` plus one line in `health.jsonl`, and
+exits 1 on a failed row so `systemctl --user status oc2-health` shows it.
+
+An absent watchman heartbeat is recorded as `absent`, not a failure — the ISO
+does not ship the relay watchman, and a clean install must not alarm.
+
+No restart is wired in. Set `META_AGENT_RESTART` to a command and it runs once
+after a failed queue row, with its exit code written as a `restart` row. Until
+a lane owner supplies the watchman's start command, nothing guesses one.
+
+Tests: `python3 tests/test_agent_health.py` — real staged roots, a real
+listening socket, real child processes.
+

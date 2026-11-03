@@ -1,0 +1,9 @@
+[Unit]
+Description=MetaOS agent layer: one health check of the local stack
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-%h/.config/oc2-agent/env
+ExecStart=/usr/bin/python3 /usr/local/lib/metaos/meta-agent-health.py
