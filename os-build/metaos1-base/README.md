@@ -72,3 +72,28 @@ python3 os-build/metaos1-base/validate.py
 
 Exit 0 means the slice is internally consistent. It does not mean
 the ISO boots — see above.
+
+## Slice 2 — first-boot dry-run test (own branch, after slice 1)
+
+Slice 1 is left untouched as the gated item: this slice 2 lives on
+branch `hana/metaos1-firstboot-test` and merges only after slice 1.
+
+- The first-boot script accepts three test-only path overrides
+  (`METAOS1_DONE_FILE`, `METAOS1_SYSTEM_DEFAULTS`,
+  `METAOS1_HOME_ROOT`). The installed unit sets none of them, so
+  installed behaviour is exactly the slice-1 defaults.
+- `firstboot/test_firstboot.sh` runs the script against throwaway
+  directories only and checks: a fresh user gets the system defaults,
+  a second run leaves the user config alone, a pre-existing user
+  config is never overwritten, and a run with no home directory
+  still exits 0 and marks done.
+- The validator runs this harness too, so `validate.py` exit 0 now
+  covers the dry-run as well as the static checks.
+- What this still does NOT prove: a VM boot, a login under 60s, or
+  first-boot landing on the desktop. Those stay owed at Pax's
+  ISO cut 1, with screendumps, and are Milo's gate — not claimed
+  here.
+
+```
+sh os-build/metaos1-base/firstboot/test_firstboot.sh
+```
