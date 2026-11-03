@@ -1,0 +1,287 @@
+{
+  "failed": 0,
+  "passed": 28,
+  "results": [
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: biology-researcher can read <records>"
+      },
+      "id": "sl-check-biology-researcher",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: chemistry-researcher can read <records>"
+      },
+      "id": "sl-check-chemistry-researcher",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: computational-scientist can read <records>"
+      },
+      "id": "sl-check-computational-scientist",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: hypothesis-generator can read <records>"
+      },
+      "id": "sl-check-hypothesis-generator",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: independent-verifier can read <records>"
+      },
+      "id": "sl-check-independent-verifier",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: literature-researcher can read <records>"
+      },
+      "id": "sl-check-literature-researcher",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: mathematics-researcher can read <records>"
+      },
+      "id": "sl-check-mathematics-researcher",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: physics-researcher can read <records>"
+      },
+      "id": "sl-check-physics-researcher",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: research-archivist can read <records>"
+      },
+      "id": "sl-check-research-archivist",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: research-director can read <records>"
+      },
+      "id": "sl-check-research-director",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: scientific-analyst can read <records>"
+      },
+      "id": "sl-check-scientific-analyst",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: scientific-critic can read <records>"
+      },
+      "id": "sl-check-scientific-critic",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 0,
+        "stdout": "ok: statistician can read <records>"
+      },
+      "id": "sl-check-statistician",
+      "kind": "check",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "discipline-design-audit"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-biology-researcher",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "discipline-design-audit"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-chemistry-researcher",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "compute-provenance"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-computational-scientist",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "hypothesis-filing-audit"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-hypothesis-generator",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "reproduction"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-independent-verifier",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "literature-shelf"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-literature-researcher",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "discipline-design-audit"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-mathematics-researcher",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "discipline-design-audit"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-physics-researcher",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "hash-chain"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-research-archivist",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          null,
+          null
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-research-director",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "fit-statistics"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-scientific-analyst",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "dropped-claims"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-scientific-critic",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "checks": [
+          "statistical-audit"
+        ],
+        "exit": 0
+      },
+      "id": "sl-duty-statistician",
+      "kind": "duty",
+      "pass": true
+    },
+    {
+      "detail": {
+        "agents_checked": 13,
+        "missing": [],
+        "wrong": []
+      },
+      "id": "sl-registry-shape",
+      "kind": "registry",
+      "pass": true
+    },
+    {
+      "detail": {
+        "exit": 2,
+        "stderr": "error: no duty for agent 'not-a-real-agent'; it stays a draft"
+      },
+      "id": "sl-unknown-agent-refusal",
+      "kind": "refusal",
+      "pass": true
+    }
+  ],
+  "scenarios": 28
+}

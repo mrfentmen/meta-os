@@ -199,10 +199,13 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [],
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
-      "hosted": false,
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "mathematics-researcher"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "mathematics-researcher",
       "owner": "system: science-lab"
@@ -214,10 +217,13 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [],
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
-      "hosted": false,
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "chemistry-researcher"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "chemistry-researcher",
       "owner": "system: science-lab"
@@ -229,10 +235,13 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [],
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
-      "hosted": false,
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "biology-researcher"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "biology-researcher",
       "owner": "system: science-lab"
@@ -244,10 +253,13 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [],
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
-      "hosted": false,
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "physics-researcher"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "physics-researcher",
       "owner": "system: science-lab"
@@ -260,10 +272,13 @@
         "literature-watch",
         "experiment-watch"
       ],
-      "command": [],
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
-      "hosted": false,
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "hypothesis-generator"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "hypothesis-generator",
       "owner": "system: science-lab"
@@ -294,10 +309,13 @@
         "experiment-watch",
         "verification-watch"
       ],
-      "command": [],
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
-      "hosted": false,
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "statistician"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "statistician",
       "owner": "system: science-lab"

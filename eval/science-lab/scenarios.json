@@ -1,0 +1,212 @@
+{
+  "agent_check_note": "research-director has no success-path check key: its duty returns a per-cycle census, so its duty scenario asserts row shape and shipped cycle ids instead of a check name.",
+  "agents": {
+    "biology-researcher": "discipline-design-audit",
+    "chemistry-researcher": "discipline-design-audit",
+    "computational-scientist": "compute-provenance",
+    "hypothesis-generator": "hypothesis-filing-audit",
+    "independent-verifier": "reproduction",
+    "literature-researcher": "literature-shelf",
+    "mathematics-researcher": "discipline-design-audit",
+    "physics-researcher": "discipline-design-audit",
+    "research-archivist": "hash-chain",
+    "research-director": null,
+    "scientific-analyst": "fit-statistics",
+    "scientific-critic": "dropped-claims",
+    "statistician": "statistical-audit"
+  },
+  "contract": "Science Lab hosted duties (os/worlds/science-lab/hosted.py) as wired by hana/science-lab-tools: every Science Lab researcher runs deterministically over the records that ship, with no model calls and no invented records.",
+  "fixture_note": "FRAME-ANCHORED FIXTURE, not an authored scenario set. Every scenario runs the real hosted.py against a temporary copy of the real shipped records (records/cycles/CYCLE-EXAMPLE-001.json, records/cycles/DRESS-REHEARSAL-001.json, records/literature/RI-EXAMPLE-001.json) or against the real agents/registry.json. No scenario asserts a science verdict, a design, or a per-record field that does not ship: the discipline duties report cycle-level falsifier statements only, and the harness asserts exactly that shape. The unknown-agent scenario asserts the shipped refusal ('it stays a draft', exit 2).",
+  "scenarios": [
+    {
+      "agent": "research-archivist",
+      "expected_exit": 0,
+      "id": "sl-check-research-archivist",
+      "kind": "check"
+    },
+    {
+      "agent": "research-director",
+      "expected_exit": 0,
+      "id": "sl-check-research-director",
+      "kind": "check"
+    },
+    {
+      "agent": "scientific-critic",
+      "expected_exit": 0,
+      "id": "sl-check-scientific-critic",
+      "kind": "check"
+    },
+    {
+      "agent": "independent-verifier",
+      "expected_exit": 0,
+      "id": "sl-check-independent-verifier",
+      "kind": "check"
+    },
+    {
+      "agent": "scientific-analyst",
+      "expected_exit": 0,
+      "id": "sl-check-scientific-analyst",
+      "kind": "check"
+    },
+    {
+      "agent": "literature-researcher",
+      "expected_exit": 0,
+      "id": "sl-check-literature-researcher",
+      "kind": "check"
+    },
+    {
+      "agent": "computational-scientist",
+      "expected_exit": 0,
+      "id": "sl-check-computational-scientist",
+      "kind": "check"
+    },
+    {
+      "agent": "mathematics-researcher",
+      "expected_exit": 0,
+      "id": "sl-check-mathematics-researcher",
+      "kind": "check"
+    },
+    {
+      "agent": "chemistry-researcher",
+      "expected_exit": 0,
+      "id": "sl-check-chemistry-researcher",
+      "kind": "check"
+    },
+    {
+      "agent": "biology-researcher",
+      "expected_exit": 0,
+      "id": "sl-check-biology-researcher",
+      "kind": "check"
+    },
+    {
+      "agent": "physics-researcher",
+      "expected_exit": 0,
+      "id": "sl-check-physics-researcher",
+      "kind": "check"
+    },
+    {
+      "agent": "hypothesis-generator",
+      "expected_exit": 0,
+      "id": "sl-check-hypothesis-generator",
+      "kind": "check"
+    },
+    {
+      "agent": "statistician",
+      "expected_exit": 0,
+      "id": "sl-check-statistician",
+      "kind": "check"
+    },
+    {
+      "agent": "research-archivist",
+      "expected_check": "hash-chain",
+      "expected_exit": 0,
+      "id": "sl-duty-research-archivist",
+      "kind": "duty"
+    },
+    {
+      "agent": "research-director",
+      "expected_cycles": [
+        "CYCLE-EXAMPLE-001",
+        "DRESS-REHEARSAL-001"
+      ],
+      "expected_exit": 0,
+      "expected_keys": [
+        "cycle",
+        "gate",
+        "phase",
+        "transitions"
+      ],
+      "id": "sl-duty-research-director",
+      "kind": "duty"
+    },
+    {
+      "agent": "scientific-critic",
+      "expected_check": "dropped-claims",
+      "expected_exit": 0,
+      "id": "sl-duty-scientific-critic",
+      "kind": "duty"
+    },
+    {
+      "agent": "independent-verifier",
+      "expected_check": "reproduction",
+      "expected_exit": 0,
+      "id": "sl-duty-independent-verifier",
+      "kind": "duty"
+    },
+    {
+      "agent": "scientific-analyst",
+      "expected_check": "fit-statistics",
+      "expected_exit": 0,
+      "id": "sl-duty-scientific-analyst",
+      "kind": "duty"
+    },
+    {
+      "agent": "literature-researcher",
+      "expected_check": "literature-shelf",
+      "expected_exit": 0,
+      "id": "sl-duty-literature-researcher",
+      "kind": "duty"
+    },
+    {
+      "agent": "computational-scientist",
+      "expected_check": "compute-provenance",
+      "expected_exit": 0,
+      "id": "sl-duty-computational-scientist",
+      "kind": "duty"
+    },
+    {
+      "agent": "mathematics-researcher",
+      "expected_check": "discipline-design-audit",
+      "expected_exit": 0,
+      "id": "sl-duty-mathematics-researcher",
+      "kind": "duty"
+    },
+    {
+      "agent": "chemistry-researcher",
+      "expected_check": "discipline-design-audit",
+      "expected_exit": 0,
+      "id": "sl-duty-chemistry-researcher",
+      "kind": "duty"
+    },
+    {
+      "agent": "biology-researcher",
+      "expected_check": "discipline-design-audit",
+      "expected_exit": 0,
+      "id": "sl-duty-biology-researcher",
+      "kind": "duty"
+    },
+    {
+      "agent": "physics-researcher",
+      "expected_check": "discipline-design-audit",
+      "expected_exit": 0,
+      "id": "sl-duty-physics-researcher",
+      "kind": "duty"
+    },
+    {
+      "agent": "hypothesis-generator",
+      "expected_check": "hypothesis-filing-audit",
+      "expected_exit": 0,
+      "id": "sl-duty-hypothesis-generator",
+      "kind": "duty"
+    },
+    {
+      "agent": "statistician",
+      "expected_check": "statistical-audit",
+      "expected_exit": 0,
+      "id": "sl-duty-statistician",
+      "kind": "duty"
+    },
+    {
+      "expected_exit": 0,
+      "id": "sl-registry-shape",
+      "kind": "registry"
+    },
+    {
+      "agent": "not-a-real-agent",
+      "expected_exit": 2,
+      "expected_stderr": "stays a draft",
+      "id": "sl-unknown-agent-refusal",
+      "kind": "refusal"
+    }
+  ]
+}
