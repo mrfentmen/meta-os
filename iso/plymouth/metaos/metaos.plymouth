@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=MetaOS
+Description=MetaOS boot splash — one blue ring on ink black, the name under it.
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/metaos
+ScriptFile=/usr/share/plymouth/themes/metaos/metaos.script
