@@ -524,7 +524,7 @@ All tools read logs as data; none writes to a log or to `kernel/src`.
 Section 18 verification: 12 test files, **50 tests pass, 0 fail** (one command
 per file; every exit status checked).
 
-## Section 19 — Officina and Musica pure code (CB2-451..475) — 14/25 delivered
+## Section 19 — Officina and Musica pure code (CB2-451..475) — 15/25 delivered
 
 Officina's pure modules: `heatsink.py` (simulator + bounds), `design_loop.py`
 (post/claim/score/held-out gate), `brief.py` (rough-words parser + iterator),
@@ -546,6 +546,7 @@ Officina's pure modules: `heatsink.py` (simulator + bounds), `design_loop.py`
 | CB2-468 | `os/worlds/musica/catalogue_validate.mjs` | a holding with no licence line is flagged `rights missing` |
 | CB2-473 | `tests/musica-normalize-data.test.mjs` | title transform trims, single-spaces, title-cases |
 | CB2-474 | `tests/musica-normalize-data.test.mjs` | idempotent on every real title; a non-string is refused, never coerced |
+| CB2-454 | `tests/officina/test_officina_loop_record.py` | every amendment names round, change and reason; every decision-log entry carries its round and result; `rounds_used` matches the highest logged round; harness jobs name the violation when failed |
 
 Two things the Musica data revealed while pinning these tests:
 - The catalogue's own tracks carry `title`, `take_id`, `duration_s`, `licence`.
@@ -556,15 +557,20 @@ Two things the Musica data revealed while pinning these tests:
   published file is not repaired here, because rewriting studio output to
   satisfy a test would be exactly the fake the wave forbids.
 
-Not delivered: CB2-454 (DesignJob has no iteration/change/result record),
-CB2-455 (no STOP-file check function), CB2-458 (no schematic module),
+Correction: CB2-454 first looked blocked because `DesignJob` has no iteration
+record. The loop's record is not on the job — it is the run file, whose
+`amendments` and `decision_log` carry round, change and reason per iteration.
+The test reads those real files.
+
+Not delivered: CB2-455 (no STOP-file check function), CB2-458 (no schematic module),
 CB2-459 (no enumerated 14-check gate list), CB2-460..462 (no JS note/semitone
 module; the mapping lives in `runtime/theory.py`), CB2-465..466 (no JS
 variation generator; `runtime/compose.py` owns it), CB2-469..470 (the take log
 has a `timestamp` and a `verdict`, not a start/end keeper window).
 
-Section 19 verification: 7 test files, **30 tests pass, 0 fail** — the four
-Officina files unchanged at 19, plus 11 new Musica tests (4 + 3 + 4).
+Section 19 verification: 8 test files, **37 tests pass, 0 fail** — the four
+Officina files unchanged at 19, 7 new loop-record tests, plus 11 new Musica
+tests (4 + 3 + 4).
 
 ## Section 20 — Documentation-as-code (CB2-476..500) — 21/25 delivered
 
