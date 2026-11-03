@@ -24,7 +24,7 @@ CODE-INSPECTED. `screenshots/iso/PROOF_PLAN.md` names the eight captures
 | Boot menu | **CODE-INSPECTED** | generated `theme.txt`, drop-in, image beside it |
 | First-login step | **CODE-INSPECTED** | tested against a real temp home and a stub `xfconf-query` |
 | Installer + revert | **VERIFIED (staging)** | 124 files in, 0 left after `--revert` |
-| Doctor | **VERIFIED (staging)** | 20 passed against an `apply.sh` tree |
+| Doctor | **VERIFIED (staging)** | 21 passed against an `apply.sh` tree |
 
 ## RK-007 — the image exists, the boot does not
 

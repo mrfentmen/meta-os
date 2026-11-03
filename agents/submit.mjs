@@ -75,7 +75,22 @@ export function submitJob({ root, registry, agent, orders, id, maxContinues }) {
 
 /* ---- CLI ---- */
 const HERE = path.dirname(url.fileURLToPath(import.meta.url));
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileURLToPath(import.meta.url))) {
+
+// A comparison of resolved paths is not enough: /tmp and /var are symlinks on
+// macOS, so `node /tmp/x/submit.mjs` and the module's own /private/tmp/x URL
+// disagree, the guard falls through, and the process exits 0 having done
+// nothing. Compare the real paths instead -- a CLI that silently no-ops is
+// worse than one that refuses.
+function isMainModule(moduleUrl) {
+  if (!process.argv[1]) return false;
+  try {
+    return fs.realpathSync(process.argv[1]) === fs.realpathSync(url.fileURLToPath(moduleUrl));
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule(import.meta.url)) {
   const arg = (name, fallback = null) => {
     const i = process.argv.indexOf(name);
     return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : fallback;

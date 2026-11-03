@@ -158,6 +158,12 @@ def rows(root, home):
     put("PASS" if exe.is_file() and os.access(exe, os.X_OK) else "FAIL",
         "meta-agent-status", str(exe))
 
+    # Two commands a person types: one asks the agents for work, the other says
+    # what they are doing. A layer nobody can reach is not a feature.
+    ask = root / "usr/local/bin/meta-ask"
+    put("PASS" if ask.is_file() and os.access(ask, os.X_OK) else "FAIL",
+        "meta-ask", str(ask))
+
     put("SKIP", "base image programs",
         "installed by the base, not by this tree: thunar xfce4-terminal "
         "xfce4-settings-manager chromium")

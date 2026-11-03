@@ -111,7 +111,7 @@ function tally(rows) {
 // retryable -- re-queuing a refusal would spin on the same missing entry.
 // The new job carries `continuesFrom`, so the watchman resumes from the run
 // that died instead of starting the work over.
-export function retryJob({ root, id }) {
+export function retryJob({ root, id, mark = {} }) {
   const jobsDir = path.join(root, "jobs");
   const jobFile = path.join(jobsDir, id + ".job.json");
   const resultFile = path.join(jobsDir, id + ".result.json");
@@ -156,6 +156,9 @@ export function retryJob({ root, id }) {
     retryOf: id,
     continuesFrom: result.run,
     createdAt: new Date().toISOString(),
+    // `mark` lets the watchman stamp a retry as automatic, so the retry
+    // itself cannot spawn another one and loop forever.
+    ...mark,
   };
   const tmp = nextFile + ".tmp";
   fs.writeFileSync(tmp, JSON.stringify(next, null, 2));
