@@ -17,10 +17,12 @@ first agentic OS from Meta's side of the fence.
 2. **Terminal.** The prompt reads `metaos` in Meta blue. `lsb_release -a` says
    `Meta OS 1.0 (Ribbon)`, codename `ribbon`, `ID=metaos`. One command, no
    explanation needed — this is the de-branding proof.
-3. **The dock.** Open Board, Musica, Science, Officina from the dock. Each one
-   opens its own window with the app's name in the title bar. **No address bar,
-   no localhost, no tabs.** This is the "it's an OS, not a website" beat, and it
-   is the one people disbelieve, so do it twice.
+3. **The dock.** 27 tiles, every one backed by an installed program or a local
+   page, every one with its own icon (all 26 PNGs are tracked in git now).
+   Open Board, Musica, Science, Officina, Aegis from the dock. Each one opens
+   its own window with the app's name in the title bar. **No address bar, no
+   localhost, no tabs.** This is the "it's an OS, not a website" beat, and it is
+   the one people disbelieve, so do it twice.
 4. **Trio.** One click opens Imperium: Vigiles (police), Ignis (fire), Medicus
    (EMS) behind a product switcher. This is the product a first responder would
    actually open.
@@ -45,6 +47,10 @@ first agentic OS from Meta's side of the fence.
 | Agents can think and act | `evals/agentic/report-*` → 8/8 + relay, 43 model calls |
 | Runs inside the OS, not just on my Mac | in-guest self-test 8/8, `meta-code` exit 0 |
 | Key never in the repo | image `/etc/metaos/agent.env`, root 0600, sha-verified |
+| The dock is really on screen | `captures/dock-live-1920x1080-20261103T2109Z.png` — live guest 21:09 UTC: Meta OS top bar, ASCII wallpaper, blue `metaos` prompt, dock along the bottom |
+| The dock is 27 real tiles, not bookmarks | `grep -cE '^\s*add_app ' os-build/face/meta-desktop.sh` → 27; every tile's page path and icon file resolved from the tree by script |
+| No tile can lose its icon | `git ls-files os-build/iso/payload-theme/icons/metaos \| wc -l` → 26; `shasum -a 256 -c SOURCES.sha256` → 26 OK |
+| A 3D app never shows a blank canvas | headless Chrome `?force2d=1` on all four WebGL pages prints the "3D unavailable" line; without it the structures still render |
 
 ## What you must NOT claim
 
@@ -64,11 +70,22 @@ first agentic OS from Meta's side of the fence.
   "hi-fi" and do not claim audio works if you booted without that device.
 - **3D is software-rendered.** This host's QEMU has no GPU 3D backend
   (`none`, `curses`, `cocoa`, `dbus` only). Mesa's software rasteriser draws it.
-  Never say "GPU accelerated".
-- **Aegis has no screen.** The security engine is real, its receipts are real,
-  and there is no page to open it from yet.
-- **The messaging app is not installed.** `bus.html` exists in the repo and is
-  not on the image, so there is nothing to click.
+  Never say "GPU accelerated". All four WebGL pages (Science Lab, Music 3D,
+  3D Notes, Scientia) now probe for a context first and print an honest "3D
+  unavailable" line instead of a blank canvas — verified in headless Chrome
+  with `?force2d=1`.
+- **Aegis.** The engine's receipts are real and there is now a read-only page
+  over them (`aegis-page/`, self-test 18 checks PASS, 10 findings / 1766-entry
+  KEV snapshot with 0 checkable / 169 liveness probes / 47 runs). Tile + copy to
+  `/opt/face-site/aegis/` are wired in `meta-desktop.sh` and `metaos-update.sh`.
+  What is not proven: that copy landing on the live image tonight. Say "the page
+  is here, the tile is wired", do not say "the security app is finished". It
+  never says "secure" and must not be quoted as saying it.
+- **Messages needs a relay.** `bus.html` ships and has a tile, but it is a
+  client: it shows "Status: not connected" and asks for a relay REST URL and
+  token (kept in the browser only). Without those it is a configure screen, not
+  a messenger. If the demo has no relay, skip the tile — do not click it live
+  and improvise.
 - **Not every dock tile has been clicked.** Board has. The rest are the same
   command line — that is inference, and if a judge asks, say so.
 
