@@ -1,0 +1,92 @@
+{
+  "backend": "MCP-GATEWAY",
+  "calls_path": "records/gateway/mcp_smoke_calls.jsonl",
+  "cycle_id": "MCP-SMOKE-2026-11-02",
+  "kind": "mcp-gateway-live-smoke",
+  "note": "payload_form text = server answered in formatted plain text, kept verbatim in the call records; matches counts only JSON list payloads",
+  "ok_count": 10,
+  "outcomes": [
+    {
+      "matches": 0,
+      "op": "search",
+      "payload_form": "text",
+      "remote_tool": "openalex__search_works",
+      "server": "openalex",
+      "status": "ok"
+    },
+    {
+      "matches": 0,
+      "op": "search",
+      "payload_form": "text",
+      "remote_tool": "archiveorg__search_items",
+      "server": "archive-org",
+      "status": "ok"
+    },
+    {
+      "matches": 0,
+      "op": "search",
+      "payload_form": "text",
+      "remote_tool": "openlibrary__search_books",
+      "server": "open-library",
+      "status": "ok"
+    },
+    {
+      "matches": 0,
+      "op": "search",
+      "payload_form": "json",
+      "remote_tool": "gbif__match_species",
+      "server": "gbif",
+      "status": "ok"
+    },
+    {
+      "matches": 0,
+      "op": "search",
+      "payload_form": "json",
+      "remote_tool": "wikidata__search_entities",
+      "server": "wikidata",
+      "status": "ok"
+    },
+    {
+      "matches": 0,
+      "op": "search",
+      "payload_form": "json",
+      "remote_tool": "wikisource__search_texts",
+      "server": "wikisource",
+      "status": "ok"
+    },
+    {
+      "matches": 0,
+      "op": "search",
+      "payload_form": "json",
+      "remote_tool": "ietf__search_documents",
+      "server": "ietf",
+      "status": "ok"
+    },
+    {
+      "matches": 3,
+      "op": "search",
+      "payload_form": "json",
+      "remote_tool": "fedreg__search_documents",
+      "server": "federal-register",
+      "status": "ok"
+    },
+    {
+      "matches": 0,
+      "op": "search",
+      "payload_form": "text",
+      "remote_tool": "osv__check_package",
+      "server": "osv",
+      "status": "ok"
+    },
+    {
+      "matches": null,
+      "op": "read",
+      "payload_form": "text",
+      "remote_tool": "wikidata__get_entity",
+      "server": "wikidata",
+      "status": "ok"
+    }
+  ],
+  "total": 10,
+  "transport": "mcp_call.py subprocess -> 127.0.0.1:8931"
+}
