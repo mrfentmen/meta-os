@@ -37,7 +37,7 @@ class ApplyTest(unittest.TestCase):
         self.assertIn("planned", out.stdout)
 
     def test_installs_the_whole_lane(self):
-        out = run(["--root", str(self.root), "--user", "boss"])
+        out = run(["--root", str(self.root)])
         self.assertEqual(out.returncode, 0, out.stderr)
         expected = [
             "usr/share/plymouth/themes/metaos/metaos.plymouth",
@@ -47,7 +47,11 @@ class ApplyTest(unittest.TestCase):
             "etc/calamares/modules/users.conf",
             "usr/share/applications/meta-agent-status.desktop",
             "usr/share/applications/meta-terminal.desktop",
-            "home/boss/.config/plank/dock1/launchers/meta-agent-status.dockitem",
+            "usr/share/metaos/dock/meta-agent-status.dockitem",
+            "usr/local/bin/meta-first-login",
+            "etc/xdg/autostart/meta-first-login.desktop",
+            "usr/share/metaos/theme/meta-wallpaper.png",
+            "etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml",
             "usr/local/bin/meta-agent-status",
             "usr/share/metaos/start/meta-start.html",
             "usr/share/metaos/start/tokens.css",

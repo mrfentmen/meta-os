@@ -5,7 +5,7 @@
 # anything. Point --root at a Cubic chroot, or at a staging directory when
 # you only want to inspect the tree it would produce.
 #
-#   iso/tools/apply.sh --root DIR [--user NAME] [--dry-run]
+#   iso/tools/apply.sh --root DIR [--dry-run]
 #
 # Every source is required. A missing one is reported by name and the run
 # exits 1, because a half-applied base is worse than an untouched one.
@@ -15,7 +15,6 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ISO="$(cd "$HERE/.." && pwd)"
 
 ROOT=""
-USER_NAME="meta"
 DRY=0
 copied=0
 planned=0
@@ -23,10 +22,9 @@ fail=0
 
 usage() {
   cat <<'USAGE'
-usage: iso/tools/apply.sh --root DIR [--user NAME] [--dry-run]
+usage: iso/tools/apply.sh --root DIR [--dry-run]
 
   --root DIR    target root (a Cubic chroot or a staging directory)
-  --user NAME   user that receives the Plank dock items (default: meta)
   --dry-run     print what would be installed, write nothing
 USAGE
 }
@@ -34,7 +32,6 @@ USAGE
 while [ $# -gt 0 ]; do
   case "$1" in
     --root)    ROOT="${2:-}"; shift 2 ;;
-    --user)    USER_NAME="${2:-}"; shift 2 ;;
     --dry-run) DRY=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "apply: unknown argument $1" >&2; usage >&2; exit 2 ;;
@@ -57,11 +54,6 @@ if [ ! -d "$ROOT" ]; then
   echo "apply: not a directory: $ROOT" >&2
   exit 2
 fi
-if [ -z "$USER_NAME" ]; then
-  echo "apply: --user cannot be empty" >&2
-  exit 2
-fi
-
 put() {
   local src="$1" dst="$2" mode="${3:-644}"
   if [ ! -f "$src" ]; then
@@ -83,7 +75,7 @@ put() {
   fi
 }
 
-echo "apply: root $ROOT, user $USER_NAME"
+echo "apply: root $ROOT"
 
 for f in "$ISO"/plymouth/metaos/*; do
   put "$f" "/usr/share/plymouth/themes/metaos/$(basename "$f")"
@@ -100,8 +92,11 @@ done
 for f in "$ISO"/apps/desktop/*.desktop; do
   put "$f" "/usr/share/applications/$(basename "$f")"
 done
+# Dock items go to a shared directory, never to a home guessed at install
+# time: Calamares creates the account after this runs, with a name the user
+# types. meta-first-login copies them into the real $HOME at first login.
 for f in "$ISO"/apps/plank/*.dockitem; do
-  put "$f" "/home/$USER_NAME/.config/plank/dock1/launchers/$(basename "$f")"
+  put "$f" "/usr/share/metaos/dock/$(basename "$f")"
 done
 
 put "$ISO/apps/agent-status/meta-agent-status.py" "/usr/local/bin/meta-agent-status" 755
@@ -112,6 +107,11 @@ put "$ISO/apps/chromium/policies.json" "/etc/chromium/policies/managed/metaos.js
 put "$ISO/theme/wallpaper/meta-wallpaper.png" "/usr/share/metaos/theme/meta-wallpaper.png"
 put "$ISO/theme/gtk/metaos.css" "/usr/share/metaos/theme/gtk.css"
 put "$ISO/theme/xfce4-desktop.xml" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+
+# First-login work: the dock, wallpaper and colours belong to whoever logs in,
+# and that account does not exist until after the install.
+put "$ISO/base/meta-first-login.sh" "/usr/local/bin/meta-first-login" 755
+put "$ISO/base/autostart/meta-first-login.desktop" "/etc/xdg/autostart/meta-first-login.desktop"
 
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"

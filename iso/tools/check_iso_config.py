@@ -337,6 +337,28 @@ else:
     else:
         bad("base: no #base: line, so no launcher can be checked against the base image")
 
+# The per-user half of the install. Calamares makes the account after this
+# runs, so the dock and the wallpaper are applied at first login instead.
+first_login = ISO / "base" / "meta-first-login.sh"
+if first_login.is_file():
+    ok("base: the first-login script ships")
+else:
+    bad("base: meta-first-login.sh is missing")
+
+autostart = ISO / "base" / "autostart" / "meta-first-login.desktop"
+if not autostart.is_file():
+    bad("base: the first-login autostart entry is missing")
+else:
+    got = ini(autostart)["Desktop Entry"]
+    exe = got.get("Exec", "").split()[0]
+    try_exec = got.get("TryExec", "")
+    if exe != "/usr/local/bin/meta-first-login":
+        bad("base: autostart runs %r, expected /usr/local/bin/meta-first-login" % exe)
+    elif try_exec != exe:
+        bad("base: autostart TryExec %r does not match Exec %r" % (try_exec, exe))
+    else:
+        ok("base: first login starts from autostart, behind a matching TryExec")
+
 # --- desktop entries ---------------------------------------------------
 # Binaries this lane ships. The value is the file that must exist.
 SHIPPED_APPS = {"meta-agent-status": Path("apps") / "agent-status" / "meta-agent-status.py"}

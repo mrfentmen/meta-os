@@ -44,8 +44,9 @@ Two honest limits:
   `monitor0`/`workspace0`; on hardware with a different name Xfce creates its
   own key on first login and the default may not apply. Seeing this work needs
   a screen.
-- The stylesheet is installed, not activated. Selecting the GTK theme and
-  telling Xfce to use it belongs to the shell lane.
+- Activation is `iso/base/meta-first-login.sh`, not `apply.sh`: the wallpaper
+  is written to every backdrop property the session reports, and the
+  stylesheet is copied to `$HOME/.config/gtk-3.0/gtk.css` for that account.
 
 **Status: CODE-INSPECTED.** The PNG header is decoded and its dimensions and
 colour type are checked; the pixels have never been seen on a display.

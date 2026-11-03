@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=MetaOS first login
+Comment=Apply the dock, wallpaper and colours for this account, once
+Exec=/usr/local/bin/meta-first-login
+TryExec=/usr/local/bin/meta-first-login
+Terminal=false
+NoDisplay=true
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
