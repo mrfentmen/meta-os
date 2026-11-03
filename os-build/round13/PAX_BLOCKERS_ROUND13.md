@@ -23,6 +23,13 @@ Grouped by who can clear them. No softening: if nothing in a group is blocked, t
 - R13-152: one bearer-shaped token in history, no longer in the tree. Counts cannot close it; review only.
 - The direct-`api.osv.dev` route exception for Sections E and F needs a written yes or a BLOCKED reading.
 
+## Crew
+
+- Boot proof (RK-007, the 0.11 image): run it on the **32GB MacBook**. The 8GB
+  machine writes and compiles the code and never boots it. Procedure:
+  `os-build/BOOT_ON_32GB_MAC.md`; one command, `iso/tools/boot_kit.sh --build`,
+  then `iso/tools/boot_log_verdict.py` on the serial log.
+
 ## Not blocked — simply absent
 
 - There is no cadence loop and no federation module. No agent can clear that by waiting; it is a build decision.

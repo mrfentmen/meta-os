@@ -117,6 +117,31 @@ else:
     else:
         bad("plymouth: a callback registration is missing (refresh or progress)")
 
+# --- splash asset ------------------------------------------------------
+ring = theme_dir / "ring-dot.png"
+if not ring.is_file():
+    bad("plymouth: ring-dot.png is missing")
+else:
+    import struct
+
+    head = ring.read_bytes()[:33]
+    if head[:8] != b"\x89PNG\r\n\x1a\n":
+        bad("plymouth: ring-dot.png is not a PNG")
+    else:
+        width, height, depth, colour = struct.unpack(">IIBB", head[16:26])
+        if (width, height) == (24, 24):
+            ok("plymouth: ring asset is 24x24")
+        else:
+            bad("plymouth: ring asset is %dx%d, expected 24x24" % (width, height))
+        if colour == 6:
+            ok("plymouth: ring asset is RGBA")
+        else:
+            bad("plymouth: ring asset colour type is %d, expected 6 (RGBA)" % colour)
+        if depth == 8:
+            ok("plymouth: ring asset is 8 bits per channel")
+        else:
+            bad("plymouth: ring asset bit depth is %d" % depth)
+
 # --- Calamares ---------------------------------------------------------
 KNOWN_MODULES = {
     "welcome", "locale", "keyboard", "partition", "users", "summary", "mount",
@@ -235,6 +260,32 @@ if welcome:
     else:
         bad("calamares: welcome checks are %r" % checks)
 
+# --- sequence completeness ---------------------------------------------
+if settings:
+    flat = [m for stage in (settings.get("sequence") or [])
+            for modules in stage.values() for m in modules]
+    if flat and flat[-1] == "finished":
+        ok("calamares: the sequence ends with finished")
+    else:
+        bad("calamares: the sequence ends with %r, not 'finished'"
+            % (flat[-1] if flat else None))
+    for required in ("partition", "bootloader"):
+        if required in flat:
+            ok("calamares: the sequence installs %s" % required)
+        else:
+            bad("calamares: the sequence never runs %s" % required)
+
+if users:
+    groups = (users.get("user") or {}).get("groups") or []
+    if "sudo" in groups:
+        ok("calamares: the user is in the sudo group")
+    else:
+        bad("calamares: the user groups are %r, no sudo" % groups)
+    if users.get("setRootPassword") is False:
+        ok("calamares: no root password is set")
+    else:
+        bad("calamares: setRootPassword is %r" % users.get("setRootPassword"))
+
 locale_cfg = module_conf("locale.conf")
 if locale_cfg:
     if locale_cfg.get("region") and locale_cfg.get("zone"):
@@ -318,6 +369,36 @@ for binary, rel in sorted(SHIPPED_APPS.items()):
     else:
         bad("apps: %s is declared but %s is missing" % (binary, rel))
 
+# The dock is not allowed to grow a sixth item or lose one: the frozen set is
+# the contract, and an extra icon is as much a lie as a missing one.
+expected_docks = {stem + ".dockitem" for stem in FROZEN_APPS.values()}
+found_docks = {item.name for item in items}
+if found_docks == expected_docks:
+    ok("apps: dock items are exactly the frozen five")
+else:
+    if found_docks - expected_docks:
+        bad("apps: dock has unexpected item(s): %s"
+            % ", ".join(sorted(found_docks - expected_docks)))
+    if expected_docks - found_docks:
+        bad("apps: dock is missing item(s): %s"
+            % ", ".join(sorted(expected_docks - found_docks)))
+
+# Two launchers with the same Name or the same Exec confuse the menu.
+seen_names, seen_execs, dupes = {}, {}, []
+for entry in entries:
+    got = ini(entry)["Desktop Entry"]
+    name, exe = got.get("Name"), got.get("Exec")
+    if name in seen_names:
+        dupes.append("Name %r in %s and %s" % (name, seen_names[name], entry.name))
+    if exe in seen_execs:
+        dupes.append("Exec %r in %s and %s" % (exe, seen_execs[exe], entry.name))
+    seen_names[name], seen_execs[exe] = entry.name, entry.name
+if dupes:
+    for note in dupes:
+        bad("apps: duplicate launcher " + note)
+else:
+    ok("apps: every launcher has a unique Name and Exec")
+
 # --- chromium policy and start page ------------------------------------
 policy_path = ISO / "apps" / "chromium" / "policies.json"
 start_page = ISO / "apps" / "chromium" / "meta-start.html"
@@ -351,6 +432,17 @@ else:
         ok("apps: search field has an accessible label")
     else:
         bad("apps: search field has no aria-label")
+    remote_css = re.findall(r"@import\s+url\(['\"]?(https?://[^)'\"]+)", html)
+    remote_font = re.findall(r"@font-face", html)
+    if remote_css:
+        bad("apps: start page imports remote CSS: %s" % ", ".join(remote_css))
+    else:
+        ok("apps: start page imports no remote CSS")
+    if remote_font:
+        bad("apps: start page declares @font-face (a font file must ship)")
+    else:
+        ok("apps: start page declares no @font-face")
+
     remote = re.findall(r'(?:src|href)="(https?://[^"]+)"', html)
     if remote:
         bad("apps: start page loads remote assets: %s" % ", ".join(remote))

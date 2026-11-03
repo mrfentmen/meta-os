@@ -88,6 +88,14 @@ class AgentStatusTest(unittest.TestCase):
         after = {p: p.stat().st_mtime for p in self.root.rglob("*")}
         self.assertEqual(before, after)
 
+    def test_strict_treats_a_stale_heartbeat_as_failure(self):
+        beat = self.root / "agents" / "watchman.heartbeat.json"
+        old = 1_600_000_000
+        os.utime(beat, (old, old))
+        out = run(["--root", str(self.root), "--strict"])
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("heartbeat", out.stdout)
+
     def test_bad_usage_exits_two(self):
         out = run(["--root", str(self.root), "--nope"])
         self.assertEqual(out.returncode, 2)
