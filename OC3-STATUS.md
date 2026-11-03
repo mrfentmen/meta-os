@@ -137,3 +137,16 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
   helpers absent with du fallback named. 148 nothing to hand over.
 - 127/129 interactive + 149 cold timing BLOCKED-with-owner (OC1).
 - 142 three defects, all owned. 133 handoff written.
+
+## §8 verdict (OC3B-192) — DONE static, screenshots OC1's
+- 176-178 About written (1.0 vs 2.0 per LAYERS/iso docs).
+- 179 launcher authored, 180 standard handoff. 181 five tips in-page;
+  182 once-behavior rides the welcome flag (see §6).
+- 183 defaults documented as upstream Xfce, verified at boot.
+- 185 nothing exotic claimed. 184/187 tried-vs-named split honored.
+- 188/189 privacy matches shipped config; capture is OC1's.
+- 190/191 paths recorded, existence OC1-confirmed.
+- 194 offline (swept: zero external refs, 4 files).
+- 195/196 two relative tour links resolve at install; no dead ends.
+- 197/198 original, cleared for ISO. 199 done-criteria met bar boot
+  screenshot. 193 one watch item + clean sweep.

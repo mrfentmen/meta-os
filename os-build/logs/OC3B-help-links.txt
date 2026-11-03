@@ -1,0 +1,5 @@
+OC3B-194/195/196 dead-link + offline sweep, 2026-11-03
+oc3b-help/help.html external=none local_refs=none
+oc3b-help/about.html external=none local_refs=none
+oc3b-desktop/tour.html external=none local_refs=['meta-loop.mp4', 'demo-3min.mp4']
+OC3B-startpage.html external=none local_refs=none
