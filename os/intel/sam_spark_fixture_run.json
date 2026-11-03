@@ -1,0 +1,552 @@
+{
+  "ignis": {
+    "metrics": {
+      "category_accuracy": 0.3,
+      "errors": {
+        "count": 0,
+        "scenario_ids": []
+      },
+      "false_negative_rate": 0.0,
+      "false_negatives": 0,
+      "false_positive_rate": 0.0,
+      "false_positives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "sample_size": 20,
+      "true_negatives": 15,
+      "true_positives": 5
+    },
+    "records": [
+      {
+        "actual_category": "visible smoke",
+        "alert_correct": true,
+        "alert_expected": true,
+        "alert_fired": true,
+        "category_correct": true,
+        "error": null,
+        "ground_truth_label": "visible smoke",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-001",
+        "spend": {
+          "est_cost": 4.8e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 25,
+          "tokens_out": 4,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "visible smoke",
+        "alert_correct": true,
+        "alert_expected": true,
+        "alert_fired": true,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "visible flame",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-002",
+        "spend": {
+          "est_cost": 5.1e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 27,
+          "tokens_out": 4,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "visible smoke",
+        "alert_correct": true,
+        "alert_expected": true,
+        "alert_fired": true,
+        "category_correct": true,
+        "error": null,
+        "ground_truth_label": "visible smoke",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-003",
+        "spend": {
+          "est_cost": 5.1e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 27,
+          "tokens_out": 4,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "visible smoke",
+        "alert_correct": true,
+        "alert_expected": true,
+        "alert_fired": true,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "visible flame",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-004",
+        "spend": {
+          "est_cost": 4.7e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 24,
+          "tokens_out": 4,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": true,
+        "error": null,
+        "ground_truth_label": "no hazard visible",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": false,
+        "scenario_id": "IGN-005",
+        "spend": {
+          "est_cost": 4.9e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 22,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": true,
+        "error": null,
+        "ground_truth_label": "no hazard visible",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": false,
+        "scenario_id": "IGN-006",
+        "spend": {
+          "est_cost": 4.9e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 22,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "steam or fog",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": false,
+        "scenario_id": "IGN-007",
+        "spend": {
+          "est_cost": 5.5e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 27,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "steam or fog",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": false,
+        "scenario_id": "IGN-008",
+        "spend": {
+          "est_cost": 5.4e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 26,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "flame-like lighting",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": false,
+        "scenario_id": "IGN-009",
+        "spend": {
+          "est_cost": 5.6e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 28,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "flame-like lighting",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": false,
+        "scenario_id": "IGN-010",
+        "spend": {
+          "est_cost": 5.4e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 26,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "obscured or distant hazard",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-011",
+        "spend": {
+          "est_cost": 5.8e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 29,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "obscured or distant hazard",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-012",
+        "spend": {
+          "est_cost": 5.6e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 28,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "indeterminate",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-013",
+        "spend": {
+          "est_cost": 5.1e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 24,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "indeterminate",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-014",
+        "spend": {
+          "est_cost": 5.4e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 26,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "indeterminate",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-015",
+        "spend": {
+          "est_cost": 5.8e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 29,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "visible smoke",
+        "alert_correct": true,
+        "alert_expected": true,
+        "alert_fired": true,
+        "category_correct": true,
+        "error": null,
+        "ground_truth_label": "visible smoke",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-016",
+        "spend": {
+          "est_cost": 5.3e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 29,
+          "tokens_out": 4,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": true,
+        "error": null,
+        "ground_truth_label": "no hazard visible",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": false,
+        "scenario_id": "IGN-017",
+        "spend": {
+          "est_cost": 4.6e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 20,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "flame-like lighting",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": false,
+        "scenario_id": "IGN-018",
+        "spend": {
+          "est_cost": 5.9e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 30,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "obscured or distant hazard",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-019",
+        "spend": {
+          "est_cost": 5.3e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 25,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      },
+      {
+        "actual_category": "no hazard visible",
+        "alert_correct": true,
+        "alert_expected": false,
+        "alert_fired": false,
+        "category_correct": false,
+        "error": null,
+        "ground_truth_label": "indeterminate",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "requires_human_review": true,
+        "scenario_id": "IGN-020",
+        "spend": {
+          "est_cost": 6e-05,
+          "lane_feature": "sam-spark:ignis-20",
+          "tokens_in": 31,
+          "tokens_out": 5,
+          "ts": 1793683591,
+          "usage": "estimated"
+        }
+      }
+    ]
+  },
+  "ledger": "local-only (no bus in offline checkout; entries ride in this run JSON)",
+  "mode": "fixture (offline, no model)",
+  "sam": {
+    "accuracy": 1.0,
+    "correct": 4,
+    "errors": 0,
+    "records": [
+      {
+        "correct": true,
+        "error": null,
+        "file": "alerts-quiet-desktop.png",
+        "half": "good",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "pair_id": "alerts-panel-desktop",
+        "predicted": "build-ok",
+        "regions": [],
+        "spend": {
+          "est_cost": 1e-05,
+          "lane_feature": "sam-spark:sam-pairs",
+          "tokens_in": 1,
+          "tokens_out": 2,
+          "ts": 1793683591,
+          "usage": "estimated"
+        },
+        "truth": "build-ok"
+      },
+      {
+        "correct": true,
+        "error": null,
+        "file": "alerts-firing-desktop.png",
+        "half": "bad",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "pair_id": "alerts-panel-desktop",
+        "predicted": "build-broken",
+        "regions": [
+          {
+            "h": 162,
+            "w": 254,
+            "x": 746,
+            "y": 614
+          }
+        ],
+        "spend": {
+          "est_cost": 2.7e-05,
+          "lane_feature": "sam-spark:sam-pairs",
+          "tokens_in": 11,
+          "tokens_out": 3,
+          "ts": 1793683591,
+          "usage": "estimated"
+        },
+        "truth": "build-broken"
+      },
+      {
+        "correct": true,
+        "error": null,
+        "file": "alerts-quiet-phone.png",
+        "half": "good",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "pair_id": "alerts-panel-phone",
+        "predicted": "build-ok",
+        "regions": [],
+        "spend": {
+          "est_cost": 1e-05,
+          "lane_feature": "sam-spark:sam-pairs",
+          "tokens_in": 1,
+          "tokens_out": 2,
+          "ts": 1793683591,
+          "usage": "estimated"
+        },
+        "truth": "build-ok"
+      },
+      {
+        "correct": true,
+        "error": null,
+        "file": "alerts-firing-phone.png",
+        "half": "bad",
+        "latency_ms": 0,
+        "ledger_ok": true,
+        "pair_id": "alerts-panel-phone",
+        "predicted": "build-broken",
+        "regions": [
+          {
+            "h": 267,
+            "w": 171,
+            "x": 186,
+            "y": 733
+          }
+        ],
+        "spend": {
+          "est_cost": 2.7e-05,
+          "lane_feature": "sam-spark:sam-pairs",
+          "tokens_in": 11,
+          "tokens_out": 3,
+          "ts": 1793683591,
+          "usage": "estimated"
+        },
+        "truth": "build-broken"
+      }
+    ],
+    "sample_size": 4
+  },
+  "spend": {
+    "entries": 24,
+    "ledger_missed": 0,
+    "ledger_ok": 24,
+    "total_est_cost_usd": 0.001136
+  }
+}
