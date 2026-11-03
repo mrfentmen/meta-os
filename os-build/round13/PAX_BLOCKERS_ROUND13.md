@@ -4,7 +4,7 @@ Grouped by who can clear them. No softening: if nothing in a group is blocked, t
 
 ## Pax
 
-- Merge `buffy/round13` (14 commits, tip `1f57502a`).
+- MERGED: `buffy/round13` landed as `e2b2c587` (tip `368c617d`). Nothing left to merge.
 - Relay `os-build/round13/userspace/PROPOSALS.md` to Rowan + OpenCode on room 1; this lane has no bus access.
 - Decide whether Section S's `cargo check` is a Mac-gate job or a host fix.
 
@@ -33,3 +33,5 @@ Grouped by who can clear them. No softening: if nothing in a group is blocked, t
 ## Not blocked — simply absent
 
 - There is no cadence loop and no federation module. No agent can clear that by waiting; it is a build decision.
+
+Round 13 task: R13-500.

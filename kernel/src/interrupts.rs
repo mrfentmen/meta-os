@@ -516,6 +516,122 @@ pub fn general_protection_handler(frame: &InterruptFrame, error_code: u64) {
     print_exception("general-protection", 13, frame, error_code);
 }
 
+/// K3 demand-paging outcome for a ring-3 fault. `NotDemand` keeps
+/// exactly today's behaviour (log, kill only that task);
+/// `Mapped` means the handler's caller must return normally, so
+/// `trap_common` iretqs back to the faulting instruction, which
+/// retries and completes; `Failed` means a demand was recognised
+/// but could not be satisfied (no frame, map error, or no
+/// confirmation) and the task is killed with a distinct line,
+/// never left half-mapped and never retried in a loop.
+enum DemandOutcome {
+    NotDemand,
+    Mapped,
+    Failed,
+}
+
+/// K3 demand paging (design §3, build note
+/// `os-build/K3_DEMAND_PAGING_BUILD.md`): for a defined class of
+/// faults, map a fresh zero-filled page and let the faulting
+/// instruction retry, instead of killing the task.
+///
+/// Q-D1, decided here as (a) map in the handler: the page-fault
+/// gate is a present 64-bit interrupt gate (`traps::install`,
+/// 0x8E), so IF is cleared on entry and this handler never
+/// re-enables interrupts; single CPU; the frame allocator is
+/// touched only from task context (the loader) and from this
+/// handler, never from IRQ context (the timer/keyboard handlers
+/// never allocate). There is therefore no reentrancy window in
+/// which a second allocation could interleave with this one.
+/// Q-D1's second confirmation, corrected against main: this
+/// kernel has ONE shared mapper root (`mem::MAPPER`) —
+/// `enter_userspace` never loads a per-task CR3, so no per-task
+/// page-table root exists to map into. Mapping through the
+/// shared mapper IS mapping into the faulting task's tables,
+/// because all tasks share them; the isolation property rests
+/// on the per-task promised-region check below, not on
+/// separate roots.
+fn try_demand_map(addr: u64, error_code: u64) -> DemandOutcome {
+    // Design §3, checks 1–4 and 6: not-present, user, no
+    // reserved-bit violation, data access (not instruction fetch).
+    // A present-page fault is a protection violation, never a
+    // demand; a supervisor or reserved-bit fault is corruption
+    // signal, never demand. (The ring-3 test is the caller's.)
+    if error_code & 0x1 != 0 {
+        return DemandOutcome::NotDemand;
+    }
+    if error_code & 0x4 == 0 {
+        return DemandOutcome::NotDemand;
+    }
+    if error_code & 0x8 != 0 {
+        return DemandOutcome::NotDemand;
+    }
+    if error_code & 0x10 != 0 {
+        return DemandOutcome::NotDemand;
+    }
+    // Design §3, check 5: the faulting page must lie inside a
+    // promised region registered for the faulting task. Any other
+    // unmapped address is a wild access, not a demand.
+    let page = addr & !0xFFF;
+    let (base, count) = match crate::user::demand_region_for(crate::sched::current_id()) {
+        Some(region) => region,
+        None => return DemandOutcome::NotDemand,
+    };
+    if page < base || page >= base + count * 4096 {
+        return DemandOutcome::NotDemand;
+    }
+    let mapped = crate::mem::with_mapper(|mapper, _| {
+        // Already present after all (cannot happen for a P=0
+        // fault on this page, but refuse rather than remap).
+        if mapper.translate(crate::memory::VirtAddr(page)).is_some() {
+            return DemandOutcome::NotDemand;
+        }
+        let frame = match mapper.allocate_frame() {
+            Some(f) => f,
+            None => return DemandOutcome::Failed,
+        };
+        // Zero-fill through the physmap BEFORE mapping, exactly
+        // as the loader zeroes BSS tails: userspace must never
+        // observe a previous task's frame contents.
+        let phys_base = crate::mem::phys_offset() + frame.as_u64();
+        for i in 0..4096u64 {
+            unsafe {
+                ((phys_base + i) as *mut u8).write(0);
+            }
+        }
+        if mapper
+            .map_page(
+                crate::memory::VirtAddr(page),
+                frame,
+                crate::memory::ENTRY_WRITABLE | crate::memory::ENTRY_NO_EXECUTE,
+                true,
+            )
+            .is_err()
+        {
+            // Leaf frame returns to the pool; intermediate tables
+            // the failed map may have linked stay linked (the
+            // documented `map_page` exception), never half-mapped.
+            mapper.deallocate_frame(frame);
+            return DemandOutcome::Failed;
+        }
+        crate::mem::invlpg(page);
+        // Confirm before returning: the caller iretqs only on a
+        // confirmed-present page, so a claimed success can never
+        // re-fault on the same address with P=0 (design §3.8).
+        if mapper.translate(crate::memory::VirtAddr(page)).is_none() {
+            return DemandOutcome::Failed;
+        }
+        DemandOutcome::Mapped
+    });
+    match mapped {
+        Some(outcome) => outcome,
+        // No mapper yet: userspace starts only after `mem_init`,
+        // so this cannot happen for a ring-3 fault — but a demand
+        // without a mapper is a failure, never a silent retry.
+        None => DemandOutcome::Failed,
+    }
+}
+
 pub fn page_fault_handler(frame: &InterruptFrame, error_code: u64) {
     // Mac-build note (opencode/os-build, OS-040): the fault ADDRESS
     // lives in CR2, which the CPU does not push. Read it here so the
@@ -528,7 +644,28 @@ pub fn page_fault_handler(frame: &InterruptFrame, error_code: u64) {
     // OS-085: a ring-3 fault kills only that userspace task — log it,
     // exit the task, and let the kernel (and the console task) carry
     // on. Never iret back into the faulting context.
+    //
+    // K3 exception to that rule: a recognised demand fault maps
+    // and returns, so the faulting instruction retries. Every
+    // other ring-3 fault keeps exactly the kill behaviour below.
     if frame.code_segment & 3 == 3 {
+        match try_demand_map(addr, error_code) {
+            DemandOutcome::Mapped => {
+                serial_write_str("INT user demand-fault addr 0x");
+                serial_write_hex_u64(addr);
+                serial_write_str(": page mapped, retry\n");
+                return;
+            }
+            DemandOutcome::Failed => {
+                serial_write_str("INT user demand-fault addr 0x");
+                serial_write_hex_u64(addr);
+                serial_write_str(" err 0x");
+                serial_write_hex_u64(error_code);
+                serial_write_str(": map failed, task killed\n");
+                crate::sched::exit_task();
+            }
+            DemandOutcome::NotDemand => {}
+        }
         serial_write_str("INT user page-fault addr 0x");
         serial_write_hex_u64(addr);
         serial_write_str(" err 0x");

@@ -6,7 +6,12 @@ read from a file on disk, and a file that is absent is reported absent.
 
     meta-agent-status [--root DIR] [--json] [--stale-after SECONDS] [--strict]
 
-The root defaults to $METAOS_ROOT, or /opt/metaos when that is unset.
+The root is the relay's own state directory — the same one the watchman unit
+is started with: `$METAOS_AGENT_STATE`, else `$XDG_STATE_HOME/oc2-agent`,
+else `~/.local/state/oc2-agent`. It is per-user state, not the read-only
+payload under /usr/share/metaos/agent, which holds the code and the registry
+template.
+
 Freshness is the heartbeat file's modification time, not a field inside it.
 
 Exit codes
@@ -22,27 +27,31 @@ import sys
 import time
 from pathlib import Path
 
-DEFAULT_ROOT = "/opt/metaos"
 DEFAULT_STALE = 10.0
 REQUIRED = "required"
 OPTIONAL = "optional"
+
+
+def default_root():
+    if os.environ.get("METAOS_AGENT_STATE"):
+        return os.environ["METAOS_AGENT_STATE"]
+    base = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
+    return str(Path(base) / "oc2-agent")
 
 
 def probe_table():
     """Every row this tool knows how to read. Paths are relative to the root."""
     return [
         {"key": "registry", "label": "agent registry",
-         "path": "agents/registry.json", "kind": "registry", "need": REQUIRED},
+         "path": "registry.json", "kind": "registry", "need": REQUIRED},
         {"key": "heartbeat", "label": "watchman heartbeat",
-         "path": "agents/watchman.heartbeat.json", "kind": "age", "need": REQUIRED},
+         "path": "watchman.heartbeat.json", "kind": "age", "need": REQUIRED},
         {"key": "jobs", "label": "job queue",
-         "path": "agents/jobs", "kind": "dir", "need": REQUIRED},
-        {"key": "gym", "label": "gym ledger",
-         "path": "agents/gym-ledger.jsonl", "kind": "lines", "need": OPTIONAL},
-        {"key": "inbox", "label": "handsfree inbox",
-         "path": "handsfree/inbox.txt", "kind": "lines", "need": OPTIONAL},
-        {"key": "refusals", "label": "handsfree refusals",
-         "path": "handsfree/inbox.txt.refusals.jsonl", "kind": "lines", "need": OPTIONAL},
+         "path": "jobs", "kind": "dir", "need": REQUIRED},
+        {"key": "board", "label": "job board",
+         "path": "jobs", "kind": "board", "need": OPTIONAL},
+        {"key": "notices", "label": "notices",
+         "path": "notices.jsonl", "kind": "notices", "need": OPTIONAL},
     ]
 
 
@@ -63,6 +72,97 @@ def read_registry(path):
     }
 
 
+def read_board(jobs_dir, ledger_path):
+    """Where each job stands, the same way agents/jobs.mjs reads it.
+
+    queued     a job file, no bell, no result
+    running    a bell, no result yet
+    done       a clean result (code 0, no signal)
+    failed     a result with a nonzero code or a signal
+    refused    the layer refused the spawn; nothing ran
+    """
+    bells = {}
+    results = {}
+    for filename in os.listdir(jobs_dir):
+        full = os.path.join(jobs_dir, filename)
+        if not filename.endswith(".json") or not os.path.isfile(full):
+            continue
+        job_id = filename[:-len(".result.json")] if filename.endswith(".result.json") else None
+        if job_id is not None:
+            try:
+                with open(full, encoding="utf-8") as handle:
+                    results[job_id] = json.load(handle) or {}
+            except (OSError, json.JSONDecodeError):
+                results[job_id] = {"unreadable": True}
+            continue
+        if filename.endswith(".job.json"):
+            try:
+                with open(full, encoding="utf-8") as handle:
+                    json.load(handle)
+            except (OSError, json.JSONDecodeError):
+                results[filename[:-len(".job.json")]] = {"unreadable": True}
+    if os.path.isfile(ledger_path):
+        with open(ledger_path, encoding="utf-8", errors="replace") as handle:
+            for line in handle:
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if isinstance(event, dict) and event.get("event") == "bell" and "id" in event:
+                    bells[str(event["id"])] = event
+
+    counts = {"queued": 0, "running": 0, "done": 0, "failed": 0, "refused": 0, "unreadable": 0}
+    for job_file in sorted(os.listdir(jobs_dir)):
+        if not job_file.endswith(".job.json"):
+            continue
+        job_id = job_file[:-len(".job.json")]
+        result = results.get(job_id)
+        if result is None:
+            counts["running" if job_id in bells else "queued"] += 1
+            continue
+        if result.get("unreadable"):
+            counts["unreadable"] += 1
+        elif result.get("refused"):
+            counts["refused"] += 1
+        elif result.get("signal") is not None:
+            counts["failed"] += 1
+        elif result.get("code") not in (0, None):
+            counts["failed"] += 1
+        elif result.get("code") == 0:
+            counts["done"] += 1
+        else:
+            counts["done"] += 1
+    total = sum(counts.values())
+    detail = "%d job(s)" % total
+    if total:
+        detail += " — " + ", ".join("%d %s" % (counts[k], k) for k in
+                                    ("queued", "running", "done", "failed", "refused") if counts[k])
+    return detail, counts
+
+
+def read_notices(path):
+    """Count what the layer said, and how loud it was."""
+    notes = alarms = suppressed = 0
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if record.get("suppressed") is True:
+            suppressed += 1
+        if record.get("severity") == "alarm":
+            alarms += 1
+        else:
+            notes += 1
+    detail = "%d note(s), %d alarm(s)" % (notes, alarms)
+    if suppressed:
+        detail += ", %d repeated" % suppressed
+    return detail, {"notes": notes, "alarms": alarms, "suppressed": suppressed}
+
+
 def read_row(probe, root, stale_after, now):
     row = {
         "key": probe["key"], "label": probe["label"], "need": probe["need"],
@@ -80,7 +180,12 @@ def read_row(probe, root, stale_after, now):
         row["detail"] = "%d pending" % len(files)
         return row
 
-    if not path.is_file():
+    if probe["kind"] == "board":
+        if not path.is_dir():
+            row["status"] = "absent"
+            return row
+
+    if not path.is_file() and probe["kind"] not in ("board",):
         row["status"] = "absent" if probe["need"] == OPTIONAL else "missing"
         return row
 
@@ -93,6 +198,10 @@ def read_row(probe, root, stale_after, now):
             row["status"] = "stale" if age > stale_after else "ok"
             row["detail"] = "%.1f s ago" % age
             return row
+        elif probe["kind"] == "board":
+            row["detail"], row["value"] = read_board(path, root / "watchman.jsonl")
+        elif probe["kind"] == "notices":
+            row["detail"], row["value"] = read_notices(path)
         elif probe["kind"] == "lines":
             row["value"] = count_lines(path)
             row["detail"] = "%d lines" % row["value"]
@@ -118,7 +227,7 @@ def render(rows, root):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="meta-agent-status", add_help=True)
-    parser.add_argument("--root", default=os.environ.get("METAOS_ROOT", DEFAULT_ROOT))
+    parser.add_argument("--root", default=default_root())
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--stale-after", type=float, default=DEFAULT_STALE)
     parser.add_argument("--strict", action="store_true",

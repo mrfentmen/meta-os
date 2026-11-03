@@ -14,12 +14,14 @@
 use alloc::boxed::Box;
 
 use crate::interrupts;
-use crate::tasks::{Context, TaskId};
+use crate::tasks::{Context, TaskId, TaskState};
 
 /// Tasks the kernel can hold. No reap in K5: slots fill in spawn
 /// order and stay, so spawn order is the table index. Now full at
-/// 8/8 with readkey (R5-2 follow-up); see `start_demo_tasks`.
-const MAX_TASKS: usize = 8;
+/// 9/9 with demand (K3 build, after readkey); see
+/// `start_demo_tasks`. A 10th task needs another bump plus a heap
+/// review, not a silent spawn refusal.
+const MAX_TASKS: usize = 9;
 /// One task stack: 16 KiB, `u128` cells so the base (and the top) is
 /// always 16-aligned as `Context::initial` demands.
 const STACK_CELLS: usize = 2048;
@@ -30,11 +32,124 @@ static mut CTXS: [Context; MAX_TASKS] = [Context::zero(); MAX_TASKS];
 /// Task ids in spawn order (slot index = spawn order; no reap in K5).
 static mut IDS: [TaskId; MAX_TASKS] = [TaskId::new(0); MAX_TASKS];
 /// Entry points, keyed by task id, for the trampoline.
-static mut ENTRIES: [(TaskId, fn()); MAX_TASKS] =
-    [(TaskId::new(0), idle_entry); MAX_TASKS];
+static mut ENTRIES: [(TaskId, fn()); MAX_TASKS] = [(TaskId::new(0), idle_entry); MAX_TASKS];
 /// Sleep deadlines (wake tick), keyed by task id; `u64::MAX` = awake.
-static mut SLEEPS: [(TaskId, u64); MAX_TASKS] =
-    [(TaskId::new(0), u64::MAX); MAX_TASKS];
+static mut SLEEPS: [(TaskId, u64); MAX_TASKS] = [(TaskId::new(0), u64::MAX); MAX_TASKS];
+
+/// K4 IPC mailbox state (K4_IPC_DESIGN.md §3, §8 Q-I2): one box per
+/// scheduler row, parallel to `SLEEPS`, kernel-owned, no heap, no
+/// page sharing. A box holds exactly one message: the sender id
+/// (kernel-filled, never caller-supplied), a length, and up to 64
+/// payload bytes. Single-CPU soundness follows the OS-086 ledger:
+/// touched only by the running task on the one CPU, never from an
+/// IRQ handler. A box is NOT a queue: a second send to an occupied
+/// box refuses, it does not wait and does not grow.
+#[derive(Clone, Copy)]
+struct Mailbox {
+    occupied: bool,
+    sender: TaskId,
+    len: usize,
+    bytes: [u8; 64],
+}
+
+impl Mailbox {
+    const fn empty() -> Mailbox {
+        Mailbox {
+            occupied: false,
+            sender: TaskId::new(0),
+            len: 0,
+            bytes: [0; 64],
+        }
+    }
+}
+
+static mut MAILBOXES: [Mailbox; MAX_TASKS] = [Mailbox::empty(); MAX_TASKS];
+
+/// True when `id` names a live row: the row exists and its policy
+/// task is not `Exited`. Id 0, never-spawned ids, and exited ids
+/// are all dead destinations for `ipc_send` (design §3 step 1).
+pub fn task_is_live(id: TaskId) -> bool {
+    if find_row(id).is_none() {
+        return false;
+    }
+    unsafe {
+        match SCHED.as_ref() {
+            Some(sched) => match sched.task(id) {
+                Some(task) => task.state != TaskState::Exited,
+                None => false,
+            },
+            None => false,
+        }
+    }
+}
+
+/// Queue `data` into `dest`'s box. Returns false (no state change)
+/// when the box is already occupied. The caller (the `user.rs`
+/// syscall dispatch) has already validated the destination as live
+/// and the buffer as mapped; this function only owns the box.
+/// The sender recorded in the box is the current task, read here —
+/// a caller can never forge its sender id.
+pub fn ipc_try_send(dest: TaskId, data: &[u8]) -> bool {
+    if data.len() > 64 {
+        return false;
+    }
+    let row = match find_row(dest) {
+        Some(r) => r,
+        None => return false,
+    };
+    unsafe {
+        let slot = &mut MAILBOXES[row];
+        if slot.occupied {
+            return false;
+        }
+        slot.bytes[..data.len()].copy_from_slice(data);
+        slot.len = data.len();
+        slot.sender = CUR;
+        slot.occupied = true;
+    }
+    true
+}
+
+/// Take the current task's queued message, if any, into `out`.
+/// Returns `Some((sender, total_len))` where `total_len` counts
+/// the 8-byte sender header plus the payload, and `out` then holds
+/// the sender id little-endian in `out[0..8)` followed by the
+/// payload. Returns `None` on an empty box, changing nothing.
+/// The box is emptied on a successful take.
+pub fn ipc_try_recv(out: &mut [u8]) -> Option<(TaskId, usize)> {
+    let row = find_row(unsafe { CUR })?;
+    unsafe {
+        let slot = &mut MAILBOXES[row];
+        if !slot.occupied {
+            return None;
+        }
+        let total = 8 + slot.len;
+        if out.len() < total {
+            return None;
+        }
+        out[..8].copy_from_slice(&slot.sender.as_u64().to_le_bytes());
+        out[8..total].copy_from_slice(&slot.bytes[..slot.len]);
+        let sender = slot.sender;
+        slot.occupied = false;
+        slot.len = 0;
+        Some((sender, total))
+    }
+}
+
+/// Discard `id`'s mailbox, if any. Called from `exit_task` only,
+/// which is the funnel for every task-removal path (voluntary
+/// exit, entry return via the trampoline, loader refusal in
+/// `run_elf`, ring-3 fault kill in the page-fault handler); the
+/// double fault halts the machine and needs no clearing rule.
+/// A message already delivered to another task's box survives:
+/// only the exiting task's own row is cleared here.
+pub fn ipc_clear(id: TaskId) {
+    if let Some(row) = find_row(id) {
+        unsafe {
+            MAILBOXES[row] = Mailbox::empty();
+        }
+    }
+}
 static mut NTABLE: usize = 0;
 /// Kernel stack tops parallel to IDS (base + 16 KiB, set at spawn).
 /// `enter_userspace` loads the current task's top into TSS.rsp0.
@@ -199,10 +314,7 @@ pub fn sleep_task(ticks: u64) {
             SLEEPS[i].1 = now.saturating_add(ticks);
         }
         wake_expired();
-        let next = SCHED
-            .as_mut()
-            .expect("sched: no scheduler")
-            .block_current();
+        let next = SCHED.as_mut().expect("sched: no scheduler").block_current();
         match next {
             Some(id) => goto(id),
             None => back_to_sched(),
@@ -214,10 +326,12 @@ pub fn sleep_task(ticks: u64) {
 pub fn exit_task() -> ! {
     unsafe {
         wake_expired();
-        let next = SCHED
-            .as_mut()
-            .expect("sched: no scheduler")
-            .exit_current();
+        // K4 IPC teardown: the exiting task's own mailbox is
+        // discarded here, on the single funnel path, so a recycled
+        // slot can never inherit a queued message and later sends
+        // to this id are refused as dead at validation step 1.
+        ipc_clear(current_id());
+        let next = SCHED.as_mut().expect("sched: no scheduler").exit_current();
         match next {
             Some(id) => goto(id),
             None => back_to_sched(),
@@ -289,8 +403,7 @@ pub fn current_kstack_top() -> Option<u64> {
 
 /// Create the scheduler over the static slot table. Call once.
 pub unsafe fn sched_init() {
-    let slots: &'static mut [Option<crate::tasks::Task>] =
-        &mut *core::ptr::addr_of_mut!(SLOTS);
+    let slots: &'static mut [Option<crate::tasks::Task>] = &mut *core::ptr::addr_of_mut!(SLOTS);
     SCHED = Some(crate::tasks::Scheduler::new(slots));
 }
 
@@ -456,10 +569,8 @@ fn console_task() {
 const BOOT_IDLE_TICKS: u64 = 200; // ~2 s at 100 Hz, after boot
 const IDLE_TICKS: u64 = 3000; // ~30 s idle at the shell
 const FRAME_TICKS: u64 = 6; // one frame per ~6 ticks
-const ATTRACT_TOP: usize =
-    (crate::vga::VGA_HEIGHT - crate::logo_frames::FRAME_H - 1) / 2;
-const ATTRACT_LEFT: usize =
-    (crate::vga::VGA_WIDTH - crate::logo_frames::FRAME_W) / 2;
+const ATTRACT_TOP: usize = (crate::vga::VGA_HEIGHT - crate::logo_frames::FRAME_H - 1) / 2;
+const ATTRACT_LEFT: usize = (crate::vga::VGA_WIDTH - crate::logo_frames::FRAME_W) / 2;
 
 /// Draw one attract frame centred, VGA-only (R-9): the serial log
 /// stays a clean shell log, because `print!` would mirror every
@@ -472,8 +583,7 @@ fn attract_draw(frame_idx: usize) {
     unsafe {
         if let Some(console) = (*core::ptr::addr_of_mut!(crate::CONSOLE)).as_mut() {
             console.clear();
-            let frame =
-                crate::logo_frames::FRAMES[frame_idx % crate::logo_frames::FRAMES.len()];
+            let frame = crate::logo_frames::FRAMES[frame_idx % crate::logo_frames::FRAMES.len()];
             for (i, line) in frame.split('\n').enumerate() {
                 if i >= crate::logo_frames::FRAME_H {
                     break;
@@ -575,10 +685,11 @@ fn run_command(line: &[u8], truncated: bool) {
     } else if line == b"clear" {
         // RW4-2 interim (Pax bus idx 503): Hana spec text for
         // clear is still owed, so nothing is invented here —
-        // clear runs the kernel's own vga.rs clear(): the VGA
-        // buffer is blanked, cursor to 0,0, no output line.
+        // clear runs the kernel's own console clears: the VGA
+        // buffer is blanked, cursor to 0,0, and (KF-03) the
+        // framebuffer console is blanked too, no output line.
         // The serial transcript is untouched (clear touches
-        // only the VGA buffer). Help does NOT list clear yet:
+        // only the screens). Help does NOT list clear yet:
         // the ruled help line is exactly "status help uptime
         // mem ps", and whether clear joins it awaits a
         // Pax/Hana ruling.
@@ -606,16 +717,23 @@ fn unsafe_console_color(spec: crate::vga::ColorSpec) {
             console.set_colors(spec);
         }
     }
+    // KF-03: recolor the framebuffer console too, so the status
+    // block's colors match on the screen the user sees on 0.11.
+    crate::fb_set_colors(spec);
 }
 
 /// Blank the VGA screen (RW4-2 clear). Same single-CPU terms as
 /// unsafe_console_color: only the console task touches CONSOLE.
+/// KF-03: also blanks the framebuffer console, so `clear` blanks
+/// the screen the user actually sees on 0.11 too; the serial
+/// transcript is untouched by either clear.
 fn unsafe_console_clear() {
     unsafe {
         if let Some(console) = (*core::ptr::addr_of_mut!(crate::CONSOLE)).as_mut() {
             console.clear();
         }
     }
+    crate::fb_clear();
 }
 
 /// W6 fetch screen (metafetch's kernel twin, text mode): frame 0
@@ -744,5 +862,12 @@ pub unsafe fn start_demo_tasks() -> ! {
     // lands exactly full at 8/8 — a 9th task needs a MAX_TASKS
     // bump plus a heap review, not a silent spawn refusal.
     spawn_task(crate::user::task_readkey, u32::MAX).expect("sched: spawn readkey");
+    // K3 build: demand spawns after readkey for the same reason —
+    // every earlier id stays stable (console 7, readkey 8) and
+    // demand takes id 9, the slot the MAX_TASKS bump above opened.
+    // Its promised region is registered by `task_demand` itself,
+    // not here: registration keys on the task id, which only
+    // exists once this spawn returns.
+    spawn_task(crate::user::task_demand, u32::MAX).expect("sched: spawn demand");
     run();
 }

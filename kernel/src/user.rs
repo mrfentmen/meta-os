@@ -13,9 +13,7 @@
 
 use crate::gdt::{set_rsp0, USER_CODE_SELECTOR, USER_DATA_SELECTOR};
 use crate::interrupts::InterruptFrame;
-use crate::memory::{
-    MapError, Mapper, VirtAddr, ENTRY_NO_EXECUTE, ENTRY_WRITABLE,
-};
+use crate::memory::{MapError, Mapper, VirtAddr, ENTRY_NO_EXECUTE, ENTRY_WRITABLE};
 
 pub static HELLO_ELF: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/hello.elf"));
@@ -25,6 +23,48 @@ pub static CRASHER_ELF: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/crasher.elf"));
 pub static READKEY_ELF: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/readkey.elf"));
+pub static DEMAND_ELF: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/demand.elf"));
+
+/// K3 demand paging: the one promised page (design §4, build note
+/// `os-build/K3_DEMAND_PAGING_BUILD.md`). Far from every program
+/// base (the 0x6000... sequence), the user stacks (0x5000...),
+/// and the kernel's low mappings: nothing else ever maps here,
+/// so a fault on this page from the demand task is a demand,
+/// never a collision.
+pub const DEMAND_PAGE: u64 = 0x0000_7000_0000_0000;
+/// Promised pages: exactly one, step-1 scope (design §4).
+pub const DEMAND_PAGE_COUNT: u64 = 1;
+
+/// The task registered as the demand program, if any. Set once by
+/// `task_demand` before it loads; read by the fault handler.
+/// Single slot on purpose: step 1 promises one page to one
+/// program, and no other task ever registers.
+static mut DEMAND_TASK: Option<crate::tasks::TaskId> = None;
+
+/// Register the calling task as the demand program. Called by
+/// `task_demand` (which runs as that task) before `run_elf`
+/// enters userspace, so the registration is in place before the
+/// first demand fault can happen.
+pub fn register_demand_region() {
+    unsafe {
+        DEMAND_TASK = Some(crate::sched::current_id());
+    }
+}
+
+/// The promised region for `id`, or `None` for every task except
+/// the registered demand program. The fault handler keys on
+/// this: an unmapped address outside the region is a wild
+/// access, not a demand, even from the demand task itself.
+pub fn demand_region_for(id: crate::tasks::TaskId) -> Option<(u64, u64)> {
+    let registered = unsafe { DEMAND_TASK };
+    if registered == Some(id) {
+        Some((DEMAND_PAGE, DEMAND_PAGE_COUNT))
+    } else {
+        None
+    }
+}
+
 
 /// One user stack per userspace task (K6 scope: four programs).
 /// Stacks are FRESH USER pages, not kernel .bss: the bootloader's
@@ -89,6 +129,7 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
         let num = saved(base, SAVED_RAX);
         let a1 = saved(base, SAVED_RDI);
         let a2 = saved(base, SAVED_RSI);
+        let a3 = saved(base, SAVED_RDX);
         match num {
             0 => {
                 println!("user exit code {}", a1);
@@ -124,10 +165,28 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
                 // copy, so readkey polls can no longer steal typed
                 // bytes from the shell, and the console task's
                 // drain can no longer starve this reader.
-                set_return(base, match crate::interrupts::readkey_read() {
-                    Some(scancode) => scancode as u64,
-                    None => u64::MAX,
-                });
+                set_return(
+                    base,
+                    match crate::interrupts::readkey_read() {
+                        Some(scancode) => scancode as u64,
+                        None => u64::MAX,
+                    },
+                );
+            }
+            6 => {
+                // K4 IPC: ipc_send (design §6). rdi = destination
+                // task id, rsi = sender buffer, rdx = length 1..=64.
+                // Returns 0 on success, u64::MAX on any refusal.
+                // syscalls.rs is FROZEN (F1); this dispatch lives
+                // in user.rs only, like syscalls 0-5.
+                set_return(base, ipc_send(a1, a2, a3));
+            }
+            7 => {
+                // K4 IPC: ipc_recv (design §6). rdi = receiver
+                // buffer, rsi = capacity (>= 72). Returns total
+                // bytes copied (8 header + payload) on success,
+                // u64::MAX when empty or refused.
+                set_return(base, ipc_recv(a1, a2));
             }
             n => {
                 println!("user bad syscall {} refused", n);
@@ -155,6 +214,89 @@ unsafe fn user_write(buf: u64, len: u64) -> u64 {
     len
 }
 
+/// K4 IPC syscall 6: `ipc_send` (design §6). Validation order
+/// (design §3), all before any copy or state change: live
+/// destination, mapped buffer, length in range, empty destination
+/// box. Returns 0 on success, `u64::MAX` on any refusal; every
+/// refusal is logged in the existing `user …` style with the
+/// literal lines pinned in design §7.
+unsafe fn ipc_send(dest_raw: u64, buf: u64, len: u64) -> u64 {
+    let sender = crate::sched::current_id();
+    let dest = crate::tasks::TaskId::new(dest_raw);
+    if !crate::sched::task_is_live(dest) {
+        println!(
+            "user ipc send {} -> {} refused dead",
+            sender.as_u64(),
+            dest_raw
+        );
+        return u64::MAX;
+    }
+    // Design §3 order: mapped buffer before length range (a zero
+    // length skips the range check and is refused below).
+    if len > 0 && !crate::mem::is_mapped_range(buf, len) {
+        println!("user ipc send {} refused unmapped", sender.as_u64());
+        return u64::MAX;
+    }
+    if len == 0 || len > 64 {
+        println!("user ipc send {} refused bad length", sender.as_u64());
+        return u64::MAX;
+    }
+    let bytes = core::slice::from_raw_parts(buf as *const u8, len as usize);
+    if !crate::sched::ipc_try_send(dest, bytes) {
+        println!(
+            "user ipc send {} -> {} refused full",
+            sender.as_u64(),
+            dest_raw
+        );
+        return u64::MAX;
+    }
+    println!(
+        "user ipc send {} -> {} len {}",
+        sender.as_u64(),
+        dest_raw,
+        len
+    );
+    0
+}
+
+/// K4 IPC syscall 7: `ipc_recv` (design §6). The caller buffer must
+/// hold the 8-byte sender header plus up to 64 payload bytes, so
+/// capacity < 72 is refused without consuming the message. An
+/// empty box returns `u64::MAX` and changes nothing (the read_key
+/// polling idiom: sleep or yield, then retry). On success returns
+/// the total bytes copied (9..=72) and empties the box.
+unsafe fn ipc_recv(buf: u64, cap: u64) -> u64 {
+    let receiver = crate::sched::current_id();
+    // Design §3 order: mapped buffer before capacity range.
+    if cap > 0 && !crate::mem::is_mapped_range(buf, cap) {
+        println!("user ipc recv {} refused unmapped", receiver.as_u64());
+        return u64::MAX;
+    }
+    if cap < 72 {
+        println!("user ipc recv {} refused small buffer", receiver.as_u64());
+        return u64::MAX;
+    }
+    // 72 is the largest possible total (8 header + 64 payload), so
+    // a `None` here can only mean an empty box, never truncation.
+    let mut tmp = [0u8; 72];
+    match crate::sched::ipc_try_recv(&mut tmp) {
+        None => {
+            println!("user ipc recv {} empty", receiver.as_u64());
+            u64::MAX
+        }
+        Some((sender, total)) => {
+            core::ptr::copy_nonoverlapping(tmp.as_ptr(), buf as *mut u8, total);
+            println!(
+                "user ipc recv {} len {} from {}",
+                receiver.as_u64(),
+                total,
+                sender.as_u64()
+            );
+            total as u64
+        }
+    }
+}
+
 fn read_u16(elf: &[u8], off: usize) -> Option<u16> {
     elf.get(off..off + 2)
         .map(|b| u16::from_le_bytes([b[0], b[1]]))
@@ -164,9 +306,8 @@ fn read_u32(elf: &[u8], off: usize) -> Option<u32> {
         .map(|b| u32::from_le_bytes([b[0], b[1], b[2], b[3]]))
 }
 fn read_u64(elf: &[u8], off: usize) -> Option<u64> {
-    elf.get(off..off + 8).map(|b| {
-        u64::from_le_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]])
-    })
+    elf.get(off..off + 8)
+        .map(|b| u64::from_le_bytes([b[0], b[1], b[2], b[3], b[4], b[5], b[6], b[7]]))
 }
 
 /// Apply RELA relocations (OS-078): static-PIE binaries carry
@@ -260,7 +401,8 @@ fn apply_relocations(
         let phys = mapper
             .translate(VirtAddr(r_offset & !0xFFF))
             .ok_or("reloc unmapped")?
-            .0 + (r_offset & 0xFFF);
+            .0
+            + (r_offset & 0xFFF);
         unsafe {
             ((mem.offset + phys) as *mut u64).write(r_addend);
         }
@@ -369,7 +511,8 @@ pub unsafe fn load_elf(
             let phys = mapper
                 .translate(VirtAddr(v & !0xFFF))
                 .ok_or("translate lost")?
-                .0 + (v & 0xFFF);
+                .0
+                + (v & 0xFFF);
             ((mem.offset + phys) as *mut u8).write(*byte);
         }
         for j in p_filesz..p_memsz {
@@ -377,7 +520,8 @@ pub unsafe fn load_elf(
             let phys = mapper
                 .translate(VirtAddr(v & !0xFFF))
                 .ok_or("translate lost")?
-                .0 + (v & 0xFFF);
+                .0
+                + (v & 0xFFF);
             ((mem.offset + phys) as *mut u8).write(0);
         }
     }
@@ -411,11 +555,11 @@ pub unsafe fn enter_userspace(entry: u64, user_sp: u64) -> ! {
     );
 }
 
-/// Take a user stack slot (max 4 programs, K6 scope + R5-2 readkey;
-/// a 5th is refused, not silently shared).
+/// Take a user stack slot (max 5 programs, K6 scope + R5-2 readkey
+/// + K3 demand; a 6th is refused, not silently shared).
 fn take_ustack() -> Option<u64> {
     unsafe {
-        if NEXT_USTACK >= 4 {
+        if NEXT_USTACK >= 5 {
             return None;
         }
         let top = map_ustack(NEXT_USTACK)?;
@@ -438,31 +582,23 @@ unsafe fn run_elf(elf: &'static [u8], name: &str) -> ! {
         etype,
         eentry
     );
-    let loaded = crate::mem::with_mapper(|mapper, mem| {
-        load_elf(elf, mapper, mem)
-    });
+    let loaded = crate::mem::with_mapper(|mapper, mem| load_elf(elf, mapper, mem));
     match loaded {
         Some(Ok(entry)) => {
             // Debug: dump the first 16 bytes the CPU will fetch.
             let mut head = [0u8; 16];
             for (i, b) in head.iter_mut().enumerate() {
                 let v = entry + i as u64;
-                let phys = crate::mem::with_mapper(|mapper, _| {
-                    mapper.translate(VirtAddr(v & !0xFFF))
-                })
-                .flatten()
-                .map(|p| p.0 + (v & 0xFFF));
+                let phys =
+                    crate::mem::with_mapper(|mapper, _| mapper.translate(VirtAddr(v & !0xFFF)))
+                        .flatten()
+                        .map(|p| p.0 + (v & 0xFFF));
                 *b = phys
-                    .map(|p| unsafe {
-                        (crate::mem::phys_offset() + p) as *const u8
-                    })
+                    .map(|p| unsafe { (crate::mem::phys_offset() + p) as *const u8 })
                     .map(|p| unsafe { p.read() })
                     .unwrap_or(0xFF);
             }
-            println!(
-                "user {}: entry {:#x} head {:02x?}",
-                name, entry, head
-            );
+            println!("user {}: entry {:#x} head {:02x?}", name, entry, head);
             enter_userspace(entry, ustack);
         }
         Some(Err(e)) => {
@@ -489,4 +625,13 @@ pub fn task_crasher() {
 /// Kernel task entry for the fourth program (R5-2 follow-up).
 pub fn task_readkey() {
     unsafe { run_elf(READKEY_ELF, "readkey") };
+}
+/// Kernel task entry for the fifth program (K3 demand paging).
+/// Registers this task as the demand program before loading: the
+/// fault handler keys the promised region on the task id, and
+/// `run_elf` enters userspace from this same task, so the
+/// registration is in place before the first demand fault.
+pub fn task_demand() {
+    register_demand_region();
+    unsafe { run_elf(DEMAND_ELF, "demand") };
 }

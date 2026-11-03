@@ -13,6 +13,8 @@ found for that promise).
 | 1 | an agent has identity, lane, capabilities, budget, owner | `agents/registry.json` | CODE-INSPECTED |
 | 3 | registry, one entry per agent | `registry.json`, `registry_validate.mjs`, `loadRegistry`/`validateEntry` in `runtime.mjs` | CODE-INSPECTED — 16 live entries with real programs, 7 drafts with **no command at all** (a placeholder is now a validation error) |
 | 4 | watchman wakes a named agent with the job in hand | `agents/watchman.mjs` (polls a jobs dir, writes a heartbeat through `watchdog.mjs`) | CODE-INSPECTED |
+| 4 | a failure is retried once, then named | `watchman.mjs` retry path: second spawn with the baton, then `retry: "exhausted"` plus an alarm | CODE-INSPECTED — 7 watchman tests (retry and refusal) pass |
+| 4 | a person can hand over work | `agents/submit.mjs`, `iso/apps/agent-status/meta-ask.py` (`meta-ask --list`) | CODE-INSPECTED — 7 meta-ask tests pass; doctor FAILs if the binary is absent |
 | 4 | timer sweep as backup | `node agents/watchman.mjs --once` drains the board once and exits | CODE-INSPECTED — the command exists; no unit in the image schedules it |
 | 4 | who watches the watchman | `agents/watchdog.mjs` (`check`, `supervise`, restart budget) | UNPROVEN — the mechanism has tests, no cadence ran it before `oc2-health.timer` |
 | 5 | baton pass, continuation never restart | `agents/baton.mjs`, `agents/continue.mjs` | CODE-INSPECTED |

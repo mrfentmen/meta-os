@@ -93,12 +93,36 @@ to whoever owns that file.
 
 ## Submitting work
 
+A person types one of these:
+
+    meta-ask --list                                   # who can take work
+    meta-ask "sweep the tree for stray licenses" --agent watch
+    meta-ask "..." --agent aegis --dry-run            # validate, write nothing
+
+A script uses the node tool underneath:
+
     node agents/submit.mjs --root ~/.local/state/oc2-agent \
       --agent aegis --orders "sweep the tree" [--id my-job]
 
-It refuses an unknown agent, a draft agent, empty orders, an unsafe id and an
+Both refuse an unknown agent, a draft agent, empty orders, an unsafe id and an
 id already on the board. The write is a rename, so the watchman never sees half
 a job. `--max-continues N` sets the continuation bound for that job.
+
+## Watching it
+
+    meta-agent-status          # heartbeat, board, notices
+    meta-agent-status --json   # the same, for a program
+
+Both read `$METAOS_AGENT_STATE`, else `$XDG_STATE_HOME/oc2-agent` — the same
+directory the units pass to the watchman.
+
+## After a failure
+
+A job that exits non-zero is retried **once**, on the next poll, with its baton
+carried over — the same agent, the same work, the notes it had when it died.
+The second failure is final: the job writes `retry: "exhausted"` and raises an
+alarm notice, so a loop that never works cannot look busy forever. A job that
+asked to continue is continued, not retried; the two paths never overlap.
 
 A stale watchman heartbeat is a failed health row. `oc2-health.service` ships
 `META_AGENT_WATCHMAN_RESTART=systemctl --user restart oc2-watchman.service`, so

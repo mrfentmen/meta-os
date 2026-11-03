@@ -10,6 +10,7 @@ import url from "node:url";
 import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
 import { readBaton, continuationOrders } from "./baton.mjs";
 import { writeBeat } from "./watchdog.mjs";
+import { retryJob } from "./jobs.mjs";
 import { createNotifier } from "./notify.mjs";
 import {
   claimContinue,
@@ -223,6 +224,28 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
         }
         fs.writeFileSync(path.join(resultDir, id + ".result.json"),
           JSON.stringify({ id, agent: job.agent, run: h.runId, code, signal, finishedAt: new Date().toISOString(), ledger: path.join(h.runDir, "ledger.jsonl"), continue: continuation }, null, 2));
+
+        // One automatic retry, continued from the run that died. A layer that
+        // only alarms on a crash is a layer a person has to nanny; the baton
+        // already holds the work, so spending it costs one more run and no
+        // thought. A job that already asked to continue is left alone, and a
+        // retry is stamped so it cannot spawn another one.
+        if (failed && !continuation.queued && job.autoRetried !== true) {
+          try {
+            const retry = retryJob({ root, id, mark: { autoRetried: true } });
+            if (retry.ok) {
+              ledger.add("watchman", "job-retry", { id, next: retry.id, from: h.runId, existing: retry.existing });
+              notify({ severity: "note", key: "job:" + id + ":retry",
+                       title: "Agent job retried: " + job.agent,
+                       body: "exit " + code + (signal ? " signal " + signal : "")
+                         + " — continuing from " + h.runId });
+            } else {
+              ledger.add("watchman", "retry-refused", { id, reason: retry.reason });
+            }
+          } catch (err) {
+            ledger.add("watchman", "retry-error", { id, reason: String((err && err.message) || err).slice(0, 200) });
+          }
+        }
       });
     }
     // The beat is written after the poll, not before: a beat that lands while the poll is

@@ -20,7 +20,8 @@ does its job, closes clean" stays **UNPROVEN** until a VM run.
 | `chromium/policies.json` | `/etc/chromium/policies/managed/metaos.json` | start page, no first-run tab |
 | `chromium/meta-start.html` | `/usr/share/metaos/start/` | the start page itself, works offline |
 | `chromium/tokens.css` | `/usr/share/metaos/start/` | generated from the frozen contract, never hand-edited |
-| `agent-status/meta-agent-status.py` | `/usr/local/bin/` | the agent-layer status reader |
+| `agent-status/meta-agent-status.py` | `/usr/local/bin/` | the agent-layer status reader: heartbeat, board, notices |
+| `agent-status/meta-ask.py` | `/usr/local/bin/` | hands one piece of work to a named agent (`meta-ask --list`) |
 | `welcome/meta-welcome.py` | `/usr/local/bin/` | the first-login welcome window |
 
 ## Install
@@ -60,19 +61,28 @@ Xubuntu binaries; the fifth is ours:
     meta-agent-status [--root DIR] [--json] [--stale-after SECONDS]
 
 It reads the local agent layer and prints what it finds: how many agents the
-registry holds, how old the watchman heartbeat is, how many jobs are queued,
-and how many lines the gym ledger, the inbox and the refusal log carry. It
-writes nothing and starts nothing. A file that is absent prints `absent`, and
-a required file that is missing makes the command exit 1 with the row named.
+registry holds (live and draft), how old the watchman heartbeat is, the board
+itself — queued, done and refused by name — and the most recent notices with
+their severity. It writes nothing and starts nothing. A file that is absent
+prints `absent`, and a required file that is missing makes the command exit 1
+with the row named.
 
-`--root` defaults to `$METAOS_ROOT`, or `/opt/metaos` when that is unset, so
-the reader works on a checkout (`--root .`) and on an installed system
-without a code change. `--json` is the machine-readable form for the agent
-layer itself to consume.
+`--root` defaults to `$METAOS_AGENT_STATE`, else `$XDG_STATE_HOME/oc2-agent`
+(the same directory the systemd units hand the watchman), so the reader and the
+relay cannot disagree about where the board is. `--json` is the machine-
+readable form for the agent layer itself to consume.
+
+`meta-ask` is the other half: it writes one job onto that board and names the
+agent who should take it.
+
+    meta-ask --list
+    meta-ask "sweep the tree for stray licenses" --agent watch
+    meta-ask "..." --agent aegis --dry-run
 
 The launcher uses `Terminal=true` because the program prints a table. Tests:
-`python3 tests/test_iso_agent_status.py` (10 cases, real directories, no
-mock).
+`python3 tests/test_iso_agent_status.py` (13 cases) and
+`python3 tests/test_iso_meta_ask.py` (7 cases), both against real directories,
+no mock.
 
 It ships: `meta-agent-status.desktop` and the fifth dock item are in this lane
 from `9020439c`, and the checker fails if either goes missing.
