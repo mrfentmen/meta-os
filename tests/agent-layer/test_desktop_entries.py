@@ -77,9 +77,11 @@ class TestDesktopEntries(unittest.TestCase):
             self.assertNotEqual(sec2.get("NoDisplay"), "true", name)
 
     def test_meta_agent_status_matches_bond(self):
-        mine = open(os.path.join(_DROP, "meta-agent-status.desktop"),
-                    "rb").read()
-        bond = open(_BOND_STATUS, "rb").read()
+        with open(os.path.join(_DROP, "meta-agent-status.desktop"),
+                  "rb") as fh:
+            mine = fh.read()
+        with open(_BOND_STATUS, "rb") as fh:
+            bond = fh.read()
         self.assertEqual(mine, bond, "must stay a byte-copy of Bond's file")
 
     def test_exec_targets_sane(self):
@@ -93,14 +95,15 @@ class TestDesktopEntries(unittest.TestCase):
 
     def test_mimeapps_exact_coverage(self):
         mapped = {}
-        for line in open(os.path.join(_DROP, "mimeapps.list"),
-                         encoding="utf-8"):
-            line = line.strip()
-            if not line or line.startswith(("#", "[")):
-                continue
-            if "=" in line:
-                k, v = line.split("=", 1)
-                mapped[k.strip()] = v.strip()
+        with open(os.path.join(_DROP, "mimeapps.list"),
+                  encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+                if not line or line.startswith(("#", "[")):
+                    continue
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    mapped[k.strip()] = v.strip()
         self.assertEqual(mapped, MIME_EXPECTED)
         for desktop in mapped.values():
             self.assertTrue(os.path.isfile(os.path.join(_DROP, desktop)),

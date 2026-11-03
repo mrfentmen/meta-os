@@ -290,3 +290,11 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Dead-code audit: manifest.py clean, 0 TODOs, install.sh print is intentional port-probe. install.sh untouched (proposal stays a doc).
 - Sweeps: sh -n OK, keep-mime exit 0, manifest-targets 0 ghosts/orphans, MANIFEST regenerated (README sha).
 - Still parked: KF-02/dashboard/GUI/re-proof (OC1 furnace), evince ack (Hana), merges (Pax).
+
+## OC2 S10 — 2026-11-03 — unblocked batch (no VM, 7 tasks)
+- Seed experiment: make-seed.sh twice, same instance-id → different shas (53d2… vs 8e22…). hdiutil embeds timestamps: recipe deterministic, artifact not. Filed OC2P-seed-note.md (never assert seed sha; verify by content).
+- New test_mimeapps_proposal (2 tests): drop-in differs from Hana canonical in exactly the pdf line, no browser types. Reads her file, never edits. Suite 32/32 OK.
+- ResourceWarnings fixed in manifest.py + test_desktop_entries (with-blocks). test_units one-liners left (pre-existing style, warnings only).
+- Filed OC2P-proof-index-S8S9.md (rows 29-48) + LAND_WALLS upkeep checkboxes (all x).
+- MANIFEST unchanged (output identical). Sweeps: fences 0, secrets 0.
+- Still parked: KF-02/dashboard/GUI/re-proof (OC1 furnace), evince ack (Hana), merges (Pax).

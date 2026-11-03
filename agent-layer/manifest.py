@@ -43,7 +43,8 @@ def main():
     print()
     for rel in sorted(TARGETS):
         p = os.path.join(_REPO, rel)
-        h = hashlib.sha256(open(p, "rb").read()).hexdigest()
+        with open(p, "rb") as fh:
+            h = hashlib.sha256(fh.read()).hexdigest()
         print(f"- `{rel}` sha256 `{h}` → {TARGETS[rel]}")
     print()
     print("## Verify after install")
