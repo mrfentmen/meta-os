@@ -9,11 +9,13 @@ runs on this machine, under the agent's own budget and STOP rules.
     meta-ask "sweep the tree for stray licenses" --agent watch
     meta-ask --list
     meta-ask "..." --agent aegis --dry-run
+    meta-ask "..." --agent watch --follow      # wait, then say how it went
 
 Exit codes
-    0  the job is on the board
+    0  the job is on the board (with --follow: it finished cleanly)
     1  refused (unknown agent, draft agent, empty orders, duplicate id)
     2  bad usage, or node is missing
+    3  with --follow: the job failed, was refused by the layer, or timed out
 """
 
 import argparse
@@ -77,6 +79,71 @@ def render_list(agents):
     return "\n".join(lines)
 
 
+def read_result(root, job_id):
+    """The watchman's receipt for one job, or None while it is still running."""
+    path = root / "jobs" / (job_id + ".result.json")
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def proposed_next(root, job_id):
+    """The job this run gave itself, if the watchman queued one.
+
+    A quiet read of the relay ledger: the proposal is already on the board by
+    the time the result exists, so this is a report, not a promise.
+    """
+    ledger = root / "watchman.jsonl"
+    try:
+        lines = ledger.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return None
+    found = None
+    for line in lines:
+        try:
+            entry = json.loads(line)
+        except ValueError:
+            continue
+        if entry.get("event") == "proposal-queued" and entry.get("id") == job_id:
+            found = entry.get("next")
+    return found
+
+
+def follow(root, job_id, timeout, interval=1.0):
+    """Wait for the receipt. Returns the result, or None on timeout.
+
+    Polling a file is honest here: the watchman writes the result with one
+    write, so a file that parses is a job that finished.
+    """
+    deadline = time.monotonic() + timeout
+    while True:
+        result = read_result(root, job_id)
+        if result is not None:
+            return result
+        if time.monotonic() >= deadline:
+            return None
+        time.sleep(min(interval, max(0.05, deadline - time.monotonic())))
+
+
+def report(root, job_id, result):
+    """Print one job's outcome the way a person reads it. Returns an exit code."""
+    if result.get("refused"):
+        print("job %s was refused by the layer: %s" % (job_id, result["refused"]), file=sys.stderr)
+        return 3
+    code = result.get("code")
+    signal = result.get("signal")
+    if signal is not None or (isinstance(code, int) and code != 0):
+        detail = "signal %s" % signal if signal is not None else "exit %s" % code
+        print("job %s failed (%s)" % (job_id, detail), file=sys.stderr)
+        return 3
+    print("job %s finished cleanly" % job_id)
+    nxt = proposed_next(root, job_id)
+    if nxt:
+        print("it handed itself the next job: %s" % nxt)
+    return 0
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="meta-ask", add_help=True)
     parser.add_argument("text", nargs="?", help="what the agent should do")
@@ -87,6 +154,9 @@ def main(argv=None):
     parser.add_argument("--list", action="store_true", help="show who can take work")
     parser.add_argument("--json", action="store_true", help="print the job as JSON")
     parser.add_argument("--dry-run", action="store_true", help="validate, write nothing")
+    parser.add_argument("--follow", action="store_true", help="wait for the result, then report it")
+    parser.add_argument("--timeout", type=float, default=120.0,
+                        help="seconds to wait with --follow (default 120)")
     args = parser.parse_args(argv)
 
     root = state_root(args.root)
@@ -139,8 +209,17 @@ def main(argv=None):
     else:
         print("asked %s: %s" % (args.agent, orders))
         print("job %s is on the board at %s" % (job_id, root / "jobs"))
-        print("run `meta-agent-status` to watch it")
-    return 0
+        if not args.follow:
+            print("run `meta-agent-status` to watch it")
+
+    if not args.follow:
+        return 0
+    result = follow(root, job_id, args.timeout)
+    if result is None:
+        print("job %s is still running after %gs; see `meta-agent-status`"
+              % (job_id, args.timeout), file=sys.stderr)
+        return 3
+    return report(root, job_id, result)
 
 
 if __name__ == "__main__":

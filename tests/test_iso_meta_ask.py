@@ -9,6 +9,7 @@ import json
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -32,16 +33,26 @@ def board(tmp_path):
     return tmp_path
 
 
-def ask(tmp_path, *args):
-    env = {
+def env_for(tmp_path):
+    return {
         "PATH": "/usr/bin:/bin:/usr/local/bin",
         "HOME": str(tmp_path),
         "METAOS_AGENT_STATE": str(tmp_path),
         "METAOS_AGENT_SHARE": str(AGENTS.parent),
     }
+
+
+def ask(tmp_path, *args):
     return subprocess.run(
         [sys.executable, str(META_ASK), *args],
-        capture_output=True, text=True, env=env, timeout=60,
+        capture_output=True, text=True, env=env_for(tmp_path), timeout=60,
+    )
+
+
+def ask_bg(tmp_path, *args):
+    return subprocess.Popen(
+        [sys.executable, str(META_ASK), *args],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, env=env_for(tmp_path),
     )
 
 
@@ -105,6 +116,58 @@ def test_the_same_id_twice_is_refused(tmp_path):
     assert "already on the board" in second.stderr
     job = json.loads((root / "jobs" / "j5.job.json").read_text(encoding="utf-8"))
     assert job["orders"] == "one", "the first job is not overwritten"
+
+
+def wait_for_result(tmp_path, job_id, result):
+    """Write a receipt the way the watchman does, once the asker is waiting."""
+    target = tmp_path / "jobs" / (job_id + ".result.json")
+    for _ in range(200):
+        if (tmp_path / "jobs" / (job_id + ".job.json")).exists():
+            break
+        time.sleep(0.02)
+    target.write_text(json.dumps(result), encoding="utf-8")
+
+
+def test_follow_waits_and_reports_a_clean_finish(tmp_path):
+    root = board(tmp_path)
+    proc = ask_bg(root, "sweep the shelf", "--agent", "watch", "--id", "f1",
+                  "--follow", "--timeout", "10")
+    wait_for_result(root, "f1", {"id": "f1", "agent": "watch", "code": 0, "signal": None})
+    # The agent also handed itself a job; --follow names it.
+    with (root / "watchman.jsonl").open("a", encoding="utf-8") as ledger:
+        ledger.write(json.dumps({"event": "proposal-queued", "id": "f1", "next": "f1-n1"}) + "\n")
+    out, err = proc.communicate(timeout=20)
+    assert proc.returncode == 0, err
+    assert "finished cleanly" in out
+    assert "f1-n1" in out, out
+
+
+def test_follow_reports_a_failure_as_a_failure(tmp_path):
+    root = board(tmp_path)
+    proc = ask_bg(root, "break something", "--agent", "watch", "--id", "f2",
+                  "--follow", "--timeout", "10")
+    wait_for_result(root, "f2", {"id": "f2", "code": 2, "signal": None})
+    out, err = proc.communicate(timeout=20)
+    assert proc.returncode == 3, (out, err)
+    assert "failed (exit 2)" in err
+
+
+def test_follow_reports_a_refusal(tmp_path):
+    root = board(tmp_path)
+    proc = ask_bg(root, "eat all the memory", "--agent", "watch", "--id", "f3",
+                  "--follow", "--timeout", "10")
+    wait_for_result(root, "f3", {"id": "f3", "refused": "memory-cap"})
+    out, err = proc.communicate(timeout=20)
+    assert proc.returncode == 3, (out, err)
+    assert "refused by the layer: memory-cap" in err
+
+
+def test_follow_gives_up_instead_of_hanging(tmp_path):
+    root = board(tmp_path)
+    run = ask(root, "nobody will run this", "--agent", "watch", "--id", "f4",
+              "--follow", "--timeout", "0.5")
+    assert run.returncode == 3, run.stderr
+    assert "still running" in run.stderr
 
 
 def test_empty_orders_is_a_usage_error(tmp_path):

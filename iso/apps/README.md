@@ -78,10 +78,15 @@ agent who should take it.
     meta-ask --list
     meta-ask "sweep the tree for stray licenses" --agent watch
     meta-ask "..." --agent aegis --dry-run
+    meta-ask "..." --agent watch --follow    # wait, then say how it went
+
+`--follow` waits for the watchman's receipt and reports it: exit 0 clean, exit 3
+for a failure, a refusal by the layer, or a timeout. If the agent handed itself
+the next job, it says which one.
 
 The launcher uses `Terminal=true` because the program prints a table. Tests:
 `python3 tests/test_iso_agent_status.py` (13 cases) and
-`python3 tests/test_iso_meta_ask.py` (7 cases), both against real directories,
+`python3 tests/test_iso_meta_ask.py` (11 cases), both against real directories,
 no mock.
 
 It ships: `meta-agent-status.desktop` and the fifth dock item are in this lane
