@@ -1,0 +1,8 @@
+[Default Applications]
+# MetaOS 1.0 base defaults (Hana lane, slice 1).
+# Only plain text, images, and PDF are mapped here. The browser
+# association is Bond's lane and is deliberately left unmapped.
+text/plain=mousepad.desktop
+image/png=ristretto.desktop
+image/jpeg=ristretto.desktop
+application/pdf=evince.desktop
