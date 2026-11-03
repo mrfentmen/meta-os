@@ -11,6 +11,22 @@ Generated from `_tools/catalog.py`; edit the catalog, then run
 [`watchdog`](./watchdog) · [`quartermaster`](./quartermaster) ·
 [`archivist`](./archivist) · [`fedora-hat`](./fedora-hat)
 
+## Using the catalog
+
+The image keeps `/var/lib/metaos/skills` empty on purpose. Install the
+collection there with the hash-pinned manifest, and verify it later:
+
+    python3 _tools/install.py --root /var/lib/metaos/skills
+    python3 _tools/install.py --root /var/lib/metaos/skills --check
+
+Pick a skill for a request without a model call:
+
+    python3 _tools/router.py "fix the flaky clipboard test"
+    python3 _tools/router.py --json --limit 5 "add a systemd unit"
+
+The router reads the frontmatter only and returns a ranked list. `NO_MATCH`
+is a valid answer; an unrelated request should not activate a skill.
+
 ### Rust (20)
 
 [`borrow-checker`](./borrow-checker) · [`lifetimes`](./lifetimes) · [`ownership`](./ownership) · [`traits`](./traits) · [`generics`](./generics) · [`error-types`](./error-types) · [`result-propagation`](./result-propagation) · [`unsafe-audit`](./unsafe-audit) · [`ffi-boundary`](./ffi-boundary) · [`async-tasks`](./async-tasks) · [`channels`](./channels) · [`mutexes`](./mutexes) · [`macros`](./macros) · [`zero-copy`](./zero-copy) · [`iterator-chains`](./iterator-chains) · [`pattern-matching`](./pattern-matching) · [`cargo-features`](./cargo-features) · [`no-std`](./no-std) · [`binary-size`](./binary-size) · [`cross-compile`](./cross-compile)
