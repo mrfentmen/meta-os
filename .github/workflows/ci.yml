@@ -25,19 +25,22 @@ jobs:
 
       - name: Node suite
         id: node-suite
-        # TRACKED-RELAXED (agent3, 2026-11-03): 56 pre-existing native/Swift-parity
-        # failures on clean main. Non-blocking until that set is green; flip by
-        # deleting continue-on-error. See lane report on opencode/agent3-env-ci.
-        continue-on-error: true
-        run: npm test
+        # Baseline-enforced (OC2 gate fix 2026-11-03): exits 1 ONLY on a
+        # failure NOT in verify/npm-baseline.txt (56 pre-existing
+        # native/Swift-parity failures, listed by name, owned by the
+        # native/web parity lanes). New breakage fails the gate;
+        # baseline members that get fixed are reported, not failed.
+        run: node verify/npm-gate.mjs
 
       - name: Python queue suite
         run: python3 -m unittest discover -s tests/queue-python
 
       - name: Repo readiness check
         id: readiness
-        # TRACKED-RELAXED (agent3, 2026-11-03): secret-scan flags pre-existing
-        # fixture key-shaped strings + the same 56 web failures. Non-blocking
-        # until resolved; flip by deleting continue-on-error.
+        # RELAXED-BY-DESIGN: verify/check.mjs still reports the raw npm
+        # count (56 baselined web/parity failures — enforcement lives in
+        # the Node-suite step via verify/npm-gate.mjs + npm-baseline.txt).
+        # Secret-scan hits were fixed 2026-11-03 (venv/__pycache__/.pyc
+        # skipped + documented fixture allowlist in verify/check.mjs).
         continue-on-error: true
         run: node verify/check.mjs

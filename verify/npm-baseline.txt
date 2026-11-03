@@ -1,0 +1,56 @@
+✖ camera: web shows an analysis-active banner while sampling, matching the native camera panel
+✖ camera: web Start says it is waiting for camera permission, matching the native camera
+✖ config: web sampling interval clamps to 1–60 like the native Stepper, instead of silently falling back
+✖ latest: native panel carries the observable-evidence note, matching the web panel
+✖ latest: web panel waits for the first assessment, matching the native panel
+✖ native panel titles: all five use PanelHeading gated on Ignis
+✖ native panel titles: all five use PanelHeading gated on Medicus
+✖ native panel titles: all five use PanelHeading gated on Vigiles
+✖ native panel titles: Latest and Timeline keep their header traits
+✖ native panel titles: Settings stays a GroupBox label, camera panel untouched
+✖ native: a mid-run interval change announces the banner's own words
+✖ native: a successfully chosen still image announces the panel's own ready words
+✖ native: a successfully chosen video announces the panel's own ready words
+✖ native: camera state still rides the preview accessibilityValue (no change needed)
+✖ native: each panel shows its sending line while its assessing flag is true, whatever the input is
+✖ native: picker offers both facings with the web picker's labels
+✖ native: picker says plainly that a facing is a preference, not a requirement
+✖ native: Start stays disabled while permission is requested, from state alone
+✖ native: startAnalysis announces the banner's own words when sampling starts
+✖ native: Stop stays enabled while permission is requested, not only while running
+✖ native: the announced words are exactly the state text the panel shows
+✖ native: the Assess buttons still gate on the flag, so it is the guard
+✖ native: the still-image button is already gated on nil image or assessing, so no native change is needed
+✖ panels: still-image and video panels show an in-panel sending note while assessing, matching the native panels
+✖ R11-282 the boot-log index names every committed log and claims no verdict it did not check
+✖ tests/native-analysis-active-size.test.mjs
+✖ tests/native-camera-facing-note-size.test.mjs
+✖ tests/native-camera-guidance-size.test.mjs
+✖ tests/native-camera-state-size.test.mjs
+✖ tests/native-footer-size.test.mjs
+✖ tests/native-header-flame-chip-size.test.mjs
+✖ tests/native-header-identity-size.test.mjs
+✖ tests/native-header-limitations-corners.test.mjs
+✖ tests/native-header-limitations-size.test.mjs
+✖ tests/native-header-product-label-size.test.mjs
+✖ tests/native-ignis-header.test.mjs
+✖ tests/native-ignis-latest-note-size.test.mjs
+✖ tests/native-ignis-latest-title.test.mjs
+✖ tests/native-ignis-ops-console-body.test.mjs
+✖ tests/native-ignis-ops-console-status.test.mjs
+✖ tests/native-input-panel-title-size.test.mjs
+✖ tests/native-latest-placeholder.test.mjs
+✖ tests/native-medicus-ops-console-body.test.mjs
+✖ tests/native-medicus-ops-console-status.test.mjs
+✖ tests/native-settings-categories-size.test.mjs
+✖ tests/native-settings-label-size.test.mjs
+✖ tests/native-settings-note-size.test.mjs
+✖ tests/native-settings-title-size.test.mjs
+✖ tests/native-statusbar-size.test.mjs
+✖ tests/native-stepper-label-size.test.mjs
+✖ tests/native-still-image-intro-size.test.mjs
+✖ tests/native-still-image-state-size.test.mjs
+✖ tests/native-video-intro-size.test.mjs
+✖ tests/native-video-state-size.test.mjs
+✖ tests/native-vigiles-ops-console-body.test.mjs
+✖ tests/native-vigiles-ops-console-status.test.mjs
