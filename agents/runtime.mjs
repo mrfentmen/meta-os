@@ -1,4 +1,4 @@
-// Meta OS agent layer — host runtime, slice 1 (AGENT_LAYER_SPEC.md).
+// Meta OS agent layer — host runtime, slice 1 (docs/AGENT_LAYER_SPEC.md).
 // Real spawn/kill, STOP file, budgets, watch poll/compare, and an
 // append-only JSONL ledger per run. Zero dependencies.
 //   node agents/runtime.mjs list            (registry entries)

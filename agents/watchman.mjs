@@ -1,4 +1,4 @@
-// Meta OS agent layer — relay-watchman v1 (AGENT_LAYER_SPEC.md S4).
+// Meta OS agent layer — relay-watchman v1 (docs/AGENT_LAYER_SPEC.md).
 // The boss's 2026-10-23 design: a tiny always-on NON-agent program.
 // It watches the job board; when work lands with an agent's name on
 // it, the agent wakes already briefed. The watchman never does the
@@ -10,6 +10,13 @@ import url from "node:url";
 import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
 import { readBaton, continuationOrders } from "./baton.mjs";
 import { writeBeat } from "./watchdog.mjs";
+import {
+  claimContinue,
+  continueDecision,
+  continueJob,
+  readContinue,
+  writeContinueJob,
+} from "./continue.mjs";
 
 export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDir, heartbeatFile = path.join(root, "watchman.heartbeat.json") }) {
   // The job board and the result board are separate directories on a relay: work arrives on
@@ -119,7 +126,10 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
         ledger.add("watchman", "resume-from-orphan", { id, from: job.continuesFrom });
       }
       if (job.continuesFrom) {
-        const baton = readBaton(path.join(root, "runs", job.continuesFrom));
+        // A continue job may carry the baton in the order itself. The run's baton.json is
+        // preferred because it is the worker's own claim; the carried one is the fallback
+        // that keeps a relayed continuation resumable even when that file was never written.
+        const baton = readBaton(path.join(root, "runs", job.continuesFrom)) || job.baton || null;
         if (baton) {
           job = { ...job, orders: continuationOrders(job.continuesFrom, baton, job.orders || ""), baton };
           ledger.add("watchman", "baton-pass", { id, from: job.continuesFrom });
@@ -127,14 +137,48 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
           ledger.add("watchman", "baton-missing", { id, from: job.continuesFrom });
         }
       }
+      const runStartedAt = Date.now();
       const h = spawnAgent(agent, { root, job });
       runs.set(id, h);
       ledger.add("watchman", "bell", { id, agent: job.agent, run: h.runId });
       spawnedNow.push({ id, handle: h });
       h.done.then(({ code, signal }) => {
         ledger.add("watchman", "job-done", { id, run: h.runId, code, signal });
+        // A run may ask to continue instead of finishing. The request is bounded before a
+        // new job is written, and it is queued before the request file is archived -- so a
+        // crash in between replays an idempotent write, never loses the continuation.
+        let continuation = { requested: false, queued: false, reason: null };
+        try {
+          const request = readContinue(h.runDir);
+          if (request) {
+            continuation.requested = true;
+            const cycles = Number(job.continueCycles) || 0;
+            const verdict = continueDecision(h.runDir, {
+              cycles,
+              maxContinues: job.maxContinues == null ? 4 : Number(job.maxContinues),
+              elapsedMs: Date.now() - runStartedAt,
+              maxWallMs: agent.budget && agent.budget.maxWallMs,
+              costUsd: job.estimatedCostUsd,
+              maxCostUsd: agent.budget && agent.budget.maxCostUsd,
+              exitCode: code,
+            });
+            if (verdict.continue) {
+              const nextJob = continueJob({ job, runId: h.runId, request, cycles });
+              writeContinueJob(jobsDir, nextJob);
+              continuation.queued = true;
+              ledger.add("watchman", "continue-queued", { id, run: h.runId, next: nextJob.id, cycle: cycles + 1 });
+            } else {
+              continuation.reason = verdict.reason;
+              ledger.add("watchman", "continue-refused", { id, run: h.runId, reason: verdict.reason });
+            }
+            claimContinue(h.runDir);
+          }
+        } catch (err) {
+          continuation.reason = "continue-error";
+          ledger.add("watchman", "continue-error", { id, run: h.runId, reason: String((err && err.message) || err).slice(0, 200) });
+        }
         fs.writeFileSync(path.join(resultDir, id + ".result.json"),
-          JSON.stringify({ id, agent: job.agent, run: h.runId, code, signal, finishedAt: new Date().toISOString(), ledger: path.join(h.runDir, "ledger.jsonl") }, null, 2));
+          JSON.stringify({ id, agent: job.agent, run: h.runId, code, signal, finishedAt: new Date().toISOString(), ledger: path.join(h.runDir, "ledger.jsonl"), continue: continuation }, null, 2));
       });
     }
     // The beat is written after the poll, not before: a beat that lands while the poll is
