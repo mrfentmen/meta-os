@@ -125,6 +125,8 @@ cp -r "$APPS/imperium/js" "$APPS/imperium/vendor" "$ROOT/usr/share/metaos/imperi
 mkdir -p "$ROOT/usr/share/metaos/server"
 cp "$APPS/server/"*.mjs "$ROOT/usr/share/metaos/server/"
 cp "$APPS/imperium/styles.css" "$APPS/imperium/icon-180.png" "$APPS/imperium/manifest.webmanifest" "$ROOT/usr/share/metaos/imperium/" 2>/dev/null || true
+[ -f "$PAYLOAD/apps/metaos-imperium.py" ] || fail "imperium payload missing: $PAYLOAD/apps/metaos-imperium.py (restore the file or drop its install line)"
+[ -f "$PAYLOAD/apps/metaos-imperium.desktop" ] || fail "imperium payload missing: $PAYLOAD/apps/metaos-imperium.desktop (restore the file or drop its install line)"
 install -m755 "$PAYLOAD/apps/metaos-imperium.py" "$ROOT/usr/share/metaos/apps/metaos-imperium.py"
 install -m644 "$PAYLOAD/apps/metaos-imperium.desktop" "$ROOT/usr/share/applications/metaos-imperium.desktop"
 install -m644 "$PAYLOAD/wallpapers/live/meta-live.py" "$ROOT/usr/share/metaos/apps/meta-live.py" 2>/dev/null || true
