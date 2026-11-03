@@ -83,7 +83,12 @@ if [ "$MODE" = "check" ]; then
              oc2-watchman.service; do
     [ -f "$ROOT$UNITS/$unit" ] && say "unit $unit" || bad "unit missing: $UNITS/$unit"
   done
-  for unit in oc2-queue.service oc2-trio.service oc2-patrol.service; do
+  # Every service the install enables must have its link checked, not a
+  # hand-kept list: the relay watchman was installed, enabled and unverified.
+  for unit in "$ROOT$UNITS"/*.service; do
+    [ -f "$unit" ] || continue
+    unit=$(basename "$unit")
+    [ "$unit" = "oc2-health.service" ] && continue
     link="$ROOT$WANTS/default.target.wants/$unit"
     [ -e "$link" ] || [ -L "$link" ] && say "enabled $unit" || bad "not enabled: default.target.wants/$unit"
   done

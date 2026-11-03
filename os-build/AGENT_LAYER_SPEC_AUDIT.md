@@ -14,7 +14,9 @@ found for that promise).
 | 3 | registry, one entry per agent | `registry.json`, `registry_validate.mjs`, `loadRegistry`/`validateEntry` in `runtime.mjs` | CODE-INSPECTED — 16 live entries with real programs, 7 drafts with **no command at all** (a placeholder is now a validation error) |
 | 4 | watchman wakes a named agent with the job in hand | `agents/watchman.mjs` (polls a jobs dir, writes a heartbeat through `watchdog.mjs`) | CODE-INSPECTED |
 | 4 | a failure is retried once, then named | `watchman.mjs` retry path: second spawn with the baton, then `retry: "exhausted"` plus an alarm | CODE-INSPECTED — 7 watchman tests (retry and refusal) pass |
-| 4 | a person can hand over work | `agents/submit.mjs`, `iso/apps/agent-status/meta-ask.py` (`meta-ask --list`) | CODE-INSPECTED — 7 meta-ask tests pass; doctor FAILs if the binary is absent |
+| 4 | a person can hand over work | `agents/submit.mjs`, `iso/apps/agent-status/meta-ask.py` (`meta-ask --list`) | CODE-INSPECTED — 11 meta-ask tests pass; doctor FAILs if the binary is absent |
+| 4 | a person can halt one agent | `stop/<name>.STOP`, checked by the watchman before the spawn; paused jobs resume by name | CODE-INSPECTED — 3 stop/resume tests pass, the hold survives a restart |
+| 5 | a finished run can order its next job | `proposeJob` in `agents/jobs.mjs`, wired into the watchman; one hop, echo and limit refused | CODE-INSPECTED — 5 propose tests, and the `self-tasking` drill |
 | 4 | timer sweep as backup | `node agents/watchman.mjs --once` drains the board once and exits | CODE-INSPECTED — the command exists; no unit in the image schedules it |
 | 4 | who watches the watchman | `agents/watchdog.mjs` (`check`, `supervise`, restart budget) | UNPROVEN — the mechanism has tests, no cadence ran it before `oc2-health.timer` |
 | 5 | baton pass, continuation never restart | `agents/baton.mjs`, `agents/continue.mjs` | CODE-INSPECTED |

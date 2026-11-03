@@ -77,6 +77,23 @@ class AgentStatusTest(unittest.TestCase):
         self.assertEqual(keys["board"]["value"]["done"], 1)       # c
         self.assertEqual(keys["board"]["value"]["refused"], 1)    # d
 
+    def test_halted_agents_are_named_not_counted_as_failures(self):
+        (self.root / "stop").mkdir()
+        (self.root / "stop" / "watch.STOP").write_text("halt\n", encoding="utf-8")
+        out = run(["--root", str(self.root), "--strict"])
+        self.assertEqual(out.returncode, 0, out.stderr + out.stdout)
+        self.assertIn("1 halted: watch", out.stdout)
+        payload = json.loads(run(["--root", str(self.root), "--json"]).stdout)
+        keys = {row["key"]: row for row in payload["rows"]}
+        self.assertEqual(keys["halts"]["value"]["halted"], ["watch"])
+
+    def test_no_halt_directory_reports_absent_not_missing(self):
+        out = run(["--root", str(self.root)])
+        self.assertEqual(out.returncode, 0, out.stderr + out.stdout)
+        payload = json.loads(run(["--root", str(self.root), "--json"]).stdout)
+        keys = {row["key"]: row for row in payload["rows"]}
+        self.assertEqual(keys["halts"]["status"], "absent")
+
     def test_notices_count_notes_and_alarms(self):
         (self.root / "notices.jsonl").write_text(
             json.dumps({"severity": "note", "title": "a"}) + "\n" +

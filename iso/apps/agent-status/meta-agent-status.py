@@ -50,6 +50,8 @@ def probe_table():
          "path": "jobs", "kind": "dir", "need": REQUIRED},
         {"key": "board", "label": "job board",
          "path": "jobs", "kind": "board", "need": OPTIONAL},
+        {"key": "halts", "label": "halted agents",
+         "path": "stop", "kind": "halts", "need": OPTIONAL},
         {"key": "notices", "label": "notices",
          "path": "notices.jsonl", "kind": "notices", "need": OPTIONAL},
     ]
@@ -140,6 +142,18 @@ def read_board(jobs_dir, ledger_path):
     return detail, counts
 
 
+def read_halts(stop_dir):
+    """Who a person has paused. A halt holds work on the board; it is not a fault.
+
+    An empty or absent directory means nothing is paused, not that the row is
+    broken -- so this never fails a run.
+    """
+    names = sorted(p.name[:-len(".STOP")] for p in Path(stop_dir).glob("*.STOP"))
+    if not names:
+        return "none", {"halted": []}
+    return "%d halted: %s" % (len(names), ", ".join(names)), {"halted": names}
+
+
 def read_notices(path):
     """Count what the layer said, and how loud it was."""
     notes = alarms = suppressed = 0
@@ -184,6 +198,14 @@ def read_row(probe, root, stale_after, now):
         if not path.is_dir():
             row["status"] = "absent"
             return row
+
+    if probe["kind"] == "halts":
+        if not path.is_dir():
+            row["status"] = "absent"
+            return row
+        row["detail"], row["value"] = read_halts(path)
+        row["status"] = "halted" if row["value"]["halted"] else "ok"
+        return row
 
     if not path.is_file() and probe["kind"] not in ("board",):
         row["status"] = "absent" if probe["need"] == OPTIONAL else "missing"
