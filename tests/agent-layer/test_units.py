@@ -2,6 +2,7 @@
 import configparser
 import os
 import re
+import sys
 import unittest
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -109,3 +110,17 @@ class TestUnits(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+    def test_manifest_fresh(self):
+        import hashlib
+        import io
+        from contextlib import redirect_stdout
+        sys.path.insert(0, os.path.join(_REPO, "agent-layer"))
+        import manifest as man
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            man.main()
+        generated = buf.getvalue()
+        committed = open(os.path.join(_REPO, "agent-layer",
+                                      "MANIFEST.md")).read()
+        self.assertEqual(generated, committed)
