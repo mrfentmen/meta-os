@@ -193,3 +193,19 @@ The Science Lab reproduced four results and honored one failure at the levels it
 
 ## Prompt follow-up — Officina parity (OPENCODE2_PROMPT item 2) — DONE 2026-11-02
 - `git diff main -- os/worlds/officina/runtime/` is EMPTY: 2b/2c/2d modules + tests on this branch are identical to the merged main (Pax blob-verified @0b18be64). No new work required; 2a gate pattern already followed (§14–16). Landed by parity.
+
+## 12H Phase A — inventory (OC2 agent layer) — DONE 2026-11-02
+- queue_service.py: argparse main, long-running HTTP 127.0.0.1:8935 (the loopback dispatch endpoint crew uses). DAEMON.
+- patrol.py: `--interval/--once/--max-checks/--reserve-usd`; Crew.production + CrewRecords; oneshot-able bounded cycles. SERVICE (oneshot at login + timer repeats).
+- crew.py: library (Crew class, no main). livecams.py: library + CLI (`--list/--area/--assess-one`); invoked by patrol, no unit of its own.
+- Env surface: DISPATCH_URL (default loopback sim), TRIO_JOB_NS, TRIO_SAM_SEGMENT/WONDER/JUDGE_MODEL flags, LIVECAMS_API_URL, LOCAL_DB, SPARK_API_KEY (session env only — never baked). Non-secret defaults ship in `agent-layer/env.example`.
+- Deps: stdlib + sibling modules; third-party PIL/numpy/cv2 are LAZY with degraded fallbacks (evidence.py: cv unavailable→[], PIL missing→caller records it). pip set: pillow + numpy (cv2 optional, skipped — fallback covers).
+- Goose: `/Users/test/mcp-servers/toolchains/goose-src/build/goose` (b781587, OC2B Sec 19 gate-2: 10 pass + 4/4 node). Lobster: `lobster-src/bin/lobster` (v2026-10-29T23:29:26-07:00|6c1389c, runs).
+- Queue suite: 327 OK on merged main. Autostart mechanism: systemd USER units + `loginctl enable-linger` (ordering, restart caps, journal). XDG autostart rejected (no restart/supervision). Key handoff: `systemctl --user import-environment` via profile hook (install.sh, marker-guarded); services without key pause LOUD via existing guardrail (no silent stall).
+
+## 12H Phase B — units + installer + tests — DONE 2026-11-02
+- `agent-layer/units/`: oc2-queue.service (daemon :8935, restart-capped), oc2-patrol.service (oneshot bounded `--max-checks`, After+Requires queue), oc2-patrol.timer (30min boot delay, hourly, persistent).
+- `env.example`: non-secret defaults only (checkout path refreshed by installer; key NEVER assigned in files — regex-tested).
+- `install.sh`: idempotent (env create-once + checkout refresh, unit link, enable, linger attempt w/ recorded fallback, marker-guarded profile hook for key import, preflight compile + port check). Syntax-checked; full systemd exercise needs the Linux target (Phase D).
+- `README.md`: order, key handoff, health/stop commands, proof-log recipe. Tests `tests/agent-layer/test_units.py`: 7 OK (parse, daemon caps, bounded+ordered, timer, no-secret regexes, installer guards, env defaults).
+- Landed. Nothing blocked. (systemd enable/linger exercise deferred to Phase D guest proof.)
