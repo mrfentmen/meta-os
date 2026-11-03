@@ -1,0 +1,184 @@
+{
+  "tool": "relay/relay.round13.test.mjs",
+  "ran_at": "2026-11-03T01:55:57.977Z",
+  "counts": {
+    "total": 25,
+    "ok": 17,
+    "findings": 8
+  },
+  "rows": [
+    {
+      "task": "R13-401",
+      "case": "append path",
+      "outcome": "201 with index 0",
+      "index": 0
+    },
+    {
+      "task": "R13-402",
+      "case": "poll path",
+      "outcome": "since=0 returned the one later line"
+    },
+    {
+      "task": "R13-403",
+      "case": "room routing",
+      "outcome": "rooms isolated"
+    },
+    {
+      "task": "R13-404",
+      "case": "message ordering",
+      "outcome": "5 posts kept their order"
+    },
+    {
+      "task": "R13-405",
+      "case": "duplicate delivery",
+      "outcome": "same id, two lines",
+      "finding": "the id is content-addressed but not a dedupe key: an identical notify is delivered twice"
+    },
+    {
+      "task": "R13-406",
+      "case": "oversized message",
+      "outcome": "400 at 2001 chars"
+    },
+    {
+      "task": "R13-407",
+      "case": "empty message",
+      "outcome": "400 for empty text"
+    },
+    {
+      "task": "R13-408",
+      "case": "malformed frame",
+      "outcome": "400 with a JSON error"
+    },
+    {
+      "task": "R13-409",
+      "case": "slow consumer",
+      "outcome": "50 buffered lines survived a late first read",
+      "finding": "the backlog is served in one response; nothing caps or trims it"
+    },
+    {
+      "task": "R13-410",
+      "case": "fast producer burst",
+      "outcome": "200 accepted in 73 ms",
+      "finding": "no rate limit or backpressure: every post in the burst was accepted"
+    },
+    {
+      "task": "R13-411",
+      "case": "viewer reconnect",
+      "outcome": "watermark resumed with no gap and no repeat"
+    },
+    {
+      "task": "R13-412",
+      "case": "backlog trim behaviour",
+      "outcome": "no trim: 200 of 200 retained",
+      "finding": "rooms grow without bound; there is no trim, cap or eviction path in relay.mjs"
+    },
+    {
+      "task": "R13-413",
+      "case": "nick parsing",
+      "outcome": "nick 'a:b' is recorded, but a first-colon reader sees 'a'",
+      "finding": "the line format is not escaped: a colon in the nick makes the line ambiguous for any reader"
+    },
+    {
+      "task": "R13-414",
+      "case": "colon in message body",
+      "outcome": "colons in the body are preserved"
+    },
+    {
+      "task": "R13-415",
+      "case": "unicode message body",
+      "outcome": "unicode round-trips"
+    },
+    {
+      "task": "R13-416",
+      "case": "long nick",
+      "outcome": "400 at 41 chars"
+    },
+    {
+      "task": "R13-417",
+      "case": "missing nick",
+      "outcome": "400 with no nick"
+    },
+    {
+      "task": "R13-418",
+      "case": "state dir watermark",
+      "outcome": "server holds rooms in memory; the watermark is client-side",
+      "finding": "there is no state directory and no server-side watermark: a client that loses its index can only start over"
+    },
+    {
+      "task": "R13-419",
+      "case": "resync after clamp",
+      "outcome": "since=-5 clamps to -1 and returns the whole room",
+      "finding": "a negative or unparseable watermark silently re-delivers the whole room"
+    },
+    {
+      "task": "R13-420",
+      "case": "concurrent pollers",
+      "outcome": "5 simultaneous polls agreed on total"
+    },
+    {
+      "task": "R13-421",
+      "case": "error envelope",
+      "outcome": "every refusal carried {error: string}"
+    },
+    {
+      "task": "R13-422",
+      "case": "exit codes",
+      "outcome": "bad port exits nonzero",
+      "exit": 1,
+      "stderr_head": "node:net:2551"
+    },
+    {
+      "task": "R13-423",
+      "case": "log line shape",
+      "outcome": "Meta Nuntius relay listening on port 0 (store: memory)",
+      "finding": "the log prints the configured port (0), not the bound port"
+    },
+    {
+      "task": "R13-424",
+      "case": "config defaults",
+      "outcome": "Meta Nuntius relay listening on port 8787 (store: memory)",
+      "default_port_expected": 8787,
+      "busy": false,
+      "finding": null
+    },
+    {
+      "task": "R13-425",
+      "case": "shutdown behaviour",
+      "outcome": "close() stopped accepting connections"
+    }
+  ],
+  "findings": [
+    {
+      "task": "R13-405",
+      "finding": "the id is content-addressed but not a dedupe key: an identical notify is delivered twice"
+    },
+    {
+      "task": "R13-409",
+      "finding": "the backlog is served in one response; nothing caps or trims it"
+    },
+    {
+      "task": "R13-410",
+      "finding": "no rate limit or backpressure: every post in the burst was accepted"
+    },
+    {
+      "task": "R13-412",
+      "finding": "rooms grow without bound; there is no trim, cap or eviction path in relay.mjs"
+    },
+    {
+      "task": "R13-413",
+      "finding": "the line format is not escaped: a colon in the nick makes the line ambiguous for any reader"
+    },
+    {
+      "task": "R13-418",
+      "finding": "there is no state directory and no server-side watermark: a client that loses its index can only start over"
+    },
+    {
+      "task": "R13-419",
+      "finding": "a negative or unparseable watermark silently re-delivers the whole room"
+    },
+    {
+      "task": "R13-423",
+      "finding": "the log prints the configured port (0), not the bound port"
+    }
+  ]
+}

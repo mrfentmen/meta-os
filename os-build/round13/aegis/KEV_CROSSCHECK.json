@@ -1,0 +1,291 @@
+{
+  "tool": "os-build/layer1/kev_crosscheck.py",
+  "feed": "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json",
+  "feed_sha256": "3aa9cf3c01f116362a29d111702979175453c425e3733bde80fc4f6f8e2294e5",
+  "feed_catalog_version": "2026.10.30",
+  "feed_date_released": "2026-10-30T17:02:45.3665Z",
+  "feed_entries": 1766,
+  "control": {
+    "cve": "CVE-2021-44228",
+    "present": true
+  },
+  "findings_source": "os-build/round13/aegis/OSV_SWEEP.json",
+  "findings_total": 0,
+  "tasks": [
+    {
+      "task": "R13-126",
+      "class": "node dependency findings",
+      "batch": "batch 1",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-127",
+      "class": "rust crate findings",
+      "batch": "batch 1",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-128",
+      "class": "python dependency findings",
+      "batch": "batch 1",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-129",
+      "class": "lockfile-pinned findings",
+      "batch": "batch 1",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-130",
+      "class": "transitive findings",
+      "batch": "batch 1",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-131",
+      "class": "node dependency findings",
+      "batch": "batch 2",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-132",
+      "class": "rust crate findings",
+      "batch": "batch 2",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-133",
+      "class": "python dependency findings",
+      "batch": "batch 2",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-134",
+      "class": "lockfile-pinned findings",
+      "batch": "batch 2",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-135",
+      "class": "transitive findings",
+      "batch": "batch 2",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-136",
+      "class": "node dependency findings",
+      "batch": "batch 3",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-137",
+      "class": "rust crate findings",
+      "batch": "batch 3",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-138",
+      "class": "python dependency findings",
+      "batch": "batch 3",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-139",
+      "class": "lockfile-pinned findings",
+      "batch": "batch 3",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-140",
+      "class": "transitive findings",
+      "batch": "batch 3",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-141",
+      "class": "node dependency findings",
+      "batch": "batch 4",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-142",
+      "class": "rust crate findings",
+      "batch": "batch 4",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-143",
+      "class": "python dependency findings",
+      "batch": "batch 4",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-144",
+      "class": "lockfile-pinned findings",
+      "batch": "batch 4",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-145",
+      "class": "transitive findings",
+      "batch": "batch 4",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-146",
+      "class": "node dependency findings",
+      "batch": "batch 5",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-147",
+      "class": "rust crate findings",
+      "batch": "batch 5",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-148",
+      "class": "python dependency findings",
+      "batch": "batch 5",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-149",
+      "class": "lockfile-pinned findings",
+      "batch": "batch 5",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    },
+    {
+      "task": "R13-150",
+      "class": "transitive findings",
+      "batch": "batch 5",
+      "findings_in_class": 0,
+      "kev_flagged": 0,
+      "cleared": 0,
+      "unmatchable_no_cve": [],
+      "status": "NOTHING_TO_CHECK",
+      "line": "0 findings of this class in Section E; nothing to cross-check. This is not a clearance of the class."
+    }
+  ]
+}

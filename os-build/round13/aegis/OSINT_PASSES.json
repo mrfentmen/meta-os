@@ -1,0 +1,286 @@
+{
+  "tool": "os-build/layer1/osint_passes.py",
+  "bounds": "public records only; counts and locations; no values",
+  "tasks": [
+    {
+      "task": "R13-201",
+      "angle": "certificate-transparency issuers",
+      "domain": "meta-os.pages.dev",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "certificates": 0,
+        "distinct_issuers": 0,
+        "distinct_names": 0
+      }
+    },
+    {
+      "task": "R13-202",
+      "angle": "certificate-transparency expiry windows",
+      "domain": "muse-relay-live.pages.dev",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "certificates": 2,
+        "expired": 0
+      }
+    },
+    {
+      "task": "R13-203",
+      "angle": "DNS record types",
+      "domain": "clipraiders.com",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "rcode": 3,
+        "answers": 0,
+        "record_type_count": 0
+      }
+    },
+    {
+      "task": "R13-204",
+      "angle": "DNS unexpected records",
+      "domain": "watchpeoplefight.com",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "rcode": 0,
+        "answers": 1,
+        "record_type_count": 1
+      }
+    },
+    {
+      "task": "R13-205",
+      "angle": "subdomain names in public CT logs",
+      "domain": "meta-os.pages.dev",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "certificates": 0,
+        "note": "crt.sh returned 404 (no rows)"
+      }
+    },
+    {
+      "task": "R13-206",
+      "angle": "response-header names present or absent (names and counts only, values never republished)",
+      "domain": "muse-relay-live.pages.dev",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "http": 200,
+        "header_count": 13,
+        "security_headers_present": 2,
+        "has_server_header": true,
+        "bytes": 120227
+      }
+    },
+    {
+      "task": "R13-207",
+      "angle": "search-index visibility",
+      "domain": "clipraiders.com",
+      "status": "NOT_IMPLEMENTED",
+      "result": {
+        "why": "search-index visibility needs a search provider's API; calling one is third-party scraping and outside the standing bound"
+      }
+    },
+    {
+      "task": "R13-208",
+      "angle": "store page public text",
+      "domain": "watchpeoplefight.com",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "http": 200,
+        "bytes": 41621,
+        "words": 889,
+        "links": 71,
+        "title_chars": 45
+      }
+    },
+    {
+      "task": "R13-209",
+      "angle": "listing page public text",
+      "domain": "meta-os.pages.dev",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "http": 200,
+        "bytes": 9894,
+        "words": 802,
+        "links": 3,
+        "title_chars": 38
+      }
+    },
+    {
+      "task": "R13-210",
+      "angle": "TLS certificate SAN entries checked against the expected hostname set (unexpected names counted and located, never republished as a list)",
+      "domain": "muse-relay-live.pages.dev",
+      "status": "NOT_IMPLEMENTED",
+      "result": {
+        "why": "reading SAN entries needs a TLS handshake and an expected-names list; no such list is in the tree, so there is nothing to compare against"
+      }
+    },
+    {
+      "task": "R13-211",
+      "angle": "certificate-transparency first-seen dates per subdomain, as timeline counts by month",
+      "domain": "clipraiders.com",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "certificates": 0,
+        "first_not_before": null,
+        "last_not_before": null
+      }
+    },
+    {
+      "task": "R13-212",
+      "angle": "DNS TXT record types present (SPF, DMARC, verification \u2014 types and counts only, values never republished)",
+      "domain": "watchpeoplefight.com",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "txt_answers": 1,
+        "spf": false,
+        "note": "TXT content is not kept; presence only"
+      }
+    },
+    {
+      "task": "R13-213",
+      "angle": "public release notes exposure",
+      "domain": "meta-os.pages.dev",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "http": 200,
+        "bytes": 9894,
+        "words": 802,
+        "links": 3,
+        "title_chars": 38
+      }
+    },
+    {
+      "task": "R13-214",
+      "angle": "public image metadata (counts only)",
+      "domain": "muse-relay-live.pages.dev",
+      "status": "NOT_IMPLEMENTED",
+      "result": {
+        "why": "no EXIF/material reader exists in aegis/; the angle needs a media pipeline that fetches and parses images, which this pass does not do"
+      }
+    },
+    {
+      "task": "R13-215",
+      "angle": "domain registration public fields (counts only)",
+      "domain": "clipraiders.com",
+      "status": "UNAVAILABLE",
+      "result": {
+        "status": "UNAVAILABLE",
+        "code": 404
+      }
+    },
+    {
+      "task": "R13-216",
+      "angle": "hosting headers",
+      "domain": "watchpeoplefight.com",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "http": 200,
+        "header_count": 24,
+        "security_headers_present": 5,
+        "has_server_header": true,
+        "bytes": 41621
+      }
+    },
+    {
+      "task": "R13-217",
+      "angle": "error pages",
+      "domain": "meta-os.pages.dev",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "http": 200,
+        "bytes": 9894,
+        "custom_page": true
+      }
+    },
+    {
+      "task": "R13-218",
+      "angle": "robots/sitemap contents",
+      "domain": "muse-relay-live.pages.dev",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "robots_http": 200,
+        "robots_disallow_rules": 0,
+        "sitemap_http": 200,
+        "sitemap_urls": 0
+      }
+    },
+    {
+      "task": "R13-219",
+      "angle": "public bucket or upload paths",
+      "domain": "clipraiders.com",
+      "status": "NOT_IMPLEMENTED",
+      "result": {
+        "why": "path enumeration is deliberately not built: probing candidate paths on a live site is scanning, and the standing bound for OSINT is reading public records, not guessing at URLs"
+      }
+    },
+    {
+      "task": "R13-220",
+      "angle": "old deployment URLs still live",
+      "domain": "watchpeoplefight.com",
+      "status": "NOT_IMPLEMENTED",
+      "result": {
+        "why": "path enumeration is deliberately not built: probing candidate paths on a live site is scanning, and the standing bound for OSINT is reading public records, not guessing at URLs"
+      }
+    },
+    {
+      "task": "R13-221",
+      "angle": "public test pages still live",
+      "domain": "meta-os.pages.dev",
+      "status": "NOT_IMPLEMENTED",
+      "result": {
+        "why": "path enumeration is deliberately not built: probing candidate paths on a live site is scanning, and the standing bound for OSINT is reading public records, not guessing at URLs"
+      }
+    },
+    {
+      "task": "R13-222",
+      "angle": "public logs reachable by URL",
+      "domain": "muse-relay-live.pages.dev",
+      "status": "NOT_IMPLEMENTED",
+      "result": {
+        "why": "path enumeration is deliberately not built: probing candidate paths on a live site is scanning, and the standing bound for OSINT is reading public records, not guessing at URLs"
+      }
+    },
+    {
+      "task": "R13-223",
+      "angle": "Wayback Machine snapshot inventory, counts by year, inventory only with no archived content pulled",
+      "domain": "clipraiders.com",
+      "status": "SCANNED",
+      "result": {
+        "status": "SCANNED",
+        "snapshots": 0,
+        "years": 0,
+        "by_year": {}
+      }
+    },
+    {
+      "task": "R13-224",
+      "angle": "public key-shaped filenames (names only)",
+      "domain": "watchpeoplefight.com",
+      "status": "NOT_IMPLEMENTED",
+      "result": {
+        "why": "path enumeration is deliberately not built: probing candidate paths on a live site is scanning, and the standing bound for OSINT is reading public records, not guessing at URLs"
+      }
+    },
+    {
+      "task": "R13-225",
+      "angle": "public backup-shaped filenames (names only)",
+      "domain": "meta-os.pages.dev",
+      "status": "NOT_IMPLEMENTED",
+      "result": {
+        "why": "path enumeration is deliberately not built: probing candidate paths on a live site is scanning, and the standing bound for OSINT is reading public records, not guessing at URLs"
+      }
+    }
+  ]
+}
