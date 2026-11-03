@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
-"""MetaOS Imperium app — native GTK shell, cooked-in, no hosting.
+"""MetaOS Imperium app — native GTK shell, cooked in, no hosting.
 
 Loads the Imperium web UI from local files (file://) in a WebKitGTK
 window and keeps the assess backend on 127.0.0.1:8080 alive as a child
 process. Nothing leaves the machine: no remote servers, no open ports.
-If node or the backend is missing, the UI still opens (live features
-show the backend-unknown state, exactly as designed).
+If node or the backend is missing, the UI still opens (the backend
+status reads unknown, as designed).
 """
-import json
 import os
-import socket
-import subprocess
 import sys
 
 APP_DIR = "/usr/share/metaos/imperium"
@@ -20,6 +17,7 @@ PORT = int(os.environ.get("META_IMPERIUM_PORT", "8080"))
 
 
 def backend_up():
+    import socket
     s = socket.socket()
     s.settimeout(0.5)
     try:
@@ -37,13 +35,14 @@ def ensure_backend():
     main = os.path.join(SERVER_DIR, "server.mjs")
     if not (os.path.exists(node) and os.path.exists(main)):
         return None
+    import subprocess
+    import time
     env = dict(os.environ, PORT=str(PORT))
     try:
         p = subprocess.Popen(
             [node, main], env=env,
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         for _ in range(40):
-            import time
             time.sleep(0.25)
             if backend_up():
                 return p
@@ -52,24 +51,23 @@ def ensure_backend():
         return None
 
 
-def main():
+def main(argv):
     ensure_backend()
     try:
         import gi
         gi.require_version("Gtk", "3.0")
         gi.require_version("WebKit2", "4.1")
-        from gi.repository import Gtk, WebKit2
-    except (ImportError, ValueError):
-        sys.stderr.write("metaos-imperium: GTK/WebKit2 unavailable\n")
+        from gi.repository import Gtk, Gdk
+    except (ImportError, ValueError) as e:
+        sys.stderr.write("metaos-imperium: GTK/WebKit unavailable (%s)\n" % e)
         return 1
-    win = Gtk.Window(title="Imperium")
+    if not os.path.exists(INDEX):
+        sys.stderr.write("metaos-imperium: missing %s\n" % INDEX)
+        return 1
+    win = Gtk.Window(title="Imperium Console")
     win.set_default_size(1280, 800)
+    from gi.repository import WebKit2
     view = WebKit2.WebView()
-    settings = view.get_settings()
-    try:
-        settings.set_enable_developer_extras(False)
-    except Exception:
-        pass
     view.load_uri("file://" + INDEX)
     win.add(view)
     win.connect("destroy", Gtk.main_quit)
@@ -79,4 +77,4 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(main(sys.argv))

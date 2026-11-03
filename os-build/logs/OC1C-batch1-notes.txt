@@ -1,0 +1,6 @@
+OC1C-010: welcome retest from vendored payload — 30/30 pass. Proof: pytest output above.
+OC1C-011: splash set complete (background, meta-m, progress, .plymouth, .script).
+OC1C-012: branding sweep clean — 2 doc-only mentions (upstream doc source + no-marks rule), no shipped branding.
+OC1C-013: UNPROVEN — no LICENSE/COPYING files in payload dirs; needs boss/Pax licensing call.
+OC1C-014/015: payload total ~3.8MB (1.7 imperium + 2.1 theme). Fits ISO budget.
+OC1C-017: docker UP. OC1C-018: base ISO sha pinned 4ed869eb. OC1C-019: worktree @ c631117f.

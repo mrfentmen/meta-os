@@ -7,6 +7,6 @@ Exec=/usr/share/metaos/apps/metaos-imperium.py
 TryExec=/usr/share/metaos/apps/metaos-imperium.py
 Icon=metaos-imperium
 Terminal=false
-Categories=Monitor;Utility;
+Categories=Utility;
 OnlyShowIn=XFCE;
 X-GNOME-Autostart-enabled=false
