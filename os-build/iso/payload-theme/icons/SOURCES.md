@@ -1,15 +1,21 @@
 # metaos icon set — provenance
 
-20 files, all 128x128 RGBA, transparent, three blue tones only
+26 files, all 128x128 RGBA, transparent, three blue tones only
 (`(0,0,170)` fill, `#1877F2` edge, `(85,85,255)` highlight — verified by the
-palette audit in the D identity report).
+palette audit in the D identity report). Count 26 = 16 vendored + 4 drawn
+(first batch) + 6 drawn (agent-1 second batch); `about.png`/`aegis.png`
+cover the last two dock names without being redrawn. Every file is tracked
+in git — a dock built from a fresh clone must not lose icons.
 
 ## Vendored (16) — from the live image, byte-identical
 
 Extracted from `/usr/share/icons/metaos/` on `/tmp/metaos.ext4` (installed
 2026-11-03 by the image build; generator uncommitted on this branch, so the
-installed bytes are the source of truth). Per-file sha256 in
-`SOURCES.sha256`; `theme_proof.sh` re-hashes repo vs image.
+installed bytes are the source of truth). `SOURCES.sha256` is a real
+sha256 manifest for all 26 files (`shasum -a 256 -c` from this directory
+passes); it used to be a bare filename list under that name, which made the
+claim above untrue. Nothing reads it automatically yet — the repo-vs-image
+re-hash is still a manual step.
 
 about aegis board calculator calendar dashboard files imperium musica
 nervus notes officina science settings terminal trash
