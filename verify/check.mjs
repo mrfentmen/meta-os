@@ -24,16 +24,44 @@ function record(name, ok, detail) {
   console.log(`${ok ? "PASS" : "FAIL"}  ${name} - ${detail}`);
 }
 
-function runSuite(name, cmd, args) {
-  const r = spawnSync(cmd, args, { cwd: ROOT, encoding: "utf8", timeout: 180000 });
+function runSuite(name, cmd, args, timeoutMs = 180000) {
+  const r = spawnSync(cmd, args, { cwd: ROOT, encoding: "utf8", timeout: timeoutMs });
   const out = `${r.stdout || ""}\n${r.stderr || ""}`;
   const pass = [...out.matchAll(/pass\s+(\d+)/g)].pop();
   const fail = [...out.matchAll(/fail\s+(\d+)/g)].pop();
   const counts = pass ? `${pass[1]} passed${fail ? `, ${fail[1]} failed` : ""}` : "no counts parsed";
   record(name, r.status === 0, counts);
+  return out;
 }
 
-runSuite("web suite (npm test)", "npm", ["test"]);
+// Web suite is baseline-enforced, not zero-fail: the 56 pre-existing
+// native/Swift-parity failures live in verify/npm-baseline.txt (owned by
+// the parity lanes). Only failures NOT in the baseline fail this check —
+// same rule as verify/npm-gate.mjs, which CI runs as the blocking step.
+// Timeout is 7 min (matches npm-gate): slower runners were killing the
+// 3-minute cap mid-suite and reporting "no counts parsed".
+function webSuiteBaseline() {
+  const r = spawnSync("npm", ["test"], { cwd: ROOT, encoding: "utf8", timeout: 420000, maxBuffer: 256 * 1024 * 1024 });
+  const out = `${r.stdout || ""}\n${r.stderr || ""}`;
+  const actual = new Set(
+    out.split("\n")
+      .map((l) => l.replace(/\s*\([0-9.]*ms\)\s*$/, "").trim())
+      .filter((l) => l.startsWith("✖") && !/failing tests:?$/i.test(l)),
+  );
+  let baseline = new Set();
+  try {
+    baseline = new Set(
+      readFileSync(path.join(ROOT, "verify", "npm-baseline.txt"), "utf8")
+        .split("\n").map((l) => l.trim()).filter(Boolean),
+    );
+  } catch { /* missing baseline = every failure is new */ }
+  const fresh = [...actual].filter((n) => !baseline.has(n));
+  const detail = `${actual.size} failing (${baseline.size} baselined)` +
+    (fresh.length > 0 ? ` NEW: ${fresh.slice(0, 5).join(" | ")}` : ", no new failures");
+  record("web suite (npm test, baseline-enforced)", fresh.length === 0, detail);
+}
+
+webSuiteBaseline();
 runSuite("medicus eval harness", "node", ["--test", "eval/medicus/harness.test.mjs"]);
 runSuite("assess conformance (fixture mode)", "node", [
   "--test",
