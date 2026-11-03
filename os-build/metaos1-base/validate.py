@@ -11,6 +11,7 @@ Checks, each printed as PASS/FAIL:
   4. No new file in this slice contains a forbidden artwork term or a
      credential-looking assignment.
   5. The working tree touches no frozen path (kernel/src/syscalls.rs).
+  6. The firstboot dry-run harness (test_firstboot.sh) passes.
 
 Exit 0 only if every check passes. This validates internal
 consistency only — it does not prove an ISO boots (see README.md).
@@ -118,6 +119,14 @@ def main():
                             capture_output=True, text=True).stdout
     check("frozen kernel/src/syscalls.rs untouched",
           "kernel/src/syscalls.rs" not in status)
+
+    # 6. firstboot dry-run harness (throwaway dirs only, see the harness)
+    harness = BASE / "firstboot" / "test_firstboot.sh"
+    harness_run = subprocess.run(["sh", str(harness)],
+                                 capture_output=True, text=True)
+    check("firstboot: dry-run harness passes", harness_run.returncode == 0,
+          harness_run.stdout.strip().splitlines()[-1]
+          if harness_run.stdout.strip() else harness_run.stderr.strip())
 
     print(f"\n{'OK' if not FAILURES else 'FAILED'}: {len(FAILURES)} failure(s)")
     return 1 if FAILURES else 0
