@@ -59,3 +59,7 @@
 /// states, the readonly-token posture, rollback pins, and the §7
 /// crew-board rules. See [`contract`] for the section refs.
 pub mod contract;
+
+/// The four machine-metric cards' data: strict per-field parsing, and an
+/// empty state that says "no reading reported" instead of showing a zero.
+pub mod metrics;

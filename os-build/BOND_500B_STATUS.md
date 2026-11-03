@@ -441,7 +441,7 @@ Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
 `cargo test -p os-supervisor --test section13_restart` (7 pass), and
 `cargo test -p os-budget --doc` all exit 0.
 
-## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 8/25 delivered, 17 blocked
+## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 11/25 delivered, 14 blocked
 
 | Task | File | Result |
 |---|---|---|
@@ -453,6 +453,9 @@ Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
 | CB2-350 | `crates/guardrail/src/lib.rs` | rustdoc example on `estimate`, runs as a doc test |
 | CB2-339 | `crates/intel/tests/section14_intel.rs` | empty brief uses its documented "no activity yet" form, writes no empty section headings, never panics |
 | CB2-340 | `crates/intel/tests/section14_intel.rs` | recovery line rendered from a borrowed `Option<&RecoveryRecord>`; a sweep-count disagreement is named, never an all-clear |
+| CB2-333 | `crates/dashboard/src/metrics.rs` | an empty snapshot renders four cards in fixed order, each saying "no reading reported", never `0.0`; one quiet source empties only its own card |
+| CB2-334 | `crates/dashboard/src/metrics.rs` | non-numeric, blank, negative and non-finite readings refused with the field named; every bad field reported in one parse |
+| CB2-349 | `crates/dashboard/src/metrics.rs` | cpu/memory/storage/network builders each with a fixture test; a reported zero stays a reading |
 
 Blocked — the named API does not exist:
 - CB2-326..328, 348: `agent-runtime` exposes `Agent::serve_job` and
@@ -461,8 +464,10 @@ Blocked — the named API does not exist:
 - CB2-329, 332: invalid JSON is rejected at the HTTP layer (already covered by
   `http_invalid_json_is_a_400`); response-contract checking lives in
   `agent-runtime::validate_assessment`, not in assess-server.
-- CB2-333, 334, 349: `dashboard` is the brief/contract crate; it has no metrics
-  snapshot or CPU/memory/storage/network card builders.
+- CB2-333, 334, 349: closed by building the metrics module the tasks describe,
+  as `crates/dashboard/src/metrics.rs`. New behaviour, recorded as such. The
+  crate has no serde dependency, so the readings are parsed per field rather
+  than from JSON — no new package was added.
 - CB2-338: partly closed and partly still open. The frozen five-section
   vocabulary and its order are now pinned from `BRIEF_SECTIONS`, and the
   empty-input form is pinned (CB2-339). What is not proven is "all sections
@@ -477,8 +482,9 @@ Blocked — the named API does not exist:
   `agent-runtime::validate_assessment`, not in assess-server.
 
 Section 14 verification: `cargo test -p guardrail`, `cargo test -p guardrail --doc`,
-`cargo test -p assess-server`, and `cargo test -p intel --test section14_intel`
-(4 pass) all exit 0.
+`cargo test -p assess-server`, `cargo test -p intel --test section14_intel`
+(4 pass), and `cargo test -p dashboard --test section14_metrics` (8 pass) all
+exit 0.
 
 ## Section 15 — Schemas and validators (CB2-351..375) — 25/25
 
@@ -670,7 +676,7 @@ Per-task check (2026-11-02):
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
 
-## Closeout — 430 of 500 delivered, 70 open
+## Closeout — 436 of 500 delivered, 64 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -679,14 +685,14 @@ one is open for a named reason, not for want of trying.
 |---|---|---|
 | 1–12 (Python, relay, board, Rust queue) | 300 | 0 |
 | 13 Rust os-* error paths | 17 | 8 |
-| 14 Rust agent/dashboard/intel/stack | 8 | 17 |
+| 14 Rust agent/dashboard/intel/stack | 11 | 14 |
 | 15 Schemas and validators | 25 | 0 |
 | 16 Agent layer Node | 20 | 5 |
 | 17 Face tests | 0 | 25 |
 | 18 Tooling scripts | 25 | 0 |
 | 19 Officina and Musica | 15 | 10 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **430** | **70** |
+| **Total** | **436** | **64** |
 
 ### The 73, by the decision that unblocks them
 
@@ -694,10 +700,10 @@ one is open for a named reason, not for want of trying.
    file has no exports and 87 functions closing over the DOM. One yes unlocks
    all 25: either extract the calculator/calendar/notes/terminal/window logic
    into an importable module, or agree that fixture-model tests count.
-2. **New APIs (17, Section 14).** `dashboard` is a 61-line stub with zero
-   public functions and no metrics type; `stack` plans service configs and has
-   no push/pop; `agent-runtime` has no registry loader. Building these is new
-   feature work, not test work.
+2. **New APIs (14, Section 14).** `stack` plans service configs and has no
+   push/pop; `agent-runtime` has no registry loader. The dashboard metrics
+   cards were built for this wave and are now covered, so they left this
+   group.
 3. **New APIs (8, Section 13).** `os-boot` is the agent CLI crate (no boot
    config type), `os-jobs` has no job-with-steps API, `os-worker` has no
    payload type. The `os-supervisor` restart policy was built for this wave
