@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""make_wallpaper.py — draw the MetaOS wallpaper from the frozen tokens.
+"""make_wallpaper.py — draw the MetaOS wallpaper and login backdrop.
 
 Original art, generated from `iso/contracts/tokens.json`: an ink field that
 falls from the contract black to a deeper black, with one blue ring. Nothing
@@ -20,6 +20,7 @@ from pathlib import Path
 ISO = Path(__file__).resolve().parents[1]
 TOKENS = ISO / "contracts" / "tokens.json"
 OUT = ISO / "theme" / "wallpaper" / "meta-wallpaper.png"
+GREETER = ISO / "theme" / "wallpaper" / "greeter-wallpaper.png"
 
 W, H = 1920, 1080
 BOTTOM = (3, 5, 10)
@@ -47,18 +48,29 @@ def png(rows, width, height):
             + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
 
 
-def build(tokens):
+def build(tokens, greeter=False):
     top = rgb(tokens["black"])
     ring = rgb(tokens["blue"])
-    cx, cy = W / 2.0, H * 0.46
-    radius = H * 0.30
-    thickness = 9.0
-    glow = 46.0
+    if greeter:
+        # Dimmer field and a smaller ring, so the user name, the password box
+        # and the session buttons sit on something calm.
+        top = tuple(int(c * 0.55) for c in top)
+        cx, cy = W / 2.0, H * 0.40
+        radius = H * 0.26
+        thickness = 8.0
+        glow = 54.0
+        floor = (2, 3, 6)
+    else:
+        cx, cy = W / 2.0, H * 0.46
+        radius = H * 0.30
+        thickness = 9.0
+        glow = 46.0
+        floor = BOTTOM
 
     rows = []
     for y in range(H):
         dy = y - cy
-        bg = blend(top, BOTTOM, y / (H - 1))
+        bg = blend(top, floor, y / (H - 1))
         row = bytearray()
         for x in range(W):
             dx = x - cx
@@ -76,23 +88,25 @@ def build(tokens):
 
 def main(argv):
     tokens = json.loads(TOKENS.read_text(encoding="utf-8"))
-    image = build(tokens)
+    targets = ((OUT, build(tokens)), (GREETER, build(tokens, greeter=True)))
 
-    if "--check" in argv:
-        if not OUT.is_file():
-            print("wallpaper: %s is missing" % OUT.relative_to(ISO))
-            return 1
-        if OUT.read_bytes() != image:
-            print("wallpaper: %s is stale (run make_wallpaper.py)" % OUT.relative_to(ISO))
-            return 1
-        print("wallpaper: %s is current" % OUT.relative_to(ISO))
-        return 0
-
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_bytes(image)
-    print("wallpaper: wrote %s (%d bytes, %dx%d)"
-          % (OUT.relative_to(ISO), len(image), W, H))
-    return 0
+    stale = 0
+    for path, image in targets:
+        if "--check" in argv:
+            if not path.is_file():
+                print("wallpaper: %s is missing" % path.relative_to(ISO))
+                stale = 1
+            elif path.read_bytes() != image:
+                print("wallpaper: %s is stale (run make_wallpaper.py)" % path.relative_to(ISO))
+                stale = 1
+            else:
+                print("wallpaper: %s is current" % path.relative_to(ISO))
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(image)
+            print("wallpaper: wrote %s (%d bytes, %dx%d)"
+                  % (path.relative_to(ISO), len(image), W, H))
+    return stale
 
 
 if __name__ == "__main__":

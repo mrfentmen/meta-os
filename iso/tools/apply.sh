@@ -113,6 +113,12 @@ put "$ISO/theme/xfce4-desktop.xml" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xf
 put "$ISO/base/meta-first-login.sh" "/usr/local/bin/meta-first-login" 755
 put "$ISO/base/autostart/meta-first-login.desktop" "/etc/xdg/autostart/meta-first-login.desktop"
 
+# Login screen: greeter config, its backdrop, and the theme it asks for.
+put "$ISO/theme/lightdm/lightdm-gtk-greeter.conf" "/etc/lightdm/lightdm-gtk-greeter.conf"
+put "$ISO/theme/wallpaper/greeter-wallpaper.png" "/usr/share/metaos/theme/greeter-wallpaper.png"
+put "$ISO/theme/lightdm/themes/MetaOS/index.theme" "/usr/share/themes/MetaOS/index.theme"
+put "$ISO/theme/lightdm/themes/MetaOS/gtk-3.0/gtk.css" "/usr/share/themes/MetaOS/gtk-3.0/gtk.css"
+
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"
 else

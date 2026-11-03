@@ -134,5 +134,32 @@ class CheckerRuleTest(unittest.TestCase):
         self.assertIn("never points at", out.stdout)
 
 
+    def test_greeter_pointing_at_another_backdrop_is_named(self):
+        path = self.root / "theme" / "lightdm" / "lightdm-gtk-greeter.conf"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "greeter-wallpaper.png", "elsewhere.png"), encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("greeter background is", out.stdout)
+
+    def test_greeter_theme_not_named_metaos_is_named(self):
+        path = self.root / "theme" / "lightdm" / "themes" / "MetaOS" / "index.theme"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "Name=MetaOS", "Name=Adwaita"), encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("index.theme Name is", out.stdout)
+
+    def test_greeter_stylesheet_missing_a_token_is_named(self):
+        path = (self.root / "theme" / "lightdm" / "themes" / "MetaOS"
+                / "gtk-3.0" / "gtk.css")
+        kept = [line for line in path.read_text(encoding="utf-8").splitlines(True)
+                if "@define-color meta_blue" not in line]
+        path.write_text("".join(kept), encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("greeter.css has no definition for blue", out.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -633,6 +633,63 @@ else:
     except ET.ParseError as exc:
         bad("theme: xfce4-desktop.xml does not parse (%s)" % exc)
 
+# --- login screen ------------------------------------------------------
+GREETER_CONF = ISO / "theme" / "lightdm" / "lightdm-gtk-greeter.conf"
+GREETER_THEME = ISO / "theme" / "lightdm" / "themes" / "MetaOS" / "index.theme"
+GREETER_CSS = ISO / "theme" / "lightdm" / "themes" / "MetaOS" / "gtk-3.0" / "gtk.css"
+GREETER_BG = "/usr/share/metaos/theme/greeter-wallpaper.png"
+
+greeter_wall = ISO / "theme" / "wallpaper" / "greeter-wallpaper.png"
+if not greeter_wall.is_file():
+    bad("lightdm: greeter-wallpaper.png is missing (run iso/tools/make_wallpaper.py)")
+else:
+    head = greeter_wall.read_bytes()[:33]
+    width, height = struct.unpack(">II", head[16:24])
+    if head[:8] != b"\x89PNG\r\n\x1a\n":
+        bad("lightdm: greeter wallpaper is not a PNG")
+    elif (width, height) != (1920, 1080):
+        bad("lightdm: greeter wallpaper is %dx%d, expected 1920x1080" % (width, height))
+    else:
+        ok("lightdm: greeter wallpaper is a 1920x1080 PNG")
+
+if not GREETER_CONF.is_file():
+    bad("lightdm: lightdm-gtk-greeter.conf is missing")
+else:
+    cfg = ini(GREETER_CONF)
+    if not cfg.has_section("greeter"):
+        bad("lightdm: greeter conf has no [greeter] section")
+    else:
+        greeter = cfg["greeter"]
+        if greeter.get("background") == GREETER_BG:
+            ok("lightdm: greeter uses the MetaOS backdrop")
+        else:
+            bad("lightdm: greeter background is %r" % greeter.get("background"))
+        if greeter.get("theme-name") == "MetaOS":
+            ok("lightdm: greeter asks for the MetaOS theme")
+        else:
+            bad("lightdm: greeter theme-name is %r" % greeter.get("theme-name"))
+
+if not GREETER_THEME.is_file():
+    bad("lightdm: themes/MetaOS/index.theme is missing")
+else:
+    idx = ini(GREETER_THEME)
+    if idx.get("Desktop Entry", "Name", fallback="") == "MetaOS":
+        ok("lightdm: the theme directory names itself MetaOS")
+    else:
+        bad("lightdm: index.theme Name is %r"
+            % idx.get("Desktop Entry", "Name", fallback=""))
+
+if not GREETER_CSS.is_file():
+    bad("lightdm: themes/MetaOS/gtk-3.0/gtk.css is missing")
+elif tokens:
+    sheet = read(GREETER_CSS)
+    absent = [name for name, value in tokens.items()
+              if "@define-color meta_%s %s;" % (name, value) not in sheet]
+    if absent:
+        bad("lightdm: greeter.css has no definition for %s" % ", ".join(sorted(absent)))
+    else:
+        ok("lightdm: every frozen token reaches the login screen")
+
 # --- no stub markers ---------------------------------------------------
 bad_marks = []
 for path in ISO.rglob("*"):
