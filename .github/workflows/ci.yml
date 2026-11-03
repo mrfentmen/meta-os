@@ -32,6 +32,14 @@ jobs:
         # baseline members that get fixed are reported, not failed.
         run: node verify/npm-gate.mjs
 
+      - name: Install Python test deps
+        # The queue suite + evidence/face-crop tests import pillow/numpy at
+        # test time (server code itself degrades honestly without them).
+        # Bare setup-python has neither: without this step 2 tests error
+        # with ModuleNotFoundError on every CI run. Mirrors the pip
+        # fallback in agent-layer/install.sh.
+        run: pip install pillow numpy
+
       - name: Python queue suite
         run: python3 -m unittest discover -s tests/queue-python
 
