@@ -15,6 +15,7 @@ and each is generated from `contracts/tokens.json`:
 | Installer | `calamares/` | `calamares/` |
 | Login | `tools/tokens_to_gtk.py` | `theme/lightdm/` |
 | Desktop | `tools/make_wallpaper.py`, `tools/tokens_to_gtk.py` | `theme/` |
+| Desktop shell | `tools/tokens_to_xfce.py` | `theme/xfce4/`, `theme/icons/`, `apps/terminal/` |
 
 `contracts/tokens.json` is vendored from `opencode1/metaos-1.0` and pinned by
 sha256 in `contracts/PIN.md`. Changing a colour means changing the pin, and
@@ -36,7 +37,7 @@ then the checker will make every surface regrow from it.
 ## Commands
 
 ```
-iso/tools/check_iso_config.py            static checks, 101 of them
+iso/tools/check_iso_config.py            static checks, 115 of them
 iso/tools/check_iso_config.py --json     same, machine readable
 iso/tools/verify_lane.sh                 checker plus every test; says LANE GREEN
 

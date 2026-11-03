@@ -163,6 +163,18 @@ put "$ISO/boot/grub/themes/metaos/theme.txt" "/boot/grub/themes/metaos/theme.txt
 put "$ISO/boot/grub/themes/metaos/meta-grub.png" "/boot/grub/themes/metaos/meta-grub.png"
 put "$ISO/boot/grub/metaos-theme.cfg" "/etc/default/grub.d/metaos-theme.cfg"
 
+# Desktop shell: panel, settings channels, lock, icons, fonts, terminal.
+for f in "$ISO"/theme/xfce4/xfconf/xfce-perchannel-xml/*.xml; do
+  put "$f" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/$(basename "$f")"
+done
+put "$ISO/theme/icons/MetaOS/index.theme" "/usr/share/icons/MetaOS/index.theme"
+for f in "$ISO"/theme/icons/MetaOS/places/48/*.svg; do
+  put "$f" "/usr/share/icons/MetaOS/places/48/$(basename "$f")"
+done
+put "$ISO/theme/fonts/local.conf" "/etc/fonts/local.conf"
+put "$ISO/apps/terminal/metaos.theme" "/usr/share/xfce4/terminal/colorschemes/MetaOS.theme"
+put "$ISO/apps/terminal/terminalrc" "/etc/xdg/xfce4/terminal/terminalrc"
+
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"
   [ "$fail" -eq 0 ] || exit 1
