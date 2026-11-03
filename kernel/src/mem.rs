@@ -103,12 +103,18 @@ pub fn invlpg(addr: u64) {
     }
 }
 
-fn kind_of(t: bootloader::bootinfo::MemoryRegionType) -> RegionKind {
-    use bootloader::bootinfo::MemoryRegionType::*;
+fn kind_of(t: bootloader_api::info::MemoryRegionKind) -> RegionKind {
+    use bootloader_api::info::MemoryRegionKind::*;
+    // 0.11 has exactly four variants and is #[non_exhaustive] (the
+    // wildcard arm is required, not decorative). It no longer
+    // distinguishes kernel/stack/page-table regions: anything not
+    // Usable or Bootloader arrives as Unknown* with the raw firmware
+    // tag and must be treated as not-usable. BootInfo separately
+    // carries kernel_addr/kernel_len if extents are ever needed.
     match t {
         Usable => RegionKind::Usable,
-        Kernel | KernelStack | PageTable | Bootloader | BootInfo | FrameZero | InUse
-        | Reserved => RegionKind::Reserved,
+        Bootloader => RegionKind::Reserved,
+        UnknownUefi(_) | UnknownBios(_) => RegionKind::Other,
         _ => RegionKind::Other,
     }
 }
@@ -124,20 +130,26 @@ const PROBE_VADDR: u64 = 0x0000_7000_0000_0000;
 /// # Safety
 /// Call once, after the IDT is live (a stray fault must print, not
 /// triple-fault), on the single boot CPU.
-pub unsafe fn mem_init(boot_info: &'static bootloader::BootInfo) {
-    let offset = boot_info.physical_memory_offset;
+pub unsafe fn mem_init(boot_info: &'static bootloader_api::BootInfo) {
+    // 0.11: the offset is Optional<u64>; kernel_main already unwrapped
+    // it, so this expect only fires if mem_init is ever called from a
+    // path that skipped that check.
+    let offset = boot_info
+        .physical_memory_offset
+        .into_option()
+        .expect("RK-008: bootloader did not map physical memory");
     let mut n = 0usize;
     let mut usable = 0u64;
     let mut reserved = 0u64;
     let mut other = 0u64;
-    for r in boot_info.memory_map.iter() {
+    for r in boot_info.memory_regions.iter() {
         if n >= REGIONS.len() {
             break;
         }
-        let kind = kind_of(r.region_type);
-        // 0.9.35 reports frame numbers, not byte addresses.
-        let start = r.range.start_frame_number * 4096;
-        let end = r.range.end_frame_number * 4096;
+        let kind = kind_of(r.kind);
+        // 0.11 reports byte addresses, not 0.9-style frame numbers.
+        let start = r.start;
+        let end = r.end;
         let len = end.saturating_sub(start);
         match kind {
             RegionKind::Usable => usable += len,
