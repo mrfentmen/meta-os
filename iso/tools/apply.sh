@@ -142,6 +142,8 @@ put "$ISO/apps/chromium/tokens.css" "/usr/share/metaos/start/tokens.css"
 put "$ISO/apps/chromium/policies.json" "/etc/chromium/policies/managed/metaos.json"
 
 put "$ISO/theme/wallpaper/meta-wallpaper.png" "/usr/share/metaos/theme/meta-wallpaper.png"
+put "$ISO/theme/wallpaper/meta-wallpaper-2560x1440.png" "/usr/share/metaos/theme/meta-wallpaper-2560x1440.png"
+put "$ISO/theme/wallpaper/meta-wallpaper-1366x768.png" "/usr/share/metaos/theme/meta-wallpaper-1366x768.png"
 put "$ISO/theme/gtk/metaos.css" "/usr/share/metaos/theme/gtk.css"
 put "$ISO/theme/xfce4-desktop.xml" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
 
@@ -162,6 +164,21 @@ put "$ISO/theme/lightdm/themes/MetaOS/gtk-3.0/gtk.css" "/usr/share/themes/MetaOS
 put "$ISO/boot/grub/themes/metaos/theme.txt" "/boot/grub/themes/metaos/theme.txt"
 put "$ISO/boot/grub/themes/metaos/meta-grub.png" "/boot/grub/themes/metaos/meta-grub.png"
 put "$ISO/boot/grub/metaos-theme.cfg" "/etc/default/grub.d/metaos-theme.cfg"
+
+# Desktop shell: panel, settings channels, lock, icons, fonts, terminal.
+for f in "$ISO"/theme/xfce4/xfconf/xfce-perchannel-xml/*.xml; do
+  put "$f" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/$(basename "$f")"
+done
+put "$ISO/theme/icons/MetaOS/index.theme" "/usr/share/icons/MetaOS/index.theme"
+for f in "$ISO"/theme/icons/MetaOS/places/48/*.svg; do
+  put "$f" "/usr/share/icons/MetaOS/places/48/$(basename "$f")"
+done
+put "$ISO/theme/fonts/local.conf" "/etc/fonts/local.conf"
+put "$ISO/apps/terminal/metaos.theme" "/usr/share/xfce4/terminal/colorschemes/MetaOS.theme"
+put "$ISO/apps/terminal/terminalrc" "/etc/xdg/xfce4/terminal/terminalrc"
+put "$ISO/apps/welcome/meta-welcome.py" "/usr/local/bin/meta-welcome" 755
+put "$ISO/apps/welcome/welcome.css" "/usr/share/metaos/welcome/welcome.css"
+put "$ISO/apps/welcome/palette.json" "/usr/share/metaos/welcome/palette.json"
 
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"

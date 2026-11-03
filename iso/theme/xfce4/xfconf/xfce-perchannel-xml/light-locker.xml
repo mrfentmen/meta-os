@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="light-locker" version="1.0">
+  <property name="lock-on-suspend" type="bool" value="true" />
+  <property name="lock-after-screensaver" type="bool" value="true" />
+  <property name="late-locking" type="bool" value="true" />
+</channel>

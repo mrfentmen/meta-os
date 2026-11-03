@@ -1,0 +1,10 @@
+[Icon Theme]
+Name=MetaOS
+Comment=MetaOS places icons, drawn from the contract palette
+Inherits=Papirus-Dark,Adwaita,hicolor
+Directories=places/48
+
+[places/48]
+Size=48
+Type=Fixed
+Context=Places

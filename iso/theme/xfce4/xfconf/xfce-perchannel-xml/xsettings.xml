@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<channel name="xsettings" version="1.0">
+  <property name="Net/ThemeName" type="string" value="MetaOS" />
+  <property name="Net/IconThemeName" type="string" value="MetaOS" />
+  <property name="Net/FontName" type="string" value="Inter 10" />
+  <property name="Net/CursorThemeName" type="string" value="Adwaita" />
+  <property name="Gtk/EnableAnimations" type="bool" value="true" />
+  <property name="Gtk/ButtonImages" type="bool" value="true" />
+  <property name="Xft/Antialias" type="int" value="1" />
+  <property name="Xft/Hinting" type="int" value="1" />
+  <property name="Xft/HintStyle" type="string" value="hintslight" />
+  <property name="Xft/RGBA" type="string" value="none" />
+</channel>
