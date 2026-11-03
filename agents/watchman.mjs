@@ -11,6 +11,7 @@ import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
 import { readBaton, continuationOrders } from "./baton.mjs";
 import { writeBeat } from "./watchdog.mjs";
 import { retryJob, proposeJob } from "./jobs.mjs";
+import { isStopped } from "./hosted.mjs";
 import { createNotifier } from "./notify.mjs";
 import {
   claimContinue,
@@ -38,13 +39,18 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
   // id -> the run it should CONTINUE, when a previous run for the same job died mid-flight.
   // Persisted, so a second restart still resumes instead of starting over.
   let resume = {};
+  // id -> agent held by a halt file. A halt PAUSES work: the job stays on the
+  // board, unclaimed, and runs when the halt is cleared. A refusal here would
+  // throw the work away for as long as the stop happens to be in place.
+  let halted = new Set();
   try {
     const st = JSON.parse(fs.readFileSync(stateFile, "utf8"));
     claimed = new Set(st.claimed || []);
     pending = new Set(st.pending || []);
     resume = st.resume || {};
+    halted = new Set(st.halted || []);
   } catch {}
-  const save = () => fs.writeFileSync(stateFile, JSON.stringify({ claimed: [...claimed], pending: [...pending], resume }, null, 2));
+  const save = () => fs.writeFileSync(stateFile, JSON.stringify({ claimed: [...claimed], pending: [...pending], resume, halted: [...halted] }, null, 2));
   const runs = new Map();
 
   function runStatus(runDir) {
@@ -116,6 +122,16 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
         continue;
       }
       const id = job.id || f.replace(/\.job\.json$/, "");
+      // A job held by a halt is picked up again only after the halt is gone.
+      if (halted.has(id)) {
+        if (isStopped(root, job.agent)) continue;
+        halted.delete(id);
+        // The hold was taken before the spawn, so the claim it made is stale;
+        // release both or the job waits for a poll that never comes.
+        claimed.delete(id);
+        save();
+        ledger.add("watchman", "job-resumed", { id, agent: job.agent });
+      }
       if (claimed.has(id) && !pending.has(id)) continue;
       if (pending.has(id)) { pending.delete(id); save(); }
       const agent = agents.find((a) => a.name === job.agent);
@@ -156,6 +172,21 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
         fs.writeFileSync(path.join(resultDir, id + ".result.json"),
           JSON.stringify({ id, agent: job.agent, refused: "draft-agent",
                            finishedAt: new Date().toISOString() }, null, 2));
+        continue;
+      }
+      // A person can halt one agent by dropping stop/<name>.STOP. The runtime
+      // honours a STOP inside a run, but a job written while the agent is
+      // halted would otherwise start anyway -- a stop that only stops work
+      // already begun is not a stop.
+      if (isStopped(root, job.agent)) {
+        // Hold it, do not judge it. The ledger says once why the job is waiting,
+        // and no result file is written -- nothing ran and nothing was refused.
+        halted.add(id);
+        save();
+        ledger.add("watchman", "job-halted", { id, agent: job.agent, reason: "stop-filed" });
+        notify({ severity: "note", key: "job:" + id + ":halted",
+                 title: "Agent is halted: " + job.agent,
+                 body: "stop file present; job " + id + " waits on the board" });
         continue;
       }
       const runStartedAt = Date.now();

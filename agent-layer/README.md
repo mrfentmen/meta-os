@@ -110,11 +110,22 @@ a job. `--max-continues N` sets the continuation bound for that job.
 
 ## Watching it
 
-    meta-agent-status          # heartbeat, board, notices
+    meta-agent-status          # heartbeat, board, halted agents, notices
     meta-agent-status --json   # the same, for a program
 
 Both read `$METAOS_AGENT_STATE`, else `$XDG_STATE_HOME/oc2-agent` — the same
 directory the units pass to the watchman.
+
+## Halting one agent
+
+    touch ~/.local/state/oc2-agent/stop/watch.STOP     # pause 'watch'
+    rm ~/.local/state/oc2-agent/stop/watch.STOP        # let it work again
+
+A halted agent is not spawned. The job is **held**, not refused: it stays on
+the board with one `job-halted` ledger line and no result file, and the first
+poll after the file is gone writes `job-resumed` and runs it. The hold is in
+`watchman-state.json`, so a restart does not quietly release it. A halt holds
+work; it does not throw it away.
 
 ## Tasking itself
 
