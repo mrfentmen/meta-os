@@ -42,12 +42,19 @@ branch claim alone.
 - [x] ISO cut 1 by Pax from the merged tree. — CUT RECORD: tree =
       main @0eddeb5d (2026-11-02 ~22:57 EST), all three 1.0 lane
       branches merged and blob-verified (96/96). NAMED GAP: the ISO
-      artifact itself is not built — Buffy's build runs on a Linux
-      host (Pax's sandbox is ready: root, xorriso + squashfs-tools
-      installed) but the base Xubuntu ISO file is Del's own download
-      (his order 22:13 EST: he has it); the byte-build starts when
-      the file reaches the build host. Per the decoupling amendment
-      the cut stands with the gap named, not delayed.
+      artifact itself is not built — two parts. (1) The base Xubuntu
+      ISO file is Del's own download (his order 22:13 EST: he has it);
+      the byte-build starts when the file reaches the build host.
+      (2) Buffy's measured facts (BASE_FACTS.md, merged): the
+      reference image is Xubuntu 24.04.5, SHA-256 verified against
+      Canonical's published sums — and it is LAYERED (minimal +
+      standard + live squashfs, 9.68 GB assembled, no single
+      casper/filesystem.squashfs), which build_iso.sh --iso
+      currently refuses by design. Buffy's lane task: a merge-layers
+      pre-step for the script; Pax's Linux host (root, xorriso +
+      squashfs-tools installed) will run/test it once the ISO lands.
+      Per the decoupling amendment the cut stands with the gap
+      named, not delayed.
 
 ## H+4 — login + desktop load (~01:46 EST)
 
