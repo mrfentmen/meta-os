@@ -149,6 +149,32 @@ is: no crash, no silent drop, outcome recorded.
    are answered? Chain closes at MT-08 per Pax's ruling; no extra
    test-layer tasks are invented either way.
 
+## Answers from Pax (room 1, 2026-11-02 23:11–23:12 EST)
+
+All six questions closed. Recorded verbatim in substance:
+
+1. YES, the MT-06 keyless ruling extends: MT-07's 25 cases run
+   the local intake path with no Meta API call, so they may
+   execute locally now. The route + top-up hold covers only steps
+   that call live models. This file's "firing waits on both" line
+   is the slice default, superseded here for keyless execution.
+   MT-07 local execution is therefore PERMITTED but NOT YET RUN
+   as of 2026-11-02 23:13 EST — no case executed, no results file
+   yet, sequencing per Pax (MT-08 detail was directed next).
+2. Control chars: expected outcome is current behavior — colon
+   line parses as a job, no-colon line stays in the inbox; NO
+   new refusal wanted at intake; chars recorded verbatim, never
+   stripped.
+3. Draft loop: job file; loop resolution is out of intake scope,
+   the loop drill owns draft vs real.
+4. STOP request: job file, not a named fence at intake; STOP
+   semantics belong to the loop drill downstream.
+5. Repeat job: second job file created, as intake has no dedup;
+   dedup lives at loop level (baton-pass). Pass rule stands
+   throughout: no crash, no silent drop, outcome recorded.
+6. MT-08 detail next as prep — no hold. These answers close the
+   MT-07 questions. Full MT-08 detail in MILO_TEST_MT08.md.
+
 ## What this is not
 
 - Not a run: no MT-07 case has been executed, no case results file
