@@ -1,15 +1,19 @@
 # Cubic project definition — MetaOS 1.0 base (Hana lane)
 
 Tool: Cubic (Custom Ubuntu ISO Creator), run on the cut machine.
-Base: Xubuntu core, x86_64. The exact source ISO is NOT fixed in this
-slice: the cut operator picks the current Xubuntu LTS core ISO at cut
-time and records its filename + SHA-256 in the ISO cut record. Any
-slice text that named a version would go stale; the cut record is the
-truth for which ISO was used.
+Base: the reference Xubuntu ISO, x86_64 — Xubuntu 24.04.5, per the
+decoupling amendment on main @d835b59a (same file every lane tests
+against; no lane waits on another). This supersedes slice 1's
+"pick the current LTS at cut time" line. The cut record still pins
+the exact filename + SHA-256 actually used; this slice names the
+version, not a checksum it has not verified — the checksum value
+comes from the frozen contracts / cut record at cut time, never
+from a guess here.
 
 ## Steps, in order
 
-1. Create a new Cubic project. Point it at the recorded source ISO.
+1. Create a new Cubic project. Point it at the reference ISO
+   (Xubuntu 24.04.5).
 2. In the Cubic terminal (chroot), apply `packages.txt`:
    - `apt update`
    - install every package under `ADD:` (one `apt install -y` run)

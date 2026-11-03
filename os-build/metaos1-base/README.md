@@ -97,3 +97,22 @@ branch `hana/metaos1-firstboot-test` and merges only after slice 1.
 ```
 sh os-build/metaos1-base/firstboot/test_firstboot.sh
 ```
+
+## Slice 3 — decoupling amendment note (main @d835b59a)
+
+- Reference ISO is pinned: Xubuntu 24.04.5, the same file every lane
+  tests against. Slice 1's "pick the current LTS at cut time" line is
+  superseded; `cubic-spec.md` now names 24.04.5.
+- No lane waits on another. This slice does not wait for the brand
+  kit, the splash, the theme, or a gate to keep moving, and it does
+  not block any other lane.
+- Packages: this slice's `packages.txt` (KEEP / ADD / REMOVE) is
+  Hana's slice format. The amendment says the base consumes
+  `metaos.packages` append-only in the frozen contract format. This
+  slice does NOT claim its format already matches that contract —
+  the frozen format was not read here — and the cut-time mapping is
+  Pax's integration call, not a wait condition for this lane.
+- H+2 cut rule (Pax, room 1): cuts proceed as-they-are, gaps named.
+  This lane's named gaps at cut time: VM boot to login under 60s
+  unproven, first-boot landing on the desktop unproven, brand kit
+  not adopted (OC1 lane, still open).
