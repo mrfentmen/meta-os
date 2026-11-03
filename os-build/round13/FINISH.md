@@ -7,7 +7,7 @@
 |---|---|---|
 | services contract depth | **COMPLETE** | 25 / 25 audited; 39 gaps |
 | services failure paths | **COMPLETE** | 25 / 25; 23 gaps, 2 observed |
-| services restart/state | **COMPLETE** | 10 / 10; 1 drilled, 9 gaps |
+| services restart/state | **COMPLETE** | 25 / 25; 1 drilled, 24 gaps |
 | services third ring | **COMPLETE** | 25 / 25; **0 pairs exist**, 1 live permission (dhcp→net, unused) |
 | Aegis OSV sweeps | **COMPLETE** | 25 / 25; 10 real manifests, 15 missing, 107 refs, **0 findings**, control passed |
 | Aegis KEV cross-check | **COMPLETE** | 25 / 25; 0 findings to check, feed 2026.10.30 (1,766 entries), control passed |
@@ -23,8 +23,8 @@
 | Hands-Free intake | **COMPLETE** | 25 / 25; **25 tests pass**, 14 findings, 3 fences checked |
 | Nuntius relay | **COMPLETE** | 25 / 25; **25 tests pass**, 8 findings |
 | Nuntius board | **COMPLETE** | 25 / 25; **25 tests pass**, 4 findings, DOM dumps in `dom/` |
-| userspace | **WRITTEN — CHECK BLOCKED** | 25 / 25 sources; 19 implemented, 1 partial, 6 ABI-blocked; `cargo check` blocked on this host's toolchain |
-| federation + closeout | NOT STARTED | 0 / 25 |
+| userspace | **WRITTEN — CHECK BLOCKED** | 25 / 25 sources; 18 implemented, 1 partial, 6 ABI-blocked; `cargo check` blocked on this host's toolchain |
+| federation + closeout | **COMPLETE** | 15 SIMULATED drills + 9 closeout docs |
 
 ## Proven (ran here, output exists)
 
@@ -46,3 +46,5 @@
 - Nothing restarts the watchman.
 - `patrol.py` does not terminate.
 - Nothing in this round was compiled or booted. The Mac gate owns both.
+
+Round 13 task: R13-499.

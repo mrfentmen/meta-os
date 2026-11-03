@@ -65,3 +65,30 @@ name and assertion; twenty-one would be restarts dressed up, so they are recorde
   met by any of the 25.
 - That 21 gaps are a tooling problem rather than a product one. There is no aegis job that
   reaches step 2 in this tree; that is a fact about the tree.
+
+## Per-ID records for R13-287..299
+
+These thirteen handoffs were previously counted inside the 21 gap records
+without a file each. They now have one. Every one is a gap for the same
+measurable reason: no per-loop fixture reaches the named step, so nothing runs,
+nothing writes a tree, and no before/after diff can exist.
+
+| task | proof | loop | step | driver | state | record |
+|---|---|---|---|---|---|---|
+| R13-287 | 12 | nervus | 5 | `agents/watchdog.mjs` | GAP | `os-build/round13/agents/baton/R13-287.md` |
+| R13-288 | 13 | handsfree | 2 | `agents/clock.mjs` | GAP | `os-build/round13/agents/baton/R13-288.md` |
+| R13-289 | 14 | imperium | 3 | `agents/runtime.mjs` | GAP | `os-build/round13/agents/baton/R13-289.md` |
+| R13-290 | 15 | cadence | 4 | `agents/watchman.mjs` | GAP | `os-build/round13/agents/baton/R13-290.md` |
+| R13-291 | 16 | aegis | 5 | `agents/baton.mjs` | GAP | `os-build/round13/agents/baton/R13-291.md` |
+| R13-292 | 17 | nervus | 2 | `agents/gym.mjs` | GAP | `os-build/round13/agents/baton/R13-292.md` |
+| R13-293 | 18 | handsfree | 3 | `agents/hosted.mjs` | GAP | `os-build/round13/agents/baton/R13-293.md` |
+| R13-294 | 19 | imperium | 4 | `agents/bridge.mjs` | GAP | `os-build/round13/agents/baton/R13-294.md` |
+| R13-295 | 20 | cadence | 5 | `agents/judge.mjs` | GAP | `os-build/round13/agents/baton/R13-295.md` |
+| R13-296 | 21 | aegis | 2 | `agents/lessons.mjs` | GAP | `os-build/round13/agents/baton/R13-296.md` |
+| R13-297 | 22 | nervus | 3 | `agents/queue.mjs` | GAP | `os-build/round13/agents/baton/R13-297.md` |
+| R13-298 | 23 | handsfree | 4 | `agents/room1.mjs` | GAP | `os-build/round13/agents/baton/R13-298.md` |
+| R13-299 | 24 | imperium | 5 | `agents/safe-write.mjs` | GAP | `os-build/round13/agents/baton/R13-299.md` |
+
+The remaining IDs in this section are covered by the rows above and by the
+four passing `A2.x` tests named at the top of this file.
+
