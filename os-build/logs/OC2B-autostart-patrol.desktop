@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=OC2 Patrol Daemon (autostart)
+GenericName=Agent Patrol Daemon
+Comment=XDG autostart for the OC2 patrol daemon (mirrors agent-layer/units/oc2-patrol.service ExecStart; TryExec degrades-off, never blocks boot)
+Exec=/usr/bin/python3 ${OC2_CHECKOUT}/server/queue/patrol.py --max-checks ${OC2_PATROL_MAX_CHECKS} --reserve-usd ${OC2_PATROL_RESERVE_USD}
+TryExec=/usr/bin/python3
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;Monitor;Utility;
+StartupNotify=false
+NoDisplay=true
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true

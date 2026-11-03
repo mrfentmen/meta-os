@@ -1,0 +1,15 @@
+# OC2B-020 — entry-point cold startup time (measured, no VM)
+
+Method: `python3 server/queue/queue_service.py --port 18937` in background
+(odd port, nothing else on it), poll `GET /health` every 0.5s, kill after.
+Build host, Python 3.9.6, Upstash unconfigured (local-sqlite FALLBACK path).
+
+- First log line (Upstash-fallback notice + store line): immediate at start.
+- `/health` 200 (`{"ok": true, "service": "trio-queue",
+  "store": "local-sqlite-FALLBACK", ...}`): on the FIRST 0.5s poll.
+- Verdict: cold start to serving <1s wall (interpreter + fallback store).
+  No model key needed for startup; no-key state serves health honestly.
+- Server stopped clean after (`pkill`, verified no process remains).
+
+Full log excerpt kept in the commit shell output; health body above is the
+live response. Re-run: same background+poll on any free port.

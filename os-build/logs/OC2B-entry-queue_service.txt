@@ -1,0 +1,7 @@
+trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+usage: queue_service.py [-h] [--port PORT]
+
+optional arguments:
+  -h, --help   show this help message and exit
+  --port PORT
+exit=0 (run queue_service)

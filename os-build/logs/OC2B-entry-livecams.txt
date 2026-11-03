@@ -1,0 +1,18 @@
+usage: livecams.py [-h] [--api-url API_URL] [--area AREA] [--name NAME]
+                   [--count COUNT] [--list] [--out OUT] [--assess-one]
+                   [--division DIVISION]
+
+NYC DOT live cameras for the Imperium patrol
+
+optional arguments:
+  -h, --help           show this help message and exit
+  --api-url API_URL
+  --area AREA
+  --name NAME          name substring filter
+  --count COUNT
+  --list               list matching online cameras and exit
+  --out OUT            directory to write snapshot JPEGs + records
+  --assess-one         run ONE live frame through the production assessment
+                       (spark_gen) and record the reading
+  --division DIVISION  division lens for --assess-one
+exit=0 (run livecams)

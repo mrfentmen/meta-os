@@ -1,0 +1,8 @@
+# OC2B-018 — install-manifest test vs scratch chroot/container: BLOCKED
+Owner: OC2. Reason: Linux image not staged on this host this session.
+Docker daemon IS up (`docker info` exit 0), but pulling a Linux image
+mid-sweep burns bandwidth/fans for a test that needs its own quiet batch.
+Move on per BLOCKED-and-move-on rule.
+What unblocks: staged image, then in-container: copy agent-layer/ +
+server/queue/ in, run py_compile + 4x --help + manifest sha check.
+Retry as a standalone batch (OC2B-018-R2). Never a VM: container only.

@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Agent Status (autostart)
+GenericName=Agent Layer Status
+Comment=XDG autostart for the agent status tray (Exec mirrors Bond iso/apps/desktop/meta-agent-status.desktop; TryExec degrades-off, never blocks boot)
+Exec=meta-agent-status
+TryExec=meta-agent-status
+Icon=utilities-system-monitor
+Terminal=true
+Categories=System;Monitor;Utility;
+StartupNotify=false
+NoDisplay=true
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true

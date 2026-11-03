@@ -1,0 +1,12 @@
+# OC2B-012 — datadir creates-if-missing (measured, no VM)
+
+`TRIO_CREW_DATA_DIR=/tmp/oc2b-dd python3 -c
+"import crew_records; r=crew_records.CrewRecords(); print(r.dir, exists)"`
+→ `dir= /tmp/oc2b-dd exists= True` (fresh dir created by constructor).
+
+Code: `CrewRecords.__init__` (`server/queue/crew_records.py:73-76`)
+runs `os.makedirs(self.dir, exist_ok=True)`. `data_dir()` itself only
+resolves the path (env override else repo-relative default); creation
+happens at store init, before any read/write. Scratch dir removed after.
+Verdict: CREATES-IF-MISSING VERIFIED (never silent — writes go through
+the makedirs constructor path).

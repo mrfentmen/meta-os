@@ -1,0 +1,8 @@
+--- queue_service --version:
+queue_service.py: error: unrecognized arguments: --version
+--- trio_agent --version:
+trio_agent.py: error: unrecognized arguments: --version
+--- patrol --version:
+patrol.py: error: unrecognized arguments: --version
+--- livecams --version:
+livecams.py: error: unrecognized arguments: --version

@@ -1,0 +1,10 @@
+usage: patrol.py [-h] [--interval INTERVAL] [--once] [--max-checks MAX_CHECKS]
+                 [--reserve-usd RESERVE_USD]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --interval INTERVAL   seconds between patrol visits
+  --once                one patrol visit, then exit
+  --max-checks MAX_CHECKS
+  --reserve-usd RESERVE_USD
+exit=0 (run patrol)

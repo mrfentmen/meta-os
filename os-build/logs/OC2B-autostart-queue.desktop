@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=OC2 Queue Service (autostart)
+GenericName=Agent Queue Service
+Comment=XDG autostart for the OC2 queue service (mirrors agent-layer/units/oc2-queue.service ExecStart; TryExec degrades-off, never blocks boot)
+Exec=/usr/bin/python3 ${OC2_CHECKOUT}/server/queue/queue_service.py --port ${OC2_QUEUE_PORT}
+TryExec=/usr/bin/python3
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;Monitor;Utility;
+StartupNotify=false
+NoDisplay=true
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
