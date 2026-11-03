@@ -157,13 +157,17 @@
       "capabilities": [
         "design-iterate"
       ],
-      "command": [],
+      "command": [
+        "python3",
+        "repo:os/worlds/officina/runtime/design_loop.py",
+        "3",
+        "7",
+        "design-loop.json"
+      ],
       "lane": "Officina faber loop",
       "name": "officina-faber",
       "owner": "system: officina",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "Officina lives outside this repo; no real command can be named here"
+      "hosted": true
     },
     {
       "budget": {
