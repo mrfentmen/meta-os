@@ -1,0 +1,122 @@
+{
+ "kind": "imperium-live-hunt",
+ "started_at": "2026-11-03T01:35:06.619Z",
+ "camera_source": "nyctmc-live",
+ "frame_source": "live fetch via crew_common.fetch_snapshot",
+ "max_frames": 12,
+ "budget_reserve_usd": 5.0,
+ "outcomes": [
+  {
+   "camera_id": "f134b133-75ef-40a8-8fbb-f9c51355e6b5",
+   "camera_name": "Old Fulton St @ Vine St/Hicks St - quad - 156.24",
+   "area": "Brooklyn",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "0472fa7a-acd7-4510-a9e7-61307d4057cd",
+   "camera_name": "Bay Pkwy @ 78 St (Kings Hwy)",
+   "area": "Brooklyn",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null
+  },
+  {
+   "camera_id": "0039e6bf-5244-4b4e-b7dc-d02056bbfdc9",
+   "camera_name": "Atlantic Ave @ 111 St",
+   "area": "Brooklyn",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "8d2b3ae9-da68-4d37-8ae2-d3bc014f827b",
+   "camera_name": "WBB - 2 NOR @ ABOVE BEDFORD AVE & S 5 St",
+   "area": "Brooklyn",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "068461e2-c62f-4ce4-adac-5f9efe92af1d",
+   "camera_name": "Bushwick Ave @ De Kalb Ave",
+   "area": "Brooklyn",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "flame-like lighting",
+   "incident_id": null
+  },
+  {
+   "camera_id": "9bdd7740-762f-48e9-b40c-3db03c2a43f5",
+   "camera_name": "Belt Pkwy @ Ocean Pkwy",
+   "area": "Brooklyn",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "84a2c36a-ef84-41b6-a4eb-3c3a2bf3bf10",
+   "camera_name": "Stillwell Ave @ Surf Ave",
+   "area": "Brooklyn",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "3576217a-82e8-4f2a-854f-3de97ef37362",
+   "camera_name": "BQE  @ Pearl St",
+   "area": "Brooklyn",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null
+  },
+  {
+   "camera_id": "07c5a9ab-38b0-4176-a932-395cded5858e",
+   "camera_name": "Cadman Plz West @ Tillary St",
+   "area": "Brooklyn",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "b18d0e36-c053-435d-921e-813ab5f65a0a",
+   "camera_name": "C2-BQE-22-WB_at_Lee_Ave-Ex31",
+   "area": "Brooklyn",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "0bbea8bd-10f1-4126-b3c5-9e9432eab749",
+   "camera_name": "Atlantic Ave @ Pennsylvania Ave",
+   "area": "Brooklyn",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null
+  },
+  {
+   "camera_id": "d401c83b-2f78-49dd-8974-14c819a992b2",
+   "camera_name": "C2-PE-05-Ctr_at_7th_Ave-Ex4",
+   "area": "Brooklyn",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  }
+ ],
+ "flagged": null,
+ "stop_reason": "max-frames",
+ "frames_checked": 12,
+ "finished_at": "2026-11-03T01:37:47.027Z"
+}
