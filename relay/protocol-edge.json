@@ -1,0 +1,19 @@
+{
+  "invalidRooms": [
+    "",
+    "Bad Room",
+    "UPPER",
+    "../",
+    "a/b",
+    "under_score",
+    "with.dot",
+    "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  ],
+  "invalidMessages": [
+    { "nick": "", "text": "x" },
+    { "nick": "pax", "text": "" },
+    { "nick": "pa\nx", "text": "x" },
+    { "nick": "pax", "text": "two\nlines" }
+  ],
+  "oversizedTextChars": 17000
+}

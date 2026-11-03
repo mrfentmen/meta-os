@@ -49,7 +49,7 @@
   },
   "dept_rule": "cycle department from record.department, else question keywords (delaney/esol/solubility -> chemistry); repository rows use their own department else their cycle's.",
   "export_version": "science-lab-export/1",
-  "generated_at": "2026-11-02T14:11:41.945734Z",
+  "generated_at": "2026-11-02T16:35:25.121166Z",
   "generated_by": "os/worlds/science-lab/export.py dept_summary",
   "sources": [
     "records/cycles/*.json",

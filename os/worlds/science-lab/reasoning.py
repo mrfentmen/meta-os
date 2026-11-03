@@ -23,6 +23,8 @@ filed_at/registered_at timestamps and ledger hashes).
 """
 
 import json
+import os
+import re
 from datetime import datetime, timezone
 
 try:
@@ -521,3 +523,197 @@ def critique(plan):
         "leakage_risks": leakage,
         "cherry_picking_risks": cherry,
     }
+
+
+# ------------------------------------------------------------------
+# Section 6: hypothesis parsing, prediction, evidence, duplicates,
+# step-8 marker. Local and deterministic; no model calls.
+# ------------------------------------------------------------------
+
+STEP_8 = "step-8-unimplemented"
+
+SCHEMA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           "schemas", "hypothesis.schema.json")
+
+
+def _text_field(record, name):
+    value = record.get(name)
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("hypothesis missing required field %r" % (name,))
+    return value.strip()
+
+
+def extract_variables(text):
+    """Extract variables in order: backticked names, then X/Y symbols.
+
+    A variable is an explicitly marked name (`temperature`) or a single
+    uppercase symbol (X, Y). Prose words are not guessed as variables.
+    """
+    if not isinstance(text, str):
+        return []
+    names = [n.strip() for n in re.findall(r"`([^`]+)`", text)]
+    names += re.findall(r"\b([A-Z])\b", text)
+    out = []
+    for name in names:
+        if name and name not in out:
+            out.append(name)
+    return out
+
+
+def extract_prediction(text):
+    """Return the measurable direction of a prediction, or None."""
+    if not isinstance(text, str):
+        return {"direction": None, "measurable": False,
+                "needs_refinement": True}
+    low = text.lower()
+    increase = any(w in low for w in
+                   ("increase", "increases", "rise", "rises", "higher",
+                    "greater", "grow", "grows", "positive"))
+    decrease = any(w in low for w in
+                   ("decrease", "decreases", "fall", "falls", "lower",
+                    "less", "shrink", "shrinks", "negative"))
+    if increase and decrease:
+        direction = "mixed"
+    elif increase:
+        direction = "increase"
+    elif decrease:
+        direction = "decrease"
+    else:
+        direction = None
+    measurable = bool(re.search(r"\d", text)) or direction in (
+        "increase", "decrease")
+    return {"direction": direction, "measurable": measurable,
+            "needs_refinement": direction in (None, "mixed")}
+
+
+def parse_hypothesis(record):
+    """Parse one hypothesis record without inventing missing values.
+
+    `proposed_explanation` is the schema field; `statement` is accepted
+    as its alias and both are emitted. A missing statement is a named
+    error. Confidence stays None when unset and is refused outside 0..1.
+    """
+    if not isinstance(record, dict):
+        raise ValueError("hypothesis record must be an object")
+    statement = record.get("statement") or record.get("proposed_explanation")
+    if not isinstance(statement, str) or not statement.strip():
+        raise ValueError("hypothesis missing required field 'statement'")
+    statement = statement.strip()
+    hid = _text_field(record, "id")
+    question = _text_field(record, "research_question")
+    measurable = _text_field(record, "measurable_prediction")
+    alternative = _text_field(record, "alternative_explanation")
+    disproof = _text_field(record, "disproof_condition")
+    level = record.get("evidence_level", 0)
+    if isinstance(level, bool) or not isinstance(level, int) or not 0 <= level <= 6:
+        raise ValueError("evidence_level must be an integer 0..6")
+    confidence = record.get("confidence")
+    if confidence is not None:
+        if isinstance(confidence, bool) or not isinstance(confidence, (int, float)):
+            raise ValueError("confidence must be a number or null")
+        if not 0 <= confidence <= 1:
+            raise ValueError("confidence must be between 0 and 1")
+    parsed = dict(record)
+    parsed.update({
+        "id": hid, "statement": statement,
+        "proposed_explanation": statement,
+        "research_question": question,
+        "measurable_prediction": measurable,
+        "alternative_explanation": alternative,
+        "disproof_condition": disproof,
+        "evidence_level": level,
+        "confidence": float(confidence) if confidence is not None else None,
+        "variables": extract_variables(statement + " " + measurable),
+        "prediction": extract_prediction(measurable),
+    })
+    parsed["testable"] = bool(parsed["variables"])
+    return parsed
+
+
+def validate_hypothesis_against_schema(record):
+    """Validate a parsed hypothesis against schemas/hypothesis.schema.json."""
+    from literature import validate_against_schema
+    with open(SCHEMA_PATH, "r", encoding="utf-8") as fh:
+        schema = json.load(fh)
+    return validate_against_schema(record, schema)
+
+
+def classify_hypothesis(record, chain_cycle=False):
+    """Classify as testable, untestable, needs_refinement, or cyclic."""
+    if chain_cycle or (isinstance(record, dict) and record.get("chain_cycle")):
+        return "cyclic"
+    try:
+        parsed = parse_hypothesis(record)
+    except (ValueError, TypeError):
+        return "untestable"
+    if not parsed["variables"]:
+        return "untestable"
+    if parsed["prediction"]["needs_refinement"]:
+        return "needs_refinement"
+    return "testable"
+
+
+def link_evidence(record, source_ids, known_source_ids=None):
+    """Attach source ids to a hypothesis, refusing unknown ids."""
+    if not isinstance(record, dict):
+        raise ValueError("hypothesis record must be an object")
+    if isinstance(source_ids, str):
+        source_ids = [source_ids]
+    if not isinstance(source_ids, (list, tuple)):
+        raise TypeError("source_ids must be a list")
+    if known_source_ids is not None:
+        known = set(str(s) for s in known_source_ids)
+        for sid in source_ids:
+            if str(sid) not in known:
+                raise ValueError("unknown source id %r" % (sid,))
+    out = dict(record)
+    existing = [str(s) for s in (record.get("sources") or [])]
+    for sid in source_ids:
+        sid = str(sid)
+        if sid and sid not in existing:
+            existing.append(sid)
+    out["sources"] = existing
+    return out
+
+
+def normalize_statement(text):
+    """Lowercase, collapse whitespace, and drop a trailing period."""
+    if not isinstance(text, str):
+        return ""
+    return re.sub(r"\s+", " ", text.strip().lower()).rstrip(".")
+
+
+def find_duplicate_statements(records):
+    """Indices of hypotheses whose statement duplicates an earlier one."""
+    seen = set()
+    duplicates = []
+    for index, record in enumerate(records):
+        if not isinstance(record, dict):
+            continue
+        text = record.get("statement") or record.get("proposed_explanation") or ""
+        key = normalize_statement(text)
+        if key and key in seen:
+            duplicates.append(index)
+        elif key:
+            seen.add(key)
+    return duplicates
+
+
+def step8_block(reason="step 8 is silent in the source text"):
+    """The always-blocking step-8 result. Never returns a working step."""
+    return {"step": STEP_8, "status": "blocked", "blocked": True,
+            "marker": UNIMPLEMENTED, "reason": reason}
+
+
+def requires_step8(value):
+    """True when a phase/step/gate names the unimplemented step 8."""
+    if isinstance(value, dict):
+        for key in ("step", "phase", "gate", "target"):
+            if key in value and requires_step8(value[key]):
+                return True
+        return False
+    if isinstance(value, int) and not isinstance(value, bool):
+        return value == 8
+    if isinstance(value, str):
+        return value.strip().lower() in ("8", STEP_8, "step-8", "step 8")
+    return False

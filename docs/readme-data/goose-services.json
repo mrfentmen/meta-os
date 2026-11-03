@@ -1,0 +1,8 @@
+{
+  "name": "Goose services",
+  "purpose": "Small service programs (echo, heartbeat, MCP host, updater) written in the Goose format.",
+  "status": "UNIMPLEMENTED",
+  "proof": "services/*/*.goose (source only)",
+  "limits": "No Goose service has a running process on the kernel yet. The programs are source, not a live service plane.",
+  "notes": "Kernel status records this gap plainly."
+}

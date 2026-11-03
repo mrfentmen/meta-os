@@ -1,0 +1,13 @@
+== patrol -> review -> investigation -> response ==
+outcome: cleared-by-review
+incident_id: incident-725c546b990dd1b4
+incidents recorded: 1
+incident status: closed-false-positive
+timeline steps: flag,decision,review,decision,evidence-purged
+package dispatch_mode: None
+package human_verify: None
+package simulated: None
+picture.frame: None
+picture.evidence_crop: None
+receipt_id: sim-UNKNOWN
+FACE-45 MEDICUS LOOP NOT GREEN: cleared-by-review

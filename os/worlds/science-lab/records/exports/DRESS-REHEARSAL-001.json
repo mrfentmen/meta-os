@@ -1,6 +1,7 @@
 {
   "claims": [
     {
+      "automatically_confirmed": false,
       "basis": "held-out rows 11-30 RMSE 0.8177 vs pre-registered <= 1.5; pipeline reproduced",
       "claim_id": "CLAIM-DRESS-REHEARSAL-001",
       "level": 2,
@@ -10,6 +11,7 @@
       "verdict": "match"
     },
     {
+      "automatically_confirmed": true,
       "basis": "filed repository experiment (verification_status=reproduced)",
       "claim_id": "EXP-DRESS-REHEARSAL-001",
       "level": 2,
@@ -19,6 +21,7 @@
       "verdict": "reproduced"
     },
     {
+      "automatically_confirmed": false,
       "basis": "sealed_record.levels.computation=2; verification: ?; claim capped at 2; ",
       "claim_id": "DRESS-REHEARSAL-001-computation",
       "level": 2,
@@ -34,6 +37,7 @@
   "cycle_id": "DRESS-REHEARSAL-001",
   "display": [
     {
+      "automatically_confirmed": false,
       "basis": "held-out rows 11-30 RMSE 0.8177 vs pre-registered <= 1.5; pipeline reproduced",
       "claim_id": "CLAIM-DRESS-REHEARSAL-001",
       "colour": "green",
@@ -41,6 +45,7 @@
       "statement": "ESOL-style predictions match measured solubility on 20 held-out compounds within RMSE 1.5 (observed RMSE 0.8177)."
     },
     {
+      "automatically_confirmed": true,
       "basis": "filed repository experiment (verification_status=reproduced)",
       "claim_id": "EXP-DRESS-REHEARSAL-001",
       "colour": "green",
@@ -48,6 +53,7 @@
       "statement": "Can ESOL-style linear model predict solubility for 20 held-out compounds within RMSE 1.5?"
     },
     {
+      "automatically_confirmed": false,
       "basis": "sealed_record.levels.computation=2; verification: ?; claim capped at 2; ",
       "claim_id": "DRESS-REHEARSAL-001-computation",
       "colour": "green",
@@ -57,7 +63,7 @@
   ],
   "export_version": "science-lab-export/1",
   "gate_state": "open",
-  "generated_at": "2026-11-02T14:11:41.944972Z",
+  "generated_at": "2026-11-02T16:35:25.118412Z",
   "generated_by": "os/worlds/science-lab/export.py export_session",
   "honesty": [
     "Generated from records by export_session; no hand-written levels.",

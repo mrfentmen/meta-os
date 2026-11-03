@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Web
+GenericName=Web Browser
+Comment=Browse with the Meta start page
+Exec=chromium --no-first-run
+Icon=chromium
+Terminal=false
+Categories=Network;WebBrowser;
+StartupNotify=true
+MimeType=text/html;x-scheme-handler/http;x-scheme-handler/https;

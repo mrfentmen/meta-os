@@ -1,0 +1,424 @@
+{
+  "camera": {
+    "area": "Manhattan",
+    "id": "cam-b",
+    "latitude": 40.771797,
+    "longitude": -73.979217,
+    "name": "Central Park West @ 65 St"
+  },
+  "category": "visible flame",
+  "created_at": "2026-11-02T06:54:26.361Z",
+  "division": "ignis",
+  "evidence": {
+    "detector": "injected",
+    "files": [
+      {
+        "bytes": 1302,
+        "camera_id": "cam-b",
+        "kind": "flag-frame",
+        "ref": "evidence/incident-2eceddca76f1e61f/flag-frame-cam-b-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-b",
+        "kind": "face-crop",
+        "ref": "evidence/incident-2eceddca76f1e61f/face-crop-cam-b-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-b",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-b-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-b",
+        "kind": "face-crop",
+        "ref": "evidence/incident-2eceddca76f1e61f/face-crop-cam-b-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-b",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-b-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-b",
+        "kind": "face-crop",
+        "ref": "evidence/incident-2eceddca76f1e61f/face-crop-cam-b-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-c",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-c-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-c",
+        "kind": "face-crop",
+        "ref": "evidence/incident-2eceddca76f1e61f/face-crop-cam-c-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-n4",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-n4-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-n4",
+        "kind": "face-crop",
+        "ref": "evidence/incident-2eceddca76f1e61f/face-crop-cam-n4-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      },
+      {
+        "bytes": 1302,
+        "camera_id": "cam-n3",
+        "kind": "investigation-frame",
+        "ref": "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-n3-d0966c.jpg",
+        "sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+      },
+      {
+        "box": {
+          "h": 64,
+          "w": 64,
+          "x": 60,
+          "y": 60
+        },
+        "bytes": 823,
+        "camera_id": "cam-n3",
+        "kind": "face-crop",
+        "ref": "evidence/incident-2eceddca76f1e61f/face-crop-cam-n3-283674.jpg",
+        "sha256": "283674a9bec62423ab9a2253ba5c6727e7d2a04c62943bde01d563df02bb9d9e"
+      }
+    ],
+    "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de"
+  },
+  "id": "incident-2eceddca76f1e61f",
+  "patrol_job_id": "trio-a3378774950b307e6f63ad4c5f670465",
+  "priority": "high",
+  "status": "dispatched-simulated",
+  "timeline": [
+    {
+      "at": "2026-11-02T06:54:26.362Z",
+      "category": "visible flame",
+      "division": "ignis",
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-a3378774950b307e6f63ad4c5f670465",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "priority": "high",
+      "step": "flag",
+      "summary": "stubbed summary: visible flame"
+    },
+    {
+      "actions": [
+        {
+          "agent": "review",
+          "task": "Independent second assessment of the flagged frame (review survival rule: the flag stands only if this reading also lands outside the baseline set)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T06:54:26.362Z",
+      "decision": "investigate",
+      "reason": "flagged category \"visible flame\" is outside the ignis baseline set and no independent review has been recorded yet",
+      "status": "under_review",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T06:54:26.363Z",
+      "category": "visible flame",
+      "error": null,
+      "job_id": "trio-d9727b21726cf7fa06b3ca78e7a5f975",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "review",
+      "summary": "stubbed summary: visible flame",
+      "verdict": "confirmed"
+    },
+    {
+      "at": "2026-11-02T06:54:26.363Z",
+      "status": "reported",
+      "step": "reported"
+    },
+    {
+      "actions": [
+        {
+          "agent": "investigation",
+          "task": "Assess the incident camera under the other divisions' lenses, then up to 3 nearest cameras under the origin division (bounded by MAX_INVESTIGATION_CALLS)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T06:54:26.364Z",
+      "decision": "investigate",
+      "reason": "the flag survived review and no investigation has been recorded; additional evidence is gathered before any response is prepared",
+      "status": "investigating",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T06:54:26.364Z",
+      "camera_id": "cam-b",
+      "camera_name": "Central Park West @ 65 St",
+      "category": "normal activity",
+      "division": "vigiles",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-b5062a1e0a1b30ca947f3709de987147",
+      "kind": "cross-lens",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": "investigating",
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T06:54:26.364Z",
+      "files": [
+        "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-b-d0966c.jpg",
+        "evidence/incident-2eceddca76f1e61f/face-crop-cam-b-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T06:54:26.365Z",
+      "camera_id": "cam-b",
+      "camera_name": "Central Park West @ 65 St",
+      "category": "normal activity",
+      "division": "medicus",
+      "error": null,
+      "flagged": false,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-a06ec54284b13fb8e58f01546fd77d3d",
+      "kind": "cross-lens",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T06:54:26.365Z",
+      "files": [
+        "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-b-d0966c.jpg",
+        "evidence/incident-2eceddca76f1e61f/face-crop-cam-b-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T06:54:26.366Z",
+      "camera_id": "cam-c",
+      "camera_name": "Broadway @ 45 St",
+      "category": "visible flame",
+      "division": "ignis",
+      "error": null,
+      "flagged": true,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-0657b8a9b7711980ed82cc16e5905233",
+      "kind": "neighbour",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T06:54:26.366Z",
+      "files": [
+        "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-c-d0966c.jpg",
+        "evidence/incident-2eceddca76f1e61f/face-crop-cam-c-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T06:54:26.368Z",
+      "camera_id": "cam-n4",
+      "camera_name": "Neighbour 4",
+      "category": "visible flame",
+      "division": "ignis",
+      "error": null,
+      "flagged": true,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-2c6b5df13ae7bc61c2184494e5724a6a",
+      "kind": "neighbour",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T06:54:26.368Z",
+      "files": [
+        "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-n4-d0966c.jpg",
+        "evidence/incident-2eceddca76f1e61f/face-crop-cam-n4-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "at": "2026-11-02T06:54:26.370Z",
+      "camera_id": "cam-n3",
+      "camera_name": "Neighbour 3",
+      "category": "visible flame",
+      "division": "ignis",
+      "error": null,
+      "flagged": true,
+      "frame_sha256": "d0966c6d8722c4d6e8aa730341523a171f1550b1e104fee8cb46fc01adab90de",
+      "job_id": "trio-e4a136ca0f6f41ec46a05fe551f23171",
+      "kind": "neighbour",
+      "latency_ms": 7,
+      "model": "muse-spark-1.3",
+      "status": null,
+      "step": "investigation"
+    },
+    {
+      "at": "2026-11-02T06:54:26.370Z",
+      "files": [
+        "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-n3-d0966c.jpg",
+        "evidence/incident-2eceddca76f1e61f/face-crop-cam-n3-283674.jpg"
+      ],
+      "step": "evidence"
+    },
+    {
+      "actions": [
+        {
+          "agent": "response",
+          "task": "Build the incident brief from the recorded assessments and submit it, picture included, to the simulated dispatch endpoint (loopback-only, labelled simulated; the agent sends it with no human verify step \u2014 requires_human_review stays true as the post-hoc audit flag, and the agency verify policy may hold the package in the crew)"
+        }
+      ],
+      "actions_count": 1,
+      "agent": "orchestrator",
+      "at": "2026-11-02T06:54:26.371Z",
+      "decision": "prepare_response",
+      "reason": "flagged, confirmed by independent review, and investigated; the response brief is prepared and submitted to the simulated dispatch endpoint only",
+      "status": "response_prepared",
+      "step": "decision"
+    },
+    {
+      "at": "2026-11-02T06:54:26.372Z",
+      "brief": {
+        "assessment": {
+          "category": "visible flame",
+          "requires_human_review": true,
+          "summary": "stubbed summary: visible flame",
+          "uncertainty": [
+            "stubbed uncertainty"
+          ]
+        },
+        "observations": [
+          {
+            "category": "visible flame",
+            "confidence": 0.8,
+            "description": "stubbed reading: visible flame",
+            "evidence": "center of frame"
+          },
+          {
+            "category": "visible flame",
+            "confidence": 0.8,
+            "description": "stubbed reading: visible flame",
+            "evidence": "center of frame"
+          },
+          {
+            "category": "visible flame",
+            "confidence": 0.8,
+            "description": "stubbed reading: visible flame",
+            "evidence": "center of frame"
+          },
+          {
+            "category": "visible flame",
+            "confidence": 0.8,
+            "description": "stubbed reading: visible flame",
+            "evidence": "center of frame"
+          },
+          {
+            "category": "visible flame",
+            "confidence": 0.8,
+            "description": "stubbed reading: visible flame",
+            "evidence": "center of frame"
+          }
+        ],
+        "processing": {
+          "latency_ms": 49,
+          "model": "muse-spark-1.3"
+        },
+        "product": "ignis",
+        "timestamp": "2026-11-02T06:54:26.372Z"
+      },
+      "step": "brief"
+    },
+    {
+      "at": "2026-11-02T06:54:26.373Z",
+      "bolo": {
+        "area": "Manhattan",
+        "camera_name": "Central Park West @ 65 St",
+        "category": "visible flame",
+        "direction_note": "Not determined from still frames.",
+        "direction_of_travel": null,
+        "division": "ignis",
+        "face_crops": 6,
+        "flagged_at": "2026-11-02T06:54:26.361Z",
+        "frame_files": [
+          "evidence/incident-2eceddca76f1e61f/flag-frame-cam-b-d0966c.jpg",
+          "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-b-d0966c.jpg",
+          "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-b-d0966c.jpg",
+          "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-c-d0966c.jpg",
+          "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-n4-d0966c.jpg",
+          "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-n3-d0966c.jpg"
+        ],
+        "person_descriptions": [
+          "stubbed reading: visible flame",
+          "stubbed reading: normal activity"
+        ],
+        "visible_marks": []
+      },
+      "step": "bolo"
+    },
+    {
+      "at": "2026-11-02T06:54:26.378Z",
+      "receipt_id": "sim-9da0ad66d87add2e",
+      "simulated": true,
+      "status": "dispatched-simulated",
+      "step": "dispatch"
+    }
+  ]
+}

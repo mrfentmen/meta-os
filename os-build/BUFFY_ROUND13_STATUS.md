@@ -7,7 +7,7 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 |---|---|---|---|
 | A — services contract depth | **COMPLETE** | 25 / 25 audited; 39 gaps | `os-build/round13/SECTION_A.md` |
 | B — services failure paths | **COMPLETE** | 25 / 25; 23 gaps, 2 observed | `os-build/round13/failures/SECTION_B.md` |
-| C — services restart/state | **COMPLETE** | 10 / 10; 1 drilled, 9 gaps | `os-build/round13/restarts/SECTION_C.md` |
+| C — services restart/state | **COMPLETE** | 25 / 25; 1 drilled, 24 gaps | `os-build/round13/restarts/SECTION_C.md` |
 | D — services third ring | **COMPLETE** | 25 / 25; **0 pairs exist**, 1 live permission (dhcp→net, unused) | `os-build/round13/pairs/SECTION_D.md` |
 | E — Aegis OSV sweeps | **COMPLETE** | 25 / 25; 10 real manifests, 15 missing, 107 refs, **0 findings**, control passed | `os-build/round13/aegis/SECTION_E.md` |
 | F — Aegis KEV cross-check | **COMPLETE** | 25 / 25; 0 findings to check, feed 2026.10.30 (1,766 entries), control passed | `os-build/round13/aegis/SECTION_F.md` |
@@ -23,7 +23,7 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | P — Hands-Free intake | **COMPLETE** | 25 / 25; **25 tests pass**, 14 findings, 3 fences checked | `os-build/round13/handsfree/SECTION_P.md` |
 | Q — Nuntius relay | **COMPLETE** | 25 / 25; **25 tests pass**, 8 findings | `os-build/round13/nuntius/SECTION_Q.md` |
 | R — Nuntius board | **COMPLETE** | 25 / 25; **25 tests pass**, 4 findings, DOM dumps in `dom/` | `os-build/round13/nuntius/SECTION_R.md` |
-| S — userspace | **WRITTEN — CHECK BLOCKED** | 25 / 25 sources; 19 implemented, 1 partial, 6 ABI-blocked; `cargo check` blocked on this host's toolchain | `os-build/round13/userspace/SECTION_S.md` |
+| S — userspace | **WRITTEN — CHECK BLOCKED** | 25 / 25 sources; 18 implemented, 1 partial, 6 ABI-blocked; `cargo check` blocked on this host's toolchain | `os-build/round13/userspace/SECTION_S.md` |
 | T — federation + closeout | **COMPLETE** | 15 SIMULATED drills + 10 closeout docs; 19 labelled records | `os-build/round13/federation/SECTION_T.md`, `FINISH.md` |
 
 **Sections A–T:** 500 / 500 addressed (S is written and committed; its `cargo check` is a host-toolchain gap, so nothing in S is called compiled or booted) — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests

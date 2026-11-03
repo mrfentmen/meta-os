@@ -34,12 +34,65 @@ REPO_ROOT = os.path.abspath(os.path.join(QUEUE_DIR, "..", ".."))
 COMMAND_FLAG_PATH = os.path.join(REPO_ROOT, "js", "command-flag.js")
 CAMERA_FALLBACK_PATH = os.path.join(REPO_ROOT, "js", "camera-fallback.js")
 
+LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
 _cache = {}
+
+
+class DispatchBoundaryError(RuntimeError):
+    """A dispatch URL that is not the local simulated endpoint."""
+
+
+def check_dispatch_url(url):
+    """Refuse any dispatch target that is not loopback. This is the
+    pure guard used before every crew dispatch; userinfo is refused
+    too so a URL cannot smuggle a different authority past the host
+    check. A query or fragment is allowed (the local endpoint may
+    carry one) and is pinned by test."""
+    from urllib.parse import urlparse
+    if not isinstance(url, str) or not url:
+        raise DispatchBoundaryError(
+            "dispatch URL is empty: the crew dispatches ONLY to the "
+            "local SIMULATED endpoint")
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname
+    except ValueError as err:
+        raise DispatchBoundaryError(
+            f"dispatch URL is not parseable: {err}") from None
+    if parsed.username is not None or parsed.password is not None:
+        raise DispatchBoundaryError(
+            "dispatch URL carries userinfo: the crew dispatches ONLY "
+            "to the local SIMULATED endpoint")
+    if host not in LOOPBACK_HOSTS:
+        raise DispatchBoundaryError(
+            f"dispatch URL host {host!r} is not loopback: the crew "
+            "dispatches ONLY to the local SIMULATED endpoint")
+    return url
 
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat(
         timespec="milliseconds").replace("+00:00", "Z")
+
+
+def iso_to_epoch(value):
+    """ISO-8601 timestamp to epoch seconds. Accepts a trailing Z and
+    numeric offsets; refuses a naive timestamp (no timezone marker)
+    rather than guessing UTC."""
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("timestamp must be a non-empty ISO string")
+    text = value.strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError as err:
+        raise ValueError(f"invalid ISO timestamp: {value!r}") from err
+    if parsed.tzinfo is None:
+        raise ValueError(
+            f"timestamp has no timezone marker: {value!r}")
+    return parsed.timestamp()
 
 
 # -- js sources of truth, loaded through node (trio_repo pattern) ------

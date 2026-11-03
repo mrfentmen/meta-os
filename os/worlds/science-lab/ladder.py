@@ -297,6 +297,70 @@ def cap_for_experiment(verification_status, is_prediction=False):
             verification_status, list(VALID_VERIFICATION_STATUSES)))
 
 
+def required_evidence(level):
+    """Evidence kinds needed to leave `level` (empty at level 6)."""
+    level = _coerce_level(level, "required_evidence")
+    if level == MAX_LEVEL:
+        return []
+    rule = PROMOTION_RULES.get((level, level + 1))
+    return [rule["evidence_kind"]] if rule else []
+
+
+def missing_evidence(level, present_kinds):
+    """Required evidence kinds not present, in ladder order."""
+    present = {_normalize_evidence_kind(kind) for kind in present_kinds}
+    return [kind for kind in required_evidence(level) if kind not in present]
+
+
+def _kind_matches(kind, expected):
+    norm = _normalize_evidence_kind(kind)
+    if norm == expected:
+        return True
+    aliases = {
+        "pinned_source_claims": _PINNED_SOURCES,
+        "computational_result": _COMPUTATIONAL_RESULTS,
+        "independent_reproduction": _REPRODUCTIONS,
+    }
+    return norm in aliases.get(expected, set())
+
+
+def level_from_evidence(evidence):
+    """Compute the automated level from evidence entries.
+
+    Entries are str kinds or dicts {kind, verification_status, fake}.
+    Fake fixtures never promote. The automated ceiling is 3; human
+    evidence is not counted here.
+    """
+    if not isinstance(evidence, (list, tuple)):
+        raise TypeError("evidence must be a list")
+    level = 0
+    for current in range(MAX_AUTOMATED_LEVEL):
+        expected = PROMOTION_RULES[(current, current + 1)]["evidence_kind"]
+        matched = False
+        for entry in evidence:
+            if isinstance(entry, str):
+                kind, status, fake = entry, "unverified", False
+            elif isinstance(entry, dict):
+                kind = entry.get("kind")
+                status = entry.get("verification_status", "unverified")
+                fake = bool(entry.get("fake"))
+            else:
+                continue
+            if fake or not _kind_matches(kind, expected):
+                continue
+            status = _normalize_verification_status(status)
+            if current == 2 and status != "reproduced":
+                continue
+            if current < 2 and status not in ("unverified", "reproduced"):
+                continue
+            matched = True
+            break
+        if not matched:
+            break
+        level = current + 1
+    return level
+
+
 __all__ = [
     "LEVELS",
     "UNIMPLEMENTED",
@@ -310,4 +374,7 @@ __all__ = [
     "next_required",
     "assert_export_allowed",
     "cap_for_experiment",
+    "required_evidence",
+    "missing_evidence",
+    "level_from_evidence",
 ]

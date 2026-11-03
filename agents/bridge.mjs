@@ -14,6 +14,29 @@ export const BST_STOPPED = "stopped";
 export const BST_RUNNING = "running";
 export const BST_FAILED = "failed";
 
+// CB2-392: the bridge has one message, and it is the reply to a start or a stop.
+// It is addressed to the agent, carries a kind and a body, and is versioned so a
+// reader can tell a shaped reply from a ledger note. A message with no
+// destination is refused: a reply to nobody is not a message.
+export const WIRE_FIELDS = ["v", "to", "kind", "body", "ts"];
+
+export function toWire(message) {
+  if (!message || typeof message !== "object") throw new Error("bridge: message has no destination");
+  if (typeof message.to !== "string" || !message.to.trim()) {
+    throw new Error("bridge: message has no destination");
+  }
+  if (typeof message.kind !== "string" || !message.kind.trim()) {
+    throw new Error("bridge: message has no kind");
+  }
+  return {
+    v: 1,
+    to: message.to.trim(),
+    kind: message.kind.trim(),
+    body: message.body && typeof message.body === "object" ? { ...message.body } : {},
+    ts: Number.isFinite(message.ts) ? message.ts : Date.now(),
+  };
+}
+
 export function loadBoot(file) {
   const raw = JSON.parse(fs.readFileSync(file, "utf8"));
   if (!Array.isArray(raw.boot)) throw new Error("boot: 'boot' must be an array");
@@ -48,8 +71,11 @@ export function createBridge({ root, registryFile, bootFile }) {
 
   const stopMarker = (name) => path.join(stopDir, name + ".STOP");
   const refuse = (name, reason, extra = {}) => {
+    // The refusal is answered to the agent that asked, in the wire shape, so the
+    // ledger note and the reply cannot say different things.
+    const wire = toWire({ to: name, kind: "refused", body: { reason, ...extra } });
     ledger.add("bridge", "refused", { agent: name, reason, ...extra });
-    return { ok: false, reason };
+    return { ok: false, reason, wire };
   };
 
   // Start one agent. Refusals are: unknown, already running, a dependency not running, a STOP

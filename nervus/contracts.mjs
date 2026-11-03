@@ -12,30 +12,48 @@
 //    in; it never calls a dose 'a little' or 'a lot' without the window."
 //   "The subspace correction: when the effect is a low-dimensional subspace, the record says
 //    subspace, never 'a neuron'."
+// Both doors write the same ledger: a sweep and a steer are different operations,
+// but they are one record trail, so a later reader never has to join two files to
+// see what was done to a model.
+export const SHARED_LEDGER = "nervus-record";
+
+// Every operation below declares `requires_real_run: true` and says so in the
+// same field. It is true because no operation has run on a real model yet; when
+// one does, its record carries the run, not this flag alone.
 export const OPERATIONS = {
   sweep: {
     requires: ["model_hash", "layer_from", "layer_to"],
     produces: ["neurons", "results"],
+    requires_real_run: true,
+    ledger: SHARED_LEDGER,
     why: "measure every neuron in a layer range before claiming one matters",
   },
   steer: {
     requires: ["model_hash", "layer", "neuron", "dose", "zone", "probe"],
     produces: ["output", "result"],
+    requires_real_run: true,
+    ledger: SHARED_LEDGER,
     why: "a single-neuron intervention with a dose and a probe",
   },
   ablate: {
     requires: ["model_hash", "layer", "neuron", "probe"],
     produces: ["output", "result"],
+    requires_real_run: true,
+    ledger: SHARED_LEDGER,
     why: "remove a neuron and measure what the model no longer does",
   },
   evaluate_delta: {
     requires: ["model_hash", "before_hash", "after_hash", "probe"],
     produces: ["delta", "result"],
+    requires_real_run: true,
+    ledger: SHARED_LEDGER,
     why: "the before/after receipt; nothing ships without one",
   },
   map_layers: {
     requires: ["model_hash"],
     produces: ["layers"],
+    requires_real_run: true,
+    ledger: SHARED_LEDGER,
     why: "the layer curve, before any single-layer story",
   },
 };

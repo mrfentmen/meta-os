@@ -26,6 +26,13 @@
 //   text : 1-2000 chars, single line
 //   topic: 1-64 chars, single line
 //   request body: at most 16384 bytes of JSON
+//   since: -1 or a non-negative integer; lower values are refused
+//   limit: 1-1000, applied to the oldest pending lines
+//
+// Each room keeps at most MAX_ROOM_LINES lines (default 1000). When the
+// cap is exceeded the oldest lines are dropped, never below
+// MIN_RETAINED_LINES. POST /messages returns {index, id}; the id is a
+// stable digest of room + index + line.
 //
 // Storage is in-memory by default. If RELAY_STORE_FILE is set, every
 // appended line is also written to that file as one JSON record per
@@ -47,6 +54,9 @@ export const MAX_BODY_BYTES = 16384;
 export const MAX_NICK_CHARS = 40;
 export const MAX_TEXT_CHARS = 2000;
 export const MAX_TOPIC_CHARS = 64;
+export const MAX_ROOM_LINES = 1000;
+export const MIN_RETAINED_LINES = 10;
+export const MAX_READ_LIMIT = 1000;
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const VIEWER_PATH = path.join(HERE, "viewer.html");
@@ -58,6 +68,82 @@ function isSingleLine(value, max) {
     value.length <= max &&
     !/[\u0000-\u001f\u007f]/.test(value)
   );
+}
+
+export function validateMessage(payload) {
+  if (!payload || typeof payload !== "object") {
+    return { ok: false, error: "request body must be a JSON object" };
+  }
+  if (!isSingleLine(payload.nick, MAX_NICK_CHARS)) {
+    return {
+      ok: false,
+      error: `nick must be a single line of 1-${MAX_NICK_CHARS} chars`,
+    };
+  }
+  if (!isSingleLine(payload.text, MAX_TEXT_CHARS)) {
+    return {
+      ok: false,
+      error: `text must be a single line of 1-${MAX_TEXT_CHARS} chars`,
+    };
+  }
+  return { ok: true };
+}
+
+export function validateNotify(payload) {
+  if (!payload || typeof payload !== "object") {
+    return { ok: false, error: "request body must be a JSON object" };
+  }
+  if (!SEVERITIES.has(payload.severity)) {
+    return {
+      ok: false,
+      error: 'severity must be one of "info", "warning", "critical"',
+    };
+  }
+  if (!isSingleLine(payload.topic, MAX_TOPIC_CHARS)) {
+    return {
+      ok: false,
+      error: `topic must be a single line of 1-${MAX_TOPIC_CHARS} chars`,
+    };
+  }
+  if (!isSingleLine(payload.text, MAX_TEXT_CHARS)) {
+    return {
+      ok: false,
+      error: `text must be a single line of 1-${MAX_TEXT_CHARS} chars`,
+    };
+  }
+  return { ok: true };
+}
+
+export function formatMessage(nick, text, tsSeconds) {
+  const ts = tsSeconds === undefined ? Math.floor(Date.now() / 1000) : tsSeconds;
+  return `${nick}: ${text} [ts:${ts}]`;
+}
+
+export function parseMessageLine(line) {
+  const match = /^(.*): (.*) \[ts:(\d+)\]$/.exec(String(line));
+  if (!match) {
+    throw new Error(
+      "malformed message line: expected '<nick>: <text> [ts:<seconds>]'"
+    );
+  }
+  return { nick: match[1], text: match[2], ts: Number(match[3]) };
+}
+
+export function messageId(room, index, line) {
+  const basis = `${room}\n${index}\n${line}`;
+  return "msg-" + createHash("sha256").update(basis).digest("hex").slice(0, 16);
+}
+
+export function trimLines(lines, maxLines = MAX_ROOM_LINES) {
+  if (!Array.isArray(lines)) {
+    throw new TypeError("trimLines requires an array of lines");
+  }
+  const requested = Number(maxLines);
+  const cap = Number.isFinite(requested)
+    ? Math.max(1, Math.floor(requested))
+    : MAX_ROOM_LINES;
+  const keep = Math.max(cap, MIN_RETAINED_LINES);
+  return lines.length <= keep ? lines.slice() : lines.slice(lines.length - keep);
 }
 
 export function notifyId(room, topic, severity, text) {
@@ -73,6 +159,10 @@ export function createRelayServer(options = {}) {
 
   /** @type {Map<string, string[]>} room name -> lines */
   const rooms = new Map();
+  const configuredCap = Number(options.maxLinesPerRoom);
+  const roomCap = Number.isFinite(configuredCap)
+    ? configuredCap
+    : MAX_ROOM_LINES;
 
   if (storeFile && existsSync(storeFile)) {
     for (const raw of readFileSync(storeFile, "utf8").split("\n")) {
@@ -93,8 +183,12 @@ export function createRelayServer(options = {}) {
   function appendLine(room, line) {
     if (!rooms.has(room)) rooms.set(room, []);
     const lines = rooms.get(room);
-    const index = lines.length;
     lines.push(line);
+    if (lines.length > roomCap) {
+      const kept = trimLines(lines, roomCap);
+      lines.splice(0, lines.length, ...kept);
+    }
+    const index = lines.length - 1;
     if (storeFile) {
       try {
         appendFileSync(storeFile, JSON.stringify({ room, line }) + "\n");
@@ -122,7 +216,7 @@ export function createRelayServer(options = {}) {
         size += chunk.length;
         if (size > MAX_BODY_BYTES) {
           reject(new Error("request body too large"));
-          req.destroy();
+          req.resume(); // drain so the 400 response can still be sent
           return;
         }
         chunks.push(chunk);
@@ -137,7 +231,9 @@ export function createRelayServer(options = {}) {
     try {
       raw = await readBody(req);
     } catch {
-      sendJson(res, 400, { error: "request body too large or unreadable" });
+      sendJson(res, 400, {
+        error: `request body too large (max ${MAX_BODY_BYTES} bytes) or unreadable`,
+      });
       return null;
     }
     try {
@@ -179,6 +275,14 @@ export function createRelayServer(options = {}) {
         return;
       }
 
+      if (req.method === "GET" && url.pathname === "/rooms") {
+        const list = [...rooms.entries()]
+          .map(([room, lines]) => ({ room, count: lines.length }))
+          .sort((a, b) => (a.room < b.room ? -1 : a.room > b.room ? 1 : 0));
+        sendJson(res, 200, { rooms: list });
+        return;
+      }
+
       if (parts.length === 3 && parts[0] === "rooms") {
         const room = decodeURIComponent(parts[1]);
         const action = parts[2];
@@ -192,46 +296,26 @@ export function createRelayServer(options = {}) {
         if (req.method === "POST" && action === "messages") {
           const body = await readJsonBody(req, res);
           if (body === null) return;
-          const { nick, text } = body;
-          if (!isSingleLine(nick, MAX_NICK_CHARS)) {
-            sendJson(res, 400, {
-              error: `nick must be a single line of 1-${MAX_NICK_CHARS} chars`,
-            });
+          const checked = validateMessage(body);
+          if (!checked.ok) {
+            sendJson(res, 400, { error: checked.error });
             return;
           }
-          if (!isSingleLine(text, MAX_TEXT_CHARS)) {
-            sendJson(res, 400, {
-              error: `text must be a single line of 1-${MAX_TEXT_CHARS} chars`,
-            });
-            return;
-          }
-          const line = `${nick}: ${text} [ts:${Math.floor(Date.now() / 1000)}]`;
-          sendJson(res, 201, { index: appendLine(room, line) });
+          const line = formatMessage(body.nick, body.text);
+          const index = appendLine(room, line);
+          sendJson(res, 201, { index, id: messageId(room, index, line) });
           return;
         }
 
         if (req.method === "POST" && action === "notify") {
           const body = await readJsonBody(req, res);
           if (body === null) return;
+          const checked = validateNotify(body);
+          if (!checked.ok) {
+            sendJson(res, 400, { error: checked.error });
+            return;
+          }
           const { severity, topic, text } = body;
-          if (!SEVERITIES.has(severity)) {
-            sendJson(res, 400, {
-              error: 'severity must be one of "info", "warning", "critical"',
-            });
-            return;
-          }
-          if (!isSingleLine(topic, MAX_TOPIC_CHARS)) {
-            sendJson(res, 400, {
-              error: `topic must be a single line of 1-${MAX_TOPIC_CHARS} chars`,
-            });
-            return;
-          }
-          if (!isSingleLine(text, MAX_TEXT_CHARS)) {
-            sendJson(res, 400, {
-              error: `text must be a single line of 1-${MAX_TEXT_CHARS} chars`,
-            });
-            return;
-          }
           const id = notifyId(room, topic, severity, text);
           const line =
             `relay: NOTIFY:${id} ${severity} [${topic}] ${text} ` +
@@ -242,13 +326,40 @@ export function createRelayServer(options = {}) {
 
         if (req.method === "GET" && action === "messages") {
           const rawSince = url.searchParams.get("since");
-          let since = rawSince === null ? -1 : Number.parseInt(rawSince, 10);
-          if (!Number.isFinite(since) || since < -1) since = -1;
+          let since = -1;
+          if (rawSince !== null) {
+            const parsed = Number(rawSince);
+            if (!Number.isInteger(parsed) || parsed < -1) {
+              sendJson(res, 400, {
+                error: "since must be -1 or a non-negative integer",
+              });
+              return;
+            }
+            since = parsed;
+          }
+          const rawLimit = url.searchParams.get("limit");
+          let limit = null;
+          if (rawLimit !== null) {
+            const parsed = Number(rawLimit);
+            if (
+              !Number.isInteger(parsed) ||
+              parsed < 1 ||
+              parsed > MAX_READ_LIMIT
+            ) {
+              sendJson(res, 400, {
+                error: `limit must be an integer from 1 to ${MAX_READ_LIMIT}`,
+              });
+              return;
+            }
+            limit = parsed;
+          }
           const lines = rooms.get(room) || [];
+          let messages = lines.slice(since + 1);
+          if (limit !== null) messages = messages.slice(0, limit);
           sendJson(res, 200, {
             room,
             total: lines.length,
-            messages: lines.slice(since + 1),
+            messages,
           });
           return;
         }

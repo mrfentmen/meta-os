@@ -1,0 +1,8 @@
+{
+  "name": "Meta Musica",
+  "purpose": "A music studio that never closes: seeded composition, take records, and a library of what was kept.",
+  "status": "CODE-INSPECTED",
+  "proof": "tests/musica-*.test.mjs and os/worlds/musica/runtime/",
+  "limits": "Rendered takes are working output; nothing here claims a released track or a model-driven performance.",
+  "notes": "The Python runtime renders real WAV audio deterministically from a seed."
+}

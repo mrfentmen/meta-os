@@ -587,6 +587,124 @@ def file_chain_record(chain, ledger_path, agent="research-director",
     return _ledger_append(str(ledger_path), record)
 
 
+# ------------------------------------------------------------------
+# Section 6: explicit step-chain graph. A step has a stable id, one
+# documented type, and an optional parent pointer. Builds are validated
+# (unknown type, missing parent, cycle, depth) and traversal is ordered.
+# ------------------------------------------------------------------
+
+CHAIN_STEP_TYPES = ("brief", "hypothesis", "decomposition",
+                    "preregistration", "critique", "result")
+MAX_CHAIN_DEPTH = 8
+
+
+class ChainError(ValueError):
+    """A step chain is malformed (type, parent, cycle, or depth)."""
+
+
+def build_step_chain(steps):
+    """Validate and copy a list of step dicts with parent pointers."""
+    if not isinstance(steps, (list, tuple)):
+        raise ChainError("chain steps must be a list")
+    copied = []
+    by_id = {}
+    for index, step in enumerate(steps):
+        if not isinstance(step, dict):
+            raise ChainError("step %d is not an object" % index)
+        sid = step.get("id")
+        if not isinstance(sid, str) or not sid.strip():
+            raise ChainError("step %d has no id" % index)
+        sid = sid.strip()
+        if sid in by_id:
+            raise ChainError("duplicate step id %r" % sid)
+        step_type = step.get("type")
+        if step_type not in CHAIN_STEP_TYPES:
+            raise ChainError(
+                "step %r has unknown type %r (allowed: %s)"
+                % (sid, step_type, ", ".join(CHAIN_STEP_TYPES)))
+        parent = step.get("parent_id")
+        if parent is not None and (not isinstance(parent, str) or not parent.strip()):
+            raise ChainError("step %r has an invalid parent_id" % sid)
+        copied_step = dict(step)
+        copied_step["id"] = sid
+        copied_step["parent_id"] = parent.strip() if isinstance(parent, str) else None
+        copied.append(copied_step)
+        by_id[sid] = copied_step
+    for step in copied:
+        parent = step["parent_id"]
+        if parent is not None and parent not in by_id:
+            raise ChainError(
+                "step %r references missing parent id %r"
+                % (step["id"], parent))
+    for step in copied:
+        seen = set()
+        cursor = step["id"]
+        depth = 0
+        while cursor is not None:
+            if cursor in seen:
+                raise ChainError("cycle in chain at step %r" % cursor)
+            seen.add(cursor)
+            depth += 1
+            cursor = by_id[cursor]["parent_id"]
+        if depth > MAX_CHAIN_DEPTH:
+            raise ChainError(
+                "chain depth %d exceeds documented maximum %d"
+                % (depth, MAX_CHAIN_DEPTH))
+    return copied
+
+
+def chain_to_dict(chain):
+    """Serialise a step chain to its documented dict form."""
+    steps = chain.get("steps") if isinstance(chain, dict) else chain
+    return {"kind": "reasoning-step-chain",
+            "steps": build_step_chain(steps)}
+
+
+def chain_from_dict(payload):
+    """Rebuild a validated step chain from its dict form."""
+    if not isinstance(payload, dict) or payload.get("kind") != "reasoning-step-chain":
+        raise ChainError("not a reasoning-step-chain record")
+    return build_step_chain(payload.get("steps"))
+
+
+def traverse_chain(chain):
+    """Preorder traversal; children are visited in id order, once each."""
+    steps = build_step_chain(chain.get("steps") if isinstance(chain, dict) else chain)
+    by_id = {s["id"]: s for s in steps}
+    children = {}
+    roots = []
+    for step in steps:
+        parent = step["parent_id"]
+        if parent is None:
+            roots.append(step["id"])
+        else:
+            children.setdefault(parent, []).append(step["id"])
+    for key in children:
+        children[key].sort()
+    order = []
+    visited = set()
+
+    def visit(sid):
+        if sid in visited:
+            return
+        visited.add(sid)
+        order.append(sid)
+        for child in children.get(sid, []):
+            visit(child)
+
+    for root in sorted(roots):
+        visit(root)
+    for sid in sorted(by_id):
+        visit(sid)
+    return order
+
+
+def chain_children(chain, parent_id):
+    """Children of one step, sorted by id."""
+    steps = build_step_chain(chain.get("steps") if isinstance(chain, dict) else chain)
+    return sorted(s["id"] for s in steps if s.get("parent_id") == parent_id)
+
+
 __all__ = [
     "UNIMPLEMENTED",
     "TO_BE_READ_AT_RUN",
@@ -597,4 +715,12 @@ __all__ = [
     "cycle_inputs_from_chain",
     "file_chain_record",
     "unresolved_markers",
+    "CHAIN_STEP_TYPES",
+    "MAX_CHAIN_DEPTH",
+    "ChainError",
+    "build_step_chain",
+    "chain_to_dict",
+    "chain_from_dict",
+    "traverse_chain",
+    "chain_children",
 ]

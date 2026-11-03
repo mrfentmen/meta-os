@@ -1,0 +1,2 @@
+receipt_id=sim-9da0ad66d87add2e
+simulated=true

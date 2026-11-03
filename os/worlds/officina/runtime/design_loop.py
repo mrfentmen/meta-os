@@ -127,10 +127,27 @@ def sample_variant(rng):
     )
 
 
-def run_loop(n_variants, seed, conditions=None, top_k=5):
+def stop_requested(stop_path):
+    """True when the operator's STOP file exists.
+
+    A missing path is not a stop: the loop reads the file, it never assumes one.
+    Kept as a function so a test can call it without starting a service.
+    """
+    if not stop_path:
+        return False
+    import os
+    return os.path.exists(stop_path)
+
+
+def run_loop(n_variants, seed, conditions=None, top_k=5, stop_path=None):
     """Run one design loop. Returns a run record dict (JSON-ready):
     every job with its score, every failure with its reason, the
-    best-so-far feasible score curve, and the top-k winners."""
+    best-so-far feasible score curve, and the top-k winners.
+
+    `stop_path`, when given, is checked before each claim: if the operator filed
+    a STOP file the loop stops where it is, records `stopped: "stop-file"`, and
+    reports the jobs it did score. It never deletes the file or clears the stop.
+    """
     conditions = conditions or Conditions()
     rng = random.Random(seed)
     board = DesignBoard()
@@ -138,7 +155,11 @@ def run_loop(n_variants, seed, conditions=None, top_k=5):
         board.post(sample_variant(rng))
     curve = []
     best = None
+    stopped = None
     while True:
+        if stop_requested(stop_path):
+            stopped = "stop-file"
+            break
         job = board.claim()
         if job is None:
             break
@@ -173,6 +194,7 @@ def run_loop(n_variants, seed, conditions=None, top_k=5):
         "score_curve_best_so_far": curve,
         "winners": [j.as_dict() for j in winners],
         "best": winners[0].as_dict() if winners else None,
+        "stopped": stopped,
     }
 
 

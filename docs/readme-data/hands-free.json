@@ -1,0 +1,8 @@
+{
+  "name": "Hands-Free",
+  "purpose": "Voice-driven control surface for the OS, intended to turn speech into commands.",
+  "status": "UNIMPLEMENTED",
+  "proof": "server/queue/models.py (transcribe surface declared, unresolved)",
+  "limits": "The transcribe endpoint is unresolved. The transcribe path names the missing surface and never calls transport.",
+  "notes": "No working voice loop ships today."
+}

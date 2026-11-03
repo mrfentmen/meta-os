@@ -15,6 +15,16 @@ Build: see `kernel/BUILD_LOG.md`. Log: `os-build/logs/K1-boot.txt` (54 lines, ca
 | K5 | tasks, scheduling | **PROVEN** | `A` / `B` / `C sleeping 200 ticks` interleaving, then `C awake` (`os-build/logs/K1-boot.txt`) |
 | K6 | syscalls, userspace | **PROVEN** | `HELLO FROM USERSPACE`, `user exit code 0`, `user bad syscall 99 refused` (refusal path), page fault with `err 0x4: task killed` (`os-build/logs/K1-boot.txt`) |
 
+## One thing to read first: two K tables
+
+This file's K1-K6 are **milestones**: boot, console, interrupts, paging,
+scheduling, syscalls. `os-build/KERNEL_BUILDOUT_SPEC.md` uses K1-K7 for
+**build-out items**: graphics, readkey, demand paging, IPC, storage, drivers,
+long tail. They are different lists that share letters.
+
+So "K3 is PROVEN" here and "K3 demand paging is not built" there are both true.
+Quote the file name with the letter, or the two claims look like a contradiction.
+
 ## What is not claimed
 
 - **No hardware boot.** Every line comes from QEMU 11.1.3. The spec's proof standard is a QEMU

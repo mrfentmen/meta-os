@@ -51,6 +51,7 @@
 
 // Supervisor & watchdog modules (B21). Order follows the watchman chain:
 // watch -> bridge -> loop -> cycle -> runner -> service, boot standalone.
+pub mod restart;
 pub mod thresholds;
 pub mod watchdog;
 pub mod watchdog_load_check;

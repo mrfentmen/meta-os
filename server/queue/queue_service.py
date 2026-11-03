@@ -61,6 +61,14 @@ STORE, FELL_BACK = trio_store.open_store(LOCAL_DB)
 JOBS = trio_store.JobStore(STORE)
 
 
+def receipt_id_for(package):
+    """The SIMULATED dispatch receipt id: `sim-` plus the first 16
+    hex characters of the canonical package hash. Pure so the format
+    can be tested without opening a socket."""
+    return "sim-" + hashlib.sha256(
+        json.dumps(package, sort_keys=True).encode()).hexdigest()[:16]
+
+
 def validate_envelope(env):
     """Return an error string, or None when the envelope is fileable."""
     if not isinstance(env, dict):
@@ -158,9 +166,7 @@ class Handler(BaseHTTPRequestHandler):
         from datetime import datetime, timezone
         received_at = datetime.now(timezone.utc).isoformat(
             timespec="milliseconds").replace("+00:00", "Z")
-        receipt_id = "sim-" + hashlib.sha256(
-            json.dumps(package, sort_keys=True).encode()
-        ).hexdigest()[:16]
+        receipt_id = receipt_id_for(package)
         record = dict(package)
         record["service_route"] = (
             self.path[len("/dispatch-simulated"):] or "/default")

@@ -63,14 +63,29 @@ def read_all(path):
     return entries
 
 
-def append_record(path, record):
-    """Append one record to the JSONL ledger with hash-chain fields.
+def validate_entry(record, require_timestamp=True):
+    """Validate one ledger entry before it is written.
 
-    Adds `prev_hash`, `entry_hash`, and `recorded_at` (if missing).
-    Never rewrites existing lines. Returns the filed entry dict.
+    Every entry must be a dict; with require_timestamp (the strict
+    write path) it must already carry a recorded_at timestamp.
     """
     if not isinstance(record, dict):
         raise TypeError("record must be a dict")
+    if require_timestamp and not record.get("recorded_at"):
+        raise ValueError(
+            "ledger entry refused: required timestamp 'recorded_at' is missing")
+    return dict(record)
+
+
+def append_record(path, record, require_timestamp=False):
+    """Append one record to the JSONL ledger with hash-chain fields.
+
+    Adds `prev_hash`, `entry_hash`, and `recorded_at` (if missing).
+    With require_timestamp=True the entry is refused unless recorded_at
+    is already present. Never rewrites existing lines. Returns the
+    filed entry dict.
+    """
+    validate_entry(record, require_timestamp=require_timestamp)
     entries = read_all(path)
     prev_hash = entries[-1]["entry_hash"] if entries else GENESIS_HASH
     entry = dict(record)

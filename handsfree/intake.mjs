@@ -6,6 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createHash } from "node:crypto";
+import { classifyUtterance } from "./refusals.mjs";
 
 // A typed order is a line, not a payload. 4096 characters is far beyond any order a person
 // types and far below anything that would turn the inbox into a transfer buffer; a longer line
@@ -54,6 +55,13 @@ export function parseInbox(text) {  const jobs = [];
       skipped.push({ line: i + 1, text: line, reason: "empty agent or empty order" });
       return;
     }
+    // R13-394: the catalogue decided what may not be ordered, but intake never asked it, so a
+    // refused order was still filed as a job. Ask before filing; the line stays in the inbox.
+    const refusal = classifyUtterance(orders);
+    if (refusal.refused) {
+      skipped.push({ line: i + 1, text: line, reason: "refusal:" + refusal.id, says: refusal.says });
+      return;
+    }
     jobs.push({ agent, orders });
   });
   return { jobs, skipped };
@@ -84,6 +92,7 @@ export function dropOrders(inboxFile, jobsDir, { now = Date.now(), source = "han
       event: "refused",
       line: s.line,
       reason: s.reason,
+      says: s.says || null,
       length: full.length,
       text_hash: createHash("sha256").update(full).digest("hex").slice(0, 16),
       source,

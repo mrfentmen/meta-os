@@ -22,3 +22,5 @@ a blocked run says BLOCKED in its own row.
 | T federation drills | `node federation/sim.mjs` | {"drills":15,"records":19,"handoffs":4} (all SIMULATED: true) | os-build/round13/federation/SECTION_T.md |
 
 Full-lane run: 130 passing, 0 failing — `FULL_LANE_TEST_RUN.md`.
+
+Round 13 task: R13-491.

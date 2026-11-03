@@ -11,3 +11,5 @@
 - No size cap, no case normalisation, no verb check, no duplicate check. A pasted log, a pasted error and a timestamped line become orders whose "agent" is `12`, `Error` and `2026-11-02 14`.
 - A spoken `STOP` is filed as work, not as a stop.
 - The voice seam remains a blocker: `handsfree/voice.mjs` is a text formatter with no audio path, and nothing in this round changed that.
+
+Round 13 task: R13-496.

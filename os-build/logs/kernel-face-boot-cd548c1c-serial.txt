@@ -1,0 +1,54 @@
+META OS 0.1 (K6)
+META OS KERNEL - alive (K1)
+mem region 0: 0x0-0x1000 reserved
+mem region 1: 0x1000-0x5000 reserved
+mem region 2: 0x5000-0x15000 reserved
+mem region 3: 0x15000-0x16000 reserved
+mem region 4: 0x16000-0x9f000 reserved
+mem region 5: 0x9f000-0xa0000 reserved
+mem region 6: 0xf0000-0x100000 reserved
+mem region 7: 0x100000-0x300000 reserved
+mem region 8: 0x300000-0x400000 usable
+mem region 9: 0x400000-0xbf4000 reserved
+mem region 10: 0xbf4000-0x1004000 reserved
+mem region 11: 0x1004000-0x1ffe0000 usable
+mem region 12: 0x1ffe0000-0x20000000 reserved
+mem region 13: 0xfffc0000-0x100000000 reserved
+mem region 14: 0xfd00000000-0x10000000000 reserved
+mem map: 15 regions, usable 508784K reserved 12598352K other 0K
+mem frames: 127196 usable total
+mem allocator: 127196 covered frames, 127196 free
+mem probe page ok
+mem heap: 512K total
+mem Box+Vec ok (box 42, vec sum 120)
+mem stress 10k ok, heap free 511K
+mem summary: K4 up
+A
+B
+C sleeping 200 ticks
+A
+B
+user hello: 2527080 bytes magic=0x464c457f type=Some(2) entry=Some(105553116266496)
+user hello: entry 0x600000000000 head [50, 48, bf, bd, 00, 00, 00, 00, 60, 00, 00, 48, b8, 70, 00, 00]
+HELLO FROM USERSPACE
+user exit code 0
+A
+B
+user sleeper: 2798216 bytes magic=0x464c457f type=Some(2) entry=Some(106652627894288)
+user sleeper: entry 0x610000000010 head [50, 48, bf, 23, 43, 01, 00, 00, 61, 00, 00, 48, b8, b0, 03, 00]
+sleeper: before sleep
+sleeper: pid 5
+user crasher: 2538648 bytes magic=0x464c457f type=Some(2) entry=Some(107752139522320)
+user crasher: entry 0x620000000110 head [50, 48, bf, 41, 06, 00, 00, 00, 62, 00, 00, 48, b8, f0, 01, 00]
+crasher: about to read zero
+INT user page-fault addr 0x0000000000000000 err 0x0000000000000004: task killed
+A
+B
+sleeper: yielded and back
+A
+B
+sleeper: after sleep
+user bad syscall 99 refused
+sleeper: bad call refused
+user exit code 0
+C awake

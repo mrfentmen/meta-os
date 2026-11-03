@@ -16,3 +16,5 @@
 - Death: `checkBeat()` detects a killed watchman in ~250–350 ms. **Nothing restarts it.** `agents/watchdog.mjs` alarms once and exits; every restart in Section N is a manual respawn by the drill.
 - `patrol.py --once --max-checks 1` never terminates; it is the only loop that gives the STOP poll a live process, and it is a finding, not a pass.
 - A missing working directory kills the process that called `spawnAgent` (no `'error'` listener on `spawn()`). Proved in a child probe, exit 7.
+
+Round 13 task: R13-495.

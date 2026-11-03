@@ -1,0 +1,8 @@
+{
+  "name": "Meta Aegis",
+  "purpose": "A watch-target pack and findings shape for Del's own pages and repos, read by the agent layer's poller.",
+  "status": "CODE-INSPECTED",
+  "proof": "aegis/watch-targets.mjs and tests/aegis-*.test.mjs",
+  "limits": "Own-ground only: meta-os.pages.dev, muse-relay-live.pages.dev, clipraiders.com, watchpeoplefight.com. Counts only; findings never carry a matched value.",
+  "notes": "A registry agent with watch targets, not a separate watch program."
+}

@@ -621,3 +621,91 @@ def _cycle_call_count(cycle_id, calls_path):
                     and entry.get("status") == "ok"):
                 count += 1
     return count
+
+
+# ------------------------------------------------------------------
+# Section 5 helpers: allowlist validation and LOCAL-SHELF queries.
+# No function here opens a socket.
+# ------------------------------------------------------------------
+
+UNIMPLEMENTED = "UNIMPLEMENTED"
+
+
+def validate_server(server):
+    """Accept exactly one allowlisted server name, or raise."""
+    if not isinstance(server, str) or not server.strip():
+        raise GatewayRefused("gateway server name must be a non-empty string")
+    name = server.strip()
+    if name not in ALLOWLIST:
+        raise GatewayRefused(
+            "refused: server %r is not on the gateway allowlist (%d "
+            "allowed servers)" % (name, len(ALLOWLIST)))
+    return name
+
+
+def _shelf_entries(shelf=None, shelves_dir=None):
+    """Yield (shelf_name, source_dict) from local shelf JSON files."""
+    root = shelves_dir or SHELVES_DIR
+    if shelf is None:
+        names = sorted(n for n in os.listdir(root) if n.endswith(".json"))
+    else:
+        names = [shelf if str(shelf).endswith(".json")
+                 else "%s.json" % shelf]
+    for name in names:
+        path = os.path.join(root, name)
+        if not os.path.exists(path):
+            raise ValueError("unknown shelf %r" % (shelf or name,))
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                payload = json.load(fh)
+        except (OSError, ValueError) as exc:
+            raise ValueError("shelf %r is unreadable: %s" % (name, exc))
+        entries = payload.get("sources") if isinstance(payload, dict) else payload
+        if not isinstance(entries, list):
+            continue
+        shelf_name = name[:-5] if name.endswith(".json") else name
+        for entry in entries:
+            if isinstance(entry, dict):
+                yield shelf_name, entry
+
+
+def search_shelf(query, shelf=None, shelves_dir=None, limit=5,
+                 adapter_factory=None):
+    """LOCAL-SHELF search: shaped hits only, no network adapter.
+
+    Returns a list of {'id', 'title', 'shelf'} dicts. Empty query is
+    refused before any shelf lookup. `adapter_factory` exists only to
+    prove the local path never constructs a remote adapter; it is not
+    called here.
+    """
+    if not isinstance(query, str) or not query.strip():
+        raise ValueError("search_shelf requires a non-empty query string")
+    if adapter_factory is not None:
+        pass  # LOCAL-SHELF never constructs a remote adapter
+    tokens = set(t for t in query.lower().split() if len(t) > 2)
+    if not tokens:
+        return []
+    hits = []
+    for shelf_name, source in _shelf_entries(shelf, shelves_dir):
+        haystack = " ".join(str(source.get(key, "")) for key in
+                             ("citation", "title", "claim", "locator"))
+        score = sum(1 for token in tokens if token in haystack.lower())
+        if score:
+            hits.append((score, shelf_name, source))
+    hits.sort(key=lambda hit: (-hit[0],
+                               str(hit[2].get("citation", ""))))
+    return [{"id": source.get("id"),
+             "title": source.get("title"),
+             "shelf": shelf_name}
+            for _score, shelf_name, source in hits[:max(0, int(limit))]]
+
+
+def remote_query(query, adapter="openalex", adapter_factory=None):
+    """UNIMPLEMENTED remote adapter request; names the adapter."""
+    if not isinstance(query, str) or not query.strip():
+        raise ValueError("remote_query requires a non-empty query string")
+    validate_server(adapter)
+    raise NotImplementedError(
+        "%s: remote adapter %r has no verified network path in this "
+        "module; use search_shelf() over local shelves."
+        % (UNIMPLEMENTED, adapter))

@@ -1,0 +1,41 @@
+# MetaOS 1.0 base package list (Hana lane, slice 1)
+# Format: one package name per line. Lines starting with # are comments.
+# Sections:
+#   KEEP: shipped by Xubuntu core already; listed so a cut operator can
+#         spot-check that the base still carries them (not reinstalled).
+#   ADD: installed in the Cubic chroot, in one apt run.
+#   REMOVE: none in slice 1. A removal needs a reason + a Milo audit row.
+# Names are Ubuntu archive package names. No third-party repo is added
+# by this slice, and no package outside the Ubuntu archive is named.
+
+# KEEP (Xubuntu core already ships these; spot-check only)
+# xfce4 desktop, lightdm display manager, mousepad text editor,
+# ristretto image viewer, evince document viewer are the defaults
+# this slice's mimeapps.list points at. If a KEEP package is missing
+# from the source ISO, the cut stops and the cut record says so —
+# it is not silently swapped for another app.
+xfce4
+lightdm
+mousepad
+ristretto
+evince
+
+# ADD (base tools only — no apps, no theme, no browser here)
+python3
+curl
+ca-certificates
+git
+htop
+nano
+unzip
+zip
+
+# REMOVE (none in slice 1)
+
+# ADD (theme lane — appended by Pax 2026-11-03 per Milo QA H4-4: these are
+# named in the frozen contract metaos-contracts/PACKAGES.md and in
+# iso/base/metaos.packages but were missing here; the cut-2 base flow
+# consumes THIS list plus iso/base/metaos.packages — both, not either/or)
+plank
+fonts-inter
+lightdm-gtk-greeter

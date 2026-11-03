@@ -10,9 +10,11 @@ branch claim alone.
 
 - Lanes commit to their own branches. Pax merges everything; only Pax
   pushes main and posts.
-- A lane's work enters a cut only when its plan acceptance evidence exists
-  in the repo (screendumps, logs, records) AND Milo's audit row for the
-  milestone is signed.
+- AMENDED by the boss's decoupling amendment (main @d835b59a, 2026-11-02
+  22:17 EST): no lane waits on another. Pax cuts from lane branches
+  as-they-are; a missing lane or a missing proof is a named gap in the
+  cut record, never a delayed cut. Milo audits whatever exists at each
+  cut; his audit rows record state, they do not hold a cut.
 - Fences: original assets only (nothing Apple-adjacent ships), no mock or
   placeholder presented as done, simulated loopback dispatch only,
   kernel/src/syscalls.rs FROZEN.
@@ -24,11 +26,35 @@ branch claim alone.
 
 ## H+2 — base boots with splash (~23:46 EST)
 
-- [ ] Cubic base project committed (Hana): package list, accounts,
-      first-boot setup, default files/associations.
-- [ ] Plymouth splash in the base (Buffy).
+- [x] Cubic base project committed (Hana): package list, accounts,
+      first-boot setup, default files/associations. — CODE-INSPECTED:
+      hana/metaos1-base @41a16c53 merged to main (7 files, 0 conflicts,
+      blobs verified). No Cubic build has run yet.
+- [x] Plymouth splash in the base (Buffy). — CODE-INSPECTED:
+      buffy/boot-installer @cbf00e3f merged to main (49 files, 0
+      conflicts, blobs verified): build_iso.sh, Calamares branding,
+      splash assets committed. Not yet built into an ISO.
+- [x] Bond core-app configs. — CODE-INSPECTED: bond/12h @df5b1664
+      merged to main (40 files, 0 conflicts, blobs verified). His new
+      ISO/agent tests are committed; Pax has not run them yet.
 - [ ] Proof: VM boot to login under 60s, screendump set committed.
-- [ ] ISO cut 1 by Pax from the merged tree.
+      — BLOCKED: no base ISO bytes exist yet (see cut 1 gap).
+- [x] ISO cut 1 by Pax from the merged tree. — CUT RECORD: tree =
+      main @0eddeb5d (2026-11-02 ~22:57 EST), all three 1.0 lane
+      branches merged and blob-verified (96/96). NAMED GAP: the ISO
+      artifact itself is not built — two parts. (1) The base Xubuntu
+      ISO file is Del's own download (his order 22:13 EST: he has it);
+      the byte-build starts when the file reaches the build host.
+      (2) Buffy's measured facts (BASE_FACTS.md, merged): the
+      reference image is Xubuntu 24.04.5, SHA-256 verified against
+      Canonical's published sums — and it is LAYERED (minimal +
+      standard + live squashfs, 9.68 GB assembled, no single
+      casper/filesystem.squashfs), which build_iso.sh --iso
+      currently refuses by design. Buffy's lane task: a merge-layers
+      pre-step for the script; Pax's Linux host (root, xorriso +
+      squashfs-tools installed) will run/test it once the ISO lands.
+      Per the decoupling amendment the cut stands with the gap
+      named, not delayed.
 
 ## H+4 — login + desktop load (~01:46 EST)
 

@@ -13,3 +13,5 @@
 - G is counts-only and self-checked: the record holds no value-shaped string.
 - J's four failures are the ones that need a human: 1,422 of 1,896 commits authored from a consumer mail domain, a branch named `buffy/pax-12h-plan`, a ledger with no dedupe key, and no closure field.
 - R13-152 (one bearer-shaped token, history only, no longer in the tree) stays open pending human review.
+
+Round 13 task: R13-494.

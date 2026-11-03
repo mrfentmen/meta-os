@@ -77,19 +77,43 @@ pub fn check(state: &GuardrailState) -> Result<(), GuardrailStop> {
     Ok(())
 }
 
+/// Estimated dollar cost for one call, before it is filed.
+///
+/// ```
+/// use guardrail::estimate;
+///
+/// // 200k input at $1.25/M plus 100k output at $4.25/M.
+/// assert!((estimate(200_000, 100_000) - 0.675).abs() < 1e-12);
+/// ```
 pub fn estimate(input_tokens: u64, output_tokens: u64) -> f64 {
     input_tokens as f64 / 1e6 * RATE_IN_PER_M + output_tokens as f64 / 1e6 * RATE_OUT_PER_M
 }
 
-/// Count one call and persist it. The ledger `ts` is a fixed literal,
-/// not the current time, and a failed write is ignored (B161 gaps G2/G3).
-pub fn record(state_path: &str, kind: &str, model: &str, input_tokens: u64, output_tokens: u64, latency_ms: u64) -> f64 {
+/// Count one call at `ts` and persist it. A spend record with a
+/// timestamp later than `now` is refused before the ledger is read
+/// or written: a future record is flagged, never silently filed.
+pub fn record_at(
+    state_path: &str,
+    ts: &str,
+    now: &str,
+    kind: &str,
+    model: &str,
+    input_tokens: u64,
+    output_tokens: u64,
+    latency_ms: u64,
+) -> Result<f64, GuardrailStop> {
+    if ts > now {
+        return Err(GuardrailStop(format!(
+            "GUARDRAIL STOP: spend timestamp {} is in the future of {}; record not filed",
+            ts, now
+        )));
+    }
     let mut state = load_state(state_path);
     let est = estimate(input_tokens, output_tokens);
     state.calls += 1;
     state.est_cost_usd = ((state.est_cost_usd + est) * 1e6).round() / 1e6;
     state.log.push(UsageLog {
-        ts: "2026-10-30T00:00:00Z".to_string(),
+        ts: ts.to_string(),
         kind: kind.to_string(),
         model: model.to_string(),
         input_tokens,
@@ -99,7 +123,23 @@ pub fn record(state_path: &str, kind: &str, model: &str, input_tokens: u64, outp
         cum_est_cost_usd: state.est_cost_usd,
     });
     save_state(state_path, &state);
-    est
+    Ok(est)
+}
+
+/// Count one call and persist it. The ledger `ts` is a fixed literal,
+/// not the current time, and a failed write is ignored (B161 gaps G2/G3).
+pub fn record(state_path: &str, kind: &str, model: &str, input_tokens: u64, output_tokens: u64, latency_ms: u64) -> f64 {
+    record_at(
+        state_path,
+        "2026-10-30T00:00:00Z",
+        "2026-10-30T00:00:00Z",
+        kind,
+        model,
+        input_tokens,
+        output_tokens,
+        latency_ms,
+    )
+    .unwrap_or(0.0)
 }
 
 pub fn status_of(state: &GuardrailState) -> serde_json::Value {

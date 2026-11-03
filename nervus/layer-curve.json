@@ -1,0 +1,12 @@
+{
+  "record": "layer-curve",
+  "operation": "map_layers",
+  "source": "the recorded R11 layer curve, written into the wave-2 task list as CB2-496 before this file existed",
+  "note": "Four measured points only. No interpolation, no smoothed line, no claim about layers that were not measured. A curve drawn between these points is a drawing, not a reading.",
+  "points": [
+    { "layer": 4, "score": 4.6 },
+    { "layer": 8, "score": 19.5 },
+    { "layer": 16, "score": 12.8 },
+    { "layer": 24, "score": 10.2 }
+  ]
+}

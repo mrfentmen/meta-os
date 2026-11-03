@@ -8,6 +8,15 @@ import fs from "node:fs";
 export function lessonsFile(root) { return root + "/lessons.jsonl"; }
 
 export function teach(root, agent, text) {
+  // CB-390: a lesson with no text teaches nothing, and an empty line is what every
+  // other agent would read as a lesson the crew never learned. Refuse it here, by name,
+  // before the file is opened -- nothing is written and the caller sees why.
+  if (typeof text !== "string" || text.trim() === "") {
+    throw new Error("lesson refused: empty text");
+  }
+  if (typeof agent !== "string" || agent.trim() === "") {
+    throw new Error("lesson refused: empty agent");
+  }
   const line = JSON.stringify({ ts: new Date().toISOString(), agent, text }) + "\n";
   const file = lessonsFile(root);
   // If the last writer died mid-append, the file does not end in a newline and appending would

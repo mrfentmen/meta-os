@@ -1,0 +1,90 @@
+{
+  "brief": {
+    "assessment": {
+      "category": "visible flame",
+      "requires_human_review": true,
+      "summary": "stubbed summary: visible flame",
+      "uncertainty": [
+        "stubbed uncertainty"
+      ]
+    },
+    "observations": [
+      {
+        "category": "visible flame",
+        "confidence": 0.8,
+        "description": "stubbed reading: visible flame",
+        "evidence": "center of frame"
+      },
+      {
+        "category": "visible flame",
+        "confidence": 0.8,
+        "description": "stubbed reading: visible flame",
+        "evidence": "center of frame"
+      },
+      {
+        "category": "visible flame",
+        "confidence": 0.8,
+        "description": "stubbed reading: visible flame",
+        "evidence": "center of frame"
+      },
+      {
+        "category": "visible flame",
+        "confidence": 0.8,
+        "description": "stubbed reading: visible flame",
+        "evidence": "center of frame"
+      },
+      {
+        "category": "visible flame",
+        "confidence": 0.8,
+        "description": "stubbed reading: visible flame",
+        "evidence": "center of frame"
+      }
+    ],
+    "processing": {
+      "latency_ms": 49,
+      "model": "muse-spark-1.3"
+    },
+    "product": "ignis",
+    "timestamp": "2026-11-02T06:54:26.372Z"
+  },
+  "created_at": "2026-11-02T06:54:26.372Z",
+  "destination": "SIMULATED dispatch endpoint (local stack route) \u2014 no real emergency service is contacted by this system",
+  "dispatch_mode": "auto",
+  "human_verify": false,
+  "incident_id": "incident-2eceddca76f1e61f",
+  "kind": "imperium-dispatch-package",
+  "person_evidence": {
+    "area": "Manhattan",
+    "camera_name": "Central Park West @ 65 St",
+    "category": "visible flame",
+    "direction_note": "Not determined from still frames.",
+    "direction_of_travel": null,
+    "division": "ignis",
+    "face_crops": 6,
+    "flagged_at": "2026-11-02T06:54:26.361Z",
+    "frame_files": [
+      "evidence/incident-2eceddca76f1e61f/flag-frame-cam-b-d0966c.jpg",
+      "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-b-d0966c.jpg",
+      "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-b-d0966c.jpg",
+      "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-c-d0966c.jpg",
+      "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-n4-d0966c.jpg",
+      "evidence/incident-2eceddca76f1e61f/investigation-frame-cam-n3-d0966c.jpg"
+    ],
+    "person_descriptions": [
+      "stubbed reading: visible flame",
+      "stubbed reading: normal activity"
+    ],
+    "visible_marks": []
+  },
+  "picture": {
+    "evidence_crop": "evidence/incident-2eceddca76f1e61f/face-crop-cam-b-283674.jpg",
+    "frame": "evidence/incident-2eceddca76f1e61f/flag-frame-cam-b-d0966c.jpg"
+  },
+  "recommended_actions": {
+    "ignis": "For human review: check the recorded frames from Central Park West @ 65 St (Manhattan) against the flagged category \"visible flame\". This system is not a certified fire-detection system; a human reviewer decides whether any follow-up is warranted.",
+    "medicus": "For human review: look at the recorded scene from Central Park West @ 65 St (Manhattan). The flagged category \"visible flame\" is a scene indicator only \u2014 no diagnosis, cause, severity, or treatment is stated or implied. A human reviewer decides whether any follow-up is warranted.",
+    "vigiles": "For human review: examine the recorded frames from Central Park West @ 65 St (Manhattan). The flagged observation category is \"visible flame\" \u2014 a visual category only; it does not establish that an incident or offense occurred. A human reviewer decides whether any follow-up is warranted."
+  },
+  "requires_human_review": true,
+  "simulated": true
+}

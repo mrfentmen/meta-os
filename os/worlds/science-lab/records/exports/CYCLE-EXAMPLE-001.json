@@ -1,6 +1,7 @@
 {
   "claims": [
     {
+      "automatically_confirmed": false,
       "basis": "sealed_record.levels.reasoning=1 in records/cycles/CYCLE-EXAMPLE-001.json",
       "claim_id": "CYCLE-EXAMPLE-001-reasoning",
       "level": 1,
@@ -10,6 +11,7 @@
       "verdict": "filed"
     },
     {
+      "automatically_confirmed": false,
       "basis": "sealed_record.levels.computation=2; verification: indeterminate; claim capped at 2; Generator observation filed (prep-run R2 0.725, RMSE 1.099). The independent verifier has NOT re-executed from the archived inputs (Section 6 lane); no reproduc",
       "claim_id": "CYCLE-EXAMPLE-001-computation",
       "level": 2,
@@ -19,6 +21,7 @@
       "verdict": "indeterminate"
     },
     {
+      "automatically_confirmed": false,
       "basis": "ledger entry be1f7a0ea918 in records/examples/cycle_example.json",
       "claim_id": "CYCLE-EXAMPLE-001-ledger-0",
       "ledger_entry": "be1f7a0ea918f7dfbcdff0e8df209660b46f8fb6a5d186069d0282054aafee9c",
@@ -29,6 +32,7 @@
       "verdict": "filed"
     },
     {
+      "automatically_confirmed": false,
       "basis": "ledger entry ef287634a407 in records/examples/cycle_example.json",
       "claim_id": "CYCLE-EXAMPLE-001-ledger-1",
       "ledger_entry": "ef287634a407941fe96ef868b2e47b9cda8a387339b606402853d0effeeb9bcc",
@@ -46,6 +50,7 @@
   "cycle_id": "CYCLE-EXAMPLE-001",
   "display": [
     {
+      "automatically_confirmed": false,
       "basis": "sealed_record.levels.reasoning=1 in records/cycles/CYCLE-EXAMPLE-001.json",
       "claim_id": "CYCLE-EXAMPLE-001-reasoning",
       "colour": "blue",
@@ -53,6 +58,7 @@
       "statement": "Reasoning chain for the cycle question is filed and hash-linked."
     },
     {
+      "automatically_confirmed": false,
       "basis": "sealed_record.levels.computation=2; verification: indeterminate; claim capped at 2; Generator observation filed (prep-run R2 0.725, RMSE 1.099). The independent verifier has NOT re-executed from the archived inputs (Section 6 lane); no reproduc",
       "claim_id": "CYCLE-EXAMPLE-001-computation",
       "colour": "green",
@@ -60,6 +66,7 @@
       "statement": "Computation observation for the cycle question (prep-run, unverified unless a reproduced record exists)."
     },
     {
+      "automatically_confirmed": false,
       "basis": "ledger entry be1f7a0ea918 in records/examples/cycle_example.json",
       "claim_id": "CYCLE-EXAMPLE-001-ledger-0",
       "colour": "blue",
@@ -67,6 +74,7 @@
       "statement": "Ledger claim record be1f7a0ea918 at level 1."
     },
     {
+      "automatically_confirmed": false,
       "basis": "ledger entry ef287634a407 in records/examples/cycle_example.json",
       "claim_id": "CYCLE-EXAMPLE-001-ledger-1",
       "colour": "green",
@@ -76,7 +84,7 @@
   ],
   "export_version": "science-lab-export/1",
   "gate_state": "human-gated",
-  "generated_at": "2026-11-02T14:15:25.713893Z",
+  "generated_at": "2026-11-02T16:36:51.283850Z",
   "generated_by": "os/worlds/science-lab/export.py export_session",
   "honesty": [
     "Generated from records by export_session; no hand-written levels.",

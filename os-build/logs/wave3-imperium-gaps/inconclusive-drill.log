@@ -1,0 +1,13 @@
+== patrol -> review -> investigation -> response ==
+outcome: flagged-unconfirmed
+incident_id: incident-725c546b990dd1b4
+incidents recorded: 1
+incident status: monitoring
+timeline steps: flag,decision,review,decision
+package dispatch_mode: None
+package human_verify: None
+package simulated: None
+picture.frame: None
+picture.evidence_crop: None
+receipt_id: sim-UNKNOWN
+FACE-45 MEDICUS LOOP NOT GREEN: flagged-unconfirmed

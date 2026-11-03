@@ -21,6 +21,7 @@ export function loadRegistry(file) {
     if (!Array.isArray(a.command) || a.command.length === 0) throw new Error("registry: " + a.name + " missing command");
     a.budget = a.budget || {};
     if (a.budget.maxWallMs != null && !(a.budget.maxWallMs > 0)) throw new Error("registry: " + a.name + " bad maxWallMs");
+    if (a.budget.maxCostUsd != null && !(a.budget.maxCostUsd >= 0)) throw new Error("registry: " + a.name + " bad maxCostUsd");
   }
   return raw.agents;
 }
@@ -28,6 +29,13 @@ export function loadRegistry(file) {
 export class Ledger {
   constructor(file) { this.file = file; }
   add(run, event, fields = {}) {
+    // CB-001: a record missing its identity is refused here, with the field
+    // named, instead of being written and failing a reader later.
+    for (const [name, value] of [["run", run], ["event", event]]) {
+      if (typeof value !== "string" || value.trim() === "") {
+        throw new Error("ledger: missing required field " + name);
+      }
+    }
     const line = JSON.stringify({ ts: new Date().toISOString(), run, event, ...fields }) + "\n";
     // A crash mid-append leaves a line with no trailing newline, and appending straight onto it
     // fuses the next record into the torn one -- so the record after the crash is lost as well.
@@ -64,6 +72,24 @@ export class Ledger {
 // Registry commands must be portable: an absolute path to this checkout would make the file
 // wrong on every other machine. `repo:node` means "this Node, plus a script inside the repo";
 // the script argument is resolved against the repo root, never the run directory.
+// CB-007: one validator for registry entries, usable by a CLI and by tests.
+// Every entry must name itself, its lane, a non-empty argv, and a budget.
+export function validateEntry(agent) {
+  if (!agent || typeof agent !== "object") throw new Error("registry: entry must be an object");
+  for (const field of ["name", "lane"]) {
+    if (typeof agent[field] !== "string" || agent[field].trim() === "") {
+      throw new Error("registry: missing field " + field + (agent.name ? " on " + agent.name : ""));
+    }
+  }
+  if (!Array.isArray(agent.command) || agent.command.length === 0) {
+    throw new Error("registry: " + agent.name + " missing command");
+  }
+  if (!agent.budget || typeof agent.budget !== "object") {
+    throw new Error("registry: " + agent.name + " missing budget");
+  }
+  return true;
+}
+
 export function resolveCommand(command, root) {
   if (!Array.isArray(command) || command.length === 0) throw new Error("registry: missing command");
   const out = [...command];
@@ -81,6 +107,27 @@ export function resolveCommand(command, root) {
   return out;
 }
 
+// CB-378: a job's estimated cost is checked against the agent's own cap before
+// anything is spawned. The check is one number against one cap on purpose -- a
+// governor that guesses is worse than none -- and a missing estimate is NOT read
+// as zero: it passes to the wall-clock budget and is recorded as unchecked.
+export function preflightBudget(agent, job = {}) {
+  const cap = agent && agent.budget ? agent.budget.maxCostUsd : undefined;
+  const estimate = job ? job.estimatedCostUsd : undefined;
+  if (cap == null) return { ok: true };
+  if (typeof cap !== "number" || !(cap >= 0)) {
+    throw new Error("registry: " + (agent && agent.name) + " bad maxCostUsd");
+  }
+  if (estimate == null) return { ok: true, unchecked: "no-estimate" };
+  if (typeof estimate !== "number" || !Number.isFinite(estimate) || estimate < 0) {
+    throw new Error("budget: estimatedCostUsd must be a non-negative number");
+  }
+  if (estimate > cap) {
+    return { ok: false, reason: "budget-cost-cap", estimate, cap };
+  }
+  return { ok: true, estimate, cap };
+}
+
 export function spawnAgent(agent, { root, job = {} } = {}) {
   const runId = agent.name + "-" + Date.now().toString(36);
   const runDir = path.join(root, "runs", runId);
@@ -95,6 +142,26 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
     deadline: job.deadline || null, capabilities: agent.capabilities || [],
   };
   fs.writeFileSync(path.join(runDir, "brief.json"), JSON.stringify(brief, null, 2));
+
+  // CB-379: the refusal is recorded where the run's history lives -- the ledger
+  // and the receipt both name the cap and the estimate -- and the returned handle
+  // resolves like any other run, so a caller needs no special case for "never
+  // started". No command is resolved and no process exists to kill.
+  const gate = preflightBudget(agent, job);
+  if (!gate.ok) {
+    const receipt = {
+      run: runId, reason: gate.reason, estimateUsd: gate.estimate,
+      capUsd: gate.cap, at: new Date().toISOString(),
+    };
+    ledger.add(runId, "budget-receipt", receipt);
+    fs.writeFileSync(path.join(runDir, "receipt.json"), JSON.stringify(receipt, null, 2));
+    ledger.add(runId, "refused", { reason: gate.reason });
+    return {
+      agent, runId, runDir, ledger, child: null, stopped: gate.reason,
+      done: Promise.resolve({ code: null, signal: null, refused: true }),
+    };
+  }
+
   const command = resolveCommand(agent.command, root);
   ledger.add(runId, "spawn", { command, lane: brief.lane });
   const child = spawn(command[0], command.slice(1), {
@@ -137,6 +204,8 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
 
 export async function killAgent(handle, reason, graceMs = 800) {
   if (handle.stopped) return;
+  // A refused run has no child; it is already stopped and its receipt says why.
+  if (!handle.child) return;
   handle.stopped = reason;
   handle.ledger.add(handle.runId, "stop-request", { reason });
   handle.child.kill("SIGTERM");
@@ -161,12 +230,26 @@ export function watchState(target) {
   throw new Error("watch: unsupported target type " + target.type);
 }
 
+// A change is a quiet note unless it moved at least this many bytes. A file
+// that appears or disappears is never quiet: a create or a delete is the whole
+// change, whatever its size. The threshold is here, not in a caller, so every
+// watcher sizes a change the same way.
+export const LARGE_CHANGE_BYTES = 4096;
+
+function classifyChange(from, to, threshold = LARGE_CHANGE_BYTES) {
+  if (!from.exists || !to.exists) return { kind: "alarm", deltaBytes: null, reason: from.exists ? "deleted" : "created" };
+  const deltaBytes = Math.abs(to.size - from.size);
+  return { kind: deltaBytes >= threshold ? "alarm" : "note", deltaBytes, reason: null };
+}
+
 export function pollWatch(targets, prev = {}) {
   const now = {}, changes = [];
   for (const t of targets) {
     const key = t.type + ":" + t.path;
     now[key] = watchState(t);
-    if (prev[key] && JSON.stringify(prev[key]) !== JSON.stringify(now[key])) changes.push({ key, from: prev[key], to: now[key] });
+    if (prev[key] && JSON.stringify(prev[key]) !== JSON.stringify(now[key])) {
+      changes.push({ key, from: prev[key], to: now[key], ...classifyChange(prev[key], now[key]) });
+    }
   }
   return { state: now, changes };
 }
@@ -178,6 +261,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
   const agents = loadRegistry(path.join(HERE, "registry.json"));
   if (cmd === "list") {
     for (const a of agents) console.log(a.name, "—", a.lane || "");
+  } else if (cmd === "validate") {
+    for (const a of agents) validateEntry(a);
+    console.log("registry ok: " + agents.length + " entries");
   } else if (cmd === "spawn" || cmd === "watch") {
     const agent = agents.find((a) => a.name === name);
     if (!agent) { console.error("no such agent: " + name); process.exit(1); }
@@ -196,7 +282,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
       }, agent.watchCadenceMs || 2000);
     }
   } else {
-    console.error("usage: runtime.mjs list | spawn <name> | watch <name>");
+    console.error("usage: runtime.mjs list | validate | spawn <name> | watch <name>");
     process.exit(1);
   }
 }

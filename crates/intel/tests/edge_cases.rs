@@ -222,9 +222,9 @@ fn attempt_budgets_clamp_at_both_ends() {
     let mut plan = Plan {
         goal: "g".to_string(),
         jobs: vec![
-            PlanJob { key: "a".to_string(), title: "A".to_string(), files: vec![], deps: vec![], max_attempts: 0 },
-            PlanJob { key: "b".to_string(), title: "B".to_string(), files: vec![], deps: vec![], max_attempts: 11 },
-            PlanJob { key: "c".to_string(), title: "C".to_string(), files: vec![], deps: vec![], max_attempts: 1 },
+            PlanJob { key: "a".to_string(), title: "A".to_string(), files: vec![], deps: vec![], max_attempts: 0, spec: String::new(), accept: vec![] },
+            PlanJob { key: "b".to_string(), title: "B".to_string(), files: vec![], deps: vec![], max_attempts: 11, spec: String::new(), accept: vec![] },
+            PlanJob { key: "c".to_string(), title: "C".to_string(), files: vec![], deps: vec![], max_attempts: 1, spec: String::new(), accept: vec![] },
         ],
     };
     clamp_attempt_budgets(&mut plan);
