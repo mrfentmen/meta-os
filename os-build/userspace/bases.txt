@@ -1,24 +1,40 @@
-# Per-program link bases for the kernel's static userspace images.
-#
-# Why a file: the kernel maps every LOAD at its linked address and refuses a
-# page already mapped by another program. If two programs share a base, the
-# second one dies with `address in use` — that is what the RK-007 boot log
-# shows for sleeper, crasher and readkey. One base per program is the rule.
-#
-# Spacing: 0x0100_0000_0000 (256 GiB) per slot. A program here is a few
-# hundred KiB, so there is no chance of touching the next slot, and the whole
-# range sits far above the kernel's low mappings and the physmap.
-#
-# The four bases below 0x6400 are the historic ones referenced by the logs and
-# by kernel/src/user.rs; do not renumber them or old boot logs stop matching.
-#
+# Per-program link bases. Generated 2026-11-02; every bin in src/bin has a slot.
+# Historic bases unchanged; new bins fill 0x6800.. upward, 1 TiB apart,
+# which keeps every image inside USER_FLOOR..USER_CEIL in verify_bases.py.
 # Format: <bin-name> <base-hex>
-hello       0x0000600000000000
-sleeper     0x0000610000000000
-crasher     0x0000620000000000
-readkey     0x0000630000000000
-# Written and compiling, awaiting Rowan's BINS list (wiring proposal):
-quitter     0x0000640000000000
-badcall     0x0000650000000000
-writer      0x0000660000000000
-hog         0x0000670000000000
+badcall        0x0000650000000000
+crasher        0x0000620000000000
+hello          0x0000600000000000
+hog            0x0000670000000000
+quitter        0x0000640000000000
+readkey        0x0000630000000000
+sleeper        0x0000610000000000
+writer         0x0000660000000000
+counter        0x0000680000000000
+counter_big    0x0000690000000000
+crasher_null   0x00006a0000000000
+crasher_stack  0x00006b0000000000
+crasher_then_status 0x00006c0000000000
+double_hog     0x00006d0000000000
+echoer         0x00006e0000000000
+echoer_empty   0x00006f0000000000
+hog_fast       0x0000700000000000
+hog_pulse      0x0000710000000000
+hog_slow       0x0000720000000000
+hog_then_quit  0x0000730000000000
+hog_under_ps   0x0000740000000000
+leaker_slow    0x0000750000000000
+printer        0x0000760000000000
+printer_flood  0x0000770000000000
+quitter_1      0x0000780000000000
+quitter_7      0x0000790000000000
+quitter_after_print 0x00007a0000000000
+reader         0x00007b0000000000
+reader_badkey  0x00007c0000000000
+sleeper_killed 0x00007d0000000000
+spinner        0x00007e0000000000
+spinner_killed 0x00007f0000000000
+abiprobe       0x0000681800000000
+selfinfo       0x0000681900000000
+writechain     0x0000681a00000000
+yielder        0x0000681b00000000

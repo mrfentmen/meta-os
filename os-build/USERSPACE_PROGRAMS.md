@@ -25,6 +25,22 @@ wired** until that list changes — the wiring is a proposal, not an edit.
 | `badcall` | reserved numbers 6-15 refuse, not just 99 | `user bad syscall 6 refused` / `15` / `99`, then `badcall: 6 returned 18446744073709551615` and `badcall: survived all three` | **WRITTEN, COMPILES**; wiring proposal |
 | `hog` | allocation is bounded and contained | `hog: allocating`, then the task killed by the fault; the shell must still answer `status` afterwards | **WRITTEN, COMPILES**; fault-containment drill, not an allocator test — no allocation syscall exists (wiring proposal: `os-build/userspace/WIRING_PROPOSAL_R12.md`) |
 | `talker` + `listener` | two tasks can exchange a message | `talker: sent <n>`, `listener: got <n>` | **BLOCKED — no IPC exists** |
+| `abiprobe` | the six-call contract itself | `abiprobe: checks 9 failures 0`, `abiprobe: ABI OK` | **WRITTEN, BUILT** at 0x6818…, base verified; diagnostic, needs `BINS` + a fifth stack slot |
+| `selfinfo` | syscall 3 identity survives sleep | `selfinfo: pid <n>`, `selfinfo: identity held` | **WRITTEN, BUILT** at 0x6819…, base verified; diagnostic |
+| `writechain` | repeated and chunked writes | `writechain: failures 0`, `writechain: OK` | **WRITTEN, BUILT** at 0x681a…, base verified; diagnostic |
+| `yielder` | a yield returns to the same task | `yielder: yields 8 failures 0`, `yielder: identity stable` | **WRITTEN, BUILT** at 0x681b…, base verified; diagnostic |
+
+## The corpus is now fully buildable (2026-11-02)
+
+All 36 bins in `user/src/bin/` are in `bases.txt` and build. `verify_bases.py` reads the real
+ELF headers and reports every image disjoint, at its manifest base, entry inside its own
+image; the measured table is `os-build/USERSPACE_BUILD_STATUS.md`. The 32 that were previously
+unlisted had no slot at all, so this is the first time the whole corpus has been checked rather
+than the four programs the kernel happens to embed.
+
+`lib.rs` gained the pieces a real program needs: `sys_write_all` (splits at the kernel's
+4096-byte cap instead of being refused), `print_hex`, and `print_i64` (including `i64::MIN`).
+`abiprobe` is the program that checks those claims from ring 3 rather than in prose.
 
 ## Why two of the six are blocked, and why that is the deliverable
 

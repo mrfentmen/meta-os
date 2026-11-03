@@ -24,7 +24,10 @@ echo "== userspace =="
 # One link base per program, verified against the ELF headers. This replaced
 # the old sed-into-link-base.ld loop, which no other build used and which left
 # plain cargo builds linking all four programs at the same address.
-PROFILE=debug "$ROOT/os-build/userspace/build.sh" hello sleeper crasher readkey
+# Every bin in bases.txt, not just the four the kernel embeds: a diagnostic
+# that no longer compiles still means the corpus is not buildable, and the
+# disjoint-base check costs nothing at this size.
+PROFILE=debug "$ROOT/os-build/userspace/build.sh" >/dev/null
 cd "$ROOT"
 
 echo "== kernel =="
@@ -59,6 +62,7 @@ checkline "K6 sleeper" "sleeper: after sleep"
 checkline "K6 bad call refused" "user bad syscall 99 refused"
 checkline "K6 user fault kill" "task killed"
 check "$ROOT/os-build/expected/K-all.txt" "K expected-line set"
+check "$ROOT/os-build/expected/USERSPACE.txt" "userspace expected lines"
 
 # Absence check, not a presence check: the K6 failure mode was the loader
 # refusing programs, which no expected-line file can catch.

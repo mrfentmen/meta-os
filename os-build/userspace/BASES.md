@@ -55,6 +55,19 @@ log committed as `os-build/logs/K6-bases-fixed.txt`:
 `K3 timer` and `mem summary: K4 up` are in the same log, so the boot is not a
 narrow one-off.
 
+## Whole-corpus check (later the same day)
+
+`bases.txt` now carries a slot for **every** bin in `user/src/bin` (36, up from 8), and
+`PROFILE=debug build.sh` builds them all. `verify_bases.py` reports:
+
+```
+36 program(s): disjoint, at their manifest bases, entries inside images
+```
+
+The measured table, including the four new probes (`abiprobe`, `selfinfo`, `writechain`,
+`yielder`), is `os-build/USERSPACE_BUILD_STATUS.md`. Nothing about the loader or the kernel
+changed; this closes the build half only.
+
 ## What this unlocks and what is still missing
 
 Unlocked: adding a program is now a line in `bases.txt` plus its source. No sed,
