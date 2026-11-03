@@ -43,6 +43,7 @@ macro_rules! println {
     };
 }
 
+mod caps;
 mod gdt;
 mod interrupts;
 mod logo_frames;

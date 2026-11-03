@@ -50,6 +50,18 @@ pub fn sys_read_key() -> u64 {
     syscall(5, 0, 0, 0)
 }
 
+/// The kernel's capability refusal (K6.1). Distinct from `u64::MAX`,
+/// which remains "no value" (an empty key ring) or a bad-syscall
+/// refusal, so a caller can tell a policy denial from an empty read.
+pub const DENIED: u64 = u64::MAX - 1;
+
+/// Ask the kernel for this task's remaining capability budget:
+/// `(remaining_ticks << 32) | remaining_write_bytes`. Returns
+/// `u64::MAX` when the task has no policy.
+pub fn sys_cap_query() -> u64 {
+    syscall(6, 0, 0, 0)
+}
+
 /// One page. The kernel's write arm refuses anything larger instead of
 /// truncating, so a caller that wants to emit more must split.
 pub const WRITE_CAP: usize = 4096;
@@ -64,7 +76,10 @@ pub fn sys_write_all(mut buf: &[u8]) -> usize {
     while !buf.is_empty() {
         let n = if buf.len() > WRITE_CAP { WRITE_CAP } else { buf.len() };
         let r = sys_write(&buf[..n]) as usize;
-        if r == 0 {
+        // 0 is a refused or empty write; DENIED is the kernel's
+        // capability refusal; r > n would be a kernel bug. Never slice
+        // past the buffer on a value we did not ask for.
+        if r == 0 || r == DENIED as usize || r > buf.len() {
             break;
         }
         done += r;

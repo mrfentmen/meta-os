@@ -25,6 +25,8 @@ pub static CRASHER_ELF: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/crasher.elf"));
 pub static READKEY_ELF: &[u8] =
     include_bytes!(concat!(env!("OUT_DIR"), "/readkey.elf"));
+pub static CAPCHECK_ELF: &[u8] =
+    include_bytes!(concat!(env!("OUT_DIR"), "/capcheck.elf"));
 
 /// One user stack per userspace task (K6 scope: four programs).
 /// Stacks are FRESH USER pages, not kernel .bss: the bootloader's
@@ -89,6 +91,16 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
         let num = saved(base, SAVED_RAX);
         let a1 = saved(base, SAVED_RDI);
         let a2 = saved(base, SAVED_RSI);
+        // K6.1: every ring-3 syscall passes the in-kernel policy first.
+        // A refusal is a DENIED return; an expired budget kills the task.
+        match crate::caps::gate(num) {
+            crate::caps::Gate::Allow => {}
+            crate::caps::Gate::Refuse => {
+                set_return(base, crate::caps::DENIED);
+                return;
+            }
+            crate::caps::Gate::Kill => crate::sched::exit_task(),
+        }
         match num {
             0 => {
                 println!("user exit code {}", a1);
@@ -99,6 +111,10 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
                 set_return(base, n);
             }
             2 => {
+                if !crate::caps::allow_sleep(a1) {
+                    set_return(base, crate::caps::DENIED);
+                    return;
+                }
                 crate::sched::sleep_task(a1);
                 set_return(base, 0);
             }
@@ -129,6 +145,9 @@ pub fn syscall_handler(frame: &InterruptFrame, _error: u64) {
                     None => u64::MAX,
                 });
             }
+            6 => {
+                set_return(base, crate::caps::query());
+            }
             n => {
                 println!("user bad syscall {} refused", n);
                 set_return(base, u64::MAX);
@@ -147,11 +166,18 @@ unsafe fn user_write(buf: u64, len: u64) -> u64 {
         println!("user write: unmapped buffer refused");
         return u64::MAX;
     }
+    // The quota is checked before the buffer is dereferenced or any
+    // byte reaches the console. A refusal prints nothing on the user's
+    // behalf; the kernel's own `cap deny` line is the audit record.
+    if !crate::caps::allow_write(len) {
+        return crate::caps::DENIED;
+    }
     let bytes = core::slice::from_raw_parts(buf as *const u8, len as usize);
     match core::str::from_utf8(bytes) {
         Ok(s) => print!("{}", s),
         Err(_) => print!("[non-utf8 {} bytes]", len),
     }
+    crate::caps::charge_write(len);
     len
 }
 
@@ -411,11 +437,11 @@ pub unsafe fn enter_userspace(entry: u64, user_sp: u64) -> ! {
     );
 }
 
-/// Take a user stack slot (max 4 programs, K6 scope + R5-2 readkey;
-/// a 5th is refused, not silently shared).
+/// Take a user stack slot (max 5 programs: K6's four plus capcheck;
+/// a 6th is refused, not silently shared).
 fn take_ustack() -> Option<u64> {
     unsafe {
-        if NEXT_USTACK >= 4 {
+        if NEXT_USTACK >= 5 {
             return None;
         }
         let top = map_ustack(NEXT_USTACK)?;
@@ -463,6 +489,12 @@ unsafe fn run_elf(elf: &'static [u8], name: &str) -> ! {
                 "user {}: entry {:#x} head {:02x?}",
                 name, entry, head
             );
+            // K6.1: assign only after the ELF has loaded, so a grant is
+            // never logged for a program the loader refused. The policy
+            // is in force before the first ring-3 instruction.
+            if let Some(policy) = crate::caps::policy_for(name) {
+                crate::caps::assign_current(policy);
+            }
             enter_userspace(entry, ustack);
         }
         Some(Err(e)) => {
@@ -489,4 +521,8 @@ pub fn task_crasher() {
 /// Kernel task entry for the fourth program (R5-2 follow-up).
 pub fn task_readkey() {
     unsafe { run_elf(READKEY_ELF, "readkey") };
+}
+/// Kernel task entry for the K6.1 capability drill.
+pub fn task_capcheck() {
+    unsafe { run_elf(CAPCHECK_ELF, "capcheck") };
 }

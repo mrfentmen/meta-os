@@ -17,9 +17,10 @@ use crate::interrupts;
 use crate::tasks::{Context, TaskId};
 
 /// Tasks the kernel can hold. No reap in K5: slots fill in spawn
-/// order and stay, so spawn order is the table index. Now full at
-/// 8/8 with readkey (R5-2 follow-up); see `start_demo_tasks`.
-const MAX_TASKS: usize = 8;
+/// order and stay, so spawn order is the table index. Nine slots are
+/// used (A/B/C, the shell, and the five userspace programs); see
+/// `start_demo_tasks`.
+const MAX_TASKS: usize = 10;
 /// One task stack: 16 KiB, `u128` cells so the base (and the top) is
 /// always 16-aligned as `Context::initial` demands.
 const STACK_CELLS: usize = 2048;
@@ -739,10 +740,12 @@ pub unsafe fn start_demo_tasks() -> ! {
     spawn_task(crate::user::task_sleeper, u32::MAX).expect("sched: spawn sleeper");
     spawn_task(crate::user::task_crasher, u32::MAX).expect("sched: spawn crasher");
     spawn_task(console_task, u32::MAX).expect("sched: spawn console");
-    // R5-2 follow-up (Pax assignment): readkey spawns LAST so the
-    // existing ids stay stable (console keeps id 7) and the table
-    // lands exactly full at 8/8 — a 9th task needs a MAX_TASKS
-    // bump plus a heap review, not a silent spawn refusal.
+    // R5-2 follow-up (Pax assignment): readkey spawns after the
+    // shell so the existing ids stay stable (console keeps id 7).
     spawn_task(crate::user::task_readkey, u32::MAX).expect("sched: spawn readkey");
+    // K6.1: the capability drill is a userspace task on purpose. The
+    // kernel enforces the policy; the program only reports what the
+    // syscall path returned. A 10th slot remains free.
+    spawn_task(crate::user::task_capcheck, u32::MAX).expect("sched: spawn capcheck");
     run();
 }

@@ -14,6 +14,7 @@ Build: see `kernel/BUILD_LOG.md`. Log: `os-build/logs/K1-boot.txt` (54 lines, ca
 | K4 | paging, frames, heap | **PROVEN** | 15-region memory map, `61660` frames, `mem probe page ok`, `Box+Vec ok`, `mem stress 10k ok`, `mem summary: K4 up` (`os-build/logs/K1-boot.txt`) |
 | K5 | tasks, scheduling | **PROVEN** | `A` / `B` / `C sleeping 200 ticks` interleaving, then `C awake` (`os-build/logs/K1-boot.txt`) |
 | K6 | syscalls, userspace | **PROVEN** | `HELLO FROM USERSPACE`, `user exit code 0`, `user bad syscall 99 refused` (refusal path), page fault with `err 0x4: task killed` (`os-build/logs/K1-boot.txt`) |
+| K6.1 | in-kernel capability policy | **PROVEN** | `cap grant capcheck write=128 ticks=2000 sleep=100`, then `cap deny capcheck write 256 over 109`, `cap deny capcheck syscall 5`, `cap deny capcheck sleep 1000 over 100`, `capcheck: done`, `user exit code 0` (`os-build/logs/K6.1-cap-policy.txt`) |
 
 ## What is not claimed
 
@@ -27,13 +28,19 @@ Build: see `kernel/BUILD_LOG.md`. Log: `os-build/logs/K1-boot.txt` (54 lines, ca
   no font scaling and no graphics mode.
 - **The syscall table is the one in `user.rs`.** `syscalls.rs` still carries the older draft
   numbers and is not wired in; it is retired by K21, not by this table.
+- **K6.1 is resource policy, not a full sandbox.** The kernel enforces a syscall allow mask,
+  console-write quota, sleep cap, and wall-tick budget because those are the actions it
+  mediates. File, network, exec, and spend have no kernel syscall yet, so those grants remain
+  in the L5 userspace gateway. A task that never makes a syscall is not checked: the
+  scheduler is cooperative.
 - **The timer is 100.0153 Hz, not 100.** Divisor 11931 truncates; see the drift note in
   `kernel/BUILD_LOG.md`. Nothing derives wall-clock time from ticks.
 
 ## What comes next, in order
 
-1. K7 is the next milestone to write, not to claim: the shell/service hand-off from kernel to
-   userspace, which is what moves the boot past the kernel demo tasks.
+1. K7 is still the next milestone to write, not to claim: the shell/service hand-off from
+   kernel to userspace, which is what moves the boot past the kernel demo tasks. K6.1 does
+   not replace K7; it makes the syscall boundary policy-bearing before the services arrive.
 2. The kernel still runs only demo tasks (`A`/`B`/`C`), the console shell and three ELF test
    programs. No Goose service has been loaded by the kernel yet, and that is the real gap
    between K6 and a usable OS.
