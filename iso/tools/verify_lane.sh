@@ -11,6 +11,24 @@ cd "$ROOT" || exit 2
 
 fail=0
 
+echo "== syntax"
+for sh in iso/tools/*.sh iso/base/*.sh; do
+  [ -f "$sh" ] || continue
+  printf '%-40s ' "$sh"
+  if bash -n "$sh"; then echo "PASS"; else echo "FAIL"; fail=1; fi
+done
+for py in iso/tools/*.py iso/base/*.py iso/apps/agent-status/*.py; do
+  [ -f "$py" ] || continue
+  printf '%-40s ' "$py"
+  if python3 -c 'import sys; compile(open(sys.argv[1], encoding="utf-8").read(), sys.argv[1], "exec")' "$py"; then
+    echo "PASS"
+  else
+    echo "FAIL"
+    fail=1
+  fi
+done
+
+echo
 echo "== static checker"
 python3 iso/tools/check_iso_config.py || fail=1
 

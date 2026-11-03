@@ -49,6 +49,13 @@ iso/tools/boot_kit.sh --build --out DIR  userspace, kernel, builder, image
 iso/tools/boot_log_verdict.py boot.txt   PASS/FAIL rows for a serial log
 ```
 
+## Proofs
+
+The lane owes one screendump per cut, named in `screenshots/iso/PROOF_PLAN.md`.
+None exist: they need a VM, and this machine has none. The plan lists the
+exact file, what it proves, and the command that produces it, so the boot run
+on the 32GB MacBook can fill the table instead of guessing at filenames.
+
 ## What a green run means
 
 A green `verify_lane.sh` means the files are well formed, point at things that

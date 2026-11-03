@@ -215,5 +215,15 @@ class CheckerRuleTest(unittest.TestCase):
         self.assertIn("no calamares.slideshow import", out.stdout)
 
 
+    def test_branding_colour_outside_the_contract_is_named(self):
+        path = self.root / "calamares" / "branding" / "meta" / "branding.desc"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            'sidebarBackground: "#070B16"', 'sidebarBackground: "#0A0B0C"'),
+            encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("branding colours outside the contract", out.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()
