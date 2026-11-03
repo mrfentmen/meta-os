@@ -1,0 +1,7 @@
+# OC1B-171 mid-final-soak shell session — NOT RUN (blocked on OC1B-164)
+
+No final soak is running (no final tree assembled), so there is no mid-run
+guest to drive. No status/mem/ps output exists for this task.
+(A mid-soak drive against the MAIN soak is recorded instead in
+OC1B-soak-main-verdict.md's interim sample, but it is not claimed as this
+task: the task names the final soak's guest explicitly.)

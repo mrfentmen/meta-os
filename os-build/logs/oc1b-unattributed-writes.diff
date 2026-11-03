@@ -1,0 +1,90 @@
+diff --git a/os-build/aegis/r11/hosted-receipt.json b/os-build/aegis/r11/hosted-receipt.json
+index eff6f51a..0b8acd31 100644
+--- a/os-build/aegis/r11/hosted-receipt.json
++++ b/os-build/aegis/r11/hosted-receipt.json
+@@ -1,6 +1,6 @@
+ {
+-  "run": "aegis-hosted-2026-11-02T14-14-27-308Z",
+-  "at": "2026-11-02T14:14:27.313Z",
++  "run": "aegis-hosted-2026-11-02T16-11-32-857Z",
++  "at": "2026-11-02T16:11:32.862Z",
+   "confusables": {
+     "scanned": 77,
+     "findings": 0
+diff --git a/os-build/aegis/r11/lifecycle-drill.jsonl b/os-build/aegis/r11/lifecycle-drill.jsonl
+index 04e99f1c..dd6e42e9 100644
+--- a/os-build/aegis/r11/lifecycle-drill.jsonl
++++ b/os-build/aegis/r11/lifecycle-drill.jsonl
+@@ -1,3 +1,3 @@
+-{"ts":"2026-11-02T14:14:27.313Z","id":"drill-1","event":"open","title":"drill finding","severity":"low","by":"aegis"}
+-{"ts":"2026-11-02T14:14:27.313Z","id":"drill-1","event":"acknowledge","by":"aegis","note":""}
+-{"ts":"2026-11-02T14:14:27.313Z","id":"drill-1","event":"close","by":"aegis","note":"drill only"}
++{"ts":"2026-11-02T16:11:32.862Z","id":"drill-1","event":"open","title":"drill finding","severity":"low","by":"aegis"}
++{"ts":"2026-11-02T16:11:32.862Z","id":"drill-1","event":"acknowledge","by":"aegis","note":""}
++{"ts":"2026-11-02T16:11:32.862Z","id":"drill-1","event":"close","by":"aegis","note":"drill only"}
+diff --git a/os-build/aegis/runs.jsonl b/os-build/aegis/runs.jsonl
+index cf1f966d..e525f100 100644
+--- a/os-build/aegis/runs.jsonl
++++ b/os-build/aegis/runs.jsonl
+@@ -14,3 +14,5 @@
+ {"ts":"2026-11-02T14:13:52.931Z","run":"aegis-hosted-2026-11-02T14-13-52-928Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+ {"ts":"2026-11-02T14:14:27.310Z","run":"aegis-hosted-2026-11-02T14-14-27-308Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
+ {"ts":"2026-11-02T14:14:27.313Z","run":"aegis-hosted-2026-11-02T14-14-27-308Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
++{"ts":"2026-11-02T16:11:32.860Z","run":"aegis-hosted-2026-11-02T16-11-32-857Z","event":"hosted-local-start","command":"aegis/hosted.mjs"}
++{"ts":"2026-11-02T16:11:32.862Z","run":"aegis-hosted-2026-11-02T16-11-32-857Z","event":"hosted-local-done","confusableFindings":0,"lifecycleState":"closed"}
+diff --git a/os-build/handsfree/brief.txt b/os-build/handsfree/brief.txt
+index 2df68922..3fbf7486 100644
+--- a/os-build/handsfree/brief.txt
++++ b/os-build/handsfree/brief.txt
+@@ -1,4 +1 @@
+-2 orders ran.
+-2 finished, 0 stopped, 0 failed.
+-aegis finished.
+-nervus finished.
++No orders ran.
+diff --git a/os-build/handsfree/intake-receipt.json b/os-build/handsfree/intake-receipt.json
+index e33b129c..7b019271 100644
+--- a/os-build/handsfree/intake-receipt.json
++++ b/os-build/handsfree/intake-receipt.json
+@@ -1,5 +1,14 @@
+ {
+-  "at": "2026-11-02T14:14:27.438Z",
+-  "filed": [],
++  "at": "2026-11-02T16:11:32.969Z",
++  "filed": [
++    {
++      "id": "aegis-20261102161132-0",
++      "agent": "aegis"
++    },
++    {
++      "id": "nervus-20261102161132-1",
++      "agent": "nervus"
++    }
++  ],
+   "refused": []
+ }
+\ No newline at end of file
+diff --git a/os-build/nervus/hosted-receipt.json b/os-build/nervus/hosted-receipt.json
+index d6a25c8f..19c259a4 100644
+--- a/os-build/nervus/hosted-receipt.json
++++ b/os-build/nervus/hosted-receipt.json
+@@ -1,5 +1,5 @@
+ {
+-  "at": "2026-11-02T14:14:27.365Z",
++  "at": "2026-11-02T16:11:32.914Z",
+   "ledger": "os-build/nervus/stub-ledger.jsonl",
+   "rows": [
+     {
+diff --git a/os-build/nervus/stub-ledger.jsonl b/os-build/nervus/stub-ledger.jsonl
+index e270d098..b5a3bd8d 100644
+--- a/os-build/nervus/stub-ledger.jsonl
++++ b/os-build/nervus/stub-ledger.jsonl
+@@ -23,3 +23,8 @@
+ {"model_hash":"3575125bd5df1fbcf57f79b9569f191353f039b3bdfd9ad35d5797347df7f131","operation":"steer","probe":"stub-probe (no model)","scope":"neuron","layer":0,"neuron":0,"dose":1,"zone":"inert","result":{"changed":false,"source":"STUB","note":"no model was loaded"},"stub":true}
+ {"model_hash":"3575125bd5df1fbcf57f79b9569f191353f039b3bdfd9ad35d5797347df7f131","operation":"ablate","probe":"stub-probe (no model)","scope":"neuron","layer":0,"neuron":0,"result":{"changed":false,"source":"STUB"},"stub":true}
+ {"model_hash":"3575125bd5df1fbcf57f79b9569f191353f039b3bdfd9ad35d5797347df7f131","operation":"evaluate_delta","probe":"stub-probe (no model)","scope":"neuron","before_hash":"26826a8ce8c0e24e2648a48cae0ae20460486ac6aec02c0426826a8ce8c0e24e","after_hash":"176866cbdbb1020065755bacaa0f1ff54644a9b99fe0ee4353398a88edfdd324","result":{"delta":0,"source":"STUB"},"stub":true}
++{"model_hash":"3575125bd5df1fbcf57f79b9569f191353f039b3bdfd9ad35d5797347df7f131","operation":"map_layers","probe":"stub-probe (no model)","scope":"neuron","result":{"layers":12,"source":"STUB"},"stub":true}
++{"model_hash":"3575125bd5df1fbcf57f79b9569f191353f039b3bdfd9ad35d5797347df7f131","operation":"sweep","probe":"stub-probe (no model)","scope":"neuron","layer_from":0,"layer_to":2,"result":{"neurons":[{"layer":0,"value":0},{"layer":1,"value":0.01},{"layer":2,"value":0.02}],"source":"STUB"},"stub":true}
++{"model_hash":"3575125bd5df1fbcf57f79b9569f191353f039b3bdfd9ad35d5797347df7f131","operation":"steer","probe":"stub-probe (no model)","scope":"neuron","layer":0,"neuron":0,"dose":1,"zone":"inert","result":{"changed":false,"source":"STUB","note":"no model was loaded"},"stub":true}
++{"model_hash":"3575125bd5df1fbcf57f79b9569f191353f039b3bdfd9ad35d5797347df7f131","operation":"ablate","probe":"stub-probe (no model)","scope":"neuron","layer":0,"neuron":0,"result":{"changed":false,"source":"STUB"},"stub":true}
++{"model_hash":"3575125bd5df1fbcf57f79b9569f191353f039b3bdfd9ad35d5797347df7f131","operation":"evaluate_delta","probe":"stub-probe (no model)","scope":"neuron","before_hash":"26826a8ce8c0e24e2648a48cae0ae20460486ac6aec02c0426826a8ce8c0e24e","after_hash":"176866cbdbb1020065755bacaa0f1ff54644a9b99fe0ee4353398a88edfdd324","result":{"delta":0,"source":"STUB"},"stub":true}

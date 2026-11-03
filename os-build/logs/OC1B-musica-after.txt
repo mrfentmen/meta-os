@@ -1,0 +1,19 @@
+OC1B-354 Musica suite after pretty_midi present (no install needed; version 0.2.11.post0 machine-wide)
+tree: 94010c76ee095fa6c6bcfa4405cd56a9695f32d3
+date(UTC): 2026-11-02T16:11:27Z
+command: node --test tests/musica-*.test.mjs
+
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ duration_ms 12401.008333
+
+OC1B-355 remaining failures: NONE — 39/39 pass. The install fixed only what it fixed: n/a (pre-installed). No other missing dependency surfaced (OC1B-368: none).
+
+OC1B-356: the Node Musica suite IS this suite (28 test files, tests/musica-*.test.mjs) — no separate Python Musica suite exists in tests/; the Python runtime (os/worlds/musica/runtime/*.py) is exercised through these node tests (compose/keepers/midi subprocesses). Count recorded here, not double-counted.
+
+OC1B-367 delta vs Bond 37/2: +2 tests present in tree (39 total), 0 failures (both pretty_midi failures resolved by the pre-existing 0.2.11.post0 install).
+OC1B-372 wall-clock: run2 12s, run3 13s (suite duration_ms ~14.4s in-run).

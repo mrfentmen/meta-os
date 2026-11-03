@@ -1,0 +1,58 @@
+OC1B-402 failing-test list, tree 94010c76ee095fa6c6bcfa4405cd56a9695f32d3, npm test full run 2026-11-02
+56 unique failures, one per line: file :: test name
+tests/analysis-active-announcement.test.mjs:80:1 :: native: startAnalysis announces the banner's own words when sampling starts
+tests/camera-start-pending.test.mjs:107:1 :: native: Start stays disabled while permission is requested, from state alone
+tests/camera-state-live-region.test.mjs:46:1 :: native: camera state still rides the preview accessibilityValue (no change needed)
+tests/camera-stop-pending.test.mjs:102:1 :: native: Stop stays enabled while permission is requested, not only while running
+tests/native-analysis-active-size.test.mjs:1:1 :: tests/native-analysis-active-size.test.mjs
+tests/native-camera-facing-note-size.test.mjs:1:1 :: tests/native-camera-facing-note-size.test.mjs
+tests/native-camera-facing.test.mjs:62:1 :: native: picker offers both facings with the web picker's labels
+tests/native-camera-facing.test.mjs:73:1 :: native: picker says plainly that a facing is a preference, not a requirement
+tests/native-camera-failure-announcement.test.mjs:67:1 :: native: the announced words are exactly the state text the panel shows
+tests/native-camera-guidance-size.test.mjs:1:1 :: tests/native-camera-guidance-size.test.mjs
+tests/native-camera-state-size.test.mjs:1:1 :: tests/native-camera-state-size.test.mjs
+tests/native-clear-assessing.test.mjs:82:1 :: native: the Assess buttons still gate on the flag, so it is the guard
+tests/native-footer-size.test.mjs:1:1 :: tests/native-footer-size.test.mjs
+tests/native-header-flame-chip-size.test.mjs:1:1 :: tests/native-header-flame-chip-size.test.mjs
+tests/native-header-identity-size.test.mjs:1:1 :: tests/native-header-identity-size.test.mjs
+tests/native-header-limitations-corners.test.mjs:1:1 :: tests/native-header-limitations-corners.test.mjs
+tests/native-header-limitations-size.test.mjs:1:1 :: tests/native-header-limitations-size.test.mjs
+tests/native-header-product-label-size.test.mjs:1:1 :: tests/native-header-product-label-size.test.mjs
+tests/native-ignis-header.test.mjs:1:1 :: tests/native-ignis-header.test.mjs
+tests/native-ignis-latest-note-size.test.mjs:1:1 :: tests/native-ignis-latest-note-size.test.mjs
+tests/native-ignis-latest-title.test.mjs:1:1 :: tests/native-ignis-latest-title.test.mjs
+tests/native-ignis-ops-console-body.test.mjs:1:1 :: tests/native-ignis-ops-console-body.test.mjs
+tests/native-ignis-ops-console-headings.test.mjs:112:1 :: native panel titles: Latest and Timeline keep their header traits
+tests/native-ignis-ops-console-headings.test.mjs:145:1 :: native panel titles: Settings stays a GroupBox label, camera panel untouched
+tests/native-ignis-ops-console-headings.test.mjs:90:1 :: native panel titles: all five use PanelHeading gated on Ignis
+tests/native-ignis-ops-console-status.test.mjs:1:1 :: tests/native-ignis-ops-console-status.test.mjs
+tests/native-input-panel-title-size.test.mjs:1:1 :: tests/native-input-panel-title-size.test.mjs
+tests/native-input-ready-announcement.test.mjs:64:1 :: native: a successfully chosen still image announces the panel's own ready words
+tests/native-input-ready-announcement.test.mjs:79:1 :: native: a successfully chosen video announces the panel's own ready words
+tests/native-interval-change-announcement.test.mjs:71:1 :: native: a mid-run interval change announces the banner's own words
+tests/native-latest-placeholder.test.mjs:1:1 :: tests/native-latest-placeholder.test.mjs
+tests/native-medicus-ops-console-body.test.mjs:1:1 :: tests/native-medicus-ops-console-body.test.mjs
+tests/native-medicus-ops-console-headings.test.mjs:98:1 :: native panel titles: all five use PanelHeading gated on Medicus
+tests/native-medicus-ops-console-status.test.mjs:1:1 :: tests/native-medicus-ops-console-status.test.mjs
+tests/native-settings-categories-size.test.mjs:1:1 :: tests/native-settings-categories-size.test.mjs
+tests/native-settings-label-size.test.mjs:1:1 :: tests/native-settings-label-size.test.mjs
+tests/native-settings-note-size.test.mjs:1:1 :: tests/native-settings-note-size.test.mjs
+tests/native-settings-title-size.test.mjs:1:1 :: tests/native-settings-title-size.test.mjs
+tests/native-statusbar-size.test.mjs:1:1 :: tests/native-statusbar-size.test.mjs
+tests/native-stepper-label-size.test.mjs:1:1 :: tests/native-stepper-label-size.test.mjs
+tests/native-still-image-intro-size.test.mjs:1:1 :: tests/native-still-image-intro-size.test.mjs
+tests/native-still-image-state-size.test.mjs:1:1 :: tests/native-still-image-state-size.test.mjs
+tests/native-video-intro-size.test.mjs:1:1 :: tests/native-video-intro-size.test.mjs
+tests/native-video-state-size.test.mjs:1:1 :: tests/native-video-state-size.test.mjs
+tests/native-vigiles-ops-console-body.test.mjs:1:1 :: tests/native-vigiles-ops-console-body.test.mjs
+tests/native-vigiles-ops-console-headings.test.mjs:98:1 :: native panel titles: all five use PanelHeading gated on Vigiles
+tests/native-vigiles-ops-console-status.test.mjs:1:1 :: tests/native-vigiles-ops-console-status.test.mjs
+tests/os-docs-r11.test.mjs:20:1 :: R11-282 the boot-log index names every committed log and claims no verdict it did not check
+tests/panel-assessing-line-clear.test.mjs:88:1 :: native: each panel shows its sending line while its assessing flag is true, whatever the input is
+tests/still-image-assess-button.test.mjs:84:1 :: native: the still-image button is already gated on nil image or assessing, so no native change is needed
+tests/ui.test.mjs:1115:1 :: latest: native panel carries the observable-evidence note, matching the web panel
+tests/ui.test.mjs:1216:1 :: config: web sampling interval clamps to 1–60 like the native Stepper, instead of silently falling back
+tests/ui.test.mjs:851:1 :: camera: web Start says it is waiting for camera permission, matching the native camera
+tests/ui.test.mjs:872:1 :: latest: web panel waits for the first assessment, matching the native panel
+tests/ui.test.mjs:938:1 :: panels: still-image and video panels show an in-panel sending note while assessing, matching the native panels
+tests/ui.test.mjs:966:1 :: camera: web shows an analysis-active banner while sampling, matching the native camera panel

@@ -1,0 +1,16 @@
+# OC1B-161 K3 soak — NOT RUN (blocked)
+
+Reason: the K3 tree image is gated by §5 (OC1B-101..125), which has not
+completed on any branch in this repo state. Rowan's build branch exists
+(origin/rowan/kernel-k3-build, commit 7bb72075 "K3 demand paging build"),
+but no §5 gate-pack artifact exists on this tree to soak:
+`ls os-build/logs | grep k3-gate` is empty, and no OC1B-k3-gatepack.md was
+found. Per the task ("after §5 gates it"), soaking the ungated branch
+would prove nothing the task asks for.
+Source check commands (run 2026-11-02 ~11:20 EST on /tmp/oc500-s7):
+  `git branch -a | grep -i rowan` (branch exists, ungated)
+  `ls os-build/logs/ | grep -i -E "k3-gate..."` (no gate artifact)
+Duration: NOT RUN — 0 minutes. No image booted, no serial exists.
+Required contents missing and why: duration (no run), demand-fault count
+(no demand program on a gated tree), panic count (no run).
+Next step: re-run this task once OC1B-101..125 land the gated K3 image.

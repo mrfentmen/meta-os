@@ -1,0 +1,12 @@
+/private/tmp/oc500-baseline/os/worlds/custos/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/dep/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/doe/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/dsny/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/ems/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/fdny/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/hospital/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/mta/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/musica/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/nypd/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/officina/pack.json: OK
+/private/tmp/oc500-baseline/os/worlds/science-lab/pack.json: OK

@@ -1,0 +1,36 @@
+# OC1B-259 — beat 6 live capture (terminal output as it happened)
+
+Date (local): 2026-11-02 ~11:14 EST. Tree: opencode/500-s11 @ 94010c76.
+Command (run during the capture session, SPARK_API_KEY from the Mac
+key file line 1 — value never printed, key length 48):
+  python3 server/queue/livecams.py --assess-one --area Brooklyn \
+      --division vigiles --out /tmp/oc1b-livecam
+
+Terminal output, verbatim:
+  live frame: 3 Ave @ 60 St [Brooklyn] 16070 bytes -> /tmp/oc1b-livecam/live-frame.jpg
+  reading recorded: /tmp/oc1b-livecam/live-reading.json
+
+Camera: 3 Ave @ 60 St, Brooklyn (id 88278063-8891-4144-9295-f5dc9a94d2ea,
+lat 40.642195 lon -74.020635, NYC DOT public traffic camera).
+Fetched at: 2026-11-02T16:14:01.487448+00:00 (11:14:01 EST).
+On-image caption 2026-11-02 11:14:38 — current, not a stale still.
+Frame: 16070 bytes, JPEG magic ffd8 verified, sha256
+aef1cf8eaad71e6a089bc9db7a389afdaaaaf71c7ecab971b3188ff35f947b54.
+Committed beside this log: os-build/demo/oc1b-beat6-frame.jpg,
+os-build/demo/oc1b-beat6-reading.json (byte-identical copies).
+
+Reading (production spark_gen assessment, model muse-spark-1.3):
+  product vigiles, category "normal activity",
+  summary "Street scene under elevated structure with vehicles
+  present and no visible people, contact, or disturbance.",
+  uncertainty "Low resolution limits fine detail",
+  requires_human_review false. Latency 13648 ms (first call).
+
+Second live call this session (OC1B-260 chain, same frame, all
+three flags on): assess:vigiles, muse-spark-1.3, latency 4872 ms,
+category "normal activity", outcome baseline. No flag, no dispatch.
+
+Live spend this section (spark_guardrail_state.json, gitignored —
+numbers carried here, not in a committed receipts file):
+2 calls, both muse-spark-1.3, est $0.007405 + $0.004574 = $0.011979
+(Spark-rate estimate, per guardrail).

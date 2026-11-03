@@ -1,0 +1,23 @@
+# OC1B-026 — KF-01 starting point (measured on opencode/500-s2 @ 94010c76)
+# Tree: /tmp/oc500-s2, HEAD 94010c76ee095fa6c6bcfa4405cd56a9695f32d3
+# Date (UTC): 2026-11-02. Measured by OpenCode 1, not asserted.
+
+kernel/Cargo.toml line 11:
+bootloader = { version = "0.9", features = ["map_physical_memory"] }
+
+kernel/Cargo.lock (lock entry):
+[[package]]
+name = "bootloader"
+version = "0.9.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e22d5a0b9e11dd5bee9d24a68885de6dc7ed367f897323b1c1286150fd469374"
+
+Rowan KF-01-relevant branch tips (git rev-parse, measured 2026-11-02):
+origin/rowan/kernel-kf01-spike 8e725f4bb4acc9988624ee0a083c561d4ec4fcb4  (docs only, pin stays 0.9)
+origin/rowan/bootloader-spike 779012edac33c3ac80eef92826ea591d74a0d5ec  (docs only, pin stays 0.9)
+
+Exhaustive scan: every ref under refs/remotes/origin/ with a
+kernel/Cargo.toml was read; the ONLY non-0.9 pin anywhere is
+origin/spike/bootloader-0.11 at 0.10.9 = round7 history pair member
+(0.10.9 API-fail), forbidden to re-run, never charged. Zero FRESH
+KF-01 candidates exist on any branch. Budget consumed: 0 of 2.

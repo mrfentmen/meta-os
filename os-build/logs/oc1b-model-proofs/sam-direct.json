@@ -1,0 +1,29 @@
+{
+ "box_px": {
+  "x1": 10,
+  "y1": 0,
+  "x2": 599,
+  "y2": 353
+ },
+ "image_size": {
+  "w": 600,
+  "h": 470
+ },
+ "region": {
+  "x": 17,
+  "y": 0,
+  "w": 982,
+  "h": 751
+ },
+ "mask": {
+  "x": 0,
+  "y": 0,
+  "data_len": 71049
+ },
+ "model": "sam-3.1",
+ "latency_ms": 1755,
+ "raw_text_len": 80865,
+ "frame": "test-footage/frames/ignis-fire-1.jpg",
+ "prompt": "the burning building engulfed in flames",
+ "tree": "94010c76"
+}

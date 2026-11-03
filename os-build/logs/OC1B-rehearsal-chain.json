@@ -1,0 +1,50 @@
+{
+ "flags": {
+  "TRIO_SAM_SEGMENT": "1",
+  "TRIO_REVIEW_WONDER": "1",
+  "TRIO_JUDGE_MODEL": "1"
+ },
+ "camera": {
+  "id": "88278063-8891-4144-9295-f5dc9a94d2ea",
+  "name": "3 Ave @ 60 St",
+  "area": "Brooklyn"
+ },
+ "frame_sha256": "aef1cf8eaad71e6a089bc9db7a389afdaaaaf71c7ecab971b3188ff35f947b54",
+ "outcome": {
+  "outcome": "baseline",
+  "category": "normal activity",
+  "camera_id": "88278063-8891-4144-9295-f5dc9a94d2ea",
+  "camera_name": "3 Ave @ 60 St",
+  "area": "Brooklyn",
+  "division": "vigiles"
+ },
+ "events": [
+  {
+   "at": "2026-11-02T16:16:10.693Z",
+   "type": "patrol-check",
+   "camera_id": "88278063-8891-4144-9295-f5dc9a94d2ea",
+   "camera_name": "3 Ave @ 60 St",
+   "area": "Brooklyn",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "job_id": "direct-chain-2026-11-02T16:16:05.721Z",
+   "model": "muse-spark-1.3",
+   "latency_ms": 4872
+  },
+  {
+   "at": "2026-11-02T17:48:15.183Z",
+   "type": "patrol-check",
+   "camera_id": "88278063-8891-4144-9295-f5dc9a94d2ea",
+   "camera_name": "3 Ave @ 60 St",
+   "area": "Brooklyn",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "job_id": "direct-chain-2026-11-02T17:48:08.433Z",
+   "model": "muse-spark-1.3",
+   "latency_ms": 6670
+  }
+ ],
+ "dispatch_endpoint": "http://127.0.0.1:8935/dispatch-simulated"
+}

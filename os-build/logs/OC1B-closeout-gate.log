@@ -1,0 +1,967 @@
+=== CONSOLE ===
+== toolchain ==
+cargo 1.101.0-nightly (31d3246e0 2026-10-27)
+QEMU emulator version 11.1.3
+== userspace ==
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.10s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.11s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+== kernel ==
+WARNING: `CARGO_MANIFEST_DIR` env variable not set
+Building kernel
+   Compiling metaos-kernel v0.1.0 (/private/tmp/oc500/kernel)
+warning: unnecessary `unsafe` block
+   --> src/main.rs:29:20
+    |
+ 24 | / macro_rules! print {
+ 25 | |     ($($arg:tt)*) => {{
+ 26 | |         use core::fmt::Write as _;
+ 27 | |         let _ = write!($crate::SerialPort, $($arg)*);
+ 28 | |         // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+ 29 | |         let slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::CONSOLE) };
+    | |                    ^^^^^^ unnecessary `unsafe` block
+...   |
+ 33 | |     }};
+ 34 | | }
+    | |_- this warning originates in the macro `print` which comes from the expansion of the macro `println`
+    |
+   ::: src/sched.rs:559:9
+    |
+559 |           unsafe {
+    |           ------ because it's nested under this `unsafe` block
+...
+564 | /                         println!(
+565 | |                             "ps id {} state {:?} ticks_used {} prio {}",
+566 | |                             task.id.as_u64(),
+567 | |                             task.state,
+568 | |                             task.ticks_used,
+569 | |                             task.priority
+570 | |                         );
+    | |_________________________- in this macro invocation
+    |
+    = note: `#[warn(unused_unsafe)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary `unsafe` block
+   --> src/main.rs:29:20
+    |
+ 24 | / macro_rules! print {
+ 25 | |     ($($arg:tt)*) => {{
+ 26 | |         use core::fmt::Write as _;
+ 27 | |         let _ = write!($crate::SerialPort, $($arg)*);
+ 28 | |         // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+ 29 | |         let slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::CONSOLE) };
+    | |                    ^^^^^^ unnecessary `unsafe` block
+...   |
+ 33 | |     }};
+ 34 | | }
+    | |_- this warning originates in the macro `print` which comes from the expansion of the macro `println`
+    |
+   ::: src/sched.rs:559:9
+    |
+559 |           unsafe {
+    |           ------ because it's nested under this `unsafe` block
+...
+564 | /                         println!(
+565 | |                             "ps id {} state {:?} ticks_used {} prio {}",
+566 | |                             task.id.as_u64(),
+567 | |                             task.state,
+568 | |                             task.ticks_used,
+569 | |                             task.priority
+570 | |                         );
+    | |_________________________- in this macro invocation
+
+warning: unnecessary `unsafe` block
+  --> src/main.rs:29:20
+   |
+24 | / macro_rules! print {
+25 | |     ($($arg:tt)*) => {{
+26 | |         use core::fmt::Write as _;
+27 | |         let _ = write!($crate::SerialPort, $($arg)*);
+28 | |         // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+29 | |         let slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::CONSOLE) };
+   | |                    ^^^^^^ unnecessary `unsafe` block
+...  |
+33 | |     }};
+34 | | }
+   | |_- this warning originates in the macro `print` which comes from the expansion of the macro `println`
+   |
+  ::: src/user.rs:88:5
+   |
+88 |       unsafe {
+   |       ------ because it's nested under this `unsafe` block
+...
+94 |                   println!("user exit code {}", a1);
+   |                   --------------------------------- in this macro invocation
+
+warning: unnecessary `unsafe` block
+   --> src/main.rs:29:20
+    |
+ 24 | / macro_rules! print {
+ 25 | |     ($($arg:tt)*) => {{
+ 26 | |         use core::fmt::Write as _;
+ 27 | |         let _ = write!($crate::SerialPort, $($arg)*);
+ 28 | |         // SAFETY: only `kernel_main` touches CONSOLE, single CPU, no threads yet.
+ 29 | |         let slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::CONSOLE) };
+    | |                    ^^^^^^ unnecessary `unsafe` block
+...   |
+ 33 | |     }};
+ 34 | | }
+    | |_- this warning originates in the macro `print` which comes from the expansion of the macro `println`
+    |
+   ::: src/user.rs:88:5
+    |
+ 88 |       unsafe {
+    |       ------ because it's nested under this `unsafe` block
+...
+133 |                   println!("user bad syscall {} refused", n);
+    |                   ------------------------------------------ in this macro invocation
+
+warning: unnecessary `unsafe` block
+   --> src/user.rs:456:30
+    |
+456 |                     .map(|p| unsafe {
+    |                              ^^^^^^ unnecessary `unsafe` block
+
+warning: associated items `new`, `as_u64`, and `align_down` are never used
+   --> src/memory.rs:102:18
+    |
+100 | impl PhysAddr {
+    | ------------- associated items in this implementation
+101 |     /// Wrap a raw address.
+102 |     pub const fn new(addr: u64) -> PhysAddr {
+    |                  ^^^
+...
+107 |     pub const fn as_u64(self) -> u64 {
+    |                  ^^^^^^
+...
+117 |     pub const fn align_down(self) -> PhysAddr {
+    |                  ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: associated function `new` is never used
+   --> src/memory.rs:142:18
+    |
+140 | impl VirtAddr {
+    | ------------- associated function in this implementation
+141 |     /// Wrap a raw address.
+142 |     pub const fn new(addr: u64) -> VirtAddr {
+    |                  ^^^
+
+warning: methods `len`, `is_empty`, and `contains_frame` are never used
+   --> src/memory.rs:227:18
+    |
+225 | impl MemoryRegion {
+    | ----------------- methods in this implementation
+226 |     /// Length in bytes, or 0 for an empty/inverted region.
+227 |     pub const fn len(self) -> u64 {
+    |                  ^^^
+...
+232 |     pub const fn is_empty(self) -> bool {
+    |                  ^^^^^^^^
+...
+259 |     pub fn contains_frame(self, addr: PhysAddr) -> bool {
+    |            ^^^^^^^^^^^^^^
+
+warning: methods `frame_index` and `is_usable_frame` are never used
+   --> src/memory.rs:320:12
+    |
+282 | impl<'a> MemoryMap<'a> {
+    | ---------------------- methods in this implementation
+...
+320 |     pub fn frame_index(&self, addr: PhysAddr) -> Option<usize> {
+    |            ^^^^^^^^^^^
+...
+337 |     pub fn is_usable_frame(&self, addr: PhysAddr) -> bool {
+    |            ^^^^^^^^^^^^^^^
+
+warning: associated items `required_bitmap_words`, `total_frames`, `used_frames`, and `deallocate` are never used
+   --> src/memory.rs:364:18
+    |
+362 | impl<'a> FrameAllocator<'a> {
+    | --------------------------- associated items in this implementation
+363 |     /// Bitmap words needed to cover `total_frames` frames.
+364 |     pub const fn required_bitmap_words(total_frames: usize) -> usize {
+    |                  ^^^^^^^^^^^^^^^^^^^^^
+...
+386 |     pub fn total_frames(&self) -> usize {
+    |            ^^^^^^^^^^^^
+...
+396 |     pub fn used_frames(&self) -> usize {
+    |            ^^^^^^^^^^^
+...
+432 |     pub fn deallocate(&mut self, frame: PhysAddr) -> bool {
+    |            ^^^^^^^^^^
+
+warning: constant `ENTRY_WRITE_THROUGH` is never used
+   --> src/memory.rs:464:11
+    |
+464 | pub const ENTRY_WRITE_THROUGH: u64 = 1 << 3;
+    |           ^^^^^^^^^^^^^^^^^^^
+
+warning: constant `ENTRY_NO_CACHE` is never used
+   --> src/memory.rs:466:11
+    |
+466 | pub const ENTRY_NO_CACHE: u64 = 1 << 4;
+    |           ^^^^^^^^^^^^^^
+
+warning: constant `ENTRY_ACCESSED` is never used
+   --> src/memory.rs:468:11
+    |
+468 | pub const ENTRY_ACCESSED: u64 = 1 << 5;
+    |           ^^^^^^^^^^^^^^
+
+warning: constant `ENTRY_DIRTY` is never used
+   --> src/memory.rs:470:11
+    |
+470 | pub const ENTRY_DIRTY: u64 = 1 << 6;
+    |           ^^^^^^^^^^^
+
+warning: constant `ENTRY_GLOBAL` is never used
+   --> src/memory.rs:475:11
+    |
+475 | pub const ENTRY_GLOBAL: u64 = 1 << 8;
+    |           ^^^^^^^^^^^^
+
+warning: method `flags` is never used
+   --> src/memory.rs:517:18
+    |
+487 | impl PageTableEntry {
+    | ------------------- method in this implementation
+...
+517 |     pub const fn flags(self) -> u64 {
+    |                  ^^^^^
+
+warning: methods `root` and `unmap_page` are never used
+   --> src/memory.rs:581:12
+    |
+567 | impl<'a, T: TableMemory> Mapper<'a, T> {
+    | -------------------------------------- methods in this implementation
+...
+581 |     pub fn root(&self) -> PhysAddr {
+    |            ^^^^
+...
+701 |     pub fn unmap_page(&mut self, virt: VirtAddr) -> Option<PhysAddr> {
+    |            ^^^^^^^^^^
+
+warning: methods `size` and `contains_sp` are never used
+   --> src/tasks.rs:268:18
+    |
+245 | impl Stack {
+    | ---------- methods in this implementation
+...
+268 |     pub const fn size(self) -> u64 {
+    |                  ^^^^
+...
+285 |     pub const fn contains_sp(self, sp: u64) -> bool {
+    |                  ^^^^^^^^^^^
+
+warning: field `ticks` is never read
+   --> src/tasks.rs:396:5
+    |
+388 | pub struct Scheduler<'a> {
+    |            --------- field in this struct
+...
+396 |     ticks: u64,
+    |     ^^^^^
+
+warning: methods `capacity`, `ticks`, `reap`, and `on_timer_tick` are never used
+   --> src/tasks.rs:415:12
+    |
+399 | impl<'a> Scheduler<'a> {
+    | ---------------------- methods in this implementation
+...
+415 |     pub fn capacity(&self) -> usize {
+    |            ^^^^^^^^
+...
+425 |     pub fn ticks(&self) -> u64 {
+    |            ^^^^^
+...
+658 |     pub fn reap(&mut self, id: TaskId) -> bool {
+    |            ^^^^
+...
+678 |     pub fn on_timer_tick(&mut self) -> Option<TaskId> {
+    |            ^^^^^^^^^^^^^
+
+warning: constant `SAVED_RCX` is never used
+  --> src/user.rs:69:7
+   |
+69 | const SAVED_RCX: isize = -32;
+   |       ^^^^^^^^^
+
+warning: constant `SAVED_RDX` is never used
+  --> src/user.rs:70:7
+   |
+70 | const SAVED_RDX: isize = -40;
+   |       ^^^^^^^^^
+
+warning: `metaos-kernel` (bin "metaos-kernel") generated 24 warnings (2 duplicates)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.38s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+Building bootloader
+   Compiling bootloader v0.9.35 (/Users/test/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/bootloader-0.9.35)
+    Finished `release` profile [optimized + debuginfo] target(s) in 0.88s
+warning: the following packages contain code that will be rejected by a future version of Rust: core v0.0.0 (/Users/test/.rustup/toolchains/nightly-aarch64-apple-darwin/lib/rustlib/src/rust/library/core)
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+Created bootimage for `metaos-kernel` at `/private/tmp/oc500/kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin`
+== boot ==
+qemu-system-x86_64: terminating on signal 15 from pid 41350 (<unknown process>)
+== assert (/tmp/gate-boot-83YUQk) ==
+  ok   K1 alive
+  ok   K4 memory
+  ok   K6 ring 3
+  ok   K6 clean exit
+  ok   K6 fault isolation
+  ok   readkey spawned (R5-2 follow-up)
+  ok   shell answered
+  ok   status reported live state
+GATE GREEN (/tmp/gate-boot-83YUQk)
+=== SERIAL (/tmp/gate-boot-83YUQk) ===
+META OS 0.1 (K6)
+META OS KERNEL - alive (K1)
+K3 timer: 10 ticks after 528791 spins
+mem region 0: 0x0-0x1000 reserved
+mem region 1: 0x1000-0x5000 reserved
+mem region 2: 0x5000-0x15000 reserved
+mem region 3: 0x15000-0x16000 reserved
+mem region 4: 0x16000-0x9f000 reserved
+mem region 5: 0x9f000-0xa0000 reserved
+mem region 6: 0xf0000-0x100000 reserved
+mem region 7: 0x100000-0x300000 reserved
+mem region 8: 0x300000-0x400000 usable
+mem region 9: 0x400000-0xea2000 reserved
+mem region 10: 0xea2000-0x12b3000 reserved
+mem region 11: 0x12b3000-0x1ffe0000 usable
+mem region 12: 0x1ffe0000-0x20000000 reserved
+mem region 13: 0xfffc0000-0x100000000 reserved
+mem region 14: 0xfd00000000-0x10000000000 reserved
+mem map: 15 regions, usable 506036K reserved 12601100K other 0K
+mem frames: 126509 usable total
+mem allocator: 126509 covered frames, 126509 free
+mem probe page ok
+mem heap: 512K total
+mem Box+Vec ok (box 42, vec sum 120)
+mem stress 10k ok, heap free 511K
+mem summary: K4 up
+A
+B
+C sleeping 200 ticks
+A
+B
+user hello: 2527624 bytes magic=0x464c457f type=Some(2) entry=Some(105553116266496)
+user hello: entry 0x600000000000 head [50, 48, bf, bd, 00, 00, 00, 00, 60, 00, 00, 48, b8, 70, 00, 00]
+HELLO FROM USERSPACE
+user exit code 0
+A
+B
+user sleeper: 2798760 bytes magic=0x464c457f type=Some(2) entry=Some(106652627894288)
+user sleeper: entry 0x610000000010 head [50, 48, bf, 23, 43, 01, 00, 00, 61, 00, 00, 48, b8, b0, 03, 00]
+sleeper: before sleep
+sleeper: pid 5
+user crasher: 2539192 bytes magic=0x464c457f type=Some(2) entry=Some(107752139522320)
+user crasher: entry 0x620000000110 head [50, 48, bf, 41, 06, 00, 00, 00, 62, 00, 00, 48, b8, f0, 01, 00]
+crasher: about to read zero
+INT user page-fault addr 0x0000000000000000 err 0x0000000000000004: task killed
+A
+B
+sleeper: yielded and back
+A
+B
+user readkey: 2799712 bytes magic=0x464c457f type=Some(2) entry=Some(108851651149840)
+user readkey: entry 0x630000000010 head [48, 83, ec, 38, 48, bf, 53, 44, 01, 00, 00, 63, 00, 00, 48, b8]
+readkey: polling syscall 5
+readkey: empty
+readkey: empty
+readkey: empty
+readkey progress 100
+readkey progress 200
+readkey progress 300
+readkey progress 400
+readkey progress 500
+readkey progress 600
+readkey progress 700
+readkey progress 800
+readkey progress 900
+readkey progress 1000
+readkey progress 1100
+readkey progress 1200
+readkey progress 1300
+readkey progress 1400
+readkey progress 1500
+readkey progress 1600
+readkey progress 1700
+readkey progress 1800
+readkey progress 1900
+readkey progress 2000
+readkey progress 2100
+readkey progress 2200
+readkey progress 2300
+readkey progress 2400
+readkey progress 2500
+readkey progress 2600
+readkey progress 2700
+readkey progress 2800
+readkey progress 2900
+readkey progress 3000
+readkey progress 3100
+readkey progress 3200
+readkey progress 3300
+readkey progress 3400
+readkey progress 3500
+readkey progress 3600
+readkey progress 3700
+readkey progress 3800
+readkey progress 3900
+readkey progress 4000
+readkey progress 4100
+readkey progress 4200
+readkey progress 4300
+readkey progress 4400
+readkey progress 4500
+readkey progress 4600
+readkey progress 4700
+readkey progress 4800
+readkey progress 4900
+readkey progress 5000
+readkey progress 5100
+readkey progress 5200
+sleeper: after sleep
+user bad syscall 99 refused
+sleeper: bad call refused
+user exit code 0
+readkey progress 5300
+readkey progress 5400
+readkey progress 5500
+readkey progress 5600
+readkey progress 5700
+readkey progress 5800
+readkey progress 5900
+readkey progress 6000
+readkey progress 6100
+readkey progress 6200
+readkey progress 6300
+readkey progress 6400
+readkey progress 6500
+readkey progress 6600
+readkey progress 6700
+readkey progress 6800
+readkey progress 6900
+readkey progress 7000
+readkey progress 7100
+readkey progress 7200
+readkey progress 7300
+readkey progress 7400
+readkey progress 7500
+readkey progress 7600
+readkey progress 7700
+readkey progress 7800
+readkey progress 7900
+readkey progress 8000
+readkey progress 8100
+readkey progress 8200
+readkey progress 8300
+readkey progress 8400
+readkey progress 8500
+readkey progress 8600
+readkey progress 8700
+readkey progress 8800
+readkey progress 8900
+C awake
+readkey progress 9000
+readkey progress 9100
+readkey progress 9200
+readkey progress 9300
+readkey progress 9400
+readkey progress 9500
+readkey progress 9600
+readkey progress 9700
+readkey progress 9800
+readkey progress 9900
+readkey progress 10000
+readkey progress 10100
+readkey progress 10200
+readkey progress 10300
+readkey progress 10400
+readkey progress 10500
+readkey progress 10600
+readkey progress 10700
+readkey progress 10800
+readkey progress 10900
+readkey progress 11000
+readkey progress 11100
+readkey progress 11200
+readkey progress 11300
+readkey progress 11400
+readkey progress 11500
+readkey progress 11600
+readkey progress 11700
+readkey progress 11800
+readkey progress 11900
+readkey progress 12000
+readkey progress 12100
+readkey progress 12200
+readkey progress 12300
+readkey progress 12400
+readkey progress 12500
+readkey progress 12600
+readkey progress 12700
+readkey progress 12800
+readkey progress 12900
+readkey progress 13000
+readkey progress 13100
+readkey progress 13200
+readkey progress 13300
+readkey progress 13400
+readkey progress 13500
+readkey progress 13600
+readkey progress 13700
+readkey progress 13800
+readkey progress 13900
+readkey progress 14000
+readkey progress 14100
+readkey progress 14200
+readkey progress 14300
+readkey progress 14400
+readkey progress 14500
+readkey progress 14600
+readkey progress 14700
+readkey progress 14800
+readkey progress 14900
+readkey progress 15000
+readkey progress 15100
+readkey progress 15200
+readkey progress 15300
+readkey progress 15400
+readkey progress 15500
+readkey progress 15600
+readkey progress 15700
+readkey progress 15800
+readkey progress 15900
+readkey progress 16000
+readkey progress 16100
+readkey progress 16200
+readkey progress 16300
+readkey progress 16400
+readkey progress 16500
+readkey progress 16600
+readkey progress 16700
+readkey progress 16800
+readkey progress 16900
+readkey progress 17000
+readkey progress 17100
+readkey progress 17200
+readkey progress 17300
+readkey progress 17400
+readkey progress 17500
+readkey progress 17600
+readkey progress 17700
+readkey progress 17800
+readkey progress 17900
+readkey progress 18000
+readkey progress 18100
+readkey progress 18200
+readkey progress 18300
+readkey progress 18400
+readkey progress 18500
+readkey progress 18600
+readkey progress 18700
+readkey progress 18800
+readkey progress 18900
+readkey progress 19000
+readkey progress 19100
+readkey progress 19200
+readkey progress 19300
+readkey progress 19400
+readkey progress 19500
+readkey progress 19600
+readkey progress 19700
+readkey progress 19800
+readkey progress 19900
+readkey progress 20000
+readkey progress 20100
+readkey progress 20200
+readkey progress 20300
+readkey progress 20400
+readkey progress 20500
+readkey progress 20600
+readkey progress 20700
+readkey progress 20800
+readkey progress 20900
+readkey progress 21000
+readkey progress 21100
+readkey progress 21200
+readkey progress 21300
+readkey progress 21400
+readkey progress 21500
+readkey progress 21600
+readkey progress 21700
+readkey progress 21800
+readkey progress 21900
+readkey progress 22000
+readkey progress 22100
+readkey progress 22200
+readkey progress 22300
+readkey progress 22400
+readkey progress 22500
+readkey progress 22600
+readkey progress 22700
+readkey progress 22800
+readkey progress 22900
+readkey progress 23000
+readkey progress 23100
+readkey progress 23200
+readkey progress 23300
+readkey progress 23400
+readkey progress 23500
+readkey progress 23600
+readkey progress 23700
+readkey progress 23800
+readkey progress 23900
+readkey progress 24000
+readkey progress 24100
+readkey progress 24200
+readkey progress 24300
+readkey progress 24400
+readkey progress 24500
+readkey progress 24600
+readkey progress 24700
+readkey progress 24800
+readkey progress 24900
+readkey progress 25000
+readkey progress 25100
+readkey progress 25200
+readkey progress 25300
+readkey progress 25400
+readkey progress 25500
+readkey progress 25600
+readkey progress 25700
+readkey progress 25800
+readkey progress 25900
+readkey progress 26000
+readkey progress 26100
+readkey progress 26200
+readkey progress 26300
+readkey progress 26400
+readkey progress 26500
+readkey progress 26600
+readkey progress 26700
+readkey progress 26800
+readkey progress 26900
+readkey progress 27000
+readkey progress 27100
+readkey progress 27200
+readkey progress 27300
+readkey progress 27400
+readkey progress 27500
+readkey progress 27600
+readkey progress 27700
+readkey progress 27800
+readkey progress 27900
+readkey progress 28000
+readkey progress 28100
+readkey progress 28200
+readkey progress 28300
+readkey progress 28400
+readkey progress 28500
+readkey progress 28600
+readkey progress 28700
+readkey progress 28800
+readkey progress 28900
+readkey progress 29000
+readkey progress 29100
+readkey progress 29200
+readkey progress 29300
+readkey progress 29400
+readkey progress 29500
+readkey progress 29600
+readkey progress 29700
+readkey progress 29800
+readkey progress 29900
+readkey progress 30000
+readkey progress 30100
+readkey progress 30200
+readkey progress 30300
+readkey progress 30400
+readkey progress 30500
+readkey progress 30600
+readkey progress 30700
+readkey progress 30800
+readkey progress 30900
+readkey progress 31000
+readkey progress 31100
+readkey progress 31200
+readkey progress 31300
+readkey progress 31400
+readkey progress 31500
+readkey progress 31600
+readkey progress 31700
+readkey progress 31800
+readkey progress 31900
+readkey progress 32000
+readkey progress 32100
+readkey progress 32200
+readkey progress 32300
+readkey progress 32400
+readkey progress 32500
+readkey progress 32600
+readkey progress 32700
+readkey progress 32800
+readkey progress 32900
+readkey progress 33000
+readkey progress 33100
+readkey progress 33200
+readkey progress 33300
+readkey progress 33400
+readkey progress 33500
+readkey progress 33600
+readkey progress 33700
+readkey progress 33800
+readkey progress 33900
+readkey progress 34000
+readkey progress 34100
+readkey progress 34200
+readkey progress 34300
+readkey progress 34400
+readkey progress 34500
+readkey progress 34600
+readkey progress 34700
+readkey progress 34800
+readkey progress 34900
+readkey progress 35000
+readkey progress 35100
+readkey progress 35200
+readkey progress 35300
+readkey progress 35400
+readkey progress 35500
+readkey progress 35600
+readkey progress 35700
+readkey progress 35800
+readkey progress 35900
+readkey progress 36000
+readkey progress 36100
+readkey progress 36200
+readkey progress 36300
+readkey progress 36400
+readkey progress 36500
+readkey progress 36600
+readkey progress 36700
+readkey progress 36800
+readkey progress 36900
+readkey progress 37000
+readkey progress 37100
+readkey progress 37200
+readkey progress 37300
+readkey progress 37400
+readkey progress 37500
+readkey progress 37600
+readkey progress 37700
+readkey progress 37800
+readkey progress 37900
+readkey progress 38000
+readkey progress 38100
+readkey progress 38200
+readkey progress 38300
+readkey progress 38400
+readkey progress 38500
+readkey progress 38600
+readkey progress 38700
+readkey progress 38800
+readkey progress 38900
+readkey progress 39000
+readkey progress 39100
+readkey progress 39200
+readkey progress 39300
+readkey progress 39400
+readkey progress 39500
+readkey progress 39600
+readkey progress 39700
+readkey progress 39800
+readkey progress 39900
+readkey progress 40000
+readkey progress 40100
+readkey progress 40200
+readkey progress 40300
+readkey progress 40400
+readkey progress 40500
+readkey progress 40600
+readkey progress 40700
+readkey progress 40800
+readkey progress 40900
+readkey progress 41000
+readkey progress 41100
+readkey progress 41200
+readkey progress 41300
+readkey progress 41400
+readkey progress 41500
+readkey progress 41600
+readkey progress 41700
+readkey progress 41800
+readkey progress 41900
+readkey progress 42000
+readkey progress 42100
+readkey progress 42200
+readkey progress 42300
+readkey progress 42400
+readkey progress 42500
+readkey progress 42600
+readkey progress 42700
+readkey progress 42800
+readkey progress 42900
+readkey progress 43000
+readkey progress 43100
+readkey progress 43200
+readkey progress 43300
+readkey progress 43400
+readkey progress 43500
+readkey progress 43600
+readkey progress 43700
+readkey progress 43800
+readkey progress 43900
+readkey progress 44000
+readkey progress 44100
+readkey progress 44200
+readkey progress 44300
+readkey progress 44400
+readkey progress 44500
+readkey progress 44600
+readkey progress 44700
+readkey progress 44800
+readkey progress 44900
+readkey progress 45000
+readkey progress 45100
+readkey progress 45200
+readkey progress 45300
+readkey progress 45400
+readkey progress 45500
+readkey progress 45600
+readkey progress 45700
+readkey progress 45800
+readkey progress 45900
+readkey progress 46000
+readkey progress 46100
+readkey progress 46200
+readkey progress 46300
+readkey progress 46400
+readkey progress 46500
+readkey progress 46600
+readkey progress 46700
+readkey progress 46800
+readkey progress 46900
+readkey progress 47000
+readkey progress 47100
+readkey progress 47200
+readkey progress 47300
+readkey progress 47400
+readkey progress 47500
+readkey progress 47600
+readkey progress 47700
+readkey progress 47800
+readkey progress 47900
+readkey progress 48000
+readkey progress 48100
+readkey progress 48200
+readkey progress 48300
+readkey progress 48400
+readkey progress 48500
+readkey progress 48600
+readkey progress 48700
+readkey progress 48800
+readkey progress 48900
+readkey progress 49000
+readkey progress 49100
+readkey progress 49200
+readkey progress 49300
+readkey progress 49400
+readkey progress 49500
+readkey progress 49600
+readkey progress 49700
+readkey progress 49800
+readkey progress 49900
+readkey progress 50000
+readkey progress 50100
+readkey progress 50200
+readkey progress 50300
+readkey progress 50400
+readkey progress 50500
+readkey progress 50600
+readkey progress 50700
+readkey progress 50800
+readkey progress 50900
+readkey progress 51000
+readkey progress 51100
+readkey progress 51200
+readkey progress 51300
+readkey progress 51400
+readkey progress 51500
+readkey progress 51600
+K3 keyboard: first scancode 0x0000000000000023
+hreadkey got 35
+readkey progress 51700
+readkey got 163
+readkey progress 51800
+readkey progress 51900
+readkey progress 52000
+readkey progress 52100
+readkey progress 52200
+readkey progress 52300
+readkey progress 52400
+readkey progress 52500
+readkey progress 52600
+ereadkey got 18
+readkey progress 52700
+readkey got 146
+readkey progress 52800
+readkey progress 52900
+readkey progress 53000
+readkey progress 53100
+readkey progress 53200
+readkey progress 53300
+readkey progress 53400
+readkey progress 53500
+readkey progress 53600
+readkey progress 53700
+readkey progress 53800
+readkey got 38
+lreadkey got 166
+readkey progress 53900
+readkey progress 54000
+readkey progress 54100
+readkey progress 54200
+readkey progress 54300
+readkey progress 54400
+readkey progress 54500
+readkey progress 54600
+readkey progress 54700
+readkey progress 54800
+readkey got 25
+preadkey progress 54900
+readkey progress 55000
+readkey got 153
+readkey progress 55100
+readkey progress 55200
+readkey progress 55300
+readkey progress 55400
+readkey progress 55500
+readkey progress 55600
+readkey progress 55700
+readkey progress 55800
+readkey progress 55900
+readkey progress 56000
+readkey got 28
+readkey: enter seen, done got=9
+user exit code 0
+
+commands: status help uptime mem ps
+status
+tasks 8 ticks 643 heap_free 255K
+STATUS tasks=8 ticks=643 heap_free_kb=255

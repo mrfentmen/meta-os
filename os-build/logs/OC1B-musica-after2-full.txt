@@ -1,0 +1,47 @@
+✔ adoptions file covers 5 candidates with licences and verdicts (0.600125ms)
+✔ adoptions file covers 5 keyless APIs with smoke notes (0.147375ms)
+✔ audit passes a clean catalogue and catches silence + duplicates (4274.615209ms)
+✔ studio board browses all session catalogues with rights (9689.27275ms)
+✔ board shows the live session from real records (4243.189208ms)
+✔ brief chipsynth parses and drives a logged session (1272.520416ms)
+✔ brief ambient parses and drives a logged session (1055.785167ms)
+✔ brief boom-bap parses and drives a logged session (1279.414625ms)
+✔ cap hit stops the session gracefully, not as an error (106.2555ms)
+✔ under the cap the loop runs normally (2469.555834ms)
+✔ catalogue exports keepers with licence and provenance (5604.751083ms)
+✔ demo cut lands on target from labelled keeper excerpts (10218.117583ms)
+✔ duet scope doc states the rule and its unbuilt status (0.588833ms)
+✔ boards show the honest no-sessions-yet state (134.862959ms)
+✔ one command bundles tracks, catalogue, and rights (4948.336708ms)
+✔ bundle lists missing files instead of hiding them (136.326209ms)
+✔ gate packet assembles pack, records, catalogues, tests (130.172834ms)
+✔ blind A/B page hides identities and records the pick (4231.302834ms)
+✔ keeper bar passes real takes and rejects degenerate audio (1838.5785ms)
+✔ prompt library reports keeper rates from the logs (5730.108167ms)
+✔ loop renders real WAV takes and logs each one (3481.7755ms)
+✔ loop is deterministic and replays a logged take byte-identically (1111.3975ms)
+✔ MIDI export writes the take's own notes via pretty_midi (5325.516ms)
+✔ museum renders real rejects with reasons (4246.210667ms)
+✔ catalogue tracks normalise to -16 LUFS with before/after (6217.027583ms)
+✔ overnight pipeline runs and reports honest counts (7008.115959ms)
+✔ musica pack validates green (52.118833ms)
+✔ musica pack status is honest partial at HN-045 (1.479375ms)
+✔ musica PACK.md states proven and unproven honestly (0.215834ms)
+✔ worlds registry lists musica (0.141709ms)
+✔ resume after a simulated mid-take kill loses no takes (5834.182125ms)
+✔ musica is registered as a studio product with honest limitations (0.840917ms)
+✔ PRODUCTS array is untouched by the Musica registry entry (0.092708ms)
+✔ session report matches the take log (3251.948667ms)
+✔ rights check rejects tracks with empty rights lines (3339.910042ms)
+✔ spark builders follow the repo contract and record attempts (67.074625ms)
+✔ loop with --spark-assist records an attempt per take (2045.696084ms)
+✔ take-log schema accepts good takes and rejects broken ones (62.682875ms)
+✔ variation pass rejects a near-identical clone (1469.2795ms)
+ℹ tests 39
+ℹ suites 0
+ℹ pass 39
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 12424.397167

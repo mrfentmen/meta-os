@@ -1,0 +1,200 @@
+readkey progress 186400
+readkey progress 186500
+readkey progress 186600
+readkey progress 186700
+readkey progress 186800
+readkey progress 186900
+readkey progress 187000
+readkey progress 187100
+readkey progress 187200
+readkey progress 187300
+readkey progress 187400
+readkey progress 187500
+readkey progress 187600
+readkey progress 187700
+readkey progress 187800
+readkey progress 187900
+readkey progress 188000
+readkey progress 188100
+readkey progress 188200
+readkey progress 188300
+readkey progress 188400
+readkey progress 188500
+readkey progress 188600
+readkey progress 188700
+readkey progress 188800
+readkey progress 188900
+readkey progress 189000
+readkey progress 189100
+readkey progress 189200
+readkey progress 189300
+readkey progress 189400
+readkey progress 189500
+readkey progress 189600
+readkey progress 189700
+readkey progress 189800
+readkey progress 189900
+readkey progress 190000
+readkey progress 190100
+readkey progress 190200
+readkey progress 190300
+readkey progress 190400
+readkey progress 190500
+readkey progress 190600
+readkey progress 190700
+readkey progress 190800
+readkey progress 190900
+readkey progress 191000
+readkey progress 191100
+readkey progress 191200
+readkey progress 191300
+readkey progress 191400
+readkey progress 191500
+readkey progress 191600
+readkey progress 191700
+readkey progress 191800
+readkey progress 191900
+readkey progress 192000
+readkey progress 192100
+readkey progress 192200
+readkey progress 192300
+readkey progress 192400
+readkey progress 192500
+readkey progress 192600
+readkey progress 192700
+readkey progress 192800
+readkey progress 192900
+readkey progress 193000
+readkey progress 193100
+readkey progress 193200
+readkey progress 193300
+readkey progress 193400
+readkey progress 193500
+readkey progress 193600
+readkey progress 193700
+readkey progress 193800
+readkey progress 193900
+readkey progress 194000
+readkey progress 194100
+readkey progress 194200
+readkey progress 194300
+readkey progress 194400
+readkey progress 194500
+readkey progress 194600
+readkey progress 194700
+readkey progress 194800
+readkey progress 194900
+readkey progress 195000
+readkey progress 195100
+readkey progress 195200
+readkey progress 195300
+readkey progress 195400
+readkey progress 195500
+readkey progress 195600
+readkey progress 195700
+readkey progress 195800
+readkey progress 195900
+readkey progress 196000
+readkey progress 196100
+readkey progress 196200
+readkey progress 196300
+readkey progress 196400
+readkey progress 196500
+readkey progress 196600
+readkey progress 196700
+readkey progress 196800
+readkey progress 196900
+readkey progress 197000
+readkey progress 197100
+readkey progress 197200
+readkey progress 197300
+readkey progress 197400
+readkey progress 197500
+readkey progress 197600
+readkey progress 197700
+readkey progress 197800
+readkey progress 197900
+readkey progress 198000
+readkey progress 198100
+readkey progress 198200
+readkey progress 198300
+readkey progress 198400
+readkey progress 198500
+readkey progress 198600
+readkey progress 198700
+readkey progress 198800
+readkey progress 198900
+readkey progress 199000
+readkey progress 199100
+readkey progress 199200
+readkey progress 199300
+readkey progress 199400
+readkey progress 199500
+readkey progress 199600
+readkey progress 199700
+readkey progress 199800
+readkey progress 199900
+readkey progress 200000
+readkey done got=0 empties=200000
+user exit code 0
+K3 keyboard: first scancode 0x000000000000001f
+status
+tasks 8 ticks 8711 heap_free 255K
+STATUS tasks=8 ticks=8711 heap_free_kb=255
+status
+tasks 8 ticks 9167 heap_free 255K
+STATUS tasks=8 ticks=9167 heap_free_kb=255
+status
+tasks 8 ticks 9623 heap_free 255K
+STATUS tasks=8 ticks=9623 heap_free_kb=255
+status
+tasks 8 ticks 10078 heap_free 255K
+STATUS tasks=8 ticks=10078 heap_free_kb=255
+status
+tasks 8 ticks 10533 heap_free 255K
+STATUS tasks=8 ticks=10533 heap_free_kb=255
+status
+tasks 8 ticks 10988 heap_free 255K
+STATUS tasks=8 ticks=10988 heap_free_kb=255
+status
+tasks 8 ticks 11443 heap_free 255K
+STATUS tasks=8 ticks=11443 heap_free_kb=255
+status
+tasks 8 ticks 11899 heap_free 255K
+STATUS tasks=8 ticks=11899 heap_free_kb=255
+status
+tasks 8 ticks 12354 heap_free 255K
+STATUS tasks=8 ticks=12354 heap_free_kb=255
+status
+tasks 8 ticks 12808 heap_free 255K
+STATUS tasks=8 ticks=12808 heap_free_kb=255
+status
+tasks 8 ticks 361051 heap_free 255K
+STATUS tasks=8 ticks=361051 heap_free_kb=255
+status
+tasks 8 ticks 361512 heap_free 255K
+STATUS tasks=8 ticks=361512 heap_free_kb=255
+status
+tasks 8 ticks 361970 heap_free 255K
+STATUS tasks=8 ticks=361970 heap_free_kb=255
+status
+tasks 8 ticks 362428 heap_free 255K
+STATUS tasks=8 ticks=362428 heap_free_kb=255
+status
+tasks 8 ticks 362884 heap_free 255K
+STATUS tasks=8 ticks=362884 heap_free_kb=255
+status
+tasks 8 ticks 363344 heap_free 255K
+STATUS tasks=8 ticks=363344 heap_free_kb=255
+status
+tasks 8 ticks 363800 heap_free 255K
+STATUS tasks=8 ticks=363800 heap_free_kb=255
+status
+tasks 8 ticks 364261 heap_free 255K
+STATUS tasks=8 ticks=364261 heap_free_kb=255
+status
+tasks 8 ticks 364719 heap_free 255K
+STATUS tasks=8 ticks=364719 heap_free_kb=255
+status
+tasks 8 ticks 365178 heap_free 255K
+STATUS tasks=8 ticks=365178 heap_free_kb=255

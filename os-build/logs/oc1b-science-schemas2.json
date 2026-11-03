@@ -1,0 +1,4 @@
+{
+ "repository vs live store aggregate": "VALID",
+ "source vs shelf entry": "INVALID: 'id' is a required property\n\nFailed validating 'required' in schema:\n    {'$id': 'science-lab/source.schema.json',\n     '$schema': 'https://json-schema.org/draft/2020-12/schema',\n     'description': 'Source record for Research Intelligence (Section 2, '\n                    'tasks 11-13, 16). Filed b"
+}

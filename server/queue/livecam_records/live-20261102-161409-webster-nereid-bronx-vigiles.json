@@ -1,0 +1,42 @@
+{
+ "frame": {
+  "camera_id": "6a841f4c-93ef-4f51-b38d-80e70053ff8d",
+  "camera_name": " WEBSTER AVE @ NEREID AVE",
+  "area": "Bronx",
+  "latitude": 40.9011,
+  "longitude": -73.8616,
+  "source": "NYC DOT public traffic camera",
+  "image_url": "https://webcams.nyctmc.org/api/cameras/6a841f4c-93ef-4f51-b38d-80e70053ff8d/image",
+  "fetched_at": "2026-11-02T16:13:48.754088+00:00",
+  "image_sha256": "3d3a31d2bbdbe2fe3487bfb0a7a1f850860039ed5c65a25a4fbf504337c2d843",
+  "image_bytes": 34852,
+  "live": true
+ },
+ "reading": [
+  {
+   "product": "vigiles",
+   "timestamp": "2026-11-02T16:13:48.754088+00:00",
+   "observations": [
+    {
+     "category": "normal activity",
+     "description": "Aerial view of divided roadway with a single white vehicle traveling, flanked by trees with autumn foliage; no people visible",
+     "evidence": "center of frame on roadway; trees on left and right sides",
+     "confidence": 0.95,
+     "region": null
+    }
+   ],
+   "assessment": {
+    "category": "normal activity",
+    "summary": "Aerial view shows a single vehicle on an otherwise empty road surrounded by trees; no incident visible.",
+    "uncertainty": [],
+    "requires_human_review": false
+   },
+   "processing": {
+    "model": "muse-spark-1.3",
+    "latency_ms": null
+   }
+  },
+  "muse-spark-1.3",
+  6237
+ ]
+}

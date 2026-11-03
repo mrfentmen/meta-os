@@ -1,0 +1,14 @@
+# OC1B-164 final soak start record — NOT RUN (blocked)
+
+Reason: the FINAL combined tree "Pax assembles for submission (the last
+kernel-touching merge wave's tree)" does not exist yet. The newest
+kernel-touching tip in this repo state is opencode/500 @ 94010c76, and
+merge waves past it (K2/K3/K4/KF merges through Pax) are still open work
+in §§2–6/§8 — no final tree has been named, so no final soak could be
+"started as soon as that tree exists".
+Source check (2026-11-02 ~11:20 EST): no post-94010c76 kernel-touching
+merge tip exists on origin; no OC1B-reproof-w*-tree.txt names a final tree.
+Tree sha: NONE (no tree). Image sha: NONE (no image). Start time: NONE.
+Serial path: NONE. Duration so far: NOT RUN — 0 minutes.
+Next step: start the 2-hour final soak the moment the final tree is named,
+and record tree sha + image sha + start time here.

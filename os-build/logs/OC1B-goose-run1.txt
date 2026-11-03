@@ -1,0 +1,6 @@
+PASS: echo round-trips
+PASS: hello prints
+PASS: host lists echo tool
+PASS: host answers echo
+PASS: host refuses unknown
+PASS: heartbeat beats then stops

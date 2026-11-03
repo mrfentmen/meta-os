@@ -1,0 +1,18 @@
+# OC1B-482/483 — large files + binary-commit sweep, this lane, 2026-11-02
+
+## OC1B-482 files over 1MB added by this lane: NONE
+Largest lane files: os-build/logs/OC1B-native-supp.txt (~115KB),
+os-build/logs/OC1B-native-g5.txt (~31KB), OC1B-native-g3.txt (~29KB).
+No file added by this lane exceeds 1MB; no justification needed.
+
+## OC1B-483 image parts / bootimage binaries / film intermediates
+`git ls-files | grep -E 'bootimage|\.bin$|\.qcow2|\.iso$|\.img$'` on this
+branch returns EMPTY — no bootimage binary, no boot image, no carrier image
+part is committed anywhere on the branch (kernel/target/ is gitignored build
+output; QEMU ran from it without committing it).
+Committed film assets (pre-existing §11 artifacts, NOT added by this lane):
+  os-build/demo/demo-3min.mp4 (789024 bytes, sha256
+  9f04bb5f5aabed7f3605e45b24574d4fd72dc90b2873e54289ce399f3b476053)
+  os-build/demo/beat6-receipt.png, os-build/demo/frames/beat6-receipt.png
+The 789KB film is within the repo's size discipline per §11 task 275 (Pax's
+call at merge); this lane added no film intermediate.

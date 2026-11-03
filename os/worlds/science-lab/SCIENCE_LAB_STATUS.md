@@ -58,19 +58,8 @@ level its record holds, never higher (`ladder.assert_export_allowed`).
 - Hortus interface: `hortus/` runtime runs locally; breeding-variant
   jobs are lab-local (see `os-build/OPENCODE2_SCIENCE_STATUS.md`
   section 7). No external Hortus service is called.
-- Gateway backends: `LOCAL-SHELF` stand-in and offline mode; the
-  export/rehearsal path still makes no network calls. A second
-  backend, `MCP-GATEWAY` (`mcp_backends.py`, added 2026-11-02 by
-  Pax), now exists for live cycles: the nine allowlisted servers are
-  called through the boss's local MCP gateway under the same
-  allowlist/scope/budget/offline/quarantine rules, every call
-  recorded with backend "MCP-GATEWAY". Live smoke 2026-11-02:
-  10/10 calls answered (9 searches + 1 read across all nine
-  servers), record `records/gateway/mcp_smoke_2026-11-02.json`;
-  several servers answer in formatted plain text, kept verbatim and
-  labelled `payload_form: "text"`, never parsed into structure.
-  Tests: `tests/science-lab/test_gateway_mcp_backend.py` (18 tests,
-  fake transport); full lab suite 181 OK.
+- Gateway backends: `LOCAL-SHELF` stand-in and offline mode only;
+  no network calls exist on the export/rehearsal path.
 
 ## Unimplemented (explicit markers, never silent)
 
@@ -96,3 +85,28 @@ level its record holds, never higher (`ladder.assert_export_allowed`).
 - `python3 -m unittest discover -s os/tests -p test_hortus_engine.py`:
   `Ran 9 tests` OK (engine untouched by this lane).
 - Agent registry `agents/registry.json` loads (key `agents` present).
+
+## Mac-verification addendum (OpenCode 1, 2026-11-02, branch opencode/500-s14)
+
+Lane: verification runs only on Del's Mac; no lab code edited. Tree
+`94010c76`. Evidence: `os-build/logs/OC1B-science-suite.txt`,
+`os-build/logs/OC1B-hortus-suite.txt`,
+`os-build/logs/OC1B-science-rehearsal.md`,
+`os-build/logs/OC1B-hortus-runs.md` (+ `oc1b-science-rerun.json`,
+`oc1b-hortus-run.jsonl`, `oc1b-hortus-breeding.json`).
+
+- Science suite: 163/163 OK. Hortus discover: 14/14 OK (engine 9 +
+  calibration 5; wave-1 counted the engine file only — no test delta).
+- Dress rehearsal recomputed end to end (no re-filing): RMSE 0.8177 on rows
+  11-30 vs prereg ≤ 1.5 → match; blind reproduce agree; gate confirmed L2;
+  model spend 0. Fresh second question (rows 31-50): RMSE 0.5844 → match,
+  reproduced, confirmed L2. Failure drill: refused, fake_success false.
+- Gateway stayed LOCAL-SHELF (allowlisted call returns LOCAL-SHELF backend;
+  off-allowlist refused; no socket opened). STEP_8 still blocks. Claim audit
+  19/19 backed, 5 traced. Ledger 20 entries verify ok. All 5 schemas VALID
+  against real records. Hortus engine demo: 300 gens, final best 138.3907,
+  verifier PASSED (cap L2). Breeding integration: 3 variants, survivor V001,
+  lineage verifies.
+- One test-hygiene defect filed (not fixed): test_section2b drops
+  C-BUDGET.budget-receipt.json into records/literature/ on every run.
+- Verdict: Science Lab + Hortus VERIFIED ON MAC. (Pax merges.)

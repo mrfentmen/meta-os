@@ -1,0 +1,139 @@
+{
+ "claim_audit": {
+  "backed_n": 19,
+  "checked": 19,
+  "cut": [],
+  "sample_traces": [
+   {
+    "claim_id": "CYCLE-EXAMPLE-001-reasoning",
+    "error": "no claim 'CYCLE-EXAMPLE-001-reasoning' in the repository."
+   },
+   {
+    "claim_id": "CYCLE-EXAMPLE-001-computation",
+    "error": "no claim 'CYCLE-EXAMPLE-001-computation' in the repository."
+   },
+   {
+    "claim_id": "CYCLE-EXAMPLE-001-ledger-0",
+    "error": "no claim 'CYCLE-EXAMPLE-001-ledger-0' in the repository."
+   },
+   {
+    "claim_id": "CYCLE-EXAMPLE-001-ledger-1",
+    "error": "no claim 'CYCLE-EXAMPLE-001-ledger-1' in the repository."
+   },
+   {
+    "claim_id": "CYCLE-EXAMPLE-001-reasoning",
+    "error": "no claim 'CYCLE-EXAMPLE-001-reasoning' in the repository."
+   }
+  ]
+ },
+ "failure_drill": {
+  "behaviour": "refused",
+  "fake_success": false,
+  "file_rewritten_identical_except_time": true,
+  "refusal_message": "blocked: phase 'cheap-computations' requires inputs ['hypotheses']; file them first.",
+  "refused": true,
+  "second_probe": "run_bio with invalid bases; behaviour: refused: run_bio: invalid bases ['X', 'Z'] in sequence"
+ },
+ "fresh_cycle": {
+  "cycle_id": "CYCLE-OC1B-FRESH-001",
+  "gate": {
+   "decision": "confirmed",
+   "level": 2
+  },
+  "held_out_rows": "31-50",
+  "history_n": 3,
+  "hypotheses_n": 2,
+  "n": 20,
+  "phases": "verification",
+  "prior_shelf": true,
+  "question": "Can ESOL-style linear model predict solubility for 20 held-out compounds (rows 31-50) within RMSE 1.5?",
+  "reproduce": "reproduced",
+  "rmse": 0.5844340852482852,
+  "scientific_verdict": "match",
+  "transition_blocks": [
+   {
+    "error": "blocked: phase 'hypotheses' requires inputs ['sources']; file them first.",
+    "target": "hypotheses"
+   },
+   {
+    "error": "blocked: phase 'critic' requires inputs ['compute_results']; file them first.",
+    "target": "critic"
+   },
+   {
+    "error": "blocked: phase 'sealing' requires inputs ['verification']; file them first.",
+    "target": "sealing"
+   }
+  ]
+ },
+ "gateway": {
+  "call": "no-call-entry",
+  "local_shelf_present": true,
+  "remote_names": [
+   "socket"
+  ]
+ },
+ "hortus_probe": {
+  "error": "ValueError: propose_variants requires a plan with a research question (research_question/question)"
+ },
+ "ladder": {
+  "MAX_AUTOMATED_LEVEL": 3,
+  "levels": {
+   "0": {
+    "meaning": "Interesting research proposal",
+    "status": "Idea"
+   },
+   "1": {
+    "meaning": "Existing sources support some underlying assumptions",
+    "status": "Evidence supported"
+   },
+   "2": {
+    "meaning": "Numerical or simulation results support the hypothesis",
+    "status": "Computationally tested"
+   },
+   "3": {
+    "meaning": "Separate calculations reproduce the result",
+    "status": "Independently reproduced"
+   },
+   "4": {
+    "meaning": "Appropriate experiments support the prediction",
+    "status": "Experimentally validated"
+   },
+   "5": {
+    "meaning": "Another research group reproduces the experimental result",
+    "status": "Independently replicated"
+   },
+   "6": {
+    "meaning": "Evidence supports its practical use, such as a validated treatment",
+    "status": "Established application"
+   }
+  }
+ },
+ "ledger": {
+  "entries": 20,
+  "verify": "(True, 'ok: 20 entries verified')"
+ },
+ "rerun": {
+  "blind_reproduce": "agree",
+  "file_sha256": "8c06a76f0c6487d29ab0f903e6a7a7139f189ab3c1178f159c8be8964602f189",
+  "filed_level": 2,
+  "filed_note": {
+   "note": "DRESS-REHEARSAL-001 already filed; recomputed only, no duplicate ledger/repository rows."
+  },
+  "gate_decision": "confirmed",
+  "gate_level": 2,
+  "model_spend": 0,
+  "n": 20,
+  "rmse": 0.8177471797566775,
+  "rows": "11-30",
+  "scientific_verdict": "match",
+  "wall_clock_s": 0.004
+ },
+ "schemas": {
+  "jsonschema_available": false
+ },
+ "step8": {
+  "STEP_8": "step-8-unimplemented",
+  "result": "blocked: ValueError: UNIMPLEMENTED: step 8 is silent in the source text; no behaviour defined. Route around or park blocked-on-source."
+ },
+ "wall_s_total": 0.017
+}

@@ -1,0 +1,50 @@
+# OC1B-156 main-soak start record (fresh 2-hour soak, §7 soak engineer)
+
+Tree: opencode/500-s7 @ 94010c76ee095fa6c6bcfa4405cd56a9695f32d3
+  (`git rev-parse HEAD` in /tmp/oc500-s7; == opencode/500 tip 94010c76)
+Image: /tmp/oc1b-main-soak.bin (copy of
+  kernel/target/x86_64-unknown-none/debug/bootimage-metaos-kernel.bin
+  built on this tree 2026-11-02 ~11:05 EST via gate.sh toolchain+userspace
+  steps and `cargo bootimage`; build log /tmp/s7-build.log)
+  size: 11202048 bytes
+  sha256: 3bbedee50a7535f621dd9046ccdc198f6a83407fab302087f69ca0cf40c1d09d
+  (`shasum -a 256 /tmp/oc1b-main-soak.bin`, run 11:07 EST before launch)
+Toolchain (from /tmp/s7-build.log): cargo 1.101.0-nightly (31d3246e0 2026-10-27),
+  QEMU emulator version 11.1.3
+Start: 2026-11-02 11:07:26 EST (2026-11-02 16:07:26 UTC), recorded at launch.
+Serial path: /tmp/oc1b-main-soak-serial.txt
+Monitor path: /tmp/oc1b-main-mon-v6oweL (unix HMP socket, attached whole run)
+QEMU PID: 19721 (`cat /tmp/oc1b-main-soak-qemu.pid`)
+Launcher: /tmp/oc1b-main-soak.sh (log /tmp/oc1b-main-soak-progress.log):
+  boot, sleep 90, 10x `drive.py --monitor status`, sleep 3480,
+  10x status, sleep 3480, 1x `ps`, sleep 30, kill. Planned end ~13:07 EST.
+Boot check at +53s: serial line 1 `META OS 0.1 (K6)`, line 2
+  `META OS KERNEL - alive (K1)` (command: `head -n 12` + `wc -l` above).
+
+## Attempt 1 death (host-side, ~11:22 EST) — NOT a guest fault
+At 11:26 EST the attempt-1 QEMU (PID 19721) was found GONE: its stderr
+(/tmp/oc1b-main-soak-progress.log, mtime 11:22) reads
+  `qemu-system-x86_64: terminating on signal 15 from pid 36720`
+i.e. host SIGTERM from unidentified pid 36720 — the guest never faulted
+(serial frozen at last write 11:09:30 with 2094 lines, 10 STATUS, 0 panic,
+0 loader-refused; guest idle-healthy). The launcher (PID 19713) survived
+in its sleep and was reaped. Attempt-1 serial preserved byte-for-byte at
+/tmp/oc1b-main-soak-attempt1-serial.txt (2094 lines, 10 STATUS, 0 panic).
+Killer identity: NOT RECOVERABLE (no record of what pid 36720 was; the
+§7 drill script's kills in that window targeted drill PIDs only, and no
+§7 command addressed the main soak's PID — stated as unknown, not blamed).
+See OC1B-soak-anomalies.txt for the filed host-side incident.
+
+## Attempt 2 (superseding run, same image)
+Relaunch 2026-11-02 11:27:47 EST, launcher PID 37659, QEMU PID 37663,
+monitor /tmp/oc1b-main2-mon-zvxs3p (path in /tmp/oc1b-main-mon.path),
+same image /tmp/oc1b-main-soak.bin (file untouched since 11:07, mtime +
+size unchanged, sha 3bbedee5...0c1d09d as above). Same launcher schedule:
+planned end ~13:27 EST. Serial /tmp/oc1b-main-soak-serial.txt (recreated).
+Boot check at +68s: line 1 `META OS 0.1 (K6)`, line 2 alive. All §7
+duration measurements for the main soak derive from THIS start record
+(11:27:47 EST); attempt 1 is reported separately above, never merged.
+
+## OC1B-158 midpoint (appended when reached)
+Midpoint (~12:07 EST) NOT reached in-session. Interim sample at commit time
+(see OC1B-soak-main-verdict.md) is labeled interim, never a midpoint.

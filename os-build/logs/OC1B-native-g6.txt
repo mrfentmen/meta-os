@@ -1,0 +1,153 @@
+OC1B-4012 group 6 run, tree 94010c76, 2026-11-02T16:07:59Z
+command: node --test <group-6 file list, see OC1B-native-groups.md>
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: rightColumn exists
+    at file:///private/tmp/oc500-s17/tests/native-latest-placeholder.test.mjs:34:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-latest-placeholder.test.mjs (65.069792ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: still-image intro exists
+    at file:///private/tmp/oc500-s17/tests/native-still-image-intro-size.test.mjs:28:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-still-image-intro-size.test.mjs (64.346833ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Text("Image ready: exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-still-image-state-size.test.mjs:31:10)
+    at file:///private/tmp/oc500-s17/tests/native-still-image-state-size.test.mjs:35:15
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-still-image-state-size.test.mjs (65.378167ms)
+✔ native timeline empty notes: web contract — #history-empty carries .note at 13px (4.213666ms)
+✔ native timeline empty notes: both take 13pt, keep muted color (0.111834ms)
+✔ native timeline empty notes: no default-size note left in the empty state (0.142417ms)
+✔ native timeline row detail: web contract — body at 15px, history body inherits it (0.786542ms)
+✔ native timeline row detail: takes 15pt, no callout left (0.082708ms)
+✔ native timeline row detail: keeps its three-line limit (0.066084ms)
+✔ native timeline row detail: still renders the row's own detail text (0.626875ms)
+✔ native timeline row product: web contract — .assessment-product at 12.5px (0.827ms)
+✔ native timeline row timestamp: web contract — .assessment-time at 12.5px (0.291667ms)
+✔ native timeline row product: takes 12.5pt, keeps muted color (0.083792ms)
+✔ native timeline row timestamp: takes 12.5pt, keeps muted color (0.489833ms)
+✔ native timeline row title: web contract — history head strong on a 15px line (1.316459ms)
+✔ native timeline row title: takes 15pt, keeps bold weight and row colors (0.208667ms)
+✔ native timeline row title: row neighbors untouched (0.095333ms)
+✔ native timeline row title: row layout untouched (0.859417ms)
+✔ native timeline row title weight: web contract — history title is a strong element (1.262834ms)
+✔ native timeline row title weight: takes bold, keeps 15pt size and row colors (0.453916ms)
+✔ native timeline row title weight: row neighbors untouched (0.166833ms)
+✔ native timeline row title weight: row layout untouched (1.23475ms)
+✔ native timeline title: web contract — .panel h2 at 15px weight 700 (0.879459ms)
+✔ native timeline note: web contract — .note at 13px muted (0.361083ms)
+✔ native timeline title: PanelHeading with Ignis gate, header trait kept (0.099708ms)
+✔ native timeline note: takes 13pt, keeps muted color and wrapping (4.882625ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: video intro exists
+    at file:///private/tmp/oc500-s17/tests/native-video-intro-size.test.mjs:28:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-video-intro-size.test.mjs (50.279917ms)
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Text("Video ready: exists
+    at blockAfter (file:///private/tmp/oc500-s17/tests/native-video-state-size.test.mjs:31:10)
+    at file:///private/tmp/oc500-s17/tests/native-video-state-size.test.mjs:35:15
+    at ModuleJob.run (node:internal/modules/esm/module_job:561:25)
+    at async node:internal/modules/esm/loader:647:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.21.0
+✖ tests/native-video-state-size.test.mjs (48.557958ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 23
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 122.491083
+
+✖ failing tests:
+
+test at tests/native-latest-placeholder.test.mjs:1:1
+✖ tests/native-latest-placeholder.test.mjs (65.069792ms)
+  'test failed'
+
+test at tests/native-still-image-intro-size.test.mjs:1:1
+✖ tests/native-still-image-intro-size.test.mjs (64.346833ms)
+  'test failed'
+
+test at tests/native-still-image-state-size.test.mjs:1:1
+✖ tests/native-still-image-state-size.test.mjs (65.378167ms)
+  'test failed'
+
+test at tests/native-video-intro-size.test.mjs:1:1
+✖ tests/native-video-intro-size.test.mjs (50.279917ms)
+  'test failed'
+
+test at tests/native-video-state-size.test.mjs:1:1
+✖ tests/native-video-state-size.test.mjs (48.557958ms)
+  'test failed'
+GROUP-g6 exit=1 elapsed=0s

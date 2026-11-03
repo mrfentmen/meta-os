@@ -1,0 +1,59 @@
+{
+ "bolo": {
+  "division": "vigiles",
+  "category": "person down",
+  "camera_name": "STAGED Cam B",
+  "area": "STAGED",
+  "flagged_at": "2026-11-02T16:25:02.381Z",
+  "frame_files": [],
+  "face_crops": 0,
+  "person_descriptions": [
+   "STAGED: adult in dark jacket, Visible marks: red tattoo on left forearm, scar above right eye"
+  ],
+  "visible_marks": [],
+  "direction_of_travel": null,
+  "direction_note": "Not determined from still frames."
+ },
+ "purge_steps": [
+  {
+   "at": "2026-11-02T16:25:02.383Z",
+   "step": "evidence-purged",
+   "reason": "closed-false-positive",
+   "files_removed": 1
+  }
+ ],
+ "outcome": {
+  "outcome": "cleared-by-review",
+  "incident_id": "incident-e9554677c6085665",
+  "category": "person down"
+ },
+ "record_status": "closed-false-positive",
+ "evidence_after": {
+  "frame_sha256": "2e63bed677ae07cbb289b31f94e655b2f97d7a3139a338bf3053d5513ff7df32",
+  "detector": "unavailable",
+  "files": [],
+  "purged": {
+   "at": "2026-11-02T16:25:02.383Z",
+   "reason": "closed-false-positive",
+   "files_removed": 1
+  }
+ },
+ "bolo_convention_shaped": {
+  "division": "vigiles",
+  "category": "person down",
+  "camera_name": "STAGED Cam B",
+  "area": "STAGED",
+  "flagged_at": "2026-11-02T16:25:02.381Z",
+  "frame_files": [],
+  "face_crops": 0,
+  "person_descriptions": [
+   "adult in dark jacket, collapsed on sidewalk",
+   "Visible marks: red tattoo on left forearm; scar above right eye"
+  ],
+  "visible_marks": [
+   "red tattoo on left forearm; scar above right eye"
+  ],
+  "direction_of_travel": null,
+  "direction_note": "Not determined from still frames."
+ }
+}
