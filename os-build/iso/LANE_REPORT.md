@@ -23,7 +23,7 @@ reboots to the login screen, proven by VM screendumps.
 | 11 | ISO | **NOT BUILT** | no Linux host, no root, no xorriso/mksquashfs on this Mac |
 | 12 | Install → reboot → login screendumps | **NOT RUN** | blocked on 11 |
 
-Local validator: **36 pass, 0 fail, 0 skip** (`tools/check_configs.py`,
+Local validator: **37 pass, 0 fail, 0 skip** (`tools/check_configs.py`,
 YAML parsed through ruby's psych because this Mac has no PyYAML —
 no check was silently skipped). Shell syntax: 4/4 scripts clean.
 Python syntax: 3/3 files compile.
@@ -50,10 +50,16 @@ with `--vnc` available for the typed field; every stage is screendumped.
    trig, no loops, no fonts) to keep the untested surface small, but a real
    plymouth run is the only proof. If it misbehaves, the fallback is the
    `text` module; that is a 10-line change, not a redesign.
-2. **Calamares version drift.** Module keys were written against 3.3-era
-   config. Unknown keys are ignored by Calamares, but a renamed key would
-   silently fall back to a default. First Linux run should print
-   `/etc/calamares/settings.conf` module load errors before install.
+2. **Calamares version drift — checked once, three real errors found.**
+   I diffed the configs against upstream `src/modules/*/*.conf` on
+   2026-11-02 and fixed: `locale.conf` had a nonexistent `language` key and
+   treated `region` as a language group (it is the timezone map pin);
+   `partition.conf` used the deprecated `efiSystemPartition` alias instead of
+   the `efi:` block; `users.conf` had inherited upstream's `doAutologin:
+   true` initial state, which would have preselected autologin on a product
+   whose front door is the login screen. Remaining risk is a future rename;
+   the first Linux run must read module-load warnings in
+   `/var/log/installation.log` before install.
 3. **Base ISO is a parameter.** The plan names Xubuntu + Cubic; Hana's lane
    owns which point release. Both build paths work without knowing the
    flavour's own installer.

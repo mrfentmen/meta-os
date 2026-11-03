@@ -239,14 +239,21 @@ def check_preseed(parsed):
          "welcome not blocking"),
         ("calamares/modules/keyboard.conf", lambda d: d.get("layout") == "us",
          "keyboard us"),
+        ("calamares/modules/locale.conf",
+         lambda d: d.get("region") == "America" and d.get("zone") == "New_York"
+         and "language" not in d,
+         "timezone pinned via region+zone, no bogus language key"),
         ("calamares/modules/partition.conf",
          lambda d: d.get("initialPartitioningChoice") == "erase"
-         and d.get("userSwapChoices") == ["none"],
-         "partition: erase + no swap"),
+         and d.get("userSwapChoices") == ["none"]
+         and (d.get("efi") or {}).get("mountPoint") == "/boot/efi",
+         "partition: erase + no swap + efi block"),
         ("calamares/modules/users.conf",
          lambda d: (d.get("user") or {}).get("login") == "meta"
-         and d.get("allowWeakPasswords") is False,
-         "user meta, weak passwords refused"),
+         and d.get("allowWeakPasswords") is False
+         and d.get("doAutologin") is False
+         and "sudo" in (d.get("defaultGroups") or []),
+         "user meta, no autologin, sudo group"),
         ("calamares/modules/unpackfs.conf",
          lambda d: (d.get("unpack") or [{}])[0].get("source") == "/cdrom/casper/filesystem.squashfs",
          "unpack from /cdrom/casper"),

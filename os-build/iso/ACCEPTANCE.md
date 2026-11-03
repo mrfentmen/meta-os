@@ -71,7 +71,7 @@ install not run` (never `done`).
 
 ## What is already true, without a Linux host
 
-- `tools/check_configs.py` — 36 assertions, 0 fail, 0 skip: YAML parses,
+- `tools/check_configs.py` — 37 assertions, 0 fail, 0 skip: YAML parses,
   module refs complete, preseed values asserted, assets hashed, no shipped
   font or Apple-adjacent value.
 - `tools/vm_install_proof.sh --dry` — real QEMU framebuffer capture; proves

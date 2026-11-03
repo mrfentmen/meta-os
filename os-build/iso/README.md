@@ -69,7 +69,7 @@ installed and launched from our own autostart entry.
 
 ```sh
 # Everything that can be checked without root or Linux:
-os-build/iso/tools/check_configs.py          # 36 assertions, exit 0 = structure only
+os-build/iso/tools/check_configs.py          # 37 assertions, exit 0 = structure only
 os-build/iso/build_iso.sh --check            # same + tool readiness on this host
 
 # Harness plumbing, no ISO needed (committed artifact: proof/dry-harness/):
