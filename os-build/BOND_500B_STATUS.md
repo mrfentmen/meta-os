@@ -568,9 +568,10 @@ module; the mapping lives in `runtime/theory.py`), CB2-465..466 (no JS
 variation generator; `runtime/compose.py` owns it), CB2-469..470 (the take log
 has a `timestamp` and a `verdict`, not a start/end keeper window).
 
-Section 19 verification: 8 test files, **37 tests pass, 0 fail** — the four
-Officina files unchanged at 19, 7 new loop-record tests, plus 11 new Musica
-tests (4 + 3 + 4).
+Section 19 verification: `python3 -m unittest discover -s tests/officina -p
+"test_*.py"` runs the whole Officina tree at **84 tests pass, 0 fail**; the
+loop-record file alone is 7. Musica adds 11 new node tests (4 + 3 + 4), all
+passing.
 
 ## Section 20 — Documentation-as-code (CB2-476..500) — 21/25 delivered
 
