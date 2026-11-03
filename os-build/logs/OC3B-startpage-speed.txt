@@ -1,0 +1,4 @@
+OC3B-015 cold load: static proxy (no browser on this Mac)
+file bytes: 3726
+external fetches: 0 (parse blocks on nothing)
+verdict: EXPECTED instant (<50ms even cold); on-target timing deferred to OC1 boot measurement

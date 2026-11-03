@@ -38,3 +38,17 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
 - 221 defects filed (3, one is office-suite-has-no-source).
 - 224 ownership recorded. No shared files touched; OC2/ISO/theme entries
   referenced, never rewritten.
+
+## §1 verdict (OC3B-023) — DONE static, boot + package confirmations deferred
+- 001/002 BLOCKED with owner (ISO lane provision step): no browser
+  binary confirmable from the ISO file list on this Mac.
+- 003 start page authored, 004 offline (0 external refs), 005 MetaOS-named,
+  006 zero Apple-adjacent strings/assets, 014 fluid-layout CODE-INSPECTED,
+  015 3726-byte proxy + on-target timing deferred.
+- 007 homepage wired two layers, 008 --app launcher authored (9th entry,
+  all audits pass), 009 Terminal=false, 010 no remote default (documented
+  as policy, not an omission), 011 wizard mitigations, 012/013 no seeded
+  bookmarks (vacuous pass, stated), 016 history options open, 017 ops,
+  018 handoff written, 019 acceptance PENDING, 020 self-install fallback
+  written, 021 quiet honestly bounded (packet capture: OC1), 022 no
+  extensions, 024 three defects filed (one BLOCKED dep, two watch items).

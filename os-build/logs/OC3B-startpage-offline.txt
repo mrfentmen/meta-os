@@ -1,0 +1,8 @@
+OC3B-004 offline render check 2026-11-03T07:06:16Z
+external refs found: 0
+result: RENDERS OFFLINE (single file, inline CSS, no fetches; render proof on OC1 boot)
+
+OC3B-005 branding check:
+metaos mentions: 5
+ubuntu mentions: 0
+result: names MetaOS, not Ubuntu
