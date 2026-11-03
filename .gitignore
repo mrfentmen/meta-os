@@ -16,3 +16,7 @@ kernel/target/
 os-build/aegis/SECRETS.json
 os-build/aegis/SECRETS.md
 os-build/aegis/r11/run-secrets.txt
+
+# Local-only deploy staging (rebuilt by os/docs/deploy-trio-frontend.sh; never commit)
+.pages-trio-dist/
+.wrangler/
