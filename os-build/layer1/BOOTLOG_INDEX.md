@@ -40,6 +40,10 @@ milestone is proven; the gate and the reviewer still do that.
 | `W6-gate-9de854d-boot.txt` | 1979 | 60 | yes | K1 alive, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
 | `W6-gate-9de854d-run.txt` | 14696 | 351 | yes | none | — |
 | `WAVE2-boot-tip-serial.txt` | 1934 | 57 | yes | K1 alive, K3 timer, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
+| `WAVE2-branch-boot-serial.txt` | 1934 | 57 | yes | K1 alive, K3 timer, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
+| `WAVE2-face-fresh-boot.txt` | 65872 | 844 | no (display) | none | — |
+| `WAVE3-clean-gate-boot.txt` | 20301 | 857 | yes | K1 alive, K3 timer, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
+| `WAVE3-combined-serial.txt` | 11848 | 479 | yes | K1 alive, K3 timer, K4 memory, K6 ring 3, K6 clean exit, K6 fault isolation, K1 banner | `META OS 0.1 (K6)` |
 | `face-boot1.txt` | 65749 | 835 | no (display) | none | — |
 | `face-image-wave2-fresh-boot.txt` | 65873 | 844 | no (display) | none | — |
 | `flakes.txt` | 46 | 3 | yes | none | — |
