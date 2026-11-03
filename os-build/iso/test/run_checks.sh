@@ -26,6 +26,13 @@ else
     bad "check_configs.py"
 fi
 
+step "installer slideshow (static, offline)"
+if python3 "$LANE/tools/check_slideshow.py"; then
+    ok "check_slideshow.py"
+else
+    bad "check_slideshow.py"
+fi
+
 step "shell syntax"
 for pair in "provision.sh sh" "merge-layers.sh sh" "finalize-iso-tree.sh sh" "grub-fix.sh sh" "calamares/meta-branding.sh sh" "build_iso.sh bash" "tools/vm_install_proof.sh bash" "test/run_checks.sh bash" "test/verify-base.test.sh bash" "test/base-layout.test.sh bash"; do
     set -- $pair
