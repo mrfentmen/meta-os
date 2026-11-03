@@ -27,7 +27,7 @@ else
 fi
 
 step "shell syntax"
-for pair in "provision.sh sh" "calamares/meta-branding.sh sh" "build_iso.sh bash" "tools/vm_install_proof.sh bash" "test/run_checks.sh bash" "test/verify-base.test.sh bash" "test/base-layout.test.sh bash"; do
+for pair in "provision.sh sh" "merge-layers.sh sh" "finalize-iso-tree.sh sh" "grub-fix.sh sh" "calamares/meta-branding.sh sh" "build_iso.sh bash" "tools/vm_install_proof.sh bash" "test/run_checks.sh bash" "test/verify-base.test.sh bash" "test/base-layout.test.sh bash"; do
     set -- $pair
     file="$LANE/$1"
     shell=$2
