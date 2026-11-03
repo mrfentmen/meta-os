@@ -49,6 +49,16 @@
 //! before embedding. License confirmation for shipping this derived table
 //! is an open item for the Pax merge gate (kernel merges go through Pax
 //! personally until K2 lands); it is flagged here, not assumed settled.
+//!
+//! KF-03 (2026-11-02, Pax RK-007 ruling): this console is now WIRED
+//! in `main.rs` as a second output beside the VGA console — when the
+//! 0.11 bootloader supplies a framebuffer, `print!` mirrors every
+//! line to it, so kernel text is visible in graphics mode where the
+//! VGA text buffer is not displayed (RK-012). The VGA console stays
+//! for the shell machinery that needs it (snapshot/restore, attract,
+//! set_pos); the framebuffer console covers print, clear, colors,
+//! and backspace. Wiring is UNCOMPILED on this VM (no cargo) and
+//! UNPROVEN until a Mac/Buffy 0.11 boot shows text on screen.
 
 /// Width of one glyph cell, in pixels.
 pub const FONT_WIDTH: usize = 8;
@@ -78,6 +88,10 @@ pub enum PixelFormat {
     Bgr,
     /// One byte per pixel, luminance only.
     Gray,
+    /// A format the adapter could not map (bootloader `Unknown` or a
+    /// depth this module does not paint). `write_pixel` leaves every
+    /// pixel unwritten for this format — never a guessed layout.
+    Unsupported,
 }
 
 /// A framebuffer console buffer. All writes are bounds-checked against
@@ -277,13 +291,17 @@ impl<'a> FramebufferConsole<'a> {
     }
 
     /// Write one byte. `\n` moves to the next line, `\r` returns to
-    /// column zero, printable and high bytes (0x20..=0xFF) draw their
+    /// column zero, `0x08` backspaces (KF-03: the shell erases with
+    /// the "\x08 \x08" sequence, so the framebuffer console must
+    /// blank the cell like vga.rs does, not ignore the byte),
+    /// printable and high bytes (0x20..=0xFF) draw their
     /// glyph from the 256-entry table, and other control bytes are
     /// ignored rather than drawn as glyph noise.
     pub fn write_byte(&mut self, byte: u8) {
         match byte {
             b'\n' => self.newline(),
             b'\r' => self.col = 0,
+            0x08 => self.backspace(),
             0x20..=0xFF => {
                 if self.cols() == 0 || self.rows() == 0 {
                     return;
@@ -309,6 +327,60 @@ impl<'a> FramebufferConsole<'a> {
         for byte in s.bytes() {
             self.write_byte(byte);
         }
+    }
+
+    /// Erase the cell left of the cursor (KF-03, mirrors
+    /// vga.rs backspace): move back one cell and repaint it with
+    /// the background color. At column 0, wrap to the previous
+    /// row's last cell; at the top-left cell, a no-op. On a
+    /// sub-cell screen (zero columns) there is no cell to erase.
+    pub fn backspace(&mut self) {
+        if self.cols() == 0 {
+            return;
+        }
+        if self.col > 0 {
+            self.col -= 1;
+        } else if self.row > 0 {
+            self.row -= 1;
+            self.col = self.cols() - 1;
+        } else {
+            return;
+        }
+        let bg = self.bg;
+        self.fb
+            .draw_glyph(self.col * FONT_WIDTH, self.row * FONT_HEIGHT, b' ', bg, bg);
+    }
+
+    /// Fill the screen with the background color (KF-03: the shell
+    /// `clear` command and the panic screen need this on the
+    /// framebuffer exactly as they have it on VGA).
+    pub fn clear(&mut self) {
+        let bg = self.bg;
+        self.fb.clear(bg);
+    }
+
+    /// Fill the screen with an explicit color (KF-03 alignment,
+    /// Pax 2026-11-03: the boot-init install clear fills VGA Blue,
+    /// NOT the console background — shell `clear` keeps `clear()`
+    /// with its black background, and this method is used only at
+    /// install time, before any glyph text lands).
+    pub fn clear_color(&mut self, color: (u8, u8, u8)) {
+        self.fb.clear(color);
+    }
+
+    /// Change colors; already-drawn cells keep their colors
+    /// (KF-03: mirrors vga.rs set_colors for the panic screen and
+    /// the shell status block).
+    pub fn set_colors(&mut self, fg: (u8, u8, u8), bg: (u8, u8, u8)) {
+        self.fg = fg;
+        self.bg = bg;
+    }
+}
+
+impl core::fmt::Write for FramebufferConsole<'_> {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        FramebufferConsole::write_str(self, s);
+        Ok(())
     }
 }
 

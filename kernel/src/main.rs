@@ -4,8 +4,32 @@
 //! the serial port, halts in a spin loop. K2: VGA text-mode console
 //! (80x25 at phys 0xB8000 via the bootloader's physical-memory
 //! mapping) mirrors every serial line on screen; the panic handler
-//! paints a red PANIC screen. No pixel framebuffer exists under
-//! bootloader 0.9.35 — see `os-build/research/framebuffer.md`.
+//! paints a red PANIC screen. RK-008: the kernel side now speaks
+//! bootloader_api 0.11 (see BOOTLOADER_CONFIG); KF-03 wires the
+//! pixel framebuffer field (`Optional<FrameBuffer>`) as a second
+//! console beside VGA, because under 0.11 the display is in
+//! graphics mode and VGA text is never shown (RK-012 blank screen).
+//! KF-03 ALIGNMENT (Pax room-1, 2026-11-03, rebased onto main
+//! b5d3e823 (Pax merge round, superseding the 79deff88 base in
+//! the first KF-03 post); RK-008 0.11 prerequisite carried from
+//! rowan/bootloader-spike, which is not on main): boot-init install
+//! clear ONLY fills pure blue (0,0,255) the moment install succeeds,
+//! before any glyph text lands (the kf03-blue.png proof frame).
+//! Pax [521] spec-grounded correction supersedes [516] here:
+//! blue is pure (0,0,255), NOT VGA Blue (0,0,170).
+//! shell `clear` keeps its console-bg fill (black) and panic keeps
+//! its red clear, both untouched. The geometry line is the single
+//! serial-only literal `fb: WxH pitch P fmt F` (pitch = stride
+//! pixels x bytes_per_pixel, F in rgb/bgr/gray/unsupported),
+//! printed ONLY when a framebuffer was supplied; when none is
+//! supplied there is NO fb: line at all and the VGA-only path
+//! is unchanged (Pax [521], superseding [516]'s `fb: none`).
+//! Unsupported still installs (geometry known from BootInfo) with
+//! fmt unsupported — an explicit non-pass, not a silent miss.
+//! The fb: line is written straight to serial, never through
+//! print! (which mirrors to the framebuffer and would break the
+//! no-text blue frame); the frame stays blue until the first
+//! mirrored println, so the gate pack must capture at the clear.
 //!
 //! K3 evidence (2026-11-02): `prove_timer` measures the PIT by waiting
 //! on the handler's tick counter, so the boot log carries a real
@@ -30,6 +54,14 @@ macro_rules! print {
         if let Some(console) = slot {
             let _ = write!(console, $($arg)*);
         }
+        // KF-03: mirror to the pixel framebuffer console too, when
+        // one is installed. Under bootloader 0.11 the display is in
+        // graphics mode and the VGA text buffer is never shown, so
+        // without this every line above would be serial-only.
+        let fb_slot = unsafe { &mut *core::ptr::addr_of_mut!($crate::FB_CONSOLE) };
+        if let Some(console) = fb_slot {
+            let _ = write!(console, $($arg)*);
+        }
     }};
 }
 
@@ -43,6 +75,7 @@ macro_rules! println {
     };
 }
 
+mod framebuffer;
 mod gdt;
 mod interrupts;
 mod logo_frames;
@@ -57,12 +90,162 @@ mod vga;
 use core::panic::PanicInfo;
 use vga::{Color, ColorSpec, VgaConsole, VGA_PHYS_ADDR};
 
-bootloader::entry_point!(kernel_main);
+/// Bootloader configuration (RK-008, bootloader_api 0.11). The default
+/// config leaves `mappings.physical_memory` as `None`, and with no
+/// mapping `physical_memory_offset` arrives as `Optional::None` — the
+/// VGA base in `kernel_main` and `mem_init` would have nothing to work
+/// through. Request a dynamic full-physical-memory mapping, the 0.11
+/// replacement for the 0.9 `map_physical_memory` cargo feature.
+pub static BOOTLOADER_CONFIG: bootloader_api::BootloaderConfig = {
+    let mut config = bootloader_api::BootloaderConfig::new_default();
+    config.mappings.physical_memory = Some(bootloader_api::config::Mapping::Dynamic);
+    config
+};
+
+bootloader_api::entry_point!(kernel_main, config = &BOOTLOADER_CONFIG);
 
 const COM1: u16 = 0x3F8;
 
 /// The boot console. `None` until `kernel_main` maps the VGA buffer.
 static mut CONSOLE: Option<VgaConsole> = None;
+
+/// KF-03 framebuffer console. `None` until `kernel_main` installs it
+/// from the bootloader's framebuffer (0.11 only — 0.9 hands over no
+/// pixel framebuffer). Kept separate from CONSOLE on purpose: the
+/// shell machinery that needs VGA cells (snapshot/restore, attract,
+/// set_pos) keeps working on CONSOLE, while `print!` mirrors every
+/// line here too, so kernel text is visible in graphics mode.
+/// Attract frames stay VGA-only (invisible on 0.11, shell text
+/// preserved on the framebuffer) — redrawing them on pixels is a
+/// KF-03 follow-up, not part of the RK-012 unblock.
+static mut FB_CONSOLE: Option<framebuffer::FramebufferConsole<'static>> = None;
+
+/// Standard VGA palette as RGB triples, for painting the framebuffer
+/// console in the shell's VGA colors (status block, panic screen).
+fn vga_color_rgb(color: Color) -> (u8, u8, u8) {
+    match color {
+        Color::Black => (0, 0, 0),
+        Color::Blue => (0, 0, 170),
+        Color::Green => (0, 170, 0),
+        Color::Cyan => (0, 170, 170),
+        Color::Red => (170, 0, 0),
+        Color::Magenta => (170, 0, 170),
+        Color::Brown => (170, 85, 0),
+        Color::LightGray => (170, 170, 170),
+        Color::DarkGray => (85, 85, 85),
+        Color::LightBlue => (85, 85, 255),
+        Color::LightGreen => (85, 255, 85),
+        Color::LightCyan => (85, 255, 255),
+        Color::LightRed => (255, 85, 85),
+        Color::Pink => (255, 85, 255),
+        Color::Yellow => (255, 255, 85),
+        Color::White => (255, 255, 255),
+    }
+}
+
+/// Blank the framebuffer console (KF-03: called beside the VGA
+/// clear by the shell `clear` command, so `clear` blanks the
+/// screen the user actually sees on 0.11 too).
+pub(crate) fn fb_clear() {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(FB_CONSOLE)).as_mut() {
+            console.clear();
+        }
+    }
+}
+
+/// KF-03 alignment, boot-init ONLY: fill the framebuffer with
+/// pure blue (0,0,255) — Pax [521] spec-grounded value, NOT VGA
+/// Blue (0,0,170) from [516] — the moment install succeeds, before
+/// any glyph text lands. This is NOT the shell `clear` (which uses
+/// `fb_clear` with the console background, black) and NOT the panic
+/// clear (red, untouched). Called once, from `kernel_main`,
+/// immediately after `install_framebuffer_console` returns `Some`.
+/// For an unsupported format this is a no-op per `write_pixel`,
+/// so the blue-frame proof honestly fails there.
+pub(crate) fn fb_clear_blue() {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(FB_CONSOLE)).as_mut() {
+            console.clear_color((0, 0, 255));
+        }
+    }
+}
+
+/// Recolor the framebuffer console in VGA terms (KF-03: called
+/// beside the VGA recolor by the shell status block).
+pub(crate) fn fb_set_colors(spec: ColorSpec) {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(FB_CONSOLE)).as_mut() {
+            console.set_colors(vga_color_rgb(spec.0), vga_color_rgb(spec.1));
+        }
+    }
+}
+
+/// KF-03 adapter: take the bootloader's framebuffer out of
+/// `BootInfo` and install it as FB_CONSOLE. Returns width, height,
+/// pitch in bytes per row, and the fmt word (`rgb`, `bgr`, `gray`,
+/// or `unsupported`) for the single serial `fb:` line. Pitch is
+/// stride pixels x bytes_per_pixel (framebuffer.rs computes
+/// row_bytes the same way). A format framebuffer.rs can paint is
+/// Rgb/Bgr at 3 or 4 bytes per pixel, U8 gray at 1. Method names
+/// verified against bootloader_api 0.11.17 source (api/src/info.rs):
+/// `Optional::take`, `FrameBuffer::info`, `FrameBuffer::into_buffer`
+/// (`&'static mut [u8]`). Nothing else in this kernel reads
+/// `boot_info.framebuffer` (mem_init uses the memory map), so
+/// taking it here is safe. An unsupported format still installs
+/// the console with local format `Unsupported`, whose pixel writes
+/// are no-ops by framebuffer.rs design, and still returns its
+/// geometry — the serial log then says `fmt unsupported` plainly
+/// (an explicit non-pass) instead of silently pretending VGA works.
+/// `None` means no framebuffer was supplied at all: no geometry
+/// exists and the caller prints NO fb: line (Pax [521]); the
+/// VGA-only path is unchanged. The blue install clear is NOT done
+/// here; `kernel_main` calls `fb_clear_blue` the moment this
+/// returns `Some`, before any glyph text lands (the constructor's
+/// black clear is transient).
+fn install_framebuffer_console(
+    boot_info: &mut bootloader_api::BootInfo,
+) -> Option<(usize, usize, usize, &'static str)> {
+    let fb = boot_info.framebuffer.take()?;
+    let info = fb.info();
+    let (format, fmt) = match (info.pixel_format, info.bytes_per_pixel) {
+        (bootloader_api::info::PixelFormat::Rgb, 3)
+        | (bootloader_api::info::PixelFormat::Rgb, 4) => {
+            (framebuffer::PixelFormat::Rgb, "rgb")
+        }
+        (bootloader_api::info::PixelFormat::Bgr, 3)
+        | (bootloader_api::info::PixelFormat::Bgr, 4) => {
+            (framebuffer::PixelFormat::Bgr, "bgr")
+        }
+        (bootloader_api::info::PixelFormat::U8, 1) => {
+            (framebuffer::PixelFormat::Gray, "gray")
+        }
+        _ => (framebuffer::PixelFormat::Unsupported, "unsupported"),
+    };
+    let buffer = fb.into_buffer();
+    let local = framebuffer::FramebufferInfo {
+        width: info.width,
+        height: info.height,
+        stride: info.stride,
+        bytes_per_pixel: info.bytes_per_pixel,
+        pixel_format: format,
+        byte_len: info.byte_len,
+    };
+    // SAFETY: the bootloader mapped this buffer for the kernel and
+    // `into_buffer` hands over its whole byte range; the console
+    // bounds-checks every pixel against the geometry and slice.
+    unsafe {
+        *core::ptr::addr_of_mut!(FB_CONSOLE) = Some(
+            framebuffer::FramebufferConsole::new(
+                framebuffer::Framebuffer::new(buffer, local),
+                vga_color_rgb(Color::LightGray),
+                vga_color_rgb(Color::Black),
+            ),
+        );
+    }
+    let pitch = info.stride.saturating_mul(info.bytes_per_pixel);
+    Some((info.width, info.height, pitch, fmt))
+}
 
 fn outb(port: u16, val: u8) {
     unsafe {
@@ -125,10 +308,46 @@ impl core::fmt::Write for SerialPort {
     }
 }
 
-fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
+fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     serial_init();
-    let vga_base =
-        (boot_info.physical_memory_offset + VGA_PHYS_ADDR) as *mut u16;
+    // 0.11: the offset is `Optional<u64>`, present only when the config
+    // maps physical memory (BOOTLOADER_CONFIG above does). Without it
+    // there is no VGA base and no `mem_init` mapping; fail loudly on
+    // serial via the panic handler instead of computing a bogus base.
+    let phys_offset = boot_info
+        .physical_memory_offset
+        .into_option()
+        .expect("RK-008: bootloader did not map physical memory");
+    // KF-03: install the framebuffer console BEFORE the VGA one,
+    // so the first println below already reaches the screen the
+    // user sees on 0.11. Takes the framebuffer out of BootInfo;
+    // nothing later in boot reads that field again.
+    let fb_geometry = install_framebuffer_console(boot_info);
+    // KF-03 alignment (Pax 2026-11-03, [521] pure blue), boot-init
+    // install clear ONLY: fill pure blue (0,0,255) the moment
+    // install succeeds, before any glyph text lands — this is the
+    // kf03-blue.png proof frame. For unsupported formats this
+    // clear is a no-op, so that proof honestly fails.
+    // Shell `clear` (sched.rs, console-bg black) and the panic
+    // screen (red) are untouched by this step.
+    if fb_geometry.is_some() {
+        fb_clear_blue();
+    }
+    // The fb: line is SERIAL ONLY and prints ONLY when a
+    // framebuffer was supplied (Pax [521]). print!/println!
+    // mirrors to the framebuffer console once installed, and
+    // drawing this line there would break the no-text blue frame,
+    // so it is written straight to the serial port. When none was
+    // supplied there is no fb: line at all and the VGA-only path
+    // below is unchanged. The frame stays solid blue until the
+    // first mirrored println below; the gate pack must capture at
+    // the blue clear, not after text lands.
+    if let Some((w, h, pitch, fmt)) = fb_geometry {
+        use core::fmt::Write as _;
+        let mut serial = SerialPort;
+        let _ = write!(serial, "fb: {}x{} pitch {} fmt {}\n", w, h, pitch, fmt);
+    }
+    let vga_base = (phys_offset + VGA_PHYS_ADDR) as *mut u16;
     // SAFETY: bootloader maps all physical memory at the offset, so the
     // VGA text buffer address is valid and writable; 80x25 bounds-checked.
     unsafe {
@@ -160,7 +379,7 @@ fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
     // Section D: frames, mapper, heap (IDT is live, so a stray fault
     // prints instead of triple-faulting).
     unsafe {
-        mem::mem_init(boot_info);
+        mem::mem_init(&*boot_info);
     }
     #[cfg(feature = "break-test")]
     unsafe {
@@ -239,6 +458,14 @@ fn panic(info: &PanicInfo) -> ! {
     let slot = unsafe { &mut *core::ptr::addr_of_mut!(CONSOLE) };
     if let Some(console) = slot {
         console.set_colors(ColorSpec(Color::White, Color::Red));
+        console.clear();
+        let _ = write!(console, "META OS KERNEL - PANIC\n{}", info);
+    }
+    // KF-03: paint the panic screen on the framebuffer too, or a
+    // 0.11 panic would be serial-only while the screen stays calm.
+    let fb_slot = unsafe { &mut *core::ptr::addr_of_mut!(FB_CONSOLE) };
+    if let Some(console) = fb_slot {
+        console.set_colors(vga_color_rgb(Color::White), vga_color_rgb(Color::Red));
         console.clear();
         let _ = write!(console, "META OS KERNEL - PANIC\n{}", info);
     }
