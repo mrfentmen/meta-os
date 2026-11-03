@@ -101,7 +101,10 @@ def main(argv):
         cmd = ["cargo", "rustc", "--target", TARGET, "--bin", name]
         if release:
             cmd.append("--release")
-        cmd += ["--", f"-C link-arg=-T{generated}"]
+        # rustc needs -C and its value as separate argv entries: one
+        # combined "-C link-arg=..." string is parsed as a codegen
+        # option " link-arg" (leading space) and fails (Milo gate-1 RED).
+        cmd += ["--", "-C", f"link-arg=-T{generated}"]
         print(f"== {name}: base 0x{base:x}, link script {generated.name}")
         print(f"   {' '.join(cmd)}")
         result = subprocess.run(cmd, cwd=user_dir)
