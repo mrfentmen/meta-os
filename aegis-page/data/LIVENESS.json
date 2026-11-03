@@ -1,0 +1,1527 @@
+{
+  "at": "2026-11-02T14:59:10.950Z",
+  "file": "aegis/watch-targets.json",
+  "results": [
+    {
+      "id": "repo-347movies",
+      "type": "repo",
+      "ref": "mrfentmen/347movies",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-8bitpeoples-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/8bitpeoples-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-acp",
+      "type": "repo",
+      "ref": "mrfentmen/acp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-adobe-premiere-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/adobe-premiere-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-adsbdb-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/adsbdb-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-ai-agents",
+      "type": "repo",
+      "ref": "mrfentmen/ai-agents",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-ai-freebuff",
+      "type": "repo",
+      "ref": "mrfentmen/ai-freebuff",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-ai-opencode",
+      "type": "repo",
+      "ref": "mrfentmen/ai-opencode",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-ai-tomogotchi-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/ai-tomogotchi-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-all-in-one-helper",
+      "type": "repo",
+      "ref": "mrfentmen/all-in-one-helper",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-anime-filler-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/anime-filler-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-annotated-pages",
+      "type": "repo",
+      "ref": "mrfentmen/annotated-pages",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-ape-social-machine",
+      "type": "repo",
+      "ref": "mrfentmen/ape-social-machine",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-api-deprecation-radar-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/api-deprecation-radar-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-archive-org-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/archive-org-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-artifact-gauge-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/artifact-gauge-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-audius-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/audius-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-awesome-servers",
+      "type": "repo",
+      "ref": "mrfentmen/awesome-servers",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-bored",
+      "type": "repo",
+      "ref": "mrfentmen/bored",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-brainrot-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/brainrot-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-build-cache-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/build-cache-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-chrome-ext-2",
+      "type": "repo",
+      "ref": "mrfentmen/chrome-ext-2",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-cisa-kev-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/cisa-kev-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-cleanshot",
+      "type": "repo",
+      "ref": "mrfentmen/cleanshot",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-clip-forge",
+      "type": "repo",
+      "ref": "mrfentmen/clip-forge",
+      "liveness": "LIVE",
+      "detail": "empty repository",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-clipforge-lockbox",
+      "type": "repo",
+      "ref": "mrfentmen/clipforge-lockbox",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-clipforge-video-compressor",
+      "type": "repo",
+      "ref": "mrfentmen/clipforge-video-compressor",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-codebuff",
+      "type": "repo",
+      "ref": "mrfentmen/codebuff",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-codepet-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/codepet-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-commoncrawl-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/commoncrawl-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-config-weather-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/config-weather-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-contextink",
+      "type": "repo",
+      "ref": "mrfentmen/contextink",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-contract-diff-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/contract-diff-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-credence-enforce",
+      "type": "repo",
+      "ref": "mrfentmen/credence-enforce",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-crew-a2a",
+      "type": "repo",
+      "ref": "mrfentmen/crew-a2a",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-crtsh-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/crtsh-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-CS460_GTAVII",
+      "type": "repo",
+      "ref": "mrfentmen/CS460_GTAVII",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-curious",
+      "type": "repo",
+      "ref": "mrfentmen/curious",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-dependency-license-change-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/dependency-license-change-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-dnd5e-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/dnd5e-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-dwarffortress-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/dwarffortress-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-env-contract-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/env-contract-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-erddap-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/erddap-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-evidence-diff-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/evidence-diff-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-favicon-studio",
+      "type": "repo",
+      "ref": "mrfentmen/favicon-studio",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-federal-register-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/federal-register-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-fedora-hat",
+      "type": "repo",
+      "ref": "mrfentmen/fedora-hat",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-flaky-history-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/flaky-history-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-forest-encyclopedia",
+      "type": "repo",
+      "ref": "mrfentmen/forest-encyclopedia",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-fourchan-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/fourchan-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-gamebanana-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gamebanana-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-gbif-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gbif-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-gimp-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gimp-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-git-reflog-archaeologist-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/git-reflog-archaeologist-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-gopher-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gopher-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-gumroad",
+      "type": "repo",
+      "ref": "mrfentmen/gumroad",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-gw2-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/gw2-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-hiddenpalace-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/hiddenpalace-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-human",
+      "type": "repo",
+      "ref": "mrfentmen/human",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-ietf-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/ietf-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-incident-timeline-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/incident-timeline-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-instink",
+      "type": "repo",
+      "ref": "mrfentmen/instink",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-invoice-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/invoice-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-itch-jams-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/itch-jams-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-jisho-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/jisho-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-license-boundary-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/license-boundary-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-lichess-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/lichess-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-linkedin",
+      "type": "repo",
+      "ref": "mrfentmen/linkedin",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-lockstep-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/lockstep-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-mangadex-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/mangadex-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-mcp-gateway",
+      "type": "repo",
+      "ref": "mrfentmen/mcp-gateway",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-mcppss",
+      "type": "repo",
+      "ref": "mrfentmen/mcppss",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-meilisearch-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/meilisearch-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-meta-musica",
+      "type": "repo",
+      "ref": "mrfentmen/meta-musica",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-meta-ops",
+      "type": "repo",
+      "ref": "mrfentmen/meta-ops",
+      "liveness": "LIVE",
+      "detail": "empty repository",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-meta-os",
+      "type": "repo",
+      "ref": "mrfentmen/meta-os",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-meta-os-image",
+      "type": "repo",
+      "ref": "mrfentmen/meta-os-image",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-migration-map-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/migration-map-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-mixpanel-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/mixpanel-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-modrinth-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/modrinth-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-molten-oil-spill",
+      "type": "repo",
+      "ref": "mrfentmen/molten-oil-spill",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-mrfentmen",
+      "type": "repo",
+      "ref": "mrfentmen/mrfentmen",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-muse-bus-relay-skill",
+      "type": "repo",
+      "ref": "mrfentmen/muse-bus-relay-skill",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-muse-relay",
+      "type": "repo",
+      "ref": "mrfentmen/muse-relay",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-musicbrainz-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/musicbrainz-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-neuron-surgery",
+      "type": "repo",
+      "ref": "mrfentmen/neuron-surgery",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-neuroreader",
+      "type": "repo",
+      "ref": "mrfentmen/neuroreader",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-nyc311-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/nyc311-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-oembed",
+      "type": "repo",
+      "ref": "mrfentmen/oembed",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-open-food-facts-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/open-food-facts-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-open-library-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/open-library-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-open-meta",
+      "type": "repo",
+      "ref": "mrfentmen/open-meta",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-openalex-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/openalex-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-openapi-scout-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/openapi-scout-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-OpenCE",
+      "type": "repo",
+      "ref": "mrfentmen/OpenCE",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-opensearch-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/opensearch-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-osrs-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/osrs-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-osv-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/osv-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-paper-trader",
+      "type": "repo",
+      "ref": "mrfentmen/paper-trader",
+      "liveness": "LIVE",
+      "detail": "empty repository",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-pokemon-price-ticker",
+      "type": "repo",
+      "ref": "mrfentmen/pokemon-price-ticker",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-pokemon-tcg-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/pokemon-tcg-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-police-transparency-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/police-transparency-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-printify-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/printify-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-privacy-policies",
+      "type": "repo",
+      "ref": "mrfentmen/privacy-policies",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-pskreporter-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/pskreporter-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-qbcore-roblox",
+      "type": "repo",
+      "ref": "mrfentmen/qbcore-roblox",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-radio-browser-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/radio-browser-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-reaserch",
+      "type": "repo",
+      "ref": "mrfentmen/reaserch",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-release-notes-forge-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/release-notes-forge-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-repo-forensics-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/repo-forensics-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-rewind",
+      "type": "repo",
+      "ref": "mrfentmen/rewind",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-RobloxGTACom",
+      "type": "repo",
+      "ref": "mrfentmen/RobloxGTACom",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-rom-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/rom-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-runtime-support-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/runtime-support-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-schema-compatibility-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/schema-compatibility-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-schema-sieve-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/schema-sieve-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-scopink",
+      "type": "repo",
+      "ref": "mrfentmen/scopink",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-screenplaywriter-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/screenplaywriter-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-scriptwriter",
+      "type": "repo",
+      "ref": "mrfentmen/scriptwriter",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-scryfall-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/scryfall-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-secret-hygiene-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/secret-hygiene-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-segaretro-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/segaretro-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-setlist-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/setlist-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-shebang-sherpa-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/shebang-sherpa-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-simple-roblox-game",
+      "type": "repo",
+      "ref": "mrfentmen/simple-roblox-game",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-skills",
+      "type": "repo",
+      "ref": "mrfentmen/skills",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-skills-2",
+      "type": "repo",
+      "ref": "mrfentmen/skills-2",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-skills-by-del",
+      "type": "repo",
+      "ref": "mrfentmen/skills-by-del",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-skills-movie-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/skills-movie-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-smogon-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/smogon-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-snap-gpt",
+      "type": "repo",
+      "ref": "mrfentmen/snap-gpt",
+      "liveness": "LIVE",
+      "detail": "empty repository",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-source-finder",
+      "type": "repo",
+      "ref": "mrfentmen/source-finder",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-space-weather-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/space-weather-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-spdx-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/spdx-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-speedrun-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/speedrun-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-sports-card-ticker",
+      "type": "repo",
+      "ref": "mrfentmen/sports-card-ticker",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-steam-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/steam-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-superagents",
+      "type": "repo",
+      "ref": "mrfentmen/superagents",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-telnetbbs-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/telnetbbs-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-test-shape-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/test-shape-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-tetriswiki-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/tetriswiki-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-textfiles-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/textfiles-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-tides-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/tides-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-time",
+      "type": "repo",
+      "ref": "mrfentmen/time",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-toolchain-lens-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/toolchain-lens-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-twilio-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/twilio-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-unicode-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/unicode-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-unicode-security-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/unicode-security-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-usgs-water-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/usgs-water-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-usps-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/usps-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-vg-resource-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/vg-resource-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-vgchartz-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/vgchartz-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-vgmdb-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/vgmdb-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-vndb-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/vndb-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-vocals",
+      "type": "repo",
+      "ref": "mrfentmen/vocals",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-walkthrough-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/walkthrough-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-wayback-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/wayback-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-web-projects",
+      "type": "repo",
+      "ref": "mrfentmen/web-projects",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-wikidata-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/wikidata-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-wikisource-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/wikisource-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-worktree-orbit-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/worktree-orbit-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-y2k-new-tab",
+      "type": "repo",
+      "ref": "mrfentmen/y2k-new-tab",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-yugioh-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/yugioh-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-yugioh-price-ticker",
+      "type": "repo",
+      "ref": "mrfentmen/yugioh-price-ticker",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "repo-zork-mcp",
+      "type": "repo",
+      "ref": "mrfentmen/zork-mcp",
+      "liveness": "LIVE",
+      "detail": "heads listed",
+      "method": "git ls-remote --heads",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "page-meta-os-pages-dev",
+      "type": "page",
+      "ref": "meta-os.pages.dev",
+      "liveness": "LIVE",
+      "detail": "HTTP 200",
+      "method": "HTTP status",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "page-muse-relay-live-pages-dev",
+      "type": "page",
+      "ref": "muse-relay-live.pages.dev",
+      "liveness": "LIVE",
+      "detail": "HTTP 200",
+      "method": "HTTP status",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "page-clipraiders-com",
+      "type": "page",
+      "ref": "clipraiders.com",
+      "liveness": "UNREACHABLE",
+      "detail": "fetch failed",
+      "method": "HTTP status",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    },
+    {
+      "id": "page-watchpeoplefight-com",
+      "type": "page",
+      "ref": "watchpeoplefight.com",
+      "liveness": "LIVE",
+      "detail": "HTTP 200",
+      "method": "HTTP status",
+      "checkedAt": "2026-11-02T14:59:10.950Z"
+    }
+  ]
+}

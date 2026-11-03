@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aegis — security findings on record</title>
+<style>
+/* House style borrowed from os-build/face/board.html: dark system-ui, no build step. */
+body{font-family:system-ui,-apple-system,sans-serif;background:#111;color:#eee;padding:24px;max-width:1180px;margin:auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:#aaa;margin:0 0 12px;font-size:14px}
+#sources{font-size:13px;color:#bbb;border:1px solid #333;background:#000;padding:8px 10px;margin:12px 0;white-space:pre-wrap}
+#failures{color:#ff9a9a;font-size:13px;margin:8px 0;white-space:pre-wrap}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:900px){.panels{grid-template-columns:1fr}}
+section.panel{border:1px solid #333;background:#181818;padding:10px 12px;min-width:0}
+section.panel h2{font-size:16px;margin:0 0 6px}
+.counts{font-size:13px;color:#bbb;margin:6px 0}
+.empty{border:1px dashed #555;padding:10px;font-style:italic;color:#ccc;background:#000}
+.fail{color:#ff9a9a;font-size:12px;margin:6px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:4px 6px;border-bottom:1px solid #2a2a2a;vertical-align:top;overflow-wrap:anywhere}
+th{color:#999;font-weight:600}
+.sev{display:inline-block;padding:1px 8px;border:1px solid #666;border-radius:10px;font-size:12px;margin-right:4px}
+.sev-critical{border-color:#ff5555;color:#ff8888}.sev-high{border-color:#ff9955;color:#ffbb88}
+.sev-medium{border-color:#ffcc55;color:#ffe088}.sev-low{border-color:#88bbff;color:#aaccff}
+.sev-info{border-color:#888;color:#bbb}.sev-unknown{border-color:#c66;color:#eaa}
+.live{color:#7dd87d}.dead{color:#ff8888}.unreach{color:#ffcc55}
+.scrollbox{max-height:340px;overflow-y:auto;border:1px solid #2a2a2a;background:#000;padding:6px}
+.row{padding:6px;border-bottom:1px solid #222;font-size:13px}
+.row .meta{color:#888;font-size:12px}
+details{font-size:12px;color:#bbb}summary{cursor:pointer;color:#7cc4ff}
+input.filter{width:100%;padding:6px;background:#222;color:#eee;border:1px solid #444;margin:6px 0;box-sizing:border-box}
+.note{font-size:12px;color:#888}
+footer{margin-top:16px;font-size:12px;color:#888;border-top:1px solid #333;padding-top:8px}
+</style>
+</head>
+<body>
+<h1>Aegis — security findings on record</h1>
+<p class="sub">A read-only dashboard over the Aegis engine's recorded findings. It does not scan, probe, or fix anything; it only shows what the engine already wrote to disk.</p>
+<div id="sources" aria-live="polite">Loading data sources…</div>
+<div id="failures" role="alert"></div>
+
+<div class="panels">
+<section class="panel" aria-labelledby="h-find"><h2 id="h-find">Findings (newest first)</h2>
+<div class="counts" id="find-counts">Loading…</div>
+<input class="filter" id="find-filter" type="search" placeholder="Filter findings by text…" aria-label="Filter findings by text">
+<div class="fail" id="find-fail"></div>
+<div class="scrollbox" id="find-list" aria-live="polite"></div>
+<p class="note" id="find-foot"></p>
+</section>
+
+<section class="panel" aria-labelledby="h-kev"><h2 id="h-kev">Known-exploited matches (KEV)</h2>
+<div class="counts" id="kev-counts">Loading…</div>
+<div class="fail" id="kev-fail"></div>
+<div class="scrollbox" id="kev-list" aria-live="polite"></div>
+<p class="note">KEV means: the US catalog of vulnerabilities that are <em>known</em> to be exploited in the wild right now. A match here would mean one of our findings names a vulnerability attackers are already using. Sorted: matches first, then the catalog snapshot facts.</p>
+</section>
+
+<section class="panel" aria-labelledby="h-live"><h2 id="h-live">Liveness probes</h2>
+<div class="counts" id="live-counts">Loading…</div>
+<div class="fail" id="live-fail"></div>
+<div class="scrollbox" id="live-list" aria-live="polite"></div>
+</section>
+
+<section class="panel" aria-labelledby="h-runs"><h2 id="h-runs">Engine runs (newest first)</h2>
+<div class="counts" id="run-counts">Loading…</div>
+<div class="fail" id="run-fail"></div>
+<div class="scrollbox" id="run-list" aria-live="polite"></div>
+</section>
+</div>
+
+<footer id="scope">All times UTC. This page does not cover: live scanning, network probing from this page, secret values (counts only, never values), or non-Aegis systems. Nothing here claims the system is "secure" or fully covered.</footer>
+
+<script>
+(function(){
+"use strict";
+var PORT=(window.location&&window.location.port)||"18934";
+var FILES=["data/findings.jsonl","data/KEV.json","data/LIVENESS.json","data/runs.jsonl"];
+function fail(id,msg){var e=document.getElementById(id);if(e)e.textContent=msg;
+  var g=document.getElementById("failures");if(g&&msg)g.textContent+=msg+"\n";}
+function fmt(ts){var d=new Date(ts);if(isNaN(d))return "no timestamp recorded";
+  function p(n){return (n<10?"0":"")+n;}
+  return d.getUTCFullYear()+"-"+p(d.getUTCMonth()+1)+"-"+p(d.getUTCDate())+" "+
+    p(d.getUTCHours())+":"+p(d.getUTCMinutes())+":"+p(d.getUTCSeconds())+" UTC";}
+function emptyBox(msg){var d=document.createElement("div");d.className="empty";d.textContent=msg;return d;}
+function row(tag,text,cls){var d=document.createElement("div");if(cls)d.className=cls;
+  var m=document.createElement("div");m.className="meta";m.textContent=tag;d.appendChild(m);
+  var b=document.createElement("div");b.textContent=text;d.appendChild(b);return d;}
+function sevBadge(s){var known=["info","low","medium","high","critical"];
+  var v=(known.indexOf(s)>=0)?s:"unknown";
+  var b=document.createElement("span");b.className="sev sev-"+v;
+  b.textContent=(v==="unknown")?("severity: unknown ("+String(s)+")"):("severity: "+v);return b;}
+function parseJsonl(text){var recs=[],bad=0,lines=text.split("\n");
+  for(var i=0;i<lines.length;i++){var ln=lines[i];if(!ln.trim())continue;
+    try{recs.push(JSON.parse(ln));}catch(e){bad++;}}
+  return {recs:recs,malformed:bad};}
+function get(url){return fetch(url).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text();});}
+
+/* ---- shared source line ---- */
+var srcEl=document.getElementById("sources");
+
+/* ---- findings ---- */
+var allFindings=[],findingsPresent=false;
+function renderFindings(filter){
+  var box=document.getElementById("find-list");box.textContent="";
+  var q=(filter||"").toLowerCase();
+  var shown=allFindings.filter(function(f){
+    if(!q)return true;
+    return ((f.title||"")+" "+(f.evidence||"")+" "+(f.target||"")+" "+(f.source||"")).toLowerCase().indexOf(q)>=0;});
+  var CAP=500, capped=shown.length>CAP;
+  shown.slice(0,CAP).forEach(function(f){
+    var d=document.createElement("div");d.className="row";
+    d.appendChild(sevBadge(f.severity));
+    var t=document.createElement("div");t.textContent=f.title||"(no title recorded)";d.appendChild(t);
+    var m=document.createElement("div");m.className="meta";
+    m.textContent=fmt(f.ts)+" | target: "+(f.target||"—")+" | run: "+(f.run||"—");d.appendChild(m);
+    var s=document.createElement("div");s.className="meta";
+    s.textContent="produced by: "+(f.source||"—");d.appendChild(s);
+    var ev=String(f.evidence||"");
+    if(ev.length>220){var det=document.createElement("details");var sum=document.createElement("summary");
+      sum.textContent="Evidence ("+ev.length+" chars) — show all";
+      var full=document.createElement("div");full.textContent=ev;
+      det.appendChild(sum);det.appendChild(full);d.appendChild(det);}
+    else if(ev){var e2=document.createElement("div");e2.textContent=ev;d.appendChild(e2);}
+    box.appendChild(d);});
+  if(!shown.length)box.appendChild(emptyBox(allFindings.length?
+    "No findings match this filter." :
+    findingsPresent?"the engine ran and recorded zero findings — it has run, and there was nothing to record (distinct from never having run).":
+    "no findings recorded — the engine has not run (or its data was not shipped with this page)."));
+  if(capped){var n=document.createElement("p");n.className="note";
+    n.textContent="Showing first 500 of "+shown.length+" matching rows. Narrow the filter to see the rest.";box.appendChild(n);}
+}
+document.getElementById("find-filter").addEventListener("input",function(e){try{renderFindings(e.target.value);}catch(err){}});
+
+/* ---- load ---- */
+var counts={};
+Promise.allSettled(FILES.map(function(f){return get(f).then(function(t){return {f:f,t:t};});}))
+.then(function(rs){
+  var byName={};rs.forEach(function(r){if(r.status==="fulfilled")byName[r.value.f]=r.value.t;});
+  FILES.forEach(function(f){if(!(f in byName))fail(f==="data/findings.jsonl"?"find-fail":f==="data/KEV.json"?"kev-fail":f==="data/LIVENESS.json"?"live-fail":"run-fail",
+    "cannot load "+f+" on port "+PORT+" (is face-site on "+PORT+" running, and was data/ shipped with the page?)");});
+
+  /* findings */
+  try{
+    if(!("data/findings.jsonl" in byName)){document.getElementById("find-counts").textContent="findings: file missing.";
+      document.getElementById("find-list").appendChild(emptyBox("no findings recorded — the engine has not run (or its data was not shipped with this page)."));}
+    else{var p=parseJsonl(byName["data/findings.jsonl"]);allFindings=p.recs;findingsPresent=true;
+      allFindings.sort(function(a,b){var t=String(b.ts||"").localeCompare(String(a.ts||""));
+        if(t)return t;return String(a.title||"").localeCompare(String(b.title||""));});
+      var sev={};allFindings.forEach(function(f){var s=f.severity||"unknown";sev[s]=(sev[s]||0)+1;});
+      var parts=Object.keys(sev).sort().map(function(k){return k+": "+sev[k];});
+      document.getElementById("find-counts").textContent="findings: "+allFindings.length+
+        (parts.length?" ("+parts.join(", ")+")":"")+(p.malformed?" | malformed lines skipped: "+p.malformed:"");
+      counts.findings=allFindings.length;
+      renderFindings("");
+      var runs=allFindings.map(function(f){return f.run||"";}).filter(Boolean).sort();
+      document.getElementById("find-foot").textContent=allFindings.length?
+        "Latest finding from run "+runs[runs.length-1]+". Producing module and run id are shown per row; the JSONL carries no file:line, so none is shown.":
+        "File is present but holds zero records: the engine ran and recorded zero findings (distinct from never having run).";
+    }}catch(e){fail("find-fail","findings panel error on "+PORT+": "+e.message);}
+
+  /* KEV */
+  try{
+    if(!("data/KEV.json" in byName)){document.getElementById("kev-counts").textContent="KEV: file missing.";
+      document.getElementById("kev-list").appendChild(emptyBox("no KEV snapshot recorded — the engine has not run its KEV cross-check."));}
+    else{var k=JSON.parse(byName["data/KEV.json"]);counts.kevRows=(k.rows||[]).length;
+      document.getElementById("kev-counts").textContent="KEV snapshot "+(k.catalog&&k.catalog.version||"unknown version")+
+        " released "+fmt(k.catalog&&k.catalog.released)+
+        " | catalog entries: "+(k.catalog&&k.catalog.count!=null?k.catalog.count:"unknown")+
+        " | findings checked: "+(k.checked!=null?k.checked:"unknown")+
+        " | flagged: "+(k.flagged!=null?k.flagged:"unknown")+
+        " | unchecked (no CVE): "+(k.unchecked!=null?k.unchecked:"unknown")+
+        " | excluded non-sweep: "+(k.excludedNonSweep!=null?k.excludedNonSweep:"unknown");
+      var kb=document.getElementById("kev-list");kb.textContent="";
+      var rows=k.rows||[];
+      if(!rows.length)kb.appendChild(emptyBox(
+        (k.checked===0)?"no known-exploited matches — and nothing was checkable: all findings on record carry no CVE id, so the cross-check recorded 0 checked, 0 flagged. Not scanned is not the same as clean.":
+        "no known-exploited matches."));
+      rows.forEach(function(r){var d=document.createElement("div");d.className="row";
+        var c=document.createElement("div");c.textContent=String((r.cves||[]).join(", ")||r.cve||"(no CVE)");
+        d.appendChild(c);var m=document.createElement("div");m.className="meta";
+        m.textContent="KEV: "+(r.kev===true?"YES — exploited in the wild":r.kev===false?"no":"unchecked")+" | finding: "+(r.title||r.finding||"—");
+        d.appendChild(m);kb.appendChild(d);});
+    }}catch(e){fail("kev-fail","KEV panel error on "+PORT+": "+e.message);}
+
+  /* liveness */
+  try{
+    if(!("data/LIVENESS.json" in byName)){document.getElementById("live-counts").textContent="liveness: file missing.";
+      document.getElementById("live-list").appendChild(emptyBox("no liveness probes recorded — the engine has not run its watch-target check."));}
+    else{var l=JSON.parse(byName["data/LIVENESS.json"]);var res=l.results||[];counts.liveness=res.length;
+      var lc={LIVE:0,DEAD:0,UNREACHABLE:0,other:0};
+      res.forEach(function(r){if(lc[r.liveness]!=null)lc[r.liveness]++;else lc.other++;});
+      document.getElementById("live-counts").textContent="probes: "+res.length+
+        " (LIVE "+lc.LIVE+", DEAD "+lc.DEAD+", UNREACHABLE "+lc.UNREACHABLE+(lc.other?", other "+lc.other:"")+")"+
+        " | last probe run: "+fmt(l.at);
+      var lb=document.getElementById("live-list");lb.textContent="";
+      if(!res.length)lb.appendChild(emptyBox("no liveness probes recorded — the engine has not run its watch-target check."));
+      res.forEach(function(r){var d=document.createElement("div");d.className="row";
+        var s=document.createElement("span");
+        s.className=r.liveness==="LIVE"?"live":r.liveness==="DEAD"?"dead":"unreach";
+        s.textContent=(r.liveness==="LIVE"?"passed (LIVE)":r.liveness==="DEAD"?"failed (DEAD)":r.liveness==="UNREACHABLE"?"not reached (UNREACHABLE)":"not probed ("+String(r.liveness)+")");
+        d.appendChild(s);
+        var b=document.createElement("div");b.textContent=(r.id||r.ref||"(no target)")+" ["+(r.type||"?")+"]";d.appendChild(b);
+        var m=document.createElement("div");m.className="meta";
+        m.textContent=(r.detail||"no detail")+" | "+(r.method||"no method")+" | checked: "+(r.checkedAt?fmt(r.checkedAt):"no timestamp recorded");
+        d.appendChild(m);lb.appendChild(d);});
+    }}catch(e){fail("live-fail","liveness panel error on "+PORT+": "+e.message);}
+
+  /* runs */
+  try{
+    if(!("data/runs.jsonl" in byName)){document.getElementById("run-counts").textContent="runs: file missing.";
+      document.getElementById("run-list").appendChild(emptyBox("no runs recorded — the engine has not run (or its data was not shipped with this page)."));}
+    else{var rp=parseJsonl(byName["data/runs.jsonl"]);var runs=rp.recs;
+      runs.sort(function(a,b){return String(b.ts||"").localeCompare(String(a.ts||""));});
+      counts.runs=runs.length;
+      var CAPR=25;
+      document.getElementById("run-counts").textContent="runs: "+runs.length+" (showing newest "+Math.min(CAPR,runs.length)+")"+
+        (rp.malformed?" | malformed lines skipped: "+rp.malformed:"");
+      var rb=document.getElementById("run-list");rb.textContent="";
+      if(!runs.length)rb.appendChild(emptyBox("no runs recorded — the engine has not run (or its data was not shipped with this page)."));
+      runs.slice(0,CAPR).forEach(function(r){var d=document.createElement("div");d.className="row";
+        var ev=String(r.event||"");
+        var done=/done|history-scan|liveness|findings-receipts|aegis-cycle|false-positive-drill|opsec-checklist/.test(ev);
+        var blocked=/blocked/.test(ev);
+        var s=document.createElement("span");s.className=blocked?"dead":done?"live":"unreach";
+        s.textContent=blocked?"blocked (failed)":done?"done":/start/.test(ev)?"started (no completion on this line)":"recorded";
+        d.appendChild(s);
+        var b=document.createElement("div");b.textContent=(r.run||"(no run id)")+" — "+(ev||"(no event)");d.appendChild(b);
+        var m=document.createElement("div");m.className="meta";
+        m.textContent=fmt(r.ts)+" | "+("queries" in r?r.queries+" queries, ":"")+("findings" in r?r.findings+" findings, ":"")+("manifests" in r?r.manifests+" manifests":"")+("command" in r?String(r.command):"");
+        d.appendChild(m);rb.appendChild(d);});
+    }}catch(e){fail("run-fail","runs panel error on "+PORT+": "+e.message);}
+
+  /* source line */
+  var newest="unknown";
+  try{var ts=[];(allFindings||[]).forEach(function(f){if(f.ts)ts.push(f.ts);});
+    if(byName["data/KEV.json"]){var k2=JSON.parse(byName["data/KEV.json"]);if(k2.at)ts.push(k2.at);}
+    if(byName["data/LIVENESS.json"]){var l2=JSON.parse(byName["data/LIVENESS.json"]);if(l2.at)ts.push(l2.at);}
+    if(byName["data/runs.jsonl"]){parseJsonl(byName["data/runs.jsonl"]).recs.forEach(function(r){if(r.ts)ts.push(r.ts);});}
+    ts.sort();if(ts.length)newest=fmt(ts[ts.length-1]);}catch(e){}
+  srcEl.textContent="Data sources (same-origin, port "+PORT+"): "+
+    "data/findings.jsonl ("+(counts.findings!=null?counts.findings+" records":"missing")+"), "+
+    "data/KEV.json ("+(counts.kevRows!=null?counts.kevRows+" matched rows":"missing")+"), "+
+    "data/LIVENESS.json ("+(counts.liveness!=null?counts.liveness+" probes":"missing")+"), "+
+    "data/runs.jsonl ("+(counts.runs!=null?counts.runs+" lines":"missing")+")"+
+    " | newest record: "+newest+".";
+});
+})();
+</script>
+</body>
+</html>
