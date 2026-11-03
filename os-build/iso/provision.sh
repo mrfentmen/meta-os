@@ -193,6 +193,19 @@ else
     say "initramfs rebuild skipped (--no-initramfs)"
 fi
 
+# ------------------------------------------------------------------ identity
+# These three were never wired in, which is why every image built from here
+# kept Ubuntu's name on the user, the wallpapers and the dead plymouth theme
+# while the scripts sat in the repo looking done. They run last so nothing
+# installed above can reintroduce what they remove.
+IDENTITY="$HERE/../identity"
+for script in debrand.sh rename_user.sh debrand2.sh; do
+    [ -f "$IDENTITY/$script" ] || fail "identity script missing: $IDENTITY/$script"
+    say "identity: $script"
+    sh "$IDENTITY/$script" "$ROOT" || fail "identity: $script failed"
+    sh "$IDENTITY/$script" "$ROOT" --check || fail "identity: $script check failed"
+done
+
 say "provision complete: $ROOT"
 say "next: build_iso.sh --root mode -> press Generate in Cubic; --iso mode rebuilds automatically"
 exit 0
