@@ -64,3 +64,15 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
   all in one basics file. 031 home defaults: watch item for first boot.
 - 046 two defects + one all-clear. Handoff doc written; no shared
   files touched.
+
+## §3 verdict (OC3B-068) — DONE static, interactive with OC1
+- 051 package recorded, version explicitly not guessed. 054/055 hook
+  guards verified by reading (once-flag, PS1 gate, || true).
+- 056 bash + user PS1, unchanged. 070 welcome app standalone per its
+  docstring. 059 no new entry (two exist); TryExec suggestion filed.
+- 060 opens-to-home from Exec analysis. 061/062 written. 063-066,071,
+  072-074 recorded with exact provenance; ssh-client presence +
+  version are OC1 one-liners. 073 inert-by-construction (nothing ships
+  autostart/ssh-config). 067 hook strings clean; binary menu strings
+  are OC1 screenshots. 057/058/065 BLOCKED-with-owner (OC1 boot).
+- 069 one suggestion + all-clear. No shared files touched.
