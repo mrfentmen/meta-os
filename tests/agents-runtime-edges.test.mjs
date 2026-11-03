@@ -59,7 +59,22 @@ test("the ledger refuses a record with no run id", () => {
   }
 });
 
-test("a torn final line is skipped and the next record stays whole", () => {
+test("a torn final line is skipped and the earlier records stay whole", () => {
+  const dir = tmp();
+  try {
+    const file = join(dir, "ledger.jsonl");
+    const ledger = new Ledger(file);
+    ledger.add("run-1", "spawn");
+    // True crash tail: the torn line is last, nothing follows it.
+    appendFileSync(file, '{"ts":"torn"');
+    const events = ledger.read().map((entry) => entry.event);
+    assert.deepEqual(events, ["spawn"]);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("a torn middle line throws and names the line", () => {
   const dir = tmp();
   try {
     const file = join(dir, "ledger.jsonl");
@@ -67,8 +82,9 @@ test("a torn final line is skipped and the next record stays whole", () => {
     ledger.add("run-1", "spawn");
     appendFileSync(file, '{"ts":"torn"');
     ledger.add("run-1", "exit");
-    const events = ledger.read().map((entry) => entry.event);
-    assert.deepEqual(events, ["spawn", "exit"]);
+    // A good record follows the torn line, so this is a spliced file, not a
+    // crash tail: read refuses loudly instead of silently dropping history.
+    assert.throws(() => ledger.read(), /ledger: torn line 2/);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
