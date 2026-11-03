@@ -175,3 +175,22 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
   MetaOS 1.0 correct. 264 sizes OC1 boot. 265/266 imagery original.
 - 271/272 welcome copy PASS, 273/274 finish copy reboot honest.
 - 268 two watch items, both owned. 269 handoff written, 270 PENDING.
+
+## §12 verdict (OC3B-290) — DONE, lane closed static
+- 276/277/278/279 closeout re-runs: no drift (browser offline,
+  11/11 launchers, defaults spot, slideshow sweep).
+- 280/281 proof index: 106 OC3B files + desktop/help dirs, all
+  resolve. 291 spot-check PASS at closeout commit.
+- 282 handoff written (READY-static, DEL-ONLY, merge order).
+  283 UNPROVEN rows owned. 284 verdict: READY-static, NOT
+  READY-booted. 287 branch attestation (logs+status only).
+- 285 no secrets (names only, no values). 286 no mocks (labels
+  honest throughout). 288 room posts: AFK, recorded not faked.
+  289 no spare time to reassign. 292 spend \$0.00. 293 ~3.5 h.
+- 294 DEL-ONLY list, 295 timeline, 296/297 clause map + reasons.
+- 300 boot reference: no booted-system opens claimed; the proving
+  boot is OC1's first-boot session (one session closes ~40 rows).
+
+OC3B-299 final line: everything static is proven in-branch; everything
+that needs a screen, speaker, cable, or installer window waits on OC1's
+boot and is named with its owner — no silent gaps.

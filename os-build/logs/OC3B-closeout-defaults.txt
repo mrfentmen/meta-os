@@ -1,0 +1,10 @@
+# OC3B-278 — closeout: defaults spot check
+
+- parole.desktop still advertises MimeType=video/mp4;video/mpeg;
+  video/ogg;video/webm;audio/mpeg;audio/ogg;audio/flac;audio/x-wav.
+- meta-browser-app.desktop still advertises
+  text/html;x-scheme-handler/http;x-scheme-handler/https.
+- Hana's canonical os-build/metaos1-base/defaults/mimeapps.list
+  untouched from this lane (no edit ever made; verified: no
+  mimeapps file exists in this branch).
+No drift. Set-as-default decisions remain ISO/Bond territory.
