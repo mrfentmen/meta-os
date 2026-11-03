@@ -269,6 +269,43 @@ var APPS = {
         '<span style="opacity:.7">Viewer: design/meta-scientia-molecules.html. Served over HTTP it renders live; the records are real data files, not drawings.</span></div>';
     }
   },
+  officina: {
+    title: "Officina",
+    build: function (body) {
+      body.innerHTML = '<div style="background:#f5efe2;border:1px solid #cdbb96;border-radius:10px;padding:12px;color:#2b2115">' +
+        '<div style="font-weight:700;letter-spacing:.06em;color:#8a5a1f">META OFFICINA</div>' +
+        '<div style="opacity:.75;font-size:12px;margin:2px 0 10px">The invention workshop. Status: partial, said plainly.</div>' +
+        '<b>Pack</b>: os/worlds/officina/pack.json — six agents, four watchers, three runtime parts.<br>' +
+        '<b>Simulator</b>: os/worlds/officina/runtime/heatsink.py — fin geometry scored by thermal resistance from physics in code.<br>' +
+        '<b>Loop</b>: os/worlds/officina/runtime/design_loop.py — post, claim, score, held-out gate, export the best proven design.<br>' +
+        '<b>Intake</b>: os/worlds/officina/runtime/brief.py — rough words into a structured brief.<br><br>' +
+        '<span style="opacity:.7">A design is workshop-proven only after the held-out re-score passes. No build is ordered, no part is shipped, and a simulated score is never presented as a measured result.</span></div>';
+    }
+  },
+  aegis: {
+    title: "Aegis",
+    build: function (body) {
+      body.innerHTML = '<div style="background:#1a1d24;border:1px solid #3b4452;border-radius:10px;padding:12px;color:#e6ebf2">' +
+        '<div style="font-weight:700;letter-spacing:.06em;color:#7fd0a8">AEGIS</div>' +
+        '<div style="opacity:.75;font-size:12px;margin:2px 0 10px">Own-ground watch only. Counts only, never the matched text.</div>' +
+        '<b>Targets</b>: aegis/watch-targets.mjs — the four own domains, as local file paths.<br>' +
+        '<b>Secrets</b>: aegis/secrets.mjs — a scan reports counts and categories, never a matched string.<br>' +
+        '<b>Findings</b>: aegis/findings.mjs — severity from the documented set, no value field.<br><br>' +
+        '<span style="opacity:.7">A pasted URL is treated as a path, never fetched. Nothing here watches anyone else.</span></div>';
+    }
+  },
+  nervus: {
+    title: "Nervus",
+    build: function (body) {
+      body.innerHTML = '<div style="background:#101a22;border:1px solid #2a4453;border-radius:10px;padding:12px;color:#e2f0f7">' +
+        '<div style="font-weight:700;letter-spacing:.06em;color:#5fc9e8">NERVUS</div>' +
+        '<div style="opacity:.75;font-size:12px;margin:2px 0 10px">Stub records only so far: no real model operation has run.</div>' +
+        '<b>Contracts</b>: nervus/contracts.mjs — each operation declares what it requires and what it produces.<br>' +
+        '<b>Layers</b>: nervus/layermap.mjs — the layer map, read as data.<br>' +
+        '<b>Dose windows</b>: nervus/dose-windows.json — the recorded windows.<br><br>' +
+        '<span style="opacity:.7">nervus/stub-runner.mjs marks its own output STUB. This window says the same thing rather than implying a run.</span></div>';
+    }
+  },
   calculator: {
     title: "Calculator",
     build: function (body) {
@@ -418,7 +455,8 @@ var DOCK = [
   ["files", "&#128193;", "Files"], ["notes", "&#128221;", "Notes"],
   ["calendar", "&#128197;", "Calendar"], ["calculator", "&#128425;", "Calculator"],
   ["board", "&#9998;", "Board"], null,
-  ["imperium", "&#9960;", "Imperium"], ["musica", "&#9835;", "Musica"], ["science", "&#9879;", "Science"], null,
+  ["imperium", "&#9960;", "Imperium"], ["musica", "&#9835;", "Musica"], ["science", "&#9879;", "Science"],
+  ["officina", "&#128295;", "Officina"], ["aegis", "&#128737;", "Aegis"], ["nervus", "&#129504;", "Nervus"], null,
   ["settings", "&#9881;", "Settings"], ["trash", "&#128465;", "Trash"], ["about", "&#9432;", "About"]
 ];
 DOCK.forEach(function (item) {

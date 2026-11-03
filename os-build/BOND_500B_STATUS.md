@@ -700,7 +700,7 @@ callers now pass the step index they were already working from.
 Section 16 verification: 13 test files, **57 tests pass, 0 fail**; the whole agent
 suite (`node --test tests/agents-*.test.mjs`) is 127/127.
 
-## Section 17 — Face tests (CB2-401..425) — 16/25 delivered, 9 blocked
+## Section 17 — Face tests (CB2-401..425) — 18/25 delivered, 7 blocked
 
 `face/face.js` was a classic browser script with 87 functions closing over
 `document` and `localStorage`. On Del's call the pure half was extracted into
@@ -725,6 +725,8 @@ real functions a Node test can call — not a fixture model of them.
 | CB2-423 | `tests/face-files-edges.test.mjs` | Files and Trash list their own files; `..`, absolute and drive paths are refused; `withinRoot` answers instead of throwing |
 | CB2-424 | `tests/face-trash-edges.test.mjs` | delete keeps the original folder; restore returns the file to it with content intact; empty removes only trashed files |
 | CB2-425 | `tests/face-window-state.test.mjs` | open raises z; focus moves a window to the front without duplicating; close keeps the order; a focus on an unopened window is named |
+| CB2-418 | `tests/face-dock-targets.test.mjs` | every dock id has an app, no id repeats, and each of the three new system windows cites at least two repo paths — every one of them exists on disk |
+| CB2-419 | `tests/face-dock-targets.test.mjs` | all six systems (imperium, musica, science, officina, aegis, nervus) are apps and dock entries; Custos is in neither |
 
 Why the face source was edited: the section's no-edit rule existed because
 `face.js` had no importable logic, so the only tests possible would have been
@@ -735,18 +737,22 @@ Blocked, with the reason per task:
 - CB2-401..405: the five held node files are not in the tree — there is no
   `tests/face-apps.test.mjs`, and no `tests/kernel-records.test.mjs`. There is
   no stale assertion to fix and no fixture path to repair.
-- CB2-418..419: `DOCK` carries three systems (imperium, musica, science).
-  Officina, Aegis and Nervus have no dock entry and no app, so "all six systems
-  present" would need three new windows written to satisfy a test.
 - CB2-420..421: there is no test-mirror copy of the category list to compare
   with, and `js/products.js` has no per-category definition field: products
   carry tagline/limitations, categories are bare strings.
 
-Section 17 verification: eight new face files, **16 tests pass, 0 fail**
-(3 + 3 + 3 + 1 + 1 + 1 + 3 + 1); the two existing face files
+The three missing systems are now real windows, on Del's section-17 call:
+Officina reads `os/worlds/officina/pack.json` and its three runtime parts,
+Aegis reads `aegis/watch-targets.mjs`, `aegis/secrets.mjs` and
+`aegis/findings.mjs`, and Nervus reads `nervus/contracts.mjs`,
+`nervus/layermap.mjs` and `nervus/dose-windows.json`. Each window says what
+its own record says, including that Nervus has run no real operation.
+
+Section 17 verification: nine new face files, **19 tests pass, 0 fail**
+(3 + 3 + 3 + 1 + 1 + 1 + 3 + 1 + 3); the two existing face files
 (`face-code100` 9, `face-board-window` 4) still pass.
 
-## Closeout — 476 of 500 delivered, 24 open
+## Closeout — 478 of 500 delivered, 22 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -758,18 +764,18 @@ one is open for a named reason, not for want of trying.
 | 14 Rust agent/dashboard/intel/stack | 21 | 4 |
 | 15 Schemas and validators | 25 | 0 |
 | 16 Agent layer Node | 23 | 2 |
-| 17 Face tests | 16 | 9 |
+| 17 Face tests | 18 | 7 |
 | 18 Tooling scripts | 25 | 0 |
 | 19 Officina and Musica | 20 | 5 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **476** | **24** |
+| **Total** | **478** | **22** |
 
-### The 24, by the decision that unblocks them
+### The 22, by the decision that unblocks them
 
-1. **Missing face data (9).** Five held test files are not in the tree, so
-   there is nothing to re-check; three dock systems and the products category
-   definitions do not exist in the face. The extraction answered the other
-   sixteen.
+1. **Missing face data (7).** Five held test files are not in the tree, so
+   there is nothing to re-check, and the products category definitions do not
+   exist in the face. The extraction and the three new system windows answered
+   the other eighteen.
 2. **New APIs or a decision (4, Section 14).** CB2-329 needs a pure entry point
    that sees unparsed bytes; CB2-344/345 need a JSON entry point in the
    zero-dependency `queue-core`, or a Rust incident-record type to pin a key set
