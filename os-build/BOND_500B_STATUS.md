@@ -660,7 +660,7 @@ Per-task check (2026-11-02):
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
 
-## Closeout — 427 of 500 delivered, 73 open
+## Closeout — 428 of 500 delivered, 72 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -674,9 +674,9 @@ one is open for a named reason, not for want of trying.
 | 16 Agent layer Node | 20 | 5 |
 | 17 Face tests | 0 | 25 |
 | 18 Tooling scripts | 25 | 0 |
-| 19 Officina and Musica | 14 | 11 |
+| 19 Officina and Musica | 15 | 10 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **427** | **73** |
+| **Total** | **428** | **72** |
 
 ### The 73, by the decision that unblocks them
 
@@ -695,7 +695,7 @@ one is open for a named reason, not for want of trying.
    field on its contracts, and the layer curve (L4 4.6, L8 19.5, L16 12.8,
    L24 10.2) appears in no file. CB2-500 needs a program list the registry
    does not carry.
-5. **Python-only logic (11, Section 19).** Note math, variation and keeper
+5. **Python-only logic (10, Section 19).** Note math, variation and keeper
    windows live in `runtime/*.py`. A JS copy would be a second implementation
    to drift, so no test was written against a mirror.
 6. **Missing behaviour (5, Section 16).** No large-change alarm threshold, no
