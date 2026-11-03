@@ -1,0 +1,1 @@
+data.csv has a header and one row per shipment. Write summary.json with exactly {"rows": N, "total_units": N, "top_region": "<region with the highest total units>"}. Compute it with a script or command, not by eye, and verify before finishing.

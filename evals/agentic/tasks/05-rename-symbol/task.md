@@ -1,0 +1,1 @@
+Rename the symbol old_func to compute_total everywhere it is defined or used (lib.py and main.py). No occurrence of the old name may remain anywhere in the workspace, and python3 main.py must still print 42. Verify both, then finish.

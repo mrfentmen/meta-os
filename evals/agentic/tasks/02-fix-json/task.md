@@ -1,0 +1,1 @@
+config.json in your workspace is not valid JSON (it has a trailing comma). Fix it so it parses, keeping the values service=meta, port=18900, enabled=true. Prove it parses with python3 -m json.tool, then finish.

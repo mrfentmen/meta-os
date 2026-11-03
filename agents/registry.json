@@ -92,7 +92,7 @@
         "total": 3
       },
       "hosted": true,
-      "lane": "job board drain \u2014 one watchman pass per run",
+      "lane": "job board drain — one watchman pass per run",
       "name": "watch",
       "owner": "boss",
       "watch": [],
@@ -112,7 +112,7 @@
         "aegis/hosted.mjs"
       ],
       "hosted": true,
-      "lane": "Meta Aegis \u2014 local passes as a hosted loop; the OSV sweep stays a separate run",
+      "lane": "Meta Aegis — local passes as a hosted loop; the OSV sweep stays a separate run",
       "name": "aegis",
       "owner": "boss"
     },
@@ -131,7 +131,7 @@
         "nervus/hosted.mjs"
       ],
       "hosted": true,
-      "lane": "Meta Nervus \u2014 STUB contract run; no model is loaded",
+      "lane": "Meta Nervus — STUB contract run; no model is loaded",
       "name": "nervus",
       "owner": "boss"
     },
@@ -371,7 +371,7 @@
         "intake"
       ],
       "hosted": true,
-      "lane": "Hands-Free \u2014 order intake (text inbox to job files)",
+      "lane": "Hands-Free — order intake (text inbox to job files)",
       "name": "handsfree-intake",
       "owner": "system: handsfree"
     },
@@ -389,7 +389,7 @@
         "brief"
       ],
       "hosted": true,
-      "lane": "Hands-Free \u2014 speakable brief from finished results",
+      "lane": "Hands-Free — speakable brief from finished results",
       "name": "handsfree-brief",
       "owner": "system: handsfree"
     },
@@ -407,7 +407,7 @@
         "approval"
       ],
       "hosted": true,
-      "lane": "Hands-Free \u2014 approval inbox (one request, one answer)",
+      "lane": "Hands-Free — approval inbox (one request, one answer)",
       "name": "handsfree-approval",
       "owner": "system: handsfree"
     },
@@ -425,9 +425,31 @@
         "aegis/cycle.mjs"
       ],
       "hosted": true,
-      "lane": "Meta Aegis \u2014 unattended cycle: OSV sweep, KEV cross-check, append-only ledger",
+      "lane": "Meta Aegis — unattended cycle: OSV sweep, KEV cross-check, append-only ledger",
       "name": "aegis-cycle",
       "owner": "boss"
+    },
+    {
+      "budget": {
+        "maxActions": 14,
+        "maxCalls": 16,
+        "maxCostUsd": 0.1,
+        "maxWallMs": 300000
+      },
+      "capabilities": [
+        "code",
+        "files",
+        "verify",
+        "report"
+      ],
+      "command": [
+        "repo:node",
+        "agents/agent_loop.mjs"
+      ],
+      "hosted": true,
+      "lane": "Meta Coder — the model-driven agent: reads orders from brief.json, acts with real tools inside its run workspace, verifies, and files a receipt",
+      "name": "meta-coder",
+      "owner": "buffy"
     }
   ],
   "programs": [

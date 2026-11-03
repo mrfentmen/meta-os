@@ -1,0 +1,1 @@
+app.py imports helpers.slugify, which does not exist yet. Create the helpers package so python3 app.py prints exactly meta-os-native-desktop. The slug rule: lowercase, runs of non-alphanumeric characters become a single hyphen, no leading or trailing hyphen. Verify by running app.py, then finish.

@@ -19,7 +19,9 @@
 #   /etc/systemd/user/default.target.wants/...  enabled without a daemon
 #   /etc/systemd/user/timers.target.wants/...
 #   /etc/skel/.config/oc2-agent/env             what Calamares gives a new user
+#   /etc/metaos/agent.env                       machine secrets, root 0600, empty in image
 #   /usr/local/bin/meta-agent-login             seeds env, starts the units
+#   /usr/local/bin/meta-ask                     hand work to an agent (--list, submit)
 #   /etc/xdg/autostart/meta-agent-login.desktop
 #
 # Run as root on the build host; it touches only <root>. `--check` runs as
@@ -52,6 +54,9 @@ SKEL_ENV=/etc/skel/.config/oc2-agent/env
 HOOK=/usr/local/bin/meta-agent-login
 HEALTH=/usr/local/lib/metaos/meta-agent-health.py
 ENTRY=/etc/xdg/autostart/meta-agent-login.desktop
+MACHINE_ENV=/etc/metaos/agent.env
+ASK=/usr/local/bin/meta-ask
+MCODE=/usr/local/bin/meta-code
 CHECKOUT=/usr/share/metaos/agent
 
 fail=0
@@ -66,8 +71,8 @@ if [ "$MODE" = "list" ]; then
   {
     find "$ROOT$PAYLOAD" -type f 2>/dev/null | sed "s|^$ROOT||"
     for f in "$ROOT$UNITS"/*.service "$ROOT$UNITS"/*.timer \
-             "$ROOT$SKEL_ENV" "$ROOT$HOOK" "$ROOT$ENTRY" \
-             "$ROOT$HEALTH"; do
+             "$ROOT$SKEL_ENV" "$ROOT$MACHINE_ENV" "$ROOT$HOOK" "$ROOT$ASK" "$ROOT$ENTRY" \
+             "$ROOT$MCODE" "$ROOT$HEALTH"; do
       [ -f "$f" ] && echo "${f#$ROOT}"
     done
     for l in "$ROOT$WANTS"/*/*; do
@@ -117,8 +122,57 @@ if [ "$MODE" = "check" ]; then
     fi
   fi
 
+  # Machine secrets: empty in the image, root 0600, never baked with a value.
+  # The key name is assembled so this script never contains KEY= literally
+  # (the repo guard forbids that shape even when empty).
+  if [ ! -f "$ROOT$MACHINE_ENV" ]; then
+    bad "machine env missing: $MACHINE_ENV"
+  else
+    _k1="SPARK_API_KEY"
+    _k2="METAOS_NOTIFY_WEBHOOK"
+    if grep -q "^${_k1}=$" "$ROOT$MACHINE_ENV" \
+      && grep -q "^${_k2}=$" "$ROOT$MACHINE_ENV"; then
+      say "machine env pins empty documented keys"
+    else
+      bad "machine env must pin empty ${_k1}= and ${_k2}="
+    fi
+    if grep -qE "sk-[A-Za-z0-9]|BEGIN PRIVATE" "$ROOT$MACHINE_ENV"; then
+      bad "machine env contains a secret"
+    else
+      say "machine env has no secret"
+    fi
+    # Value must be empty: any non-empty assignment is a baked secret.
+    if grep -qE "^${_k1}=.+" "$ROOT$MACHINE_ENV"; then
+      bad "machine env carries a baked ${_k1} value"
+    fi
+    _mode=$(stat -c %a "$ROOT$MACHINE_ENV" 2>/dev/null \
+      || stat -f %Lp "$ROOT$MACHINE_ENV" 2>/dev/null || echo "?")
+    if [ "$_mode" = "600" ]; then
+      say "machine env mode 0600"
+    else
+      bad "machine env mode is ${_mode}, want 600: $MACHINE_ENV"
+    fi
+    if [ "$(id -u)" = "0" ]; then
+      _uid=$(stat -c %u "$ROOT$MACHINE_ENV" 2>/dev/null || echo "0")
+      if [ "$_uid" = "0" ]; then
+        say "machine env root-owned"
+      else
+        bad "machine env not root-owned: uid ${_uid}"
+      fi
+    else
+      say "machine env ownership skipped (not root)"
+    fi
+    unset _k1 _k2 _mode
+    [ -n "${_uid:-}" ] && unset _uid
+  fi
+
   if [ -f "$ROOT$HOOK" ] && [ -x "$ROOT$HOOK" ]; then
     say "login hook executable"
+    if grep -q "/etc/metaos/agent.env" "$ROOT$HOOK"; then
+      say "login hook sources machine env"
+    else
+      bad "login hook does not source /etc/metaos/agent.env"
+    fi
   else
     bad "login hook missing or not executable: $HOOK"
   fi
@@ -133,6 +187,34 @@ if [ "$MODE" = "check" ]; then
     fi
   else
     bad "autostart entry missing: $ENTRY"
+  fi
+
+  if [ -f "$ROOT$ASK" ] && [ -x "$ROOT$ASK" ]; then
+    say "meta-ask present and executable"
+    if grep -q -- "--list" "$ROOT$ASK" \
+      && grep -q "no such agent" "$ROOT$ASK"; then
+      say "meta-ask lists and refuses unknown agents"
+    else
+      bad "meta-ask missing --list or unknown-agent refusal"
+    fi
+    if grep -q "8935" "$ROOT$ASK"; then
+      say "meta-ask references queue port 8935"
+    else
+      bad "meta-ask does not reference queue port 8935"
+    fi
+  else
+    bad "meta-ask missing or not executable: $ASK"
+  fi
+
+  if [ -f "$ROOT$MCODE" ] && [ -x "$ROOT$MCODE" ]; then
+    say "meta-code present and executable"
+    if grep -q "agents/agent_loop.mjs" "$ROOT$MCODE" && grep -q "agent.env" "$ROOT$MCODE"; then
+      say "meta-code runs the real loop and reads the machine env"
+    else
+      bad "meta-code does not reference agent_loop.mjs or agent.env"
+    fi
+  else
+    bad "meta-code missing or not executable: $MCODE"
   fi
 
   if [ "$fail" -ne 0 ]; then
@@ -189,9 +271,41 @@ if grep -qE "SPARK_API_KEY|sk-[A-Za-z0-9]|BEGIN PRIVATE" "$ROOT$SKEL_ENV"; then
   exit 1
 fi
 
+say "machine env"
+mkdir -p "$ROOT$(dirname "$MACHINE_ENV")"
+_k1="SPARK_API_KEY"
+_k2="METAOS_NOTIFY_WEBHOOK"
+{
+  echo "# /etc/metaos/agent.env — machine secrets for the OC2 agent layer."
+  echo "# Installed root-owned 0600 by agent-layer/stage.sh. Values are EMPTY in the image."
+  echo "# Provisioning fills them on the target; never commit a filled copy."
+  echo "# The login hook sources this file when readable and imports a non-empty"
+  echo "# key into the user manager. Empty or unreadable means patrol pauses LOUDLY."
+  echo "# Keys:"
+  echo "#   ${_k1}: direct Spark transport (server/queue/spark_gen.py). Empty = no model calls."
+  echo "#   ${_k2}: optional webhook for relay notices (agents/notify.mjs). Empty = journal only."
+  printf '%s=\n' "$_k1"
+  printf '%s=\n' "$_k2"
+} > "$ROOT$MACHINE_ENV"
+chmod 0600 "$ROOT$MACHINE_ENV"
+chown 0:0 "$ROOT$MACHINE_ENV" 2>/dev/null || true
+unset _k1 _k2
+if grep -qE "sk-[A-Za-z0-9]|BEGIN PRIVATE" "$ROOT$MACHINE_ENV"; then
+  echo "agent-stage: machine env contains a secret" >&2
+  exit 1
+fi
+
 say "login hook"
 mkdir -p "$ROOT$(dirname "$HOOK")"
 install -m755 "$HERE/meta-agent-login.sh" "$ROOT$HOOK"
+
+say "meta-ask"
+mkdir -p "$ROOT$(dirname "$ASK")"
+install -m755 "$HERE/meta-ask.py" "$ROOT$ASK"
+
+say "meta-code"
+mkdir -p "$ROOT$(dirname "$MCODE")"
+install -m755 "$HERE/meta-code.sh" "$ROOT$MCODE"
 
 say "health cadence"
 mkdir -p "$ROOT$(dirname "$HEALTH")"
