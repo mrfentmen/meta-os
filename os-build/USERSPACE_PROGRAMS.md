@@ -1,5 +1,11 @@
 # Userspace programs — spec first, one program per proof
 
+**Build pipeline (fixed 2026-11-02):** programs are built with
+`os-build/userspace/build.sh`, which gives each one its own link base from
+`bases.txt` and verifies the ELF headers. Before this, every bin linked at the
+same address and the kernel refused 3 of 4 with `address in use`. Proof:
+`os-build/logs/K6-bases-fixed.txt` and `os-build/userspace/BASES.md`.
+
 Lane rule: a program's expected boot-log lines are written **before** the program, and the
 program is done when the log matches the spec. Sources live in
 `os-build/userspace/user/src/bin/`; the kernel embeds them through `kernel/build.rs`, whose
@@ -13,7 +19,7 @@ wired** until that list changes — the wiring is a proposal, not an edit.
 | `hello` | ring 3 runs at all | `HELLO FROM USERSPACE`, `user exit code 0` | PROVEN (`K6-boot.txt`) |
 | `sleeper` | sleep/wake from userspace | `sleeper: before sleep`, `sleeper: pid <n>`, `sleeper: after sleep` | PROVEN (`K6-boot.txt`) |
 | `crasher` | fault isolation | `crasher: about to read zero`, `INT user page-fault addr 0x0 err 0x4: task killed` | PROVEN (`K6-boot.txt`) |
-| `quitter` | exit status is reported truthfully | `quitter: exiting 7`, `user exit code 7` | **WRITTEN, COMPILES**; needs one line in `BINS` to be wired |
+| `quitter` | exit status is reported truthfully | `quitter: exiting 7`, `user exit code 7` | **BUILT at 0x6400…, base verified**; needs one line in `BINS` to be wired |
 | `readkey` | syscall 5 returns real scancodes | `readkey: polling syscall 5`, `readkey got <n>`, `readkey: empty` | **WRITTEN, COMPILES**; a diagnostic probe, not for `BINS` |
 | `writer` | the one-page write cap is enforced | `writer: alive`, `writer: oversize returned 0`, `writer: cap returned 19` | **WRITTEN, COMPILES**; probe, not for `BINS` |
 | `badcall` | reserved numbers 6-15 refuse, not just 99 | `user bad syscall 6 refused` / `15` / `99`, then `badcall: 6 returned 18446744073709551615` and `badcall: survived all three` | **WRITTEN, COMPILES**; wiring proposal |

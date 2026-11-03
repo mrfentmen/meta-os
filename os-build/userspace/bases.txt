@@ -1,0 +1,24 @@
+# Per-program link bases for the kernel's static userspace images.
+#
+# Why a file: the kernel maps every LOAD at its linked address and refuses a
+# page already mapped by another program. If two programs share a base, the
+# second one dies with `address in use` — that is what the RK-007 boot log
+# shows for sleeper, crasher and readkey. One base per program is the rule.
+#
+# Spacing: 0x0100_0000_0000 (256 GiB) per slot. A program here is a few
+# hundred KiB, so there is no chance of touching the next slot, and the whole
+# range sits far above the kernel's low mappings and the physmap.
+#
+# The four bases below 0x6400 are the historic ones referenced by the logs and
+# by kernel/src/user.rs; do not renumber them or old boot logs stop matching.
+#
+# Format: <bin-name> <base-hex>
+hello       0x0000600000000000
+sleeper     0x0000610000000000
+crasher     0x0000620000000000
+readkey     0x0000630000000000
+# Written and compiling, awaiting Rowan's BINS list (wiring proposal):
+quitter     0x0000640000000000
+badcall     0x0000650000000000
+writer      0x0000660000000000
+hog         0x0000670000000000

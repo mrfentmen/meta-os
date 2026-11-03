@@ -21,13 +21,10 @@ checkline() { # checkline <name> <fixed-string>
 }
 
 echo "== userspace =="
-cd os-build/userspace/user
-for pair in "hello:0x600000000000" "sleeper:0x610000000000" "crasher:0x620000000000" "readkey:0x630000000000"; do
-  b=${pair%%:*}; base=${pair##*:}
-  sed "s/= BASE/= $base/" link-base.ld > link.ld
-  touch src/bin/$b.rs
-  RUSTFLAGS="-C link-arg=-T$PWD/link.ld" cargo build -q --target x86_64-unknown-none --bin $b
-done
+# One link base per program, verified against the ELF headers. This replaced
+# the old sed-into-link-base.ld loop, which no other build used and which left
+# plain cargo builds linking all four programs at the same address.
+PROFILE=debug "$ROOT/os-build/userspace/build.sh" hello sleeper crasher readkey
 cd "$ROOT"
 
 echo "== kernel =="
