@@ -18,7 +18,7 @@ found for that promise).
 | 5 | baton pass, continuation never restart | `agents/baton.mjs`, `agents/continue.mjs` | CODE-INSPECTED |
 | 6 | spawn and kill are real | `agents/runtime.mjs` header: real spawn/kill, STOP file, ledger | CODE-INSPECTED, **UNPROVEN** — no spawn/kill drill log was read here |
 | 7 | bus-shaped messaging, named rooms | `agents/room1.mjs`, `agents/bridge.mjs` | PARTIAL — files exist; only `room1.mjs` was skimmed |
-| 8 | per-agent memory with a size cap, append-only | none found. `lessons.mjs` and `gym.mjs` are learning loops, not agent memory | **UNIMPLEMENTED** |
+| 8 | per-agent memory with a size cap, append-only | `agents/memory.mjs`: allowlisted records only, cap checked before the write, ledger appends with no rewrite call | CODE-INSPECTED — 11 tests, no drill |
 | 9 | budgets: actions, calls, spend, wall clock; no self-raise | `preflightBudget` in `runtime.mjs`, `agents/clock.mjs`, `budget` fields in the registry | CODE-INSPECTED |
 | 10 | watch targets, wake only on change | `runtime.mjs` watch path, `watchman.mjs` | CODE-INSPECTED |
 | 11 | append-only JSONL receipt per run | `Ledger` in `runtime.mjs`, `ledger.jsonl` per run | CODE-INSPECTED |
@@ -29,9 +29,9 @@ found for that promise).
 ## What this means for 1.0
 
 The layer is further along than "design only": spawn, kill, budgets, baton,
-receipts and the watchman all have real code. One promise has no code at all —
-per-agent memory caps. The sweep has a command (`--once`) but nothing
-schedules it, and the image has no such unit.
+receipts, the watchman and now memory caps all have real code. The sweep has a
+command (`--once`) but nothing schedules it, and the image has no such unit —
+so no agent wakes on a clock yet.
 
 The crew entries being `draft` matters: the registry validates and lists them,
 but a draft entry runs `true`, so a spawn of "rowan" succeeds and does nothing.
