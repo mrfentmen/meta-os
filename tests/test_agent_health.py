@@ -170,6 +170,41 @@ class Health(unittest.TestCase):
         shutil.copytree(self.root, root, symlinks=True)
         return root
 
+class WatchmanRestart(unittest.TestCase):
+    """A stale beat is a failed row; the restart only runs when asked."""
+
+    def setUp(self):
+        self.home = Path(tempfile.mkdtemp(prefix="home-"))
+        self.beat = self.home / ".local/state/oc2-agent/watchman.heartbeat.json"
+        self.beat.parent.mkdir(parents=True)
+
+    def run_probe(self, *extra, env=None):
+        cmd = [sys.executable, str(TOOL), "--home", str(self.home),
+               "--port", str(free_port()), "--json", "--no-write"]
+        cmd.extend(extra)
+        return subprocess.run(cmd, capture_output=True, text=True, timeout=60,
+                              env={**os.environ, **(env or {})})
+
+    def test_a_stale_beat_restarts_the_watchman_when_a_command_is_set(self):
+        self.beat.write_text(json.dumps({"ts": int((time.time() - 600) * 1000)}))
+        marker = self.home / "restarted"
+        result = self.run_probe("--stale-after", "60",
+                                env={"META_AGENT_WATCHMAN_RESTART": "printf wm > %s" % marker})
+        rows = {r["name"]: r for r in json.loads(result.stdout)["rows"]}
+        self.assertEqual(rows["watchman"]["state"], "fail")
+        self.assertEqual(rows["restart-watchman"]["state"], "pass")
+        self.assertEqual(marker.read_text(), "wm")
+
+    def test_a_healthy_beat_does_not_restart_anything(self):
+        self.beat.write_text(json.dumps({"ts": int(time.time() * 1000)}))
+        marker = self.home / "not-restarted"
+        result = self.run_probe(env={"META_AGENT_WATCHMAN_RESTART": "printf wm > %s" % marker})
+        rows = {r["name"]: r for r in json.loads(result.stdout)["rows"]}
+        self.assertEqual(rows["watchman"]["state"], "pass")
+        self.assertNotIn("restart-watchman", rows)
+        self.assertFalse(marker.exists())
+
+
 class LoginHook(unittest.TestCase):
     """The autostart hook must start the timer, or the cadence never runs."""
 

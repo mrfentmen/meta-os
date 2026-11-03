@@ -91,3 +91,17 @@ through this module, because it is Python and a second notifier is a second
 set of rules. `METAOS_NOTIFY_WEBHOOK` is not in `.env.example` yet — it belongs
 to whoever owns that file.
 
+## Submitting work
+
+    node agents/submit.mjs --root ~/.local/state/oc2-agent \
+      --agent aegis --orders "sweep the tree" [--id my-job]
+
+It refuses an unknown agent, a draft agent, empty orders, an unsafe id and an
+id already on the board. The write is a rename, so the watchman never sees half
+a job. `--max-continues N` sets the continuation bound for that job.
+
+A stale watchman heartbeat is a failed health row. `oc2-health.service` ships
+`META_AGENT_WATCHMAN_RESTART=systemctl --user restart oc2-watchman.service`, so
+a hung relay is restarted once and the attempt is recorded as
+`restart-watchman`.
+

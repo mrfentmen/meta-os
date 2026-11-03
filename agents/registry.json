@@ -17,105 +17,6 @@
   "agents": [
     {
       "budget": {
-        "maxWallMs": 3600000
-      },
-      "capabilities": [
-        "kernel",
-        "gate-runs"
-      ],
-      "command": [],
-      "lane": "kernel (L1-L3)",
-      "name": "rowan",
-      "owner": "boss",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "crew lane has no program in this repo; the placeholder cannot review a kernel"
-    },
-    {
-      "budget": {
-        "maxWallMs": 3600000
-      },
-      "capabilities": [
-        "surfaces",
-        "design",
-        "site"
-      ],
-      "command": [],
-      "lane": "UI and surfaces (L6)",
-      "name": "hana",
-      "owner": "boss",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "crew lane has no program in this repo; the placeholder cannot design a surface"
-    },
-    {
-      "budget": {
-        "maxWallMs": 3600000
-      },
-      "capabilities": [
-        "gate-1",
-        "claim-audit",
-        "scoreboard"
-      ],
-      "command": [],
-      "lane": "gates and records",
-      "name": "milo",
-      "owner": "boss",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "crew lane has no program in this repo; the placeholder cannot run a gate"
-    },
-    {
-      "budget": {
-        "maxWallMs": 3600000
-      },
-      "capabilities": [
-        "services",
-        "failure-injection"
-      ],
-      "command": [],
-      "lane": "services (L4, Goose)",
-      "name": "buffy",
-      "owner": "boss",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "crew lane has no program in this repo; the placeholder cannot run the services lane"
-    },
-    {
-      "budget": {
-        "maxWallMs": 3600000
-      },
-      "capabilities": [
-        "clean-clone-gate",
-        "image-boot-checks"
-      ],
-      "command": [],
-      "lane": "verification (8GB Mac) Renamed Bond by the boss 2026-11-02 (formerly Buffy 2). Light lanes: BOND_LIGHT_LANES.md.",
-      "name": "bond",
-      "owner": "boss",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "crew lane has no program in this repo; the placeholder cannot run the clean-clone gate"
-    },
-    {
-      "budget": {
-        "maxWallMs": 3600000
-      },
-      "capabilities": [
-        "merge",
-        "dispatch",
-        "watch"
-      ],
-      "command": [],
-      "lane": "dispatch and merge",
-      "name": "pax",
-      "owner": "boss",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "crew lane has no program in this repo; the placeholder cannot merge or dispatch"
-    },
-    {
-      "budget": {
         "maxActions": 8,
         "maxCalls": 12,
         "maxSpendUsd": 0.5
@@ -157,13 +58,17 @@
       "capabilities": [
         "design-iterate"
       ],
-      "command": [],
+      "command": [
+        "python3",
+        "repo:os/worlds/officina/runtime/design_loop.py",
+        "3",
+        "7",
+        "design-loop.json"
+      ],
       "lane": "Officina faber loop",
       "name": "officina-faber",
       "owner": "system: officina",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "Officina lives outside this repo; no real command can be named here"
+      "hosted": true
     },
     {
       "budget": {

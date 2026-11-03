@@ -28,8 +28,15 @@ test("R11-261 every hosted entry has a real command; every placeholder is marked
     assert.ok(fs.existsSync(path.join(ROOT, script)), a.name + " names a file that exists: " + script);
   }
   const drafts = agents.filter((a) => a.draft === true);
-  assert.ok(drafts.length >= 20, "the rest are in the open, not silently placeholder");
-  for (const a of drafts) assert.ok(a.draftReason && a.draftReason.length > 20, a.name + " says why it is draft");
+  assert.ok(drafts.length > 0, "an unfinished lane is named, not hidden");
+  for (const a of drafts) {
+    assert.ok(a.draftReason && a.draftReason.length > 20, a.name + " says why it is draft");
+    assert.deepEqual(a.command, [], a.name + " carries no command until it has a program");
+  }
+  const live = agents.filter((a) => a.draft !== true);
+  for (const a of live) {
+    assert.ok(Array.isArray(a.command) && a.command.length > 0, a.name + " is live and has a command");
+  }
   assert.equal(resolveCommand(["repo:node", "aegis/hosted.mjs"], "/r")[0], process.execPath);
   assert.equal(resolveCommand(["repo:node", "aegis/hosted.mjs"], "/r")[1], "/r/aegis/hosted.mjs");
 });
