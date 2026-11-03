@@ -1,13 +1,13 @@
 # mathematics-researcher — lab-local job definition
 
-Status: **SPEC (job definition).** The agent has not run. No lab
+Status: **HOSTED (bounded check duty via hosted.py).** The full research job has not run. No lab
 experiment record has been filed. The Delaney stage 1 gate has not
 been attempted.
 
 - **nick:** `mathematics-researcher`
 - **registry name:** `mathematics-researcher`
   (`agents/registry.json`, owner `system: science-lab`, lane
-  `Science Lab (research)`, command `["true"]` — stub, runs nothing)
+  `Science Lab (research)`, command `["python3", "repo:os/worlds/science-lab/hosted.py", "--agent", "mathematics-researcher"]` — bounded check duty over existing records only)
 - **role (verbatim from `os/worlds/science-lab/pack.json`):**
 
   > Designs symbolic and numerical checks (SymPy, SciPy) for hypotheses in mathematical form and states what result would disprove each one.
