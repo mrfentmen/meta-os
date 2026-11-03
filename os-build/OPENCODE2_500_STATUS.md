@@ -260,3 +260,11 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - `agent-layer/make-seed.sh`: rebuilds the NoCloud CIDATA seed ISO (macOS hdiutil + Linux genisoimage/xorrisofs paths, instance-id param, keypair bootstrap). Tested on Mac: ISO builds, CIDATA label mounts.
 - `agent-layer/verify-dropin.sh`: OC3-side check (sha vs MANIFEST, enabled/active state, no-key-material). Tested with fixtures: clean tree exit 0, tampered file exit 1, systemd parts explicitly SKIP without a user manager.
 - Tests: 12 agent-layer tests green (incl. 2 script tests + manifest freshness). No VM booted, no builds, no model calls for any of this.
+
+## OC2 S6 — 2026-11-03 — OC1-sole-boot fix + T1 drop-in pack DONE (no VM)
+- DOC FIX (boss order): `os-build/OC123_DEMO_4H.md` — ONLY OC1 boots any VM/QEMU. Iron rules + OC1 section (sole furnace) + OC3 (assembly, no boot) + handoffs OC2→OC1 / OC3→OC1 + timeline + fallback decider OC1 + kill-switch. OC2/OC3 ZERO QEMU.
+- T1 BUILT: `agent-layer/desktop-entries/` — mousepad/ristretto/atril active, evince degraded-off (NoDisplay=true, pending Hana KEEP ack), thunar (Exec mirrors Bond meta-files), meta-agent-status byte-copy of Bond `iso/apps/desktop/`, drop-in `mimeapps.list` (PDF→atril, browser unmapped), README with provenance. Never edited Hana/Bond files.
+- MANIFEST: extended to 15 paths (OC1 copies), regenerated, fresh-test green.
+- TESTS: 20/20 green (`tests/agent-layer/` — 13 unit incl. 3 revived dead tests + 7 desktop-entries). Wallpaper --check current (3 PNGs). `check_iso_config.py` 101 passed.
+- FENCES: kernel/src, server/queue, agents/registry untouched (branch adds only). Secrets 0 hits. No >1MB branch-added files.
+- PARKED (need OC1 furnace): KF-02 battery, dashboard-forwarded, GUI spike, agent re-proof. NEXT EVENT: OC1 posts theme pack + boot evidence → OC2 cross-checks within hour.

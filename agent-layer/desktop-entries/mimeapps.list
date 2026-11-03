@@ -1,0 +1,11 @@
+[Default Applications]
+# OC2 drop-in proposal (agent-layer/desktop-entries/mimeapps.list).
+# Canonical is Hana's os-build/metaos1-base/defaults/mimeapps.list (still maps
+# application/pdf=evince.desktop). This drop-in maps PDF to atril because the
+# Xubuntu 24.04.5 base ISO ships atril where KEEP lists evince. If Hana acks
+# evince present, OC1 uses evince.desktop (shipped NoDisplay=true here) instead.
+# Browser association is Bond's lane — deliberately unmapped here.
+text/plain=mousepad.desktop
+image/png=ristretto.desktop
+image/jpeg=ristretto.desktop
+application/pdf=atril.desktop

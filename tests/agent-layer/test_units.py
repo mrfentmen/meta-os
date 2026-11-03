@@ -107,10 +107,6 @@ class TestUnits(unittest.TestCase):
         self.assertIn("OC2_CHECKOUT=", src)
         self.assertNotIn("SPARK_API_KEY=", src)
 
-
-if __name__ == "__main__":
-    unittest.main()
-
     def test_manifest_fresh(self):
         import hashlib
         import io
@@ -171,3 +167,7 @@ if __name__ == "__main__":
                             capture_output=True, text=True, timeout=60,
                             env=env)
         self.assertNotEqual(r2.returncode, 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

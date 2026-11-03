@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Ristretto
+GenericName=Image Viewer
+Comment=View PNG and JPEG images (KEEP: ristretto per os-build/metaos1-base/packages.txt)
+Exec=ristretto %U
+TryExec=ristretto
+Icon=accessories-image-viewer
+Terminal=false
+Categories=Graphics;Viewer;GTK;
+StartupNotify=true
