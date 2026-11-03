@@ -607,7 +607,9 @@ elif tokens:
     else:
         bad("theme: gtk.css has %d hex value(s) for %d token(s)" % (len(hexes), len(tokens)))
 
-for tool, label in (("make_wallpaper.py", "wallpaper"), ("tokens_to_gtk.py", "gtk.css")):
+for tool, label in (("make_wallpaper.py", "wallpaper"),
+                    ("tokens_to_gtk.py", "gtk.css"),
+                    ("tokens_to_grub.py", "grub theme")):
     run = subprocess.run([sys.executable, str(ISO / "tools" / tool), "--check"],
                          capture_output=True, text=True)
     if run.returncode == 0:
@@ -689,6 +691,55 @@ elif tokens:
         bad("lightdm: greeter.css has no definition for %s" % ", ".join(sorted(absent)))
     else:
         ok("lightdm: every frozen token reaches the login screen")
+
+# --- boot menu ---------------------------------------------------------
+GRUB_DIR = ISO / "boot" / "grub" / "themes" / "metaos"
+GRUB_TXT = GRUB_DIR / "theme.txt"
+GRUB_DROPIN = ISO / "boot" / "grub" / "metaos-theme.cfg"
+GRUB_TARGET = "/boot/grub/themes/metaos/theme.txt"
+
+if not GRUB_TXT.is_file():
+    bad("grub: theme.txt is missing (run iso/tools/tokens_to_grub.py)")
+else:
+    body = read(GRUB_TXT)
+    image = re.search(r'desktop-image:\s*"([^"]+)"', body)
+    if not image:
+        bad("grub: theme.txt names no desktop-image")
+    elif not (GRUB_DIR / image.group(1)).is_file():
+        bad("grub: theme image %r is not next to theme.txt" % image.group(1))
+    else:
+        ok("grub: the theme image ships beside theme.txt (%s)" % image.group(1))
+
+    needed = ("left", "top", "width", "height", "item_color", "selected_item_color")
+    if "+ boot_menu" not in body:
+        bad("grub: theme.txt has no boot_menu block")
+    else:
+        absent = [key for key in needed if not re.search(r"\b%s\s*=" % key, body)]
+        if absent:
+            bad("grub: boot_menu is missing %s" % ", ".join(absent))
+        else:
+            ok("grub: the boot menu block has geometry and both colours")
+
+    if tokens:
+        values = {value.upper() for value in tokens.values()}
+        stray = sorted({hit.upper() for hit in re.findall(r"#[0-9A-Fa-f]{6}\b", body)} - values)
+        if stray:
+            bad("grub: colours outside the contract: %s" % ", ".join(stray))
+        else:
+            ok("grub: every colour in the boot theme is a contract colour")
+
+if not GRUB_DROPIN.is_file():
+    bad("grub: metaos-theme.cfg is missing")
+else:
+    dropin = read(GRUB_DROPIN)
+    if re.search(r'^GRUB_THEME="?%s"?\s*$' % re.escape(GRUB_TARGET), dropin, re.M):
+        ok("grub: the drop-in points at the shipped theme")
+    else:
+        bad("grub: the drop-in does not set GRUB_THEME to %s" % GRUB_TARGET)
+    if re.search(r"^GRUB_CMDLINE_LINUX(_DEFAULT)?=", dropin, re.M):
+        bad("grub: the drop-in rewrites the kernel command line")
+    else:
+        ok("grub: the drop-in leaves the kernel command line alone")
 
 # --- no stub markers ---------------------------------------------------
 bad_marks = []

@@ -161,5 +161,32 @@ class CheckerRuleTest(unittest.TestCase):
         self.assertIn("greeter.css has no definition for blue", out.stdout)
 
 
+    def test_boot_theme_image_that_is_not_there_is_named(self):
+        path = self.root / "boot" / "grub" / "themes" / "metaos" / "theme.txt"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "meta-grub.png", "gone.png"), encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("is not next to theme.txt", out.stdout)
+
+    def test_boot_theme_colour_outside_the_contract_is_named(self):
+        path = self.root / "boot" / "grub" / "themes" / "metaos" / "theme.txt"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            'selected_item_color = "', 'selected_item_color = #ABCDEF  # "'),
+            encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("colours outside the contract", out.stdout)
+
+    def test_dropin_setting_a_kernel_command_line_is_named(self):
+        path = self.root / "boot" / "grub" / "metaos-theme.cfg"
+        path.write_text(path.read_text(encoding="utf-8")
+                        + 'GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"\n',
+                        encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("rewrites the kernel command line", out.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

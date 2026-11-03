@@ -44,6 +44,29 @@ splash, the login screen and the desktop cannot disagree about a colour.
 picks up a `theme-name` that Xubuntu did not ship is exactly what a login run
 on the 32GB machine settles.
 
+## Boot menu
+
+GRUB draws its own screen before any of this exists, so it gets a third
+variant of the ring and a theme file:
+
+| File | What it is |
+|---|---|
+| `boot/grub/themes/metaos/meta-grub.png` | the ring small and high, field at about a third brightness, lower two thirds left quiet for the menu |
+| `boot/grub/themes/metaos/theme.txt` | generated: image name, title, and one `+ boot_menu` block with geometry and two contract colours |
+| `boot/grub/metaos-theme.cfg` | drop-in for `/etc/default/grub.d/`, setting `GRUB_THEME` and showing the menu |
+
+No font is named in `theme.txt`. GRUB resolves fonts by the names in loaded
+`.pf2` files; a name with no file behind it would render nothing, and
+`grub-mkfont` is not run here. GRUB's own font applies.
+
+The drop-in deliberately sets no `GRUB_CMDLINE_LINUX` or
+`GRUB_CMDLINE_LINUX_DEFAULT`: the kernel command line belongs to the base
+image or to whoever runs the install. The checker fails if this file ever
+grows one.
+
+**Status: CODE-INSPECTED.** No GRUB has read this theme, and nothing here has
+run `update-grub`.
+
 ## Regenerate
 
 ```

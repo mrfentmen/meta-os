@@ -119,6 +119,12 @@ put "$ISO/theme/wallpaper/greeter-wallpaper.png" "/usr/share/metaos/theme/greete
 put "$ISO/theme/lightdm/themes/MetaOS/index.theme" "/usr/share/themes/MetaOS/index.theme"
 put "$ISO/theme/lightdm/themes/MetaOS/gtk-3.0/gtk.css" "/usr/share/themes/MetaOS/gtk-3.0/gtk.css"
 
+# Boot menu: the theme lives where GRUB looks, and a drop-in sets it without
+# touching the base image's own /etc/default/grub.
+put "$ISO/boot/grub/themes/metaos/theme.txt" "/boot/grub/themes/metaos/theme.txt"
+put "$ISO/boot/grub/themes/metaos/meta-grub.png" "/boot/grub/themes/metaos/meta-grub.png"
+put "$ISO/boot/grub/metaos-theme.cfg" "/etc/default/grub.d/metaos-theme.cfg"
+
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"
 else

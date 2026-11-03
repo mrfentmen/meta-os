@@ -21,6 +21,7 @@ ISO = Path(__file__).resolve().parents[1]
 TOKENS = ISO / "contracts" / "tokens.json"
 OUT = ISO / "theme" / "wallpaper" / "meta-wallpaper.png"
 GREETER = ISO / "theme" / "wallpaper" / "greeter-wallpaper.png"
+GRUB = ISO / "boot" / "grub" / "themes" / "metaos" / "meta-grub.png"
 
 W, H = 1920, 1080
 BOTTOM = (3, 5, 10)
@@ -48,10 +49,10 @@ def png(rows, width, height):
             + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
 
 
-def build(tokens, greeter=False):
+def build(tokens, variant="desktop"):
     top = rgb(tokens["black"])
     ring = rgb(tokens["blue"])
-    if greeter:
+    if variant == "greeter":
         # Dimmer field and a smaller ring, so the user name, the password box
         # and the session buttons sit on something calm.
         top = tuple(int(c * 0.55) for c in top)
@@ -60,6 +61,14 @@ def build(tokens, greeter=False):
         thickness = 8.0
         glow = 54.0
         floor = (2, 3, 6)
+    elif variant == "grub":
+        # The menu is drawn over the lower two thirds; keep that area quiet.
+        top = tuple(int(c * 0.35) for c in top)
+        cx, cy = W / 2.0, H * 0.30
+        radius = H * 0.18
+        thickness = 6.0
+        glow = 40.0
+        floor = (1, 2, 4)
     else:
         cx, cy = W / 2.0, H * 0.46
         radius = H * 0.30
@@ -88,7 +97,9 @@ def build(tokens, greeter=False):
 
 def main(argv):
     tokens = json.loads(TOKENS.read_text(encoding="utf-8"))
-    targets = ((OUT, build(tokens)), (GREETER, build(tokens, greeter=True)))
+    targets = ((OUT, build(tokens)),
+               (GREETER, build(tokens, variant="greeter")),
+               (GRUB, build(tokens, variant="grub")))
 
     stale = 0
     for path, image in targets:
