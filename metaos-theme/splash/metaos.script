@@ -1,0 +1,117 @@
+# MetaOS plymouth boot splash (script plugin).
+# Palette (frozen studio tokens): ink #070B16, blue #1877F2, paper #EDF5FF.
+# Assets live in ImageDir (/usr/share/plymouth/themes/metaos):
+#   background.png  1920x1080 splash backdrop (downscaled meta-rays wallpaper)
+#   meta-m.png      512px original M mark (white stems + blue chevron)
+#   progress.png    560x28 Meta-blue progress bar
+
+Window.SetBackgroundTopColor (0.027, 0.043, 0.086);
+Window.SetBackgroundBottomColor (0.027, 0.043, 0.086);
+
+screen.x = Window.GetX ();
+screen.y = Window.GetY ();
+screen.w = Window.GetWidth ();
+screen.h = Window.GetHeight ();
+
+# --- backdrop: wallpaper scaled to full screen ---
+bg.image = Image ("background.png");
+bg.image = bg.image.Scale (screen.w, screen.h);
+bg.sprite = Sprite (bg.image);
+bg.sprite.SetPosition (screen.x, screen.y, -10);
+
+# --- centered M mark (capped at 1/3 of screen, never upscaled) ---
+logo.image = Image ("meta-m.png");
+logo.w = logo.image.GetWidth ();
+logo.h = logo.image.GetHeight ();
+logo.scale = Math.Min (screen.w / 3 / logo.w, screen.h / 3 / logo.h);
+logo.scale = Math.Min (logo.scale, 1);
+logo.image = logo.image.Scale (logo.w * logo.scale, logo.h * logo.scale);
+logo.sprite = Sprite (logo.image);
+logo.sprite.SetPosition (screen.x + (screen.w - logo.image.GetWidth ()) / 2,
+                         screen.y + (screen.h - logo.image.GetHeight ()) / 2 - 60, 0);
+
+# --- progress bar under the mark ---
+bar.image = Image ("progress.png");
+bar.sprite = Sprite ();
+bar.x = screen.x + (screen.w - bar.image.GetWidth ()) / 2;
+bar.y = screen.y + (screen.h + logo.image.GetHeight ()) / 2 - 20;
+bar.sprite.SetPosition (bar.x, bar.y, 1);
+bar.sprite.SetOpacity (0);
+
+# --- password / message overlays share one centered text sprite ---
+prompt.sprite = Sprite ();
+prompt.sprite.SetOpacity (0);
+bullet.sprites = NULL;
+
+pulse = 0;
+
+fun boot_progress (duration, progress) {
+  if (progress > 0) {
+    bar.sprite.SetOpacity (1);
+    w = Math.Int (bar.image.GetWidth () * progress);
+    if (w > 0) {
+      clipped = bar.image.Crop (0, 0, w, bar.image.GetHeight ());
+      bar.sprite.SetImage (clipped);
+    }
+  }
+}
+
+Plymouth.SetBootProgressFunction (boot_progress);
+
+fun on_refresh () {
+  pulse = pulse + 1;
+  logo.sprite.SetOpacity (0.88 + 0.12 * Math.Sin (pulse / 12));
+}
+
+Plymouth.SetRefreshFunction (on_refresh);
+
+fun password_prompt (prompt, bullets) {
+  bar.sprite.SetOpacity (0);
+  prompt.sprite.SetOpacity (0);
+  bullet.sprites = NULL;
+  dialog = Image.Text (prompt, 0.93, 0.96, 1.0);
+  prompt.sprite.SetImage (dialog);
+  prompt.sprite.SetPosition (screen.x + (screen.w - dialog.GetWidth ()) / 2,
+                             bar.y - dialog.GetHeight () - 24, 2);
+  prompt.sprite.SetOpacity (1);
+  if (bullets > 0) {
+    dot = Image.Text ("*", 0.93, 0.96, 1.0);
+    start = screen.x + screen.w / 2 - bullets * dot.GetWidth () / 2;
+    for (i = 0; i < bullets; i++) {
+      bullet.sprites[i] = Sprite (dot);
+      bullet.sprites[i].SetPosition (start + i * dot.GetWidth (), bar.y, 3);
+    }
+  }
+}
+
+Plymouth.SetDisplayPasswordFunction (password_prompt);
+
+fun normal_state () {
+  prompt.sprite.SetOpacity (0);
+  bullet.sprites = NULL;
+  bar.sprite.SetOpacity (0);
+}
+
+Plymouth.SetDisplayNormalFunction (normal_state);
+
+fun show_message (msg) {
+  text = Image.Text (msg, 0.93, 0.96, 1.0);
+  prompt.sprite.SetImage (text);
+  prompt.sprite.SetPosition (screen.x + (screen.w - text.GetWidth ()) / 2,
+                             screen.y + screen.h - text.GetHeight () - 60, 2);
+  prompt.sprite.SetOpacity (1);
+}
+
+Plymouth.SetMessageFunction (show_message);
+
+fun hide_message (msg) {
+  prompt.sprite.SetOpacity (0);
+}
+
+Plymouth.SetHideMessageFunction (hide_message);
+
+fun on_quit () {
+  logo.sprite.SetOpacity (1);
+}
+
+Plymouth.SetQuitFunction (on_quit);
