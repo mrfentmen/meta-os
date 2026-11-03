@@ -92,22 +92,29 @@ def check_watchman(path, stale_after):
     return row("watchman", "pass", "heartbeat %.0fs old" % age)
 
 
-def maybe_restart(rows, timeout=60):
-    command = os.environ.get("META_AGENT_RESTART", "").strip()
-    if not command:
-        return
-    if not any(r["name"] == "queue" and r["state"] == "fail" for r in rows):
-        return
+def run_restart(name, command, rows, timeout=60):
     try:
         proc = subprocess.run(command, shell=True, capture_output=True,
                               text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
-        rows.append(row("restart", "fail", "timed out after %ds" % timeout))
+        rows.append(row(name, "fail", "timed out after %ds" % timeout))
         return
     output = (proc.stderr or proc.stdout or "").strip().splitlines()
-    rows.append(row("restart", "pass" if proc.returncode == 0 else "fail",
+    rows.append(row(name, "pass" if proc.returncode == 0 else "fail",
                     "exit %d%s" % (proc.returncode,
                                    (": " + output[-1][:120]) if output else "")))
+
+
+def maybe_restart(rows, timeout=60):
+    # The queue unit has systemd's Restart=; a HUNG watchman does not, and a
+    # stale heartbeat is the only sign. Each restart is opt-in by command: no
+    # lane has supplied one, and guessing would start a second process.
+    queue_cmd = os.environ.get("META_AGENT_RESTART", "").strip()
+    if queue_cmd and any(r["name"] == "queue" and r["state"] == "fail" for r in rows):
+        run_restart("restart", queue_cmd, rows, timeout)
+    watch_cmd = os.environ.get("META_AGENT_WATCHMAN_RESTART", "").strip()
+    if watch_cmd and any(r["name"] == "watchman" and r["state"] == "fail" for r in rows):
+        run_restart("restart-watchman", watch_cmd, rows, timeout)
 
 
 def write_verdict(state_dir, verdict):

@@ -6,4 +6,5 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 EnvironmentFile=-%h/.config/oc2-agent/env
+Environment="META_AGENT_WATCHMAN_RESTART=systemctl --user restart oc2-watchman.service"
 ExecStart=/usr/bin/python3 /usr/local/lib/metaos/meta-agent-health.py

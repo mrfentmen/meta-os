@@ -54,6 +54,15 @@ fi
 rm -rf "$root"
 root=""
 
+echo "== agent drills"
+if node agents/drills.mjs >"$log" 2>&1; then
+  echo "DRILLS PASS"
+else
+  echo "DRILLS FAIL"
+  tail -10 "$log"
+  fail=1
+fi
+
 echo "== claims"
 if python3 iso/tools/check_claims.py >"$log" 2>&1; then
   echo "$(grep -c '^OK' "$log" || true) claim(s) match the tree"
