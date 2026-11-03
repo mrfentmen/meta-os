@@ -1,0 +1,16 @@
+=== OC1C-003 gates ===
+6
+=== OC1C-004 gate6 source ===
+260:unmkinitramfs "$WORK/iso/casper/initrd" "$UUID_TMPD/x" >/dev/null 2>&1 || fail "unmkinitramfs failed on built initrd"
+261:INITRD_UUID=$(cat "$UUID_TMPD/x/main/conf/uuid.conf" 2>/dev/null)
+262:[ -n "$INITRD_UUID" ] || fail "no baked UUID in built initrd"
+263:echo "$INITRD_UUID" > "$WORK/iso/.disk/casper-uuid-generic"
+264:[ "$(cat "$WORK/iso/.disk/casper-uuid-generic")" = "$INITRD_UUID" ] || fail "UUID sync verify failed"
+265:gate "initrd UUID == tree casper-uuid ($INITRD_UUID)"
+=== OC1C-005 finalize ===
+8:if 'layerfs-path=' not in s:
+9:    s = s.replace('/casper/vmlinuz ', '/casper/vmlinuz layerfs-path=filesystem.squashfs ')
+10:    s = s.replace('/casper/vmlinuz nomodeset ', '/casper/vmlinuz layerfs-path=filesystem.squashfs nomodeset ')
+11:if 'console=ttyS0' not in s:
+=== OC1C-006 calamares ===
+19
