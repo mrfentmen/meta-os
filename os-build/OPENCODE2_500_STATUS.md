@@ -274,3 +274,11 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Filed `os-build/logs/OC2P-proof-index-S6.md` (rows 20-28 + UNPROVEN-carry + sweeps).
 - Filed `os-build/logs/OC2P-crosscheck-OC1-boot-TEMPLATE.md` (copy-paste checks for OC1 evidence; fires the hour it posts).
 - Still parked on OC1 furnace: KF-02, dashboard-forwarded, GUI spike, re-proof. Still waiting on Hana: evince/atril ack.
+
+## OC2 S8 — 2026-11-03 — side batch while waiting (no VM, 24 tasks)
+- Docs (6): INSTALL-OC1.md, H44-gap (closed, all 3 present in all 3 files), greeter-conflict (OC1 ships iso/theme), keep-matrix, shotmap (launcher/app-open gap named for OC1), fallback-parts (VERIFIED vs CODE-INSPECTED).
+- Scripts+tests (5): verify-dropin-desktop.sh (sha backend guard, exits 0/1/3) + fixture test (3 tests), check-keep-mime.sh (exit 0; pdf split expected-with-note), check-manifest-targets.sh (no orphans/ghosts), install --with-desktop filed as proposal only (installer untouched).
+- Upkeep (5): WATCH.md (4 watches + last-known), kf02-static.md (10/10 mapped, furnace parked), BLOCKERS.md, MANIFEST 16 paths, proof-index-S6 already filed.
+- Sweeps: fences 0, secrets 0, no branch-added >1MB, byte-copy clean, sh -n OK.
+- Suites: agent-layer 23/23 OK, check_iso_config 101, base validate OK, wallpaper current.
+- Parked: KF-02 / dashboard / GUI spike / re-proof (OC1 furnace), evince ack (Hana). Fires on OC1 post via cross-check template.

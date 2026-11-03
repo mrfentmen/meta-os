@@ -25,6 +25,7 @@ TARGETS = {
     "agent-layer/desktop-entries/meta-agent-status.desktop": "/usr/share/applications/meta-agent-status.desktop (byte-copy of Bond iso/apps/desktop/)",
     "agent-layer/desktop-entries/mimeapps.list": "/etc/xdg/mimeapps.list (drop-in proposal; canonical is Hana os-build/metaos1-base/defaults/mimeapps.list)",
     "agent-layer/desktop-entries/README.md": "docs (not installed)",
+    "agent-layer/desktop-entries/INSTALL-OC1.md": "docs (not installed, OC1 copy commands)",
 }
 
 VERIFY = [

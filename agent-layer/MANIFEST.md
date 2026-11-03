@@ -3,6 +3,7 @@
 # OC1 copies these paths; shas must match at copy time.
 
 - `agent-layer/README.md` sha256 `aa98dc016ab753693a2a7111d4671360b84cdb748e3a74e5e45339ebfc8bcaca` → docs (not installed)
+- `agent-layer/desktop-entries/INSTALL-OC1.md` sha256 `a0a69fa48edfecd027db2a18dadf846b4d7dfc5eb3a2035fe9f739088b06dbe9` → docs (not installed, OC1 copy commands)
 - `agent-layer/desktop-entries/README.md` sha256 `0d69d2154daa24974d62226413e6b21ded709cb707cd2165403cf00616b53b84` → docs (not installed)
 - `agent-layer/desktop-entries/atril.desktop` sha256 `0990716ef614ae6b3b1c1db37fd468af4a89cef28a7b165a8c038524bf711f92` → /usr/share/applications/atril.desktop
 - `agent-layer/desktop-entries/evince.desktop` sha256 `a7ae673c8cd39800017922ecb4ddc8068a94d396f7234a0c1c0e43eac39fcb69` → /usr/share/applications/evince.desktop (degraded-off, NoDisplay=true)
