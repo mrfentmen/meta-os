@@ -192,3 +192,22 @@ milestone above is real, testable, and provable by its boot log.
 Nothing in this spec promises a finished OS on a hackathon clock; it
 promises the OS is actually being built, in the open, one proven
 milestone at a time.
+
+## KF-03 framebuffer install-clear pin (Pax 2026-11-03)
+
+The boot-init framebuffer install clear fills solid blue, pinned to
+pure blue (0,0,255) — the Pax [521] spec-grounded value, confirmed
+[527]. The earlier VGA Blue (0,0,170) value from [516] is retired
+[527]. No third flip: any future change to this value needs a new
+Pax ruling and an update to this section in the same commit.
+
+- The install clear runs the moment install succeeds, before any
+  glyph text lands; it is the no-text blue frame the KF-03 proof
+  captures. Implemented on rowan/kernel-kf03-align @436c6cc.
+- The serial `fb:` line (`fb: WxH pitch P fmt F`) is emitted only
+  when a framebuffer is supplied. When none is supplied there is no
+  `fb:` line and the VGA-only path is unchanged.
+- The framebuffer-unavailable fallback line stays owed under KF-08;
+  it is not invented here.
+- Shell `clear` keeps its black background and the panic screen
+  keeps red; neither is the install clear.
