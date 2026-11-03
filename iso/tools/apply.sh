@@ -144,6 +144,7 @@ put "$ISO/apps/chromium/policies.json" "/etc/chromium/policies/managed/metaos.js
 put "$ISO/theme/wallpaper/meta-wallpaper.png" "/usr/share/metaos/theme/meta-wallpaper.png"
 put "$ISO/theme/wallpaper/meta-wallpaper-2560x1440.png" "/usr/share/metaos/theme/meta-wallpaper-2560x1440.png"
 put "$ISO/theme/wallpaper/meta-wallpaper-1366x768.png" "/usr/share/metaos/theme/meta-wallpaper-1366x768.png"
+put "$ISO/theme/wallpaper/meta-wallpaper-3840x2160.png" "/usr/share/metaos/theme/meta-wallpaper-3840x2160.png"
 put "$ISO/theme/gtk/metaos.css" "/usr/share/metaos/theme/gtk.css"
 put "$ISO/theme/xfce4-desktop.xml" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
 
@@ -156,6 +157,12 @@ put "$ISO/base/autostart/meta-first-login.desktop" "/etc/xdg/autostart/meta-firs
 # Login screen: greeter config, its backdrop, and the theme it asks for.
 put "$ISO/theme/lightdm/lightdm-gtk-greeter.conf" "/etc/lightdm/lightdm-gtk-greeter.conf"
 put "$ISO/theme/wallpaper/greeter-wallpaper.png" "/usr/share/metaos/theme/greeter-wallpaper.png"
+put "$ISO/theme/wallpaper/greeter-wallpaper-2560x1440.png" "/usr/share/metaos/theme/greeter-wallpaper-2560x1440.png"
+put "$ISO/theme/wallpaper/greeter-wallpaper-3840x2160.png" "/usr/share/metaos/theme/greeter-wallpaper-3840x2160.png"
+put "$ISO/theme/wallpaper/greeter-wallpaper-1366x768.png" "/usr/share/metaos/theme/greeter-wallpaper-1366x768.png"
+put "$ISO/theme/wallpaper/greeter-active.png" "/usr/share/metaos/theme/greeter-active.png"
+put "$ISO/theme/lightdm/meta-greeter-setup.sh" "/usr/local/bin/meta-greeter-setup" 755
+put "$ISO/theme/lightdm/lightdm.conf.d/90-metaos-greeter.conf" "/etc/lightdm/lightdm.conf.d/90-metaos-greeter.conf"
 put "$ISO/theme/lightdm/themes/MetaOS/index.theme" "/usr/share/themes/MetaOS/index.theme"
 put "$ISO/theme/lightdm/themes/MetaOS/gtk-3.0/gtk.css" "/usr/share/themes/MetaOS/gtk-3.0/gtk.css"
 

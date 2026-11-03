@@ -105,3 +105,10 @@ isolated a fault and answered the shell. It does not prove Plymouth drew, that
 Calamares installed, or that a dock icon opened. Those need the Xubuntu base
 image and a second VM run; they are separate acceptance lines in
 `os-build/METAOS_1.0_RELEASE_CHECKLIST.md`.
+
+## 6. The wallpapers, on real screens
+
+`os-build/WALLPAPER_BOOT_CHECK.md` is the checklist for the ten wallpaper
+files: GRUB, four greeter sizes, four desktop sizes and the active copy the
+greeter points at. Each row needs a screenshot and the resolution that
+produced it. A screen the VM cannot offer is BLOCKED, not PASS.

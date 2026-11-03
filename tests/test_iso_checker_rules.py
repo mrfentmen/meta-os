@@ -138,7 +138,7 @@ class CheckerRuleTest(unittest.TestCase):
     def test_greeter_pointing_at_another_backdrop_is_named(self):
         path = self.root / "theme" / "lightdm" / "lightdm-gtk-greeter.conf"
         path.write_text(path.read_text(encoding="utf-8").replace(
-            "greeter-wallpaper.png", "elsewhere.png"), encoding="utf-8")
+            "greeter-active.png", "elsewhere.png"), encoding="utf-8")
         out = self.check()
         self.assertEqual(out.returncode, 1)
         self.assertIn("greeter background is", out.stdout)
