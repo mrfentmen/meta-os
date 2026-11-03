@@ -396,7 +396,7 @@ Two real gaps were closed in code while pinning the tests:
 Section 12 verification: `cargo test -p queue-core -p queue-store -p relay` and
 `cargo test -p queue-core --doc` both exit 0.
 
-## Section 13 — Rust os-* error paths (CB2-301..325) — 19/25 delivered, 6 blocked
+## Section 13 — Rust os-* error paths (CB2-301..325) — 22/25 delivered, 3 blocked
 
 Delivered against the crates' real public APIs:
 
@@ -421,11 +421,14 @@ Delivered against the crates' real public APIs:
 | CB2-318 | `crates/os-supervisor/src/restart.rs` | a recorded recovery resets the count and restarts the sequence from 1 |
 | CB2-319 | `crates/os-worker/tests/section13_worker.rs` | an empty or whitespace payload (`spec`) is refused by field name before spawn; id, title, files and signature each refuse by their own name |
 | CB2-320 | `crates/os-worker/tests/section13_worker.rs` | acceptance results come back in submission order, one per check, and reverse when the submission reverses |
+| CB2-308 | `crates/os-jobs/src/job.rs` | a job with no steps is refused at construction; a blank step name and an empty step command are named too |
+| CB2-309 | `crates/os-jobs/src/job.rs` | a job round-trips through text with its step order and each step's command words intact |
+| CB2-310 | `crates/os-jobs/src/job.rs` | cancelling a finished job returns `AlreadyFinished` and leaves the state alone; a second cancel says `AlreadyCancelled` |
 
 Blocked — the named API does not exist, and inventing it would be fake code:
 - CB2-301, 302, 324: `os-boot` is the agent CLI crate; it has no boot-config type.
-- CB2-308, 309, 310: `os-jobs` has `JobQueue` but no job-with-steps creation or
-  cancel-finished API.
+- CB2-308, 309, 310: closed by building the job model the tasks describe, as
+  `crates/os-jobs/src/job.rs`. New behaviour, recorded as such.
 - CB2-314, 315: delivered against the real B24 helpers. Correction to an
   earlier note: `os-misc` does carry a string/numeric helper set
   (`b24::send`, `b24::transport`, `b24::watch`), so the edge tests were written
@@ -442,7 +445,8 @@ Blocked — the named API does not exist, and inventing it would be fake code:
 Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
 -p os-workspace`, `cargo test -p os-misc --test section13_misc` (8 pass),
 `cargo test -p os-supervisor --test section13_restart` (7 pass),
-`cargo test -p os-worker --test section13_worker` (2 pass), and
+`cargo test -p os-worker --test section13_worker` (2 pass),
+`cargo test -p os-jobs --test section13_job` (4 pass), and
 `cargo test -p os-budget --doc` all exit 0.
 
 ## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 15/25 delivered, 10 blocked
@@ -684,7 +688,7 @@ Per-task check (2026-11-02):
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
 
-## Closeout — 442 of 500 delivered, 58 open
+## Closeout — 445 of 500 delivered, 55 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -692,7 +696,7 @@ one is open for a named reason, not for want of trying.
 | Section | Delivered | Open |
 |---|---|---|
 | 1–12 (Python, relay, board, Rust queue) | 300 | 0 |
-| 13 Rust os-* error paths | 19 | 6 |
+| 13 Rust os-* error paths | 22 | 3 |
 | 14 Rust agent/dashboard/intel/stack | 15 | 10 |
 | 15 Schemas and validators | 25 | 0 |
 | 16 Agent layer Node | 20 | 5 |
@@ -700,7 +704,7 @@ one is open for a named reason, not for want of trying.
 | 18 Tooling scripts | 25 | 0 |
 | 19 Officina and Musica | 15 | 10 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **442** | **58** |
+| **Total** | **445** | **55** |
 
 ### The 73, by the decision that unblocks them
 
@@ -713,9 +717,9 @@ one is open for a named reason, not for want of trying.
    harness has no queue-envelope or incident fixtures. The dashboard metrics
    cards and the agent registry loader were built for this wave and are now
    covered, so they left this group.
-3. **New APIs (6, Section 13).** `os-boot` is the agent CLI crate (no boot
-   config type) and `os-jobs` has no job-with-steps API. The `os-supervisor`
-   restart policy and the `os-worker` payload/order cases were covered for
+3. **New APIs (3, Section 13).** `os-boot` is the agent CLI crate and carries
+   no boot-config type. The `os-supervisor` restart policy, the `os-jobs` job
+   model and the `os-worker` payload/order cases were built or covered for
    this wave, so they left this group.
 4. **Missing data (4, Section 20).** Nervus has no real-run flag and no ledger
    field on its contracts, and the layer curve (L4 4.6, L8 19.5, L16 12.8,
