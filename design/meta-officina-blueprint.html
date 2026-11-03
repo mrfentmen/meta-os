@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meta Officina — Workshop</title>
+<link rel="icon" href="data:,">
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; color: #dbe9ff; font-family: ui-monospace, Menlo, Consolas, monospace;
@@ -25,6 +26,11 @@
   .loop span { border: 1px dashed rgba(219,233,255,0.8); padding: 5px 9px; }
   .loop i { color: #a9c6f5; font-style: normal; }
   footer { padding: 10px 18px; font-size: 11px; color: #a9c6f5; border-top: 2px solid rgba(219,233,255,0.75); }
+  #runs-content .fetch-fail { color: #ff9a9a; }
+  .officina-board h3 { font-size: 12px; letter-spacing: 0.14em; margin: 10px 0 4px; font-weight: normal; color: #a9c6f5; }
+  .officina-board ul { margin: 0 0 8px; padding-left: 16px; font-size: 12px; }
+  #runs-content, #runs-content div, #runs-content p, #runs-content li { overflow-wrap: anywhere; }
+  main, .card { min-width: 0; overflow-wrap: anywhere; }
 </style>
 </head>
 <body>
@@ -59,7 +65,52 @@
       <li>Iterates alone; the boss judges results, not drafts</li>
     </ul>
   </section>
+  <section class="card" data-no="DWG-04">
+    <h2>RECORDED RUNS</h2>
+    <p>Workshop runs from Milo's records, rendered by the shared boards renderer. A run is failed only on recorded failure evidence.</p>
+    <div id="runs-content" aria-live="polite">Loading workshop runs…</div>
+  </section>
 </main>
+<script>
+// Recorded-runs strip: the same officina run files the Boards page
+// renders, through the shared renderer from js/surfaces.js. Missing
+// files are skipped and counted; zero loaded files names the port.
+(async function () {
+  var el = document.getElementById("runs-content");
+  function fail(msg) {
+    el.textContent = "workshop runs unreachable on 18934 (" + msg + " — is face-site serving os/worlds/officina/runs/?)";
+  }
+  try {
+    var mod = await import("../js/surfaces.js");
+    var files = ["forced-airflow-run-001.json", "forced-airflow-best-design.json",
+      "gap-headroom-run-001.json", "gap-headroom-best-design.json",
+      "overnight-run-001.json", "overnight-best-design.json",
+      "rough-words-run-001.json", "rough-words-best-design.json",
+      "volume-repair-run-001.json"];
+    var loaded = [];
+    for (var i = 0; i < files.length; i++) {
+      try {
+        var res = await fetch("../os/worlds/officina/runs/" + files[i]);
+        if (res.ok) loaded.push(await res.json());
+      } catch (e) { /* skipped, counted below */ }
+    }
+    el.innerHTML = "";
+    if (!loaded.length) {
+      fail("0 of " + files.length + " run files loaded from os/worlds/officina/runs/");
+      var d = document.createElement("p");
+      d.textContent = "No Officina runs recorded.";
+      el.appendChild(d);
+      return;
+    }
+    var p = document.createElement("p");
+    p.textContent = "Loaded " + loaded.length + " of " + files.length + " run files.";
+    el.appendChild(p);
+    var wrap = document.createElement("div");
+    wrap.innerHTML = mod.officinaBoard(loaded);
+    el.appendChild(wrap);
+  } catch (e) { fail((e && e.message) || e); }
+})();
+</script>
 <footer>Officina is system five of Meta OS (adopted 2026-11-01). Design front end, 2026-11-02: blueprint identity — drafting blue, white line work, dimension callouts. Figures are records from the merged tree, not live telemetry.</footer>
 </body>
 </html>

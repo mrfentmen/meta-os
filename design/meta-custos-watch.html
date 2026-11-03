@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meta Custos — Night Watch</title>
+<link rel="icon" href="data:,">
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; background: #070604; color: #e8dcc2; font-family: ui-monospace, Menlo, Consolas, monospace; }
@@ -22,6 +23,11 @@
   #log { padding: 0 18px 18px; font-size: 12px; color: #9a8a68; line-height: 1.9; }
   #log b { color: #e8dcc2; font-weight: normal; }
   footer { padding: 10px 18px; font-size: 11px; color: #6e6046; border-top: 1px solid #2b2113; }
+  #runs { padding: 0 18px 18px; font-size: 12px; color: #9a8a68; line-height: 1.9; }
+  #runs-content .fetch-fail { color: #ff9a9a; }
+  .custos-board h3 { font-size: 11px; letter-spacing: 0.18em; color: #9a8a68; margin: 10px 0 4px; font-weight: normal; }
+  .custos-board ul, .custos-board ol { margin: 0 0 8px; padding-left: 18px; }
+  #runs-content, #runs-content div, #runs-content p, #runs-content li { overflow-wrap: anywhere; }
   @media (max-width: 760px) { main { grid-template-columns: 1fr; } #scope { border-right: none; border-bottom: 1px solid #2b2113; } }
 </style>
 </head>
@@ -46,6 +52,10 @@
     <div class="ward"><span>suite record</span><span class="quiet">125 / 125 tests at last full run (record)</span></div>
   </section>
 </main>
+<section id="runs" aria-label="Live runs">
+  <h2>LIVE RUNS — FROM THE PATROL RECORDS</h2>
+  <div id="runs-content" aria-live="polite">Loading patrol runs…</div>
+</section>
 <section id="log" aria-label="Watch log">
   <h2>WATCH LOG — RECORDS, NOT A LIVE FEED</h2>
   <div><b>03:12</b> — bus watch: B10 advanced, uncompiled, queue state unchanged.</div>
@@ -85,6 +95,45 @@ function draw() {
   requestAnimationFrame(draw);
 }
 draw();
+</script>
+<script>
+// Live runs strip: the same patrol JSONLs the Boards page renders,
+// counted by tier/source with the shared renderer from js/surfaces.js.
+// No records is an honest empty state; an unreachable runs directory
+// names the port instead of going blank.
+(async function () {
+  var el = document.getElementById("runs-content");
+  function fail(msg) {
+    el.textContent = "patrol runs unreachable on 18934 (" + msg + " — is face-site serving os/worlds/custos/runs/?)";
+  }
+  try {
+    var mod = await import("../js/surfaces.js");
+    var files = ["patrol-001.jsonl", "patrol-002.jsonl"];
+    var parsed = [];
+    for (var i = 0; i < files.length; i++) {
+      var res = await fetch("../os/worlds/custos/runs/" + files[i]);
+      if (!res.ok) throw new Error("HTTP " + res.status + " for " + files[i]);
+      parsed.push(mod.parseCustosJsonl(await res.text()));
+    }
+    var recs = parsed.reduce(function (a, p) { return a.concat(p.records); }, []);
+    var skipped = parsed.reduce(function (n, p) { return n + p.skipped; }, 0);
+    el.innerHTML = "";
+    if (!recs.length) {
+      var d = document.createElement("div");
+      d.className = "ward";
+      var s1 = document.createElement("span"); s1.textContent = "patrol runs";
+      var s2 = document.createElement("span"); s2.className = "quiet"; s2.textContent = "empty — no runs recorded";
+      d.appendChild(s1); d.appendChild(s2); el.appendChild(d);
+      return;
+    }
+    var p = document.createElement("p");
+    p.textContent = recs.length + " patrol records (" + skipped + " malformed lines skipped).";
+    el.appendChild(p);
+    var wrap = document.createElement("div");
+    wrap.innerHTML = mod.custosBoard(recs);
+    el.appendChild(wrap);
+  } catch (e) { fail((e && e.message) || e); }
+})();
 </script>
 </body>
 </html>

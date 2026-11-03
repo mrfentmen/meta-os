@@ -4,12 +4,19 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Boards — Imperium app</title>
+<link rel="icon" href="data:,">
 <link rel="stylesheet" href="styles.css">
 <style>
   .boards-nav { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1rem 0; }
   .boards-nav a { color: inherit; }
   .board-section { margin: 2rem 0; }
+  .board-section:target { outline: 2px solid #0a84ff; outline-offset: 6px; }
+  .board-section:target h2::after { content: " — here"; font-size: 12px; color: #0a84ff; }
   .empty-state { font-style: italic; }
+  #site-status { font-size: 13px; padding: 8px 12px; border: 1px solid #444; background: #111; }
+  #site-status { overflow-wrap: anywhere; }
+  .board-section div, .board-section p, .board-section li { overflow-wrap: anywhere; }
+  .fetch-fail { color: #ff9a9a; font-size: 13px; }
   .lab-list { list-style: none; padding: 0; }
   .lab-row { display: flex; gap: 1rem; padding: 0.25rem 0; }
   .lab-hypothesis { flex: 2; }
@@ -40,6 +47,7 @@
     <a href="#board-custos">Custos</a>
     <a href="#board-systems">Systems</a>
   </nav>
+  <p id="site-status" role="status">Loading boards…</p>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
     <p>Reads the lab's records when present (os/lab/records.json). No level is ever shown higher than its record's cap.</p>
@@ -100,32 +108,57 @@
   </section>
   <section class="board-section" id="board-systems" aria-labelledby="board-systems-heading">
     <h2 id="board-systems-heading">Systems home</h2>
-    <p>Status chips from each world's own pack.json status field. The Trio products are live in this app; a spec is never shown as live.</p>
+    <p>Status chips from each world's own pack.json status field: custos, dep, doe, dsny, ems, fdny, hospital, mta, nypd, officina. The Trio products are live in this app; a spec is never shown as live.</p>
     <div id="systems-content" aria-live="polite">Loading…</div>
   </section>
 </main>
 <script type="module">
   import { labBoard, hortusChart, hortusChampion, gateStatusPage, evidenceViewer, boloCard, timelineView, receiptView, costTicker, officinaBoard, parseCustosJsonl, custosBoard, systemsChip, systemsHome } from "./js/surfaces.js";
-  const el = document.getElementById("lab-content");
+  // Failure-line rule (house style borrowed from os-build/face/board.html):
+  // with the backend stopped, each board prints a visible line naming WHAT
+  // failed and WHICH port serves it (face-site on 18934). Never a blank
+  // panel, never an empty catch.
+  const PORT = "18934";
+  const failures = [];
+  function failLine(what, detail) {
+    const line = what + " unreachable on " + PORT + " (" + detail + ")";
+    failures.push(line);
+    return `<p class="fetch-fail" role="alert">${line}</p>`;
+  }
+  function summarize() {
+    const el = document.getElementById("site-status");
+    el.textContent = failures.length === 0
+      ? "All board data loaded from face-site on " + PORT + "."
+      : failures.length + " data source(s) unreachable on " + PORT + " — each board below names its own. " + failures.join(" ");
+  }
+  // Lab records.
   try {
     const res = await fetch("os/lab/records.json");
-    const records = res.ok ? await res.json() : [];
-    el.innerHTML = labBoard(records);
-  } catch {
-    el.innerHTML = labBoard([]);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    document.getElementById("lab-content").innerHTML = labBoard(await res.json());
+  } catch (e) {
+    document.getElementById("lab-content").innerHTML =
+      failLine("lab records", "os/lab/records.json answered " + e.message + " — is face-site serving it?") + labBoard([]);
   }
+  // Hortus: no run JSONLs exist in this repo yet; the honest empty state
+  // is the correct render, stated in the section text above.
   document.getElementById("hortus-content").innerHTML =
     hortusChart([]) + hortusChampion(null);
+  // Gate manifest.
   try {
     const res = await fetch("gates/delaney/manifest.json");
-    const manifest = res.ok ? await res.json() : null;
-    document.getElementById("gate-content").innerHTML = gateStatusPage(manifest);
-  } catch {
-    document.getElementById("gate-content").innerHTML = gateStatusPage(null);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    document.getElementById("gate-content").innerHTML = gateStatusPage(await res.json());
+  } catch (e) {
+    document.getElementById("gate-content").innerHTML =
+      failLine("gate manifest", "gates/delaney/manifest.json answered " + e.message + " — is face-site serving it?") + gateStatusPage(null);
   }
+  // Crew records feed the four incident boards. One fetch, four honest
+  // panels; a dead backend names itself in each panel it starves.
   try {
     const res = await fetch("/api/crew/status");
-    const crew = res.ok ? await res.json() : null;
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const crew = await res.json();
     const flagged = (crew?.incidents ?? []).find((i) => i.status === "flagged") ?? null;
     document.getElementById("evidence-content").innerHTML = flagged
       ? evidenceViewer(flagged)
@@ -142,82 +175,95 @@
     document.getElementById("receipt-content").innerHTML = withReceipt
       ? receiptView(withReceipt)
       : `<p class="empty-state">No dispatch receipt in the live crew records.</p>`;
-    // HN-065: refresh the ticker as the chain runs.
-    async function refreshCosts() {
-      try {
-        const res = await fetch("server/queue/spark_guardrail_state.json");
-        const ledger = res.ok ? await res.json() : null;
-        document.getElementById("cost-content").innerHTML = costTicker(ledger);
-      } catch {
-        document.getElementById("cost-content").innerHTML = costTicker(null);
-      }
-    }
-    await refreshCosts();
-    setInterval(refreshCosts, 15000);
-    // HN-066: fetch the known run files (no directory listing is
-    // served); missing files are skipped and the count says so.
-    const officinaFiles = ["forced-airflow-run-001.json", "forced-airflow-best-design.json",
-      "gap-headroom-run-001.json", "gap-headroom-best-design.json",
-      "overnight-run-001.json", "overnight-best-design.json",
-      "rough-words-run-001.json", "rough-words-best-design.json",
-      "volume-repair-run-001.json"];
-    const loaded = [];
-    for (const f of officinaFiles) {
-      try {
-        const res = await fetch(`os/worlds/officina/runs/${f}`);
-        if (res.ok) loaded.push(await res.json());
-      } catch { /* skipped, counted below */ }
-    }
-    document.getElementById("officina-content").innerHTML =
-      `<p>Loaded ${loaded.length} of ${officinaFiles.length} run files.</p>` + officinaBoard(loaded);
-    // HN-067: fetch the real patrol JSONLs (served as ndjson now).
-    const custosTexts = [];
-    for (const f of ["patrol-001.jsonl", "patrol-002.jsonl"]) {
-      try {
-        const res = await fetch(`os/worlds/custos/runs/${f}`);
-        if (res.ok) custosTexts.push(await res.text());
-      } catch { /* skipped, counted below */ }
-    }
-    const parsed = custosTexts.map(parseCustosJsonl);
-    const allRecords = parsed.flatMap((p) => p.records);
-    const skipped = parsed.reduce((n, p) => n + p.skipped, 0);
-    document.getElementById("custos-content").innerHTML =
-      `<p>${allRecords.length} patrol records (${skipped} malformed lines skipped).</p>` + custosBoard(allRecords);
-    // HN-068: status chips from each world's own pack.json.
-    const worldDirs = ["custos", "dep", "doe", "dsny", "ems", "fdny", "hospital", "mta", "nypd", "officina"];
-    const systems = [
-      { name: "Vigiles", status: "live" },
-      { name: "Ignis", status: "live" },
-      { name: "Medicus", status: "live" },
-    ];
-    let packsLoaded = 0;
-    for (const dir of worldDirs) {
-      try {
-        const res = await fetch(`os/worlds/${dir}/pack.json`);
-        if (res.ok) {
-          const pack = await res.json();
-          systems.push({ name: pack.pack_name ?? dir, status: systemsChip(pack.status) });
-          packsLoaded += 1;
-        } else {
-          systems.push({ name: dir, status: "not built" });
-        }
-      } catch {
-        systems.push({ name: dir, status: "not built" });
-      }
-    }
-    document.getElementById("systems-content").innerHTML =
-      `<p>Loaded ${packsLoaded} of ${worldDirs.length} world packs.</p>` + systemsHome(systems);
-  } catch {
+  } catch (e) {
+    const line = (panel) => failLine("crew records for " + panel, "/api/crew/status answered " + e.message + " — no crew backend is served here");
     document.getElementById("evidence-content").innerHTML =
-      `<p class="empty-state">Crew records unavailable.</p>`;
+      line("evidence") + `<p class="empty-state">Crew records unavailable.</p>`;
     document.getElementById("bolo-content").innerHTML =
-      `<p class="empty-state">Crew records unavailable.</p>`;
+      line("BOLO") + `<p class="empty-state">Crew records unavailable.</p>`;
     document.getElementById("timeline-content").innerHTML =
-      `<p class="empty-state">Crew records unavailable.</p>`;
+      line("timeline") + `<p class="empty-state">Crew records unavailable.</p>`;
     document.getElementById("receipt-content").innerHTML =
-      `<p class="empty-state">Crew records unavailable.</p>`;
-    document.getElementById("cost-content").innerHTML = costTicker(null);
+      line("receipt") + `<p class="empty-state">Crew records unavailable.</p>`;
   }
+  // Cost ticker, refreshed as the chain runs.
+  async function refreshCosts() {
+    try {
+      const res = await fetch("server/queue/spark_guardrail_state.json");
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      document.getElementById("cost-content").innerHTML = costTicker(await res.json());
+    } catch (e) {
+      document.getElementById("cost-content").innerHTML =
+        failLine("budget ledger", "server/queue/spark_guardrail_state.json answered " + e.message + " — is face-site serving it?") + costTicker(null);
+    }
+  }
+  await refreshCosts();
+  setInterval(refreshCosts, 15000);
+  // Officina: fetch the known run files (no directory listing is
+  // served); missing files are skipped and the count says so. Zero
+  // loaded files is a named failure, not a silent empty board.
+  const officinaFiles = ["forced-airflow-run-001.json", "forced-airflow-best-design.json",
+    "gap-headroom-run-001.json", "gap-headroom-best-design.json",
+    "overnight-run-001.json", "overnight-best-design.json",
+    "rough-words-run-001.json", "rough-words-best-design.json",
+    "volume-repair-run-001.json"];
+  const loaded = [];
+  for (const f of officinaFiles) {
+    try {
+      const res = await fetch(`os/worlds/officina/runs/${f}`);
+      if (res.ok) loaded.push(await res.json());
+    } catch (e) {
+      failures.push("officina run file " + f + " unreachable on " + PORT + " (" + e.message + ")");
+    }
+  }
+  document.getElementById("officina-content").innerHTML =
+    (loaded.length === 0
+      ? failLine("officina runs", "0 of " + officinaFiles.length + " run files loaded from os/worlds/officina/runs/ — is face-site serving them?")
+      : `<p>Loaded ${loaded.length} of ${officinaFiles.length} run files.</p>`) + officinaBoard(loaded);
+  // Custos: fetch the real patrol JSONLs. Malformed lines are skipped
+  // and counted by the parser; zero usable records is a named failure.
+  const custosTexts = [];
+  for (const f of ["patrol-001.jsonl", "patrol-002.jsonl"]) {
+    try {
+      const res = await fetch(`os/worlds/custos/runs/${f}`);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      custosTexts.push(await res.text());
+    } catch (e) {
+      failures.push("custos run file " + f + " unreachable on " + PORT + " (" + e.message + ")");
+    }
+  }
+  const parsed = custosTexts.map(parseCustosJsonl);
+  const allRecords = parsed.flatMap((p) => p.records);
+  const skipped = parsed.reduce((n, p) => n + p.skipped, 0);
+  document.getElementById("custos-content").innerHTML =
+    (allRecords.length === 0
+      ? failLine("custos patrol runs", "0 patrol records loaded from os/worlds/custos/runs/ — is face-site serving them?")
+      : `<p>${allRecords.length} patrol records (${skipped} malformed lines skipped).</p>`) + custosBoard(allRecords);
+  // Systems: status chips from each world's own pack.json. A missing
+  // pack.json names its pack — the row reads "fdny (pack.json missing)",
+  // never a blank row and never a 404 in the UI.
+  const worldDirs = ["custos", "dep", "doe", "dsny", "ems", "fdny", "hospital", "mta", "nypd", "officina"];
+  const systems = [
+    { name: "Vigiles", status: "live" },
+    { name: "Ignis", status: "live" },
+    { name: "Medicus", status: "live" },
+  ];
+  let packsLoaded = 0;
+  for (const dir of worldDirs) {
+    try {
+      const res = await fetch(`os/worlds/${dir}/pack.json`);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const pack = await res.json();
+      systems.push({ name: pack.pack_name ?? dir, status: systemsChip(pack.status) });
+      packsLoaded += 1;
+    } catch (e) {
+      systems.push({ name: dir + " (pack.json missing)", status: "not built" });
+      failures.push(dir + " pack.json unreachable on " + PORT + " (" + e.message + ")");
+    }
+  }
+  document.getElementById("systems-content").innerHTML =
+    `<p>Loaded ${packsLoaded} of ${worldDirs.length} world packs.</p>` + systemsHome(systems);
+  summarize();
 </script>
 </body>
 </html>

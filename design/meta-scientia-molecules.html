@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meta Scientia — Molecule Viewer</title>
+<link rel="icon" href="data:,">
 <style>
   :root { color-scheme: light; }
   body { margin: 0; background: #edf3ec; color: #14261a; font-family: ui-monospace, Menlo, Consolas, monospace; }
@@ -51,7 +52,7 @@
   <span class="sw" style="background:#3050f8"></span>N — hover any atom for element and position.
 </div>
 <footer id="prov"></footer>
-<script src="vendor/three.min.js"></script>
+<script src="../vendor/three.min.js"></script>
 <script>
 "use strict";
 // CPK-ish colors + display radii (ball-and-stick) and vdW radii (space fill), Angstrom.
@@ -194,14 +195,14 @@ async function loadCompound(id) {
     b.setAttribute("aria-pressed", String(b.dataset.id === id)));
   try {
     const res = await fetch("molecules/" + meta.file, { cache: "no-store" });
-    if (!res.ok) throw new Error("HTTP " + res.status + " for " + meta.file);
+    if (!res.ok) throw new Error("HTTP " + res.status + " for " + meta.file + " on 18934 (is face-site serving it?)");
     const mol = parseSDF(await res.text());
     buildScene(mol, currentMode());
     document.getElementById("meta").textContent =
       meta.name + " — " + meta.formula + " — " + meta.weight.toFixed(2) + " g/mol — " + mol.atoms.length +
       " atoms, " + mol.bonds.length + " bonds — " + meta.coords;
     document.getElementById("prov").innerHTML =
-      "Source: " + meta.source + " (<a href=\"" + meta.url + "\">" + meta.url + "</a>). " +
+      "Source: " + meta.source + " (<a href=\"" + meta.url + "\">record link</a>). " +
       "Coordinates: " + meta.coords + ".";
   } catch (err) {
     showError(err.message);
@@ -220,6 +221,29 @@ function setMode(sf) {
 
 function init() {
   const cv = document.getElementById("view");
+  // Honest WebGL fallback, same contract as labs/molecules: no 3D context
+  // means say so instead of leaving a blank canvas. ?force2d=1 exercises it.
+  function deadControls(reason) {
+    document.querySelectorAll("#bar button").forEach(function (b) {
+      b.disabled = true; b.title = reason;
+    });
+  }
+  if (!window.THREE) {
+    document.getElementById("meta").textContent =
+      "3D library missing (the shared vendor/three.min.js did not load on 18934). Structures cannot be drawn — nothing is faked in their place.";
+    deadControls("needs the 3D library");
+    return;
+  }
+  let gl = null;
+  try {
+    gl = cv.getContext("webgl2") || cv.getContext("webgl");
+  } catch (e) { gl = null; }
+  if (!gl || new URLSearchParams(location.search).has("force2d")) {
+    document.getElementById("meta").textContent =
+      "3D unavailable in this browser (no WebGL context). Structures cannot be drawn — nothing is faked in their place.";
+    deadControls("needs the 3D view");
+    return;
+  }
   renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0d2018);
@@ -332,7 +356,7 @@ function init() {
       });
       loadCompound(META[0].id);
     })
-    .catch((err) => showError("compound list failed: " + err.message));
+    .catch((err) => showError("compound list unreachable on 18934 (molecules/meta.json: " + err.message + " — is face-site serving it?)"));
 }
 
 document.addEventListener("DOMContentLoaded", init);
