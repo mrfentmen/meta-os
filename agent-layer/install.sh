@@ -51,12 +51,14 @@ grep -i -E "SPARK_API_KEY|sk-|BEGIN PRIVATE" "$CONF/env" \
   && { echo "FAIL: secret-looking value in env file"; exit 1; }
 echo "env file clean (no secrets)"
 
-# 4. Units.
+# 4. Units (everything shipped in agent-layer/units/, no hardcoded list —
+# a new unit must never require an installer edit to deploy).
 mkdir -p "$UNITDIR"
-for u in oc2-queue.service oc2-patrol.service oc2-patrol.timer; do
-  cp "$ROOT/agent-layer/units/$u" "$UNITDIR/$u"
+for path in "$ROOT/agent-layer/units/"*.service "$ROOT/agent-layer/units/"*.timer; do
+  [ -e "$path" ] || continue
+  cp "$path" "$UNITDIR/$(basename "$path")"
 done
-echo "units linked"
+echo "units linked: $(ls "$ROOT/agent-layer/units" | tr '\n' ' ')"
 
 # 5. Reload + enable (linger attempted; recorded if unavailable).
 systemctl --user daemon-reload 2>&1 | head -n 1

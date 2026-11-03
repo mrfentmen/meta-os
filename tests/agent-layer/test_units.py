@@ -84,6 +84,22 @@ class TestUnits(unittest.TestCase):
                        "py_compile", "port 8935", "idempotent"):
             self.assertIn(marker, src, marker)
 
+    def test_installer_deploys_every_unit(self):
+        import glob
+        src = open(os.path.join(_REPO, "agent-layer", "install.sh")).read()
+        self.assertIn('agent-layer/units/', src)
+        # No hardcoded unit allowlist: every shipped unit must deploy.
+        shipped = {os.path.basename(p) for p in
+                   glob.glob(os.path.join(_REPO, "agent-layer", "units",
+                                           "*.service")) +
+                   glob.glob(os.path.join(_REPO, "agent-layer", "units",
+                                           "*.timer"))}
+        self.assertTrue(shipped, "no units shipped")
+        for name in ("oc2-queue.service", "oc2-patrol.service",
+                     "oc2-patrol.timer", "oc2-trio.service"):
+            self.assertIn(name, shipped, name)
+        self.assertNotIn("for u in oc2-queue.service", src)
+
     def test_env_example_has_no_secrets_and_has_checkout(self):
         src = open(os.path.join(_REPO, "agent-layer", "env.example")).read()
         self.assertIn("OC2_CHECKOUT=", src)
