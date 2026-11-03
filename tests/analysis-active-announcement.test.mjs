@@ -28,7 +28,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const page = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const page = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const web = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
 const model = readFileSync(
   new URL(

@@ -16,7 +16,7 @@ import path from "node:path";
 import { ribbonIncident, ribbonText, flagTier } from "../js/command-loop.js";
 import { readCrewStatus } from "../server/crew-status.mjs";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const mapJs = readFileSync(new URL("../js/command-map.js", import.meta.url), "utf8");
 
 test("ribbonIncident picks the newest incident by created_at, even unsorted", () => {

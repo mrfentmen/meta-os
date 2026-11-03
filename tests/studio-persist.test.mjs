@@ -21,7 +21,7 @@ const studio = readFileSync(
   new URL("../design/meta-ascii-logo-studio.html", import.meta.url),
   "utf8",
 );
-const panel = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const panel = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 
 test("studio shares the console Logo panel's storage keys", () => {
   for (const key of [

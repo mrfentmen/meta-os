@@ -433,7 +433,7 @@ test("web wiring: updateLogStats renders the per-product line from log.stats()",
 });
 
 test("web wiring: session-log panel holds the per-product stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-by-product" class="note mono">Assessments by product: Vigiles 0 · Ignis 0 · Medicus 0 · Failed 0<\/p>/,

@@ -42,7 +42,7 @@ test("native still-image intro: web contract — .note at 13px muted", () => {
 });
 
 test("native still-image intro: web panel carries the same intro words", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.ok(
     html.includes(`<p class="note">${introWords}</p>`),
     "web still-image panel carries the intro verbatim as a note",

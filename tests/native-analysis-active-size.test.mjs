@@ -32,7 +32,7 @@ test("native analysis-active: web contract — #analysis-active carries .note at
     /\.note \{\s+color: var\(--muted\);\s+font-size: 13px;\s+\}/,
     "web .note is 13px",
   );
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.ok(
     html.includes('<p id="analysis-active" class="note"'),
     "web analysis-active line carries .note",

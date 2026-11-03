@@ -25,7 +25,7 @@ const loopView = readFileSync(
   new URL("../native/Sources/MetaTrio/Views/LogoLoopView.swift", import.meta.url),
   "utf8",
 );
-const web = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const web = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const webAnimation = readFileSync(
   new URL("../js/logo-animation.js", import.meta.url),
   "utf8",

@@ -37,7 +37,7 @@ test("native input-panel titles: web contract — .panel h2 at 15px weight 700",
     /\.panel h2 \{\s+margin: 0 0 10px;\s+font-size: 15px;\s+font-weight: 700;/,
     "web .panel h2 is 15px weight 700",
   );
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(html, /<h2>Still image<\/h2>/, "web still-image panel has h2 title");
   assert.match(html, /<h2>Prerecorded video<\/h2>/, "web video panel has h2 title");
 });

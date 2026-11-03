@@ -38,7 +38,7 @@ test("native stepper label: web contract — label rule at 13px, muted", () => {
     /label \{\s+display: block;\s+margin: 10px 0 4px;\s+font-size: 13px;\s+color: var\(--muted\);/,
     "web label rule is 13px, muted",
   );
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<label for="interval-seconds">Sampling interval \(seconds, 1–60\)<\/label>/,

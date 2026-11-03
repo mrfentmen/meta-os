@@ -11,7 +11,7 @@ import { readFileSync } from "node:fs";
 
 import { flagTier, loopEventText, loopFeedItems, loopIncidentItems, loopIncidentText, loopStatusText } from "../js/command-loop.js";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const commandJs = readFileSync(new URL("../js/command-map.js", import.meta.url), "utf8");
 

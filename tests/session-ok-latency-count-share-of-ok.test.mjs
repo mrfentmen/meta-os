@@ -177,7 +177,7 @@ test("web wiring: updateLogStats renders the ok-latency-count-share-of-ok line f
 });
 
 test("web wiring: session-log panel holds the ok-latency-count-share-of-ok stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-ok-latency-count-share-of-ok" class="note mono">Successful latency-measurement share of successes: none<\/p>/,

@@ -25,7 +25,7 @@ const model = readFileSync(
   new URL("../native/Sources/MetaTrio/ViewModels/AppModel.swift", import.meta.url),
   "utf8",
 );
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 
 const nativeHealth = model.slice(
   model.indexOf("func checkBackendHealth()"),

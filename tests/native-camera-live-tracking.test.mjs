@@ -40,7 +40,7 @@ test("native CAMERA LIVE label: web contract — .camera-indicator at 12px, 700,
 });
 
 test("native CAMERA LIVE label: web indicator carries the class and wording", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /class="camera-indicator"[^>]*><span class="dot"[^>]*><\/span>CAMERA LIVE<\/span>/,

@@ -94,7 +94,7 @@ test("web wiring: updateLogStats renders the average-latency line from log.stats
 });
 
 test("web wiring: session-log panel holds the average-latency stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-avg-latency" class="note mono">Average successful latency: none<\/p>/,

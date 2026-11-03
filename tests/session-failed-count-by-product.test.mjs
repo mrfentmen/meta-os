@@ -127,7 +127,7 @@ test("web wiring: updateLogStats renders the failed-by-product line from log.sta
 });
 
 test("web wiring: session-log panel holds the failed-by-product stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-failed-by-product" class="note mono">Failed by product: Vigiles 0 · Ignis 0 · Medicus 0<\/p>/,

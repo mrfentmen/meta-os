@@ -15,7 +15,7 @@ import { readFileSync } from "node:fs";
 
 import { FALLBACK_CAMERAS, WALL_FEEDS } from "../js/camera-fallback.js";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const appJs = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
 const commandJs = readFileSync(new URL("../js/command-map.js", import.meta.url), "utf8");
@@ -57,11 +57,11 @@ test("command view carries every control id the glue queries", () => {
 test("maplibre is vendored locally and loaded before the command module", () => {
   assert.ok(maplibreJs.includes("MapLibre GL JS"));
   assert.ok(maplibreJs.includes("v4.7.1"), "vendored build is MapLibre GL JS v4.7.1");
-  const maplibreCss = html.indexOf('<link rel="stylesheet" href="vendor/maplibre/maplibre-gl.css">');
-  const appCss = html.indexOf('<link rel="stylesheet" href="styles.css">');
+  const maplibreCss = html.indexOf('<link rel="stylesheet" href="../vendor/maplibre/maplibre-gl.css">');
+  const appCss = html.indexOf('<link rel="stylesheet" href="../styles.css">');
   assert.ok(maplibreCss !== -1 && appCss !== -1 && maplibreCss < appCss, "maplibre css loads first so app overrides win");
-  const maplibreTag = html.indexOf('<script src="vendor/maplibre/maplibre-gl.js"></script>');
-  const commandTag = html.indexOf('<script type="module" src="js/command-map.js"></script>');
+  const maplibreTag = html.indexOf('<script src="../vendor/maplibre/maplibre-gl.js"></script>');
+  const commandTag = html.indexOf('<script type="module" src="../js/command-map.js"></script>');
   assert.ok(maplibreTag !== -1 && commandTag !== -1 && maplibreTag < commandTag);
   assert.ok(!html.toLowerCase().includes("leaflet"), "no leaflet in the page");
   assert.ok(!commandJs.toLowerCase().includes("leaflet"), "no leaflet in the glue");
@@ -159,8 +159,8 @@ test("stepper steps are the five real pipeline states, in order", () => {
   assert.deepEqual([...idx].sort((a, b) => a - b), idx, "steps appear in pipeline order");
 });
 
-test("the system is named Meta Imperium in display text only", () => {
-  assert.ok(html.includes("<title>Meta Imperium — Visual Event Assessment Prototype</title>"));
+test("the app is named Imperium Console, a MetaOS app, in display text only", () => {
+  assert.ok(html.includes("<title>Imperium Console — MetaOS app</title>"));
   assert.ok(html.includes("<h1>Meta Imperium</h1>"), "header brand renamed");
   assert.ok(html.includes("IMPERIUM COMMAND"), "command wordmark renamed");
   assert.ok(html.includes("Meta Imperium · New York City"), "wordmark sub renamed");
