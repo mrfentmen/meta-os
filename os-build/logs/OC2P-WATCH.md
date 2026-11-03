@@ -20,5 +20,5 @@ RULE: read-only. Never touch, never boot, never sha for them.
 ## T4 OC1 evidence — the firing event
 WATCH: OC1 STATUS file + serial log + shot dir (paths filled at post time).
 LAST-KNOWN: ABSENT — no OC1 STATUS/serials/shots on branch or main.
-TRIGGER: the hour OC1 posts → run `OC2P-crosscheck-OC1-boot-TEMPLATE.md`,
+TRIGGER: the hour OC1 posts → run `os-build/logs/OC2P-crosscheck-OC1-boot-TEMPLATE.md`,
 file AGREE/DISAGREE.

@@ -282,3 +282,11 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Sweeps: fences 0, secrets 0, no branch-added >1MB, byte-copy clean, sh -n OK.
 - Suites: agent-layer 23/23 OK, check_iso_config 101, base validate OK, wallpaper current.
 - Parked: KF-02 / dashboard / GUI spike / re-proof (OC1 furnace), evince ack (Hana). Fires on OC1 post via cross-check template.
+
+## OC2 S9 — 2026-11-03 — different-work batch (no VM, 10 tasks)
+- New tests (7): test_check_keep_mime (4: clean/syntax/note/uncovered-fails) + test_check_manifest_targets (3: clean/syntax/ghost-fails). Suite 30/30 OK.
+- Real bug fixed: verify-dropin.sh had no sha-backend guard (false-pass path when both backends missing + empty-sha regex `*`). Backported shasum256 + hard FAIL + tightened regex to 64-hex. Old fixture test still green.
+- Docs link audit fixed (5): README bare validate.py/packages.txt/mimeapps → qualified; WATCH/BLOCKERS bare template → qualified; OC123 bare tokens.json → both qualified paths (same sha).
+- Dead-code audit: manifest.py clean, 0 TODOs, install.sh print is intentional port-probe. install.sh untouched (proposal stays a doc).
+- Sweeps: sh -n OK, keep-mime exit 0, manifest-targets 0 ghosts/orphans, MANIFEST regenerated (README sha).
+- Still parked: KF-02/dashboard/GUI/re-proof (OC1 furnace), evince ack (Hana), merges (Pax).

@@ -9,4 +9,4 @@
 - Pax owes: F1 k4 ruling (pair-swap vs ipc2) + merges. Degraded: log
   "waiting on F1", never invent numbers; verdicts merge-ready.
 - OC2 owes nobody boots. Next event: OC1 post → cross-check within hour
-  via `OC2P-crosscheck-OC1-boot-TEMPLATE.md`. Template + WATCH are live.
+  via `os-build/logs/OC2P-crosscheck-OC1-boot-TEMPLATE.md`. Template + WATCH are live.

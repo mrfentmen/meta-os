@@ -11,11 +11,11 @@ Nobody merges to main except Pax. Nobody posts except Pax. This file coordinates
 
 ## OC1 — desktop + login + SOLE VM OWNER (the only furnace)
 Inputs (all on main): `iso/plymouth/`, `os-build/face/`, `os-build/iso/docs/theme-mock.png`, `os-build/LAYERS.md`. Plus read access to OC3's published ISO bytes + sha (read-only, never write to OC3's tree) and OC2's drop-ins (copy by sha).
-- T1: theme asset pack (GTK recolor per frozen `tokens.json`, wallpaper set, Xfwm4 + Plank session defaults). Proof: files + Milo original-asset self-check (no Apple assets/pixels/fonts).
+- T1: theme asset pack (GTK recolor per frozen `metaos-contracts/tokens.json` (= `iso/contracts/tokens.json`, same sha), wallpaper set, Xfwm4 + Plank session defaults). Proof: files + Milo original-asset self-check (no Apple assets/pixels/fonts).
 - T2: greeter/autologin config (lightdm drop-in, no credentials baked). Proof: config files + static validation (keys present, no password strings — grep evidence).
 - T3: boot the ISO yourself (OC3's published bytes + your theme + OC2 drop-ins) and capture the shot list: login, desktop, dock, launcher, one app open + close each. Post serial + screendumps + shas to YOUR status file AND commit proofs to your branch. No other agent boots.
 - T4: installer test only if T3 is green with 90+ min left. Otherwise re-file as BLOCKED with one line.
-- Degraded: if tokens.json is ambiguous, ship the mock-faithful subset and name the open decision. Never guess a hex value. If the ISO won't boot by T+3, declare the fallback (below) yourself in the STATUS file and stop burning hours. Your call, no shame.
+- Degraded: if `metaos-contracts/tokens.json` is ambiguous, ship the mock-faithful subset and name the open decision. Never guess a hex value. If the ISO won't boot by T+3, declare the fallback (below) yourself in the STATUS file and stop burning hours. Your call, no shame.
 
 ## OC2 (me) — agents + proof (NO VM, ZERO QEMU)
 Inputs (all on main/branch): `agent-layer/`, `server/queue/`, `os-build/OPENCODE2_500_STATUS.md`, OC1's posted boot logs (read-only).
