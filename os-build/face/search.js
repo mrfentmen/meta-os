@@ -16,9 +16,12 @@
  */
 (function () {
   var FILES_API = "http://127.0.0.1:18936";
-  var NOTES_KEY = "metaos-notes";
+  var NOTES_API = "http://127.0.0.1:18937";
+  var NOTES_CACHE_KEY = "metaos-notes-cache";
+  var NOTES_LEGACY_KEY = "metaos-notes";
   var DEBOUNCE_MS = 200;
   var MAX_RESULTS = 8;
+  var HOME_CACHE = null;
 
   function $(id) { return document.getElementById(id); }
 
@@ -114,34 +117,83 @@
       });
   }
 
-  function searchNotes(q) {
-    var text = "";
-    try { text = window.localStorage.getItem(NOTES_KEY) || ""; } catch (e) { text = ""; }
-    if (!text) return [];
-    var ql = q.toLowerCase();
+  function readNotesCache() {
+    // notes.html keeps an offline cache under NOTES_CACHE_KEY (array of
+    // {id,text,updated}); very old pages used NOTES_LEGACY_KEY line text.
     var out = [];
-    var lines = text.split("\n");
-    for (var i = 0; i < lines.length && out.length < MAX_RESULTS; i++) {
-      if (lines[i].toLowerCase().indexOf(ql) !== -1) {
-        (function (ln, txt) {
-          out.push({
-            group: "Notes", label: "Line " + (ln + 1) + ": " + txt.slice(0, 80),
-            detail: "notes", run: function () {
-              var app = { id: "notes", name: "Notes", kind: "url", target: "notes.html" };
-              var found = getApps().filter(function (a) { return a.id === "notes"; })[0];
-              openAppTarget(found || app);
-            },
-          });
-        })(i, lines[i].trim());
+    try {
+      var raw = window.localStorage.getItem(NOTES_CACHE_KEY) || "";
+      var v = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(v)) {
+        v.forEach(function (n) {
+          if (n && typeof n.id === "string" && typeof n.text === "string") {
+            n.text.split("\n").forEach(function (ln, i) {
+              out.push({ id: n.id, line: i, text: ln });
+            });
+          }
+        });
       }
+    } catch (e) { /* ignore */ }
+    if (!out.length) {
+      try {
+        var legacy = window.localStorage.getItem(NOTES_LEGACY_KEY) || "";
+        legacy.split("\n").forEach(function (ln, i) {
+          out.push({ id: "legacy", line: i, text: ln });
+        });
+      } catch (e2) { /* ignore */ }
     }
     return out;
+  }
+
+  function searchNotes(q) {
+    // Live notes from notesd :18937, offline cache when it is unreachable.
+    var ql = q.toLowerCase();
+    function toHits(lines) {
+      var out = [];
+      for (var i = 0; i < lines.length && out.length < MAX_RESULTS; i++) {
+        if (lines[i].text.toLowerCase().indexOf(ql) !== -1) {
+          (function (ln) {
+            out.push({
+              group: "Notes",
+              label: "Note " + String(ln.id).slice(0, 13) + " L" + (ln.line + 1) + ": " + ln.text.trim().slice(0, 80),
+              detail: "notes",
+              run: function () {
+                var app = { id: "notes", name: "Notes", kind: "url", target: "notes.html" };
+                var found = getApps().filter(function (a) { return a.id === "notes"; })[0];
+                openAppTarget(found || app);
+              },
+            });
+          })(lines[i]);
+        }
+      }
+      return out;
+    }
+    return fetch(NOTES_API + "/notes").then(function (r) {
+      return r.json().then(function (d) {
+        if (!r.ok || !d.ok || !Array.isArray(d.notes)) return toHits(readNotesCache());
+        var lines = [];
+        d.notes.forEach(function (n) {
+          String(n.text || "").split("\n").forEach(function (ln, i) {
+            lines.push({ id: n.id, line: i, text: ln });
+          });
+        });
+        return toHits(lines);
+      });
+    }).catch(function () { return toHits(readNotesCache()); });
   }
 
   function fetchJSON(url) {
     return fetch(url).then(function (r) {
       return r.json().then(function (d) { return { ok: r.ok, d: d }; });
     });
+  }
+
+  function getHome() {
+    if (HOME_CACHE) return Promise.resolve(HOME_CACHE);
+    return fetchJSON(FILES_API + "/home").then(function (x) {
+      if (x.ok && x.d.ok && x.d.home) HOME_CACHE = x.d.home;
+      return HOME_CACHE;
+    }).catch(function () { return HOME_CACHE; });
   }
 
   function searchFiles(q) {
@@ -165,21 +217,37 @@
       }));
       return sub.then(function (lists) {
         lists.forEach(function (l) { hits = hits.concat(l); });
-        hits = hits.slice(0, MAX_RESULTS);
-        return hits.map(function (e) {
-          return {
-            group: "Files", label: (e.is_dir ? "Dir " : "File ") + e.name, detail: e.path,
-            run: function () {
-              var target = e.is_dir ? "files.html" : "editor.html?path=" + encodeURIComponent(e.path);
-              var name = e.is_dir ? "Files" : "Code Editor";
-              var id = e.is_dir ? "files" : "editor";
-              var known = getApps().filter(function (a) { return a.id === id; })[0];
-              openAppTarget(known || { id: id, name: name, kind: "url", target: target });
-            },
-          };
+        // ~/Notes filenames too (notes live on disk as <id>.md mirrors).
+        return getHome().then(function (home) {
+          if (!home) return finish(hits);
+          return fetchJSON(FILES_API + "/list?path=" + encodeURIComponent(home + "/Notes"))
+            .then(function (nx) {
+              if (nx.ok && nx.d.ok) {
+                (nx.d.entries || []).forEach(function (e) {
+                  if (e.name && e.name.toLowerCase().indexOf(ql) !== -1 &&
+                      hits.length < MAX_RESULTS) hits.push(e);
+                });
+              }
+              return finish(hits);
+            }).catch(function () { return finish(hits); });
         });
       });
     }).catch(function () { return []; });
+
+    function finish(hits) {
+      return hits.slice(0, MAX_RESULTS).map(function (e) {
+        return {
+          group: "Files", label: (e.is_dir ? "Dir " : "File ") + e.name, detail: e.path,
+          run: function () {
+            var target = e.is_dir ? "files.html" : "editor.html?path=" + encodeURIComponent(e.path);
+            var name = e.is_dir ? "Files" : "Code Editor";
+            var id = e.is_dir ? "files" : "editor";
+            var known = getApps().filter(function (a) { return a.id === id; })[0];
+            openAppTarget(known || { id: id, name: name, kind: "url", target: target });
+          },
+        };
+      });
+    }
   }
 
   function init() {
@@ -227,11 +295,9 @@
     function runSearch(q) {
       if (!q) { close(); return; }
       var appHits = searchApps(q);
-      var noteHits = searchNotes(q);
-      var base = appHits.concat(noteHits).slice(0, MAX_RESULTS);
-      if (base.length >= MAX_RESULTS) { render(base); return; }
-      searchFiles(q).then(function (fileHits) {
-        render(base.concat(fileHits).slice(0, MAX_RESULTS));
+      if (appHits.length >= MAX_RESULTS) { render(appHits.slice(0, MAX_RESULTS)); return; }
+      Promise.all([searchNotes(q), searchFiles(q)]).then(function (parts) {
+        render(appHits.concat(parts[0]).concat(parts[1]).slice(0, MAX_RESULTS));
       });
     }
 
@@ -273,6 +339,31 @@
         searchApps: searchApps, searchNotes: searchNotes, searchFiles: searchFiles,
       };
     } catch (e) { /* ignore */ }
+
+    // Settings restore (shell boot): the shell paints instantly from
+    // localStorage, but after the epiphany profile is deleted localStorage
+    // is empty. The daemon at :18937 holds ~/.config/metaos/settings.json,
+    // so copy its known keys back into localStorage and re-apply the paint.
+    // Loopback only; failure keeps the localStorage paint.
+    try {
+      fetch("http://127.0.0.1:18937/settings").then(function (r) {
+        return r.json().then(function (d) { return { ok: r.ok, d: d }; });
+      }).then(function (x) {
+        if (!x.ok || !x.d.ok || !x.d.settings) return;
+        var keys = ["metaos-theme", "metaos-bar", "metaos-wallpaper", "metaos-bg"];
+        var touched = false;
+        keys.forEach(function (k) {
+          var v = x.d.settings[k];
+          if (v !== undefined && v !== null) {
+            try { window.localStorage.setItem(k, String(v)); touched = true; } catch (e2) {}
+          }
+        });
+        if (!touched) return;
+        try { if (typeof window.applyTheme === "function") window.applyTheme(); } catch (e2) {}
+        try { if (typeof window.applyBar === "function") window.applyBar(); } catch (e2) {}
+        try { if (typeof window.applyWallpaper === "function") window.applyWallpaper(); } catch (e2) {}
+      }).catch(function () { /* keep localStorage paint */ });
+    } catch (e) { /* keep localStorage paint */ }
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

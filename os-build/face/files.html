@@ -42,22 +42,38 @@ function load(p){
       var t=document.createElement("button");t.className="op";t.textContent="Trash";t.onclick=function(){trash(e.path)};a.appendChild(t);
       tr.appendChild(n);tr.appendChild(s);tr.appendChild(m);tr.appendChild(a);rows.appendChild(tr);
     });
-  }).catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+  }).catch(function(){st.textContent="backend unreachable on 18936 (is files.py running?)";});
 }
 function trash(p){
   fetch(API+"/trash",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:p})})
   .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?"Trashed "+p:"Error: "+d.error;load(cur);})
-  .catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+  .catch(function(){st.textContent="backend unreachable on 18936 (is files.py running?)";});
 }
-[["Face",""],["Root","/"],["/tmp","/tmp"],["/opt/face","/opt/face"]].forEach(function(q){
+[["Face",""],["Root","/"],["/tmp","/tmp"],["/opt/face","/opt/face"],["Notes","NOTES"],["Home","HOME"]].forEach(function(q){
   var b=document.createElement("button");b.textContent=q[0];b.onclick=function(){load(q[1])};document.getElementById("quick").appendChild(b);
 });
+// Resolve the Notes/Home shortcuts against the real $HOME from files.py.
+fetch(API+"/home").then(function(r){return r.json()}).then(function(d){
+  if(!d.ok||!d.home)return;
+  var btns=document.getElementById("quick").children;
+  for(var i=0;i<btns.length;i++){
+    if(btns[i].textContent==="Notes")btns[i].onclick=(function(h){return function(){load(h+"/Notes")};})(d.home);
+    if(btns[i].textContent==="Home")btns[i].onclick=(function(h){return function(){load(h)};})(d.home);
+  }
+  // ?path= deep-links (Editor "Browse Notes" uses this to open ~/Notes).
+  try{
+    var m=/[?&]path=([^&]+)/.exec(location.search);
+    if(m)load(decodeURIComponent(m[1]));
+    else if((d.home+"/Notes")===cur||!cur)load(d.home+"/Notes");
+  }catch(e){}
+}).catch(function(){});
 document.getElementById("go").onclick=function(){load(pathEl.value.trim())};
 document.getElementById("up").onclick=function(){if(!cur)return;var i=cur.lastIndexOf("/");load(i<=0?"/":cur.slice(0,i))};
 document.getElementById("mkbtn").onclick=function(){
   var p=document.getElementById("newdir").value.trim();if(!p)return;
   fetch(API+"/mkdir",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:p})})
-  .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?"Created "+p:"Error: "+d.error;if(d.ok)load(cur);});
+  .then(function(r){return r.json()}).then(function(d){st.textContent=d.ok?"Created "+p:"Error: "+d.error;if(d.ok)load(cur);})
+  .catch(function(){st.textContent="backend unreachable on 18936 (is files.py running?)";});
 };
 pathEl.addEventListener("keydown",function(e){if(e.key==="Enter")load(pathEl.value.trim())});
 load("");

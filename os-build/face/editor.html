@@ -7,7 +7,7 @@ textarea{width:100%;box-sizing:border-box;height:60vh;background:#000;color:#eee
 #meta{color:#999;font-size:13px;min-height:1.4em}#status{min-height:1.4em}</style>
 </head><body>
 <h1>Editor <small>(live, this machine)</small></h1>
-<div id="bar"><input id="path" type="text" placeholder="/absolute/path/to/file"><button id="open">Open</button><button id="save">Save (Ctrl+S)</button><a href="files.html">Browse</a></div>
+<div id="bar"><input id="path" type="text" placeholder="/absolute/path/to/file"><button id="open">Open</button><button id="save">Save (Ctrl+S)</button><a href="files.html">Browse</a><a id="noteslink" href="files.html">Notes</a></div>
 <div id="meta"></div>
 <textarea id="ed" spellcheck="false" placeholder="Open a text file to edit it. Binary files are refused by files.py."></textarea>
 <p id="status" role="status"></p>
@@ -25,7 +25,7 @@ function open(p){
     ed.value=x.d.content;pathEl.value=x.d.path;
     meta.textContent=x.d.path+" \u00b7 "+x.d.size+" bytes \u00b7 saved "+new Date(x.d.mtime*1000).toLocaleString();
     st.textContent="Opened "+x.d.path;
-  }).catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+  }).catch(function(){st.textContent="backend unreachable on 18936 (is files.py running?)";});
 }
 function save(){
   var p=pathEl.value.trim();if(!p){st.textContent="Enter a path first.";return}
@@ -34,7 +34,7 @@ function save(){
   .then(function(r){return r.json()}).then(function(d){
     st.textContent=d.ok?("Saved "+d.path+" ("+d.bytes+" bytes)"):"Error: "+d.error;
     if(d.ok)meta.textContent=d.path+" \u00b7 "+d.bytes+" bytes \u00b7 just saved";
-  }).catch(function(){st.textContent="files service unreachable (is files.py running on :18936?)";});
+  }).catch(function(){st.textContent="backend unreachable on 18936 (is files.py running?)";});
 }
 document.getElementById("open").onclick=function(){open(pathEl.value.trim())};
 document.getElementById("save").onclick=save;
@@ -43,6 +43,10 @@ pathEl.addEventListener("keydown",function(e){if(e.key==="Enter")open(pathEl.val
 try{
   var m=/[?&]path=([^&]+)/.exec(location.search);
   if(m){pathEl.value=decodeURIComponent(m[1]);open(pathEl.value);}
+  // Point the Notes shortcut at the real $HOME from files.py.
+  fetch(API+"/home").then(function(r){return r.json()}).then(function(d){
+    if(d.ok&&d.home)document.getElementById("noteslink").href="files.html?path="+encodeURIComponent(d.home+"/Notes");
+  }).catch(function(){});
 }catch(e){}
 })();
 </script></body></html>

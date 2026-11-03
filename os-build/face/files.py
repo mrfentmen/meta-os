@@ -268,6 +268,9 @@ class H(BaseHTTPRequestHandler):
     def do_GET(self):
         u = urlparse(self.path)
         q = parse_qs(u.query)
+        if u.path == "/home":
+            return self._send(200, {"ok": True,
+                                   "home": os.path.expanduser("~")})
         if u.path == "/list":
             raw = q.get("path", [""])[0]
             try:

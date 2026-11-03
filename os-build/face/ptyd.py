@@ -1,17 +1,21 @@
-"""pty bridge: raw-TCP + WebSocket loopback daemon, one 80x24 bash at a time.
+"""pty bridge: raw-TCP + WebSocket loopback daemon, pool of 80x24 bash sessions.
 
 Ports: TCP 127.0.0.1:18933, loopback only, stdlib only, Linux guest.
 - Raw TCP (nc, selftest): connect, bytes pump both ways to `bash -i`
-  on a fresh pty. One client at a time; busy clients get
+  on a fresh pty. Pool of MAX_SESSIONS concurrent clients (terminal +
+  agent can coexist); when the pool is exhausted busy clients get
   b'\\r\\n[busy]\\r\\n' then close.
 - WebSocket (browser Terminal): GET / with `Upgrade: websocket`
   (RFC 6455, handshake via hashlib+base64, stdlib only). After the
   101 response, client frames (masked text/binary) pump to the pty
   and pty output returns as unmasked binary frames. Ping->pong,
-  close handshake honoured.
+  close handshake honoured. Same pool: 503 busy only when pool full.
 - No resize protocol: slave winsize fixed at 80x24 (see LIMIT).
+- Same wire protocol as the single-client version: handshake bytes,
+  frame format, busy bytes, and close semantics are unchanged.
 Selftest: python3 ptyd.py --selftest        (raw TCP path)
 WS selftest: python3 ptyd.py --selftest-ws  (handshake + echo path)
+Pool selftest: python3 ptyd.py --selftest-pool (N concurrent raw clients)
 """
 import base64
 import fcntl
@@ -28,7 +32,8 @@ import threading
 
 HOST, PORT = "127.0.0.1", 18933
 BUSY = b"\r\n[busy]\r\n"
-LOCK = threading.Lock()
+MAX_SESSIONS = 4
+POOL = threading.Semaphore(MAX_SESSIONS)
 WS_MAGIC = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 
@@ -219,7 +224,7 @@ def handle(conn):
             pass
         conn.close()
         return
-    if not LOCK.acquire(blocking=False):
+    if not POOL.acquire(blocking=False):
         try:
             if is_ws:
                 conn.sendall(b"HTTP/1.1 503 busy\r\nContent-Length: 0\r\n"
@@ -271,7 +276,7 @@ def handle(conn):
             finally:
                 _cleanup(conn, master, pid)
     finally:
-        LOCK.release()
+        POOL.release()
 
 
 def serve(host=HOST, port=PORT):
@@ -364,7 +369,57 @@ def selftest_ws(host=HOST, port=PORT):
     return 1
 
 
+def selftest_pool(host=HOST, port=PORT, n=2):
+    """Two concurrent raw clients must both get a shell (no [busy])."""
+    import time
+    threading.Thread(target=serve, kwargs={"host": host, "port": port},
+                     daemon=True).start()
+    time.sleep(0.5)
+    conns = []
+    try:
+        for _ in range(n):
+            conns.append(socket.create_connection((host, port), timeout=5))
+        for i, c in enumerate(conns):
+            c.settimeout(5)
+            c.sendall(("echo POOLMARK%d\n" % i).encode())
+        deadline = time.time() + 6.0
+        bufs = [b"" for _ in conns]
+        done = [False] * n
+        while time.time() < deadline and not all(done):
+            for i, c in enumerate(conns):
+                if done[i]:
+                    continue
+                try:
+                    chunk = c.recv(65536)
+                except socket.timeout:
+                    continue
+                if not chunk:
+                    continue
+                if b"[busy]" in chunk:
+                    print("FAIL: client %d got [busy] (pool exhausted)" % i)
+                    return 1
+                bufs[i] += chunk
+                if ("POOLMARK%d" % i).encode() in bufs[i]:
+                    done[i] = True
+        if all(done):
+            print("PASS")
+            return 0
+        print("FAIL: pool markers missing %r" % (bufs,))
+        return 1
+    except OSError as e:
+        print("FAIL: %r" % (e,))
+        return 1
+    finally:
+        for c in conns:
+            try:
+                c.close()
+            except OSError:
+                pass
+
+
 if __name__ == "__main__":
+    if "--selftest-pool" in sys.argv:
+        sys.exit(selftest_pool())
     if "--selftest-ws" in sys.argv:
         sys.exit(selftest_ws())
     if "--selftest" in sys.argv:

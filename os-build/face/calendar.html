@@ -25,6 +25,8 @@ html[data-motion="reduced"] button{transition:none}
 #add{display:flex;gap:6px;margin-top:10px}
 #add input{flex:1;font:inherit;padding:7px 9px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
 #status{color:var(--mut);font-size:13px;min-height:1.2em;margin:8px 0 0}
+#paths{color:var(--mut);font-size:12px;margin:8px 0 0;overflow-wrap:anywhere}
+#io{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
 @media(max-width:520px){body{padding:16px}.day{min-height:44px}}
 </style></head><body>
 <header>
@@ -42,21 +44,49 @@ html[data-motion="reduced"] button{transition:none}
 <input id="ev" placeholder="Add an event" autocomplete="off">
 <button type="submit">Add</button>
 </form>
-<p id="status" role="status" aria-live="polite"></p>
+<div id="io">
+<button id="export" type="button">Export .ics</button>
+<button id="importbtn" type="button">Import .ics</button>
+<input id="importfile" type="file" accept=".ics,text/calendar" hidden>
+</div>
+<p id="status" role="status" aria-live="polite">Loading events from this machine...</p>
+<p id="paths"></p>
 </section>
 <script>
 (function(){
 try{var t=localStorage.getItem('metaos-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}
 try{if(localStorage.getItem('metaos-reduced-motion')==='1')document.documentElement.dataset.motion='reduced';}catch(e){}
-var KEY='metaos-calendar',cur=new Date(),sel=null;
+var API='http://127.0.0.1:18937',CACHE_KEY='metaos-calendar-cache';
+var cur=new Date(),sel=null,data={},online=false,icsFile='';
 cur.setDate(1);
-function load(){try{var v=JSON.parse(localStorage.getItem(KEY)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{};}catch(e){return{};}}
-function save(d){try{localStorage.setItem(KEY,JSON.stringify(d));return true;}catch(e){return false;}}
 function key(y,m,dd){return y+'-'+String(m+1).padStart(2,'0')+'-'+String(dd).padStart(2,'0');}
 function keyOf(dt){return key(dt.getFullYear(),dt.getMonth(),dt.getDate());}
 function human(k){var p=k.split('-');var d=new Date(Number(p[0]),Number(p[1])-1,Number(p[2]));return d.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+function readCache(){try{var v=JSON.parse(localStorage.getItem(CACHE_KEY)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{};}catch(e){return{};}}
+function writeCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify(data));}catch(e){}}
+function setStatus(m){document.getElementById('status').textContent=m;}
+function api(method,route,body){
+  var opts={method:method,headers:{'Content-Type':'application/json'}};
+  if(body!==undefined)opts.body=JSON.stringify(body);
+  return fetch(API+route,opts).then(function(r){return r.json().then(function(d){return{ok:r.ok,d:d};});});
+}
+function load(){
+  setStatus('Loading events from this machine...');
+  api('GET','/events').then(function(x){
+    if(!x.ok||!x.d.ok)throw new Error(x.d.error||'load failed');
+    online=true;data=x.d.events||{};icsFile=x.d.ics||'~/Notes/calendar.ics';writeCache();
+    setStatus('Loaded events from this machine (notesd :18937).');
+    document.getElementById('paths').textContent='Calendar file: '+icsFile+' (valid VCALENDAR, rewritten on every change).';
+    renderGrid();renderDay();
+  }).catch(function(){
+    online=false;data=readCache();icsFile='~/Notes/calendar.ics';
+    setStatus('Showing cached events (backend unreachable on 18937 — is notesd.py running?).');
+    document.getElementById('paths').textContent='Offline cache only. The on-disk calendar.ics is untouched.';
+    renderGrid();renderDay();
+  });
+}
 function renderGrid(){
-  var data=load(),y=cur.getFullYear(),m=cur.getMonth();
+  var y=cur.getFullYear(),m=cur.getMonth();
   document.getElementById('title').textContent=cur.toLocaleString(undefined,{month:'long',year:'numeric'});
   var g=document.getElementById('grid');g.innerHTML='';
   ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d){var s=document.createElement('div');s.className='dow';s.textContent=d;s.setAttribute('role','columnheader');g.appendChild(s);});
@@ -78,7 +108,7 @@ function renderGrid(){
   });
 }
 function renderDay(){
-  var data=load(),title=document.getElementById('day-title'),ul=document.getElementById('events');
+  var title=document.getElementById('day-title'),ul=document.getElementById('events');
   ul.innerHTML='';
   if(!sel){title.textContent='Select a day';return;}
   title.textContent=human(sel);
@@ -90,10 +120,14 @@ function renderDay(){
     var del=document.createElement('button');del.type='button';del.textContent='Delete';
     del.setAttribute('aria-label','Delete '+text+' on '+human(sel));
     del.onclick=function(){
-      var d=load();var arr=d[sel]||[];arr.splice(i,1);
-      if(arr.length)d[sel]=arr;else delete d[sel];
-      save(d);renderGrid();renderDay();
-      document.getElementById('status').textContent='Event deleted.';
+      if(!online){setStatus('Showing cached events — cannot delete while offline.');return;}
+      api('POST','/events/delete',{date:sel,index:i}).then(function(x){
+        if(!x.ok||!x.d.ok)throw new Error(x.d.error||'delete failed');
+        var arr=data[sel]||[];arr.splice(i,1);
+        if(arr.length)data[sel]=arr;else delete data[sel];
+        writeCache();renderGrid();renderDay();
+        setStatus('Event deleted from this machine.');
+      }).catch(function(){setStatus('Showing cached events — delete failed (backend unreachable on 18937).');});
     };
     li.appendChild(span);li.appendChild(del);ul.appendChild(li);
   });
@@ -105,14 +139,41 @@ document.getElementById('today').onclick=function(){cur=new Date();cur.setDate(1
 document.getElementById('add').onsubmit=function(e){
   e.preventDefault();
   var input=document.getElementById('ev'),v=input.value.trim();
-  if(!sel){document.getElementById('status').textContent='Select a day first.';return;}
+  if(!sel){setStatus('Select a day first.');return;}
   if(!v)return;
-  var d=load();d[sel]=d[sel]||[];d[sel].push(v);
-  if(!save(d)){document.getElementById('status').textContent='Could not save in this browser.';return;}
-  input.value='';renderGrid();renderDay();
-  document.getElementById('status').textContent='Event added.';
+  if(!online){setStatus('Showing cached events — cannot add while offline.');return;}
+  api('POST','/events',{date:sel,text:v}).then(function(x){
+    if(!x.ok||!x.d.ok)throw new Error(x.d.error||'add failed');
+    data[sel]=data[sel]||[];data[sel].push(v);writeCache();
+    input.value='';renderGrid();renderDay();
+    setStatus('Event saved to this machine.');
+  }).catch(function(){setStatus('Showing cached events — add failed (backend unreachable on 18937).');});
 };
+document.getElementById('export').onclick=function(){
+  api('GET','/export').then(function(x){
+    if(!x.ok||!x.d.ok)throw new Error(x.d.error||'export failed');
+    var blob=new Blob([x.d.ics],{type:'text/calendar'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);a.download='calendar.ics';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},1000);
+    setStatus('Exported '+(x.d.ics.split('BEGIN:VEVENT').length-1)+' event(s) from '+(x.d.path||icsFile)+'.');
+  }).catch(function(){setStatus('Showing cached events — export failed (backend unreachable on 18937).');});
+};
+document.getElementById('importbtn').onclick=function(){document.getElementById('importfile').click();};
+document.getElementById('importfile').addEventListener('change',function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    api('POST','/import',{ics:String(rd.result||'')}).then(function(x){
+      if(!x.ok||!x.d.ok)throw new Error(x.d.error||'import failed');
+      setStatus('Imported '+x.d.added+' event(s) into this machine.');
+      e.target.value='';load();
+    }).catch(function(){setStatus('Import failed: '+(online?'bad .ics file':'backend unreachable on 18937')+'.');e.target.value='';});
+  };
+  rd.readAsText(f);
+});
 sel=keyOf(new Date());
-renderGrid();renderDay();
+load();
 })();
 </script></body></html>

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Meta OS Desktop
+Comment=Open the Meta OS shell over the XFCE floor
+Exec=/opt/face/kiosk.sh
+Icon=/usr/share/backgrounds/meta-wallpaper.png
+Terminal=false
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-Delay=3
+X-GNOME-Autostart-enabled=true

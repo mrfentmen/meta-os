@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><link rel="icon" href="data:,"><meta name="viewport" content="width=device-width,initial-scale=1"><title>About this OS</title>
+<style>
+body{font-family:system-ui,-apple-system,sans-serif;background:#070b16;color:#edf5ff;padding:24px;max-width:640px;margin:0 auto}
+h1{margin:0 0 4px;font-size:22px}
+.sub{color:#8291ac;font-size:13px;margin:0 0 16px}
+section{background:#0e1626;border:1px solid #16213a;border-radius:10px;padding:14px 16px;margin:14px 0}
+h2{margin:0 0 10px;font-size:14px;color:#78baff;font-weight:600}
+.row{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid #16213a;font-size:13.5px}
+.row:first-of-type{border-top:0}
+.k{color:#8291ac;flex:0 0 auto}
+.v{text-align:right;overflow-wrap:anywhere}
+p{font-size:13.5px;line-height:1.55;color:#c7d3e8;margin:8px 0}
+#fail{display:none;background:#3a1414;border:1px solid #7a2a2a;border-radius:10px;padding:12px 14px;margin:14px 0;font-size:13.5px}
+#stamp{font-size:12px;color:#8291ac;min-height:1.4em}
+button{font-size:14px;padding:6px 14px;cursor:pointer;background:#1877f2;border:0;border-radius:8px;color:#fff}
+</style>
+</head><body>
+<h1>About this OS</h1>
+<p class="sub">Meta OS &mdash; read from this machine, just now. Nothing on this page is typed in by hand.</p>
+
+<div id="fail" role="alert"></div>
+
+<section aria-label="System"><h2>This machine</h2>
+<div class="row"><span class="k">Version</span><span class="v" id="f-version">&mdash;</span></div>
+<div class="row"><span class="k">Full name</span><span class="v" id="f-pretty">&mdash;</span></div>
+<div class="row"><span class="k">System ID</span><span class="v" id="f-id">&mdash;</span></div>
+<div class="row"><span class="k">Codename</span><span class="v" id="f-codename">&mdash;</span></div>
+<div class="row"><span class="k">Kernel</span><span class="v" id="f-kernel">&mdash;</span></div>
+<div class="row"><span class="k">Session</span><span class="v" id="f-session">&mdash;</span></div>
+<div class="row"><span class="k">Desktop build</span><span class="v" id="f-build">&mdash;</span></div>
+</section>
+
+<section aria-label="What this is"><h2>What this is</h2>
+<p>Meta OS 1.0 (Ribbon) is a Meta-branded desktop on a Debian-family base:
+its own name, theme, session, services and apps, on top of the base system
+and its stock kernel. The base is not rewritten and is not claimed to be.</p>
+</section>
+
+<p><button id="refresh" type="button">Refresh</button> <span id="stamp" role="status">Loading live values&hellip;</span></p>
+
+<script>
+(function(){
+"use strict";
+// Primary source: about.json, rewritten at every login by session.sh from
+// the live /etc/os-release and uname on THIS machine (same directory, so it
+// is served by the same static backend as this page).
+// Fallback: the facts service on this machine, which reads the same files
+// live (full name + kernel only). If neither answers, the failure box says
+// so instead of showing stale or invented values.
+var stamp = document.getElementById('stamp');
+var fail = document.getElementById('fail');
+function set(id, v){ document.getElementById(id).textContent = v || 'unavailable'; }
+function showFail(msg){
+  fail.style.display = 'block';
+  fail.textContent = msg;
+}
+function hideFail(){ fail.style.display = 'none'; fail.textContent = ''; }
+async function tick(){
+  hideFail();
+  try{
+    var r = await fetch('about.json', {cache: 'no-store'});
+    if(!r.ok) throw new Error('http ' + r.status);
+    var j = await r.json();
+    if(j.error){ throw new Error(j.error); }
+    set('f-version', j.version);
+    set('f-pretty', j.pretty);
+    set('f-id', j.id);
+    set('f-codename', j.codename);
+    set('f-kernel', j.kernel);
+    set('f-session', j.session);
+    set('f-build', j.build_date);
+    stamp.textContent = 'Read live at ' + new Date().toLocaleTimeString() +
+      ' (generated on this machine ' + (j.generated_utc || 'unknown') + ').';
+    return;
+  }catch(e){ /* fall through to the facts service */ }
+  try{
+    var r2 = await fetch('http://127.0.0.1:18932/facts', {cache: 'no-store'});
+    if(!r2.ok) throw new Error('http ' + r2.status);
+    var f = await r2.json();
+    set('f-version', f.distro);
+    set('f-pretty', f.distro);
+    set('f-kernel', f.kernel);
+    set('f-id', null); set('f-codename', null);
+    set('f-session', null); set('f-build', null);
+    stamp.textContent = 'Partial: name and kernel are live; identity details need a fresh login.';
+    showFail('The login-time facts file is missing, so only the name and kernel (read live just now) are shown. Log out and back in, then reopen About.');
+  }catch(e2){
+    showFail('Neither the login-time facts file nor the facts service on this machine answered. The values above are unavailable, not defaults.');
+    stamp.textContent = 'Facts service unreachable (is the session running?).';
+  }
+}
+document.getElementById('refresh').onclick = tick;
+tick();
+})();
+</script>
+</body></html>

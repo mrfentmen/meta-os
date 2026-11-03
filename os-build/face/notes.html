@@ -20,45 +20,43 @@ button:hover{filter:brightness(1.15)}
 html[data-motion="reduced"] button{transition:none}
 #del{border-color:#a33;color:#e88}
 #status{color:var(--mut);font-size:13px;margin:0;min-height:1.2em}
+#paths{color:var(--mut);font-size:12px;margin:0}
 @media(max-width:600px){main{grid-template-columns:1fr}nav{max-height:160px}}
 </style></head><body>
 <header><h1>Notes</h1><button id="new">New note</button></header>
 <main>
 <nav aria-label="Saved notes"><ul id="list"></ul></nav>
 <section aria-label="Note editor">
-<textarea id="body" aria-label="Note text" placeholder="Write a note..."></textarea>
+<textarea id="body" aria-label="Note text" placeholder="Write a note..." disabled></textarea>
 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
 <button id="del">Delete note</button>
-<p id="status" role="status" aria-live="polite">Notes are stored in this browser.</p>
+<p id="status" role="status" aria-live="polite">Loading notes from this machine...</p>
 </div>
+<p id="paths"></p>
 </section>
 </main>
 <script>
 (function(){
 try{var t=localStorage.getItem('metaos-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}
 try{if(localStorage.getItem('metaos-reduced-motion')==='1')document.documentElement.dataset.motion='reduced';}catch(e){}
-var KEY='metaos-notes';
-var list=document.getElementById('list'),body=document.getElementById('body'),status=document.getElementById('status');
-var sel=null,notes=[];
-function read(){
+var API='http://127.0.0.1:18937';
+var CACHE_KEY='metaos-notes-cache';
+var list=document.getElementById('list'),body=document.getElementById('body'),
+    status=document.getElementById('status'),paths=document.getElementById('paths');
+var sel=null,notes=[],online=false,saveTimer=null;
+function title(n){var line=String(n.text||'').split('\n')[0].trim();return line?line.slice(0,40):'Untitled note';}
+function find(id){for(var i=0;i<notes.length;i++){if(notes[i].id===id)return notes[i];}return null;}
+function readCache(){
   try{
-    var raw=localStorage.getItem(KEY);
+    var raw=localStorage.getItem(CACHE_KEY);
     if(!raw)return[];
     var v=JSON.parse(raw);
-    if(Array.isArray(v))return v.filter(function(n){return n&&typeof n.id==='string';});
-    if(typeof v==='string')return[{id:String(Date.now()),text:v,updated:Date.now()}];
-    return[];
-  }catch(e){return[];}
+    if(Array.isArray(v))return v.filter(function(n){return n&&typeof n.id==='string'&&typeof n.text==='string';});
+  }catch(e){}
+  return[];
 }
-function write(){try{localStorage.setItem(KEY,JSON.stringify(notes));return true;}catch(e){return false;}}
-function title(n){var line=String(n.text||'').split('\n')[0].trim();return line?line.slice(0,40):'Untitled note';}
-function find(id){return notes.filter(function(n){return n.id===id;})[0];}
-function save(){
-  if(sel===null)return;
-  var n=find(sel);if(!n)return;
-  n.text=body.value;n.updated=Date.now();
-  status.textContent=write()?'Saved.':'Could not save in this browser.';
-}
+function writeCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify(notes));}catch(e){}}
+function setStatus(msg){status.textContent=msg;}
 function render(){
   list.innerHTML='';
   if(!notes.length){
@@ -68,32 +66,92 @@ function render(){
     var li=document.createElement('li');
     var b=document.createElement('button');b.type='button';b.className='note';b.textContent=title(n);
     if(n.id===sel)b.setAttribute('aria-current','true');
-    b.onclick=function(){sel=n.id;body.value=n.text||'';status.textContent='';render();body.focus();};
+    b.onclick=function(){sel=n.id;body.value=n.text||'';setStatus(online?'':'Showing cached notes — edits stay in this browser until the daemon is back.');render();body.focus();};
     li.appendChild(b);list.appendChild(li);
   });
   var has=!!find(sel);
   body.disabled=!has;
   body.placeholder=has?'Write a note...':'No note selected - press New note.';
 }
+function api(method,route,data){
+  var opts={method:method,headers:{'Content-Type':'application/json'}};
+  if(data!==undefined)opts.body=JSON.stringify(data);
+  return fetch(API+route,opts).then(function(r){
+    return r.json().then(function(d){return{ok:r.ok,d:d};});
+  });
+}
+function load(){
+  setStatus('Loading notes from this machine...');
+  api('GET','/notes').then(function(x){
+    if(!x.ok||!x.d.ok)throw new Error(x.d.error||('http '+x.ok));
+    online=true;
+    notes=x.d.notes||[];
+    writeCache();
+    if(notes.length&&!find(sel)){sel=notes.slice().sort(function(a,b){return(b.updated||0)-(a.updated||0);})[0].id;}
+    body.value=sel?(find(sel).text||''):'';
+    setStatus('Loaded '+notes.length+' note(s) from this machine (notesd :18937).');
+    paths.textContent='Stored in '+x.d.dir+' with a readable mirror in ~/Notes/*.md';
+    render();
+  }).catch(function(){
+    online=false;
+    notes=readCache();
+    if(notes.length&&!find(sel))sel=notes[0].id;
+    body.value=sel?(find(sel).text||''):'';
+    setStatus('Showing cached notes (backend unreachable on 18937 — is notesd.py running?).');
+    paths.textContent='Offline cache only. Notes on disk are untouched.';
+    render();
+  });
+}
+function persistCurrent(){
+  var n=find(sel);if(!n)return;
+  n.text=body.value;n.updated=Date.now();
+  writeCache();
+  if(!online){setStatus('Showing cached notes — saved in this browser only (backend unreachable on 18937).');return;}
+  setStatus('Saving...');
+  api('POST','/notes',{id:n.id,text:n.text}).then(function(x){
+    if(!x.ok||!x.d.ok)throw new Error(x.d.error||'save failed');
+    n.updated=x.d.note.updated;
+    writeCache();render();
+    setStatus('Saved to this machine.');
+  }).catch(function(){setStatus('Showing cached notes — save failed (backend unreachable on 18937).');});
+}
 document.getElementById('new').onclick=function(){
   var n={id:String(Date.now())+'-'+Math.floor(Math.random()*1e4),text:'',updated:Date.now()};
-  notes.push(n);sel=n.id;
-  if(!write()){status.textContent='Could not save in this browser.';return;}
-  body.value='';render();body.focus();status.textContent='New note.';
+  if(!online){
+    notes.push(n);sel=n.id;writeCache();body.value='';render();body.focus();
+    setStatus('Showing cached notes — new note kept in this browser only.');
+    return;
+  }
+  setStatus('Creating...');
+  api('POST','/notes',{id:n.id,text:''}).then(function(x){
+    if(!x.ok||!x.d.ok)throw new Error(x.d.error||'create failed');
+    notes.push(x.d.note);sel=x.d.note.id;writeCache();body.value='';render();body.focus();
+    setStatus('New note saved to this machine.');
+  }).catch(function(){setStatus('Showing cached notes — could not create (backend unreachable on 18937).');});
 };
 document.getElementById('del').onclick=function(){
   if(sel===null)return;
   var n=find(sel);if(!n)return;
   if(!confirm('Delete this note? This cannot be undone.'))return;
-  notes=notes.filter(function(x){return x.id!==sel;});
-  sel=notes.length?notes[0].id:null;
-  write();
-  body.value=sel?(find(sel).text||''):'';
-  render();status.textContent='Note deleted.';
+  if(!online){
+    notes=notes.filter(function(x){return x.id!==sel;});
+    sel=notes.length?notes[0].id:null;writeCache();
+    body.value=sel?(find(sel).text||''):'';
+    render();setStatus('Showing cached notes — deleted in this browser only.');
+    return;
+  }
+  api('POST','/notes/delete',{id:sel}).then(function(x){
+    if(!x.ok||!x.d.ok)throw new Error(x.d.error||'delete failed');
+    notes=notes.filter(function(x){return x.id!==sel;});
+    sel=notes.length?notes[0].id:null;writeCache();
+    body.value=sel?(find(sel).text||''):'';
+    render();setStatus('Note deleted from this machine.');
+  }).catch(function(){setStatus('Showing cached notes — delete failed (backend unreachable on 18937).');});
 };
-body.addEventListener('input',save);
-notes=read();
-if(notes.length){notes.sort(function(a,b){return (b.updated||0)-(a.updated||0);});sel=notes[0].id;body.value=notes[0].text||'';}
-render();
+body.addEventListener('input',function(){
+  if(saveTimer)clearTimeout(saveTimer);
+  saveTimer=setTimeout(persistCurrent,400);
+});
+load();
 })();
 </script></body></html>

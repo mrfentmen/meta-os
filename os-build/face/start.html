@@ -1,0 +1,67 @@
+<!DOCTYPE html><html lang="en" data-theme="dark"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Web — Meta OS start</title>
+<style>
+:root{color-scheme:dark light}
+html[data-theme="dark"]{--bg:#020814;--fg:#eee;--mut:#9fb3d8;--card:#0f1f3d;--line:#2a3f66;--acc:#4f7ec2}
+html[data-theme="light"]{--bg:#eaf2ff;--fg:#111;--mut:#41547a;--card:#fff;--line:#bccbe4;--acc:#2456a6}
+*{box-sizing:border-box}
+body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--fg);margin:0;padding:32px 24px;min-height:100vh}
+.wrap{max-width:880px;margin:0 auto}
+.mark{font-size:15px;color:var(--mut);letter-spacing:.2em;text-transform:uppercase}
+h1{font-size:44px;margin:4px 0 0}
+h1 .rib{color:var(--acc)}
+p.sub{color:var(--mut);margin:8px 0 24px}
+h2{font-size:15px;text-transform:uppercase;letter-spacing:.12em;color:var(--mut);margin:28px 0 12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.grid a{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 12px;color:var(--fg);text-decoration:none}
+.grid a:hover{border-color:var(--acc)}
+.grid b{display:block;font-size:16px}
+.grid small{color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+td code{font:13px/1.4 monospace}
+.note{color:var(--mut);font-size:13px;margin-top:16px}
+</style></head><body><div class="wrap">
+<div class="mark">Meta OS</div>
+<h1><span class="rib">&#8734;</span> Web</h1>
+<p class="sub">Start page served from this machine. No external sites — every tile below opens a local app.</p>
+<h2>Apps</h2>
+<div class="grid">
+<a href="files.html"><b>Files</b><small>Browse this machine</small></a>
+<a href="dashboard.html"><b>Dashboard</b><small>Live facts</small></a>
+<a href="editor.html"><b>Code Editor</b><small>Edit text files</small></a>
+<a href="notes.html"><b>Notes</b><small>File-backed notes</small></a>
+<a href="board.html"><b>Board</b><small>Rooms</small></a>
+<a href="calendar.html"><b>Calendar</b><small>Events + .ics</small></a>
+<a href="calculator.html"><b>Calculator</b><small>Pure JS</small></a>
+<a href="settings.html"><b>Settings</b><small>Theme, bar, wallpaper</small></a>
+<a href="trash.html"><b>Trash</b><small>Restore or purge</small></a>
+<a href="agents.html"><b>Agents</b><small>Agent relay</small></a>
+<a href="musica.html"><b>Musica</b><small>Generated take</small></a>
+<a href="http://127.0.0.1:18934/surfaces.html"><b>Imperium</b><small>Surfaces, this machine</small></a>
+<a href="http://127.0.0.1:18934/labs/molecules/index.html"><b>Science Lab</b><small>Molecules, this machine</small></a>
+<a href="http://127.0.0.1:18934/surfaces.html#board-custos"><b>Custos</b><small>Custos board</small></a>
+<a href="http://127.0.0.1:18934/index.html"><b>Officina</b><small>Index, this machine</small></a>
+<a href="start.html"><b>Web</b><small>This page</small></a>
+</div>
+<h2>Local services (all on this machine)</h2>
+<table>
+<tr><th>What</th><th>Where</th></tr>
+<tr><td>Desktop pages</td><td><code>http://127.0.0.1:18900/shell.html</code></td></tr>
+<tr><td>App launcher</td><td><code>http://127.0.0.1:18931/launch</code></td></tr>
+<tr><td>Facts</td><td><code>http://127.0.0.1:18932/facts</code></td></tr>
+<tr><td>Terminal</td><td><code>ws://127.0.0.1:18933/</code></td></tr>
+<tr><td>Product site</td><td><code>http://127.0.0.1:18934/index.html</code></td></tr>
+<tr><td>Board</td><td><code>http://127.0.0.1:18935/rooms</code></td></tr>
+<tr><td>Files</td><td><code>http://127.0.0.1:18936/list</code></td></tr>
+<tr><td>Notes / calendar / settings</td><td><code>http://127.0.0.1:18937/notes</code></td></tr>
+<tr><td>Agent relay</td><td><code>http://127.0.0.1:18940/status</code></td></tr>
+</table>
+<p class="note">Terminal opens inside the shell dock (built-in window), so it has no page here. If a service is down, its app shows "backend unreachable" instead of a blank window.</p>
+</div>
+<script>
+try{var t=localStorage.getItem('metaos-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}
+</script>
+</div></body></html>
