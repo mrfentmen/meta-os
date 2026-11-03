@@ -1,0 +1,4 @@
+# OC3B-043 — thumbnailers phone home: nothing to phone with
+
+Covered in OC3B-files-archives.md: no thumbnailer config ships in any
+lane, so there is no in-tree caller to audit. Standing note only.

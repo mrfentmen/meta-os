@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Mousepad
+GenericName=Text Editor
+Comment=Edit plain text files (KEEP: mousepad per os-build/metaos1-base/packages.txt)
+Exec=mousepad %U
+TryExec=mousepad
+Icon=accessories-text-editor
+Terminal=false
+Categories=Utility;TextEditor;GTK;
+StartupNotify=true

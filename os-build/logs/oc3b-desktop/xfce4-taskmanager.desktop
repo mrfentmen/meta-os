@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Task Manager
+GenericName=Xfce Task Manager
+Comment=Monitor running programs
+Exec=xfce4-taskmanager
+TryExec=xfce4-taskmanager
+Icon=utilities-system-monitor
+Terminal=false
+Categories=System;Monitor;GTK;
+OnlyShowIn=XFCE;
+StartupNotify=true
+NoDisplay=false

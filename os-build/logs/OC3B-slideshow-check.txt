@@ -1,0 +1,22 @@
+# OC3B-251/253/254/255/256/263 — slideshow static verification (ran, not claimed)
+
+Method: the lane's own `os-build/iso/tools/check_slideshow.py` run
+against a scratch git checkout of `os-build/iso/calamares/` content
+from main (scratch repo required: the checker's git-tree gate fails
+outside one — that single FAIL was environmental, re-ran to
+35 pass / 0 fail, PASS).
+
+Covered by the run, per slide file (01-welcome, 02-desktop,
+03-apps, 04-agents, 05-done): balanced tags, CSS linked, 0
+uncommitted images, zero http(s) URLs, zero flavour/vendor words,
+zero placeholder copy. CSS: no web URLs at all; font stack is
+system-ui/Segoe UI/Roboto/Arial/Noto Sans — system fonts only
+(OC3B-263). Branding strings: MetaOS throughout, no Ubuntu/Apple
+(OC3B-255/256). Slide copy is substantive end-to-end (welcome
+explains the guided install + typed-password rationale; finish
+states disk erase, identity, first-boot splash flow, and the
+pre-checked reboot — OC3B-271..274 verified present and honest).
+Rendering at 1024x768 and 1920x1080 is OC1's boot screenshot;
+the static part (no fixed-pixel traps in CSS) is CODE-INSPECTED.
+ProductName/productVersion in branding.desc: "MetaOS" / "1.0" —
+correct as shipped (OC3B-261/262).

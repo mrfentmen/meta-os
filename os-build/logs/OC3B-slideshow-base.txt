@@ -1,0 +1,14 @@
+# OC3B-251/252 — slideshow baseline (checker output, thin-copy decision)
+
+Baseline: `os-build/iso/tools/check_slideshow.py` re-run in a scratch
+git checkout of `os-build/iso/calamares/` from main@c38c6187:
+35 pass / 0 fail, PASS. The single earlier FAIL was environmental
+(checker requires a git tree; /tmp scratch was not one). Full per-slide
+breakdown lives in OC3B-slideshow-check.txt; this file is the 251
+baseline pointer, not a second copy.
+
+252: no extensions made. All five slides carry specific, substantive
+copy (welcome explains guided-install + typed-password rationale;
+02 desktop, 03 apps, 04 agents, 05-done states disk erase GPT/EFI,
+identity metaos, splash-then-login, pre-checked reboot). Extending
+for its own sake adds words, not information. Deliberate no-op.

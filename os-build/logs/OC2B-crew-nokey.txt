@@ -1,0 +1,18 @@
+# OC2B-082 — Failure-honesty drill: key withheld, error step names it
+
+Method: every live run this session ran with `SPARK_API_KEY` unset and
+`TRIO_SPARK_VIA_HELPER` unset (env popped in all drivers).
+
+- Trio serve: receipt `status=failed`,
+  `error="generation failed: SPARK_API_KEY is not set in the
+  environment and TRIO_SPARK_VIA_HELPER is not 1: no generation
+  transport is configured"` (OC2B-queue-nokey.json). The error step
+  names the missing key; model stays null (never engaged); no partial
+  receipt (OC2B-108/109 shape holds: full envelope or nothing).
+- Patrol: governor path exists in code (`patrol.py` pause on reserve /
+  guardrail refuse → `crew-status.json state=paused-budget` + event);
+  this session's live patrol stayed `state=running` (guardrail
+  $0.15 « $5 reserve, job failures are per-job, not pauses).
+  No-key pause path is code-reviewed, not live-fired — named here.
+- No path fabricates an assessment, retries silently, or contacts a
+  model host without the key (egress audit: OC2B-allowlist.txt).

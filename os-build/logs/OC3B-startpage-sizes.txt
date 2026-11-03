@@ -1,0 +1,4 @@
+OC3B-014 sizes: static review (no renderer on this Mac)
+viewport meta: present (width=device-width, initial-scale=1)
+fluid rules: clamp() type scale, auto-fit minmax(180px,1fr) grid, 560px + 1600px breakpoints
+verdict: CODE-INSPECTED responsive at 1280x720 and 1920x1080; pixel proof deferred to OC1 boot render

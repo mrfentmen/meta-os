@@ -1,0 +1,3 @@
+#  — pointer, not a result
+
+Boot proof owned by OC1 at first boot. Static position recorded in OC3B-media-inventory.md.

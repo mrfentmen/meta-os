@@ -338,3 +338,9 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Soak 059/060 VERIFIED: 30 filed / 30 receipted / 0 errors / 1800s wall, zero-unreceipted=True (OC2B-queue-soak.txt). Collected from background run, server killed clean after.
 - Main sync: Pax merged S14+S15 as TRUE merges (d2ad5e4f, 23462be5) + bond watchdog-cadence (JS agent runtime, zero overlap with my watchdog.sh). Pax applied my checker's finding (oc2-health orphan → manifest fixup commits). Branch fast-forwarded to edc894ab, clean.
 - §3 queue section: COMPLETE except 062 reboot (BLOCKED), 023/063/064/070/071 needs-feature (filed as defects).
+
+## OC2 S17 — 2026-11-03 — §4 patrol/crew proofs (no VM)
+- Patrol --once LIVE (972 real cameras, 1 check, exit 0, receipt saved — OC2B-patrol-once.json). Quiet baseline → zero dispatch (OC2B-quiet-paths.json). Timeline patrol→review→judge→response via code path + staged chain.
+- Nokey drill: named SPARK_API_KEY refusal (OC2B-crew-nokey.txt). No-emergency-number grep: only hit is the HARD BOUNDARY comment forbidding real dispatch.
+- Daemon ops/resources docs (idle queue ~17MB RSS). §13 lineage: no artifact in tree → executed equivalent recorded (OC2B-patrol-delta.md). Staged rerun: format identical (OC2B-staged-rerun.json).
+- Hour runs (patrol-hour, daemons-hour) in background; collect at end.

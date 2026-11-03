@@ -1,0 +1,6 @@
+# OC3B-276 — closeout: browser offline re-run
+
+Re-ran 2026-11-03 on the committed OC3B-startpage.html: external-ref
+grep (src=/href=http/url(http/@import/link-href) returns EMPTY.
+Result: still renders offline. No drift since §1. Live first-launch
+packet proof remains OC1's (see OC3B-browser-quiet.txt); unchanged.

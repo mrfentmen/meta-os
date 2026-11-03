@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Volume Control
+GenericName=PulseAudio Volume Control
+Comment=Adjust playback volumes
+Exec=pavucontrol
+TryExec=pavucontrol
+Icon=pavucontrol
+Terminal=false
+Categories=AudioVideo;Mixer;GTK;
+OnlyShowIn=XFCE;
+StartupNotify=true
+NoDisplay=false

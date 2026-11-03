@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Help
+GenericName=MetaOS Help
+Comment=How to use this system
+Exec=xdg-open /usr/share/metaos/help/help.html
+TryExec=xdg-open
+Icon=help-about
+Terminal=false
+Categories=System;Documentation;GTK;
+OnlyShowIn=XFCE;
+StartupNotify=true
+NoDisplay=false

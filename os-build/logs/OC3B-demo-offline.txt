@@ -1,0 +1,13 @@
+# OC3B-173/174 — audio state + offline readiness
+
+Audio: the film ships silent BY CUT DESIGN (no audio track in the
+container — verified, not assumed). Narration beds and stingers
+exist as original synthesized MP3s with licenses on file; whether
+the demo plays them is a showtime choice, not a missing asset.
+173 answered: state recorded, nothing unplayable-through-silence.
+
+174 offline: film, loop, wallpapers, start page are all local files
+with zero network refs (start page verified 0 external refs; video
+containers carry no references by construction). The tour as
+scripted needs no network. OC1 confirms at boot by unplugging
+the cable and running it — named, not hand-waved.
