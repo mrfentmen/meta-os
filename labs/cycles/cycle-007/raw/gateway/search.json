@@ -1,0 +1,44 @@
+{
+ "agent": "literature-researcher",
+ "kind": "gateway-source",
+ "note": "UNCONFIRMED gateway result: not evidence until pinned by the literature job (assemble_brief).",
+ "recorded_at": "2026-11-03T02:31:11.175411Z",
+ "result": {
+  "backend": "MCP-GATEWAY",
+  "matches": [],
+  "network": "boss's local MCP gateway http://127.0.0.1:8931/mcp; keyless public servers; no credentials held by the lab",
+  "op": "search",
+  "payload_form": "json",
+  "query": "Panthera leo",
+  "remote_args": {
+   "name": "Panthera leo"
+  },
+  "remote_tool": "gbif__match_species",
+  "result": {
+   "canonicalName": "Panthera leo",
+   "class": "Mammalia",
+   "classKey": 359,
+   "confidence": 99,
+   "family": "Felidae",
+   "familyKey": 9703,
+   "genus": "Panthera",
+   "genusKey": 2435194,
+   "kingdom": "Animalia",
+   "kingdomKey": 1,
+   "matchType": "EXACT",
+   "order": "Carnivora",
+   "orderKey": 732,
+   "phylum": "Chordata",
+   "phylumKey": 44,
+   "rank": "SPECIES",
+   "scientificName": "Panthera leo (Linnaeus, 1758)",
+   "species": "Panthera leo",
+   "speciesKey": 5219404,
+   "status": "ACCEPTED",
+   "usageKey": 5219404
+  },
+  "tool": "gbif"
+ },
+ "status": "unconfirmed",
+ "tool": "gbif"
+}

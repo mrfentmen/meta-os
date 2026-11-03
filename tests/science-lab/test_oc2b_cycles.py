@@ -1,4 +1,4 @@
-"""OC2B cycles 1-5 pack discipline (Sections 8-11, OC2B-176-275). Read-only.
+"""OC2B cycles 1-7 pack discipline (Sections 8-11, OC2B-176-275). Read-only.
 
 Checks: prereg-before-result via ledger order, falsifiers present,
 verify outputs match raw outputs, ladder honesty (no level above
@@ -15,7 +15,8 @@ import unittest
 REPO = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CYCLES = os.path.join(REPO, "labs", "cycles")
 LEDGER = os.path.join(CYCLES, "ledger.jsonl")
-IDS = ["cycle-001", "cycle-002", "cycle-003", "cycle-004", "cycle-005"]
+IDS = ["cycle-001", "cycle-002", "cycle-003", "cycle-004", "cycle-005",
+       "cycle-006", "cycle-007"]
 
 
 def sha(path):
@@ -49,7 +50,7 @@ class TestOC2BCycles(unittest.TestCase):
         import ledger
         ok, msg = ledger.verify_chain(LEDGER)
         self.assertTrue(ok, msg)
-        self.assertEqual(len(ledger.read_all(LEDGER)), 5)
+        self.assertEqual(len(ledger.read_all(LEDGER)), 7)
 
     def test_falsifiers_present(self):
         for cid in IDS:

@@ -1,0 +1,17 @@
+{
+ "cycle": "cycle-006",
+ "delaney_in_read": true,
+ "doi_in_read": true,
+ "doi_in_search": true,
+ "pinned": true,
+ "prereg_doi": "10.1021/ci034243x",
+ "prereg_work_url": "https://openalex.org/W2076498053",
+ "read_payload_form": "text",
+ "remote_tools": [
+  "openalex__search_works",
+  "openalex__get_work"
+ ],
+ "rule": "pinned iff the gateway read payload carries the pre-registered DOI and author/year identifiers (literature assemble_brief explicit-id rule)",
+ "search_payload_form": "text",
+ "year2004_in_read": true
+}

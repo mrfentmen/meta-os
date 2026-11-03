@@ -1,0 +1,23 @@
+{
+ "agent": "literature-researcher",
+ "kind": "gateway-source",
+ "note": "UNCONFIRMED gateway result: not evidence until pinned by the literature job (assemble_brief).",
+ "recorded_at": "2026-11-03T02:31:16.911703Z",
+ "result": {
+  "backend": "MCP-GATEWAY",
+  "locator": "https://openalex.org/W2076498053",
+  "network": "boss's local MCP gateway http://127.0.0.1:8931/mcp; keyless public servers; no credentials held by the lab",
+  "op": "read",
+  "payload_form": "text",
+  "remote_args": {
+   "id": "https://openalex.org/W2076498053"
+  },
+  "remote_tool": "openalex__get_work",
+  "source": {
+   "raw_text": "ESOL: Estimating Aqueous Solubility Directly from Molecular Structure\nYear: 2004\nDOI: https://doi.org/10.1021/ci034243x\nCitations: 1103\nOpen access: no\nVenue: Journal of Chemical Information and Computer Sciences\nAuthors: John S. Delaney\nTopics: Solubility, Aqueous solution, Molecule, Chemistry, Linear regression, Thermodynamics, Molecular descriptor, Octanol"
+  },
+  "tool": "openalex"
+ },
+ "status": "unconfirmed",
+ "tool": "openalex"
+}

@@ -1,0 +1,1 @@
+{"expected_gc_fraction": 0.5166666666666667, "length": 60, "organism": "Panthera leo", "organism_usage_key": 5219404, "research_question": "What is the GC-content of the frozen 60-mer reference sequence?", "sequence_file": "inputs/sequence.txt", "tolerance": 1e-09}

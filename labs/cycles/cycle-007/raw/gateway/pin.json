@@ -1,0 +1,20 @@
+{
+ "cycle": "cycle-007",
+ "key_sent_as_string": true,
+ "name_in_read": true,
+ "pinned": true,
+ "prereg_organism": "Panthera leo",
+ "prereg_usage_key": "5219404",
+ "read_payload_form": "json",
+ "remote_tools": [
+  "gbif__match_species",
+  "gbif__get_species"
+ ],
+ "rule": "pinned iff the gateway read payload carries the pre-registered usageKey and organism name (literature assemble_brief explicit-id rule)",
+ "search_payload_form": "json",
+ "usagekey_in_read": true,
+ "usagekey_in_search": true,
+ "wire_read_args": {
+  "key": "5219404"
+ }
+}

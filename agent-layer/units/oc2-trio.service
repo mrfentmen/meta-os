@@ -1,0 +1,15 @@
+[Unit]
+Description=OC2 agent layer: trio job runner (drains the local queue)
+After=network-online.target oc2-queue.service
+Wants=network-online.target
+Requires=oc2-queue.service
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/oc2-agent/env
+ExecStart=/usr/bin/python3 ${OC2_CHECKOUT}/server/queue/trio_agent.py --nick oc2-trio
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

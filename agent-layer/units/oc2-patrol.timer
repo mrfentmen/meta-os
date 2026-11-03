@@ -1,0 +1,10 @@
+[Unit]
+Description=OC2 agent layer: repeat patrol cycle hourly
+
+[Timer]
+OnBootSec=30min
+OnUnitActiveSec=60min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

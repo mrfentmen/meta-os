@@ -173,6 +173,49 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - The 0.11.17 spike pinned the host crate, not `bootloader_api` — recorded attempt malformed, budget unconsumed. My Sec 2 MATCH reproductions stand as reproductions; the "0.11 dead end" conclusion is WITHDRAWN.
 - Owed: corrected attempt-1 (build/boot/screendump/verbatim logs) when Rowan lands pin+RK-008 rewrite on `rowan/bootloader-spike` (still @1f006090 wrong pin — checked). KF-01 BLOCKED until then. Full note: `os-build/logs/OC2B-kf01-correction.md`.
 
+## Cross-check lane — OC1 §11 film (prompt item 3) — AGREE 2026-11-02
+- ffprobe `os-build/demo/demo-3min.mp4`: duration=180.000000 EXACT, 1280x720, 10fps, h264, video-only (no audio). sha256 `a29bc47d…3ae13f0` MATCHES CAPTURE_NOTES claim byte-for-byte.
+- Cards/cut list present (`oc1b-cut.txt`, `oc1b-frames/` s01-s05/s11 + beats). Serials present, panic count 0 both. Beat-7 frame/reading/chain files present.
+- Self-check spot frames extracted and read: t=10 BEAT 1 BOOT (banner/alive/mem map + src line), t=90 BEAT 4 fault isolation (task killed, sleeper, bad-syscall-99, readkey got=5), t=160 BEAT 7 no-dispatch (SIMULATED loopback endpoint, chain citation). Zero faces/web pages/browsers in all three.
+- Verdict: AGREE — every checked CAPTURE_NOTES line holds against film + records. No disagree items.
+
+## Live MCP gateway setup (prompt item 1 prereq) — DONE 2026-11-02
+- Built here (was absent on this Mac): venv (python3.14, mcp==1.30.0 — latest 2.3.0 crashes committed gateway.py), 9 lab servers installed to `mcp-gateway/lab-servers/` (35M, NOT committed), trimmed `mcp-gateway/lab-backends.json` (committed, 4K), gateway RUNNING (PID file `/tmp/oc2b-gateway.pid`), smoke 9/9 searches + reads (3 reads needed one arg correction each). `backends.json` untouched (sha verified). Full record: `os-build/logs/OC2B-gateway-setup.md`.
+- Two live-read map flags for cycle work: open-library reads require `m0_key` (not `key`); gbif keys must be strings. Fix in the lab call layer when wiring reads, not in the smoke.
+
+## Prompt follow-up — live-gateway cycles 006–007 (OPENCODE2_PROMPT item 1) — DONE 2026-11-02
+- Preregs committed FIRST (`206adc79` precedes all result commits). Gateway live (PID-held, 9/9 backends).
+- Cycle-006 (chem, Delaney rerun + live literature): openalex search+get_work (W2076498053, DOI 10.1021/ci034243x, pinned, backend=MCP-GATEWAY, $0). RMSE 1.0994 in prereg band [1.049,1.149] → MATCH. Bit-for-bit clean-dir re-run agrees. Level L3.
+- Cycle-007 (bio, GC-content + live GBIF provenance): match_species+get_species (Panthera leo usageKey 5219404, string-coerced, pinned, $0). gc 0.5166666667 vs prereg 31/60 ±1e-9 → MATCH. Bit-for-bit re-run agrees. Level L3.
+- Quarantine held (envelopes unconfirmed until pin; only stable IDs in results). No transport errors, one attempt per call. Spend $0.00 (keyless servers, no model calls).
+- Ledger + repository updated (2 entries, levels 3/3). Suite 205 OK (10 new live-cycle tests). Figure for 006 byte-identical to cycle-001 (same computation — stated, not hidden).
+- Truth: two more reproductions at L3, this time with live-sourced provenance. Landed. Nothing blocked.
+
+## Prompt follow-up — Officina parity (OPENCODE2_PROMPT item 2) — DONE 2026-11-02
+- `git diff main -- os/worlds/officina/runtime/` is EMPTY: 2b/2c/2d modules + tests on this branch are identical to the merged main (Pax blob-verified @0b18be64). No new work required; 2a gate pattern already followed (§14–16). Landed by parity.
+
+## 12H Phase A — inventory (OC2 agent layer) — DONE 2026-11-02
+- queue_service.py: argparse main, long-running HTTP 127.0.0.1:8935 (the loopback dispatch endpoint crew uses). DAEMON.
+- patrol.py: `--interval/--once/--max-checks/--reserve-usd`; Crew.production + CrewRecords; oneshot-able bounded cycles. SERVICE (oneshot at login + timer repeats).
+- crew.py: library (Crew class, no main). livecams.py: library + CLI (`--list/--area/--assess-one`); invoked by patrol, no unit of its own.
+- Env surface: DISPATCH_URL (default loopback sim), TRIO_JOB_NS, TRIO_SAM_SEGMENT/WONDER/JUDGE_MODEL flags, LIVECAMS_API_URL, LOCAL_DB, SPARK_API_KEY (session env only — never baked). Non-secret defaults ship in `agent-layer/env.example`.
+- Deps: stdlib + sibling modules; third-party PIL/numpy/cv2 are LAZY with degraded fallbacks (evidence.py: cv unavailable→[], PIL missing→caller records it). pip set: pillow + numpy (cv2 optional, skipped — fallback covers).
+- Goose: `/Users/test/mcp-servers/toolchains/goose-src/build/goose` (b781587, OC2B Sec 19 gate-2: 10 pass + 4/4 node). Lobster: `lobster-src/bin/lobster` (v2026-10-29T23:29:26-07:00|6c1389c, runs).
+- Queue suite: 327 OK on merged main. Autostart mechanism: systemd USER units + `loginctl enable-linger` (ordering, restart caps, journal). XDG autostart rejected (no restart/supervision). Key handoff: `systemctl --user import-environment` via profile hook (install.sh, marker-guarded); services without key pause LOUD via existing guardrail (no silent stall).
+
+## 12H Phase B — units + installer + tests — DONE 2026-11-02
+- `agent-layer/units/`: oc2-queue.service (daemon :8935, restart-capped), oc2-patrol.service (oneshot bounded `--max-checks`, After+Requires queue), oc2-patrol.timer (30min boot delay, hourly, persistent).
+- `env.example`: non-secret defaults only (checkout path refreshed by installer; key NEVER assigned in files — regex-tested).
+- `install.sh`: idempotent (env create-once + checkout refresh, unit link, enable, linger attempt w/ recorded fallback, marker-guarded profile hook for key import, preflight compile + port check). Syntax-checked; full systemd exercise needs the Linux target (Phase D).
+- `README.md`: order, key handoff, health/stop commands, proof-log recipe. Tests `tests/agent-layer/test_units.py`: 7 OK (parse, daemon caps, bounded+ordered, timer, no-secret regexes, installer guards, env defaults).
+- Landed. Nothing blocked. (systemd enable/linger exercise deferred to Phase D guest proof.)
+
+## 12H Phase C — Goose/Lobster runtimes — DONE 2026-11-02
+- Goose `/Users/test/mcp-servers/toolchains/goose-src/build/goose` (b781587, runtime 3901ec457ba9): `goose check root.goose` exit 0 (warnings only, known redundant-cast class, same as OC2B gate-2). Provenance + gate table already in `os-build/logs/OC2B-goose-gate2.md`.
+- Lobster `lobster-src/bin/lobster` (v2026-10-29T23:29:26-07:00|6c1389c): trivial program prints LOBSTER-OK, exit 0.
+- Ship decision: reference both binaries by path+version in the bake (binaries live outside the repo; sizes recorded at bake time; no binaries committed).
+- Landed. Nothing blocked.
+
 ## 12H Phase D — acceptance proof (fresh boot, no hand-holding) — DONE 2026-11-02
 - Guest: carrier-image bake (`metaos-2026-11-02-oc2b-baked` + agent-layer from branch tip), `-cpu max`, autologin relay. First SSH login 22:44, units started 22:40:21-37 (journal timestamps precede any login — PROVEN no hand-holding).
 - Boot sequence from journal (`OC2-proof-journal.txt`): queue up (local SQLite FALLBACK, Upstash unconfigured — honest), trio up, patrol on 972 live NYCTMC cameras.
