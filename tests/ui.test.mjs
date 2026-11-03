@@ -458,7 +458,7 @@ test("health: malformed body throws AssessError kind=invalid, never a partial re
 });
 
 test("health: the shipped page has the check button and health line", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.ok(html.includes('id="btn-backend-check"'), "page is missing the backend check button");
   assert.ok(html.includes('id="backend-health"'), "page is missing the backend health line");
 });
@@ -754,7 +754,7 @@ test("video input: captureVideoFrame throws when the video has no dimensions yet
 });
 
 test("video input: the shipped page has the video panel elements", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(html, /<input[^>]*id="video-input"[^>]*accept="video\/\*"/);
   assert.match(html, /<video[^>]*id="video-preview"[^>]*controls/);
   assert.match(html, /id="video-state"/);
@@ -795,7 +795,7 @@ test("video input: a video frame capture failure lands in the web history and ba
 // so they get no button.
 
 test("history: past assessments can be shown again from the web history", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(html, /Show assessment.*Latest assessment panel/);
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
   assert.match(app, /show\.textContent = "Show assessment"/);
@@ -833,7 +833,7 @@ test("history: empty history note says analysis is running, matching the native 
 test("history: idle empty history note matches the native timeline", () => {
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
   assert.match(app, /els\.historyEmpty\.textContent = sampler\.running\n\s+\? "Analysis is running — assessments and errors will appear here as they arrive\."\n\s+: "No events yet\. Assessments and errors will appear here\.";/);
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(html, /id="history-empty"[^>]*>No events yet\. Assessments and errors will appear here\.</);
   const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/TimelineView.swift", import.meta.url), "utf8");
   assert.match(swift, /Text\("No events yet\. Assessments and errors will appear here\."\)/);
@@ -890,7 +890,7 @@ test("latest: web panel waits for the first assessment, matching the native pane
 // path of submitAssessment (never from the server-reported processing
 // latency), and Reset clears it again.
 test("status: web shows the client-measured last round trip, cleared by Reset", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(html, /id="last-round-trip"/);
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
   assert.match(app, /lastRoundTrip: \$\("last-round-trip"\)/);
@@ -908,7 +908,7 @@ test("status: web shows the client-measured last round trip, cleared by Reset", 
 // rules the browser will use.
 
 test("a11y: backend status and latest assessment are polite live regions", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   const backendTag = html.match(/<p[^>]*id="backend-status"[^>]*>/);
   assert.ok(backendTag, "backend-status element exists");
   assert.match(backendTag[0], /aria-live="polite"/, "backend status is announced");
@@ -936,7 +936,7 @@ test("a11y: keyboard focus on a product option shows a visible ring", () => {
 // submit path), Clear hides it too, and the native panels carry the
 // same lines.
 test("panels: still-image and video panels show an in-panel sending note while assessing, matching the native panels", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(html, /id="image-assessing"[^>]*hidden>Sending still image…</);
   assert.match(html, /id="video-assessing"[^>]*hidden>Sending video frame…</);
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
@@ -964,7 +964,7 @@ test("panels: still-image and video panels show an in-panel sending note while a
 // refreshes it, the interval-change handler refreshes it too, and the
 // native panel carries the same banner.
 test("camera: web shows an analysis-active banner while sampling, matching the native camera panel", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(html, /id="analysis-active"[^>]*hidden>Analysis active — sampling one frame every 3 seconds\.</);
   const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
   assert.match(app, /analysisActive: \$\("analysis-active"\)/);
@@ -1113,7 +1113,7 @@ test("latest: web observation line omits empty evidence, matching the native pan
 // web note exists, and the native note sits in rightColumn next to
 // the Latest panel (before the timeline), in the web panel's words.
 test("latest: native panel carries the observable-evidence note, matching the web panel", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(html, /Assessments describe observable evidence only\. Each product's limitations notice \(above\) states what its assessments never claim\./);
   const swift = readFileSync(new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url), "utf8");
   const rightColumn = swift.slice(swift.indexOf("private var rightColumn"), swift.indexOf("TimelineView(model: model)"));

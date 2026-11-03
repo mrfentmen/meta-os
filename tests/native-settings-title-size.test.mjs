@@ -42,7 +42,7 @@ test("native Settings title: web contract — panel h2 at 15px bold", () => {
     /\.panel h2 \{\s+margin: 0 0 10px;\s+font-size: 15px;\s+font-weight: 700;\s+\}/,
     "web .panel h2 is 15px weight 700",
   );
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<section class="panel" aria-label="Configuration">\s+<h2>Analysis configuration<\/h2>/,

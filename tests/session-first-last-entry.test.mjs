@@ -147,7 +147,7 @@ test("web wiring: updateLogStats renders the global first- and last-entry lines 
 });
 
 test("web wiring: session-log panel holds the global first- and last-entry stats elements", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-first-entry" class="note mono">First entry: none<\/p>/,

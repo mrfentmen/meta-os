@@ -182,7 +182,7 @@ test("web wiring: updateLogStats renders the entry-span-share line from log.stat
 });
 
 test("web wiring: session-log panel holds the entry-span-share stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-entry-span-share-by-product" class="note mono">Entry-span share of session window by product: Vigiles none · Ignis none · Medicus none<\/p>/,

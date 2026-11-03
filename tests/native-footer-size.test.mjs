@@ -43,7 +43,7 @@ test("native footer: web contract — .footer at 13px muted", () => {
 });
 
 test("native footer: web footer carries the same disclaimer words", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.ok(
     html.includes(`<footer class="footer">`) &&
       html.includes(`<p>${disclaimer}</p>`),

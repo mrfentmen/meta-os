@@ -46,7 +46,7 @@ test("native settings labels: web contract — label at 13px muted", () => {
 });
 
 test("native settings labels: web labels exist for both fields", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<label for="endpoint">Assessment endpoint<\/label>/,

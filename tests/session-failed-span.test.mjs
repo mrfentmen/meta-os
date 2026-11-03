@@ -156,7 +156,7 @@ test("web wiring: updateLogStats renders the global failure-span line from log.s
 });
 
 test("web wiring: session-log panel holds the global failure-span stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-failed-span" class="note mono">Failure span: none<\/p>/,

@@ -25,13 +25,13 @@ const rootStudio = readFileSync(
   new URL("../logo-studio.html", import.meta.url),
   "utf8",
 );
-const panel = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const panel = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 
 test("studio header links back to the console", () => {
   assert.match(
     studio,
-    /<a class="back-link" href="\.\.\/index\.html">← Back to console<\/a>/,
-    "studio carries a Back to console link to ../index.html",
+    /<a class="back-link" href="\.\.\/imperium\/">← Back to Imperium console<\/a>/,
+    "studio carries a Back to Imperium console link to ../imperium/",
   );
   const link = studio.indexOf('class="back-link"');
   const headerEnd = studio.indexOf("</header>", link);
@@ -41,7 +41,7 @@ test("studio header links back to the console", () => {
   );
   assert.match(
     panel,
-    /<a class="logo-studio-link" href="design\/meta-ascii-logo-studio\.html">Open the full logo studio<\/a>/,
+    /<a class="logo-studio-link" href="(\.\.\/)?design\/meta-ascii-logo-studio\.html">Open the full logo studio<\/a>/,
     "console Logo panel still links out to the full studio page",
   );
 });

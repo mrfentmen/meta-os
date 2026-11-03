@@ -122,7 +122,7 @@ test("web wiring: updateLogStats renders the global share lines from log.stats()
 });
 
 test("web wiring: session-log panel holds the global share stats elements", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-ok-share" class="note mono">Successful share: none<\/p>/,

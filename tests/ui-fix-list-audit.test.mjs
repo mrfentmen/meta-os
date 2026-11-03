@@ -22,7 +22,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const jsDir = new URL("../js/", import.meta.url);
 const jsFiles = readdirSync(jsDir).filter((f) => f.endsWith(".js"));
 const jsByFile = new Map(
@@ -122,8 +122,8 @@ test("scoped out: no credential field in the web UI — the key stays server-sid
   }
 });
 
-test("branding: the live surface reads Meta Imperium", () => {
-  assert.ok(html.includes("<title>Meta Imperium"), "title brands Meta Imperium");
+test("branding: the live Imperium app surface reads Imperium Console (MetaOS app)", () => {
+  assert.ok(html.includes("<title>Imperium Console — MetaOS app</title>"), "title brands the Imperium app");
   assert.ok(html.includes("<h1>Meta Imperium</h1>"), "header brands Meta Imperium");
   assert.ok(html.includes("IMPERIUM COMMAND"), "command view wordmark present");
 });

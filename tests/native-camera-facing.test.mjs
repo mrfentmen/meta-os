@@ -24,7 +24,7 @@ const contentView = readFileSync(
   new URL("../native/Sources/MetaTrio/Views/ContentView.swift", import.meta.url),
   "utf8",
 );
-const webPage = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const webPage = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 
 test("native: facing enum has front and rear, mapping to .front and .back", () => {
   assert.match(service, /enum Facing: String, CaseIterable \{\s*case front\s*case rear/);

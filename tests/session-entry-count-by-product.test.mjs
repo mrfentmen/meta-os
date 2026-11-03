@@ -149,7 +149,7 @@ test("web wiring: updateLogStats renders the per-product entry-count line from l
 });
 
 test("web wiring: session-log panel holds the per-product entry-count stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-entry-count-by-product" class="note mono">Entries by product: Vigiles 0 · Ignis 0 · Medicus 0<\/p>/,

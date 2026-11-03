@@ -130,12 +130,17 @@ test("fetchCameraList returns the upstream array and rejects bad answers", async
   await assert.rejects(fetchCameraList(shapeFetch), /did not return a JSON array/);
 });
 
-test("live server serves the actual web frontend entry point", async () => {
+test("live server serves the MetaOS hub at / and the Imperium app under /imperium/", async () => {
   await withServer(async (base) => {
-    const res = await fetch(`${base}/`);
-    assert.equal(res.status, 200);
-    const html = await res.text();
-    assert.match(html, /js\/app\.js/);
-    assert.match(html, /Vigiles/);
+    const hub = await fetch(`${base}/`);
+    assert.equal(hub.status, 200);
+    const hubHtml = await hub.text();
+    assert.match(hubHtml, /<title>MetaOS/);
+    assert.match(hubHtml, /href="imperium\//);
+    const app = await fetch(`${base}/imperium/index.html`);
+    assert.equal(app.status, 200);
+    const appHtml = await app.text();
+    assert.match(appHtml, /js\/app\.js/);
+    assert.match(appHtml, /Vigiles/);
   });
 });

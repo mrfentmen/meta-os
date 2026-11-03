@@ -43,7 +43,7 @@ test("native latest notes: web contract — .note at 13px muted", () => {
     /const note = document\.createElement\("p"\);\s+note\.className = "note";/,
     "web redisplayed-assessment note carries the note class",
   );
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p class="note">Assessments describe observable evidence only\./,

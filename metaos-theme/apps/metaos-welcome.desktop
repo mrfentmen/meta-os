@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MetaOS Welcome
+Comment=First-run welcome window for MetaOS 1.0
+Exec=/usr/share/metaos/apps/metaos-welcome.py
+TryExec=/usr/share/metaos/apps/metaos-welcome.py
+Icon=help-about
+Terminal=false
+Categories=GTK;System;
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+NoDisplay=false
+StartupNotify=false

@@ -145,7 +145,7 @@ test("web wiring: updateLogStats renders the per-product entry-span line from lo
 });
 
 test("web wiring: session-log panel holds the per-product entry-span stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-entry-span-by-product" class="note mono">Entry span by product: Vigiles none · Ignis none · Medicus none<\/p>/,

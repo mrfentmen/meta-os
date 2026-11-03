@@ -132,7 +132,7 @@ test("web wiring: updateLogStats renders the per-product average-latency line fr
 });
 
 test("web wiring: session-log panel holds the per-product average-latency stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-avg-latency-by-product" class="note mono">Average successful latency by product: Vigiles none · Ignis none · Medicus none<\/p>/,

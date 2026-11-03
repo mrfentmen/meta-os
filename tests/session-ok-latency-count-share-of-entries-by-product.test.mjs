@@ -221,7 +221,7 @@ test("web wiring: updateLogStats renders the ok-latency-count-share-of-entries-b
 });
 
 test("web wiring: session-log panel holds the ok-latency-count-share-of-entries-by-product stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-ok-latency-count-share-of-entries-by-product" class="note mono">Successful latency-measurement share of all entries by product: Vigiles none · Ignis none · Medicus none<\/p>/,

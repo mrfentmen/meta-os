@@ -168,7 +168,7 @@ test("web wiring: updateLogStats renders the failure-cause-share-of-entries line
 });
 
 test("web wiring: session-log panel holds the failure-cause-share-of-entries stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-failed-share-by-status-of-entries" class="note mono">Failure-cause share of all entries: Network none, HTTP none, Invalid response none<\/p>/,

@@ -19,7 +19,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const studio = readFileSync(
   new URL("../logo-studio.html", import.meta.url),
@@ -29,7 +29,7 @@ const studio = readFileSync(
 test("header links to the logo studio page", () => {
   assert.match(
     html,
-    /<a class="logo-studio-link" href="design\/meta-ascii-logo-studio\.html">Logo studio<\/a>/,
+    /<a class="logo-studio-link" href="(\.\.\/)?design\/meta-ascii-logo-studio\.html">Logo studio<\/a>/,
     "index.html header carries a Logo studio link to design/meta-ascii-logo-studio.html",
   );
 });
@@ -50,7 +50,7 @@ test("header and Logo panel links land on the same studio", () => {
   );
   assert.equal(
     header[1],
-    "design/meta-ascii-logo-studio.html",
+    "../design/meta-ascii-logo-studio.html",
     "both links point at the full studio, not the root v2 viewer",
   );
 });

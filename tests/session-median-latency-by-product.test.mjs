@@ -168,7 +168,7 @@ test("web wiring: updateLogStats renders the median-latency-by-product line from
 });
 
 test("web wiring: session-log panel holds the median-latency-by-product stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-median-latency-by-product" class="note mono">Median successful latency by product: Vigiles none · Ignis none · Medicus none<\/p>/,

@@ -1,1 +1,17 @@
-{"background_color":"#14161a","description":"Meta Imperium — visual event assessment prototype for Vigiles, Ignis, and Medicus.","display":"standalone","icons":[{"sizes":"180x180","src":"/icon-180.png","type":"image/png"}],"name":"Meta Imperium","scope":"/","short_name":"Imperium","start_url":"/","theme_color":"#14161a"}
+{
+  "background_color": "#14161a",
+  "description": "MetaOS desktop: apps and agents. Imperium, Science Lab, Musica and Officina plug in as apps.",
+  "display": "standalone",
+  "icons": [
+    {
+      "sizes": "180x180",
+      "src": "/icon-180.png",
+      "type": "image/png"
+    }
+  ],
+  "name": "MetaOS",
+  "scope": "/",
+  "short_name": "MetaOS",
+  "start_url": "/",
+  "theme_color": "#14161a"
+}

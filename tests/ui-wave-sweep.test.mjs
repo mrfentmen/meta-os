@@ -9,7 +9,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const sweep = readFileSync(new URL("../docs/UI_CONTROL_SWEEP.md", import.meta.url), "utf8");
 
 test("sweep covers every static control in the live UI", () => {

@@ -214,7 +214,7 @@ test("web wiring: updateLogStats renders the entry-span-share-of-ok-window line 
 });
 
 test("web wiring: session-log panel holds the entry-span-share-of-ok-window stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-entry-span-share-of-ok-window" class="note mono">Entry-span share of success window: none<\/p>/,

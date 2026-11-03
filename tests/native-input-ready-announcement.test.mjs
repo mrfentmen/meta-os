@@ -32,7 +32,7 @@ const contentView = readFileSync(
   "utf8",
 );
 const web = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
-const webHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const webHtml = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 
 const slice = (from, to) => model.slice(model.indexOf(from), model.indexOf(to));
 const chooseStillImage = slice("func chooseStillImage()", "func assessStillImage()");
