@@ -56,6 +56,7 @@ macro_rules! println {
 
 mod framebuffer;
 mod gdt;
+mod icons;
 mod interrupts;
 mod logo_frames;
 mod mem;
@@ -163,7 +164,13 @@ pub(crate) fn fb_set_colors(spec: ColorSpec) {
 pub(crate) fn fb_draw_shell_desktop() -> bool {
     unsafe {
         if let Some(console) = (*core::ptr::addr_of_mut!(FB_CONSOLE)).as_mut() {
-            return console.draw_shell_desktop();
+            if console.draw_shell_desktop() {
+                // KF-10 icons: the dock goes on after the window is
+                // painted; it uses pixel methods only, so the shell
+                // window's view region and cursor are untouched.
+                icons::draw_dock(console);
+                return true;
+            }
         }
     }
     false

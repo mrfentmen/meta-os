@@ -286,6 +286,25 @@ impl<'a> Framebuffer<'a> {
         self.fill_rect(x, y + h - lines, w, lines, fill);
     }
 
+    /// Draw a character bitmap (KF-10 icons): one character per
+    /// pixel, each painted as a `scale` x `scale` block. `.` is
+    /// transparent and leaves the pixels underneath untouched; every
+    /// other character maps through `icon_color`. Rows shorter than
+    /// others simply end early; everything is clipped by
+    /// `write_pixel`, so a bitmap hanging off an edge is safe.
+    pub fn draw_bitmap(&mut self, x: usize, y: usize, scale: usize, rows: &[&str]) {
+        if scale == 0 {
+            return;
+        }
+        for (row, line) in rows.iter().enumerate() {
+            for (col, ch) in line.bytes().enumerate() {
+                if let Some(color) = icon_color(ch) {
+                    self.fill_rect(x + col * scale, y + row * scale, scale, scale, color);
+                }
+            }
+        }
+    }
+
     /// Draw one glyph cell with its top-left corner at pixel (`x`, `y`).
     /// Bit 7 of each font byte is the leftmost pixel. Every pixel of
     /// the cell is painted, foreground for set bits and background for
@@ -299,6 +318,29 @@ impl<'a> Framebuffer<'a> {
                 self.write_pixel(x + col, y + row, if set { fg } else { bg });
             }
         }
+    }
+}
+
+/// Palette for the KF-10 icon bitmaps (icons.rs). One character per
+/// color so icon data stays readable as ASCII art in the source.
+/// `B` is the Meta blue from the repo's own icon contract
+/// (metaos-theme/icons/ICONS.md maps folder blue to #1877F2).
+/// Anything unlisted — including `.` — is transparent.
+fn icon_color(ch: u8) -> Option<(u8, u8, u8)> {
+    match ch {
+        b'K' => Some((0, 0, 0)),
+        b'W' => Some((255, 255, 255)),
+        b'B' => Some((24, 119, 242)),
+        b'b' => Some((0, 0, 170)),
+        b'L' => Some((85, 85, 255)),
+        b'G' => Some((140, 140, 140)),
+        b'D' => Some((70, 70, 70)),
+        b'R' => Some((205, 45, 45)),
+        b'N' => Some((35, 175, 70)),
+        b'Y' => Some((245, 197, 66)),
+        b'O' => Some((232, 140, 35)),
+        b'C' => Some((60, 190, 220)),
+        _ => None,
     }
 }
 
@@ -386,6 +428,26 @@ impl<'a> FramebufferConsole<'a> {
             self.fb
                 .draw_glyph(x + i * FONT_WIDTH, y, byte, fg, bg);
         }
+    }
+
+    /// Screen geometry in pixels (KF-10: the dock layout in icons.rs
+    /// sizes itself from this, not from assumed dimensions).
+    pub fn screen_size(&self) -> (usize, usize) {
+        let info = self.fb.info();
+        (info.width, info.height)
+    }
+
+    /// Fill a pixel rectangle straight on the framebuffer, bypassing
+    /// the text view and cursor (KF-10: dock bar and other painted
+    /// desktop furniture).
+    pub fn fill_rect_px(&mut self, x: usize, y: usize, w: usize, h: usize, color: (u8, u8, u8)) {
+        self.fb.fill_rect(x, y, w, h, color);
+    }
+
+    /// Draw an icon bitmap straight on the framebuffer (KF-10:
+    /// icons.rs dock), bypassing the text view and cursor.
+    pub fn draw_bitmap_px(&mut self, x: usize, y: usize, scale: usize, rows: &[&str]) {
+        self.fb.draw_bitmap(x, y, scale, rows);
     }
 
     /// Paint the KF-10 desktop and the shell window, then narrow this
