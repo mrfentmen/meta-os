@@ -1,0 +1,64 @@
+INFO : Framebuffer info: FrameBufferInfo { byte_len: 2764800, width: 1280, height: 720, pixel_format: Bgr, bytes_per_pixel: 3, stride: 1280 }
+INFO : 4th Stage
+INFO : BiosInfo { stage_4: Region { start: 130000, len: 24cc8 }, kernel: Region { start: 1000000, len: dccca8 }, ramdisk: Region { start: 1dcd000, len: 0 }, config_file: Region { start: 1dcd000, len: 0 }, last_used_addr: 1dccfff, framebuffer: BiosFramebufferInfo { region: Region { start: fd000000, len: 2a3000 }, width: 500, height: 2d0, bytes_per_pixel: 3, stride: 500, pixel_format: Bgr }, memory_map_addr: 12fdc, memory_map_len: 7 }
+INFO : BIOS boot
+INFO : Elf file loaded at Pointer {
+    addr: 0x0000000001000000,
+    metadata: 14470312,
+}
+INFO : virtual_address_offset: 0x0
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(4), offset: 0, virtual_addr: 200000, physical_addr: 200000, file_size: 9fba2c, mem_size: 9fba2c, align: 1000 })
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(5), offset: 9fba30, virtual_addr: bfca30, physical_addr: bfca30, file_size: 3b31c, mem_size: 3b31c, align: 1000 })
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(6), offset: a36d50, virtual_addr: c38d50, physical_addr: c38d50, file_size: 18, mem_size: 2b0, align: 1000 })
+INFO : Mapping bss section
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(6), offset: a36d68, virtual_addr: c39d68, physical_addr: c39d68, file_size: b38, mem_size: 877b0, align: 1000 })
+INFO : Mapping bss section
+INFO : Entry point at: 0xc0ddc0
+INFO : Creating GDT at PhysAddr(0x1e77000)
+INFO : Map framebuffer
+INFO : Map physical memory
+INFO : Allocate bootinfo
+INFO : Create Memory Map
+INFO : Create bootinfo
+INFO : Jumping to kernel entry point at VirtAddr(0xc0ddc0)
+META OS 0.1 (K6)
+META OS KERNEL - alive (K1)
+K3 timer: 10 ticks after 516888 spins
+mem region 0: 0x0-0x9fc00 usable
+mem region 1: 0x9fc00-0xa0000 other
+mem region 2: 0xf0000-0x100000 other
+mem region 3: 0x100000-0x1000000 usable
+mem region 4: 0x1000000-0x1dcd000 reserved
+mem region 5: 0x1dcd000-0x2286000 reserved
+mem region 6: 0x2286000-0x1ffe0000 usable
+mem region 7: 0x1ffe0000-0x20000000 other
+mem region 8: 0xfffc0000-0x100000000 other
+mem region 9: 0xfd00000000-0x10000000000 other
+mem map: 10 regions, usable 504807K reserved 18968K other 12583361K
+mem frames: 126201 usable total
+mem allocator: 126201 covered frames, 126201 free
+mem probe page ok
+mem heap: 512K total
+mem Box+Vec ok (box 42, vec sum 120)
+mem stress 10k ok, heap free 511K
+mem summary: K4 up
+A
+B
+C sleeping 200 ticks
+A
+B
+user hello: 2523640 bytes magic=0x464c457f type=Some(2) entry=Some(2101600)
+user hello loader refused: address in use
+A
+B
+user sleeper: 2679640 bytes magic=0x464c457f type=Some(2) entry=Some(2101616)
+user sleeper loader refused: address in use
+A
+B
+user crasher: 2532064 bytes magic=0x464c457f type=Some(2) entry=Some(2101872)
+user crasher loader refused: address in use
+A
+B
+user readkey: 2680216 bytes magic=0x464c457f type=Some(2) entry=Some(2101616)
+user readkey loader refused: address in use
+C awake
