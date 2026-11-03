@@ -1,0 +1,16 @@
+[package]
+name = "rk007-builder"
+version = "0.1.0"
+edition = "2021"
+
+# RK-007: in bootloader 0.11 the `bootimage` cargo subcommand is gone. The
+# HOST-side `bootloader` crate is the image builder instead. This tiny
+# binary is that builder and nothing else: it takes a kernel ELF and writes
+# a raw disk image. It never touches kernel code.
+[dependencies]
+bootloader = "0.11.17"
+
+[workspace]
+
+[profile.release]
+opt-level = 2

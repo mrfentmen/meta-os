@@ -1,0 +1,14 @@
+/private/tmp/metaos-rk007/os-build/layer1/rk007-builder/target/debug/build/serde/8034ebb2d62cb92e/out/serde-8034ebb2d62cb92e.d: /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /private/tmp/metaos-rk007/os-build/layer1/rk007-builder/target/debug/build/serde/88841d03bb8f868e/out/private.rs
+
+/private/tmp/metaos-rk007/os-build/layer1/rk007-builder/target/debug/build/serde/8034ebb2d62cb92e/out/libserde-8034ebb2d62cb92e.rlib: /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /private/tmp/metaos-rk007/os-build/layer1/rk007-builder/target/debug/build/serde/88841d03bb8f868e/out/private.rs
+
+/private/tmp/metaos-rk007/os-build/layer1/rk007-builder/target/debug/build/serde/8034ebb2d62cb92e/out/libserde-8034ebb2d62cb92e.rmeta: /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs /Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs /private/tmp/metaos-rk007/os-build/layer1/rk007-builder/target/debug/build/serde/88841d03bb8f868e/out/private.rs
+
+/Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/lib.rs:
+/Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/integer128.rs:
+/Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/mod.rs:
+/Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/de.rs:
+/Users/dtaxk/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.229/src/private/ser.rs:
+/private/tmp/metaos-rk007/os-build/layer1/rk007-builder/target/debug/build/serde/88841d03bb8f868e/out/private.rs:
+
+# env-dep:OUT_DIR=/private/tmp/metaos-rk007/os-build/layer1/rk007-builder/target/debug/build/serde/88841d03bb8f868e/out
