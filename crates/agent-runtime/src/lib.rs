@@ -15,6 +15,8 @@
 //! loop, the relay POST, and real ISO-8601 timestamps - see
 //! `os-build/records/agent-runtime-gaps.md`.
 
+pub mod registry;
+
 use base64::{engine::general_purpose::STANDARD as B64, Engine as _};
 use queue_store::{JobStore, StoreBackend};
 use serde_json::Value;

@@ -441,7 +441,7 @@ Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
 `cargo test -p os-supervisor --test section13_restart` (7 pass), and
 `cargo test -p os-budget --doc` all exit 0.
 
-## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 11/25 delivered, 14 blocked
+## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 15/25 delivered, 10 blocked
 
 | Task | File | Result |
 |---|---|---|
@@ -456,11 +456,15 @@ Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
 | CB2-333 | `crates/dashboard/src/metrics.rs` | an empty snapshot renders four cards in fixed order, each saying "no reading reported", never `0.0`; one quiet source empties only its own card |
 | CB2-334 | `crates/dashboard/src/metrics.rs` | non-numeric, blank, negative and non-finite readings refused with the field named; every bad field reported in one parse |
 | CB2-349 | `crates/dashboard/src/metrics.rs` | cpu/memory/storage/network builders each with a fixture test; a reported zero stays a reading |
+| CB2-326 | `crates/agent-runtime/src/registry.rs` | empty, missing, non-array and blank-argument commands refused with the entry and position named |
+| CB2-327 | `crates/agent-runtime/src/registry.rs` | a `["true"]` command loads as a draft, not a runnable agent; a declared `draft` flag agrees |
+| CB2-328 | `crates/agent-runtime/src/registry.rs` | a duplicate name refuses the whole registry, naming both entry indexes |
+| CB2-348 | `crates/agent-runtime/tests/section14_registry.rs` | the real registry, embedded at compile time, loads 28 agents: 23 drafts, 5 runnable |
 
 Blocked — the named API does not exist:
-- CB2-326..328, 348: `agent-runtime` exposes `Agent::serve_job` and
-  `validate_assessment`; it has no registry loader, duplicate-name check, or
-  draft detection.
+- CB2-326..328, 348: closed by building the loader the tasks describe, as
+  `crates/agent-runtime/src/registry.rs`. New behaviour, recorded as such. It
+  parses with the crate's existing `serde_json`, so no package was added.
 - CB2-329, 332: invalid JSON is rejected at the HTTP layer (already covered by
   `http_invalid_json_is_a_400`); response-contract checking lives in
   `agent-runtime::validate_assessment`, not in assess-server.
@@ -483,8 +487,8 @@ Blocked — the named API does not exist:
 
 Section 14 verification: `cargo test -p guardrail`, `cargo test -p guardrail --doc`,
 `cargo test -p assess-server`, `cargo test -p intel --test section14_intel`
-(4 pass), and `cargo test -p dashboard --test section14_metrics` (8 pass) all
-exit 0.
+(4 pass), `cargo test -p dashboard --test section14_metrics` (8 pass), and
+`cargo test -p agent-runtime --test section14_registry` (4 pass) all exit 0.
 
 ## Section 15 — Schemas and validators (CB2-351..375) — 25/25
 
@@ -676,7 +680,7 @@ Per-task check (2026-11-02):
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
 
-## Closeout — 436 of 500 delivered, 64 open
+## Closeout — 440 of 500 delivered, 60 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -685,14 +689,14 @@ one is open for a named reason, not for want of trying.
 |---|---|---|
 | 1–12 (Python, relay, board, Rust queue) | 300 | 0 |
 | 13 Rust os-* error paths | 17 | 8 |
-| 14 Rust agent/dashboard/intel/stack | 11 | 14 |
+| 14 Rust agent/dashboard/intel/stack | 15 | 10 |
 | 15 Schemas and validators | 25 | 0 |
 | 16 Agent layer Node | 20 | 5 |
 | 17 Face tests | 0 | 25 |
 | 18 Tooling scripts | 25 | 0 |
 | 19 Officina and Musica | 15 | 10 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **436** | **64** |
+| **Total** | **440** | **60** |
 
 ### The 73, by the decision that unblocks them
 
@@ -700,10 +704,11 @@ one is open for a named reason, not for want of trying.
    file has no exports and 87 functions closing over the DOM. One yes unlocks
    all 25: either extract the calculator/calendar/notes/terminal/window logic
    into an importable module, or agree that fixture-model tests count.
-2. **New APIs (14, Section 14).** `stack` plans service configs and has no
-   push/pop; `agent-runtime` has no registry loader. The dashboard metrics
-   cards were built for this wave and are now covered, so they left this
-   group.
+2. **New APIs (10, Section 14).** `stack` plans service configs and has no
+   push/pop; `assess-server` has no observation-contract checks; the parity
+   harness has no queue-envelope or incident fixtures. The dashboard metrics
+   cards and the agent registry loader were built for this wave and are now
+   covered, so they left this group.
 3. **New APIs (8, Section 13).** `os-boot` is the agent CLI crate (no boot
    config type), `os-jobs` has no job-with-steps API, `os-worker` has no
    payload type. The `os-supervisor` restart policy was built for this wave
