@@ -396,7 +396,7 @@ Two real gaps were closed in code while pinning the tests:
 Section 12 verification: `cargo test -p queue-core -p queue-store -p relay` and
 `cargo test -p queue-core --doc` both exit 0.
 
-## Section 13 — Rust os-* error paths (CB2-301..325) — 12/25 delivered, 13 blocked
+## Section 13 — Rust os-* error paths (CB2-301..325) — 14/25 delivered, 11 blocked
 
 Delivered against the crates' real public APIs:
 
@@ -414,13 +414,17 @@ Delivered against the crates' real public APIs:
 | CB2-321 | `crates/os-workspace/tests/section13_workspace.rs` | `..`, absolute, and `..`-job-id deposits refused; nothing written |
 | CB2-322 | `crates/os-workspace/tests/section13_workspace.rs` | deposit then latest and v1 reads are byte-identical; listing agrees |
 | CB2-323 | `crates/os-workspace/tests/section13_workspace.rs` | missing job and empty job both list zero records |
+| CB2-314 | `crates/os-misc/tests/section13_misc.rs` | string helpers at their edges: empty basename becomes `blob`, unit-less duration refused by name, room keys round-trip, non-ascii folds to `_`, 60-char cap |
+| CB2-315 | `crates/os-misc/tests/section13_misc.rs` | numeric edges: zero duration and zero timestamp kept, `i64::MAX` accepted and one past refused, ISO time-of-day exact, interval zero/negative/`-0.0` refused |
 
 Blocked — the named API does not exist, and inventing it would be fake code:
 - CB2-301, 302, 324: `os-boot` is the agent CLI crate; it has no boot-config type.
 - CB2-308, 309, 310: `os-jobs` has `JobQueue` but no job-with-steps creation or
   cancel-finished API.
-- CB2-314, 315: `os-misc` holds domain modules (b24..b30); it has no generic
-  string/numeric helper set.
+- CB2-314, 315: delivered against the real B24 helpers. Correction to an
+  earlier note: `os-misc` does carry a string/numeric helper set
+  (`b24::send`, `b24::transport`, `b24::watch`), so the edge tests were written
+  rather than skipped.
 - CB2-316, 317, 318: `os-supervisor` is the watchdog crate; there is no restart
   policy or backoff sequence to test.
 - CB2-319, 320: `os-worker` has `Worker`/`JobSpec`/drivers, not a task-payload or
@@ -428,7 +432,8 @@ Blocked — the named API does not exist, and inventing it would be fake code:
 - CB2-325: only the spend half landed — there is no `remaining()` function.
 
 Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
--p os-workspace` and `cargo test -p os-budget --doc` both exit 0.
+-p os-workspace`, `cargo test -p os-misc --test section13_misc` (8 pass), and
+`cargo test -p os-budget --doc` all exit 0.
 
 ## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 8/25 delivered, 17 blocked
 
