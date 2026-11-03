@@ -1,0 +1,40 @@
+INFO : Framebuffer info: FrameBufferInfo { byte_len: 2764800, width: 1280, height: 720, pixel_format: Bgr, bytes_per_pixel: 3, stride: 1280 }
+INFO : 4th Stage
+INFO : BiosInfo { stage_4: Region { start: 130000, len: 24cc8 }, kernel: Region { start: 1000000, len: 10a33a0 }, ramdisk: Region { start: 20a4000, len: 0 }, config_file: Region { start: 20a4000, len: 0 }, last_used_addr: 20a3fff, framebuffer: BiosFramebufferInfo { region: Region { start: fd000000, len: 2a3000 }, width: 500, height: 2d0, bytes_per_pixel: 3, stride: 500, pixel_format: Bgr }, memory_map_addr: 12fdc, memory_map_len: 7 }
+INFO : BIOS boot
+INFO : Elf file loaded at Pointer {
+    addr: 0x0000000001000000,
+    metadata: 17445792,
+}
+INFO : virtual_address_offset: 0x0
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(4), offset: 0, virtual_addr: 200000, physical_addr: 200000, file_size: caccfc, mem_size: caccfc, align: 1000 })
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(5), offset: cacd00, virtual_addr: eadd00, physical_addr: eadd00, file_size: 49cdc, mem_size: 49cdc, align: 1000 })
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(6), offset: cf69e0, virtual_addr: ef89e0, physical_addr: ef89e0, file_size: 20, mem_size: 620, align: 1000 })
+INFO : Mapping bss section
+INFO : Handling Segment: Ph64(ProgramHeader64 { type_: Ok(Load), flags: Flags(6), offset: cf6a00, virtual_addr: ef9a00, physical_addr: ef9a00, file_size: c20, mem_size: 87c18, align: 1000 })
+INFO : Mapping bss section
+INFO : Entry point at: 0xec6a20
+INFO : Creating GDT at PhysAddr(0x214f000)
+INFO : Map framebuffer
+INFO : Map physical memory
+INFO : Allocate bootinfo
+INFO : Create Memory Map
+INFO : Create bootinfo
+INFO : Jumping to kernel entry point at VirtAddr(0xec6a20)
+KF-03 framebuffer: 1280x720 stride 1280 bpp 3 (screen live)
+META OS 0.1 (K6)
+META OS KERNEL - alive (K1)
+K3 timer: 10 ticks after 519540 spins
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                                                                       
+                                                                                      h552AXXs         
+                                                                    h552AAAA2      HH3MMMh5XXsX        
+                                                                  ShMHSMAAAA225  H3hHGSMMh2XXXX        
+                                                                  BG#@9i A225553HhMHSHHM  :XXXXX       
+                                                                 @S9@@B     53M3MMSHHH     XXXXX       
+                                                                 @9@@@:     MMMMGMMHG     2XXXAX       
+                                                                 @@@@@@  MMMhMMHMHGS##&  :AXXAA        
+                                                                  @@@@GMM53MMHMM GS9&@@@hAXAAAA        
+                                                                  @@@@&MMHHHMM      @@@@&522AA         
