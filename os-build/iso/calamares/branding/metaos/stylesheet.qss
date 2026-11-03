@@ -2,29 +2,29 @@
  *
  * Cosmetic only: every rule below is colour/spacing. No rule changes
  * geometry or hides a widget, so a Calamares version bump cannot turn
- * this file into a broken installer layout. Colours are the Meta
- * palette used by the splash and the desktop theme.
+ * this file into a broken installer. Colours are the installer spec
+ * palette only: blue #1877F2, white #EDF5FF, black #070B16.
  */
 
 QWidget {
-    background-color: #0B1220;
-    color: #E8EEF7;
+    background-color: #070B16;
+    color: #EDF5FF;
 }
 
 QLabel {
-    color: #E8EEF7;
+    color: #EDF5FF;
     background: transparent;
 }
 
 QLabel#heading,
 QLabel[heading="true"] {
-    color: #FFFFFF;
+    color: #EDF5FF;
     font-size: 18px;
 }
 
 QPushButton {
-    background-color: #3FA9F5;
-    color: #06101C;
+    background-color: #1877F2;
+    color: #070B16;
     border: 0;
     border-radius: 4px;
     padding: 6px 18px;
@@ -32,62 +32,63 @@ QPushButton {
 }
 
 QPushButton:disabled {
-    background-color: #21435C;
-    color: #7F94A8;
+    background-color: #070B16;
+    color: #1877F2;
+    border: 1px solid #1877F2;
 }
 
 QPushButton#quitButton,
 QPushButton[flat="true"] {
     background-color: transparent;
-    color: #B9C7D8;
+    color: #EDF5FF;
 }
 
 QProgressBar {
-    border: 1px solid #21435C;
+    border: 1px solid #1877F2;
     border-radius: 3px;
-    background-color: #101B2B;
+    background-color: #070B16;
     text-align: center;
-    color: #E8EEF7;
+    color: #EDF5FF;
 }
 
 QProgressBar::chunk {
-    background-color: #3FA9F5;
+    background-color: #1877F2;
     border-radius: 2px;
 }
 
 QListView,
 QTreeView,
 QTableView {
-    background-color: #101B2B;
-    alternate-background-color: #13223A;
-    selection-background-color: #1F5F8C;
-    selection-color: #FFFFFF;
-    border: 1px solid #21435C;
+    background-color: #070B16;
+    alternate-background-color: #070B16;
+    selection-background-color: #1877F2;
+    selection-color: #EDF5FF;
+    border: 1px solid #1877F2;
 }
 
 QLineEdit,
 QPlainTextEdit,
 QComboBox,
 QSpinBox {
-    background-color: #101B2B;
-    border: 1px solid #21435C;
+    background-color: #070B16;
+    border: 1px solid #1877F2;
     border-radius: 3px;
     padding: 4px;
-    color: #FFFFFF;
+    color: #EDF5FF;
 }
 
 QLineEdit:focus,
 QComboBox:focus {
-    border-color: #3FA9F5;
+    border-color: #1877F2;
 }
 
 QScrollBar:vertical {
-    background: #101B2B;
+    background: #070B16;
     width: 10px;
 }
 
 QScrollBar::handle:vertical {
-    background: #21435C;
+    background: #1877F2;
     border-radius: 5px;
     min-height: 24px;
 }
