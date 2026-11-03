@@ -153,6 +153,22 @@ pub(crate) fn fb_set_colors(spec: ColorSpec) {
     }
 }
 
+/// KF-10: paint the kernel-drawn desktop and shell window on the
+/// framebuffer and narrow the framebuffer console's view to the
+/// window's interior, so the shell session types inside the window.
+/// Called once by the console task when it starts (sched.rs). Returns
+/// false when no framebuffer console is installed or the screen is
+/// too small, in which case the KF-03 full-screen console stays.
+/// The serial log keeps the full boot text either way.
+pub(crate) fn fb_draw_shell_desktop() -> bool {
+    unsafe {
+        if let Some(console) = (*core::ptr::addr_of_mut!(FB_CONSOLE)).as_mut() {
+            return console.draw_shell_desktop();
+        }
+    }
+    false
+}
+
 /// KF-03 adapter: take the bootloader's framebuffer out of
 /// `BootInfo` and install it as FB_CONSOLE. Returns its geometry
 /// plus whether the pixel format is one framebuffer.rs can paint
@@ -500,6 +516,8 @@ fn panic(info: &PanicInfo) -> ! {
     // 0.11 panic would be serial-only while the screen stays calm.
     let fb_slot = unsafe { &mut *core::ptr::addr_of_mut!(FB_CONSOLE) };
     if let Some(console) = fb_slot {
+        // KF-10: a panic paints the full screen, not the shell window.
+        console.full_view();
         console.set_colors(vga_color_rgb(Color::White), vga_color_rgb(Color::Red));
         console.clear();
         let _ = write!(console, "META OS KERNEL - PANIC\n{}", info);

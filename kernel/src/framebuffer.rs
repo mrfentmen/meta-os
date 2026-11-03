@@ -50,6 +50,16 @@
 //! is an open item for the Pax merge gate (kernel merges go through Pax
 //! personally until K2 lands); it is flagged here, not assumed settled.
 //!
+//! KF-10 (2026-11-03, Pax): the console gains a view region — text
+//! can be clipped to a pixel rectangle and scrolled inside it — and
+//! `draw_shell_desktop`, which paints a kernel-drawn desktop (top
+//! bar, one centred window with a blue title bar) and narrows the
+//! view to the window's interior, so the real shell from sched.rs
+//! types inside a window the kernel itself drew. This file compiles
+//! standalone with rustc 1.99.1 (core-only lib check, Pax, this VM);
+//! the full kernel build and the QEMU screendump of the windowed
+//! shell remain the Mac-side proof, still owed.
+//!
 //! KF-03 (2026-11-02, Pax RK-007 ruling): this console is now WIRED
 //! in `main.rs` as a second output beside the VGA console — when the
 //! 0.11 bootloader supplies a framebuffer, `print!` mirrors every
@@ -228,6 +238,54 @@ impl<'a> Framebuffer<'a> {
         self.fill_rect(0, height - lines, self.info.width, lines, fill);
     }
 
+    /// Scroll a pixel rectangle up by `lines` pixel rows, painting the
+    /// freed rows at the rectangle's bottom with `fill` (KF-10: the
+    /// shell window scrolls its own interior, not the whole screen, so
+    /// the desktop and window frame around it stay put). The rectangle
+    /// is clamped to the screen geometry first; each row segment is
+    /// then copied with `copy_within`, destination above source, so no
+    /// row is read after it is overwritten.
+    pub fn scroll_up_rect_pixels(
+        &mut self,
+        x: usize,
+        y: usize,
+        w: usize,
+        h: usize,
+        lines: usize,
+        fill: (u8, u8, u8),
+    ) {
+        if x >= self.info.width || y >= self.info.height || w == 0 || h == 0 || lines == 0 {
+            return;
+        }
+        let w = w.min(self.info.width - x);
+        let h = h.min(self.info.height - y);
+        if lines >= h {
+            self.fill_rect(x, y, w, h, fill);
+            return;
+        }
+        let bpp = self.info.bytes_per_pixel;
+        if bpp == 0 {
+            return;
+        }
+        let stride_bytes = self.info.stride.saturating_mul(bpp);
+        let seg_bytes = w.saturating_mul(bpp);
+        for row in 0..(h - lines) {
+            let dst = (y + row)
+                .saturating_mul(stride_bytes)
+                .saturating_add(x.saturating_mul(bpp));
+            let src = (y + row + lines)
+                .saturating_mul(stride_bytes)
+                .saturating_add(x.saturating_mul(bpp));
+            if src.checked_add(seg_bytes).map_or(true, |end| end > self.buffer.len())
+                || dst.checked_add(seg_bytes).map_or(true, |end| end > self.buffer.len())
+            {
+                continue;
+            }
+            self.buffer.copy_within(src..src + seg_bytes, dst);
+        }
+        self.fill_rect(x, y + h - lines, w, lines, fill);
+    }
+
     /// Draw one glyph cell with its top-left corner at pixel (`x`, `y`).
     /// Bit 7 of each font byte is the leftmost pixel. Every pixel of
     /// the cell is painted, foreground for set bits and background for
@@ -254,25 +312,122 @@ pub struct FramebufferConsole<'a> {
     row: usize,
     fg: (u8, u8, u8),
     bg: (u8, u8, u8),
+    // KF-10 view region: text is drawn inside this pixel rectangle
+    // (origin + size) and scrolls inside it. Default is the whole
+    // screen, which reproduces the KF-03 full-screen console exactly;
+    // `draw_shell_desktop` narrows it to the shell window's interior.
+    origin_x: usize,
+    origin_y: usize,
+    view_w: usize,
+    view_h: usize,
 }
 
 impl<'a> FramebufferConsole<'a> {
     /// Build a console and clear the screen to the background color.
     pub fn new(fb: Framebuffer<'a>, fg: (u8, u8, u8), bg: (u8, u8, u8)) -> Self {
-        let mut console = FramebufferConsole { fb, col: 0, row: 0, fg, bg };
+        let (w, h) = (fb.info().width, fb.info().height);
+        let mut console = FramebufferConsole {
+            fb,
+            col: 0,
+            row: 0,
+            fg,
+            bg,
+            origin_x: 0,
+            origin_y: 0,
+            view_w: w,
+            view_h: h,
+        };
         let bg_color = console.bg;
         console.fb.clear(bg_color);
         console
     }
 
-    /// Character columns across the screen (zero on a sub-cell screen).
+    /// Character columns across the view region (zero on a sub-cell view).
     pub fn cols(&self) -> usize {
-        self.fb.info().width / FONT_WIDTH
+        self.view_w / FONT_WIDTH
     }
 
-    /// Character rows down the screen (zero on a sub-cell screen).
+    /// Character rows down the view region (zero on a sub-cell view).
     pub fn rows(&self) -> usize {
-        self.fb.info().height / FONT_HEIGHT
+        self.view_h / FONT_HEIGHT
+    }
+
+    /// Narrow the text view to a pixel rectangle (KF-10: the shell
+    /// window's interior). The rectangle is clamped to the screen; the
+    /// cursor restarts at the region's top-left cell. Drawing, wrapping
+    /// and scrolling all stay inside the region from here on.
+    pub fn set_view(&mut self, x: usize, y: usize, w: usize, h: usize) {
+        let (sw, sh) = (self.fb.info().width, self.fb.info().height);
+        self.origin_x = x.min(sw);
+        self.origin_y = y.min(sh);
+        self.view_w = w.min(sw - self.origin_x);
+        self.view_h = h.min(sh - self.origin_y);
+        self.col = 0;
+        self.row = 0;
+    }
+
+    /// Restore the whole-screen view (KF-10: the panic handler calls
+    /// this first, so a panic paints the full screen, not the window).
+    pub fn full_view(&mut self) {
+        let (w, h) = (self.fb.info().width, self.fb.info().height);
+        self.origin_x = 0;
+        self.origin_y = 0;
+        self.view_w = w;
+        self.view_h = h;
+        self.col = 0;
+        self.row = 0;
+    }
+
+    /// Draw a text string with its first glyph cell at pixel (`x`, `y`),
+    /// independent of the cursor and the view region (KF-10: window
+    /// titles and the desktop top bar are painted, not typed).
+    pub fn draw_text_px(&mut self, x: usize, y: usize, s: &str, fg: (u8, u8, u8), bg: (u8, u8, u8)) {
+        for (i, byte) in s.bytes().enumerate() {
+            self.fb
+                .draw_glyph(x + i * FONT_WIDTH, y, byte, fg, bg);
+        }
+    }
+
+    /// Paint the KF-10 desktop and the shell window, then narrow this
+    /// console's view to the window's interior so the real shell
+    /// (sched.rs console task, reached through the normal `print!`
+    /// path) types inside the window from here on. The kernel draws
+    /// every pixel itself: light desktop, white top bar with the OS
+    /// name, one centred window with a blue title bar and a black
+    /// interior. Returns false without painting when the screen is
+    /// too small to hold a usable window, so boot degrades to the
+    /// KF-03 full-screen console instead of a broken desktop.
+    pub fn draw_shell_desktop(&mut self) -> bool {
+        let (sw, sh) = (self.fb.info().width, self.fb.info().height);
+        if sw < 320 || sh < 200 {
+            return false;
+        }
+        const DESKTOP: (u8, u8, u8) = (148, 178, 216);
+        const BAR: (u8, u8, u8) = (242, 244, 248);
+        const INK: (u8, u8, u8) = (0, 0, 0);
+        const TITLE: (u8, u8, u8) = (0, 0, 170);
+        const WHITE: (u8, u8, u8) = (255, 255, 255);
+        const SHADOW: (u8, u8, u8) = (70, 84, 104);
+        // Desktop and top bar.
+        self.fb.clear(DESKTOP);
+        self.fb.fill_rect(0, 0, sw, 28, BAR);
+        self.draw_text_px(12, 6, "META OS 0.1", INK, BAR);
+        // One centred window: drop shadow, white frame, blue title
+        // bar, black interior.
+        let win_w = (sw - 96).min(920);
+        let win_h = (sh - 160).min(540);
+        let win_x = (sw - win_w) / 2;
+        let win_y = 76usize;
+        self.fb.fill_rect(win_x + 10, win_y + 10, win_w, win_h, SHADOW);
+        self.fb.fill_rect(win_x, win_y, win_w, win_h, WHITE);
+        self.fb.fill_rect(win_x + 2, win_y + 2, win_w - 4, win_h - 4, INK);
+        self.fb.fill_rect(win_x + 2, win_y + 2, win_w - 4, 26, TITLE);
+        self.draw_text_px(win_x + 12, win_y + 7, "META OS SHELL", WHITE, TITLE);
+        // The shell lives in the interior below the title bar.
+        self.set_view(win_x + 14, win_y + 40, win_w - 28, win_h - 52);
+        self.set_colors((170, 170, 170), INK);
+        self.clear();
+        true
     }
 
     /// Move the cursor (demo splash: lets the boot spin redraw the
@@ -295,7 +450,9 @@ impl<'a> FramebufferConsole<'a> {
         if self.row >= self.rows() {
             if self.rows() > 0 {
                 let bg_color = self.bg;
-                self.fb.scroll_up_pixels(FONT_HEIGHT, bg_color);
+                let (ox, oy, vw, vh) = (self.origin_x, self.origin_y, self.view_w, self.view_h);
+                self.fb
+                    .scroll_up_rect_pixels(ox, oy, vw, vh, FONT_HEIGHT, bg_color);
                 self.row = self.rows() - 1;
             } else {
                 self.row = 0;
@@ -319,8 +476,8 @@ impl<'a> FramebufferConsole<'a> {
                 if self.cols() == 0 || self.rows() == 0 {
                     return;
                 }
-                let x = self.col * FONT_WIDTH;
-                let y = self.row * FONT_HEIGHT;
+                let x = self.origin_x + self.col * FONT_WIDTH;
+                let y = self.origin_y + self.row * FONT_HEIGHT;
                 let fg_color = self.fg;
                 let bg_color = self.bg;
                 self.fb.draw_glyph(x, y, byte, fg_color, bg_color);
@@ -360,16 +517,29 @@ impl<'a> FramebufferConsole<'a> {
             return;
         }
         let bg = self.bg;
-        self.fb
-            .draw_glyph(self.col * FONT_WIDTH, self.row * FONT_HEIGHT, b' ', bg, bg);
+        let (x, y) = (
+            self.origin_x + self.col * FONT_WIDTH,
+            self.origin_y + self.row * FONT_HEIGHT,
+        );
+        self.fb.draw_glyph(x, y, b' ', bg, bg);
     }
 
-    /// Fill the screen with the background color (KF-03: the shell
-    /// `clear` command and the panic screen need this on the
-    /// framebuffer exactly as they have it on VGA).
+    /// Fill the view region with the background color and restart the
+    /// cursor at its top-left cell (KF-03: the shell `clear` command
+    /// and the panic screen need this on the framebuffer exactly as
+    /// they have it on VGA; KF-10: in the shell window this blanks
+    /// only the window's interior, the desktop stays painted).
     pub fn clear(&mut self) {
         let bg = self.bg;
-        self.fb.clear(bg);
+        let (ox, oy, vw, vh) = (self.origin_x, self.origin_y, self.view_w, self.view_h);
+        let (sw, sh) = (self.fb.info().width, self.fb.info().height);
+        if ox == 0 && oy == 0 && vw == sw && vh == sh {
+            self.fb.clear(bg);
+        } else {
+            self.fb.fill_rect(ox, oy, vw, vh, bg);
+        }
+        self.col = 0;
+        self.row = 0;
     }
 
     /// Change colors; already-drawn cells keep their colors

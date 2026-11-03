@@ -480,6 +480,17 @@ pub fn task_count() -> usize {
 /// drawing runs in this loop between key polls: no new task,
 /// no blocking, no scheduler changes.
 fn console_task() {
+    // KF-10: the kernel draws its desktop and one window on the
+    // framebuffer, and the framebuffer console's view narrows to the
+    // window's interior, so this shell's echo and command output land
+    // inside the window on the screen the user sees. The marker line
+    // is printed AFTER the paint, so it is the first line inside the
+    // window as well as the serial-log proof that the desktop was
+    // drawn. Without a framebuffer (or on a too-small screen) the
+    // shell keeps the KF-03 full-screen console and no marker prints.
+    if crate::fb_draw_shell_desktop() {
+        println!("KF-10 desktop: shell window live");
+    }
     let mut line: [u8; 80] = [0; 80];
     let mut len = 0usize;
     let mut truncated = false;
