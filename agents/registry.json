@@ -1,19 +1,4 @@
 {
-  "programs": [
-    "imperium",
-    "ignis",
-    "medicus",
-    "science-lab",
-    "hortus",
-    "officina",
-    "musica",
-    "aegis",
-    "nervus",
-    "hands-free",
-    "agent-layer",
-    "nuntius",
-    "goose-services"
-  ],
   "agents": [
     {
       "budget": {
@@ -27,12 +12,12 @@
         "dispatch-simulated"
       ],
       "command": [],
+      "draft": true,
+      "draftReason": "Imperium lives outside this repo; no real command can be named here",
+      "hosted": false,
       "lane": "Imperium loop (patrol -> review -> investigation -> records -> response)",
       "name": "imperium-patrol",
-      "owner": "system: imperium",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "Imperium lives outside this repo; no real command can be named here"
+      "owner": "system: imperium"
     },
     {
       "budget": {
@@ -43,13 +28,14 @@
         "keeper-pass",
         "rights-check"
       ],
-      "command": [],
-      "lane": "Musica overnight sessions",
+      "command": [
+        "repo:node",
+        "os/worlds/musica/hosted.mjs"
+      ],
+      "hosted": true,
+      "lane": "Musica overnight sessions (compose -> keepers -> variation -> catalogue -> rights)",
       "name": "musica-studio",
-      "owner": "system: musica",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "Musica lives outside this repo; no real command can be named here"
+      "owner": "system: musica"
     },
     {
       "budget": {
@@ -65,10 +51,10 @@
         "7",
         "design-loop.json"
       ],
+      "hosted": true,
       "lane": "Officina faber loop",
       "name": "officina-faber",
-      "owner": "system: officina",
-      "hosted": true
+      "owner": "system: officina"
     },
     {
       "budget": {
@@ -77,56 +63,58 @@
       "capabilities": [
         "watch"
       ],
-      "command": [],
-      "lane": "watch rounds (bus, repo, gateway) \u2014 capability demo agent",
-      "name": "watch",
-      "owner": "boss",
-      "watch": [],
-      "watchCadenceMs": 900000,
+      "command": [
+        "repo:node",
+        "agents/watchman.mjs",
+        "--once"
+      ],
       "gym": {
-        "drill": "gym-drill-1",
         "at": "2026-11-02T11:45:09.186Z",
+        "drill": "gym-drill-1",
+        "max": 3,
         "tasks": [
           {
             "id": "registry-entry",
-            "score": 1,
-            "max": 1
+            "max": 1,
+            "score": 1
           },
           {
             "id": "spawn-clean-exit",
-            "score": 1,
-            "max": 1
+            "max": 1,
+            "score": 1
           },
           {
             "id": "ledger-complete",
-            "score": 1,
-            "max": 1
+            "max": 1,
+            "score": 1
           }
         ],
-        "total": 3,
-        "max": 3
+        "total": 3
       },
-      "hosted": false,
-      "draft": true,
-      "draftReason": "capability demo entry only; `true` proves the runtime, not a watch loop"
+      "hosted": true,
+      "lane": "job board drain \u2014 one watchman pass per run",
+      "name": "watch",
+      "owner": "boss",
+      "watch": [],
+      "watchCadenceMs": 900000
     },
     {
-      "name": "aegis",
-      "lane": "Meta Aegis \u2014 local passes as a hosted loop; the OSV sweep stays a separate run",
-      "command": [
-        "repo:node",
-        "aegis/hosted.mjs"
-      ],
+      "budget": {
+        "maxWallMs": 120000
+      },
       "capabilities": [
         "confusables",
         "lifecycle",
         "alarm-split"
       ],
-      "budget": {
-        "maxWallMs": 120000
-      },
-      "owner": "boss",
-      "hosted": true
+      "command": [
+        "repo:node",
+        "aegis/hosted.mjs"
+      ],
+      "hosted": true,
+      "lane": "Meta Aegis \u2014 local passes as a hosted loop; the OSV sweep stays a separate run",
+      "name": "aegis",
+      "owner": "boss"
     },
     {
       "budget": {
@@ -142,10 +130,10 @@
         "repo:node",
         "nervus/hosted.mjs"
       ],
+      "hosted": true,
       "lane": "Meta Nervus \u2014 STUB contract run; no model is loaded",
       "name": "nervus",
-      "owner": "boss",
-      "hosted": true
+      "owner": "boss"
     },
     {
       "budget": {
@@ -156,13 +144,16 @@
         "experiment-watch",
         "verification-watch"
       ],
-      "command": [],
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "research-director"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "research-director",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -171,13 +162,16 @@
       "capabilities": [
         "literature-watch"
       ],
-      "command": [],
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "literature-researcher"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "literature-researcher",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -187,13 +181,16 @@
         "literature-watch",
         "experiment-watch"
       ],
-      "command": [],
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "scientific-analyst"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "scientific-analyst",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -203,12 +200,12 @@
         "experiment-watch"
       ],
       "command": [],
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
+      "hosted": false,
       "lane": "Science Lab (research)",
       "name": "mathematics-researcher",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -218,12 +215,12 @@
         "experiment-watch"
       ],
       "command": [],
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
+      "hosted": false,
       "lane": "Science Lab (research)",
       "name": "chemistry-researcher",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -233,12 +230,12 @@
         "experiment-watch"
       ],
       "command": [],
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
+      "hosted": false,
       "lane": "Science Lab (research)",
       "name": "biology-researcher",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -248,12 +245,12 @@
         "experiment-watch"
       ],
       "command": [],
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
+      "hosted": false,
       "lane": "Science Lab (research)",
       "name": "physics-researcher",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -264,12 +261,12 @@
         "experiment-watch"
       ],
       "command": [],
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
+      "hosted": false,
       "lane": "Science Lab (research)",
       "name": "hypothesis-generator",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -278,13 +275,16 @@
       "capabilities": [
         "experiment-watch"
       ],
-      "command": [],
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "computational-scientist"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "computational-scientist",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -295,12 +295,12 @@
         "verification-watch"
       ],
       "command": [],
+      "draft": true,
+      "draftReason": "no program in this repo; command is a placeholder and does the lane no work",
+      "hosted": false,
       "lane": "Science Lab (research)",
       "name": "statistician",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -309,13 +309,16 @@
       "capabilities": [
         "verification-watch"
       ],
-      "command": [],
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "scientific-critic"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "scientific-critic",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -324,13 +327,16 @@
       "capabilities": [
         "verification-watch"
       ],
-      "command": [],
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "independent-verifier"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "independent-verifier",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
       "budget": {
@@ -340,85 +346,103 @@
         "experiment-watch",
         "verification-watch"
       ],
-      "command": [],
+      "command": [
+        "python3",
+        "repo:os/worlds/science-lab/hosted.py",
+        "--agent",
+        "research-archivist"
+      ],
+      "hosted": true,
       "lane": "Science Lab (research)",
       "name": "research-archivist",
-      "owner": "system: science-lab",
-      "hosted": false,
-      "draft": true,
-      "draftReason": "no program in this repo; command is a placeholder and does the lane no work"
+      "owner": "system: science-lab"
     },
     {
-      "name": "handsfree-intake",
+      "budget": {
+        "maxWallMs": 60000
+      },
+      "capabilities": [
+        "orders",
+        "intake"
+      ],
       "command": [
         "repo:node",
         "handsfree/hosted.mjs",
         "intake"
       ],
+      "hosted": true,
       "lane": "Hands-Free \u2014 order intake (text inbox to job files)",
-      "capabilities": [
-        "orders",
-        "intake"
-      ],
+      "name": "handsfree-intake",
+      "owner": "system: handsfree"
+    },
+    {
       "budget": {
         "maxWallMs": 60000
       },
-      "owner": "system: handsfree",
-      "hosted": true
-    },
-    {
-      "name": "handsfree-brief",
+      "capabilities": [
+        "brief",
+        "latency"
+      ],
       "command": [
         "repo:node",
         "handsfree/hosted.mjs",
         "brief"
       ],
+      "hosted": true,
       "lane": "Hands-Free \u2014 speakable brief from finished results",
-      "capabilities": [
-        "brief",
-        "latency"
-      ],
+      "name": "handsfree-brief",
+      "owner": "system: handsfree"
+    },
+    {
       "budget": {
         "maxWallMs": 60000
       },
-      "owner": "system: handsfree",
-      "hosted": true
-    },
-    {
-      "name": "handsfree-approval",
+      "capabilities": [
+        "approval",
+        "duplicate-detection"
+      ],
       "command": [
         "repo:node",
         "handsfree/hosted.mjs",
         "approval"
       ],
+      "hosted": true,
       "lane": "Hands-Free \u2014 approval inbox (one request, one answer)",
-      "capabilities": [
-        "approval",
-        "duplicate-detection"
-      ],
-      "budget": {
-        "maxWallMs": 60000
-      },
-      "owner": "system: handsfree",
-      "hosted": true
+      "name": "handsfree-approval",
+      "owner": "system: handsfree"
     },
     {
-      "name": "aegis-cycle",
-      "lane": "Meta Aegis \u2014 unattended cycle: OSV sweep, KEV cross-check, append-only ledger",
-      "command": [
-        "repo:node",
-        "aegis/cycle.mjs"
-      ],
+      "budget": {
+        "maxWallMs": 180000
+      },
       "capabilities": [
         "osv-sweep",
         "kev-cross-check",
         "ledger-receipts"
       ],
-      "budget": {
-        "maxWallMs": 180000
-      },
-      "owner": "boss",
-      "hosted": true
+      "command": [
+        "repo:node",
+        "aegis/cycle.mjs"
+      ],
+      "hosted": true,
+      "lane": "Meta Aegis \u2014 unattended cycle: OSV sweep, KEV cross-check, append-only ledger",
+      "name": "aegis-cycle",
+      "owner": "boss"
     }
+  ],
+  "programs": [
+    "imperium",
+    "ignis",
+    "medicus",
+    "science-lab",
+    "hortus",
+    "officina",
+    "musica",
+    "aegis",
+    "nervus",
+    "hands-free",
+    "agent-layer",
+    "nuntius",
+    "goose-services"
   ]
 }

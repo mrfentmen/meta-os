@@ -11,7 +11,7 @@ found for that promise).
 | § | Promise | Code | Label |
 |---|---|---|---|
 | 1 | an agent has identity, lane, capabilities, budget, owner | `agents/registry.json` | CODE-INSPECTED |
-| 3 | registry, one entry per agent | `registry.json`, `registry_validate.mjs`, `loadRegistry`/`validateEntry` in `runtime.mjs` | CODE-INSPECTED — 7 live entries with real programs, 16 drafts with **no command at all** (a placeholder is now a validation error) |
+| 3 | registry, one entry per agent | `registry.json`, `registry_validate.mjs`, `loadRegistry`/`validateEntry` in `runtime.mjs` | CODE-INSPECTED — 16 live entries with real programs, 7 drafts with **no command at all** (a placeholder is now a validation error) |
 | 4 | watchman wakes a named agent with the job in hand | `agents/watchman.mjs` (polls a jobs dir, writes a heartbeat through `watchdog.mjs`) | CODE-INSPECTED |
 | 4 | timer sweep as backup | `node agents/watchman.mjs --once` drains the board once and exits | CODE-INSPECTED — the command exists; no unit in the image schedules it |
 | 4 | who watches the watchman | `agents/watchdog.mjs` (`check`, `supervise`, restart budget) | UNPROVEN — the mechanism has tests, no cadence ran it before `oc2-health.timer` |
@@ -35,8 +35,8 @@ command (`--once`) but nothing schedules it, and the image has no such unit —
 so no agent wakes on a clock yet.
 
 The registry no longer lists the crew (rowan, hana, milo, buffy, bond, pax):
-they are people working on the project, not processes. What remains is 7 live
-agents with real programs and 16 drafts that carry no command, so nothing can
+they are people working on the project, not processes. What remains is 16 live
+agents with real programs and 7 drafts that carry no command, so nothing can
 spawn them by accident.
 
 ## Not verified here
@@ -44,3 +44,11 @@ spawn them by accident.
 - No drill was run; no ledger line, heartbeat or receipt was inspected.
 - `bridge.mjs`, `tools.mjs` and `grants.mjs` were not read past their headers.
 - The kernel-side L5 path (§2) is Rowan's and stays unstarted.
+
+## Where a hosted loop writes
+
+A hosted loop keeps its state out of the checkout, because an install runs the code from a
+read-only payload. `METAOS_STATE` names the root (default `~/.local/state/metaos`);
+`musica-studio` writes `musica/session-<stamp>/` beneath it, the Science Lab duties write
+`science-lab/<agent>-<stamp>.json`. Both accept `--check`, which proves they can read their
+inputs and write their receipts without spending a run.
