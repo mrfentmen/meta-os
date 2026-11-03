@@ -1,5 +1,5 @@
 # MetaOS live frames — verbatim export of kernel/src/logo_frames.rs FRAMES array
-# Regenerate: rerun the exporter in LANE_NOTES or gen-ascii-loop.py logic
+# Regenerate: python3 -c (parse kernel/src/logo_frames.rs FRAMES array, join with ===FRAME=== separators)
 
 
 
