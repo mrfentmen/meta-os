@@ -140,6 +140,16 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
       const runStartedAt = Date.now();
       const h = spawnAgent(agent, { root, job });
       runs.set(id, h);
+      // A refused spawn (budget or memory) has no child and never will. Recording a bell and
+      // a job-done for it made a job that never ran look finished. Name the refusal, write a
+      // result that says so, and leave the job claimed so the poll does not spin on it.
+      if (h.stopped) {
+        ledger.add("watchman", "job-refused", { id, agent: job.agent, run: h.runId, reason: h.stopped });
+        fs.writeFileSync(path.join(resultDir, id + ".result.json"),
+          JSON.stringify({ id, agent: job.agent, run: h.runId, refused: h.stopped,
+                           finishedAt: new Date().toISOString() }, null, 2));
+        continue;
+      }
       ledger.add("watchman", "bell", { id, agent: job.agent, run: h.runId });
       spawnedNow.push({ id, handle: h });
       h.done.then(({ code, signal }) => {
