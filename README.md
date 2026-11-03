@@ -113,11 +113,11 @@ Every number below was measured on the current main on 2026-11-02. Recheck any o
 | --- | --- | --- |
 | Node (app, server, eval harnesses) | 2071 run, 2016 pass, 55 fail | `npm test` |
 | Rust workspace | 2186 pass, 0 fail | `cargo test --workspace` |
-| Python job queue | 296 pass, 1 skip | `python3 -m unittest discover -s tests/queue-python` |
+| Python job queue | 327 pass, 1 skip | `python3 -m unittest discover -s tests/queue-python` |
 | Python Officina | 49 pass | `python3 -m unittest discover -s tests/officina` |
 | Python Science Lab | 163 of 163 pass | `python3 -m unittest discover -s tests/science-lab` |
 | Python Hortus | 14 pass | `python3 -m unittest discover -s os/tests -p "test_hortus*.py"` |
-| Rust intel crate | 186 of 186 lib tests pass; b10_parity 53 of 53 | `cargo test -p intel` |
+| Rust intel crate | 283 lib tests pass; b10_parity 53 of 53 | `cargo test -p intel` |
 | Worlds packs | 12 of 12 valid | `python3 os/worlds/validate_pack.py` |
 | OS loop harness | 11 of 12 pass — the `green cycle` scenario fails and stays on the record | `bash os/os/loop-tests/metaos-loop.test.sh` |
 
