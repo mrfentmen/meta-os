@@ -58,8 +58,19 @@ level its record holds, never higher (`ladder.assert_export_allowed`).
 - Hortus interface: `hortus/` runtime runs locally; breeding-variant
   jobs are lab-local (see `os-build/OPENCODE2_SCIENCE_STATUS.md`
   section 7). No external Hortus service is called.
-- Gateway backends: `LOCAL-SHELF` stand-in and offline mode only;
-  no network calls exist on the export/rehearsal path.
+- Gateway backends: `LOCAL-SHELF` stand-in and offline mode; the
+  export/rehearsal path still makes no network calls. A second
+  backend, `MCP-GATEWAY` (`mcp_backends.py`, added 2026-11-02 by
+  Pax), now exists for live cycles: the nine allowlisted servers are
+  called through the boss's local MCP gateway under the same
+  allowlist/scope/budget/offline/quarantine rules, every call
+  recorded with backend "MCP-GATEWAY". Live smoke 2026-11-02:
+  10/10 calls answered (9 searches + 1 read across all nine
+  servers), record `records/gateway/mcp_smoke_2026-11-02.json`;
+  several servers answer in formatted plain text, kept verbatim and
+  labelled `payload_form: "text"`, never parsed into structure.
+  Tests: `tests/science-lab/test_gateway_mcp_backend.py` (18 tests,
+  fake transport); full lab suite 181 OK.
 
 ## Unimplemented (explicit markers, never silent)
 
