@@ -124,3 +124,16 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
   to check against — sent to Pax. 171 closing line per cut plan.
 - 172 stutter check OC1. 173 silent-by-cut-design + beds licensed.
   174 offline (local files only). 167 two defects, both owned.
+
+## §6 verdict (OC3B-141) — DONE static, runs with OC1
+- 126 editors/calc/notes inventoried; 132 entries listed, none
+  rewritten (OC2's + my galculator). 130 menu entry present;
+  131 once-flag CODE-INSPECTED + test_welcome 30/30 co-located
+  (earlier 4-error run was my harness, recorded).
+- 134/140 brand+quiet bounded and clean. 135 ops written.
+- 136 archives: pointer to §2. 137 readers present (atril live,
+  evince degraded-off, Hana ack pending). 138 render check OC1.
+- 139 printing stack ABSENT, owner ISO lane. 143/144/145/147
+  helpers absent with du fallback named. 148 nothing to hand over.
+- 127/129 interactive + 149 cold timing BLOCKED-with-owner (OC1).
+- 142 three defects, all owned. 133 handoff written.
