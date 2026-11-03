@@ -127,13 +127,49 @@ number in the saved RAX, arguments in RDI/RSI):
 - 5 — read_key: return the next keyboard byte to the caller.
   Ruled by F1; implementation in `user.rs` is R-lane work
   (RW4-1). Until it lands, 5 falls in the refusal arm below.
-- 6–15 — reserved. Never allocated without a Pax ruling and a
+- 6 — cap_query: return the calling task's remaining capability
+  budget, packed as `(remaining_ticks << 32) | remaining_write_bytes`;
+  `u64::MAX` when the caller has no policy. Allocated 2026-11-03 on the
+  boss's order for the K6.1 in-kernel capability slice; the policy table
+  is `kernel/src/caps.rs`, and this spec update lands in the same commit.
+  A policy refusal returns `u64::MAX - 1` (`DENIED`), distinct from the
+  normal refusal below, so userspace can tell a capability denial from an
+  empty read or a bad call.
+- 7–15 — reserved. Never allocated without a Pax ruling and a
   spec update in the same commit.
 - Every other number is refused: the kernel logs
   `user bad syscall <n> refused`, returns `u64::MAX`, and the
   task carries on. There is no silent compatibility.
 
-`kernel/src/syscalls.rs` is NOT this table. It carries an older
+## In-kernel agent capability policy (K6.1, 2026-11-03)
+
+The kernel now owns a first, real slice of agent policy. It is not a
+claim that the whole agent layer lives in ring 0; it is the part the
+kernel can actually mediate.
+
+- A policy is assigned at ELF entry (`caps::assign_current`) and is in
+  force before the first ring-3 instruction. It names the allowed
+  syscall bits, a total console-write quota, a per-sleep cap, and a
+  wall-clock tick budget.
+- The syscall entry checks the policy before dispatch. An ungranted
+  syscall or an over-quota write is refused with `DENIED` and logged as
+  `cap deny <name> ...`; an expired wall budget logs `cap kill <name>
+  budget <ticks> ticks` and exits the task.
+- The grant itself is logged once: `cap grant <name> write=<n>
+  ticks=<n> sleep=<n>`. Those serial lines are the audit record; there
+  is no filesystem to make them durable yet.
+- The policy covers only what the kernel mediates. File, network, exec,
+  and spend have no syscalls, so their grants stay in the L5 userspace
+  gateway (`agents/grants.mjs`) and are not enforced here.
+- The scheduler is cooperative: a task that never makes a syscall is not
+  checked. Enforcement is at the syscall boundary, not preemptive.
+
+Proof: `os-build/logs/K6.1-cap-policy.txt` contains the grant, three
+refusals (`write`, `syscall 5`, `sleep`), `capcheck: done`, and
+`user exit code 0` from the image built by this tree.
+
+`kernel/src/caps.rs` is the K6.1 policy table; it does not add any
+number beyond 6. `kernel/src/syscalls.rs` is NOT this table. It carries an older
 set of DRAFT numbers (from the K6 shape document) that conflicts
 with the table above at every number from 2 on, it is not declared
 in `main.rs`, and it is frozen untouched while the boss rules on

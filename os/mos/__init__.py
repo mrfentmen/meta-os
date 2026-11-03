@@ -3,6 +3,7 @@
 The bus stays transport; this package is the orchestration layer:
 
   capabilities  who can do what (heartbeated registry, Redis-backed)
+  contract      the run contract's Python verifier and job gate
   acceptance    machine-readable acceptance criteria + a verifier
   overseer      dispatch work via DMs, verify results, requeue failures
   worker        poll DMs, claim matching jobs, heartbeat, done/blocked

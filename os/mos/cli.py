@@ -16,6 +16,7 @@ Usage:
 Spec/accept may be given inline or via @file. Never prints the token.
 """
 import argparse
+import json
 import os
 import sys
 
@@ -56,7 +57,7 @@ def cmd_dispatch(a):
     jid, dms = overseer.dispatch(
         a.title, _text(a.spec), accept=_text(a.accept), requirements=reqs,
         room=a.room or "", lease=a.lease, branch=a.branch or "",
-        base=a.base or "")
+        base=a.base or "", contract=getattr(a, "contract", "") or "")
     print(f"DISPATCHED {jid}")
     for nick, ok, detail in dms:
         print(f"  DM {nick}: {'OK' if ok else 'FAIL'} {detail}")
@@ -89,6 +90,13 @@ def cmd_verify(a):
     print(report)
     print("VERIFIED" if ok else "NOT_VERIFIED")
     return 0 if ok else 1
+
+
+def cmd_contract(a):
+    from mos import contract_job
+    verdict = contract_job.verify_contract(a.run_dir)
+    print(json.dumps(verdict.as_dict(), sort_keys=True))
+    return 0 if verdict.ok else 1
 
 
 def cmd_worker(a):
@@ -174,6 +182,8 @@ def main(argv=None):
     p.add_argument("--lease", type=int, default=1800)
     p.add_argument("--branch", default="")
     p.add_argument("--base", default="")
+    p.add_argument("--contract", default="",
+                   help="run directory whose contract.json must finish")
     p.set_defaults(fn=cmd_dispatch)
 
     p = sub.add_parser("tick", help="one overseer pass")
@@ -186,6 +196,10 @@ def main(argv=None):
     p.add_argument("--repo", default=None)
     p.add_argument("--workdir-base", default=None)
     p.set_defaults(fn=cmd_verify)
+
+    p = sub.add_parser("contract", help="verify a run directory's contract")
+    p.add_argument("run_dir")
+    p.set_defaults(fn=cmd_contract)
 
     p = sub.add_parser("worker", help="worker poll/claim cycle")
     p.add_argument("--dm", default="", help="DM dead-drop secret")

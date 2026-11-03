@@ -5,3 +5,4 @@ C awake
 HELLO FROM USERSPACE
 sleeper: after sleep
 user exit code 0
+capcheck: done

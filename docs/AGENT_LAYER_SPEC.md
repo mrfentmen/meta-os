@@ -261,11 +261,22 @@ tampered contract. The runner prints `PASS`/`FAIL` per drill and exits 1 if any 
 
 ## Where it runs — kernel and OS
 
-The kernel is not the enforcement point, and this layer does not pretend it is. The frozen
-syscall table is 0–5 — `exit`, `write`, `sleep`, `pid`, `yield`, `read_key` — and there is no
-file, network, spawn, or exec syscall (`os-build/KERNEL_SPEC.md`, `kernel/src/syscalls.rs`). A
-"tool permission" therefore cannot be a kernel check today. The kernel isolates tasks; agent
-policy lives at L5 in userspace, on the host.
+The kernel now enforces the first real slice of agent policy, and it is explicit about where
+that slice ends. K6.1 (`kernel/src/caps.rs`, syscall 6 = `cap_query`) assigns every embedded
+ELF a per-task permit at entry and checks it on every syscall: an allow mask, a total
+console-write quota, a per-sleep cap, and a wall-clock tick budget. A refusal returns `DENIED`
+and logs `cap deny <name> ...`; an expired budget logs `cap kill <name> budget ...` and exits
+the task. The grant itself is logged as `cap grant <name> write=<n> ticks=<n> sleep=<n>`.
+The proof is `os-build/logs/K6.1-cap-policy.txt`: the `capcheck` program's over-limit write,
+ungranted `read_key`, and 1000-tick sleep are all refused by the kernel, not by the program.
+
+That is still not a full sandbox. The syscall table is 0–6 — `exit`, `write`, `sleep`, `pid`,
+`yield`, `read_key`, `cap_query` — and there is no file, network, spawn, or exec syscall
+(`os-build/KERNEL_SPEC.md`). File, network, exec, and spend grants therefore cannot be kernel
+checks today and remain in the L5 userspace gateway (`tools.mjs` + `grants.mjs`). The scheduler
+is cooperative, so a task that never makes a syscall is never checked. The kernel isolates
+tasks and now polices their syscalls; the host-side tool gateway still polices the tools the
+kernel cannot see.
 
 That gives the bridge two sides:
 
@@ -280,6 +291,19 @@ That gives the bridge two sides:
 The JSON contract is the interface, not an import. That matters because the image's toolchain is
 provisioned in separate pieces (Node/OpenCode and Python); MOS does not need Node to verify a
 contract.
+
+### The worker gate
+
+A job opts in by carrying a run directory. `jobs.py post --contract <dir>` stores it in the job
+hash, and `mos dispatch --contract <dir>` passes it through. After the handler returns,
+`Worker.run_once` calls `mos.contract_job.verify_contract`; a missing, invalid, or unfinished
+contract blocks the job with the verdict's own code instead of marking it done. `jobs.py done`
+checks again, so a direct caller cannot bypass the worker. `mos contract <dir>` is the operator
+command, and a job without `contract` behaves exactly as before.
+
+This is a verifier at the queue boundary, not a second agent loop: it reads the JSON the agent
+wrote and gates on it. A job that names a contract but never writes one is blocked, and its
+commit stays on the branch for the next attempt.
 
 What is **not** built: a Python tool gateway (the Node `tools.mjs` is the only executor), a
 kernel-side L5 runtime, and a contract writer inside MOS. The kernel road is separate and no
@@ -308,9 +332,11 @@ real watchman continuation cycle. The drills are the same refusals in a human-re
 
 ## Honest limits
 
-- **The kernel does not enforce any of this.** Its ABI has no file, network, spawn, or exec
-  calls; grants and receipts are userspace L5. An in-kernel L5 remains design-only, as
-  `os-build/AGENT_LAYER_SPEC.md` §2 and §15 say.
+- **The kernel enforces only syscall-mediated resources.** K6.1 covers the allow mask, console
+  write quota, sleep cap, and wall budget. File, network, exec, and spend grants are still
+  userspace L5 because the ABI has no such syscalls; the Node gateway remains their enforcement
+  point. A task that never makes a syscall is not checked, and the policy table is in-memory,
+  so its `cap` log lines are serial evidence rather than durable receipts.
 - **`os/mos/contract.py` is a verifier, not a second loop.** It reads and gates; it does not
   mutate the contract or run the agent. The Node loop is still the only writer.
 - **The Python side has no tool gateway.** `tools.mjs`, `guardedWrite`, and `guardedExec` are
