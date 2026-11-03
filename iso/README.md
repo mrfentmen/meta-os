@@ -37,7 +37,7 @@ then the checker will make every surface regrow from it.
 ## Commands
 
 ```
-iso/tools/check_iso_config.py            static checks, 115 of them
+iso/tools/check_iso_config.py            static checks, 122 of them
 iso/tools/check_iso_config.py --json     same, machine readable
 iso/tools/verify_lane.sh                 checker plus every test; says LANE GREEN
 

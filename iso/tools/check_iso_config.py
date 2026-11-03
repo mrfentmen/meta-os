@@ -974,6 +974,63 @@ if tokens and svgs:
     elif not broken:
         ok("icons: every icon parses and every fill is a contract colour")
 
+# --- first-login welcome -------------------------------------------------
+WELCOME = ISO / "apps" / "welcome"
+missing = [name for name in ("meta-welcome.py", "welcome.css", "palette.json")
+           if not (WELCOME / name).is_file()]
+if missing:
+    bad("welcome: missing %s" % ", ".join(missing))
+else:
+    ok("welcome: app, stylesheet and palette all ship")
+
+if "/usr/local/bin/meta-welcome" in read(ISO / "tools" / "apply.sh"):
+    ok("welcome: the installer puts the app on PATH")
+else:
+    bad("welcome: apply.sh never installs meta-welcome")
+
+if (WELCOME / "welcome.css").is_file() and tokens:
+    allowed = {value.upper() for value in tokens.values()}
+    body = read(WELCOME / "welcome.css")
+    stray = sorted({h.upper() for h in re.findall(r"#[0-9A-Fa-f]{6}\b", body)} - allowed)
+    if stray:
+        bad("welcome: colours outside the contract: %s" % ", ".join(stray))
+    else:
+        ok("welcome: the stylesheet uses contract colours only")
+
+if (WELCOME / "palette.json").is_file() and tokens:
+    palette = {}
+    try:
+        palette = json.loads(read(WELCOME / "palette.json"))
+    except ValueError as exc:  # noqa: BLE001
+        bad("welcome: palette.json does not parse (%s)" % exc)
+    wrong = [key for key, value in palette.items()
+             if tokens.get(key, "").upper() != str(value).upper()]
+    if wrong:
+        bad("welcome: palette disagrees with the contract: %s" % ", ".join(wrong))
+    elif palette:
+        ok("welcome: palette is the contract, verbatim")
+
+login = ISO / "base" / "meta-first-login.sh"
+if login.is_file():
+    body = read(login)
+    if "command -v meta-welcome" in body and "--no-welcome" in body:
+        ok("welcome: first login launches it and can skip it")
+    else:
+        bad("welcome: first login does not launch it, or cannot skip it")
+
+if (WELCOME / "meta-welcome.py").is_file():
+    source = read(WELCOME / "meta-welcome.py")
+    head = source.find("def run_gui")
+    imported = source.find("import gi")
+    if head != -1 and imported > head:
+        ok("welcome: GTK is imported only when a window is needed")
+    else:
+        bad("welcome: GTK is imported at module level")
+    if any(word in source for word in ("urllib", "requests", "http://")):
+        bad("welcome: the welcome app reaches for the network")
+    else:
+        ok("welcome: no network access in the welcome app")
+
 # --- no stub markers ---------------------------------------------------
 bad_marks = []
 for path in ISO.rglob("*"):

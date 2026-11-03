@@ -79,7 +79,7 @@ live outside the contract.
 ```
 iso/tools/verify_lane.sh
   == syntax            12 scripts and modules, all parse
-  == static checker 115 passed, 0 failed, 0 skipped
+  == static checker 122 passed, 0 failed, 0 skipped
   == tests             6 files, all PASS
   LANE GREEN
 ```

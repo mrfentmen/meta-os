@@ -174,6 +174,9 @@ done
 put "$ISO/theme/fonts/local.conf" "/etc/fonts/local.conf"
 put "$ISO/apps/terminal/metaos.theme" "/usr/share/xfce4/terminal/colorschemes/MetaOS.theme"
 put "$ISO/apps/terminal/terminalrc" "/etc/xdg/xfce4/terminal/terminalrc"
+put "$ISO/apps/welcome/meta-welcome.py" "/usr/local/bin/meta-welcome" 755
+put "$ISO/apps/welcome/welcome.css" "/usr/share/metaos/welcome/welcome.css"
+put "$ISO/apps/welcome/palette.json" "/usr/share/metaos/welcome/palette.json"
 
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"

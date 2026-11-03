@@ -14,14 +14,16 @@ set -uo pipefail
 
 DRY=0
 FORCE=0
+WELCOME=1
 fail=0
 
 usage() {
   cat <<'USAGE'
-usage: meta-first-login.sh [--dry-run] [--force]
+usage: meta-first-login.sh [--dry-run] [--force] [--no-welcome]
 
   --dry-run   print what would change, write nothing
   --force     apply again even if the marker says it is done
+  --no-welcome  do not open the welcome window
 USAGE
 }
 
@@ -29,6 +31,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY=1; shift ;;
     --force)   FORCE=1; shift ;;
+    --no-welcome) WELCOME=0; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "first-login: unknown argument $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -123,6 +126,19 @@ if [ "$DRY" = "1" ]; then
   echo "would write  $MARKER"
 else
   mkdir -p "$(dirname "$MARKER")" && : > "$MARKER" || fail=1
+fi
+
+# 5. The welcome window, once. A missing binary is not a failure: the desktop
+#    is already applied by the time we get here.
+if [ "$WELCOME" = "1" ] && command -v meta-welcome >/dev/null 2>&1; then
+  if [ "$DRY" = "1" ]; then
+    echo "would launch  meta-welcome"
+  else
+    meta-welcome >/dev/null 2>&1 &
+    echo "first-login: welcome started (pid $!)"
+  fi
+else
+  echo "first-login: welcome skipped"
 fi
 
 if [ "$fail" -ne 0 ]; then
