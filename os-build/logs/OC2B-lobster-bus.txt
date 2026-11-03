@@ -1,0 +1,47 @@
+# OC2B-178/180/179 — Lobster runs (live, no VM)
+
+## hello (178)
+`lobster lobster/hello.lobster` → `HELLO FROM LOBSTER`, exit 0.
+(Run from worktree root; same result from `lobster/`.)
+
+## agent-call (host tools live)
+`lobster lobster/agent-call.lobster` → exit 0:
+```
+host exit: 0
+host said: {"ok":true,"tools":["echo"]}
+host exit: 0
+host said: {"ok":true,"result":"hello from lobster"}
+```
+
+## budget (180)
+`lobster lobster/budget.lobster` → exit 0:
+```
+spent on call-1
+spent on call-2
+spent on call-3
+REFUSED: call-4 (budget exhausted)
+refusal recorded
+```
+
+## bus send/recv (179) — DELIVERY UNVERIFIED
+`lobster lobster/bus-send.lobster` → `sent 0001.txt`, exit 0.
+`lobster lobster/bus-recv.lobster` → `channel empty`, exit 0.
+Same from `lobster/` CWD. Filesystem check: NO `bus/general/`
+created anywhere in the tree, no `0001.txt` materialized
+(`ls`, scoped `find lobster` — the one host-wide `find /` was
+abandoned as too broad). The send script PRINTS success but delivers
+zero observable bytes; recv consistently drains nothing.
+Verdict: scripts run clean, DELIVERY UNPROVEN — recorded as a
+triage row in OC2B-lobster-triage.md (host `write_file` appears
+home-scoped; `bus/` channel writes do not land). NOT presented as a
+working round trip.
+
+## service round trip (real service, not canned)
+`lobster lobster/service-roundtrip.lobster` → exit 0:
+```
+service exit: 0
+service said: > echo: hello from lobster
+```
+Goose toolchain binary launched `../services/echo/echo.goose` as a
+child process; the printed bytes are the service's own stdout.
+Agent→service→answer path PROVEN live.

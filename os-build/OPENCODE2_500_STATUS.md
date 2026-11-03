@@ -320,3 +320,10 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - Defects (3, honest): --version missing, no poison quarantine, no depth cap/backpressure. UNPROVEN: 023/063/064/070/071. BLOCKED: 062 reboot (no reboot on dev host).
 - Soak 059/060: RUNNING in background (30x1-job/min, reconcile at end).
 - Next: §3 remainder (receive soak), then §4 patrol/crew hour runs + §6 livecam offline + §8 lobster (runtime present) + §9 film re-verify.
+
+## OC2 S14 — 2026-11-03 — §6 offline + §8 lobster + §9 film (no VM)
+- Lobster: runtime present, hello/agent-call/memory/budget live exit 0; service round trip PROVEN (goose echo child, real stdout). Bus send/recv: scripts clean but ZERO bytes delivered → DELIVERY UNPROVEN, triaged (failures case = expected-fail museum, matches .err).
+- Film xcheck AGREE: demo-3min.mp4 ffprobe 180.000000 EXACT + sha a29bc47d….
+- Livecam offline subset 47/47 green. Live assess-one BLOCKED (camera net + key).
+- Soak 059/060 still running in background; collect at end.
+- Next: §4 patrol/crew staged runs, §5 offline schema/allowlist, §11 spend docs, soak collect.
