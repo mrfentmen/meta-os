@@ -605,8 +605,12 @@ fn run_command(line: &[u8], truncated: bool) {
         // toolchain on this VM; Mac build + QEMU boot log
         // showing `echo` output remain the proof.
         match core::str::from_utf8(&line[5..]) {
-            Ok(text) => println!("{}", text),
-            Err(_) => println!("echo: non-utf8 input"),
+            Ok(text) => {
+                println!("{}", text);
+            }
+            Err(_) => {
+                println!("echo: non-utf8 input");
+            }
         }
     } else if line.is_empty() {
         // Empty line: nothing, not an error.
