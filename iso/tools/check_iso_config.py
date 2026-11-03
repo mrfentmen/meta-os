@@ -181,6 +181,21 @@ if brand:
             break
     else:
         ok("calamares: sidebar colours are all hex")
+    # The installer sidebar is a surface like any other. Its colours are
+    # typed into branding.desc, so this is the one place a stray hex can hide.
+    try:
+        contract = json.loads(read(ISO / "contracts" / "tokens.json"))
+    except Exception:  # noqa: BLE001
+        contract = {}
+    if contract:
+        allowed = {value.upper() for value in contract.values()}
+        stray = sorted({hit.upper() for hit in
+                        re.findall(r"#[0-9A-Fa-f]{6}\b", read(branding))} - allowed)
+        if stray:
+            bad("calamares: branding colours outside the contract: %s" % ", ".join(stray))
+        else:
+            ok("calamares: every branding colour is a contract colour")
+
     slideshow = brand.get("slideshow")
     if not slideshow or not (branding.parent / slideshow).is_file():
         bad("calamares: slideshow %r does not exist" % slideshow)
@@ -199,10 +214,6 @@ if brand:
                 ok("calamares: the slideshow has %d slides and advances" % count)
             else:
                 bad("calamares: the slideshow has %d slide(s) or never advances" % count)
-            try:
-                contract = json.loads(read(ISO / "contracts" / "tokens.json"))
-            except Exception:  # noqa: BLE001
-                contract = {}
             if contract:
                 allowed = {value.upper() for value in contract.values()}
                 stray = sorted({hit.upper() for hit in
