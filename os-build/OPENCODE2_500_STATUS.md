@@ -168,3 +168,7 @@ Spend guardrail: cumulative model spend stays under Del's cap; every live call s
 - §20 block complete (498). Index closing entry points here (499).
 
 The Science Lab reproduced four results and honored one failure at the levels it earned, Hortus bred selectable candidates under a biting gate, Officina turned rough words into checked packs, the models proved live where they answered and were logged honestly where they flaked, the cameras watched real streets, and the kernel soaked four hours without a panic — and everything past the text console waits on Rowan's framebuffer. (500)
+
+## KF-01 correction note (main 4b8d0105, Pax) — appended 2026-11-02
+- The 0.11.17 spike pinned the host crate, not `bootloader_api` — recorded attempt malformed, budget unconsumed. My Sec 2 MATCH reproductions stand as reproductions; the "0.11 dead end" conclusion is WITHDRAWN.
+- Owed: corrected attempt-1 (build/boot/screendump/verbatim logs) when Rowan lands pin+RK-008 rewrite on `rowan/bootloader-spike` (still @1f006090 wrong pin — checked). KF-01 BLOCKED until then. Full note: `os-build/logs/OC2B-kf01-correction.md`.
