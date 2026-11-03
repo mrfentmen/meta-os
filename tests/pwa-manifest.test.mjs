@@ -36,8 +36,8 @@ test("icon-180.png is a real 180x180 PNG", () => {
 });
 
 test("index.html links the manifest and the touch icon", () => {
-  assert.ok(html.includes('<link rel="manifest" href="/manifest.webmanifest">'));
-  assert.ok(html.includes('<link rel="apple-touch-icon" href="/icon-180.png">'));
+  assert.ok(html.includes('<link rel="manifest" href="./manifest.webmanifest">'));
+  assert.ok(html.includes('<link rel="apple-touch-icon" href="./icon-180.png">'));
 });
 
 test("app server serves .webmanifest and .png instead of 404", () => {
