@@ -590,6 +590,24 @@ fn run_command(line: &[u8], truncated: bool) {
         // clear), and whether fetch joins it awaits a Pax/Hana
         // ruling, asked on room 1 with this landing.
         fetch_screen();
+    } else if line == b"echo" {
+        // R-10: bare echo prints an empty line.
+        println!("");
+    } else if line.starts_with(b"echo ") {
+        // R-10: echo prints its arguments back, byte-for-byte
+        // as text. No alloc: the arg slice is borrowed from the
+        // input line and printed via from_utf8; non-UTF8 input
+        // is refused with one line instead of garbage. Help does
+        // NOT list echo yet: the ruled help line is exactly
+        // "status help uptime mem ps" (clear/fetch precedent),
+        // and whether echo joins it awaits a Pax/Hana ruling,
+        // asked on room 1 with this landing. UNCOMPILED: no Rust
+        // toolchain on this VM; Mac build + QEMU boot log
+        // showing `echo` output remain the proof.
+        match core::str::from_utf8(&line[5..]) {
+            Ok(text) => println!("{}", text),
+            Err(_) => println!("echo: non-utf8 input"),
+        }
     } else if line.is_empty() {
         // Empty line: nothing, not an error.
     } else {
