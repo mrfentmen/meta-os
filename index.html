@@ -8,6 +8,18 @@
 <link rel="stylesheet" href="styles.css">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="apple-touch-icon" href="/icon-180.png">
+<style>
+body.hub { background: #070B16; color: #EDF5FF; font-family: system-ui, sans-serif; margin: 0; }
+.hub-main { display: block; max-width: 960px; margin: 0 auto; padding: 48px 24px 96px; position: relative; z-index: 1; }
+.hub-lede { color: #EDF5FF; font-size: 18px; background: #0B1526; border: 1px solid #1E3A5F; border-radius: 12px; padding: 20px 22px; max-width: 520px; } .hub-lede strong { color: #78BAFF; }
+.hub-lede strong { color: #EDF5FF; }
+.hub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 32px; }
+.hub-card { display: block; background: #0B1526; border: 1px solid #1E3A5F; border-radius: 12px; padding: 20px; color: inherit; text-decoration: none; }
+.hub-card:hover { border-color: #1877F2; }
+.hub-card h2 { margin: 0 0 8px; font-size: 18px; color: #78BAFF; }
+.hub-card p { margin: 0; color: #A8B7D0; font-size: 14px; line-height: 1.5; }
+.topbar .brand h1 { color: #EDF5FF; }
+</style>
 </head>
 <body data-product="hub">
 <canvas id="logo-background" aria-hidden="true"></canvas>
@@ -18,7 +30,7 @@
     <a class="logo-studio-link" href="design/meta-ascii-logo-studio.html">Logo studio</a>
   </div>
 </header>
-<main class="hub">
+<main class="hub hub-main">
   <p class="hub-lede">One desktop. The programs below are <strong>apps</strong> — Imperium is one of them, not the whole system.</p>
   <section class="hub-grid" aria-label="MetaOS applications">
     <a class="hub-card" href="imperium/">
