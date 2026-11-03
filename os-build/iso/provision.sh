@@ -46,6 +46,7 @@ exec >>"$LOG" 2>&1
 echo "== metaos provision $(date -u '+%Y-%m-%dT%H:%M:%SZ') root=$ROOT packages=$WITH_PACKAGES =="
 
 say() { echo "provision: $*"; }
+fail() { echo "provision-GATE-FAIL: $*" >&2; exit 1; }
 
 # ---------------------------------------------------------------- plymouth
 say "installing plymouth theme"
