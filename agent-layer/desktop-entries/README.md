@@ -10,13 +10,13 @@ Provenance (copy-only, no forks):
   If Bond updates theirs, re-copy — never diverge.
 - `thunar.desktop`: Exec mirrors Bond's `iso/apps/desktop/meta-files.desktop`
   (`Exec=thunar %U`) under a package-named filename so the MIME/packaging
-  check (`validate.py` desktop->package map) resolves.
+  check (`os-build/metaos1-base/validate.py` desktop->package map) resolves.
 - `mousepad.desktop` / `ristretto.desktop`: authored from KEEP
   (`os-build/metaos1-base/packages.txt`) + Hana MIME map. No source .desktop
   exists in repo — these are net-new, package-named.
 - `atril.desktop` (active) vs `evince.desktop` (NoDisplay=true, degraded-off):
   Xubuntu 24.04.5 base ships atril where KEEP lists evince. OC2 does NOT edit
-  Hana's `packages.txt` or `defaults/mimeapps.list`. This pack ships both and
+  Hana's `os-build/metaos1-base/packages.txt` or `os-build/metaos1-base/defaults/mimeapps.list`. This pack ships both and
   maps PDF to atril in the drop-in `mimeapps.list` with a comment. If Hana
   records evince present, OC1 flips one line to evince.desktop — no repack.
 - `mimeapps.list`: drop-in proposal only. Covers exactly text/plain,

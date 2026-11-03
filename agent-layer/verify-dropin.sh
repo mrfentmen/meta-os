@@ -9,22 +9,31 @@ UNITDIR="${2:-$HOME/.config/systemd/user}"
 ENVFILE="${3:-$HOME/.config/oc2-agent/env}"
 FAIL=0
 note() { echo "DROPIN $1: $2"; }
+# Portable sha256: sha256sum (Linux) or shasum -a 256 (macOS/BSD).
+# Hard FAIL when neither backend exists (never false-pass on empty strings).
+shasum256() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{print $1}';
+  elif command -v shasum >/dev/null 2>&1; then shasum -a 256 "$1" 2>/dev/null | awk '{print $1}';
+  else echo "MISSING-SHA-BACKEND"; fi
+}
+if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1; then
+  note "FAIL" "no sha256 backend (need sha256sum or shasum)"; exit 1
+fi
 if ! command -v systemctl >/dev/null 2>&1; then
   echo "SKIP: no systemctl on this host (static checks only)"
 fi
 # 1. Every manifest-listed unit file exists in the systemd dir with matching sha.
-# 1. Every manifest-listed unit file exists in the systemd dir with matching sha.
 # (Matches are staged to a temp file first: a piped `while read` loop runs in
 # a subshell and its FAIL flag would never reach the parent shell.)
 _MATCHES="$(mktemp)"
-grep -o '`agent-layer/units/[^`]*` sha256 `[0-9a-f]*`' "$MANIFEST" 2>/dev/null > "$_MATCHES" || true
+grep -o '`agent-layer/units/[^`]*` sha256 `[0-9a-f]\{64\}`' "$MANIFEST" 2>/dev/null > "$_MATCHES" || true
 while read -r path _ sha; do
   rel=$(printf '%s' "$path" | tr -d '`')
   rel=${rel#agent-layer/units/}
   sha=$(printf '%s' "$sha" | tr -d '`')
   f="$UNITDIR/$rel"
   if [ ! -f "$f" ]; then note "FAIL" "missing installed $rel"; FAIL=1; continue; fi
-  got="$(shasum -a 256 "$f" 2>/dev/null | awk '{print $1}')"
+  got="$(shasum256 "$f")"
   if [ "$got" = "$sha" ]; then note "OK" "$rel sha matches"; else note "FAIL" "$rel sha MISMATCH"; FAIL=1; fi
 done < "$_MATCHES"
 rm -f "$_MATCHES"
