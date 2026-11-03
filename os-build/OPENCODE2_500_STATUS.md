@@ -172,3 +172,13 @@ The Science Lab reproduced four results and honored one failure at the levels it
 ## KF-01 correction note (main 4b8d0105, Pax) — appended 2026-11-02
 - The 0.11.17 spike pinned the host crate, not `bootloader_api` — recorded attempt malformed, budget unconsumed. My Sec 2 MATCH reproductions stand as reproductions; the "0.11 dead end" conclusion is WITHDRAWN.
 - Owed: corrected attempt-1 (build/boot/screendump/verbatim logs) when Rowan lands pin+RK-008 rewrite on `rowan/bootloader-spike` (still @1f006090 wrong pin — checked). KF-01 BLOCKED until then. Full note: `os-build/logs/OC2B-kf01-correction.md`.
+
+## Cross-check lane — OC1 §11 film (prompt item 3) — AGREE 2026-11-02
+- ffprobe `os-build/demo/demo-3min.mp4`: duration=180.000000 EXACT, 1280x720, 10fps, h264, video-only (no audio). sha256 `a29bc47d…3ae13f0` MATCHES CAPTURE_NOTES claim byte-for-byte.
+- Cards/cut list present (`oc1b-cut.txt`, `oc1b-frames/` s01-s05/s11 + beats). Serials present, panic count 0 both. Beat-7 frame/reading/chain files present.
+- Self-check spot frames extracted and read: t=10 BEAT 1 BOOT (banner/alive/mem map + src line), t=90 BEAT 4 fault isolation (task killed, sleeper, bad-syscall-99, readkey got=5), t=160 BEAT 7 no-dispatch (SIMULATED loopback endpoint, chain citation). Zero faces/web pages/browsers in all three.
+- Verdict: AGREE — every checked CAPTURE_NOTES line holds against film + records. No disagree items.
+
+## Live MCP gateway setup (prompt item 1 prereq) — DONE 2026-11-02
+- Built here (was absent on this Mac): venv (python3.14, mcp==1.30.0 — latest 2.3.0 crashes committed gateway.py), 9 lab servers installed to `mcp-gateway/lab-servers/` (35M, NOT committed), trimmed `mcp-gateway/lab-backends.json` (committed, 4K), gateway RUNNING (PID file `/tmp/oc2b-gateway.pid`), smoke 9/9 searches + reads (3 reads needed one arg correction each). `backends.json` untouched (sha verified). Full record: `os-build/logs/OC2B-gateway-setup.md`.
+- Two live-read map flags for cycle work: open-library reads require `m0_key` (not `key`); gbif keys must be strings. Fix in the lab call layer when wiring reads, not in the smoke.
