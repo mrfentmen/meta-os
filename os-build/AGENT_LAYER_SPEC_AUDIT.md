@@ -13,7 +13,7 @@ found for that promise).
 | 1 | an agent has identity, lane, capabilities, budget, owner | `agents/registry.json` | CODE-INSPECTED |
 | 3 | registry, one entry per agent | `registry.json`, `registry_validate.mjs`, `loadRegistry`/`validateEntry` in `runtime.mjs` | CODE-INSPECTED — but the crew entries carry `command: ["true"]`, `draft: true` and a `draftReason`, so they are **DRAFT**, not agents that can work |
 | 4 | watchman wakes a named agent with the job in hand | `agents/watchman.mjs` (polls a jobs dir, writes a heartbeat through `watchdog.mjs`) | CODE-INSPECTED |
-| 4 | timer sweep as backup | none in `agents/`; the ISO's `oc2-health.timer` checks the layer, it does not wake an agent | **UNIMPLEMENTED** |
+| 4 | timer sweep as backup | `node agents/watchman.mjs --once` drains the board once and exits | CODE-INSPECTED — the command exists; no unit in the image schedules it |
 | 4 | who watches the watchman | `agents/watchdog.mjs` (`check`, `supervise`, restart budget) | UNPROVEN — the mechanism has tests, no cadence ran it before `oc2-health.timer` |
 | 5 | baton pass, continuation never restart | `agents/baton.mjs`, `agents/continue.mjs` | CODE-INSPECTED |
 | 6 | spawn and kill are real | `agents/runtime.mjs` header: real spawn/kill, STOP file, ledger | CODE-INSPECTED, **UNPROVEN** — no spawn/kill drill log was read here |
@@ -29,8 +29,9 @@ found for that promise).
 ## What this means for 1.0
 
 The layer is further along than "design only": spawn, kill, budgets, baton,
-receipts and the watchman all have real code. Two promises have none — the
-timer sweep (nothing wakes an agent on a clock) and per-agent memory caps.
+receipts and the watchman all have real code. One promise has no code at all —
+per-agent memory caps. The sweep has a command (`--once`) but nothing
+schedules it, and the image has no such unit.
 
 The crew entries being `draft` matters: the registry validates and lists them,
 but a draft entry runs `true`, so a spawn of "rowan" succeeds and does nothing.
