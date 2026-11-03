@@ -98,3 +98,15 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
   packet-capture pretended). 118/123/124 gaps named with filler
   package + policy owner. 120/121 entry committed, mute test OC1.
   122 no separate lane needed. 117 three defects, all owned.
+
+## §6 verdict (OC3B-141) — DONE static, runs with OC1
+- 126 editors/calc/notes inventoried; 132 entries listed (mine +
+  OC2's, none rewritten). 130 welcome opens from menu; 131
+  once-flag CODE-INSPECTED + test_welcome 30/30 co-located
+  (earlier 4-error run was my harness missing a file, recorded).
+- 134/140 brand+quiet bounded and clean. 135 ops written. 136
+  archives pointer to §2. 137 readers present; 138 render check OC1.
+- 139 printing stack ABSENT (named, owner ISO lane). 143-145/147
+  clipboard/charmap/disk-GUI absent with CLI fallback named.
+- 148 nothing to hand. 133 handoff written. 142 three defects, all
+  owned. 127/129/149 interactive BLOCKED-with-owner (OC1).
