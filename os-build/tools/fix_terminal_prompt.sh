@@ -26,7 +26,7 @@ ROOT="${1:-/mnt}"
 
 MARK="# metaos: shell identity (appended by os-build/tools/fix_terminal_prompt.sh)"
 
-for f in "$ROOT/etc/skel/.bashrc" "$ROOT/home/ubuntu/.bashrc"; do
+for f in "$ROOT/etc/skel/.bashrc" "$ROOT/home/meta/.bashrc" "$ROOT/home/ubuntu/.bashrc"; do
   [ -f "$f" ] || continue
   if grep -qF "$MARK" "$f"; then
     echo "prompt: already set in ${f#"$ROOT"}"
@@ -35,7 +35,7 @@ for f in "$ROOT/etc/skel/.bashrc" "$ROOT/home/ubuntu/.bashrc"; do
   cat >>"$f" <<'EOF'
 
 # metaos: shell identity (appended by os-build/tools/fix_terminal_prompt.sh)
-# Runs last, so it wins over Ubuntu's \u@\h prompt above. 38;5;33 is Meta
+# Runs last, so it wins over the base image's \u@\h prompt above. 38;5;33 is Meta
 # blue; the path is a lighter blue so the two never blur together.
 PS1='\[\033[38;5;33m\]metaos\[\033[0m\] \[\033[38;5;111m\]\w\[\033[0m\]\$ '
 EOF
@@ -47,8 +47,8 @@ BASHRC="$ROOT/etc/bash.bashrc"
 if [ -f "$BASHRC" ] && ! grep -q 'metaos: source drop-in shell hooks' "$BASHRC"; then
   cat >>"$BASHRC" <<'EOF'
 
-# metaos: source drop-in shell hooks (Ubuntu ships none by default, which is
-# why /etc/bash.bashrc.d/metaos.sh never ran).
+# metaos: source drop-in shell hooks (the base image hooks none in, which
+# is why /etc/bash.bashrc.d/metaos.sh never ran).
 if [ -d /etc/bash.bashrc.d ]; then
   for _metaos_dropin in /etc/bash.bashrc.d/*.sh; do
     [ -r "$_metaos_dropin" ] && . "$_metaos_dropin"
@@ -63,5 +63,10 @@ fi
 
 # Receipt: show the prompt line that is now in effect.
 echo "--- effective prompt ---"
-grep -h '^PS1=' "$ROOT/home/ubuntu/.bashrc" | tail -1
+# Show it for whoever actually logs in: meta first, the legacy ubuntu path
+# only if this root still has one (it does not, since the rename).
+for _f in "$ROOT/home/meta/.bashrc" "$ROOT/home/ubuntu/.bashrc"; do
+  [ -f "$_f" ] && grep -h '^PS1=' "$_f" | tail -1
+  [ -f "$_f" ] && break
+done
 echo "fix_terminal_prompt: done"
