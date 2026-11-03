@@ -30,7 +30,14 @@ fn dj(status: &str) -> push::JobView {
     assert_eq!(brief::parse_since("all", 9).unwrap(), None);
 }
 #[test] fn test_intel_brief_daily_caller_budget() {
-    assert!(brief::brief_exceeds_budget(&"x".repeat(10), 5));
+    // Python BudgetTest (test_intel_brief.py): morning budget 220,
+    // ondemand 300; word count, not character count.
+    let over = "word ".repeat(221);
+    let at = "word ".repeat(220);
+    assert!(brief::brief_exceeds_budget("morning", &over));
+    assert!(!brief::brief_exceeds_budget("ondemand", &over));
+    assert!(!brief::brief_exceeds_budget("morning", &at));
+    assert!(!brief::brief_exceeds_budget("evening", &over));
 }
 #[test] fn test_intel_brief_demo_morning_failure_line() {
     assert!(brief::brief_failure_line("main", "e").contains("failed"));
