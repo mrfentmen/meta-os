@@ -259,15 +259,48 @@ done condition still fails, a recorded dead end retried silently, a write outsid
 (including through a symlink), a continue past its cap, a lesson that is counted, and a
 tampered contract. The runner prints `PASS`/`FAIL` per drill and exits 1 if any fail.
 
+## Where it runs — kernel and OS
+
+The kernel is not the enforcement point, and this layer does not pretend it is. The frozen
+syscall table is 0–5 — `exit`, `write`, `sleep`, `pid`, `yield`, `read_key` — and there is no
+file, network, spawn, or exec syscall (`os-build/KERNEL_SPEC.md`, `kernel/src/syscalls.rs`). A
+"tool permission" therefore cannot be a kernel check today. The kernel isolates tasks; agent
+policy lives at L5 in userspace, on the host.
+
+That gives the bridge two sides:
+
+- **Agent side, Node.** `contract.mjs` + `loop.mjs` produce the contract; `tools.mjs` checks
+  `grants.mjs` before the action and appends `receipts.jsonl` after it. A refused action is a
+  receipt too, so the record cannot claim a call that never happened.
+- **OS side, Python.** `os/mos/contract.py` reads the same JSON and runs the same finish gate;
+  `os/mos/contract_job.py` runs a command and accepts it only if `contract.json` says done.
+  MOS's worker can then report done instead of blocking, and the overseer's acceptance check
+  still has final say.
+
+The JSON contract is the interface, not an import. That matters because the image's toolchain is
+provisioned in separate pieces (Node/OpenCode and Python); MOS does not need Node to verify a
+contract.
+
+What is **not** built: a Python tool gateway (the Node `tools.mjs` is the only executor), a
+kernel-side L5 runtime, and a contract writer inside MOS. The kernel road is separate and no
+claim here reaches it.
+
 ## Checks
 
 Run from `meta-os/`:
 
 ```sh
-node --test tests/agents-agentic.test.mjs   # 22 focused cases
+node --test tests/agents-agentic.test.mjs   # 22 contract + loop cases
+node --test tests/agents-tools.test.mjs     # 7 gateway cases
 node agents/drills.mjs                      # 11/11 judgment drills
-npm run test:agents                         # 158 existing agent-layer tests
+node agents/contract-check.mjs tests/fixtures/contract-done.json
+python3 -m unittest discover -s tests/queue-python -p "test_os_contract.py"  # 16 cases
+npm run test:agents                         # full agent-layer suite
 ```
+
+The shared fixture `tests/fixtures/contract-done.json` is read by both the Node and the Python
+suites. A schema change that breaks one side fails the other; that is the cross-language proof,
+not a claim in prose.
 
 The focused suite executes the contract, the loop, the grants (including a real spawned
 process and a symlink escape), the dead-end and learning ledgers, the continue bounds, and a
@@ -275,6 +308,17 @@ real watchman continuation cycle. The drills are the same refusals in a human-re
 
 ## Honest limits
 
+- **The kernel does not enforce any of this.** Its ABI has no file, network, spawn, or exec
+  calls; grants and receipts are userspace L5. An in-kernel L5 remains design-only, as
+  `os-build/AGENT_LAYER_SPEC.md` §2 and §15 say.
+- **`os/mos/contract.py` is a verifier, not a second loop.** It reads and gates; it does not
+  mutate the contract or run the agent. The Node loop is still the only writer.
+- **The Python side has no tool gateway.** `tools.mjs`, `guardedWrite`, and `guardedExec` are
+  Node-only. A Python agent that wants the same enforcement needs a Python port, or must call
+  the Node gateway; neither exists yet.
+- **Network grants are name-and-port checks.** Redirects are refused, but DNS rebinding and
+  proxy environment variables are not addressed. Do not treat a host grant as a guarantee about
+  which IP answers.
 - **The layer is a library, not a scheduler.** `runtime.spawnAgent` still spawns a command;
   it does not construct a contract for it. A worker opts in by using `runLoop`. The layer
   enforces shape, not judgment: `decide` and `act` are the caller's code.

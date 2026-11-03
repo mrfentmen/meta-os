@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "goal": "prove the contract crosses the Node and Python boundary",
+  "done_condition": {
+    "cmd": "true",
+    "expect_exit": 0
+  },
+  "max_steps": 5,
+  "status": "done",
+  "steps": [
+    {
+      "id": "s1",
+      "observation": {
+        "id": "obs-1",
+        "cmd": "probe",
+        "exit": 1,
+        "tail": "red",
+        "at": "2026-11-03T00:00:00.000Z"
+      },
+      "considered": [
+        {
+          "action": "wait",
+          "why_not": "time is not a fix"
+        }
+      ],
+      "chose": {
+        "action": "fix",
+        "why": "the probe is red",
+        "because": "obs-1",
+        "decided_at": "2026-11-03T00:00:01.000Z"
+      },
+      "result": {
+        "exit": 0,
+        "ok": true,
+        "evidence": "probe green",
+        "at": "2026-11-03T00:00:02.000Z",
+        "closed_seq": 3
+      },
+      "plan_revision": null,
+      "lessons_applied": [],
+      "opened_at": "2026-11-03T00:00:00.000Z",
+      "closed_at": "2026-11-03T00:00:02.000Z"
+    }
+  ],
+  "done_checks": [
+    {
+      "cmd": "true",
+      "exit": 0,
+      "tail": "",
+      "at": "2026-11-03T00:00:03.000Z",
+      "seq": 4
+    }
+  ],
+  "revisions": [],
+  "stops": [],
+  "reopens": [],
+  "seq": 4,
+  "created_at": "2026-11-03T00:00:00.000Z",
+  "updated_at": "2026-11-03T00:00:03.000Z",
+  "finished_at": "2026-11-03T00:00:03.000Z",
+  "done_evidence": {
+    "cmd": "true",
+    "exit": 0,
+    "tail": "",
+    "at": "2026-11-03T00:00:03.000Z",
+    "seq": 4
+  }
+}
