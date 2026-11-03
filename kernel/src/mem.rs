@@ -113,9 +113,23 @@ fn kind_of(t: bootloader::bootinfo::MemoryRegionType) -> RegionKind {
     }
 }
 
-/// First mapping probe: high, PML4 index 14, almost certainly free;
-/// `translate` says for sure before anything is written.
-const PROBE_VADDR: u64 = 0x0000_7000_0000_0000;
+/// First mapping probe: a PML4 branch no userspace program uses
+/// (`translate` says for sure before anything is written).
+/// K3 fix (OC1B-123): this MUST NOT be 0x0000_7000_0000_0000.
+/// That address is the K3 promised demand page (`user::DEMAND_PAGE`),
+/// and the old probe mapped it supervisor-only (`map_page(..., false)`)
+/// and never unmapped it outside `guard-test`. A ring-3 read of it
+/// then faulted PRESENT/supervisor (err 0x5), which `try_demand_map`
+/// correctly rejects as NotDemand, so the demand task was killed on
+/// its first touch and no demand-fault line ever appeared. Worse,
+/// the probe's supervisor intermediate tables would have poisoned
+/// even a leaf-only unmap: `map_page` never upgrades existing
+/// intermediate entries to USER, so the demand map would still
+/// fault supervisor through them. Moving the probe to its own
+/// branch (stacks 0x5000..., ELF bases 0x6000..., demand
+/// 0x7000...) leaves the demand page's whole walk fresh and
+/// user-flagged when the handler maps it.
+const PROBE_VADDR: u64 = 0x0000_4000_0000_0000;
 
 /// Bring up frames, mapper, and heap. Prints the map counts, the
 /// mapping proof, the Box/Vec proof, the 10k stress result, and the
@@ -204,7 +218,20 @@ pub unsafe fn mem_init(boot_info: &'static bootloader::BootInfo) {
     (PROBE_VADDR as *mut u64).write_volatile(0x4d454d4f53505242);
     let back = (PROBE_VADDR as *const u64).read_volatile();
     assert!(back == 0x4d454d4f53505242);
-    println!("mem probe page ok");
+    // K3 fix (OC1B-123): the probe mapping must not survive boot.
+    // Unmap the leaf, flush it, and return the frame, so no stray
+    // supervisor mapping (or supervisor intermediate branch) can
+    // ever collide with a promised userspace region again. The
+    // intermediate tables the probe linked stay linked (the
+    // documented `map_page` exception) but on the probe's own
+    // branch, which no userspace program walks.
+    let probe_frame = mapper
+        .unmap_page(virt)
+        .expect("mem: probe unmap failed");
+    invlpg(PROBE_VADDR);
+    assert!(mapper.translate(virt).is_none());
+    mapper.deallocate_frame(probe_frame);
+    println!("mem probe page ok, unmapped");
 
     #[cfg(feature = "guard-test")]
     {
