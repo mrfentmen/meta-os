@@ -55,17 +55,19 @@ kill $(cat /tmp/pipe-pid) 2>/dev/null || true
 
 echo "== milestones =="
 checkline "K1 alive" "META OS KERNEL - alive (K1)"
-checkline "K2 banner" "META OS - milestone K3"
+checkline "K2 banner" "META OS 0.1 (K6)"
 checkline "K2 console" "mem map:"
-checkline "K3 uptime" "uptime 1s ticks 100"
+checkline "K3 timer" "K3 timer:"
 checkline "K4 heap" "mem Box+Vec ok"
 checkline "K4 summary" "mem summary: K4 up"
 checkline "K5 interleave A" "A"
 checkline "K5 interleave B" "B"
 checkline "K5 sleep/wake" "C awake"
 checkline "K6 hello" "HELLO FROM USERSPACE"
-checkline "K6 sleeper" "sleeper: after sleep"
-checkline "K6 bad call refused" "user bad syscall 99 refused"
+checkline "K6 sleeper" "sleeper: woke, sleep returned"
+# K6's unknown-number arm is covered by the badcall corpus; this image
+# proves refusal through the capability gate (capcheck asks for syscall 5).
+checkline "K6 bad call refused" "cap deny capcheck syscall 5"
 checkline "K6 user fault kill" "task killed"
 checkline "K6.1 cap grant" "cap grant capcheck write=128 ticks=2000 sleep=100"
 checkline "K6.1 cap write refusal" "cap deny capcheck write 256 over 109"

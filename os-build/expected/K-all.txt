@@ -3,6 +3,6 @@ META OS 0.1 (K6)
 mem summary: K4 up
 C awake
 HELLO FROM USERSPACE
-sleeper: after sleep
+sleeper: woke, sleep returned
 user exit code 0
 capcheck: done
