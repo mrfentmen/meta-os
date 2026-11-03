@@ -40,7 +40,7 @@ rm -rf /usr/share/backgrounds/xubuntu /usr/share/xubuntu-docs /usr/share/xubuntu
 
 echo "[dexubuntu] default session wallpaper + greeter background"
 # OC1's theme owns the artwork; point the Xfce defaults at it when present.
-WALL=/usr/share/backgrounds/metaos/meta-dusk.png
+WALL=/usr/share/backgrounds/meta-dusk.png
 if [ -f "$WALL" ]; then
   mkdir -p /etc/xdg/xfce4/xfconf/xfce-perchannel-xml
   cat > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml <<XML
