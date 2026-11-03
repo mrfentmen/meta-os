@@ -40,6 +40,12 @@ class TestUnits(unittest.TestCase):
                       + u["Unit"].get("Requires", ""))
         self.assertIn("Install", u.sections())
 
+    def test_queue_starts_uncapped(self):
+        u = _load("oc2-queue.service")
+        # StartLimit* belong in [Unit]; systemd ignores them in [Service].
+        self.assertNotIn("StartLimitIntervalSec", dict(u["Service"]))
+        self.assertIn("StartLimitIntervalSec", dict(u["Unit"]))
+
     def test_timer_repeats(self):
         u = _load("oc2-patrol.timer")
         self.assertIn("OnUnitActiveSec", list(u["Timer"].keys()))

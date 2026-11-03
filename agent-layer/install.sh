@@ -17,9 +17,15 @@ echo "== OC2 agent layer install (root: $ROOT) =="
 # 1. Python present?
 command -v python3 >/dev/null || { echo "FAIL: python3 missing"; exit 1; }
 
-# 2. Deps (user site; cv2 optional — evidence.py degrades without it).
-# (Needs pip3: `sudo apt-get install -y python3-pip` on minimal images.)
-pip3 install --user pillow numpy 2>&1 | tail -n 1
+# 2. Deps. Debian/Ubuntu target: nodejs (queue hard-requires node for
+# js/products.js — no fallback in trio_repo), PIL + numpy (evidence.py
+# uses them lazily; cv2 stays optional). No-ops where apt is absent (macOS dev).
+if command -v apt-get >/dev/null 2>&1; then
+  sudo apt-get install -y nodejs python3-pil python3-numpy 2>&1 | tail -n 1 \
+    || echo "apt install failed or needs a password — recorded, not fatal"
+fi
+# Python-site fallback (pipx-style user install where apt lacks the package).
+pip3 install --user pillow numpy 2>&1 | tail -n 1 || true
 
 # 3. Env file (non-secrets). Create once; otherwise only refresh OC2_CHECKOUT.
 mkdir -p "$CONF"
@@ -27,13 +33,19 @@ if [ ! -f "$CONF/env" ]; then
   sed "s|^OC2_CHECKOUT=.*|OC2_CHECKOUT=$ROOT|" "$ROOT/agent-layer/env.example" > "$CONF/env"
   echo "wrote $CONF/env"
 else
+  # File exists: refresh checkout path AND backfill any missing defaults
+  # (keep user-set values; first botched runs may have left a bare file).
   if grep -q "^OC2_CHECKOUT=" "$CONF/env"; then
     sed -i '' "s|^OC2_CHECKOUT=.*|OC2_CHECKOUT=$ROOT|" "$CONF/env" 2>/dev/null \
       || sed -i "s|^OC2_CHECKOUT=.*|OC2_CHECKOUT=$ROOT|" "$CONF/env"
   else
     echo "OC2_CHECKOUT=$ROOT" >> "$CONF/env"
   fi
-  echo "kept $CONF/env (checkout refreshed)"
+  while IFS='=' read -r key val; do
+    case "$key" in \#*|"") continue;; esac
+    grep -q "^${key}=" "$CONF/env" || echo "${key}=${val}" >> "$CONF/env"
+  done < "$ROOT/agent-layer/env.example"
+  echo "kept $CONF/env (checkout refreshed, defaults backfilled)"
 fi
 grep -i -E "SPARK_API_KEY|sk-|BEGIN PRIVATE" "$CONF/env" \
   && { echo "FAIL: secret-looking value in env file"; exit 1; }

@@ -2,6 +2,8 @@
 Description=OC2 agent layer: queue service (local job API 127.0.0.1:8935)
 After=network-online.target
 Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
 
 [Service]
 Type=simple
@@ -9,8 +11,6 @@ EnvironmentFile=%h/.config/oc2-agent/env
 ExecStart=/usr/bin/python3 ${OC2_CHECKOUT}/server/queue/queue_service.py --port ${OC2_QUEUE_PORT}
 Restart=on-failure
 RestartSec=10
-StartLimitIntervalSec=300
-StartLimitBurst=3
 
 [Install]
 WantedBy=default.target
