@@ -15,8 +15,8 @@ does its job, closes clean" stays **UNPROVEN** until a VM run.
 
 | File | Goes to | What it does |
 |---|---|---|
-| `desktop/meta-*.desktop` | `/usr/share/applications/` | four launchers: Files, Terminal, Settings, Web |
-| `plank/meta-*.dockitem` | `~/.config/plank/dock1/launchers/` | the dock order |
+| `desktop/meta-*.desktop` | `/usr/share/applications/` | five launchers: Files, Terminal, Settings, Web, Agent status |
+| `plank/meta-*.dockitem` | `/usr/share/metaos/dock/` | the dock order; `meta-first-login` copies these into the real home |
 | `chromium/policies.json` | `/etc/chromium/policies/managed/metaos.json` | start page, no first-run tab |
 | `chromium/meta-start.html` | `/usr/share/metaos/start/` | the start page itself, works offline |
 | `chromium/tokens.css` | `/usr/share/metaos/start/` | generated from the frozen contract, never hand-edited |
@@ -25,19 +25,15 @@ does its job, closes clean" stays **UNPROVEN** until a VM run.
 ## Install
 
 ```sh
-install -d /usr/share/applications /usr/share/metaos/start \
-           /etc/chromium/policies/managed
-cp iso/apps/desktop/*.desktop          /usr/share/applications/
-cp iso/apps/chromium/meta-start.html   /usr/share/metaos/start/
-cp iso/apps/chromium/tokens.css        /usr/share/metaos/start/
-cp iso/apps/chromium/policies.json     /etc/chromium/policies/managed/metaos.json
-install -d /home/"$USER"/.config/plank/dock1/launchers
-cp iso/apps/plank/*.dockitem /home/"$USER"/.config/plank/dock1/launchers/
-install -m 755 iso/apps/agent-status/meta-agent-status.py /usr/local/bin/meta-agent-status
+iso/tools/apply.sh --root /                  # the whole lane, into a live root
+iso/tools/apply.sh --root /tmp/stage --verify # or a staging tree, then checked
 ```
 
-After that, `chromium` opens on the Meta start page and the dock shows the
-four apps in the order listed.
+`apply.sh` is the only install path. It records every file it writes, can
+revert exactly that set, and runs the doctor against the result when asked.
+
+After that, `chromium` opens on the Meta start page and the dock shows five
+apps in the order listed.
 
 ## Choices worth knowing
 
@@ -74,8 +70,8 @@ without a code change. `--json` is the machine-readable form for the agent
 layer itself to consume.
 
 The launcher uses `Terminal=true` because the program prints a table. Tests:
-`python3 tests/test_iso_agent_status.py` (9 cases, real directories, no
+`python3 tests/test_iso_agent_status.py` (10 cases, real directories, no
 mock).
 
-Status: **BLOCKED**, waiting on an agent-status entry point. When one lands,
-it gets `meta-agent-status.desktop` (with `TryExec=`) and the fifth dock item.
+It ships: `meta-agent-status.desktop` and the fifth dock item are in this lane
+from `9020439c`, and the checker fails if either goes missing.
