@@ -396,7 +396,7 @@ Two real gaps were closed in code while pinning the tests:
 Section 12 verification: `cargo test -p queue-core -p queue-store -p relay` and
 `cargo test -p queue-core --doc` both exit 0.
 
-## Section 13 — Rust os-* error paths (CB2-301..325) — 17/25 delivered, 8 blocked
+## Section 13 — Rust os-* error paths (CB2-301..325) — 19/25 delivered, 6 blocked
 
 Delivered against the crates' real public APIs:
 
@@ -419,6 +419,8 @@ Delivered against the crates' real public APIs:
 | CB2-316 | `crates/os-supervisor/src/restart.rs` | three strikes marks a worker failed and it is never restarted again; the state is sticky and an explicit limit is honoured |
 | CB2-317 | `crates/os-supervisor/src/restart.rs` | backoff walks 1, 2, 4, 8, 16, 32, 60 in order and holds at the ceiling |
 | CB2-318 | `crates/os-supervisor/src/restart.rs` | a recorded recovery resets the count and restarts the sequence from 1 |
+| CB2-319 | `crates/os-worker/tests/section13_worker.rs` | an empty or whitespace payload (`spec`) is refused by field name before spawn; id, title, files and signature each refuse by their own name |
+| CB2-320 | `crates/os-worker/tests/section13_worker.rs` | acceptance results come back in submission order, one per check, and reverse when the submission reverses |
 
 Blocked — the named API does not exist, and inventing it would be fake code:
 - CB2-301, 302, 324: `os-boot` is the agent CLI crate; it has no boot-config type.
@@ -432,13 +434,15 @@ Blocked — the named API does not exist, and inventing it would be fake code:
   new module `crates/os-supervisor/src/restart.rs` (three strikes, documented
   backoff, recovery reset). This is new behaviour, not a test of old
   behaviour, and it is recorded as such.
-- CB2-319, 320: `os-worker` has `Worker`/`JobSpec`/drivers, not a task-payload or
-  result-order API.
+- CB2-319, 320: delivered against the real API. The payload is
+  `JobSpec.spec` and `validate_spec` names it; the order case is
+  `run_accept_checks`, which returns one result per check in submission order.
 - CB2-325: only the spend half landed — there is no `remaining()` function.
 
 Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
 -p os-workspace`, `cargo test -p os-misc --test section13_misc` (8 pass),
-`cargo test -p os-supervisor --test section13_restart` (7 pass), and
+`cargo test -p os-supervisor --test section13_restart` (7 pass),
+`cargo test -p os-worker --test section13_worker` (2 pass), and
 `cargo test -p os-budget --doc` all exit 0.
 
 ## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 15/25 delivered, 10 blocked
@@ -680,7 +684,7 @@ Per-task check (2026-11-02):
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
 
-## Closeout — 440 of 500 delivered, 60 open
+## Closeout — 442 of 500 delivered, 58 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -688,7 +692,7 @@ one is open for a named reason, not for want of trying.
 | Section | Delivered | Open |
 |---|---|---|
 | 1–12 (Python, relay, board, Rust queue) | 300 | 0 |
-| 13 Rust os-* error paths | 17 | 8 |
+| 13 Rust os-* error paths | 19 | 6 |
 | 14 Rust agent/dashboard/intel/stack | 15 | 10 |
 | 15 Schemas and validators | 25 | 0 |
 | 16 Agent layer Node | 20 | 5 |
@@ -696,7 +700,7 @@ one is open for a named reason, not for want of trying.
 | 18 Tooling scripts | 25 | 0 |
 | 19 Officina and Musica | 15 | 10 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **440** | **60** |
+| **Total** | **442** | **58** |
 
 ### The 73, by the decision that unblocks them
 
@@ -709,10 +713,10 @@ one is open for a named reason, not for want of trying.
    harness has no queue-envelope or incident fixtures. The dashboard metrics
    cards and the agent registry loader were built for this wave and are now
    covered, so they left this group.
-3. **New APIs (8, Section 13).** `os-boot` is the agent CLI crate (no boot
-   config type), `os-jobs` has no job-with-steps API, `os-worker` has no
-   payload type. The `os-supervisor` restart policy was built for this wave
-   and is now covered, so it is no longer in this group.
+3. **New APIs (6, Section 13).** `os-boot` is the agent CLI crate (no boot
+   config type) and `os-jobs` has no job-with-steps API. The `os-supervisor`
+   restart policy and the `os-worker` payload/order cases were covered for
+   this wave, so they left this group.
 4. **Missing data (4, Section 20).** Nervus has no real-run flag and no ledger
    field on its contracts, and the layer curve (L4 4.6, L8 19.5, L16 12.8,
    L24 10.2) appears in no file. CB2-500 needs a program list the registry
