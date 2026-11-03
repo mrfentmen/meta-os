@@ -1,0 +1,11 @@
+# Plank dock1 defaults for the MetaOS live session.
+# Install: /etc/skel/.config/plank/dock1/settings (new live users inherit it).
+# Theme=MetaOS pairs with /usr/share/plank/themes/MetaOS/dock.theme.
+[PlankDockPreferences]
+Theme=MetaOS
+Alignment=Center
+ItemsAlignment=Center
+IconSize=40
+ZoomEnabled=true
+ZoomPercent=150
+HideMode=0

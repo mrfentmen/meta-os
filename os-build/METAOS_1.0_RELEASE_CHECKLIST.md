@@ -148,10 +148,89 @@ branch claim alone.
 ## H+6 — fully themed (~03:46 EST)
 
 - [ ] GTK recolor, Papirus recolor, wallpaper pack, font picks (OC1).
+      — PARTIAL, CODE-INSPECTED: wallpaper pack MERGED (Bond greeter +
+      desktop wallpapers at 1366/2560/3840 + make_wallpaper.py +
+      MANIFEST; OC1 meta-ascii wallpaper; OC1 live-wallpaper pack —
+      the spinning ASCII ribbon as a live desktop background, per the
+      boss's attract-screen ruling). GTK theme + greeter conf merged
+      and apply-tested (H+4 record). Papirus recolor still NOT run on
+      a build host; the xfwm4 window theme is still NOT built.
+      NAMED GAPS, carried to H+8/H+10.
 - [ ] Core apps open from the dock and close clean (Bond): file manager,
       terminal, settings, Chromium with Meta start page. Configs committed,
       no stubs.
+      — Configs + apps CODE-INSPECTED and test-verified on the merged
+      tree (welcome suites OK; ISO battery 114 OK at H+4 tree; agent
+      layer staged into provision.sh with payload-gate checks; Bond
+      health service + watchdog cadence merged). Opening from a dock
+      on a booted themed image is NOT proofed — no byte-built image
+      exists yet (carried gap, same root as cut 1/2: the base ISO file
+      has not reached Pax's build host).
 - [ ] ISO cut 3.
+      — CUT RECORD: tree = main @451798b8 (cut at H+6, 2026-11-03
+      ~03:46 EST). Since cut 2: the boss lifted all lane fences
+      (2026-11-03 02:12 EST, "everyone over everyone's lanes") and Pax
+      ran two all-in merge rounds — Bond 12h round 2 (grub theme,
+      greeter, wallpaper set, ISO tools) + agent-layer-iso + watchdog
+      cadence (health service/timer); OC2 landwalls 500-lane +
+      queue round (watchdog, OC2B proof logs, queue e2e set); Buffy
+      contract-worker superset (327 files: the full os/skills catalog,
+      os/mos worker contract, capcheck userspace sources — her
+      os-skills branch fully absorbed) + skills-runtime + boot-gate +
+      layer1 clean set (45 contract/lobster files); OC1 Imperium
+      wrapper update (single vendored Imperium app, per the boss's
+      Trio = Imperium ruling); agents/runtime.mjs hand-combined by Pax
+      (main lineage UNION Buffy hardening). Pax-run verification on
+      merged trees: queue-python 637 OK; worker-contract + ISO
+      wallpaper/checker suites 48 OK; os skills runtime 15 OK;
+      test:agents — the ledger torn-line policy fork is RESOLVED:
+      Milo's QA call (strict stands) updated the 2 stale
+      skip-anywhere tests to the landed policy (milo/qa-ledger-strict
+      merged by Pax); Pax re-ran the suite on the merged tree:
+      184/184 GREEN. Provision dry-run re-verified by Pax on the
+      cut tree: exit 0, Imperium app + agent runtime land. Pre-cut Pax
+      gap-fill: Bond's updated meta-doctor checked the agent layer
+      but iso/tools/apply.sh never staged it (4 doctor tests red);
+      apply.sh now stages agent-layer like provision.sh does and
+      records the staged paths for exact revert — full ISO battery
+      re-run by Pax on the fixed tree: 123/123 OK (doctor 20 passed,
+      0 failed against an apply.sh tree; BUFFY_ISO_STATUS claims
+      refreshed to match, measured). After those rounds: Bond watchdog-cadence follow-ups merged (6-file partial: stage.sh, precut.sh, audit/handoff/box-map/proof-plan docs; then agents/memory.mjs + its tests whole) and Pax closed the manifest gap they exposed (oc2-health service+timer added to manifest TARGETS, MANIFEST.md regenerated). Pax re-verified on the merged trees: ISO battery 123/123 OK; test:agents 195/195 GREEN. At 02:38 EST the boss ordered Rowan, Milo and Hana to stop work and report what they have left, the OpenCodes to finish the build, and Pax to merge only (Hana and Milo acked stop; Rowan's ack still pending at cut time if not posted). Bond watchdog-cadence @72a025f6 landed whole after Pax's hand-combine (notify feature, registry draft rules, memory wiring; one policy edit: his torn-middle test removed per the settled strict ledger ruling, tail case already covered). Final pre-cut verification: test:agents 212/212 GREEN, ISO battery OK. still pending at cut time if not posted). HELD with
+      reasons, not fences: Buffy's 5 kernel files (caps gate) —
+      Milo gate-1 GREEN on record (kernel cargo check exit 0), held
+      only for the boss's syscall-6 call (her caps query takes
+      syscall 6; the frozen table assigns 6/7 to K4 IPC) plus the
+      Mac boot log (gate-2); Rowan kernel-kf03-align @436c6cc — Milo
+      gate-1 GREEN on record; held for the Mac build + QEMU log
+      (gate-2). NAMED GAP (carried): the
+      ISO artifact itself is still not built — the base Xubuntu
+      24.04.5 file (Del's copy) has not reached Pax's build host;
+      themed-desktop and login-screen proofs stay open for the same
+      reason. Per the decoupling amendment the cut stands with the
+      gaps named, not delayed.
+      — ADDENDUM (final, at cut): after the rounds above, Bond
+      watchdog-cadence landed twice more (@f0a9510b partial 12 +
+      Pax edges hand-combine; @f9ce25c1 whole — jobs retry, Musica
+      and Science Lab hosted), OC3 agent3 landed partial (SAM to
+      Spark intel pipeline, 12 tests OK; its 6 crates files held,
+      no compile gate), and Pax closed a manifest gap
+      (oc2-watchman TARGETS row). Pax-verified on the merged tree:
+      test:agents 239/239 GREEN, ISO battery 123/123 OK,
+      queue-python 637 OK, science-lab 374 OK. At 03:34 EST the
+      boss stopped Pax merging branches (the OpenCode lanes merge
+      directly now); at 03:39 EST he ordered Pax to commit his own
+      code to main. KERNEL (2.0 track): OC3's direct merge
+      8923da87 put Buffy's RK-007 tree on main — kernel/src is now
+      the bootloader_api 0.11 line (syscalls.rs untouched). Its
+      committed serial log shows K1 alive, K3 ticks, K4 up, but
+      all four userspace programs loader-refused ("address in
+      use": the RK-007 build linked every program at the default
+      address inside the kernel image). Pax's fix is committed at
+      451798b8: rk007/build.sh now links each program at its own
+      base via build_userspace.py, and kernel/build.rs no longer
+      teaches the colliding plain build. The fixed-pipeline boot
+      proof (zero refusals) is still owed; KF-03 screen proof and
+      the two kernel holds above stand.
 
 ## H+8 — installer tested end to end (~05:46 EST)
 

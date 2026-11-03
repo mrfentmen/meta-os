@@ -4,8 +4,11 @@
 //! the serial port, halts in a spin loop. K2: VGA text-mode console
 //! (80x25 at phys 0xB8000 via the bootloader's physical-memory
 //! mapping) mirrors every serial line on screen; the panic handler
-//! paints a red PANIC screen. No pixel framebuffer exists under
-//! bootloader 0.9.35 — see `os-build/research/framebuffer.md`.
+//! paints a red PANIC screen. RK-008: the kernel side now speaks
+//! bootloader_api 0.11 (see BOOTLOADER_CONFIG); the pixel
+//! framebuffer field exists there (`Optional<FrameBuffer>`) but is
+//! still unwired — that wiring is KF-03, not this rewrite — see
+//! `os-build/research/framebuffer.md`.
 //!
 //! K3 evidence (2026-11-02): `prove_timer` measures the PIT by waiting
 //! on the handler's tick counter, so the boot log carries a real
@@ -57,7 +60,19 @@ mod vga;
 use core::panic::PanicInfo;
 use vga::{Color, ColorSpec, VgaConsole, VGA_PHYS_ADDR};
 
-bootloader::entry_point!(kernel_main);
+/// Bootloader configuration (RK-008, bootloader_api 0.11). The default
+/// config leaves `mappings.physical_memory` as `None`, and with no
+/// mapping `physical_memory_offset` arrives as `Optional::None` — the
+/// VGA base in `kernel_main` and `mem_init` would have nothing to work
+/// through. Request a dynamic full-physical-memory mapping, the 0.11
+/// replacement for the 0.9 `map_physical_memory` cargo feature.
+pub static BOOTLOADER_CONFIG: bootloader_api::BootloaderConfig = {
+    let mut config = bootloader_api::BootloaderConfig::new_default();
+    config.mappings.physical_memory = Some(bootloader_api::config::Mapping::Dynamic);
+    config
+};
+
+bootloader_api::entry_point!(kernel_main, config = &BOOTLOADER_CONFIG);
 
 const COM1: u16 = 0x3F8;
 
@@ -125,10 +140,17 @@ impl core::fmt::Write for SerialPort {
     }
 }
 
-fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
+fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     serial_init();
-    let vga_base =
-        (boot_info.physical_memory_offset + VGA_PHYS_ADDR) as *mut u16;
+    // 0.11: the offset is `Optional<u64>`, present only when the config
+    // maps physical memory (BOOTLOADER_CONFIG above does). Without it
+    // there is no VGA base and no `mem_init` mapping; fail loudly on
+    // serial via the panic handler instead of computing a bogus base.
+    let phys_offset = boot_info
+        .physical_memory_offset
+        .into_option()
+        .expect("RK-008: bootloader did not map physical memory");
+    let vga_base = (phys_offset + VGA_PHYS_ADDR) as *mut u16;
     // SAFETY: bootloader maps all physical memory at the offset, so the
     // VGA text buffer address is valid and writable; 80x25 bounds-checked.
     unsafe {
@@ -160,7 +182,7 @@ fn kernel_main(boot_info: &'static bootloader::BootInfo) -> ! {
     // Section D: frames, mapper, heap (IDT is live, so a stray fault
     // prints instead of triple-faulting).
     unsafe {
-        mem::mem_init(boot_info);
+        mem::mem_init(&*boot_info);
     }
     #[cfg(feature = "break-test")]
     unsafe {

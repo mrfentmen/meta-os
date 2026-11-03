@@ -106,12 +106,23 @@ install -m755 "$PAYLOAD/apps/metaos-welcome.py" "$ROOT/usr/share/metaos/apps/met
 install -m644 "$PAYLOAD/apps/metaos-welcome.desktop" "$ROOT/usr/share/applications/metaos-welcome.desktop"
 install -m644 "$PAYLOAD/apps/metaos-welcome.desktop" "$ROOT/etc/xdg/autostart/metaos-welcome.desktop"
 install -m644 "$PAYLOAD/greeter/lightdm-gtk-greeter.conf" "$ROOT/etc/lightdm/lightdm-gtk-greeter.conf"
+mkdir -p "$ROOT/etc/lightdm/lightdm.conf.d"
+install -m644 "$PAYLOAD/greeter/10-metaos-live.conf" "$ROOT/etc/lightdm/lightdm.conf.d/10-metaos-live.conf"
 install -m644 "$PAYLOAD/wallpapers/meta-ascii.png" "$ROOT/usr/share/backgrounds/meta-ascii.png" 2>/dev/null || true
 install -m644 "$PAYLOAD/wallpapers/meta-rays.png" "$ROOT/usr/share/backgrounds/meta-rays.png" 2>/dev/null || true
 install -m644 "$PAYLOAD/wallpapers/meta-dusk.png" "$ROOT/usr/share/backgrounds/meta-dusk.png" 2>/dev/null || true
 install -m644 "$PAYLOAD/wallpapers/meta-dawn.png" "$ROOT/usr/share/backgrounds/meta-dawn.png" 2>/dev/null || true
-cp -r "$PAYLOAD/dock/." "$ROOT/usr/share/plank/themes/" 2>/dev/null || true
 cp -r "$PAYLOAD/gtk/." "$ROOT/usr/share/themes/" 2>/dev/null || { mkdir -p "$ROOT/usr/share/themes/MetaOS/gtk-3.0"; install -m644 "$PAYLOAD/gtk/gtk.css" "$ROOT/usr/share/themes/MetaOS/gtk-3.0/gtk.css"; }
+mkdir -p "$ROOT/usr/share/themes/MetaOS/xfwm4"
+install -m644 "$PAYLOAD/xfwm4/themerc" "$ROOT/usr/share/themes/MetaOS/xfwm4/themerc"
+mkdir -p "$ROOT/usr/share/plank/themes/MetaOS"
+install -m644 "$PAYLOAD/dock/dock.theme" "$ROOT/usr/share/plank/themes/MetaOS/dock.theme"
+mkdir -p "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml"
+install -m644 "$PAYLOAD/panel/xfce4-panel.xml" "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+install -m644 "$PAYLOAD/panel/xfce4-panel.xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+mkdir -p "$ROOT/etc/skel/.config/plank/dock1"
+install -m644 "$PAYLOAD/dock/plank-settings" "$ROOT/etc/skel/.config/plank/dock1/settings"
+install -m644 "$PAYLOAD/dock/plank.desktop" "$ROOT/etc/xdg/autostart/plank.desktop"
 install -m644 "$PAYLOAD/terminal/metaos-welcome.sh" "$ROOT/etc/bash.bashrc.d/metaos.sh"
 gate_payload_welcome=1
 
@@ -125,6 +136,8 @@ cp -r "$APPS/imperium/js" "$APPS/imperium/vendor" "$ROOT/usr/share/metaos/imperi
 mkdir -p "$ROOT/usr/share/metaos/server"
 cp "$APPS/server/"*.mjs "$ROOT/usr/share/metaos/server/"
 cp "$APPS/imperium/styles.css" "$APPS/imperium/icon-180.png" "$APPS/imperium/manifest.webmanifest" "$ROOT/usr/share/metaos/imperium/" 2>/dev/null || true
+[ -f "$PAYLOAD/apps/metaos-imperium.py" ] || fail "imperium payload missing: $PAYLOAD/apps/metaos-imperium.py (restore the file or drop its install line)"
+[ -f "$PAYLOAD/apps/metaos-imperium.desktop" ] || fail "imperium payload missing: $PAYLOAD/apps/metaos-imperium.desktop (restore the file or drop its install line)"
 install -m755 "$PAYLOAD/apps/metaos-imperium.py" "$ROOT/usr/share/metaos/apps/metaos-imperium.py"
 install -m644 "$PAYLOAD/apps/metaos-imperium.desktop" "$ROOT/usr/share/applications/metaos-imperium.desktop"
 install -m644 "$PAYLOAD/wallpapers/live/meta-live.py" "$ROOT/usr/share/metaos/apps/meta-live.py" 2>/dev/null || true

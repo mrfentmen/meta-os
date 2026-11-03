@@ -144,7 +144,6 @@ lean.
    version, field list, and file claim above is checkable against
    main without a compiler. No boot claim is made here.
 
-
 ## 6. KF-01 — bootloader spike, step 1: evidence synthesis (Rowan, 2026-11-02)
 
 Status: **KF-01 STEP 1 ONLY — NOT THE KF-01 DECISION.** This section
@@ -288,3 +287,191 @@ real-OS ruling: the face is drawn by the kernel itself, with no
 browser and no Linux underneath; the web face is design
 reference only — no new web features. Nothing in this step
 builds a web face, a browser shell, or a carrier-face feature.
+
+## 7. S1 decision record — bootloader spike, RK-001..RK-005 (Rowan, 2026-11-02)
+
+Status: **RECORD ONLY — NOT THE KF-01 DECISION, NO PIN CHANGE.**
+This section lands ROWAN_TASKS_500 S1 tasks RK-001..RK-005 on
+`rowan/bootloader-spike`, off main `3452d24` (README
+per-program expansion commit; `os-build/face/KERNEL_FACE.md` blob unchanged from the
+earlier fetch, so this append applies cleanly). It changes no
+kernel file, pins no bootloader version, claims no build and no
+boot: `kernel/src/syscalls.rs` is untouched and no syscall
+number is consumed. RK-006 (the pin change) does NOT start
+until Pax approves or redirects target #1 on the bus, as
+RK-005 requires.
+
+Numbering note, stated to avoid a merge collision: the
+KF-01 step-1 evidence synthesis lives as §6 on the separate
+branch `rowan/kernel-kf01-spike @ 8e725f4`, which is NOT on
+main. This record is §7 on THIS branch, written against
+main's file (§1–§5). If Pax merges both branches, he
+renumbers; this record cross-references the step-1 appendix
+instead of duplicating it. Milo gate-1 on this branch covers
+evidence accuracy only, as with the earlier spike branches.
+
+### 7.1 RK-001 — round7 failure summary (carried, gap stands)
+
+Carried from KF-01 step 1 §6.1 (`rowan/kernel-kf01-spike`
+@ 8e725f4), not re-derived here, because the underlying
+evidence has not changed:
+
+- bootloader **0.10.9: API failure**;
+- bootloader **0.11: std failure**.
+
+Both labels are quoted from the build order
+(`os-build/KERNEL_FACE_BUILD_ORDER.md` on main @07373f2).
+The verbatim error logs for those two attempts were NOT
+located in the `opencode/round7` tip tree searched for step 1
+(`OPENCODE_FACE_BUILD.md`: zero bootloader hits;
+`KERNEL_FACE_TASKS.md`: only the generic A1–A3 route text;
+no round7/bootloader evidence file found), and no new log
+has surfaced on main since. Pax's KF-01 budget ruling
+(room-1, 2026-11-02) governs the consequence: the round7
+pair neither consumes the Mac lane's fresh budget nor gets
+blind re-run, and any fresh attempt must carry its verbatim
+log or it does not count. RK-001 is complete to the extent
+the tree allows; the verbatim-log gap is Pax/Mac-lane owned,
+not closable from this VM.
+
+### 7.2 RK-002 — current boot stack, verified against main this run
+
+- `kernel/Cargo.toml`: `bootloader = { version = "0.9",
+  features = ["map_physical_memory"] }`, package
+  `metaos-kernel` 0.1.0, edition 2021, standalone workspace.
+  There is NO `[package.metadata.bootloader]` table.
+- `kernel/Cargo.lock` (386 bytes, whole file): pins
+  bootloader **0.9.35**, checksum
+  `e22d5a0b9e11dd5bee9d24a68885de6dc7ed367f897323b1c1286150fd469374`;
+  the only other package is `metaos-kernel` itself.
+- `kernel/.cargo/config.toml`: `build-std = ["core",
+  "compiler_builtins", "alloc"]`, target
+  `x86_64-unknown-none`, `rustflags =
+  ["-C", "relocation-model=static"]` (workaround for the
+  0.9.35 stage-2 mapper panic on static-PIE kernels, seen
+  2026-11-01 on rustc 1.99.1), runner `"bootimage runner"`.
+- `kernel/src/main.rs` BootInfo reads today:
+  `bootloader::entry_point!(kernel_main)` (line 60);
+  `fn kernel_main(boot_info: &'static bootloader::BootInfo)`
+  (line 128); reads `boot_info.physical_memory_offset`
+  (line 131, VGA console base); passes `boot_info` to
+  `mem::mem_init` (line 163). It does NOT read
+  `memory_map` directly, does NOT read
+  `recursive_page_table_addr`, and reads no framebuffer —
+  none exists on 0.9.35.
+- `kernel/src/mem.rs` BootInfo reads today:
+  `mem_init(boot_info: &'static bootloader::BootInfo)`
+  (line 127); `boot_info.physical_memory_offset` (line 128);
+  `boot_info.memory_map.iter()` (line 133); `kind_of`
+  matches on `bootloader::bootinfo::MemoryRegionType`
+  variants `Kernel | KernelStack | PageTable | Bootloader |
+  BootInfo | FrameZero | InUse` (lines 106–110).
+- `kernel/src/memory.rs`: imports NO bootloader type. It
+  defines its own `MemoryRegion`/`MemoryMap`; the only
+  bootloader adapter is `mem.rs`. A version bump therefore
+  touches `memory.rs` not at all directly.
+
+### 7.3 RK-003 — version table, 0.9.35 to newest 0.11.x (docs.rs)
+
+| Family | BootInfo carries a framebuffer? | Framebuffer type | docs.rs citation |
+|---|---|---|---|
+| 0.9.x (0.9.35 pinned) | NO | — (no such field) | `bootloader` 0.9.34 `bootloader::bootinfo::BootInfo`: fields are exactly `memory_map`, `recursive_page_table_addr: u64`, `physical_memory_offset: u64` |
+| 0.10.x (0.10.9 / 0.10.13) | YES — framebuffer mapping supported | Field spelling NOT pulled this run (see gap note) | `bootloader` 0.10.9 lib: entry takes `&'static mut BootInfo`, `bootimage` no longer used since 0.10.0; `bootloader` 0.10.9/0.10.13 `Config`: `map_framebuffer` (default true), `framebuffer_address`, `minimum_framebuffer_height/width` |
+| 0.11.x (newest 0.11.17, lib.rs release list dated Jul 27, 2026) | YES | `FrameBuffer`, as `Optional<FrameBuffer>` | `bootloader_api` latest `bootloader_api::info::BootInfo`: `pub framebuffer: Optional<FrameBuffer>`; entry signature `fn(&'static mut BootInfo) -> !` |
+
+Gap note (plain): the 0.10.x BootInfo framebuffer field's
+exact spelling was not pulled from docs.rs this run, and
+this record does not guess it. That gap is acceptable here
+because 0.10.x is fallback target #2 only (RK-017); the
+Mac lane confirms the spelling from the pinned crate
+source at RK-007 before any 0.10 attempt counts. The pick
+below rests on the 0.11.x row, which IS verified.
+
+### 7.4 RK-004 — API delta, 0.9.35 to target #1 (0.11.x)
+
+Rows cover every item `main.rs`, `memory.rs`, and `mem.rs`
+touch, each marked used-by-us or unused. "Verify at
+RK-007" means the exact new spelling is confirmed from the
+pinned crate source on the Mac lane, not asserted here.
+
+USED by us:
+
+1. Crate path `bootloader::BootInfo` → `bootloader_api::BootInfo`
+   (kernel dependency becomes `bootloader_api`; the
+   `bootloader` crate becomes the disk-image builder lib).
+   Touched: `main.rs:128`, `mem.rs:127`.
+2. Entry macro `bootloader::entry_point!` →
+   `bootloader_api::entry_point!`, and entry signature
+   `&'static BootInfo` → `&'static mut BootInfo`.
+   Touched: `main.rs:60`, `main.rs:128`.
+3. `physical_memory_offset: u64` → `Optional<u64>`.
+   Touched: `main.rs:131`, `mem.rs:128`. Both call sites
+   must unwrap-or-fail, never silently default.
+4. `memory_map: MemoryMap` (0.9, `.iter()` of regions) →
+   `memory_regions: MemoryRegions`. Touched: `mem.rs:133`.
+   Iteration shape to be confirmed at RK-007.
+5. `bootloader::bootinfo::MemoryRegionType` and its
+   variants (`Kernel | KernelStack | PageTable |
+   Bootloader | BootInfo | FrameZero | InUse`) → the new
+   region-kind type and values. Touched: `mem.rs:106–110`.
+   Exact new spelling: verify at RK-007, not guessed here.
+6. Cargo feature `map_physical_memory` → the
+   `map-physical-memory` config option (config-driven
+   mappings replace the feature flag). Touched:
+   `kernel/Cargo.toml` dependency line.
+7. `bootimage runner` (`kernel/.cargo/config.toml`) → DEAD
+   since 0.10.0; the QEMU launch path must be rebuilt
+   around the builder crate's disk image (0.10.9 docs:
+   `cargo builder --kernel-manifest … --kernel-binary …`).
+   Touched: `kernel/.cargo/config.toml` runner line.
+8. `relocation-model=static` workaround → must be
+   RE-PROVEN on the new loader; the 0.9.35 stage-2 mapper
+   panic may not apply, and keeping the flag unexamined
+   would hide that. Touched: `kernel/.cargo/config.toml`
+   rustflags. Open question for RK-007/RK-011, not a row
+   to close here.
+
+UNUSED by us (no call site in `main.rs`, `memory.rs`, or
+`mem.rs`):
+
+- `recursive_page_table_addr: u64` → `recursive_index:
+  Optional<u16>` (config `map-page-table-recursively`
+  stays off unless a later task needs it).
+- New `BootInfo` fields: `api_version`, `rsdp_addr`,
+  `tls_template`, `ramdisk_addr`/`ramdisk_len`,
+  `kernel_addr`/`kernel_len`, `kernel_image_offset`,
+  `kernel_stack_bottom`/`kernel_stack_len` — none read.
+- `memory.rs` itself: NO direct delta (imports no
+  bootloader type); all adaptation flows through `mem.rs`.
+- VGA console path (`main.rs` VGA base via the physical
+  offset): not an API row but a behaviour question —
+  spike part 2 §5 item 8 stands: do NOT assume `0xB8000`
+  text mode is visible on a 0.10+/0.11 graphics-mode boot.
+  Honest fallback order on the new loader: framebuffer
+  if `Some`, else serial only. Decided at RK-011, not here.
+
+### 7.5 RK-005 — target version #1 pick and rationale
+
+**Target #1: newest 0.11.x (0.11.17 at time of writing;
+the Mac lane pins the exact patch at RK-006 from lockfile
+resolution). Target #2 fallback: 0.10.x (RK-017).**
+
+Rationale: (a) Pax's KF-01 budget ruling orders 0.11.x
+first for the Mac lane's two fresh attempts, and this
+record does not override a boss ruling with a
+fewest-delta heuristic; (b) 0.11.x is the only family
+with a docs-verified framebuffer field spelling this run
+(`Optional<FrameBuffer>`); (c) 0.10.x stays available as
+the RK-017 fallback if the 0.11 probe fails. Tension
+stated plainly: a pure fewest-delta reading could favor
+0.10.x (one fewer major jump), so if Pax prefers the
+fewest-delta criterion over the 0.11.x-first order, he
+redirects on the bus and target #1 becomes 0.10.x with
+no record rewrite beyond this paragraph.
+
+**Pax approval requested (bus post with this branch's
+SHA): approve target #1 = newest 0.11.x, or redirect to
+0.10.x. RK-006 does not start until that approval lands.**
+RK-025 will close S1 in `os-build/ROWAN_500_STATUS.md`
+for RK-001..RK-025 once the spike resolves; no partial
+status lines are written by this landing.

@@ -1,8 +1,9 @@
 //! Kernel build script (OS-077): stages the userspace ELFs into
 //! OUT_DIR for `include_bytes!`. It does NOT build them — the
-//! userspace crates build first (`os-build/userspace/user`, normal
-//! `cargo build --target x86_64-unknown-none`; the Section N
-//! pipeline runs both in order). A nested cargo from inside build.rs
+//! userspace crates build first (`os-build/userspace/user`, via
+//! `os-build/userspace/build_userspace.py`, which links each
+//! program at its own base; a plain `cargo build --bins` links
+//! them all at one address and the loader refuses every one). A nested cargo from inside build.rs
 //! proved unreliable here (stale artifacts, silent flag loss), so
 //! the ordering lives in the pipeline script instead, stated, not
 //! hidden. Missing ELFs fail here with the exact recovery command.
@@ -44,7 +45,9 @@ fn main() {
         std::fs::copy(&elf, &dest).unwrap_or_else(|_| {
             panic!(
                 "build.rs: {} missing — build userspace first: \
-                 cd os-build/userspace/user && cargo build --target x86_64-unknown-none --bins",
+                 python3 os-build/userspace/build_userspace.py \
+                 (per-program link bases; a plain --bins build links every \
+                 program at the same address and the loader refuses them)",
                 elf.display()
             )
         });
