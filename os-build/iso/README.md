@@ -72,8 +72,8 @@ installed and launched from our own autostart entry.
 os-build/iso/tools/check_configs.py          # 36 assertions, exit 0 = structure only
 os-build/iso/build_iso.sh --check            # same + tool readiness on this host
 
-# Harness plumbing, no ISO needed:
-os-build/iso/tools/vm_install_proof.sh --dry
+# Harness plumbing, no ISO needed (committed artifact: proof/dry-harness/):
+os-build/iso/tools/vm_install_proof.sh --dry --work os-build/iso/proof/dry-harness
 
 # The acceptance run (Linux host, ISO present):
 os-build/iso/tools/vm_install_proof.sh --iso metaos-1.0-amd64.iso \

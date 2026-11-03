@@ -69,9 +69,11 @@ rm -f "$SOCK" "$PIDFILE"
 # TCG everywhere else (including Apple silicon, which cannot HVF an x86 guest).
 ACCEL_ARGS=(-accel "tcg,thread=multi" -cpu max)
 if [ -e /dev/kvm ] && [ -w /dev/kvm ]; then
-    ACCEL_ARGS=(-enable-kvm -cpu host)
+    ACCEL_ARGS=(-enable-kvm -cpu max)
 fi
+START_EPOCH=$(date +%s)
 say "accel: ${ACCEL_ARGS[*]}"
+say "clock starts here; every frame is stamped T+seconds from this line"
 
 qmp() { python3 "$HERE/qmp.py" --socket "$SOCK" "$@"; }
 
@@ -98,8 +100,9 @@ wait_for_socket() {
 
 shot() {  # shot <name> <label>
     qmp screendump "$PROOF/$1.png" >/dev/null
-    printf '| %s.png | %s |\n' "$1" "$2" >> "$PROOF/INDEX.md"
-    say "captured $1 — $2"
+    local elapsed=$(( $(date +%s) - START_EPOCH ))
+    printf '| %s.png | T+%ss | %s |\n' "$1" "$elapsed" "$2" >> "$PROOF/INDEX.md"
+    say "captured $1 at T+${elapsed}s — $2"
 }
 
 start_vm() {  # start_vm <boot-order> <with-cdrom 0|1>
@@ -137,8 +140,15 @@ Accel: ${ACCEL_ARGS[*]}
 Every frame below is QEMU's framebuffer via QMP screendump — a real VM,
 not a mock. Interpret them in order; a stage with no frame did not happen.
 
-| frame | expected |
-|---|---|
+The at column is wall-clock T+seconds from harness start, including QEMU
+launch. Under TCG it is an upper bound on boot time, not hardware speed;
+say so if you quote it. The H+2 box asks for "login under 60s" — only a
+frame whose stage is the login screen and whose at value is under 60
+answers it. (No backticks in this block: the heredoc is unquoted so the
+shell would execute them; that bug mangled the first INDEX.md.)
+
+| frame | at | expected |
+|---|---|---|
 HEADER
 
 if [ "$DRY" = "1" ]; then

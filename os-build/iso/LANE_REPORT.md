@@ -19,7 +19,7 @@ reboots to the login screen, proven by VM screendumps.
 | 7 | `provision.sh` (host → chroot payload install) | WRITTEN, UNRUN | `sh -n` clean; installs theme, config, hook, autostart, initramfs rebuild |
 | 8 | `build_iso.sh` (`--check`, `--root`, `--iso`) | WRITTEN, UNRUN | `bash -n` clean; `--check` runs here and reports the missing Linux tools honestly |
 | 9 | `tools/qmp.py` | **PROVEN LOCALLY** | drove a real QEMU instance: `screendump`, `quit` |
-| 10 | `tools/vm_install_proof.sh` | **PLUMBING PROVEN** (`--dry`), install path UNRUN | captured `proof/20261103T025309Z/00-harness-dry.png` from a live QEMU framebuffer |
+| 10 | `tools/vm_install_proof.sh` | **PLUMBING PROVEN** (`--dry`), install path UNRUN | captured `proof/dry-harness/00-harness-dry.png` from a live QEMU framebuffer (720×400 SeaBIOS "no bootable device" screen, 4s after start) |
 | 11 | ISO | **NOT BUILT** | no Linux host, no root, no xorriso/mksquashfs on this Mac |
 | 12 | Install → reboot → login screendumps | **NOT RUN** | blocked on 11 |
 
