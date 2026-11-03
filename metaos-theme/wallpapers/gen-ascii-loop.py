@@ -9,7 +9,7 @@ import subprocess
 import sys
 
 SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                   '../../../kernel/src/logo_frames.rs')
+                   '../../kernel/src/logo_frames.rs')
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'live')
 os.makedirs(OUT, exist_ok=True)
