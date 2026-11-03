@@ -1,0 +1,31 @@
+{
+ "service": "imperium-patrol",
+ "state": "running",
+ "reason": null,
+ "at": "2026-11-03T04:05:16.560Z",
+ "camera_source": "nyctmc-live",
+ "cameras": 972,
+ "interval_s": 20.0,
+ "counts": {
+  "checks": 7,
+  "baseline": 7,
+  "flagged": 0,
+  "reported": 0,
+  "feed_errors": 0,
+  "job_errors": 0
+ },
+ "last_camera_id": "1e88b34b-2058-402e-9a3d-aca1c57696bf",
+ "guardrail": {
+  "calls": 22,
+  "est_cost_usd": 0.155044,
+  "test_budget_usd": 75.0,
+  "remaining_usd": 74.845
+ },
+ "paused_cameras": [],
+ "last_check": {
+  "camera_id": "1e88b34b-2058-402e-9a3d-aca1c57696bf",
+  "camera_name": "GCP @ 31 ST",
+  "division": "vigiles",
+  "outcome": "baseline"
+ }
+}
