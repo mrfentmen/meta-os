@@ -1,0 +1,13 @@
+{
+  "id": "trio-573d748126b855cd2a0279b26cc9d1ea",
+  "image": {
+    "byteLength": 16,
+    "dataUrl": "data:image/jpeg;base64,/9j/4FBBUklUWS1GUkFNRQ==",
+    "mediaType": "image/jpeg",
+    "sha256": "d6c02a685cf1b15b7645dee8d3e99be7c7189bea3693dbda71cff077d21ff0b5"
+  },
+  "kind": "trio-assessment",
+  "product": "vigiles",
+  "timestamp": "2026-11-02T00:00:00Z",
+  "version": 1
+}
