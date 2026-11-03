@@ -55,6 +55,76 @@ if [ -x /usr/local/bin/meta-agent-login ]; then
   say "agent login hook scheduled"
 fi
 
+# 2b2 — the About page's facts. about.html is a static page (18900 is
+# `python3 -m http.server`, no code runs there), so the live values it shows
+# are rendered here, at login, from the live /etc/os-release and uname of
+# THIS machine into about.json beside it. Best-effort on purpose: if the
+# file cannot be written the page shows its fallback line, and a failed
+# write must never break the login.
+# Paths are overridable for offline testing (ABOUT_JSON, FACE_OS_RELEASE).
+ABOUT_JSON="${ABOUT_JSON:-/opt/face/about.json}"
+FACE_OS_RELEASE="${FACE_OS_RELEASE:-/etc/os-release}"
+write_about_json() {
+  _pretty=""; _ver=""; _verid=""; _id=""; _code=""
+  if [ -r "$FACE_OS_RELEASE" ]; then
+    _pretty=$(sed -n 's/^PRETTY_NAME=//p' "$FACE_OS_RELEASE" | head -1 | tr -d '"')
+    _ver=$(sed -n 's/^VERSION=//p' "$FACE_OS_RELEASE" | head -1 | tr -d '"')
+    _verid=$(sed -n 's/^VERSION_ID=//p' "$FACE_OS_RELEASE" | head -1 | tr -d '"')
+    _id=$(sed -n 's/^ID=//p' "$FACE_OS_RELEASE" | head -1 | tr -d '"')
+    _code=$(sed -n 's/^VERSION_CODENAME=//p' "$FACE_OS_RELEASE" | head -1 | tr -d '"')
+  fi
+  [ -n "$_ver" ] || _ver="$_pretty"
+  _kernel=$(uname -r 2>/dev/null || echo unknown)
+  _session="Meta OS Desktop"
+  for _d in /usr/share/xsessions /opt/face; do
+    if [ -r "$_d/metaos-face.desktop" ]; then
+      _n=$(sed -n 's/^Name=//p' "$_d/metaos-face.desktop" | head -1)
+      [ -n "$_n" ] && _session="$_n"
+      break
+    elif [ -r "$_d/metaos.desktop" ]; then
+      _n=$(sed -n 's/^Name=//p' "$_d/metaos.desktop" | head -1)
+      [ -n "$_n" ] && _session="$_n"
+      break
+    fi
+  done
+  # Build date: when this image's identity was baked (os-release is rewritten
+  # by debrand at bake time). Falls back to this script's own mtime
+  # (provision copies it at the same bake), then to unknown — never a guess.
+  # (Guard with -n, not ||: `stat ... | cut` exits 0 on empty input, so ||
+  # would never fire and the date would silently become empty.)
+  _build=""
+  if [ -r "$FACE_OS_RELEASE" ]; then
+    _build=$(stat -c %y "$FACE_OS_RELEASE" 2>/dev/null | cut -d' ' -f1)
+  fi
+  if [ -z "$_build" ]; then
+    _build=$(stat -c %y "$0" 2>/dev/null | cut -d' ' -f1)
+  fi
+  [ -n "$_build" ] || _build="unknown"
+  _now=$(date -u '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || echo unknown)
+  _json_esc() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+  if [ -z "$_pretty" ]; then
+    _body=$(printf '{"error":"os-release missing or unreadable at %s"}' \
+      "$(_json_esc "$FACE_OS_RELEASE")")
+  else
+    _body=$(printf '{"pretty":"%s","version":"%s","version_id":"%s","id":"%s","codename":"%s","kernel":"%s","session":"%s","build_date":"%s","generated_utc":"%s"}' \
+      "$(_json_esc "$_pretty")" "$(_json_esc "$_ver")" "$(_json_esc "$_verid")" \
+      "$(_json_esc "$_id")" "$(_json_esc "$_code")" "$(_json_esc "$_kernel")" \
+      "$(_json_esc "$_session")" "$(_json_esc "$_build")" "$_now")
+  fi
+  if [ -w "$(dirname "$ABOUT_JSON")" ] 2>/dev/null; then
+    printf '%s\n' "$_body" >"$ABOUT_JSON" 2>/dev/null \
+      && say "about.json refreshed" \
+      || say "about.json write failed (page will show fallback)"
+  elif command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+    printf '%s\n' "$_body" | sudo -n tee "$ABOUT_JSON" >/dev/null 2>&1 \
+      && say "about.json refreshed via sudo" \
+      || say "about.json sudo write failed (page will show fallback)"
+  else
+    say "about.json not writable — page will show fallback"
+  fi
+}
+write_about_json >>"$LOG" 2>&1 || say "about.json step failed (page will show fallback)"
+
 # 2b — the spinning Meta wallpaper. A systemd user unit owns the frames; the
 # old XDG autostart path is the one that silently did nothing.
 systemctl --user start metaos-livebg.service >>"$LOG" 2>&1 \
@@ -63,8 +133,25 @@ systemctl --user start metaos-livebg.service >>"$LOG" 2>&1 \
 # 3 — the dock. XDG autostart is not trusted in this image, so plank is
 # started here, after a beat so the window manager exists to place it.
 if command -v plank >/dev/null 2>&1; then
-  ( sleep 2; plank >>"$LOG" 2>&1 ) &
-  say "plank dock scheduled"
+  (
+    sleep 2
+    # /etc/xdg/autostart/plank.desktop exists in this image too. If XFCE
+    # honoured it, a second plank would mean two docks on screen — so wait
+    # for the autostart one and only start plank if nothing did.
+    if command -v pgrep >/dev/null 2>&1; then
+      _i=0
+      while [ "$_i" -lt 10 ]; do
+        if pgrep -x plank >/dev/null 2>&1; then
+          say "plank already running (autostart won) — not starting a second dock"
+          exit 0
+        fi
+        sleep 0.5
+        _i=$((_i + 1))
+      done
+    fi
+    plank >>"$LOG" 2>&1
+  ) &
+  say "plank dock scheduled (starts only if the autostart entry did not)"
 else
   say "plank missing — desktop still works, no dock"
 fi

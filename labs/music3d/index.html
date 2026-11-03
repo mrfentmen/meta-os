@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Labs — 3D music notes</title>
+<link rel="icon" href="data:,">
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; background: #05070c; color: #d7e5f2; font-family: ui-monospace, Menlo, Consolas, monospace; }
@@ -43,9 +44,19 @@
 <div id="fps">frame rate: measuring…</div>
 <div id="loadms">first render: measuring…</div>
 <footer>Notes in one accent color (cyan); the playing note turns amber #FFBE55 (the film accent). Audio: WebAudio triangle wave, A4 = 440 Hz. All geometry from primitives.</footer>
-<script src="vendor/three.min.js"></script>
+<script src="../../vendor/three.min.js"></script>
+<script>
+window.__music3d_booted = false;
+setTimeout(function () {
+  if (!window.__music3d_booted) {
+    var m = document.getElementById("meta");
+    if (m && !m.textContent) m.textContent = "3D failed to start (the notes module or the shared vendor/three.min.js did not load on 18934). Nothing is drawn — no placeholder substituted.";
+  }
+}, 5000);
+</script>
 <script type="module">
 import { SCALE, MINOR_SCALE, CHORDS, CHORD_ORDER, NOTE_Y, BEATS, freqOf, octaveUp } from "./notes-data.mjs";
+window.__music3d_booted = true;
 // Color rule: every note is cyan #22D3EE at rest; the note under the
 // playhead turns amber #FFBE55 while it sounds, then back to cyan.
 const REST = 0x22d3ee, PLAYING = 0xffbe55, ROW2 = 0x8a6f3f;
@@ -166,6 +177,74 @@ function addLabel(n, name) {
   n.userData.label = lab;
 }
 
+// No-WebGL audio path: the same placeholder melody through the same tone()
+// voice, scheduled on a timer. No scene, no playhead — the status line says
+// which note is sounding. 3D-only buttons are disabled with their reason;
+// tempo and volume keep working because they only retune this scheduler.
+function audioOnly() {
+  const metaEl = document.getElementById("meta");
+  function ensure() {
+    if (!audio) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) {
+        metaEl.textContent = "No WebGL and no WebAudio in this browser — the melody as text: " +
+          currentMelody().map(function (e) { return e.n; }).join(" ");
+        return false;
+      }
+      audio = new AC();
+      master = audio.createGain();
+      master.gain.value = 1;
+      master.connect(audio.destination);
+    }
+    if (audio.state === "suspended") audio.resume();
+    return true;
+  }
+  let timer = null, idx = 0;
+  function events() {
+    const ev = [];
+    if (mode === "chords") {
+      CHORD_ORDER.forEach(function (ck) {
+        ev.push({ names: CHORDS[ck].map(function (e) { return e.n; }), beats: 2 });
+      });
+    } else {
+      currentMelody().forEach(function (e) { ev.push({ names: [e.n], beats: BEATS[e.v] }); });
+    }
+    return ev;
+  }
+  function tick() {
+    const ev = events();
+    if (!ev.length || !audio) return;
+    const cur = ev[idx % ev.length];
+    cur.names.forEach(function (n) { tone(freqOf(n), audio.currentTime, beatLen() * cur.beats * 0.95); });
+    metaEl.textContent = "Playing (audio only, no 3D) — sounding: " + cur.names.join(", ");
+    idx += 1;
+  }
+  document.getElementById("btn-play").addEventListener("click", function () {
+    if (!ensure() || timer) return;
+    playing = true; idx = 0; tick();
+    timer = setInterval(tick, beatLen() * 1000);
+  });
+  document.getElementById("btn-pause").addEventListener("click", function () {
+    if (timer) { clearInterval(timer); timer = null; }
+    playing = false;
+    metaEl.textContent = "Stopped (audio only, no 3D). Press Play.";
+  });
+  document.getElementById("btn-restart").addEventListener("click", function () { idx = 0; });
+  document.getElementById("tempo").addEventListener("input", function (e) {
+    bpm = Number(e.target.value);
+    document.getElementById("tempo-val").textContent = bpm + " bpm";
+    if (timer) { clearInterval(timer); timer = setInterval(tick, beatLen() * 1000); }
+  });
+  document.getElementById("vol").addEventListener("input", function (e) {
+    vol = Number(e.target.value) / 100;
+    document.getElementById("vol-val").textContent = e.target.value + "%";
+  });
+  ["btn-labels", "btn-v2", "btn-mode", "btn-row2", "btn-metro"].forEach(function (id) {
+    const b = document.getElementById(id);
+    if (b) { b.disabled = true; b.title = "needs the 3D view"; }
+  });
+}
+
 function click(t0) {
   const o = audio.createOscillator(), g = audio.createGain();
   o.type = "square";
@@ -218,13 +297,36 @@ function update(dt) {
     : "Stopped. Press Play. Space toggles, R replays.";
   fpsAcc += dt; fpsN++;
   if (fpsAcc >= 1) {
-    document.getElementById("fps").textContent = "frame rate: ~" + Math.round(fpsN / fpsAcc) + " fps (headless Chromium on this Mac)";
+    document.getElementById("fps").textContent = "frame rate: ~" + Math.round(fpsN / fpsAcc) + " fps (measured in this window)";
     fpsAcc = 0; fpsN = 0;
   }
 }
 
 function init() {
   const cv = document.getElementById("view");
+  // Honest WebGL fallback, same contract as labs/molecules: no 3D context
+  // means say so in the status line instead of leaving a blank canvas.
+  // ?force2d=1 exercises this path. Returning before the render loop starts
+  // is enough — nothing below touches a renderer that was never created.
+  if (!window.THREE) {
+    document.getElementById("meta").textContent =
+      "3D library missing (the shared vendor/three.min.js did not load on 18934). Notes cannot be drawn — audio still plays: press Play.";
+    document.getElementById("loadms").textContent = "3D library missing — audio path only";
+    audioOnly();
+    return;
+  }
+  let gl = null;
+  try {
+    gl = cv.getContext("webgl2") || cv.getContext("webgl");
+  } catch (e) { gl = null; }
+  if (!gl || new URLSearchParams(location.search).has("force2d")) {
+    document.getElementById("meta").textContent =
+      "3D unavailable in this browser (no WebGL context). The note field cannot be drawn — nothing is faked in its place. Press Play: the synth still sounds.";
+    document.getElementById("loadms").textContent =
+      "software rendering unavailable — audio path only";
+    audioOnly();
+    return;
+  }
   renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x05070c);
@@ -327,7 +429,7 @@ function init() {
     if (firstFrame) {
       firstFrame = false;
       document.getElementById("loadms").textContent =
-        "first render: " + Math.round(performance.now() - T0) + " ms after script start (this Mac, headless Chromium)";
+        "first render: " + Math.round(performance.now() - T0) + " ms after script start (measured in this window)";
     }
     const dt = Math.min(0.1, (t - lastT) / 1000 || 0);
     lastT = t;

@@ -21,11 +21,13 @@ set -u
 
 HOME_DIR="${HOME_DIR:-}"
 OWNER="${OWNER:-}"
+CHECK_ICONS="${CHECK_ICONS:-0}"
 while [ $# -gt 0 ]; do
   case "$1" in
     --home)  HOME_DIR="$2"; shift 2 ;;
     --owner) OWNER="$2"; shift 2 ;;
-    -h|--help) echo "usage: meta-desktop.sh [--home DIR] [--owner UID:GID]"; exit 0 ;;
+    --check-icons) CHECK_ICONS=1; shift ;;
+    -h|--help) echo "usage: meta-desktop.sh [--home DIR] [--owner UID:GID] [--check-icons]"; exit 0 ;;
     *) echo "meta-desktop: unknown flag $1" >&2; exit 2 ;;
   esac
 done
@@ -157,11 +159,13 @@ Locked=false
 EOF
 say "plank settings -> $PLANK/settings"
 
-# One row per tile: id | Name | Icon | Exec
-# Exec is resolved to a real binary; a tile whose program is missing is not
-# written, so the dock never shows a launcher that opens nothing.
+# One row per tile: id | Name | Icon | program + args (separate words)
+# A tile whose program is missing is not written, so the dock never shows a
+# launcher that opens nothing. A tile whose icon PNG is missing is still
+# written (the page matters more than the picture) but logs a named warning,
+# because a themed name the theme does not carry draws a blank white tile.
 APP_N=0
-ICON_DIR=/usr/share/icons/metaos
+ICON_DIR="${ICON_DIR:-/usr/share/icons/metaos}"
 add_app() {
   id="$1"; name="$2"; icon_name="$3"; shift 3
   # Absolute path wins: a themed icon name that the active icon theme does not
@@ -170,9 +174,20 @@ add_app() {
     icon="$ICON_DIR/$icon_name.png"
   else
     icon="$icon_name"
+    say "warn $id: icon $icon_name.png missing in $ICON_DIR — themed fallback, may draw blank"
   fi
+  # "-" means no program check (kept for compatibility; unused today).
+  if [ "${1:-}" = "-" ]; then shift; fi
   bin="$1"
-  exec_line="$*"
+  # Quote each exec word that contains a space (paths, --title values) so a
+  # space cannot split the Exec= line. Words without spaces pass through.
+  exec_line=""
+  for w in "$@"; do
+    case "$w" in
+      *" "*) w="\"$w\"" ;;
+    esac
+    exec_line="${exec_line:+$exec_line }$w"
+  done
   APP_N=$((APP_N + 1))
   idx=$(printf '%02d' "$APP_N")
   if [ "$bin" != "-" ] && ! command -v "$bin" >/dev/null 2>&1; then
@@ -199,14 +214,14 @@ EOF
 # Surfaces open in meta-app: one GTK window per app, no address bar, no tabs,
 # no visible 127.0.0.1. Epiphany is no longer used for these tiles -- a browser
 # tab is what made the apps look like webpages.
-META_APP=/usr/local/bin/meta-app
+META_APP="${META_APP:-/usr/local/bin/meta-app}"
 
 # Imperium and Trio are one program: Meta Vigiles (police), Meta Ignis (fire)
 # and Meta Medicus (EMS) behind a product switcher. It is a native GTK shell
 # over local files -- no browser tab, no remote host. Trio used to open the
 # logo studio, and Imperium used to open the site's surfaces page, which is
 # why neither tile showed the dispatch console.
-IMPERIUM=/usr/share/metaos/apps/metaos-imperium.py
+IMPERIUM="${IMPERIUM:-/usr/share/metaos/apps/metaos-imperium.py}"
 
 add_app terminal  "Terminal"   terminal        xfce4-terminal
 add_app files     "Files"      files           thunar
@@ -221,18 +236,33 @@ add_app trio      "Trio"      imperium        "$IMPERIUM"
 add_app imperium  "Imperium"  imperium        "$IMPERIUM"
 
 if [ -x "$META_APP" ]; then
-  add_app web       "Web"       web             "$META_APP --title Web --url http://127.0.0.1:18934/index.html"
-  add_app dashboard "Dashboard" dashboard       "$META_APP --title Dashboard --url http://127.0.0.1:18900/dashboard.html"
-  add_app board     "Board"     board           "$META_APP --title Board --url http://127.0.0.1:18900/board.html"
-  add_app calendar  "Calendar"  calendar        "$META_APP --title Calendar --url http://127.0.0.1:18900/calendar.html"
-  add_app musica    "Musica"    musica          "$META_APP --title Musica --url http://127.0.0.1:18900/musica.html"
-  add_app science   "Science"   science         "$META_APP --title Science --url http://127.0.0.1:18934/labs/molecules/index.html"
+  add_app web       "Web"       web             "$META_APP" --title Web --url http://127.0.0.1:18934/index.html
+  add_app dashboard "Dashboard" dashboard       "$META_APP" --title Dashboard --url http://127.0.0.1:18900/dashboard.html
+  add_app board     "Board"     board           "$META_APP" --title Board --url http://127.0.0.1:18900/board.html
+  add_app calendar  "Calendar"  calendar        "$META_APP" --title Calendar --url http://127.0.0.1:18900/calendar.html
+  add_app musica    "Musica"    musica          "$META_APP" --title Musica --url http://127.0.0.1:18900/musica.html
+  add_app science   "Science"   science         "$META_APP" --title Science --url http://127.0.0.1:18934/labs/molecules/index.html
   # Each app gets its own page. Custos and Officina used to point at Imperium's
   # surfaces.html and at the site index -- three tiles, two pages, so two of the
   # boss's apps looked unwired. These are the dedicated pages that already ship
   # in /opt/face-site/design.
-  add_app custos    "Custos"    custos          "$META_APP --title Custos --url http://127.0.0.1:18934/design/meta-custos-watch.html"
-  add_app officina  "Officina"  officina        "$META_APP --title Officina --url http://127.0.0.1:18934/design/meta-officina-blueprint.html"
+  add_app custos    "Custos"    custos          "$META_APP" --title Custos --url http://127.0.0.1:18934/design/meta-custos-watch.html
+  add_app officina  "Officina"  officina        "$META_APP" --title Officina --url http://127.0.0.1:18934/design/meta-officina-blueprint.html
+  # Product pages that shipped with no tile (APP_INVENTORY.md section 4).
+  # Boards is the Imperium dispatch boards page; Messages is the live bus
+  # (agent-2 ships bus.html — before that lands this tile explains itself
+  # through meta-app's failure screen instead of opening blank).
+  add_app boards    "Boards"    boards          "$META_APP" --title Boards --url http://127.0.0.1:18934/surfaces.html
+  add_app messages  "Messages"  messages        "$META_APP" --title Messages --url http://127.0.0.1:18934/bus.html
+  add_app logo      "Logo Studio" logo          "$META_APP" --title "Logo Studio" --url http://127.0.0.1:18934/logo-studio.html
+  add_app music3d   "Music 3D"  music3d         "$META_APP" --title "Music 3D" --url http://127.0.0.1:18934/labs/music3d/index.html
+  add_app notes3d   "3D Notes"  notes3d         "$META_APP" --title "3D Notes" --url http://127.0.0.1:18934/design/meta-musica-notes.html
+  add_app budget    "Agent Budget" budget       "$META_APP" --title "Agent Budget" --url http://127.0.0.1:18934/design/agent-budget-dashboard.html
+  # Aegis is agent-3's page (lands at /opt/face-site/aegis/). Same contract as
+  # Messages: the tile is wired now, meta-app explains a missing backend.
+  add_app aegis     "Aegis"     aegis           "$META_APP" --title Aegis --url http://127.0.0.1:18934/aegis/index.html
+  # About carries live machine facts on port 18900 (agent-4's about.html).
+  add_app about     "About"     about           "$META_APP" --title About --url http://127.0.0.1:18900/about.html
 else
   say "meta-app missing at $META_APP — web tiles left out of the dock"
 fi
@@ -251,3 +281,31 @@ if [ -n "$OWNER" ]; then
 fi
 
 say "done: $(ls "$PLANK"/launchers 2>/dev/null | wc -l | tr -d ' ') dock items"
+
+# --check-icons: every tile's Icon= must be a file that exists. An absolute
+# path must exist; a bare themed name must exist as a PNG in the Meta icon
+# dir (themed-name fallback that resolves nowhere draws blank in plank).
+if [ "$CHECK_ICONS" = 1 ]; then
+  fails=0; total=0
+  for d in "$APPS"/meta-*.desktop; do
+    [ -e "$d" ] || continue
+    total=$((total + 1))
+    ic=$(sed -n 's/^Icon=//p' "$d" | head -1)
+    case "$ic" in
+      /*) if [ -f "$ic" ]; then
+            say "check-icons ok $(basename "$d"): $ic"
+          else
+            say "check-icons FAIL $(basename "$d"): $ic not a file"
+            fails=$((fails + 1))
+          fi ;;
+      *) if [ -f "$ICON_DIR/$ic.png" ]; then
+           say "check-icons ok $(basename "$d"): $ICON_DIR/$ic.png"
+         else
+           say "check-icons FAIL $(basename "$d"): $ic resolves nowhere"
+           fails=$((fails + 1))
+         fi ;;
+    esac
+  done
+  say "check-icons: $((total - fails))/$total icons resolve"
+  [ "$fails" -eq 0 ] || exit 1
+fi
