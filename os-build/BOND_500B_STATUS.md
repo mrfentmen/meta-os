@@ -573,7 +573,7 @@ All tools read logs as data; none writes to a log or to `kernel/src`.
 Section 18 verification: 12 test files, **50 tests pass, 0 fail** (one command
 per file; every exit status checked).
 
-## Section 19 — Officina and Musica pure code (CB2-451..475) — 18/25 delivered
+## Section 19 — Officina and Musica pure code (CB2-451..475) — 20/25 delivered
 
 Officina's pure modules: `heatsink.py` (simulator + bounds), `design_loop.py`
 (post/claim/score/held-out gate), `brief.py` (rough-words parser + iterator),
@@ -599,6 +599,8 @@ Officina's pure modules: `heatsink.py` (simulator + bounds), `design_loop.py`
 | CB2-460 | `os/worlds/musica/note_math.mjs` | the 12 pitch classes map to 60..71 from C4; the Bb/Db/Gb/Ab spellings equal their sharps; a flat outside the set (`Cb4`) is refused rather than placed an octave high |
 | CB2-461 | `tests/musica-note-math.test.mjs` | an octave shift moves every note exactly 12 semitones both ways; `transposeOctaves` keeps the spelling where `transpose` normalises it |
 | CB2-462 | `tests/musica-note-math.test.mjs` | `H4`, bare `C`, `C4x`, `C##4`, a non-string, note 128, and a fractional semitone are all refused, never guessed |
+| CB2-465 | `os/worlds/musica/variation.mjs` | a seeded generator: the same seed and scale produce the identical bar, a different seed walks a different one, and a short bar is the prefix of the long bar at the same seed |
+| CB2-466 | `tests/musica-variation-math.test.mjs` | every note stays inside the scale's pitch classes and the given range; an unknown scale note, an empty scale, and a range with no scale note are refused by name |
 
 Two things the Musica data revealed while pinning these tests:
 - The catalogue's own tracks carry `title`, `take_id`, `duration_s`, `licence`.
@@ -614,10 +616,10 @@ record. The loop's record is not on the job — it is the run file, whose
 `amendments` and `decision_log` carry round, change and reason per iteration.
 The test reads those real files.
 
-Not delivered: CB2-455 (no STOP-file check function), CB2-458 (no schematic module),
-CB2-459 (no enumerated 14-check gate list), CB2-465..466 (no JS variation
-generator; `runtime/compose.py` owns it), CB2-469..470 (the take log has a
-`timestamp` and a `verdict`, not a start/end keeper window).
+Not delivered: CB2-455 (no STOP-file check function and no runner to call one
+from), CB2-458 (no schematic module), CB2-459 (no enumerated 14-check gate
+list), CB2-469..470 (the take log has a `timestamp` and a `verdict`, not a
+start/end keeper window, so a keeper fixture would test its own shape).
 
 CB2-460..462 note: closed by writing the JS note/semitone module the tasks
 describe, as `os/worlds/musica/note_math.mjs`. New behaviour, recorded as such.
@@ -626,8 +628,8 @@ because resolving them without the octave correction plays the wrong pitch.
 
 Section 19 verification: `python3 -m unittest discover -s tests/officina -p
 "test_*.py"` runs the whole Officina tree at **84 tests pass, 0 fail**; the
-loop-record file alone is 7. Musica adds 14 new node tests (4 + 3 + 4 + 3), all
-passing.
+loop-record file alone is 7. Musica adds 16 new node tests (4 + 3 + 4 + 3 + 2),
+all passing.
 
 ## Section 20 — Documentation-as-code (CB2-476..500) — 21/25 delivered
 
@@ -661,7 +663,7 @@ Not delivered:
 Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 `test_readme_data_index.py` 3 pass; 7 new Aegis tests pass (3 + 4).
 
-## Section 16 — Agent layer Node (CB2-376..400) — 22/25
+## Section 16 — Agent layer Node (CB2-376..400) — 23/25
 
 | Task | File | Result |
 |---|---|---|
@@ -687,15 +689,16 @@ Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 | CB2-395 | `tests/agents-queue-edges.test.mjs` | three posted jobs drain in id order, once each; a second drain runs nothing |
 | CB2-382 | `agents/runtime.mjs`, `tests/agents-watchman-edges.test.mjs` | `LARGE_CHANGE_BYTES` threshold in the runtime; a change at the boundary takes the alarm form, a small one stays a note, a delete is always an alarm with no byte delta |
 | CB2-385 | `agents/baton.mjs`, `tests/agents-baton-resume.test.mjs` | `stepsRemaining` resumes after the last done step; a step-run log proves no completed step runs twice; a baton with no usable index is refused, never restarted from zero |
+| CB2-384 | `agents/baton.mjs`, `tests/agents-baton-edges.test.mjs` | a baton with no integer step index is refused at construction and writes no file; -1, 0 and 3 are accepted and survive the round trip. The five callers now pass the index they meant |
 
-Not delivered: CB2-384 — `writeBaton` has six callers (a drill script and five
-tests) that build a baton with no step index, so requiring one at construction
-is a behaviour change that breaks them, not a test. CB2-392..393 — `bridge.mjs`
-is the supervisor verb (start/stop/boot); it shapes no messages, so there is
-no wire shape to assert.
+Not delivered: CB2-392..393 — `bridge.mjs` is the supervisor verb
+(start/stop/boot); it shapes no messages, so there is no wire shape to assert.
+CB2-384 was listed here as blocked because `writeBaton` has six callers; the
+contract the task asks for is the right one, so the rule was made real and the
+callers now pass the step index they were already working from.
 
-Section 16 verification: 13 test files, **56 tests pass, 0 fail**; the whole agent
-suite (`node --test tests/agents-*.test.mjs`) is 126/126.
+Section 16 verification: 13 test files, **57 tests pass, 0 fail**; the whole agent
+suite (`node --test tests/agents-*.test.mjs`) is 127/127.
 
 ## Section 17 — Face tests (CB2-401..425) — 0/25, blocked
 
@@ -720,7 +723,7 @@ Per-task check (2026-11-02):
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
 
-## Closeout — 457 of 500 delivered, 43 open
+## Closeout — 460 of 500 delivered, 40 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -731,14 +734,14 @@ one is open for a named reason, not for want of trying.
 | 13 Rust os-* error paths | 25 | 0 |
 | 14 Rust agent/dashboard/intel/stack | 21 | 4 |
 | 15 Schemas and validators | 25 | 0 |
-| 16 Agent layer Node | 22 | 3 |
+| 16 Agent layer Node | 23 | 2 |
 | 17 Face tests | 0 | 25 |
 | 18 Tooling scripts | 25 | 0 |
-| 19 Officina and Musica | 18 | 7 |
+| 19 Officina and Musica | 20 | 5 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **457** | **43** |
+| **Total** | **460** | **40** |
 
-### The 43, by the decision that unblocks them
+### The 40, by the decision that unblocks them
 
 1. **Face source (25).** Section 17 forbids editing `face/face.js`, and that
    file has no exports and 87 functions closing over the DOM. One yes unlocks
@@ -755,14 +758,13 @@ one is open for a named reason, not for want of trying.
    field on its contracts, and the layer curve (L4 4.6, L8 19.5, L16 12.8,
    L24 10.2) appears in no file. CB2-500 needs a program list the registry
    does not carry.
-4. **Python-only logic (7, Section 19).** Variation generators and keeper
-   windows live in `runtime/*.py`; the Officina half is a missing schematic
-   module, a missing gate list, and a missing STOP-file check. A JS copy would be
-   a second implementation to drift, so no test was written against a mirror.
-5. **Missing behaviour (3, Section 16).** No baton step-index check at
-   construction, and `bridge.mjs` shapes no messages, so there is no wire
-   shape to assert. The change-size rule and the resume function were built
-   for this wave and are now covered.
+4. **Missing modules and records (5, Section 19).** Keeper windows are a record
+   shape no file writes; the Officina half is a missing schematic module, a
+   missing gate list, and a STOP-file check with no runner to call it. A test
+   against a fixture that only the test writes would prove nothing about the app.
+5. **Missing behaviour (2, Section 16).** `bridge.mjs` shapes no messages, so
+   there is no wire shape to assert. The change-size rule, the resume function
+   and the baton step index were built for this wave and are now covered.
 
 ### Two red tests that are older than this wave, left visible
 

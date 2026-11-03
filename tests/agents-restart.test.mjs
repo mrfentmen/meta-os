@@ -39,7 +39,7 @@ function crashedRun(dir, id, { exit = false } = {}) {
   const l = new Ledger(path.join(runDir, "ledger.jsonl"));
   l.add(id, "spawn", { lane: "test" });
   if (exit) l.add(id, "exit", { code: 0 });
-  writeBaton(runDir, { state: "west wall half built", artifacts: ["wall.txt"], nextStep: "finish the west wall" });
+  writeBaton(runDir, { stepIndex: 0, state: "west wall half built", artifacts: ["wall.txt"], nextStep: "finish the west wall" });
   return runDir;
 }
 

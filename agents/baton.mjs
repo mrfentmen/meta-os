@@ -13,6 +13,13 @@ export function writeBaton(runDir, baton) {
     try { fs.writeFileSync(path.join(runDir, "baton-refused.json"), JSON.stringify(refusal, null, 2)); } catch { /* refusal still thrown */ }
     throw new Error("baton refused: job already finished");
   }
+  // CB2-384: a baton is a step pointer, so the index is part of what makes one.
+  // Without it the next worker cannot tell what is done, and guessing zero would
+  // silently restart the job; refuse at construction instead of writing a baton
+  // nobody can resume. -1 means "nothing done yet" and is a real value.
+  if (!baton || !Number.isInteger(baton.stepIndex) || baton.stepIndex < -1) {
+    throw new Error("baton refused: missing step index");
+  }
   const full = { state: "", artifacts: [], nextStep: "", ...baton, ts: new Date().toISOString() };
   fs.writeFileSync(path.join(runDir, "baton.json"), JSON.stringify(full, null, 2));
   return full;
