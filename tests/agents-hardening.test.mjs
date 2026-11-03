@@ -4,7 +4,9 @@
 // "does it work" but "what does the record say when it doesn't". Each test below breaks one
 // thing on purpose and asserts what survives:
 //
-//   1. a torn ledger line (crash mid-append) must not make the whole run unreadable
+//   1. a torn LAST ledger line (crash mid-append) is skipped and the run stays
+//      readable; a torn MIDDLE line is corruption, not a crash, and read refuses
+//      with its line number instead of silently dropping the middle of the record
 //   2. a kill mid-write must leave one stop-request and one exit, and a readable ledger
 //   3. a second kill must not append a second stop-request
 //   4. a STOP file that arrives after the run ended must not manufacture a stop
@@ -25,7 +27,11 @@ const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), "agents-hardening-"));
 const NODE = process.execPath;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-test("A1.1 a torn ledger line does not make the run unreadable", () => {
+test("A1.1 a torn tail line is skipped, a torn middle line refuses with its line number", () => {
+  // Strict ledger policy (landed with the agent-runtime-harden hand-combine):
+  // a crash tears only the last append, so a torn tail is skipped; a torn line
+  // with good records after it is a spliced file, and read must refuse loudly
+  // rather than silently drop the middle of the run's evidence.
   const dir = tmp();
   const file = path.join(dir, "ledger.jsonl");
   const ledger = new Ledger(file);
@@ -33,10 +39,17 @@ test("A1.1 a torn ledger line does not make the run unreadable", () => {
   // A process killed mid-append leaves exactly this: a line with no closing brace.
   fs.appendFileSync(file, '{"ts":"2026-11-02T00:00:00.000Z","run":"run-1","event":"exit"');
   ledger.add("run-1", "done", { code: 0 });
-  const lines = ledger.read();
-  assert.equal(lines.length, 2, "the two complete records are still readable");
+  // The torn line is in the middle now (a good record follows it): refuse, named.
+  assert.throws(() => ledger.read(), /ledger: torn line 2/);
+  // Same tear as the last line (a true crash tail): skipped, history readable.
+  const dir2 = tmp();
+  const file2 = path.join(dir2, "ledger.jsonl");
+  const ledger2 = new Ledger(file2);
+  ledger2.add("run-1", "spawn", { lane: "test" });
+  fs.appendFileSync(file2, '{"ts":"2026-11-02T00:00:00.000Z","run":"run-1","event":"exit"');
+  const lines = ledger2.read();
+  assert.equal(lines.length, 1, "the complete record is still readable");
   assert.equal(lines[0].event, "spawn");
-  assert.equal(lines[1].event, "done");
 });
 
 test("A1.2 kill mid-write leaves one stop, one exit, and a readable ledger", async () => {
