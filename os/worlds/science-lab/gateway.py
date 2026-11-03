@@ -1,11 +1,13 @@
 """Controlled MCP gateway (Section 8: tasks 71-77).
 
 The lab's agents may call ONLY the boss-allowlisted MCP servers. Every
-call is recorded; refusals are recorded too. No network is touched on
-this path: the execution backend reads LOCAL department shelves as an
-honest stand-in (backend "LOCAL-SHELF"), or the gateway is closed
-entirely (offline_mode). Results enter records as UNCONFIRMED sources
-until the literature job pins them (see quarantine()).
+call is recorded; refusals are recorded too. Two execution backends
+exist: "LOCAL-SHELF" reads LOCAL department shelves as an honest
+stand-in and touches no network; "MCP-GATEWAY" (mcp_backends.py) calls
+the nine allowlisted servers for real through the boss's own local
+MCP gateway. Either way the gateway can be closed entirely
+(offline_mode). Results enter records as UNCONFIRMED sources until
+the literature job pins them (see quarantine()).
 
 Task map:
   71. ALLOWLIST: the 9 boss-named servers, nothing else.
@@ -23,9 +25,11 @@ Task map:
       refusal, and offline_record() states the cycle ran its
       deterministic parts with the gateway closed.
 
-HONESTY: a LOCAL-SHELF result is a local lead, never external
-evidence. Backend is always named in the record ("LOCAL-SHELF" or
-"OFFLINE"). No function here opens a socket.
+HONESTY: a gateway result — either backend — is a lead, never
+evidence until pinned. Backend is always named in the record
+("LOCAL-SHELF" or "MCP-GATEWAY"). The LOCAL-SHELF path opens no
+socket; the MCP-GATEWAY path reaches only the boss's local gateway
+on 127.0.0.1:8931 (keyless public servers, no credentials).
 """
 
 import hashlib
@@ -40,6 +44,14 @@ except ImportError:  # direct script use / sys.path import (see tests)
         from lab_config import load_config
     except ImportError:  # config helper missing: local defaults apply
         load_config = None
+
+try:
+    from . import mcp_backends
+except ImportError:  # direct script use / sys.path import (see tests)
+    try:
+        import mcp_backends
+    except ImportError:  # backend module missing: local-shelf only
+        mcp_backends = None
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 SHELVES_DIR = os.path.join(BASE_DIR, "shelves")
@@ -130,6 +142,10 @@ class GatewayClosed(GatewayError):
 
 class GatewayBudgetExceeded(GatewayError):
     """Raised when the per-cycle call cap is hit. Receipt on stop."""
+
+
+class GatewayBackendError(GatewayError):
+    """Raised when the MCP-GATEWAY backend fails. Recorded."""
 
 
 def _utcnow():
@@ -391,22 +407,32 @@ class Gateway(object):
     config: lab config dict (gateway.maxCallsPerCycle); loaded lazily.
     offline_mode: when True the gateway is closed; call_tool raises
         GatewayClosed and records the refusal (Task 77).
-    backend: only "local-shelf" exists; anything else raises.
+    backend: "local-shelf" (default; no network) or "mcp-gateway"
+        (live calls through the boss's local MCP gateway, via
+        mcp_backends.py). Anything else raises.
+    transport: optional callable(wire_tool, wire_args) -> payload for
+        the mcp-gateway backend (tests inject fakes; production uses
+        mcp_backends.default_transport).
     """
 
     def __init__(self, cycle_id, calls_path=None, config=None,
-                 offline_mode=False, backend="local-shelf"):
+                 offline_mode=False, backend="local-shelf",
+                 transport=None):
         if not cycle_id:
             raise ValueError("Gateway requires a cycle_id")
-        if backend != "local-shelf":
-            raise ValueError("unsupported gateway backend %r: only "
-                             "'local-shelf' exists (no network path)"
+        if backend not in ("local-shelf", "mcp-gateway"):
+            raise ValueError("unsupported gateway backend %r: want "
+                             "'local-shelf' or 'mcp-gateway'"
                              % (backend,))
+        if backend == "mcp-gateway" and mcp_backends is None:
+            raise ValueError("backend 'mcp-gateway' unavailable: "
+                             "mcp_backends.py not importable")
         self.cycle_id = cycle_id
         self.calls_path = _calls_path(calls_path)
         self._config = config
         self.offline_mode = bool(offline_mode)
         self.backend = backend
+        self.transport = transport
         self.calls_made = 0
 
     def _config_now(self):
@@ -426,14 +452,23 @@ class Gateway(object):
 
     def status(self):
         """State record: open/closed, cycle, calls made. For cycle logs."""
+        if self.offline_mode:
+            state = "closed"
+            network = "gateway closed; no calls issued"
+        elif self.backend == "mcp-gateway":
+            state = "open-mcp-gateway"
+            network = mcp_backends.NETWORK_STATEMENT
+        else:
+            state = "open-local-shelf"
+            network = "no external network touched on this path"
         return {
             "kind": "gateway-status",
             "cycle_id": self.cycle_id,
-            "gateway": "closed" if self.offline_mode else "open-local-shelf",
+            "gateway": state,
             "offline_mode": self.offline_mode,
             "backend": self.backend,
             "calls_made": self.calls_made,
-            "network": "no external network touched on this path",
+            "network": network,
             "recorded_at": _utcnow(),
         }
 
@@ -510,7 +545,20 @@ class Gateway(object):
                                         self.cycle_id))
             raise GatewayBudgetExceeded(budget_reason)
 
-        raw = _execute_local(tool, op, args)
+        if self.backend == "mcp-gateway":
+            try:
+                raw = mcp_backends.execute_mcp(
+                    tool, op, args, transport=self.transport)
+            except mcp_backends.McpBackendError as exc:
+                reason = "backend-error: %s" % (exc,)
+                self._record(_refusal_entry(
+                    canon_agent, tool, args, reason, "backend-error",
+                    self.cycle_id))
+                raise GatewayBackendError(reason)
+            backend_name = mcp_backends.BACKEND_NAME
+        else:
+            raw = _execute_local(tool, op, args)
+            backend_name = "LOCAL-SHELF"
         quarantined = quarantine(raw, tool=tool, agent=canon_agent)
         entry = {
             "kind": "gateway-call",
@@ -522,7 +570,7 @@ class Gateway(object):
             "result_hash": canonical_hash(quarantined),
             "cost": COST_PER_CALL,
             "cycle_id": self.cycle_id,
-            "backend": "LOCAL-SHELF",
+            "backend": backend_name,
             "timestamp": _utcnow(),
         }
         self._record(entry)
@@ -531,19 +579,24 @@ class Gateway(object):
 
 
 def call_tool(agent, tool, args, cycle_id="GATEWAY-DEFAULT",
-              calls_path=None, config=None, offline_mode=None):
+              calls_path=None, config=None, offline_mode=None,
+              backend="local-shelf", transport=None):
     """Module-level call_tool(agent, tool, args) per the task spec.
 
     Convenience wrapper over Gateway with one call per handle (plus
     budget counted against the existing calls.jsonl for the cycle).
     Optional kwargs: cycle_id, calls_path (tests), config,
-    offline_mode (True closes the gateway for this call).
+    offline_mode (True closes the gateway for this call), backend
+    ("local-shelf" default, or "mcp-gateway" for live calls),
+    transport (fake transport for tests on the mcp-gateway backend).
     """
     gw = Gateway(cycle_id,
                  calls_path=calls_path,
                  config=config,
                  offline_mode=_OFFLINE_MODE if offline_mode is None
-                 else offline_mode)
+                 else offline_mode,
+                 backend=backend,
+                 transport=transport)
     if cycle_id != "GATEWAY-DEFAULT":
         gw.calls_made = _cycle_call_count(cycle_id, gw.calls_path)
     return gw.call_tool(agent, tool, args)
