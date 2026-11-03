@@ -37,10 +37,10 @@ jobs:
 
       - name: Repo readiness check
         id: readiness
-        # RELAXED-BY-DESIGN: verify/check.mjs still reports the raw npm
-        # count (56 baselined web/parity failures — enforcement lives in
-        # the Node-suite step via verify/npm-gate.mjs + npm-baseline.txt).
-        # Secret-scan hits were fixed 2026-11-03 (venv/__pycache__/.pyc
-        # skipped + documented fixture allowlist in verify/check.mjs).
+        # Baseline-enforced like the Node step (check.mjs shares
+        # verify/npm-baseline.txt; secret-scan hits were fixed 2026-11-03).
+        # continue-on-error stays as belt-and-braces: a red readiness must
+        # never block the merge queue by itself — the Node step is the
+        # enforcer. Last verified: 5/5 passing.
         continue-on-error: true
         run: node verify/check.mjs
