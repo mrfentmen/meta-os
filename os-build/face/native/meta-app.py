@@ -78,6 +78,20 @@ class AppWindow(Gtk.Window):
         # Local backends only; keep it lean and offline-safe.
         settings.set_property("enable-developer-extras", False)
         settings.set_property("enable-page-cache", True)
+        # The Science Lab molecule viewer and the 3D music notes are three.js
+        # scenes. WebGL has to be on or those pages show their "no 3D context"
+        # notice instead of the model. Each property is set independently
+        # because they arrived in different WebKitGTK versions and a missing
+        # one must not stop the window from opening.
+        for prop, value in (
+            ("enable-webgl", True),
+            ("enable-accelerated-2d-canvas", True),
+            ("hardware-acceleration-policy", "always"),
+        ):
+            try:
+                settings.set_property(prop, value)
+            except Exception:
+                pass
 
         self.add(self.web)
         self.show_all()
