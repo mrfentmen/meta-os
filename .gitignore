@@ -1,5 +1,7 @@
 .sentinel-cron.lock
 server/queue/crew-data/
+# Real env files are never committed; only .env.example is tracked.
+.env
 # Build outputs (never commit; rebuild from source)
 kernel/target/
 os-build/userspace/user/target/
@@ -16,3 +18,7 @@ kernel/target/
 os-build/aegis/SECRETS.json
 os-build/aegis/SECRETS.md
 os-build/aegis/r11/run-secrets.txt
+
+# Local-only deploy staging (rebuilt by os/docs/deploy-trio-frontend.sh; never commit)
+.pages-trio-dist/
+.wrangler/
