@@ -1,0 +1,47 @@
+Nov 02 22:40:21 metaos systemd[443]: Started oc2-queue.service - OC2 agent layer: queue service (local job API 127.0.0.1:8935).
+Nov 02 22:40:21 metaos systemd[443]: Started oc2-trio.service - OC2 agent layer: trio job runner (drains the local queue).
+Nov 02 22:40:25 metaos python3[459]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 02 22:40:26 metaos python3[459]: trio_agent: WARNING — local SQLite FALLBACK store; jobs live in a file on this machine only
+Nov 02 22:40:26 metaos python3[459]: trio_agent: store=local-sqlite-FALLBACK namespace=oc2
+Nov 02 22:40:35 metaos python3[458]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 02 22:40:35 metaos python3[458]: queue_service: store=local-sqlite-FALLBACK fallback=True namespace=oc2
+Nov 02 22:40:35 metaos python3[458]: queue_service: WARNING — local SQLite FALLBACK store; jobs live in a file on this machine only
+Nov 02 22:40:37 metaos python3[460]: patrol: camera list source: nyctmc-live (972 online cameras)
+Nov 02 22:40:37 metaos python3[460]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 02 22:40:37 metaos python3[460]: crew: WARNING — local SQLite FALLBACK store
+Nov 02 22:49:19 metaos python3[460]: patrol: counts: {'checks': 20, 'baseline': 0, 'flagged': 0, 'reported': 0, 'feed_errors': 0, 'job_errors': 20}
+Nov 02 22:49:19 metaos systemd[443]: oc2-patrol.service: Consumed 15.792s CPU time.
+Nov 02 22:52:05 metaos python3[626]: patrol: camera list source: nyctmc-live (972 online cameras)
+Nov 02 22:52:05 metaos python3[626]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 02 22:52:05 metaos python3[626]: crew: WARNING — local SQLite FALLBACK store
+Nov 02 22:59:53 metaos systemd[443]: oc2-patrol.service: Main process exited, code=killed, status=15/TERM
+Nov 02 22:59:53 metaos systemd[443]: oc2-patrol.service: Failed with result 'signal'.
+Nov 02 22:59:53 metaos systemd[443]: oc2-patrol.service: Consumed 13.345s CPU time.
+Nov 02 22:59:53 metaos systemd[443]: Stopping oc2-trio.service - OC2 agent layer: trio job runner (drains the local queue)...
+Nov 02 22:59:53 metaos systemd[443]: Stopped oc2-trio.service - OC2 agent layer: trio job runner (drains the local queue).
+Nov 02 22:59:53 metaos systemd[443]: oc2-trio.service: Consumed 10.971s CPU time.
+Nov 02 22:59:53 metaos systemd[443]: Started oc2-trio.service - OC2 agent layer: trio job runner (drains the local queue).
+Nov 02 22:59:54 metaos python3[700]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 02 22:59:54 metaos python3[700]: trio_agent: WARNING — local SQLite FALLBACK store; jobs live in a file on this machine only
+Nov 02 22:59:54 metaos python3[700]: trio_agent: store=local-sqlite-FALLBACK namespace=oc2
+Nov 02 22:59:57 metaos python3[702]: patrol: camera list source: nyctmc-live (972 online cameras)
+Nov 02 22:59:57 metaos python3[702]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 02 22:59:57 metaos python3[702]: crew: WARNING — local SQLite FALLBACK store
+Nov 02 23:00:01 metaos systemd[443]: oc2-patrol.service: Main process exited, code=killed, status=15/TERM
+Nov 02 23:00:01 metaos systemd[443]: oc2-patrol.service: Failed with result 'signal'.
+Nov 02 23:00:01 metaos systemd[443]: oc2-patrol.service: Consumed 2.849s CPU time.
+Nov 02 23:00:05 metaos python3[736]: patrol: camera list source: nyctmc-live (972 online cameras)
+Nov 02 23:00:05 metaos python3[736]: trio_store: Upstash unreachable (Upstash store host is not configured: set TRIO_UPSTASH_HOST to the store host (or its full REST URL), or store the REST URL on the custom.upstash credential record. The host is deployment configuration and is never hardcoded.); falling back to local SQLite
+Nov 02 23:00:05 metaos python3[736]: crew: WARNING — local SQLite FALLBACK store
+Nov 02 23:00:18 metaos python3[700]: trio_agent: trio-82f2a4b826c4f2677a34b61716e66264: done — normal activity
+Nov 02 23:00:39 metaos python3[700]: trio_agent: trio-c747f96bc2632a7a5fc34bd75bc8e015: done — normal activity
+Nov 02 23:01:33 metaos python3[700]: trio_agent: trio-973a14240ea026149d98303c6b5e2847: done — flame-like lighting
+Nov 02 23:02:13 metaos python3[700]: trio_agent: trio-7499c4ced2d81fae8061a3404fb5ad84: model output failed validation (assessment.requires_human_review: must be true for medicus — every Medicus assessment requires human verification); one correction retry
+Nov 02 23:02:25 metaos python3[700]: trio_agent: trio-7499c4ced2d81fae8061a3404fb5ad84: correction retry validated
+Nov 02 23:02:25 metaos python3[700]: trio_agent: trio-7499c4ced2d81fae8061a3404fb5ad84: done — normal activity
+Nov 02 23:03:06 metaos python3[700]: trio_agent: trio-9c68b61415cfafbd0f92d2c4bb65f181: done — normal activity
+Nov 02 23:03:46 metaos python3[700]: trio_agent: trio-1466bbaab1da7b2845599ca8909a2340: done — no hazard visible
+Nov 02 23:04:27 metaos python3[700]: trio_agent: trio-fde916cb4c28bcfdec63717db907fa67: model output failed validation (assessment.requires_human_review: must be true for medicus — every Medicus assessment requires human verification); one correction retry
+Nov 02 23:04:38 metaos python3[700]: trio_agent: trio-fde916cb4c28bcfdec63717db907fa67: correction retry validated
+Nov 02 23:04:38 metaos python3[700]: trio_agent: trio-fde916cb4c28bcfdec63717db907fa67: done — normal activity
+Nov 02 23:05:16 metaos python3[700]: trio_agent: trio-f9eb254c04b4c203c66b8bf3fc2b2728: done — normal activity
