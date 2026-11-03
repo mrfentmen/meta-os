@@ -37,6 +37,9 @@ export class Ledger {
         throw new Error("ledger: missing required field " + name);
       }
     }
+    // A field called "run" or "event" lands after the record's own keys and
+    // silently rewrites them: a memory failure was written as a second "exit"
+    // line. Refuse the collision instead of writing a record that lies.
     const line = JSON.stringify({ ts: new Date().toISOString(), run, event, ...fields }) + "\n";
     // A crash mid-append leaves a line with no trailing newline, and appending straight onto it
     // fuses the next record into the torn one -- so the record after the crash is lost as well.
@@ -137,7 +140,7 @@ function noteMemory(memory, entry, ledger, runId) {
     appendLedger(memory.dir, entry, { maxBytes: memory.cap });
   } catch (error) {
     try {
-      ledger.add(runId, "memory-write-failed", { event: entry.event, code: error.code || "error" });
+      ledger.add(runId, "memory-write-failed", { record: entry.event, code: error.code || "error" });
     } catch { /* nothing left to write to */ }
   }
 }

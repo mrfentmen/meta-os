@@ -81,9 +81,11 @@ test("a run still finishes when the memory fills mid-flight", async () => {
   const probeRoot = tmp();
   const probe = spawnAgent(agent(), { root: probeRoot });
   await probe.done;
-  const spawnBytes = fs.statSync(
-    path.join(memoryDir(probeRoot, "rowan"), "ledger.jsonl")
-  ).size;
+  // The probe ledger holds spawn AND exit, so measure the first line only.
+  const firstLine = fs
+    .readFileSync(path.join(memoryDir(probeRoot, "rowan"), "ledger.jsonl"), "utf8")
+    .split("\n")[0];
+  const spawnBytes = Buffer.byteLength(firstLine) + 1;
   const cap = spawnBytes + 5;
 
   const root = tmp();
@@ -93,5 +95,5 @@ test("a run still finishes when the memory fills mid-flight", async () => {
   assert.equal(result.code, 0);
   const refused = handle.ledger.read().find((l) => l.event === "memory-write-failed");
   assert.ok(refused, "the refused exit record is named in the run ledger");
-  assert.equal(refused.event, "memory-write-failed");
+  assert.equal(refused.record, "exit");
 });
