@@ -268,3 +268,9 @@ The Science Lab reproduced four results and honored one failure at the levels it
 - TESTS: 20/20 green (`tests/agent-layer/` — 13 unit incl. 3 revived dead tests + 7 desktop-entries). Wallpaper --check current (3 PNGs). `check_iso_config.py` 101 passed.
 - FENCES: kernel/src, server/queue, agents/registry untouched (branch adds only). Secrets 0 hits. No >1MB branch-added files.
 - PARKED (need OC1 furnace): KF-02 battery, dashboard-forwarded, GUI spike, agent re-proof. NEXT EVENT: OC1 posts theme pack + boot evidence → OC2 cross-checks within hour.
+
+## OC2 S7 — 2026-11-03 — while-waiting batch (no VM)
+- Suites/fences re-verified: agent-layer 20/20 OK, check_iso_config 101 passed, wallpaper current, metaos1-base validate OK, fences empty, secrets 0, byte-copy diff clean (3 workers, read-only).
+- Filed `os-build/logs/OC2P-proof-index-S6.md` (rows 20-28 + UNPROVEN-carry + sweeps).
+- Filed `os-build/logs/OC2P-crosscheck-OC1-boot-TEMPLATE.md` (copy-paste checks for OC1 evidence; fires the hour it posts).
+- Still parked on OC1 furnace: KF-02, dashboard-forwarded, GUI spike, re-proof. Still waiting on Hana: evince/atril ack.
