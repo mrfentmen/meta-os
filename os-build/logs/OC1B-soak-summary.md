@@ -83,3 +83,23 @@ mid-run) — while the K3, K4, graphics-interactive, and final-tree soaks
 remain explicitly NOT RUN behind their ungated trees, and the duration
 claim against R5-5's 73 minutes stays open until the measured main soak
 ends. Nothing regressed; the long-run proof is still in flight.
+
+## OC1B-486 final collection (coordinator, 2026-11-02 ~20:25 EST)
+- Attempt 2 COMPLETED by planned launcher kill ~13:27 EST
+  (/tmp/oc1b-main-soak-progress.log: SIGTERM from launcher pid 37659,
+  "OC1B_MAIN_SOAK_DONE panics=0 runs=11"). Duration measured 11:07:26 →
+  ~13:27 = 2h20m (start record + progress-log mtime; R5-5 duration now
+  measured). Serial /tmp/oc1b-main-soak-serial.txt: 2108 lines, panic 0,
+  STATUS ticks advancing (10087→13570 while driven).
+- DRIVE-COVERAGE GAP (coordinator incident, named): only 11 of 21 planned
+  drive interactions executed. Cause: I removed the /tmp/oc500-s7 worktree
+  at the s7 merge (~12:0x) while the soak was still running; batch-2
+  (10x status) + final ps invocations failed silently (drive.py path gone,
+  stderr discarded by the launcher). Batch 1 (10x) + boot answers stand.
+- SUPPLEMENT (same image, not the soak): /tmp/oc1b-main-soak.bin rebooted
+  20:2x EST — status/mem/ps all answer (STATUS ticks=2269, K4 up, 8 ps
+  rows id 7 Running, panic 0). Proof: os-build/logs/OC1B-soak-supp-serial.txt.
+  Covers the missed close-state answers; does not rewrite soak history.
+- Verdict: soak COMPLETED, guest healthy the full window, panics HELD at 0
+  everywhere (wave-2, attempt 1, attempt 2, supplement). Drive gap owned
+  above; nothing padded to hide it.

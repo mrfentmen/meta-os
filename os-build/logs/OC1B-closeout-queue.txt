@@ -1,8 +1,6 @@
-OC1B-490 final queue run, tree 94010c76, 2026-11-02
-command: python3 -m unittest discover -s tests/queue-python
 ......................trio_agent: store=injected namespace=trio-test
 ...........patrol: PAUSED — budget reserve reached; filing nothing
-......................................................................................................................../private/tmp/oc500-s17/tests/queue-python/test_models.py:72: ResourceWarning: unclosed file <_io.TextIOWrapper name='/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/tmpce25y9e6/receipts.jsonl' mode='r' encoding='UTF-8'>
+......................................................................................................................../private/tmp/oc500/tests/queue-python/test_models.py:72: ResourceWarning: unclosed file <_io.TextIOWrapper name='/var/folders/r0/mc2kkvz94f32cfbmq91kj7p40000gn/T/tmp37pq0733/receipts.jsonl' mode='r' encoding='UTF-8'>
   lines = open(receipts).read().strip().splitlines()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 .................................................................trio_agent: store=injected namespace=trio-test
@@ -10,17 +8,17 @@ trio_agent: relay notify failed (ignored): <urlopen error [Errno 61] Connection 
 trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
 .trio_agent: store=injected namespace=trio-test
 trio_agent: trio-d89e4f02685c609758b43e46969da382: model output failed validation (product: missing or not a non-empty string; timestamp: missing or not a string; observations: missing or not an array; assessment: missing or not an object; processing: missing or not an object); one correction retry
-/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/case.py:632: ResourceWarning: unclosed <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 50347)>
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/case.py:632: ResourceWarning: unclosed <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 56464)>
   function, args, kwargs = self._cleanups.pop()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 .trio_agent: store=injected namespace=trio-test
 trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
-/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/case.py:632: ResourceWarning: unclosed <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 50349)>
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/case.py:632: ResourceWarning: unclosed <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 56466)>
   function, args, kwargs = self._cleanups.pop()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 .trio_agent: store=injected namespace=trio-test
 trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
-/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/case.py:632: ResourceWarning: unclosed <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 50351)>
+/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/unittest/case.py:632: ResourceWarning: unclosed <socket.socket fd=5, family=AddressFamily.AF_INET, type=SocketKind.SOCK_STREAM, proto=0, laddr=('127.0.0.1', 56468)>
   function, args, kwargs = self._cleanups.pop()
 ResourceWarning: Enable tracemalloc to get the object allocation traceback
 ..trio_agent: store=injected namespace=trio-test
@@ -38,8 +36,6 @@ trio_agent: trio-d89e4f02685c609758b43e46969da382: done — steam or fog
 trio_agent: trio-d89e4f02685c609758b43e46969da382: result already present — skipped, not re-billed
 .....................................................................
 ----------------------------------------------------------------------
-Ran 296 tests in 4.208s
+Ran 296 tests in 3.878s
 
 OK
-exit=0 elapsed=4s
-§9 baseline (OC1B-201): owned by §9 lane; this lane's runs: 296 tests OK (4.2s) at both reads
