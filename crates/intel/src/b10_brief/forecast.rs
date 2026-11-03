@@ -32,6 +32,156 @@ pub fn preempt_decision(projected: f64, cap: f64) -> bool {
     projected > cap
 }
 
+/// One lane's raw forecast input, mirroring the dict `forecast_lines`
+/// reads in Python (`os/intel/forecast.py`): lane, spent, cap,
+/// elapsed_hours, and day_hours (Python defaults it to 24).
+pub struct ForecastInput {
+    pub lane: String,
+    pub spent: f64,
+    pub cap: f64,
+    pub elapsed_hours: f64,
+    pub day_hours: f64,
+}
+
+/// Python `_format_hours`: an integral float prints as an integer.
+fn format_hours(value: f64) -> String {
+    if value.fract() == 0.0 && value.is_finite() {
+        format!("{value:.0}")
+    } else {
+        format!("{value}")
+    }
+}
+
+/// Python `str(float)` for a spent/cap figure: an integral float keeps
+/// its `.0` (50.0, not 50). Rust's Display would drop it.
+fn format_amount(value: f64) -> String {
+    if value.fract() == 0.0 && value.is_finite() {
+        format!("{value:.0}.0")
+    } else {
+        format!("{value}")
+    }
+}
+
+/// Plain brief lines for a list of forecast entries, ported from
+/// Python `forecast_lines`.
+///
+/// Each usable entry yields one line: lane, spent, cap, projected
+/// end-of-day spend rounded DOWN to a whole number (a forecast is an
+/// estimate; rounding up would overstate it), the basis sentence, the
+/// confidence word from elapsed hours alone (low under 4, medium from
+/// 4 to under 12, high at 12 or more), and "breach expected before end
+/// of day" when the projection passes the cap, else "within cap".
+/// Unusable entries are skipped, never guessed; an empty input yields
+/// no lines. Lines are not bullets, so the BRF-007 trim keeps them.
+///
+/// NOTE: this deliberately does NOT reuse the sketch `project_end_of_day`
+/// / `confidence_for` above — those carry different, parity-pinned
+/// semantics (spent + rate * hours; confidence from a missing-input
+/// count). Unifying them would break `b10_parity.rs`. The formulas
+/// here are Python's own: projected = spent * day_hours / elapsed_hours,
+/// or spent itself once elapsed reaches the full day.
+pub fn forecast_lines(entries: &[ForecastInput]) -> Vec<String> {
+    let mut lines = Vec::new();
+    for entry in entries {
+        if entry.lane.is_empty() {
+            continue;
+        }
+        if !entry.cap.is_finite() || entry.cap <= 0.0 {
+            continue;
+        }
+        if !entry.spent.is_finite() || entry.spent < 0.0 {
+            continue;
+        }
+        if !entry.elapsed_hours.is_finite() || entry.elapsed_hours <= 0.0 {
+            continue;
+        }
+        if !entry.day_hours.is_finite() || entry.day_hours <= 0.0 {
+            continue;
+        }
+        let projected = if entry.elapsed_hours >= entry.day_hours {
+            entry.spent
+        } else {
+            entry.spent * entry.day_hours / entry.elapsed_hours
+        };
+        if !projected.is_finite() {
+            continue;
+        }
+        let projected_int = projected as i64;
+        let confidence = if entry.elapsed_hours < 4.0 {
+            "low"
+        } else if entry.elapsed_hours < 12.0 {
+            "medium"
+        } else {
+            "high"
+        };
+        let basis = format!(
+            "based on {} hours of ledger in a {}-hour day",
+            format_hours(entry.elapsed_hours),
+            format_hours(entry.day_hours)
+        );
+        let verdict = if projected > entry.cap {
+            "breach expected before end of day"
+        } else {
+            "within cap"
+        };
+        lines.push(format!(
+            "Budget forecast for lane {}: {} spent of {} cap, projected {} by end of day, {} ({} confidence) - {}.",
+            entry.lane,
+            format_amount(entry.spent),
+            format_amount(entry.cap),
+            projected_int,
+            basis,
+            confidence,
+            verdict
+        ));
+    }
+    lines
+}
+
+/// Python `preempt_decision` from `os/intel/forecast.py`, under a
+/// distinct name so the parity-pinned sketch `preempt_decision`
+/// above (projected vs cap, bool) is untouched.
+///
+/// Pause only when the job is running, low priority, and the lane
+/// is at warning — approaching the cap, not past it. Resume only
+/// when the job is paused and the lane is back below warning
+/// ("ok" or "unbudgeted"). At cap, running work is left alone:
+/// the gate already holds new claims. Anything else yields None,
+/// never a guessed action. Python's non-dict job case has no Rust
+/// equivalent here — a caller with no job passes no status/priority
+/// that matches, and also gets None.
+pub fn job_preempt_decision(status: &str, priority: &str, lane_state: &str) -> Option<&'static str> {
+    if status == "running" && priority == "low" && lane_state == "warning" {
+        return Some("pause");
+    }
+    if status == "paused" && (lane_state == "ok" || lane_state == "unbudgeted") {
+        return Some("resume");
+    }
+    None
+}
+
+/// One journal record from Python `preempt_record`: the job, the
+/// lane, the action, and the reason in plain words — nothing more.
+/// It performs no pause and no resume; the caller applies the
+/// decision and files this record beside it. Values are carried
+/// verbatim, exactly as Python stores them (no validation).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PreemptRecord {
+    pub job: String,
+    pub lane: String,
+    pub action: String,
+    pub reason: String,
+}
+
+pub fn preempt_record(job_id: &str, lane: &str, action: &str, reason: &str) -> PreemptRecord {
+    PreemptRecord {
+        job: job_id.to_string(),
+        lane: lane.to_string(),
+        action: action.to_string(),
+        reason: reason.to_string(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -49,5 +199,109 @@ mod tests {
     fn preempt_trips_over_cap() {
         assert!(preempt_decision(80.0, 75.0));
         assert!(!preempt_decision(70.0, 75.0));
+    }
+    #[test]
+    fn forecast_lines_breach_medium_confidence() {
+        let entries = [ForecastInput {
+            lane: "vigiles".to_string(),
+            spent: 50.0,
+            cap: 100.0,
+            elapsed_hours: 6.0,
+            day_hours: 24.0,
+        }];
+        assert_eq!(
+            forecast_lines(&entries),
+            vec!["Budget forecast for lane vigiles: 50.0 spent of 100.0 cap, projected 200 by end of day, based on 6 hours of ledger in a 24-hour day (medium confidence) - breach expected before end of day.".to_string()]
+        );
+    }
+    #[test]
+    fn forecast_lines_within_cap_high_confidence() {
+        let entries = [ForecastInput {
+            lane: "ignis".to_string(),
+            spent: 10.0,
+            cap: 100.0,
+            elapsed_hours: 12.0,
+            day_hours: 24.0,
+        }];
+        assert_eq!(
+            forecast_lines(&entries),
+            vec!["Budget forecast for lane ignis: 10.0 spent of 100.0 cap, projected 20 by end of day, based on 12 hours of ledger in a 24-hour day (high confidence) - within cap.".to_string()]
+        );
+    }
+    #[test]
+    fn forecast_lines_truncates_projection_down() {
+        // 10 * 10 / 3 = 33.33... -> 33, never rounded up to 34.
+        let entries = [ForecastInput {
+            lane: "medicus".to_string(),
+            spent: 10.0,
+            cap: 1000.0,
+            elapsed_hours: 3.0,
+            day_hours: 10.0,
+        }];
+        assert_eq!(
+            forecast_lines(&entries),
+            vec!["Budget forecast for lane medicus: 10.0 spent of 1000.0 cap, projected 33 by end of day, based on 3 hours of ledger in a 10-hour day (low confidence) - within cap.".to_string()]
+        );
+    }
+    #[test]
+    fn forecast_lines_full_day_projects_spent_itself() {
+        let entries = [ForecastInput {
+            lane: "vigiles".to_string(),
+            spent: 30.0,
+            cap: 100.0,
+            elapsed_hours: 24.0,
+            day_hours: 24.0,
+        }];
+        assert_eq!(
+            forecast_lines(&entries),
+            vec!["Budget forecast for lane vigiles: 30.0 spent of 100.0 cap, projected 30 by end of day, based on 24 hours of ledger in a 24-hour day (high confidence) - within cap.".to_string()]
+        );
+    }
+    #[test]
+    fn forecast_lines_skips_unusable_entries() {
+        let entries = [
+            ForecastInput { lane: "".to_string(), spent: 10.0, cap: 100.0, elapsed_hours: 6.0, day_hours: 24.0 },
+            ForecastInput { lane: "a".to_string(), spent: 10.0, cap: 0.0, elapsed_hours: 6.0, day_hours: 24.0 },
+            ForecastInput { lane: "b".to_string(), spent: -5.0, cap: 100.0, elapsed_hours: 6.0, day_hours: 24.0 },
+            ForecastInput { lane: "c".to_string(), spent: 10.0, cap: 100.0, elapsed_hours: 0.0, day_hours: 24.0 },
+            ForecastInput { lane: "d".to_string(), spent: 10.0, cap: 100.0, elapsed_hours: 6.0, day_hours: 0.0 },
+        ];
+        assert!(forecast_lines(&entries).is_empty());
+        assert!(forecast_lines(&[]).is_empty());
+    }
+    #[test]
+    fn job_preempt_pauses_low_running_at_warning() {
+        assert_eq!(job_preempt_decision("running", "low", "warning"), Some("pause"));
+    }
+    #[test]
+    fn job_preempt_resumes_paused_below_warning() {
+        assert_eq!(job_preempt_decision("paused", "low", "ok"), Some("resume"));
+        assert_eq!(job_preempt_decision("paused", "high", "unbudgeted"), Some("resume"));
+    }
+    #[test]
+    fn job_preempt_yields_none_otherwise() {
+        // High priority is never preempted, even at warning.
+        assert_eq!(job_preempt_decision("running", "high", "warning"), None);
+        // At cap, running work is left alone by this decision.
+        assert_eq!(job_preempt_decision("running", "low", "capped"), None);
+        // Already paused is never preempted twice.
+        assert_eq!(job_preempt_decision("paused", "low", "warning"), None);
+        // Running work never resumes.
+        assert_eq!(job_preempt_decision("running", "low", "ok"), None);
+        // Malformed / unknown values yield None, never a guess.
+        assert_eq!(job_preempt_decision("stuck", "low", "warning"), None);
+        assert_eq!(job_preempt_decision("running", "low", "unknown"), None);
+    }
+    #[test]
+    fn preempt_record_carries_fields_verbatim() {
+        assert_eq!(
+            preempt_record("job-7", "vigiles", "paused", "lane at warning"),
+            PreemptRecord {
+                job: "job-7".to_string(),
+                lane: "vigiles".to_string(),
+                action: "paused".to_string(),
+                reason: "lane at warning".to_string(),
+            }
+        );
     }
 }
