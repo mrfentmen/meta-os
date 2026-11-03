@@ -156,6 +156,11 @@ for moddir in lib/modules usr/lib/modules; do
 done
 [ -n "$KVER" ] || fail "no kernel version found under rootfs lib/modules (module transplant failed?)"
 echo "target kernel: $KVER"
+# Meta payload: splash theme + calamares config (frozen lane handoffs)
+mkdir -p "$WORK/rootfs/usr/share/plymouth/themes/metaos"
+cp -r "$SCRIPT_DIR/splash/." "$WORK/rootfs/usr/share/plymouth/themes/metaos/" 2>/dev/null || true
+mkdir -p "$WORK/rootfs/etc/calamares"
+cp -r "$SCRIPT_DIR/calamares/." "$WORK/rootfs/etc/calamares/" 2>/dev/null || true
 chroot "$WORK/rootfs" update-initramfs -u -k "$KVER"
 [ -f "$WORK/iso/casper/initrd" ] || fail "no casper/initrd in base tree (found: $(ls "$WORK/iso/casper" | tr '\n' ' '))"
 cp "$WORK/rootfs/boot/initrd.img-$KVER" "$WORK/iso/casper/initrd"
