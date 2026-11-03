@@ -36,6 +36,14 @@ with openable applications (boss order). Until then: static verification only.
 - OC2P-051: secrets sweep (zero hits), >1MB sweep, fence diffs (kernel/server-queue/registry empty).
 - OC2P-052: status block + push (tip == ls-remote, tree clean).
 
+## Upkeep — S8/S9 side batch (no VM, done 2026-11-03)
+- [x] INSTALL-OC1 doc — `agent-layer/desktop-entries/INSTALL-OC1.md` exists, MANIFEST 16 paths.
+- [x] 3 check scripts + tests green — keep-mime / manifest-targets / verify-dropin-desktop exit 0, suite 30/30.
+- [x] WATCH/BLOCKERS live — `OC2P-WATCH.md` (4 watches), `OC2P-BLOCKERS.md`, links qualified.
+- [x] Doc link audit clean — no bare validate.py/packages.txt/mimeapps.list/tokens.json/template refs.
+- [x] verify-dropin backend fix kept — hard-FAIL with no sha backend, 64-hex regex.
+- [x] Index appendices filed — `OC2P-proof-index-S8S9.md` rows 29-48, UNPROVEN-carry restated.
+
 ## Explicit non-goals (OC2 does NOT)
 - kernel/src edits of any kind (Rowan). ISO/base/installer builds or fixes (Hana/Buffy). Registry, queue runtime, metaos-contracts edits. Model re-proofs while 402 stands. Feature work before W1 has bytes (trap #1). Re-proofs without new code (trap #2). Model-connectivity debugging (trap #3).
 - Evince/atril KEEP mismatch: Hana's line — OC2 may only note it + propose the one-line ack in status, never edit her file.
