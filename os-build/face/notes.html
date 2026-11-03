@@ -1,12 +1,99 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Notes</title>
-<style>body{font-family:system-ui;background:#111;color:#eee;padding:24px}textarea{width:100%;height:60vh;font-size:15px}</style>
-</head><body>
-<h1>Notes <small>(saved in this browser)</small></h1>
-<textarea id="n" placeholder="Type a note..."></textarea>
+<!DOCTYPE html><html lang="en" data-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Notes</title>
+<style>
+:root{color-scheme:dark light}
+html[data-theme="dark"]{--bg:#111;--fg:#eee;--mut:#999;--panel:#1c1c1c;--line:#333;--acc:#4f7ec2}
+html[data-theme="light"]{--bg:#f4f4f4;--fg:#111;--mut:#666;--panel:#fff;--line:#ccc;--acc:#2456a6}
+*{box-sizing:border-box}
+body{font-family:system-ui;background:var(--bg);color:var(--fg);margin:0;padding:24px;min-height:100vh;display:flex;flex-direction:column;gap:12px}
+header{display:flex;align-items:center;gap:12px}
+h1{font-size:22px;margin:0;flex:1}
+main{display:grid;grid-template-columns:220px 1fr;gap:16px;flex:1;min-height:0}
+nav{background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:auto}
+ul{list-style:none;margin:0;padding:8px}
+li button.note{width:100%;text-align:left;background:none;border:1px solid transparent;color:var(--fg);padding:8px;border-radius:6px;cursor:pointer;font:inherit;overflow-wrap:anywhere}
+li button.note[aria-current="true"]{border-color:var(--acc)}
+.empty{color:var(--mut);padding:8px;font-size:14px}
+section{display:flex;flex-direction:column;gap:8px;min-height:0}
+textarea{flex:1;width:100%;min-height:220px;resize:vertical;font:15px/1.5 system-ui;padding:12px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+button{font:inherit;padding:8px 14px;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;transition:filter .15s}
+button:hover{filter:brightness(1.15)}
+html[data-motion="reduced"] button{transition:none}
+#del{border-color:#a33;color:#e88}
+#status{color:var(--mut);font-size:13px;margin:0;min-height:1.2em}
+@media(max-width:600px){main{grid-template-columns:1fr}nav{max-height:160px}}
+</style></head><body>
+<header><h1>Notes</h1><button id="new">New note</button></header>
+<main>
+<nav aria-label="Saved notes"><ul id="list"></ul></nav>
+<section aria-label="Note editor">
+<textarea id="body" aria-label="Note text" placeholder="Write a note..."></textarea>
+<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+<button id="del">Delete note</button>
+<p id="status" role="status" aria-live="polite">Notes are stored in this browser.</p>
+</div>
+</section>
+</main>
 <script>
 (function(){
-  var t=document.getElementById('n');
-  try{t.value=localStorage.getItem('metaos-notes')||''}catch(e){}
-  t.addEventListener('input',function(){try{localStorage.setItem('metaos-notes',t.value)}catch(e){}});
+try{var t=localStorage.getItem('metaos-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}
+try{if(localStorage.getItem('metaos-reduced-motion')==='1')document.documentElement.dataset.motion='reduced';}catch(e){}
+var KEY='metaos-notes';
+var list=document.getElementById('list'),body=document.getElementById('body'),status=document.getElementById('status');
+var sel=null,notes=[];
+function read(){
+  try{
+    var raw=localStorage.getItem(KEY);
+    if(!raw)return[];
+    var v=JSON.parse(raw);
+    if(Array.isArray(v))return v.filter(function(n){return n&&typeof n.id==='string';});
+    if(typeof v==='string')return[{id:String(Date.now()),text:v,updated:Date.now()}];
+    return[];
+  }catch(e){return[];}
+}
+function write(){try{localStorage.setItem(KEY,JSON.stringify(notes));return true;}catch(e){return false;}}
+function title(n){var line=String(n.text||'').split('\n')[0].trim();return line?line.slice(0,40):'Untitled note';}
+function find(id){return notes.filter(function(n){return n.id===id;})[0];}
+function save(){
+  if(sel===null)return;
+  var n=find(sel);if(!n)return;
+  n.text=body.value;n.updated=Date.now();
+  status.textContent=write()?'Saved.':'Could not save in this browser.';
+}
+function render(){
+  list.innerHTML='';
+  if(!notes.length){
+    var li=document.createElement('li');li.className='empty';li.textContent='No notes yet. Press New note.';list.appendChild(li);
+  }
+  notes.slice().sort(function(a,b){return (b.updated||0)-(a.updated||0);}).forEach(function(n){
+    var li=document.createElement('li');
+    var b=document.createElement('button');b.type='button';b.className='note';b.textContent=title(n);
+    if(n.id===sel)b.setAttribute('aria-current','true');
+    b.onclick=function(){sel=n.id;body.value=n.text||'';status.textContent='';render();body.focus();};
+    li.appendChild(b);list.appendChild(li);
+  });
+  var has=!!find(sel);
+  body.disabled=!has;
+  body.placeholder=has?'Write a note...':'No note selected - press New note.';
+}
+document.getElementById('new').onclick=function(){
+  var n={id:String(Date.now())+'-'+Math.floor(Math.random()*1e4),text:'',updated:Date.now()};
+  notes.push(n);sel=n.id;
+  if(!write()){status.textContent='Could not save in this browser.';return;}
+  body.value='';render();body.focus();status.textContent='New note.';
+};
+document.getElementById('del').onclick=function(){
+  if(sel===null)return;
+  var n=find(sel);if(!n)return;
+  if(!confirm('Delete this note? This cannot be undone.'))return;
+  notes=notes.filter(function(x){return x.id!==sel;});
+  sel=notes.length?notes[0].id:null;
+  write();
+  body.value=sel?(find(sel).text||''):'';
+  render();status.textContent='Note deleted.';
+};
+body.addEventListener('input',save);
+notes=read();
+if(notes.length){notes.sort(function(a,b){return (b.updated||0)-(a.updated||0);});sel=notes[0].id;body.value=notes[0].text||'';}
+render();
 })();
 </script></body></html>
