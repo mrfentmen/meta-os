@@ -135,7 +135,7 @@ test("web wiring: updateLogStats renders the global first-success line from log.
 });
 
 test("web wiring: session-log panel holds the global first-success stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-first-ok" class="note mono">First successful assessment: none<\/p>/,

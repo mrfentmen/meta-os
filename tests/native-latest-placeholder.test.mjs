@@ -36,7 +36,7 @@ assert.ok(rightColumn.length > 0, "rightColumn exists");
 const monoFont = String.raw`\.font\(\.system\(size: 13, design: \.monospaced\)\)`;
 
 test("native latest placeholder: web contract — #latest-assessment is mono-block 13px", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.ok(
     html.includes(`<div id="latest-assessment" class="mono-block"`),
     "web latest container carries mono-block",

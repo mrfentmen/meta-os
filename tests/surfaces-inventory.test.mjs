@@ -7,7 +7,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync, existsSync } from "node:fs";
 
-const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const indexHtml = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const surfacesHtml = readFileSync(new URL("../surfaces.html", import.meta.url), "utf8");
 const jsDir = new URL("../js/", import.meta.url);
 const jsSources = readdirSync(jsDir).filter((f) => f.endsWith(".js"))

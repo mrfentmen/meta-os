@@ -15,6 +15,7 @@ and each is generated from `contracts/tokens.json`:
 | Installer | `calamares/` | `calamares/` |
 | Login | `tools/tokens_to_gtk.py` | `theme/lightdm/` |
 | Desktop | `tools/make_wallpaper.py`, `tools/tokens_to_gtk.py` | `theme/` |
+| Desktop shell | `tools/tokens_to_xfce.py` | `theme/xfce4/`, `theme/icons/`, `apps/terminal/` |
 
 `contracts/tokens.json` is vendored from `opencode1/metaos-1.0` and pinned by
 sha256 in `contracts/PIN.md`. Changing a colour means changing the pin, and
@@ -36,7 +37,7 @@ then the checker will make every surface regrow from it.
 ## Commands
 
 ```
-iso/tools/check_iso_config.py            static checks, 92 of them
+iso/tools/check_iso_config.py            static checks, 125 of them
 iso/tools/check_iso_config.py --json     same, machine readable
 iso/tools/verify_lane.sh                 checker plus every test; says LANE GREEN
 
@@ -48,6 +49,8 @@ iso/tools/boot_kit.sh --check            what the boot machine is missing
 iso/tools/boot_kit.sh --build --out DIR  userspace, kernel, builder, image
 iso/tools/boot_log_verdict.py boot.txt   PASS/FAIL rows for a serial log
 python3 iso/tools/release_gate.py          every open box in the 1.0 checklist
+python3 iso/tools/check_claims.py          docs that claim a count the tree lost
+iso/tools/precut.sh [--allow-open]         all three answers, one verdict
 ```
 
 ## Proofs

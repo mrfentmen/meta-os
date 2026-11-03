@@ -33,7 +33,7 @@ const contentView = readFileSync(
   "utf8",
 );
 const web = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
-const webHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const webHtml = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 
 const cameraFailureFn = announcement.slice(
   announcement.indexOf("static func cameraFailure("),

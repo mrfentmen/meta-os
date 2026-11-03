@@ -57,7 +57,7 @@ test("native status bar: web contract — status 13px, note 13px, mono 12.5px", 
     /\.mono \{\s+font-family: var\(--mono\);\s+font-size: 12\.5px;\s+\}/,
     "web .mono is 12.5px",
   );
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.ok(
     html.includes('<p id="backend-status" class="status"'),
     "web backend status carries .status",

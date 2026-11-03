@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 
 import { labBoard } from "../js/surfaces.js";
 
-const indexHtml = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const indexHtml = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const surfacesHtml = readFileSync(new URL("../surfaces.html", import.meta.url), "utf8");
 
 test("lab board shows the cap, never the higher claimed level", () => {

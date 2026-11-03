@@ -14,7 +14,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const bg = readFileSync(
   new URL("../js/logo-background.js", import.meta.url),
@@ -48,12 +48,12 @@ test("Logo panel carries a speed slider and a pause button", () => {
   );
   assert.match(
     html,
-    /<script src="js\/logo-animation\.js"><\/script>/,
+    /<script src="(\.\.\/)?js\/logo-animation\.js"><\/script>/,
     "index.html loads js/logo-animation.js after the color script",
   );
   assert.match(
     html,
-    /<a class="logo-studio-link" href="design\/meta-ascii-logo-studio\.html">Open the full logo studio<\/a> for the large animated logo\./,
+    /<a class="logo-studio-link" href="(\.\.\/)?design\/meta-ascii-logo-studio\.html">Open the full logo studio<\/a> for the large animated logo\./,
     "studio link now points at the large logo only, since speed and pause live in the panel",
   );
 });

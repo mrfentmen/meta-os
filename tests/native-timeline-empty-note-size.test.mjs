@@ -41,7 +41,7 @@ test("native timeline empty notes: web contract — #history-empty carries .note
     /\.note \{\s+color: var\(--muted\);\s+font-size: 13px;/,
     "web .note is 13px muted",
   );
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.ok(
     html.includes('<p id="history-empty" class="note"'),
     "web history-empty note carries .note",

@@ -19,7 +19,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 
-const web = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const web = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const webAnimation = readFileSync(
   new URL("../js/logo-animation.js", import.meta.url),
   "utf8",

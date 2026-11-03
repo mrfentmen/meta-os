@@ -58,10 +58,92 @@ branch claim alone.
 
 ## H+4 — login + desktop load (~01:46 EST)
 
-- [ ] LightDM/SDDM theme + lock screen (OC1); password login works.
+- [ ] LightDM theme + lock screen (OC1); password login works.
+      — Theme code MERGED + apply path VERIFIED: metaos-theme greeter
+      conf + apply.sh on main; the H4-1 blocker (apply.sh installed a
+      nonexistent slick-greeter.conf and aborted everything) was found
+      by Milo's audit, fixed by Pax @f60dd3e8, and independently
+      re-audited CLOSED by Milo (shim run exit 0, 7/7 payloads).
+      The GTK half of Milo's H4-2 index gap is also filled: a standard
+      X-GNOME-Metatheme index.theme for MetaOS landed (Pax gap-fill,
+      apply.sh installs it; shim re-test 8/8 payloads). The icon half
+      resolves when OC1's Papirus recolor runs on the build host
+      (the copied tree carries its index); the xfwm4 window theme
+      remains an H+6 item, not yet built.
+      Post-sweep hand-combine (Pax, @6d1620e7): apply.sh now also
+      installs OC1's splash set and registers the Plymouth theme
+      (guarded update-alternatives + update-initramfs activation);
+      shim run exit 0, 15/15 payloads land, activation calls verified
+      via stubs (real update-initramfs runs in the ISO chroot, not
+      the shim). Plymouth is now installed by code; a themed boot
+      splash is still not boot-proofed. NAMED GAP for proof only.
+      Password login itself: NOT proofed on a committed screenshot —
+      Del-side first boot (2026-11-02 23:41 EST, Del-reported) reached
+      a desktop; no login-screen shot is committed. NAMED GAP.
 - [ ] Xfce top bar + Plank dock + launcher in the Meta colorway.
+      — CODE-INSPECTED: panel xml + plank dock.theme merged with the
+      theme; token values verified against the frozen contracts by
+      Milo. NOT proofed on a booted image: the one committed desktop
+      screenshot (os-build/iso/proof/metaos-first-desktop.png, read
+      by Pax) shows a stock Xfce panel, no dock, and a green wallpaper.
+      A second committed shot landed in this pass
+      (os-build/iso/proof/metaos-desktop-autologin.png, OC1, read by
+      Pax): autologin reaches the desktop, but it is the same stock
+      panel, no dock, green rays wallpaper — an autologin proof, not
+      a theme proof. NAMED GAP.
 - [ ] Proof: login-to-desktop screenshot set committed per milestone.
-- [ ] ISO cut 2.
+      — Two desktop PNGs exist (first boot + autologin); both are
+      stock/unthemed and no login-screen shot exists. NAMED GAP.
+- [x] ISO cut 2 by Pax from the merged tree. — CUT RECORD: tree =
+      main @6d1620e7 (cut at H+4, 2026-11-03 ~01:55 EST). Since cut 1:
+      frozen contracts + OC1 theme merged; Milo QA audits x3 merged
+      (1.0, merge-layers, H+4 apply + re-audit); dexubuntu pack built,
+      chroot-tested 7/7, wired as base-flow step 3 (Hana; validate.py
+      107 PASS run by Pax); Bond ISO lane merged through @3b97ead3
+      (Pax-run ISO suites: 53 + release_gate 8, all OK); OC2 delta
+      fully merged (science-lab 374 OK); the byte-build pipeline is
+      now scripted end to end on main: merge-layers.sh (OC1) ->
+      finalize-iso-tree.sh (OC1, Pax-tested) -> repack-iso.sh (Pax,
+      mechanism-tested incl. base SHA gate). Full branch sweep run by
+      Pax before this cut (Del's order): every non-contained branch
+      classified file-by-file — 17 lane branches merged whole (incl.
+      Milo's agent-layer gate docs, Rowan's K3/K4 design docs, OC1
+      round-6 + wave-3 evidence archives, Bond's rewritten officina
+      test_code100 — 13 tests OK on the merged tree) and 4 partial
+      merges taking only apply-clean files (71 files, blob-verified);
+      kernel/Rust branches stay HELD behind their proof gates, and
+      conflicted branches were left untouched. Pax-run test baselines
+      at the pre-sweep tree b0859f10 (all green): queue-python 613 OK
+      (1 skip), science-lab 374 OK, custos 125 OK, ISO battery 61 OK,
+      agent-layer units 10 OK, hortus 14 OK; post-sweep additions
+      verified separately (officina test_code100 13 OK at the new tip).
+      MERGE PASS at H+4 (Del's order 01:19 EST, "start merging"):
+      every branch moved since the sweep was re-classified file-by-file
+      against main — Milo qa-h6-firstlogin merged whole (1 file, his
+      H+6 first-login QA doc); Bond 12h merged whole (39/39 apply-clean:
+      wallpaper at three sizes + login picker, welcome app, MetaOS icon
+      theme, xfconf panel/power/locker configs, claims registry +
+      checker, precut + tokens_to_xfce tools); OC1 boot-installer
+      merged whole (70/70 apply-clean: merge-layers.sh update,
+      payload-theme pack incl. welcome app + tests, Plymouth splash
+      set, Calamares slideshow + mount/umount modules, pipeline docs,
+      boot + autologin proof PNGs); OC1 metaos-1.0 partial merge (170
+      apply-clean files: theme splash/welcome/icons/wallpapers, face
+      updates, test batch) with metaos-theme/apply.sh EXCLUDED as the
+      single conflict, then hand-combined by Pax @6d1620e7 (see theme
+      bullet above). Post-merge verification by Pax on the merged tree:
+      10/10 spot blobs match branch blobs; ISO battery 114 OK (up from
+      61 — the new Bond ISO tests included), cross-lane claims 6 OK,
+      both welcome test suites OK, shell syntax OK on the merged
+      scripts. HELD in this pass: buffy/agentic-layer (41 files,
+      apply-clean, but Rust userspace + agent code with no Milo gate-1
+      message — gate requested on room 1); all kernel branches remain
+      held behind their Mac/boot proofs as before.
+      NAMED GAP (carried):
+      the ISO artifact itself is still not built — the base Xubuntu
+      24.04.5 file (Del's copy) has not reached Pax's build host.
+      Per the decoupling amendment the cut stands with the gap
+      named, not delayed.
 
 ## H+6 — fully themed (~03:46 EST)
 

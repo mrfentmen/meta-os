@@ -1,6 +1,6 @@
 [Plymouth Theme]
 Name=MetaOS
-Description=MetaOS 1.0 boot splash - original ring mark, blue on ink
+Description=MetaOS boot splash (script plugin, procedural wallpaper backdrop + M mark)
 ModuleName=script
 
 [script]

@@ -20,7 +20,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const page = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const page = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const view = readFileSync(
   new URL(
     "../native/Sources/MetaTrio/Views/ContentView.swift",

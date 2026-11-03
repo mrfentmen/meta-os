@@ -231,7 +231,7 @@ test("web wiring: updateLogStats renders the ok-span-share-of-own-failed-window 
 });
 
 test("web wiring: session-log panel holds the ok-span-share-of-own-failed-window stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-ok-span-share-of-own-failed-window-by-product" class="note mono">Success-span share of that product's own failure window by product: Vigiles none · Ignis none · Medicus none<\/p>/,

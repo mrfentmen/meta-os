@@ -42,7 +42,7 @@ test("native camera facing note: web contract — .note at 13px muted", () => {
 });
 
 test("native camera facing note: web note carries the note class", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p class="note">A preference, not a requirement:/,

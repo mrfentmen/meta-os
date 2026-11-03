@@ -133,7 +133,7 @@ test("web wiring: updateLogStats renders the per-product last-entry line from lo
 });
 
 test("web wiring: session-log panel holds the per-product last-entry stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-last-entry-by-product" class="note mono">Last entry by product: Vigiles none · Ignis none · Medicus none<\/p>/,

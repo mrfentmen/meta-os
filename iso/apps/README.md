@@ -21,6 +21,7 @@ does its job, closes clean" stays **UNPROVEN** until a VM run.
 | `chromium/meta-start.html` | `/usr/share/metaos/start/` | the start page itself, works offline |
 | `chromium/tokens.css` | `/usr/share/metaos/start/` | generated from the frozen contract, never hand-edited |
 | `agent-status/meta-agent-status.py` | `/usr/local/bin/` | the agent-layer status reader |
+| `welcome/meta-welcome.py` | `/usr/local/bin/` | the first-login welcome window |
 
 ## Install
 

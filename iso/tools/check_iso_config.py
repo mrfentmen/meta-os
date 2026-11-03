@@ -729,6 +729,33 @@ else:
 GREETER_CONF = ISO / "theme" / "lightdm" / "lightdm-gtk-greeter.conf"
 GREETER_THEME = ISO / "theme" / "lightdm" / "themes" / "MetaOS" / "index.theme"
 GREETER_CSS = ISO / "theme" / "lightdm" / "themes" / "MetaOS" / "gtk-3.0" / "gtk.css"
+# --- wallpaper pack -----------------------------------------------------
+for pack_name, (want_w, want_h) in {
+    "meta-wallpaper-2560x1440.png": (2560, 1440),
+    "meta-wallpaper-1366x768.png": (1366, 768),
+}.items():
+    path = ISO / "theme" / "wallpaper" / pack_name
+    if not path.is_file():
+        bad("theme: %s is missing (run make_wallpaper.py)" % pack_name)
+        continue
+    head = path.read_bytes()[:33]
+    if head[:8] != b"\x89PNG\r\n\x1a\n":
+        bad("theme: %s is not a PNG" % pack_name)
+        continue
+    got_w, got_h, depth, colour = struct.unpack(">IIBB", head[16:26])
+    if (got_w, got_h) == (want_w, want_h) and depth == 8 and colour == 6:
+        ok("theme: %s is %dx%d RGBA" % (pack_name, want_w, want_h))
+    else:
+        bad("theme: %s is %dx%d depth %d colour %d"
+            % (pack_name, got_w, got_h, depth, colour))
+
+login_path = ISO / "base" / "meta-first-login.sh"
+login_body = read(login_path) if login_path.is_file() else ""
+if "meta-wallpaper-$RES.png" in login_body:
+    ok("theme: first login picks the wallpaper size the screen reports")
+else:
+    bad("theme: first login does not choose a wallpaper size")
+
 GREETER_BG = "/usr/share/metaos/theme/greeter-wallpaper.png"
 
 greeter_wall = ISO / "theme" / "wallpaper" / "greeter-wallpaper.png"
@@ -830,6 +857,206 @@ else:
         bad("grub: the drop-in rewrites the kernel command line")
     else:
         ok("grub: the drop-in leaves the kernel command line alone")
+
+# --- desktop shell (panel, icons, fonts, terminal, lock) ----------------
+import xml.etree.ElementTree as ET
+
+SHELL = ISO / "theme" / "xfce4" / "xfconf" / "xfce-perchannel-xml"
+REQUIRED_CHANNELS = (
+    "xfce4-panel.xml",
+    "xsettings.xml",
+    "xfce4-power-manager.xml",
+    "light-locker.xml",
+)
+
+
+def channel(name):
+    path = SHELL / name
+    if not path.is_file():
+        bad("shell: %s is missing" % name)
+        return None
+    try:
+        return ET.parse(path).getroot()
+    except Exception as exc:  # noqa: BLE001
+        bad("shell: %s does not parse (%s)" % (name, exc))
+        return None
+
+
+parsed = {name: channel(name) for name in REQUIRED_CHANNELS}
+if all(parsed.values()):
+    ok("shell: all %d xfconf channels exist and parse" % len(REQUIRED_CHANNELS))
+
+panel = parsed.get("xfce4-panel.xml")
+if panel is not None:
+    ids = panel.find(".//property[@name='plugin-ids']")
+    plugins_node = panel.find(".//property[@name='plugins']")
+    n_ids = len(ids.findall("value")) if ids is not None else 0
+    n_plugins = len(plugins_node.findall("property")) if plugins_node is not None else 0
+    if n_ids and n_ids == n_plugins:
+        ok("panel: %d plugin ids, %d plugins, no gap" % (n_ids, n_plugins))
+    else:
+        bad("panel: %d plugin ids but %d plugins" % (n_ids, n_plugins))
+
+    items = [v.get("value") for v in panel.iter("value")
+             if v.get("value", "").endswith(".desktop")]
+    missing = [i for i in items if not (ISO / "apps" / "desktop" / i).is_file()]
+    if not items:
+        bad("panel: the launcher names no items")
+    elif missing:
+        bad("panel: launcher names missing entry(s): %s" % ", ".join(missing))
+    else:
+        ok("panel: every launcher item exists (%d)" % len(items))
+
+    backdrop = panel.find(".//property[@name='background-rgba']")
+    if backdrop is not None and tokens:
+        want = [int(tokens["black"][i:i + 2], 16) / 255 for i in (1, 3, 5)]
+        got = [float(v.get("value")) for v in backdrop.findall("value")]
+        if len(got) == 4 and all(abs(g - w) < 0.002 for g, w in zip(got, want)):
+            ok("panel: the bar is the contract black at %d%% alpha" % round(got[3] * 100))
+        else:
+            bad("panel: backdrop %r is not the contract black" % got)
+
+xsettings = parsed.get("xsettings.xml")
+if xsettings is not None:
+    values = {p.get("name"): p.get("value") for p in xsettings.findall("property")}
+    icon_name = values.get("Net/IconThemeName", "")
+    if (ISO / "theme" / "icons" / icon_name / "index.theme").is_file():
+        ok("shell: icon theme %r ships an index.theme" % icon_name)
+    else:
+        bad("shell: icon theme %r has no index.theme" % icon_name)
+    theme_name = values.get("Net/ThemeName", "")
+    if (ISO / "theme" / "lightdm" / "themes" / theme_name / "index.theme").is_file():
+        ok("shell: GTK theme %r is the one the login screen uses" % theme_name)
+    else:
+        bad("shell: GTK theme %r has no index.theme" % theme_name)
+    family = values.get("Net/FontName", "").split(" ")[0]
+    conf = ISO / "theme" / "fonts" / "local.conf"
+    if family and conf.is_file() and ("<family>%s</family>" % family) in read(conf):
+        ok("shell: interface font %r is what fontconfig prefers" % family)
+    else:
+        bad("shell: %r is not preferred by theme/fonts/local.conf" % family)
+
+for channel_name, prop in (
+    ("light-locker.xml", "lock-on-suspend"),
+    ("xfce4-power-manager.xml", "lock-screen-suspend-hibernate"),
+):
+    root = parsed.get(channel_name)
+    value = None
+    if root is not None:
+        for node in root.findall("property"):
+            name = node.get("name") or ""
+            if name == prop or name.endswith("/" + prop):
+                value = node.get("value")
+    if value == "true":
+        ok("shell: %s enables %s" % (channel_name, prop))
+    else:
+        bad("shell: %s does not enable %s" % (channel_name, prop))
+
+scheme = ISO / "apps" / "terminal" / "metaos.theme"
+if not scheme.is_file():
+    bad("terminal: metaos.theme is missing")
+else:
+    body = read(scheme)
+    palette = re.search(r"^ColorPalette=(.+)$", body, re.M)
+    entries = palette.group(1).split(";") if palette else []
+    if len(entries) == 16:
+        ok("terminal: the scheme carries 16 palette entries")
+    else:
+        bad("terminal: the scheme carries %d palette entries, expected 16" % len(entries))
+    if tokens and entries:
+        allowed = {value.upper() for value in tokens.values()}
+        stray = [c for c in entries[:8] if c.upper() not in allowed]
+        if stray:
+            bad("terminal: colours outside the contract: %s" % ", ".join(stray))
+        else:
+            ok("terminal: the eight base colours are contract colours")
+
+icon_dir = ISO / "theme" / "icons" / "MetaOS"
+if (icon_dir / "index.theme").is_file():
+    ok("icons: index.theme exists")
+else:
+    bad("icons: index.theme is missing")
+svgs = sorted((icon_dir / "places" / "48").glob("*.svg")) if (icon_dir / "places" / "48").is_dir() else []
+if len(svgs) == 3:
+    ok("icons: three place icons ship")
+else:
+    bad("icons: %d place icons, expected 3" % len(svgs))
+if tokens and svgs:
+    allowed = {value.upper() for value in tokens.values()}
+    stray = []
+    broken = []
+    for icon in svgs:
+        body = read(icon)
+        try:
+            ET.fromstring(body)
+        except Exception:  # noqa: BLE001
+            broken.append(icon.name)
+            continue
+        stray += [h.upper() for h in re.findall(r"#[0-9A-Fa-f]{6}\b", body)
+                  if h.upper() not in allowed]
+    if broken:
+        bad("icons: do not parse: %s" % ", ".join(broken))
+    if stray:
+        bad("icons: colours outside the contract: %s" % ", ".join(sorted(set(stray))))
+    elif not broken:
+        ok("icons: every icon parses and every fill is a contract colour")
+
+# --- first-login welcome -------------------------------------------------
+WELCOME = ISO / "apps" / "welcome"
+missing = [name for name in ("meta-welcome.py", "welcome.css", "palette.json")
+           if not (WELCOME / name).is_file()]
+if missing:
+    bad("welcome: missing %s" % ", ".join(missing))
+else:
+    ok("welcome: app, stylesheet and palette all ship")
+
+if "/usr/local/bin/meta-welcome" in read(ISO / "tools" / "apply.sh"):
+    ok("welcome: the installer puts the app on PATH")
+else:
+    bad("welcome: apply.sh never installs meta-welcome")
+
+if (WELCOME / "welcome.css").is_file() and tokens:
+    allowed = {value.upper() for value in tokens.values()}
+    body = read(WELCOME / "welcome.css")
+    stray = sorted({h.upper() for h in re.findall(r"#[0-9A-Fa-f]{6}\b", body)} - allowed)
+    if stray:
+        bad("welcome: colours outside the contract: %s" % ", ".join(stray))
+    else:
+        ok("welcome: the stylesheet uses contract colours only")
+
+if (WELCOME / "palette.json").is_file() and tokens:
+    palette = {}
+    try:
+        palette = json.loads(read(WELCOME / "palette.json"))
+    except ValueError as exc:  # noqa: BLE001
+        bad("welcome: palette.json does not parse (%s)" % exc)
+    wrong = [key for key, value in palette.items()
+             if tokens.get(key, "").upper() != str(value).upper()]
+    if wrong:
+        bad("welcome: palette disagrees with the contract: %s" % ", ".join(wrong))
+    elif palette:
+        ok("welcome: palette is the contract, verbatim")
+
+login = ISO / "base" / "meta-first-login.sh"
+if login.is_file():
+    body = read(login)
+    if "command -v meta-welcome" in body and "--no-welcome" in body:
+        ok("welcome: first login launches it and can skip it")
+    else:
+        bad("welcome: first login does not launch it, or cannot skip it")
+
+if (WELCOME / "meta-welcome.py").is_file():
+    source = read(WELCOME / "meta-welcome.py")
+    head = source.find("def run_gui")
+    imported = source.find("import gi")
+    if head != -1 and imported > head:
+        ok("welcome: GTK is imported only when a window is needed")
+    else:
+        bad("welcome: GTK is imported at module level")
+    if any(word in source for word in ("urllib", "requests", "http://")):
+        bad("welcome: the welcome app reaches for the network")
+    else:
+        ok("welcome: no network access in the welcome app")
 
 # --- no stub markers ---------------------------------------------------
 bad_marks = []

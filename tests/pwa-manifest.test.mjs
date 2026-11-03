@@ -10,15 +10,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const serverJs = readFileSync(new URL("../server/server.mjs", import.meta.url), "utf8");
 const manifestRaw = readFileSync(new URL("../manifest.webmanifest", import.meta.url), "utf8");
 const manifest = JSON.parse(manifestRaw);
 const icon = readFileSync(new URL("../icon-180.png", import.meta.url));
 
 test("manifest names the app and points at the 180px icon", () => {
-  assert.equal(manifest.name, "Meta Imperium");
-  assert.equal(manifest.short_name, "Imperium");
+  assert.equal(manifest.name, "MetaOS");
+  assert.equal(manifest.short_name, "MetaOS");
   assert.equal(manifest.start_url, "/");
   assert.equal(manifest.display, "standalone");
   const entry = (manifest.icons ?? []).find((i) => i.src === "/icon-180.png");

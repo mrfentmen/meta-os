@@ -21,13 +21,19 @@ checkline() { # checkline <name> <fixed-string>
 }
 
 echo "== userspace =="
-cd os-build/userspace/user
-for pair in "hello:0x600000000000" "sleeper:0x610000000000" "crasher:0x620000000000" "readkey:0x630000000000"; do
-  b=${pair%%:*}; base=${pair##*:}
-  sed "s/= BASE/= $base/" link-base.ld > link.ld
-  touch src/bin/$b.rs
-  RUSTFLAGS="-C link-arg=-T$PWD/link.ld" cargo build -q --target x86_64-unknown-none --bin $b
-done
+# Manifest coverage first: a bin with no slot is a program that would never be
+# built, and no ELF check can see it because there is no ELF.
+python3 "$ROOT/os-build/userspace/check_manifest.py"
+# Two pipelines exist (build.sh and build_userspace.py). They must agree on
+# every shared base before either one stages an ELF for the kernel.
+python3 "$ROOT/os-build/userspace/compare_builders.py"
+# One link base per program, verified against the ELF headers. This replaced
+# the old sed-into-link-base.ld loop, which no other build used and which left
+# plain cargo builds linking all four programs at the same address.
+# Every bin in bases.txt, not just the four the kernel embeds: a diagnostic
+# that no longer compiles still means the corpus is not buildable, and the
+# disjoint-base check costs nothing at this size.
+PROFILE=debug "$ROOT/os-build/userspace/build.sh" >/dev/null
 cd "$ROOT"
 
 echo "== kernel =="
@@ -62,6 +68,17 @@ checkline "K6 sleeper" "sleeper: after sleep"
 checkline "K6 bad call refused" "user bad syscall 99 refused"
 checkline "K6 user fault kill" "task killed"
 check "$ROOT/os-build/expected/K-all.txt" "K expected-line set"
+check "$ROOT/os-build/expected/USERSPACE.txt" "userspace expected lines"
+
+# Absence check, not a presence check: the K6 failure mode was the loader
+# refusing programs, which no expected-line file can catch.
+if grep -aq "loader refused" "$BOOTLOG"; then
+  echo "FAIL: loader refused a program ($(grep -ac 'loader refused' "$BOOTLOG") line(s))"
+  fail=$((fail+1))
+else
+  echo "PASS: no loader refusals"
+  pass=$((pass+1))
+fi
 
 echo "== goose suite =="
 sh services/run-goose-tests.sh | tail -2

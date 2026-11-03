@@ -16,6 +16,7 @@ import audit.audit;
 import audit.retention;
 import bootlog.bootlog;
 import callmatrix.callmatrix;
+import clipboard.clipboard;
 import common.args.args;
 import common.boot.boot;
 import common.bytes.bytes;

@@ -88,7 +88,10 @@ uint8_t sys_read_key(gs_rref)        gs_rref = { gs_rhdr *hdr; gs_stack *stk; }
 | `entry/logd` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 | `entry/time` | BUILDS (not run) | 0 | 0 | svc_entry; no supervisor on a host |
 
-**59 of 59 drivers run to completion, all green: 2715 assertions passed, 0 failed** (measured 2026-11-02, `run_native.sh` exit 0). 4 entry points **build** and are not run — they export `svc_entry`, and a host process has no supervisor to call it. 1 entry point **typechecks** and is not run: its `svc_entry` takes a kernel `BootInfo`, and a host has no boot block to hand it.
+**88 of 88 drivers run to completion, all green: 3833 assertions passed, 0 failed** (re-measured 2026-11-02 with `t141_clipboard` in the set; `run_native.sh` exit 0). 4 entry points **build** and are not run — they export `svc_entry`, and a host process has no supervisor to call it. 1 entry point **typechecks** and is not run: its `svc_entry` takes a kernel `BootInfo`, and a host has no boot block to hand it.
+
+
+The per-program table below is the first 59-driver snapshot. `os-build/layer1/host/run_rows.txt` is the current machine-readable set (drivers plus the five entry points), and the totals above are computed from it, not from the table.
 
 ## What the first pass found, and what fixing it taught
 

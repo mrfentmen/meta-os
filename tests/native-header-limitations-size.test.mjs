@@ -40,7 +40,7 @@ test("native header limitations: web contract — .note at 13px muted", () => {
 });
 
 test("native header limitations: web notice carries the note class", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="product-limitations" class="note"/,

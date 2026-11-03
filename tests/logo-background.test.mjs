@@ -12,7 +12,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles.css", import.meta.url), "utf8");
 const bg = readFileSync(
   new URL("../js/logo-background.js", import.meta.url),
@@ -27,7 +27,7 @@ test("page carries a hidden background canvas and its script", () => {
   );
   assert.match(
     html,
-    /<script src="js\/logo-background\.js"><\/script>/,
+    /<script src="(\.\.\/)?js\/logo-background\.js"><\/script>/,
     "index.html loads js/logo-background.js",
   );
 });

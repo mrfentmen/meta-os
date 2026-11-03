@@ -15,3 +15,12 @@ lightdm-gtk-greeter
 # Lane: boot and install
 plymouth
 calamares
+
+# Lane: desktop shell (panel, lock, icons, fonts)
+light-locker
+xfce4-whiskermenu-plugin
+papirus-icon-theme
+fonts-dejavu-core
+python3-gi
+gir1.2-gtk-3.0
+x11-xserver-utils

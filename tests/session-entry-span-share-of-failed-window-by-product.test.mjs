@@ -274,7 +274,7 @@ test("web wiring: updateLogStats renders the entry-span-share-of-failed-window l
 });
 
 test("web wiring: session-log panel holds the entry-span-share-of-failed-window stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-entry-span-share-of-failed-window-by-product" class="note mono">Entry-span share of failure window by product: Vigiles none · Ignis none · Medicus none<\/p>/,

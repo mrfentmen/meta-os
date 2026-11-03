@@ -148,7 +148,7 @@ test("web wiring: updateLogStats renders the failure-cause-share-of-entries-by-p
 });
 
 test("web wiring: session-log panel holds the failure-cause-share-of-entries-by-product stats element", () => {
-  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const html = readFileSync(new URL("../imperium/index.html", import.meta.url), "utf8");
   assert.match(
     html,
     /<p id="log-stats-failed-share-by-status-of-entries-by-product" class="note mono">Failure-cause share of all entries by product: Vigiles Network none, HTTP none, Invalid response none · Ignis Network none, HTTP none, Invalid response none · Medicus Network none, HTTP none, Invalid response none<\/p>/,

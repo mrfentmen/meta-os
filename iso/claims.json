@@ -1,0 +1,46 @@
+[
+  {
+    "id": "iso-readme-checks",
+    "doc": "iso/README.md",
+    "pattern": "static checks, (\\d+) of them",
+    "source": "checker"
+  },
+  {
+    "id": "status-checker",
+    "doc": "os-build/BUFFY_ISO_STATUS.md",
+    "pattern": "static checker\\s+(\\d+) passed",
+    "source": "checker"
+  },
+  {
+    "id": "status-doctor",
+    "doc": "os-build/BUFFY_ISO_STATUS.md",
+    "pattern": "(\\d+) passed against an",
+    "source": "doctor"
+  },
+  {
+    "id": "handoff-checks",
+    "doc": "os-build/ISO_LANE_HANDOFF.md",
+    "pattern": "(\\d+) static checks",
+    "source": "checker"
+  },
+  {
+    "id": "handoff-tests",
+    "doc": "os-build/ISO_LANE_HANDOFF.md",
+    "pattern": "(\\d+) test files",
+    "source": "tests"
+  },
+  {
+    "id": "apps-launchers",
+    "doc": "iso/apps/README.md",
+    "pattern": "(\\w+) launchers: Files",
+    "source": "glob:iso/apps/desktop/*.desktop",
+    "kind": "word"
+  },
+  {
+    "id": "apps-dock",
+    "doc": "iso/apps/README.md",
+    "pattern": "dock shows\\s+(\\w+)\\s+apps",
+    "source": "glob:iso/apps/plank/*.dockitem",
+    "kind": "word"
+  }
+]
