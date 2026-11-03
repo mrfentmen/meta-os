@@ -210,6 +210,13 @@ def search_repo(brief_or_text, root=None):
     ]
     hits = []
     per_file = {}
+    # Scan source code before data files: as run records accumulate
+    # in runs/, a plain walk fills the 20-hit cap with JSON before
+    # the walk ever reaches the code that defines the artefact
+    # (a heatsink brief stopped finding heatsink.py). Code first
+    # keeps the source of truth in the results; data still fills
+    # the remaining cap.
+    candidates = []
     for area in areas:
         for dirpath, _dirnames, filenames in os.walk(area):
             if "__pycache__" in dirpath:
@@ -217,27 +224,29 @@ def search_repo(brief_or_text, root=None):
             for name in sorted(filenames):
                 if not name.endswith((".py", ".md", ".json")):
                     continue
-                path = os.path.join(dirpath, name)
-                rel = os.path.relpath(path, root)
-                try:
-                    with open(path, encoding="utf-8",
-                              errors="replace") as f:
-                        for lineno, line in enumerate(f, 1):
-                            lowered = line.lower()
-                            if any(k in lowered for k in keywords):
-                                if per_file.get(rel, 0) >= 2:
-                                    continue
-                                per_file[rel] = \
-                                    per_file.get(rel, 0) + 1
-                                hits.append({
-                                    "path": rel,
-                                    "lineno": lineno,
-                                    "snippet": line.strip()[:160],
-                                })
-                                if len(hits) >= 20:
-                                    return hits
-                except OSError:
-                    continue
+                candidates.append(os.path.join(dirpath, name))
+    candidates.sort(key=lambda p: (0 if p.endswith(".py") else
+                                   1 if p.endswith(".md") else 2, p))
+    for path in candidates:
+        rel = os.path.relpath(path, root)
+        try:
+            with open(path, encoding="utf-8",
+                      errors="replace") as f:
+                for lineno, line in enumerate(f, 1):
+                    lowered = line.lower()
+                    if any(k in lowered for k in keywords):
+                        if per_file.get(rel, 0) >= 2:
+                            continue
+                        per_file[rel] = per_file.get(rel, 0) + 1
+                        hits.append({
+                            "path": rel,
+                            "lineno": lineno,
+                            "snippet": line.strip()[:160],
+                        })
+                        if len(hits) >= 20:
+                            return hits
+        except OSError:
+            continue
     return hits
 
 
