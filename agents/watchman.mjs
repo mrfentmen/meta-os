@@ -10,7 +10,7 @@ import url from "node:url";
 import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
 import { readBaton, continuationOrders } from "./baton.mjs";
 import { writeBeat } from "./watchdog.mjs";
-import { retryJob } from "./jobs.mjs";
+import { retryJob, proposeJob } from "./jobs.mjs";
 import { createNotifier } from "./notify.mjs";
 import {
   claimContinue,
@@ -244,6 +244,27 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
             }
           } catch (err) {
             ledger.add("watchman", "retry-error", { id, reason: String((err && err.message) || err).slice(0, 200) });
+          }
+        }
+
+        // A run that finished its work may name the next piece on its baton
+        // (`next`). Queue it for the same agent: this is what lets the relay
+        // keep moving without a person deciding every step. A failed or
+        // continuing run is not asked -- one has not learned enough to order
+        // more work, the other already has its own ceiling.
+        if (!failed && !continuation.queued) {
+          try {
+            const baton = readBaton(h.runDir);
+            const proposal = proposeJob({ root, id, runId: h.runId, next: baton && baton.next });
+            if (proposal.ok) {
+              ledger.add("watchman", "proposal-queued", { id, run: h.runId, next: proposal.id });
+              notify({ severity: "note", key: "job:" + id + ":proposed",
+                       title: "Agent proposed its next job: " + job.agent, body: proposal.order });
+            } else if (proposal.reason !== "no next order on the baton") {
+              ledger.add("watchman", "proposal-refused", { id, reason: proposal.reason });
+            }
+          } catch (err) {
+            ledger.add("watchman", "proposal-error", { id, reason: String((err && err.message) || err).slice(0, 200) });
           }
         }
       });

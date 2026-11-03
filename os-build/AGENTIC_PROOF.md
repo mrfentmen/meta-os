@@ -28,6 +28,17 @@ what runs today, and what does not yet.
    last seen, and speak only on change - currently run by Pax's
    cadence jobs. Per the 2026-11-02 ruling this becomes a built-in
    agent capability of the OS, not a separate system.
+5. **The relay tasks itself.** An agent that finishes a job and writes
+   `next` on its baton has the next job put on the board by the
+   watchman - same agent, its own order, no person in between. The
+   chain is bounded at one hop by default (`maxProposals` raises it),
+   a job cannot propose the order it just answered, and a failed run
+   proposes nothing. Proof: `tests/agents-watchman-propose.test.mjs`
+   (5 cases, real child processes); a failed job is retried once with
+   its baton (`tests/agents-watchman-retry.test.mjs`), and a person
+   hands work over with `meta-ask` (`tests/test_iso_meta_ask.py`).
+   This is the layer deciding its own next step, not a cron with
+   extra words.
 
 ## NOT YET — stated plainly
 

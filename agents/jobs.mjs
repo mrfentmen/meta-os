@@ -166,6 +166,78 @@ export function retryJob({ root, id, mark = {} }) {
   return { ok: true, id: nextId, continuesFrom: result.run, existing: false };
 }
 
+// A run that finishes its work can say what it would do next. That is the
+// difference between a queue and a relay: the layer does not need a person to
+// decide the next job, because the worker that just learned the ground hands
+// the next order back to itself.
+//
+//   baton.next = "sweep the second shelf"   ->   job <id>-n1, same agent
+//
+// Bounded on purpose. One proposal per finished job unless the job says
+// otherwise, never a proposal that repeats the order it answered, and never
+// from a job that already asked to continue (that path has its own ceiling).
+// A layer that can task itself forever is a layer that never stops spending.
+export const PROPOSAL_LIMIT = 1;
+const PROPOSAL_SUFFIX = /-n(\d+)$/;
+
+export function proposeJob({ root, id, runId, next, mark = {} }) {
+  const jobsDir = path.join(root, "jobs");
+  const jobFile = path.join(jobsDir, id + ".job.json");
+  let job;
+  try {
+    job = JSON.parse(fs.readFileSync(jobFile, "utf8"));
+  } catch {
+    return { ok: false, reason: "job " + id + " does not parse; cannot propose from it" };
+  }
+  if (typeof next !== "string" || next.trim() === "") {
+    return { ok: false, reason: "no next order on the baton" };
+  }
+  const order = next.trim();
+  // Echoing the orders just done is a loop wearing a new name. Refuse it by
+  // name so the ledger shows why the chain stops.
+  if (typeof job.orders === "string" && job.orders.trim() === order) {
+    return { ok: false, reason: "proposal-echo" };
+  }
+  const made = Number(job.proposals) || 0;
+  const limit = job.maxProposals == null ? PROPOSAL_LIMIT : Number(job.maxProposals);
+  if (!(made < limit)) {
+    return { ok: false, reason: "proposal-limit" };
+  }
+  const base = id.replace(PROPOSAL_SUFFIX, "").replace(/-r\d+$/, "");
+  const chain = Number((id.match(PROPOSAL_SUFFIX) || [])[1] || 0);
+  const nextId = base + "-n" + (chain + 1);
+  const nextFile = path.join(jobsDir, nextId + ".job.json");
+  // Idempotent: asking twice returns the same job instead of stacking two.
+  if (fs.existsSync(nextFile)) return { ok: true, id: nextId, existing: true };
+
+  const proposal = {
+    id: nextId,
+    agent: job.agent,
+    orders: order,
+    lane: job.lane == null ? null : job.lane,
+    proposedBy: runId || null,
+    fromJob: id,
+    proposals: made + 1,
+    maxProposals: limit,
+    ...mark,
+    createdAt: new Date().toISOString(),
+  };
+  fs.mkdirSync(jobsDir, { recursive: true });
+  const tmp = nextFile + ".tmp";
+  fs.writeFileSync(tmp, JSON.stringify(proposal, null, 2));
+  fs.renameSync(tmp, nextFile);
+
+  // Record the count on the job that proposed, so the next poll can tell the
+  // limit was spent without reading the whole board.
+  try {
+    fs.writeFileSync(jobFile, JSON.stringify({ ...job, proposals: made + 1 }, null, 2));
+  } catch {
+    // The new job is already on disk; a lost counter only means one more
+    // proposal could be asked for, never that work is lost.
+  }
+  return { ok: true, id: nextId, existing: false, order };
+}
+
 /* ---- CLI ---- */
 const HERE = path.dirname(url.fileURLToPath(import.meta.url));
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileURLToPath(import.meta.url))) {
@@ -177,6 +249,17 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
   if (!fs.existsSync(path.join(root, "jobs"))) {
     console.error("jobs: no board at " + path.join(root, "jobs"));
     process.exit(2);
+  }
+  const proposeId = arg("--propose");
+  if (proposeId) {
+    const next = arg("--next");
+    const out = proposeJob({ root, id: proposeId, runId: arg("--run"), next });
+    if (!out.ok) {
+      console.error("jobs: " + out.reason);
+      process.exit(1);
+    }
+    console.log("jobs: " + (out.existing ? "already on the board " : "proposed ") + out.id);
+    process.exit(0);
   }
   const retryId = arg("--retry");
   if (retryId) {
