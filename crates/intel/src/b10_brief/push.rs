@@ -126,6 +126,29 @@ impl PushLedger {
     }
 }
 
+/// Build the one push a job's state earns, or `None` (push.py `decide_push`).
+///
+/// A done job earns a done push (gated by `build_done_push`); a blocked job
+/// earns a blocked push (gated by `build_blocked_push`); any other status
+/// earns nothing. With a ledger, a repeat for the same job and kind returns
+/// `None` instead of a second push.
+pub fn decide_push(
+    job: &JobView,
+    verification: Option<&Verification>,
+    question: Option<&str>,
+    ledger: Option<&mut PushLedger>,
+) -> Option<Push> {
+    let push = match job.status.as_str() {
+        "done" => build_done_push(job, verification)?,
+        "blocked" => build_blocked_push(job, question)?,
+        _ => return None,
+    };
+    match ledger {
+        Some(l) => l.decide_push(push),
+        None => Some(push),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -165,6 +188,25 @@ mod tests {
         let p = build_done_push(&done_job(), Some(&ver())).unwrap();
         assert!(l.decide_push(p.clone()).is_some());
         assert!(l.decide_push(p).is_none());
+    }
+
+    #[test]
+    fn decide_push_dispatches_by_status_and_dedupes() {
+        assert_eq!(decide_push(&done_job(), Some(&ver()), None, None).unwrap().push_type, "done");
+        let b = JobView { id: "b".into(), title: "T".into(), status: "blocked".into(), verified: false, note: "why?".into() };
+        assert_eq!(decide_push(&b, None, None, None).unwrap().push_type, "blocked");
+        let o = JobView { status: "open".into(), ..done_job() };
+        assert!(decide_push(&o, Some(&ver()), None, None).is_none());
+        let mut u = done_job();
+        u.verified = false;
+        assert!(decide_push(&u, Some(&ver()), None, None).is_none());
+        let bn = JobView { note: String::new(), ..b };
+        assert!(decide_push(&bn, None, None, None).is_none());
+        let mut l = PushLedger::default();
+        assert!(decide_push(&done_job(), Some(&ver()), None, Some(&mut l)).is_some());
+        assert!(decide_push(&done_job(), Some(&ver()), None, Some(&mut l)).is_none());
+        let bj = JobView { id: "j".into(), status: "blocked".into(), note: "why?".into(), ..done_job() };
+        assert!(decide_push(&bj, None, None, Some(&mut l)).is_some());
     }
 
     #[test]
