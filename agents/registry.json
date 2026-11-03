@@ -1,4 +1,19 @@
 {
+  "programs": [
+    "imperium",
+    "ignis",
+    "medicus",
+    "science-lab",
+    "hortus",
+    "officina",
+    "musica",
+    "aegis",
+    "nervus",
+    "hands-free",
+    "agent-layer",
+    "nuntius",
+    "goose-services"
+  ],
   "agents": [
     {
       "budget": {

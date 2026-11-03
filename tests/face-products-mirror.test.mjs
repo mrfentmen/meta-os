@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
-import { PRODUCTS } from "../js/products.js";
+import { CATEGORY_DEFINITIONS, PRODUCTS, STUDIO_PRODUCTS, definitionFor } from "../js/products.js";
 
 const ROOT = path.resolve(path.dirname(url.fileURLToPath(import.meta.url)), "..");
 const swift = fs.readFileSync(
@@ -50,4 +50,29 @@ test("CB2-420 every product's categories agree between products.js and ProductCo
   // No product in the mirror is missing from the browser data.
   const ours = new Set(PRODUCTS.map((p) => p.id));
   for (const id of Object.keys(mirrored)) assert.ok(ours.has(id), id + " is in products.js too");
+});
+
+test("CB2-421 every category carries its own non-empty definition", () => {
+  const all = [...PRODUCTS, ...STUDIO_PRODUCTS];
+  assert.ok(all.length >= 5, "read the product and studio tables");
+
+  for (const product of all) {
+    for (const category of product.categories) {
+      const text = definitionFor(category);
+      assert.equal(typeof text, "string", product.id + "/" + category);
+      assert.ok(text.trim().length > 10, "definition is a sentence, not a label: " + category);
+      assert.ok(!text.toLowerCase().startsWith(category.toLowerCase() + " is"), "a definition does not repeat its own name");
+    }
+  }
+
+  // A category nobody defined is refused by name, never rendered blank.
+  assert.throws(() => definitionFor("birds in the sky"), /no definition for category/);
+  assert.throws(() => definitionFor(undefined), /no definition for category/);
+
+  // The crowd-gathered entry keeps its narrow definition: a stationary crowd,
+  // not any people near each other.
+  const crowd = CATEGORY_DEFINITIONS["crowd gathered"];
+  assert.match(crowd, /stationary/i);
+  assert.match(crowd, /assembled/i);
+  assert.match(crowd, /normal activity/i, "and it points at the category it is not");
 });

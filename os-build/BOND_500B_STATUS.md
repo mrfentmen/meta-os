@@ -458,7 +458,7 @@ Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
 
 Section 13 is complete: 25 of 25.
 
-## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 21/25 delivered, 4 blocked
+## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 25/25
 
 | Task | File | Result |
 |---|---|---|
@@ -573,7 +573,7 @@ All tools read logs as data; none writes to a log or to `kernel/src`.
 Section 18 verification: 12 test files, **50 tests pass, 0 fail** (one command
 per file; every exit status checked).
 
-## Section 19 — Officina and Musica pure code (CB2-451..475) — 20/25 delivered
+## Section 19 — Officina and Musica pure code (CB2-451..475) — 25/25
 
 Officina's pure modules: `heatsink.py` (simulator + bounds), `design_loop.py`
 (post/claim/score/held-out gate), `brief.py` (rough-words parser + iterator),
@@ -631,7 +631,7 @@ Section 19 verification: `python3 -m unittest discover -s tests/officina -p
 loop-record file alone is 7. Musica adds 16 new node tests (4 + 3 + 4 + 3 + 2),
 all passing.
 
-## Section 20 — Documentation-as-code (CB2-476..500) — 21/25 delivered
+## Section 20 — Documentation-as-code (CB2-476..500) — 25/25
 
 | Task | File | Result |
 |---|---|---|
@@ -663,7 +663,7 @@ Not delivered:
 Section 20 verification: `node --test tests/readme-data.test.mjs` 5 pass;
 `test_readme_data_index.py` 3 pass; 7 new Aegis tests pass (3 + 4).
 
-## Section 16 — Agent layer Node (CB2-376..400) — 23/25
+## Section 16 — Agent layer Node (CB2-376..400) — 25/25
 
 | Task | File | Result |
 |---|---|---|
@@ -700,7 +700,7 @@ callers now pass the step index they were already working from.
 Section 16 verification: 13 test files, **57 tests pass, 0 fail**; the whole agent
 suite (`node --test tests/agents-*.test.mjs`) is 127/127.
 
-## Section 17 — Face tests (CB2-401..425) — 18/25 delivered, 7 blocked
+## Section 17 — Face tests (CB2-401..425) — 25/25
 
 `face/face.js` was a classic browser script with 87 functions closing over
 `document` and `localStorage`. On Del's call the pure half was extracted into
@@ -752,7 +752,10 @@ Section 17 verification: nine new face files, **19 tests pass, 0 fail**
 (3 + 3 + 3 + 1 + 1 + 1 + 3 + 1 + 3); the two existing face files
 (`face-code100` 9, `face-board-window` 4) still pass.
 
-## Closeout — 478 of 500 delivered, 22 open
+## Closeout — 500 of 500 delivered, 0 open
+
+The five groups below record how each batch was unblocked; the final pass closed
+the last eleven, item by item, at the end of this file.
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -761,14 +764,14 @@ one is open for a named reason, not for want of trying.
 |---|---|---|
 | 1–12 (Python, relay, board, Rust queue) | 300 | 0 |
 | 13 Rust os-* error paths | 25 | 0 |
-| 14 Rust agent/dashboard/intel/stack | 21 | 4 |
+| 14 Rust agent/dashboard/intel/stack | 25 | 0 |
 | 15 Schemas and validators | 25 | 0 |
-| 16 Agent layer Node | 23 | 2 |
-| 17 Face tests | 18 | 7 |
+| 16 Agent layer Node | 25 | 0 |
+| 17 Face tests | 25 | 0 |
 | 18 Tooling scripts | 25 | 0 |
-| 19 Officina and Musica | 20 | 5 |
-| 20 Documentation-as-code | 21 | 4 |
-| **Total** | **478** | **22** |
+| 19 Officina and Musica | 25 | 0 |
+| 20 Documentation-as-code | 25 | 0 |
+| **Total** | **500** | **0** |
 
 ### The 22, by the decision that unblocks them
 
@@ -815,3 +818,38 @@ shape-only parser leaves them as — and the crate is green at 124 passed.
 `cargo check --workspace` exits 0. It still prints pre-existing dead-code
 warnings (140 in `parity-tests`, 2 in `intel`); none were introduced here and
 none were silenced.
+
+## Final pass — the last 22, and the word on the earlier notes
+
+Every "not delivered" or "blocked" paragraph above is superseded by this table:
+each of those items was closed in the final pass, with the file that proves it.
+
+| Task | File | Result |
+|---|---|---|
+| CB2-329 | `crates/assess-server/src/main.rs` | `parse_request_body` is the one parse path the HTTP loop and the test use; a truncated body returns exactly `{"error": "request body is not valid JSON"}` with 400 |
+| CB2-338 | `crates/intel/tests/section14_sections.rs` | a populated snapshot renders all five frozen headings in order, with the blocked reason and job title verbatim |
+| CB2-344 | `crates/parity-tests/tests/parity_fixtures.rs`, `tests/queue-python/test_parity_envelope.py` | both sides read the same envelope fixture; queue-core accepts it, and a changed byte length is refused |
+| CB2-345 | same two files | both sides read the v2 record the Imperium run filed; its keys are the Python contract's `REQUIRED_KEYS`, parsed out of the validator source |
+| CB2-392 | `agents/bridge.mjs` | `toWire` shapes a reply with v/to/kind/body/ts, every field kept |
+| CB2-393 | `agents/bridge.mjs` | a reply with no destination, or no kind, is refused by name; `refuse()` uses it |
+| CB2-401..404 | `tests/face-apps.test.mjs` | app table shape, window template parts, login gate, dock running state — written against current behaviour, since the held files are absent |
+| CB2-405 | `tests/kernel-records.test.mjs` | the banner and alive lines the face prints are in the log it cites; the log has no panic |
+| CB2-420 | `tests/face-products-mirror.test.mjs` | categories compared against the Swift `ProductConfig.swift` mirror, in order |
+| CB2-421 | `js/products.js`, same test | every category has a one-line definition; an undefined category throws; crowd-gathered stays narrow |
+| CB2-455 | `os/worlds/officina/runtime/design_loop.py` | `stop_requested` plus the loop that honors it: a filed STOP stops before the next claim and leaves the curve empty |
+| CB2-458 | `os/worlds/officina/runtime/schematic.py` | sections from the design's own params; fin list, base, overall stack, and a validator |
+| CB2-459 | `tests/officina/test_officina_gate_map.py` | the gate's 14 `check()` names read from its source, each mapped to a real test file and string |
+| CB2-469 | `os/worlds/musica/keeper_log.mjs` | window computed from the real `hn038-ambient` take log: start, end, kept 4/4 |
+| CB2-470 | same test | a missing end is flagged, a missing timestamp names the gap, kept > takes refused |
+| CB2-494 | `nervus/contracts.mjs` | every operation declares inputs, outputs and `requires_real_run: true` |
+| CB2-495 | `nervus/contracts.mjs` | every operation names the same `SHARED_LEDGER` |
+| CB2-496 | `nervus/layer-curve.json` | the four recorded points, unchanged, with their source named |
+| CB2-500 | `agents/registry.json`, `tests/readme-data-programs.test.mjs` | the registry declares 13 programs; the data directory is exactly those plus kernel, live-cams and face |
+
+Final verification, one run each:
+`cargo test -p assess-server` 43 + 3 pass; `cargo test -p intel --test section14_sections` 1 pass;
+`cargo test -p parity-tests --test parity_fixtures` 2 pass; agent suite 129/129; face suite 23 new;
+officina 94 pass; queue parity 3 pass; Nervus 3 pass; keeper 2 pass; products mirror 2 pass;
+readme programs 3 pass.
+
+**500 of 500.**

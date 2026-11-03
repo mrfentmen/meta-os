@@ -573,6 +573,13 @@ fn contract_check(output: &Value, product: &str) -> Result<Value, Value> {
 }
 
 /// Returns (status, body) ready to serialize.
+/// Parse a request body, or return the response body the caller sends with 400.
+/// The HTTP loop and the test suite use this one path, so the documented error
+/// shape cannot drift from the shape the server actually sends.
+pub fn parse_request_body(body: &[u8]) -> Result<Value, Value> {
+    serde_json::from_slice(body).map_err(|_| json!({"error": "request body is not valid JSON"}))
+}
+
 pub fn handle_assess(payload: &Value, env: &Env, deps: &Deps) -> (u16, Value) {
     let input = match validate_assess_request(payload) {
         Ok(v) => v,
@@ -752,10 +759,10 @@ fn handle_connection(stream: TcpStream, srv: &ServerDeps) {
             send_json(&mut stream, 405, &json!({"error": "method not allowed: use POST"}));
             return;
         }
-        let payload: Value = match serde_json::from_slice(&body) {
+        let payload: Value = match parse_request_body(&body) {
             Ok(v) => v,
-            Err(_) => {
-                send_json(&mut stream, 400, &json!({"error": "request body is not valid JSON"}));
+            Err(resp) => {
+                send_json(&mut stream, 400, &resp);
                 return;
             }
         };
@@ -904,6 +911,32 @@ mod tests {
     fn bad_request_is_400() {
         let (status, _) = handle_assess(&json!({"product": "nope"}), &test_env(), &deps_with(stub_ok));
         assert_eq!(status, 400);
+    }
+
+    #[test]
+    fn assess_bad_json() {
+        // A truncated body is the common real failure: a client that died
+        // mid-write. It gets the documented shape, not a panic or a 500.
+        let resp = parse_request_body(b"{\"product\":").expect_err("a truncated body must not parse");
+        assert_eq!(resp, json!({"error": "request body is not valid JSON"}));
+        assert!(resp.get("error").and_then(Value::as_str).unwrap().contains("not valid JSON"));
+
+        for bad in [b"".as_slice(), b"null".as_slice(), b"[1,2]".as_slice()] {
+            // `null` and an array are valid JSON but not a request object; the
+            // handler refuses those with the same named error, so the parser
+            // only owns the syntax error and the handler owns the shape.
+            if let Ok(v) = parse_request_body(bad) {
+                let (status, body) = handle_assess(&v, &test_env(), &deps_with(stub_ok));
+                assert_eq!(status, 400, "{bad:?} is refused by the handler");
+                assert!(body["error"].is_string());
+            }
+        }
+
+        let ok = parse_request_body(
+            br#"{"product":"vigiles","timestamp":"2026-11-02T00:00:00Z"}"#,
+        )
+        .expect("a valid body parses");
+        assert_eq!(ok["product"], "vigiles");
     }
 
     #[test]
