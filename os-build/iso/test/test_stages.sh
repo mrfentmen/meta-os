@@ -383,8 +383,28 @@ if [ -e "$LANE/../metaos-theme/wallpapers/gen.py" ]; then
 else
     printf 'NOTE  metaos-theme/wallpapers/gen.py absent on this branch (not tested)\n'
 fi
-if find "$LANE" -maxdepth 3 -iname '*recolor*' -print -quit 2>/dev/null | grep -q .; then
-    bad "recolor script present but unasserted — extend this harness"
+RECOL=$(find "$LANE" -maxdepth 3 -iname '*recolor*' -print -quit 2>/dev/null)
+if [ -n "$RECOL" ]; then
+    step "recolor script maps Papirus blues on a fixture tree (offline)"
+    mkdir -p "$tmp/pap/SIZE/places"
+    printf '<svg><path fill="#5294e2"/><path fill="#4877b1"/></svg>' > "$tmp/pap/SIZE/places/folder-blue.svg"
+    printf '<svg><path fill="#5294e2"/></svg>' > "$tmp/pap/SIZE/places/user-blue-starred.svg"
+    printf '<svg><path fill="#5294e2"/></svg>' > "$tmp/pap/SIZE/places/solus-logo.svg"
+    ln -s folder-blue.svg "$tmp/pap/SIZE/places/folder.svg"
+    run "recolor fixture run (exit 0)" 0 "recolored" sh "$RECOL" "$tmp/pap" "$tmp/icons-out"
+    [ "$(grep -c '#1877F2' "$tmp/icons-out/SIZE/places/folder-blue.svg")" = "1" ] \
+        && ok "front tone mapped #5294e2 -> #1877F2" || bad "front tone map missing"
+    [ "$(grep -c '#1360C4' "$tmp/icons-out/SIZE/places/folder-blue.svg")" = "1" ] \
+        && ok "back tone mapped #4877b1 -> #1360C4" || bad "back tone map missing"
+    if grep -q '#5294e2\|#4877b1' "$tmp/icons-out/SIZE/places/folder-blue.svg" "$tmp/icons-out/SIZE/places/user-blue-starred.svg" 2>/dev/null; then
+        bad "source tones remain in scope"
+    else
+        ok "no source tones left in scope"
+    fi
+    [ -L "$tmp/icons-out/SIZE/places/folder.svg" ] \
+        && ok "symlink alias preserved" || bad "symlink alias lost"
+    grep -q '#5294e2' "$tmp/icons-out/SIZE/places/solus-logo.svg" \
+        && ok "out-of-scope file untouched" || bad "out-of-scope file touched"
 else
     printf 'NOTE  no recolor script on this branch (not tested)\n'
 fi

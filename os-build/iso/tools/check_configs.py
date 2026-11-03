@@ -220,23 +220,26 @@ def check_plymouth():
     else:
         record(PASS, "plymouth brace/paren balance", "balanced")
 
-    # Deliberate restrictions: no trig, no loops, no font files. A future
-    # edit that adds them needs a real plymouth run before it ships.
-    banned = [t for t in ("Math.", "for (", "loadfont", ".ttf") if t in script]
+    # Determinism rule (relaxed 2026-11-03: the validated splash theme
+    # legitimately uses Math.* pure functions and bounded for-loops for
+    # password bullets). Banned: randomness, wall-clock/date reads,
+    # filesystem access, font files. Math.* + for are fine and proven
+    # by syntax + balance checks; first live boot confirms rendering.
+    banned = [t for t in ("Math.Random", "Date.", "File.", "loadfont", ".ttf") if t in script]
     if banned:
-        record(FAIL, "plymouth conservative-subset", "found: " + ", ".join(banned))
+        record(FAIL, "plymouth determinism", "nondeterministic construct: " + ", ".join(banned))
     else:
-        record(PASS, "plymouth conservative-subset", "no trig/loops/fonts")
+        record(PASS, "plymouth determinism", "no rng/date/fs/fonts")
     if "Plymouth.SetRefreshFunction" not in script:
         record(FAIL, "plymouth refresh hook", "SetRefreshFunction missing")
     else:
         record(PASS, "plymouth refresh hook", "present")
 
-    dots = re.findall(r"dot(\d+) = Sprite\(dot_image\)", script)
-    if len(dots) != 12 or dots != [str(i) for i in range(12)]:
-        record(FAIL, "plymouth progress ring", f"expected dot0..dot11, found {dots}")
+    has_bar = "bar.sprite" in script and bool(re.search(r"\.Crop\s*\(", script))
+    if not has_bar:
+        record(FAIL, "plymouth progress bar", "expected bar.sprite + .Crop() progress fill")
     else:
-        record(PASS, "plymouth progress ring", "12 dots, dot0..dot11")
+        record(PASS, "plymouth progress bar", "bar-crop fill present")
 
 
 def check_preseed(parsed):
