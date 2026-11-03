@@ -1,0 +1,124 @@
+# Trio stack — mirrors run-stack.sh in containers.
+#
+#   relay :8787  Meta Nuntius relay   (node relay/relay.mjs)
+#   queue :8935  OS queue service     (python3 server/queue/queue_service.py)
+#   agent :—      resident queue agent (python3 server/queue/trio_agent.py)
+#   app   :8080  Trio app server      (node server/server.mjs, queue path on)
+#
+# Env contract (from relay/README.md, server/queue/README.md,
+# server/README.md — same names run-stack.sh uses):
+#
+# | Var                    | Service | Default | Meaning                                    |
+# | ---------------------- | ------- | ------- | ------------------------------------------ |
+# | RELAY_PORT             | relay   | 8787    | relay listen port                          |
+# | RELAY_STORE_FILE       | relay   | unset   | set = JSONL file store (volume ./relay-data); unset = in-memory only |
+# | QUEUE_PORT             | queue   | 8935    | queue listen port (passed as --port flag)  |
+# | TRIO_JOB_NS            | queue   | trio    | job namespace in the store                 |
+# | TRIO_STORE             | queue   | unset   | `local` forces the labelled SQLite fallback (dev/tests) |
+# | TRIO_LOCAL_DB          | queue   | beside modules | fallback SQLite path (volume ./queue-data) |
+# | TRIO_UPSTASH_HOST      | queue   | unset   | Upstash store host (or full REST URL); unset = labelled SQLite fallback |
+# | TRIO_RELAY_URL         | agent   | unset   | relay base URL for NOTIFY lines, e.g. http://relay:8787; unset = no hook |
+# | SPARK_API_KEY          | agent+app | unset | model key slot, env only — never committed; unset = NOT CONFIGURED/offline mode |
+# | TRIO_SPARK_VIA_HELPER  | agent   | unset   | `1` selects the DEV helper transport (opt-in only; helper lives outside this repo) |
+# | TRIO_QUEUE_ENABLED     | app     | 1 here  | `1` turns the queue path on                |
+# | TRIO_QUEUE_URL         | app     | —       | queue base URL (here http://queue:8935)    |
+# | PORT                   | app     | 8080    | app listen port                            |
+# | ASSESS_LIVE_MODEL      | app     | unset   | `1` opens the test-phase gate; unset = held refusals |
+# | FIRMS_MAP_KEY          | app     | unset   | NASA FIRMS key; unset = /api/fires answers 503 |
+#
+# Generation transport (same rule as run-stack.sh): with
+# SPARK_API_KEY in the environment the agent uses the production
+# direct transport. The DEV helper transport is NEVER auto-selected:
+# set TRIO_SPARK_VIA_HELPER=1 explicitly for it. With neither, the
+# stack still starts in labelled offline mode (generation honestly
+# unavailable) until SPARK_API_KEY is set.
+#
+# Run:  docker compose up --build
+# Down: docker compose down
+
+services:
+  relay:
+    build: .
+    command: ["node", "relay/relay.mjs"]
+    ports:
+      - "${RELAY_PORT:-8787}:8787"
+    environment:
+      RELAY_PORT: "8787"
+      # RELAY_STORE_FILE: /data/relay-store.jsonl  # opt-in file store
+    volumes:
+      - relay-data:/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  queue:
+    build: .
+    # NOTE (verified 2026-11-03): queue_service.py binds 127.0.0.1
+    # (server/queue/queue_service.py), so in Docker only processes
+    # INSIDE this container can reach it — the container healthcheck
+    # above passes, but host curl and the app's TRIO_QUEUE_URL both
+    # fail. Same single-host behavior as run-stack.sh is unaffected
+    # (all four share loopback there). The app degrades exactly as
+    # documented: queue attempt refuses, falls back to the direct
+    # Spark path, logs it (server/queue.mjs). Binding 0.0.0.0 is a
+    # one-line fix in queue_service.py — flagged for the owner,
+    # not made here (docs-only lane).
+    command: ["python3", "server/queue/queue_service.py", "--port", "8935"]
+    ports:
+      - "${QUEUE_PORT:-8935}:8935"
+    environment:
+      TRIO_JOB_NS: "${TRIO_JOB_NS:-trio}"
+      # TRIO_STORE: local            # uncomment to force the labelled SQLite fallback
+      TRIO_LOCAL_DB: /data/trio-queue-local.db
+      # TRIO_UPSTASH_HOST: ...       # set for the Redis path; unset = labelled fallback
+      SPARK_API_KEY: "${SPARK_API_KEY:-}"
+    volumes:
+      - queue-data:/data
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8935/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  agent:
+    build: .
+    command: ["python3", "server/queue/trio_agent.py"]
+    depends_on:
+      relay:
+        condition: service_healthy
+      queue:
+        condition: service_healthy
+    environment:
+      TRIO_RELAY_URL: http://relay:8787
+      TRIO_JOB_NS: "${TRIO_JOB_NS:-trio}"
+      TRIO_LOCAL_DB: /data/trio-queue-local.db
+      # TRIO_UPSTASH_HOST: ...       # same store as queue when set
+      SPARK_API_KEY: "${SPARK_API_KEY:-}"
+      # TRIO_SPARK_VIA_HELPER: "1"   # DEV helper transport opt-in only (see header)
+    volumes:
+      - queue-data:/data
+
+  app:
+    build: .
+    command: ["node", "server/server.mjs"]
+    ports:
+      - "${PORT:-8080}:8080"
+    depends_on:
+      relay:
+        condition: service_healthy
+      queue:
+        condition: service_healthy
+    environment:
+      PORT: "8080"
+      TRIO_QUEUE_ENABLED: "1"
+      TRIO_QUEUE_URL: http://queue:8935
+      SPARK_API_KEY: "${SPARK_API_KEY:-}"
+      # ASSESS_LIVE_MODEL: "1"       # test-phase gate opt-in (see header)
+      # FIRMS_MAP_KEY: ...           # opt-in; unset = /api/fires answers 503
+      TRIO_JOB_NS: "${TRIO_JOB_NS:-trio}"
+
+volumes:
+  relay-data:
+  queue-data:
