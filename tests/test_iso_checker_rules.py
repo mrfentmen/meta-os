@@ -6,6 +6,7 @@ that break. The baseline case proves the copy passes untouched.
 """
 
 import shutil
+import struct
 import subprocess
 import sys
 import tempfile
@@ -72,6 +73,65 @@ class CheckerRuleTest(unittest.TestCase):
         self.assertEqual(out.returncode, 1)
         self.assertIn("ring-dot.png is missing", out.stdout)
         self.assertEqual(path.is_file(), True)
+
+
+    def test_missing_package_manifest_is_named(self):
+        (self.root / "base" / "metaos.packages").unlink()
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("metaos.packages is missing", out.stdout)
+
+    def test_duplicate_package_is_named(self):
+        path = self.root / "base" / "metaos.packages"
+        path.write_text(path.read_text(encoding="utf-8") + "plank\n", encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("duplicate package(s): plank", out.stdout)
+
+    def test_launcher_with_no_package_behind_it_is_named(self):
+        # Drop thunar from the base line: meta-files.desktop then starts a
+        # program that neither apt nor this lane installs.
+        path = self.root / "base" / "metaos.packages"
+        text = path.read_text(encoding="utf-8").replace(
+            "#base: thunar xfce4-terminal", "#base: xfce4-terminal")
+        path.write_text(text, encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("which no package installs", out.stdout)
+        self.assertIn("thunar", out.stdout)
+
+    def test_stale_wallpaper_is_named(self):
+        path = self.root / "theme" / "wallpaper" / "meta-wallpaper.png"
+        path.write_bytes(path.read_bytes() + b"\x00")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("wallpaper is stale", out.stdout)
+
+    def test_wrong_wallpaper_size_is_named(self):
+        path = self.root / "theme" / "wallpaper" / "meta-wallpaper.png"
+        raw = bytearray(path.read_bytes())
+        raw[16:20] = struct.pack(">I", 1280)
+        path.write_bytes(bytes(raw))
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("expected 1920x1080", out.stdout)
+
+    def test_stylesheet_missing_a_token_is_named(self):
+        path = self.root / "theme" / "gtk" / "metaos.css"
+        kept = [line for line in path.read_text(encoding="utf-8").splitlines(True)
+                if "@define-color meta_blue" not in line]
+        path.write_text("".join(kept), encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("has no definition for blue", out.stdout)
+
+    def test_backdrop_pointing_elsewhere_is_named(self):
+        path = self.root / "theme" / "xfce4-desktop.xml"
+        path.write_text(path.read_text(encoding="utf-8").replace(
+            "meta-wallpaper.png", "other.png"), encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("never points at", out.stdout)
 
 
 if __name__ == "__main__":

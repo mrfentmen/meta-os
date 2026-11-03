@@ -14,8 +14,10 @@ import configparser
 import hashlib
 import json
 import re
+import struct
 import subprocess
 import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ISO = Path(__file__).resolve().parents[1]
@@ -122,8 +124,6 @@ ring = theme_dir / "ring-dot.png"
 if not ring.is_file():
     bad("plymouth: ring-dot.png is missing")
 else:
-    import struct
-
     head = ring.read_bytes()[:33]
     if head[:8] != b"\x89PNG\r\n\x1a\n":
         bad("plymouth: ring-dot.png is not a PNG")
@@ -294,12 +294,53 @@ if locale_cfg:
     else:
         bad("calamares: locale.conf has no region/zone")
 
+# --- base image manifest ----------------------------------------------
+# What the base image supplies, and what this lane adds on top. A launcher for
+# a program no package installs is a dead icon, so the desktop entries are
+# checked against this manifest instead of against a list inside this file.
+packages_path = ISO / "base" / "metaos.packages"
+REQUIRED_PACKAGES = {"plank", "fonts-inter", "lightdm-gtk-greeter", "plymouth", "calamares"}
+packages, base_binaries = [], set()
+
+if not packages_path.is_file():
+    bad("base: metaos.packages is missing")
+else:
+    for raw in read(packages_path).splitlines():
+        line = raw.strip()
+        if line.startswith("#base:"):
+            base_binaries |= set(line.split(":", 1)[1].split())
+            continue
+        if not line or line.startswith("#"):
+            continue
+        packages.append(line)
+
+    dupes = sorted({name for name in packages if packages.count(name) > 1})
+    if dupes:
+        bad("base: duplicate package(s): %s" % ", ".join(dupes))
+    else:
+        ok("base: %d package(s), no duplicates" % len(packages))
+
+    invalid = [name for name in packages if not re.fullmatch(r"[a-z0-9][a-z0-9+.-]+", name)]
+    if invalid:
+        bad("base: not apt package names: %s" % ", ".join(invalid))
+    else:
+        ok("base: every line is a well-formed apt package name")
+
+    missing_pkgs = sorted(REQUIRED_PACKAGES - set(packages))
+    if missing_pkgs:
+        bad("base: the manifest does not install %s" % ", ".join(missing_pkgs))
+    else:
+        ok("base: the manifest installs the packages the configs reference")
+
+    if base_binaries:
+        ok("base: the base image is declared to provide %s" % ", ".join(sorted(base_binaries)))
+    else:
+        bad("base: no #base: line, so no launcher can be checked against the base image")
+
 # --- desktop entries ---------------------------------------------------
-# Binaries the base image already supplies.
-SYSTEM_APPS = {"thunar", "xfce4-terminal", "xfce4-settings-manager", "chromium"}
 # Binaries this lane ships. The value is the file that must exist.
 SHIPPED_APPS = {"meta-agent-status": Path("apps") / "agent-status" / "meta-agent-status.py"}
-APPS = SYSTEM_APPS | set(SHIPPED_APPS)
+APPS = set(packages) | base_binaries | set(SHIPPED_APPS)
 
 # The frozen launcher set, `metaos-contracts/APPS.md`: id -> launcher stem.
 # A missing id is a named gap, and this table is how it gets named.
@@ -330,7 +371,7 @@ for entry in entries:
         continue
     binary = got.get("Exec", "").split()[0]
     if binary not in APPS:
-        bad("apps: %s runs %r, which is neither a system app nor a shipped one"
+        bad("apps: %s runs %r, which no package installs and this lane does not ship"
             % (entry.name, binary))
     else:
         ok("apps: %s runs %s" % (entry.name, binary))
@@ -507,6 +548,68 @@ if start_page.is_file():
         ok("apps: start page links the generated token stylesheet")
     else:
         bad("apps: start page does not link tokens.css")
+
+# --- wallpaper and GTK theme ------------------------------------------
+wallpaper = ISO / "theme" / "wallpaper" / "meta-wallpaper.png"
+if not wallpaper.is_file():
+    bad("theme: meta-wallpaper.png is missing (run iso/tools/make_wallpaper.py)")
+else:
+    head = wallpaper.read_bytes()[:33]
+    if head[:8] != b"\x89PNG\r\n\x1a\n":
+        bad("theme: wallpaper is not a PNG")
+    else:
+        width, height, depth, colour = struct.unpack(">IIBB", head[16:26])
+        if (width, height) == (1920, 1080):
+            ok("theme: wallpaper is 1920x1080")
+        else:
+            bad("theme: wallpaper is %dx%d, expected 1920x1080" % (width, height))
+        if (depth, colour) == (8, 6):
+            ok("theme: wallpaper is 8-bit RGBA")
+        else:
+            bad("theme: wallpaper depth %d colour type %d" % (depth, colour))
+
+gtk_css = ISO / "theme" / "gtk" / "metaos.css"
+if not gtk_css.is_file():
+    bad("theme: metaos.css is missing (run iso/tools/tokens_to_gtk.py)")
+elif tokens:
+    css = read(gtk_css)
+    absent = [name for name, value in tokens.items()
+              if "@define-color meta_%s %s;" % (name, value) not in css]
+    if absent:
+        bad("theme: gtk.css has no definition for %s" % ", ".join(sorted(absent)))
+    else:
+        ok("theme: every frozen token has a GTK colour name")
+    hexes = re.findall(r"#[0-9A-Fa-f]{6}\b", css)
+    if len(hexes) == len(tokens):
+        ok("theme: gtk.css carries no colour outside the contract")
+    else:
+        bad("theme: gtk.css has %d hex value(s) for %d token(s)" % (len(hexes), len(tokens)))
+
+for tool, label in (("make_wallpaper.py", "wallpaper"), ("tokens_to_gtk.py", "gtk.css")):
+    run = subprocess.run([sys.executable, str(ISO / "tools" / tool), "--check"],
+                         capture_output=True, text=True)
+    if run.returncode == 0:
+        ok("theme: %s is exactly what the generator produces" % label)
+    else:
+        bad("theme: %s is stale (%s)" % (label, (run.stdout + run.stderr).strip()))
+
+# --- desktop backdrop channel -----------------------------------------
+backdrop = ISO / "theme" / "xfce4-desktop.xml"
+BACKDROP_TARGET = "/usr/share/metaos/theme/meta-wallpaper.png"
+if not backdrop.is_file():
+    bad("theme: xfce4-desktop.xml is missing")
+else:
+    try:
+        channel = ET.parse(str(backdrop)).getroot()
+        values = [el.get("value") for el in channel.iter("property")]
+        if channel.get("name") != "xfce4-desktop":
+            bad("theme: backdrop channel is %r, expected 'xfce4-desktop'" % channel.get("name"))
+        elif BACKDROP_TARGET not in values:
+            bad("theme: the backdrop channel never points at %s" % BACKDROP_TARGET)
+        else:
+            ok("theme: the backdrop channel points at the installed wallpaper")
+    except ET.ParseError as exc:
+        bad("theme: xfce4-desktop.xml does not parse (%s)" % exc)
 
 # --- no stub markers ---------------------------------------------------
 bad_marks = []

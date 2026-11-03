@@ -109,6 +109,10 @@ put "$ISO/apps/chromium/meta-start.html" "/usr/share/metaos/start/meta-start.htm
 put "$ISO/apps/chromium/tokens.css" "/usr/share/metaos/start/tokens.css"
 put "$ISO/apps/chromium/policies.json" "/etc/chromium/policies/managed/metaos.json"
 
+put "$ISO/theme/wallpaper/meta-wallpaper.png" "/usr/share/metaos/theme/meta-wallpaper.png"
+put "$ISO/theme/gtk/metaos.css" "/usr/share/metaos/theme/gtk.css"
+put "$ISO/theme/xfce4-desktop.xml" "/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+
 if [ "$DRY" = "1" ]; then
   echo "apply: dry run, $planned file(s) planned, $fail missing"
 else
