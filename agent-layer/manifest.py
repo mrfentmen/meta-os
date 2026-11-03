@@ -16,6 +16,7 @@ TARGETS = {
     "agent-layer/units/oc2-trio.service": "~/.config/systemd/user/oc2-trio.service",
     "agent-layer/units/oc2-health.service": "~/.config/systemd/user/oc2-health.service",
     "agent-layer/units/oc2-health.timer": "~/.config/systemd/user/oc2-health.timer",
+    "agent-layer/units/oc2-watchman.service": "~/.config/systemd/user/oc2-watchman.service",
     "agent-layer/install.sh": "run: sh agent-layer/install.sh (idempotent)",
     "agent-layer/env.example": "~/.config/oc2-agent/env (template only, never keys)",
     "agent-layer/README.md": "docs (not installed)",
