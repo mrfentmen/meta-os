@@ -135,6 +135,12 @@ if [ -d "$PAYLOAD/wallpapers/studio-loop" ]; then
 fi
 gate_payload_imperium=1
 
+# ---------------------------------------------------------------- agent layer
+say "installing OC2 agent layer (runtime, user units, login hook)"
+AGENT="$HERE/../../agent-layer"
+[ -d "$AGENT" ] || fail "agent-layer dir missing at repo root (expected $AGENT)"
+sh "$AGENT/stage.sh" "$ROOT" || fail "agent-layer stage failed"
+
 # ---------------------------------------------------------------- packages
 if [ "$WITH_PACKAGES" = "1" ]; then
     if chroot "$ROOT" sh -c 'command -v calamares >/dev/null 2>&1'; then
