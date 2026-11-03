@@ -12,6 +12,7 @@ mkdir -p /usr/share/plank/themes/MetaOS
 install -m644 "$HERE/dock/dock.theme" /usr/share/plank/themes/MetaOS/dock.theme
 mkdir -p /usr/share/themes/MetaOS/gtk-3.0
 install -m644 "$HERE/gtk/gtk.css" /usr/share/themes/MetaOS/gtk-3.0/gtk.css
+install -m644 "$HERE/gtk/index.theme" /usr/share/themes/MetaOS/index.theme
 mkdir -p /etc/bash.bashrc.d
 install -m644 "$HERE/terminal/metaos-welcome.sh" /etc/bash.bashrc.d/metaos.sh
 # The welcome hook runs /usr/share/metaos/metafetch.mjs; install it when
