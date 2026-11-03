@@ -1,0 +1,23 @@
+# OC2B-110/111 — Model endpoint allowlist + egress audit (static, no VM)
+
+Allowlisted hosts (the ONLY URL literals in `server/queue/*.py`):
+
+1. `https://api.meta.ai/v1/chat/completions` — `models.py:52`
+   (`CHAT_ENDPOINT`), `spark_gen.py:47` (`SPARK_ENDPOINT`).
+   `models.py:53` also defines `RESPONSES_ENDPOINT`
+   (`.../v1/responses`) — declared, same host.
+2. `https://webcams.nyctmc.org/api/cameras` — `livecams.py:35`
+   (`API_URL`), docs at `:11-15`.
+
+Egress audit: grep for `https?://` across `server/queue/*.py`,
+excluding the two allowlisted hosts + loopback + `example.invalid` /
+`example.com` test fixtures → ZERO other hits. `trio_store.py`
+builds `https://{host}` ONLY from env/credential-supplied hosts
+(Upstash deployment config, never hardcoded — `trio_store.py:92,111,174`).
+
+- OC2B-110: allowlist = api.meta.ai + webcams.nyctmc.org (+ env-fed
+  Upstash host). Recorded above with file:line.
+- OC2B-111: no non-allowlisted host is contacted in any test or live
+  run this session. Live runs hit 127.0.0.1 only (odd ports 189xx);
+  the no-key trio path raises BEFORE any egress (named RuntimeError).
+  Test-suite egress: loopback dispatch + `example.invalid` stubs.
