@@ -113,3 +113,43 @@ repo mounted read-only through virtfs), so it is mid-proof. Do not touch
 - Messages (`bus.html`) needs a relay REST URL + token before it is a messenger;
   offline it is a configure screen that says `Status: not connected`.
 - No boot, screenshot or port proof was run from this lane tonight.
+
+## Second pass — what the working tree was hiding
+
+After the merges I checked the tree the image is actually built from, and found
+that shipping source had never been committed at all:
+
+- `os-build/face/notesd.py` — the service behind Notes, Calendar and Settings
+  (port 18937). Untracked.
+- `os-build/face/native/meta-notes.py`, `meta-monitor.py`, `meta-agents.py` —
+  three of the dock's native apps. Untracked.
+- `os-build/face/start.html`, `kiosk.sh`, `app_proof.sh`, `metaos-face.desktop`,
+  `metaos-livebg.service`, `about.html`, `agents.html`, `APP_MATRIX.md`,
+  `SESSION.md` — untracked.
+- The image got all of them because the build copies the working tree. A clone
+  would have produced a desktop with no notes service and no Notes/Monitor/
+  Agents windows, and `provision.sh` would have FAILed two of its own checks
+  (`face start.html`, `face notesd.py`).
+
+All of that is committed now (`178d5752`), and a root-mode `provision.sh` run
+against a throwaway root ends with every check OK, including the new
+`site aegis/index.html: OK`.
+
+Also committed on its own: `vendor/three.min.js` (`3ba5c6b0`). agent-2 is
+consolidating the four per-page copies into that one file and has repointed the
+pages at `../../vendor/…`. The new file was untracked, so a clone would have
+404ed three.js and every 3D page would have shown the "3D unavailable" line.
+Tested after committing: all four pages run the real 3D path again
+(`Caffeine — C8H10N4O2 … 24 atoms, 25 bonds`, `Stopped. Press Play.`).
+
+**Still uncommitted in the shared tree (agent-2's lane):** the page repoints and
+the deletion of the per-page `vendor/three.min.js` + `LICENSE-three.txt` files,
+plus `bus.html` and `surfaces.html` rewrites. That is a coherent change set and
+should be committed as one by whoever owns that lane — do not merge the deletion
+without the repoint, and do not merge the repoint without the root vendor file
+(now in main).
+
+**Still untracked, deliberately:** `os-build/captures/*` except the two
+referenced frames, `runs/`, `memory/`, `os-build/handsfree/*`, the drill data,
+`os-build/aegis` receipts. Those are generated; committing them is a decision
+for the owner, not a fix.
