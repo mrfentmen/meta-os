@@ -76,6 +76,28 @@ def rows(root, home):
             "all %d files" % len(files) if not missing
             else "missing " + ", ".join(missing))
 
+    autostart = root / "etc/xdg/autostart"
+    entries = sorted(autostart.glob("*.desktop")) if autostart.is_dir() else []
+    unresolved = []
+    for entry in entries:
+        exe = ""
+        try:
+            for line in entry.read_text(encoding="utf-8", errors="replace").splitlines():
+                if line.startswith("Exec="):
+                    exe = line.split("=", 1)[1].strip().split(" ")[0]
+                    break
+        except OSError:
+            unresolved.append("%s (unreadable)" % entry.name)
+            continue
+        if not exe or not (root / exe.lstrip("/")).is_file():
+            unresolved.append("%s -> %s" % (entry.name, exe or "no Exec"))
+    if not entries:
+        put("FAIL", "autostart binaries", "no entries in %s" % autostart)
+    else:
+        put("PASS" if not unresolved else "FAIL", "autostart binaries",
+            "%d entry/entries all resolve" % len(entries) if not unresolved
+            else "missing " + ", ".join(unresolved))
+
     exe = root / "usr/local/bin/meta-agent-status"
     put("PASS" if exe.is_file() and os.access(exe, os.X_OK) else "FAIL",
         "meta-agent-status", str(exe))

@@ -225,5 +225,24 @@ class CheckerRuleTest(unittest.TestCase):
         self.assertIn("branding colours outside the contract", out.stdout)
 
 
+    def test_autostart_running_something_uninstalled_is_named(self):
+        path = self.root / "base" / "autostart" / "meta-first-login.desktop"
+        text = path.read_text(encoding="utf-8")
+        text = text.replace("/usr/local/bin/meta-first-login", "/usr/local/bin/nope")
+        path.write_text(text, encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("which this lane never installs", out.stdout)
+
+    def test_autostart_binary_without_tryexec_is_named(self):
+        path = self.root / "base" / "autostart" / "meta-first-login.desktop"
+        text = "".join(line for line in path.read_text(encoding="utf-8").splitlines(True)
+                       if not line.startswith("TryExec="))
+        path.write_text(text, encoding="utf-8")
+        out = self.check()
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("TryExec", out.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()

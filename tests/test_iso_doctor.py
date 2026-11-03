@@ -75,5 +75,13 @@ class DoctorTest(unittest.TestCase):
         self.assertEqual(run(["--nope"]).returncode, 2)
 
 
+    def test_an_autostart_entry_with_no_binary_is_named(self):
+        (self.root / "usr/local/bin/meta-first-login").unlink()
+        out = run(["--root", str(self.root)])
+        self.assertEqual(out.returncode, 1)
+        self.assertIn("autostart binaries", out.stdout)
+        self.assertIn("meta-first-login", out.stdout)
+
+
 if __name__ == "__main__":
     unittest.main()
