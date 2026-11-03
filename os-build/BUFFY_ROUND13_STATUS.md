@@ -20,12 +20,12 @@ Branch `buffy/round13`, cut from `origin/main` at `c5a80252`. Task list:
 | M — agent runtime: STOP/budget | **COMPLETE** | 25 / 25; 12 observed, 9 observed-gap, 4 gaps | `os-build/round13/agents/SECTION_M.md` |
 | N — agent runtime: death/recovery | **COMPLETE** | 25 / 25; 21 observed, 2 observed-gap, 2 gaps | `os-build/round13/agents/SECTION_N.md` |
 | O — chaos over the loops | **COMPLETE** | 25 / 25; 11 observed, 9 observed-gap, 5 gaps | `os-build/round13/agents/SECTION_O.md` |
-| P — Hands-Free | NOT STARTED | 0 / 25 | — |
+| P — Hands-Free intake | **COMPLETE** | 25 / 25; **25 tests pass**, 14 findings, 3 fences checked | `os-build/round13/handsfree/SECTION_P.md` |
 | Q–R — Nuntius | NOT STARTED | 0 / 50 | — |
 | S — userspace | NOT STARTED | 0 / 25 | — |
 | T — federation + closeout | NOT STARTED | 0 / 25 | — |
 
-**Sections A–O:** 375 / 375 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
+**Sections A–P:** 400 / 400 addressed — 71 gaps (A–C), 25 pair gaps (D), 15 missing manifests
 (E), 9 missing artifacts (H), 9 unimplemented OSINT angles (I), 21 baton gaps (L), 1 review
 item (G), 4 real observations (D/E), 2 OSINT findings (I), 6 OPSEC findings (J), 5 runtime
 findings (K), 4 loop findings (M–O: no restart supervisor, a missing cwd kills the caller,
@@ -48,6 +48,7 @@ be regenerated:
 | `os-build/layer1/opsec_checks.py` | 25 OPSEC checks, mechanical where a command can decide |
 | `os-build/layer1/agent_drills.mjs` | 25 runtime drills with real spawns, budgets, STOP files and ledgers |
 | `os-build/layer1/loop_drills.mjs` | 75 loop drills: STOP/budget arms, real watchman deaths, chaos faults |
+| `handsfree/intake_cases.test.mjs` | 25 intake cases; asserts no line is silently dropped, records the rest |
 
 ## Limits carried forward
 
@@ -69,3 +70,10 @@ be regenerated:
   recovery does not. Every Section N restart is a manual respawn by the drill.
 - A missing working directory kills the process that called `spawnAgent`: `runtime.mjs` attaches
   no `'error'` listener to `spawn()`. Proved in a child probe (R13-374), exit 7, uncaught ENOENT.
+
+- The refusal catalogue (`handsfree/refusals.mjs`) is **not wired into `intake.mjs`**: a dispatch
+  order that the catalogue refuses is still filed as a job (R13-394). The fence exists as data
+  and is never consulted by the path that turns text into work.
+- Intake has no size cap, no case normalisation, no verb check and no duplicate check. A pasted
+  log, a pasted error and a timestamped line each become orders whose "agent" is `12`, `Error`
+  and `2026-11-02 14` (R13-397..399). A spoken `STOP` is filed as work, not as a stop (R13-389).
