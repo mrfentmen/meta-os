@@ -19,9 +19,17 @@
 //! Everything here is pure logic + tests. Execution, backends, and
 //! humans stay with the callers.
 
+pub mod authority;
 pub mod budgetsim;
+pub mod conflicts;
+pub mod consolidate;
 pub mod egress;
+pub mod firewall;
+pub mod objective;
+pub mod provenance;
 pub mod router;
+pub mod secrets;
 pub mod snapshot;
+pub mod tasks;
 pub mod throttle;
 pub mod vectors;
