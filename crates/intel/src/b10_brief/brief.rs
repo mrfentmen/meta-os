@@ -221,8 +221,18 @@ pub fn brief_age_seconds(now: i64, ts: i64) -> i64 {
     (now - ts).max(0)
 }
 
-pub fn brief_exceeds_budget(text: &str, budget: usize) -> bool {
-    text.len() > budget
+/// FND-034: does a brief exceed its kind budget? Word count counts
+/// every word in the text, including headings. An unknown kind has
+/// no budget to exceed, so it returns `false` — callers must validate
+/// the kind separately, not rely on this to catch it.
+/// (Python `brief.brief_exceeds_budget(kind, text)`: the previous
+/// Rust shape counted characters against a numeric budget, which
+/// disagreed with Python on any multi-character word.)
+pub fn brief_exceeds_budget(kind: &str, text: &str) -> bool {
+    match brief_budget(kind) {
+        None => false,
+        Some(budget) => text.split_whitespace().count() > budget,
+    }
 }
 
 /// OS-051: a previous-session record carried on a boot snapshot.
