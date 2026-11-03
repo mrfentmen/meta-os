@@ -1,0 +1,195 @@
+#!/usr/bin/env python3
+"""Aegis page selftest: parse every file the page reads, fail loudly on problems.
+
+Reads only files under aegis-page/ (anchored at this script's directory).
+One line per check on stdout. Exit 0 iff everything passes, 1 otherwise.
+Usage: ./selftest [--quiet]  (--quiet prints only the summary line)
+"""
+import json
+import os
+import re
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+DATA = os.path.join(HERE, "data")
+PAGE = os.path.join(HERE, "index.html")
+
+DECLARED = [
+    "data/findings.jsonl",
+    "data/KEV.json",
+    "data/LIVENESS.json",
+    "data/runs.jsonl",
+]
+
+SEVERITIES = {"info", "low", "medium", "high", "critical"}
+LIVENESS_VALUES = {"LIVE", "DEAD", "UNREACHABLE"}
+REQUIRED_FINDING_FIELDS = {"ts", "severity", "title", "source", "run"}
+
+quiet = "--quiet" in sys.argv[1:]
+lines = []
+failed = False
+
+
+def check(name, ok, detail=""):
+    global failed
+    if not ok:
+        failed = True
+    if not quiet or not ok:
+        lines.append(("FAIL " if not ok else "ok ") + name + (": " + detail if detail and (quiet or not ok or True) else ""))
+
+
+def inside(path):
+    return os.path.abspath(path).startswith(HERE + os.sep)
+
+
+# 0. containment: every path we touch stays inside aegis-page/
+for rel in DECLARED + ["index.html"]:
+    p = os.path.join(HERE, rel)
+    check("contained aegis-page/" + rel, inside(p), "escapes aegis-page/" if not inside(p) else "stays inside aegis-page/")
+    if not inside(p):
+        print("\n".join(lines))
+        sys.exit(1)
+
+# 1. page declares exactly the files we check
+try:
+    html = open(PAGE, encoding="utf-8").read()
+    fetched = sorted(set(re.findall(r'"(data/[A-Za-z0-9_.\-]+\.(?:jsonl|json))"', html)))
+    check("page declares the checked files", fetched == sorted(DECLARED),
+          "page=" + ",".join(fetched) + " selftest=" + ",".join(sorted(DECLARED)))
+except FileNotFoundError:
+    check("page index.html exists", False, "aegis-page/index.html missing")
+    fetched = []
+
+# 2. findings.jsonl
+findings = None
+try:
+    raw = open(os.path.join(DATA, "findings.jsonl"), encoding="utf-8").read()
+    recs, bad = [], []
+    for i, ln in enumerate(raw.split("\n"), 1):
+        if not ln.strip():
+            continue
+        try:
+            recs.append(json.loads(ln))
+        except json.JSONDecodeError as e:
+            bad.append((i, str(e)))
+    if bad:
+        check("findings.jsonl parses", False,
+              "malformed line(s): " + "; ".join("line %d: %s" % b for b in bad))
+    else:
+        check("findings.jsonl parses", True, "%d records, 0 malformed" % len(recs))
+        findings = recs
+    if findings is not None:
+        missing = [i for i, r in enumerate(recs, 1)
+                   if not REQUIRED_FINDING_FIELDS.issubset(set(r.keys()))]
+        check("findings required fields ts/severity/title/source/run", not missing,
+              ("records missing fields at 1-based positions: " + ",".join(map(str, missing))) if missing
+              else "%d records carry all required fields" % len(recs))
+        unknown = sorted({str(r.get("severity")) for r in recs} - SEVERITIES)
+        lines.append(("note findings unknown severities: " + ",".join(unknown)) if unknown
+                     else "note findings severities all in info/low/medium/high/critical")
+        from collections import Counter
+        c = Counter(str(r.get("severity")) for r in recs)
+        lines.append("count findings: %d total (%s)" % (
+            len(recs), ", ".join("%s=%d" % (k, c[k]) for k in sorted(c)) if recs else "empty"))
+except FileNotFoundError:
+    check("findings.jsonl exists", False, "data/findings.jsonl missing")
+
+# 3. KEV.json
+try:
+    k = json.load(open(os.path.join(DATA, "KEV.json"), encoding="utf-8"))
+    need = {"at", "run", "source", "checked", "flagged", "unchecked", "rows", "catalog"}
+    check("KEV.json parses and has required fields", need.issubset(set(k.keys())),
+          ("missing: " + ",".join(sorted(need - set(k.keys())))) if not need.issubset(set(k.keys()))
+          else "catalog=%s entries=%s checked=%s flagged=%s unchecked=%s rows=%d" % (
+              (k.get("catalog") or {}).get("version"), (k.get("catalog") or {}).get("count"),
+              k.get("checked"), k.get("flagged"), k.get("unchecked"), len(k.get("rows") or [])))
+    if need.issubset(set(k.keys())):
+        lines.append("count kev: %d matched rows, checked=%s flagged=%s unchecked=%s" % (
+            len(k["rows"]), k["checked"], k["flagged"], k["unchecked"]))
+except FileNotFoundError:
+    check("KEV.json exists", False, "data/KEV.json missing")
+except json.JSONDecodeError as e:
+    check("KEV.json parses", False, "malformed: %s" % e)
+
+# 4. LIVENESS.json
+try:
+    lv = json.load(open(os.path.join(DATA, "LIVENESS.json"), encoding="utf-8"))
+    okshape = isinstance(lv, dict) and isinstance(lv.get("results"), list)
+    check("LIVENESS.json parses with results[]", okshape,
+          "%d probes" % len(lv.get("results", [])) if okshape else "missing results[]")
+    if okshape:
+        badv = [(r.get("id"), r.get("liveness")) for r in lv["results"]
+                if r.get("liveness") not in LIVENESS_VALUES]
+        check("liveness values in LIVE/DEAD/UNREACHABLE", not badv,
+              ("unexpected: " + str(badv[:5])) if badv else "%d probes, all valued" % len(lv["results"]))
+        from collections import Counter
+        c = Counter(r.get("liveness") for r in lv["results"])
+        lines.append("count liveness: %d probes (%s)" % (
+            len(lv["results"]), ", ".join("%s=%d" % (k, c[k]) for k in sorted(c, key=str))))
+        missing_ts = sum(1 for r in lv["results"] if not r.get("checkedAt"))
+        lines.append(("note liveness probes without checkedAt: %d" % missing_ts) if missing_ts
+                     else "note liveness every probe carries checkedAt")
+except FileNotFoundError:
+    check("LIVENESS.json exists", False, "data/LIVENESS.json missing")
+except json.JSONDecodeError as e:
+    check("LIVENESS.json parses", False, "malformed: %s" % e)
+
+# 5. runs.jsonl
+try:
+    raw = open(os.path.join(DATA, "runs.jsonl"), encoding="utf-8").read()
+    recs, bad = [], []
+    for i, ln in enumerate(raw.split("\n"), 1):
+        if not ln.strip():
+            continue
+        try:
+            recs.append(json.loads(ln))
+        except json.JSONDecodeError as e:
+            bad.append((i, str(e)))
+    if bad:
+        check("runs.jsonl parses", False,
+              "malformed line(s): " + "; ".join("line %d: %s" % b for b in bad))
+    else:
+        check("runs.jsonl parses", True, "%d records, 0 malformed" % len(recs))
+    if not bad:
+        missing = [i for i, r in enumerate(recs, 1)
+                   if not {"ts", "run", "event"}.issubset(set(r.keys()))]
+        check("runs required fields ts/run/event", not missing,
+              ("records missing fields at positions: " + ",".join(map(str, missing))) if missing
+              else "%d run records carry ts/run/event" % len(recs))
+        lines.append("count runs: %d records" % len(recs))
+except FileNotFoundError:
+    check("runs.jsonl exists", False, "data/runs.jsonl missing")
+
+# 6. snapshot time: newest timestamp across the data
+try:
+    stamps = []
+    if findings:
+        stamps += [str(r.get("ts")) for r in findings if r.get("ts")]
+    for fn, key in (("KEV.json", "at"), ("LIVENESS.json", "at")):
+        try:
+            d = json.load(open(os.path.join(DATA, fn), encoding="utf-8"))
+            if d.get(key):
+                stamps.append(str(d[key]))
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+    try:
+        raw = open(os.path.join(DATA, "runs.jsonl"), encoding="utf-8").read()
+        for ln in raw.split("\n"):
+            if ln.strip():
+                try:
+                    r = json.loads(ln)
+                    if r.get("ts"):
+                        stamps.append(str(r["ts"]))
+                except json.JSONDecodeError:
+                    pass
+    except FileNotFoundError:
+        pass
+    stamps = sorted(set(stamps))
+    lines.append("snapshot newest record: " + (stamps[-1] if stamps else "no timestamps found"))
+except Exception as e:  # never let the snapshot line itself fail the run opaquely
+    check("snapshot time computable", False, str(e))
+
+out = lines if not quiet else [l for l in lines if l.startswith("FAIL ")]
+print("\n".join(out))
+print(("SELFTEST FAIL" if failed else "SELFTEST PASS"))
+sys.exit(1 if failed else 0)
