@@ -1,0 +1,325 @@
+{
+  "tool": "os-build/layer1/agent_drills.mjs",
+  "tasks": [
+    {
+      "task": "R13-251",
+      "case": "spawn and clean exit",
+      "status": "OBSERVED",
+      "detail": {
+        "code": 0,
+        "events": [
+          "spawn",
+          "exit"
+        ]
+      }
+    },
+    {
+      "task": "R13-252",
+      "case": "spawn and nonzero exit",
+      "status": "OBSERVED",
+      "detail": {
+        "code": 3,
+        "events": [
+          "spawn",
+          "exit"
+        ]
+      }
+    },
+    {
+      "task": "R13-253",
+      "case": "spawn and hang",
+      "status": "OBSERVED",
+      "detail": {
+        "alive_at_300ms": true,
+        "stopped_by": "drill-end",
+        "events": [
+          "spawn",
+          "stop-request",
+          "exit"
+        ]
+      }
+    },
+    {
+      "task": "R13-254",
+      "case": "restart on death (allowed)",
+      "status": "GAP",
+      "detail": {
+        "restart_logic_in_runtime": false,
+        "why": "runtime.mjs has no restart policy; a second spawn is a second run, not a restart"
+      }
+    },
+    {
+      "task": "R13-255",
+      "case": "restart refused (fence)",
+      "status": "GAP",
+      "detail": {
+        "restart_logic_in_runtime": false,
+        "why": "no restart path exists, so there is no fence to refuse one"
+      }
+    },
+    {
+      "task": "R13-256",
+      "case": "two agents one job",
+      "status": "OBSERVED",
+      "detail": {
+        "distinct_runs": true,
+        "distinct_dirs": true,
+        "codes": [
+          0,
+          0
+        ],
+        "finding": "neither spawn is fenced: the runtime does not know a second agent has the same job"
+      }
+    },
+    {
+      "task": "R13-257",
+      "case": "registry entry with a draft command",
+      "status": "OBSERVED",
+      "detail": {
+        "draft_entries": 23,
+        "spawn_exit": 0,
+        "finding": "spawnAgent does not check the draft flag: a draft lane is spawned like any other"
+      }
+    },
+    {
+      "task": "R13-258",
+      "case": "registry entry with a missing command",
+      "status": "REFUSED",
+      "detail": {
+        "refusal": "registry: x missing command"
+      }
+    },
+    {
+      "task": "R13-259",
+      "case": "job with no budget",
+      "status": "OBSERVED",
+      "detail": {
+        "code": 0,
+        "budget_timer": false
+      }
+    },
+    {
+      "task": "R13-260",
+      "case": "job with a zero budget",
+      "status": "REFUSED",
+      "detail": {
+        "refusal": "registry: z bad maxWallMs"
+      }
+    },
+    {
+      "task": "R13-261",
+      "case": "job past its budget",
+      "status": "OBSERVED",
+      "detail": {
+        "receipt_reason": "budget-wall-clock",
+        "cap_ms": 400,
+        "events": [
+          "spawn",
+          "budget-receipt",
+          "stop-request",
+          "exit"
+        ]
+      }
+    },
+    {
+      "task": "R13-262",
+      "case": "ledger write on every transition",
+      "status": "OBSERVED",
+      "detail": {
+        "events": [
+          "spawn",
+          "exit"
+        ]
+      }
+    },
+    {
+      "task": "R13-263",
+      "case": "lessons.mjs graft on a finished job",
+      "status": "OBSERVED",
+      "detail": {
+        "brief_has_lessons": true,
+        "lessons": 0
+      }
+    },
+    {
+      "task": "R13-264",
+      "case": "queue.mjs ordering under burst",
+      "status": "OBSERVED",
+      "detail": {
+        "exports": [
+          "PACKAGE_REFUSALS",
+          "PackageError",
+          "acceptPackage",
+          "validatePackage"
+        ],
+        "valid_input": {
+          "returned": "{\"ok\":false,\"errors\":[{\"reason\":\"missing-agent\",\"detail\":\"the package names no agent, so nobody woul"
+        },
+        "malformed_input": {
+          "returned": "{\"ok\":false,\"errors\":[{\"reason\":\"missing-id\",\"detail\":\"the package has no id, so no record could poi"
+        },
+        "finding": "queue.mjs is a package-ingress validator (validatePackage/acceptPackage), not a scheduling queue; burst ordering is not a behaviour it has"
+      }
+    },
+    {
+      "task": "R13-265",
+      "case": "safe-write on a contested file",
+      "status": "OBSERVED",
+      "detail": {
+        "exports": [
+          "DiskFullError",
+          "appendLoud",
+          "writeFileLoud"
+        ],
+        "bytes": 2050,
+        "lines": 2,
+        "whole_a": true,
+        "whole_b": true,
+        "error": null
+      }
+    },
+    {
+      "task": "R13-266",
+      "case": "bridge failure shape",
+      "status": "OBSERVED",
+      "detail": {
+        "module_present": true,
+        "exports": [
+          "BST_FAILED",
+          "BST_RUNNING",
+          "BST_STOPPED",
+          "createBridge",
+          "loadBoot"
+        ]
+      }
+    },
+    {
+      "task": "R13-267",
+      "case": "judge.mjs on a malformed verdict",
+      "status": "OBSERVED",
+      "detail": {
+        "exports": [
+          "JudgeError",
+          "RULING_AGREE",
+          "RULING_INCONCLUSIVE",
+          "rule"
+        ],
+        "bad_verdict": {
+          "returned": "{\"ruling\":\"inconclusive\",\"reason\":\"fewer-than-two-readings\",\"detail\":\"one reading cannot contradict "
+        },
+        "null_input": {
+          "returned": "{\"ruling\":\"inconclusive\",\"reason\":\"fewer-than-two-readings\",\"detail\":\"one reading cannot contradict "
+        }
+      }
+    },
+    {
+      "task": "R13-268",
+      "case": "clock.mjs drift note",
+      "status": "OBSERVED",
+      "detail": {
+        "exports": [
+          "ClockJumpError",
+          "budgetRemainingMs",
+          "elapsedMs"
+        ],
+        "clock_moved_backwards": {
+          "returned": {
+            "ms": 0,
+            "jumped": true,
+            "reason": "clock-went-backwards",
+            "raw": -500
+          }
+        }
+      }
+    },
+    {
+      "task": "R13-269",
+      "case": "room1.mjs reconnect",
+      "status": "GAP",
+      "detail": {
+        "module_present": true,
+        "why": "room1.mjs posts to the live bus; a reconnect drill needs the bus running and was not run here"
+      }
+    },
+    {
+      "task": "R13-270",
+      "case": "hosted.mjs cycle counts",
+      "status": "OBSERVED",
+      "detail": {
+        "module_present": true,
+        "exports": [
+          "hostedLoops",
+          "isStopped",
+          "spawnHosted",
+          "stopDrill",
+          "stopMarker"
+        ]
+      }
+    },
+    {
+      "task": "R13-271",
+      "case": "gym.mjs drill scoring",
+      "status": "NOT_EXERCISED",
+      "detail": {
+        "tasks_defined": 3,
+        "exports": [
+          "GYM_LEDGER_FILE",
+          "REGISTRY_FILE",
+          "TASKS",
+          "recordGymResult",
+          "runGymDrill"
+        ],
+        "why": "runGymDrill spawns real agents and appends to the shared gym-ledger.jsonl; running it here would score the crew, not the drill, and would write shared state"
+      }
+    },
+    {
+      "task": "R13-272",
+      "case": "boot.json shape check",
+      "status": "OBSERVED",
+      "detail": {
+        "agents": 28,
+        "malformed": 0,
+        "loaded": true
+      }
+    },
+    {
+      "task": "R13-273",
+      "case": "runtime state after a kill",
+      "status": "OBSERVED",
+      "detail": {
+        "stopped": "drill-kill",
+        "events": [
+          "spawn",
+          "stop-request",
+          "exit"
+        ]
+      }
+    },
+    {
+      "task": "R13-274",
+      "case": "runtime state after a STOP",
+      "status": "OBSERVED",
+      "detail": {
+        "stopped": "stop-file",
+        "events": [
+          "spawn",
+          "stop-request",
+          "exit"
+        ]
+      }
+    },
+    {
+      "task": "R13-275",
+      "case": "runtime recovery after a crash",
+      "status": "OBSERVED",
+      "detail": {
+        "records_before_torn_line": 1,
+        "events": [
+          "spawn"
+        ],
+        "torn_line_still_present": true,
+        "appended_after_separator": 3
+      }
+    }
+  ]
+}

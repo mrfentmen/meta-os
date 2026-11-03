@@ -1,0 +1,237 @@
+{
+  "tool": "os-build/userspace/user/src/bin/*.rs",
+  "counts": {
+    "total": 25,
+    "implemented": 18,
+    "partial": 1,
+    "abi_blocked": 6,
+    "cargo_check": "BLOCKED"
+  },
+  "programs": [
+    {
+      "task": "R13-451",
+      "program": "hog_fast",
+      "source": "os-build/userspace/user/src/bin/hog_fast.rs",
+      "spec": "throws 16 page touches in 4 KiB strides, then exits 0",
+      "status": "implemented (BSS; no allocator exists)",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-452",
+      "program": "hog_slow",
+      "source": "os-build/userspace/user/src/bin/hog_slow.rs",
+      "spec": "touches the same 16 pages one byte at a time",
+      "status": "implemented (BSS)",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-453",
+      "program": "hog_pulse",
+      "source": "os-build/userspace/user/src/bin/hog_pulse.rs",
+      "spec": "fills, clears, fills again over the same arena",
+      "status": "implemented (BSS)",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-454",
+      "program": "quitter_1",
+      "source": "os-build/userspace/user/src/bin/quitter_1.rs",
+      "spec": "exits 1 with no output",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-455",
+      "program": "quitter_7",
+      "source": "os-build/userspace/user/src/bin/quitter_7.rs",
+      "spec": "exits 7 with no output",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-456",
+      "program": "quitter_after_print",
+      "source": "os-build/userspace/user/src/bin/quitter_after_print.rs",
+      "spec": "prints one line then exits 3",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-457",
+      "program": "crasher_null",
+      "source": "os-build/userspace/user/src/bin/crasher_null.rs",
+      "spec": "reads address zero and must be killed",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-458",
+      "program": "crasher_stack",
+      "source": "os-build/userspace/user/src/bin/crasher_stack.rs",
+      "spec": "recurses until the stack guard faults",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-459",
+      "program": "spinner",
+      "source": "os-build/userspace/user/src/bin/spinner.rs",
+      "spec": "loops forever and never yields",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-460",
+      "program": "sleeper",
+      "source": "os-build/userspace/user/src/bin/sleeper.rs",
+      "spec": "sleeps five ticks then exits 0",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-461",
+      "program": "printer",
+      "source": "os-build/userspace/user/src/bin/printer.rs",
+      "spec": "writes 100 lines then exits 0",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-462",
+      "program": "reader",
+      "source": "os-build/userspace/user/src/bin/reader.rs",
+      "spec": "reads keys until q then exits 0",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-463",
+      "program": "counter",
+      "source": "os-build/userspace/user/src/bin/counter.rs",
+      "spec": "counts to 1000 and prints the total",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-464",
+      "program": "echoer",
+      "source": "os-build/userspace/user/src/bin/echoer.rs",
+      "spec": "echoes its arguments",
+      "status": "BLOCKED: no argv syscall",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-465",
+      "program": "leaker_slow",
+      "source": "os-build/userspace/user/src/bin/leaker_slow.rs",
+      "spec": "touches one new page per second",
+      "status": "partial: no mmap/free, static pages only",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-466",
+      "program": "hog_then_quit",
+      "source": "os-build/userspace/user/src/bin/hog_then_quit.rs",
+      "spec": "touches the arena then exits 9",
+      "status": "implemented (BSS)",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-467",
+      "program": "double_hog",
+      "source": "os-build/userspace/user/src/bin/double_hog.rs",
+      "spec": "two hogs at once",
+      "status": "BLOCKED: no fork/exec",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-468",
+      "program": "hog_under_ps",
+      "source": "os-build/userspace/user/src/bin/hog_under_ps.rs",
+      "spec": "a hog while ps is captured",
+      "status": "BLOCKED: no process-list syscall, no ps",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-469",
+      "program": "spinner_killed",
+      "source": "os-build/userspace/user/src/bin/spinner_killed.rs",
+      "spec": "a spinner plus a kill",
+      "status": "BLOCKED: no kill syscall",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-470",
+      "program": "crasher_then_status",
+      "source": "os-build/userspace/user/src/bin/crasher_then_status.rs",
+      "spec": "a crash then a status capture",
+      "status": "BLOCKED: no wait/status syscall",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-471",
+      "program": "reader_badkey",
+      "source": "os-build/userspace/user/src/bin/reader_badkey.rs",
+      "spec": "reads one key, exits 3 unless it is q",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-472",
+      "program": "printer_flood",
+      "source": "os-build/userspace/user/src/bin/printer_flood.rs",
+      "spec": "writes 5000 lines past console size",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-473",
+      "program": "sleeper_killed",
+      "source": "os-build/userspace/user/src/bin/sleeper_killed.rs",
+      "spec": "a sleeper plus a kill",
+      "status": "BLOCKED: no kill syscall",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-474",
+      "program": "counter_big",
+      "source": "os-build/userspace/user/src/bin/counter_big.rs",
+      "spec": "counts to four billion",
+      "status": "implemented",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    },
+    {
+      "task": "R13-475",
+      "program": "echoer_empty",
+      "source": "os-build/userspace/user/src/bin/echoer_empty.rs",
+      "spec": "invoked with no arguments",
+      "status": "implemented (and names the missing argv ABI)",
+      "source_committed": true,
+      "boot": "NOT CLAIMED \u2014 the Mac gate is the only boot proof"
+    }
+  ]
+}

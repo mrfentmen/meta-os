@@ -1,0 +1,325 @@
+{
+ "kind": "imperium-live-hunt",
+ "started_at": "2026-11-03T02:27:34Z (approx, process start)",
+ "camera_source": "nyctmc-live",
+ "frame_source": "live fetch via crew_common.fetch_snapshot",
+ "max_frames": 36,
+ "budget_reserve_usd": 5.0,
+ "outcomes": [
+  {
+   "camera_id": "1b3248f9-f26e-4f36-943f-b7a7731595fb",
+   "camera_name": "QBB @ Crescent St",
+   "area": "Queens",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "09afb231-ef10-470f-bf54-0f44fc2dc18f",
+   "camera_name": "Pelham Shore Rd @ City Island Rd",
+   "area": "Bronx",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "8cc75cbc-e050-4947-aee8-639f63fe4ca7",
+   "camera_name": "Canal Street @ Chrystie Street",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "f134b133-75ef-40a8-8fbb-f9c51355e6b5",
+   "camera_name": "Old Fulton St @ Vine St/Hicks St - quad - 156.24",
+   "area": "Brooklyn",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "4f8c2e84-c15a-4474-91fb-7e14554d4c4e",
+   "camera_name": "Central Park West @ 65 St",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "0472fa7a-acd7-4510-a9e7-61307d4057cd",
+   "camera_name": "Bay Pkwy @ 78 St (Kings Hwy)",
+   "area": "Brooklyn",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "1e88b34b-2058-402e-9a3d-aca1c57696bf",
+   "camera_name": "GCP @ 31 ST",
+   "area": "Queens",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "8a6bc417-4877-4ebe-8052-88c1b261baf1",
+   "camera_name": "Central Park West @ 86 St",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "0039e6bf-5244-4b4e-b7dc-d02056bbfdc9",
+   "camera_name": "Atlantic Ave @ 111 St",
+   "area": "Brooklyn",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "8afc5cd6-f735-47e8-bd57-6e6d3b81b442",
+   "camera_name": "WBB-20 @ Above Bedford Ave ( Berry St )",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "8d2b3ae9-da68-4d37-8ae2-d3bc014f827b",
+   "camera_name": "WBB - 2 NOR @ ABOVE BEDFORD AVE & S 5 St",
+   "area": "Brooklyn",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "330e2a88-3cea-4ce5-b1a2-ae8440de9b1a",
+   "camera_name": "1 Ave @ 84 St",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "ec1e7b42-18de-4475-8c89-9e80f21e5b6c",
+   "camera_name": "FDR Drive @ 122 St",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "98fc3e41-66be-42d7-8f69-5cc76ae7226f",
+   "camera_name": "BB - Manhattan hub - 156.103",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "indeterminate",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "0f5e11ff-0ecc-4622-a32e-bb80a6b2c1c6",
+   "camera_name": "Hylan Blvd @ Arden Ave",
+   "area": "Staten Island",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": "300e0508-3c7e-4ac5-8527-b75bcf8292b8",
+   "camera_name": "Hillside Ave @ Little Neck Pkwy",
+   "area": "Queens",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "crew events.jsonl"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "6 Ave @ 35 St",
+   "area": null,
+   "division": "ignis",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "no hazard visible",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Hempstead Ave @ Springfield Blvd",
+   "area": null,
+   "division": "medicus",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "FDR Dr @ 96 Street",
+   "area": null,
+   "division": "vigiles",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Harlem Rvr Dr @ Dyckman St",
+   "area": null,
+   "division": "ignis",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "no hazard visible",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Whitestone Br @ Bronx Side - BQE - I-678 - 156.92",
+   "area": null,
+   "division": "medicus",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Adam Clayton Powell Jr Blvd @ W127 St",
+   "area": null,
+   "division": "vigiles",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "73 Ave @ 209 St",
+   "area": null,
+   "division": "ignis",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "flame-like lighting",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Jamaica Ave @ 168 St",
+   "area": null,
+   "division": "medicus",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "person down",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "8th Ave @ 31st St",
+   "area": null,
+   "division": "vigiles",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Grand Central Pkwy @ 33 St",
+   "area": null,
+   "division": "ignis",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "no hazard visible",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Arthur Kill Rd @ Richmond Ave",
+   "area": null,
+   "division": "medicus",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Whitestone Expy @ Linden Pl",
+   "area": null,
+   "division": "vigiles",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Harlem Rvr Dr @ 154 St",
+   "area": null,
+   "division": "ignis",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "no hazard visible",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Wantagh Ave @ Hillside Ave",
+   "area": null,
+   "division": "medicus",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  },
+  {
+   "camera_id": null,
+   "camera_name": "Jackie Robinson Pkwy @ Metropolitan Ave",
+   "area": null,
+   "division": "vigiles",
+   "outcome": "not-flagged (hunt final summary)",
+   "category": "normal activity",
+   "incident_id": null,
+   "source": "hunt run log (stdout) only"
+  }
+ ],
+ "flagged": null,
+ "stop_reason": "budget \u2014 hunt stopped after 31 of 36 frames; final assess calls failed HTTP 402 (Meta API billing account out of credits)",
+ "frames_checked": 31,
+ "finished_at": "2026-11-03T02:36Z (approx)",
+ "record_note": "RECONSTRUCTED by Pax at landing time. The hunt's own JSON record was printed as written but does not exist anywhere on disk (full-filesystem search) \u2014 the work clone is shared with cron workers and the write did not survive. Frames 1-16 are corroborated by crew-data/events.jsonl (camera ids, outcomes). Frames 17-31 come from the hunt process's own stdout only. Frame 24 (Jamaica Ave @ 168 St, medicus) first reading was 'person down'; the hunt's own final summary reports flagged: none and no dispatch, and the simulated endpoint's log shows zero POSTs received \u2014 no dispatch happened. Whether a review reading cleared that frame cannot be recovered from surviving records; it is NOT counted as a flag, a catch, or a dispatch anywhere."
+}

@@ -1,0 +1,230 @@
+{
+ "kind": "imperium-live-hunt",
+ "started_at": "2026-11-03T02:14:14.412Z",
+ "camera_source": "nyctmc-live",
+ "frame_source": "live fetch via crew_common.fetch_snapshot",
+ "max_frames": 24,
+ "budget_reserve_usd": 5.0,
+ "outcomes": [
+  {
+   "camera_id": "8cc75cbc-e050-4947-aee8-639f63fe4ca7",
+   "camera_name": "Canal Street @ Chrystie Street",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "4f8c2e84-c15a-4474-91fb-7e14554d4c4e",
+   "camera_name": "Central Park West @ 65 St",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null
+  },
+  {
+   "camera_id": "8a6bc417-4877-4ebe-8052-88c1b261baf1",
+   "camera_name": "Central Park West @ 86 St",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "8afc5cd6-f735-47e8-bd57-6e6d3b81b442",
+   "camera_name": "WBB-20 @ Above Bedford Ave ( Berry St )",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "330e2a88-3cea-4ce5-b1a2-ae8440de9b1a",
+   "camera_name": "1 Ave @ 84 St",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null
+  },
+  {
+   "camera_id": "ec1e7b42-18de-4475-8c89-9e80f21e5b6c",
+   "camera_name": "FDR Drive @ 122 St",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "98fc3e41-66be-42d7-8f69-5cc76ae7226f",
+   "camera_name": "BB - Manhattan hub - 156.103",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "indeterminate",
+   "incident_id": null
+  },
+  {
+   "camera_id": "053e8995-f8cb-4d02-a659-70ac7c7da5db",
+   "camera_name": "Broadway @ 45 St",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null
+  },
+  {
+   "camera_id": "332f161d-47cb-4c8a-b6b6-5ad48a55c978",
+   "camera_name": "Ave of Americas @ Central Park South",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "0ccf3a51-8981-4e03-92a9-00b1c59f0b9b",
+   "camera_name": "BB-24 South Rdwy @ Above South St",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "975c7dd6-d6d7-4eaa-843d-fbe8eb7a1eb3",
+   "camera_name": "QBB UL CM @ York Ave",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "flame-like lighting",
+   "incident_id": null
+  },
+  {
+   "camera_id": "984ebbad-ca64-41d8-8008-63aaae316952",
+   "camera_name": "Central Park West @ 72 St",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "9cc8495e-aeee-4759-adba-5a6bf5efd4b9",
+   "camera_name": "3 Ave @ 23 St",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "a6bd09c7-9195-4e0b-ac0f-78114a7d63a1",
+   "camera_name": "Park Ave @ E 125 St",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null
+  },
+  {
+   "camera_id": "1572a83a-0a4f-4a7b-84a0-fec0890a2de3",
+   "camera_name": "C4-WST-03-Med_at_Vestry_St",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "09b1235e-d2d1-4451-83a5-5a1c3ec280aa",
+   "camera_name": "St Nicholas Ave @ 145 St",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "155b2bff-5dd2-4109-bd10-e098376c8476",
+   "camera_name": "FDR Dr @ 96 Street",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "flame-like lighting",
+   "incident_id": null
+  },
+  {
+   "camera_id": "b1d5d592-9e36-478e-bedc-5fb02d836bc3",
+   "camera_name": "Sutton Pl @ 58 St",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "ec9ffb62-e3bf-4352-8bcf-7c9adf5fbe9c",
+   "camera_name": "8th Ave @ 31st St",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "6847c104-0117-4e3f-b30e-e1a859bc8107",
+   "camera_name": "FDR Dr @ 101 St ",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null
+  },
+  {
+   "camera_id": "ca545979-d0c1-4735-88d6-61b6311bb6bc",
+   "camera_name": "Henry Hudson Pkwy @ 125 St",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "23bcc0dd-d395-45fe-8106-676ba7293208",
+   "camera_name": "Varick St @ Watt St",
+   "area": "Manhattan",
+   "division": "vigiles",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  },
+  {
+   "camera_id": "41397b64-d035-4b41-a03e-170fe4103d89",
+   "camera_name": "Park Ave @ 79 St",
+   "area": "Manhattan",
+   "division": "ignis",
+   "outcome": "baseline",
+   "category": "no hazard visible",
+   "incident_id": null
+  },
+  {
+   "camera_id": "6d3a21dd-0434-4d92-a0d1-3ca8b77297db",
+   "camera_name": "5 Ave @ E 58 St",
+   "area": "Manhattan",
+   "division": "medicus",
+   "outcome": "baseline",
+   "category": "normal activity",
+   "incident_id": null
+  }
+ ],
+ "flagged": null,
+ "stop_reason": "max-frames",
+ "frames_checked": 24,
+ "finished_at": "2026-11-03T02:19:42.742Z"
+}

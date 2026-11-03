@@ -1,0 +1,654 @@
+{
+  "tool": "os-build/layer1/surface_passes.mjs",
+  "tasks": [
+    {
+      "task": "R13-176",
+      "label": "README shipped text",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [],
+      "codePoints": 20073,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 6,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-177",
+      "label": "site/index.html",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [],
+      "codePoints": 10037,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 2,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-178",
+      "label": "demo script",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [],
+      "codePoints": 4878,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 1,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-179",
+      "label": "demo captions",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [],
+      "codePoints": 2846,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 3,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-180",
+      "label": "product listing titles",
+      "status": "SCANNED",
+      "files": 2,
+      "missing": [],
+      "codePoints": 11760,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 6,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-181",
+      "label": "product listing descriptions",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [],
+      "codePoints": 10037,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 2,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-182",
+      "label": "face UI strings",
+      "status": "SCANNED",
+      "files": 2,
+      "missing": [],
+      "codePoints": 29600,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 40,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-183",
+      "label": "board UI strings",
+      "status": "ARTIFACT_MISSING",
+      "files": 0,
+      "missing": [
+        "board/index.html"
+      ],
+      "codePoints": 0,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-184",
+      "label": "relay viewer strings",
+      "status": "ARTIFACT_MISSING",
+      "files": 0,
+      "missing": [
+        "relay/index.html",
+        "relay/relay.js"
+      ],
+      "codePoints": 0,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-185",
+      "label": "registry display names",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [],
+      "codePoints": 12802,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 36,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-186",
+      "label": "world pack display text",
+      "status": "ARTIFACT_MISSING",
+      "files": 0,
+      "missing": [
+        "os/worlds/index.json",
+        "os/worlds.json"
+      ],
+      "codePoints": 0,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-187",
+      "label": "science-lab export text",
+      "status": "ARTIFACT_MISSING",
+      "files": 0,
+      "missing": [
+        "labs/README.md"
+      ],
+      "codePoints": 0,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-188",
+      "label": "officina output text",
+      "status": "ARTIFACT_MISSING",
+      "files": 0,
+      "missing": [
+        "tools/README.md"
+      ],
+      "codePoints": 0,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-189",
+      "label": "musica display text",
+      "status": "ARTIFACT_MISSING",
+      "files": 0,
+      "missing": [
+        "os-build/MUSICA.md"
+      ],
+      "codePoints": 0,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-190",
+      "label": "nervus display text",
+      "status": "SCANNED",
+      "files": 2,
+      "missing": [],
+      "codePoints": 9567,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-191",
+      "label": "aegis finding titles",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [],
+      "codePoints": 3204,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-192",
+      "label": "status file text",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [],
+      "codePoints": 1614,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-193",
+      "label": "submission checklist",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [],
+      "codePoints": 1682,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-194",
+      "label": "X post draft",
+      "status": "ARTIFACT_MISSING",
+      "files": 0,
+      "missing": [
+        "os-build/X_POST.md",
+        "os-build/aegis/X_POST.md"
+      ],
+      "codePoints": 0,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-195",
+      "label": "store page text",
+      "status": "SCANNED",
+      "files": 1,
+      "missing": [
+        "site/store.html"
+      ],
+      "codePoints": 10037,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 2,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-196",
+      "label": "goal file text",
+      "status": "ARTIFACT_MISSING",
+      "files": 0,
+      "missing": [
+        "GOAL.md",
+        "os-build/GOAL.md"
+      ],
+      "codePoints": 0,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-197",
+      "label": "skill descriptions",
+      "status": "ARTIFACT_MISSING",
+      "files": 0,
+      "missing": [
+        ".agents/skills/**/*.md"
+      ],
+      "codePoints": 0,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 0,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-198",
+      "label": "connector doc text",
+      "status": "SCANNED",
+      "files": 16,
+      "missing": [],
+      "codePoints": 162521,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 25,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-199",
+      "label": "error message strings",
+      "status": "SCANNED",
+      "files": 180,
+      "missing": [],
+      "codePoints": 1620533,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 357,
+        "hits": 0
+      },
+      "findings": []
+    },
+    {
+      "task": "R13-200",
+      "label": "log banner strings",
+      "status": "SCANNED",
+      "files": 193,
+      "missing": [],
+      "codePoints": 1866937,
+      "surface": {
+        "counts": {
+          "zero-width": 0,
+          "invisible-operator": 0,
+          "bom": 0,
+          "bidi-override": 0,
+          "bidi-isolate": 0,
+          "tag-char": 0,
+          "mixed-script": 0
+        },
+        "hits": 0
+      },
+      "confusables": {
+        "names_scanned": 385,
+        "hits": 0
+      },
+      "findings": []
+    }
+  ]
+}

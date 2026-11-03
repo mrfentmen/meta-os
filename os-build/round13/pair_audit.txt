@@ -1,0 +1,28 @@
+task      caller       callee       verdict        import   matrix   bootable
+R13-076   agenthost    display      NOT_A_SERVICE  no       DENY     n/n
+R13-077   audit        dns          NOT_A_SERVICE  no       DENY     n/n
+R13-078   board        dock         NOT_A_SERVICE  no       DENY     n/n
+R13-079   bootlog      echo         NOT_A_SERVICE  no       DENY     y/n
+R13-080   build        fs           NOT_A_SERVICE  no       DENY     n/n
+R13-081   callmatrix   heartbeat    NOT_A_SERVICE  no       DENY     n/n
+R13-082   console      input        NOT_A_SERVICE  no       DENY     y/n
+R13-083   dashboard    logd         NOT_A_SERVICE  no       DENY     n/y
+R13-084   devices      logfmt       NOT_A_SERVICE  no       DENY     n/n
+R13-085   devmgr       mcp-host     NOT_A_SERVICE  no       DENY     n/n
+R13-086   dhcp         net          NOT_A_SERVICE  no       ALLOW    n/n
+R13-087   display      netcfg       NOT_A_SERVICE  no       DENY     n/n
+R13-088   dns          notify       NOT_A_SERVICE  no       DENY     n/n
+R13-089   dock         registry     NOT_A_SERVICE  no       DENY     n/n
+R13-090   echo         session      NOT_A_SERVICE  no       DENY     n/n
+R13-091   fs           settings     NOT_A_SERVICE  no       DENY     n/n
+R13-092   heartbeat    shell        NOT_A_SERVICE  no       DENY     n/n
+R13-093   input        socket       NOT_A_SERVICE  no       DENY     n/n
+R13-094   logd         sockets      NOT_A_SERVICE  no       DENY     y/n
+R13-095   logfmt       storage      NOT_A_SERVICE  no       DENY     n/n
+R13-096   mcp-host     supervisor   NOT_A_SERVICE  no       DENY     n/n
+R13-097   net          time         NOT_A_SERVICE  no       DENY     n/y
+R13-098   netcfg       timesync     NOT_A_SERVICE  no       DENY     n/n
+R13-099   notify       updater      NOT_A_SERVICE  no       DENY     n/n
+R13-100   registry     wallpaper    NOT_A_SERVICE  no       DENY     n/n
+
+total=25 NOT_A_SERVICE=25
