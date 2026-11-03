@@ -28,3 +28,40 @@ Branch opencode/500-s7 @ 36cb7b68. Verdict: BLOCKED, no failures. Wave-2 follow-
 
 ## §11/§12 demo + carrier (OC1B-251..300) — MERGED 2026-11-02
 Branch opencode/500-s11 @ 6239f0c5 (3 commits). §11 DONE all 25 (261 honest-zero): K1/K2 fresh serials panic 0, beat captures, beat-7 live frame+chain, film os-build/demo/demo-3min.mp4 180.000000s 719410 B sha256 a29bc47d, closing line verified, runbook OC1B_RUNBOOK.md lawritten; readkey got=5 (press+release, narrated); spend 2 Spark calls $0.011979. VGA garble exhibit for Rowan (serial correct, film uses serial cards). §12 DONE with gaps: toolchain IN in-guest (opencode 2.2.0, node 18.20.4, git 2.39.5, chromium, freebuff 0.2.35); 286/287 FAILED + 290 NOT PRESENT (no face stack — toolchain image not face image); 296 UNPROVEN (no hardware boot); clean-checkout rebuild proven (298). 454-final + 464 now unblocked (film + runbook exist). Full blocks: os-build/logs/OC1B-s11-STATUS-SNIPPET.md.
+
+## §20 Final status pass OC1B-493 (coordinator, 2026-11-02 — no silent gaps)
+- §1 DONE (baseline PASS GREEN x2). §2 BLOCKED (no Rowan attempt branches;
+  0/2 budget consumed, 0.9.35 restored GREEN). §3 BLOCKED (no wiring
+  branches). §4 BLOCKED (KF-11) / KF-12..20 UNIMPLEMENTED (branches named).
+- §5 K3: demand leg FAILED (deterministic, err 0x5) — DO NOT MERGE 7bb72075;
+  containment PROVEN, gate GREEN on K3 tree. §6 K4: builds+boots GREEN, 7
+  acceptance lines UNPROVEN — DO NOT MERGE as IPC proof.
+- §7 BLOCKED-honest: 2h20m soak COMPLETED panics 0 with coordinator-caused
+  drive gap (11/21) + supplementary close-state answers. §8 DONE
+  (NO REGRESSION, 5x NO WAVE). §9 DONE (212/213/215 UNPROVEN token budget,
+  defect filed). §10 DONE (honest zero flags). §11 DONE (180.000s film).
+- §12 DONE (286/287/290 face-stack gaps, 296 no-hardware-boot).
+- §13 DONE (G2 natural-flag + G8 judge-model OPEN). §14 DONE (defect filed:
+  science suite writes into records/). §15 DONE (39/39; registry DRAFT by
+  design 359/360). §16 BLOCKED (runner D1–D3, fix not landed).
+- §17 DONE (56 settled = 55 + R11-282 newcomer). §18 DONE (README fixed to
+  measured; 5 UNPROVEN named). §19 READY (all rows READY; rehearsal DONE
+  from clean clone; X draft Del's to post). §20 this block.
+- OC1B-484 deviation stands: syscalls history holds one pre-existing
+  Pax-merged Rowan draft (4bf2367f); our branch adds zero kernel/src edits.
+
+## OC1B-500 — what remains unproven in this 500, in plain words
+The kernel-face future: KF-01 has no fresh spike candidate, no framebuffer
+or pixel-text branch exists, K3's demand paging faults where the design
+says it shouldn't, and K4 has no talker/listener pair — Rowan's pieces,
+all BLOCKED or DO-NOT-MERGE, none of it hidden. The Goose runner is broken
+(D1–D3) so services have no run evidence. Three reasoning-model readers
+(212/213/215, G8) are starved by token budgets, defect filed. Everything
+else — baseline, soaks, models, cams, Imperium, science, musica, the 56
+native fails, the numbers, the 180-second film, the rehearsal — is proven
+with a committed log on opencode/500. Total live spend ≈$0.29.
+
+## OC1B-497 final commit
+This status file's final commit is tagged opencode1-500-final on
+opencode/500 (tag object = the commit; verify: `git rev-parse
+opencode1-500-final` == `git rev-parse origin/opencode/500`).
