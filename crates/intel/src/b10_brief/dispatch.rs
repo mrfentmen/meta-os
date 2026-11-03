@@ -2107,7 +2107,7 @@ where
     for key in &order {
         let job = by_key
             .iter()
-            .find(|(k, _)| k == key.as_str())
+            .find(|(k, _)| *k == key.as_str())
             .map(|(_, j)| *j)
             .expect("order covers exactly the plan's jobs");
         let missing: Vec<&str> = job
@@ -2156,7 +2156,7 @@ where
         .map(|key| {
             let job = by_key
                 .iter()
-                .find(|(k, _)| k == key.as_str())
+                .find(|(k, _)| *k == key.as_str())
                 .map(|(_, j)| *j)
                 .expect("order covers exactly the plan's jobs");
             DispatchPostedJob {
