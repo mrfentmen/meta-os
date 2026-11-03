@@ -14,6 +14,8 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 FRAMES_PATH = os.path.join(HERE, "frames.txt")
+IMAGES_DIR = os.path.join(os.path.dirname(HERE), "studio-loop")
+FPS_IMAGES = 8
 FPS = 8
 INK = (0.027, 0.043, 0.086)
 BLUE = "#1877F2"
@@ -46,6 +48,41 @@ class Cycler:
 
     def frame(self):
         return self.frames[self.index]
+
+
+def run_gui_images(framedir):
+    import gi
+    gi.require_version("Gtk", "3.0")
+    from gi.repository import Gtk, Gdk, GLib
+    import glob
+    files = sorted(glob.glob(os.path.join(framedir, "loop-*.jpg")))
+    if not files:
+        return 1
+    win = Gtk.Window()
+    win.set_decorated(False)
+    win.set_skip_taskbar_hint(True)
+    win.set_skip_pager_hint(True)
+    win.set_keep_below(True)
+    win.stick()
+    try:
+        win.set_type_hint(Gdk.WindowTypeHint.DESKTOP)
+    except Exception:
+        pass
+    img = Gtk.Image()
+    win.add(img)
+    win.maximize()
+    win.show_all()
+    state = {"i": 0}
+
+    def show():
+        img.set_from_file(files[state["i"] % len(files)])
+        state["i"] += 1
+        return True
+
+    show()
+    GLib.timeout_add(1000 // FPS_IMAGES, show)
+    Gtk.main()
+    return 0
 
 
 def run_gui(frames):
@@ -112,6 +149,14 @@ def main(argv):
     if not frames or not any(any(r.strip() for r in f) for f in frames):
         print("meta-live: no frames", file=sys.stderr)
         return 1
+    imgdir = os.environ.get("META_LIVE_IMAGES", IMAGES_DIR)
+    import glob as _g
+    if os.path.isdir(imgdir) and _g.glob(os.path.join(imgdir, "loop-*.jpg")):
+        if "--once" in argv or "DISPLAY" not in os.environ:
+            n = len(_g.glob(os.path.join(imgdir, "loop-*.jpg")))
+            print(f"meta-live: image mode, {n} studio frames, headless OK")
+            return 0
+        return run_gui_images(imgdir)
     if "--once" in argv or "DISPLAY" not in os.environ:
         print(f"meta-live: {len(frames)} frames loaded, headless OK")
         return 0
