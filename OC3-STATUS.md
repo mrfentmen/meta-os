@@ -194,3 +194,25 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
 OC3B-299 final line: everything static is proven in-branch; everything
 that needs a screen, speaker, cable, or installer window waits on OC1's
 boot and is named with its owner — no silent gaps.
+
+## ISO lane (no-waiting, no VM, no main pushes — 2026-11-03)
+
+1. OC2 drop-ins: COPIED + VERIFIED. Source `origin/main @8923da87`.
+   19/19 MANIFEST paths sha-match (manifest lists 19, not 16 —
+   reported as-run). 9 desktop-entries + MANIFEST staged at
+   `os-build/logs/oc3b-dropins/`, re-hash 9/9 clean. Shas in
+   OC3B-dropins.md. OC1 pulls by sha; nothing edited/run here.
+2. Payload WITHOUT theme: `os-build/logs/oc3-payload-no-theme.tar.gz`
+   sha256 `5d20fa7c12a3c586fff03c3e2055d73fb5d406cbfa60e6cc55e1a43ca95fef11`,
+   15 files, install-relative layout. File list in
+   OC3B-payload-no-theme.md. BLOCKED-on-OC1-theme-pack (not on main
+   @8923da87). TRIGGER: theme pack lands → re-cut WITH-theme + post
+   new sha immediately, no meeting.
+3. Cut record: OC3B-cut-record.md. Source xubuntu-base.iso
+   `4ed869eb…` VERIFIED vs official 24.04.5 sums. Output baseline
+   metaos-1.0.iso `6d3793eb…` re-VERIFIED. Package hashes recorded.
+   validate.py OK 0 failures (clean main worktree). verify-rootfs
+   7/7 BLOCKED owner OC1 (no squashfs tooling on this Mac).
+4. Constraints honored: no boots, no other lane's tree/branch
+   touched (main read via git archive/show only), no main pushes
+   (this commit lands on opencode/agent3-oc3 only).

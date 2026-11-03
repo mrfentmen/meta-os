@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Agent Status
+GenericName=Agent Layer Status
+Comment=See what the local agent layer is doing
+Exec=meta-agent-status
+Icon=utilities-system-monitor
+Terminal=true
+Categories=System;Monitor;Utility;
+StartupNotify=false
