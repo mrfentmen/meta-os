@@ -1,0 +1,10 @@
+# OC3B-115 — no phone-home on first run (bounded claim)
+
+Covered apps have no network features by construction: parole plays
+local files, pavucontrol talks to the local sound server,
+xfce4-screenshooter writes local files, Ristretto views local
+images. None has an account, update check, or telemetry switch in
+its committed launcher (no Exec flags enabling any). What is NOT
+claimed: library-level traffic and thumbnail-cache behavior, both
+local-only by design but unobserved from here. Packet-capture proof,
+if the judges ask, is an OC1 boot task — named, not assumed.

@@ -1,0 +1,6 @@
+# OC3B-051/052 — terminal package and version
+
+- Emulator: xfce4-terminal (per ISO lane `meta-terminal.desktop` Exec).
+- Version: NOT recorded — no image dpkg output exists in-repo; writing
+  one would be a guess. Owner: OC1 (`xfce4-terminal --version` at boot
+  into this file's verdict addendum).

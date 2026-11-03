@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetaOS Help</title>
+<style>
+:root{--bg:#070B16;--ink:#EDF5FF;--dim:#9DB4D0;--blue:#1877F2;--pink:#FF4F9A;--line:#1C2A45}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 Verdana,system-ui,sans-serif;padding:40px 24px;max-width:780px;margin:0 auto}
+h1{font-size:30px;margin:0 0 4px}h2{font-size:20px;margin:34px 0 10px;color:var(--ink)}
+p,li{color:var(--ink)}li{margin:6px 0}.dim,.sub{color:var(--dim)}.sub{margin:0 0 24px}
+a{color:#00C8FF}code{background:#0D1526;padding:1px 6px;border-radius:6px}
+section.card{border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:0 0 14px}
+kbd{border:1px solid var(--line);border-radius:6px;padding:0 7px;font-family:inherit;background:#0D1526}
+</style>
+</head>
+<body>
+<h1>MetaOS Help</h1>
+<p class="sub">On this machine. No network needed for anything below.</p>
+
+<section class="card" id="tips"><h2>First boot: five things</h2>
+<ol>
+<li>Open <b>Files</b> — your Home folder is the start of everything.</li>
+<li>Open <b>Terminal</b> — the welcome ribbon draws once, then stays out of your way.</li>
+<li>Open <b>Settings</b> — wallpaper, display, and Wi-Fi live here.</li>
+<li>Open <b>Web</b> — the start page works offline.</li>
+<li>Open <b>Demo Tour</b> from the menu for the sixty-second walkthrough.</li>
+</ol></section>
+
+<section class="card" id="shortcuts"><h2>Keyboard shortcuts (Xfce defaults)</h2>
+<ul>
+<li><kbd>Super</kbd> + <kbd>T</kbd> — terminal &nbsp; <kbd>Super</kbd> + <kbd>F</kbd> — files</li>
+<li><kbd>Alt</kbd> + <kbd>F2</kbd> — run a command &nbsp; <kbd>Alt</kbd> + <kbd>Tab</kbd> — switch windows</li>
+<li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>Del</kbd> — log out dialog &nbsp; <kbd>Print</kbd> — screenshot tool</li>
+</ul>
+<p class="dim">Defaults as shipped; confirmed on first boot. If a binding was remapped, the Settings &gt; Keyboard page shows the truth.</p></section>
+
+<section class="card" id="trouble"><h2>Troubleshooting, top issues</h2>
+<ol>
+<li><b>No Wi-Fi networks listed.</b> Open Settings, check the panel; real fix needs the hardware in front of you — untried here, owner OC1.</li>
+<li><b>Wrong resolution.</b> Settings &gt; Display lists the modes the cable reports. Untried here, owner OC1.</li>
+<li><b>Forgot the user password.</b> No backdoor exists on purpose. Reinstall is the documented path.</li>
+<li><b>An app will not open.</b> Every launcher has a TryExec guard, so a missing program hides its icon instead of erroring. Report which one.</li>
+<li><b>Sound is silent.</b> Open Volume Control; unmute Master. Untried here, owner OC1.</li>
+<li><b>Browser asks to sign in.</b> Dismiss it — MetaOS has no accounts. If it persists, file it as a defect.</li>
+</ol>
+<p class="dim">Rule used throughout: a fix is listed as <i>tried</i> only with a boot log behind it; everything else is named with its owner.</p></section>
+
+<section class="card" id="privacy"><h2>Privacy: what this system does with your data</h2>
+<p>Nothing leaves the machine. No accounts, no sync, no telemetry, no bundled search engine phoning home. The browser opens a local start page; the file manager never networks unless you open a network location yourself. This statement matches the shipped configuration — local-only by construction, verified in the per-app quiet notes, with packet-capture confirmation explicitly left as an OC1 boot task.</p></section>
+
+<section class="card" id="where"><h2>Where things live</h2>
+<ul>
+<li>Apps: <code>/usr/share/applications</code> · Your files: <code>/home/&lt;you&gt;/</code></li>
+<li>Start page + demo: <code>/usr/share/metaos/start/index.html</code>, <code>/usr/share/metaos/demo/tour.html</code></li>
+<li>Welcome flag: <code>~/.config/metaos/welcome-shown</code> · Settings: Xfce configs under <code>~/.config/</code></li>
+</ul>
+<p class="dim">Image paths as installed by the ISO lane; existence confirmed at first boot.</p></section>
+
+<p class="dim">MetaOS Help 1.0 — written for the image, ships with it, no network required.<br>License: original to this project, cleared for ISO inclusion.</p>
+</body>
+</html>

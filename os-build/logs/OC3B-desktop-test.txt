@@ -1,0 +1,12 @@
+OC3B-210 parser+audit run 2026-11-03T07:03:58Z
+os-build/logs/oc3b-desktop/galculator.desktop: Type=Application TryExec=galculator Terminal=false OnlyShowIn=XFCE; Categories=Utility;Calculator;GTK;
+os-build/logs/oc3b-desktop/parole.desktop: Type=Application TryExec=parole Terminal=false OnlyShowIn=XFCE; Categories=AudioVideo;Player;GTK;
+os-build/logs/oc3b-desktop/pavucontrol.desktop: Type=Application TryExec=pavucontrol Terminal=false OnlyShowIn=XFCE; Categories=AudioVideo;Mixer;GTK;
+os-build/logs/oc3b-desktop/xfce4-appearance-settings.desktop: Type=Application TryExec=xfce4-appearance-settings Terminal=false OnlyShowIn=XFCE; Categories=Settings;GTK;
+os-build/logs/oc3b-desktop/xfce4-display-settings.desktop: Type=Application TryExec=xfce4-display-settings Terminal=false OnlyShowIn=XFCE; Categories=Settings;GTK;
+os-build/logs/oc3b-desktop/xfce4-screenshooter.desktop: Type=Application TryExec=xfce4-screenshooter Terminal=false OnlyShowIn=XFCE; Categories=Utility;GTK;
+os-build/logs/oc3b-desktop/xfce4-settings-manager.desktop: Type=Application TryExec=xfce4-settings-manager Terminal=false OnlyShowIn=XFCE; Categories=Settings;GTK;
+os-build/logs/oc3b-desktop/xfce4-taskmanager.desktop: Type=Application TryExec=xfce4-taskmanager Terminal=false OnlyShowIn=XFCE; Categories=System;Monitor;GTK;
+ALL-PASS 8/8: parse, Type=Application, TryExec present, Terminal=false, OnlyShowIn=XFCE
+204 Exec-on-image: DEFERRED to OC1 boot check (no squashfs tooling on this Mac; TryExec guards each entry)
+205 icon-resolve: DEFERRED to OC1 boot check (upstream package icon names recorded; validator on Linux re-checks)

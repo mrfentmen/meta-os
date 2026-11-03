@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Files
+GenericName=File Manager
+Comment=Browse and manage your files (Exec mirrors Bond iso/apps/desktop/meta-files.desktop)
+Exec=thunar %U
+TryExec=thunar
+Icon=system-file-manager
+Terminal=false
+Categories=System;FileManager;Utility;
+StartupNotify=true

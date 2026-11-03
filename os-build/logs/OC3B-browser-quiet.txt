@@ -1,0 +1,14 @@
+# OC3B-021 — browser never phones home on launch: what is actually true
+
+Claimed: the start page performs zero network loads (verified:
+0 external refs, OC3B-startpage-offline.txt). The --app target is a
+file:// URL, so launch itself needs no network.
+NOT claimed: Chromium-the-binary's own background traffic
+(component update, safebrowsing lists, field trials). Chromium phones
+home by default; this lane sets --no-first-run and a local homepage
+but does not patch the binary's update/safebrowsing behavior. Full
+quiet proof needs a packet capture at OC1 first-launch (owner: OC1,
+named not assumed). Policy delta available if wanted:
+--disable-background-networking on the Exec line — proposed, NOT
+applied unilaterally, because it also disables useful update checks.
+Decision recorded here as open; Pax/OC1 call it.

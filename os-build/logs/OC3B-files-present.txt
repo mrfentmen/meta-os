@@ -1,0 +1,13 @@
+# OC3B-026 — file manager package and version (record, not guess)
+
+- Package: Thunar, via the `xfce4` KEEP line in
+  `os-build/metaos1-base/packages.txt` (Xubuntu core metapackage;
+  Thunar is its file manager — CODE-INSPECTED from packaging facts,
+  not observed on a booted image).
+- Launcher: OC2's `agent-layer/desktop-entries/thunar.desktop`
+  (TryExec-guarded) + ISO lane's `meta-files.desktop`. Neither is
+  authored here.
+- Version: NOT recorded — no image dpkg output exists anywhere in
+  the repo, and writing a version without it would be a guess.
+  Owner of the version line: OC1 at first boot (`thunar --version`
+  into this file's §2 verdict addendum). Until then: name only.

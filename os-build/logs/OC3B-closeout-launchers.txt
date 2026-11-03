@@ -1,0 +1,8 @@
+# OC3B-277 — closeout: launcher validation re-run
+
+Re-ran 2026-11-03 over os-build/logs/oc3b-desktop/*.desktop:
+11/11 parse as INI with [Desktop Entry], Type=Application,
+TryExec present, Terminal=false. (8x §9 entries + meta-browser-app
++ meta-demo + meta-help.) No drift since §9/§1/§7/§8 commits.
+Linux-side desktop-file-validate + Exec-on-image + icon-resolve
+remain OC1 boot checks per OC3B-desktop-files.md; unchanged.

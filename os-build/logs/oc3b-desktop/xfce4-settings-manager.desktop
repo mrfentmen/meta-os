@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Settings Manager
+GenericName=Xfce Settings
+Comment=Configure the desktop
+Exec=xfce4-settings-manager
+TryExec=xfce4-settings-manager
+Icon=preferences-system
+Terminal=false
+Categories=Settings;GTK;
+OnlyShowIn=XFCE;
+StartupNotify=true
+NoDisplay=false

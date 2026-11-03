@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MetaOS Demo Tour</title>
+<style>
+:root{--bg:#070B16;--ink:#EDF5FF;--dim:#9DB4D0;--blue:#1877F2;--pink:#FF4F9A;--line:#1C2A45}
+*{box-sizing:border-box}html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.6 Verdana,system-ui,sans-serif;padding:48px 24px;max-width:760px;margin:0 auto}
+h1{font-size:32px;margin:0 0 8px}.sub{color:var(--dim);margin:0 0 32px}
+ol{padding:0;list-style:none;counter-reset:b}li{counter-increment:b;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:0 0 14px}
+li b.t{display:block;font-size:18px;margin-bottom:6px}li b.t::before{content:counter(b)". ";color:var(--pink)}
+li a{color:var(--cyan,#00C8FF)}li p{margin:6px 0 0;color:var(--dim);font-size:14px}
+.foot{color:var(--dim);font-size:13px;margin-top:28px}
+</style>
+</head>
+<body>
+<h1>MetaOS — 60-second tour</h1>
+<p class="sub">Everything here is a file on this machine. No network needed.</p>
+<ol>
+<li><b class="t">Desktop</b><p>Boot to the Meta wallpaper. This page is the map.</p></li>
+<li><b class="t">Terminal</b><p>Open Terminal; the welcome ribbon draws once.</p></li>
+<li><b class="t">Files</b><p>Open Files; Home, Pictures, and the demo folder.</p></li>
+<li><b class="t">Loop</b><p><a href="meta-loop.mp4">Play the ASCII loop</a> fullscreen.</p></li>
+<li><b class="t">Film</b><p><a href="demo-3min.mp4">Play the 3-minute film</a> — or a 10-second excerpt.</p></li>
+<li><b class="t">Agent status</b><p>Open Agent Status from the menu.</p></li>
+<li><b class="t">Close</b><p>Back to the desktop. Done in sixty seconds.</p></li>
+</ol>
+<p class="foot">Installs next to the film as <code>tour.html</code>. Labels: live parts are live; the simulated dispatch beat is labelled SIMULATED in the film it belongs to.</p>
+</body>
+</html>

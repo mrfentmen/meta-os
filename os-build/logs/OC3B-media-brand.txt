@@ -1,0 +1,7 @@
+# OC3B-109 — no Ubuntu branding in media apps (UI strings)
+
+Scanned: my parole/pavucontrol/screenshot .desktop Name/GenericName/
+Comment lines + OC2 ristretto entry lines. Zero Ubuntu/vendor words.
+Player-internal menu strings live in the binaries — OC1 screenshot
+audit, named not assumed. Same dev-docs rule as before: docs may
+name the base; pixels may not.

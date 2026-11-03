@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Appearance
+GenericName=Theme and Style Settings
+Comment=Change theme, icons and fonts
+Exec=xfce4-appearance-settings
+TryExec=xfce4-appearance-settings
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Settings;GTK;
+OnlyShowIn=XFCE;
+StartupNotify=true
+NoDisplay=false

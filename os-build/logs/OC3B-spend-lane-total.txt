@@ -1,0 +1,6 @@
+# OC3B-292 — lane spend total
+
+Live model spend by this lane: $0.00. Apps work needed no model
+calls (static authoring + tree reads + local ffprobe/python only).
+$1 cap noted by the operator; whole plan costs ~$0.05 anyway —
+this lane spent none of it.

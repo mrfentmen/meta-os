@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Calculator
+GenericName=Galculator
+Comment=Perform calculations
+Exec=galculator
+TryExec=galculator
+Icon=galculator
+Terminal=false
+Categories=Utility;Calculator;GTK;
+OnlyShowIn=XFCE;
+StartupNotify=true
+NoDisplay=false

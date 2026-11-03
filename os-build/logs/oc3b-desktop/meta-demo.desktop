@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Demo Tour
+GenericName=MetaOS Guided Demo
+Comment=Play the 60-second guided tour and film excerpt
+Exec=xdg-open /usr/share/metaos/demo/tour.html
+TryExec=xdg-open
+Icon=media-playback-start
+Terminal=false
+Categories=AudioVideo;Player;GTK;
+OnlyShowIn=XFCE;
+StartupNotify=true
+NoDisplay=false
