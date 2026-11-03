@@ -685,10 +685,11 @@ fn run_command(line: &[u8], truncated: bool) {
     } else if line == b"clear" {
         // RW4-2 interim (Pax bus idx 503): Hana spec text for
         // clear is still owed, so nothing is invented here —
-        // clear runs the kernel's own vga.rs clear(): the VGA
-        // buffer is blanked, cursor to 0,0, no output line.
+        // clear runs the kernel's own console clears: the VGA
+        // buffer is blanked, cursor to 0,0, and (KF-03) the
+        // framebuffer console is blanked too, no output line.
         // The serial transcript is untouched (clear touches
-        // only the VGA buffer). Help does NOT list clear yet:
+        // only the screens). Help does NOT list clear yet:
         // the ruled help line is exactly "status help uptime
         // mem ps", and whether clear joins it awaits a
         // Pax/Hana ruling.
@@ -716,16 +717,23 @@ fn unsafe_console_color(spec: crate::vga::ColorSpec) {
             console.set_colors(spec);
         }
     }
+    // KF-03: recolor the framebuffer console too, so the status
+    // block's colors match on the screen the user sees on 0.11.
+    crate::fb_set_colors(spec);
 }
 
 /// Blank the VGA screen (RW4-2 clear). Same single-CPU terms as
 /// unsafe_console_color: only the console task touches CONSOLE.
+/// KF-03: also blanks the framebuffer console, so `clear` blanks
+/// the screen the user actually sees on 0.11 too; the serial
+/// transcript is untouched by either clear.
 fn unsafe_console_clear() {
     unsafe {
         if let Some(console) = (*core::ptr::addr_of_mut!(crate::CONSOLE)).as_mut() {
             console.clear();
         }
     }
+    crate::fb_clear();
 }
 
 /// W6 fetch screen (metafetch's kernel twin, text mode): frame 0
