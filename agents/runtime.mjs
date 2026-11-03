@@ -19,9 +19,27 @@ export function loadRegistry(file) {
     if (seen.has(a.name)) throw new Error("registry: duplicate agent " + a.name);
     seen.add(a.name);
     if (!Array.isArray(a.command) || a.command.length === 0) throw new Error("registry: " + a.name + " missing command");
+    // Every argv element must be a string. `command: ["node", 42]` passes a length check and
+    // then throws inside spawn() -- at spawn time, in a process that is already running the
+    // rest of the crew. A malformed entry is refused at load, where nothing has started.
+    for (const part of a.command) {
+      if (typeof part !== "string") throw new Error("registry: " + a.name + " command must be strings");
+    }
     a.budget = a.budget || {};
     if (a.budget.maxWallMs != null && !(a.budget.maxWallMs > 0)) throw new Error("registry: " + a.name + " bad maxWallMs");
     if (a.budget.maxCostUsd != null && !(a.budget.maxCostUsd >= 0)) throw new Error("registry: " + a.name + " bad maxCostUsd");
+    // Watch targets are validated here for the same reason: `pollWatch` throws on an
+    // unsupported target type, and today that throw happens inside a setInterval at the
+    // watch cadence -- one typo in the registry kills the watcher minutes later, far from
+    // the entry that caused it.
+    if (a.watch != null) {
+      if (!Array.isArray(a.watch)) throw new Error("registry: " + a.name + " watch must be an array");
+      for (const t of a.watch) {
+        if (!t || t.type !== "file" || typeof t.path !== "string" || t.path.length === 0) {
+          throw new Error("registry: " + a.name + " bad watch target");
+        }
+      }
+    }
   }
   return raw.agents;
 }
@@ -54,16 +72,31 @@ export class Ledger {
     fs.appendFileSync(this.file, sep + line);
     return line;
   }
-  // A torn last line is what a crash mid-append leaves behind, and the old reader threw on it
-  // and took every complete record before it down too: one bad append made the whole run's
-  // history unreadable. Skipping is the smallest honest recovery -- it repairs nothing and
-  // reorders nothing, it just keeps the records that are whole.
+  // Read the events back.
+  //
+  // A crash can tear exactly one line: the last one, the append that was in flight when the
+  // process died (a single appendFileSync is not a transaction). That line is skipped and
+  // the rest of the history is returned, because a receipt with one truncated tail is still
+  // the receipt of the run.
+  //
+  // A torn line anywhere ELSE is not a crash -- it is a rewritten or spliced file, which the
+  // append-only rule forbids. That throws with its line number: an agent's history is the
+  // evidence for everything else it claims, and quietly dropping the middle of it would make
+  // every later line a claim about a run nobody can reconstruct.
   read() {
     if (!fs.existsSync(this.file)) return [];
+    const lines = fs.readFileSync(this.file, "utf8").split("\n");
     const out = [];
-    for (const line of fs.readFileSync(this.file, "utf8").split("\n")) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       if (!line) continue;
-      try { out.push(JSON.parse(line)); } catch { /* torn line: skip, keep the rest */ }
+      try {
+        out.push(JSON.parse(line));
+      } catch (e) {
+        const isLastContent = lines.slice(i + 1).every((l) => !l);
+        if (isLastContent) return out;          // the tail a crash tore off
+        throw new Error("ledger: torn line " + (i + 1) + " of " + this.file);
+      }
     }
     return out;
   }
@@ -170,11 +203,23 @@ export function spawnAgent(agent, { root, job = {} } = {}) {
   });
   const out = fs.createWriteStream(path.join(runDir, "output.log"));
   child.stdout.pipe(out); child.stderr.pipe(out);
-  const handle = { agent, runId, runDir, ledger, child, stopped: null };
+  const handle = { agent, runId, runDir, ledger, child, stopped: null, exited: false };
   handle.done = new Promise((resolve) => {
     child.on("exit", (code, signal) => {
+      handle.exited = true;
       ledger.add(runId, "exit", { code, signal, stopped: handle.stopped });
       resolve({ code, signal });
+    });
+    // A spawn that never becomes a process (ENOENT command, a cwd that does not exist, a
+    // permission refusal) emits 'error' and NEVER emits 'exit'. With no listener that is an
+    // uncaught exception that takes the runtime down -- and with the crew in the same
+    // process, one bad registry entry would kill every other agent's parent. With a listener
+    // that resolves nothing, `await handle.done` hangs forever. It does both jobs: the run is
+    // marked failed in its own ledger and the promise settles.
+    child.on("error", (err) => {
+      handle.exited = true;    // never became a process: there is nothing left to stop
+      ledger.add(runId, "spawn-error", { message: String(err && err.message || err), stopped: handle.stopped });
+      resolve({ code: null, signal: null, error: String(err && err.message || err) });
     });
   });
   // Budget: wall-clock cap stops the run (spec S9).
@@ -206,6 +251,11 @@ export async function killAgent(handle, reason, graceMs = 800) {
   if (handle.stopped) return;
   // A refused run has no child; it is already stopped and its receipt says why.
   if (!handle.child) return;
+  // A stop requested for a run that has already exited is not a stop. Writing the
+  // receipt anyway makes the ledger say the runtime stopped something it never touched --
+  // and the budget timer and the STOP poll both fire on their own schedule, so this is a
+  // race a real run hits, not a synthetic one.
+  if (handle.exited) return;
   handle.stopped = reason;
   handle.ledger.add(handle.runId, "stop-request", { reason });
   handle.child.kill("SIGTERM");
@@ -218,6 +268,47 @@ export async function killAgent(handle, reason, graceMs = 800) {
     handle.ledger.add(handle.runId, "killed-hard", { reason });
     await handle.done;
   }
+}
+
+// Reconcile the run directories after a runtime restart (spec S12).
+//
+// A runtime that dies takes no children with it: the spawned agents keep running (or keep
+// being dead) and their ledgers stop mid-story, with no `exit` line. Nothing on disk says so,
+// so after a restart every one of those runs reads as "still going" to anything that scans the
+// directory -- which is how a supervisor reports work that finished an hour ago.
+//
+// This walks `root/runs`, and for every run whose ledger has no terminal event it appends one:
+// `{"event":"orphaned","reason":"runtime-died"}`. The ledger and the brief are preserved
+// untouched -- the brief is what a baton hand-off reads, so a reconciliation that rewrote it
+// would be the runtime editing the agent's orders. Idempotent: a run already marked is left
+// alone, so a second restart does not stack marks.
+const TERMINAL = new Set(["exit", "spawn-error"]);
+
+export function reconcileRuns(root) {
+  const runsDir = path.join(root, "runs");
+  const marked = [], quiet = [], unreadable = [];
+  if (!fs.existsSync(runsDir)) return { marked, quiet, unreadable };
+  for (const name of fs.readdirSync(runsDir).sort()) {
+    const runDir = path.join(runsDir, name);
+    if (!fs.statSync(runDir).isDirectory()) continue;
+    const ledgerFile = path.join(runDir, "ledger.jsonl");
+    const ledger = new Ledger(ledgerFile);
+    let events;
+    try {
+      events = ledger.read();
+    } catch (e) {
+      // A torn middle line is corruption, not a crash. It is reported, not repaired: the
+      // only honest thing a recovery pass can say about a rewritten history is "I cannot
+      // read this", and rewriting it would destroy the evidence either way.
+      unreadable.push({ run: name, reason: String(e.message || e) });
+      continue;
+    }
+    const last = events[events.length - 1];
+    if (last && (TERMINAL.has(last.event) || last.event === "orphaned")) { quiet.push(name); continue; }
+    ledger.add(name, "orphaned", { reason: "runtime-died", lastEvent: last ? last.event : null });
+    marked.push(name);
+  }
+  return { marked, quiet, unreadable };
 }
 
 export function watchState(target) {
@@ -264,6 +355,14 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
   } else if (cmd === "validate") {
     for (const a of agents) validateEntry(a);
     console.log("registry ok: " + agents.length + " entries");
+  } else if (cmd === "reconcile") {
+    // Run this once after a runtime restart: it is the only thing that marks the runs a dead
+    // runtime left without an exit line (spec S12).
+    const res = reconcileRuns(HERE);
+    console.log("reconcile: marked", res.marked.length, "quiet", res.quiet.length, "unreadable", res.unreadable.length);
+    for (const r of res.marked) console.log("  orphaned", r);
+    for (const r of res.unreadable) console.log("  UNREADABLE", r.run, "—", r.reason);
+    if (res.unreadable.length > 0) process.exit(2);
   } else if (cmd === "spawn" || cmd === "watch") {
     const agent = agents.find((a) => a.name === name);
     if (!agent) { console.error("no such agent: " + name); process.exit(1); }
@@ -282,7 +381,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
       }, agent.watchCadenceMs || 2000);
     }
   } else {
-    console.error("usage: runtime.mjs list | validate | spawn <name> | watch <name>");
+    console.error("usage: runtime.mjs list | validate | spawn <name> | watch <name> | reconcile");
     process.exit(1);
   }
 }
