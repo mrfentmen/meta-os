@@ -92,9 +92,9 @@ fn registry_fixture_loads() {
     const REAL: &str = include_str!("../../../agents/registry.json");
     let agents = parse_registry_text(REAL).expect("the real registry loads");
 
-    assert_eq!(agents.len(), 28, "the registry carries 28 agents");
+    assert_eq!(agents.len(), 29, "the registry carries 29 agents");
     assert_eq!(drafts(&agents).len(), 23, "23 of them are drafts");
-    assert_eq!(runnable(&agents).len(), 5, "5 are runnable");
+    assert_eq!(runnable(&agents).len(), 6, "6 are runnable");
 
     for agent in &agents {
         assert!(!agent.name.trim().is_empty());
