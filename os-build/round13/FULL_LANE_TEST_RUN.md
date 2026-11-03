@@ -18,3 +18,5 @@ Tip: `buffy/round13`. Generated 2026-11-03T01:55:59.863Z by `os-build/round13/cl
   `os-build/round13/userspace/CARGO_CHECK.txt`. **Nothing in this round was compiled or booted.**
 - The `relay/` and `board/` original suites (`relay.test.mjs`, `board.test.mjs`) are run by `npm test`, not here;
   the Round 13 suites above supersede them for this round's evidence.
+
+Round 13 task: R13-492.

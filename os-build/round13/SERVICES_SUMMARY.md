@@ -9,3 +9,5 @@
 
 - The service layer is four executables (bootlog, console, logd, time) and 21 modules; every document that calls the 25 directories "services" describes intent, not artifact.
 - **No cross-service pair exists.** 25 of 25 pairs failed the bootability check; the only live callmatrix permission is `dhcp -> net`, and no code in `dhcp` uses it.
+
+Round 13 task: R13-493.

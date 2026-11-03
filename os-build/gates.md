@@ -17,7 +17,7 @@ match; a silent grep is a NO. All lines verified against
 - K6: `grep 'user hello: entry 0x600000000000' os-build/logs/K6-repro-main-2026-11-01.txt`
   and `grep 'HELLO FROM USERSPACE' os-build/logs/K6-repro-main-2026-11-01.txt`
   and `grep 'INT user page-fault' os-build/logs/K6-repro-main-2026-11-01.txt`
-- K7: NO LOG. Banner ruling is K6, not K7. Any K7 claim without a
+- K7: no K7 banner (K7-boot.txt exists, 74 lines). Banner ruling is K6, not K7. Any K7 claim without a
   new log file is rejected on sight.
 
 ## Per-merge checklist (Pax runs this unaided, in order)
