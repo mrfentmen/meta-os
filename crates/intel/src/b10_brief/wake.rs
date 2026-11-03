@@ -12,8 +12,10 @@ pub fn should_wake(sleeping: bool, already_sent: bool, has_spec: bool) -> bool {
     sleeping && !already_sent && has_spec
 }
 
-pub fn dedupe_key(nick: &str, job: &str) -> String {
-    format!("wake:{nick}:{job}")
+/// The journal dedupe key for one wake, in wake.py order: job id
+/// first, agent nick second (`wake:{job}:{nick}`).
+pub fn dedupe_key(job: &str, nick: &str) -> String {
+    format!("wake:{job}:{nick}")
 }
 
 pub fn compose_bundle(nick: &str, job: &str, spec_text: &str, acceptance: &[String]) -> String {
@@ -80,7 +82,7 @@ pub fn wake_tick(
             if job.addressed_to != agent.nick {
                 continue;
             }
-            let key = dedupe_key(&agent.nick, &job.id);
+            let key = dedupe_key(&job.id, &agent.nick);
             if seen.contains(&key) {
                 continue;
             }
@@ -146,7 +148,9 @@ mod tests {
     fn wake_tick_one_record_per_pair_and_dedupes() {
         let recs = wake_tick(&[tick_job()], &[tick_agent()], &[], 42);
         assert_eq!(recs.len(), 1);
-        assert_eq!(recs[0].dedupe_key, "wake:hana:j1");
+        // wake.py order: job id first, agent nick second.
+        assert_eq!(recs[0].dedupe_key, "wake:j1:hana");
+        assert_eq!(dedupe_key("j1", "hana"), "wake:j1:hana");
         assert_eq!(recs[0].created_at, 42);
         assert!(recs[0].bundle.contains("spec words"));
         // Journal dedupe: same pair again journals nothing new.
