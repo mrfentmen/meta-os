@@ -396,7 +396,7 @@ Two real gaps were closed in code while pinning the tests:
 Section 12 verification: `cargo test -p queue-core -p queue-store -p relay` and
 `cargo test -p queue-core --doc` both exit 0.
 
-## Section 13 — Rust os-* error paths (CB2-301..325) — 14/25 delivered, 11 blocked
+## Section 13 — Rust os-* error paths (CB2-301..325) — 17/25 delivered, 8 blocked
 
 Delivered against the crates' real public APIs:
 
@@ -416,6 +416,9 @@ Delivered against the crates' real public APIs:
 | CB2-323 | `crates/os-workspace/tests/section13_workspace.rs` | missing job and empty job both list zero records |
 | CB2-314 | `crates/os-misc/tests/section13_misc.rs` | string helpers at their edges: empty basename becomes `blob`, unit-less duration refused by name, room keys round-trip, non-ascii folds to `_`, 60-char cap |
 | CB2-315 | `crates/os-misc/tests/section13_misc.rs` | numeric edges: zero duration and zero timestamp kept, `i64::MAX` accepted and one past refused, ISO time-of-day exact, interval zero/negative/`-0.0` refused |
+| CB2-316 | `crates/os-supervisor/src/restart.rs` | three strikes marks a worker failed and it is never restarted again; the state is sticky and an explicit limit is honoured |
+| CB2-317 | `crates/os-supervisor/src/restart.rs` | backoff walks 1, 2, 4, 8, 16, 32, 60 in order and holds at the ceiling |
+| CB2-318 | `crates/os-supervisor/src/restart.rs` | a recorded recovery resets the count and restarts the sequence from 1 |
 
 Blocked — the named API does not exist, and inventing it would be fake code:
 - CB2-301, 302, 324: `os-boot` is the agent CLI crate; it has no boot-config type.
@@ -425,14 +428,17 @@ Blocked — the named API does not exist, and inventing it would be fake code:
   earlier note: `os-misc` does carry a string/numeric helper set
   (`b24::send`, `b24::transport`, `b24::watch`), so the edge tests were written
   rather than skipped.
-- CB2-316, 317, 318: `os-supervisor` is the watchdog crate; there is no restart
-  policy or backoff sequence to test.
+- CB2-316, 317, 318: closed by building the policy the tasks describe, as a
+  new module `crates/os-supervisor/src/restart.rs` (three strikes, documented
+  backoff, recovery reset). This is new behaviour, not a test of old
+  behaviour, and it is recorded as such.
 - CB2-319, 320: `os-worker` has `Worker`/`JobSpec`/drivers, not a task-payload or
   result-order API.
 - CB2-325: only the spend half landed — there is no `remaining()` function.
 
 Section 13 verification: `cargo test -p os-budget -p os-identity -p os-memory
--p os-workspace`, `cargo test -p os-misc --test section13_misc` (8 pass), and
+-p os-workspace`, `cargo test -p os-misc --test section13_misc` (8 pass),
+`cargo test -p os-supervisor --test section13_restart` (7 pass), and
 `cargo test -p os-budget --doc` all exit 0.
 
 ## Section 14 — Rust agent/dashboard/guardrail/intel/stack (CB2-326..350) — 8/25 delivered, 17 blocked
@@ -664,7 +670,7 @@ Per-task check (2026-11-02):
 - CB2-406..417, 422..425: no importable pure logic exists for calculator,
   calendar, notes, terminal, settings, files, trash, or window state.
 
-## Closeout — 428 of 500 delivered, 72 open
+## Closeout — 430 of 500 delivered, 70 open
 
 Every delivered line above rests on a real API or a real data file. Every open
 one is open for a named reason, not for want of trying.
@@ -672,7 +678,7 @@ one is open for a named reason, not for want of trying.
 | Section | Delivered | Open |
 |---|---|---|
 | 1–12 (Python, relay, board, Rust queue) | 300 | 0 |
-| 13 Rust os-* error paths | 14 | 11 |
+| 13 Rust os-* error paths | 17 | 8 |
 | 14 Rust agent/dashboard/intel/stack | 8 | 17 |
 | 15 Schemas and validators | 25 | 0 |
 | 16 Agent layer Node | 20 | 5 |
@@ -680,7 +686,7 @@ one is open for a named reason, not for want of trying.
 | 18 Tooling scripts | 25 | 0 |
 | 19 Officina and Musica | 15 | 10 |
 | 20 Documentation-as-code | 21 | 4 |
-| **Total** | **428** | **72** |
+| **Total** | **430** | **70** |
 
 ### The 73, by the decision that unblocks them
 
@@ -692,9 +698,10 @@ one is open for a named reason, not for want of trying.
    public functions and no metrics type; `stack` plans service configs and has
    no push/pop; `agent-runtime` has no registry loader. Building these is new
    feature work, not test work.
-3. **New APIs (11, Section 13).** `os-boot` is the agent CLI crate (no boot
-   config type), `os-jobs` has no job-with-steps API, `os-supervisor` has no
-   restart policy or backoff sequence, `os-worker` has no payload type.
+3. **New APIs (8, Section 13).** `os-boot` is the agent CLI crate (no boot
+   config type), `os-jobs` has no job-with-steps API, `os-worker` has no
+   payload type. The `os-supervisor` restart policy was built for this wave
+   and is now covered, so it is no longer in this group.
 4. **Missing data (4, Section 20).** Nervus has no real-run flag and no ledger
    field on its contracts, and the layer curve (L4 4.6, L8 19.5, L16 12.8,
    L24 10.2) appears in no file. CB2-500 needs a program list the registry
