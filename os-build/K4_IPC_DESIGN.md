@@ -9,7 +9,15 @@ the kernel files cited below were verified on that tree).
 **Status:** design only. Nothing here is
 compiled, built, or booted. Proof is the Mac + QEMU boot log through
 OpenCode 1's gate, read by Pax — same standard as every kernel step
-before it. `syscalls.rs` is FROZEN (F1) and is not touched by this
+before it.
+**Corrections (Pax review `os-build/K4_REVIEW_PAX.md`, 2026-11-02;
+applied in the follow-up commit on this branch):** (1) §6 states
+the real peer-id mechanism — fixed spawn-order ids, not `getpid`
+of a peer; (2) §4 names the step-1 squatting limitation out
+loud; (3) §4 names every task-removal path for mailbox clearing;
+(4) §7 pins the literal gate log lines. §5 also records the
+review's number assignment (6/7) and §8 records its Q-I1 answer
+(swap, do not grow). `syscalls.rs` is FROZEN (F1) and is not touched by this
 design; the two new numbers come from the reserved range via the
 inline dispatch in `user.rs` (see §5).
 
@@ -107,8 +115,8 @@ both userspace, so kernel-task addressing is out of gate scope.
    returns `u64::MAX` and changes nothing.
 
 A refusal changes no mailbox state and consumes nothing. Every
-refusal is logged in the existing kernel style (see §7 for the
-wording the gate log must show).
+refusal is logged in the existing kernel style, with the
+literal strings pinned in §7.
 
 ## 4. Blocking semantics, and what happens when a peer dies
 
@@ -134,11 +142,29 @@ non-blocking, deliberately:
 
 **Peer death:**
 
-- **Recipient dies:** `exit_task` clears the exiting task's
-  mailbox. A message still queued for it is discarded with it —
-  it was never received, and there is no dead-letter box in
-  step 1. Any later send to that id is refused at validation
-  step 1 (the row is `Exited`).
+- **Recipient dies:** the exiting task's mailbox is cleared,
+  on every task-removal path, because every path funnels
+  through `sched::exit_task` — and the build step clears the
+  box there, not in each caller separately. The paths, all
+  verified on the current tree: voluntary exit (syscall 0 in
+  `user.rs::syscall_handler` → `exit_task`); a task entry
+  returning (the trampoline in `sched.rs` → `exit_task`); a
+  loader refusal or a missing mapper (`user.rs::run_elf`
+  error arms → `exit_task`); and the fault-isolation kill (a
+  ring-3 page fault in `interrupts::page_fault_handler` →
+  `exit_task`, never an `iretq` back into the faulting
+  context). A message still queued for the dead task is
+  discarded with it — it was never received, and there is no
+  dead-letter box in step 1. Any later send to that id is
+  refused at validation step 1 (the row is `Exited`). The
+  one non-path is the double fault: it halts the machine, so
+  no task continues and no lingering-mailbox hazard survives
+  it; it needs no clearing rule. Slot reuse depends on this
+  holding on all paths: `tasks.rs::reap` frees a slot only
+  for an `Exited` task, whose box was already cleared at its
+  `exit_task`, so a recycled slot can never inherit a queued
+  message — the build step re-proves this if reap ever lands,
+  it does not assume it.
 - **Sender dies:** a message already copied into the
   recipient's mailbox survives the sender's exit. The mailbox
   copy is recipient-owned; delivery is complete at `send`
@@ -160,6 +186,19 @@ non-blocking, deliberately:
   sleep deadline, or queue position changes. The gate proves
   this (§7), it is not asserted here.
 
+**Step-1 squatting limitation, stated out loud:** there is
+no sender filtering in step 1. Any live task can send to any
+live task, and one send occupies that task's only slot until
+it receives or exits — so a nuisance task can sit on another
+task's mailbox (including the console's) and make legitimate
+sends to that task refuse with a full box. This is accepted
+knowingly for step 1, which has no permission model; the
+later blocking-receive step must revisit it, because a
+blocked receiver plus a squatted box is a denial-of-service
+shape, not just a refused send. Isolation claims name their
+mechanism (§§2–3); they also name their limits, and this is
+step 1's.
+
 ## 5. Fences respected, and the syscall numbers
 
 - `syscalls.rs`: untouched (F1 FROZEN). The authoritative
@@ -174,9 +213,9 @@ non-blocking, deliberately:
   userspace-requested), so 6 and 7 are the first free numbers,
   and this design argues for them because userspace must invoke
   the primitive from ring 3 and there is no other entry path.
-  If Pax's review assigns different numbers, the build step
-  uses Pax's numbers and this note is corrected — the numbers
-  here are the design's proposal, not a unilateral claim.
+  Pax's review (`os-build/K4_REVIEW_PAX.md`, 2026-11-02)
+  assigned 6 = `ipc_send` / 7 = `ipc_recv` as proposed, so the
+  numbers are now assigned, not a proposal.
 - K3 demand paging, K5 storage/filesystem, copy-on-write, and
   shared memory are all out of scope. One interaction is named
   so the build step does not trip on it: `send` validates the
@@ -195,7 +234,11 @@ already use. Anything else is a success count.
 
 **`ipc_send` — syscall 6:**
 
-- `rdi` = destination task id (as returned by `getpid`, syscall 3).
+- `rdi` = destination task id: the peer's fixed spawn-order id
+  from the gate build's loader table (see the sketch below).
+  `getpid` (syscall 3) returns only the *caller's own* id; no
+  program can `getpid` a peer, and the convention must not claim
+  otherwise.
 - `rsi` = sender buffer address. `rdx` = message length, `1..=64`.
 - Returns `0` on success (message queued in the destination
   box). Returns `u64::MAX` on any refusal: bad or dead
@@ -229,11 +272,18 @@ already use. Anything else is a success count.
   the sender on this cooperative scheduler.
 
 **Talker/listener sketch (Buffy's programs, not Rowan's):**
-talker `getpid`s the listener's id (the pair's ids are fixed
-by spawn order in the gate build — see Q-I1), sends one
-message, and exits; listener polls `ipc_recv` until it
-receives, prints the message, and exits. Neither program needs
-any kernel knowledge beyond this section.
+talker sends one message to the listener's fixed spawn-order
+id and exits; listener polls `ipc_recv` until it receives,
+prints the message, and exits. How each program knows the
+peer's id: the gate build's loader table fixes the pair's
+spawn order, so the ids are named constants in the pair (or a
+value the loader arrangement guarantees) — that table is the
+pair's contract, and it is fixed before Buffy writes against
+it. Each program learns its *own* id from `getpid` only, and
+uses that own id for nothing but identifying itself (for
+example, as a check on a received message's sender field).
+Neither program needs any kernel knowledge beyond this
+section.
 
 ## 7. Gate pack for OpenCode 1 (the boot log must show all of this)
 
@@ -260,6 +310,27 @@ unaffected:
    receive into an undersized buffer are both refused, with
    no mailbox state changed and no task killed.
 
+**Literal gate lines (pinned in advance, so the Mac boot log
+is checkable line-by-line instead of readable only in
+hindsight).** The build prints exactly these strings, in the
+existing `user …` log style (`user exit code …`,
+`user bad syscall … refused`):
+
+- send success: `user ipc send <sender> -> <dest> len <n>`
+- receive success: `user ipc recv <receiver> len <n> from <sender>`
+  (the length is the total bytes copied, header included)
+- full-box refusal: `user ipc send <sender> -> <dest> refused full`
+- dead-destination refusal: `user ipc send <sender> -> <dest> refused dead`
+- unmapped-buffer refusal: `user ipc send <sender> refused unmapped`
+- undersized-receive-buffer refusal: `user ipc recv <receiver> refused small buffer`
+- empty receive: `user ipc recv <receiver> empty`
+
+The empty-receive line repeats while the listener polls (it
+yields between polls, so the repeats are few); the gate leg
+checks for at least one such line before the exchange leg,
+not for exactly one. A refusal leg missing its line fails
+the gate, same as a missing exchange line.
+
 Gate failure modes that must NOT be papered over: an exchange
 leg that passes only because the pair shared memory or a
 global instead of the mailbox; a refusal leg missing its log
@@ -269,12 +340,14 @@ the send/receive lines, proves nothing.
 
 ## 8. Open questions for the build step (not assumed here)
 
-- **Q-I1 — slot budget.** `sched.rs` records the table as
-  "now full at 8/8 with readkey". The gate pair needs two
-  userspace slots. The build step must say whether the gate
-  build swaps demo programs out or grows the table — this
-  design assumes neither, and the pair cannot be added to a
-  full table by wishing.
+- **Q-I1 — slot budget: answered by Pax's review — swap, do
+  not grow.** `sched.rs` records the table as "now full at
+  8/8 with readkey". The gate pair needs two userspace slots,
+  and `MAX_TASKS` stays 8 in step 1: the gate build swaps demo
+  programs out to make room for the talker/listener pair.
+  Growing the scheduler table is out of scope for K4 step 1 —
+  it touches every parallel array and invariant in `sched.rs`
+  and is its own designed step if ever needed.
 - **Q-I2 — where the mailbox state lives.** The natural home,
   following the existing parallel-array pattern, is `sched.rs`
   alongside `SLEEPS` (one box per row, accessed via
@@ -294,8 +367,9 @@ the send/receive lines, proves nothing.
 
 ## 9. Build order after this design
 
-1. This note (this branch) — Pax review, including the 6/7
-   number proposal and the Q-I1 slot answer.
+1. This note (this branch) — Pax review received (numbers
+   assigned, Q-I1 answered); the four required corrections
+   applied in the follow-up commit on this branch.
 2. Build step: mailbox state (Q-I2), dispatch entries 6/7 in
    `user.rs` only, exit-path discard, one gate pair run by
    Buffy's programs against the §6 convention.
