@@ -7,13 +7,21 @@ install -m644 "$HERE/greeter/lightdm-gtk-greeter.conf" /etc/lightdm/lightdm-gtk-
 install -m644 "$HERE/wallpapers/meta-ascii.png" /usr/share/backgrounds/meta-ascii.png
 install -m644 "$HERE/wallpapers/meta-rays.png" /usr/share/backgrounds/meta-rays.png
 install -m644 "$HERE/wallpapers/meta-dusk.png" /usr/share/backgrounds/meta-dusk.png
+install -m644 "$HERE/wallpapers/meta-dawn.png" /usr/share/backgrounds/meta-dawn.png
 install -m644 "$HERE/splash/meta-m.png" /usr/share/backgrounds/meta-m.png
 mkdir -p /usr/share/plymouth/themes/metaos
 install -m644 "$HERE/splash/metaos.plymouth" "$HERE/splash/metaos.script" "$HERE/splash/background.png" "$HERE/splash/meta-m.png" "$HERE/splash/progress.png" /usr/share/plymouth/themes/metaos/
 mkdir -p /usr/share/plank/themes/MetaOS
 install -m644 "$HERE/dock/dock.theme" /usr/share/plank/themes/MetaOS/dock.theme
-mkdir -p /usr/share/themes/MetaOS/gtk-3.0
+mkdir -p /usr/share/themes/MetaOS/gtk-3.0 /usr/share/themes/MetaOS/xfwm4
 install -m644 "$HERE/gtk/gtk.css" /usr/share/themes/MetaOS/gtk-3.0/gtk.css
+install -m644 "$HERE/xfwm4/themerc" /usr/share/themes/MetaOS/xfwm4/themerc
+mkdir -p /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml /etc/xdg/xfce4/xfconf/xfce-perchannel-xml
+install -m644 "$HERE/panel/xfce4-panel.xml" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
+install -m644 "$HERE/panel/xfce4-panel.xml" /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
+mkdir -p /etc/skel/.config/plank/dock1
+install -m644 "$HERE/dock/plank-settings" /etc/skel/.config/plank/dock1/settings
+install -m644 "$HERE/dock/plank.desktop" /etc/xdg/autostart/plank.desktop
 mkdir -p /etc/bash.bashrc.d
 install -m644 "$HERE/terminal/metaos-welcome.sh" /etc/bash.bashrc.d/metaos.sh
 if command -v update-alternatives >/dev/null 2>&1 && command -v update-initramfs >/dev/null 2>&1; then

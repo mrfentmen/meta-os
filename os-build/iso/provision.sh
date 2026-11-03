@@ -110,8 +110,17 @@ install -m644 "$PAYLOAD/wallpapers/meta-ascii.png" "$ROOT/usr/share/backgrounds/
 install -m644 "$PAYLOAD/wallpapers/meta-rays.png" "$ROOT/usr/share/backgrounds/meta-rays.png" 2>/dev/null || true
 install -m644 "$PAYLOAD/wallpapers/meta-dusk.png" "$ROOT/usr/share/backgrounds/meta-dusk.png" 2>/dev/null || true
 install -m644 "$PAYLOAD/wallpapers/meta-dawn.png" "$ROOT/usr/share/backgrounds/meta-dawn.png" 2>/dev/null || true
-cp -r "$PAYLOAD/dock/." "$ROOT/usr/share/plank/themes/" 2>/dev/null || true
 cp -r "$PAYLOAD/gtk/." "$ROOT/usr/share/themes/" 2>/dev/null || { mkdir -p "$ROOT/usr/share/themes/MetaOS/gtk-3.0"; install -m644 "$PAYLOAD/gtk/gtk.css" "$ROOT/usr/share/themes/MetaOS/gtk-3.0/gtk.css"; }
+mkdir -p "$ROOT/usr/share/themes/MetaOS/xfwm4"
+install -m644 "$PAYLOAD/xfwm4/themerc" "$ROOT/usr/share/themes/MetaOS/xfwm4/themerc"
+mkdir -p "$ROOT/usr/share/plank/themes/MetaOS"
+install -m644 "$PAYLOAD/dock/dock.theme" "$ROOT/usr/share/plank/themes/MetaOS/dock.theme"
+mkdir -p "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml"
+install -m644 "$PAYLOAD/panel/xfce4-panel.xml" "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+install -m644 "$PAYLOAD/panel/xfce4-panel.xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+mkdir -p "$ROOT/etc/skel/.config/plank/dock1"
+install -m644 "$PAYLOAD/dock/plank-settings" "$ROOT/etc/skel/.config/plank/dock1/settings"
+install -m644 "$PAYLOAD/dock/plank.desktop" "$ROOT/etc/xdg/autostart/plank.desktop"
 install -m644 "$PAYLOAD/terminal/metaos-welcome.sh" "$ROOT/etc/bash.bashrc.d/metaos.sh"
 gate_payload_welcome=1
 

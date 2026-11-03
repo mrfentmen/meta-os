@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Plank
+Comment=MetaOS dock
+Exec=plank
+TryExec=plank
+Icon=plank
+Terminal=false
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
