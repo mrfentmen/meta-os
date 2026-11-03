@@ -1,0 +1,42 @@
+===== OC2P-003 BOOT LOG =====
+date: 2026-11-03T04:28:13Z
+image: /tmp/oc2p-kf01/metaos-bios.img
+-rw-r--r--@ 1 test  wheel  17269760 Nov  2 23:27 /tmp/oc2p-kf01/metaos-bios.img
+
+--- starting QEMU ---
+serial=/tmp/oc2p-kf01/serial.log mon=/tmp/oc2p-kf01/mon-NVT0qh
+qemu-pid=62919
+
+===== OC2P-003 interactive check (drive.py attach, typed help + status) =====
+monitor: /tmp/oc2p-kf01/mon2-M57OZj
+serial bytes before drive: 50730 ; after:    50902
+--- grep results on /tmp/oc2p-kf01/serial2.log ---
+1 :: META OS KERNEL - alive
+1 :: mem summary: K4 up
+1 :: HELLO FROM USERSPACE
+3 :: user exit code 0
+1 :: task killed
+1 :: user readkey: entry
+1 :: sleeper: bad call refused
+1 :: commands: status help
+1 :: STATUS tasks=
+0 :: loader refused
+0 :: panicked
+0 :: PANIC
+0 :: triple fault
+--- STATUS line ---
+STATUS tasks=8 ticks=5507 heap_free_kb=255
+--- framebuffer evidence FROM BOOT OUTPUT (never from source) ---
+1:INFO : Framebuffer info: FrameBufferInfo { byte_len: 2764800, width: 1280, height: 720, pixel_format: Bgr, bytes_per_pixel: 3, stride: 1280 }
+3:INFO : BiosInfo { stage_4: Region { start: 130000, len: 24cc8 }, kernel: Region { start: 1000000, len: e09c58 }, ramdisk: Region { start: 1e0a000, len: 0 }, config_file: Region { start: 1e0a000, len: 0 }, last_used_addr: 1e09fff, framebuffer: BiosFramebufferInfo { region: Region { start: fd000000, len: 2a3000 }, width: 500, height: 2d0, bytes_per_pixel: 3, stride: 500, pixel_format: Bgr }, memory_map_addr: 12fdc, memory_map_len: 7 }
+18:INFO : Map framebuffer
+(kernel serial prints no framebuffer line of its own; only bootloader INFO lines above)
+--- screendumps ---
+-rw-r--r--@ 1 test  wheel  120485 Nov  2 23:31 /tmp/oc2p-kf01/OC2P-kf01-fb0.png
+-rw-r--r--@ 1 test  wheel  120485 Nov  2 23:31 /tmp/oc2p-kf01/OC2P-kf01-fb1.png
+MD5 (/tmp/oc2p-kf01/fb0.ppm) = 7e7df0a840986436130a5cf8a3978e2e
+MD5 (/tmp/oc2p-kf01/fb1.ppm) = 7e7df0a840986436130a5cf8a3978e2e
+(fb0/fb1 identical: screen frozen at bootloader handoff text; kernel VGA-text writes target undisplayed 0xB8000 while pixel fb active = KF-03 gap, not a boot failure)
+
+===== OC2P-003 VERDICT: BOOT =====
+qemu killed pid=63127
