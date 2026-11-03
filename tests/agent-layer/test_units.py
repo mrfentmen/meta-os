@@ -81,7 +81,8 @@ class TestUnits(unittest.TestCase):
     def test_installer_guards(self):
         src = open(os.path.join(_REPO, "agent-layer", "install.sh")).read()
         for marker in ("enable-linger", "import-environment SPARK_API_KEY",
-                       "py_compile", "port 8935", "idempotent"):
+                       "py_compile", "port 8935", "idempotent",
+                       "no-hardcode rule"):
             self.assertIn(marker, src, marker)
 
     def test_installer_deploys_every_unit(self):

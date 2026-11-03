@@ -61,8 +61,11 @@ done
 echo "units linked: $(ls "$ROOT/agent-layer/units" | tr '\n' ' ')"
 
 # 5. Reload + enable (linger attempted; recorded if unavailable).
+# Enable list derived from shipped units (same no-hardcode rule as linking).
 systemctl --user daemon-reload 2>&1 | head -n 1
-systemctl --user enable oc2-queue.service oc2-patrol.service oc2-patrol.timer 2>&1 | head -n 3
+UNITS="$(cd "$ROOT/agent-layer/units" && ls *.service *.timer 2>/dev/null | tr '\n' ' ')"
+# shellcheck disable=SC2086
+systemctl --user enable $UNITS 2>&1 | head -n 4
 loginctl enable-linger "$USER" 2>&1 | head -n 1 || echo "linger unavailable (recorded)"
 
 # 6. Key handoff hook (marker-guarded, runs at login shell start).
