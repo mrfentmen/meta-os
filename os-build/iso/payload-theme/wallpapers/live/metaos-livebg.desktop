@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=MetaOS Live ASCII Background
+Comment=The kernel attract loop, cycling live on the desktop
+Exec=/usr/share/metaos/apps/meta-live.py
+TryExec=/usr/share/metaos/apps/meta-live.py
+Icon=metaos-logo
+Terminal=false
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true

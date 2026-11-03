@@ -4,30 +4,6 @@
   "font_note": "wordmark is 5x7 block glyphs drawn as rectangles; no font file is shipped",
   "assets": [
     {
-      "path": "plymouth/metaos/logo.png",
-      "width": 512,
-      "height": 512,
-      "mode": "RGBA",
-      "sha256": "3cc711772a8a967eee232c1494b6ecd8fc50bb59faf096a0b766a26a5778500c",
-      "source": "plymouth splash mark"
-    },
-    {
-      "path": "plymouth/metaos/wordmark.png",
-      "width": 510,
-      "height": 138,
-      "mode": "RGBA",
-      "sha256": "70e772125337ef889134b3658ef73951b393363d6fa539285465ba0bf00b0eb5",
-      "source": "plymouth wordmark, block glyphs"
-    },
-    {
-      "path": "plymouth/metaos/dot.png",
-      "width": 24,
-      "height": 24,
-      "mode": "RGBA",
-      "sha256": "fe23f3c54132921092436e45cd00fa56e464431946a3fe375fc552445d710deb",
-      "source": "copied from os-build/face/plymouth/metaos/ring-dot.png (OC1 lane, on main)"
-    },
-    {
       "path": "calamares/branding/metaos/productLogo.png",
       "width": 256,
       "height": 256,
@@ -58,6 +34,18 @@
       "mode": "RGB",
       "sha256": "d0c724f145b81e47abdc93ae1bdda417a400598c5e772aa923704d5ea9a67e48",
       "source": "MOCK render, not a boot capture"
+    },
+    {
+      "path": "plymouth/metaos/background.png",
+      "sha256": "2b70378ec9d049f07e16cfd32622d8e5dbbf9d8b04f81e611e0e0aac01e4e824"
+    },
+    {
+      "path": "plymouth/metaos/meta-m.png",
+      "sha256": "494434c2bd341052008741fda6b08e422118718286e0a1ebd2f552dbc560e03e"
+    },
+    {
+      "path": "plymouth/metaos/progress.png",
+      "sha256": "8c1a08c711d908e5bd8f989493151b6258dc3f83953620207b4a9dbd4719ee9e"
     }
   ]
 }

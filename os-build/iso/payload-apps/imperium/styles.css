@@ -1,0 +1,2294 @@
+/* Meta Trio — restrained operational UI. Flat colors, 1px borders,
+   no gradients, no decorative effects. The active product tints only
+   functional accents (switcher, badge, limitations rule) via --accent. */
+
+:root {
+  --bg: #14161a;
+  --panel: rgba(29, 32, 38, 0.68);
+  --panel-border: #3a3f47;
+  --input-bg: #101216;
+  --text: #e6e6e6;
+  --muted: #9aa0a8;
+  --accent: #4f7ec2;
+  --ok: #5da864;
+  --warn: #c9a227;
+  --err: #c2504a;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+body[data-product="vigiles"] {
+  --accent: #4f7ec2;
+}
+
+body[data-product="ignis"] {
+  --accent: #d92b2b;
+}
+
+body[data-product="medicus"] {
+  --accent: #5da864;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* Spinning ASCII Meta loop behind the app. Dim on purpose: the
+   panels stay opaque, so the loop shows in the gaps around them
+   and never sits under readable text. It ignores pointer input. */
+#logo-background {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.topbar,
+main,
+.footer {
+  position: relative;
+  z-index: 1;
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--panel-border);
+  background: rgba(20, 22, 26, 0.92);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.product-badge {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+
+.logo-studio-link {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.logo-studio-link:hover {
+  text-decoration: underline;
+}
+
+.status {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.status[data-state="connected"] {
+  color: var(--ok);
+}
+
+.status[data-state="error"] {
+  color: var(--err);
+}
+
+main {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.panel h2 {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.subhead {
+  margin: 14px 0 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.camera-indicator {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--err);
+}
+
+.camera-indicator .dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--err);
+  margin-right: 6px;
+}
+
+video {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+button {
+  background: #262a31;
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-primary:not(:disabled) {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+/* LOGO-2 (Del direction, Oct 30): the Logo panel's speed slider
+   spans the panel like the other full-width controls; the pause
+   button reuses the existing .controls button treatment. */
+#logo-speed {
+  width: 100%;
+}
+
+/* Product switcher: three real radio options, styled as a segmented row. */
+.product-switch {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+
+.product-option {
+  display: block;
+  margin: 0;
+  padding: 10px 8px;
+  text-align: center;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--input-bg);
+}
+
+.product-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.product-option-name {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.product-option-sub {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.product-option:has(input:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.product-option:has(input:checked) {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.product-option:has(input:checked) .product-option-name {
+  color: var(--accent);
+}
+
+/* Per-option checked tint uses the option's own product color, not the
+   currently selected accent, so the switcher reads correctly at a glance. */
+.product-option[data-product-option="vigiles"]:has(input:checked) {
+  border-color: #4f7ec2;
+  box-shadow: inset 0 0 0 1px #4f7ec2;
+}
+
+.product-option[data-product-option="vigiles"]:has(input:checked) .product-option-name {
+  color: #4f7ec2;
+}
+
+.product-option[data-product-option="ignis"]:has(input:checked) {
+  border-color: #d92b2b;
+  box-shadow: inset 0 0 0 1px #d92b2b;
+}
+
+.product-option[data-product-option="ignis"]:has(input:checked) .product-option-name {
+  color: #d92b2b;
+}
+
+.product-option[data-product-option="medicus"]:has(input:checked) {
+  border-color: #5da864;
+  box-shadow: inset 0 0 0 1px #5da864;
+}
+
+.product-option[data-product-option="medicus"]:has(input:checked) .product-option-name {
+  color: #5da864;
+}
+
+.product-department {
+  margin: 0 0 2px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.product-tagline {
+  margin: 0;
+  font-size: 14px;
+}
+
+.chips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  font-size: 12.5px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  padding: 2px 10px;
+  color: var(--text);
+  background: var(--input-bg);
+}
+
+.limitations {
+  margin-top: 14px;
+  border-left: 3px solid var(--accent);
+  padding-left: 12px;
+}
+
+.limitations .subhead {
+  margin-top: 0;
+}
+
+.limitations p {
+  margin-bottom: 0;
+}
+
+label {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+input[type="file"] {
+  width: 100%;
+  font-size: 14px;
+  color: var(--text);
+}
+
+#image-preview {
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  background: #000;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  margin-top: 8px;
+}
+
+input[type="text"],
+input[type="number"],
+select {
+  width: 100%;
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 14px;
+  font-family: var(--mono);
+}
+
+select {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.mono-block {
+  font-family: var(--mono);
+  font-size: 13px;
+  white-space: normal;
+}
+
+.assessment-head {
+  margin: 0 0 6px;
+}
+
+/* HANA Agent1: the Latest panel's category at the native panel's
+   title3 size (20pt, bold). The web category was a bare strong, so
+   it read at the 15px body size while the native category reads at
+   title3 — the panel's title did not stand out from its summary and
+   observations. The mapping is 1:1 pt-to-px, like the 12.5pt subline
+   (UI-19) and the 13pt uncertainty heading (UI-12). Weight comes
+   from the strong element itself, so no font-weight is set here, and
+   the rule is scoped to the assessment head: history titles keep
+   their body-size strong. */
+.assessment-category {
+  font-size: 20px;
+}
+
+.assessment-product {
+  color: var(--accent);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* HANA Agent1: a redisplayed assessment's product name keeps the
+   assessment's own product accent, not the selected product's. The
+   base rule above uses var(--accent), which follows the current
+   selection, so a past Ignis assessment shown again under Vigiles
+   read its product name in Vigiles blue — and even a fresh
+   assessment could land tinted wrong if the user switched products
+   while its request was in flight. Same fixed-hex reason as the
+   history-product rules: the name is the assessment's identity, so
+   it must not re-tint on a switch. An unknown product key gets no
+   class and keeps the base selection accent, like the native
+   panel's system-accent fallback. */
+.assessment-product.assessment-product-vigiles {
+  color: #4f7ec2;
+}
+
+.assessment-product.assessment-product-ignis {
+  color: #d92b2b;
+}
+
+.assessment-product.assessment-product-medicus {
+  color: #5da864;
+}
+
+.assessment-time {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.review-flag {
+  color: var(--warn);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+}
+
+.observations {
+  margin: 6px 0;
+  padding-left: 18px;
+}
+
+.uncertainty {
+  color: var(--muted);
+}
+
+.history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-item {
+  border-left: 3px solid var(--muted);
+  padding: 6px 0 6px 10px;
+  margin-bottom: 8px;
+}
+
+.history-item p {
+  margin: 2px 0;
+}
+
+.history-ok {
+  border-left-color: var(--ok);
+}
+
+.history-review {
+  border-left-color: var(--warn);
+}
+
+.history-error {
+  border-left-color: var(--err);
+}
+
+.history-error .history-head strong {
+  color: var(--err);
+}
+
+/* M3: a Medicus history entry's edge uses the Medicus product accent,
+   not its status color. Scoped to Medicus entries only, regardless of
+   which product is currently selected. */
+.history-item.history-product-medicus {
+  border-left-color: #5da864;
+}
+
+/* IGNIS-UI-3: the Ignis counterpart to M3 — an Ignis entry's edge uses
+   the Ignis product accent, not its status color. Scoped to Ignis
+   entries only, regardless of which product is currently selected. */
+.history-item.history-product-ignis {
+  border-left-color: #d92b2b;
+}
+
+/* HANA Agent1: the Vigiles counterpart, completing the set — a Vigiles
+   entry's edge uses the Vigiles product accent #4f7ec2, not its status
+   color, matching the native timeline rows, which carry their own
+   product's accent for all three products (UI-4). Fixed hex, not
+   var(--accent): --accent follows the currently selected product, so a
+   fixed value is what keeps each entry's edge on its own product under
+   any selection, exactly like the Medicus and Ignis rules above. */
+.history-item.history-product-vigiles {
+  border-left-color: #4f7ec2;
+}
+
+/* Past-assessment button on a history entry: small and quiet, so the
+   timeline stays a list, not a wall of buttons. The global
+   button:focus-visible rule already gives it a visible focus ring. */
+.history-show {
+  margin-top: 4px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+
+.footer {
+  padding: 12px 16px 20px;
+  max-width: 1240px;
+  margin: 0 auto;
+  color: var(--muted);
+  font-size: 13px;
+  background: rgba(20, 22, 26, 0.92);
+}
+
+@media (max-width: 720px) {
+  main {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+
+  .controls button {
+    flex: 1 1 40%;
+  }
+
+  .product-switch {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Medicus theme (Del UI push, Oct 29): green identity with futuristic
+   polish, scoped to body[data-product="medicus"] only. The base theme
+   above stays flat for the other products; this block never restyles
+   Vigiles or Ignis. */
+
+body[data-product="medicus"] .topbar {
+  background: linear-gradient(180deg, rgba(93, 168, 100, 0.16), transparent 75%);
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 rgba(93, 168, 100, 0.35);
+}
+
+body[data-product="medicus"] .product-badge {
+  background: linear-gradient(135deg, #7cc184, #3d8a48);
+  color: #0d1a0f;
+  border-color: transparent;
+  box-shadow: 0 0 14px rgba(93, 168, 100, 0.45);
+}
+
+body[data-product="medicus"] .panel {
+  background: linear-gradient(180deg, rgba(93, 168, 100, 0.09), var(--panel) 42%);
+  border-color: rgba(93, 168, 100, 0.5);
+  box-shadow: 0 0 0 1px rgba(93, 168, 100, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+body[data-product="medicus"] .btn-primary:not(:disabled) {
+  background: linear-gradient(135deg, #79c180, #3f8f4b);
+  border-color: #79c180;
+  box-shadow: 0 0 14px rgba(93, 168, 100, 0.35);
+}
+
+body[data-product="medicus"] .chip {
+  border-color: rgba(93, 168, 100, 0.55);
+  background: rgba(93, 168, 100, 0.1);
+}
+
+body[data-product="medicus"] .product-option[data-product-option="medicus"]:has(input:checked) {
+  border-color: #5da864;
+  box-shadow: inset 0 0 0 1px #5da864, 0 0 14px rgba(93, 168, 100, 0.35);
+}
+
+/* M1: break the green collision on Medicus. Identity green #5da864
+   stays vivid; the success/connected state goes muted sage, so the two
+   are distinguishable. History edges are governed by M3, not this rule. */
+body[data-product="medicus"] .status[data-state="connected"] {
+  color: #7f9c82;
+}
+
+/* Contacts directory: one entry per row, SAMPLE flag unmistakable. */
+.contacts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.contact-item {
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.contact-item strong {
+  display: inline-block;
+  margin-right: 8px;
+}
+
+.contact-meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 2px 0 6px;
+}
+
+.sample-chip {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+/* Ignis theme (Del UI push, Oct 29; R2 + UI-3): red identity polish,
+   scoped to body[data-product="ignis"] only. Mirrors the Medicus theme
+   block in Ignis red #d92b2b; this block never restyles Vigiles or
+   Medicus. The native header carries the matching pieces (flame chip,
+   accent limitations rule); the web panel gradient is the web half
+   of R2, and UI-3 completes the web theme with the topbar, badge,
+   primary button, chips, and switcher glow. */
+body[data-product="ignis"] .panel {
+  background: linear-gradient(180deg, rgba(217, 43, 43, 0.09), var(--panel) 42%);
+  border-color: rgba(217, 43, 43, 0.5);
+  box-shadow: 0 0 0 1px rgba(217, 43, 43, 0.15), 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+body[data-product="ignis"] .topbar {
+  background: linear-gradient(180deg, rgba(217, 43, 43, 0.16), transparent 75%);
+  border-bottom-color: var(--accent);
+  box-shadow: 0 1px 0 rgba(217, 43, 43, 0.35);
+}
+
+body[data-product="ignis"] .product-badge {
+  background: linear-gradient(135deg, #e54848, #b01e1e);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 0 14px rgba(217, 43, 43, 0.45);
+}
+
+body[data-product="ignis"] .btn-primary:not(:disabled) {
+  background: linear-gradient(135deg, #e54848, #b01e1e);
+  border-color: #e54848;
+  box-shadow: 0 0 14px rgba(217, 43, 43, 0.35);
+}
+
+body[data-product="ignis"] .chip {
+  border-color: rgba(217, 43, 43, 0.55);
+  background: rgba(217, 43, 43, 0.1);
+}
+
+body[data-product="ignis"] .product-option[data-product-option="ignis"]:has(input:checked) {
+  border-color: #d92b2b;
+  box-shadow: inset 0 0 0 1px #d92b2b, 0 0 14px rgba(217, 43, 43, 0.35);
+}
+
+.assessment-divider {
+  border: 0;
+  border-top: 1px solid var(--panel-border);
+  margin: 12px 0;
+}
+
+/* HANA Agent1: the Latest assessment panel's wash follows the
+   assessment's own product, not the selected product's — the web
+   counterpart to the native UI-6 panel wash. The theme blocks above
+   wash every panel in the SELECTED product's accent
+   (body[data-product] .panel), so a past Ignis assessment shown again
+   under Vigiles read flat (Vigiles has no panel gradient), and one
+   shown under Medicus read green. The native panel washes in the
+   assessment's own accent at a flat 0.09; the web rules use the same
+   0.09-at-the-top gradient shape the theme blocks already use, with
+   fixed rgba values per product, so a switch cannot re-tint a shown
+   assessment. These rules sit after the theme blocks and use the
+   body .panel.latest-product-<product> selector, which ties the theme
+   rules' specificity and wins on source order. An unknown product key
+   gets no class, so the panel keeps the selection wash, like the
+   native panel's system-accent fallback and the product-name rule.
+   The same rules also carry the panel border in the assessment's own
+   accent at 0.5 — the web counterpart to the native UI-9 panel
+   border, which strokes the assessment's own accent at 0.5 for all
+   three products. Without it, a redisplayed Ignis assessment kept
+   the selected product's border (Medicus green under Medicus, the
+   neutral panel border under Vigiles) while its wash and product
+   name already read Ignis red. The border uses the same fixed rgba
+   values as the wash, so a switch cannot re-tint it either.
+   The same rules also carry the panel drop shadow — the web
+   counterpart to the native UI-10 panel shadow, which casts black
+   at 0.35, 8pt down, for all three products. Without it, a shown
+   assessment under Vigiles read flat (the base .panel carries no
+   shadow and Vigiles has no theme panel shadow) while the native
+   panel lifted off the page, and a redisplayed assessment under
+   Ignis or Medicus kept the SELECTED product's faint 1px accent
+   ring from the theme shadow, a second, wrong-accent edge next to
+   its own-accent border. The drop here is the theme shadow's drop
+   half only, 0 8px 24px rgba(0, 0, 0, 0.35), product-neutral black
+   like the native shadow, with no 1px ring: the own-accent border
+   at 0.5 already draws the stronger edge, so a faint ring would
+   double it, exactly the reason UI-10 omits the ring natively. */
+body .panel.latest-product-vigiles {
+  background: linear-gradient(180deg, rgba(79, 126, 194, 0.09), var(--panel) 42%);
+  border-color: rgba(79, 126, 194, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+body .panel.latest-product-ignis {
+  background: linear-gradient(180deg, rgba(217, 43, 43, 0.09), var(--panel) 42%);
+  border-color: rgba(217, 43, 43, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+body .panel.latest-product-medicus {
+  background: linear-gradient(180deg, rgba(93, 168, 100, 0.09), var(--panel) 42%);
+  border-color: rgba(93, 168, 100, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* ============================================================
+   CONSOLE REDESIGN (Oct 30, boss direction): presentation layer
+   only. Turns the stacked documentation layout into an ops
+   console: sticky status top bar, camera viewport as the hero
+   on the left, product/session rail on the right, real control
+   surfaces, category chips restyled as non-interactive tags.
+   No existing rule above is edited; this layer composes with
+   the product themes and the ops-console blocks below it.
+   ============================================================ */
+
+body {
+  background: #0f1114;
+}
+
+body > #logo-background {
+  opacity: 0.35;
+}
+
+/* LOGO-3 (Del direction, Oct 30): back to full brightness so
+   the loop reads through the see-through console panels as
+   one loop. In Map view the backdrop is gone entirely, so
+   nothing competes with the map. This block sits here, ahead
+   of the per-product console passes, on purpose. */
+body > #logo-background {
+  opacity: 0.5;
+  transition: opacity 0.4s ease;
+}
+
+body[data-view="command"] > #logo-background {
+  opacity: 0;
+}
+
+/* --- Top bar: sticky console header --- */
+body > .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 12px 20px;
+  background: rgba(15, 17, 20, 0.94);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+}
+
+.topbar h1 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.console-clock {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* Backend status as a status pill with a state dot. The base
+   .status rules still own the state colors for the text; the
+   dot follows the same state via the data-state attribute. */
+.topbar .status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #3a3f47;
+  border-radius: 999px;
+  padding: 5px 12px;
+  background: rgba(0, 0, 0, 0.35);
+  max-width: 560px;
+}
+
+.topbar .status::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--warn);
+}
+
+.topbar .status[data-state="connected"] {
+  border-color: rgba(93, 168, 100, 0.55);
+}
+
+.topbar .status[data-state="connected"]::before {
+  background: var(--ok);
+}
+
+.topbar .status[data-state="error"] {
+  border-color: rgba(194, 80, 74, 0.55);
+}
+
+.topbar .status[data-state="error"]::before {
+  background: var(--err);
+}
+
+/* --- Console grid: hero column left, rail right --- */
+body > main {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  gap: 14px;
+  max-width: 1560px;
+  padding: 20px;
+}
+
+main > section {
+  grid-column: 8 / span 5;
+  min-width: 0;
+}
+
+main > section[aria-label="Camera"] {
+  grid-column: 1 / span 7;
+  grid-row: 1;
+}
+
+main > section[aria-label="Latest assessment"] {
+  grid-column: 1 / span 7;
+  grid-row: 2;
+}
+
+main > section[aria-label="Configuration"] {
+  grid-column: 1 / span 7;
+  grid-row: 3;
+}
+
+main > section[aria-label="Still image input"] {
+  grid-column: 1 / span 7;
+  grid-row: 4;
+}
+
+main > section[aria-label="Prerecorded video input"] {
+  grid-column: 1 / span 7;
+  grid-row: 5;
+}
+
+main > section[aria-label="Logo"] {
+  grid-column: 1 / span 7;
+  grid-row: 6;
+}
+
+/* Glass panels floating over the ASCII backdrop. Product theme
+   blocks still own their per-product panel tints; this layer
+   owns the shared console surface. */
+main > .panel {
+  border-radius: 10px;
+  border-color: #40464f;
+  background: linear-gradient(180deg, rgba(26, 29, 35, 0.92), rgba(17, 19, 23, 0.94));
+  backdrop-filter: blur(7px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+  padding: 18px 20px;
+}
+
+main .panel h2 {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  padding-bottom: 9px;
+  margin-bottom: 14px;
+}
+
+/* --- Camera: viewport hero with a real control bar --- */
+main > section[aria-label="Camera"] {
+  display: flex;
+  flex-direction: column;
+}
+
+main > section[aria-label="Camera"] .panel-head {
+  order: 0;
+}
+
+main > section[aria-label="Camera"] #preview {
+  order: 1;
+  border: 1px solid #000;
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px #3a3f47, 0 18px 40px rgba(0, 0, 0, 0.5);
+}
+
+main > section[aria-label="Camera"] #camera-state {
+  order: 2;
+  font-size: 14px;
+  color: var(--text);
+  margin: 10px 0 0;
+}
+
+main > section[aria-label="Camera"] .controls {
+  order: 3;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid #33383f;
+  border-radius: 8px;
+  padding: 10px;
+  margin: 12px 0 4px;
+}
+
+main > section[aria-label="Camera"] #in-flight {
+  order: 4;
+}
+
+main > section[aria-label="Camera"] #analysis-active {
+  order: 5;
+  color: var(--ok);
+  font-weight: 600;
+}
+
+main > section[aria-label="Camera"] label[for="camera-facing"] {
+  order: 6;
+}
+
+main > section[aria-label="Camera"] #camera-facing {
+  order: 7;
+}
+
+main > section[aria-label="Camera"] .note-details {
+  order: 8;
+}
+
+main > section[aria-label="Camera"] #sampler-stats {
+  order: 9;
+}
+
+main > section[aria-label="Camera"] #last-round-trip {
+  order: 10;
+}
+
+/* Sampler counters as a console readout strip. */
+#sampler-stats {
+  background: #0a0c0f;
+  border: 1px solid #33383f;
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: #cfd4da;
+  margin-bottom: 0;
+}
+
+#last-round-trip {
+  background: #0a0c0f;
+  border: 1px solid #33383f;
+  border-radius: 6px;
+  padding: 9px 12px;
+  color: #cfd4da;
+}
+
+/* --- Controls: buttons and inputs that read as controls --- */
+main .controls {
+  gap: 10px;
+  align-items: center;
+}
+
+main .controls button {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 13px;
+}
+
+main button {
+  background: #2b3038;
+  border-color: #484f59;
+  border-radius: 6px;
+  padding: 9px 16px;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+main button:hover:not(:disabled) {
+  background: #343b45;
+  border-color: var(--accent);
+}
+
+main button:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+main label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #aeb4bc;
+}
+
+main .product-option {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+main input[type="text"],
+main input[type="number"],
+main select {
+  background: #0c0e11;
+  border-color: #484f59;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+main input[type="file"] {
+  background: #0c0e11;
+  border: 1px solid #484f59;
+  border-radius: 6px;
+  padding: 9px 10px;
+}
+
+/* --- Product switcher as segmented console tabs --- */
+.product-switch {
+  gap: 10px;
+}
+
+main .product-option {
+  padding: 12px 8px;
+  border-radius: 8px;
+  background: #14171b;
+}
+
+main .product-option:hover {
+  border-color: var(--accent);
+}
+
+.product-option-name {
+  font-size: 15px;
+}
+
+.product-department {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* --- Categories: tags, not buttons. Flat squared labels with a
+   small marker square; no pill radius, no hover state, default
+   cursor — nothing about them invites a click. Per-product
+   theme tint rules above still own their border/background
+   tint under Ignis and Medicus. --- */
+.chips {
+  gap: 8px;
+}
+
+.chips .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 3px;
+  border-color: #454b54;
+  background: rgba(255, 255, 255, 0.03);
+  color: #cfd4da;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  cursor: default;
+}
+
+.chips .chip::before {
+  content: "";
+  flex: none;
+  width: 6px;
+  height: 6px;
+  background: var(--accent);
+  opacity: 0.75;
+}
+
+/* --- Collapsible prose: real disclosure controls --- */
+.about-details,
+.stats-details,
+.note-details {
+  margin-top: 14px;
+  border: 1px solid #33383f;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  padding: 4px 14px 10px;
+}
+
+.about-details summary,
+.stats-details summary,
+.note-details summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  padding: 8px 0 4px;
+}
+
+.about-details summary:hover,
+.stats-details summary:hover,
+.note-details summary:hover {
+  text-decoration: underline;
+}
+
+.note-details {
+  margin-top: 10px;
+}
+
+/* --- Readouts and history as result cards --- */
+#latest-assessment {
+  padding: 14px;
+  border-radius: 6px;
+}
+
+/* BUILD WAVE W1 live wiring: the assessed frame in the latest
+   panel, with region boxes overlaid. The frame is the exact
+   image that was sent, so percent boxes land on the scene they
+   were drawn for; the container clips any validator-accepted
+   box that runs past the frame edge. */
+.assessed-frame {
+  position: relative;
+  margin: 10px 0;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.assessed-frame-img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.assessed-frame-overlay {
+  position: absolute;
+  inset: 0;
+}
+.assessed-frame-overlay .region-boxes {
+  position: absolute;
+  inset: 0;
+}
+.region-box {
+  position: absolute;
+  border: 2px solid #ffd166;
+  box-sizing: border-box;
+}
+.region-box-label {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffd166;
+  font-size: 12px;
+  padding: 1px 4px;
+}
+
+.history-item {
+  background: rgba(255, 255, 255, 0.025);
+  border-top: 1px solid #343a41;
+  border-right: 1px solid #343a41;
+  border-bottom: 1px solid #343a41;
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+
+.contact-item {
+  background: rgba(255, 255, 255, 0.025);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+body > .footer {
+  border-top: 1px solid #33383f;
+  max-width: 1560px;
+  padding: 14px 20px 22px;
+}
+
+@media (max-width: 1100px) {
+  body > main {
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  main > section,
+  main > section[aria-label="Camera"],
+  main > section[aria-label="Latest assessment"],
+  main > section[aria-label="Configuration"],
+  main > section[aria-label="Still image input"],
+  main > section[aria-label="Prerecorded video input"],
+  main > section[aria-label="Logo"] {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+
+  .topbar .status {
+    max-width: none;
+  }
+}
+
+/* HN-022 demo-mode banner: sticky, so it stays at the top of
+   the viewport in both views while scrolling; yellow on near-
+   black text measures ~7.5, past AA. */
+.demo-banner {
+  position: sticky;
+  top: 0;
+  z-index: 9999;
+  background: #c9a227;
+  color: #14161a;
+  font-weight: 700;
+  text-align: center;
+  padding: 8px;
+  margin: 0;
+}
+/* HN-018 contrast pass (WCAG AA, measured in tests/contrast.test.mjs):
+   brand hexes stay pinned (tests + logo palettes assert them), so
+   only TEXT colors move — to lighter variants of the same hue.
+   Borders, backgrounds, and gradients are untouched. One pair is
+   measured short and deliberately NOT changed: the Ignis badge /
+   primary gradient's light end (#e54848) with white text measures
+   3.93 — the gradient is pinned by tests/ignis-web-theme.test.mjs
+   and no single text color passes both gradient ends, so that one
+   needs a brand call from the boss, not a silent edit. */
+body[data-product="vigiles"] .product-badge { color: #6a96d8; }
+body[data-product="vigiles"] .logo-studio-link,
+body[data-product="vigiles"] .assessment-product { color: #6a96d8; }
+body[data-product="ignis"] .logo-studio-link,
+body[data-product="ignis"] .assessment-product { color: #e85545; }
+.product-option[data-product-option="vigiles"]:has(input:checked) .product-option-name { color: #6a96d8; }
+.product-option[data-product-option="ignis"]:has(input:checked) .product-option-name { color: #e85545; }
+.status[data-state="error"],
+.camera-indicator,
+.history-error .history-head strong { color: #e07068; }
+body[data-product="vigiles"] .btn-primary:not(:disabled) { color: #02131c; }
+body[data-product="medicus"] .btn-primary:not(:disabled) { color: #02131c; }
+
+/* Medicus ops-console pass (Del UI direction, Oct 29): modern, elite,
+   professional dispatch-console feel, scoped to
+   body[data-product="medicus"] only. Additive sharpness on top of the
+   existing green theme: uppercase section labels, mono status readouts,
+   sharper buttons, framed console readouts. Nothing here touches the
+   disclosures, the limitations banner, the spinning background, the
+   contract, or any Spark gate; Vigiles and Ignis are untouched. */
+
+body[data-product="medicus"] .panel h2 {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+body[data-product="medicus"] .subhead {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+body[data-product="medicus"] .status {
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+body[data-product="medicus"] .btn-primary {
+  border-radius: 3px;
+}
+
+body[data-product="medicus"] .mono-block {
+  border: 1px solid rgba(93, 168, 100, 0.4);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* COMMAND VIEW v2 (Oct 30, Del's Batman/JARVIS direction): the
+   map-first TRIO COMMAND landing view. One additive layer like the
+   console layer above; it styles only .command-view, the header view
+   switch, and body[data-view] visibility, and it ends before the
+   pinned OPS-CONSOLE blocks below, which it never touches.
+   Skin: deep black-blue, thin luminous lines, angular glass panels
+   floating over a full-bleed dark map, mono readouts. Neon is kept
+   to signal moments only — pulses, the selected pin, the flag.
+   Product tint: the HUD accent follows the active product (Vigiles
+   cyan-blue, Ignis orange-red, Medicus green). FLAG COLOR DECISION:
+   a flagged pin is always signal red (#ff2d20) in every product;
+   the Ignis accent is deliberately ORANGE-red (#ff7a3c), a different
+   hue, so the product tint can never be mistaken for a flag. */
+.command-view {
+  --cmd-accent: #53c8ff;
+  --cmd-accent-dim: rgba(83, 200, 255, 0.35);
+  --cmd-line: rgba(83, 200, 255, 0.38);
+  --cmd-flag: #ff2d20;
+  --cmd-glass: rgba(3, 9, 15, 0.86);
+  display: none;
+  position: relative;
+  height: calc(100vh - 128px);
+  min-height: 640px;
+  margin: 10px 14px 14px;
+  border: 1px solid var(--cmd-line);
+  overflow: hidden;
+  background: #02040a;
+}
+body[data-product="ignis"] .command-view {
+  --cmd-accent: #ff7a3c;
+  --cmd-accent-dim: rgba(255, 122, 60, 0.35);
+  --cmd-line: rgba(255, 122, 60, 0.42);
+}
+body[data-product="medicus"] .command-view {
+  --cmd-accent: #35e0a1;
+  --cmd-accent-dim: rgba(53, 224, 161, 0.35);
+  --cmd-line: rgba(53, 224, 161, 0.42);
+}
+body[data-view="command"] .command-view { display: block; }
+body[data-view="command"] > main { display: none; }
+
+.view-switch { display: flex; border: 1px solid rgba(140, 180, 200, 0.35); }
+.view-switch button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  cursor: pointer;
+}
+.view-switch button[aria-pressed="true"] { background: #53c8ff; color: #02131c; font-weight: 700; }
+
+.cmd-map {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse at 50% 38%, #071626 0%, #02040a 72%);
+}
+.cmd-map .maplibregl-ctrl-attrib {
+  background: rgba(2, 6, 10, 0.78);
+  color: rgba(200, 220, 230, 0.55);
+  font-size: 9.5px;
+}
+.cmd-map .maplibregl-ctrl-attrib a { color: rgba(160, 210, 235, 0.7); }
+.cmd-map .maplibregl-ctrl-bottom-right { margin: 0 366px 42px 0; }
+.cmd-map .maplibregl-ctrl-group { border: 1px solid var(--cmd-line); border-radius: 0; }
+.maplibregl-popup-content {
+  background: rgba(3, 9, 15, 0.95);
+  border: 1px solid var(--cmd-line);
+  color: inherit;
+  font: inherit;
+  padding: 10px 12px;
+  border-radius: 0;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+}
+.maplibregl-popup-close-button { color: inherit; font-size: 16px; padding: 2px 6px; }
+.maplibregl-popup-anchor-top .maplibregl-popup-tip { border-bottom-color: rgba(3, 9, 15, 0.95); }
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip { border-top-color: rgba(3, 9, 15, 0.95); }
+.maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: rgba(3, 9, 15, 0.95); }
+.maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: rgba(3, 9, 15, 0.95); }
+.cmd-building-popup h4 { margin: 0 16px 4px 0; font-size: 13.5px; }
+.cmd-building-popup p { margin: 2px 0; font-size: 11.5px; }
+.cmd-building-head {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cmd-accent);
+  margin-top: 7px;
+}
+.cmd-building-popup button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 1px solid rgba(140, 180, 200, 0.12);
+  color: inherit;
+  padding: 4px 6px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.cmd-building-popup button:hover { border-color: var(--cmd-line); }
+.cmd-marker { cursor: pointer; }
+.cmd-marker .cmd-pin { margin: 0; }
+.cmd-map-note {
+  position: absolute;
+  left: 326px;
+  top: 146px;
+  z-index: 15;
+  margin: 0;
+  max-width: 430px;
+  padding: 4px 8px;
+  background: var(--cmd-glass);
+  border: 1px solid var(--cmd-line);
+  font-family: var(--mono);
+  font-size: 10.5px;
+}
+
+.cmd-float {
+  position: absolute;
+  z-index: 20;
+  background: var(--cmd-glass);
+  border: 1px solid var(--cmd-line);
+  backdrop-filter: blur(8px);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+.cmd-topbar {
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 10px 14px;
+  clip-path: none;
+}
+.cmd-wordmark {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 19px;
+  letter-spacing: 0.22em;
+  color: var(--cmd-accent);
+}
+.cmd-wordmark-sub { font-size: 11px; letter-spacing: 0.1em; color: rgba(215, 235, 245, 0.66); }
+.cmd-source { margin: 2px 0; font-size: 11px; color: rgba(190, 220, 235, 0.85); }
+.cmd-honesty { margin: 2px 0 7px; max-width: 580px; font-size: 10.5px; line-height: 1.45; color: rgba(210, 230, 240, 0.6); }
+.cmd-products { display: flex; gap: 6px; }
+.cmd-modes { display: flex; gap: 6px; align-items: center; }
+.cmd-layers { display: flex; gap: 6px; align-items: center; }
+.cmd-mode-btn {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--cmd-line);
+  color: inherit;
+  padding: 4px 11px;
+  cursor: pointer;
+}
+.cmd-mode-btn[aria-pressed="true"] { background: var(--cmd-accent); color: #02131c; font-weight: 700; }
+.cmd-ai-focus {
+  background: var(--cmd-accent);
+  color: #02131c;
+  border: 1px solid var(--cmd-accent);
+  font-family: var(--mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  cursor: pointer;
+  box-shadow: 0 0 14px var(--cmd-accent-dim);
+}
+.cmd-product-chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: transparent;
+  border: 1px solid var(--cmd-line);
+  color: inherit;
+  padding: 4px 11px;
+  cursor: pointer;
+}
+.cmd-product-chip[aria-pressed="true"] { background: var(--cmd-accent); color: #02131c; font-weight: 700; }
+.cmd-readouts { display: flex; gap: 24px; align-items: flex-start; }
+.cmd-readout { text-align: right; }
+.cmd-readout-num { display: block; font-family: var(--mono); font-size: 30px; line-height: 1.05; color: var(--cmd-accent); }
+.cmd-readouts .cmd-readout:last-child .cmd-readout-num { color: var(--cmd-flag); }
+.cmd-readout-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(210, 230, 240, 0.6);
+}
+
+.cmd-rail-left { left: 10px; top: 136px; bottom: 44px; width: 304px; padding: 12px; overflow-y: auto; }
+.cmd-rail-right { right: 10px; top: 136px; bottom: 44px; width: 352px; padding: 12px; overflow-y: auto; }
+.cmd-h {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--cmd-accent);
+  border-bottom: 1px solid var(--cmd-line);
+  padding-bottom: 5px;
+  margin: 14px 0 8px;
+}
+.cmd-rail-left .cmd-h:first-child, .cmd-rail-right .cmd-h:first-child { margin-top: 0; }
+.command-view input[type="search"] {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--cmd-line);
+  color: inherit;
+  padding: 6px 8px;
+  font: inherit;
+}
+
+.cmd-alerts { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.cmd-alert {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  text-align: left;
+  background: rgba(255, 45, 32, 0.06);
+  border: 1px solid rgba(255, 45, 32, 0.35);
+  padding: 6px;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+}
+.cmd-alert--high { border-left: 3px solid var(--cmd-flag); }
+.cmd-alert--medium { border-left: 3px solid #ffb02e; }
+.cmd-alert--low { border-left: 3px solid #7d94a3; }
+.cmd-alert--seen { opacity: 0.62; }
+.cmd-alert--cleared { opacity: 0.45; border-color: rgba(160, 180, 190, 0.3); background: rgba(120, 140, 150, 0.05); }
+.cmd-alert-thumb { width: 74px; height: 52px; object-fit: cover; flex: none; background: #0a141c; }
+.cmd-alert-body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.cmd-alert-title { font-weight: 700; font-size: 12.5px; }
+.cmd-alert-detail { font-size: 11.5px; }
+.cmd-alert-meta { font-size: 10px; opacity: 0.75; }
+.cmd-alert-handoff {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid var(--cmd-accent, #4f7ec2);
+  border-radius: 20px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.cmd-alert-handoff:hover { background: rgba(79, 126, 194, 0.18); }
+.cmd-alert-track {
+  align-self: flex-start;
+  margin-top: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid var(--cmd-line);
+  border-radius: 20px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.cmd-alert-track[aria-pressed="true"] {
+  border-color: var(--cmd-accent);
+  color: var(--cmd-accent);
+}
+
+.cmd-borough {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cmd-accent);
+  margin: 10px 0 4px;
+}
+.cmd-cam-rows { list-style: none; margin: 0; padding: 0; }
+.cmd-cam-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 1px solid rgba(140, 180, 200, 0.08);
+  color: inherit;
+  text-align: left;
+  padding: 4px 6px;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.cmd-cam-row:hover { border-color: var(--cmd-line); }
+.cmd-cam-row--focused { box-shadow: inset 2px 0 0 var(--cmd-accent); background: rgba(120, 180, 210, 0.07); }
+.cmd-cam-row--flagged { box-shadow: inset 2px 0 0 var(--cmd-flag); }
+.cmd-row-tag { margin-left: auto; font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; color: var(--cmd-accent); }
+.cmd-row-tag--flagged { color: #ff8d84; }
+.cmd-row-source { margin-left: auto; font-family: var(--mono); font-size: 9px; opacity: 0.7; }
+.cmd-row-state { font-family: var(--mono); font-size: 9px; letter-spacing: 0.14em; }
+.cmd-row-state--live { color: #8fe3a8; }
+.cmd-row-state--test { color: #ffd9a8; }
+
+/* Pins: DOM markers on the 3D map (and schematic grid dots, and
+   list-row dots) share the state classes. Priority is carried by
+   pulse PATTERN, not color: fast = unseen HIGH, slow = unseen
+   MEDIUM/LOW, steady = seen. */
+.cmd-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  margin: 3.5px;
+  border-radius: 50%;
+  background: var(--cmd-accent);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+.cmd-pin--idle { opacity: 0.55; box-shadow: 0 0 5px var(--cmd-accent-dim); }
+.cmd-pin--watched { opacity: 1; box-shadow: 0 0 0 3px var(--cmd-accent-dim), 0 0 9px var(--cmd-accent); }
+.cmd-pin--focused { opacity: 1; background: #eaf7ff; box-shadow: 0 0 0 2px var(--cmd-accent), 0 0 13px var(--cmd-accent); }
+.cmd-pin--flagged { opacity: 1; background: var(--cmd-flag); border-color: #ffd9d4; }
+.cmd-pin--fast { animation: cmd-pulse 0.55s ease-out infinite; }
+.cmd-pin--slow { animation: cmd-pulse 1.7s ease-out infinite; }
+.cmd-pin--steady { box-shadow: 0 0 10px var(--cmd-flag), 0 0 0 2px rgba(255, 45, 32, 0.35); }
+@keyframes cmd-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 45, 32, 0.55); }
+  70% { box-shadow: 0 0 0 12px rgba(255, 45, 32, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 45, 32, 0); }
+}
+.cmd-pin-glyph { display: none; width: 10px; height: 10px; color: rgba(2, 16, 24, 0.85); }
+.cmd-zoom-near .cmd-pin { width: 18px; height: 18px; }
+.cmd-zoom-near .cmd-pin-glyph { display: block; }
+.cmd-grid-dot { position: absolute; transform: translate(-50%, -50%); margin: 0; padding: 0; cursor: pointer; }
+.cmd-row-dot { width: 9px; height: 9px; margin: 0; flex: none; }
+
+.cmd-insp-name { font-size: 16px; font-weight: 700; margin: 0 0 2px; }
+.cmd-viewer-img {
+  width: 100%;
+  aspect-ratio: 352 / 240;
+  object-fit: cover;
+  display: block;
+  border: 1px solid var(--cmd-line);
+  background: #050b11;
+}
+.cmd-viewer-img[hidden] { display: none; }
+.cmd-result { border: 1px solid var(--cmd-line); border-left: 3px solid var(--cmd-accent); padding: 8px 10px; margin-top: 8px; background: rgba(0, 0, 0, 0.25); }
+.cmd-result[hidden] { display: none; }
+.cmd-result-cat { font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; font-size: 15px; margin: 0; }
+.cmd-result-cat--flagged { color: #ff8d84; }
+.cmd-uncertainty { margin: 4px 0; padding-left: 16px; font-size: 12px; }
+
+.cmd-stepper { list-style: none; display: flex; margin: 12px 0 4px; padding: 0; }
+.cmd-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(210, 230, 240, 0.66);
+}
+.cmd-step::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: -50%;
+  width: 100%;
+  height: 1px;
+  background: rgba(140, 180, 200, 0.25);
+}
+.cmd-step:first-child::before { display: none; }
+.cmd-step-dot { width: 11px; height: 11px; border-radius: 50%; border: 1px solid var(--cmd-line); background: #0a141d; z-index: 1; }
+.cmd-step--done { color: rgba(215, 240, 250, 0.85); }
+.cmd-step--done .cmd-step-dot { background: var(--cmd-accent); border-color: transparent; }
+.cmd-step--current { color: var(--cmd-accent); }
+.cmd-step--current .cmd-step-dot { border-color: var(--cmd-accent); animation: cmd-step-pulse 1.2s ease-out infinite; }
+@keyframes cmd-step-pulse {
+  0% { box-shadow: 0 0 0 0 var(--cmd-accent-dim); }
+  70% { box-shadow: 0 0 0 7px rgba(0, 0, 0, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+}
+
+.cmd-system { display: flex; flex-direction: column; gap: 3px; }
+.cmd-sys-row { display: flex; justify-content: space-between; gap: 10px; font-size: 11.5px; border-bottom: 1px solid rgba(140, 180, 200, 0.07); padding: 2px 0; }
+.cmd-sys-label { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(210, 230, 240, 0.55); }
+.cmd-sys-value { text-align: right; }
+.cmd-sys-value[data-state="error"] { color: #ff8d84; }
+.cmd-bar { height: 4px; background: rgba(140, 180, 200, 0.15); margin: 1px 0 5px; }
+.cmd-bar span { display: block; height: 100%; width: 0; background: var(--cmd-accent); transition: width 0.3s; }
+.cmd-bar--flag span { background: var(--cmd-flag); }
+
+.cmd-wall-panel { left: 326px; right: 374px; bottom: 40px; padding: 6px 10px 8px; }
+.cmd-wall-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--cmd-accent); margin: 0 0 5px; }
+.cmd-wall-title .note { letter-spacing: 0; text-transform: none; }
+.cmd-wall { display: flex; gap: 8px; overflow-x: auto; align-items: stretch; }
+.cmd-tile {
+  flex: 0 0 148px;
+  margin: 0;
+  padding: 0;
+  background: #050b11;
+  border: 1px solid rgba(140, 180, 200, 0.18);
+  color: inherit;
+  text-align: left;
+  font: inherit;
+}
+.cmd-tile img { width: 100%; height: 80px; object-fit: cover; display: block; background: #0a141c; }
+.cmd-tile figcaption { padding: 3px 6px; display: flex; flex-direction: column; }
+.cmd-tile-name { font-size: 10.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmd-tile-sub { font-size: 9px; opacity: 0.65; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmd-wall-empty { align-self: center; margin: 0; }
+
+.cmd-pin-card {
+  position: absolute;
+  z-index: 60;
+  width: 264px;
+  background: rgba(3, 9, 15, 0.94);
+  border: 1px solid var(--cmd-line);
+  padding: 8px;
+  backdrop-filter: blur(8px);
+}
+.cmd-pin-card[hidden] { display: none; }
+.cmd-pin-card img { width: 100%; height: 118px; object-fit: cover; display: block; background: #050b11; }
+.cmd-pin-card-name { font-weight: 700; margin: 6px 0 0; }
+.cmd-pin-card-close {
+  position: absolute;
+  top: 2px;
+  right: 6px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 17px;
+  cursor: pointer;
+  z-index: 1;
+}
+.cmd-chip { display: inline-block; font-family: var(--mono); font-size: 10px; border: 1px solid var(--cmd-line); padding: 2px 7px; margin: 4px 0; }
+.cmd-chip--flagged { border-color: rgba(255, 45, 32, 0.6); color: #ff8d84; }
+.cmd-div-tag { display: inline-block; font-family: var(--mono); font-size: 9.5px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; border: 1px solid var(--cmd-line); padding: 1px 6px; margin: 2px 0; width: fit-content; }
+.cmd-div-tag--vigiles { color: #53c8ff; border-color: rgba(83, 200, 255, 0.55); }
+.cmd-div-tag--ignis { color: #ff7a3c; border-color: rgba(255, 122, 60, 0.55); }
+.cmd-div-tag--medicus { color: #35e0a1; border-color: rgba(53, 224, 161, 0.55); }
+
+.cmd-activity {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 30px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+  background: rgba(2, 6, 10, 0.92);
+  border-top: 1px solid var(--cmd-line);
+  font-size: 11px;
+}
+.cmd-activity-label {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--cmd-accent);
+  flex: none;
+}
+#cmd-activity-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmd-activity-count { margin-left: auto; opacity: 0.6; flex: none; }
+
+.cmd-search-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 80;
+  background: rgba(1, 4, 8, 0.62);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 9vh;
+}
+.cmd-search-overlay[hidden] { display: none; }
+.cmd-search-box { width: min(560px, 92%); background: rgba(3, 9, 15, 0.96); border: 1px solid var(--cmd-line); padding: 14px; }
+.cmd-kresults { list-style: none; margin: 8px 0; padding: 0; max-height: 46vh; overflow-y: auto; }
+.cmd-kresult {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: 1px solid rgba(140, 180, 200, 0.08);
+  color: inherit;
+  padding: 6px 8px;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.cmd-kresult:hover { border-color: var(--cmd-line); }
+.cmd-kresult-sub { font-size: 10px; opacity: 0.65; }
+.cmd-help-list { margin: 8px 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; }
+.cmd-help-list kbd { font-family: var(--mono); font-size: 11px; border: 1px solid var(--cmd-line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; background: rgba(83, 200, 255, 0.08); }
+
+/* Loop feed: the agent crew's recorded activity (patrol checks,
+   review verdicts, incident reports, SIMULATED dispatch receipts),
+   polled from /api/crew/status. Text rows only — the feed reports
+   what the crew recorded; it renders no state of its own. */
+.cmd-ribbon { margin: 0 0 6px; padding: 8px 10px; border: 1px solid var(--cmd-line); background: rgba(83, 200, 255, 0.08); font-size: 12px; font-weight: 700; }
+.empty-state { border-left: 2px solid var(--panel-border); padding-left: 8px; }
+.cmd-loading { font-style: italic; }
+.cmd-retry { margin-top: 4px; }
+.cmd-ribbon--yellow { color: #ffe27a; border-color: rgba(255, 226, 122, 0.5); }
+.cmd-ribbon--red { color: #ffb3ab; border-color: rgba(255, 179, 171, 0.5); }
+.cmd-loop-feed { list-style: none; margin: 6px 0 0; padding: 0; max-height: 260px; overflow-y: auto; }
+.cmd-loop-item {
+  display: flex;
+  gap: 8px;
+  padding: 5px 2px;
+  border-bottom: 1px solid rgba(140, 180, 200, 0.08);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+.cmd-loop-when { flex: 0 0 auto; font-size: 10px; opacity: 0.6; padding-top: 1px; }
+.cmd-loop-item--flag { color: #ffb3ab; }
+.cmd-loop-item--incident-yellow { color: #ffe27a; }
+.cmd-loop-item--incident-red { color: #ffb3ab; }
+.cmd-loop-item--dispatch { color: #ffd9a8; }
+.cmd-loop-item--patrol-status { color: #ffe27a; }
+
+@media (max-width: 1150px) {
+  .command-view { height: auto; min-height: 0; overflow: visible; }
+  .cmd-map { position: relative; height: 420px; }
+  .cmd-float { position: static; width: auto; margin: 10px; clip-path: none; }
+  .cmd-wall-panel { left: auto; right: auto; }
+  .cmd-activity { position: static; }
+  .cmd-pin-card { position: absolute; }
+}
+
+/* HN-016 mobile pass (390 px): the 1150 px rules already stack the
+   floats; this block finishes the phone width — the camera wall
+   stacks vertically instead of scrolling sideways, every tap target
+   reaches 44 px, and nothing overflows the viewport width. Layout
+   is asserted by rule tests; a real-device 390 px check stays owed
+   at gate (no browser runs in this sandbox). */
+@media (max-width: 480px) {
+  .command-view { overflow-x: clip; }
+  .cmd-map { height: 300px; }
+  .cmd-wall { flex-direction: column; overflow-x: visible; }
+  .cmd-tile { flex: 1 1 auto; }
+  .cmd-tile img { height: auto; aspect-ratio: 16 / 9; }
+  .command-view button,
+  .command-view input,
+  .command-view select { min-height: 44px; }
+  .command-view .cmd-sys-value { overflow-wrap: anywhere; }
+  main button,
+  main input,
+  main select { min-height: 44px; }
+  main { overflow-x: clip; padding: 8px; }
+  .maplibregl-ctrl button { min-height: 44px; min-width: 44px; }
+}
+
+/* HN-017 reduced motion: CSS pulses and bar transitions stop for
+   viewers who asked for reduced motion. The ASCII canvas stops
+   itself (js/logo-background.js gates its animation frame), and
+   the wall interval is gated in js/command-map.js init. */
+@media (prefers-reduced-motion: reduce) {
+  .cmd-pin--fast, .cmd-pin--slow, .cmd-step--current .cmd-step-dot { animation: none; }
+  .cmd-bar span { transition: none; }
+}
+/* OPS-CONSOLE-1 (Del UI direction, Oct 29): first web-first
+   modern/elite/professional dispatch/ops-console piece for Ignis.
+   Panel headings become console section labels — uppercase mono
+   with wide tracking and a red accent tick — scoped to
+   body[data-product="ignis"] only, so Vigiles and Medicus are
+   untouched. Size and weight deliberately stay at the base 15px/700:
+   the base .panel h2 rule still owns those, so native parity holds
+   and the existing web-contract tests keep passing. The spinning
+   ASCII background, disclosures, and limitations banner are
+   untouched; product red is an accent only, never a status color. */
+body[data-product="ignis"] .panel h2 {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-left: 3px solid #d92b2b;
+  padding-left: 10px;
+}
+/* IGNIS-ONEOFONE-1 (Del's one-of-one bar, Oct 29): the Ignis
+   look-alike scoreboard panel shows only under Ignis. It counts
+   recorded assessments, so under Vigiles or Medicus — where it could
+   never show that product's data — it stays hidden rather than
+   reading zeros for the wrong product. The h2 already carries the
+   OPS-CONSOLE-1 console treatment under Ignis; this block only owns
+   visibility. No contract, server, or Spark-gate change. */
+.ignis-scoreboard-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-scoreboard-panel {
+  display: block;
+}
+/* IGNIS-ONEOFONE-2 (Del's one-of-one bar, Oct 29): the Ignis
+   reported-confidence panel shows only under Ignis, same rule as
+   the scoreboard above — under Vigiles or Medicus it could never
+   show that product's data, so it stays hidden rather than reading
+   zeros for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-confidence-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-confidence-panel {
+  display: block;
+}
+/* IGNIS-ONEOFONE-3 (Del's one-of-one bar, Oct 29): the Ignis
+   review-queue panel shows only under Ignis, same rule as the
+   scoreboard and confidence panels above — under Vigiles or
+   Medicus it could never show that product's data, so it stays
+   hidden rather than reading zeros for the wrong product. This
+   block only owns visibility. No contract, server, or Spark-gate
+   change. */
+.ignis-review-queue-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-queue-panel {
+  display: block;
+}
+/* IGNIS-ONEOFONE-4 (Del's one-of-one bar, Oct 29): the Ignis
+   evidence-transparency panel shows only under Ignis, same rule as
+   the scoreboard, confidence, and review-queue panels above — under
+   Vigiles or Medicus it could never show that product's data, so it
+   stays hidden rather than reading zeros for the wrong product.
+   This block only owns visibility. No contract, server, or
+   Spark-gate change. */
+.ignis-evidence-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-evidence-panel {
+  display: block;
+}
+/* IGNIS-ONEOFONE-5 (Del's one-of-one bar, Oct 29): the Ignis
+   uncertainty-disclosure panel shows only under Ignis, same rule as
+   the scoreboard, confidence, review-queue, and evidence panels
+   above — under Vigiles or Medicus it could never show that
+   product's data, so it stays hidden rather than reading zeros for
+   the wrong product. This block only owns visibility. No contract,
+   server, or Spark-gate change. */
+.ignis-uncertainty-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-uncertainty-panel {
+  display: block;
+}
+/* IGNIS-ONEOFONE-6 (Del's one-of-one bar, Oct 29): the Ignis
+   review-triage panel shows only under Ignis, same rule as the
+   scoreboard, confidence, review-queue, evidence, and uncertainty
+   panels above — under Vigiles or Medicus it could never show that
+   product's data, so it stays hidden rather than reading zeros for
+   the wrong product. This block only owns visibility. No contract,
+   server, or Spark-gate change. */
+.ignis-review-triage-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-triage-panel {
+  display: block;
+}
+/* IGNIS-ONEOFONE-7 (Del's one-of-one bar, Oct 29): the Ignis
+   observation-classes panel shows only under Ignis, same rule as
+   the scoreboard, confidence, review-queue, evidence, uncertainty,
+   and review-triage panels above — under Vigiles or Medicus it
+   could never show that product's data, so it stays hidden rather
+   than reading zeros for the wrong product. This block only owns
+   visibility. No contract, server, or Spark-gate change. */
+.ignis-observation-categories-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-observation-categories-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-8 (Del's one-of-one bar, Oct 29): the Ignis
+   model-attribution panel shows only under Ignis, same rule as
+   the scoreboard, confidence, review-queue, evidence, uncertainty,
+   review-triage, and observation-classes panels above — under
+   Vigiles or Medicus it could never show that product's data, so
+   it stays hidden rather than reading zeros for the wrong product.
+   This block only owns visibility. No contract, server, or
+   Spark-gate change. */
+.ignis-model-attribution-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-model-attribution-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-9 (Del's one-of-one bar, Oct 29): the Ignis
+   footage-source panel follows the same visibility rule as the
+   other Ignis-only panels — hidden unless Ignis is the selected
+   product, so under Vigiles or Medicus it could never show that
+   product's data, so it stays hidden rather than reading zeros
+   for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-footage-source-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-footage-source-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-10 (Del's one-of-one bar, Oct 30): the Ignis
+   scenario-breakdown panel follows the same visibility rule as
+   the other Ignis-only panels — hidden unless Ignis is the selected
+   product, so under Vigiles or Medicus it could never show that
+   product's data, so it stays hidden rather than reading zeros
+   for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-scenario-breakdown-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-scenario-breakdown-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-11 (Del's one-of-one bar, Oct 30): the Ignis
+   review-by-source panel follows the same visibility rule as the
+   other Ignis-only panels — hidden unless Ignis is the selected
+   product, so under Vigiles or Medicus it could never show that
+   product's data, so it stays hidden rather than reading zeros
+   for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-review-source-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-source-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-12 (Del's one-of-one bar, Oct 30): the Ignis
+   review-by-model panel follows the same visibility rule as the
+   other Ignis-only panels — hidden unless Ignis is the selected
+   product, so under Vigiles or Medicus it could never show that
+   product's data, so it stays hidden rather than reading zeros
+   for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-review-model-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-model-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-13 (Del's one-of-one bar, Oct 30): the Ignis
+   review-audit-trail panel follows the same visibility rule as the
+   other Ignis-only panels — hidden unless Ignis is the selected
+   product, so under Vigiles or Medicus it could never show that
+   product's data, so it stays hidden rather than reading zeros
+   for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-review-audit-trail-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-audit-trail-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-14 (Del's one-of-one bar, Oct 30): the Ignis
+   review-by-reported-confidence panel follows the same visibility
+   rule as the other Ignis-only panels — hidden unless Ignis is the
+   selected product, so under Vigiles or Medicus it could never show
+   that product's data, so it stays hidden rather than reading zeros
+   for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-review-confidence-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-confidence-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-15 (Del's one-of-one bar, Oct 30): the Ignis
+   review-by-scenario-label panel follows the same visibility rule
+   as the other Ignis-only panels — hidden unless Ignis is the
+   selected product, so under Vigiles or Medicus it could never show
+   that product's data, so it stays hidden rather than reading zeros
+   for the wrong product. This block only owns visibility. No
+   contract, server, or Spark-gate change. */
+.ignis-review-scenario-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-scenario-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-16 (Del's one-of-one bar, Oct 30): the Ignis
+   review-by-observation-category panel follows the same
+   visibility rule as the other Ignis-only panels — hidden unless
+   Ignis is the selected product, so under Vigiles or Medicus it
+   could never show that product's data, so it stays hidden
+   rather than reading zeros for the wrong product. This block
+   only owns visibility. No contract, server, or Spark-gate change. */
+.ignis-review-observation-category-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-observation-category-panel {
+  display: block;
+}
+
+/* IGNIS-ONEOFONE-17 (Del's one-of-one bar, Oct 30): the Ignis
+   review-by-evidence panel follows the same visibility rule as
+   the other Ignis-only panels — hidden unless Ignis is the
+   selected product, so under Vigiles or Medicus it could never
+   show that product's data, so it stays hidden rather than
+   reading zeros for the wrong product. This block only owns
+   visibility. No contract, server, or Spark-gate change. */
+.ignis-review-evidence-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-evidence-panel {
+  display: block;
+}
+.ignis-review-uncertainty-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-uncertainty-panel {
+  display: block;
+}
+.ignis-review-observation-count-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-observation-count-panel {
+  display: block;
+}
+.ignis-review-latency-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-latency-panel {
+  display: block;
+}
+.ignis-review-summary-panel {
+  display: none;
+}
+body[data-product="ignis"] .ignis-review-summary-panel {
+  display: block;
+}
+
+/* OPS-CONSOLE-3 (Del UI direction, Oct 29): second web-first
+   dispatch/ops-console piece for Ignis, extending OPS-CONSOLE-1's
+   panel headings to the rest of the console surface — the same four
+   elements Milo's Medicus ops-console pass treated, in Ignis terms.
+   Subheads widen from the base 0.05em to 0.08em console tracking
+   (still below the h2's 0.12em, so heading hierarchy holds; size,
+   weight, and color stay at the base rule). Status lines read in
+   mono with 0.02em tracking, like the Medicus readout — font and
+   tracking only, never a color change, so product red stays an
+   accent and never becomes a status color. Primary buttons sharpen
+   to a 3px radius, matching the Medicus console buttons. The
+   latest-assessment readout frames in Ignis red at 0.4 over a dark
+   0.25 fill, the Medicus frame's shape in Ignis red. All scoped to
+   body[data-product="ignis"] only, so Vigiles and Medicus are
+   untouched; disclosures, limitations banner, spinning background,
+   contract, and Spark gates are untouched. */
+body[data-product="ignis"] .subhead {
+  letter-spacing: 0.08em;
+}
+
+body[data-product="ignis"] .status {
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+body[data-product="ignis"] .btn-primary {
+  border-radius: 3px;
+}
+
+body[data-product="ignis"] .mono-block {
+  border: 1px solid rgba(217, 43, 43, 0.4);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* OPS-CONSOLE-6 (Del UI direction, Oct 29): third web-first
+   dispatch/ops-console piece, extending the direction Milo's
+   Medicus pass set and OPS-CONSOLE-1/3 carried to Ignis, to the
+   last product without it — Vigiles, in Vigiles blue. Panel
+   headings become console section labels — uppercase mono with
+   wide tracking and a blue accent tick — scoped to
+   body[data-product="vigiles"] only, so Ignis and Medicus are
+   untouched. Size and weight deliberately stay at the base
+   15px/700: the base .panel h2 rule still owns those, so native
+   parity holds and the existing web-contract tests keep passing.
+   Subheads widen from the base 0.05em to 0.08em console tracking
+   (still below the h2's 0.12em, so heading hierarchy holds; size,
+   weight, and color stay at the base rule). Status lines read in
+   mono with 0.02em tracking — font and tracking only, never a
+   color change, so product blue stays an accent and never becomes
+   a status color. Primary buttons sharpen to a 3px radius,
+   matching the Medicus and Ignis console buttons. The
+   latest-assessment readout frames in Vigiles blue at 0.4 over a
+   dark 0.25 fill, the Medicus frame's shape in Vigiles blue. The
+   spinning ASCII background, disclosures, and limitations banner
+   are untouched; contract and Spark gates are untouched. */
+body[data-product="vigiles"] .panel h2 {
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  border-left: 3px solid #4f7ec2;
+  padding-left: 10px;
+}
+
+body[data-product="vigiles"] .subhead {
+  letter-spacing: 0.08em;
+}
+
+body[data-product="vigiles"] .status {
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+}
+
+body[data-product="vigiles"] .btn-primary {
+  border-radius: 3px;
+}
+
+body[data-product="vigiles"] .mono-block {
+  border: 1px solid rgba(79, 126, 194, 0.4);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+
+/* ============================================================
+   Topbar cleanup + panel glass (Del direction, Oct 30): the
+   view switch is bigger, the map button says MAP, and the
+   backend status pill stays on one line so the top bar stops
+   wrapping. The console panels also go properly see-through
+   here: the glass layer at main > .panel was 0.92/0.94, near
+   solid, which is why the backdrop loop never ghosted
+   through. Same gradient, lower alpha. The companion
+   backdrop rules live in the LOGO-3 block above, ahead of
+   the per-product console passes.
+   ============================================================ */
+
+main > .panel {
+  background: linear-gradient(180deg, rgba(26, 29, 35, 0.8), rgba(17, 19, 23, 0.84));
+}
+
+.view-switch {
+  border-color: rgba(140, 180, 200, 0.6);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.view-switch button {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 9px 22px;
+}
+
+.topbar .status {
+  display: block;
+  max-width: 330px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar .status::before {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* HN-069 Print stylesheet: printing the boards page prints only the
+   incident record (evidence + BOLO + timeline + receipt sections).
+   Navigation, controls, and every other board are hidden; the record
+   prints black on white so it reads on paper. */
+@media print {
+  @page { margin: 1cm; }
+  .boards-nav, button, .logo-studio-link { display: none !important; }
+  .board-section:not(.incident-record) { display: none !important; }
+  .incident-record, .incident-record * {
+    color: #000 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+  }
+  .incident-record { width: 100%; margin: 0 0 1rem 0; }
+}
