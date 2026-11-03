@@ -8,7 +8,13 @@ license = "MIT"
 [workspace]
 
 [dependencies]
-bootloader = { version = "0.11" }
+# RK-008 (Pax KF-01 correction): the KERNEL side depends on
+# `bootloader_api`, never on `bootloader` — the latter is the HOST-side
+# image builder (BiosBoot/UefiBoot) and pulls std/serde, which is the
+# 5,829-error wall the malformed 0.11.17 spike attempt hit. Resolves to
+# 0.11.17 via kernel/Cargo.lock. Physical-memory mapping is config now
+# (BOOTLOADER_CONFIG in main.rs), not a cargo feature.
+bootloader_api = { version = "0.11" }
 
 [features]
 # Test-only hooks (OS-024/OS-058): boot once with a forced trap to
