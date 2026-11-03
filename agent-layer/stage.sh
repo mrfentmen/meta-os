@@ -47,6 +47,7 @@ UNITS=/usr/lib/systemd/user
 WANTS=/etc/systemd/user
 SKEL_ENV=/etc/skel/.config/oc2-agent/env
 HOOK=/usr/local/bin/meta-agent-login
+HEALTH=/usr/local/lib/metaos/meta-agent-health.py
 ENTRY=/etc/xdg/autostart/meta-agent-login.desktop
 CHECKOUT=/usr/share/metaos/agent
 
@@ -55,7 +56,8 @@ say() { echo "agent-stage: $*"; }
 bad() { echo "agent-stage: FAIL $*" >&2; fail=1; }
 
 if [ "$MODE" = "check" ]; then
-  for unit in oc2-queue.service oc2-trio.service oc2-patrol.service oc2-patrol.timer; do
+  for unit in oc2-queue.service oc2-trio.service oc2-patrol.service \
+             oc2-patrol.timer oc2-health.service oc2-health.timer; do
     [ -f "$ROOT$UNITS/$unit" ] && say "unit $unit" || bad "unit missing: $UNITS/$unit"
   done
   for unit in oc2-queue.service oc2-trio.service oc2-patrol.service; do
@@ -64,6 +66,9 @@ if [ "$MODE" = "check" ]; then
   done
   link="$ROOT$WANTS/timers.target.wants/oc2-patrol.timer"
   [ -e "$link" ] || [ -L "$link" ] && say "enabled oc2-patrol.timer" || bad "not enabled: timers.target.wants/oc2-patrol.timer"
+  link="$ROOT$WANTS/timers.target.wants/oc2-health.timer"
+  [ -e "$link" ] || [ -L "$link" ] && say "enabled oc2-health.timer" || bad "not enabled: timers.target.wants/oc2-health.timer"
+  [ -f "$ROOT$HEALTH" ] && say "health cadence: probe + timer present" || bad "health probe missing: $HEALTH"
 
   for rel in server/queue/queue_service.py server/queue/patrol.py \
              server/queue/trio_agent.py js/products.js js/schema.js; do
@@ -130,6 +135,9 @@ say "enabling without a daemon"
 mkdir -p "$ROOT$WANTS/default.target.wants" "$ROOT$WANTS/timers.target.wants"
 for unit in "$ROOT$UNITS"/*.service; do
   name=$(basename "$unit")
+  # The health unit is timer-driven: enabling it in default.target would run
+  # one check at login and never again.
+  [ "$name" = "oc2-health.service" ] && continue
   ln -sfn "$UNITS/$name" "$ROOT$WANTS/default.target.wants/$name"
 done
 for unit in "$ROOT$UNITS"/*.timer; do
@@ -149,6 +157,10 @@ fi
 say "login hook"
 mkdir -p "$ROOT$(dirname "$HOOK")"
 install -m755 "$HERE/meta-agent-login.sh" "$ROOT$HOOK"
+
+say "health cadence"
+mkdir -p "$ROOT$(dirname "$HEALTH")"
+install -m755 "$HERE/meta-agent-health.py" "$ROOT$HEALTH"
 mkdir -p "$ROOT$(dirname "$ENTRY")"
 cat > "$ROOT$ENTRY" <<ENTRY_EOF
 [Desktop Entry]

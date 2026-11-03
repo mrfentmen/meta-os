@@ -139,6 +139,19 @@ def rows(root, home):
     put("PASS" if hook.is_file() and os.access(hook, os.X_OK) else "FAIL",
         "agent login hook", str(hook))
 
+    cadence_units = ("oc2-health.service", "oc2-health.timer")
+    probe = root / "usr/local/lib/metaos/meta-agent-health.py"
+    timer_link = root / "etc/systemd/user/timers.target.wants/oc2-health.timer"
+    bits = []
+    if not probe.is_file():
+        bits.append("probe")
+    bits.extend(u for u in cadence_units if not (agent_units / u).is_file())
+    if not (timer_link.is_symlink() or timer_link.is_file()):
+        bits.append("timer link")
+    put("PASS" if not bits else "FAIL", "agent cadence",
+        "probe + 5-minute timer enabled" if not bits
+        else "missing " + ", ".join(bits))
+
     exe = root / "usr/local/bin/meta-agent-status"
     put("PASS" if exe.is_file() and os.access(exe, os.X_OK) else "FAIL",
         "meta-agent-status", str(exe))
