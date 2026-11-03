@@ -98,6 +98,23 @@ X-GNOME-Autostart-Delay=8
 DESKTOP
 chmod 0644 "$ROOT/etc/xdg/autostart/metaos-install.desktop"
 
+# ------------------------------------------------- welcome + theme
+say "installing welcome app + Meta theme payload (frozen vendor of opencode1/metaos-1.0)"
+PAYLOAD="$HERE/payload-theme"
+mkdir -p "$ROOT/usr/share/metaos/apps" "$ROOT/usr/share/applications" "$ROOT/usr/share/backgrounds" "$ROOT/usr/share/plank/themes" "$ROOT/usr/share/themes" "$ROOT/etc/lightdm" "$ROOT/etc/bash.bashrc.d"
+install -m755 "$PAYLOAD/apps/metaos-welcome.py" "$ROOT/usr/share/metaos/apps/metaos-welcome.py"
+install -m644 "$PAYLOAD/apps/metaos-welcome.desktop" "$ROOT/usr/share/applications/metaos-welcome.desktop"
+install -m644 "$PAYLOAD/apps/metaos-welcome.desktop" "$ROOT/etc/xdg/autostart/metaos-welcome.desktop"
+install -m644 "$PAYLOAD/greeter/lightdm-gtk-greeter.conf" "$ROOT/etc/lightdm/lightdm-gtk-greeter.conf"
+install -m644 "$PAYLOAD/wallpapers/meta-ascii.png" "$ROOT/usr/share/backgrounds/meta-ascii.png" 2>/dev/null || true
+install -m644 "$PAYLOAD/wallpapers/meta-rays.png" "$ROOT/usr/share/backgrounds/meta-rays.png" 2>/dev/null || true
+install -m644 "$PAYLOAD/wallpapers/meta-dusk.png" "$ROOT/usr/share/backgrounds/meta-dusk.png" 2>/dev/null || true
+install -m644 "$PAYLOAD/wallpapers/meta-dawn.png" "$ROOT/usr/share/backgrounds/meta-dawn.png" 2>/dev/null || true
+cp -r "$PAYLOAD/dock/." "$ROOT/usr/share/plank/themes/" 2>/dev/null || true
+cp -r "$PAYLOAD/gtk/." "$ROOT/usr/share/themes/" 2>/dev/null || { mkdir -p "$ROOT/usr/share/themes/MetaOS/gtk-3.0"; install -m644 "$PAYLOAD/gtk/gtk.css" "$ROOT/usr/share/themes/MetaOS/gtk-3.0/gtk.css"; }
+install -m644 "$PAYLOAD/terminal/metaos-welcome.sh" "$ROOT/etc/bash.bashrc.d/metaos.sh"
+gate_payload_welcome=1
+
 # ---------------------------------------------------------------- packages
 if [ "$WITH_PACKAGES" = "1" ]; then
     if chroot "$ROOT" sh -c 'command -v calamares >/dev/null 2>&1'; then

@@ -1,133 +1,117 @@
-# MetaOS 1.0 boot splash -- plymouth script module.
-#
-# Deliberately conservative: no trig, no loops, no font files. Every asset
-# is ours (assets/make_assets.py). Positions are recomputed on every
-# refresh from the real window size, so a mode change cannot leave the
-# mark off-screen.
-#
-# Claim label: WRITTEN, UNRUN. There is no plymouth binary on the build
-# Mac; this file is proven only by tools/check_configs.py's structure lint
-# and by the first Linux-host boot (vm_install_proof.sh stage 01-splash).
+# MetaOS plymouth boot splash (script plugin).
+# Palette (frozen studio tokens): ink #070B16, blue #1877F2, paper #EDF5FF.
+# Assets live in ImageDir (/usr/share/plymouth/themes/metaos):
+#   background.png  1920x1080 splash backdrop (downscaled meta-rays wallpaper)
+#   meta-m.png      512px original M mark (white stems + blue chevron)
+#   progress.png    560x28 Meta-blue progress bar
 
-Window.SetBackgroundTopColor(0.043, 0.071, 0.125);
-Window.SetBackgroundBottomColor(0.016, 0.027, 0.050);
+Window.SetBackgroundTopColor (0.027, 0.043, 0.086);
+Window.SetBackgroundBottomColor (0.027, 0.043, 0.086);
 
-logo_image = Image("logo.png");
-logo_sprite = Sprite(logo_image);
+screen.x = Window.GetX ();
+screen.y = Window.GetY ();
+screen.w = Window.GetWidth ();
+screen.h = Window.GetHeight ();
 
-wordmark_image = Image("wordmark.png");
-wordmark_sprite = Sprite(wordmark_image);
+# --- backdrop: wallpaper scaled to full screen ---
+bg.image = Image ("background.png");
+bg.image = bg.image.Scale (screen.w, screen.h);
+bg.sprite = Sprite (bg.image);
+bg.sprite.SetPosition (screen.x, screen.y, -10);
 
-dot_image = Image("dot.png");
-dot0 = Sprite(dot_image);
-dot1 = Sprite(dot_image);
-dot2 = Sprite(dot_image);
-dot3 = Sprite(dot_image);
-dot4 = Sprite(dot_image);
-dot5 = Sprite(dot_image);
-dot6 = Sprite(dot_image);
-dot7 = Sprite(dot_image);
-dot8 = Sprite(dot_image);
-dot9 = Sprite(dot_image);
-dot10 = Sprite(dot_image);
-dot11 = Sprite(dot_image);
+# --- centered M mark (capped at 1/3 of screen, never upscaled) ---
+logo.image = Image ("meta-m.png");
+logo.w = logo.image.GetWidth ();
+logo.h = logo.image.GetHeight ();
+logo.scale = Math.Min (screen.w / 3 / logo.w, screen.h / 3 / logo.h);
+logo.scale = Math.Min (logo.scale, 1);
+logo.image = logo.image.Scale (logo.w * logo.scale, logo.h * logo.scale);
+logo.sprite = Sprite (logo.image);
+logo.sprite.SetPosition (screen.x + (screen.w - logo.image.GetWidth ()) / 2,
+                         screen.y + (screen.h - logo.image.GetHeight ()) / 2 - 60, 0);
 
-message_image = Image.Text("", 0.92, 0.96, 1.0);
-message_sprite = Sprite(message_image);
-message_sprite.SetOpacity(0.0);
+# --- progress bar under the mark ---
+bar.image = Image ("progress.png");
+bar.sprite = Sprite ();
+bar.x = screen.x + (screen.w - bar.image.GetWidth ()) / 2;
+bar.y = screen.y + (screen.h + logo.image.GetHeight ()) / 2 - 20;
+bar.sprite.SetPosition (bar.x, bar.y, 1);
+bar.sprite.SetOpacity (0);
 
-password_image = Image.Text("", 0.92, 0.96, 1.0);
-password_sprite = Sprite(password_image);
-password_sprite.SetOpacity(0.0);
+# --- password / message overlays share one centered text sprite ---
+prompt.sprite = Sprite ();
+prompt.sprite.SetOpacity (0);
+bullet.sprites = NULL;
 
-progress = 0.0;
-pulse = 0.30;
+pulse = 0;
 
-fun place() {
-    w = Window.GetWidth();
-    h = Window.GetHeight();
-    cx = w / 2;
-    cy = h / 2 + 40;
-
-    logo_sprite.SetX(cx - logo_image.GetWidth() / 2);
-    logo_sprite.SetY(cy - 260);
-
-    wordmark_sprite.SetX(cx - wordmark_image.GetWidth() / 2);
-    wordmark_sprite.SetY(cy + 150);
-
-    dot0.SetX(cx - 12);
-    dot0.SetY(cy - 162);
-    dot1.SetX(cx + 63);
-    dot1.SetY(cy - 142);
-    dot2.SetX(cx + 118);
-    dot2.SetY(cy - 87);
-    dot3.SetX(cx + 138);
-    dot3.SetY(cy - 12);
-    dot4.SetX(cx + 118);
-    dot4.SetY(cy + 63);
-    dot5.SetX(cx + 63);
-    dot5.SetY(cy + 118);
-    dot6.SetX(cx - 12);
-    dot6.SetY(cy + 138);
-    dot7.SetX(cx - 87);
-    dot7.SetY(cy + 118);
-    dot8.SetX(cx - 142);
-    dot8.SetY(cy + 63);
-    dot9.SetX(cx - 162);
-    dot9.SetY(cy - 12);
-    dot10.SetX(cx - 142);
-    dot10.SetY(cy - 87);
-    dot11.SetX(cx - 87);
-    dot11.SetY(cy - 142);
-
-    message_sprite.SetX(cx - message_image.GetWidth() / 2);
-    message_sprite.SetY(h - 96);
-    password_sprite.SetX(cx - password_image.GetWidth() / 2);
-    password_sprite.SetY(h - 60);
+fun boot_progress (duration, progress) {
+  if (progress > 0) {
+    bar.sprite.SetOpacity (1);
+    w = Math.Int (bar.image.GetWidth () * progress);
+    if (w > 0) {
+      clipped = bar.image.Crop (0, 0, w, bar.image.GetHeight ());
+      bar.sprite.SetImage (clipped);
+    }
+  }
 }
 
-# 12-step progress ring: a dot is fully lit once boot passes its step.
-# The first dot breathes while progress is still zero, so a slow boot
-# never looks frozen.
-fun paint() {
-    if (progress * 12 > 0) { dot0.SetOpacity(1.0); } else { dot0.SetOpacity(pulse); }
-    if (progress * 12 > 1) { dot1.SetOpacity(1.0); } else { dot1.SetOpacity(0.18); }
-    if (progress * 12 > 2) { dot2.SetOpacity(1.0); } else { dot2.SetOpacity(0.18); }
-    if (progress * 12 > 3) { dot3.SetOpacity(1.0); } else { dot3.SetOpacity(0.18); }
-    if (progress * 12 > 4) { dot4.SetOpacity(1.0); } else { dot4.SetOpacity(0.18); }
-    if (progress * 12 > 5) { dot5.SetOpacity(1.0); } else { dot5.SetOpacity(0.18); }
-    if (progress * 12 > 6) { dot6.SetOpacity(1.0); } else { dot6.SetOpacity(0.18); }
-    if (progress * 12 > 7) { dot7.SetOpacity(1.0); } else { dot7.SetOpacity(0.18); }
-    if (progress * 12 > 8) { dot8.SetOpacity(1.0); } else { dot8.SetOpacity(0.18); }
-    if (progress * 12 > 9) { dot9.SetOpacity(1.0); } else { dot9.SetOpacity(0.18); }
-    if (progress * 12 > 10) { dot10.SetOpacity(1.0); } else { dot10.SetOpacity(0.18); }
-    if (progress * 12 > 11) { dot11.SetOpacity(1.0); } else { dot11.SetOpacity(0.18); }
+Plymouth.SetBootProgressFunction (boot_progress);
+
+fun on_refresh () {
+  pulse = pulse + 1;
+  logo.sprite.SetOpacity (0.88 + 0.12 * Math.Sin (pulse / 12));
 }
 
-fun on_progress(p) {
-    progress = p;
+Plymouth.SetRefreshFunction (on_refresh);
+
+fun password_prompt (prompt, bullets) {
+  bar.sprite.SetOpacity (0);
+  prompt.sprite.SetOpacity (0);
+  bullet.sprites = NULL;
+  dialog = Image.Text (prompt, 0.93, 0.96, 1.0);
+  prompt.sprite.SetImage (dialog);
+  prompt.sprite.SetPosition (screen.x + (screen.w - dialog.GetWidth ()) / 2,
+                             bar.y - dialog.GetHeight () - 24, 2);
+  prompt.sprite.SetOpacity (1);
+  if (bullets > 0) {
+    dot = Image.Text ("*", 0.93, 0.96, 1.0);
+    start = screen.x + screen.w / 2 - bullets * dot.GetWidth () / 2;
+    for (i = 0; i < bullets; i++) {
+      bullet.sprites[i] = Sprite (dot);
+      bullet.sprites[i].SetPosition (start + i * dot.GetWidth (), bar.y, 3);
+    }
+  }
 }
 
-fun on_message(text) {
-    message_image = Image.Text(text, 0.92, 0.96, 1.0);
-    message_sprite.SetImage(message_image);
-    message_sprite.SetOpacity(1.0);
+Plymouth.SetDisplayPasswordFunction (password_prompt);
+
+fun normal_state () {
+  prompt.sprite.SetOpacity (0);
+  bullet.sprites = NULL;
+  bar.sprite.SetOpacity (0);
 }
 
-fun on_password(prompt, bullets) {
-    password_image = Image.Text(prompt, 0.78, 0.86, 0.95);
-    password_sprite.SetImage(password_image);
-    password_sprite.SetOpacity(1.0);
+Plymouth.SetDisplayNormalFunction (normal_state);
+
+fun show_message (msg) {
+  text = Image.Text (msg, 0.93, 0.96, 1.0);
+  prompt.sprite.SetImage (text);
+  prompt.sprite.SetPosition (screen.x + (screen.w - text.GetWidth ()) / 2,
+                             screen.y + screen.h - text.GetHeight () - 60, 2);
+  prompt.sprite.SetOpacity (1);
 }
 
-fun refresh() {
-    pulse = pulse + 0.02;
-    if (pulse > 1.0) { pulse = 0.30; }
-    place();
-    paint();
+Plymouth.SetMessageFunction (show_message);
+
+fun hide_message (msg) {
+  prompt.sprite.SetOpacity (0);
 }
 
-Plymouth.SetBootProgressFunction(on_progress);
-Plymouth.SetMessageFunction(on_message);
-Plymouth.SetDisplayPasswordFunction(on_password);
-Plymouth.SetRefreshFunction(refresh);
+Plymouth.SetHideMessageFunction (hide_message);
+
+fun on_quit () {
+  logo.sprite.SetOpacity (1);
+}
+
+Plymouth.SetQuitFunction (on_quit);
