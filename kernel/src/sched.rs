@@ -14,7 +14,7 @@
 use alloc::boxed::Box;
 
 use crate::interrupts;
-use crate::tasks::{Context, TaskId};
+use crate::tasks::{Context, TaskId, TaskState};
 
 /// Tasks the kernel can hold. No reap in K5: slots fill in spawn
 /// order and stay, so spawn order is the table index. Now full at
@@ -214,6 +214,10 @@ pub fn sleep_task(ticks: u64) {
 pub fn exit_task() -> ! {
     unsafe {
         wake_expired();
+        // K4 IPC teardown: closing the exiting task's own mailbox
+        // drops its queued mail and turns later sends into
+        // `Closed`, so no sender queues into a dead task.
+        crate::ipc::mailbox_close(current_id());
         let next = SCHED
             .as_mut()
             .expect("sched: no scheduler")
@@ -274,6 +278,53 @@ pub unsafe fn spawn_task(entry: fn(), quantum: u32) -> Option<TaskId> {
     ENTRIES[i] = (id, entry);
     SLEEPS[i] = (id, u64::MAX);
     NTABLE += 1;
+    Some(id)
+}
+
+/// Spawn into an exited task's slot — the "spawn swap".
+///
+/// K5 never reaps on its own: `tasks.rs` keeps an `Exited` task
+/// until `reap` frees it, and `spawn_task` appends at `NTABLE`,
+/// so a full 8/8 table can never take a new task even after demo
+/// tasks exit. `spawn_swap` reaps the first exited row's policy
+/// slot, then rewrites that row's switch tables with the new
+/// task, leaving `NTABLE` unchanged. Row index and policy slot
+/// index are independent after a swap (the policy table fills
+/// first-free, rows are spawn order); both tables are keyed by
+/// `TaskId`, never correlated by index, so the divergence is
+/// safe. The old stack leaks, exactly like `spawn_task`'s boxes
+/// already do. Returns `None` when no task has exited, when the
+/// policy refuses the reap, or when the new task fails
+/// validation. This is what lets the K4 talker/listener pair
+/// start after demo tasks exit without a `MAX_TASKS` bump.
+pub unsafe fn spawn_swap(entry: fn(), quantum: u32) -> Option<TaskId> {
+    let sched = SCHED.as_mut().expect("sched: no scheduler");
+    let mut victim: Option<(usize, TaskId)> = None;
+    for i in 0..NTABLE {
+        let id = IDS[i];
+        if let Some(task) = sched.task(id) {
+            if task.state == TaskState::Exited {
+                victim = Some((i, id));
+                break;
+            }
+        }
+    }
+    let (row, old_id) = victim?;
+    if !sched.reap(old_id) {
+        return None;
+    }
+    let stack_box = Box::new([0u128; STACK_CELLS]);
+    let base = Box::leak(stack_box) as *mut [u128; STACK_CELLS] as u64;
+    let stack = crate::tasks::Stack::new(base, STACK_CELLS * 16)?;
+    let trampoline: u64 = task_trampoline as extern "C" fn() -> ! as usize as u64;
+    let id = sched.spawn(0, quantum, stack, trampoline)?;
+    let top = base + (STACK_CELLS * 16) as u64;
+    let ctx = crate::tasks::Context::initial(top, trampoline)?;
+    CTXS[row] = ctx;
+    IDS[row] = id;
+    KSTACK_TOPS[row] = top;
+    ENTRIES[row] = (id, entry);
+    SLEEPS[row] = (id, u64::MAX);
     Some(id)
 }
 
