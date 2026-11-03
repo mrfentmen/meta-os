@@ -39,7 +39,7 @@ def _say(room, text):
         print(f"WARNING: announce failed ({e})", file=sys.stderr)
 
 
-def _post_job(title, spec, accept, room, lease, branch, base):
+def _post_job(title, spec, accept, room, lease, branch, base, contract=""):
     """Post via jobs.main, capturing the new job id."""
     argv = ["post", "--title", title, "--spec", spec, "--lease", str(lease)]
     if accept:
@@ -50,6 +50,8 @@ def _post_job(title, spec, accept, room, lease, branch, base):
         argv += ["--branch", branch]
     if base:
         argv += ["--base", base]
+    if contract:
+        argv += ["--contract", contract]
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         rc_code = jobs.main(argv)
@@ -62,7 +64,7 @@ def _post_job(title, spec, accept, room, lease, branch, base):
 
 
 def dispatch(title, spec, accept="", requirements=(), room="",
-             lease=LEASE_DEFAULT, branch="", base=""):
+             lease=LEASE_DEFAULT, branch="", base="", contract=""):
     """Post a job and DM every capable worker.
 
     Returns (jid, dm_results) where dm_results is
@@ -71,7 +73,8 @@ def dispatch(title, spec, accept="", requirements=(), room="",
     if not spec or not spec.strip():
         raise ValueError("spec must not be empty")
     reqs = [r.strip().lower() for r in requirements if r and r.strip()]
-    jid = _post_job(title, spec, accept, room, lease, branch, base)
+    jid = _post_job(title, spec, accept, room, lease, branch, base,
+                    contract=contract)
     dm_results = []
     for nick in capabilities.find_for(reqs):
         rec = capabilities.get(nick) or {}

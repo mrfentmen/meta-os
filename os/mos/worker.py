@@ -31,6 +31,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import relay_common as rc  # noqa: E402
 import jobs  # noqa: E402
 from mos import capabilities  # noqa: E402
+from mos import contract_job  # noqa: E402
 
 _ANNOUNCE = re.compile(r"JOB:(\d+)\s+(.*)")
 _REQ = re.compile(r"\breq=([A-Za-z0-9_,-]+)\s*$")
@@ -38,6 +39,20 @@ _REQ = re.compile(r"\breq=([A-Za-z0-9_,-]+)\s*$")
 
 class WorkerBlocked(Exception):
     """Raise from a handler to mark the job blocked with a reason."""
+
+
+def contract_gate(fields):
+    """Return the contract verdict for this job, or None when it has none.
+
+    A job opts in by carrying a `contract` run directory in its hash. The
+    handler has already done the work; this only asks the Python verifier
+    whether the run's JSON proves it finished. Jobs without the field keep
+    their old behaviour exactly.
+    """
+    run_dir = str((fields or {}).get("contract", "") or "").strip()
+    if not run_dir:
+        return None
+    return contract_job.verify_contract(run_dir)
 
 
 def parse_announcement(body):
@@ -187,6 +202,17 @@ class Worker:
             try:
                 commit, note = handler(jid, title, spec or "",
                                        self.workdir)
+                # The queue gate: a job that names a contract cannot be
+                # reported done until that contract validates and finishes.
+                gate = contract_gate(h)
+                if gate is not None and not gate.ok:
+                    reason = f"contract {gate.code}: {gate.reason}"
+                    if not self._block(jid, reason):
+                        report["errors"].append(f"blocked {jid}: block failed")
+                    report["blocked"].append(jid)
+                    continue
+                if gate is not None:
+                    note = (note + f" [contract {gate.digest}]").strip()
                 if self._finish(jid, commit, note):
                     report["done"].append(jid)
                 else:

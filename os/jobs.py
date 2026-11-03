@@ -421,6 +421,7 @@ def cmd_post(args):
         fields = {
             "title": args.title, "room": room, "branch": args.branch,
             "base": args.base, "accept": args.accept, "status": "open",
+            "contract": getattr(args, "contract", ""),
             "lease": lease, "created_by": NICK, "created_host": INSTANCE_ID,
             "created_at": now,
             "files": args.files, "deps": args.deps, "attempts": 0,
@@ -522,6 +523,7 @@ def cmd_list(args):
                 "files": h.get("files", ""),
                 "deps": h.get("deps", ""),
                 "artifacts": _split_artifacts(h.get("artifacts", "")),
+                "contract": h.get("contract", ""),
                 "req": h.get("req", ""),
                 "attempts": _as_int(h.get("attempts", 0)),
                 "lease_until": _as_int(h.get("lease_until")),
@@ -545,7 +547,8 @@ def cmd_show(args):
         print(f"ERROR: no such job: {args.id}", file=sys.stderr)
         return 2
     for f in ("title", "status", "room", "branch", "base", "accept",
-              "files", "deps", "artifacts", "req", "attempts", "max_attempts",
+              "contract", "files", "deps", "artifacts", "req",
+              "attempts", "max_attempts",
               "last_progress_at", "last_heartbeat_at",
               "claim", "claim_host", "claimed_at", "lease_until",
               "result_commit", "note", "created_by", "created_host",
@@ -766,6 +769,21 @@ def cmd_done(args):
         return 2
     if not _require_claimer(h, args.id):
         return 2
+    contract = (h.get("contract") or "").strip()
+    if contract:
+        try:
+            from mos import contract_job
+        except Exception as e:
+            print(f"ERROR: contract gate unavailable: {e}", file=sys.stderr)
+            return 2
+        verdict = contract_job.verify_contract(contract)
+        if not verdict.ok:
+            print(
+                f"ERROR: job {args.id} contract not finished: "
+                f"{verdict.code}: {verdict.reason}",
+                file=sys.stderr,
+            )
+            return 2
     try:
         _hset(_job_key(args.id), {
             "status": "done", "result_commit": args.commit,
@@ -934,6 +952,9 @@ def main(argv=None):
     p.add_argument("--spec", required=True,
                    help="spec text ('-' = stdin)")
     p.add_argument("--accept", default="", help="acceptance criteria")
+    p.add_argument("--contract", default="",
+                   help="run directory whose contract.json must finish "
+                        "before the job can be done")
     p.add_argument("--branch", default="", help="worker branch name")
     p.add_argument("--base", default="", help="base commit")
     p.add_argument("--room", default="", help="announce room")

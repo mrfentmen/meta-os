@@ -292,6 +292,19 @@ The JSON contract is the interface, not an import. That matters because the imag
 provisioned in separate pieces (Node/OpenCode and Python); MOS does not need Node to verify a
 contract.
 
+### The worker gate
+
+A job opts in by carrying a run directory. `jobs.py post --contract <dir>` stores it in the job
+hash, and `mos dispatch --contract <dir>` passes it through. After the handler returns,
+`Worker.run_once` calls `mos.contract_job.verify_contract`; a missing, invalid, or unfinished
+contract blocks the job with the verdict's own code instead of marking it done. `jobs.py done`
+checks again, so a direct caller cannot bypass the worker. `mos contract <dir>` is the operator
+command, and a job without `contract` behaves exactly as before.
+
+This is a verifier at the queue boundary, not a second agent loop: it reads the JSON the agent
+wrote and gates on it. A job that names a contract but never writes one is blocked, and its
+commit stays on the branch for the next attempt.
+
 What is **not** built: a Python tool gateway (the Node `tools.mjs` is the only executor), a
 kernel-side L5 runtime, and a contract writer inside MOS. The kernel road is separate and no
 claim here reaches it.
