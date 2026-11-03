@@ -1,0 +1,5 @@
+# OC2B-067 — disk usage (100 DISTINCT 2KB-frame jobs, tmp SQLite)
+filed=100/100 wall=5s db_bytes=548864 db_kb=536.0
+per_job_bytes~5488 (envelope+index+claim rows)
+projection-1000: ~5359K for 1000 such jobs (linear extrapolation, labelled estimate)
+note: 1000x identical envelope dedupes by deterministic id (1 stored row, 28K) — idempotency verified, not a loss.
