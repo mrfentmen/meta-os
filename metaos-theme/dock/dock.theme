@@ -1,0 +1,13 @@
+# Plank theme MetaOS. Install: /usr/share/plank/themes/MetaOS/dock.theme
+[PlankTheme]
+TopColor=24;;119;;242;;255
+BottomColor=7;;11;;22;;255
+LineColor=237;;245;;255;;255
+FillStartColor=24;;119;;242;;255
+FillEndColor=24;;119;;242;;255
+InnerStrokeColor=237;;245;;255;;90
+OuterStrokeColor=7;;11;;22;;255
+UrgentDotColor=255;;79;;154;;255
+LaunchBounceTime=600
+FadeOpacity=1
+IconShadow=1
