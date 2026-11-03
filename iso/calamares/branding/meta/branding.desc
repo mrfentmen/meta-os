@@ -1,0 +1,27 @@
+---
+# MetaOS Calamares branding (Buffy lane, H+8).
+# Only settings this project actually owns are set. No productLogo /
+# productIcon / productWelcome keys: those would name image files we have
+# not drawn yet, and Calamares falls back cleanly. Adding a file we do not
+# have would be a stub, so it is not added.
+componentName: metaos
+
+strings:
+    productName: MetaOS
+    shortProductName: MetaOS
+    version: "1.0"
+    shortVersion: "1.0"
+    versionedName: "MetaOS 1.0"
+    shortVersionedName: "MetaOS 1.0"
+    bootloaderEntryName: MetaOS
+    productUrl: "https://metaos.invalid"
+    supportUrl: "https://metaos.invalid/support"
+    releaseNotesUrl: "https://metaos.invalid/release-notes"
+
+style:
+    sidebarBackground: "#0d1117"
+    sidebarText: "#f5f7fa"
+    sidebarTextSelect: "#0b0f14"
+    sidebarTextHighlight: "#3b82f6"
+
+slideshow: "show.qss"

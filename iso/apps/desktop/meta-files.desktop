@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Files
+GenericName=File Manager
+Comment=Browse and manage your files
+Exec=thunar %U
+Icon=system-file-manager
+Terminal=false
+Categories=System;FileManager;Utility;
+StartupNotify=true

@@ -1,0 +1,22 @@
+/* MetaOS Calamares slideshow.
+   Same ink-black and Meta blue as the splash, so install looks like boot.
+   No artwork is referenced: this is type and colour only. */
+
+QWidget {
+    background-color: #0d1117;
+    color: #f5f7fa;
+    font-family: "DejaVu Sans", sans-serif;
+}
+
+#mainText {
+    font-size: 26px;
+    font-weight: bold;
+    color: #f5f7fa;
+    margin-bottom: 12px;
+}
+
+#secondaryText {
+    font-size: 14px;
+    color: #9fb0c3;
+    line-height: 150%;
+}

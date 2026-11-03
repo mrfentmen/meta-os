@@ -1,0 +1,12 @@
+{
+  "policies": {
+    "HomepageLocation": "file:///usr/share/metaos/start/meta-start.html",
+    "HomepageIsNewTabPage": false,
+    "RestoreOnStartup": 4,
+    "RestoreOnStartupURLs": [
+      "file:///usr/share/metaos/start/meta-start.html"
+    ],
+    "DefaultBrowserSettingEnabled": true,
+    "PromotionalTabsEnabled": false
+  }
+}

@@ -1,0 +1,46 @@
+# MetaOS Plymouth splash (script module).
+#
+# One blue ring on ink black, the name under it, pulsing slowly. No
+# Apple asset, no copied theme: the ring is the 24x24 PNG in this
+# directory, drawn by our own art pass.
+#
+# Label: CODE-INSPECTED. It has not been booted — this machine cannot
+# run QEMU/VM. The base lane (Hana) proves it on the H+2 cut.
+
+Window.SetBackgroundTopColor(0.043, 0.067, 0.094);
+Window.SetBackgroundBottomColor(0.020, 0.031, 0.047);
+
+screen_width = Window.GetWidth();
+screen_height = Window.GetHeight();
+
+ring = Image("ring-dot.png");
+ring_sprite = Sprite();
+ring_sprite.SetImage(ring);
+ring_sprite.SetX(screen_width / 2 - ring.GetWidth() / 2);
+ring_sprite.SetY(screen_height / 2 - ring.GetHeight() / 2 - 24);
+ring_sprite.SetZ(10);
+
+title = Image.Text("MetaOS", 0.961, 0.969, 0.980);
+title_sprite = Sprite();
+title_sprite.SetImage(title);
+title_sprite.SetX(screen_width / 2 - title.GetWidth() / 2);
+title_sprite.SetY(screen_height / 2 + 24);
+title_sprite.SetZ(10);
+
+# Boot progress drives the ring's opacity, so a stalled boot looks
+# stalled instead of looping forever.
+progress = 0;
+fun progress_callback (duration, progress_percent) {
+  progress = progress_percent;
+}
+
+frame = 0;
+fun refresh_callback () {
+  frame = frame + 1;
+  pulse = Math.Sin(frame / 18) * 0.18;
+  ring_sprite.SetOpacity(0.72 + pulse);
+  title_sprite.SetOpacity(0.55 + progress * 0.45);
+}
+
+Plymouth.SetBootProgressFunction(progress_callback);
+Plymouth.SetRefreshFunction(refresh_callback);
