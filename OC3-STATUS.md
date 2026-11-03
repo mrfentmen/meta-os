@@ -150,3 +150,16 @@ Branch: `opencode/agent3-oc3` (base: main @ 1b32be39). No boots, no mounts-as-bo
 - 195/196 two relative tour links resolve at install; no dead ends.
 - 197/198 original, cleared for ISO. 199 done-criteria met bar boot
   screenshot. 193 one watch item + clean sweep.
+
+## §10 verdict (OC3B-241) — DONE static, opens with OC1
+- 226-230 defaults recorded from Hana's canonical + my
+  advertisements; browser default explicitly Bond/ISO territory.
+- 231/238 per-type opens + 233/234 persist/upgrade: OC1 boot.
+- 235 operator behavior folded into per-area ops docs; this lane's
+  rule (no silent remotes, TryExec everywhere) is the policy.
+- 236/249 handoff via the desktop-handoff procedure; canonical file
+  untouched. 237 xdg-open mechanism recorded. 239/240 absent/native,
+  honestly stated. 245/246 autorun policy: nothing executes, nothing
+  to configure — OC1 confirms with a stick.
+- 242 three items, all owned elsewhere or boot-bound. 247/248
+  unknown schemes: absence recorded as the safe default.
