@@ -17,7 +17,7 @@ PNG in this directory would be a lie Milo cannot detect from the filename.
 | H+6 | `H6-desktop.png` | wallpaper, dock with five items, panel | screendump after login |
 | H+8 | `H8-installer.png` | Calamares runs with the Meta branding and slideshow | screendump inside the live session |
 | H+8 | `H8-installed.png` | an installed disk reboots to the greeter | screendump after first restart |
-| H+10 | `H10-doctor.png` | `meta-doctor` reports 13 passed, 0 failed on the installed system | terminal capture |
+| H+10 | `H10-doctor.png` | `meta-doctor` reports 14 passed, 0 failed on the installed system | terminal capture |
 | H+12 | `H12-boot.png` | the final ISO boots from cold | screendump |
 
 ## Before any capture

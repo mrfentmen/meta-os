@@ -406,19 +406,32 @@ if "meta-doctor" in read(ISO / "tools" / "apply.sh"):
 else:
     bad("base: apply.sh never installs meta-doctor")
 
-autostart = ISO / "base" / "autostart" / "meta-first-login.desktop"
-if not autostart.is_file():
-    bad("base: the first-login autostart entry is missing")
-else:
-    got = ini(autostart)["Desktop Entry"]
+# Every autostart entry must run a binary this lane installs, and carry TryExec
+# so a missing binary is skipped at login instead of shown broken. The install
+# map is read out of apply.sh, so an entry that names a path nobody copies is
+# caught here rather than at the login it ruins.
+autostart_dir = ISO / "base" / "autostart"
+installed_from = {dst: src for src, dst in re.findall(
+    r'put "\$ISO/([^"]+)" "([^"]+)"', read(ISO / "tools" / "apply.sh"))}
+entries = sorted(autostart_dir.glob("*.desktop")) if autostart_dir.is_dir() else []
+if not entries:
+    bad("autostart: no entries found in base/autostart")
+for entry in entries:
+    got = ini(entry)["Desktop Entry"]
     exe = got.get("Exec", "").split()[0]
     try_exec = got.get("TryExec", "")
-    if exe != "/usr/local/bin/meta-first-login":
-        bad("base: autostart runs %r, expected /usr/local/bin/meta-first-login" % exe)
-    elif try_exec != exe:
-        bad("base: autostart TryExec %r does not match Exec %r" % (try_exec, exe))
+    if try_exec != exe:
+        bad("autostart: %s TryExec %r does not match Exec %r"
+            % (entry.name, try_exec, exe))
+    elif exe not in installed_from:
+        bad("autostart: %s runs %r, which this lane never installs"
+            % (entry.name, exe))
+    elif not (ISO / installed_from[exe]).is_file():
+        bad("autostart: %s runs %r, but its source %s is missing"
+            % (entry.name, exe, installed_from[exe]))
     else:
-        ok("base: first login starts from autostart, behind a matching TryExec")
+        ok("autostart: %s runs %s, installed from %s"
+           % (entry.name, exe, installed_from[exe]))
 
 # --- desktop entries ---------------------------------------------------
 # Binaries this lane ships. The value is the file that must exist.
