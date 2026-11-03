@@ -175,10 +175,27 @@ All six questions closed. Recorded verbatim in substance:
 6. MT-08 detail next as prep — no hold. These answers close the
    MT-07 questions. Full MT-08 detail in MILO_TEST_MT08.md.
 
+## Execution record (2026-11-02 23:33 EST)
+
+EXECUTED, no longer written-only. Pax 23:28 EST confirmed MT-07 local
+execution may run now (with the MT-08 register task; neither waits on
+the key route or the 402 top-up). Full results in
+MILO_TEST_MT07_RESULTS.md: all 25 cases run through the real CLI
+(`node handsfree/intake.mjs`) against both branch code
+(milo/test-slice-prep @ 26f81bc0) and main code (@ 3142f841), identical
+outcomes on every case, 0 crashes, 0 silent drops. Verdict: PASS on
+intake outcomes only, under MT-07's pass rule. Named limits: no brief
+produced (no `*.result.json` files exist after intake alone — a missing
+step, not an intake failure); no dispatch exercised on MT-07-19. The
+"firing waits on both" line above remains true for any live-key step
+inside MT-07; there is none in this execution.
+
 ## What this is not
 
 - Not a run: no MT-07 case has been executed, no case results file
-  exists, nothing here is a pass.
+  exists, nothing here is a pass. (Superseded by the execution record
+  above for the local intake cases only; the live-key reading of this
+  line still stands.)
 - Not voice: no microphone, wake word, or synthesis is involved.
 - Not approval: a job file is not permission to act; the caller
   must still check `mayAct()` before acting.

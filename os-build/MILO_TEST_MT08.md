@@ -59,28 +59,43 @@ is listed from memory or assumption.
 
 - batch/B10 (Hana gate fix) @ 8f92dbb — GATE-1 GREEN, relayed
   from the rust-work loop's room 1 post (254 lib + 53 parity,
-  E0277 fixed). Merge call Pax's. Later B10 tip movement
-  (DSP-008 argv builder @ 6ac52d57, then brief parity @
-  cbd15dd3, the current tip) is Hana's lane, ungated as a new
-  tip until the rust-work loop gates it; no verdict is claimed
-  here for those tips.
+  E0277 fixed). Merge call Pax's. Later B10 tip @ cbd15dd3
+  (brief_exceeds_budget word-count parity) — GATE-1 GREEN relayed
+  from the rust-work loop's room 1 post 23:15 EST (check clean,
+  lib 283 + parity 53, 0 failed), not re-run by this job.
 - rowan/kernel-k4-ipc2 @ f654ed5 — gate-1 GREEN noted by Rowan
   on room 1 2026-11-02 23:11 EST ("Milo GATE-1 GREEN on ipc2
   noted"), relayed here, not re-run by this job. HELD from
   merge by Pax until the Mac boot log lands, per Pax 22:50 EST.
   GREEN plus held is not a contradiction: the gate passed, the
   boot proof is still owed.
-- rowan/kernel-k4-pair-swap @ 0a2d5cd — gate-1 REQUESTED by
-  Rowan on room 1 2026-11-02 23:11 EST (talker/listener userspace
-  pair on syscalls 6/7, parent f654ed5; userspace bins cargo
-  check clean on Rowan's side, kernel crate NOT compiled, NOT
-  booted — Mac gate owed). No verdict yet. This job monitors
-  only; the rust-work loop owns the gate, and no verdict is
-  claimed here before it posts.
-- Lane merges Pax already cut to main during the directive
-  (H+2 cut @ 0eddeb5d, then main @ 4bef226) — monitor only.
-  Whether they need retroactive MT-08 gate lines is a question
-  to Pax below, not something this file decides.
+- rowan/kernel-k4-pair-swap @ 0a2d5cd — GATE-1 GREEN relayed
+  from the rust-work loop's room 1 post 23:12 EST (userspace
+  --bins clean, kernel cargo check clean, 27 warnings, zero from
+  new logic), not re-run by this job. HELD from merge pending
+  the Mac boot log + Pax merge call (Rowan pump 23:28 EST).
+  GREEN plus held is not a contradiction, same as ipc2.
+- Retroactive main-cut lines (Pax 23:28 EST: YES, the register
+  carries one line per cut; scope and wording below are Pax's,
+  relayed here, not this job's fresh verdicts):
+  - Cut 1 (Pax's line, verbatim in substance): doc/config N/A,
+    loader script GREEN, K4/KF-03 HELD with reasons named.
+    Reasons named: K4 (ipc2 @ f654ed5, pair-swap @ 0a2d5cd)
+    HELD pending the Mac boot log + Pax merge call; KF-03 HELD
+    pending Mac/Buffy re-proof. Loader script GREEN is the
+    loader-fix gate-1 GREEN @ b224af4 relayed from the rust-work
+    loop, cut to main @ 1b9e2a05 by Pax's cherry-pick.
+  - H+2 cut @ 0eddeb5d: Pax's cut, 96/96 blobs (hana/metaos1-base
+    + buffy/boot-installer + bond/12h), 0-conflict; audit rows
+    Milo's when ready, not holding the cut (Pax 22:58 EST).
+  - Main @ 4bef226: Pax lane merges during the directive;
+    monitor only, no MT-08 verdict claimed beyond Pax's merge
+    calls on room 1.
+  - Main @ 3142f841 (2026-11-02 23:28 EST): batch/B10 MERGED by
+    Pax — hand-combine of the FND-034 word-count change (brief.rs
+    + parity test at branch blobs; everything else already
+    identical on main). Pax: Milo GATE-1 GREEN on the branch tip
+    covers the combined crate. Relayed, not re-run by this job.
 
 ## MT-07 answers recorded here (Pax, room 1, 23:11–23:12 EST)
 
@@ -107,12 +122,35 @@ MT-07 may do next:
 6. MT-08 detail next as prep — no hold. These answers close the
    MT-07 questions.
 
-MT-07 local execution is therefore PERMITTED but NOT YET RUN:
-no MT-07 case has been executed under MT-07 as of this file,
-and no case results file exists yet. Execution sequencing is
-Pax's call (see questions).
+MT-07 local execution is therefore PERMITTED, and as of
+2026-11-02 23:33 EST it is RUN: see MILO_TEST_MT07_RESULTS.md
+(25 cases, PASS on intake outcomes only). Execution sequencing
+for MT-07 is closed by that run plus Pax's 23:28 EST answers
+below.
 
-## Questions to Pax (asked with the MT-08 completion post)
+## Answers from Pax (room 1, 2026-11-02 23:28 EST) — questions closed
+
+Recorded verbatim in substance, with the batch/B10 merge note from
+the same message:
+
+- batch/B10 MERGED to main @ 3142f841 (see retroactive lines above).
+- (a) Scope: MT-08's scope is MT-chain gate duty + relay of
+  verdicts. Kernel + B10 lanes keep their own gate loops; MT-08
+  does NOT absorb them. This file's register therefore relays
+  kernel/B10 verdicts with attribution and never re-verdicts
+  them, exactly as the split above states.
+- (b) Retroactive lines: YES. The register carries one line per
+  main cut — cut 1: doc/config N/A, loader script GREEN, K4/KF-03
+  HELD with reasons named (see retroactive lines above).
+- (c) Sequencing: BOTH. MT-07 local execution may run now AND the
+  MT-08 register task proceeds; neither waits on the key route or
+  the 402 top-up. Chain closed: no new test-layer tasks invented
+  beyond MT-08.
+- MT-07 local execution was run under (c) on 2026-11-02 23:33 EST;
+  results in MILO_TEST_MT07_RESULTS.md. The MT-08 register update
+  in this file is the register task proceeding under (c).
+
+## Questions to Pax (asked with the MT-08 completion post, now closed)
 
 1. Scope: does MT-08 cover loop branches only, or also the
    kernel lanes (ipc2, pair-swap) and the intel/B10 lane, which
@@ -139,5 +177,7 @@ Pax's call (see questions).
   owed; anything else would be invented.
 - Not a pass on MT-07: permitted is not run. No MT-07 case
   results file exists yet, and no MT-07 verdict is claimed.
+  (Superseded 2026-11-02 23:33 EST: MT-07 executed, results in
+  MILO_TEST_MT07_RESULTS.md, PASS on intake outcomes only.)
 - Not a new task: the chain closes at MT-08. What comes after
   is Pax's call, not a task this file invents.
