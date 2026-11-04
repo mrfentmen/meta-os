@@ -291,6 +291,37 @@ else
   echo "provision(face): units staged, enable links created by hand"
 fi
 
+# 2b) the repo share must never hold the boot hostage.
+# /etc/fstab in this image mounts the host tree over 9p for the agent lanes:
+#   metaos_repo /mnt/metaos 9p trans=virtio,version=9p2000.L,rw,nofail 0 0
+# nofail covers a device that never appears, but a 9p mount is not a device:
+# systemd starts the mount job, the kernel logs "9pnet_virtio: no channels
+# available for device metaos_repo", and the job waits for a channel that will
+# never exist. local-fs.target never finishes, graphical.target never starts,
+# and the guest sits on a black screen with no error on it — the exact symptom
+# this project kept calling "the black box bug". Boot with an automount unit
+# instead: nothing is attempted until something opens /mnt/metaos, and a boot
+# with no share attached reaches the desktop and fails loudly at first use.
+FSTAB="$ROOT/etc/fstab"
+if [ -n "$ROOT" ] && [ -f "$FSTAB" ] && grep -q 'metaos_repo' "$FSTAB"; then
+  if grep -q 'x-systemd.automount' "$FSTAB"; then
+    echo "provision(face): /mnt/metaos already automount — boot cannot block on it"
+  else
+    cp -f "$FSTAB" "$FSTAB.metaos.bak"
+    # awk, not python3: provision also runs inside a bare ubuntu container for
+    # sync_image.sh, where python3 is not installed. A missing interpreter here
+    # aborted the whole provision halfway through.
+    awk 'BEGIN { OFS="\t" }
+         $1 == "metaos_repo" {
+           if ($4 !~ /(^|,)nofail(,|$)/) $4 = $4 ",nofail"
+           if ($4 !~ /x-systemd\.automount/) $4 = $4 ",x-systemd.automount"
+           if ($4 !~ /x-systemd\.idle-timeout/) $4 = $4 ",x-systemd.idle-timeout=120"
+         }
+         { print }' "$FSTAB" > "$FSTAB.metaos.new" && mv "$FSTAB.metaos.new" "$FSTAB"
+    echo "provision(face): /mnt/metaos switched to automount (backup $FSTAB.metaos.bak)"
+  fi
+fi
+
 # 3) verify
 FAIL=0
 check() {
@@ -328,6 +359,15 @@ else
   if [ -f "$U/default.target.wants/face.target" ]; then echo "face.target enabled: OK"; else echo "face.target enabled: FAIL"; FAIL=1; fi
   # The dock tile opens /aegis/index.html on 18934; provision must have copied it.
   if [ -f "$SITE_DST/aegis/index.html" ]; then echo "site aegis/index.html: OK"; else echo "site aegis/index.html: FAIL"; FAIL=1; fi
+  # A boot with no 9p share attached must still reach the desktop. Root mode
+  # only: in live mode /etc/fstab is the developer's own machine.
+  if [ "$MODE" = root ] && [ -f "$FSTAB" ]; then
+    if grep -q 'metaos_repo' "$FSTAB" && ! grep -q 'x-systemd.automount' "$FSTAB"; then
+      echo "fstab metaos_repo non-blocking: FAIL"; FAIL=1
+    else
+      echo "fstab metaos_repo non-blocking: OK"
+    fi
+  fi
 fi
 
 echo "next: log in — the Meta OS session (session.sh) builds the panel and dock, starts face.target, then execs startxfce4; kiosk.sh only runs if /etc/metaos/kiosk exists"

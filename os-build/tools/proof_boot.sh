@@ -20,7 +20,9 @@ IMAGE="/tmp/metaos.ext4"
 KERNEL="/tmp/meta-boot/vmlinuz"
 INITRD="/tmp/meta-boot/initrd.img"
 TIMEOUT=180
+SETTLE=0
 KEEP=0
+NO_VIRTFS=0
 OUTDIR=""
 SSH_PORT="2223"
 
@@ -33,7 +35,9 @@ while [ $# -gt 0 ]; do
     --out) OUTDIR="$2"; shift 2 ;;
     --keep) KEEP=1; shift ;;
     --ssh-port) SSH_PORT="$2"; shift 2 ;;
-    -h|--help) echo "usage: sh proof_boot.sh [--timeout S] [--out DIR] [--keep] [--image F --kernel K --initrd I]"; exit 0 ;;
+    --settle) SETTLE="$2"; shift 2 ;;
+    --no-virtfs) NO_VIRTFS=1; shift ;;
+    -h|--help) echo "usage: sh proof_boot.sh [--timeout S] [--settle S] [--out DIR] [--keep] [--image F --kernel K --initrd I]"; exit 0 ;;
     *) echo "proof_boot: unknown flag $1" >&2; exit 2 ;;
   esac
 done
@@ -42,6 +46,15 @@ HERE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 REPO="$(CDPATH= cd -- "$HERE/../.." && pwd)"
 if [ -z "$OUTDIR" ]; then OUTDIR="$REPO/os-build/captures"; fi
 mkdir -p "$OUTDIR"
+
+# /etc/fstab in this image mounts the host tree over 9p (metaos_repo). Boot the
+# same way show_os.sh does, or the guest stalls where the share should be and
+# the framebuffer never leaves the splash — black screen, no error on it. This
+# proof used to boot without the channel and blame the OS for that.
+VIRTFS_ARG=""
+if [ "$NO_VIRTFS" = 0 ]; then
+  VIRTFS_ARG="-virtfs local,path=$REPO,mount_tag=metaos_repo,security_model=none,readonly=on"
+fi
 
 QEMU="qemu-system-aarch64"
 command -v "$QEMU" >/dev/null 2>&1 || { echo "proof_boot: FAIL: $QEMU not found" >&2; exit 2; }
@@ -56,6 +69,12 @@ PPM_TMP="$(mktemp /tmp/proof-fb.XXXXXX)"
 QEMU_PID=""
 
 cleanup() {
+  if [ "$KEEP" = 1 ]; then
+    # --keep means "leave it up": a caller that asked for a VM to look at, or a
+    # second screendump at a later second, must still find it running. Killing
+    # here made --keep a no-op and cost a whole boot to discover.
+    return 0
+  fi
   if [ -n "$QEMU_PID" ] && kill -0 "$QEMU_PID" 2>/dev/null; then
     # Ask nicely first (journal-safe), then kill. Never leave a writer on ext4.
     python3 - "$MON" <<'PY' 2>/dev/null || true
@@ -103,6 +122,7 @@ echo "proof_boot: monitor=$MON serial=$SER_LOG ssh=127.0.0.1:$SSH_PORT (detached
   -device virtio-gpu-pci,xres=1920,yres=1080 \
   -device qemu-xhci -device usb-kbd -device usb-tablet \
   -netdev "user,id=n0,hostfwd=tcp::${SSH_PORT}-:22" -device virtio-net-pci,netdev=n0 \
+  ${VIRTFS_ARG} \
   -chardev "socket,id=c0,path=$SER_SOCK,server=on,wait=off,logfile=$SER_LOG" \
   -serial chardev:c0 \
   -monitor "unix:$MON,server,nowait" \
@@ -220,6 +240,25 @@ if [ "$FOUND" -ne 1 ]; then
   echo "proof_boot: FAIL: framebuffer stayed single-colour/black after ${TIMEOUT}s" >&2
   echo "proof_boot: last=${FW}x${FH} unique~${FUNIQ} max=${FMAX} serial=$SER_LOG" >&2
   exit 1
+fi
+
+# The first non-single-colour frame is usually the boot splash, not the desktop:
+# plymouth and the ASCII spinner are already colourful at 5s. --settle waits
+# past that and re-reads the framebuffer, so a capture called "proof-boot" is
+# the screen a judge would see rather than the logo on the way in.
+if [ "$SETTLE" -gt 0 ]; then
+  echo "proof_boot: first frame at ${ELAPSED}s; settling ${SETTLE}s for the desktop..."
+  sleep "$SETTLE"
+  rm -f "$PPM_TMP"
+  if hmp_screendump "$PPM_TMP" 2>/dev/null && [ -s "$PPM_TMP" ]; then
+    settled="$(analyze_ppm "$PPM_TMP")"
+    # shellcheck disable=SC2086
+    set -- $settled
+    if [ "${1:-}" != "BAD" ]; then
+      FW="$1"; FH="$2"; FUNIQ="$3"; FMAX="$4"
+      echo "proof_boot: settled frame ${FW}x${FH} unique~${FUNIQ} max=${FMAX}"
+    fi
+  fi
 fi
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
