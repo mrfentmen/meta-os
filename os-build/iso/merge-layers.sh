@@ -249,7 +249,7 @@ xorriso -indev "$ISO" -outdev "$OUT_ISO" \
 ( cd "$(dirname "$OUT_ISO")" && sha256sum "$(basename "$OUT_ISO")" > "$(basename "$OUT_ISO").sha256" )
 echo "iso: $OUT_ISO ($(du -h "$OUT_ISO" | awk '{print $1}')) sha256 $(awk '{print $1}' "$OUT_ISO.sha256")"
 echo "=== GATE 5: El Torito has exactly the BIOS + UEFI entries ==="
-xorriso -indev "$OUT_ISO" -report_el_torito as plain > "$WORK/el-torito.txt" 2>&1 || fail "xorriso could not read El Torito from $OUT_ISO"
+xorriso -indev "$OUT_ISO" -report_el_torito plain > "$WORK/el-torito.txt" 2>&1 || fail "xorriso could not read El Torito from $OUT_ISO"
 cat "$WORK/el-torito.txt"
 BOOT_N=$(grep -ci 'boot image' "$WORK/el-torito.txt" || true)
 [ -n "$BOOT_N" ] || BOOT_N=0
