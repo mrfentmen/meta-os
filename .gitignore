@@ -25,3 +25,6 @@ os-build/aegis/r11/run-secrets.txt
 
 # Reference repos cloned for study (plan/PLAN.md §6). Not dependencies.
 refs/
+
+# Generated icon sheets (regenerate with app-icons.py / settings-symbols.py)
+os-build/captures/app-icons-*/
