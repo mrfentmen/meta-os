@@ -185,5 +185,10 @@ Promise.allSettled(FILES.map(function(f){return get(f).then(function(t){return {
 });
 })();
 </script>
+<!-- Agent chat for Nervus. Every panel on this page is a GET over a file that
+     already exists and anything marked STUB is a placeholder, so the agent is
+     told that instead of being invited to read the stub as evidence. -->
+<script src="../js/agent-chat.js" data-app="nervus" data-label="Nervus" data-accent="#7dd87d"
+  data-context="Nervus page: read-only runtime status over the Nervus stub lane's recorded files — dose windows, hosted lane state, last run, layer curve. It runs no model and writes nothing. Anything labelled STUB is a placeholder record, never evidence about a model."></script>
 </body>
 </html>

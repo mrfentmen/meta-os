@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # run-stack.sh — start the full Meta Trio demo stack in one command.
 #
-#   1. Board (the one messaging app) node board/board.mjs        (BOARD_PORT, default 8787)
+#   1. Board (the one messaging app) node board/board.mjs        (BOARD_PORT, default 18935)
 #   2. OS queue service          server/queue/queue_service.py   (port 8935)
 #   3. Resident queue agent      server/queue/trio_agent.py      (TRIO_RELAY_URL -> board)
 #   4. Trio app server           node server/server.mjs          (PORT, default 8080,
@@ -28,7 +28,10 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-BOARD_PORT="${BOARD_PORT:-8787}"
+# 18935, not 8787: the pages' desk chat (js/site-chat.js) and the dock's
+# Messages tile both default to 18935, so starting the board anywhere else made
+# every room box say "Board unreachable on 18935" while the board was running.
+BOARD_PORT="${BOARD_PORT:-18935}"
 RELAY_PORT="$BOARD_PORT"  # the board speaks the same notify line the agent posts
 QUEUE_PORT="${QUEUE_PORT:-8935}"
 APP_PORT="${PORT:-8080}"
@@ -36,9 +39,26 @@ RELAY_BASE="http://127.0.0.1:${RELAY_PORT}"
 QUEUE_BASE="http://127.0.0.1:${QUEUE_PORT}"
 APP_BASE="http://127.0.0.1:${APP_PORT}"
 
+# A key can be handed in as a file (METAOS_KEY_FILE=/path/to/key) so the demo
+# command never carries the secret in shell history. The key is read here and
+# exported; it is never written into the tree.
+if [ -z "${SPARK_API_KEY:-}" ] && [ -n "${METAOS_KEY_FILE:-}" ]; then
+  if [ -r "$METAOS_KEY_FILE" ]; then
+    SPARK_API_KEY=$(tr -d '\r\n' < "$METAOS_KEY_FILE")
+    export SPARK_API_KEY
+    echo "Generation transport: key read from $METAOS_KEY_FILE."
+  else
+    echo "WARNING: METAOS_KEY_FILE=$METAOS_KEY_FILE is not readable." >&2
+  fi
+fi
+
 if [ -n "${SPARK_API_KEY:-}" ]; then
   unset TRIO_SPARK_VIA_HELPER
-  echo "Generation transport: production direct (SPARK_API_KEY present)."
+  # The in-app chat (/api/agent/ask) and the assessments both sit behind this
+  # gate. Opening it here is what makes the chat boxes answer instead of
+  # reporting "calls held" on every page.
+  export ASSESS_LIVE_MODEL=1
+  echo "Generation transport: production direct (SPARK_API_KEY present, live calls open)."
 elif [ "${TRIO_SPARK_VIA_HELPER:-}" = "1" ]; then
   echo "Generation transport: DEV helper (TRIO_SPARK_VIA_HELPER=1 was set"
   echo "         explicitly). Dev-only opt-in; the helper lives outside"
@@ -96,10 +116,10 @@ wait_http "${APP_BASE}/api/health" "Trio app server"
 
 echo
 echo "Meta Trio stack is up:"
-echo "  Meta Nuntius viewer   ${RELAY_BASE}/"
+echo "  Messages (the Board)  ${RELAY_BASE}/"
 echo "  Queue service         ${QUEUE_BASE}/health"
 echo "  Resident agent        running (NOTIFY -> ${RELAY_BASE}/rooms/main)"
-echo "  Web console + API     ${APP_BASE}/  (POST ${APP_BASE}/api/assess)"
+echo "  Web console + API     ${APP_BASE}/  (POST ${APP_BASE}/api/assess, POST ${APP_BASE}/api/agent/ask)"
 echo
 echo "Ctrl-C stops the whole stack."
 wait

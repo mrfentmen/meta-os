@@ -137,5 +137,10 @@ draw();
 </script>
 <!-- Desk chat over the Board (room "custos"), the one messaging system. -->
 <script src="../js/site-chat.js" data-room="custos" data-label="Custos"></script>
+<!-- Agent chat for Custos: one persona id, the same endpoint every app posts
+     to. The page says STATE: PARKED, and the agent is told that, so it does
+     not describe a parked sheet as if it were watching anything. -->
+<script src="../js/agent-chat.js" data-app="custos" data-label="Custos" data-accent="#f5a623"
+  data-context="Custos page: the night-watch design sheet for custody and oversight — what the agents did, what the queue holds, what was spent. This sheet is the design (header reads STATE: PARKED), not live telemetry; figures on it are records from the merged tree."></script>
 </body>
 </html>

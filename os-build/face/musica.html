@@ -40,4 +40,15 @@ a.play().catch(function(){st.textContent+=' (autoplay blocked: press play)';});
      /opt/face on 18900, so it loads the box from the face-site on 18934; the
      box states the port it cannot reach instead of failing silently. -->
 <script src="http://127.0.0.1:18934/js/site-chat.js" data-room="musica" data-label="Musica"></script>
+<!-- Agent chat for Musica. The player's own state line is the context, read at
+     question time, so "why is it not playing" is answered from what the page
+     actually reports (in QEMU: no audio device) instead of a guess. -->
+<script>
+  window.metaAgentContext = function () {
+    var s = document.getElementById("state");
+    return s ? "Player state line: " + s.textContent : "";
+  };
+</script>
+<script src="http://127.0.0.1:18934/js/agent-chat.js" data-app="musica" data-label="Musica" data-accent="#7fb8ff"
+  data-context="Musica page: session hn029-chipsynth, take-006 — a real generated track served from this machine on 18934. There is no Apple art and no stream."></script>
 </body></html>

@@ -306,5 +306,10 @@ Promise.allSettled(FILES.map(function(f){return get(f).then(function(t){return {
 });
 })();
 </script>
+<!-- Agent chat for Aegis. The page is a read-only dashboard over recorded
+     findings; the agent is told the same thing, so it cannot answer an
+     unrecorded hypothesis as if it were a finding. -->
+<script src="../js/agent-chat.js" data-app="aegis" data-label="Aegis" data-accent="#7cc4ff"
+  data-context="Aegis page: a read-only dashboard over the Aegis engine's recorded findings — sweeps, findings with their file and reason, manifests and secret counts. It does not scan or fix anything; it shows what the engine already wrote to disk."></script>
 </body>
 </html>

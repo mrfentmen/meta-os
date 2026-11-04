@@ -30,4 +30,21 @@ async function tick(){
   }catch(e){ stamp.textContent = 'backend unreachable on 18932 (is facts.py running?)'; }
 }
 setInterval(tick, 2000); tick();
-</script></body></html>
+</script>
+<!-- Agent chat for the monitor. The cards and the stamp are the only facts the
+     agent gets, so a stale or failed reading is visible to it instead of being
+     smoothed over. -->
+<script>
+  window.metaAgentContext = function () {
+    var c = document.getElementById("cards");
+    var s = document.getElementById("stamp");
+    return [c && c.textContent, s && s.textContent]
+      .filter(Boolean)
+      .join(" | ")
+      .replace(/\s+/g, " ")
+      .slice(0, 800);
+  };
+</script>
+<script src="http://127.0.0.1:18934/js/agent-chat.js" data-app="monitor" data-label="Monitor" data-accent="#7fb8ff"
+  data-context="Dashboard page: live machine facts read from http://127.0.0.1:18932/facts every two seconds. Nothing is hardcoded; when the facts service is down the page says unreachable and draws no cards."></script>
+</body></html>

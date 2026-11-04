@@ -589,5 +589,21 @@ document.addEventListener("DOMContentLoaded", init);
 <!-- The desk chat: the same Board rooms the Messages app shows. Room "science"
      is where this page talks; it is the one messaging system, not a second one. -->
 <script src="../../js/site-chat.js" data-room="science" data-label="Science Lab"></script>
+<!-- Agent chat for the lab. The context is read fresh on every question from
+     the two lines the viewer already maintains, so "what am I looking at"
+     answers about the structure that is loaded now, not the first one. -->
+<script>
+  window.metaAgentContext = function () {
+    var meta = document.getElementById("meta");
+    var counts = document.getElementById("counts");
+    return [meta && meta.textContent, counts && counts.textContent]
+      .filter(Boolean)
+      .join(" | ")
+      .replace(/\s+/g, " ")
+      .slice(0, 600);
+  };
+</script>
+<script src="../../js/agent-chat.js" data-app="science" data-label="Science Lab" data-accent="#7fb8e8"
+  data-context="Science Lab page: the molecule viewer. Structures come from the SDF packs beside this page (offline); Load-by-CID fetches PubChem only when the machine is online."></script>
 </body>
 </html>

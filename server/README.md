@@ -22,6 +22,7 @@ from the repo root, so one process runs the whole demo stack locally.
 | Route | What it does |
 | --- | --- |
 | `POST /api/assess` | One frame in, one v2 assessment out (below). |
+| `POST /api/agent/ask` | One question from any app's chat box in, one short plain-text answer out (below). |
 | `GET /api/health` | `{ ok, service, products, model: { configured, live_enabled } }`. Never exposes key material. |
 | `GET /api/cameras` | Same-origin NYCTMC camera list, with any positioned IP cameras from `cams.json` appended. 502 only when both are empty and NYCTMC failed. |
 | `GET /api/ipcam` | `{ cameras, error, config, configMissing, ffmpeg }` for the configured IP cameras. The config problems are named, never hidden. |
@@ -134,6 +135,43 @@ Configuration is environment-only, server-side:
 Per-product prompt profiles (categories + limitations) are derived from
 `js/products.js` in `model.mjs` (`PRODUCT_PROFILES`), so the server and
 the clients cannot drift.
+
+## The in-app agent chat (`POST /api/agent/ask`)
+
+Every app carries a chat box that talks to this server: `js/agent-chat.js`
+on the product pages, and the division console (`trio/agent.js`) on Vigiles,
+Ignis and Medicus. Both post the same shape:
+
+```json
+{ "app": "officina", "question": "what does this sheet show?", "context": "what the page is showing right now" }
+```
+
+The answer is `{ reply, app, model, latency_ms, spend }`. `division` is still
+accepted instead of `app` so the three division pages keep working, and an
+unknown `app` falls back to the general persona rather than refusing, so a
+page added later is never a dead chat box. Personas live in
+`server/agent-chat.mjs` (`APP_PROFILES`): vigiles, ignis, medicus, science,
+musica, officina, custos, boards, aegis, nervus, messages, monitor, notes,
+and `general`.
+
+Same two gates as the assessment path (`ASSESS_LIVE_MODEL`, `SPARK_API_KEY`)
+and the same `$75` ledger (`server/budget.mjs`), checked before the call and
+recorded after. It uses the **contributor** model
+(`muse-spark-1.3-contributor`) with an explicit `max_tokens`, because the
+model bills its reasoning against that budget: a 1200-token cap returned an
+empty answer on 3 of 14 app questions, so the default is 3000.
+
+| Variable | Meaning |
+| --- | --- |
+| `METAOS_CHAT_MODEL` | Model id for the chat. Default `muse-spark-1.3-contributor`. |
+| `METAOS_CHAT_MAX_TOKENS` | Completion cap per question. Default `3000`; raise it if a page reports "used all … tokens". |
+| `METAOS_CHAT_TIMEOUT_MS` | Per-request timeout. Default `45000`. |
+| `METAOS_CHAT_ENDPOINT` | Point the chat at a local OpenAI-compatible server instead. |
+
+`tools/proof_agent_chat.sh` starts the server with these gates open, asks each
+app one live question through the same endpoint the on-page box uses, and
+prints every reply plus the ledger's estimated spend. It stops before a
+configurable cap (`METAOS_CHAT_MAX_SPEND_USD`, default `$0.50`).
 
 ## OS queue path (Trio side, steps 1-3 — envelope + submit + result fetch + poll + wiring)
 

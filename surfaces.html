@@ -380,5 +380,10 @@
      same rooms the Messages app shows—over the Board on 18935. -->
 <script src="js/logo-background.js"></script>
 <script src="js/site-chat.js" data-room="boards" data-label="Boards"></script>
+<!-- Agent chat: the Boards agent answers from the sections and rooms this page
+     lists. Same endpoint as every other app (/api/agent/ask); the desk chat
+     above is the human rooms, this box is the agent. -->
+<script src="js/agent-chat.js" data-app="boards" data-label="Boards" data-accent="#58a6ff"
+  data-context="Boards page: the dispatch sections, the incidents each carries, and the room each section posts into. Sections are drawn from the local pack files under os/worlds; a section with no pack shows a named empty state instead of invented rows."></script>
 </body>
 </html>

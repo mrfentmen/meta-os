@@ -462,7 +462,11 @@ if [ -f "$SITE_SRC/surfaces.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
       $SUDO cp -f "$SITE_SRC/$f" "$SITE_DST/$f"
     fi
   done
-  for d in js vendor design; do
+  # trio/ is staged here, not only by metaos-update.sh: the Vigiles, Ignis and
+  # Medicus windows load $SITE_ROOT/trio/<page> and fell back to a payload copy
+  # that does not exist, so a freshly provisioned image opened three tiles onto
+  # "missing page" until an update pull happened to land it.
+  for d in js vendor design trio; do
     if [ -d "$SITE_SRC/$d" ]; then
       $SUDO rm -rf "$SITE_DST/$d"
       $SUDO cp -r "$SITE_SRC/$d" "$SITE_DST/$d"
