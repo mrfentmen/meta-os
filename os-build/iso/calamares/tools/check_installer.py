@@ -68,7 +68,22 @@ names = {1: "welcome", 2: "desktop", 3: "apps", 4: "agents", 5: "done"}
 for i in range(1, 6):
     f = os.path.join(sp, "slide-%02d-%s.html" % (i, names[i]))
     gate_file(f, os.path.basename(f) + " ships")
-    f = os.path.join(sp, "slide-%02d.png" % i)
+# Slide PNGs: exactly what branding.desc lists (single source of truth).
+desc_slides = []
+if os.path.isfile(desc):
+    in_slides = False
+    for line in read(desc).splitlines():
+        if line.strip() == "slideshow:":
+            in_slides = True
+            continue
+        if in_slides:
+            m = re.match(r'\s*-\s*"([^"]+)"', line)
+            if m:
+                desc_slides.append(m.group(1))
+            else:
+                break
+for rel in desc_slides:
+    f = os.path.join(BRAND, rel)
     slides.append(f)
     gate_file(f, os.path.basename(f) + " ships")
 for f in slides:
