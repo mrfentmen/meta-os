@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Meta OS
+Comment=Meta OS session
+Exec=/opt/face/session.sh
+TryExec=/opt/face/session.sh
+Icon=/usr/share/icons/metaos/logo.png
+Type=Application
+DesktopNames=MetaOS;XFCE;
