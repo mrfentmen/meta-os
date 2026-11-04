@@ -135,3 +135,11 @@ winefile.svg
 
 (A blanket find/replace across the whole tree would corrupt these
 third-party marks — that is why the script is scoped to `places/`.)
+
+## metaos/ app icons (lane D)
+
+The 128x128 app glyph set lives in `icons/metaos/` (20 PNGs) with
+`icons/metaos.index.theme` (`Inherits=Papirus,elementary-xfce,hicolor`) and
+is installed as `/usr/share/icons/metaos`. Provenance, palette audit and the
+`check-icons.sh` resolver live in `icons/SOURCES.md`. This Papirus-recolor
+scope above is unchanged.
