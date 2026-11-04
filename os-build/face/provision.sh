@@ -183,6 +183,17 @@ if [ -f "$THEME_SRC/gtk/gtk.css" ]; then
   $SUDO install -m644 "$THEME_SRC/gtk/gtk.css" "$ROOT/usr/share/themes/MetaOS/gtk-3.0/gtk.css"
   echo "provision(face): gtk theme -> /usr/share/themes/MetaOS"
 fi
+# The control gallery. meta-desktop.sh puts a Controls tile on the dock, and a
+# tile whose program is not in the image opens nothing — so the program and its
+# launcher are staged here, next to the theme they demonstrate.
+if [ -f "$THEME_SRC/apps/metaos-controls.py" ]; then
+  $SUDO mkdir -p "$ROOT/usr/share/metaos/apps"
+  $SUDO install -m755 "$THEME_SRC/apps/metaos-controls.py" \
+    "$ROOT/usr/share/metaos/apps/metaos-controls.py"
+  $SUDO install -m644 "$THEME_SRC/apps/metaos-controls.desktop" \
+    "$ROOT/usr/share/applications/metaos-controls.desktop"
+  echo "provision(face): control gallery -> /usr/share/metaos/apps + applications"
+fi
 
 # 1a4) the Meta dock icons. These are absolute-path PNGs used by the .desktop
 # files, so the dock draws the real mark instead of a blank tile.
