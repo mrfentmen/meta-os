@@ -1,0 +1,4 @@
+ae18cf4f6474c06cdbbb62a6137d460afec84b1cf0ba152167592634a52d6151  kernel/target/x86_64-unknown-none/debug/metaos-kernel (17588736 bytes, HEAD f6827930e439c5b1e44895937ebf8477a8829dfd)
+5f37c47523870196adaf29c944d4ccba9e86ddc5ec36be748d9033db855c43e4  os-build/rk007/disk.img (20415488 bytes, built output, uncommitted)
+8f37cc950029695b9ca79905af57f6396c50304c33cd5052d4f1655066c65ffe  kernel/logs/E-boot-vnc.txt
+f57d952d92648bd68e986bf646c7c11c1e2d2360f29a7edcc710f7580d2cf927  kernel/logs/E-boot-20261104.txt
