@@ -68,6 +68,12 @@
     display: grid; grid-template-rows: 64px 1fr 232px 30px; height: 100vh;
     background: #f4f1e8;
   }
+
+  /* The ASCII loop on paper: the renderer's green palette multiplied into the
+     sheet at low opacity. Cards, map and agent stay opaque so nothing moving
+     sits under a reading. */
+  #logo-background { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; opacity: 0.22; mix-blend-mode: multiply; pointer-events: none; }
+  header.bar, main, section.band, footer.strip { position: relative; z-index: 1; }
   /* The triage lanes stop at their last card. Without this bar the bottom
      third of the screen was empty background, which read as a page that had
      not finished loading. The bar carries the crew and board state instead. */
@@ -373,7 +379,8 @@
   }
 </style>
 </head>
-<body>
+<body data-product="medicus">
+<canvas id="logo-background" aria-hidden="true"></canvas>
 <header class="bar">
   <div class="brand">
     <h1>
@@ -433,6 +440,7 @@
 
 <div id="ops-mount"></div>
 
+<script src="../js/logo-background.js"></script>
 <script type="module">
 import { createStore, LocalMap, clock, ago, el, sourceTag, DIVISIONS, MAX_WATCHED } from "./core.js";
 import { createOps } from "./ops.js";
