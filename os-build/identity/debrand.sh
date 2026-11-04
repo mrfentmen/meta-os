@@ -201,7 +201,10 @@ EOF
   # still match are touched, so a second run changes nothing.
   for d in usr/share/desktop-directories usr/share/applications; do
     [ -d "$ROOT/$d" ] || continue
-    for f in $(grep -rl "Ubuntu" "$ROOT/$d" 2>/dev/null); do
+    # "buntu" matches Ubuntu and Xubuntu (the latter has no "Ubuntu"
+    # substring); only files that still match are touched, so reruns
+    # change nothing.
+    for f in $(grep -rl "buntu" "$ROOT/$d" 2>/dev/null); do
       sed 's/Xubuntu/Meta OS/g; s/Ubuntu/Meta OS/g' "$f" > "$f.metaos-new" \
         && cat "$f.metaos-new" > "$f"
       rm -f "$f.metaos-new"
@@ -338,6 +341,16 @@ do_check() {
   [ -f "$ROOT/usr/share/backgrounds/meta-wallpaper.png" ] \
     && say "meta wallpaper present" ok "present" "present" "" \
     || say "meta wallpaper present" no "present" "missing" "meta-wallpaper.png missing"
+  dirty=""
+  for d in usr/share/desktop-directories usr/share/applications; do
+    [ -d "$ROOT/$d" ] || continue
+    for f in $(grep -rl "buntu" "$ROOT/$d" 2>/dev/null); do
+      dirty="$dirty ${f#"$ROOT"}"
+    done
+  done
+  [ -z "$dirty" ] \
+    && say "desktop names clean" ok "no buntu string" "clean" "" \
+    || say "desktop names clean" no "no buntu string" "dirty:$dirty" "still names Ubuntu/Xubuntu:$dirty"
   if [ "$MODE" = json ]; then
     [ "$FAIL" = 0 ]
   else

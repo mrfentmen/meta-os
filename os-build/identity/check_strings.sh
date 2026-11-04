@@ -19,8 +19,10 @@
 # plan/, and binary files (grep -I). plan/ is working history and logs are
 # generated evidence; both are counted in STRINGS_INVENTORY.md, not scanned.
 #
-# Guest fallback (task 21): if the tree is not a git checkout, scan with
-# find + grep instead of git grep. Same words, same exclusions, same verdict.
+# Guest fallback (task 21): if the tree is not a git checkout, the file list
+# comes from find instead of git ls-files. Same words, same exclusions.
+# Tracked plus untracked-but-not-ignored files are scanned, so a newly
+# dropped file cannot hide; ignored build output never counts.
 set -eu
 
 WORDS="ubuntu Ubuntu Xubuntu xubuntu canonical Canonical"
@@ -44,8 +46,11 @@ done
 # allow <path> <word>: print the row and exit 0 if allowlisted.
 allow() {
   [ -f "$ALLOW" ] || return 1
-  # Literal tab match: path<TAB>word<TAB>. Fixed-string, whole line start.
-  grep -F -m1 -- "$1${TAB}$2${TAB}" "$ALLOW" 2>/dev/null
+  # Exact field match on path and word. The old fixed-string prefix test
+  # let row path "b/c" suppress hits in "a/b/c" (real pair in this tree:
+  # vendor/maplibre/maplibre-gl.js vs its imperium copy). Equality cannot
+  # cross paths; row sets are identical there today, so verdicts do not move.
+  awk -F"$TAB" -v p="$1" -v w="$2" '$1==p && $2==w {if (!f) print; f=1} END{exit (f ? 0 : 1)}' "$ALLOW" 2>/dev/null
 }
 
 # in_scope <path>: the exclusions, in one place.
@@ -57,23 +62,30 @@ in_scope() {
 }
 
 HITS=$(mktemp)
-trap 'rm -f "$HITS"' EXIT INT TERM
+FLIST=$(mktemp)
+trap 'rm -f "$HITS" "$FLIST"' EXIT INT TERM
 
+# File list: tracked plus untracked-but-not-ignored, so a newly dropped file
+# cannot hide from the git backend. find fallback when there is no checkout.
 if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  for w in $WORDS; do
-    git -C "$ROOT" grep -n -w -F -I -- "$w" -- . ':!plan' ':!os-build/logs' 2>/dev/null \
-      | sed "s/^/$w	/" >> "$HITS" || true
-  done
+  { git -C "$ROOT" ls-files; git -C "$ROOT" ls-files --others --exclude-standard; } > "$FLIST" 2>/dev/null
 else
   # No checkout (guest tree): same scan with find + grep.
-  for w in $WORDS; do
-    ( cd "$ROOT" && find . -path ./.git -prune -o -path ./node_modules -prune \
-      -o -path ./plan -prune -o -path ./os-build/logs -prune \
-      -o -type f -print ) 2>/dev/null \
-      | ( cd "$ROOT" && xargs grep -w -F -I -n -- "$w" 2>/dev/null ) \
-      | sed "s/^/$w	/" >> "$HITS" || true
-  done
+  ( cd "$ROOT" && find . -path ./.git -prune -o -path ./node_modules -prune \
+    -o -path ./plan -prune -o -path ./os-build/logs -prune \
+    -o -type f -print ) 2>/dev/null | sed 's|^\./||' > "$FLIST"
 fi
+# Scope exclusions in one place (belt and braces: the listers above already
+# skip .git; plan/ and logs/ are dropped here for both backends).
+grep -v -e '^plan/' -e '^os-build/logs/' -e '/node_modules/' -e '^\.git/' "$FLIST" > "$FLIST.clean" || true
+mv "$FLIST.clean" "$FLIST"
+
+for w in $WORDS; do
+  # -w: whole word, so dexubuntu / canonicalize / 0ubuntu0 do not match.
+  # -I: skip binaries. Untracked-but-ignored files never reach this list.
+  ( cd "$ROOT" && xargs grep -w -F -I -n -- "$w" 2>/dev/null ) < "$FLIST" \
+    | sed "s/^/$w	/" >> "$HITS" || true
+done
 
 total=0
 bad=0
