@@ -188,5 +188,9 @@ Prompt rendering read from `fix_terminal_prompt.sh:40`, not executed here.
 
 ## Commits
 
-(pending at report-writing time; single commit on `agent-os-3`, own files
-only, no merge/push — command recorded here after commit.)
+- `5b244a40` OS-3: userland defaults — terminal, launcher, entries, fonts
+  (19 files, all in-lane, on `agent-os-3`; this report included).
+- `os-build/face/test_launcher_allowlist.py` sits beside the owned
+  `launcher.py` in `os-build/face/` per the task's "script under your paths"
+  order — Buffy, move it if it collides with the desktop rewrite.
+- No merge, no rebase, no push, no `--force`.
