@@ -78,7 +78,8 @@
 // Binds 127.0.0.1 only. CORS `*` so product pages keep polling.
 //
 // Run: node server/bus.mjs  (ports/env below)
-//   BUS_PORT (default 18935, the board port site-chat.js already uses)
+//   BUS_PORT (default 18938 — see DEFAULT_PORT below; 18935 belongs to the
+//   board, and R2_T3_A.md §391 left this call to whoever merged)
 //   BUS_DATA_DIR, METAOS_STATE (see data dir above)
 //   BUS_UPSTASH (reserved: only ""/unset starts; "1" refuses to start)
 //
@@ -122,7 +123,12 @@ export const ATTACH_ALLOWLIST = new Set([
 ]);
 export const PRESENCE_TTL_MS = 60_000; // task 8
 export const RETENTION_MIN_KEEP = 500; // task 12
-export const DEFAULT_PORT = 18935;
+// 18935 is the board, the one messaging app (face-board.service sets
+// BOARD_PORT=18935). 18932/18934/18936/18937 are facts/site/files/notesd, so a
+// standalone bus gets 18938: starting it can never take the messages port out
+// from under the desk. BUS_PORT or BOARD_PORT still override, for a run that
+// is deliberately replacing the board rather than sitting beside it.
+export const DEFAULT_PORT = 18938;
 
 export function defaultDataDir() {
   if (process.env.BUS_DATA_DIR && process.env.BUS_DATA_DIR.trim()) {
