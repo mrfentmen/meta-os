@@ -24,7 +24,7 @@
     --flag: #e7836b;
   }
   body {
-    display: grid; grid-template-rows: 64px 1fr 30px; height: 100vh;
+    display: grid; grid-template-rows: 64px 1fr 232px 30px; height: 100vh;
     background: radial-gradient(circle at 12% -10%, #0f201c, #08110f 60%);
   }
   /* The triage lanes stop at their last card. Without this bar the bottom
@@ -138,6 +138,57 @@
     padding: 16px; font-size: 11.5px; color: var(--dimmer); line-height: 1.5;
   }
 
+  /* Bottom band: the camera layer on the left, the duty agent on the right.
+     Before this the triage columns floated over two thirds of empty screen. */
+  .band {
+    display: grid; grid-template-columns: minmax(0, 1fr) 470px; gap: 14px;
+    padding: 0 18px 14px; min-height: 0;
+  }
+  .band-map {
+    position: relative; border: 1px solid var(--line); border-radius: var(--radius);
+    background: #050b0a; overflow: hidden; min-height: 0;
+  }
+  #med-map { width: 100%; height: 100%; display: block; cursor: grab; }
+  #med-map:active { cursor: grabbing; }
+  .band-map .legend {
+    position: absolute; left: 10px; top: 8px; display: flex; gap: 12px;
+    font-family: var(--mono); font-size: 10px; color: var(--dimmer);
+    background: rgba(5, 11, 10, 0.72); padding: 3px 8px; border-radius: 999px;
+    pointer-events: none;
+  }
+  .band-map .legend .dot { color: var(--accent); }
+  .band-map .legend .muted { color: rgba(180, 200, 230, 0.65); }
+
+  .agent {
+    display: grid; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0;
+    border: 1px solid var(--line); border-radius: var(--radius);
+    background: rgba(16, 32, 28, 0.72);
+  }
+  .agent-head {
+    display: flex; align-items: baseline; gap: 10px; padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .agent-head h2 { font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); font-weight: 600; }
+  .agent-head .state { margin-left: auto; font-family: var(--mono); font-size: 10px; color: var(--dimmer); }
+  .agent-head .state.bad { color: var(--flag); }
+  .agent-log { overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 7px; }
+  .agent-log .turn { font-size: 11.5px; line-height: 1.5; max-width: 92%; }
+  .agent-log .turn.user {
+    align-self: flex-end; color: #d8efe8; background: rgba(63, 168, 139, 0.16);
+    border: 1px solid rgba(63, 168, 139, 0.34); border-radius: 10px 10px 2px 10px;
+    padding: 6px 10px;
+  }
+  .agent-log .turn.agent { color: var(--text); border-left: 2px solid var(--accent); padding-left: 9px; }
+  .agent-log .turn.note { color: var(--dimmer); font-family: var(--mono); font-size: 10.5px; }
+  .agent-log .turn.bad { color: #f0b49f; border-left: 2px solid var(--flag); padding-left: 9px; }
+  .agent form { display: flex; gap: 8px; padding: 9px 12px; border-top: 1px solid var(--line); }
+  .agent input {
+    flex: 1; min-width: 0; background: rgba(5, 11, 10, 0.7); color: var(--text);
+    border: 1px solid var(--line-strong); border-radius: 999px; padding: 7px 12px; font-size: 11.5px;
+  }
+  .agent input:focus { outline: 1px solid var(--accent); outline-offset: 1px; }
+  .agent button { border-radius: 999px; padding: 7px 14px; font-size: 11.5px; }
+
   #toast {
     position: fixed; left: 50%; transform: translateX(-50%); bottom: 20px;
     padding: 8px 16px; border-radius: 999px; background: #12241f;
@@ -185,6 +236,21 @@
   </section>
 </main>
 
+<section class="band">
+  <div class="band-map">
+    <canvas id="med-map" aria-label="Camera layer: every NYC DOT camera, watched cameras highlighted"></canvas>
+    <p class="legend"><span class="dot">&#9679; watched <span id="legend-watched">0</span></span><span class="muted">&#9679; camera</span><span>drag to pan, scroll to zoom</span></p>
+  </div>
+  <aside class="agent">
+    <div class="agent-head"><h2>Agent</h2><span class="state" id="agent-state">reading the server…</span></div>
+    <div class="agent-log" id="agent-log"></div>
+    <form id="agent-form">
+      <input id="agent-q" type="text" placeholder="Ask the duty agent about this board" autocomplete="off" aria-label="Ask the duty agent">
+      <button class="btn primary" type="submit">Send</button>
+    </form>
+  </aside>
+</section>
+
 <footer class="strip">
   <span><span class="k">Crew</span> <span id="crew">reading…</span></span>
   <span><span class="k">Board</span> <span id="board">0 / 6</span></span>
@@ -193,7 +259,7 @@
 <p id="toast" role="status"></p>
 
 <script type="module">
-import { createStore, clock, ago, el, DIVISIONS, MAX_WATCHED } from "./core.js";
+import { createStore, LocalMap, clock, ago, el, DIVISIONS, MAX_WATCHED, backendBase } from "./core.js";
 
 const division = DIVISIONS.ems;
 const store = createStore("ems");
@@ -327,6 +393,7 @@ function render() {
     crew.textContent = store.crewError;
     crew.className = "bad";
   }
+  drawMap();
 }
 
 function renderResults() {
@@ -370,6 +437,95 @@ $("assess-all").addEventListener("click", async () => {
   else toast("Assessed " + res.results.length + " watched cameras.");
 });
 
+// Camera layer. Same canvas map as Vigiles and Ignis, so Medicus can see
+// where the watched cameras are instead of only reading their names.
+const medMap = LocalMap($("med-map"), {
+  accent: "#35E0A1",
+  zoom: 10.3,
+  onSelect: (id) => {
+    const cam = store.byId.get(id);
+    if (!cam) return;
+    medMap.set({ selected: id });
+    toast(cam.name + " · " + cam.area + (store.watch.has(id) ? " · watched" : " · press the card to watch"));
+  },
+});
+
+function drawMap() {
+  $("legend-watched").textContent = String(store.watch.size);
+  medMap.set({ cameras: store.cameras, results: store.results, watch: store.watch });
+}
+
+// Duty agent. Real request, real refusal: the server answers or names what is
+// missing. Nothing on this page makes up a reply.
+const agentLog = $("agent-log");
+
+function addTurn(kind, text) {
+  if (agentLog.querySelector(".turn.note.only")) agentLog.replaceChildren();
+  agentLog.append(el("p", { class: "turn " + kind, text }));
+  agentLog.scrollTop = agentLog.scrollHeight;
+}
+
+function boardContext() {
+  const watched = [...store.watch].map((id) => store.byId.get(id)).filter(Boolean);
+  if (watched.length === 0) return "The board is empty. " + store.cameras.length + " cameras are available to watch.";
+  const lines = watched.map((cam) => {
+    const r = store.results.get(cam.id);
+    const state = !r
+      ? "not assessed"
+      : r.status === "failed"
+        ? "assessment failed: " + r.reason
+        : (r.flagged ? "flagged: " : "clear: ") + r.category + (r.summary ? ". " + r.summary : "");
+    return "- " + cam.name + " (" + cam.area + "): " + state;
+  });
+  return "Watched cameras, " + watched.length + " of " + MAX_WATCHED + ":\n" + lines.join("\n");
+}
+
+$("agent-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const input = $("agent-q");
+  const question = input.value.trim();
+  if (!question) return;
+  addTurn("user", question);
+  input.value = "";
+  const pending = addTurn("note", "asking the model through " + backendBase() + " …");
+  try {
+    const res = await fetch(backendBase() + "/api/agent/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, division: "medicus", context: boardContext() }),
+    });
+    const body = await res.json().catch(() => ({}));
+    pending.remove();
+    if (!res.ok) addTurn("bad", body.error || "Agent request failed with HTTP " + res.status + ".");
+    else addTurn("agent", body.reply);
+  } catch (err) {
+    pending.remove();
+    addTurn("bad", "Agent unreachable: " + (err && err.message ? err.message : String(err)) + ". The server is on " + backendBase() + ".");
+  }
+});
+
+async function agentHealth() {
+  const state = $("agent-state");
+  try {
+    const res = await fetch(backendBase() + "/api/health", { cache: "no-store" });
+    const body = await res.json();
+    const model = body && body.model ? body.model : {};
+    if (model.configured && model.live_enabled) {
+      state.textContent = "model live";
+      state.className = "state";
+    } else if (!model.configured) {
+      state.textContent = "no key configured";
+      state.className = "state bad";
+    } else {
+      state.textContent = "calls held";
+      state.className = "state bad";
+    }
+  } catch {
+    state.textContent = "server unreachable";
+    state.className = "state bad";
+  }
+}
+
 store.subscribe(render);
 setInterval(() => {
   $("clock").textContent = clock();
@@ -379,6 +535,9 @@ setInterval(render, 15000);
 
 async function boot() {
   render();
+  agentHealth();
+  addTurn("note", "Duty agent for Medicus. It reads the board you are watching; it cannot dispatch anyone.");
+  agentLog.firstElementChild?.classList.add("only");
   await store.loadCameras();
   // ?seed=6 fills the board for a screenshot or a demo. Nothing else uses it.
   const seed = Number(new URLSearchParams(location.search).get("seed") || 0);

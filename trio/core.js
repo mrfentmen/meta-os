@@ -524,6 +524,25 @@ const BOROUGHS = [
   { name: "Staten Island", lat: 40.5795, lon: -74.1502 },
 ];
 
+// The five borough outlines, shipped with the site (28 KB). Without them the
+// map is a grid with dots, which reads as broken. Loaded once, cached, and
+// redrawn in place; a missing file leaves the grid rather than an error.
+let boroughGeometry = null;
+let boroughRequest = null;
+
+export function loadBoroughs(url = "/vendor/geo/nyc-boroughs.geojson") {
+  if (boroughGeometry) return Promise.resolve(boroughGeometry);
+  if (boroughRequest) return boroughRequest;
+  boroughRequest = fetch(url, { cache: "force-cache" })
+    .then((res) => (res.ok ? res.json() : null))
+    .then((geo) => {
+      boroughGeometry = geo && geo.type === "FeatureCollection" ? geo : null;
+      return boroughGeometry;
+    })
+    .catch(() => null);
+  return boroughRequest;
+}
+
 function project(lat, lon, center, zoom, w, h) {
   const scale = 256 * Math.pow(2, zoom);
   const x = ((lon + 180) / 360) * scale;
@@ -563,6 +582,32 @@ export function LocalMap(canvas, opts = {}) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
 
+    // Land under the grid: filled borough polygons with an even-odd fill so
+    // enclaves read as holes instead of blobs.
+    if (boroughGeometry) {
+      ctx.beginPath();
+      for (const feature of boroughGeometry.features) {
+        const geom = feature.geometry;
+        if (!geom) continue;
+        const polys = geom.type === "Polygon" ? [geom.coordinates] : geom.coordinates;
+        for (const poly of polys) {
+          for (const ring of poly) {
+            for (let i = 0; i < ring.length; i++) {
+              const [x, y] = project(ring[i][1], ring[i][0], state.center, state.zoom, w, h);
+              if (i === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+          }
+        }
+      }
+      ctx.fillStyle = "rgba(26, 41, 66, 0.72)";
+      ctx.fill("evenodd");
+      ctx.strokeStyle = "rgba(104, 136, 182, 0.38)";
+      ctx.lineWidth = 1.1;
+      ctx.stroke();
+    }
+
     // grid, one line per 0.02 degrees, so the empty map still reads as a map
     ctx.strokeStyle = "rgba(120, 150, 200, 0.10)";
     ctx.lineWidth = 1;
@@ -595,7 +640,16 @@ export function LocalMap(canvas, opts = {}) {
       ctx.fillText(b.name.toUpperCase(), x, y);
     }
 
-    for (const cam of state.cameras) {
+    // Plain dots first, then flagged, then watched, then selected. At 975
+    // cameras a watched dot drawn early is painted over by its neighbours,
+    // which is why the board's six cameras were invisible on the map.
+    const order = (cam) => {
+      if (cam.id === state.selected) return 3;
+      if (state.results.get(cam.id)?.flagged) return 2;
+      if (state.watch.has(cam.id)) return 1;
+      return 0;
+    };
+    for (const cam of [...state.cameras].sort((a, b) => order(a) - order(b))) {
       const [x, y] = project(cam.latitude, cam.longitude, state.center, state.zoom, w, h);
       if (x < -20 || y < -20 || x > w + 20 || y > h + 20) continue;
       const result = state.results.get(cam.id);
@@ -603,9 +657,18 @@ export function LocalMap(canvas, opts = {}) {
       const watched = state.watch.has(cam.id);
       const selected = cam.id === state.selected;
       ctx.beginPath();
-      ctx.arc(x, y, selected ? 7 : flagged ? 6 : 4.5, 0, Math.PI * 2);
+      ctx.arc(x, y, selected ? 7 : flagged ? 6 : watched ? 5.5 : 4.5, 0, Math.PI * 2);
       ctx.fillStyle = flagged ? "#E0564F" : watched ? state.accent : "rgba(180, 200, 230, 0.65)";
       ctx.fill();
+      // A watched camera gets a ring as well as the fill: at 975 dots a colour
+      // change alone disappears, and the board's six cameras are the point.
+      if (watched && !flagged && !selected) {
+        ctx.beginPath();
+        ctx.arc(x, y, 8.5, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
       if (flagged || selected) {
         ctx.beginPath();
         ctx.arc(x, y, selected ? 11 : 10, 0, Math.PI * 2);
@@ -672,6 +735,9 @@ export function LocalMap(canvas, opts = {}) {
     { passive: false }
   );
   window.addEventListener("resize", draw);
+  loadBoroughs(opts.geojsonUrl).then((geo) => {
+    if (geo) draw();
+  });
 
   return {
     state,

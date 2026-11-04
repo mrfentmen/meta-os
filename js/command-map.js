@@ -140,7 +140,12 @@ const els = {
 const CAMERA_GLYPH =
   '<svg class="cmd-pin-glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 8.5h11v7h-11z M13.5 10.8 21 6.8v10.4l-7.5-4z" fill="currentColor"/></svg>';
 
-const MAP_STYLE_URL = "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json";
+// Local, always. The console used to load CARTO's hosted dark style, which
+// meant no network meant no basemap: the pins projected onto black and the
+// page looked broken. This file ships the five borough outlines (28 KB,
+// simplified from NYC Open Data) and nothing else, so the map draws the same
+// on the guest, offline, and on the host.
+const MAP_STYLE_URL = "/vendor/geo/meta-style.json";
 // Source id inside that style (verified against the live style
 // JSON); its "buildings" layer carries height / min_height / name.
 const BUILDINGS_SOURCE = "protomaps";
@@ -388,11 +393,21 @@ function initMap() {
   state.map.on("move", positionPinCard);
   state.map.on("load", () => {
     state.mapLoaded = true;
+    // The map is built while the page is still laying out, so the canvas is
+    // sometimes 0x0 at this point. Without a resize call the whole borough
+    // basemap renders into nothing and the pins bunch into a corner, which
+    // is what it looked like when the style was remote and slow.
+    state.map.resize();
     addBuildings();
     addSelectionRing();
     updateSelectionRing();
     syncRingColor(document.body.dataset.product ?? "vigiles", true);
   });
+  if (typeof window.ResizeObserver === "function") {
+    new window.ResizeObserver(() => {
+      if (state.map) state.map.resize();
+    }).observe(els.map);
+  }
   // If the style JSON never arrives (blocked network), the map still
   // projects pins correctly over the dark backdrop — say so plainly
   // instead of leaving a silent blank.
@@ -400,7 +415,7 @@ function initMap() {
     if (!state.mapLoaded && state.map) {
       els.mapNote.hidden = false;
       els.mapNote.textContent =
-        "3D basemap style unreachable from this network — camera pins are plotted at their real locations without the basemap.";
+        "The local basemap (/vendor/geo/meta-style.json) did not load. Camera pins still plot at their real coordinates.";
     }
   }, 9000);
   updateZoomClass();
@@ -417,6 +432,10 @@ function initMap() {
 function addBuildings() {
   const map = state.map;
   if (!map || map.getLayer("cmd-buildings-3d")) return;
+  // The local style has no vector tile source, so there is nothing to
+  // extrude. Returning here is the difference between a map and a thrown
+  // "source not found" that leaves every later layer unadded.
+  if (!map.getSource(BUILDINGS_SOURCE)) return;
   const layers = map.getStyle()?.layers ?? [];
   const before = layers.find((layer) => layer.type === "symbol")?.id;
   map.addLayer(
@@ -784,8 +803,12 @@ function renderPins() {
   // cameras' own lat/lng bounding box so the layout still reads.
   els.map.classList.add("cmd-map--grid");
   els.mapNote.hidden = false;
-  els.mapNote.textContent =
-    "Map library unavailable — schematic pin grid from camera coordinates.";
+  // Two different failures, two different sentences. Saying "library
+  // unavailable" when the library loaded but WebGL did not sent the last
+  // debugging session after the wrong file.
+  els.mapNote.textContent = window.maplibregl
+    ? "WebGL is unavailable on this display, so the 3D basemap cannot start. Pins are plotted from camera coordinates."
+    : "Map library unavailable — schematic pin grid from camera coordinates.";
   if (state.cameras.length === 0) return;
   const lats = state.cameras.map((c) => c.latitude);
   const lngs = state.cameras.map((c) => c.longitude);

@@ -28,6 +28,29 @@ the watch list, `assess()`, the agent crew status, the local map projection,
 and the store. Each page imports it and renders its own way. Nothing about the
 backend changed.
 
+## Map and agent console, added the same day
+
+Two things the division pages were missing.
+
+**The basemap is local now.** Imperium's console loaded CARTO's hosted dark
+style, so with no network the map was dots on black. `vendor/geo/` now ships
+the five borough outlines (`nyc-boroughs.geojson`, 28 KB, simplified from NYC
+Open Data) and a style file that uses them, and the console points at it. The
+Vigiles and Medicus canvas maps draw the same outlines under their dots.
+Watched cameras are drawn last, with a ring, because at 975 cameras a watched
+dot drawn early is painted over by its neighbours.
+
+**Medicus has a camera layer and an agent console.** The bottom band is a
+pannable, zoomable map of every camera (watched ones in green) next to a
+transcript box. The box posts to `POST /api/agent/ask` with the board state as
+context. That endpoint is real: `server/agent-chat.mjs` calls the same Meta
+Spark transport the assessment path uses, under the same three gates (live
+flag, key present, spend ledger). With no key it answers HTTP 503 and names the
+missing setting, which is what the page shows. It never fabricates a reply.
+
+To make it live, the service needs `SPARK_API_KEY` and `ASSESS_LIVE_MODEL=1`,
+then a restart.
+
 ## Wiring
 
 - `os-build/iso/payload-theme/apps/metaos-imperium.py` takes

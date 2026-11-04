@@ -1,0 +1,29 @@
+{
+  "version": 8,
+  "name": "Meta OS local basemap",
+  "sources": {
+    "boroughs": {
+      "type": "geojson",
+      "data": "nyc-boroughs.geojson"
+    }
+  },
+  "layers": [
+    {
+      "id": "ink",
+      "type": "background",
+      "paint": { "background-color": "#060a12" }
+    },
+    {
+      "id": "land",
+      "type": "fill",
+      "source": "boroughs",
+      "paint": { "fill-color": "#0b1422", "fill-opacity": 1 }
+    },
+    {
+      "id": "coast",
+      "type": "line",
+      "source": "boroughs",
+      "paint": { "line-color": "#22344e", "line-width": 1.2 }
+    }
+  ]
+}

@@ -32,6 +32,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { handleAssess } from "./assess.mjs";
+import { askAgent } from "./agent-chat.mjs";
 import { modelStatus } from "./model.mjs";
 import { readCrewStatus } from "./crew-status.mjs";
 import { fetchCameraList } from "./cameras.mjs";
@@ -40,7 +41,14 @@ import { readFiresCached } from "./fires.mjs";
 import { PRODUCT_IDS } from "../js/products.js";
 
 const MAX_BODY_BYTES = 12 * 1024 * 1024; // JSON envelope cap (image cap is in assess.mjs)
-const STATIC_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+// Where the console's own files (styles.css, js/, vendor/, imperium/) are
+// served from. Defaults to the parent of this server directory, which is
+// right for the repo and for /usr/share/metaos/server. The GTK app sets
+// METAOS_STATIC_ROOT to the installed site tree, which is the only place
+// that has js/ and vendor/ together with imperium/.
+const STATIC_ROOT = process.env.METAOS_STATIC_ROOT
+  ? path.resolve(process.env.METAOS_STATIC_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CONTENT_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -49,6 +57,7 @@ const CONTENT_TYPES = {
   ".json": "application/json; charset=utf-8",
   ".sdf": "chemical/x-mdl-molfile; charset=utf-8",
   ".jsonl": "application/x-ndjson; charset=utf-8",
+  ".geojson": "application/geo+json; charset=utf-8",
   ".webmanifest": "application/manifest+json",
   ".png": "image/png",
 };
@@ -150,6 +159,29 @@ export function createAssessServer(deps = {}) {
           return;
         }
         const { status, body } = await handleAssess(payload, deps);
+        sendJson(res, status, body);
+        return;
+      }
+      if (url.pathname === "/api/agent/ask") {
+        if (req.method !== "POST") {
+          sendJson(res, 405, { error: "method not allowed: use POST" });
+          return;
+        }
+        let raw;
+        try {
+          raw = await readBody(req);
+        } catch (err) {
+          sendJson(res, err.status ?? 400, { error: err.message });
+          return;
+        }
+        let payload;
+        try {
+          payload = JSON.parse(raw);
+        } catch {
+          sendJson(res, 400, { error: "request body is not valid JSON" });
+          return;
+        }
+        const { status, body } = await askAgent(payload, env, deps);
         sendJson(res, status, body);
         return;
       }
