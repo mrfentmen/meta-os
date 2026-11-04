@@ -1,119 +1,101 @@
-"""Prove meta-live._cover fills the screen, without needing GTK.
+"""Prove the wallpaper always covers the screen, without needing GTK.
 
-fake gi.GdkPixbuf is a thin wrapper over PIL, so the crop arithmetic in
-_cover() is exercised exactly as written: same scale ratio, same centred
-sub-pixbuf offsets. What this does NOT prove is GTK drawing it (no display
-here) — it proves the geometry, which is the part that was wrong.
+meta-live paints its frame into a DrawingArea's own allocation, using
+cover_metrics() for the geometry (scale + centred offset). That function is the
+whole of the "wallpaper is small and stuck in the corner" fix, and it is a pure
+function of four numbers — so it is checked here for every aspect ratio the
+screen can take, with no display, no pixbuf, and no GTK.
 
-The test frame is deliberate: a red ramp across x, a green ramp down y, and a
-white block in the middle. Ramp symmetry is what proves the crop is CENTRED
-(left edge R + right edge R must stay ≈ 255 for any cover crop), and the white
-block is what proves the loop's centre survived the scale.
+What this does NOT prove is GTK drawing it (no display here); it proves the
+numbers, which is the part that was wrong, plus the invariant the bug broke:
+after the transform, the frame's painted rectangle must cover the whole screen.
+
+The frame is the shipped size, 1920x1080. Every case asserts:
+  * both painted edges reach or pass the screen edge (no gap, no letterbox);
+  * the overflow is split evenly (dx == width - dx - pw*scale), i.e. the loop
+    stays centred rather than being pushed to one corner;
+  * a 1:1 screen returns scale 1.0 and zero offset — the shipped path costs
+    nothing, and the pixel grid stays exact;
+  * degenerate inputs (zero screen, zero frame) do not produce NaN or a crash.
 """
 import sys
-import types
-
-from PIL import Image
-
-W, H = 1920, 1080
-
-
-class FakePixbuf:
-    def __init__(self, img):
-        self.img = img
-
-    def get_width(self):
-        return self.img.width
-
-    def get_height(self):
-        return self.img.height
-
-    def scale_simple(self, w, h, interp):
-        return FakePixbuf(self.img.resize((w, h), Image.BILINEAR))
-
-    def new_subpixbuf(self, x, y, w, h):
-        return FakePixbuf(self.img.crop((x, y, x + w, y + h)))
-
-
-class FakeGdkPixbuf:
-    class InterpType:
-        BILINEAR = 2
-
-    class Pixbuf:
-        @staticmethod
-        def new_from_file(path):
-            return FakePixbuf(Image.open(path))
-
-
-gi = types.ModuleType("gi")
-gi.repository = types.ModuleType("gi.repository")
-gi.repository.GdkPixbuf = FakeGdkPixbuf
-sys.modules["gi"] = gi
-sys.modules["gi.repository"] = gi.repository
 
 sys.path.insert(0, "os-build/iso/payload-theme/wallpapers/live")
 import importlib
 
 meta_live = importlib.import_module("meta-live")
-_cover = meta_live._cover
+cover_metrics = meta_live.cover_metrics
 
-frame = Image.new("RGB", (W, H))
-px = frame.load()
-for y in range(H):
-    g = int(round(255 * y / (H - 1)))
-    for x in range(W):
-        px[x, y] = (int(round(255 * x / (W - 1))), g, 40)
-frame.paste((255, 255, 255), (W // 2 - 200, H // 2 - 200, W // 2 + 200, H // 2 + 200))
-
-TOL = 14  # bilinear resampling plus 8-bit rounding
+FW, FH = 1920, 1080
+EPS = 1e-6
 
 cases = [
-    ((W, H), "shipped: frame is the screen size"),
+    ((FW, FH), "shipped: frame is the screen size"),
     ((1600, 900), "smaller, same aspect"),
     ((2560, 1600), "larger, same aspect"),
     ((1920, 1200), "taller: width binds, crop top/bottom"),
     ((1280, 1024), "4:3: crop left/right"),
     ((3840, 1080), "ultrawide"),
     ((800, 1280), "portrait"),
+    ((640, 360), "the boot window before the mode switch"),
+    ((1764, 994), "a dragged cocoa window"),
+    ((1, 1), "first allocation, before the window is placed"),
 ]
 
 fails = 0
+
+
+def check(cond, label, detail=""):
+    global fails
+    if not cond:
+        fails += 1
+        print("FAIL %-40s %s" % (label, detail))
+    return cond
+
+
 for (w, h), label in cases:
-    out = _cover(FakePixbuf(frame), w, h).img
+    scale, dx, dy = cover_metrics(FW, FH, w, h)
     problems = []
-    if (out.width, out.height) != (w, h):
-        problems.append("size %dx%d" % (out.width, out.height))
-    left = out.getpixel((0, h // 2))[0]
-    right = out.getpixel((w - 1, h // 2))[0]
-    top = out.getpixel((w // 2, 0))[1]
-    bottom = out.getpixel((w // 2, h - 1))[1]
-    if abs((left + right) - 255) > TOL:
-        problems.append("x crop off-centre (R %d+%d)" % (left, right))
-    if abs((top + bottom) - 255) > TOL:
-        problems.append("y crop off-centre (G %d+%d)" % (top, bottom))
-    if abs(left - right) > 255:
-        problems.append("x edges swapped")
-    if out.getpixel((w // 2, h // 2)) != (255, 255, 255):
-        problems.append("centre marker lost")
+
+    if scale <= 0:
+        problems.append("scale %r" % (scale,))
+    painted_w = FW * scale
+    painted_h = FH * scale
+    # Cover: never a gap on any edge.
+    if painted_w + EPS < w:
+        problems.append("width %.2f < %d" % (painted_w, w))
+    if painted_h + EPS < h:
+        problems.append("height %.2f < %d" % (painted_h, h))
+    # Centred: equal overflow on both sides of each axis.
+    if abs(dx - (w - painted_w - dx)) > EPS:
+        problems.append("x off-centre (dx %.2f)" % dx)
+    if abs(dy - (h - painted_h - dy)) > EPS:
+        problems.append("y off-centre (dy %.2f)" % dy)
+    # No overflow kept off-screen on the near side (dx <= 0, dy <= 0).
+    if dx > EPS or dy > EPS:
+        problems.append("frame starts inside the screen (dx %.2f dy %.2f)" % (dx, dy))
+
     status = "PASS" if not problems else "FAIL"
+    print("%s %-40s %4dx%-4d  scale %.4f  dx %8.2f  dy %8.2f  %s"
+          % (status, label, w, h, scale, dx, dy, "; ".join(problems)))
     if problems:
         fails += 1
-    print("%s %-38s %4dx%-4d  R %3d/%3d  G %3d/%3d  %s"
-          % (status, label, w, h, left, right, top, bottom, "; ".join(problems)))
 
-same = FakePixbuf(frame)
-if _cover(same, W, H) is same:
-    print("PASS identical size returns the original pixbuf (zero cost)")
+scale, dx, dy = cover_metrics(FW, FH, FW, FH)
+if not check(scale == 1.0 and dx == 0.0 and dy == 0.0,
+             "identical size is a 1:1 blit",
+             "scale %r dx %r dy %r" % (scale, dx, dy)):
+    pass
 else:
-    print("FAIL identical size re-scaled; the shipped path is not free")
-    fails += 1
+    print("PASS identical size is a 1:1 blit (zero resample, exact pixels)")
 
-z = _cover(FakePixbuf(frame), 0, 0)
-if (z.get_width(), z.get_height()) == (W, H):
-    print("PASS zero screen keeps the frame instead of crashing")
-else:
-    print("FAIL zero screen produced a %dx%d pixbuf" % (z.get_width(), z.get_height()))
-    fails += 1
+# Degenerate inputs: the first draw happens before GTK has allocated a size.
+for (pw, ph, w, h) in ((0, 0, 1920, 1080), (FW, FH, 0, 0), (-1, 20, 800, 600)):
+    scale, dx, dy = cover_metrics(pw, ph, w, h)
+    if check(scale == 1.0 and dx == 0.0 and dy == 0.0,
+             "degenerate input is inert", "%d %d %d %d -> %r" % (pw, ph, w, h, scale)):
+        print("PASS degenerate input is inert: frame %sx%s screen %sx%s"
+              % (pw, ph, w, h))
 
 print("covered: %d case(s) failed" % fails)
 sys.exit(1 if fails else 0)

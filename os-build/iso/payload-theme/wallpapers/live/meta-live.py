@@ -64,41 +64,100 @@ class Cycler:
         return self.frames[self.index]
 
 
-def _fit_to_screen(win):
-    """A wallpaper window must be exactly the screen, not whatever xfwm4
-    hands a maximized window.
+def _root_size(win):
+    """The live size of the X root window — not a cached monitor list.
 
-    win.maximize() on XFCE respects panel struts, so the art ends up inset by
-    the panel height and stops looking like a wallpaper. Asking the monitor
-    for its geometry and setting it directly cannot be argued with.
+    The old code asked the screen for its primary monitor geometry. That list
+    is rebuilt on a monitor change, and a resolution change driven from the
+    QEMU window (the guest's mode follows the host window's size) does not
+    always count as one — so the window kept being pushed back to the size the
+    screen had a moment ago. get_width()/get_height() read the root window
+    itself, which is the thing a wallpaper has to cover.
     """
     try:
         scr = win.get_screen()
-        geo = scr.get_monitor_geometry(scr.get_primary_monitor())
-        win.move(geo.x, geo.y)
-        win.resize(geo.width, geo.height)
+        w, h = scr.get_width(), scr.get_height()
+        if w > 1 and h > 1:
+            return w, h
     except Exception:
         pass
+    return 0, 0
 
 
-def _cover(pixbuf, width, height):
+def cover_metrics(pw, ph, width, height):
+    """(scale, dx, dy) that paint a pw x ph frame over width x height.
+
+    This is the arithmetic behind "the wallpaper is small and stuck in the
+    corner": an image drawn at its natural size occupies one small rectangle of
+    a bigger screen. Cover, not contain — the larger ratio reaches both edges
+    and the overflow is split evenly, so the centre of the loop stays centred.
+
+    A pure function of four numbers on purpose: test_cover.py checks every
+    aspect ratio without a display, a pixbuf, or GTK.
+    """
+    if pw <= 0 or ph <= 0 or width <= 0 or height <= 0:
+        return 1.0, 0.0, 0.0
+    scale = max(width / float(pw), height / float(ph))
+    return scale, (width - pw * scale) / 2.0, (height - ph * scale) / 2.0
+
+
+def _pin_to_screen(win):
+    """Sit exactly on the root window, and follow it when the screen resizes.
+
+    Both halves of the resize bug lived in the old version of this: a
+    win.maximize() (which xfwm4 sizes to the work area, i.e. inset by the
+    panel, so the art stopped being a wallpaper) and a 1 s timer that
+    re-applied the CACHED monitor geometry. After the resolution changed, that
+    timer kept forcing the window back to the old size — the art stayed small
+    in the corner of a screen that had grown around it, until something
+    replaced the window (changing the wallpaper did).
+
+    So: no timer. Resize once now, then again only on the signals that actually
+    mean "the screen changed", and let the drawing surface cover whatever
+    rectangle it is given.
+    """
+    from gi.repository import GLib
+
+    def apply_now(*_args):
+        w, h = _root_size(win)
+        if w > 1 and h > 1:
+            # move+resize, never maximize: the WM would apply panel struts.
+            win.move(0, 0)
+            win.resize(w, h)
+        return False
+
+    pending = {"id": 0}
+
+    def schedule(*_args):
+        # One idle refit per burst: a resize arrives as several signals
+        # (size-changed, monitors-changed, configure) and resizing the window
+        # again for each one would fight the server for no gain.
+        if pending["id"]:
+            return
+        pending["id"] = GLib.idle_add(apply_now)
+
+    try:
+        scr = win.get_screen()
+        scr.connect("size-changed", schedule)
+        scr.connect("monitors-changed", schedule)
+    except Exception:
+        pass
+    GLib.idle_add(apply_now)
+
+
+def _cover_pixbuf(pixbuf, width, height):
     """Scale a frame to FILL width x height, cropping the overflow.
 
-    This is the fix for "the wallpaper is small and stuck in the corner".
-    Gtk.Image draws a pixbuf at its natural size: a 1920x1080 frame on a
-    1600x900 screen was centred with black bars, and a 1280x720 frame on a
-    1920x1080 screen sat in the middle as a postage stamp. A wallpaper has to
-    cover the screen, not fit inside it.
+    Cover, not contain: cover_metrics() gives the scale and the centred offset,
+    and the overflow is cut off. The result is exactly width x height, so the
+    Gtk.Image that draws it can never letterbox or centre a smaller picture.
 
-    Cover, not contain: scale by the larger of the two ratios so both edges are
-    reached, then take the centred sub-pixbuf, which throws away the overflow.
-    The result is exactly width x height, so the Gtk.Image can never letterbox.
-
-    Cost: one bilinear scale per frame, only when the frame size differs from
-    the screen. In the shipped configuration the studio renders its loop at
-    1920x1080 and the session runs at 1920x1080, so this returns the original
-    pixbuf untouched and costs nothing. It is here for every other resolution,
-    and that is worth a scale per frame rather than a postage stamp.
+    GdkPixbuf scaling, not Cairo on purpose: this image has no python3-cairo,
+    and a `draw` handler that receives a cairo.Context dies on the spot with
+    "Couldn't find foreign struct converter for 'cairo.Context'" — which is
+    exactly what happened when this was first written as a DrawingArea paint.
+    When the frame is already the screen size, the original pixbuf is returned
+    untouched, so the shipped 1920x1080 case costs nothing.
     """
     from gi.repository import GdkPixbuf
     pw, ph = pixbuf.get_width(), pixbuf.get_height()
@@ -106,36 +165,13 @@ def _cover(pixbuf, width, height):
         return pixbuf
     if (pw, ph) == (width, height):
         return pixbuf
-    scale = max(width / float(pw), height / float(ph))
+    scale, _dx, _dy = cover_metrics(pw, ph, width, height)
     sw = max(width, int(round(pw * scale)))
     sh = max(height, int(round(ph * scale)))
     scaled = pixbuf.scale_simple(sw, sh, GdkPixbuf.InterpType.BILINEAR)
     if scaled is None:
-        # Out of memory or a broken codec: a centred frame beats a blank screen.
         return pixbuf
     return scaled.new_subpixbuf((sw - width) // 2, (sh - height) // 2, width, height)
-
-
-def _screen_size(win):
-    """The size the wallpaper must cover, read from the window we just sized.
-
-    _fit_to_screen() has already set the window to the monitor geometry, so the
-    window's own allocation is the truth here. Falling back to the monitor
-    geometry covers the frame before the first allocation, when the window is
-    still 1x1.
-    """
-    try:
-        w, h = win.get_size()
-        if w > 1 and h > 1:
-            return w, h
-    except Exception:
-        pass
-    try:
-        scr = win.get_screen()
-        geo = scr.get_monitor_geometry(scr.get_primary_monitor())
-        return geo.width, geo.height
-    except Exception:
-        return 0, 0
 
 
 class FrameRing:
@@ -224,28 +260,67 @@ def run_gui_images(framedir):
         pass
     img = Gtk.Image()
     # FILL, not CENTER: with the default alignment Gtk.Image centres whatever
-    # size the pixbuf happens to be, which is the small-in-the-corner bug.
+    # size the pixbuf happens to be, which was the small-in-the-corner bug.
+    # Below, the pixbuf is also re-cut to exactly the widget's allocation, so
+    # "whatever size it happens to be" is always the whole window.
     img.set_halign(Gtk.Align.FILL)
     img.set_valign(Gtk.Align.FILL)
     win.add(img)
-    win.maximize()
     win.show_all()
-    _fit_to_screen(win)
-    # Re-assert once a second: xfwm4 can re-place the window when the panel
-    # starts or the resolution changes under it (the guest tracks the window
-    # size), and a wallpaper that shrinks on resize is not a wallpaper.
-    GLib.timeout_add(1000, lambda: (_fit_to_screen(win), True)[1])
-    state = {"i": 0}
+    _pin_to_screen(win)
+    state = {"i": 0, "frame": None, "size": (0, 0)}
 
     # Decode-ahead window instead of a full preload: the set is 240 frames and
     # holding it decoded would cost more memory than the VM has.
     ring = FrameRing(files)
 
+    def target_size():
+        """What the picture is actually drawn into.
+
+        The widget's allocation, not the window's: that is the rectangle GTK
+        will paint, and it is already correct in the frame that follows a
+        resize. The root window is only the fallback for the first ticks,
+        before anything has been allocated.
+        """
+        w, h = img.get_allocated_width(), img.get_allocated_height()
+        if w <= 1 or h <= 1:
+            return _root_size(win)
+        return w, h
+
+    def repaint():
+        frame = state["frame"]
+        w, h = target_size()
+        if frame is None or w <= 1 or h <= 1:
+            return
+        state["size"] = (w, h)
+        img.set_from_pixbuf(_cover_pixbuf(frame, w, h))
+
+    busy = {"v": False}
+
+    def on_allocate(*_args):
+        # A new allocation invalidates the pixbuf cut for the old one, so cut it
+        # again from the frame already on screen — do not wait for the next
+        # 1/60 s tick, which a stalled decode ring could delay indefinitely.
+        # Guarded, because set_from_pixbuf can itself trigger an allocate in a
+        # window that is not allowed to shrink, and the two would then bounce
+        # off each other forever.
+        if busy["v"] or state["frame"] is None:
+            return
+        if target_size() == state["size"]:
+            return
+        busy["v"] = True
+        try:
+            repaint()
+        finally:
+            busy["v"] = False
+
+    img.connect("size-allocate", on_allocate)
+
     def show():
-        width, height = _screen_size(win)
         frame = ring.get(state["i"])
         if frame is not None:
-            img.set_from_pixbuf(_cover(frame, width, height))
+            state["frame"] = frame
+            repaint()
         state["i"] += 1
         return True
 
@@ -281,14 +356,11 @@ def run_gui(frames):
     label = Gtk.Label()
     label.get_style_context().add_class("meta-bg")
     label.set_selectable(False)
+    label.set_halign(Gtk.Align.CENTER)
+    label.set_valign(Gtk.Align.CENTER)
     win.add(label)
-    win.maximize()
     win.show_all()
-    _fit_to_screen(win)
-    # Re-assert once a second: xfwm4 can re-place the window when the panel
-    # starts or the resolution changes under it (the guest tracks the window
-    # size), and a wallpaper that shrinks on resize is not a wallpaper.
-    GLib.timeout_add(1000, lambda: (_fit_to_screen(win), True)[1])
+    _pin_to_screen(win)
     below = [w for w in win.get_screen().get_window_stack()
              if w != win.get_window()]
     for w in below:

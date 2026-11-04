@@ -17,31 +17,33 @@ set -u
 
 LOG=/tmp/metaos-session.log
 mkdir -p /tmp 2>/dev/null || true
-say() { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] $*" >>"$LOG" 2>&1; }
+# say() also mirrors to the serial console. The session log lives inside the
+# guest, so without this the only way to read why the desktop came up at the
+# wrong resolution is to log in and open a file — and QEMU already writes that
+# serial to a file on the host. Absent (or read-only) serial: the log alone.
+say() {
+  _line="[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] $*"
+  echo "$_line" >>"$LOG" 2>&1
+  { [ -w /dev/ttyAMA0 ] && echo "metaos-session $_line" >/dev/ttyAMA0; } 2>/dev/null || true
+}
 
 say "=== session start ==="
 
-# Resolution. QEMU's cocoa window opens at 640x360 and tells the guest so, and
-# X then keeps that mode for the whole session — a 640x360 desktop with the
-# wallpaper window sized to a monitor it does not fill, which reads as "the
-# wallpaper disappeared". The GPU advertises 1920x1080 as the preferred mode,
-# so ask for it explicitly. Headless boots already come up at 1920x1080 and
-# this is a no-op there. Best-effort: no xrandr (or no output) must not stop
-# the login.
-# Resolution: MEASURED, not forced.
+# Resolution — MEASURED, not forced (tried and disproved on 2026-11-04).
 #
-# This block used to call `xrandr --output … --mode 1920x1080` (and, worse, a
-# `--fb 1920x1080` fallback). With QEMU's cocoa display the guest's only mode is
-# the size of the host window, so a forced mode made the scanout stride disagree
-# with the surface: the desktop came out sheared along a diagonal, and every
-# screenshot after it was unusable. A mismatch cannot be fixed from inside the
-# guest; the window has to be that size. So this now records what X chose and
-# leaves it alone.
+# QEMU's cocoa window opens at 640x360 and the guest's X screen is that size,
+# which is why a fresh boot looks like a miniature desktop (and why the
+# wallpaper's frame has nowhere to go). The obvious fix — `xrandr --output …
+# --mode 1920x1080` — does NOT work: the switch is accepted, logged, and then
+# reverted, because the scanout surface is still the host window. With X at
+# 1920x1080 on a 640x360 surface you get a corner of the desktop instead of a
+# desktop. The window has to be that size; nothing inside the guest can change
+# it. So this records what X chose and leaves it alone.
 if command -v xrandr >/dev/null 2>&1; then
   _out=$(xrandr 2>/dev/null | sed -n 's/^\([A-Za-z0-9-]*\) connected primary.*/\1/p' | head -1)
-  [ -n "$_out" ] || _out=$(xrandr 2>/dev/null | sed -n 's/\([A-Za-z0-9-]*\) connected.*/\1/p' | head -1)
-  _mode=$(xrandr 2>/dev/null | sed -n "s/.*[[:space:]]\\([0-9]*x[0-9]*\\)[[:space:]]*[0-9.]*\\*.*/\\1/p" | head -1)
-  say "resolution: ${_out:-no output} at ${_mode:-unknown} (window-sized on cocoa; resized from the host)"
+  [ -n "$_out" ] || _out=$(xrandr 2>/dev/null | sed -n 's/^\([A-Za-z0-9-]*\) connected.*/\1/p' | head -1)
+  _mode=$(xrandr 2>/dev/null | sed -n "s/.*[[:space:]]\([0-9][0-9]*x[0-9][0-9]*\)[[:space:]][0-9.]*\*.*/\1/p" | head -1)
+  say "resolution: ${_out:-no output} at ${_mode:-unknown} (window-sized; drag the QEMU window to change it)"
 fi
 
 # 3D: Science Lab (labs/molecules) and the 3D music notes are three.js scenes.
@@ -157,6 +159,19 @@ write_about_json >>"$LOG" 2>&1 || say "about.json step failed (page will show fa
 # old XDG autostart path is the one that silently did nothing.
 systemctl --user start metaos-livebg.service >>"$LOG" 2>&1 \
   || say "livebg unit did not start (wallpaper stays static)"
+# And then say, on the serial console, whether it is alive and what it said if
+# not. The wallpaper is the one part of the desktop that fails silently — a dead
+# player is just a flat backdrop — and the reason (a traceback, a missing frame
+# set) is in the journal inside the guest, which nobody wants to log in to read.
+(
+  sleep 5
+  {
+    [ -w /dev/ttyAMA0 ] || exit 0
+    echo "metaos-session livebg: state=$(systemctl --user is-active metaos-livebg.service 2>&1) restarts=$(systemctl --user show -p NRestarts --value metaos-livebg.service 2>&1) frames=$(ls /usr/share/metaos/studio-loop 2>/dev/null | wc -l) screen=$(xrandr 2>/dev/null | sed -n 's/.*[[:space:]]\([0-9][0-9]*x[0-9][0-9]*\)[[:space:]][0-9.]*\*.*/\1/p' | head -1)" >/dev/ttyAMA0 2>&1
+    journalctl --user -u metaos-livebg.service --no-pager -n 8 2>&1 \
+      | sed 's/^/metaos-session livebg-journal /' >/dev/ttyAMA0 2>&1
+  }
+) >>"$LOG" 2>&1 &
 
 # 3 — the dock. XDG autostart is not trusted in this image, so plank is
 # started here, after a beat so the window manager exists to place it.

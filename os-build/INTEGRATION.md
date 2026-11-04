@@ -15,8 +15,8 @@ the image is currently **off**.
 | 4 | session → kiosk | `session.sh` starts `kiosk.sh` in the background | installed |
 | 5 | kiosk → backends | `systemctl --user start face.target` (7 services) | installed |
 | 6 | backends alive | 18900 http, 18931 launcher, 18932 facts, 18933 pty, 18934 site, 18935 board, 18936 files | installed |
-| 7 | kiosk → wallpaper | `metaos-livebg.service` → `meta-live.py`, 32 frames @16 fps | installed |
-| 8 | wallpaper → screen | `_fit_to_screen()` sets monitor geometry, re-asserts every 1 s | installed |
+| 7 | kiosk → wallpaper | `metaos-livebg.service` → `meta-live.py`, 240 frames @60 fps | installed |
+| 8 | wallpaper → screen | `_pin_to_screen()` sizes the window to the root window and refits on the screen's `size-changed`/`monitors-changed`; each frame is re-cut to the widget's allocation (`cover_metrics`), so a resize cannot leave the art in a corner. No timer: a 1 s re-assert froze the window at the pre-resize size | installed |
 | 9 | kiosk → shell | epiphany `--application-mode` on 18900, then `wmctrl` fullscreen | installed |
 | 10 | shell → desktop | `shell.html`: top bar, 16-app dock, window manager | installed |
 | 11 | desktop → agents | `metaosd.service` on 18940; `agents.html` reads it | installed |

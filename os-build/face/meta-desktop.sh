@@ -50,6 +50,29 @@ backup() { [ -e "$1" ] && [ ! -e "$1.metaos-fix.bak" ] && cp -p "$1" "$1.metaos-
 XF="$HOME_DIR/.config/xfce4/xfconf/xfce-perchannel-xml"
 APPS="$HOME_DIR/.local/share/applications"
 PLANK="$HOME_DIR/.config/plank/dock1"
+
+# ----------------------------------------------------------------- HiDPI
+# QEMU's cocoa display hands the guest the host's DEVICE pixels, not its
+# points. On a Mac whose screen is scaled (a 4K panel set to "looks like
+# 1728x1117" is 2.25 device pixels per point) a 1600x900 window arrives as a
+# 3594x2022 X screen, so a desktop designed at 1920 comes up at half size:
+# crisp, and too small to read or record. Above 2600 px wide this asks GTK,
+# the panel and the dock to draw at 2x, which restores the designed size.
+# A real 1080p monitor and a small QEMU window are both under that threshold,
+# so neither changes. META_HIDPI=1 or =2 overrides the detection by hand.
+HIDPI="${META_HIDPI:-auto}"
+if [ "$HIDPI" = auto ]; then
+  HIDPI=1
+  _screen_w=$(xrandr 2>/dev/null | awk '/\*/ {print $1; exit}' | sed 's/x.*//')
+  case "$_screen_w" in
+    ''|*[!0-9]*) : ;;
+    *) [ "$_screen_w" -ge 2600 ] && HIDPI=2 ;;
+  esac
+fi
+DOCK_ICON=$((40 * HIDPI))
+PANEL_SIZE=$((30 * HIDPI))
+export META_HIDPI="$HIDPI" META_PANEL_SIZE="$PANEL_SIZE"
+say "hidpi: scale ${HIDPI}x (screen width ${_screen_w:-unknown}), dock icons ${DOCK_ICON}px, panel ${PANEL_SIZE}px"
 mkdir -p "$XF" "$APPS" "$PLANK/launchers" 2>/dev/null || {
   echo "meta-desktop: cannot create $HOME_DIR/.config" >&2; exit 1; }
 
@@ -185,6 +208,29 @@ if os.path.isdir("/usr/share/icons/MetaOS"):
 setprop(t, "Gtk", "DecorationLayout", "icon:minimize,maximize,close")
 t.write(set_path, encoding="UTF-8", xml_declaration=True)
 print("meta-desktop: gtk theme MetaOS + CSD buttons minimize,maximize,close")
+
+# HiDPI (see the top of this script): one integer that scales every GTK
+# window, dialog and menu. Three different files agree on the same factor —
+# GTK here, the panel's thickness just below, the dock's icons further down —
+# because a 2x GTK inside a 30 px panel simply clips.
+factor = os.environ.get("META_HIDPI", "1")
+if factor not in ("", "1", "0"):
+    setprop(t, "Gdk", "WindowScalingFactor", factor, "int")
+    t.write(set_path, encoding="UTF-8", xml_declaration=True)
+    panel_path = os.path.join(xf, "xfce4-panel.xml")
+    pt = load(panel_path)
+    if pt is not None:
+        try:
+            size = int(os.environ.get("META_PANEL_SIZE", "30"))
+        except ValueError:
+            size = 30
+        for panel in pt.getroot().iter("property"):
+            if panel.get("name") == "panel-1":
+                for prop in panel.findall("property"):
+                    if prop.get("name") == "size":
+                        prop.set("value", str(size))
+        pt.write(panel_path, encoding="UTF-8", xml_declaration=True)
+    print("meta-desktop: HiDPI %sx (GTK + panel)" % factor)
 PY
 
 # ------------------------------------------------------ 2b. terminal colours
@@ -230,12 +276,12 @@ fi
 # Theme=MetaOS, not Default: the MetaOS plank theme is installed right above
 # this block, and "Default" is why the dock still looked like stock plank after
 # every other Meta change had landed.
-cat >"$PLANK/settings" <<'EOF'
+cat >"$PLANK/settings" <<EOF
 [PlankDockPreferences]
 Theme=MetaOS
 Alignment=Center
 ItemsAlignment=Center
-IconSize=40
+IconSize=$DOCK_ICON
 ZoomEnabled=false
 ZoomPercent=130
 HideMode=0

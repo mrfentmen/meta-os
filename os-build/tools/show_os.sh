@@ -217,6 +217,27 @@ PY
   exit "$rc"
 fi
 
+# Window size. QEMU's cocoa window opens at 640x360 and the GUEST TAKES THAT
+# SIZE — the X screen is the window, so a plain launch gives a 640x360 desktop
+# that has to be dragged bigger before it is usable (and, before the wallpaper
+# fix, showed the ribbon as a stamp in the middle). There is no size option on
+# the cocoa backend, so ask macOS for the window geometry once the window
+# exists; the guest's mode follows it (measured: 640x360 -> 2120x1192 on a
+# 1520x860 request). Best-effort and silent on failure: this needs the
+# Accessibility permission, and a boot must not depend on it.
+WINDOW_SIZE="${META_WINDOW:-1600x900}"
+if [ "$WINDOW_SIZE" != "none" ] && command -v osascript >/dev/null 2>&1; then
+  (
+    sleep 4
+    w=${WINDOW_SIZE%x*}
+    h=${WINDOW_SIZE#*x}
+    osascript -e "tell application \"System Events\" to set size of window 1 of process \"qemu-system-aarch64\" to {$w, $h}" \
+      >/dev/null 2>&1 \
+      && echo "show_os: window set to ${WINDOW_SIZE} (the guest's resolution follows it)" \
+      || echo "show_os: could not size the window (grant Accessibility, or drag it). META_WINDOW=none disables this."
+  ) &
+fi
+
 cat <<EOF
 
   Meta OS is booting in a window (about 30-60s to the desktop).
