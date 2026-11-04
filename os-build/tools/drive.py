@@ -16,6 +16,7 @@ names; anything unlisted is passed through as-is (single letters and
 digits work verbatim).
 """
 import argparse
+import os
 import socket
 import subprocess
 import sys
@@ -77,6 +78,16 @@ def main():
             ap.error("give at least one word to type")
         type_words(connect(args.monitor), args.words)
         return 0
+
+    # No-boot guard (OS-4): standalone mode starts its own QEMU. Attach mode
+    # above does not boot, so it is not guarded. The flag is read from the
+    # exported environment only: os.environ, never argv, never a file.
+    if os.environ.get("METAOS_ALLOW_QEMU") != "1":
+        sys.stderr.write(
+            "refused: drive.py boots QEMU. "
+            "set METAOS_ALLOW_QEMU=1 to allow it.\n"
+        )
+        return 2
 
     subprocess.run(["rm", "-f", args.log, args.socket], check=False)
     qemu = subprocess.Popen(

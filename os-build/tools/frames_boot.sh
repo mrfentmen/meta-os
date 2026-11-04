@@ -9,6 +9,10 @@ INITRD=/tmp/meta-boot/initrd.img
 OUT=${OUT:-/tmp/metaos-frames}
 mkdir -p "$OUT"
 
+# No-boot guard (OS-4): this script's only job is launching QEMU.
+. "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/qemu_guard.sh"
+qemu_guard "frames_boot.sh"
+
 MON=$(mktemp -u /tmp/fr-mon.XXXXXX)
 SER=$(mktemp -u /tmp/fr-ser.XXXXXX)
 mkdir -p /tmp/metaos-frames

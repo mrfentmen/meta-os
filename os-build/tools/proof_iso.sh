@@ -37,6 +37,9 @@ if [ -n "$ISO" ] && [ -n "$DISK" ]; then echo "proof_iso: pass exactly one of --
 
 QEMU="qemu-system-aarch64"
 command -v "$QEMU" >/dev/null 2>&1 || { echo "proof_iso: FAIL: $QEMU not found" >&2; exit 2; }
+# No-boot guard (OS-4): before any QEMU execution, including the launch below.
+. "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/qemu_guard.sh"
+qemu_guard "proof_iso.sh"
 CODE="/opt/homebrew/share/qemu/edk2-aarch64-code.fd"
 VARS_TMPL="/opt/homebrew/share/qemu/edk2-arm-vars.fd"
 [ -f "$CODE" ] || { echo "proof_iso: FAIL: EDK2 code missing: $CODE" >&2; exit 2; }
