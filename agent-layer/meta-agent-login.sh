@@ -53,6 +53,15 @@ else
   fi
 fi
 
+# Machine secrets live in /etc/metaos/agent.env (root-owned 0600, empty in the
+# image). The hook never writes a key; it only sources the file when it is
+# readable and imports a non-empty key into the user manager. Empty or
+# unreadable means the patrol pauses LOUDLY downstream — never silently.
+if [ -r /etc/metaos/agent.env ]; then
+  # shellcheck disable=SC1091
+  set -a; . /etc/metaos/agent.env; set +a
+fi
+
 if [ -n "${SPARK_API_KEY:-}" ]; then
   if [ "$DRY" = "1" ]; then
     echo "would import  SPARK_API_KEY into the user manager"
