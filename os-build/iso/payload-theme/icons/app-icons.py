@@ -286,11 +286,13 @@ def glyph(name):
     return p.img
 
 
+# Exactly the 27 names in payload-theme/icons/metaos/ — the dock's Icon= values.
+# Trio and Imperium share the imperium tile by design, so there is no trio.png.
 ORDER = ["terminal", "files", "editor", "web", "messages", "boards", "board",
-         "agents", "aegis", "custos", "imperium", "trio", "science", "musica",
+         "agents", "aegis", "custos", "imperium", "science", "musica",
          "music3d", "notes", "notes3d", "officina", "nervus", "budget",
          "dashboard", "calendar", "calculator", "logo", "controls", "settings",
-         "trash"]
+         "trash", "about"]
 LABEL = {"terminal": "Terminal", "files": "Files", "editor": "Editor",
          "web": "Web", "messages": "Messages", "boards": "Boards",
          "board": "Boards", "agents": "Agents", "aegis": "Aegis",
@@ -299,7 +301,8 @@ LABEL = {"terminal": "Terminal", "files": "Files", "editor": "Editor",
          "notes": "Notes", "notes3d": "Notes 3D", "officina": "Officina",
          "nervus": "Nervus", "budget": "Budget", "dashboard": "Dashboard",
          "calendar": "Calendar", "calculator": "Calculator", "logo": "Logo",
-         "controls": "Controls", "settings": "Settings", "trash": "Trash"}
+         "controls": "Controls", "settings": "Settings", "trash": "Trash",
+         "about": "About"}
 
 
 def font(sz, bold=False):

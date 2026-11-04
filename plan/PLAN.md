@@ -227,7 +227,14 @@ Everything here happens **before** the next boot, because a boot costs a full
 sync + 2 minutes and we have hours, not days. Each item ends in a PNG we can
 look at without a VM.
 
-1. **Icons — pick one language.** ✅ **drawn, waiting on the pick.**
+1. **Icons — ✅ wired, and the dock now follows the wallpaper.**
+   All 27 tiles ship in three languages and eight accents; `blue-B` is the
+   system default (`icons/metaos/`), and `meta-icon-accent` shadows the theme
+   per user so a wallpaper change recolours the dock with no root write and no
+   image decoding. Proven by `icons/test-icon-accent.sh` (19/19) and by
+   `apply.sh` on a staged root (432 accent files). See `icons/ACCENTS.md`.
+
+   _The sheet this was chosen from, kept for the record:_
    `os-build/captures/dock-three-languages.png` is all 27 tiles three times
    (A monoline on an ink plate, B ink-to-blue plate with a knockout glyph,
    C dot-matrix in a bracket frame). 256 px PNGs per language in

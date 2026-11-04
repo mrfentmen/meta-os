@@ -138,7 +138,7 @@ def rounded_mask(radius):
     return m
 
 
-def style_a(g):
+def style_a(g, accent=BLUE, bright=BRIGHT):
     plate_img, rad = plate()
     pm = rounded_mask(rad)
     plate_img.paste(Image.new("RGBA", (C, C), INK), (0, 0), pm)
@@ -146,18 +146,18 @@ def style_a(g):
     d = ImageDraw.Draw(plate_img)
     d.rounded_rectangle((1, 1, C - 2, C - 2), radius=rad,
                         outline=INK_EDGE, width=max(2, int(C * 0.006)))
-    # glyph: blue body, bright on the top-left third for a lit edge
-    plate_img.paste(Image.new("RGBA", (C, C), BLUE), (0, 0), g)
+    # glyph: accent body, lighter tint on the upper half for a lit edge
+    plate_img.paste(Image.new("RGBA", (C, C), accent), (0, 0), g)
     lit_full = Image.new("L", (C, C), 0)
     lit_full.paste(g)
     lit = lit_full.crop((0, 0, C, int(C * 0.52)))
     lit_mask = Image.new("L", (C, C), 0)
     lit_mask.paste(lit, (0, 0))
-    plate_img.paste(Image.new("RGBA", (C, C), BRIGHT), (0, 0), lit_mask)
+    plate_img.paste(Image.new("RGBA", (C, C), bright), (0, 0), lit_mask)
     return plate_img
 
 
-def style_b(g):
+def style_b(g, accent=BLUE, bright=PAPER):
     plate_img, rad = plate()
     pm = rounded_mask(rad)
     grad = Image.new("RGBA", (C, C))
@@ -167,9 +167,9 @@ def style_b(g):
         t = y / float(C - 1)
         # navy at the top, accent at the bottom: one straight ramp, no gloss
         # wash, because a wash with a straight cut read as a dome in the sheet.
-        r = int(top[0] + (BLUE[0] - top[0]) * t)
-        gg = int(top[1] + (BLUE[1] - top[1]) * t)
-        b = int(top[2] + (BLUE[2] - top[2]) * t)
+        r = int(top[0] + (accent[0] - top[0]) * t)
+        gg = int(top[1] + (accent[1] - top[1]) * t)
+        b = int(top[2] + (accent[2] - top[2]) * t)
         gd.line([(0, y), (C, y)], fill=(r, gg, b, 255))
     plate_img.paste(grad, (0, 0), pm)
     # a single hairline of light on the top edge, clipped to the plate
@@ -180,11 +180,11 @@ def style_b(g):
     from PIL import ImageChops
     plate_img.paste(hair, (0, 0), ImageChops.multiply(hair.split()[3], pm))
     # knockout glyph
-    plate_img.paste(Image.new("RGBA", (C, C), PAPER), (0, 0), g)
+    plate_img.paste(Image.new("RGBA", (C, C), bright), (0, 0), g)
     return plate_img
 
 
-def style_c(g, cols=21):
+def style_c(g, cols=21, accent=BLUE, bright=BRIGHT):
     """Dot-matrix glyph in a bracket frame — the spinner's language."""
     plate_img, rad = plate()
     plate_img = Image.new("RGBA", (C, C), (0, 0, 0, 0))
@@ -202,7 +202,7 @@ def style_c(g, cols=21):
                              (inset, C - 1 - inset, 1, -1),
                              (C - 1 - inset, C - 1 - inset, -1, -1)):
         d.line([(cx, cy + dy * t), (cx + dx * t, cy + dy * t)],
-               fill=BLUE, width=stroke * 2)
+               fill=accent, width=stroke * 2)
     # sample the mask onto a cell grid
     pad = int(C * 0.20)
     span = C - 2 * pad
@@ -221,7 +221,7 @@ def style_c(g, cols=21):
                         hit += 1
             if hit < 2:
                 continue
-            col_rgb = BRIGHT if hit >= 6 else BLUE
+            col_rgb = bright if hit >= 6 else accent
             d.rounded_rectangle((cx - dot // 2, cy - dot // 2,
                                  cx + dot // 2, cy + dot // 2),
                                 radius=max(1, dot // 4), fill=col_rgb)

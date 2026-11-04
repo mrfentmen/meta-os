@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=Meta Icon Accent
+Comment=Recolour the dock to match the wallpaper and keep following it
+# Runs the initial apply and then stays resident listening to xfce4-desktop.
+# NoDisplay: this is a background service, not something to launch from a menu.
+Exec=/usr/local/bin/meta-icon-accent watch
+Icon=preferences-desktop-theme
+Terminal=false
+NoDisplay=true
+OnlyShowIn=XFCE;
+X-GNOME-Autostart-enabled=true
+X-MetaOS-Service=icons

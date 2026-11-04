@@ -38,7 +38,10 @@ for f in \
   panel/xfce4-panel.xml \
   dock/dock.theme dock/plank-settings dock/plank.desktop \
   terminal/metaos-welcome.sh terminal/metaos-terminal-profile.txt \
-  icons/metaos.index.theme \
+  icons/metaos.index.theme icons/accents/accents.conf \
+  icons/meta-icon-accent icons/metaos-icon-accent.desktop \
+  icons/accents/blue-B/index.theme icons/accents/amber-B/index.theme \
+  icons/accents/ice-B/index.theme icons/accents/violet-B/index.theme \
   apps/metaos-welcome.py apps/metaos-welcome.desktop \
   apps/metaos-imperium.py apps/metaos-imperium.desktop \
   apps/metaos-controls.py apps/metaos-controls.desktop \
@@ -51,6 +54,11 @@ nframes=$(ls "$HERE"/splash/frames/frame-*.png 2>/dev/null | wc -l)
 # needed 60 fps, and an exact match here is how the theme once refused to
 # install on a healthy tree. 120 is the point below which it stutters again.
 [ "$nframes" -ge 120 ] || { echo "apply-GATE-FAIL: want at least 120 splash frames, found $nframes" >&2; fail=$((fail + 1)); }
+nsets=$(ls -d "$HERE"/icons/accents/*/index.theme 2>/dev/null | wc -l)
+# The accent sets are what makes the dock follow the wallpaper. Fewer than 8
+# means the build did not run gen-icon-accents.py, and the desktop would ship
+# with a wall of icons that never change.
+[ "$nsets" -ge 8 ] || { echo "apply-GATE-FAIL: want at least 8 icon accent sets, found $nsets (run icons/gen-icon-accents.py)" >&2; fail=$((fail + 1)); }
 nicons=$(ls "$HERE"/icons/metaos/*.png 2>/dev/null | wc -l)
 # A FLOOR, not an exact match. The count was pinned at 20 and the tree grew to
 # 26, so this gate refused every install with "want 20 icons, found 26" — the
@@ -153,6 +161,38 @@ for f in "$HERE"/icons/metaos/*.png; do
   put "$f" "/usr/share/icons/metaos/128x128/apps/$(basename "$f")"
 done
 
+# The accent sets: 8 full 27-icon sets the desktop switches between. Installed
+# system-wide, read-only; the per-user theme directory links into them, so a
+# wallpaper change is a few symlinks and never a root write.
+nacc=0
+for set_dir in "$HERE"/icons/accents/*/; do
+  [ -f "$set_dir/index.theme" ] || continue
+  set_name=$(basename "$set_dir")
+  mkdir -p "$ROOT/usr/share/icons/metaos-accents/$set_name/128x128/apps" \
+           "$ROOT/usr/share/icons/metaos-accents/$set_name/48x48/apps"
+  for f in "$set_dir"/128x128/apps/*.png; do
+    [ -e "$f" ] || continue
+    install -m644 "$f" "$ROOT/usr/share/icons/metaos-accents/$set_name/128x128/apps/$(basename "$f")"
+    nacc=$((nacc + 1))
+  done
+  for f in "$set_dir"/48x48/apps/*.png; do
+    [ -e "$f" ] || continue
+    install -m644 "$f" "$ROOT/usr/share/icons/metaos-accents/$set_name/48x48/apps/$(basename "$f")"
+    nacc=$((nacc + 1))
+  done
+  install -m644 "$set_dir/index.theme" "$ROOT/usr/share/icons/metaos-accents/$set_name/index.theme"
+  install -m644 "$set_dir/set.conf" "$ROOT/usr/share/icons/metaos-accents/$set_name/set.conf"
+done
+install -m644 "$HERE/icons/accents/accents.conf" "$ROOT/usr/share/icons/metaos-accents/accents.conf"
+echo "apply: $nacc accent icon files -> /usr/share/icons/metaos-accents"
+
+# The service that keeps the dock on the wallpaper's accent. Installed as a
+# plain executable + an autostart entry: no systemd unit, because it has to run
+# inside the user's session where xfconf-query can reach the running daemon.
+mkdir -p "$ROOT/usr/local/bin" "$ROOT/etc/xdg/autostart"
+install -m755 "$HERE/icons/meta-icon-accent" "$ROOT/usr/local/bin/meta-icon-accent"
+install -m644 "$HERE/icons/metaos-icon-accent.desktop" "$ROOT/etc/xdg/autostart/metaos-icon-accent.desktop"
+
 # ------------------------------------------------------------------ apps
 put "$HERE/apps/metaos-welcome.py" /usr/share/metaos/apps/metaos-welcome.py 755
 put "$HERE/apps/metaos-welcome.desktop" /usr/share/applications/metaos-welcome.desktop
@@ -179,8 +219,14 @@ chmod 0644 "$ROOT/etc/os-release"
 put "$HERE/identity/lsb-release" /etc/lsb-release
 printf 'metaos\n' > "$ROOT/etc/hostname"
 chmod 0644 "$ROOT/etc/hostname"
+# Rewritten through a temp file, not `sed -i`: BSD sed (macOS) rejects
+# `sed -i 's/…/…/' file`, which made the second apply on a staging root die at
+# this line — and a theme installer that cannot be run twice is not idempotent.
 if grep -q '^127\.0\.1\.1' "$ROOT/etc/hosts" 2>/dev/null; then
-  sed -i 's/^127\.0\.1\.1.*/127.0.1.1\tmetaos/' "$ROOT/etc/hosts"
+  awk 'BEGIN { OFS = "\t" }
+       /^127\.0\.1\.1/ { print "127.0.1.1", "metaos"; next }
+       { print }' "$ROOT/etc/hosts" > "$ROOT/etc/hosts.tmp" && \
+    mv "$ROOT/etc/hosts.tmp" "$ROOT/etc/hosts"
 else
   printf '127.0.1.1\tmetaos\n' >> "$ROOT/etc/hosts"
 fi

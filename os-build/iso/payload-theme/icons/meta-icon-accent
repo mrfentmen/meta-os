@@ -1,0 +1,301 @@
+#!/bin/sh
+# meta-icon-accent — make the dock follow the wallpaper.
+#
+# The icon sets are rendered at build time (gen-icon-accents.py) into
+# /usr/share/icons/metaos-accents/<set>/. This script never decodes an image on
+# the login path: it reads the wallpaper's basename, looks it up in the
+# manifest, and points a per-user theme directory at the matching set.
+#
+# Why a per-user directory: the theme is installed system-wide as "metaos" and
+# every launcher already says Icon=<name>. Writing $XDG_DATA_HOME/icons/metaos
+# shadows that directory for this user only (XDG searches the home dir first),
+# so the theme NAME never changes and nothing else on the desktop has to know
+# that the accent moved. Nothing under /usr is written, so this works without
+# root, at login, in a live session.
+#
+# Usage
+#   meta-icon-accent apply [WALLPAPER]   pick a set for the wallpaper and install it
+#   meta-icon-accent watch               follow xfce4-desktop until killed
+#   meta-icon-accent set <set>           pin a set, ignoring the wallpaper
+#   meta-icon-accent follow on|off       whether the wallpaper drives the accent
+#   meta-icon-accent list                sets on this machine
+#   meta-icon-accent current             what is installed right now
+#
+# Options: --dry-run (print, change nothing)  --quiet (no stderr chatter)
+#
+# Env overrides used by the test: METAOS_ACCENTS_DIR, METAOS_ICON_HOME.
+set -u
+
+ACCENTS=${METAOS_ACCENTS_DIR:-/usr/share/icons/metaos-accents}
+HOME_DIR=${METAOS_ICON_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/icons}
+CONF_DIR=${XDG_CONFIG_HOME:-$HOME/.config}/metaos
+CONF=$CONF_DIR/icons.conf
+LOG=${XDG_CACHE_HOME:-$HOME/.cache}/metaos/icons.log
+THEME=metaos
+
+DRY=0
+QUIET=0
+MODE=
+ARG=
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dry-run) DRY=1 ;;
+    --quiet) QUIET=1 ;;
+    -h|--help) sed -n '2,27p' "$0"; exit 0 ;;
+    *) if [ -z "$MODE" ]; then MODE=$1; else ARG=$1; fi ;;
+  esac
+  shift
+done
+[ -n "$MODE" ] || { echo "meta-icon-accent: need a command (apply|watch|set|follow|list|current)" >&2; exit 2; }
+
+say() { [ "$QUIET" = 1 ] || echo "meta-icon-accent: $*" >&2; }
+
+log() {
+  line="$(date -u +%Y-%m-%dT%H:%M:%SZ) $*"
+  say "$*"
+  mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
+  printf '%s\n' "$line" >>"$LOG" 2>/dev/null || true
+}
+
+conf_get() { # conf_get <key>
+  [ -f "$CONF" ] || return 1
+  sed -n "s/^$1=//p" "$CONF" | tail -1
+}
+
+conf_set() { # conf_set <key> <value>
+  mkdir -p "$CONF_DIR" 2>/dev/null || true
+  if [ -f "$CONF" ]; then
+    grep -v "^$1=" "$CONF" >"$CONF.tmp" 2>/dev/null || : >"$CONF.tmp"
+  else
+    : >"$CONF.tmp"
+  fi
+  printf '%s=%s\n' "$1" "$2" >>"$CONF.tmp"
+  mv "$CONF.tmp" "$CONF"
+}
+
+# --------------------------------------------------------------- wallpaper
+# Every monitor keeps its own last-image property, so the first property that
+# has a value is the one the user sees on the primary head.
+wallpaper_now() {
+  command -v xfconf-query >/dev/null 2>&1 || return 1
+  props=$(xfconf-query -c xfce4-desktop -l 2>/dev/null | grep 'last-image$')
+  [ -n "$props" ] || return 1
+  for p in $props; do
+    v=$(xfconf-query -c xfce4-desktop -p "$p" 2>/dev/null)
+    case "$v" in
+      /*) printf '%s\n' "$v"; return 0 ;;
+    esac
+  done
+  return 1
+}
+
+set_for_wallpaper() { # set_for_wallpaper <path> -> prints set name, may log
+  base=${1##*/}
+  def=$(sed -n 's/^default=//p' "$ACCENTS/accents.conf" 2>/dev/null | head -1)
+  [ -n "$def" ] || def=blue-B
+  hit=$(sed -n "s|^$base=\(.*\)$|\1|p" "$ACCENTS/accents.conf" 2>/dev/null | head -1)
+  if [ -n "$hit" ]; then
+    printf '%s\n' "$hit"
+    return 0
+  fi
+  # Unknown art: if this machine can read pixels, take the nearest accent by
+  # hue; otherwise say so and fall back — never silently pretend it matched.
+  if command -v python3 >/dev/null 2>&1 && \
+     python3 -c 'import PIL' >/dev/null 2>&1; then
+    guess=$(python3 - "$1" "$ACCENTS" <<'PY' 2>/dev/null
+import colorsys, os, sys
+path, accents = sys.argv[1], sys.argv[2]
+try:
+    from PIL import Image
+    im = Image.open(path).convert("RGB").resize((32, 32))
+except Exception:
+    sys.exit(0)
+px = list(im.getdata())
+best, bestd = None, 999
+# The manifest default is evaluated first, and a tie does not displace it:
+# several sets share the Meta blue, so a near-tie must not pick blue-A over
+# the shipped default just because of alphabetical order.
+names = sorted(os.listdir(accents))
+default = None
+manifest = os.path.join(accents, "accents.conf")
+if os.path.exists(manifest):
+    for line in open(manifest):
+        if line.startswith("default="):
+            default = line.split("=", 1)[1].strip()
+if default in names:
+    names.remove(default)
+    names.insert(0, default)
+for name in names:
+    conf = os.path.join(accents, name, "set.conf")
+    if not os.path.exists(conf):
+        continue
+    acc = None
+    for line in open(conf):
+        if line.startswith("accent="):
+            acc = tuple(int(v) for v in line.split("=", 1)[1].strip().split(","))
+    if not acc:
+        continue
+    ar, ag, ab = [c / 255.0 for c in acc]
+    ah, asat, av = colorsys.rgb_to_hsv(ar, ag, ab)
+    # average hue of the art, weighted towards saturated pixels
+    tot = 0.0
+    n = 0.0
+    for r, g, b in px:
+        h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
+        if s < 0.15 or v < 0.08:
+            continue
+        tot += h
+        n += 1
+    if not n:
+        continue
+    mh = tot / n
+    d = abs(mh - ah)
+    d = min(d, 1 - d)
+    if d < bestd:
+        best, bestd = name, d
+print(best or "")
+PY
+)
+    if [ -n "$guess" ]; then
+      log "wallpaper '$base' is not in the manifest; sampled its hue -> $guess"
+      printf '%s\n' "$guess"
+      return 0
+    fi
+  fi
+  log "wallpaper '$base' is not in the manifest and this machine cannot sample it; using $def"
+  printf '%s\n' "$def"
+}
+
+# ----------------------------------------------------------------- install
+install_set() { # install_set <set> <reason>
+  set=$1
+  reason=${2:-manual}
+  src=$ACCENTS/$set
+  if [ ! -f "$src/index.theme" ]; then
+    log "REFUSED: no icon set named '$set' under $ACCENTS (reason: $reason)"
+    return 1
+  fi
+  if [ "$DRY" = 1 ]; then
+    printf 'dry-run: would install %s -> %s/%s (%s)\n' "$set" "$HOME_DIR" "$THEME" "$reason"
+    return 0
+  fi
+  tmp=$HOME_DIR/.$THEME.new.$$
+  rm -rf "$tmp"
+  mkdir -p "$tmp/128x128/apps" "$tmp/48x48/apps" || return 1
+  n=0
+  for size in 128x128 48x48; do
+    for f in "$src/$size/apps"/*.png; do
+      [ -e "$f" ] || continue
+      ln -sf "$f" "$tmp/$size/apps/${f##*/}"
+      n=$((n + 1))
+    done
+  done
+  if [ "$n" -lt 20 ]; then
+    rm -rf "$tmp"
+    log "REFUSED: set '$set' has $n icon files, want at least 20"
+    return 1
+  fi
+  # Name must equal the directory name, or GTK will not treat it as the theme
+  # it is shadowing.
+  sed 's/^Name=.*/Name='"$THEME"'/' "$src/index.theme" >"$tmp/index.theme"
+  rm -rf "$HOME_DIR/$THEME.old"
+  if [ -d "$HOME_DIR/$THEME" ]; then
+    mv "$HOME_DIR/$THEME" "$HOME_DIR/$THEME.old" || return 1
+  fi
+  mv "$tmp" "$HOME_DIR/$THEME" || return 1
+  rm -rf "$HOME_DIR/$THEME.old"
+  if command -v gtk-update-icon-cache >/dev/null 2>&1; then
+    gtk-update-icon-cache -f -t -q "$HOME_DIR/$THEME" >/dev/null 2>&1
+    rc=$?
+    [ "$rc" = 0 ] || log "icon cache rebuild returned $rc for $HOME_DIR/$THEME"
+  fi
+  if command -v xfconf-query >/dev/null 2>&1; then
+    xfconf-query -c xsettings -p /Net/IconThemeName -s "$THEME" >/dev/null 2>&1 || \
+      log "could not set /Net/IconThemeName (xfsettingsd not running yet?)"
+  fi
+  log "installed $set ($n files) -> $HOME_DIR/$THEME  reason: $reason"
+  printf 'metaos:%s\n' "$set" >"$HOME_DIR/.metaos-accent" 2>/dev/null || true
+  return 0
+}
+
+apply() { # apply [wallpaper]
+  follow=$(conf_get follow_wallpaper)
+  [ -n "$follow" ] || follow=on
+  pinned=$(conf_get set)
+  if [ "$follow" != "on" ] && [ -n "$pinned" ]; then
+    install_set "$pinned" "pinned in $CONF"
+    return $?
+  fi
+  wp=${1:-}
+  if [ -z "$wp" ]; then
+    wp=$(wallpaper_now) || wp=
+  fi
+  if [ -z "$wp" ]; then
+    log "no wallpaper is set; using the manifest default"
+    set=$(sed -n 's/^default=//p' "$ACCENTS/accents.conf" 2>/dev/null | head -1)
+    [ -n "$set" ] || set=blue-B
+    install_set "$set" "no wallpaper"
+    return $?
+  fi
+  set=$(set_for_wallpaper "$wp")
+  install_set "$set" "wallpaper ${wp##*/}"
+}
+
+# ------------------------------------------------------------------- watch
+# xfconf-query -m prints every change on the channel, one line per property.
+# Debounced: dragging a wallpaper picker can emit a burst, and rebuilding the
+# theme 20 times per second is how a login gets slow.
+watch() {
+  command -v xfconf-query >/dev/null 2>&1 || {
+    log "REFUSED: xfconf-query is not installed, cannot follow the wallpaper"
+    return 1
+  }
+  log "watching xfce4-desktop for wallpaper changes (pid $$)"
+  last=
+  xfconf-query -c xfce4-desktop -m 2>/dev/null | while IFS= read -r line; do
+    case "$line" in
+      *last-image*) ;;
+      *) continue ;;
+    esac
+    value=${line#*: }
+    [ "$value" = "$last" ] && continue
+    last=$value
+    sleep 0.4
+    wp=$(wallpaper_now) || wp=
+    if [ -n "$wp" ]; then
+      set=$(set_for_wallpaper "$wp")
+      install_set "$set" "wallpaper ${wp##*/} (live)"
+    fi
+  done
+}
+
+case "$MODE" in
+  apply) apply "$ARG" ;;
+  watch) watch ;;
+  set)
+    [ -n "$ARG" ] || { echo "meta-icon-accent: set needs a name (see list)" >&2; exit 2; }
+    conf_set follow_wallpaper off
+    conf_set set "$ARG"
+    apply
+    ;;
+  follow)
+    [ "$ARG" = on ] || [ "$ARG" = off ] || { echo "meta-icon-accent: follow on|off" >&2; exit 2; }
+    conf_set follow_wallpaper "$ARG"
+    log "follow_wallpaper=$ARG"
+    [ "$ARG" = on ] && apply || true
+    ;;
+  list)
+    [ -f "$ACCENTS/accents.conf" ] || { echo "no manifest at $ACCENTS/accents.conf" >&2; exit 1; }
+    sed -n 's/^set=//p' "$ACCENTS/accents.conf" | while IFS='|' read -r name label; do
+      printf '%-10s %s\n' "$name" "$label"
+    done
+    ;;
+  current)
+    if [ -f "$HOME_DIR/.metaos-accent" ]; then
+      sed -n 's/^metaos://p' "$HOME_DIR/.metaos-accent"
+    else
+      echo "none"
+    fi
+    ;;
+  *) echo "meta-icon-accent: unknown command $MODE" >&2; exit 2 ;;
+esac
