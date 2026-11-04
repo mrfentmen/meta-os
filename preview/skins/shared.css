@@ -1,0 +1,94 @@
+/* Shared craft layer for the Trio preview skins.
+   Typography rhythm, control sizing and the small surfaces the three pages
+   already have. Nothing here positions a panel; each app's own sheet does. */
+
+:root {
+  color-scheme: dark;
+  --step-0: 10px;
+  --step-1: 11px;
+  --step-2: 12.5px;
+  --step-3: 14px;
+  --step-4: 17px;
+  --gutter: 14px;
+}
+
+body {
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", "DejaVu Sans", system-ui, sans-serif;
+  font-size: var(--step-2);
+  font-feature-settings: "tnum" 1, "ss01" 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Labels are the quiet part of the screen: small, spaced, never bold-heavy. */
+h2,
+.div-tag,
+.sub,
+.lane-head h2,
+.timeline h2,
+.rail-head h2,
+.list-head h2,
+.list-head label {
+  font-size: var(--step-0);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* One button scale for every page. Filled is the one action, outline is the
+   secondary, quiet is a link-like control. */
+.btn {
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid var(--line-strong);
+  background: color-mix(in srgb, var(--raised) 80%, transparent);
+  font-size: var(--step-1);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+.btn:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--raised));
+}
+.btn:active { transform: translateY(1px); }
+.btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink, #04100d);
+  font-weight: 600;
+}
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Empty states stop being a large dashed rectangle. */
+.empty {
+  font-size: var(--step-1);
+  line-height: 1.5;
+  max-width: 46ch;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text) 18%, transparent);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--text) 34%, transparent); }
+::-webkit-scrollbar-track { background: transparent; }
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 40%, transparent);
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

@@ -1,0 +1,205 @@
+/* Aegis preview skin. A security readout, so the data is dense and the chrome
+   is quiet: one accent, severity carried by the chip, every panel a card with
+   its own head. No new information, only clearer hierarchy. */
+
+:root {
+  color-scheme: dark;
+  --ink: #07090d;
+  --panel: #0c111a;
+  --raised: #111826;
+  --line: rgba(140, 170, 205, 0.13);
+  --line-strong: rgba(150, 180, 215, 0.26);
+  --text: #e7edf6;
+  --dim: #96a5b9;
+  --dimmer: #67768a;
+  --accent: #7fb2ff;
+  --flag: #ff8080;
+  --mono: ui-monospace, "SF Mono", "DejaVu Sans Mono", monospace;
+}
+
+body {
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", "DejaVu Sans", system-ui, sans-serif;
+  background:
+    radial-gradient(900px 380px at 88% -10%, #101a2b, transparent 60%),
+    var(--ink);
+  color: var(--text);
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 26px 28px 40px;
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1 {
+  font-size: 21px;
+  letter-spacing: -0.015em;
+  font-weight: 650;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+h1::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(127, 178, 255, 0.16);
+  flex: none;
+}
+.sub { color: var(--dim); margin: 0 0 16px; font-size: 12.5px; max-width: 96ch; }
+
+#sources {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  color: #8fa3bd;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(8, 13, 21, 0.8);
+  padding: 10px 12px;
+  margin: 0 0 14px;
+  white-space: pre-wrap;
+}
+#failures { color: var(--flag); font-size: 12px; margin: 0 0 12px; white-space: pre-wrap; }
+
+.panels { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+section.panel {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(13, 19, 29, 0.95), rgba(9, 14, 22, 0.95));
+  padding: 0;
+  min-width: 0;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 12px 30px rgba(0, 0, 0, 0.22);
+}
+section.panel > h2 {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #8ea6c2;
+  margin: 0;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(14, 22, 34, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+section.panel > h2::before {
+  content: "";
+  width: 4px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.8;
+}
+section.panel > *:not(h2) { margin-left: 14px; margin-right: 14px; }
+section.panel > *:last-child { margin-bottom: 14px; }
+
+.counts {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  color: #8194ab;
+  margin: 10px 14px 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.counts:empty { display: none; }
+
+.empty {
+  border: 1px dashed rgba(150, 180, 215, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-style: normal;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--dim);
+  background: rgba(6, 10, 17, 0.6);
+  margin: 8px 14px 12px;
+}
+.fail { color: var(--flag); font-size: 11.5px; margin: 6px 14px; }
+
+table { border-collapse: collapse; width: 100%; font-size: 11.5px; }
+th, td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid rgba(140, 170, 205, 0.1);
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+th {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #7f92a9;
+  font-weight: 600;
+  background: rgba(8, 13, 21, 0.6);
+}
+tbody tr:hover td { background: rgba(127, 178, 255, 0.05); }
+
+.sev {
+  border-radius: 4px;
+  padding: 1px 7px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.04);
+}
+.sev-critical { border-color: #ff5555; color: #ff9a9a; }
+.sev-high { border-color: #ff9955; color: #ffc39a; }
+.sev-medium { border-color: #ffcc55; color: #ffe3a1; }
+.sev-low { border-color: #88bbff; color: #b6d4ff; }
+.sev-info { border-color: #888; color: #c3ccd8; }
+
+.live { color: #6fe0a8; }
+.dead { color: #ff9a9a; }
+.unreach { color: #ffd27a; }
+
+.scrollbox {
+  max-height: 322px;
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(6, 10, 17, 0.7);
+  padding: 4px 8px;
+  margin: 8px 14px 12px;
+  scrollbar-width: thin;
+}
+.row { padding: 7px 4px; border-bottom: 1px solid rgba(140, 170, 205, 0.08); font-size: 11.5px; }
+.row:last-child { border-bottom: 0; }
+.row .meta { color: var(--dimmer); font-size: 10px; font-family: var(--mono); letter-spacing: 0.02em; }
+
+input.filter {
+  width: calc(100% - 28px);
+  margin: 10px 14px 6px;
+  padding: 7px 10px;
+  background: rgba(6, 10, 17, 0.9);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 11.5px;
+}
+input.filter:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px rgba(127, 178, 255, 0.16); }
+
+details { font-size: 11px; color: var(--dim); }
+summary { cursor: pointer; color: #8fbcff; }
+.note { font-size: 10.5px; color: var(--dimmer); line-height: 1.55; }
+
+footer {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: var(--dimmer);
+}

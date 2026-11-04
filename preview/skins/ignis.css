@@ -1,0 +1,174 @@
+/* Ignis preview skin. Fire watch: ember palette, a serif wordmark to separate
+   it from the other two, and the wall treated as four real monitors (gaps,
+   rounded frames, state chips on the image) instead of one flat mosaic. */
+
+:root {
+  --ink: #0d0806;
+  --panel: #17100b;
+  --raised: #241710;
+  --line: rgba(230, 168, 120, 0.14);
+  --line-strong: rgba(230, 168, 120, 0.3);
+  --text: #fdf3ea;
+  --dim: #bda592;
+  --dimmer: #86705f;
+  --accent: #ff7a2f;
+  --accent-ink: #140803;
+  --flag: #ff5a4d;
+}
+
+body {
+  grid-template-rows: 52px 1fr;
+  background: radial-gradient(1100px 500px at 15% -20%, #22150d, transparent 65%), var(--ink);
+}
+
+/* ---- top bar ---------------------------------------------------------- */
+
+.top {
+  padding: 0 18px;
+  gap: 14px;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 122, 47, 0.22);
+  background: linear-gradient(180deg, #1b120b, #120c07);
+}
+.mark {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  letter-spacing: 0.005em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1;
+}
+.mark b { color: var(--accent); font-weight: 400; }
+.sub {
+  border-left: 1px solid var(--line-strong);
+  padding-left: 14px;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  color: #8d7563;
+}
+.top .right { gap: 14px; align-items: center; }
+.src { font-size: 11px; }
+#clock {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: #bda592;
+}
+
+/* ---- session timeline ------------------------------------------------- */
+
+main { grid-template-columns: 246px 1fr; }
+
+.timeline { background: linear-gradient(180deg, #170f0a, #100a06); }
+.timeline h2 {
+  padding: 15px 16px 11px;
+  font-size: 9.5px;
+  letter-spacing: 0.22em;
+  color: #8a7568;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.timeline h2::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(255, 122, 47, 0.18);
+}
+.entry {
+  grid-template-columns: 44px 1fr;
+  gap: 10px;
+  padding: 8px 16px;
+  border-left: 2px solid transparent;
+  transition: background 100ms ease, border-color 100ms ease;
+}
+.entry:hover { background: rgba(255, 122, 47, 0.06); border-left-color: var(--accent); }
+.entry + .entry { border-top: 1px solid rgba(230, 168, 120, 0.07); }
+.entry .when { font-family: var(--mono); font-size: 10px; letter-spacing: 0.02em; color: #7d6757; }
+.entry .what { font-size: 11.5px; line-height: 1.45; color: #bda592; }
+.entry b { color: #fdf3ea; }
+.timeline-foot { padding: 11px 16px; font-size: 9.5px; line-height: 1.5; color: #7d6757; }
+
+/* ---- wall ------------------------------------------------------------- */
+
+.stage { grid-template-rows: minmax(0, 1fr) 98px; padding: 10px 10px 0; gap: 8px; }
+.wall {
+  gap: 8px;
+  background: transparent;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.slot {
+  background: #0a0604;
+  border: 1px solid rgba(230, 168, 120, 0.16);
+  border-radius: 9px;
+  overflow: hidden;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.slot img { opacity: 1; filter: saturate(1.06) contrast(1.03) brightness(0.97); }
+.slot .slot-empty { color: #7d6757; font-size: 10px; letter-spacing: 0.06em; }
+.slot .slot-bar {
+  gap: 9px;
+  padding: 8px 11px;
+  border-top: 1px solid rgba(230, 168, 120, 0.18);
+  background: linear-gradient(180deg, rgba(14, 9, 6, 0.86), rgba(10, 6, 4, 0.97));
+  backdrop-filter: blur(6px);
+}
+.slot .slot-name { font-size: 12px; letter-spacing: -0.005em; }
+.slot .slot-state { font-size: 9.5px; letter-spacing: 0.04em; color: #8d7563; }
+.slot .mini {
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  background: rgba(255, 122, 47, 0.05);
+  border-color: rgba(230, 168, 120, 0.26);
+  color: #bda592;
+}
+.slot .mini:hover { background: rgba(255, 122, 47, 0.16); border-color: var(--accent); color: #fff2e7; }
+.slot .src-tag {
+  border-radius: 4px;
+  border-color: rgba(255, 122, 47, 0.36);
+  color: #ffb98c;
+  background: rgba(255, 122, 47, 0.1);
+}
+.slot.flagged { box-shadow: inset 0 0 0 1px rgba(255, 90, 77, 0.6), 0 14px 34px rgba(0, 0, 0, 0.34); }
+.slot.flagged .slot-bar { border-top-color: rgba(255, 90, 77, 0.5); }
+.slot.watched { box-shadow: inset 0 0 0 1px rgba(255, 122, 47, 0.4), 0 14px 34px rgba(0, 0, 0, 0.34); }
+
+/* ---- hot frames ------------------------------------------------------- */
+
+.strip {
+  height: 98px;
+  margin: 0 10px 10px;
+  padding: 9px 12px;
+  gap: 12px;
+  border: 1px solid rgba(230, 168, 120, 0.14);
+  border-radius: 9px;
+  background: linear-gradient(180deg, #170f0a, #120c07);
+}
+.strip .label { font-size: 9px; letter-spacing: 0.2em; color: #8a7568; }
+.hot { gap: 9px; }
+.hot button {
+  width: 116px;
+  height: 66px;
+  border-radius: 6px;
+  border-color: rgba(230, 168, 120, 0.22);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
+}
+.hot button .tag { font-size: 8.5px; padding: 3px 5px; background: rgba(10, 6, 4, 0.9); }
+.hot .empty { font-size: 11px; color: #7d6757; }
+
+.map-toggle {
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  background: rgba(36, 23, 16, 0.9);
+}
+.inset { border-radius: 9px; bottom: 0; overflow: hidden; }

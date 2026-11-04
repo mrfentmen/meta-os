@@ -299,7 +299,7 @@ test("GET /api/ipcam lists cameras and names the config it read", async () => {
   });
 });
 
-test("GET /api/cameras appends positioned IP cameras to the upstream list", async () => {
+test("GET /api/cameras puts positioned IP cameras ahead of the upstream list", async () => {
   clearCache();
   const file = await configFile([
     { id: "lobby", input: "rtsp://h/1", latitude: 40.7, longitude: -73.9 },
@@ -313,8 +313,10 @@ test("GET /api/cameras appends positioned IP cameras to the upstream list", asyn
       assert.equal(res.status, 200);
       const body = await res.json();
       assert.equal(body.length, 2);
-      assert.equal(body[0].id, "nyc-1");
-      assert.equal(body[1].id, "ipcam-lobby");
+      // The roster shows the first 400 entries; an operator's own camera has to
+      // be visible without scrolling past 975 street cameras.
+      assert.equal(body[0].id, "ipcam-lobby");
+      assert.equal(body[1].id, "nyc-1");
       assert.equal(
         body.some((c) => c.id === "ipcam-unplaced"),
         false,

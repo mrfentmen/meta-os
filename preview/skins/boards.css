@@ -1,0 +1,180 @@
+/* Boards preview skin. Two things: the shared stylesheet's `main` is a
+   two-column grid, so this page's nav and its sections ended up as one narrow
+   column and one wide one. That is a layout bug, not taste. And every board
+   reads better as its own card. */
+
+:root {
+  color-scheme: dark;
+  --ink: #070a10;
+  --panel: #0c121c;
+  --line: rgba(140, 170, 205, 0.14);
+  --line-strong: rgba(150, 180, 215, 0.28);
+  --text: #e8eef7;
+  --dim: #9aa9bd;
+  --dimmer: #6a7a8f;
+  --accent: #7fb2ff;
+  --mono: ui-monospace, "SF Mono", "DejaVu Sans Mono", monospace;
+}
+
+body {
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", "DejaVu Sans", system-ui, sans-serif;
+  background: radial-gradient(1000px 420px at 82% -14%, #111b2b, transparent 62%), var(--ink);
+  color: var(--text);
+  font-size: 13px;
+  -webkit-font-smoothing: antialiased;
+}
+
+.topbar {
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(14, 22, 34, 0.96), rgba(8, 12, 20, 0.98));
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+}
+.topbar .brand { display: flex; align-items: center; gap: 12px; }
+.topbar h1 {
+  font-size: 15px;
+  letter-spacing: -0.005em;
+  font-weight: 650;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.topbar h1::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px rgba(127, 178, 255, 0.14);
+}
+.product-badge {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #9db4d1;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.logo-studio-link {
+  color: var(--accent);
+  font-size: 11px;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+.logo-studio-link:hover { border-bottom-color: var(--accent); }
+
+/* The fix: one column, so the nav runs across the page and each board keeps
+   the full width it was written for. */
+main {
+  display: block;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 18px 24px 48px;
+}
+
+.boards-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(10, 16, 25, 0.8);
+}
+.boards-nav a {
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: #a9bbd2;
+  text-decoration: none;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+}
+.boards-nav a:hover { color: #ffffff; background: rgba(127, 178, 255, 0.12); border-color: rgba(127, 178, 255, 0.26); }
+
+#site-status {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.01em;
+  line-height: 1.6;
+  color: #8fa4bc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(8, 13, 21, 0.8);
+  padding: 9px 12px;
+  margin: 0 0 14px;
+}
+
+.board-section {
+  margin: 12px 0;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(13, 19, 29, 0.95), rgba(9, 14, 22, 0.95));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  scroll-margin-top: 14px;
+}
+.board-section:target {
+  outline: none;
+  border-color: rgba(127, 178, 255, 0.55);
+  box-shadow: 0 0 0 1px rgba(127, 178, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.board-section:target h2::after {
+  content: "current";
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #a9c9ff;
+  border: 1px solid rgba(127, 178, 255, 0.4);
+  border-radius: 999px;
+  padding: 1px 7px;
+  margin-left: 10px;
+}
+.board-section h2 {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #93aac6;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.board-section h2::before {
+  content: "";
+  width: 4px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--accent);
+  opacity: 0.75;
+}
+.board-section p { color: var(--dim); font-size: 12px; line-height: 1.6; margin: 0 0 8px; max-width: 96ch; }
+.board-section .empty-state { color: var(--dimmer); font-style: normal; }
+.fetch-fail {
+  color: #ffa0a0;
+  font-size: 11.5px;
+  border-left: 2px solid #ff8080;
+  padding-left: 9px;
+  margin: 8px 0;
+}
+
+.lab-list { margin: 0; }
+.lab-row {
+  display: flex;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(140, 170, 205, 0.09);
+  font-size: 11.5px;
+}
+.lab-row:last-child { border-bottom: 0; }
+.lab-hypothesis { flex: 3; }
+.lab-level, .lab-status { flex: 1; font-family: var(--mono); font-size: 10px; color: #8fa4bc; }

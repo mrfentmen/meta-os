@@ -94,6 +94,11 @@
   }
   .slot .mini:hover { border-color: var(--accent); color: var(--text); }
   .slot .mini[disabled] { opacity: 0.45; }
+  .slot .src-tag {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--dim); border: 1px solid var(--line-strong);
+    border-radius: 3px; padding: 0 4px;
+  }
   /* a 2 px left edge carries the division state, no rounded corners anywhere */
   .slot.flagged { box-shadow: inset 3px 0 0 var(--flag); }
   .slot.watched { box-shadow: inset 3px 0 0 var(--accent); }
@@ -181,7 +186,7 @@
 </main>
 
 <script type="module">
-import { createStore, LocalMap, clock, ago, el, DIVISIONS } from "./core.js";
+import { createStore, LocalMap, clock, ago, el, sourceTag, DIVISIONS } from "./core.js";
 
 const division = DIVISIONS.fire;
 const store = createStore("fire");
@@ -279,6 +284,7 @@ function renderWall() {
       node.append(
         el("div", { class: "slot-bar" }, [
           el("span", { class: "slot-name", text: cam.name, title: cam.name + " · " + cam.area }),
+          ...(sourceTag(cam) ? [el("span", { class: "src-tag", text: sourceTag(cam), title: "Frame grabbed through ffmpeg, not the NYCTMC list" })] : []),
           el("div", { class: "slot-actions" }, [watchBtn, assessBtn]),
           stateNode,
         ])

@@ -181,6 +181,18 @@ if [ "$WITH_PACKAGES" = "1" ]; then
         DEBIAN_FRONTEND=noninteractive chroot "$ROOT" \
             apt-get install -y --no-install-recommends calamares plymouth plymouth-themes
     fi
+    # ffmpeg is what turns an RTSP camera into the JPEG that
+    # /api/ipcam/:id/snapshot serves. Without it those routes answer 502 and the
+    # console only ever shows NYCTMC cameras.
+    if chroot "$ROOT" sh -c 'command -v ffmpeg >/dev/null 2>&1'; then
+        say "ffmpeg already present in the chroot; RTSP cameras can be served"
+    else
+        say "installing ffmpeg into the chroot (needs network)"
+        chroot "$ROOT" apt-get update
+        DEBIAN_FRONTEND=noninteractive chroot "$ROOT" \
+            apt-get install -y --no-install-recommends ffmpeg || \
+            say "WARN: ffmpeg install failed; /api/ipcam snapshots will answer 502"
+    fi
 else
     say "packages skipped (--no-packages); calamares must already be in the chroot"
 fi

@@ -85,7 +85,19 @@ export function normalizeCamera(raw) {
     area,
     imageUrl,
     online: isOnline === true || isOnline === "true",
+    // "ipcam" is the server's own marker (server/ipcam.mjs) for a camera
+    // reached through ffmpeg instead of the NYCTMC list. The pages name the
+    // source because the two behave differently: NYCTMC publishes a JPEG and
+    // an IP camera is a frame the server grabbed, with its own latency and
+    // its own failure text.
+    source: raw.source === "ipcam" ? "ipcam" : "nyctmc",
   };
+}
+
+// What the board shows for this camera's origin. Null means the ordinary
+// NYCTMC list, which the header already names; a chip would only repeat it.
+export function sourceTag(cam) {
+  return cam && cam.source === "ipcam" ? "IP CAM" : null;
 }
 
 function listFromBody(body) {
@@ -262,9 +274,17 @@ export function createStore(divisionKey) {
           store.cameras = cameras;
           store.byId = new Map(cameras.map((c) => [c.id, c]));
           store.usingOffline = false;
+          const ip = cameras.filter((c) => c.source === "ipcam").length;
           store.source = {
             kind: "live",
-            note: "Live list from NYC DOT. " + cameras.length + " cameras online.",
+            note:
+              "Live list from NYC DOT" +
+              // An IP camera is not NYC DOT's, so the header says so instead
+              // of folding it into their count.
+              (ip > 0
+                ? " and " + ip + (ip === 1 ? " IP camera" : " IP cameras")
+                : "") +
+              ". " + cameras.length + " cameras online.",
           };
           store.note("Camera list loaded, " + cameras.length + " online");
           store.emit();

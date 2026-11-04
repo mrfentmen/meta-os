@@ -250,7 +250,9 @@ export function createAssessServer(deps = {}) {
         } catch {
           extra = [];
         }
-        const merged = [...upstream, ...extra];
+        // The operator's own cameras lead the list. Appending them put a new
+        // IP camera at row 976 of the roster, which is the same as hiding it.
+        const merged = [...extra, ...upstream];
         if (merged.length === 0 && upstreamError) {
           sendJson(res, 502, { error: `camera list unavailable: ${upstreamError}` });
           return;

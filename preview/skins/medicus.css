@@ -1,0 +1,217 @@
+/* Medicus preview skin. EMS board: clinical teal, three lanes that read as
+   panels with their own tint, and a bottom band split between the camera layer
+   and the duty agent. It shares the palette family with the other two only
+   through contrast rules, not through colour. */
+
+:root {
+  --ink: #06100e;
+  --panel: #0a1714;
+  --raised: #10241f;
+  --line: rgba(150, 205, 186, 0.13);
+  --line-strong: rgba(150, 205, 186, 0.28);
+  --text: #ecf7f3;
+  --dim: #9db5ad;
+  --dimmer: #6a827b;
+  --accent: #4fd8ab;
+  --accent-ink: #04120d;
+  --flag: #f08a72;
+  --radius: 13px;
+}
+
+body {
+  grid-template-rows: 66px 1fr 238px 32px;
+  background:
+    radial-gradient(900px 460px at 6% -14%, #0d211c, transparent 62%),
+    radial-gradient(760px 420px at 96% 108%, #0a1b18, transparent 60%),
+    var(--ink);
+}
+
+/* ---- header ----------------------------------------------------------- */
+
+header.bar {
+  gap: 18px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(6, 16, 14, 0.72);
+  backdrop-filter: blur(10px);
+}
+.brand { align-items: center; gap: 10px; }
+.brand::before {
+  content: "";
+  width: 27px;
+  height: 27px;
+  border-radius: 8px;
+  background: linear-gradient(150deg, #235f4f, #0d2a23);
+  border: 1px solid rgba(79, 216, 171, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  flex: none;
+}
+.brand h1 { font-size: 16px; font-weight: 650; letter-spacing: -0.015em; }
+.brand .dept {
+  margin-left: 4px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line-strong);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: #7c948d;
+}
+.searchwrap { margin-left: 6px; }
+#search {
+  width: 296px;
+  padding: 8px 13px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: rgba(10, 26, 22, 0.8);
+  font-size: 11.5px;
+}
+#search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 216, 171, 0.14);
+}
+.bar-right { gap: 14px; }
+#source { font-size: 10px; letter-spacing: 0.04em; max-width: 330px; color: #8aa39b; }
+#clock { font-size: 10.5px; color: #7c948d; padding: 3px 8px; border: 1px solid var(--line); border-radius: 5px; }
+#assess-all { min-height: 32px; padding: 0 14px; border-radius: 8px; font-size: 11.5px; }
+
+#results { border-radius: 10px; background: #0b1c18; box-shadow: 0 22px 60px rgba(0, 0, 0, 0.6); }
+
+/* ---- lanes ------------------------------------------------------------ */
+
+main { gap: 12px; padding: 2px 18px 14px; }
+
+.lane {
+  grid-template-rows: auto 1fr;
+  padding: 0 12px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(16, 38, 33, 0.55), rgba(8, 21, 18, 0.4));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+.lane:first-child { padding-left: 12px; border-left: 1px solid var(--line); }
+/* Count first, name second, hint under: the number is what a triage board is
+   read for, so it gets the size and the label stays small above it. */
+.lane-head {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "count name" "count hint";
+  column-gap: 11px;
+  row-gap: 1px;
+  padding: 12px 4px 10px;
+  border-bottom: 1px solid var(--line);
+  align-items: center;
+}
+.lane-head h2 {
+  grid-area: name;
+  font-size: 9.5px;
+  letter-spacing: 0.2em;
+  color: #9db5ad;
+  align-self: end;
+}
+.lane-head .n {
+  grid-area: count;
+  font-family: ui-monospace, "SF Mono", "DejaVu Sans Mono", monospace;
+  font-size: 21px;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: #d6efe6;
+}
+.lane-head .hint {
+  grid-area: hint;
+  margin-left: 0;
+  align-self: start;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  color: #6a827b;
+}
+
+.lane.immediate { border-top: 2px solid rgba(240, 138, 114, 0.75); }
+.lane.immediate { background: linear-gradient(180deg, rgba(64, 33, 28, 0.5), rgba(9, 22, 19, 0.35) 40%); }
+.lane.immediate .lane-head h2 { color: #f3b7a4; }
+.lane.immediate .lane-head .n { color: #ffb8a4; }
+.lane.delayed { border-top: 2px solid rgba(240, 190, 110, 0.65); background: linear-gradient(180deg, rgba(52, 42, 22, 0.42), rgba(9, 22, 19, 0.35) 40%); }
+.lane.delayed .lane-head h2 { color: #e5c893; }
+.lane.delayed .lane-head .n { color: #f0d9a8; }
+.lane.unseen { border-top: 2px solid rgba(79, 216, 171, 0.6); background: linear-gradient(180deg, rgba(20, 48, 42, 0.5), rgba(9, 22, 19, 0.35) 40%); }
+.lane.unseen .lane-head .n { color: #a9f0d8; }
+
+.lane-body { gap: 10px; padding: 10px 2px 10px; }
+
+.card {
+  border-radius: 11px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, #0d201c, #0a1916);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26);
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+.card:hover { border-color: rgba(79, 216, 171, 0.32); }
+.card.flag { border-color: rgba(240, 138, 114, 0.5); box-shadow: 0 10px 26px rgba(0, 0, 0, 0.26), inset 0 0 0 1px rgba(240, 138, 114, 0.14); }
+.card .shot img { filter: saturate(1.03); }
+.card .body { padding: 10px 12px 11px; gap: 6px; }
+.card .name { font-size: 12.5px; letter-spacing: -0.005em; }
+.card .src-tag { border-color: rgba(79, 216, 171, 0.34); color: #9fe4cd; background: rgba(79, 216, 171, 0.1); }
+.card .line { font-size: 11px; color: #9db5ad; }
+.card .foot { margin-top: 3px; }
+.card .btn { min-height: 26px; padding: 0 11px; font-size: 10.5px; border-radius: 999px; }
+.card .btn.primary { background: rgba(79, 216, 171, 0.16); border-color: rgba(79, 216, 171, 0.42); color: #c9f2e3; }
+.card .btn.primary:hover { background: rgba(79, 216, 171, 0.26); }
+
+.lane .empty {
+  border: 1px dashed rgba(150, 205, 186, 0.18);
+  border-radius: 10px;
+  padding: 13px 14px;
+  font-size: 10.5px;
+  line-height: 1.55;
+  color: #6a827b;
+  background: rgba(8, 20, 17, 0.35);
+}
+
+/* ---- bottom band ------------------------------------------------------ */
+
+.band { gap: 12px; padding: 0 18px 12px; grid-template-columns: minmax(0, 1fr) 468px; }
+.band-map {
+  border-radius: var(--radius);
+  border-color: var(--line);
+  background: #05100d;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.band-map .legend {
+  left: 12px;
+  top: 10px;
+  padding: 4px 10px;
+  font-size: 9.5px;
+  background: rgba(4, 14, 12, 0.78);
+  border: 1px solid rgba(150, 205, 186, 0.16);
+}
+
+.agent {
+  border-radius: var(--radius);
+  border-color: var(--line);
+  background: linear-gradient(180deg, rgba(16, 38, 33, 0.7), rgba(8, 20, 17, 0.6));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+.agent-head { padding: 10px 13px; }
+.agent-head h2 { font-size: 9.5px; letter-spacing: 0.2em; }
+.agent-head .state { font-size: 9.5px; letter-spacing: 0.03em; }
+.agent-log { padding: 12px 13px; gap: 9px; }
+.agent-log .turn { font-size: 11.5px; line-height: 1.55; }
+.agent-log .turn.user { padding: 7px 11px; border-radius: 12px 12px 3px 12px; }
+.agent-log .turn.agent { border-left-width: 2px; padding-left: 10px; }
+.agent-log .turn.note { font-size: 10px; letter-spacing: 0.02em; }
+.agent form { padding: 10px 13px; gap: 9px; background: rgba(5, 14, 12, 0.5); }
+.agent input { padding: 8px 13px; font-size: 11.5px; border-color: rgba(150, 205, 186, 0.22); background: rgba(5, 14, 12, 0.8); }
+.agent button { min-height: 32px; padding: 0 15px; font-size: 11px; }
+
+footer.strip {
+  padding: 0 22px;
+  font-size: 10px;
+  letter-spacing: 0.02em;
+  color: #6a827b;
+  background: rgba(5, 14, 12, 0.7);
+}
+footer.strip .gap { flex: 1; }

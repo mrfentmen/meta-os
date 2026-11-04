@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Meta OS UI preview</title>
+<style>
+  :root { color-scheme: dark; --chrome: #0b0d12; --chrome-line: #22262f; --chrome-text: #c7cdd8; }
+  html, body { margin: 0; height: 100%; background: #05070a; color: var(--chrome-text);
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", system-ui, sans-serif; }
+  .bar { display: flex; align-items: center; gap: 14px; height: 38px; padding: 0 12px;
+    background: var(--chrome); border-bottom: 1px solid var(--chrome-line); font-size: 11px; }
+  .bar b { color: #eef2f8; font-weight: 600; }
+  .bar .path { font-family: ui-monospace, "SF Mono", monospace; color: #8d97a6; }
+  .bar .sep { color: #3a404c; }
+  .bar .right { margin-left: auto; display: flex; gap: 8px; }
+  .bar button { font: inherit; font-size: 11px; color: var(--chrome-text); background: #151922;
+    border: 1px solid var(--chrome-line); border-radius: 5px; padding: 3px 9px; cursor: pointer; }
+  .bar button:hover { border-color: #3d4552; color: #fff; }
+  .bar button[aria-pressed="true"] { background: #1d2534; border-color: #4a6a9c; color: #dce7f8; }
+  .stage { position: relative; width: 1440px; height: 900px; margin: 0 auto; background: #000; }
+  body.bare .bar { display: none; }
+  body.bare .stage { margin: 0; }
+  iframe { width: 1440px; height: 900px; border: 0; display: block; background: #000; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>Meta OS UI preview</b>
+  <span class="sep">/</span>
+  <span class="path" id="labels">-</span>
+  <span class="right">
+    <button id="toggle" type="button" aria-pressed="true">Skin on</button>
+  </span>
+</div>
+<div class="stage"><iframe id="frame" title="App preview"></iframe></div>
+<script type="module">
+  // Query: app=trio/vigiles.html&skin=vigiles&bare=1
+  // skin may be a comma list, loaded in order (shared first, then the app's).
+  const p = new URLSearchParams(location.search);
+  const app = p.get("app") || "trio/vigiles.html";
+  const skins = (p.get("skin") || "vigiles").split(",").filter(Boolean);
+  const bare = p.get("bare") === "1";
+  if (bare) document.body.classList.add("bare");
+
+  const root = new URL("../", location.href);         // repo root
+  const frame = document.getElementById("frame");
+  let on = true;
+
+  document.getElementById("labels").textContent = `${app}  +  ${skins.join(" + ") || "no skin"}`;
+
+  function link(href, id) {
+    const el = document.createElement("link");
+    el.rel = "stylesheet";
+    el.href = href;
+    el.dataset.skin = id;
+    el.dataset.preview = "1";
+    return el;
+  }
+
+  function inject() {
+    const doc = frame.contentDocument;
+    if (!doc) return;
+    doc.querySelectorAll('link[data-preview="1"]').forEach((n) => n.remove());
+    if (!on) return;
+    for (const skin of skins) {
+      doc.head.append(link(new URL(`preview/skins/${skin}.css`, root).href, skin));
+    }
+  }
+
+  const toggle = document.getElementById("toggle");
+  toggle.addEventListener("click", () => {
+    on = !on;
+    toggle.setAttribute("aria-pressed", String(on));
+    toggle.textContent = on ? "Skin on" : "Skin off";
+    inject();
+  });
+
+  frame.addEventListener("load", () => {
+    // The app's own script keeps rendering after load; re-assert the skin once
+    // the first paint settles so a late-inserted node still gets the styles.
+    inject();
+    setTimeout(inject, 1200);
+  });
+  // app is repo-relative; the frame must not resolve it against /preview/.
+  frame.src = new URL(app, root).href;
+</script>
+</body>
+</html>
