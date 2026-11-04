@@ -83,12 +83,16 @@ fi
 # it; xfconf merges by property, so `commands/custom` overrides only the one
 # default in `commands/default` and everything else is untouched. Needs a live
 # X session (xfconf talks to xfconfd), so it is skipped when this runs offline.
-if command -v xfconf-query >/dev/null 2>&1 && xfconf-query -c xfwm4 -l >/dev/null 2>&1; then
-  xfconf-query -c xfce4-keyboard-shortcuts \
+# timeout, not a bare call: xfconf-query talks to xfconfd over the session bus
+# and BLOCKS forever when the bus is still coming up — which is exactly the
+# moment this runs (session start). That hang stopped session.sh before
+# startxfce4, so the login sat on a black 1920x1080 screen with no desktop.
+if command -v xfconf-query >/dev/null 2>&1 && timeout 5 xfconf-query -c xfwm4 -l >/dev/null 2>&1; then
+  timeout 5 xfconf-query -c xfce4-keyboard-shortcuts \
     -p '/commands/custom/<Primary><Alt>t' \
     -n -t string -s 'xfce4-terminal --disable-server' >>"$LOG" 2>&1 \
     && say "shortcut <- Ctrl+Alt+T runs xfce4-terminal --disable-server" \
-    || say "shortcut <- Ctrl+Alt+T NOT set (xfconf-query failed, see log)"
+    || say "shortcut <- Ctrl+Alt+T NOT set (xfconf-query failed or timed out, see log)"
 else
   say "shortcut <- skipped: no live xfconf session"
 fi

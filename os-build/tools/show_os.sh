@@ -120,7 +120,7 @@ echo "show_os: serial=$SER_LOG  mode=$MODE"
 
 # A stale qcow2 overlay lock from a killed VM blocks the next boot; the raw
 # ext4 here has no lock file, but the check is cheap and the message is clear.
-rm -f /tmp/metaos-show.qmp
+rm -f /tmp/metaos-show.qmp /tmp/metaos-qmp.sock
 
 # /etc/fstab in this image carries `metaos_repo /mnt/metaos 9p trans=virtio`.
 # Without a matching virtfs channel the kernel logs "9pnet_virtio: no channels
@@ -136,13 +136,14 @@ VIRTFS=""
   -kernel "$KERNEL" -initrd "$INITRD" \
   -append "root=/dev/vda rw console=ttyAMA0 console=tty0 plymouth.enable=0" \
   -drive "file=$IMAGE,if=virtio,format=raw,$SNAP" \
-  -device virtio-gpu-pci,xres=1920,yres=1080 \
+  -device virtio-gpu-pci,xres=1920,yres=1080,edid=on \
   $AUDIO_ARGS \
   -device qemu-xhci -device usb-kbd -device usb-tablet \
   $NETARGS \
   $VIRTFS \
   -serial "file:$SER_LOG" \
   -monitor "unix:/tmp/metaos-show.qmp,server,nowait" \
+  -qmp "unix:/tmp/metaos-qmp.sock,server,nowait" \
   $DISPLAY_ARGS &
 QEMU_PID=$!
 echo "show_os: qemu pid=$QEMU_PID"

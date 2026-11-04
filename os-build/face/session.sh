@@ -28,17 +28,20 @@ say "=== session start ==="
 # so ask for it explicitly. Headless boots already come up at 1920x1080 and
 # this is a no-op there. Best-effort: no xrandr (or no output) must not stop
 # the login.
+# Resolution: MEASURED, not forced.
+#
+# This block used to call `xrandr --output … --mode 1920x1080` (and, worse, a
+# `--fb 1920x1080` fallback). With QEMU's cocoa display the guest's only mode is
+# the size of the host window, so a forced mode made the scanout stride disagree
+# with the surface: the desktop came out sheared along a diagonal, and every
+# screenshot after it was unusable. A mismatch cannot be fixed from inside the
+# guest; the window has to be that size. So this now records what X chose and
+# leaves it alone.
 if command -v xrandr >/dev/null 2>&1; then
   _out=$(xrandr 2>/dev/null | sed -n 's/^\([A-Za-z0-9-]*\) connected primary.*/\1/p' | head -1)
-  if [ -n "$_out" ]; then
-    if xrandr --output "$_out" --mode 1920x1080 >>"$LOG" 2>&1; then
-      say "resolution: $_out -> 1920x1080"
-    else
-      say "resolution: xrandr could not set 1920x1080 on $_out (desktop may be 640x360)"
-    fi
-  else
-    say "resolution: no connected primary output found — left as is"
-  fi
+  [ -n "$_out" ] || _out=$(xrandr 2>/dev/null | sed -n 's/\([A-Za-z0-9-]*\) connected.*/\1/p' | head -1)
+  _mode=$(xrandr 2>/dev/null | sed -n "s/.*[[:space:]]\\([0-9]*x[0-9]*\\)[[:space:]]*[0-9.]*\\*.*/\\1/p" | head -1)
+  say "resolution: ${_out:-no output} at ${_mode:-unknown} (window-sized on cocoa; resized from the host)"
 fi
 
 # 3D: Science Lab (labs/molecules) and the 3D music notes are three.js scenes.
@@ -52,7 +55,12 @@ export WEBKIT_DISABLE_DMABUF_RENDERER=1
 # 1 — per-user desktop config (panel, dock, window theme). File-based and
 # idempotent; safe to run on every login.
 if [ -x /opt/face/meta-desktop.sh ]; then
-  /opt/face/meta-desktop.sh >>"$LOG" 2>&1 || say "meta-desktop.sh returned non-zero"
+  # Hard ceiling. This script has hung once (an xfconf-query waiting on a
+  # half-started session bus) and a hung desktop setup means a black screen
+  # with no session at all, because startxfce4 is below it. 45 s is far more
+  # than the file work needs; past it, the login wins over the polish.
+  timeout 45 /opt/face/meta-desktop.sh >>"$LOG" 2>&1 \
+    || say "meta-desktop.sh returned non-zero or timed out at 45s"
 else
   say "no /opt/face/meta-desktop.sh — dock/panel left as the base image has them"
 fi
