@@ -57,16 +57,16 @@ def main() -> int:
         os.remove(old)
     total = 0
     for i, f in enumerate(files):
-        out = os.path.join(OUT, f"loop-{i:02d}.jpg")
+        out = os.path.join(OUT, f"loop-{i:03d}.jpg")
         compose(Image.open(f).convert("RGBA")).save(out, quality=90, subsampling=1)
         total += os.path.getsize(out)
     print(f"composite: {len(files)} frames {W}x{H} -> {OUT} ({total // 1024} KiB)")
 
     # Wrap check: the step from the last frame back to the first must look like
     # any other step. A seam shows up as a much larger mean difference.
-    first = Image.open(os.path.join(OUT, "loop-00.jpg")).convert("L").resize((160, 90))
-    last = Image.open(os.path.join(OUT, f"loop-{len(files) - 1:02d}.jpg")).convert("L").resize((160, 90))
-    second = Image.open(os.path.join(OUT, "loop-01.jpg")).convert("L").resize((160, 90))
+    first = Image.open(os.path.join(OUT, "loop-000.jpg")).convert("L").resize((160, 90))
+    last = Image.open(os.path.join(OUT, f"loop-{len(files) - 1:03d}.jpg")).convert("L").resize((160, 90))
+    second = Image.open(os.path.join(OUT, "loop-001.jpg")).convert("L").resize((160, 90))
 
     def mean_abs(a, b):
         pa, pb = a.tobytes(), b.tobytes()

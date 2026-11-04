@@ -41,14 +41,15 @@ no Apple/Ubuntu/Xubuntu marks in visible strings.
 
 ## Status (lane D, 2026-11-03)
 
-- `apply.sh` rewritten: preflight gate (32 splash frames / 20 icons / 12
+- `apply.sh` rewritten: preflight gate (>=120 splash frames / 20 icons / 12
   dock launchers + every named source), absolute dest paths, `[ROOT]` arg
   for lane C (`./apply.sh /mnt`). Ran against `/tmp/metaos.ext4`;
   `theme_proof.sh` 10/10, md5 repo-vs-image 98/98 MATCH, report:
   `os-build/lanes/D_IDENTITY_REPORT.md`.
-- `splash/frames/`: 32-frame spinning ribbon (480x272, downscaled from the
-  settled `studio-loop-smooth` set `meta-live.py` plays at 16 fps);
-  `metaos.script` preloads all 32 and steps ~15 fps; mirrored byte-identical
+- `splash/frames/`: 240-frame spinning ribbon (480x272 palette PNGs, from the
+  settled `studio-loop` set `meta-live.py` plays at 60 fps);
+  `metaos.script` preloads all 240 and steps one per 60 Hz refresh; mirrored
+  byte-identical
   to `os-build/iso/plymouth/metaos/`. Contact sheet:
   `os-build/lanes/D_plymouth_contact.jpg`. Boot capture is lane C's.
 - `grub/`: `theme.txt` (Meta OS 1.0, timeout 10) + generated PNGs; lane C

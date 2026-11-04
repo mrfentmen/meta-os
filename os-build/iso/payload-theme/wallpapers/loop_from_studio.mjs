@@ -103,6 +103,30 @@ async function main() {
   }
   if (!box) throw new Error("studio never exposed MetaAsciiStudio with a sized canvas");
 
+  // Canvas geometry: the studio's canvas is a responsive element (aspect 1.76,
+  // capped at 58svh), so its captured size depends on the window it happened to
+  // open in. A wallpaper needs a known size, and a recapture must not silently
+  // change the framing. --canvas WxH pins the CSS box; the page's own
+  // ResizeObserver then resizes the backing store, so renderAt draws at the
+  // size we asked for.
+  const CANVAS = arg("canvas", "1088x618");
+  const [cw, ch] = CANVAS.split("x").map(Number);
+  if (cw > 0 && ch > 0) {
+    await cdp.eval(`(() => {
+      const c = document.getElementById('ascii-canvas');
+      c.style.aspectRatio = 'auto';
+      c.style.maxHeight = 'none';
+      c.style.width = '${cw}px';
+      c.style.height = '${ch}px';
+      return c.getBoundingClientRect().width + 'x' + c.getBoundingClientRect().height;
+    })()`);
+    await sleep(700);
+    box = await cdp.eval(`(() => {
+      const c = document.getElementById('ascii-canvas');
+      return { w: c.width, h: c.height };
+    })()`);
+  }
+
   const written = [];
   for (let i = 0; i < FRAMES; i += 1) {
     const angle = (i / FRAMES) * Math.PI * 2;

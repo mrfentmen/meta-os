@@ -48,7 +48,7 @@ for p in \
   have "$p" || missing="$missing $p"
 done
 nframes=0; if [ -d "$THEME/frames" ]; then nframes=$(ls "$THEME"/frames/frame-*.png 2>/dev/null | wc -l); fi
-[ "$nframes" -eq 32 ] || missing="$missing [want 32 plymouth frames, have $nframes]"
+[ "$nframes" -ge 120 ] || missing="$missing [want at least 120 plymouth frames, have $nframes]"
 nicons=0; if [ -d "$ROOT/usr/share/icons/metaos/128x128/apps" ]; then nicons=$(ls "$ROOT"/usr/share/icons/metaos/128x128/apps/*.png 2>/dev/null | wc -l); fi
 # floor, not exact: the icon set grew past 20 and this row failed the whole
 # proof on a healthy image
@@ -169,7 +169,7 @@ else
   if [ -f "$alt" ]; then
     grep -q 'metaos' "$alt" || missing_ref="$missing_ref alternative-not-metaos"
   fi
-  if [ -z "$missing_ref" ]; then ok "plymouth: descriptor+32 frames+7 hooks+fps note+default=metaos"; else no "plymouth" "$missing_ref"; fi
+  if [ -z "$missing_ref" ]; then ok "plymouth: descriptor+>=120 frames+7 hooks+fps note+default=metaos"; else no "plymouth" "$missing_ref"; fi
 fi
 
 # ------------------------------------------------------------ G. autologin intact

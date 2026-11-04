@@ -24,11 +24,12 @@ IMAGES_DIRS = [
     IMAGES_DIR,
     "/usr/share/backgrounds/metaos-studio",
 ]
-# The frame set is now captured from the logo studio at 60 frames per turn
-# (the old kernel set was 16 frames, 22.5 degrees apart — a stutter, not a
-# spin). At 30 fps one revolution takes 2 s, the same speed as before with
-# nearly four times the frames.
-FPS_IMAGES = int(os.environ.get("META_LIVE_FPS", "30"))
+# The frame set is captured from the logo studio at 240 frames per turn — 1.5
+# degrees apart. At 60 fps one revolution takes 4 s, and there is a new frame on
+# every screen refresh, which is what makes it read as a live object rather than
+# a slideshow. The set is too big to hold decoded (240 x 1920 x 1080 x 3 = 1.5
+# GB), so FrameRing decodes ahead of the playhead instead.
+FPS_IMAGES = int(os.environ.get("META_LIVE_FPS", "60"))
 FPS = 8
 INK = (0.027, 0.043, 0.086)
 BLUE = "#1877F2"
@@ -137,6 +138,68 @@ def _screen_size(win):
         return 0, 0
 
 
+class FrameRing:
+    """A bounded, decode-ahead window over a large frame set.
+
+    Three ways to play 240 full-HD frames were possible and only one survives:
+
+    * preload all of them — 1.5 GB of pixbufs, which is the VM's whole RAM;
+    * decode on every tick — a 1920x1080 JPEG decode is ~10 ms, so at 60 fps
+      every frame would arrive late and the animation would stutter worse than
+      the 32-frame set it replaced;
+    * decode ahead on one worker thread into a window of ~64 frames (~400 MB).
+      The UI thread only blits.
+
+    If the worker falls behind, get() returns None for that tick and the caller
+    keeps the frame already on screen: a spin that is momentarily slower is
+    honest, a blank desktop is not.
+    """
+
+    def __init__(self, files, window=64):
+        import threading
+        self.files = files
+        self.window = max(4, window)
+        self.frames = {}
+        self.lock = threading.Lock()
+        self.want = 0
+        self.error = None
+        self.stop = False
+        self.thread = threading.Thread(target=self._run, daemon=True)
+        self.thread.start()
+
+    def _evict(self):
+        n = len(self.files)
+        keep = set((self.want + k) % n for k in range(-1, self.window))
+        self.frames = dict((k, v) for k, v in self.frames.items() if k in keep)
+
+    def _run(self):
+        import time
+        from gi.repository import GdkPixbuf
+        n = len(self.files)
+        while not self.stop:
+            i = self.want % n
+            with self.lock:
+                have = i in self.frames
+            if have:
+                time.sleep(0.002)
+                continue
+            try:
+                pb = GdkPixbuf.Pixbuf.new_from_file(self.files[i])
+            except Exception as exc:
+                self.error = str(exc)
+                time.sleep(0.05)
+                continue
+            with self.lock:
+                self.frames[i] = pb
+                self._evict()
+
+    def get(self, index):
+        n = len(self.files)
+        self.want = index + 1
+        with self.lock:
+            return self.frames.get(index % n)
+
+
 def run_gui_images(framedir):
     import gi
     gi.require_version("Gtk", "3.0")
@@ -174,31 +237,20 @@ def run_gui_images(framedir):
     GLib.timeout_add(1000, lambda: (_fit_to_screen(win), True)[1])
     state = {"i": 0}
 
-    # Decode once, then blit. set_from_file() decodes a 1920x1080 JPEG on every
-    # tick, and at 30 fps that is a file decode 30 times a second for art that
-    # never changes inside the loop — the wallpaper should cost a blit, not a
-    # decoding pipeline. If the decode of the whole set cannot be held in
-    # memory, fall back to the per-frame file read rather than failing to draw.
-    preloaded = []
-    try:
-        from gi.repository import GdkPixbuf
-        preloaded = [GdkPixbuf.Pixbuf.new_from_file(f) for f in files]
-    except Exception:
-        preloaded = []
+    # Decode-ahead window instead of a full preload: the set is 240 frames and
+    # holding it decoded would cost more memory than the VM has.
+    ring = FrameRing(files)
 
     def show():
         width, height = _screen_size(win)
-        if preloaded:
-            frame = preloaded[state["i"] % len(preloaded)]
-        else:
-            from gi.repository import GdkPixbuf
-            frame = GdkPixbuf.Pixbuf.new_from_file(files[state["i"] % len(files)])
-        img.set_from_pixbuf(_cover(frame, width, height))
+        frame = ring.get(state["i"])
+        if frame is not None:
+            img.set_from_pixbuf(_cover(frame, width, height))
         state["i"] += 1
         return True
 
     show()
-    GLib.timeout_add(1000 // FPS_IMAGES, show)
+    GLib.timeout_add(max(1, 1000 // FPS_IMAGES), show)
     Gtk.main()
     return 0
 

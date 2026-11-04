@@ -4,7 +4,7 @@
 # Lane C calls it as: os-build/iso/payload-theme/apply.sh /mnt
 #
 # Installs, with absolute destination paths only: greeter configs, backgrounds,
-# plymouth theme (32-frame ribbon), GRUB theme staging, GTK + xfwm4 + index,
+# plymouth theme (240-frame ribbon), GRUB theme staging, GTK + xfwm4 + index,
 # panel xml, plank theme/settings/autostart, terminal hook, the metaos icon
 # set + index.theme, the 17 dock launchers, and the identity files
 # (os-release, hostname, issue, ...).
@@ -47,7 +47,10 @@ for f in \
   ; do need "$HERE/$f"; done
 
 nframes=$(ls "$HERE"/splash/frames/frame-*.png 2>/dev/null | wc -l)
-[ "$nframes" -eq 32 ] || { echo "apply-GATE-FAIL: want 32 splash frames, found $nframes" >&2; fail=$((fail + 1)); }
+# A floor, not an exact count: the set went 32 -> 240 when the boot spinner
+# needed 60 fps, and an exact match here is how the theme once refused to
+# install on a healthy tree. 120 is the point below which it stutters again.
+[ "$nframes" -ge 120 ] || { echo "apply-GATE-FAIL: want at least 120 splash frames, found $nframes" >&2; fail=$((fail + 1)); }
 nicons=$(ls "$HERE"/icons/metaos/*.png 2>/dev/null | wc -l)
 # A FLOOR, not an exact match. The count was pinned at 20 and the tree grew to
 # 26, so this gate refused every install with "want 20 icons, found 26" — the
