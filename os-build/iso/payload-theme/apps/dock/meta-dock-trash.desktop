@@ -3,9 +3,16 @@ Version=1.0
 Type=Application
 Name=Trash
 Comment=Deleted files, restorable (XDG trash)
-Exec=thunar trash:///
-Icon=trash
+Exec=/usr/bin/thunar trash:///
+TryExec=/usr/bin/thunar
+Icon=/usr/share/icons/metaos/128x128/apps/trash.png
 Terminal=false
 Categories=System;FileManager;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=thunar
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/bin/thunar trash:///

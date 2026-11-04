@@ -3,9 +3,16 @@ Version=1.0
 Type=Application
 Name=Agents
 Comment=Agent status and job board (MetaOS local services)
-Exec=epiphany-browser http://127.0.0.1:18900/agents.html
-Icon=agents
+Exec=/usr/local/bin/meta-agents
+TryExec=/usr/local/bin/meta-agents
+Icon=/usr/share/icons/metaos/128x128/apps/agents.png
 Terminal=false
 Categories=System;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=meta-agents
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/local/bin/meta-agents

@@ -3,9 +3,16 @@ Version=1.0
 Type=Application
 Name=Calculator
 Comment=Desktop calculator (offline)
-Exec=mate-calc
-Icon=calculator
+Exec=/usr/bin/mate-calc
+TryExec=/usr/bin/mate-calc
+Icon=/usr/share/icons/metaos/128x128/apps/calculator.png
 Terminal=false
 Categories=Utility;Calculator;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=mate-calc
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/bin/mate-calc

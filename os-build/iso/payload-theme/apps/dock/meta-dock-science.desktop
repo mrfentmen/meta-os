@@ -3,9 +3,16 @@ Version=1.0
 Type=Application
 Name=Science Lab
 Comment=Molecule lab pages (MetaOS local service)
-Exec=epiphany-browser http://127.0.0.1:18934/labs/molecules/index.html
-Icon=science
+Exec=/usr/local/bin/meta-app --title Science --app-id science --url http://127.0.0.1:18934/labs/molecules/index.html
+TryExec=/usr/local/bin/meta-app
+Icon=/usr/share/icons/metaos/128x128/apps/science.png
 Terminal=false
 Categories=Science;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=meta-app
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/local/bin/meta-app --title Science --app-id science --url http://127.0.0.1:18934/labs/molecules/index.html

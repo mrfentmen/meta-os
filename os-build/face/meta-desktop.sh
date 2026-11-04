@@ -8,7 +8,13 @@
 #
 # What it sets up:
 #   panel   the Meta top bar (payload-theme/panel/xfce4-panel.xml)
+#   clock   date + seconds on the panel clock (post-process of the user copy)
 #   wm      theme MetaOS + macOS button order (close/minimise on the left)
+#   workspaces 2 (Main, Agents) to match the pager's two buttons
+#   keys    Alt+Tab cycle, Super+Left/Right tile, Ctrl+Alt+Left/Right
+#           workspace switch, Print/Alt+Print screenshot, Ctrl+Alt+L lock,
+#           Ctrl+Alt+Del logout dialog — merged into the user's
+#           xfce4-keyboard-shortcuts.xml, defaults elsewhere untouched
 #   gtk     theme MetaOS
 #   dock    plank: MetaOS theme, one .dockitem per installed app
 #   entries one .desktop per app, owned by the user (no root at login)
@@ -31,7 +37,7 @@ while [ $# -gt 0 ]; do
     *) echo "meta-desktop: unknown flag $1" >&2; exit 2 ;;
   esac
 done
-# The base image's account is "ubuntu"; after rename_user.sh it is "meta".
+# The stock account on the base image is "ubuntu"; after rename_user.sh it is "meta".
 # Hardcoding either one is how this script quietly did nothing on an image
 # where the other name was live, so ask the account database first and only
 # then fall back to the two names this project has ever used.
@@ -55,7 +61,7 @@ mkdir -p "$XF" "$APPS" "$PLANK/launchers" 2>/dev/null || {
 
 # ---------------------------------------------------------------- 1. panel
 # The Meta top bar ships at /etc/xdg/... as the channel default, but the live
-# user already has a Xubuntu panel file that wins over it. Copy the Meta one
+# user already has a stock panel file that wins over it. Copy the Meta one
 # into the user config so the top bar is the one that draws.
 PANEL_SRC=""
 for cand in /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml \
@@ -71,7 +77,39 @@ else
   say "no Meta panel xml on this system — panel left alone"
 fi
 
-# ------------------------------------------- 1b. Ctrl+Alt+T opens the terminal
+# ---------------------------------- 1b. panel clock: date + seconds
+# The generated panel xml (T1-owned, do not edit there) ships the clock as
+# "%a, %b %e %H:%M" — date but no seconds. The desktop spec wants seconds on
+# the bar, so this edits only the user's copy, right after the copy above.
+# The clock draws in the theme font through the panel's GTK theme; no font
+# key exists on the clock plugin itself, so there is nothing to set here.
+python3 - "$XF/xfce4-panel.xml" <<'PY'
+import os, sys
+import xml.etree.ElementTree as ET
+path = sys.argv[1]
+FMT = "%a, %b %e %H:%M:%S"
+if not os.path.exists(path):
+    print("meta-desktop: clock skipped (no user panel xml)")
+else:
+    try:
+        t = ET.parse(path)
+    except Exception as e:
+        print("meta-desktop: cannot parse %s (%s) — clock skipped" % (path, e))
+        t = None
+    if t is not None:
+        done = 0
+        for c in t.getroot().iter("property"):
+            if c.get("name") == "digital-time-format":
+                c.set("value", FMT)
+                done += 1
+        if done:
+            t.write(path, encoding="UTF-8", xml_declaration=True)
+            print("meta-desktop: clock format <- %s" % FMT)
+        else:
+            print("meta-desktop: clock skipped (no digital-time-format key found)")
+PY
+
+# ------------------------------------------ 1c. Ctrl+Alt+T opens the terminal
 # Same reason as the dock tile above: the image's default shortcut is
 # `exo-open --launch TerminalEmulator`, which starts xfce4-terminal's *server*.
 # The first window then owns the colours for the whole login, so a session that
@@ -90,7 +128,7 @@ fi
 if command -v xfconf-query >/dev/null 2>&1 && timeout 5 xfconf-query -c xfwm4 -l >/dev/null 2>&1; then
   timeout 5 xfconf-query -c xfce4-keyboard-shortcuts \
     -p '/commands/custom/<Primary><Alt>t' \
-    -n -t string -s 'xfce4-terminal --disable-server' >>"$LOG" 2>&1 \
+    -n -t string -s 'xfce4-terminal --disable-server' 2>&1 \
     && say "shortcut <- Ctrl+Alt+T runs xfce4-terminal --disable-server" \
     || say "shortcut <- Ctrl+Alt+T NOT set (xfconf-query failed or timed out, see log)"
 else
@@ -168,8 +206,30 @@ def button_layout():
 layout, source = button_layout()
 setprop(t, "general", "button_layout", layout)
 setprop(t, "general", "title_alignment", "center")
+# Two workspaces (Main, Agents): the top bar carries a pager, and a pager over
+# one workspace is a button that does nothing. The system channel default
+# already says 2, but a user file from an older session wins over it — so the
+# login path enforces the pair here instead of trusting the default.
+def drop_named(root, name):
+    for parent in root.iter("property"):
+        for child in list(parent):
+            if child.tag == "property" and child.get("name") == name:
+                parent.remove(child)
+    for child in list(root):
+        if child.tag == "property" and child.get("name") == name:
+            root.remove(child)
+drop_named(t.getroot(), "workspaces")
+ws_el = ET.SubElement(t.getroot(), "property",
+                      {"name": "workspaces", "type": "empty"})
+ET.SubElement(ws_el, "property",
+              {"name": "count", "type": "int", "value": "2"})
+names_el = ET.SubElement(ws_el, "property",
+                         {"name": "names", "type": "array"})
+for n in ("Main", "Agents"):
+    ET.SubElement(names_el, "value", {"type": "string", "value": n})
 t.write(wm_path, encoding="UTF-8", xml_declaration=True)
 print("meta-desktop: wm theme MetaOS, buttons '%s' (from %s)" % (layout, source))
+print("meta-desktop: workspaces=2 (Main, Agents)")
 
 set_path = os.path.join(xf, "xsettings.xml")
 t = load(set_path)
@@ -187,7 +247,105 @@ t.write(set_path, encoding="UTF-8", xml_declaration=True)
 print("meta-desktop: gtk theme MetaOS + CSD buttons minimize,maximize,close")
 PY
 
-# ------------------------------------------------------ 2b. terminal colours
+# -------------------------------------- 2b. keyboard shortcuts (Meta set)
+# The Meta shortcut set, merged into the user's
+# xfce4-keyboard-shortcuts.xml — never rewritten whole, never deleting the
+# user's own bindings or the stock `default` tree. File-based like everything
+# else here, so it works in the offline chroot as well as at login.
+#
+# The enforced set (Settings > Keyboard must list exactly these — see the
+# cross-lane request for settings.html):
+#   Ctrl+Alt+T      terminal (xfce4-terminal --disable-server)
+#   Alt+Tab         cycle windows, with xfwm4's visible switcher
+#   Super+Left      snap window left half        Super+Right  snap right half
+#   Ctrl+Alt+Left   previous workspace           Ctrl+Alt+Right next workspace
+#   Print           screenshot, full screen      Alt+Print    screenshot, window
+#   Ctrl+Alt+L      lock screen (same session on unlock)
+#   Ctrl+Alt+Del    logout dialog (the ONLY session-ending path; no binding
+#                   here or anywhere else in this script kills the session)
+# Clicking the desktop focuses it and clears window focus: that is xfdesktop's
+# own behaviour and no binding here overrides it (guest check proves it).
+python3 - "$XF" <<'PY'
+import os, shutil, sys
+import xml.etree.ElementTree as ET
+
+xf = sys.argv[1]
+ks_path = os.path.join(xf, "xfce4-keyboard-shortcuts.xml")
+t = None
+if os.path.exists(ks_path):
+    try:
+        t = ET.parse(ks_path)
+    except Exception as e:
+        print("meta-desktop: cannot parse %s (%s) — skipped" % (ks_path, e))
+if t is None:
+    t = ET.ElementTree(ET.Element("channel",
+                                  {"name": "xfce4-keyboard-shortcuts",
+                                   "version": "1.0"}))
+root = t.getroot()
+
+def scope(name):
+    for p in root.findall("property"):
+        if p.get("name") == name:
+            return p
+    return ET.SubElement(root, "property", {"name": name, "type": "empty"})
+
+def custom(scope_name):
+    s = scope(scope_name)
+    for p in s.findall("property"):
+        if p.get("name") == "custom":
+            return p
+    return ET.SubElement(s, "property", {"name": "custom", "type": "empty"})
+
+def bind(parent, key, value):
+    for p in parent.findall("property"):
+        if p.get("name") == key:
+            p.set("value", value)
+            p.set("type", "string")
+            return
+    ET.SubElement(parent, "property",
+                  {"name": key, "type": "string", "value": value})
+
+cmds = custom("commands")
+wm = custom("xfwm4")
+
+# Window cycling, tiling, workspace switch: these values are xfwm4's own
+# action names, so a key that does nothing means the name is wrong, not the
+# binding. Always set: they are the desktop spec, not a preference.
+for key, action in [
+        ("<Alt>Tab", "cycle_window_key"),
+        ("<Super>Left", "tile_left_key"),
+        ("<Super>Right", "tile_right_key"),
+        ("<Primary><Alt>Left", "left_workspace_key"),
+        ("<Primary><Alt>Right", "right_workspace_key")]:
+    bind(wm, key, action)
+# App + session commands. The terminal binding duplicates the live
+# xfconf-query above so it survives a session the query never saw.
+bind(cmds, "<Primary><Alt>t", "xfce4-terminal --disable-server")
+# The logout dialog — xfce4-session-logout with NO flags shows the dialog
+# (logout / restart / shutdown buttons), it does not log out. This binding
+# is the one session-ending path the desktop offers; nothing here passes
+# --logout/--halt/--reboot or kills the session any other way.
+bind(cmds, "<Primary><Alt>Delete", "xfce4-session-logout")
+# Tool-gated: only bound when the tool is on PATH at login time (the login
+# run always is; a chroot run that cannot see the tool simply skips, and the
+# merge above means it never deletes a binding the login run wrote).
+if shutil.which("xfce4-screenshooter") is not None:
+    bind(cmds, "Print", "xfce4-screenshooter -f")
+    bind(cmds, "<Alt>Print", "xfce4-screenshooter -w")
+    print("meta-desktop: shortcuts Print/Alt+Print run xfce4-screenshooter")
+else:
+    print("meta-desktop: shortcuts Print/Alt+Print skipped (no xfce4-screenshooter on PATH)")
+if shutil.which("xflock4") is not None:
+    bind(cmds, "<Primary><Alt>l", "xflock4")
+    print("meta-desktop: shortcut Ctrl+Alt+L runs xflock4")
+else:
+    print("meta-desktop: shortcut Ctrl+Alt+L skipped (no xflock4 on PATH)")
+t.write(ks_path, encoding="UTF-8", xml_declaration=True)
+print("meta-desktop: shortcuts merged (Alt+Tab cycle, Super+Left/Right tile, "
+      "Ctrl+Alt+Left/Right workspace, Ctrl+Alt+Del logout dialog)")
+PY
+
+# ------------------------------------------------------ 2c. terminal colours
 # xfce4-terminal does not read /etc/xdg/xfce4/terminal/terminalrc into an
 # existing profile: the first window starts a terminal *server* that owns the
 # settings for every later window, so if the user has no terminalrc yet the
@@ -330,7 +488,7 @@ add_app notes     "Notes"      notes           meta-notes
 add_app monitor   "Monitor"    dashboard       meta-monitor
 add_app agents    "Agents"     agents          meta-agents
 add_app editor    "Editor"     editor          mousepad
-# Calculator: the image has galculator (Xubuntu's own); mate-calc is what the
+# Calculator: the image ships galculator (the base image's own); mate-calc is what the
 # ISO manifest names. Pick whichever is really installed instead of shipping a
 # tile that opens nothing on one of the two.
 CALC_BIN=galculator

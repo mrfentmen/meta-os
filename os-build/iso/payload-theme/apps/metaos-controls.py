@@ -99,6 +99,73 @@ def load_css():
 
 
 # --------------------------------------------------------------------------
+# Window chrome shared by the gallery and its child demo window (R2-T2 A).
+# Chrome only: minimise/maximise buttons, Alt+F4/F9/F10 + Ctrl+Q keys, and
+# a per-window minimum size. No gallery content or behavior changes here.
+# --------------------------------------------------------------------------
+def add_window_chrome(win, hb, min_size=None):
+    """Pack minimise/maximise beside the WM close button and wire the
+    standard keys. Safe to call once per top-level window."""
+    from gi.repository import Gtk
+    if min_size:
+        try:
+            win.set_size_request(*min_size)
+        except Exception:
+            pass
+    for icon, tooltip, action in (
+            ("window-minimize-symbolic", "Minimise (Alt+F9)", "minimize"),
+            ("window-maximize-symbolic", "Maximise (Alt+F10)",
+             "toggle-maximize")):
+        try:
+            btn = Gtk.Button.new_from_icon_name(icon, Gtk.IconSize.MENU)
+            btn.set_tooltip_text(tooltip)
+            btn.set_can_focus(True)
+            btn.set_focus_on_click(False)
+            btn.connect("clicked", _chrome_button, win, action)
+            hb.pack_end(btn)
+        except Exception:
+            pass
+    try:
+        ag = Gtk.AccelGroup()
+        win.add_accel_group(ag)
+        for spec, action in (("<Alt>F4", "close"),
+                             ("<Alt>F9", "minimize"),
+                             ("<Alt>F10", "toggle-maximize"),
+                             ("<Control>q", "close")):
+            key, mods = Gtk.accelerator_parse(spec)
+            if key == 0:
+                continue
+            ag.connect(key, mods, Gtk.AccelFlags.VISIBLE,
+                       _chrome_accel, win, action)
+    except Exception:
+        pass
+
+
+def _chrome_button(_btn, win, action):
+    _chrome_action(win, action)
+
+
+def _chrome_accel(_ag, _obj, _key, _mods, win, action):
+    _chrome_action(win, action)
+    return True
+
+
+def _chrome_action(win, action):
+    try:
+        if action == "minimize":
+            win.iconify()
+        elif action == "toggle-maximize":
+            if win.is_maximized():
+                win.unmaximize()
+            else:
+                win.maximize()
+        elif action == "close":
+            win.destroy()  # this window only; the session is untouched
+    except Exception:
+        pass
+
+
+# --------------------------------------------------------------------------
 # small builders, so each page reads as a list of controls, not as geometry
 # --------------------------------------------------------------------------
 def row(label, widget, note=None):
@@ -437,6 +504,7 @@ def window_page(win):
         hb = Gtk.HeaderBar()
         hb.set_show_close_button(True)
         hb.props.title = "Meta OS child window"
+        add_window_chrome(child, hb, min_size=(520, 260))
         child.set_titlebar(hb)
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
         box.set_border_width(18)
@@ -495,6 +563,7 @@ def main(argv):
     hb.set_show_close_button(True)
     hb.props.title = "Meta OS Controls"
     hb.props.subtitle = "every control, drawn by the MetaOS theme"
+    add_window_chrome(win, hb, min_size=(640, 440))
     win.set_titlebar(hb)
 
     overlay = Gtk.Overlay()

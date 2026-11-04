@@ -1,0 +1,18 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Nuntius
+Comment=Nuntius crew board — named rooms on this machine (Board service, port 18935)
+Exec=/usr/local/bin/meta-app --title Messages --app-id messages --url http://127.0.0.1:18935/
+TryExec=/usr/local/bin/meta-app
+Icon=/usr/share/icons/metaos/128x128/apps/messages.png
+Terminal=false
+Categories=Office;Network;
+OnlyShowIn=XFCE;
+StartupNotify=true
+StartupWMClass=meta-app
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/local/bin/meta-app --title Messages --app-id messages --url http://127.0.0.1:18935/

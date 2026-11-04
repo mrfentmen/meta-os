@@ -3,9 +3,16 @@ Version=1.0
 Type=Application
 Name=Custos
 Comment=Custos watch page (MetaOS local service)
-Exec=epiphany-browser http://127.0.0.1:18934/surfaces.html
-Icon=custos
+Exec=/usr/local/bin/meta-app --title Custos --app-id custos --url http://127.0.0.1:18934/design/meta-custos-watch.html
+TryExec=/usr/local/bin/meta-app
+Icon=/usr/share/icons/metaos/128x128/apps/custos.png
 Terminal=false
 Categories=System;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=meta-app
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/local/bin/meta-app --title Custos --app-id custos --url http://127.0.0.1:18934/design/meta-custos-watch.html

@@ -5,8 +5,14 @@ Name=Controls
 Comment=Every native control the MetaOS theme draws, in one window
 Exec=/usr/share/metaos/apps/metaos-controls.py
 TryExec=/usr/share/metaos/apps/metaos-controls.py
-Icon=controls
+Icon=/usr/share/icons/metaos/128x128/apps/controls.png
 Terminal=false
 Categories=Settings;DesktopSettings;Utility;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=metaos-controls.py
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/share/metaos/apps/metaos-controls.py

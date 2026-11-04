@@ -3,10 +3,17 @@ Version=1.0
 Type=Application
 Name=Code Editor
 Comment=Edit files in your home directory (offline)
-Exec=mousepad %U
-Icon=editor
+Exec=/usr/bin/mousepad %U
+TryExec=/usr/bin/mousepad
+Icon=/usr/share/icons/metaos/128x128/apps/editor.png
 Terminal=false
 Categories=Development;TextEditor;
 OnlyShowIn=XFCE;
 StartupNotify=true
+StartupWMClass=mousepad
 MimeType=text/plain;
+Actions=NewWindow;
+
+[Desktop Action NewWindow]
+Name=Open New Window
+Exec=/usr/bin/mousepad %U

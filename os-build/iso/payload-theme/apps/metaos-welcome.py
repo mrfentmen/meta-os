@@ -229,6 +229,23 @@ def on_launch_clicked(button, app_ids):
     return launch_entry(app_ids)
 
 
+def on_quit_accel(*_args):
+    """GTK callback: Ctrl+Q accelerator. Destroys the welcome window."""
+    if not GTK_AVAILABLE or Gtk is None:
+        return True
+    for window in Gtk.Window.list_toplevels():
+        try:
+            if window.get_title() == "Welcome to MetaOS":
+                window.destroy()
+        except Exception:
+            pass
+    try:
+        Gtk.main_quit()
+    except Exception:
+        pass
+    return True
+
+
 def on_dismiss_clicked(button, window):
     """GTK callback: dismiss button. Marks shown and closes the window."""
     mark_shown()
@@ -311,6 +328,24 @@ def build_window(system_info=None, metafetch_text=None):
 
     window = Gtk.Window(title="Welcome to MetaOS")
     window.set_default_size(620, 520)
+    # Chrome only (R2-T2 A): a per-window minimum size and Ctrl+Q to quit.
+    # The window keeps server-side decorations, so minimise/maximise/close
+    # and Alt+F4 come from the window manager. Escape is deliberately left
+    # inert here: closing the welcome window quits the app, and Escape must
+    # never close an app window.
+    try:
+        window.set_size_request(480, 400)
+    except Exception:
+        pass
+    try:
+        quit_group = Gtk.AccelGroup()
+        window.add_accel_group(quit_group)
+        quit_key, quit_mods = Gtk.accelerator_parse("<Control>q")
+        if quit_key != 0:
+            quit_group.connect(quit_key, quit_mods, Gtk.AccelFlags.VISIBLE,
+                               on_quit_accel)
+    except Exception:
+        pass
     window.set_position(Gtk.WindowPosition.CENTER)
     window.get_style_context().add_class("metaos-welcome")
     try:
