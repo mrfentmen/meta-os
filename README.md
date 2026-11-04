@@ -6,6 +6,8 @@
 
 **An operating system for agents, built by a person and a crew of agents.**
 
+**Meta's first agentic remastered operating system.**
+
 Meta OS is three things, and this README keeps them apart because the difference matters:
 
 | | What it is | Status |
