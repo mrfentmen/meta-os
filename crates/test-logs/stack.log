@@ -1,0 +1,83 @@
+=== TEST stack 2026-11-04T19:24:28Z ===
+   Compiling stack v0.1.0 (/Users/test/Desktop/meta-os/crates/stack)
+    Finished `release` profile [optimized] target(s) in 0.56s
+     Running unittests src/lib.rs (target/release/deps/stack-adb6b9dc0d4aeeec)
+
+running 13 tests
+test tests::default_ports_and_bases ... ok
+test tests::empty_port_values_fall_back_to_defaults ... ok
+test tests::job_ns_absent_by_default_and_inherited_verbatim ... ok
+test tests::non_numeric_port_passes_through_verbatim ... ok
+test tests::port_overrides_are_honored ... ok
+test tests::app_service_matches_script_queue_path_always_on ... ok
+test tests::plan_order_is_script_order ... ok
+test tests::relay_service_matches_script ... ok
+test tests::transport_dev_helper_when_key_missing_or_empty ... ok
+test tests::summary_lines_match_script_echo ... ok
+test tests::agent_service_matches_script ... ok
+test tests::queue_service_matches_script ... ok
+test tests::transport_production_when_key_present ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-9891f974809aae8d)
+
+running 8 tests
+test duplicate_input_keeps_the_first_value ... ok
+test empty_input_yields_the_documented_defaults ... ok
+test out_of_order_input_is_resolved_by_key_not_position ... ok
+test unicode_port_is_kept_verbatim ... ok
+test zero_port_is_kept_not_treated_as_unset ... ok
+test empty_job_namespace_is_inherited_verbatim ... ok
+test every_service_has_a_unique_name_and_a_non_empty_argv ... ok
+test maximum_input_is_carried_without_truncation ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-e314a6020fb70444)
+
+running 11 tests
+test keys_are_case_sensitive_and_a_wrong_case_is_unset ... ok
+test empty_port_value_is_not_an_error_it_falls_back ... ok
+test empty_spark_key_selects_dev_helper_not_an_error ... ok
+test any_non_empty_spark_key_is_production_without_validation ... ok
+test negative_port_is_kept_verbatim ... ok
+test duplicate_keys_take_the_first_match ... ok
+test unknown_keys_are_ignored_not_refused ... ok
+test missing_spark_key_selects_dev_helper_not_an_error ... ok
+test plan_survives_an_unusable_port ... ok
+test summary_survives_an_unusable_port ... ok
+test whitespace_port_is_kept_verbatim ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-8f66200c99a99885)
+
+running 8 tests
+test dev_helper_warning_is_only_for_dev_helper ... ok
+test from_env_reads_live_values_and_empty_falls_back ... ok
+test plan_order_and_cwd_match_the_script ... ok
+test summary_lines_carry_custom_bases ... ok
+test plan_without_job_namespace_has_no_namespace_env ... ok
+test plan_with_empty_job_namespace_is_inherited ... ok
+test the_resident_agent_never_gets_an_http_gate ... ok
+test readiness_constants_are_the_script_values ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section14_stack.rs (target/release/deps/section14_stack-be1ced3e5e56b409)
+
+running 3 tests
+test stack_lifo_order ... ok
+test stack_overflow_named ... ok
+test stack_underflow ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests stack
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:24:29Z

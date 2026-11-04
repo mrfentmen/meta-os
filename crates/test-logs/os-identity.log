@@ -1,0 +1,105 @@
+=== TEST os-identity 2026-11-04T19:23:55Z ===
+   Compiling os-identity v0.1.0 (/Users/test/Desktop/meta-os/crates/os-identity)
+    Finished `release` profile [optimized] target(s) in 1.02s
+     Running unittests src/lib.rs (target/release/deps/os_identity-534af47073c3f76f)
+
+running 20 tests
+test tests::cap_set_drops_empties_from_ragged_caps ... ok
+test tests::config_defaults_and_key_shapes ... ok
+test tests::agents_skips_index_members_without_a_hash ... ok
+test tests::find_for_skips_stale_agents ... ok
+test tests::is_fresh_boundaries_and_bad_updated ... ok
+test tests::find_for_results_are_sorted ... ok
+test tests::get_returns_none_for_unknown ... ok
+test tests::find_for_bad_max_jobs_falls_back_to_one ... ok
+test tests::find_for_ignores_non_claimed_and_other_agents_jobs ... ok
+test tests::record_fields_round_trip_skip_empty ... ok
+test tests::register_empty_host_is_not_stored ... ok
+test tests::find_for_matches_caps_freshness_and_capacity ... ok
+test tests::register_normalizes_caps_sorted_lower_deduped ... ok
+test tests::prune_stale_removes_only_stale_sorted ... ok
+test tests::register_refresh_overwrites_caps_and_keeps_index_single ... ok
+test tests::register_rejects_blank_nick_and_empty_caps ... ok
+test tests::register_stores_optional_fields_only_when_nonempty ... ok
+test tests::store_error_paths_match_python_fallbacks ... ok
+test tests::touch_heartbeat_unknown_false_known_true ... ok
+test tests::unregister_removes_hash_and_index ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/code100_section4.rs (target/release/deps/code100_section4-a5f3a94fe808eaaf)
+
+running 2 tests
+test empty_name_is_refused_not_stored ... ok
+test ten_thousand_char_name_round_trips ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-8e4935423362b586)
+
+running 12 tests
+test future_and_unparseable_updated_values ... ok
+test extreme_positive_updated_does_not_overflow ... ok
+test empty_capability_slice_is_refused ... ok
+test out_of_order_index_scores_list_in_score_order ... ok
+test duplicate_capabilities_are_deduped_and_sorted ... ok
+test maximum_nick_length_round_trips ... ok
+test duplicate_registration_updates_one_record_and_one_index_member ... ok
+test capacity_zero_behaves_as_one ... ok
+test empty_requirement_list_matches_every_fresh_agent_with_capacity ... ok
+test maximum_capability_list_and_job_capacity ... ok
+test out_of_order_registration_returns_sorted_nicks ... ok
+test staleness_boundary_is_inclusive ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-4fea6cc03be7345a)
+
+running 12 tests
+test active_claims_job_error_is_zero ... ok
+test register_blank_nick_refused_with_python_wording ... ok
+test agents_per_agent_hash_error_propagates ... ok
+test find_for_propagates_a_per_agent_read_error ... ok
+test get_store_failure_propagates ... ok
+test prune_stale_propagates_a_delete_error ... ok
+test agents_index_error_is_an_empty_list_not_an_error ... ok
+test register_without_a_usable_capability_refused ... ok
+test register_store_failure_is_wrapped_as_store_error ... ok
+test store_error_display_and_conversion ... ok
+test touch_unknown_is_false_and_store_failure_propagates ... ok
+test unregister_store_failure_propagates ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-25559135e0fd1145)
+
+running 11 tests
+test all_three_error_types_are_std_errors ... ok
+test cap_set_drops_empties_from_ragged_caps ... ok
+test config_defaults_are_the_documented_constants ... ok
+test memory_store_job_claims_reflect_set_jobs ... ok
+test from_fields_defaults_and_ignores_unknown_fields ... ok
+test memory_store_round_trips_direct_operations ... ok
+test memory_store_zrange_orders_equal_scores_by_member ... ok
+test register_error_messages_are_python_exact ... ok
+test registry_error_display_covers_both_variants ... ok
+test negative_max_jobs_behaves_as_one ... ok
+test to_fields_skips_empty_values ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section13.rs (target/release/deps/section13-447becb3374539f1)
+
+running 2 tests
+test identity_empty_name ... ok
+test identity_id_unique ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests os_identity
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:23:56Z

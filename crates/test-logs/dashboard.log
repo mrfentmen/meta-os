@@ -1,0 +1,202 @@
+=== TEST dashboard 2026-11-04T19:23:45Z ===
+   Compiling dashboard v0.1.0 (/Users/test/Desktop/meta-os/crates/dashboard)
+    Finished `release` profile [optimized] target(s) in 0.74s
+     Running unittests src/lib.rs (target/release/deps/dashboard-8620f7bcd5b17f96)
+
+running 7 tests
+test contract::tests::demo_prefix_trap ... ok
+test contract::tests::staleness_threshold ... ok
+test contract::tests::deep_links_parse ... ok
+test contract::tests::brief_contract_validates ... ok
+test contract::tests::today_briefs_dedupe ... ok
+test contract::tests::today_records_match_fixture ... ok
+test contract::tests::verdicts_never_remapped ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/b15_crewboard.rs (target/release/deps/b15_crewboard-a0dd10ae6d31c74c)
+
+running 23 tests
+test test_crewboard_artifact_old_job_has_no_links ... ok
+test test_crewboard_artifact_paths_escaped ... ok
+test test_crewboard_artifact_links_store_paths ... ok
+test test_crewboard_attempts_absent_blank_junk_no_badge ... ok
+test test_crewboard_files_deps_old_and_blank_render_nothing ... ok
+test test_crewboard_artifact_bad_paths_dropped ... ok
+test test_crewboard_files_and_deps_lines ... ok
+test test_crewboard_files_names_escaped ... ok
+test test_crewboard_attempts_thresholds ... ok
+test test_crewboard_ribbon_acknowledged_keeps_ribbon ... ok
+test test_crewboard_ribbon_bare_subject_links_to_alert ... ok
+test test_crewboard_ribbon_first_matching_critical_wins ... ok
+test test_crewboard_ribbon_job_form_matches_case_insensitively ... ok
+test test_crewboard_ribbon_other_job_and_no_alerts_get_none ... ok
+test test_crewboard_ribbon_kind_and_id_are_escaped ... ok
+test test_crewboard_ribbon_resolved_gets_none ... ok
+test test_crewboard_ribbon_uppercase_severity_matches ... ok
+test test_crewboard_ribbon_warning_and_info_get_none ... ok
+test test_crewboard_ribbon_without_id_has_no_link ... ok
+test test_crewboard_signing_hash_and_history_entry_shapes ... ok
+test test_crewboard_signing_log_entry_is_keyless_json ... ok
+test test_crewboard_signing_pystr_matches_json_dumps ... ok
+test test_crewboard_signing_nonce_shape ... ok
+
+test result: ok. 23 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/b15_parity.rs (target/release/deps/b15_parity-8d7808721f80a3b0)
+
+running 26 tests
+test test_dashboard_alert_feed_dsh013 ... ok
+test test_dashboard_alert_lifecycle_ack_persists_and_idempotent ... ok
+test test_dashboard_accessibility_palette_contrast_meets_aa ... ok
+test test_dashboard_alert_lifecycle_legacy_record_derives_status ... ok
+test test_dashboard_alert_lifecycle_feed_rows_carry_wdg014_status ... ok
+test test_dashboard_alert_lifecycle_live_write_gate_off ... ok
+test test_dashboard_accessibility_spec_carries_contrast_notes ... ok
+test test_dashboard_alert_lifecycle_resolve_unblocks_header ... ok
+test test_dashboard_alert_lifecycle_resolved_collapse_count ... ok
+test test_dashboard_alert_lifecycle_resolved_refuses_ack ... ok
+test test_dashboard_brief_payload_contract_brf042 ... ok
+test test_dashboard_brief_sections_default_open_map ... ok
+test test_dashboard_brief_sections_titles_and_order ... ok
+test test_dashboard_deploy_runbook_honest_limits ... ok
+test test_dashboard_deploy_runbook_sections_and_gates ... ok
+test test_dashboard_dsh038_request_only ... ok
+test test_dashboard_rollback_int031_exact_steps ... ok
+test test_dashboard_rollback_int031_rejects_invented_id ... ok
+test test_dashboard_smoke_checklist_covers_deploy_gates ... ok
+test test_dashboard_smoke_checklist_every_check_names_pass_criteria ... ok
+test test_dashboard_smoke_checklist_exactly_ten_checks ... ok
+test test_dashboard_smoke_checklist_run_procedure_and_log ... ok
+test test_dashboard_smoke_checklist_spec_documents_it ... ok
+test test_dashboard_spec_docs_carried ... ok
+test test_dashboard_stale_labels_brf043 ... ok
+test test_dashboard_today_counters_record_rules ... ok
+
+test result: ok. 26 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/b15_rollback_parity.rs (target/release/deps/b15_rollback_parity-bb4376f07bc35259)
+
+running 5 tests
+test test_rollback_failover_card_copy_present ... ok
+test test_rollback_no_credential_recorded ... ok
+test test_rollback_previous_id_no_invented_id ... ok
+test test_rollback_verified_by_previous_marker ... ok
+test test_rollback_project_restore_still_marked_unconfirmed ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/b15_spec_notes.rs (target/release/deps/b15_spec_notes-a3bc5911089cb385)
+
+running 21 tests
+test test_dashboard_cross_browser_log_records_all_four_runs_pass ... ok
+test test_dashboard_brief_sections_spec_notes_dsh031 ... ok
+test test_dashboard_cross_browser_log_records_no_safari_only_bug_verdict ... ok
+test test_dashboard_cross_browser_log_states_ios_device_caveat_plainly ... ok
+test test_dashboard_deep_links_spec_documents_deep_links ... ok
+test test_dashboard_demo_mode_spec_documents_demo_mode ... ok
+test test_dashboard_dsh038_spec_decision_gives_real_cli_flow ... ok
+test test_dashboard_dsh038_spec_decision_names_why_not_deferred ... ok
+test test_dashboard_dsh038_spec_decision_reopens_only_on_dale_plus_server ... ok
+test test_dashboard_dsh038_spec_has_request_only_decision_section ... ok
+test test_dashboard_dsh038_spec_no_longer_waits_on_viewer_posting_rule ... ok
+test test_dashboard_dsp039_spec_lists_all_six_states_with_exact_labels ... ok
+test test_dashboard_error_states_spec_documents_error_states ... ok
+test test_dashboard_help_spec_documents_help_panel ... ok
+test test_dashboard_intel_focus_spec_and_demo_notes_document_shortcut ... ok
+test test_dashboard_os043_spec_documents_boot_checklist_contract ... ok
+test test_dashboard_os084_spec_documents_refusal_banner_contract ... ok
+test test_dashboard_performance_spec_documents_the_cap ... ok
+test test_dashboard_readonly_token_spec_notes_dsh033 ... ok
+test test_dashboard_str005_spec_notes_str005 ... ok
+test test_dashboard_today_counters_spec_notes_dsh032 ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-2da1a8e78e647ba4)
+
+running 16 tests
+test duplicate_alert_ids_keep_input_order_on_a_tie ... ok
+test duplicate_lifecycle_id_acks_only_the_first_record ... ok
+test duplicate_deps_tokens_are_rendered_as_given ... ok
+test empty_inputs_return_empty_results_not_errors ... ok
+test out_of_order_feed_is_sorted_by_time_then_id_descending ... ok
+test escape_is_applied_in_the_documented_order ... ok
+test maximum_length_room_still_validates_against_its_own_id ... ok
+test out_of_order_history_counts_the_same_day_once ... ok
+test maximum_brief_history_dedupes_to_distinct_timestamps ... ok
+test out_of_order_jobs_and_alerts_are_counted_independently ... ok
+test route_encoding_covers_every_non_unreserved_byte ... ok
+test same_day_boundary_is_utc_midnight ... ok
+test stale_boundary_is_exactly_two_hours ... ok
+test zero_max_attempts_is_already_danger ... ok
+test maximum_feed_sorts_ten_thousand_cards_newest_first ... ok
+test maximum_files_line_keeps_every_name ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-f9a3e29ec405e7e5)
+
+running 19 tests
+test bad_brief_id_is_refused_with_the_id_named ... ok
+test a_complete_runbook_is_accepted ... ok
+test an_empty_runbook_fails_on_the_first_step ... ok
+test bad_brief_kind_is_refused_with_the_kind_named ... ok
+test empty_room_is_refused ... ok
+test missing_docs_citation_is_refused ... ok
+test missing_id_field_is_refused ... ok
+test every_missing_step_names_itself ... ok
+test missing_preview_rule_is_refused ... ok
+test a_short_colour_panics_in_the_wcag_helper - should panic ... ok
+test missing_valid_target_rule_is_refused ... ok
+test negative_age_is_refused ... ok
+test negative_generated_at_is_refused ... ok
+test non_hex_digits_read_as_zero_channels ... ok
+test non_intel_and_id_less_deep_links_are_none ... ok
+test token_rejection_names_the_panel_and_the_fix ... ok
+test unparseable_attempts_have_no_badge ... ok
+test unreachable_names_the_panel_and_spares_the_log ... ok
+test unsafe_or_missing_artifact_paths_are_dropped ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-46aa6b27879582d7)
+
+running 13 tests
+test an_unrecognised_status_falls_back_to_the_timestamps ... ok
+test brief_kinds_are_exactly_the_three_spec_kinds ... ok
+test addressable_cards_preserve_order_and_drop_resolved ... ok
+test resolve_brief_link_only_accepts_a_timestamp_in_the_window ... ok
+test resolving_an_acknowledged_record_keeps_the_ack_stamp ... ok
+test py_str_json_handles_control_bytes_and_del ... ok
+test default_open_is_closed_for_every_known_section_but_blocked ... ok
+test rollback_steps_are_the_four_int031_names_in_order ... ok
+test nonce_shape_is_lowercase_hex_and_exactly_sixteen ... ok
+test route_encode_id_passes_unreserved_bytes_through ... ok
+test stale_label_humanises_hours_and_minutes ... ok
+test unresolved_critical_count_is_case_insensitive_and_skips_resolved ... ok
+test verdicts_are_the_three_str004_ground_truth_words ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section14_metrics.rs (target/release/deps/section14_metrics-59fb93a12096d9d7)
+
+running 8 tests
+test dashboard_bad_metric_type ... ok
+test dashboard_empty_snapshot_is_per_card ... ok
+test dashboard_card_network ... ok
+test dashboard_card_storage ... ok
+test dashboard_card_memory ... ok
+test dashboard_card_cpu ... ok
+test dashboard_parse_accepts_the_reported_forms ... ok
+test dashboard_empty_snapshot ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests dashboard
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:23:46Z

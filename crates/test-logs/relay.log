@@ -1,0 +1,112 @@
+=== TEST relay 2026-11-04T19:24:26Z ===
+   Compiling relay v0.1.0 (/Users/test/Desktop/meta-os/crates/relay)
+    Finished `release` profile [optimized] target(s) in 0.77s
+     Running unittests src/lib.rs (target/release/deps/relay-799918b146573b9a)
+
+running 30 tests
+test http::tests::health_names_the_memory_store ... ok
+test http::tests::append_then_poll_by_watermark ... ok
+test http::tests::refusals_for_bad_json_and_oversized_bodies ... ok
+test http::tests::since_parsing_matches_parseint ... ok
+test http::tests::rooms_are_isolated ... ok
+test http::tests::notify_line_format_and_deterministic_id ... ok
+test json::tests::escape_controls ... ok
+test http::tests::validation_refusals ... ok
+test http::tests::viewer_is_served_at_slash ... ok
+test json::tests::parse_tolerances ... ok
+test json::tests::round_trip ... ok
+test notify::tests::different_basis_different_id ... ok
+test notify::tests::id_format_and_determinism ... ok
+test notify::tests::id_matches_node_for_js_suite_payload ... ok
+test notify::tests::line_formats ... ok
+test notify::tests::parse_first_colon ... ok
+test sha256::tests::abc_vector ... ok
+test sha256::tests::empty_input_vector ... ok
+test sha256::tests::long_input_spans_blocks ... ok
+test store::tests::append_indices_and_isolation ... ok
+test store::tests::since_semantics ... ok
+test validation::tests::room_names ... ok
+test validation::tests::severities ... ok
+test validation::tests::single_line_rules ... ok
+test validation::tests::utf16_length_matches_js ... ok
+test http::tests::file_store_persists_lines_across_a_restart ... ok
+test http::tests::health_names_the_file_store ... ok
+test store::tests::file_store_persists_across_reload ... ok
+test store::tests::reload_skips_torn_records ... ok
+test http::tests::live_http_post_then_get ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running unittests src/main.rs (target/release/deps/relay-7c2a6bcc9bb37ba4)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-68e87fc9537d0479)
+
+running 7 tests
+test duplicate_json_keys_follow_last_one_wins ... ok
+test empty_inputs_are_answered_not_crashed ... ok
+test out_of_order_watermarks_are_clamped_and_first_since_wins ... ok
+test a_get_before_any_post_is_an_honest_empty_room ... ok
+test duplicate_notify_payloads_keep_one_id_and_two_indices ... ok
+test maximum_lengths_are_accepted_at_the_cap ... ok
+test an_exactly_maximum_body_is_not_an_oversized_body ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-6fa5b8dfbeaf9d59)
+
+running 12 tests
+test a_missing_viewer_is_500_plain_text_with_the_upstream_wording ... ok
+test an_oversized_body_is_refused_before_parsing ... ok
+test a_malformed_percent_escape_is_a_500_not_a_400 ... ok
+test a_body_that_is_not_a_json_object_is_refused ... ok
+test health_on_an_empty_relay_names_zero_rooms_and_the_memory_store ... ok
+test room_store_reports_the_unreadable_file_as_an_error ... ok
+test invalid_room_names_are_refused_with_the_documented_message ... ok
+test nick_refusals_name_the_nick_field ... ok
+test an_unreadable_store_file_panics_at_boot - should panic ... ok
+test notify_refuses_severity_topic_and_text_in_that_order ... ok
+test unknown_routes_and_wrong_methods_are_404_json ... ok
+test text_refusals_name_the_text_field ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-d115cb2f7ab86892)
+
+running 10 tests
+test parse_duplicate_keys_last_one_wins ... ok
+test parse_decodes_unicode_escapes_and_surrogate_pairs ... ok
+test escape_leaves_del_and_everything_above_it_alone ... ok
+test escape_handles_quotes_backslashes_and_unicode ... ok
+test escape_uses_the_named_control_sequences ... ok
+test parse_ignores_extra_fields_including_nested_ones ... ok
+test parse_rejects_every_shape_that_is_not_a_room_line_object ... ok
+test parse_rejects_lone_surrogates ... ok
+test parse_tolerates_whitespace_between_tokens ... ok
+test record_line_round_trips_every_hostile_character ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section12.rs (target/release/deps/section12-51f1a153f52ab4a5)
+
+running 7 tests
+test nick_first_colon_split ... ok
+test cursor_beyond_end ... ok
+test read_append_order ... ok
+test room_isolation ... ok
+test message_empty_body ... ok
+test trim_oldest_first ... ok
+test timestamps_monotonic ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests relay
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:24:28Z

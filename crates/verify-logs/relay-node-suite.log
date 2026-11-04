@@ -1,0 +1,109 @@
+✔ append then poll by watermark (29.064542ms)
+✔ rooms are isolated (2.446958ms)
+✔ notify line format and deterministic id (2.95925ms)
+✔ validation refusals (6.023458ms)
+✔ health names the memory store (0.617792ms)
+✔ viewer is served at / (0.968584ms)
+✔ posting creates a room once and GET /rooms lists it once (1.265125ms)
+✔ oversized body is refused with the cap in the error (0.732417ms)
+✔ concurrent writers never interleave a line (21.988709ms)
+✔ path characters are not valid room names (0.179542ms)
+✔ history order survives a restart (13.328458ms)
+✔ file store persists lines across a restart (14.187708ms)
+▶ protocol edges
+  ✔ empty message body is refused (1.639625ms)
+  ✔ maximum text length passes, one over is refused (1.294291ms)
+  ✔ nick containing a colon keeps the documented split (2.323459ms)
+  ✔ a line with no nick separator is refused by the parser (0.310375ms)
+  ✔ unicode bodies round-trip unchanged (1.397334ms)
+  ✔ a newline in the body is refused (0.811583ms)
+  ✔ five messages read back in post order (3.01625ms)
+  ✔ second poll with the same cursor has no duplicates (2.114916ms)
+  ✔ cursor beyond the current end returns an empty page (0.875625ms)
+  ✔ negative cursor is refused (0.40275ms)
+  ✔ two concurrent writers lose nothing and keep writer order (9.181083ms)
+  ✔ rooms stay isolated (1.344417ms)
+  ✔ room name with whitespace is refused (0.717084ms)
+  ✔ timestamps are assigned and non-decreasing (2.717834ms)
+  ✔ malformed JSON frame is refused with a named error (0.772708ms)
+  ✔ validation helper pins nick and text limits (0.093792ms)
+  ✔ store trims oldest lines at the cap (13.594667ms)
+  ✔ trimming never drops below minimum retention (0.159584ms)
+  ✔ reading an empty room is an empty list, not an error (0.788292ms)
+  ✔ read limit returns the oldest pending messages (3.435292ms)
+  ✔ 100 posted messages get unique ids (83.994541ms)
+  ✔ relay exports the documented API (0.232875ms)
+✔ protocol edges (132.111792ms)
+▶ parsed message validator
+  ✔ a well-formed message record passes (0.188875ms)
+  ✔ a missing nick is named (0.047291ms)
+  ✔ a record that is not an object is refused (0.027167ms)
+  ✔ body at the cap passes and one over is refused (0.075042ms)
+  ✔ an empty body is refused (0.030333ms)
+  ✔ a newline in the body is refused (0.044416ms)
+  ✔ a nil nick and its text never appear in the error list (0.043458ms)
+  ✔ timestamps must be non-negative integers (0.041625ms)
+  ✔ an extra field is named (0.036333ms)
+✔ parsed message validator (0.665875ms)
+ℹ tests 43
+ℹ suites 2
+ℹ pass 43
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 309.342959
+✔ R13-401 append path (22.238833ms)
+✔ R13-402 poll path (4.973708ms)
+✔ R13-403 room routing (3.517ms)
+✔ R13-404 message ordering (5.804792ms)
+✔ R13-405 duplicate delivery (2.462041ms)
+✔ R13-406 oversized message (0.863333ms)
+✔ R13-407 empty message (1.153292ms)
+✔ R13-408 malformed frame (1.8185ms)
+✔ R13-409 slow consumer (24.956833ms)
+✔ R13-410 fast producer burst (92.129208ms)
+✔ R13-411 viewer reconnect (2.637333ms)
+✔ R13-412 backlog trim behaviour (0.475166ms)
+✔ R13-413 nick parsing (0.684292ms)
+✔ R13-414 colon in message body (0.8785ms)
+✔ R13-415 unicode message body (1.232208ms)
+✔ R13-416 long nick (0.647666ms)
+✔ R13-417 missing nick (0.588459ms)
+✔ R13-418 state dir watermark (0.861458ms)
+✖ R13-419 resync after clamp (3.040833ms)
+✔ R13-420 concurrent pollers (7.967167ms)
+✔ R13-421 error envelope (2.612167ms)
+✔ R13-422 exit codes (51.737292ms)
+✔ R13-423 log line shape (49.117125ms)
+✔ R13-424 config defaults (52.661209ms)
+Q_CASES {"total":24,"ok":17,"findings":7}
+✔ R13-425 shutdown behaviour (5.302209ms)
+ℹ tests 25
+ℹ suites 0
+ℹ pass 24
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 412.612834
+
+✖ failing tests:
+
+test at relay/relay.round13.test.mjs:237:1
+✖ R13-419 resync after clamp (3.040833ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(Array.isArray(r.json.messages))
+  
+      at TestContext.<anonymous> (file:///Users/test/Desktop/meta-os/relay/relay.round13.test.mjs:239:10)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async Test.run (node:internal/test_runner/test:1409:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:974:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

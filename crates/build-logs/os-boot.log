@@ -1,0 +1,4 @@
+=== BUILD os-boot 2026-11-04T19:23:09Z ===
+   Compiling os-boot v0.1.0 (/Users/test/Desktop/meta-os/crates/os-boot)
+    Finished `release` profile [optimized] target(s) in 0.47s
+EXIT=0 2026-11-04T19:23:10Z

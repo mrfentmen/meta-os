@@ -1,0 +1,227 @@
+=== TEST os-jobs 2026-11-04T19:23:56Z ===
+   Compiling os-jobs v0.1.0 (/Users/test/Desktop/meta-os/crates/os-jobs)
+    Finished `release` profile [optimized] target(s) in 2.63s
+     Running unittests src/lib.rs (target/release/deps/os_jobs-31bb06d045331227)
+
+running 101 tests
+test tests::cancel_tests::test_cancel_missing_job_refused ... ok
+test tests::claim_tests::test_claim_missing_job ... ok
+test tests::cancel_tests::test_cancel_claimed_job_refused ... ok
+test tests::claim_tests::test_claim_twice_fails ... ok
+test tests::claim_tests::test_claim_lifecycle ... ok
+test tests::claim_tests::test_claim_mutex_rolled_back_when_hset_fails ... ok
+test tests::cancel_tests::test_cancel_open_job ... ok
+test tests::cancel_tests::test_list_status_cancelled ... ok
+test tests::cancel_tests::test_cancel_twice_refused ... ok
+test tests::cancel_tests::test_cancelled_job_cannot_be_claimed ... ok
+test tests::claim_tests::test_ids_increment ... ok
+test tests::claim_tests::test_lost_race ... ok
+test tests::encoding_tests::test_hgetall_roundtrips_literal_percent ... ok
+test tests::environment_jobs_tests::test_boot_template_brief_carries_builder_working_line ... ok
+test tests::environment_jobs_tests::test_builder_record_renders_working_line_and_others_not_reported ... ok
+test tests::environment_jobs_tests::test_no_claimed_job_returns_empty_not_none ... ok
+test tests::environment_jobs_tests::test_non_list_returns_none_so_line_reads_not_reported ... ok
+test tests::environment_jobs_tests::test_only_claimed_jobs_with_nick_and_title_survive_in_order ... ok
+test tests::environment_jobs_tests::test_unusable_id_is_left_out_not_invented ... ok
+test tests::hardening_tests::test_post_explicit_kid ... ok
+test tests::hardening_tests::test_post_defaults_to_first_kid ... ok
+test tests::hardening_tests::test_claim_refuses_tampered_and_alerts ... ok
+test tests::hardening_tests::test_unsigned_claim_still_allowed_with_warning ... ok
+test tests::job_fields_tests::test_attempts_unlimited_requeues ... ok
+test tests::job_fields_tests::test_attempts_walk_to_failed_final ... ok
+test tests::job_fields_tests::test_deps_missing_warns_but_posts ... ok
+test tests::job_fields_tests::test_deps_stored_and_shown ... ok
+test tests::job_fields_tests::test_files_stored_and_shown ... ok
+test tests::hardening_tests::test_expiry ... ok
+test tests::hardening_tests::test_claim_refuses_expired_and_alerts ... ok
+test tests::job_fields_tests::test_list_json_empty ... ok
+test tests::job_fields_tests::test_list_json_shape_and_values ... ok
+test tests::job_fields_tests::test_progress_and_heartbeat_stamps ... ok
+test tests::jobs_unit_tests::test_exec_runs_jobs_sweep_with_no_secret_on_command_line ... ok
+test tests::jobs_unit_tests::test_image_route_enables_and_live_route_stages ... ok
+test tests::jobs_unit_tests::test_install_and_target_want_each_other ... ok
+test tests::jobs_unit_tests::test_unit_exists ... ok
+test tests::jobs_unit_tests::test_service_identity_workdir_and_oneshot ... ok
+test tests::hardening_tests::test_post_unknown_kid_rejected ... ok
+test tests::jobs_unit_tests::test_jobspy_is_the_named_process ... ok
+test tests::hardening_tests::test_legacy_single_token_file_still_works ... ok
+test tests::jobs_unit_tests::test_unit_ordering_target_and_secrets_gate ... ok
+test tests::lease_expiry_tests::test_expired_claim_can_be_reclaimed ... ok
+test tests::hardening_tests::test_show_displays_sig_fields ... ok
+test tests::hardening_tests::test_transplanted_signature_fails ... ok
+test tests::jobs_unit_tests::test_readme_section_and_spec_record ... ok
+test tests::lease_expiry_tests::test_requeue_after_expiry ... ok
+test tests::lease_expiry_tests::test_requeue_refuses_active_lease ... ok
+test tests::lease_expiry_tests::test_sweep ... ok
+test tests::list_show_tests::test_list_and_show ... ok
+test tests::nick_claim_tests::test_claim_expires ... ok
+test tests::nick_claim_tests::test_claim_renewed_by_heartbeat ... ok
+test tests::nick_claim_tests::test_claim_ttl_matches_presence_interval ... ok
+test tests::nick_claim_tests::test_conflict_clears_when_holder_leaves ... ok
+test tests::hardening_tests::test_v1_signature_still_verifies ... ok
+test tests::nick_claim_tests::test_first_claim_wins ... ok
+test tests::nick_claim_tests::test_nick_holder_readonly ... ok
+test tests::hardening_tests::test_verify_unknown_kid_is_bad ... ok
+test tests::nick_claim_tests::test_winner_sees_no_conflict ... ok
+test tests::post_tests::test_post_announces_to_room ... ok
+test tests::post_tests::test_post_bad_artifact_ref_posts_nothing ... ok
+test tests::post_tests::test_post_creates_job ... ok
+test tests::post_tests::test_post_empty_spec_rejected ... ok
+test tests::post_tests::test_post_lease_too_short_rejected ... ok
+test tests::post_tests::test_post_spec_from_stdin ... ok
+test tests::progress_done_tests::test_blocked_releases ... ok
+test tests::progress_done_tests::test_claim_blocked_fails ... ok
+test tests::progress_done_tests::test_done ... ok
+test tests::progress_done_tests::test_done_by_other_fails ... ok
+test tests::progress_done_tests::test_heartbeat_renews ... ok
+test tests::progress_done_tests::test_progress_renews_and_notes ... ok
+test tests::pure_tests::test_artifact_ref_valid_and_malformed ... ok
+test tests::pure_tests::test_brief_time_eastern_conversion ... ok
+test tests::pure_tests::test_canonical_v1_payload_and_signature ... ok
+test tests::pure_tests::test_canonical_v2_payload_and_signature ... ok
+test tests::pure_tests::test_canonical_v2_unicode_escaping_matches_python ... ok
+test tests::pure_tests::test_clean_room_and_bus_key ... ok
+test tests::pure_tests::test_keyring_parsing ... ok
+test tests::pure_tests::test_sha256_vectors ... ok
+test tests::pure_tests::test_url_quote_unquote_roundtrip ... ok
+test tests::req_tests::test_list_json_and_show_carry_req ... ok
+test tests::req_tests::test_post_stores_normalized_req ... ok
+test tests::req_tests::test_post_without_req_stores_empty ... ok
+test tests::signed_job_tests::test_post_bad_secret_file_errors ... ok
+test tests::signed_job_tests::test_claim_refuses_tampered ... ok
+test tests::signed_job_tests::test_post_signed_stores_sig ... ok
+test tests::signed_job_tests::test_show_displays_signed_by ... ok
+test tests::signed_job_tests::test_verify_unknown_job ... ok
+test tests::signed_job_tests::test_verify_tampered_spec ... ok
+test tests::signed_job_tests::test_verify_tampered_field ... ok
+test tests::sweep_dep_dead_tests::test_claimed_job_with_blocked_dep_flagged ... ok
+test tests::sweep_dep_dead_tests::test_failed_final_dep_flagged ... ok
+test tests::sweep_dep_dead_tests::test_open_job_with_blocked_dep_flagged_no_mutation ... ok
+test tests::trust_warning_tests::test_claim_warns_on_spoofed_poster ... ok
+test tests::sweep_dep_dead_tests::test_open_or_done_dep_not_flagged ... ok
+test tests::signed_job_tests::test_claim_unsigned_with_secret_still_works ... ok
+test tests::signed_job_tests::test_claim_signed_ok ... ok
+test tests::signed_job_tests::test_verify_ok ... ok
+test tests::signed_job_tests::test_post_unsigned_has_no_sig ... ok
+test tests::signed_job_tests::test_verify_wrong_secret ... ok
+test tests::signed_job_tests::test_verify_unsigned ... ok
+
+test result: ok. 101 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/code100_section4.rs (target/release/deps/code100_section4-b6009f25cd6026b7)
+
+running 1 test
+test posting_after_completion_uses_a_new_id_and_keeps_the_old_record ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-52fa2a196c535d0a)
+
+running 6 tests
+test duplicate_deps_warn_once_per_listed_dep ... ok
+test empty_input_omits_empty_fields_and_lists_no_jobs ... ok
+test maximum_input_round_trips_a_64k_spec ... ok
+test duplicate_input_in_one_attach_is_stored_twice ... ok
+test zero_attempt_budget_fails_final_on_the_first_requeue ... ok
+test out_of_order_input_lists_ids_lexicographically_within_one_second ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-6fa44bacd702c8cb)
+
+running 56 tests
+test a_missing_keyring_file_is_a_read_refusal ... ok
+test blocked_refuses_a_missing_job ... ok
+test claim_refuses_a_missing_job ... ok
+test attach_refuses_a_missing_job ... ok
+test cancel_reports_a_store_failure ... ok
+test claim_does_not_read_the_secret_file_for_an_unsigned_job ... ok
+test attach_refuses_a_malformed_ref ... ok
+test claim_refuses_a_short_lease ... ok
+test claim_refuses_a_job_that_is_not_open ... ok
+test attach_reports_a_write_failure ... ok
+test blocked_refuses_a_non_claimer ... ok
+test claim_reports_a_mutex_write_failure ... ok
+test done_refuses_a_missing_job ... ok
+test claim_rolls_back_the_mutex_when_the_claim_record_fails ... ok
+test done_refuses_a_non_claimer ... ok
+test done_reports_a_store_failure ... ok
+test environment_lines_reports_every_missing_quarter ... ok
+test environment_lines_reports_nobody_when_the_jobs_list_is_empty ... ok
+test heartbeat_refuses_a_missing_job ... ok
+test heartbeat_refuses_a_non_claimer ... ok
+test heartbeat_reports_a_lost_lease_on_a_store_failure ... ok
+test job_get_returns_nothing_for_an_invalid_id ... ok
+test job_get_swallows_a_store_failure ... ok
+test keyring_refuses_a_line_with_two_colons ... ok
+test keyring_refuses_an_empty_file ... ok
+test keyring_refuses_empty_kid_or_secret ... ok
+test keyring_refuses_multiple_legacy_secrets ... ok
+test nick_claim_returns_none_when_the_store_fails ... ok
+test post_bad_room_is_refused ... ok
+test post_empty_spec_is_refused ... ok
+test post_fails_when_the_index_write_fails ... ok
+test claim_reports_a_malformed_expiry_as_a_verify_failure ... ok
+test post_fails_when_the_job_hash_write_fails ... ok
+test claim_refuses_a_tampered_signature_and_announces_it ... ok
+test claim_refuses_an_expired_signature ... ok
+test post_fails_when_the_sequence_counter_fails ... ok
+test post_fails_when_the_spec_write_fails ... ok
+test post_malformed_artifact_ref_is_refused ... ok
+test post_short_lease_is_refused ... ok
+test post_with_a_missing_secret_file_reports_after_the_job_is_written ... ok
+test progress_refuses_a_missing_job ... ok
+test progress_refuses_a_non_claimer ... ok
+test progress_reports_a_note_write_failure ... ok
+test requeue_refuses_a_job_that_is_not_claimed ... ok
+test post_refuses_a_zero_expiry ... ok
+test requeue_refuses_a_missing_job ... ok
+test requeue_reports_a_requeue_write_failure ... ok
+test requeue_reports_an_attempts_write_failure ... ok
+test sweep_reports_an_index_read_failure ... ok
+test post_refuses_an_unknown_kid ... ok
+test sweep_warns_when_a_requeue_fails_and_does_not_fail_the_sweep ... ok
+test verdict_words_are_stable ... ok
+test post_reports_a_signing_write_failure ... ok
+test verify_reports_a_missing_secret_file ... ok
+test verify_refuses_an_unknown_job ... ok
+test verify_exits_one_on_a_bad_signature ... ok
+
+test result: ok. 56 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-dc205976801280f5)
+
+running 13 tests
+test ct_eq_is_length_aware_and_content_aware ... ok
+test hex_digest_is_lowercase_and_zero_padded ... ok
+test canonical_json_sorts_keys_and_uses_compact_separators ... ok
+test hmac_sha256_matches_the_published_vector ... ok
+test json_escape_handles_quote_backslash_and_controls ... ok
+test canonical_payload_v1_is_the_sorted_six_field_shape ... ok
+test json_escape_surrogate_pairs_beyond_the_bmp ... ok
+test canonical_payload_v2_binds_job_and_key_id ... ok
+test python_repr_escapes_quote_and_backslash ... ok
+test sha256_matches_the_published_vector ... ok
+test url_quote_percent_encodes_everything_but_unreserved ... ok
+test url_unquote_leaves_malformed_sequences_alone ... ok
+test url_quote_unquote_round_trips_utf8 ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section13_job.rs (target/release/deps/section13_job-a0853691fe1cc5ae)
+
+running 4 tests
+test cancel_finished ... ok
+test job_no_steps_refused ... ok
+test cancel_from_pending_is_a_real_cancel ... ok
+test job_step_order_roundtrip ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests os_jobs
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+EXIT=0 2026-11-04T19:24:00Z

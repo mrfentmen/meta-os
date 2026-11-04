@@ -1,0 +1,95 @@
+=== TEST guardrail 2026-11-04T19:23:46Z ===
+   Compiling guardrail v0.1.0 (/Users/test/Desktop/meta-os/crates/guardrail)
+    Finished `release` profile [optimized] target(s) in 0.66s
+     Running unittests src/lib.rs (target/release/deps/guardrail-5f13c5ce22f5358f)
+
+running 5 tests
+test tests::test_unwrap_fence ... ok
+test tests::test_check_passes_under_budget ... ok
+test tests::test_stop_at_budget ... ok
+test tests::test_estimate_math ... ok
+test tests::test_record_counts_and_cumulates ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/code100_section4.rs (target/release/deps/code100_section4-68f81c40262a4e78)
+
+running 2 tests
+test future_timestamp_is_refused_and_ledger_is_untouched ... ok
+test current_timestamp_is_filed ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/edge_cases.rs (target/release/deps/edge_cases-254b41c1c22586a7)
+
+running 10 tests
+test one_input_token_costs_the_published_rate ... ok
+test a_fence_after_prose_still_yields_the_object ... ok
+test empty_input_builds_a_prompt_without_panicking ... ok
+test status_goes_negative_once_the_budget_is_passed ... ok
+test product_and_profile_fields_appear_verbatim_in_the_prompt ... ok
+test cumulative_cost_is_rounded_to_six_decimals ... ok
+test zero_tokens_cost_nothing_but_still_count_the_call ... ok
+test duplicate_input_is_counted_each_time_not_deduplicated ... ok
+test out_of_order_latency_is_kept_in_call_order ... ok
+test maximum_input_builds_a_prompt_and_a_finite_estimate ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/error_paths.rs (target/release/deps/error_paths-da41b8d5273af0f4)
+
+running 19 tests
+test a_non_object_with_braces_is_returned_as_the_slice ... ok
+test an_unclosed_fence_keeps_its_body ... ok
+test build_prompt_omits_the_correction_block_without_one ... ok
+test build_prompt_appends_the_correction_block_when_given ... ok
+test check_at_budget_refuses_with_the_python_message ... ok
+test check_just_under_budget_passes ... ok
+test check_over_budget_refuses ... ok
+test empty_model_text_unwraps_to_an_empty_string ... ok
+test estimate_never_mixes_the_two_rates ... ok
+test a_logged_record_carries_the_fixed_timestamp ... ok
+test a_hand_written_state_with_a_log_round_trips ... ok
+test corrupt_ledger_reads_as_zero_instead_of_refusing ... ok
+test missing_ledger_reads_as_zero ... ok
+test prose_around_the_object_is_dropped ... ok
+test empty_object_uses_serde_defaults ... ok
+test record_into_an_unwritable_path_still_returns_the_estimate ... ok
+test save_to_an_unwritable_path_is_silent ... ok
+test text_without_an_object_is_returned_trimmed ... ok
+test wrong_shape_ledger_reads_as_zero ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/gap_close.rs (target/release/deps/gap_close-9f17fe090b68f872)
+
+running 9 tests
+test a_negative_budget_state_still_passes_check ... ok
+test an_empty_object_model_text_is_its_own_object ... ok
+test status_of_reports_the_four_contract_fields ... ok
+test the_rate_card_and_public_endpoints_are_the_documented_values ... ok
+test status_remaining_is_exactly_zero_at_the_budget ... ok
+test via_helper_is_true_only_for_the_literal_one ... ok
+test a_partial_state_object_loads_with_defaults ... ok
+test one_record_leaves_the_log_and_the_state_agreeing ... ok
+test saved_state_survives_the_pretty_json_writer ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/section14.rs (target/release/deps/section14-71d48561abbb22cb)
+
+running 3 tests
+test guardrail_ceiling_boundary ... ok
+test guardrail_tripped_refuses ... ok
+test guardrail_cumulative ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests guardrail
+
+running 1 test
+test crates/guardrail/src/lib.rs - estimate (line 82) ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.28s
+
+EXIT=0 2026-11-04T19:23:48Z
