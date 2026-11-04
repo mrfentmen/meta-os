@@ -25,16 +25,24 @@ else
 fi
 echo "hostname: metaos"
 
-# 2. Release marker. No URL yet by design (see branding.desc).
+# 2. Release marker. Contract values (R3: previously stamped the wrong ID_LIKE
+# and short names; the live image carries "Meta OS 1.0 (Ribbon)" with
+# ID_LIKE=debian, so the installed system must match). No URL beyond
+# metaos.local by design (see branding.desc).
 cat > /etc/metaos-release <<'RELEASE'
-NAME="MetaOS"
-VERSION="1.0"
-ID=metaos
-ID_LIKE=ubuntu
-PRETTY_NAME="MetaOS 1.0"
+NAME="Meta OS"
+VERSION="1.0 (Ribbon)"
 VERSION_ID="1.0"
+VERSION_CODENAME=ribbon
+ID=metaos
+ID_LIKE=debian
+LOGO=metaos
+PRETTY_NAME="Meta OS 1.0 (Ribbon)"
+HOME_URL="https://metaos.local"
+SUPPORT_URL="https://metaos.local/support"
+BUG_REPORT_URL="https://metaos.local/issues"
 RELEASE
-if [ -f /etc/os-release ]; then
+if [ -f /etc/os-release ] && [ ! -f /etc/os-release.base-flavour ]; then
     cp -f /etc/os-release /etc/os-release.base-flavour
 fi
 cp -f /etc/metaos-release /etc/os-release

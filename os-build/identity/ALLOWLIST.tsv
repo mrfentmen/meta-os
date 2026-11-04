@@ -292,3 +292,32 @@ os-build/identity/README.md	Ubuntu	attribution	lane checker doc quotes leak line
 os-build/identity/README.md	Xubuntu	attribution	lane checker doc quotes leak lines verbatim to explain them
 os-build/identity/test_check_strings.sh	ubuntu	attribution	lane test fixtures must contain the word to prove detection
 os-build/identity/test_check_strings.sh	Ubuntu	attribution	lane test fixtures must contain the word to prove detection
+agent-layer/desktop-entries/check_entries.sh	ubuntu	attribution	gate probe string (BANNED list) that forbids the word; never shipped
+agent-layer/desktop-entries/check_entries.sh	xubuntu	attribution	gate probe string (BANNED list) that forbids the word; never shipped
+metaos-theme/fonts/FONTS.md	Ubuntu	compat	real font name (Ubuntu Mono / fonts-ubuntu package), not branding
+os-build/face/meta-desktop.sh	ubuntu	compat	legacy /home/ubuntu fallback probe, last resort after getent + /home/meta; rename-safe
+os-build/face/provision.sh	Xubuntu	attribution	base-ISO layout comment (reworded R3); names the base honestly
+os-build/iso/payload-theme/greeter/desktop-base/metaos-theme/wallpaper/contents/images/1920x1080.svg	Ubuntu	attribution	XML comment naming the base whose fallback art this replaces; not a rendered string
+os-build/iso/payload-theme/icons/ACCENTS.md	Ubuntu	attribution	design comment (never Ubuntu green); not branding
+os-build/iso/payload-theme/icons/gen-icon-accents.py	Ubuntu	attribution	design comment (never Ubuntu green); not branding
+os-build/iso/payload-theme/terminal/check_profile.sh	ubuntu	attribution	the proof script's own probe string (greps to forbid the word)
+os-build/iso/payload-theme/terminal/check_profile.sh	Ubuntu	attribution	the proof script's own probe string (greps to forbid the word)
+os-build/iso/payload-theme/terminal/README.md	Ubuntu	attribution	documents the gate's own Ubuntu-string check
+os-build/iso/payload-theme/tokens/gen_theme.py	Ubuntu	attribution	code comment naming the artifact it avoids
+os-build/iso/payload-theme/tokens/meta.tokens.json	Ubuntu	attribution	token note resolving AWAY from Ubuntu Mono to DejaVu; not branding
+os-build/iso/payload-theme/tokens/test_tokens.sh	ubuntu	attribution	the proof script's own probe strings (greps to forbid the word)
+os-build/iso/payload-theme/tokens/test_tokens.sh	Ubuntu	attribution	the proof script's own probe strings (greps to forbid the word)
+os-build/iso/payload-theme/tokens/test_tokens.sh	xubuntu	attribution	the proof script's own probe strings (greps to forbid the word)
+os-build/lanes/AGENT_OS_3_REPORT.md	ubuntu	attribution	lane evidence report quotes leak lines verbatim; documentation
+os-build/lanes/AGENT_OS_3_REPORT.md	Ubuntu	attribution	lane evidence report quotes leak lines verbatim; documentation
+os-build/lanes/AGENT_OS_3_REPORT.md	Xubuntu	attribution	lane evidence report quotes leak lines verbatim; documentation
+os-build/lanes/AGENT_OS_4_REPORT.md	ubuntu	attribution	lane evidence report quotes prior gate output; documentation
+os-build/tools/verify_tree.sh	ubuntu	attribution	the gate's own probe strings (greps to forbid the word)
+os-build/tools/verify_tree.sh	Ubuntu	attribution	the gate's own probe strings (greps to forbid the word)
+os-build/lanes/R3_REPORT.md	ubuntu	attribution	R3 identity lane report quotes gate output verbatim; documentation
+os-build/lanes/R3_REPORT.md	Ubuntu	attribution	R3 identity lane report quotes gate output verbatim; documentation
+os-build/lanes/R3_REPORT.md	xubuntu	attribution	R3 identity lane report quotes gate output verbatim; documentation
+os-build/lanes/R3_REPORT.md	Xubuntu	attribution	R3 identity lane report quotes gate output verbatim; documentation
+os-build/lanes/R3_REPORT.md	canonical	attribution	English word in R3 report prose, not Canonical the company
+os-build/lanes/R3_REPORT.md	Canonical	attribution	names upstream Canonical honestly (hashes, sources)
+metaos-theme/fonts/FONTS.md	ubuntu	compat	real package name (fonts-ubuntu), not branding

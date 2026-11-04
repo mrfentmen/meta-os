@@ -41,6 +41,7 @@ for a in "$@"; do
   if [ -n "$prev" ]; then ROOT_OVERRIDE="$a"; prev=""; continue; fi
   case "$a" in
     --explain) EXPLAIN=1 ;;
+    --check) CHECK=1 ;;  # R3: verify_tree.sh calls every checker with --check
     --root) prev="--root" ;;
     --root=*) ROOT_OVERRIDE="${a#--root=}" ;;
     -h|--help)

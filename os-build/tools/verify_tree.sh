@@ -141,6 +141,34 @@ else
   row "no-ubuntu" "FAIL" "$_n files mention ubuntu (e.g. $_sample)"
 fi
 
+# --- row 7: no unmigrated HOME default (R3, inline). The old pattern
+# HOME="${HOME:-/home/ubuntu}" must never come back; the only tolerated
+# /home/ubuntu reference in launch code is the last-resort probe in
+# os-build/face/meta-desktop.sh:41 (getent + /home/meta win first).
+_home_hits=$(grep -rn -F ':-/home/ubuntu' "$ROOT/os-build/face" "$ROOT/os-build/iso" "$ROOT/agent-layer" 2>/dev/null || true)
+if [ -z "$_home_hits" ]; then
+  row "home-refs" "PASS" "no :-/home/ubuntu default in face/iso launch code"
+else
+  row "home-refs" "FAIL" "$(printf '%s' "$_home_hits" | head -2 | tr '\n' ';' | cut -c1-160)"
+fi
+
+# --- row 8: shipped os-release identity (R3, inline). Every os-release file
+# this repo stamps must say ID=metaos and must not mention ubuntu.
+_os_bad=""
+for _f in os-build/iso/payload-theme/identity/os-release os-build/metaos1-base/dexubuntu/identity/os-release; do
+  if [ -f "$ROOT/$_f" ]; then
+    grep -q '^ID=metaos' "$ROOT/$_f" || _os_bad="$_os_bad $_f:no-ID-metaos"
+    if grep -qi 'ubuntu' "$ROOT/$_f"; then _os_bad="$_os_bad $_f:ubuntu-leak"; fi
+  else
+    _os_bad="$_os_bad $_f:missing"
+  fi
+done
+if [ -z "$_os_bad" ]; then
+  row "os-release-identity" "PASS" "2 shipped os-release files: ID=metaos, no ubuntu"
+else
+  row "os-release-identity" "FAIL" "$(printf '%s' "$_os_bad" | cut -c1-160)"
+fi
+
 # --- output
 if [ "$MODE" = "json" ]; then
   printf '[\n'

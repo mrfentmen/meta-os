@@ -18,12 +18,12 @@ fi
 echo "[dexubuntu] os-release / lsb-release / issue"
 cp "$HERE/identity/os-release" /etc/os-release
 cp "$HERE/identity/lsb-release" /etc/lsb-release
-printf 'MetaOS 1.0 \\n \\l\n' > /etc/issue
-printf 'MetaOS 1.0\n' > /etc/issue.net || true
+printf 'Meta OS 1.0 (Ribbon) \\n \\l\n' > /etc/issue
+printf 'Meta OS 1.0 (Ribbon)\n' > /etc/issue.net || true
 
 echo "[dexubuntu] motd"
 if [ -d /etc/update-motd.d ]; then
-  printf '#!/bin/sh\necho "MetaOS 1.0"\n' > /etc/update-motd.d/00-header
+  printf '#!/bin/sh\necho "Meta OS 1.0 (Ribbon)"\n' > /etc/update-motd.d/00-header
   chmod +x /etc/update-motd.d/00-header
 fi
 
