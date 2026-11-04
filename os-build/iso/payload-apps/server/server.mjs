@@ -13,8 +13,12 @@
 //                      live_enabled} } — never exposes the key itself
 //   GET  /api/crew/status  read-only agent-crew status for the
 //                      Command view's loop feed (see crew-status.mjs)
-//   GET  /api/cameras  same-origin proxy for the NYCTMC camera list
-//                      (see cameras.mjs)
+//   GET  /api/cameras  same-origin proxy for the NYCTMC camera list,
+//                      plus positioned IP cameras (see cameras.mjs)
+//   GET  /api/ipcam    configured RTSP cameras, their config and status
+//                      (see ipcam.mjs; empty until cams.json has entries)
+//   GET  /api/ipcam/:id/snapshot
+//                      one RTSP frame as JPEG, taken through ffmpeg
 //   GET  /api/fires   same-origin proxy for the NASA FIRMS active-fire
 //                      list (see fires.mjs; 503 without FIRMS_MAP_KEY)
 //   GET  /api/weather/radar/:z/:x/:y.png
@@ -32,6 +36,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { handleAssess } from "./assess.mjs";
+import { askAgent } from "./agent-chat.mjs";
+import { snapshot as ipcamSnapshot, ipCamList, FFMPEG as IPCAM_FFMPEG } from "./ipcam.mjs";
 import { modelStatus } from "./model.mjs";
 import { readCrewStatus } from "./crew-status.mjs";
 import { fetchCameraList } from "./cameras.mjs";
@@ -56,7 +62,10 @@ const CONTENT_TYPES = {
   ".json": "application/json; charset=utf-8",
   ".sdf": "chemical/x-mdl-molfile; charset=utf-8",
   ".jsonl": "application/x-ndjson; charset=utf-8",
+  ".geojson": "application/geo+json; charset=utf-8",
   ".webmanifest": "application/manifest+json",
+  ".woff2": "font/woff2",
+  ".woff": "font/woff",
   ".png": "image/png",
 };
 
@@ -160,6 +169,29 @@ export function createAssessServer(deps = {}) {
         sendJson(res, status, body);
         return;
       }
+      if (url.pathname === "/api/agent/ask") {
+        if (req.method !== "POST") {
+          sendJson(res, 405, { error: "method not allowed: use POST" });
+          return;
+        }
+        let raw;
+        try {
+          raw = await readBody(req);
+        } catch (err) {
+          sendJson(res, err.status ?? 400, { error: err.message });
+          return;
+        }
+        let payload;
+        try {
+          payload = JSON.parse(raw);
+        } catch {
+          sendJson(res, 400, { error: "request body is not valid JSON" });
+          return;
+        }
+        const { status, body } = await askAgent(payload, env, deps);
+        sendJson(res, status, body);
+        return;
+      }
       if (url.pathname === "/api/health") {
         if (req.method !== "GET") {
           sendJson(res, 405, { error: "method not allowed: use GET" });
@@ -198,12 +230,70 @@ export function createAssessServer(deps = {}) {
         // An upstream failure is a 502 — the app then tries the direct
         // URL and finally its built-in offline subset.
         const fetchList = deps.cameraList ?? fetchCameraList;
+        let upstream;
+        let upstreamError;
         try {
-          sendJson(res, 200, await fetchList());
+          upstream = await fetchList();
         } catch (err) {
-          sendJson(res, 502, {
-            error: `camera list unavailable: ${err && err.message ? err.message : String(err)}`,
+          // An IP camera in cams.json should still appear when NYCTMC is
+          // unreachable, so this is not an automatic 502 any more.
+          upstream = [];
+          upstreamError = err && err.message ? err.message : String(err);
+        }
+        // IP cameras join the same array, but only when they carry a position:
+        // the map projects every entry, and a null latitude would put a pin at
+        // NaN. Positionless IP cameras stay visible on /api/ipcam.
+        let extra = [];
+        try {
+          const ip = await ipCamList(deps.ipcam);
+          extra = ip.cameras.filter(
+            (c) => Number.isFinite(c.latitude) && Number.isFinite(c.longitude),
+          );
+        } catch {
+          extra = [];
+        }
+        // The operator's own cameras lead the list. Appending them put a new
+        // IP camera at row 976 of the roster, which is the same as hiding it.
+        const merged = [...extra, ...upstream];
+        if (merged.length === 0 && upstreamError) {
+          sendJson(res, 502, { error: `camera list unavailable: ${upstreamError}` });
+          return;
+        }
+        sendJson(res, 200, merged);
+        return;
+      }
+      if (url.pathname === "/api/ipcam") {
+        if (req.method !== "GET") {
+          sendJson(res, 405, { error: "method not allowed: use GET" });
+          return;
+        }
+        const out = await ipCamList(deps.ipcam);
+        sendJson(res, 200, {
+          cameras: out.cameras,
+          error: out.error,
+          config: out.path,
+          configMissing: out.missing === true,
+          ffmpeg: IPCAM_FFMPEG,
+        });
+        return;
+      }
+      const ipcamHit = url.pathname.match(/^\/api\/ipcam\/([a-z0-9][a-z0-9_-]{0,40})\/snapshot$/);
+      if (ipcamHit) {
+        if (req.method !== "GET") {
+          sendJson(res, 405, { error: "method not allowed: use GET" });
+          return;
+        }
+        const out = await ipcamSnapshot(ipcamHit[1], deps.ipcam);
+        if (out.status === 200) {
+          res.writeHead(200, {
+            "Content-Type": out.contentType,
+            "Content-Length": out.bytes.length,
+            "Cache-Control": "no-store",
+            "Access-Control-Allow-Origin": "*",
           });
+          res.end(out.bytes);
+        } else {
+          sendJson(res, out.status, out.body);
         }
         return;
       }
@@ -277,7 +367,7 @@ if (isMain) {
   server.listen(port, "127.0.0.1", () => {
     const status = modelStatus();
     console.log(`meta-trio-assess listening on http://localhost:${port}`);
-    console.log(`POST /api/assess  GET /api/health  GET /api/cameras  GET /api/fires  GET /api/weather/radar/:z/:x/:y.png  static web app on /`);
+    console.log(`POST /api/assess  GET /api/health  GET /api/cameras  GET /api/ipcam  GET /api/ipcam/:id/snapshot  GET /api/fires  GET /api/weather/radar/:z/:x/:y.png  static web app on /`);
     console.log(
       `model: key ${status.configured ? "configured" : "NOT configured"}, live calls ${status.live_enabled ? "ENABLED (test phase)" : "held (Spark rule)"}`,
     );

@@ -404,6 +404,12 @@ DESKTOP
     cp -r "$APPS/imperium/js" "$APPS/imperium/vendor" "$tree/usr/share/metaos/imperium/"
     mkdir -p "$tree/usr/share/metaos/server"
     cp "$APPS/server/"*.mjs "$tree/usr/share/metaos/server/"
+    # The backend imports ../js/*.js from its own directory (schema, products,
+    # camera-fallback, command-layers), so the tree needs /usr/share/metaos/js
+    # or node exits on import and metaos-imperium.py falls back to file://.
+    [ -d "$HERE/../../js" ] || die "repo js/ missing at $HERE/../../js (the backend imports it)"
+    rm -rf "$tree/usr/share/metaos/js"
+    cp -r "$HERE/../../js" "$tree/usr/share/metaos/js"
     cp "$APPS/imperium/styles.css" "$APPS/imperium/icon-180.png" "$APPS/imperium/manifest.webmanifest" "$tree/usr/share/metaos/imperium/" 2>/dev/null || true
     [ -f "$PAYLOAD/apps/metaos-imperium.py" ] || die "imperium payload missing: $PAYLOAD/apps/metaos-imperium.py"
     [ -f "$PAYLOAD/apps/metaos-imperium.desktop" ] || die "imperium payload missing: $PAYLOAD/apps/metaos-imperium.desktop"

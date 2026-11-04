@@ -142,6 +142,13 @@ cp "$APPS/imperium/index.html" "$ROOT/usr/share/metaos/imperium/index.html"
 cp -r "$APPS/imperium/js" "$APPS/imperium/vendor" "$ROOT/usr/share/metaos/imperium/"
 mkdir -p "$ROOT/usr/share/metaos/server"
 cp "$APPS/server/"*.mjs "$ROOT/usr/share/metaos/server/"
+# The backend imports ../js/{schema,products,camera-fallback,command-layers}.js
+# relative to its own directory, which under /usr/share/metaos/server resolves
+# to /usr/share/metaos/js. Without that tree node exits on the first import and
+# metaos-imperium.py falls back to file://, which is the bare-HTML console.
+[ -d "$HERE/../../js" ] || fail "repo js/ missing at $HERE/../../js (the backend imports it)"
+rm -rf "$ROOT/usr/share/metaos/js"
+cp -r "$HERE/../../js" "$ROOT/usr/share/metaos/js"
 cp "$APPS/imperium/styles.css" "$APPS/imperium/icon-180.png" "$APPS/imperium/manifest.webmanifest" "$ROOT/usr/share/metaos/imperium/" 2>/dev/null || true
 [ -f "$PAYLOAD/apps/metaos-imperium.py" ] || fail "imperium payload missing: $PAYLOAD/apps/metaos-imperium.py (restore the file or drop its install line)"
 [ -f "$PAYLOAD/apps/metaos-imperium.desktop" ] || fail "imperium payload missing: $PAYLOAD/apps/metaos-imperium.desktop (restore the file or drop its install line)"
