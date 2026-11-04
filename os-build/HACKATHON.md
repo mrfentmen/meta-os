@@ -34,6 +34,14 @@ first agentic OS from Meta's side of the fence.
    "what this does not prove" section. Judges trust the section more than the
    score.
 
+## Tonight's rebuild (2026-11-04)
+
+The image was re-synced from `main` and booted four times. Read
+`os-build/STATUS_2026-11-04.md` before quoting anything here: it has the
+desktop capture, the 9/9 session proof, the 27-tile dock check, `sudo -n id`
+returning root, and a short list of what still must not be claimed (the
+physical mouse path, Calamares, an ISO rebuilt from tonight's tree).
+
 ## What you can claim, with the receipt
 
 | Claim | Receipt |

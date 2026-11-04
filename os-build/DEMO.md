@@ -4,6 +4,10 @@ Three minutes. Every beat below is something that was actually observed on this
 machine, and each one names the evidence. Beats marked **PENDING** are not
 ready and must not be shown as if they were.
 
+Tonight's receipts (image re-synced from `main`, booted four times) are in
+`os-build/STATUS_2026-11-04.md`: the desktop capture, the 9/9 session proof,
+and the five bugs that were only visible on screen.
+
 Two proof scripts back the whole thing:
 
 | Script | What it checks | Run it |
