@@ -159,3 +159,30 @@ never upgraded above recorded level; Aegis/Nervus read-only.
 unwired to dock, agent-job PENDING; **missing:** fresh boot proof since
 these edits, DSH dashboard re-baseline (26/30 tests assert the replaced
 bus.html debug page).
+
+---
+
+## Agent proof, 2026-11-04 (appended — existing lines untouched)
+
+The claims above about an agent layer now have measured evidence in
+`docs/AGENT_PROOF.md`. Headlines, all from commands named in that file:
+
+- **14/14 apps answered** through one endpoint, live, with page context, and
+  **11/11 pages** served their chat box (`tools/proof_agent_chat.sh`, $0.083).
+- **The desk is a room**: 12 named agents, a transcript that survives a page
+  reload, `@name` routing, and every reply carrying `picked_by` so a routed
+  guess is never shown as a person's choice.
+- **Tools run for real**: `agent_loop --self-test` 8/8 (including a refused
+  path escape, a refused destructive command, and the API key stripped from a
+  tool subprocess), the permissioned gateway writing 4 receipts with one
+  recorded refusal, and a live 4-step model-chosen run that wrote a file, ran
+  it, and produced `55` — verified again by re-running the artefact
+  (`tools/proof_agent_tools.sh`, $0.0012).
+- **Agent-layer tests 254/254**, roster 29/29, chat 20/20, image gate 14/14.
+- **Spend for all of it ≈ $0.12** against the $1.00 limit; shared ledger
+  $0.3776 of the $75 test budget.
+
+**Do not overclaim on stage:** the chat box itself cannot run tools; the
+permissioned gateway is not yet the loop's action path; there are no
+Allow/Deny approval cards; no new boot since these edits. §8 of the proof file
+says all four plainly.

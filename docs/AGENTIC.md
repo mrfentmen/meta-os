@@ -1,5 +1,9 @@
 # Agentic architecture of this codebase
 
+> Measured evidence for the claims in this document (live runs, tool calls,
+> spend, and the gaps that remain) lives in [AGENT_PROOF.md](AGENT_PROOF.md).
+> Read that one before repeating any claim here on stage.
+
 How the Meta Trio / OS-queue stack actually implements the standard
 agentic-AI architecture pillars — and which ones it deliberately
 does not. Every claim below names the file that backs it. If a
