@@ -65,9 +65,9 @@ separators.
 | P7 | wallpaper fills the *browser* canvas | `face/logo-background.js` `fillScale()` | render at 1600×900, ribbon reaches all four edges | **done** |
 | P8 | greeter becomes the glass card | `greeter/*` + a GTK3 greeter + `gtk.css` | see §4 | **not started** |
 | P9 | Meta menu instead of xfce's app menu | a plugin or a launcher script | no stock menu icon, no Xubuntu entry | **not started** |
-| P10 | window buttons drawn as the reference's circles | xfwm4 button assets (SVG/PNG) | three circles right, nothing left | **not started** |
+| P10 | window buttons drawn as the reference's circles | `xfwm4/*.svg` + `*.png` (30 files) | layout `\|HMC`, 18 token rows, 30 images land in a fake root | **done** |
 
-P8–P10 are the rest of the port. P1–P7 is the skin; P8–P10 is the part people
+P1–P7 and P10 are the skin. P8–P9 are the rest of the port, and the part people
 notice without being told to look.
 
 ---
@@ -110,6 +110,39 @@ with `BLEED = 1.12` so no straight edge of the loop is ever on screen. At
 viewport. The vertical coverage comes out near 2.1×, and that is arithmetic,
 not a bug: a roughly circular loop in a 16:9 frame cannot fill the width without
 losing the top and bottom of the loop. The approved desktop shows the same crop.
+
+---
+
+## 3b. Why windows had no × or – or + at all
+
+Three separate causes, all fixed, and they had to be fixed together or the
+buttons still would not appear:
+
+1. **No button art.** `themes/MetaOS/xfwm4/` shipped `themerc` and nothing else.
+   xfwm4 resolves a button by name and state and draws *nothing* when a lookup
+   fails. 15 SVGs + 15 PNGs are now generated from the tokens.
+   SVG because it stays crisp; **PNG as well** because SVG needs the rsvg
+   GdkPixbuf loader, and an image without it would bring the empty titlebar
+   straight back.
+2. **Two sources disagreed.** `meta-desktop.sh` wrote `button_layout=CM|` into
+   xfconf at every login — close and maximise on the LEFT, no minimise — while
+   themerc said `O|SHMC`. xfconf wins over themerc, so the theme was ignored.
+   Layout is now `|HMC` in both, generated from one token, and the login script
+   reads themerc instead of hard-coding a string.
+3. **CSD windows had no buttons either.** GTK apps that draw their own titlebar
+   take the layout from `Gtk/DecorationLayout`, which was unset. It is now
+   `icon:minimize,maximize,close` in xsettings.
+
+And the reason none of this could have reached the image even if it were right:
+`apply.sh`'s preflight gated the icon count at exactly 20 while the tree holds
+26, so every install aborted with `want 20 icons, found 26`. The gate was
+"refusing to install a half theme" on a complete one. It is a floor (`-ge 20`)
+now, in `apply.sh` and in `theme_proof.sh`'s matching row.
+
+Proof: `apply.sh /tmp/proofroot` prints `15 svg + 15 png window-button images`
+and leaves them in `/tmp/proofroot/usr/share/themes/MetaOS/xfwm4/`, with
+`button_layout=|HMC` in both themerc and the xfconf channel. It then stops on
+the font gate, which is correct for a root that has no fonts.
 
 ---
 

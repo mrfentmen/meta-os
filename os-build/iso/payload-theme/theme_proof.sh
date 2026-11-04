@@ -50,7 +50,9 @@ done
 nframes=0; if [ -d "$THEME/frames" ]; then nframes=$(ls "$THEME"/frames/frame-*.png 2>/dev/null | wc -l); fi
 [ "$nframes" -eq 32 ] || missing="$missing [want 32 plymouth frames, have $nframes]"
 nicons=0; if [ -d "$ROOT/usr/share/icons/metaos/128x128/apps" ]; then nicons=$(ls "$ROOT"/usr/share/icons/metaos/128x128/apps/*.png 2>/dev/null | wc -l); fi
-[ "$nicons" -eq 20 ] || missing="$missing [want 20 metaos icons, have $nicons]"
+# floor, not exact: the icon set grew past 20 and this row failed the whole
+# proof on a healthy image
+[ "$nicons" -ge 20 ] || missing="$missing [want at least 20 metaos icons, have $nicons]"
 for d in meta-dock-dashboard meta-dock-editor meta-dock-notes meta-dock-agents \
   meta-dock-board meta-dock-calendar meta-dock-calculator meta-dock-trash \
   meta-dock-science meta-dock-musica meta-dock-custos meta-dock-officina; do

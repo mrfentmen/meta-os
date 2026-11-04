@@ -108,6 +108,20 @@
     "_login": "face.css .glass-card 300px / 20px / .avatar 84px. Consumed by the Meta greeter (plan step G3); the reference's 18px backdrop blur has no GTK3 equivalent and is dropped here on purpose."
   },
 
+  "window_buttons": {
+    "_note": "The reference's 22 px circular buttons, but three of them: minimise, maximise, close. face.css only draws minimise and close in the browser (the page has no maximise), so the third is DERIVED from the same geometry. The boss's complaint was 'there is not an x or a - or a + button', which is exactly what an empty theme dir renders.",
+    "layout": "|HMC",
+    "_layout": "xfwm4 syntax: buttons left of the | are left-aligned, buttons right of it are right-aligned. H=hide (minimise), M=maximise, C=close. Nothing on the left: the bar starts with the title, like the reference. The old value in meta-desktop.sh was CM| — close and maximise on the LEFT and no minimise at all, which also silently disagreed with the themerc.",
+    "size": 22,
+    "spacing": 6,
+    "glyph_stroke": 1.5,
+    "_size": "face.css .win-btns button is 22x22 with margin-left 6px.",
+    "states": ["active", "inactive", "prelight", "pressed", "toggled"],
+    "_states": "xfwm4 looks up <name>-<state>.svg. toggled is what maximise shows when the window is already maximised, so it gets the restore glyph.",
+    "csd_layout": "icon:minimize,maximize,close",
+    "_csd_layout": "The same three buttons for GTK apps that draw their own titlebar (mousepad, dialogs). Without Gtk/DecorationLayout set, a client-side-decorated window shows no buttons at all — the second half of the missing-x report."
+  },
+
   "type": {
     "ui": "'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     "_ui": "face.css body font-family with Inter first (the image ships fonts-inter). theme_proof.sh greps for \"'Inter'\" in gtk.css, so the quoting matters.",

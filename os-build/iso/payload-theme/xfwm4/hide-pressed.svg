@@ -1,0 +1,8 @@
+<!-- GENERATED FILE — do not edit.
+     Source: tokens/meta.tokens.json (window_buttons)
+     hide button, pressed state, 22px disc.
+     Regenerate: python3 os-build/iso/payload-theme/tokens/gen_theme.py -->
+<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+  <circle cx="11.0" cy="11.0" r="11.0" fill="#0750bcff"/>
+  <path d="M6.4 11 L15.6 11" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

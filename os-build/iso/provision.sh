@@ -116,11 +116,17 @@ install -m644 "$PAYLOAD/wallpapers/meta-dawn.png" "$ROOT/usr/share/backgrounds/m
 cp -r "$PAYLOAD/gtk/." "$ROOT/usr/share/themes/" 2>/dev/null || { mkdir -p "$ROOT/usr/share/themes/MetaOS/gtk-3.0"; install -m644 "$PAYLOAD/gtk/gtk.css" "$ROOT/usr/share/themes/MetaOS/gtk-3.0/gtk.css"; }
 mkdir -p "$ROOT/usr/share/themes/MetaOS/xfwm4"
 install -m644 "$PAYLOAD/xfwm4/themerc" "$ROOT/usr/share/themes/MetaOS/xfwm4/themerc"
+# button art: xfwm4 draws nothing for a button with no image in the theme
+for svg in "$PAYLOAD"/xfwm4/*-*.svg "$PAYLOAD"/xfwm4/*-*.png; do
+  [ -f "$svg" ] && install -m644 "$svg" "$ROOT/usr/share/themes/MetaOS/xfwm4/$(basename "$svg")"
+done
 mkdir -p "$ROOT/usr/share/plank/themes/MetaOS"
 install -m644 "$PAYLOAD/dock/dock.theme" "$ROOT/usr/share/plank/themes/MetaOS/dock.theme"
 mkdir -p "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml"
 install -m644 "$PAYLOAD/panel/xfce4-panel.xml" "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
 install -m644 "$PAYLOAD/panel/xfce4-panel.xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
+install -m644 "$PAYLOAD/xfwm4/xfwm4.xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+install -m644 "$PAYLOAD/xfwm4/xfwm4.xml" "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
 mkdir -p "$ROOT/etc/skel/.config/plank/dock1"
 install -m644 "$PAYLOAD/dock/plank-settings" "$ROOT/etc/skel/.config/plank/dock1/settings"
 install -m644 "$PAYLOAD/dock/plank.desktop" "$ROOT/etc/xdg/autostart/plank.desktop"

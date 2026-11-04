@@ -34,7 +34,7 @@ for f in \
   splash/metaos.plymouth splash/metaos.script splash/background.png splash/meta-m.png splash/progress.png \
   grub/theme.txt grub/background.png grub/mark.png \
   gtk/gtk.css gtk/index.theme \
-  xfwm4/themerc \
+  xfwm4/themerc xfwm4/xfwm4.xml xfwm4/close-active.svg xfwm4/hide-active.svg xfwm4/maximize-active.svg \
   panel/xfce4-panel.xml \
   dock/dock.theme dock/plank-settings dock/plank.desktop \
   terminal/metaos-welcome.sh terminal/metaos-terminal-profile.txt \
@@ -48,9 +48,13 @@ for f in \
 nframes=$(ls "$HERE"/splash/frames/frame-*.png 2>/dev/null | wc -l)
 [ "$nframes" -eq 32 ] || { echo "apply-GATE-FAIL: want 32 splash frames, found $nframes" >&2; fail=$((fail + 1)); }
 nicons=$(ls "$HERE"/icons/metaos/*.png 2>/dev/null | wc -l)
-[ "$nicons" -eq 20 ] || { echo "apply-GATE-FAIL: want 20 icons, found $nicons" >&2; fail=$((fail + 1)); }
+# A FLOOR, not an exact match. The count was pinned at 20 and the tree grew to
+# 26, so this gate refused every install with "want 20 icons, found 26" — the
+# theme could not reach the image at all, which is how the guest ended up on
+# a half-applied desktop. 20 is still the floor: a half-copied icon set fails.
+[ "$nicons" -ge 20 ] || { echo "apply-GATE-FAIL: want at least 20 icons, found $nicons" >&2; fail=$((fail + 1)); }
 ndock=$(ls "$HERE"/apps/dock/*.desktop 2>/dev/null | wc -l)
-[ "$ndock" -eq 12 ] || { echo "apply-GATE-FAIL: want 12 dock launchers, found $ndock" >&2; fail=$((fail + 1)); }
+[ "$ndock" -ge 12 ] || { echo "apply-GATE-FAIL: want at least 12 dock launchers, found $ndock" >&2; fail=$((fail + 1)); }
 
 if [ "$fail" -ne 0 ]; then
   echo "apply: $fail missing asset(s); refusing to install a half theme" >&2
@@ -99,6 +103,28 @@ put "$HERE/grub/mark.png" /boot/grub/themes/metaos/mark.png
 put "$HERE/gtk/gtk.css" /usr/share/themes/MetaOS/gtk-3.0/gtk.css
 put "$HERE/gtk/index.theme" /usr/share/themes/MetaOS/index.theme
 put "$HERE/xfwm4/themerc" /usr/share/themes/MetaOS/xfwm4/themerc
+# The button art. Without it xfwm4 draws an EMPTY titlebar no matter what the
+# layout says — the theme dir used to ship themerc and nothing else, which is
+# why windows had no x, no - and no +. 15 svgs: 3 buttons x 5 states.
+nbuttons=$(ls "$HERE"/xfwm4/*-*.svg 2>/dev/null | wc -l)
+npngs=$(ls "$HERE"/xfwm4/*-*.png 2>/dev/null | wc -l)
+# Both formats on purpose: SVG is crisp at any scale but only loads when the
+# rsvg GdkPixbuf loader is installed; PNG always loads. An image without that
+# loader and an SVG-only theme draws an empty titlebar — the exact bug this
+# block exists to prevent.
+if [ "$nbuttons" -eq 15 ] && [ "$npngs" -eq 15 ]; then
+  for f in "$HERE"/xfwm4/*-*.svg "$HERE"/xfwm4/*-*.png; do
+    put "$f" "/usr/share/themes/MetaOS/xfwm4/$(basename "$f")"
+  done
+  echo "apply: 15 svg + 15 png window-button images -> /usr/share/themes/MetaOS/xfwm4"
+else
+  echo "apply: refusing to ship an empty titlebar — want 15 svgs + 15 pngs, found $nbuttons + $npngs" >&2
+  exit 1
+fi
+# xfconf beats themerc, so the channel file is the one that decides which
+# buttons exist. Generated from the same token as themerc, so they agree.
+put "$HERE/xfwm4/xfwm4.xml" /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
+put "$HERE/xfwm4/xfwm4.xml" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
 
 # ----------------------------------------------------------------- panel
 put "$HERE/panel/xfce4-panel.xml" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml

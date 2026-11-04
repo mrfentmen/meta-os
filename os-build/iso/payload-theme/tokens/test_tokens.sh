@@ -112,10 +112,62 @@ fi
 # ---- 4. xfwm4/themerc contracts
 XM="$THEME/xfwm4/themerc"
 if [ -f "$XM" ]; then
-  if grep -q '^button_layout=O|SHMC$' "$XM"; then
-    ok "xfwm4: only the menu button on the left, three on the right"
+  # The report that started this: no x, no -, no + anywhere on a window. A
+  # layout string alone cannot fix that — xfwm4 needs an image per button per
+  # state — so both halves are asserted here.
+  if grep -q '^button_layout=|HMC$' "$XM"; then
+    ok "xfwm4: minimise, maximise, close on the right, nothing on the left"
   else
-    no "xfwm4" "button_layout is not O|SHMC"
+    no "xfwm4" "button_layout is not |HMC ($(sed -n 's/^button_layout=//p' "$XM"))"
+  fi
+  btnmiss=""
+  for n in close maximize hide; do
+    for s in active inactive prelight pressed toggled; do
+      [ -s "$THEME/xfwm4/$n-$s.svg" ] || btnmiss="$btnmiss $n-$s"
+    done
+  done
+  [ -z "$btnmiss" ] && ok "xfwm4: 15 button images present (3 buttons x 5 states)" \
+    || no "xfwm4" "missing button art:$btnmiss"
+  badsvg=$(python3 - "$THEME/xfwm4" <<'PY'
+import glob, os, sys, xml.dom.minidom
+problems = []
+for f in sorted(glob.glob(os.path.join(sys.argv[1], "*.svg"))):
+    try:
+        doc = xml.dom.minidom.parse(f)
+    except Exception as exc:
+        problems.append(os.path.basename(f) + ": not XML")
+        continue
+    svg = doc.documentElement
+    if svg.getAttribute("width") != svg.getAttribute("height"):
+        problems.append(os.path.basename(f) + ": not square")
+    if not svg.getElementsByTagName("circle"):
+        problems.append(os.path.basename(f) + ": no disc")
+    if not svg.getElementsByTagName("path"):
+        problems.append(os.path.basename(f) + ": no glyph")
+print(" ".join(problems[:3]))
+PY
+)
+  [ -z "$badsvg" ] && ok "xfwm4: every button svg parses, is square, has a disc and a glyph" \
+    || no "xfwm4" "$badsvg"
+  # The PNG twins exist because SVG needs the rsvg GdkPixbuf loader and PNG
+  # does not. check_buttons.py also proves the two formats are the same count.
+  btnbad=$(python3 "$HERE/check_buttons.py" "$THEME" 2>&1)
+  if [ $? -eq 0 ]; then
+    ok "xfwm4: 15 PNG twins are 22x22 RGBA, round, inked, and match the svg count"
+  else
+    no "xfwm4" "$(echo "$btnbad" | head -3 | tr '\n' ' ')"
+  fi
+  CH="$THEME/xfwm4/xfwm4.xml"
+  if [ -f "$CH" ]; then
+    themerc_layout=$(sed -n 's/^button_layout=//p' "$XM")
+    chan_layout=$(sed -n 's/.*name="button_layout"[^>]*value="\([^"]*\)".*/\1/p' "$CH")
+    if [ "$themerc_layout" = "$chan_layout" ]; then
+      ok "xfconf: xfwm4.xml and themerc agree on '$chan_layout'"
+    else
+      no "xfconf" "themerc '$themerc_layout' != xfconf '$chan_layout' (xfconf wins, so the theme is ignored)"
+    fi
+  else
+    no "xfconf" "xfwm4/xfwm4.xml missing; xfconf will keep whatever the image had"
   fi
   miss=""
   for k in active_color_1 active_hilight_1 inactive_text_color title_alignment; do

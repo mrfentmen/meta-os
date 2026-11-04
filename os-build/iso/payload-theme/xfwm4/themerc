@@ -6,8 +6,9 @@
 # xfwm4 renders flat titlebars from colour pairs; there is no gradient and no
 # backdrop blur. The reference's glass titlebar is approximated by the window
 # background tint plus the accent on the focused title.
-button_layout=O|SHMC
+button_layout=|HMC
 button_spacing=6
+button_offset=6
 title_horizontal_offset=12
 title_vertical_offset_active=8
 title_vertical_offset_inactive=8

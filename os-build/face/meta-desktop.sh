@@ -129,11 +129,33 @@ if t is None:
     t = ET.ElementTree(ET.Element("channel",
                                   {"name": "xfwm4", "version": "1.0"}))
 setprop(t, "general", "theme", "MetaOS")
-# macOS order: close + minimise on the left, maximise next to them.
-setprop(t, "general", "button_layout", "CM|")
+
+def button_layout():
+    """The window-button layout lives in the theme's themerc, and nowhere else.
+
+    xfconf is read before themerc, and this script writes xfconf — so a string
+    hard-coded here silently overrides the theme. That is how the image ended
+    up with `CM|`: close and maximise on the LEFT, no minimise at all, while
+    themerc said `O|SHMC`. Between the two, windows drew no buttons and the
+    report was "there is not an x or a - or a +". One source now: the theme.
+    """
+    for cand in ("/usr/share/themes/MetaOS/xfwm4/themerc",
+                 "/opt/face/theme/xfwm4/themerc"):
+        try:
+            for line in open(cand):
+                if line.startswith("button_layout="):
+                    value = line.split("=", 1)[1].strip()
+                    if value:
+                        return value, cand
+        except Exception:
+            continue
+    return "|HMC", "fallback"
+
+layout, source = button_layout()
+setprop(t, "general", "button_layout", layout)
 setprop(t, "general", "title_alignment", "center")
 t.write(wm_path, encoding="UTF-8", xml_declaration=True)
-print("meta-desktop: wm theme MetaOS, buttons left")
+print("meta-desktop: wm theme MetaOS, buttons '%s' (from %s)" % (layout, source))
 
 set_path = os.path.join(xf, "xsettings.xml")
 t = load(set_path)
@@ -143,8 +165,12 @@ if t is None:
 setprop(t, "Net", "ThemeName", "MetaOS")
 if os.path.isdir("/usr/share/icons/MetaOS"):
     setprop(t, "Net", "IconThemeName", "MetaOS")
+# GTK apps that draw their own titlebar (mousepad, file choosers, every GTK3
+# dialog) take their buttons from this key, not from xfwm4. Unset, they draw a
+# bare strip with nothing to click — the other half of "there is no x button".
+setprop(t, "Gtk", "DecorationLayout", "icon:minimize,maximize,close")
 t.write(set_path, encoding="UTF-8", xml_declaration=True)
-print("meta-desktop: gtk theme MetaOS")
+print("meta-desktop: gtk theme MetaOS + CSD buttons minimize,maximize,close")
 PY
 
 # ------------------------------------------------------ 2b. terminal colours

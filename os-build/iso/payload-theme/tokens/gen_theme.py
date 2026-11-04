@@ -224,6 +224,190 @@ separator { background-color: %(hairline_rgba)s; min-width: 1px; min-height: 1px
     }
 
 
+
+# ---------------------------------------------------------------- buttons
+#
+# xfwm4 draws a button ONLY if the theme dir has an image for it. A themes/
+# MetaOS/xfwm4 that contains themerc and nothing else renders an empty titlebar —
+# which is the "there is no x, no -, no +" report, and it cannot be fixed by
+# changing the layout string alone.
+#
+# Geometry per button is 22x22 with the glyph on a 22-unit grid, drawn as SVG so
+# one file is crisp at every scale factor and there is no second raster copy to
+# drift from it.
+BUTTON_GLYPHS = {
+    # name: (state -> list of svg path/shape strings)
+    "close": {
+        "active": ["M7.2 7.2 L14.8 14.8", "M14.8 7.2 L7.2 14.8"],
+        "inactive": ["M7.2 7.2 L14.8 14.8", "M14.8 7.2 L7.2 14.8"],
+        "prelight": ["M7.2 7.2 L14.8 14.8", "M14.8 7.2 L7.2 14.8"],
+        "pressed": ["M7.2 7.2 L14.8 14.8", "M14.8 7.2 L7.2 14.8"],
+        "toggled": ["M7.2 7.2 L14.8 14.8", "M14.8 7.2 L7.2 14.8"],
+    },
+    "maximize": {
+        # a plus, because that is what the boss asked for and what reads as
+        # "fill the screen" at 22 px on a dark bar
+        "active": ["M11 6.4 L11 15.6", "M6.4 11 L15.6 11"],
+        "inactive": ["M11 6.4 L11 15.6", "M6.4 11 L15.6 11"],
+        "prelight": ["M11 6.4 L11 15.6", "M6.4 11 L15.6 11"],
+        "pressed": ["M11 6.4 L11 15.6", "M6.4 11 L15.6 11"],
+        # toggled = already maximised, so the glyph becomes the restore box
+        "toggled": ["M7.4 7.4 L14.6 7.4 L14.6 14.6 L7.4 14.6 Z"],
+    },
+    "hide": {
+        "active": ["M6.4 11 L15.6 11"],
+        "inactive": ["M6.4 11 L15.6 11"],
+        "prelight": ["M6.4 11 L15.6 11"],
+        "pressed": ["M6.4 11 L15.6 11"],
+        "toggled": ["M6.4 11 L15.6 11"],
+    },
+}
+
+# state -> (disc fill, glyph stroke). The fills are the hairline token at the
+# opacities the reference uses for a button at rest, hovered and pressed; the
+# glyph is the window foreground until the fill turns accent, then paper.
+BUTTON_COLOURS = {
+    "active": ("hairline", 0.25, "win_fg"),
+    "inactive": ("hairline", 0.15, "muted"),
+    "prelight": ("accent", 1.0, "paper"),
+    "pressed": ("accent_deep", 1.0, "paper"),
+    "toggled": ("accent_deep", 0.85, "paper"),
+}
+
+
+def _hex_alpha(t, key, alpha):
+    """token colour name + alpha -> #rrggbbaa, which SVG takes directly."""
+    h = t["colour"][key].lstrip("#")
+    return "#%s%02x" % (h, int(round(max(0.0, min(1.0, alpha)) * 255)))
+
+
+def svg_button(name, state, t):
+    wb, c = t["window_buttons"], t["colour"]
+    size = wb["size"]
+    fill_key, fill_alpha, glyph_key = BUTTON_COLOURS[state]
+    fill = _hex_alpha(t, fill_key, fill_alpha)
+    glyph = c[glyph_key] if glyph_key in c else c["win_fg"]
+    glyphs = BUTTON_GLYPHS[name][state]
+    paths = "".join(
+        '  <path d="%s" fill="none" stroke="%s" stroke-width="%s" '
+        'stroke-linecap="round"/>\n'
+        % (d, glyph, wb["glyph_stroke"])
+        if not d.rstrip().endswith("Z") else
+        '  <path d="%s" fill="none" stroke="%s" stroke-width="%s" '
+        'stroke-linejoin="round"/>\n'
+        % (d, glyph, wb["glyph_stroke"])
+        for d in glyphs)
+    half = size / 2.0
+    return (
+        '<!-- GENERATED FILE — do not edit.\n'
+        '     Source: tokens/meta.tokens.json (window_buttons)\n'
+        '     %s button, %s state, %spx disc.\n'
+        '     Regenerate: python3 os-build/iso/payload-theme/tokens/gen_theme.py -->\n'
+        '<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="%d" '
+        'viewBox="0 0 %d %d">\n'
+        '  <circle cx="%s" cy="%s" r="%s" fill="%s"/>\n'
+        '%s</svg>\n'
+    ) % (name, state, size, size, size, size, size,
+         half, half, half, fill, paths)
+
+
+def _parse_paths(glyphs, scale):
+    """Turn the tiny subset of SVG path syntax used above into polylines.
+
+    Only M/L/Z, absolute, which is all the glyphs are. Written out rather than
+    pulled from a library because the PNG fallback has to be drawn from exactly
+    the same numbers as the SVG — that is the whole point of having two.
+    """
+    import re as _re
+    out = []
+    for d in glyphs:
+        numbers = _re.findall(r"[MLZ]|-?\d+(?:\.\d+)?", d)
+        points, cmd, buf, closed = [], None, [], False
+        for token in numbers:
+            if token in ("M", "L", "Z"):
+                if buf:
+                    points.append((float(buf[0]) * scale, float(buf[1]) * scale))
+                    buf = []
+                cmd = token
+                if token == "Z":
+                    closed = True
+                continue
+            buf.append(token)
+            if len(buf) == 2:
+                points.append((float(buf[0]) * scale, float(buf[1]) * scale))
+                buf = []
+        if len(points) >= 2:
+            out.append((points, closed))
+    return out
+
+
+def png_button(name, state, t, supersample=4):
+    """Raster twin of svg_button(), same geometry.
+
+    xfwm4 loads a button through GdkPixbuf, and GdkPixbuf can only read SVG when
+    the rsvg pixbuf loader is installed. On a system image that has not got it,
+    an SVG-only theme renders an EMPTY titlebar — the exact bug this change is
+    fixing, reintroduced by a package that might not be there. So both formats
+    ship, drawn from one set of coordinates.
+    """
+    from PIL import Image, ImageDraw
+    wb = t["window_buttons"]
+    size = int(wb["size"])
+    scale = supersample
+    px = size * scale
+    fill_key, fill_alpha, glyph_key = BUTTON_COLOURS[state]
+    h = t["colour"][fill_key].lstrip("#")
+    disc = tuple(int(h[i:i + 2], 16) for i in (0, 2, 4)) + (
+        int(round(max(0.0, min(1.0, fill_alpha)) * 255)),)
+    g = t["colour"][glyph_key].lstrip("#")
+    ink = tuple(int(g[i:i + 2], 16) for i in (0, 2, 4)) + (255,)
+    img = Image.new("RGBA", (px, px), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    half = px / 2.0
+    draw.ellipse((0, 0, px - 1, px - 1), fill=disc)
+    width = max(1, int(round(wb["glyph_stroke"] * scale)))
+    cap = max(1, width // 2)
+    for points, closed in _parse_paths(BUTTON_GLYPHS[name][state], scale):
+        pts = list(points)
+        if closed:
+            pts.append(points[0])
+        draw.line(pts, fill=ink, width=width, joint="curve")
+        for x, y in (pts[0], pts[-1]):
+            draw.ellipse((x - cap, y - cap, x + cap, y + cap), fill=ink)
+    return img.resize((size, size), Image.LANCZOS)
+
+
+def xfwm4_channel(t):
+    """The xfconf channel, so xfconf and themerc cannot disagree.
+
+    xfwm4 reads button_layout from xfconf FIRST and only falls back to the
+    theme's themerc. The image shipped themerc=O|SHMC while meta-desktop.sh
+    wrote CM| into this channel at login, so the theme's buttons never appeared
+    and the window had close+maximise on the left with no minimise anywhere.
+    Both are now generated from one token.
+    """
+    wb = t["window_buttons"]
+    return """<?xml version="1.0" encoding="UTF-8"?>
+<!-- GENERATED FILE — do not edit.
+     Source: os-build/iso/payload-theme/tokens/meta.tokens.json
+     Regenerate: python3 os-build/iso/payload-theme/tokens/gen_theme.py
+     Install: /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
+
+     xfconf wins over the theme's themerc, so this file is the one that decides
+     which window buttons exist. Keeping it generated means the layout here and
+     button_layout in themerc are the same string by construction. -->
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="theme" type="string" value="%(name)s"/>
+    <property name="button_layout" type="string" value="%(layout)s"/>
+    <property name="title_alignment" type="string" value="center"/>
+    <property name="title_font" type="string" value="%(font)s"/>
+  </property>
+</channel>
+""" % {"name": t["theme_name"], "layout": wb["layout"],
+       "font": "%(x)s" % {"x": "Inter Bold 10"}}
+
+
 def xfwm4_themerc(t):
     c, m = t["colour"], t["metric"]
     # xfwm4 draws a flat titlebar from two colours, so the "glass" titlebar is
@@ -238,8 +422,9 @@ def xfwm4_themerc(t):
 # xfwm4 renders flat titlebars from colour pairs; there is no gradient and no
 # backdrop blur. The reference's glass titlebar is approximated by the window
 # background tint plus the accent on the focused title.
-button_layout=O|SHMC
-button_spacing=%(winbtn_gap)d
+button_layout=%(layout)s
+button_spacing=%(btn_spacing)d
+button_offset=%(btn_spacing)d
 title_horizontal_offset=%(titlebar_pad_x)d
 title_vertical_offset_active=%(titlebar_pad_y)d
 title_vertical_offset_inactive=%(titlebar_pad_y)d
@@ -270,6 +455,8 @@ title_shadow_active=%(ink)s
 title_shadow_inactive=%(ink)s
 """ % {
         "name": t["theme_name"],
+        "layout": t["window_buttons"]["layout"],
+        "btn_spacing": t["window_buttons"]["spacing"],
         "winbtn_gap": m["winbtn_gap"],
         "titlebar_pad_x": m["titlebar_pad_x"],
         "titlebar_pad_y": m["titlebar_pad_y"],
@@ -385,35 +572,86 @@ def panel_xml(t):
 TARGETS = [
     ("gtk.css", os.path.join("gtk", "gtk.css"), gtk_css),
     ("themerc", os.path.join("xfwm4", "themerc"), xfwm4_themerc),
+    ("xfwm4.xml", os.path.join("xfwm4", "xfwm4.xml"), xfwm4_channel),
     ("dock.theme", os.path.join("dock", "dock.theme"), dock_theme),
     ("xfce4-panel.xml", os.path.join("panel", "xfce4-panel.xml"), panel_xml),
 ]
+
+
+def button_targets(t):
+    """Every <name>-<state>.svg xfwm4 will look for, one per file.
+
+    xfwm4 resolves a button by name and state; a miss is not an error, it is a
+    blank space where the button should be, which is why this list is generated
+    from the token's own state list instead of being typed twice.
+    """
+    out = []
+    for name in sorted(BUTTON_GLYPHS):
+        for state in t["window_buttons"]["states"]:
+            out.append(("%s-%s.svg" % (name, state),
+                        os.path.join("xfwm4", "%s-%s.svg" % (name, state)),
+                        (lambda n, s: (lambda cfg: svg_button(n, s, cfg)))(name, state)))
+    return out
+
+
+def png_targets(t):
+    """Same buttons as PNG, for an image without the SVG pixbuf loader."""
+    out = []
+    for name in sorted(BUTTON_GLYPHS):
+        for state in t["window_buttons"]["states"]:
+            out.append(("%s-%s.png" % (name, state),
+                        os.path.join("xfwm4", "%s-%s.png" % (name, state)),
+                        (lambda n, s: (lambda cfg: png_button(n, s, cfg)))(name, state)))
+    return out
+
+
+def write_text(path, text):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(text)
 
 
 def main(argv):
     check = "--check" in argv
     t = load()
     drifted = 0
-    for label, rel, fn in TARGETS:
+    written = 0
+    targets = TARGETS + button_targets(t) + png_targets(t)
+    for label, rel, fn in targets:
         path = os.path.join(THEME, rel)
-        want = fn(t)
-        have = None
-        if os.path.exists(path):
-            with open(path, "r", encoding="utf-8") as fh:
-                have = fh.read()
+        is_png = label.endswith(".png")
         if check:
-            if have == want:
-                print("PASS  %-18s matches tokens" % label)
+            fresh = fn(t)
+            ok = os.path.exists(path)
+            if ok and is_png:
+                # Re-render and compare bytes: a PNG that differs is a hand-edit
+                # or a stale copy from before a token change.
+                import io as _io
+                buf = _io.BytesIO()
+                fresh.save(buf, format="PNG")
+                with open(path, "rb") as fh:
+                    ok = fh.read() == buf.getvalue()
+            elif ok:
+                with open(path, "r", encoding="utf-8") as fh:
+                    ok = fh.read() == fresh
+            if ok:
+                print("PASS  %-20s matches tokens" % label)
             else:
-                print("FAIL  %-18s drifted from tokens" % label)
+                print("FAIL  %-20s %s" % (label, "missing" if not os.path.exists(path) else "drifted from tokens"))
                 drifted += 1
             continue
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8") as fh:
-            fh.write(want)
-        print("wrote %-18s %s" % (label, path))
+        if is_png:
+            img = fn(t)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            img.save(path, format="PNG")
+        else:
+            write_text(path, fn(t))
+        written += 1
+        if written <= 6 or written % 15 == 0:
+            print("wrote %-20s %s" % (label, path))
     if check:
         return 1 if drifted else 0
+    print("wrote %d files from one token set" % written)
     return 0
 
 

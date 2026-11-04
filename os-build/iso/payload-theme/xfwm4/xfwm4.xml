@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GENERATED FILE — do not edit.
+     Source: os-build/iso/payload-theme/tokens/meta.tokens.json
+     Regenerate: python3 os-build/iso/payload-theme/tokens/gen_theme.py
+     Install: /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml
+
+     xfconf wins over the theme's themerc, so this file is the one that decides
+     which window buttons exist. Keeping it generated means the layout here and
+     button_layout in themerc are the same string by construction. -->
+<channel name="xfwm4" version="1.0">
+  <property name="general" type="empty">
+    <property name="theme" type="string" value="MetaOS"/>
+    <property name="button_layout" type="string" value="|HMC"/>
+    <property name="title_alignment" type="string" value="center"/>
+    <property name="title_font" type="string" value="Inter Bold 10"/>
+  </property>
+</channel>

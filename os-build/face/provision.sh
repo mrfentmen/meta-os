@@ -150,12 +150,33 @@ if [ -f "$THEME_SRC/panel/xfce4-panel.xml" ]; then
   echo "provision(face): Meta panel -> /etc/xdg + /etc/skel"
 fi
 
-# window decorations. MetaOS/xfwm4/themerc is what makes the buttons blue and
-# puts close/minimise on the left; without this dir xfwm4 silently uses Default.
+# window decorations. MetaOS/xfwm4/themerc is what colours the titlebar; the
+# 15 svgs are what make the buttons EXIST. xfwm4 resolves each button by name
+# and state, and a miss draws nothing — that is the "no x, no -, no +" bug, so
+# the art is installed in the same block as the colours and never apart.
 if [ -f "$THEME_SRC/xfwm4/themerc" ]; then
   $SUDO mkdir -p "$ROOT/usr/share/themes/MetaOS/xfwm4"
   $SUDO install -m644 "$THEME_SRC/xfwm4/themerc" "$ROOT/usr/share/themes/MetaOS/xfwm4/themerc"
-  echo "provision(face): xfwm4 theme -> /usr/share/themes/MetaOS/xfwm4"
+  nbtn=0
+  for svg in "$THEME_SRC"/xfwm4/*-*.svg "$THEME_SRC"/xfwm4/*-*.png; do
+    [ -f "$svg" ] || continue
+    $SUDO install -m644 "$svg" "$ROOT/usr/share/themes/MetaOS/xfwm4/$(basename "$svg")" || exit 1
+    nbtn=$((nbtn + 1))
+  done
+  echo "provision(face): xfwm4 theme + $nbtn button images -> /usr/share/themes/MetaOS/xfwm4"
+  if [ "$nbtn" -eq 0 ]; then
+    echo "provision(face): WARNING no button svgs — windows will have an empty titlebar" >&2
+  fi
+fi
+# xfconf wins over themerc; without the channel file the session keeps whatever
+# layout the stock image had.
+if [ -f "$THEME_SRC/xfwm4/xfwm4.xml" ]; then
+  for d in "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml" \
+           "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml"; do
+    $SUDO mkdir -p "$d"
+    $SUDO install -m644 "$THEME_SRC/xfwm4/xfwm4.xml" "$d/xfwm4.xml"
+  done
+  echo "provision(face): xfwm4 button layout -> xfconf channel"
 fi
 if [ -f "$THEME_SRC/gtk/gtk.css" ]; then
   $SUDO mkdir -p "$ROOT/usr/share/themes/MetaOS/gtk-3.0"
