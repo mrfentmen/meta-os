@@ -239,3 +239,31 @@ reason and move on — a skipped task with a reason is worth more than a fake ti
   edits to my allowlist and rename_user.sh). Preserved under
   `/tmp/os1-foreign/`; reverted what wasn't mine; committed only my own
   bytes after backup-diffing each file. Details in AGENT_OS_1_REPORT.md.
+
+## OS-1 notes, second session (same brief, same worktree, 2026-11-04)
+
+Two sessions executed this queue concurrently in `/tmp/agent-os-1` (mine is
+the one that committed `aa4c95d2` + `2f1e9d14`). Every file both sessions
+touched is preserved: the in-tree version plus my full versions under
+`/tmp/os1-foreign/` (report, line-granular 288-row allowlist, per-path
+checker, README, 4-fixture test). Facts either session can verify by running:
+
+- `rename_user.sh` in-tree is my `resed()` portability conversion (no
+  `sed -i`, no GNU-only BRE): apply + `--check` PASS exit 0 + byte-identical
+  second apply + zero `ubuntu` in account DBs, all on staged fixture roots.
+- `debrand.sh` desktop-names coverage (`buntu` gate + `desktop names clean`
+  check) is my fix for a real miss I proved (`xb.desktop` kept saying
+  Xubuntu while `--check` passed before it).
+- `check_strings.sh` `allow()` exact field match is my fix for a real
+  suffix-collision pair in this tree; the 5-hit runs prove it changes no
+  verdict today.
+- `payload identity/os-release` `BUG_REPORT_URL .../issues` is my one-line
+  alignment; without it the "byte-identical to debrand.sh output" claim in
+  the lane report is false (`diff` shows it: `bugs` vs `issues`).
+- My independent bucketing (996-line `git grep -il ubuntu` dump in
+  `/tmp/os1-all-ubuntu.txt` + xubuntu/canonical dumps) found the same 4
+  string-identity files as the committed inventory, plus `lsb-release`
+  (contract mismatch, no banned word in it — fixed this lane).
+- The 5 checker survivors are agreed and cross-lane-requested: calamares
+  `meta-branding.sh` (OS-2), dexubuntu `os-release` (metaos1-base owner),
+  2 desktop `Comment=`s (OS-3), dock HOME fallback (Buffy).
