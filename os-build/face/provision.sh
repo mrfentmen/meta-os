@@ -182,6 +182,11 @@ if [ -f "$THEME_SRC/gtk/gtk.css" ]; then
   $SUDO mkdir -p "$ROOT/usr/share/themes/MetaOS/gtk-3.0"
   $SUDO install -m644 "$THEME_SRC/gtk/gtk.css" "$ROOT/usr/share/themes/MetaOS/gtk-3.0/gtk.css"
   echo "provision(face): gtk theme -> /usr/share/themes/MetaOS"
+  if [ -f "$THEME_SRC/gtk/settings.ini" ]; then
+    $SUDO mkdir -p "$ROOT/etc/gtk-3.0"
+    $SUDO install -m644 "$THEME_SRC/gtk/settings.ini" "$ROOT/etc/gtk-3.0/settings.ini"
+    echo "provision(face): gtk defaults -> /etc/gtk-3.0/settings.ini (decoration layout)"
+  fi
 fi
 # The control gallery. meta-desktop.sh puts a Controls tile on the dock, and a
 # tile whose program is not in the image opens nothing — so the program and its

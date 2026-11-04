@@ -219,6 +219,7 @@ separator { background-color: %(hairline_rgba)s; min-width: 1px; min-height: 1px
         "winbtn_gap": m["winbtn_gap"],
         "winbody_px": m["winbody_px"],
         "bar_app_px": m["bar_app_px"],
+        "panel_position": m["panel_position"],
         "ui": ty["ui"],
         "win_shadow": win_shadow,
     } + controls_css(t)
@@ -991,7 +992,7 @@ def panel_xml(t):
   <property name="panels" type="array">
     <value type="int" value="1"/>
     <property name="panel-1" type="empty">
-      <property name="position" type="string" value="p=8;x=0;y=0"/>
+      <property name="position" type="string" value="p=%(panel_position)s;x=0;y=0"/>
       <property name="length" type="uint" value="100"/>
       <property name="size" type="uint" value="%(bar_height)d"/>
       <property name="background-style" type="uint" value="1"/>
@@ -1036,6 +1037,7 @@ def panel_xml(t):
         "bar_g": "%.3f" % (int(c["bar_bg"][3:5], 16) / 255),
         "bar_b": "%.3f" % (int(c["bar_bg"][5:7], 16) / 255),
         "bar_rgba": bar_rgba,
+        "panel_position": m["panel_position"],
     }
 
 

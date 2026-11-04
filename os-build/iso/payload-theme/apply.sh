@@ -33,7 +33,7 @@ for f in \
   wallpapers/meta-ascii.png wallpapers/meta-rays.png wallpapers/meta-dusk.png wallpapers/meta-dawn.png \
   splash/metaos.plymouth splash/metaos.script splash/background.png splash/meta-m.png splash/progress.png \
   grub/theme.txt grub/background.png grub/mark.png \
-  gtk/gtk.css gtk/index.theme \
+  gtk/gtk.css gtk/index.theme gtk/settings.ini \
   xfwm4/themerc xfwm4/xfwm4.xml xfwm4/close-active.svg xfwm4/hide-active.svg xfwm4/maximize-active.svg \
   panel/xfce4-panel.xml \
   dock/dock.theme dock/plank-settings dock/plank.desktop \
@@ -106,6 +106,10 @@ put "$HERE/grub/mark.png" /boot/grub/themes/metaos/mark.png
 # ------------------------------------------------------------- gtk/xfwm4
 put "$HERE/gtk/gtk.css" /usr/share/themes/MetaOS/gtk-3.0/gtk.css
 put "$HERE/gtk/index.theme" /usr/share/themes/MetaOS/index.theme
+# GTK reads this itself: decoration layout, theme, icon theme and font,
+# available before xfsettingsd has exported anything.
+put "$HERE/gtk/settings.ini" /etc/gtk-3.0/settings.ini
+put "$HERE/gtk/settings.ini" /etc/skel/.config/gtk-3.0/settings.ini
 put "$HERE/xfwm4/themerc" /usr/share/themes/MetaOS/xfwm4/themerc
 # The button art. Without it xfwm4 draws an EMPTY titlebar no matter what the
 # layout says — the theme dir used to ship themerc and nothing else, which is

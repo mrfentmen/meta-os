@@ -10,88 +10,63 @@
   "theme_name": "MetaOS",
   "theme_version": "1.0",
   "reference": "face/face.css + face/index.html (browser reference desktop, boss-approved)",
-
   "colour": {
     "_note": "hex + separate alpha so one file can serve CSS, plank and xfconf, which all take colour differently.",
-
     "accent": "#4f7ec2",
     "_accent": "face.css --accent. Links, focus rings, selected rows, checked buttons.",
-
     "accent_deep": "#0750bc",
     "_accent_deep": "face.css body.bar-blue + the avatar gradient's dark end. Pressed states and the focused title hairline.",
-
     "accent_bright": "#9dc0f2",
     "_accent_bright": "DERIVED, not in face.css: accent mixed 45% toward paper. Only the ASCII ribbon's specular uses it, where the reference relies on canvas blending that GTK cannot do.",
-
     "ink": "#000000",
     "_ink": "face.css dark bar + tooltips' text on light.",
-
     "paper": "#ffffff",
     "_paper": "Text on accent.",
-
     "muted": "#8b93a7",
     "_muted": "DERIVED: --win-fg (#e8ecf4) dimmed to 62% over --win-bg. Used for inactive titles and secondary labels; face.css expresses this as opacity, which GTK3 needs as a colour.",
-
     "bg_dark": "#04060c",
     "_bg_dark": "face.css --bg. What the wallpaper sits on top of.",
-
     "win_bg": "#0e1016",
     "win_bg_alpha": 0.92,
     "_win_bg": "face.css --win-bg rgba(14,16,22,.92). GTK3 gets the opaque value plus the alpha for the places it can composite.",
-
     "win_fg": "#e8ecf4",
     "_win_fg": "face.css --win-fg.",
-
     "win_bar": "#ffffff",
     "win_bar_alpha": 0.08,
     "_win_bar": "face.css --win-bar rgba(255,255,255,.08): the titlebar is a white wash over the window, not a second colour.",
-
     "dock_bg": "#14161c",
     "dock_bg_alpha": 0.72,
     "_dock_bg": "face.css --dock-bg rgba(20,22,28,.72).",
-
     "bar_bg": "#000000",
     "_bar_bg": "face.css --bar-bg; the panel ships it at 96% so the wallpaper reads through slightly.",
-
     "hairline": "#7f7f7f",
     "hairline_alpha": 0.3,
     "_hairline": "face.css uses rgba(127,127,127,.3) for every border. Mid grey is deliberate: it is the one border that works on black and on white, so the palette needs no per-mode border.",
-
     "urgent": "#e8553f",
     "_urgent": "DERIVED: face.css has no alert hue. Plank's urgent dot needs one, and reusing the accent would make an alert invisible against an accent-coloured dock.",
-
     "slider": "#7f7f7f",
     "slider_alpha": 0.45
   },
-
   "metric": {
     "_note": "px. face.css is CSS px at 1x, which is GTK3's px, so these transfer unchanged except where noted.",
-
     "bar_height": 30,
     "_bar_height": "face.css #topbar height:30px.",
-
     "bar_app_px": 13,
     "_bar_app_px": "face.css topbar font-size:13px.",
-
     "window_radius": 12,
     "window_border": 1,
     "_window": "face.css .window border-radius:12px + 1px border.",
-
     "titlebar_pad_x": 12,
     "titlebar_pad_y": 8,
     "titlebar_px": 13,
     "_titlebar": "face.css .win-bar padding 8px 12px, .win-title 13px.",
-
     "winbtn": 22,
     "winbtn_gap": 6,
     "_winbtn": "face.css .win-btns button 22x22, margin-left 6px. Round buttons are drawn by the theme; xfwm4's own buttons are suppressed by button_layout=O|SHMC (only the menu).",
-
     "winbody_px": 14,
     "_winbody_px": "face.css .win-body 13.5px; rounded to 14 because GTK3 sizes are integers and 13 would shrink body text below the reference.",
-
     "hover_ms": 120,
     "_hover_ms": "face.css .dock-glyph transition .12s. Plank is the only surface that can animate a hover; GTK3 toggles.",
-
     "dock_item": 52,
     "dock_glyph": 40,
     "dock_gap": 6,
@@ -101,38 +76,49 @@
     "dock_bottom": 10,
     "dock_label_px": 10,
     "_dock": "face.css #dock + .dock-item + .dock-glyph + .dock-label. Plank only honours the item size and the theme plate, so the paddings are recorded here for the dock's own renderer, not for plank.",
-
     "login_card_w": 300,
     "login_radius": 20,
     "login_avatar": 84,
-    "_login": "face.css .glass-card 300px / 20px / .avatar 84px. Consumed by the Meta greeter (plan step G3); the reference's 18px backdrop blur has no GTK3 equivalent and is dropped here on purpose."
+    "_login": "face.css .glass-card 300px / 20px / .avatar 84px. Consumed by the Meta greeter (plan step G3); the reference's 18px backdrop blur has no GTK3 equivalent and is dropped here on purpose.",
+    "panel_position": "2",
+    "_panel_position": "xfconf snap code for the TOP edge (2 = north). It was 8, which is south: the generated 'top bar' shipped along the bottom of the screen."
   },
-
   "window_buttons": {
     "_note": "The reference's 22 px circular buttons, but three of them: minimise, maximise, close. face.css only draws minimise and close in the browser (the page has no maximise), so the third is DERIVED from the same geometry. The boss's complaint was 'there is not an x or a - or a + button', which is exactly what an empty theme dir renders.",
     "layout": "|HMC",
-    "_layout": "xfwm4 syntax: buttons left of the | are left-aligned, buttons right of it are right-aligned. H=hide (minimise), M=maximise, C=close. Nothing on the left: the bar starts with the title, like the reference. The old value in meta-desktop.sh was CM| — close and maximise on the LEFT and no minimise at all, which also silently disagreed with the themerc.",
+    "_layout": "xfwm4 syntax: buttons left of the | are left-aligned, buttons right of it are right-aligned. H=hide (minimise), M=maximise, C=close. Nothing on the left: the bar starts with the title, like the reference. The old value in meta-desktop.sh was CM| \u2014 close and maximise on the LEFT and no minimise at all, which also silently disagreed with the themerc.",
     "size": 22,
     "spacing": 6,
     "glyph_stroke": 1.5,
     "_size": "face.css .win-btns button is 22x22 with margin-left 6px.",
-    "states": ["active", "inactive", "prelight", "pressed", "toggled"],
+    "states": [
+      "active",
+      "inactive",
+      "prelight",
+      "pressed",
+      "toggled"
+    ],
     "_states": "xfwm4 looks up <name>-<state>.svg. toggled is what maximise shows when the window is already maximised, so it gets the restore glyph.",
-
     "discs": {
-      "_note": "Boss's call: close is black, minimise is white, maximise is blue. That is the Meta trio itself — the reference's own palette comment is 'bars white/blue/black' — so the three window buttons now spell the brand instead of being three greys. Glyph contrast is explicit per button; there is no formula that gets white-on-white right.",
+      "_note": "Boss's call: close is black, minimise is white, maximise is blue. That is the Meta trio itself \u2014 the reference's own palette comment is 'bars white/blue/black' \u2014 so the three window buttons now spell the brand instead of being three greys. Glyph contrast is explicit per button; there is no formula that gets white-on-white right.",
       "close": {
-        "base": "#000000", "prelight": "#2b2b2b", "pressed": "#000000",
+        "base": "#000000",
+        "prelight": "#2b2b2b",
+        "pressed": "#000000",
         "glyph": "#ffffff",
         "_note": "black disc, white cross; pressed darkens the ring, not the disc"
       },
       "hide": {
-        "base": "#ffffff", "prelight": "#e8ecf4", "pressed": "#cfd6e2",
+        "base": "#ffffff",
+        "prelight": "#e8ecf4",
+        "pressed": "#cfd6e2",
         "glyph": "#000000",
-        "_note": "white disc, black bar — the one button that inverts the titlebar"
+        "_note": "white disc, black bar \u2014 the one button that inverts the titlebar"
       },
       "maximize": {
-        "base": "#4f7ec2", "prelight": "#6a96d8", "pressed": "#0750bc",
+        "base": "#4f7ec2",
+        "prelight": "#6a96d8",
+        "pressed": "#0750bc",
         "glyph": "#ffffff",
         "_note": "accent disc, paper plus; pressed uses the deep accent"
       }
@@ -141,9 +127,8 @@
     "_inactive_alpha": "unfocused windows keep their colours but fade to 55%, so a background window never competes with the focused one",
     "glyph_alpha_inactive": 0.8,
     "csd_layout": "icon:minimize,maximize,close",
-    "_csd_layout": "The same three buttons for GTK apps that draw their own titlebar (mousepad, dialogs). Without Gtk/DecorationLayout set, a client-side-decorated window shows no buttons at all — the second half of the missing-x report."
+    "_csd_layout": "The same three buttons for GTK apps that draw their own titlebar (mousepad, dialogs). Without Gtk/DecorationLayout set, a client-side-decorated window shows no buttons at all \u2014 the second half of the missing-x report."
   },
-
   "controls": {
     "_note": "The rest of the widget set, so every control in the OS is one of these rather than whatever GTK ships by default. Sizes in px at 1x; GTK3 sizes are integers.",
     "height": 30,
@@ -180,18 +165,28 @@
     "toast_w": 320,
     "_only": "These are the controls face.css actually defines or that the OS needs to look native: button (default / suggested / destructive / flat / icon), entry, check, radio, switch, slider, tab, menu, tooltip, scrollbar, progress, badge, list row, card, OSD. Anything not in this list is a GTK default and therefore a bug, not a choice."
   },
-
   "type": {
     "ui": "'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     "_ui": "face.css body font-family with Inter first (the image ships fonts-inter). theme_proof.sh greps for \"'Inter'\" in gtk.css, so the quoting matters.",
     "mono": "'Meta Mono', 'DejaVu Sans Mono', monospace",
-    "_mono": "'Meta Mono' is not in the image yet; it is listed first so shipping the face is a font-file drop, not a CSS edit. Until then this resolves to DejaVu Sans Mono, per plan/ART_PLAN.md section 5 — NOT Ubuntu Mono, because the native surfaces must not resolve to an Ubuntu-named face. theme_proof.sh still asserts Ubuntu Mono for the terminal profile file, which this token set does not touch."
+    "_mono": "'Meta Mono' is not in the image yet; it is listed first so shipping the face is a font-file drop, not a CSS edit. Until then this resolves to DejaVu Sans Mono, per plan/ART_PLAN.md section 5 \u2014 NOT Ubuntu Mono, because the native surfaces must not resolve to an Ubuntu-named face. theme_proof.sh still asserts Ubuntu Mono for the terminal profile file, which this token set does not touch."
   },
-
   "shadow": {
     "_note": "face.css box-shadows, expressed as the three numbers GTK3 and plank need.",
-    "window": { "y": 22, "blur": 55, "alpha": 0.45 },
-    "bar": { "y": 1, "blur": 12, "alpha": 0.25 },
-    "dock": { "y": 14, "blur": 40, "alpha": 0.35 }
+    "window": {
+      "y": 22,
+      "blur": 55,
+      "alpha": 0.45
+    },
+    "bar": {
+      "y": 1,
+      "blur": 12,
+      "alpha": 0.25
+    },
+    "dock": {
+      "y": 14,
+      "blur": 40,
+      "alpha": 0.35
+    }
   }
 }
