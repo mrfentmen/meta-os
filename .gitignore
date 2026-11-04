@@ -46,3 +46,9 @@ os-build/userspace/user/link-*.ld
 
 # macOS
 .DS_Store
+
+# handsfree inbox is a working queue: the runner consumes it, so it is
+# empty or rebuilt on every pass (receipts are the record, not this)
+os-build/handsfree/inbox.txt
+os-build/handsfree/inbox.txt.done
+os-build/handsfree/inbox.txt.refusals.jsonl
