@@ -23,6 +23,16 @@ MODE=apply
 OLD=ubuntu
 NEW=meta
 
+# Portable in-place edit. BSD sed needs `-i ''` where GNU sed takes bare
+# `-i`, and GNU BRE \(...\|...\) / \? do not exist on BSD sed at all —
+# so sed -i is never used here. One ERE expression per call (sed -E is
+# POSIX and behaves the same on both).
+resed() { # resed <ERE> <file>
+  expr=$1; file=$2
+  sed -E "$expr" "$file" > "$file.metaos-new" \
+    && cat "$file.metaos-new" > "$file"
+  rm -f "$file.metaos-new"
+}
 check() {
   fail=0
   say() { if [ "$2" = ok ]; then echo "PASS $1"; else echo "FAIL $1 -- $3"; fail=1; fi; }
@@ -80,18 +90,18 @@ for db in passwd passwd- shadow shadow- group group- gshadow gshadow-; do
   f="$ROOT/etc/$db"
   [ -f "$f" ] || continue
   # leading name
-  sed -i "s/^$OLD:/$NEW:/" "$f"
+  resed "s/^$OLD:/$NEW:/" "$f"
   # group member lists:  sudo:x:27:ubuntu  ->  sudo:x:27:meta
-  sed -i "s/:$OLD\(,\|$\)/:$NEW\1/g" "$f"
+  resed "s/:$OLD(,|$)/:$NEW\1/g" "$f"
   # home field, so the *.bak copies of passwd do not keep the old path
-  sed -i "s|:/home/$OLD:|:/home/$NEW:|g" "$f"
+  resed "s|:/home/$OLD:|:/home/$NEW:|g" "$f"
   echo "  rewrote /etc/$db"
 done
 
 # supplementary id maps, if present
 for f in "$ROOT/etc/subuid" "$ROOT/etc/subgid"; do
   [ -f "$f" ] || continue
-  sed -i "s/^$OLD:/$NEW:/" "$f"
+  resed "s/^$OLD:/$NEW:/" "$f"
   echo "  rewrote ${f#"$ROOT"}"
 done
 
@@ -103,7 +113,7 @@ fi
 
 # 3. passwd home field is the new path only if the move happened
 if [ -d "$ROOT/home/$NEW" ]; then
-  sed -i "s|^$NEW:\([^:]*\):\([^:]*\):\([^:]*\):\([^:]*\):/home/$OLD:|$NEW:\1:\2:\3:\4:/home/$NEW:|" "$ROOT/etc/passwd"
+  resed "s|^$NEW:([^:]*):([^:]*):([^:]*):([^:]*):/home/$OLD:|$NEW:\1:\2:\3:\4:/home/$NEW:|" "$ROOT/etc/passwd"
 fi
 
 # 3b. the display name. Field 5 of passwd is the GECOS name; leaving it as
@@ -112,18 +122,18 @@ for db in passwd passwd-; do
   f="$ROOT/etc/$db"
   [ -f "$f" ] || continue
   if grep -q "^$NEW:[^:]*:[^:]*:[^:]*:[Uu]buntu:" "$f" 2>/dev/null; then
-    sed -i "s/^\($NEW:[^:]*:[^:]*:[^:]*:\)[Uu]buntu:/\1Meta:/" "$f"
+    resed "s/^($NEW:[^:]*:[^:]*:[^:]*:)[Uu]buntu:/\1Meta:/" "$f"
     echo "  display name -> Meta in /etc/$db"
   fi
 done
 
 # 4. autologin + live-session username
 for f in $(grep -rl "autologin-user=$OLD" "$ROOT/etc/lightdm" 2>/dev/null); do
-  sed -i "s/autologin-user=$OLD/autologin-user=$NEW/" "$f"
+  resed "s/autologin-user=$OLD/autologin-user=$NEW/" "$f"
   echo "  autologin -> $NEW in ${f#"$ROOT"}"
 done
 if [ -f "$ROOT/etc/casper.conf" ] && grep -q "USERNAME=\"\?$OLD\"\?" "$ROOT/etc/casper.conf"; then
-  sed -i "s/USERNAME=\"\?$OLD\"\?/USERNAME=\"$NEW\"/" "$ROOT/etc/casper.conf"
+  resed "s/USERNAME=\"?$OLD\"?/USERNAME=\"$NEW\"/" "$ROOT/etc/casper.conf"
   echo "  casper USERNAME -> $NEW"
 fi
 
@@ -133,7 +143,7 @@ for d in "$ROOT/etc/systemd/system" "$ROOT/opt/face" "$ROOT/usr/share/metaos" \
          "$ROOT/home/$NEW/.local" "$ROOT/etc/skel/.local"; do
   [ -d "$d" ] || continue
   for f in $(grep -rl "/home/$OLD" "$d" 2>/dev/null); do
-    sed -i "s|/home/$OLD|/home/$NEW|g" "$f"
+    resed "s|/home/$OLD|/home/$NEW|g" "$f"
     echo "  path fixed in ${f#"$ROOT"}"
   done
 done
