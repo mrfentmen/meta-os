@@ -177,6 +177,8 @@ install -m644 "$PAYLOAD/panel/xfce4-panel.xml" "$ROOT/etc/skel/.config/xfce4/xfc
 install -m644 "$PAYLOAD/panel/xfce4-panel.xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml"
 install -m644 "$PAYLOAD/xfwm4/xfwm4.xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
 install -m644 "$PAYLOAD/xfwm4/xfwm4.xml" "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfwm4.xml"
+install -m644 "$PAYLOAD/wallpapers/xfce4-desktop.xml" "$ROOT/etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
+install -m644 "$PAYLOAD/wallpapers/xfce4-desktop.xml" "$ROOT/etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml"
 mkdir -p "$ROOT/etc/skel/.config/plank/dock1"
 install -m644 "$PAYLOAD/dock/plank-settings" "$ROOT/etc/skel/.config/plank/dock1/settings"
 install -m644 "$PAYLOAD/dock/plank.desktop" "$ROOT/etc/xdg/autostart/plank.desktop"

@@ -1,5 +1,13 @@
 # MetaOS 1.0 fonts — installed, referenced, missing
 
+> R2-T1 note (2026-11-04, fonts lane): the `fonts-ubuntu` apt pull described
+> below (`apply.sh` font block) is removed — `apply.sh` now installs the six
+> vendored OFL families via `fonts/install.sh`, and `fonts/test-no-ubuntu.sh`
+> fails any image carrying an Ubuntu-named family. The `FONTS.md` rows naming
+> `Ubuntu Mono`/`fonts-ubuntu` as installed/referenced are therefore HISTORICAL
+> (pre-R2-T1 state), kept for provenance. Current mapping: `META-FONTS.md`;
+> declared files: `MANIFEST.txt`.
+
 No font binaries ship in this tree or in this directory. Licence files live
 inside the installed packages, never here.
 

@@ -25,11 +25,14 @@ else
 fi
 echo "hostname: metaos"
 
-# 2. Release marker. Contract values (R3: previously stamped the wrong ID_LIKE
-# and short names; the live image carries "Meta OS 1.0 (Ribbon)" with
-# ID_LIKE=debian, so the installed system must match). No URL beyond
-# metaos.local by design (see branding.desc).
+# 2. Release marker. SINGLE-WRITER GATE (identity lane): debrand.sh owns the
+# build-time identity and provision.sh runs it last, so the live squashfs the
+# installer unpacks already carries the contract os-release. This step must
+# not invent a second identity here: it re-stamps the exact debrand contract
+# (ID_LIKE=debian, VERSION_CODENAME=ribbon, Meta URLs), so last-writer-wins
+# on the installed system is harmless. No UBUNTU_CODENAME, no base name.
 cat > /etc/metaos-release <<'RELEASE'
+PRETTY_NAME="Meta OS 1.0 (Ribbon)"
 NAME="Meta OS"
 VERSION="1.0 (Ribbon)"
 VERSION_ID="1.0"
@@ -37,12 +40,12 @@ VERSION_CODENAME=ribbon
 ID=metaos
 ID_LIKE=debian
 LOGO=metaos
-PRETTY_NAME="Meta OS 1.0 (Ribbon)"
 HOME_URL="https://metaos.local"
 SUPPORT_URL="https://metaos.local/support"
 BUG_REPORT_URL="https://metaos.local/issues"
+DOCUMENTATION_URL="https://metaos.local/docs"
 RELEASE
-if [ -f /etc/os-release ] && [ ! -f /etc/os-release.base-flavour ]; then
+if [ -f /etc/os-release ]; then
     cp -f /etc/os-release /etc/os-release.base-flavour
 fi
 cp -f /etc/metaos-release /etc/os-release

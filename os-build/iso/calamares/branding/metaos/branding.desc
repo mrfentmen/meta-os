@@ -13,13 +13,13 @@
 componentName: metaos
 
 strings:
-    productName:         "MetaOS"
-    shortProductName:    "MetaOS"
+    productName:         "Meta OS"
+    shortProductName:    "Meta OS"
     version:             "1.0"
     shortVersion:        "1.0"
-    versionedName:       "MetaOS 1.0"
-    shortVersionedName:  "MetaOS 1.0"
-    bootloaderEntryName: "MetaOS"
+    versionedName:       "Meta OS 1.0"
+    shortVersionedName:  "Meta OS 1.0"
+    bootloaderEntryName: "Meta OS"
 
 images:
     productLogo:    "productLogo.png"

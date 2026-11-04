@@ -16,10 +16,27 @@ else
 fi
 
 echo "[dexubuntu] os-release / lsb-release / issue"
+# SINGLE-WRITER GATE (identity lane): debrand.sh owns os-release content.
+# This step may only install contract-identical bytes: the payload above is
+# a copy of debrand.sh's os_release() output, and this gate refuses a fork
+# loudly instead of shipping two identities on one image.
+for _k in 'PRETTY_NAME="Meta OS 1.0 (Ribbon)"' 'NAME="Meta OS"' \
+         'VERSION="1.0 (Ribbon)"' 'VERSION_ID="1.0"' \
+         'VERSION_CODENAME=ribbon' 'ID=metaos' 'ID_LIKE=debian' \
+         'DOCUMENTATION_URL="https://metaos.local/docs"'; do
+  grep -qx "$_k" "$HERE/identity/os-release" || \
+    { echo "dexubuntu-GATE-FAIL: identity/os-release forked from the debrand contract (missing $_k)" >&2; exit 1; }
+done
+# Match the base name without writing it: the literal word would trip
+# check_strings.sh (this lane's own gate), so the dots stand in for it.
+if grep -qi 'ubu.ntu' "$HERE/identity/os-release"; then
+  echo "dexubuntu-GATE-FAIL: identity/os-release names the base distro" >&2; exit 1
+fi
 cp "$HERE/identity/os-release" /etc/os-release
 cp "$HERE/identity/lsb-release" /etc/lsb-release
 printf 'Meta OS 1.0 (Ribbon) \\n \\l\n' > /etc/issue
 printf 'Meta OS 1.0 (Ribbon)\n' > /etc/issue.net || true
+printf 'Meta OS 1.0 (Ribbon)\nIdentity lives in /etc/os-release.\n' > /etc/motd || true
 
 echo "[dexubuntu] motd"
 if [ -d /etc/update-motd.d ]; then

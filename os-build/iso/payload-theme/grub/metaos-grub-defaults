@@ -1,0 +1,6 @@
+# /etc/default/grub.d/99-metaos.cfg — MetaOS grub defaults (installed on target).
+# GRUB_DEFAULT names the top menu entry so a kernel update cannot reorder it.
+GRUB_DISTRIBUTOR="MetaOS"
+GRUB_DEFAULT="Try or Install Meta OS 1.0"
+GRUB_TIMEOUT=10
+GRUB_THEME=/boot/grub/themes/metaos/theme.txt

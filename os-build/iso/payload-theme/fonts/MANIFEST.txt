@@ -1,0 +1,20 @@
+# MetaOS vendored fonts — declared file manifest (R2-T1, Section A).
+#
+# One row per file. Fields are pipe-separated with NO spaces (install.sh parses
+# field 1 as the vendored filename):
+#   filename|family|version|license|source-url
+#
+# STATE 2026-11-04: skeleton only — this host is offline for font fetching per
+# lane orders (no downloads), so no binaries are vendored yet. Each row records
+# the exact file to vendor and the exact upstream it comes from. Versions are
+# UNPINNED until vendoring (pin the tag + sha256 then). install.sh --check
+# fails until every row below exists non-empty beside it.
+#
+# All six are neo-grotesque/geometric sans + mono, OFL-1.1. No serifs, no
+# scripts, no decorative faces. Role mapping + rationale: META-FONTS.md.
+Inter-Regular.woff2|Inter|UNPINNED-offline-2026-11-04;declared-target:Inter-4.x-line|OFL-1.1|https://github.com/rsms/inter
+SourceSans3-Regular.woff2|Source Sans 3|UNPINNED-offline-2026-11-04;declared-target:SourceSans3-3.x-line|OFL-1.1|https://github.com/adobe-fonts/source-sans
+JetBrainsMono-Regular.woff2|JetBrains Mono|UNPINNED-offline-2026-11-04;declared-target:JetBrainsMono-2.x-line|OFL-1.1|https://github.com/JetBrains/JetBrainsMono
+SpaceGrotesk-Regular.woff2|Space Grotesk|UNPINNED-offline-2026-11-04;declared-target:SpaceGrotesk-2.x-line|OFL-1.1|https://github.com/floriankarsten/space-grotesk
+Archivo-Regular.woff2|Archivo|UNPINNED-offline-2026-11-04;declared-target:Archivo-2.x-line|OFL-1.1|https://github.com/Omnibus-Type/Archivo
+IBMPlexSans-Regular.woff2|IBM Plex Sans|UNPINNED-offline-2026-11-04;declared-target:IBMPlexSans-5.x-line|OFL-1.1|https://github.com/IBM/plex

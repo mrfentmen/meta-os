@@ -10,8 +10,8 @@
 # (os-release, hostname, issue, ...).
 #
 # Refuses to run when any referenced source asset is missing (preflight
-# counts are exact: 32 plymouth frames, 20 icons, 12 dock launchers).
-# Refuses when neither Inter nor Ubuntu Mono is present on the target.
+# gates are floors: >=120 plymouth frames, >=20 icons, >=12 dock launchers).
+# Refuses when the vendored Meta font set is missing from the target.
 # Never touches autologin (50-metaos.conf / lightdm.conf) or meta-live.py.
 set -eu
 
@@ -31,6 +31,7 @@ need() { # need <source-path> — preflight gate, counts failures, never silence
 for f in \
   greeter/lightdm-gtk-greeter.conf greeter/unity-greeter.conf greeter/10-metaos-live.conf \
   wallpapers/meta-ascii.png wallpapers/meta-rays.png wallpapers/meta-dusk.png wallpapers/meta-dawn.png \
+  wallpapers/xfce4-desktop.xml \
   splash/metaos.plymouth splash/metaos.script splash/background.png splash/meta-m.png splash/progress.png \
   grub/theme.txt grub/background.png grub/mark.png \
   gtk/gtk.css gtk/index.theme gtk/settings.ini \
@@ -92,6 +93,10 @@ put "$HERE/wallpapers/meta-rays.png" /usr/share/backgrounds/meta-rays.png
 put "$HERE/wallpapers/meta-dusk.png" /usr/share/backgrounds/meta-dusk.png
 put "$HERE/wallpapers/meta-dawn.png" /usr/share/backgrounds/meta-dawn.png
 put "$HERE/splash/meta-m.png" /usr/share/backgrounds/meta-m.png
+# Static xfconf backdrop default: the still the desktop shows before the live
+# wallpaper player starts. Same image the greeter override points at.
+put "$HERE/wallpapers/xfce4-desktop.xml" /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
+put "$HERE/wallpapers/xfce4-desktop.xml" /etc/skel/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-desktop.xml
 
 # ------------------------------------------------------------- plymouth
 put "$HERE/splash/metaos.plymouth" /usr/share/plymouth/themes/metaos/metaos.plymouth
@@ -209,6 +214,17 @@ for f in "$HERE"/apps/dock/*.desktop; do
 done
 
 # -------------------------------------------------------------- identity
+# SINGLE-WRITER marker (identity lane rule): debrand.sh is the only PRIMARY
+# writer of these paths. This block still writes them by default so a stale
+# caller that never heard of the rule keeps working, but any provision path
+# that ends with a debrand re-stamp MUST export METAOS_SKIP_IDENTITY=1 (see
+# provision-all.sh step 4), leaving debrand the last and only writer.
+# Named reason for the default-ON choice: payload-theme/apply.sh predates the
+# rule and lane C's theme flow calls it directly; flipping the default would
+# silently un-brand those roots. The flag flips the default where sealed.
+if [ "${METAOS_SKIP_IDENTITY:-0}" = 1 ]; then
+  echo "apply: identity skipped (METAOS_SKIP_IDENTITY=1; debrand owns these paths)"
+else
 # NOTE: /etc/os-release is a symlink to ../usr/lib/os-release on Ubuntu.
 # Write through it (like meta-branding does) instead of replacing the link.
 if [ ! -f "$ROOT/etc/os-release.base-flavour" ]; then
@@ -234,23 +250,23 @@ put "$HERE/identity/issue" /etc/issue
 put "$HERE/identity/issue.net" /etc/issue.net
 put "$HERE/identity/motd" /etc/motd
 put "$HERE/identity/00-header" /etc/update-motd.d/00-header 755
+fi # METAOS_SKIP_IDENTITY
 
 # ----------------------------------------------------------------- fonts
-have_inter=0
-have_mono=0
-if ls "$ROOT"/usr/share/fonts/opentype/inter/Inter-* >/dev/null 2>&1 || \
-   ls "$ROOT"/usr/share/fonts/truetype/inter/Inter-* >/dev/null 2>&1; then have_inter=1; fi
-if ls "$ROOT"/usr/share/fonts/truetype/ubuntu/UbuntuMono* >/dev/null 2>&1; then have_mono=1; fi
-if [ "$have_inter" -eq 0 ] || [ "$have_mono" -eq 0 ]; then
-  if [ "$ROOT" = "/" ] && command -v apt-get >/dev/null 2>&1; then
-    echo "apply: fonts missing (inter=$have_inter mono=$have_mono); installing via apt"
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends fonts-inter fonts-ubuntu
-    ls /usr/share/fonts/opentype/inter/Inter-* >/dev/null 2>&1 || ls /usr/share/fonts/truetype/inter/Inter-* >/dev/null 2>&1 || { echo "apply-GATE-FAIL: Inter still absent after apt" >&2; exit 1; }
-    ls /usr/share/fonts/truetype/ubuntu/UbuntuMono* >/dev/null 2>&1 || { echo "apply-GATE-FAIL: Ubuntu Mono still absent after apt" >&2; exit 1; }
-  else
-    echo "apply-GATE-FAIL: fonts missing on target (inter=$have_inter mono=$have_mono); install fonts-inter + fonts-ubuntu, then re-run" >&2
+# Meta ships files, not font packages: the six OFL families in
+# payload-theme/fonts/ install to /usr/share/fonts/truetype/meta/ with the
+# fontconfig generics in 69-meta.conf. There is deliberately no apt fallback —
+# a font-package pull can reintroduce a non-Meta family name (see
+# fonts/META-FONTS.md and fonts/test-no-ubuntu.sh), so a missing vendored set
+# is a gate failure, not a package install.
+if [ -x "$HERE/fonts/install.sh" ]; then
+  sh "$HERE/fonts/install.sh" "$ROOT" || {
+    echo "apply-GATE-FAIL: Meta fonts install failed; vendor fonts/ first (see fonts/MANIFEST.txt)" >&2
     exit 1
-  fi
+  }
+else
+  echo "apply-GATE-FAIL: fonts installer missing: $HERE/fonts/install.sh" >&2
+  exit 1
 fi
 
 # -------------------------------------------- plymouth default (live root only)

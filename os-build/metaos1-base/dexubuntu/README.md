@@ -21,8 +21,11 @@ Works in Cubic's customisation phase or under Buffy's
 
 - `/etc/hostname` -> `metaos`, `/etc/hosts` 127.0.1.1 entry follows
 - `/etc/os-release` and `/etc/lsb-release` -> `identity/` payloads
-  (NAME/PRETTY_NAME "MetaOS 1.0", ID=metaos, ID_LIKE=ubuntu)
-- `/etc/issue`, `/etc/issue.net`, motd header -> MetaOS 1.0
+  (PRETTY_NAME/NAME "Meta OS 1.0 (Ribbon)", ID=metaos, ID_LIKE=debian,
+  VERSION_CODENAME=ribbon, no UBUNTU_CODENAME — byte-identical to
+  `os-build/identity/debrand.sh` output; the apply step gates this and
+  refuses a forked payload)
+- `/etc/issue`, `/etc/issue.net`, `/etc/motd`, motd header -> Meta OS 1.0 (Ribbon)
 - Purges branding-only packages: `xubuntu-default-settings`,
   `xubuntu-wallpapers`, `xubuntu-artwork`, `xubuntu-docs`; removes their
   asset dirs if a purge was partial

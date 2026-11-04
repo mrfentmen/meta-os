@@ -38,6 +38,13 @@ bar.y = screen.y + (screen.h + logo.image.GetHeight ()) / 2 - 20;
 bar.sprite.SetPosition (bar.x, bar.y, 1);
 bar.sprite.SetOpacity (0);
 
+# --- loading caption, visible for the whole boot ---
+caption.text = Image.Text ("Loading into MetaOS", 0.93, 0.96, 1.0);
+caption.sprite = Sprite (caption.text);
+caption.sprite.SetPosition (screen.x + (screen.w - caption.text.GetWidth ()) / 2,
+                            bar.y - caption.text.GetHeight () - 16, 2);
+caption.sprite.SetOpacity (1);
+
 # --- password / message overlays share one centered text sprite ---
 prompt.sprite = Sprite ();
 prompt.sprite.SetOpacity (0);

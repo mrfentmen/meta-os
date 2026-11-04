@@ -18,5 +18,5 @@ background='/usr/share/backgrounds/meta-rays.png'
 logo='/usr/share/backgrounds/meta-m.png'
 draw-user-backgrounds=false
 draw-grid=false
-show-hostname=false
+show-hostname=true
 play-ready-sound=false
