@@ -1,0 +1,11 @@
+proof_boot: image=/tmp/metaos.ext4
+proof_boot: kernel=vmlinuz initrd=initrd.img timeout=180s
+proof_boot: monitor=/tmp/proof-mon.0vlpmO serial=/tmp/proof-serial.JjK8KS ssh=127.0.0.1:2223 (detached, snapshot=on)
+proof_boot: qemu pid=46242
+proof_boot: polling framebuffer every 5s (single-colour = FAIL)...
+proof_boot: ... 5s: 1920x1080 unique~294 max=255
+proof_boot: PASS: framebuffer 1920x1080 unique~294 (not single-colour)
+proof_boot: capture: /Users/test/Desktop/meta-os/os-build/captures/proof-boot-1920x1080-20261103T114055Z.ppm
+proof_boot: capture: /Users/test/Desktop/meta-os/os-build/captures/proof-boot-1920x1080-20261103T114055Z.png
+proof_boot: serial: /tmp/proof-serial.JjK8KS monitor: /tmp/proof-mon.0vlpmO pid: 46242
+qemu-system-aarch64: terminating on signal 15 from pid 46229 (<unknown process>)
