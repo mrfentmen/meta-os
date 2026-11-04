@@ -125,6 +125,25 @@ t.write(set_path, encoding="UTF-8", xml_declaration=True)
 print("meta-desktop: gtk theme MetaOS")
 PY
 
+# ------------------------------------------------------ 2b. terminal colours
+# xfce4-terminal does not read /etc/xdg/xfce4/terminal/terminalrc into an
+# existing profile: the first window starts a terminal *server* that owns the
+# settings for every later window, so if the user has no terminalrc yet the
+# first terminal of the session locks in the white default for good. Put the
+# Meta colours in the user's own file at login, before any terminal exists.
+TERM_SRC=""
+for cand in /etc/xdg/xfce4/terminal/terminalrc \
+            /opt/face/theme/terminal/terminalrc; do
+  if [ -r "$cand" ]; then TERM_SRC="$cand"; break; fi
+done
+if [ -n "$TERM_SRC" ] && [ ! -f "$HOME_DIR/.config/xfce4/terminal/terminalrc" ]; then
+  mkdir -p "$HOME_DIR/.config/xfce4/terminal" 2>/dev/null \
+    && cp -f "$TERM_SRC" "$HOME_DIR/.config/xfce4/terminal/terminalrc" \
+    && say "terminal colours <- $TERM_SRC"
+else
+  [ -z "$TERM_SRC" ] && say "no Meta terminalrc to install — terminal stays on the stock colours"
+fi
+
 # ------------------------------------------------------------- 3. the dock
 # plank reads a theme from /usr/share/plank/themes/<Name>, and one .dockitem
 # per launcher. Both are written here so a fresh user gets the Meta dock.
