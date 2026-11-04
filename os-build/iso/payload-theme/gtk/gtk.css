@@ -1,6 +1,12 @@
 /* MetaOS gtk.css override — applied over the base theme. Colors locked to
    studio palette until boss locks brand kit (blue #1877F2, white #EDF5FF,
    black #070B16). Install: /usr/share/themes/MetaOS/gtk-3.0/gtk.css */
+/* Type: Inter (SIL OFL 1.0+, package fonts-inter — same face the LightDM
+   greeter uses via font-name=Inter 11, see greeter/). Referenced here so
+   every GTK surface renders the Meta face even where xfconf is absent. */
+window, headerbar, button, menu, menuitem, label, entry, treeview {
+  font-family: 'Inter', 'Ubuntu', system-ui, sans-serif;
+}
 @define-color meta_blue #1877F2;
 @define-color meta_blue_light #78BAFF;
 @define-color meta_ink #070B16;
