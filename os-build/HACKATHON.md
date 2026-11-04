@@ -131,3 +131,31 @@ them collapses live.
 2. Record the demo in one take, live. A live fumble beats a polished video that
    a judge suspects was staged.
 3. Put `evals/agentic/report-*.md` on screen, not a summary of it.
+
+---
+
+## R2-T4 evidence note, 2026-11-04 (agent-r2-t4 lane — appended, existing lines untouched)
+
+**Claims still lacking evidence links:** any fps number for 3D scenes
+(headless rAF deltas exist: molecules 17.37 ms avg/59 frames — guest fps
+unmeasured); "board loads in under one second" (selftest render 66 ms from
+navigation start measured, 500-record internal timing not externally
+reproducible); audio audibility (scheduling/state proven headless, no
+speaker claim possible).
+
+**One-click disprovables (do not say on stage):** the stale proof-boot
+capture name (C1 above); any fixed dock-tile count (26 today, moves weekly);
+identity `--check` PASS on the Mac (needs guest root); a merged agent-job
+demo (beat PENDING); `board.html` at repo root (does not exist — only
+`board/board.html`, other lane).
+
+**Honest limits:** bus backend is T3's board on :18935 (down = named banner,
+nothing cached-faked); officina submit needs live :18940 with CORS; music
+takes are the 11 keeper takes (take-004 excluded, no MIDI); science claims
+never upgraded above recorded level; Aegis/Nervus read-only.
+
+**User status — real:** 6 apps render with real data + selftests green;
+**thin:** two board data files missing (empty states name them), Nervus
+unwired to dock, agent-job PENDING; **missing:** fresh boot proof since
+these edits, DSH dashboard re-baseline (26/30 tests assert the replaced
+bus.html debug page).

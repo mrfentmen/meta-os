@@ -26,7 +26,7 @@ exit 0**. Captures (both sizes): rooms, empty, down. Request log: only
 BREAKAGE (expected, DSH lane): rebuild removes `intelPanel` markers that
 26/30 `tests/test_dashboard_*` assert (verified:
 `test_dashboard_smoke_checklist.py` → `AssertionError: bus.html must carry
-exactly two intelPanel markers, found 1`). DSH must re-baseline against the
+exactly two intelPanel markers, found 0` (`grep -c intelPanel bus.html` → 0). DSH must re-baseline against the
 messaging app; `tests/` untouched by this lane.
 
 ## B. Officina (23–44) — labs/officina/index.html new + fixtures
