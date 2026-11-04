@@ -8,6 +8,8 @@
 
 **Meta's first agentic remastered operating system.**
 
+**Demo video:** https://youtu.be/WNx22WKHXxw
+
 Meta OS is three things, and this README keeps them apart because the difference matters:
 
 | | What it is | Status |
