@@ -14,6 +14,8 @@ Built for the **Meta Global AI Developer Hackathon 2026**, Indie track.
 
 **Meta's first agentic remastered operating system.**
 
+**[Watch the demo video](https://youtu.be/WNx22WKHXxw)** (3 min)
+
 Meta OS is a next-generation agentic platform: an autonomous, multi-agent
 operating system, remastered from first principles and rebuilt for
 the age of AI. Its agents perceive, reason, and act around the clock —
