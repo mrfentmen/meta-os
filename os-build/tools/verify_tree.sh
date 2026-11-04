@@ -24,11 +24,15 @@ START=$(date +%s 2>/dev/null || echo 0)
 # glue together without this).
 NL=$(printf '\nX'); NL=${NL%X}
 
-# Expected checker paths owned by other lanes. Missing = absent, not failure.
+# Absent-lane rows always read "absent (owner: lane N)" — a missing lane is
+# never a pass. Owner labels follow the debrand work split (lane 2: strings
+# and allowlist; lane 3: desktop entries; lane 1: theme/profile assets);
+# Buffy corrects them if the split differs.
 OS1_CHECK="os-build/identity/check_strings.sh"
 OS1_ALLOWLIST="os-build/identity/ALLOWLIST.tsv"
-OS3_LAUNCHER="agent-layer/desktop-entries/selftest.sh"
-OS3_DESKTOP="agent-layer/desktop-entries/check_desktop.sh"
+LANE3_ENTRIES="agent-layer/desktop-entries/check_entries.sh"
+LANE1_PROFILE="os-build/iso/payload-theme/terminal/check_profile.sh"
+LANE1_TOKENS="os-build/iso/payload-theme/tokens/test_tokens.sh"
 
 ROWS=""
 FAIL_NAMES=""
@@ -47,18 +51,23 @@ row() {
   fi
 }
 
-# run_checker <row> <owner> <path> — absent-tolerant external checker w/ --check.
+# run_checker <row> <owner> <path> [args...] — absent-tolerant external
+# checker. Missing file => "absent (owner: lane N)", never a pass. Args
+# default to --check; checkers without that flag (check_strings, test_tokens)
+# pass their own (possibly empty) invocation.
 run_checker() {
-  _row="$1"; _owner="$2"; _path="$3"
+  _row="$1"; _owner="$2"; _path="$3"; shift 3
   if [ ! -f "$ROOT/$_path" ]; then
-    row "$_row" "absent (owned by $_owner)" "$_path not present yet"
+    row "$_row" "absent (owner: $_owner)" "$_path not present yet"
     return 0
   fi
   if [ ! -x "$ROOT/$_path" ]; then
     row "$_row" "FAIL" "$_path present but not executable"
     return 0
   fi
-  if _out=$("sh" "$ROOT/$_path" --check 2>&1); then
+  if [ $# = 0 ]; then set -- --check; fi
+  if [ "$1" = "__none__" ]; then shift; fi
+  if _out=$("sh" "$ROOT/$_path" "$@" 2>&1); then
     row "$_row" "PASS" "$(printf '%s' "$_out" | tail -1 | cut -c1-120)"
   else
     row "$_row" "FAIL" "$(printf '%s' "$_out" | tail -2 | tr '\n' ';' | cut -c1-160)"
@@ -70,13 +79,177 @@ if [ -f "$ROOT/$OS1_ALLOWLIST" ]; then
   _n=$(grep -c . "$ROOT/$OS1_ALLOWLIST" 2>/dev/null || echo 0)
   row "allowlist" "PASS" "$OS1_ALLOWLIST present with $_n non-empty lines"
 else
-  row "allowlist" "absent (owned by OS-1)" "$OS1_ALLOWLIST not present yet"
+  row "allowlist" "absent (owner: lane 2)" "$OS1_ALLOWLIST not present yet"
 fi
 
-# --- rows 2-4: other lanes' checkers, by path
-run_checker "identity-strings" "OS-1" "$OS1_CHECK"
-run_checker "launcher-allowlist" "OS-3" "$OS3_LAUNCHER"
-run_checker "desktop-entries" "OS-3" "$OS3_DESKTOP"
+# --- lane checkers, by path: string sweep, entries, profile, tokens.
+# check_strings takes no --check flag (it rejects unknown flags), so it is
+# invoked bare; same for test_tokens, which runs on invocation.
+run_checker "debrand-strings" "lane 2" "$OS1_CHECK" "__none__"
+run_checker "desktop-entries-check" "lane 3" "$LANE3_ENTRIES"
+run_checker "profile-check" "lane 1" "$LANE1_PROFILE"
+run_checker "tokens-check" "lane 1" "$LANE1_TOKENS" "__none__"
+
+# --- row: no-stock-art (OS-DEBRAND-4, inline). FAIL if stock Ubuntu art or
+# live pointers to it exist: greybird-wall* / warty* files, emerald /
+# ubuntu-logo / ubuntu-text plymouth theme dirs, symlinks targeting
+# ubuntu-text, `update-alternatives --set/--install ... ubuntu-text` in
+# shell code, or desktop-base wallpaper *values* in xml/conf. Prose mentions
+# (docs, plan, comments) do not trigger: this row matches artifacts and
+# live config values only. Named allowlist rows (path match) excuse a hit.
+_art_bad=""
+_art_files=$(find "$ROOT" -path "$ROOT/.git" -prune -o \( -name 'greybird-wall*' -o -name 'warty*' \) -print 2>/dev/null | grep -v "^$ROOT/os-build/logs/" || true)
+_art_dirs=$(find "$ROOT" -path "$ROOT/.git" -prune -o -type d \( -name 'emerald' -o -name 'ubuntu-logo' -o -name 'ubuntu-text' \) -print 2>/dev/null | grep -v "^$ROOT/os-build/logs/" || true)
+for _a in $_art_files $_art_dirs; do
+  _art_bad="$_art_bad ${_a#"$ROOT"/}:stock-artifact"
+done
+# (No case-in-$(): macOS bash 3.2 rejects `;;` there. Temp file under /tmp,
+# never under the repo tree.)
+_art_tmp=$(mktemp "${TMPDIR:-/tmp}/verify-art-XXXXXX")
+find "$ROOT" -path "$ROOT/.git" -prune -o -type l -print 2>/dev/null > "$_art_tmp"
+_art_links=""
+while read -r _l; do
+  _t=$(readlink "$_l" 2>/dev/null || true)
+  case "$_t" in
+    *ubuntu-text*) _art_links="$_art_links $_l" ;;
+  esac
+done < "$_art_tmp"
+rm -f "$_art_tmp"
+for _a in $_art_links; do
+  _art_bad="$_art_bad ${_a#"$ROOT"/}:alternative-target"
+done
+# (Self-exclusion: this script's own -e pattern text necessarily contains the
+# match, so verify_tree.sh itself is excluded from this one scan.)
+_art_conf=$(grep -rn --include='*.sh' -e 'update-alternatives.*ubuntu-text' -e 'ubuntu-text.*update-alternatives' "$ROOT" 2>/dev/null | grep -v "/.git/" | grep -v "os-build/logs/" | grep -v "/plan/" | grep -v "os-build/tools/verify_tree.sh" | cut -d: -f1,2 || true)
+for _a in $_art_conf; do
+  _art_bad="$_art_bad ${_a}:live-alternative"
+done
+_art_val=$(grep -rn --include='*.xml' --include='*.conf' -e 'value="[^"]*desktop-base' -e 'background=.*desktop-base' -e 'last-image.*desktop-base' "$ROOT" 2>/dev/null | grep -v "/.git/" | grep -v "os-build/logs/" | grep -v "/plan/" | cut -d: -f1,2 || true)
+for _a in $_art_val; do
+  _art_bad="$_art_bad ${_a}:desktop-base-value"
+done
+if [ -n "$_art_bad" ] && [ -f "$ROOT/$OS1_ALLOWLIST" ]; then
+  _kept=""
+  for _h in $_art_bad; do
+    _p=${_h%%:*}
+    _excused=0
+    while IFS="$(printf '\t')" read -r _ap _apat _av _awhy; do
+      case "$_ap" in ""|\#*) continue ;; esac
+      if [ "$_p" = "$_ap" ]; then _excused=1; break; fi
+    done < "$ROOT/$OS1_ALLOWLIST"
+    [ "$_excused" = "0" ] && _kept="$_kept $_h"
+  done
+  _art_bad=$(printf '%s' "$_kept" | tr ' ' '\n' | grep . | tr '\n' ' ' || true)
+fi
+if [ -z "$_art_bad" ]; then
+  row "no-stock-art" "PASS" "no greybird/warty files, no emerald/ubuntu-logo/ubuntu-text theme dirs, no ubuntu-text alternatives or desktop-base values"
+else
+  _n=$(printf '%s' "$_art_bad" | wc -w | tr -d ' ')
+  row "no-stock-art" "FAIL" "$_n stock-art hits: $(printf '%s' "$_art_bad" | cut -c1-140)"
+fi
+
+# --- row: wallpaper-reachability (OS-DEBRAND-4, inline). Every backdrop path
+# named in the shipped xfce4-desktop.xml files and greeter confs must resolve
+# to a file in this repo (via the image-path map below) or an allowlist row;
+# every wallpaper source file must be Meta-named (meta-*, greeter-*) or
+# allowlisted as a carrier. Image path /usr/share/X maps to repo file Y:
+#   /usr/share/metaos/theme/*.png      -> iso/theme/wallpaper/<same>
+#   /usr/share/backgrounds/meta-*.png  -> os-build/iso/payload-theme/wallpapers/<same>
+_wall_bad=""
+for _x in $(find "$ROOT" -name 'xfce4-desktop.xml' -not -path "$ROOT/.git/*" 2>/dev/null | grep -v "os-build/logs/"); do
+  for _v in $(grep -o 'value="/usr/share/[^"]*"' "$_x" 2>/dev/null | sed 's/value="//;s/"$//' | sort -u); do
+    case "$_v" in
+      /usr/share/metaos/theme/*)
+        _rel="iso/theme/wallpaper/$(basename "$_v")"
+        [ -f "$ROOT/$_rel" ] || _wall_bad="$_wall_bad ${_x#"$ROOT"/}:unreachable-$_v" ;;
+      /usr/share/backgrounds/*)
+        _rel="os-build/iso/payload-theme/wallpapers/$(basename "$_v")"
+        [ -f "$ROOT/$_rel" ] || _wall_bad="$_wall_bad ${_x#"$ROOT"/}:unreachable-$_v" ;;
+      *) _wall_bad="$_wall_bad ${_x#"$ROOT"/}:unknown-prefix-$_v" ;;
+    esac
+  done
+done
+for _g in $(find "$ROOT" -name 'lightdm-gtk-greeter.conf' -not -path "$ROOT/.git/*" 2>/dev/null | grep -v "os-build/logs/"); do
+  _b=$(sed -n 's/^background=//p' "$_g" 2>/dev/null | head -1)
+  case "$_b" in
+    ""|\#*) ;;
+    /usr/share/metaos/theme/*)
+      _rel="iso/theme/wallpaper/$(basename "$_b")"
+      [ -f "$ROOT/$_rel" ] || _wall_bad="$_wall_bad ${_g#"$ROOT"/}:unreachable-$_b" ;;
+    /usr/share/backgrounds/*)
+      _rel="os-build/iso/payload-theme/wallpapers/$(basename "$_b")"
+      [ -f "$ROOT/$_rel" ] || _wall_bad="$_wall_bad ${_g#"$ROOT"/}:unreachable-$_b" ;;
+    *) _wall_bad="$_wall_bad ${_g#"$ROOT"/}:unknown-prefix-$_b" ;;
+  esac
+done
+for _w in $(find "$ROOT/iso/theme/wallpaper" "$ROOT/os-build/iso/payload-theme/wallpapers" -type f \( -name '*.png' -o -name '*.jpg' -o -name '*.svg' \) 2>/dev/null); do
+  _bn=$(basename "$_w")
+  case "$_bn" in
+    meta-*|greeter-*|loop-*) ;;
+    *) _wall_bad="$_wall_bad ${_w#"$ROOT"/}:non-meta-wallpaper" ;;
+  esac
+done
+if [ -n "$_wall_bad" ] && [ -f "$ROOT/$OS1_ALLOWLIST" ]; then
+  _kept=""
+  for _h in $_wall_bad; do
+    _p=${_h%%:*}
+    _excused=0
+    while IFS="$(printf '\t')" read -r _ap _apat _av _awhy; do
+      case "$_ap" in ""|\#*) continue ;; esac
+      if [ "$_p" = "$_ap" ]; then _excused=1; break; fi
+    done < "$ROOT/$OS1_ALLOWLIST"
+    [ "$_excused" = "0" ] && _kept="$_kept $_h"
+  done
+  _wall_bad=$(printf '%s' "$_kept" | tr ' ' '\n' | grep . | tr '\n' ' ' || true)
+fi
+if [ -z "$_wall_bad" ]; then
+  row "wallpaper-reachability" "PASS" "all named backdrops resolve to repo art; all wallpaper files Meta-named"
+else
+  _n=$(printf '%s' "$_wall_bad" | wc -w | tr -d ' ')
+  row "wallpaper-reachability" "FAIL" "$_n reachability hits: $(printf '%s' "$_wall_bad" | cut -c1-140)"
+fi
+
+# --- row: brand-identity (OS-DEBRAND-4, inline). Line-anchored machine
+# contexts only — prose about the leaks (matrix, inventory, READMEs) does not
+# match: ^ID_LIKE=ubuntu (compat must be debian), ^ID=ubuntu, ^NAME=Ubuntu,
+# ^PRETTY_NAME="Ubuntu, ^DISTRIB_ID=Ubuntu, ^UBUNTU_CODENAME,
+# ^Comment=<anything>Xubuntu (user-visible desktop string). Whole-word
+# prose terms are check_strings' job (debrand-strings row). Each hit prints
+# file:line plus its reason.
+_brand_hits=""
+_brand_scan=$(grep -rn --include='*.sh' --include='*.desktop' --include='*.conf' --include='*.xml' --include='*.py' --include='*os-release*' --include='*.list' -e '^ID_LIKE=ubuntu' -e '^ID=ubuntu' -e '^NAME=Ubuntu' -e '^PRETTY_NAME="Ubuntu' -e '^DISTRIB_ID=Ubuntu' -e '^UBUNTU_CODENAME' -e '^Comment=.*Xubuntu' "$ROOT" 2>/dev/null | grep -v "/.git/" | grep -v "os-build/logs/" | grep -v "/plan/" || true)
+for _h in $(printf '%s' "$_brand_scan" | cut -d: -f1,2 | sort -u); do
+  _line=$(printf '%s' "$_brand_scan" | grep "^$_h:" | head -1 | cut -d: -f3-)
+  case "$_line" in
+    ID_LIKE=ubuntu*) _why="compat must be ID_LIKE=debian" ;;
+    UBUNTU_CODENAME*) _why="stock codename field ships Ubuntu identity" ;;
+    Comment=*Xubuntu*) _why="user-visible desktop string names Xubuntu" ;;
+    *) _why="product identity names Ubuntu" ;;
+  esac
+  _brand_hits="${_brand_hits}${_h#"$ROOT"/}[$_why]$NL"
+done
+if [ -n "$_brand_hits" ] && [ -f "$ROOT/$OS1_ALLOWLIST" ]; then
+  _kept=""
+  while IFS= read -r _h; do
+    [ -n "$_h" ] || continue
+    _p=${_h%%\[*}
+    _excused=0
+    while IFS="$(printf '\t')" read -r _ap _apat _av _awhy; do
+      case "$_ap" in ""|\#*) continue ;; esac
+      if [ "$_p" = "$_ap" ]; then _excused=1; break; fi
+    done < "$ROOT/$OS1_ALLOWLIST"
+    [ "$_excused" = "0" ] && _kept="${_kept}${_h}$NL"
+  done <<EOF_HITS
+$_brand_hits
+EOF_HITS
+  _brand_hits="$_kept"
+fi
+if [ -z "$_brand_hits" ]; then
+  row "brand-identity" "PASS" "no ubuntu product-identity fields in machine contexts"
+else
+  _n=$(printf '%s' "$_brand_hits" | grep -c '\[' || true)
+  row "brand-identity" "FAIL" "$_n identity hits: $(printf '%s' "$_brand_hits" | tr '\n' ';' | cut -c1-200)"
+fi
 
 # --- row 5: tree references (OS-4, inline): every shipped .desktop file must
 # have Name= and Exec=, and every absolute Icon=/ path must exist in the tree.
