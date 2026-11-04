@@ -237,7 +237,7 @@ ColorUseTheme=FALSE
 ColorForeground=#EDF5FF
 ColorBackground=#070B16
 ColorPalette=#070B16;#FF4F9A;#20D6A3;#FFBD4A;#1877F2;#8B5CF6;#69DDFF;#EDF5FF;#52617A;#FF4F9A;#20D6A3;#FFBD4A;#78BAFF;#8B5CF6;#69DDFF;#FFFFFF
-FontName=Ubuntu Mono 11
+FontName=Monospace 11
 BackgroundMode=TERMINAL_BACKGROUND_SOLID
 EOF
   echo "provision(face): terminal defaults -> /etc/xdg/xfce4/terminal/terminalrc"

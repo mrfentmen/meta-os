@@ -31,8 +31,18 @@ while [ $# -gt 0 ]; do
     *) echo "meta-desktop: unknown flag $1" >&2; exit 2 ;;
   esac
 done
-[ -n "$HOME_DIR" ] || HOME_DIR="${HOME:-/home/ubuntu}"
-[ -d "$HOME_DIR" ] || { echo "meta-desktop: no home at $HOME_DIR" >&2; exit 1; }
+# The base image's account is "ubuntu"; after rename_user.sh it is "meta".
+# Hardcoding either one is how this script quietly did nothing on an image
+# where the other name was live, so ask the account database first and only
+# then fall back to the two names this project has ever used.
+[ -n "$HOME_DIR" ] || HOME_DIR="${HOME:-}"
+if [ -z "$HOME_DIR" ] || [ ! -d "$HOME_DIR" ]; then
+  HOME_DIR=""
+  for cand in "$(getent passwd 1000 2>/dev/null | cut -d: -f6)" /home/meta /home/ubuntu; do
+    if [ -n "$cand" ] && [ -d "$cand" ]; then HOME_DIR="$cand"; break; fi
+  done
+fi
+[ -d "${HOME_DIR:-/nonexistent}" ] || { echo "meta-desktop: no home at ${HOME_DIR:-?}" >&2; exit 1; }
 
 say() { echo "meta-desktop: $*"; }
 backup() { [ -e "$1" ] && [ ! -e "$1.metaos-fix.bak" ] && cp -p "$1" "$1.metaos-fix.bak" 2>/dev/null; return 0; }
@@ -213,9 +223,12 @@ fi
 
 # Dock preferences. HideMode=0 keeps it on screen (a dock that hides is a
 # dock the demo never sees).
+# Theme=MetaOS, not Default: the MetaOS plank theme is installed right above
+# this block, and "Default" is why the dock still looked like stock plank after
+# every other Meta change had landed.
 cat >"$PLANK/settings" <<'EOF'
 [PlankDockPreferences]
-Theme=Default
+Theme=MetaOS
 Alignment=Center
 ItemsAlignment=Center
 IconSize=40
@@ -304,13 +317,21 @@ IMPERIUM="${IMPERIUM:-/usr/share/metaos/apps/metaos-imperium.py}"
 # even with the Meta terminalrc present, so Ctrl+Alt+T opened a white terminal
 # while a directly started one was dark. Without a server, every window reads
 # the user's own colours.
-add_app terminal  "Terminal"   terminal        "xfce4-terminal --disable-server"
+# Two words, not one quoted string: add_app checks the FIRST word with
+# `command -v`, and a quoted "xfce4-terminal --disable-server" never resolves,
+# which silently dropped the Terminal tile from every dock this script built.
+add_app terminal  "Terminal"   terminal        xfce4-terminal --disable-server
 add_app files     "Files"      files           thunar
 add_app notes     "Notes"      notes           meta-notes
 add_app monitor   "Monitor"    dashboard       meta-monitor
 add_app agents    "Agents"     agents          meta-agents
 add_app editor    "Editor"     editor          mousepad
-add_app calc      "Calculator" calculator      galculator
+# Calculator: the image has galculator (Xubuntu's own); mate-calc is what the
+# ISO manifest names. Pick whichever is really installed instead of shipping a
+# tile that opens nothing on one of the two.
+CALC_BIN=galculator
+command -v mate-calc >/dev/null 2>&1 && CALC_BIN=mate-calc
+add_app calc      "Calculator" calculator      "$CALC_BIN"
 add_app settings  "Settings"   settings        xfce4-settings-manager
 add_app trash     "Trash"      trash           thunar trash:///
 # Native, not a wrapped page: the control gallery is a GTK app that draws one of

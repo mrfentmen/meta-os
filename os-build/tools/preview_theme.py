@@ -80,6 +80,103 @@ def icon(name, size):
     return '<img src="%s" width="%d" height="%d">' % (data_uri(path), size, size)
 
 
+PANEL_XML = os.path.join(THEME, "panel", "xfce4-panel.xml")
+
+
+def panel_items():
+    """[(plugin, {property: value})] in the order the panel loads them."""
+    import xml.etree.ElementTree as ET
+    try:
+        root = ET.parse(PANEL_XML).getroot()
+    except Exception as exc:                      # missing file is not fatal
+        print("preview: no panel xml (%s) — bar drawn empty" % exc)
+        return []
+    by_id = {}
+    for prop in root.findall("property"):
+        if prop.get("name") != "plugins":
+            continue
+        for plug in prop.findall("property"):
+            pid = plug.get("name", "")
+            if not pid.startswith("plugin-"):
+                continue
+            props = {s.get("name"): s.get("value") for s in plug.findall("property")}
+            by_id[pid.split("-", 1)[1]] = (plug.get("value"), props)
+    ids = root.find(".//property[@name='plugin-ids']")
+    order = [v.get("value") for v in ids.findall("value")] if ids is not None else []
+    return [by_id[i] for i in order if i in by_id]
+
+
+def panel_bar(t):
+    """Draw the generated top bar, item for item."""
+    c, m = t["colour"], t["metric"]
+    h, px = m["bar_height"], m["bar_app_px"]
+    paper, accent, muted = c["paper"], c["accent"], c["muted"]
+
+    def svg(body, size=16, stroke=None, fill="none"):
+        return ('<svg width="%d" height="%d" viewBox="0 0 24 24" fill="%s" '
+                'stroke="%s" stroke-width="1.8" stroke-linecap="round" '
+                'stroke-linejoin="round">%s</svg>'
+                % (size, size, fill, stroke or paper, body))
+
+    def pill(inner, bg="rgba(255,255,255,.07)", pad="0 9px"):
+        return ('<span style="display:inline-flex;align-items:center;gap:6px;height:%dpx;'
+                'padding:%s;border-radius:7px;background:%s;font-size:%dpx">%s</span>'
+                % (h - 8, pad, bg, px, inner))
+
+    task_icon = svg('<rect x="4" y="5" width="16" height="14" rx="2"/>'
+                    '<path d="M7 10l3 2-3 2"/>', 15)
+    win_chip = lambda label, on: pill(
+        '%s<span>%s</span>' % (task_icon, label),
+        bg="rgba(255,255,255,.20)" if on else "rgba(255,255,255,.06)")
+    speaker = svg('<path d="M4 9h4l5-4v14l-5-4H4z" fill="%s" stroke="none"/>'
+                  '<path d="M16.5 8.5a6 6 0 0 1 0 7"/>' % paper, 15)
+    squares = svg('<rect x="3" y="4" width="18" height="14" rx="2"/>'
+                  '<path d="M3 9h18"/>', 16)
+    power = svg('<path d="M12 3v9"/><path d="M6.6 6.6a8 8 0 1 0 10.8 0"/>', 16)
+
+    out = []
+    for name, props in panel_items():
+        if name == "applicationsmenu":
+            out.append(pill(icon("logo", 16) + '<b>%s</b>'
+                            % (props.get("button-title") or "Meta"),
+                            bg="rgba(255,255,255,.12)"))
+        elif name == "tasklist":
+            out.append(win_chip("Agents", True) + win_chip("Terminal", False))
+        elif name == "pager":
+            out.append('<span style="display:inline-flex;gap:4px;align-items:center">'
+                       '<span style="width:26px;height:16px;border-radius:4px;background:%s;'
+                       'color:%s;font-size:9px;display:inline-flex;align-items:center;'
+                       'justify-content:center">1</span>'
+                       '<span style="width:26px;height:16px;border-radius:4px;background:rgba(255,255,255,.10);'
+                       'color:%s;font-size:9px;display:inline-flex;align-items:center;'
+                       'justify-content:center">2</span></span>'
+                       % (accent, paper, muted))
+        elif name == "separator":
+            if props.get("expand") == "true":
+                out.append('<span style="flex:1"></span>')
+            else:
+                out.append('<span style="width:1px;height:%dpx;background:rgba(255,255,255,.16)"></span>'
+                           % (h - 12))
+        elif name == "clock":
+            out.append('<span style="opacity:.92">Sat, Nov 1&nbsp;&nbsp;14:32</span>')
+        elif name == "pulseaudio-plugin":
+            out.append(pill(speaker + '<span style="font-size:%dpx;opacity:.8">68%%</span>'
+                            % (px - 2), bg="none", pad="0 6px"))
+        elif name == "showdesktop":
+            out.append(pill(squares, bg="none", pad="0 6px"))
+        elif name == "actions":
+            out.append(pill(power, bg="none", pad="0 6px"))
+        elif name == "systray":
+            out.append('<span style="display:inline-flex;gap:5px;align-items:center;opacity:.55">'
+                       '<span style="width:5px;height:5px;border-radius:3px;background:%s"></span>'
+                       '<span style="width:5px;height:5px;border-radius:3px;background:%s"></span>'
+                       '<span style="width:5px;height:5px;border-radius:3px;background:%s"></span></span>'
+                       % (paper, paper, paper))
+    return ('<div style="height:%dpx;display:flex;align-items:center;gap:8px;padding:0 10px;'
+            'background:%s;color:%s;font-size:%dpx">%s</div>'
+            % (h, c["bar_bg"], paper, px, "".join(out)))
+
+
 def desktop(t):
     c, m, wb = t["colour"], t["metric"], t["window_buttons"]
     frames = sorted(glob.glob(os.path.join(FRAMES, "loop-*.jpg")))
@@ -95,15 +192,10 @@ def desktop(t):
            name.capitalize(), c["accent"], "●" if i < 4 else "&nbsp;")
         for i, name in enumerate(DOCK))
 
-    bar = ('<div style="height:%(h)dpx;display:flex;align-items:center;padding:0 14px;'
-           'background:%(bg)s;color:%(fg)s;font-size:%(px)dpx">'
-           '<span style="color:%(accent)s;font-size:17px;font-weight:700;margin-right:7px">&#8734;</span>'
-           '<span style="font-weight:700">Meta OS</span>'
-           '<span style="margin:0 auto">Sat, Nov 1&nbsp;&nbsp;14:32</span>'
-           '<span style="opacity:.85;font-size:12px">NET &#9679;</span>'
-           '<span style="opacity:.85;font-size:12px;margin-left:14px">DARK</span></div>'
-           % {"h": m["bar_height"], "px": m["bar_app_px"], "bg": c["bar_bg"],
-              "fg": c["paper"], "accent": c["accent"]})
+    # The bar is drawn from the generated panel XML, item by item, in the order
+    # the panel will load them. A preview that invents its own bar proves
+    # nothing about the bar the image installs; this one cannot drift from it.
+    bar = panel_bar(t)
 
     title_buttons = "".join(
         '<span style="margin-left:%dpx">%s</span>' % (wb["spacing"], button_svg(n, "active", wb["size"]))

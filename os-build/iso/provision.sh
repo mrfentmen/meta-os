@@ -205,7 +205,9 @@ fi
 # while the scripts sat in the repo looking done. They run last so nothing
 # installed above can reintroduce what they remove.
 IDENTITY="$HERE/../identity"
-for script in debrand.sh rename_user.sh debrand2.sh; do
+# debrand2.sh folded into debrand.sh (same sections, one --check contract),
+# so it is no longer run. Running both only doubled the work on the same files.
+for script in debrand.sh rename_user.sh; do
     [ -f "$IDENTITY/$script" ] || fail "identity script missing: $IDENTITY/$script"
     say "identity: $script"
     sh "$IDENTITY/$script" "$ROOT" || fail "identity: $script failed"

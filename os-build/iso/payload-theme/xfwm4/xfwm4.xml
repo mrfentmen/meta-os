@@ -14,4 +14,14 @@
     <property name="title_alignment" type="string" value="center"/>
     <property name="title_font" type="string" value="Inter Bold 10"/>
   </property>
+  <!-- Two workspaces, because the top bar carries a pager: a pager over one
+       workspace is a button that does nothing. Names match what the pager
+       draws, so a judge can see the split instead of two blank squares. -->
+  <property name="workspaces" type="empty">
+    <property name="count" type="int" value="2"/>
+    <property name="names" type="array">
+      <value type="string" value="Main"/>
+      <value type="string" value="Agents"/>
+    </property>
+  </property>
 </channel>

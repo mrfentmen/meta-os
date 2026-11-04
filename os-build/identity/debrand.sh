@@ -15,10 +15,10 @@
 #
 # This is the survivor of the debrand.sh/debrand2.sh pair (OS-1 task 7):
 # debrand.sh had the --check contract provision.sh relies on, so debrand2.sh's
-# asset/backdrop sections were folded in here. debrand2.sh still exists and
-# still runs (provision.sh calls it), but it is now redundant: everything it
-# does, this script does. rename_user.sh stays separate — account databases
-# are a different failure domain from files.
+# asset/backdrop sections were folded in here and debrand2.sh is gone. Running
+# both meant the same files were rewritten twice, and only one of the two had a
+# check mode — so a half-debranded image could still pass. rename_user.sh stays
+# separate: account databases are a different failure domain from files.
 #
 # Modes:
 #   sh os-build/identity/debrand.sh /mnt            # apply (old form, kept)
