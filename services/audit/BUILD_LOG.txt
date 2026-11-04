@@ -1,0 +1,121 @@
+# BUILD_LOG — services/audit (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_audit.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import audit.audit;
+#   import audit.retention;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_audit.goose
+services/audit/retention.goose:111: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:110: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:178: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:252: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:294: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/audit.c --standalone services/.run_audit.goose
+services/audit/retention.goose:111: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:110: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:178: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:252: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:294: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/audit.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_audit
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t60_audit.c --standalone services/.run_t60_audit.goose  (from services/tests/t60_audit.goose)
+services/.run_t60_audit.goose:115: warning: redundant `as u8`: (copy[(at4 + 42)] ^ 0x01) is already u8
+services/audit/audit.goose:110: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:178: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:252: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:294: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t60_audit: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t60_audit.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t60_audit
+  cc t60_audit: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t60_audit  (host run, 2s cap)
+t60 audit round trip
+ok   starts empty
+ok   first record
+ok   sequence increments
+ok   third record
+ok   fourth record
+ok   seq counter
+ok   chain verifies
+ok   count of agent records
+ok   count of denied records
+ok   count of a kind never written
+ok   find locates the record
+ok   body copies
+ok   body is the body, not the head
+ok   head reads
+ok   head kind
+ok   head actor
+ok   head seq
+ok   head timestamp
+ok   head length is sane
+ok   find respects from_seq
+ok   the log is readable as bytes
+ok   tampering target located
+ok   tampered chain fails
+ok   records before the tamper still verify
+ok   the original is unaffected
+ok   read past the end refused
+ok   negative offset refused
+ok   truncated buffer is caught
+ok   writer eventually refuses
+ok   drops are counted
+ok   the log is still coherent after a refusal
+ok   the verified prefix is non-empty
+ok   every count matches the records
+passed 33
+t60 done
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t105_audit_r11.c --standalone services/.run_t105_audit_r11.goose  (from services/tests/t105_audit_r11.goose)
+services/audit/audit.goose:110: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:178: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:252: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/audit/audit.goose:294: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t105_audit_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t105_audit_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t105_audit_r11
+  cc t105_audit_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t105_audit_r11  (host run, 2s cap)
+t105 audit deepen
+ok   budget: a 4097-byte body is refused with AUD_NO_REC
+ok   budget: an oversize body does not move the drop counter
+ok   budget: an oversize body writes nothing
+ok   write: the first record gets seq 1
+ok   write: 42 bytes of head plus a 4-byte body
+ok   write: 79 more records, each with the next seq
+ok   write: 80 records occupy 3680 bytes
+ok   write: the sequence counter is 80
+LOAD audit ops=80 ok=80 refused=0
+ok   budget: a record that lands exactly on 4096 is accepted
+ok   budget: the buffer is exactly full
+ok   budget: the next record is refused
+ok   budget: the refusal is counted as a drop
+ok   budget: the buffer is unchanged by a refusal
+ok   verify: 81 records and no bad sequence
+ok   verify_buf: a clean copy verifies
+ok   verify_buf: a changed body byte fails at seq 1
+ok   verify_buf: a truncated buffer verifies the records it has
+ok   reader: one boot record
+ok   reader: 79 service records
+ok   reader: one integrity record
+ok   reader: find returns the first boot record's offset
+ok   reader: the body copy is the body
+ok   reader: find from seq 2 has no boot record
+ok   reader: a bad offset body copy is refused
+ok   reader: a body larger than the caller cap is refused
+t105 done  pass=25 fail=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/audit/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_audit + run above)

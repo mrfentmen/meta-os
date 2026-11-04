@@ -10,7 +10,7 @@ table, directory entries, path resolution, and an fsck-style checker.
 | `paths.goose` | path parsing and resolution, hostile cases included (B-L1-83) |
 | `fsck.goose` | consistency checker and its safe repairs (B-L1-86) |
 
-**Status: RUNS** as a host process: `tests/t65_fs` (75 checks) and
+**Status: COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/fs/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) as a host process: `tests/t65_fs` (75 checks) and
 `tests/t82_fs_deep` (35 checks), both exit 0. Round 11 adds `tests/t119_fs_r11`
 (refusal catalogue, inode exhaustion, path depth).
 

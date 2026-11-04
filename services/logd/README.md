@@ -1,6 +1,6 @@
 # `logd` — Layer 4, service 5
 
-**Status: RUNS** — reached by `tests/t66_shell` (57 checks), `tests/t81_logd_deep`, and the rotation driver `tests/t71_rotate` (48 checks). Round 11 adds `tests/t122_logd_r11` (ring edges, loss counters, rotation ceiling).
+**Status: COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/logd/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — reached by `tests/t66_shell` (57 checks), `tests/t81_logd_deep`, and the rotation driver `tests/t71_rotate` (48 checks). Round 11 adds `tests/t122_logd_r11` (ring edges, loss counters, rotation ceiling).
 
 ## What it does
 

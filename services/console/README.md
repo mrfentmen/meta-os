@@ -1,6 +1,6 @@
 # `console` — Layer 4, service 2
 
-**Status: RUNS.** Reached by `tests/t49_bootlog` (23 checks, exit 0) and typechecked with the
+**Status: COMPILED.** (Lane B R5, 2026-11-04 — build+run log: services/console/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) Reached by `tests/t49_bootlog` (23 checks, exit 0) and typechecked with the
 corpus by `os-build/layer1/check_services.sh`; `tests/t110_console_r11.goose` drives its line
 cap and escape parser.
 

@@ -1,6 +1,6 @@
 # logfmt — the record shape every service logs through
 
-Status: **RUNS** — `tests/t96_logfmt` (50 checks, exit 0) drives the format, and Round 11
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/logfmt/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — `tests/t96_logfmt` (50 checks, exit 0) drives the format, and Round 11
 adds `tests/t123_logfmt_r11` (limits, truncation marker, parser refusals, round trip).
 Layer 4, service 12.
 

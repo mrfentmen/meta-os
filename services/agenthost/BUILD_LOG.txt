@@ -1,0 +1,135 @@
+# BUILD_LOG — services/agenthost (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_agenthost.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import agenthost.agenthost;
+#   import agenthost.channel;
+#   import agenthost.quota;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_agenthost.goose
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/agenthost.c --standalone services/.run_agenthost.goose
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/agenthost.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_agenthost
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t59_agenthost.c --standalone services/.run_t59_agenthost.goose  (from services/tests/t59_agenthost.goose)
+  codegen t59_agenthost: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t59_agenthost.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t59_agenthost
+  cc t59_agenthost: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t59_agenthost  (host run, 2s cap)
+t59 agent host + grants
+ok   spawn
+ok   state is created, not running
+ok   not live-running yet
+ok   duplicate name refused
+ok   empty name refused
+ok   undefined capability bit refused
+ok   second agent spawns
+ok   live count
+ok   granted bit present
+ok   ungranted bit absent
+ok   all-of check is all-of
+ok   empty requirement allowed
+ok   negative requirement refused
+ok   bind pid
+ok   start
+ok   running
+ok   rebinding a running agent refused
+ok   pid is not 0 after bind
+ok   remove a grant
+ok   removed grant is gone
+ok   removal left nothing behind
+ok   the other agent keeps its grants
+ok   removing an undefined bit refused
+ok   kill
+ok   killed state
+ok   a killed agent cannot start
+ok   a killed agent cannot fail again
+ok   grants cannot be changed on a dead agent
+ok   exit
+ok   exit state is stopped
+ok   a stopped agent cannot be killed as if running
+ok   spawn the running one
+ok   reap refuses a running agent
+ok   reap the stopped one
+ok   reap the killed one
+ok   reaped handle resolves to nothing
+ok   reaped handle has no grants
+ok   reaped handle is not live
+ok   slot reused
+ok   old handle still dead after reuse
+ok   new handle works
+ok   new agent has only its own grants
+ok   handle 0 resolves to nothing
+ok   negative handle resolves to nothing
+ok   huge handle resolves to nothing
+ok   unknown handle has no grants
+ok   list returns a count
+ok   list wrote real handles
+passed 48
+t59 done
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t104_agenthost_r11.c --standalone services/.run_t104_agenthost_r11.goose  (from services/tests/t104_agenthost_r11.goose)
+  codegen t104_agenthost_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t104_agenthost_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t104_agenthost_r11
+  cc t104_agenthost_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t104_agenthost_r11  (host run, 2s cap)
+t104 agent host deepen
+ok   spawn: a legal name and grant set
+ok   spawn: a duplicate name is E_BUSY
+ok   spawn: an empty name is E_INVAL
+ok   spawn: a 33-byte name is E_INVAL
+ok   spawn: a bit above the capability surface is E_INVAL
+ok   spawn: an agent with no grants is legal
+ok   bind: an unknown handle is E_NOTFOUND
+ok   bind: pid 0 is E_INVAL
+ok   bind: a real pid is accepted
+ok   bind: a second bind while CREATED is accepted (FINDING: pid replaced)
+ok   caps: the grant is present before narrowing
+ok   caps: asking for nothing is always allowed
+ok   caps: a negative mask is not a wildcard
+ok   caps: removing a negative mask is E_INVAL
+ok   caps: removing a bit above the surface is E_INVAL
+ok   caps: a CREATED agent can be narrowed (FINDING: live includes CREATED)
+ok   start: accepted
+ok   caps: narrowing a running agent works
+ok   caps: the removed grant is gone
+ok   caps: the other grant survives
+ok   stop: accepted
+ok   stop: twice is E_STATE
+ok   stop: a stopped agent cannot be narrowed
+ok   kill: after stop is E_STATE
+ok   reap: after stop is accepted
+ok   reap: the old handle no longer resolves
+ok   reap: the caps of a reaped handle are zero
+ok   generation: first handle
+ok   generation: a reused slot gets a new handle
+ok   reap: a running agent is E_STATE
+ok   exit: a nonzero code still ends in STOPPED
+ok   fail: ends in FAILED
+ok   down line: a short buffer is refused
+ok   down line: a 64-byte buffer is enough
+ok   down line: the exact text the console prints
+ok   capacity: the table fills to AH_CAP
+ok   capacity: the 25th spawn is E_NO_SPACE
+ok   list: cap 24 returns 24
+ok   list: cap 10 returns 10
+ok   capacity: every slot comes back
+ok   load: 240 cycles complete
+ok   load: no refusal in a reused slot
+LOAD agenthost ops=240 ok=240 refused=0
+t104 done  pass=42 fail=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/agenthost/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_agenthost + run above)

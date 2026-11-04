@@ -1,0 +1,236 @@
+# BUILD_LOG — services/netcfg (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_netcfg.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import netcfg.netcfg;
+#   import netcfg.persist;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_netcfg.goose
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/netcfg.c --standalone services/.run_netcfg.goose
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/netcfg.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_netcfg
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t101_netaddr.c --standalone services/.run_t101_netaddr.goose  (from services/tests/t101_netaddr.goose)
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:62: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:107: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:109: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:113: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:123: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:124: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:80: warning: redundant `as u8`: spa.a is already u8
+services/net/arp.goose:80: warning: redundant `as u8`: spa.b is already u8
+services/net/arp.goose:80: warning: redundant `as u8`: spa.c is already u8
+services/net/arp.goose:80: warning: redundant `as u8`: spa.d is already u8
+services/net/arp.goose:83: warning: redundant `as u8`: tpa.a is already u8
+services/net/arp.goose:83: warning: redundant `as u8`: tpa.b is already u8
+services/net/arp.goose:83: warning: redundant `as u8`: tpa.c is already u8
+services/net/arp.goose:83: warning: redundant `as u8`: tpa.d is already u8
+services/net/arp.goose:93: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:94: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:95: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:96: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:100: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:100: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:100: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:100: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:100: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:100: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:101: warning: redundant `as u8`: pkt[14] is already u8
+services/net/arp.goose:101: warning: redundant `as u8`: pkt[15] is already u8
+services/net/arp.goose:101: warning: redundant `as u8`: pkt[16] is already u8
+services/net/arp.goose:101: warning: redundant `as u8`: pkt[17] is already u8
+services/net/arp.goose:102: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:102: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:102: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:102: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:102: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:102: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/arp.goose:103: warning: redundant `as u8`: pkt[24] is already u8
+services/net/arp.goose:103: warning: redundant `as u8`: pkt[25] is already u8
+services/net/arp.goose:103: warning: redundant `as u8`: pkt[26] is already u8
+services/net/arp.goose:103: warning: redundant `as u8`: pkt[27] is already u8
+  codegen t101_netaddr: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t101_netaddr.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t101_netaddr
+  cc t101_netaddr: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t101_netaddr  (host run, 2s cap)
+t101 network addresses
+ok   lo_mask: 127.0.0.1 is in a /8
+ok   lo_mask: the mask is contiguous
+ok   lo_configured: always true, nothing configures loopback
+ok   lo_route: any address in 127/8 is local
+ok   lo_route: 127.0.0.1 is local too
+ok   lo_route: the interface's own address is local
+ok   lo_route: a neighbour on the subnet goes direct
+ok   lo_route: off-subnet goes via the gateway
+ok   lo_route: off-subnet with no gateway is unreachable
+ok   lo_route: an unconfigured interface has no route
+ok   lo_route: loopback works on an unconfigured interface
+ok   lo_route: a local peer does not need a gateway
+ok   lo_source_for: loopback traffic sources from 127.0.0.1
+ok   lo_source_for: a direct send sources from the interface
+ok   lo_source_for: a gatewayed send sources from the interface
+ok   mac_is_broadcast: ff:ff:ff:ff:ff:ff
+ok   mac_is_broadcast: one bit off is not broadcast
+ok   mac_is_broadcast: the zero MAC is not broadcast
+ok   mac_is_broadcast: a multicast MAC is not broadcast
+ok   ip4_mask: /0 is a legal mask of zero
+ok   ip4_mask: /8
+ok   ip4_mask: /24
+ok   ip4_mask: /25 splits the last byte at the high bit
+ok   ip4_mask: /26
+ok   ip4_mask: /31
+ok   ip4_mask: /32 is a legal mask of everything
+ok   ip4_mask: every prefix from 0 to 32 is contiguous
+ok   ip4_mask: /33 is refused
+ok   ip4_mask: a negative prefix is refused
+ok   ip4_subnet_broadcast: 192.168.1.10/24 is 192.168.1.255
+ok   ip4_subnet_broadcast: 10.1.2.3/8 is 10.255.255.255
+ok   ip4_subnet_broadcast: a /32 broadcast is the address itself
+ok   ip4_subnet_broadcast: /0 broadcast is 255.255.255.255
+ok   ip4_subnet_broadcast: the host is on the subnet it broadcasts to
+t101 done  pass=34 fail=0
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t126_netcfg_r11.c --standalone services/.run_t126_netcfg_r11.goose  (from services/tests/t126_netcfg_r11.goose)
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t126_netcfg_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t126_netcfg_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t126_netcfg_r11
+  cc t126_netcfg_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t126_netcfg_r11  (host run, 2s cap)
+t126 netcfg r11
+-- ip4_parse is strict
+ok   parse: a normal address
+ok   parse: 0.0.0.0 is a legal address
+ok   parse: broadcast parses
+ok   parse: a leading zero is refused (octal-looking)
+ok   parse: 256 is refused
+ok   parse: three parts is refused
+ok   parse: five parts is refused
+ok   parse: an empty part is refused
+ok   parse: a trailing dot is refused
+ok   parse: a letter is refused
+ok   parse: an empty string is refused
+ok   parse: four digits in a part is refused
+ok   render: the address renders
+ok   render: one-, two- and three-digit octets
+-- masks and subnets
+ok   mask: /24
+ok   mask: /0 is legal and empty
+ok   mask: /32 is legal and full
+ok   mask: /33 is refused
+ok   mask: a negative prefix is refused
+ok   mask: 255.255.255.0 is contiguous
+ok   mask: 255.0.255.0 is not
+ok   mask: 255.255.255.255 is contiguous
+ok   mask: 0.0.0.0 is contiguous
+ok   mask: 255.255.254.0 is contiguous
+ok   subnet: 10.0.2.99 is in 10.0.2.0/24
+ok   subnet: 10.0.3.1 is not
+ok   subnet: the directed broadcast is .255
+-- interface configuration: every refusal
+ok   iface_default: name stored
+ok   iface_default: not configured
+ok   iface_default: the default MTU is 1500
+ok   iface_default: the name is cut at IF_NAME_MAX-1
+ok   iface: static config is accepted
+ok   iface: the address is stored
+ok   iface: the mask is stored
+ok   iface: no DHCP
+ok   iface: dhcp wins over static fields
+ok   iface: a static address with no mask is E_INVAL
+ok   iface: an invalid address fails the whole interface
+ok   iface: a non-contiguous mask is E_INVAL
+ok   iface: mtu 575 is E_INVAL
+ok   iface: mtu 1501 is E_INVAL
+ok   iface: mtu 576 is accepted
+ok   iface: mtu 1500 is accepted
+ok   iface: another interface's section does not configure this one
+-- render, then parse: one format, not two
+ok   round trip: the source config parses
+ok   round trip: render succeeds
+ok   round trip: the section header is written
+ok   round trip: dhcp=false is written
+ok   round trip: the address is written
+ok   round trip: the MTU is written
+ok   round trip: the rendered text parses
+ok   round trip: the address survives
+ok   round trip: the mask survives
+ok   round trip: the gateway survives
+ok   round trip: the DNS survives
+ok   round trip: the MTU survives
+ok   round trip: a dynamic interface renders
+ok   round trip: a dynamic interface writes no address
+ok   round trip: a second nameserver is refused, not dropped
+ok   round trip: a cap too small is E_NOROOM-sized (-1)
+-- load: 100 render/parse round trips
+ok   load: every round trip agreed
+LOAD netcfg ops=100 ok=100 refused=0
+t126 done  pass=61 fail=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/netcfg/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_netcfg + run above)

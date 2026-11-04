@@ -1,6 +1,6 @@
 # watchdog — missed heartbeats and who decides what happens next
 
-Status: **WRITTEN** (not COMPILED — no Goose toolchain on this Mac; see
+Status: **COMPILED** (Lane B R5, 2026-11-04 — log: services/watchdog/BUILD_LOG.txt; toolchain /opt/homebrew/bin/goose b781587; was WRITTEN for want of a toolchain; see
 `services/BUILD.md`). Layer 4, service 7.
 
 ## The one thing this service does not do

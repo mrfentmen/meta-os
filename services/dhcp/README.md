@@ -1,6 +1,6 @@
 # dhcp — the client state machine
 
-Status: **RUNS** — `tests/t57_dhcp_dns` (45 checks, exit 0), plus
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/dhcp/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — `tests/t57_dhcp_dns` (45 checks, exit 0), plus
 `tests/t114_dhcp_r11` for every parser refusal and the lease clock. Layer 4,
 service 15. Speaks the packet interface (B-L1-29); takes time as a parameter.
 

@@ -1,0 +1,240 @@
+# BUILD_LOG — services/fs (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_fs.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import fs.fs;
+#   import fs.fsck;
+#   import fs.paths;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_fs.goose
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/fs.c --standalone services/.run_fs.goose
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/fs.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_fs
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t65_fs.c --standalone services/.run_t65_fs.goose  (from services/tests/t65_fs.goose)
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+  codegen t65_fs: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t65_fs.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t65_fs
+  cc t65_fs: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t65_fs  (host run, 2s cap)
+t65 filesystem
+ok   format 64 blocks
+ok   format with no room refuses
+ok   format too big for the disk refuses
+ok   umount
+ok   reads fail while unmounted
+ok   mount
+ok   stats after mount
+ok   free blocks = 64 - 10 reserved
+ok   root is a directory
+ok   create /hello
+ok   create duplicate refuses
+ok   write 11 bytes
+ok   read back 11
+ok   bytes match
+ok   append 6
+ok   read back 17
+ok   append landed at the end
+ok   offset read
+ok   read past EOF is empty success
+ok   write past EOF refuses (no sparse files)
+ok   mkdir /etc
+ok   create /etc/hostname
+ok   write into a subdirectory file
+ok   mkdir over an existing name refuses
+ok   root has 2 entries
+ok   readdir 0 found
+ok   readdir 0 name
+ok   readdir 0 kind is file
+ok   readdir 1 name
+ok   readdir 1 kind is dir
+ok   readdir past the end stops
+ok   rename
+ok   renamed file resolves
+ok   old name is gone
+ok   resolve /
+ok   empty path refuses
+ok   //etc///hostname collapses
+ok   trailing slash on a dir is fine
+ok   trailing slash on a file is refused
+ok   /.. stays at root
+ok   /../.. stays at root
+ok   /etc/.. is root
+ok   cannot escape upward
+ok   missing name is NOTFOUND
+ok   walking through a file is refused
+ok   13-byte component is refused
+ok   a dot file is an ordinary name
+ok   deep path refuses
+ok   want_dir on a file refuses
+ok   want_dir on a dir is fine
+ok   rmdir a non-empty dir refuses
+ok   unlink missing name refuses
+ok   unlink the file
+ok   entry is gone
+ok   root cannot be unlinked
+ok   create /held
+ok   unlink the held file
+ok   a stale inode number reads nothing
+ok   rename onto an existing name refuses
+ok   and the source keeps its name
+ok   create /big
+ok   2600 bytes refuses (5 blocks = 2560)
+ok   2560 bytes fits exactly
+ok   umount before remount
+ok   remount
+ok   file survives remount
+ok   contents survive remount
+ok   fsck runs
+ok   fsck is clean
+ok   fsck saw the inodes
+ok   plant a leak
+ok   fsck sees the leak
+ok   fsck_fix repairs it
+ok   clean again after the fix
+ok   the disk fills and refuses politely
+t65 done  pass=75 fail=0
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t119_fs_r11.c --standalone services/.run_t119_fs_r11.goose  (from services/tests/t119_fs_r11.goose)
+services/fs/fs.goose:73: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:77: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:81: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:112: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:174: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/fs/fs.goose:406: warning: redundant `as i64`: g32(fs_blk, 8) is already i64
+services/fs/fs.goose:407: warning: redundant `as i64`: g32(fs_blk, 12) is already i64
+services/fs/fs.goose:412: warning: redundant `as u32`: sb_crc(fs_blk) is already u32
+services/fs/fs.goose:544: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:556: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/fs/fs.goose:898: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+  codegen t119_fs_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t119_fs_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t119_fs_r11
+  cc t119_fs_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t119_fs_r11  (host run, 2s cap)
+t119 fs r11
+-- (1) format edges
+ok   format: zero blocks is E_INVAL
+ok   format: nine blocks is E_INVAL (the layout needs 14)
+ok   format: one past MAX_DISK_BLOCKS is E_INVAL
+ok   format: exactly MAX_DISK_BLOCKS is accepted
+-- (2) create refusals
+ok   create: a legal file
+ok   create: an empty name is E_INVAL
+ok   create: an unknown kind is E_INVAL
+ok   create: a file cannot be a parent (E_INVAL)
+ok   create: a name of MAX_NAME+1 is E_INVAL
+-- (3) type refusals
+ok   create: a legal directory
+ok   create: a file beside it
+ok   read: a directory is E_INVAL
+ok   write: a directory is E_INVAL
+ok   truncate: a directory is E_INVAL
+ok   read: a negative offset is E_INVAL
+ok   write: an offset past the size is E_INVAL (no holes)
+ok   read: a free inode is E_INVAL, not a silent short read
+-- (4) unlink and rename
+ok   unlink: a name that is not there is E_INVAL
+ok   unlink: the directory to fill
+ok   unlink: a file inside it
+ok   unlink: a non-empty directory is E_STATE
+ok   rename: two files to work with
+ok   rename: a missing source is E_INVAL
+ok   rename: an existing target is E_STATE
+ok   rename: a free target succeeds
+ok   rename: the old name is gone
+ok   rename: the new name resolves
+ok   format: reset before paths
+-- (5) path refusals
+ok   format: clean for the path cases
+ok   resolve: an empty path is E_INVAL
+ok   resolve: a 13-byte component is E_INVAL
+ok   resolve: fifteen directories were built
+ok   resolve: fifteen components resolve
+ok   resolve: the sixteenth directory is created
+ok   resolve: sixteen components are E_NOROOM (DESIGN's '16' counts the root)
+-- (6) inode exhaustion
+ok   format: clean for exhaustion
+ok   inodes: every inode after the root is used before the table refuses
+ok   inodes: the next create is E_NOROOM, not a silent overwrite
+ok   inodes: the directory limit is not the binding one here
+-- (7) truncate frees, then load
+ok   format: clean for truncate
+ok   truncate: the file exists
+ok   truncate: one block was written
+ok   truncate: succeeds
+ok   truncate: the block is back in the free count
+ok   load: the file exists
+ok   load: 200 write+read pairs all held
+t119 done  pass=46 fail=0
+LOAD fs ops=200 ok=200 refused=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/fs/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_fs + run above)

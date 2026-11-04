@@ -1,6 +1,6 @@
 # `timesync` — Layer 4, service 19
 
-**Status: RUNS** — driven by `tests/t77_gaps` (73 checks) and `tests/t137_timesync_r11`
+**Status: COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/timesync/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — driven by `tests/t77_gaps` (73 checks) and `tests/t137_timesync_r11`
 (the smear and the millisecond round trip), exit 0 on the host corpus. Layer 4, service 19.
 
 ## What it does

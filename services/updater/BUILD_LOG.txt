@@ -1,0 +1,182 @@
+# BUILD_LOG — services/updater (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_updater.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import updater.delta;
+#   import updater.signature;
+#   import updater.updater;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_updater.goose
+services/updater/updater.goose:167: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:238: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:542: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/updater/updater.goose:560: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/updater/updater.goose:658: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+services/common/enc/enc.goose:47: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/updater.c --standalone services/.run_updater.goose
+services/updater/updater.goose:167: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:238: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:542: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/updater/updater.goose:560: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/updater/updater.goose:658: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+services/common/enc/enc.goose:47: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/updater.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_updater
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t58_updater.c --standalone services/.run_t58_updater.goose  (from services/tests/t58_updater.goose)
+services/.run_t58_updater.goose:159: warning: redundant `as u8`: (blk[12] + 1) is already u8
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+services/updater/updater.goose:167: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:238: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:542: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/updater/updater.goose:560: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/updater/updater.goose:658: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t58_updater: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t58_updater.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t58_updater
+  cc t58_updater: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t58_updater  (host run, 2s cap)
+t58 updater plan + rollback
+ok   digest computed
+ok   digest rendered as hex
+ok   manifest parses
+ok   version parsed
+ok   one file
+ok   target slot is b
+ok   file size
+ok   digest is bytes, not text
+ok   path traversal refused
+ok   duplicate path refused
+ok   unknown key refused, not ignored
+ok   manifest without a slot refused
+ok   short digest refused
+ok   content verifies
+ok   tampered content refused
+ok   plan built
+ok   plan writes the inactive slot
+ok   plan counts files and bytes
+ok   plan records the active slot
+ok   plan carries the version
+ok   plan onto the running slot refused
+ok   plan with an unknown active slot refused
+ok   record is pending, never confirmed
+ok   record names the target slot
+ok   record counts what will be written
+ok   record encodes to a blk
+ok   record has a magic
+ok   record decodes
+ok   decoded slot matches
+ok   decoded seq matches
+ok   decoded bytes match
+ok   decoded timestamp matches
+ok   corrupt record refused
+ok   record decodes from a reset blk?
+ok   plan action is not APPLY_REBOOT (nothing self-modifies)
+passed 35
+t58 done
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t138_updater_r11.c --standalone services/.run_t138_updater_r11.goose  (from services/tests/t138_updater_r11.goose)
+services/updater/updater.goose:167: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:238: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:239: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:240: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/updater/updater.goose:542: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/updater/updater.goose:560: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/updater/updater.goose:658: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/common/hash/hash.goose:53: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:57: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:74: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:78: warning: redundant `as u32`: 3988292384 fits u32 here
+services/common/hash/hash.goose:154: warning: redundant `as u32`: a u8 converts to u32 implicitly here
+services/common/hash/hash.goose:241: warning: redundant `as u64`: 8 fits u64 here
+  codegen t138_updater_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t138_updater_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t138_updater_r11
+  cc t138_updater_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t138_updater_r11  (host run, 2s cap)
+t138 updater r11
+ok   parse: a clean manifest is accepted
+ok   parse: version is five bytes
+ok   parse: slot b is SLOT_B
+ok   parse: one file
+ok   parse: the size is the decimal on the line
+ok   parse: the digest became 32 bytes
+ok   plan: inactive slot is writable
+ok   plan: action is SLOT
+ok   plan: target is the manifest's slot
+ok   plan: bytes are the sum
+ok   plan: one file
+ok   plan: installing over the running slot is E_STATE
+ok   plan: an active slot that is neither A nor B is E_INVAL
+ok   parse: a zero-byte file is shape-legal
+ok   plan: a zero-byte file is E_BAD_MANIFEST
+ok   refuse: an unknown key
+ok   refuse: a line with no '='
+ok   refuse: a duplicate path
+ok   refuse: a path containing '..'
+ok   refuse: a path at MF_PATH_MAX (32) is one too many
+ok   refuse: a 63-character digest
+ok   refuse: a size that is not decimal
+ok   refuse: no slot
+ok   refuse: no version
+ok   refuse: no file
+ok   refuse: a version at MF_VERSION_MAX (16) is one too many
+ok   refuse: an empty origin
+ok   refuse: a ninth file at MF_MAX_FILES (8)
+ok   verify: a 3-byte body for an 18432-byte file is E_VERIFY
+ok   verify: an index past the count is E_INVAL
+ok   verify_all: the size refusal surfaces as E_VERIFY
+ok   record: the writer never confirms its own write
+ok   record: it carries the plan's target
+ok   record: the version is carried
+ok   record: encodes to 512 bytes
+ok   record: the magic is MOSU
+ok   record: decodes
+ok   record: every field survives the round trip
+ok   refuse: a block without the magic is E_CORRUPT
+ok   refuse: one changed header byte is E_CORRUPT (torn write)
+ok   refuse: a block shorter than 512 bytes is E_CORRUPT
+ok   history: starts empty
+ok   history: keeps exactly UPD_REC_KEEP (4)
+ok   history: a PENDING record is not a safe slot
+ok   history: a CONFIRMED record names the safe slot
+ok   history: the newest CONFIRMED wins
+ok   load: 50 accepted and 50 refused, on purpose
+LOAD updater ops=100 ok=50 refused=50
+t138 done  pass=47 fail=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/updater/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_updater + run above)

@@ -1,0 +1,31 @@
+# BUILD_LOG — services/time (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_time.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import time.calendar;
+#   import time.entry;
+#   import time.time;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_time.goose
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/time.c --standalone services/.run_time.goose
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/time.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_time
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/time_entry.c --standalone services/.run_time_e.goose
+entry build: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/run_time  (host run, 2s cap)
+svc time: ready ticks 10
+exit: 0
+# --- sys_* externs referenced by services/time/*.goose
+sys_ticks sys_write_serial sys_yield 
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_time + run above)

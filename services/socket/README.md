@@ -1,6 +1,6 @@
 # socket — what a socket means at Layer 4
 
-Status: **RUNS** — `t77_gaps` (73 checks, exit 0) and `t132_socket_r11` on the host.
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/socket/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — `t77_gaps` (73 checks, exit 0) and `t132_socket_r11` on the host.
 Layer 4, service 17. It exports functions but no `svc_entry`, so the supervisor cannot
 start it yet: a library with a service's name.
 

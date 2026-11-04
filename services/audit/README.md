@@ -1,6 +1,6 @@
 # `audit` — Layer 4, service 23
 
-**Status: RUNS** — reached by `tests/t60_audit` and `tests/t105_audit_r11` (budget edge, drop accounting, tamper and truncation), both exit 0 in the native host corpus on 2026-11-02. Not booted on the kernel.
+**Status: COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/audit/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — reached by `tests/t60_audit` and `tests/t105_audit_r11` (budget edge, drop accounting, tamper and truncation), both exit 0 in the native host corpus on 2026-11-02. Not booted on the kernel.
 
 ## What it does
 

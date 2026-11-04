@@ -1,0 +1,177 @@
+# BUILD_LOG — services/supervisor (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_supervisor.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import supervisor.bootorder;
+#   import supervisor.deps;
+#   import supervisor.supervisor;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_supervisor.goose
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/supervisor.c --standalone services/.run_supervisor.goose
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/supervisor.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_supervisor
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t52_supervisor.c --standalone services/.run_t52_supervisor.goose  (from services/tests/t52_supervisor.goose)
+  codegen t52_supervisor: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t52_supervisor.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t52_supervisor
+  cc t52_supervisor: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t52_supervisor  (host run, 2s cap)
+t52 supervisor + registry
+ok   register first
+ok   register second
+ok   duplicate name refused
+ok   empty name refused
+ok   name too long refused
+ok   lookup finds the service
+ok   lookup is stable
+ok   lookup of unknown name fails
+ok   unknown handle resolves to nothing
+ok   handle names its service
+ok   starts stopped
+ok   start from stopped is legal
+ok   stopped to running is NOT legal (must pass through starting)
+ok   stopped to starting to running
+ok   is running
+ok   running to starting is NOT legal
+ok   illegal transition is refused
+ok   still running after refusal
+ok   crash to failed
+ok   failed to running refused
+ok   walk back to stopped
+ok   NEVER does not restart a crash
+ok   NEVER leaves a clean exit
+ok   ON_FAIL restarts a crash
+ok   ON_FAIL backs off by a positive delay
+ok   ON_FAIL leaves a clean exit
+ok   ALWAYS restarts a clean exit immediately
+ok   ALWAYS restarts a crash
+ok   crash 1 restarts
+ok   on_exit 1 restarts
+ok   entry is restarting
+ok   restart ready moves to starting
+ok   starting can be stopped
+ok   third crash gives up
+ok   gave up leaves it failed
+ok   penalty counted
+ok   long uptime clears the attempt count
+ok   backoff grows
+ok   backoff capped
+ok   can_start answers with a reason
+ok   beat accepted
+ok   ms since beat
+ok   state name stopped
+ok   state names differ
+ok   storage handle exists
+ok   release while failed is refused
+ok   walk to stopped
+ok   release when stopped
+ok   released handle resolves to nothing
+ok   the other service is untouched
+ok   released name is gone
+ok   same name can be registered again
+ok   old handle still dead
+passed 53
+t52 done
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t135_supervisor_r11.c --standalone services/.run_t135_supervisor_r11.goose  (from services/tests/t135_supervisor_r11.goose)
+  codegen t135_supervisor_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t135_supervisor_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t135_supervisor_r11
+  cc t135_supervisor_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t135_supervisor_r11  (host run, 2s cap)
+t135 supervisor round 11
+ok   the table starts empty
+ok   an empty name is E_INVAL
+ok   a name of NAME_MAX bytes is E_INVAL
+ok   a name of NAME_MAX-1 bytes is accepted
+ok   the accepted name occupies slot 0
+ok   the long name is findable
+ok   the two refused names created no rows
+ok   a duplicate name at a non-full table is E_STATE
+ok   32 registrations accepted
+ok   the 33rd registration is E_NOROOM
+ok   a duplicate name at a full table is E_NOROOM (capacity checked first)
+ok   lookup finds a registered name
+ok   a fresh handle resolves to its slot
+ok   a handle past the table is 0
+ok   an unknown name is E_NOTFOUND with handle 0
+ok   a new slot is STOPPED
+ok   STOPPED -> RUNNING is refused
+ok   STOPPED -> STARTING
+ok   STARTING -> RUNNING
+ok   RUNNING -> RUNNING is refused (it is a heartbeat)
+ok   a bad slot index is E_INVAL
+ok   release of a running slot is E_STATE
+ok   a boot service can start
+ok   a service whose dependency is running can start
+ok   a disabled service cannot start
+ok   a self-dependency is refused
+ok   a dependency past the table is E_INVAL
+ok   STARTING slot 1
+ok   RUNNING slot 1
+ok   a heartbeat from a running service is accepted
+ok   time since the beat
+ok   a backwards clock reads as fresh
+ok   a beat from a stopped service is E_STATE
+ok   RUNNING -> STOPPING
+ok   STOPPING -> STOPPED
+ok   release from STOPPED
+ok   the old handle no longer resolves
+ok   the released name is gone
+ok   a service whose dependency was released cannot start
+ok   a bad policy is E_INVAL
+ok   base_ms of zero is E_INVAL
+ok   max_ms below base_ms is E_INVAL
+ok   a negative restart budget is E_INVAL
+ok   set RP_NEVER
+ok   RP_NEVER gives up on an unclean exit
+ok   set RP_ON_FAIL
+ok   RP_ON_FAIL leaves on a clean exit
+ok   set RP_ALWAYS
+ok   RP_ALWAYS restarts a clean exit at once
+ok   set the backoff ladder
+ok   backoff attempt 0 is base_ms
+ok   backoff attempt 1 doubles
+ok   backoff attempt 2 doubles
+ok   backoff attempt 8 is below the cap
+ok   backoff attempt 9 is capped
+ok   a large attempt stays at the cap
+ok   set a two-restart budget
+ok   slot 9 is RUNNING
+ok   first crash restarts after 100 ms
+ok   first crash is counted
+ok   first crash leaves RESTARTING
+ok   second crash restarts after 200 ms
+ok   second crash is counted
+ok   the third crash gives up
+ok   giving up leaves FAILED, not STOPPED
+ok   set an unlimited policy
+ok   slot 10 is RUNNING
+ok   a short run costs one attempt
+ok   a healthy run resets to the base delay
+ok   slot 11 is RUNNING
+ok   a clean exit leaves
+ok   a clean exit ends STOPPED
+ok   slot 13 is RUNNING
+ok   slot 13 waits in RESTARTING
+ok   restart_ready from RESTARTING is accepted
+ok   restart_ready moves to STARTING
+ok   restart_ready from STARTING is E_STATE
+ok   load: every known lookup resolved
+ok   load: every unknown lookup refused
+LOAD supervisor ops=640 ok=500 refused=140
+t135 done  pass=79 fail=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/supervisor/*.goose
+sys_kill sys_spawn 
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_supervisor + run above)

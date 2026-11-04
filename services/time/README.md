@@ -1,6 +1,6 @@
 # `time` — Layer 4, service 3
 
-**Status: RUNS** — driven by `tests/t51_time` (24 checks) and
+**Status: COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/time/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — driven by `tests/t51_time` (24 checks) and
 `tests/t136_time_r11`. B-L1-04 wrote the clock core; B-L1-19 added the deadline and
 budget surface.
 

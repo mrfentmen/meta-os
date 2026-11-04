@@ -1,0 +1,223 @@
+# BUILD_LOG — services/socket (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_socket.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import socket.bind;
+#   import socket.socket;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_socket.goose
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:35: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:36: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:37: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:38: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:48: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:85: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:91: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:108: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:109: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:62: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:107: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:109: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:113: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:123: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:124: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/socket.c --standalone services/.run_socket.goose
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:35: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:36: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:37: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:38: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:48: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:85: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:91: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:108: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/udp.goose:109: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:62: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:107: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:109: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:113: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:123: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/net/ip.goose:124: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/socket.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_socket
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t77_gaps.c --standalone services/.run_t77_gaps.goose  (from services/tests/t77_gaps.goose)
+services/.run_t77_gaps.goose:82: warning: redundant `as u64`: 1016 fits u64 here
+services/.run_t77_gaps.goose:85: warning: redundant `as u64`: 0 fits u64 here
+services/.run_t77_gaps.goose:88: warning: redundant `as u64`: 0 fits u64 here
+services/.run_t77_gaps.goose:91: warning: redundant `as u64`: 0 fits u64 here
+services/.run_t77_gaps.goose:94: warning: redundant `as u64`: 0 fits u64 here
+services/.run_t77_gaps.goose:109: warning: redundant `as u64`: 0 fits u64 here
+services/.run_t77_gaps.goose:114: warning: redundant `as u64`: 0 fits u64 here
+services/.run_t77_gaps.goose:134: warning: redundant `as i64`: i is already i64
+services/.run_t77_gaps.goose:248: warning: redundant `as i64`: n is already i64
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/timesync/timesync.goose:155: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/session/login.goose:191: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/devices/devices.goose:131: warning: redundant `as u64`: a u16 converts to u64 implicitly here
+services/devices/devices.goose:132: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+services/devices/devices.goose:132: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+services/devices/devices.goose:144: warning: redundant `as i64`: a u16 converts to i64 implicitly here
+services/devices/devices.goose:144: warning: redundant `as i64`: a u16 converts to i64 implicitly here
+services/devices/devices.goose:160: warning: redundant `as i64`: a u32 converts to i64 implicitly here
+  codegen t77_gaps: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t77_gaps.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t77_gaps
+  cc t77_gaps: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t77_gaps  (host run, 2s cap)
+t77 gap services
+--- devices
+ok   a good device registers
+ok   a second device of the same kind is refused (E_STATE)
+ok   an empty name is refused (E_INVAL)
+ok   kind 0 is refused (E_INVAL)
+ok   a 25-byte name is refused (E_INVAL)
+ok   marking a slot that does not exist is E_INVAL
+ok   DETECTED -> READY is legal
+ok   READY -> DETECTED is not a transition (E_STATE)
+ok   READY -> FAULT is legal
+ok   dev_ready is false while faulted
+ok   detail of a faulted device refuses (E_STATE), not stale numbers
+ok   the table stops at DEV_MAX
+ok   past DEV_MAX is E_NOROOM, not a silent overwrite
+ok   the devices already registered are untouched
+--- devices/hotplug
+ok   an empty mask is not a subscriber
+ok   a subscriber with a mask registers
+ok   an unknown event kind is refused (E_INVAL)
+ok   the overflow is counted, not silent
+ok   the queue holds exactly its capacity
+ok   every raise was counted as raised
+ok   the subscriber's own loss is reported
+ok   the subscriber's waiting count is what survived the queue
+ok   delivered + dropped is exactly what was raised
+ok   a queued event can be taken
+ok   the oldest was dropped, so the first one out is seq 4
+ok   draining stops at the end instead of repeating an event
+--- session
+ok   owner 0 is refused (E_INVAL)
+ok   a user session with no user id is refused (E_INVAL)
+ok   an agent session with no agent handle is refused (E_INVAL)
+ok   Enter on an empty name is refused (E_INVAL)
+ok   a control byte never enters a field (E_INVAL)
+ok   a name past the field is refused (E_NOROOM)
+ok   three wrong tokens end the flow (E_AUTH)
+ok   a failed flow takes no more keystrokes (E_STATE)
+ok   an empty expected token refuses the login (E_AUTH)
+ok   a correct token opens a session
+ok   the flow is ACTIVE after login
+ok   the session is resolvable
+ok   logout closes it
+ok   the session table fills to its capacity
+ok   past the cap is E_NO_SPACE, not a reused slot
+--- socket
+ok   a socket opens
+ok   an unknown handle is refused (E_STATE)
+ok   sending before bind is refused (E_STATE)
+ok   a privileged port is refused (E_INVAL)
+ok   a port past 65535 is refused (E_INVAL)
+ok   a normal port binds
+ok   binding twice is E_STATE
+ok   a duplicate bind is E_BUSY
+ok   a zero-length datagram is refused (E_INVAL)
+ok   a datagram past the MTU is refused (E_NOROOM)
+ok   a datagram to 0.0.0.0 is refused (E_INVAL)
+ok   a datagram to port 0 is refused (E_INVAL)
+ok   first datagram queues
+ok   second datagram queues
+ok   a third datagram is refused while two are queued (E_BUSY)
+ok   the closed socket's handle no longer resolves
+ok   the socket table has a hard cap
+ok   past the cap is E_NOROOM
+--- timesync
+ok   a short packet is E_CORRUPT
+ok   a well-formed reply is accepted
+ok   the measured offset is the target, not the applied clock
+ok   a 10 ms server turnaround is measured exactly
+ok   a client-mode packet is not a reply (E_CORRUPT)
+ok   stratum 0 is a kiss-o'-death and is refused (E_REFUSED)
+ok   leap indicator 3 means the server is unsynchronised (E_UNSUPPORTED)
+ok   a reply with no transmit time is refused (E_CORRUPT)
+ok   an offset beyond a day is refused (E_INVAL)
+ok   impossible timestamps are refused (E_CORRUPT)
+ok   a good reply after refusals is still accepted
+ok   the smear closes the gap
+ok   the smear takes more than one step (no visible jump)
+ok   the smear never overshoots the target
+t77 done  pass=73 fail=0
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t132_socket_r11.c --standalone services/.run_t132_socket_r11.goose  (from services/tests/t132_socket_r11.goose.red)
+services/netcfg/netcfg.goose:89: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t132_socket_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t132_socket_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t132_socket_r11
+  cc t132_socket_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t132_socket_r11  (host run, 2s cap)
+t132 socket round 11
+ok   a destination address parses
+ok   sk_open: every slot opens
+ok   sk_open: the seventeenth is E_NOROOM
+ok   sk_bind: every socket gets an ephemeral port above the range floor
+ok   sk_bind: rebinding a bound socket is E_STATE
+ok   sk_close: a second live socket closes
+ok   sk_close: a third live socket closes
+ok   sk_close: a fourth live socket closes
+ok   sk_open: the three freed slots reopen
+ok   sk_bind: an explicit port is accepted
+ok   sk_bind: the same port on another socket is E_BUSY
+ok   sk_bind: a privileged port is E_INVAL
+ok   sk_bind: a port past 65535 is E_INVAL
+ok   sk_bind: 65535 itself is accepted
+ok   a fresh socket opens after the table frees nothing
+ok   sk_close: a live socket closes
+ok   sk_close: closing it twice is E_STATE
+FAIL sk_bind: a closed handle is E_STATE
+ok   sk_send: a closed handle is E_STATE
+ok   sk_open: a closed slot is reused
+ok   sk_open: the reuse hands out a different handle
+ok   sk_open: the old handle no longer resolves
+ok   sk_open: the new handle resolves to the slot
+ok   sk_send on an unbound socket is E_STATE
+ok   sk_connect on an unbound socket is allowed
+FAIL sk_connect: port 0 is E_INVAL
+FAIL sk_connect: 0.0.0.0 is not a destination
+ok   sk_match: port 0 never matches
+ok   sk_send: 512 bytes is one datagram
+ok   sk_send: 513 bytes is E_NOROOM, not a truncated send
+ok   sk_send: zero bytes is E_INVAL
+ok   sk_send: a second datagram queues
+ok   sk_send: the third is E_BUSY at SK_QUEUE
+ok   sk_take_send: the first queued datagram comes out
+ok   sk_take_send: its length is the length sent
+ok   sk_send_result: a taken datagram is counted sent
+ok   sk_take_send: the second queued datagram comes out
+ok   sk_take_send: the queue is empty after two takes
+ok   sk_send: a send after draining queues again
+ok   sk_take_send: and that one comes out
+ok   sk_take_send: then the queue is empty
+ok   sk_send_result: a failed send is counted dropped
+ok   sk_send_result: an unknown handle is E_STATE
+ok   sk_close: a socket with a queued datagram closes
+ok   gen wrap: 255 open/close cycles all succeed
+FAIL gen wrap: the next open reuses generation 1
+FAIL gen wrap: the old handle now names the new socket (documented bound)
+ok   load: a socket for the batch opens
+ok   load: and binds
+ok   load: every send was accepted and taken
+ok   load: the batch is 320 operations
+LOAD socket ops=320 ok=320 refused=0
+t132 done  pass=46 fail=5
+exit: 1
+tests built+run: 2/2
+# --- sys_* externs referenced by services/socket/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_socket + run above)

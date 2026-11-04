@@ -1,6 +1,6 @@
 # storage — block contract + RAM backend
 
-Status: **RUNS** — driven by `tests/t54_storage` (26 checks) and
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/storage/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — driven by `tests/t54_storage` (26 checks) and
 `tests/t134_storage_r11`. Layer 4, service 9.
 
 ## Real, not a mock

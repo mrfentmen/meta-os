@@ -1,6 +1,6 @@
 # netcfg — addresses and interface configuration as data
 
-Status: **RUNS** — `tests/t67_net`, `tests/t79_limit_drivers`,
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/netcfg/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — `tests/t67_net`, `tests/t79_limit_drivers`,
 `tests/t80_limit_drivers2` and `tests/t126_netcfg_r11` run in the native host corpus, and
 the corpus typechecks under `os-build/layer1/check_services.sh`. Layer 4, service 14.
 

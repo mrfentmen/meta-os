@@ -1,0 +1,207 @@
+# BUILD_LOG — services/session (Lane B, R5, 2026-11-04)
+# Toolchain: /opt/homebrew/bin/goose (goose b781587 (runtime 3901ec457ba9))
+# Shim: os-build/layer1/host/host_shim.c
+# Driver carries  +  like every real program root (tests reach both via fmt/err imports; the 5 root_<svc>.goose via their entries). Goose resolves those names program-wide, so a minimal driver without them fails on cfg.goose:212 parse_int / sort E_INVAL even though the corpus root.goose checks clean. Lib/service sources are byte-identical; only the generated driver carries the imports. (host process: writes->stdout, ticks=host ms, yield=no-op, exit=exit; read_key always empty; spawn/kill/net refused)
+# Driver source (services/.run_session.goose, generated, removed after build):
+#   import std;
+#   import common.err.err;
+#   import session.login;
+#   import session.session;
+#   
+#   fn main() {}
+# --- check
+$ goose check --color never services/.run_session.goose
+services/session/login.goose:191: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+check: OK
+# --- codegen (Goose -> C)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/session.c --standalone services/.run_session.goose
+services/session/login.goose:191: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+codegen: OK
+# --- cc (C -> host exe, shim linked for sys_* externs)
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/session.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_session
+cc-link: OK
+# --- host run (2s cap each)
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t84_session_deep.c --standalone services/.run_t84_session_deep.goose  (from services/tests/t84_session_deep.goose)
+services/session/login.goose:191: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t84_session_deep: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t84_session_deep.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t84_session_deep
+  cc t84_session_deep: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t84_session_deep  (host run, 2s cap)
+t84 session deep
+-- (a) failure injection
+ok   ses: resolve before init
+ok   ses: state before init reads free
+ok   ses: accepts_input before init is false
+ok   ses: unknown owner refused
+ok   ses: user session without a user id refused
+ok   ses: agent session without a handle refused
+ok   ses: open user session
+ok   ses: starts in LOGIN, not ACTIVE
+ok   ses: no console yet
+ok   ses: attach with console -1 refused
+ok   ses: attach console 0
+ok   ses: attach makes it ACTIVE
+ok   ses: double attach refused
+ok   ses: open second session
+ok   ses: second attach to a live console is E_BUSY
+ok   ses: the busy attach claimed nothing
+ok   ses: focus unknown id
+ok   ses: focus a LOGIN session refused
+ok   ses: focus the active session
+ok   ses: foreground is the focused session
+ok   ses: visible console is the focused one
+ok   ses: focused and active accepts input
+ok   ses: lock an ACTIVE session
+ok   ses: locked session does not accept input
+ok   ses: locking a LOGIN session refused
+ok   ses: input time does not reopen the gate
+ok   ses: unlock
+ok   ses: unlocked session accepts input again
+ok   ses: double unlock refused
+ok   ses: unknown id still refuses
+ok   ses: caps before close
+ok   ses: close
+ok   ses: closed state
+ok   ses: close clears caps
+ok   ses: close clears the foreground
+ok   ses: closed session does not accept input
+ok   ses: close unknown id
+ok   ses: double close is accepted (finding: no CLOSED guard)
+ok   ses: closed session still resolves
+ok   ses: reap writes the session off
+ok   ses: reaped id resolves to free
+ok   ses: reaping twice is E_NOTFOUND
+ok   ses: reap a live session refused
+ok   ses: a reaped id and a never-issued id are indistinguishable
+-- (b) boundary sweep
+ok   ses: table filled to SES_CAP
+ok   ses: SES_CAP+1 refused with E_NO_SPACE
+     sessions open: 8
+ok   ses: attach console 0x3f (63) is a valid console
+ok   ses: attach console -2 refused
+ok   ses: two sessions cannot share console 63
+ok   ses: SES_CAP closed sessions still fill the table
+ok   ses: reaping the closed sessions frees the table
+ok   ses: ids strictly increase across close and reap
+ok   ses: an id from before the cycles does not resolve to a live session
+ok   ses: open two agent sessions
+ok   ses: owner_agent reports the agent
+ok   ses: agent exit closes both sessions
+ok   ses: agent sessions are CLOSED and need a reap
+ok   ses: agent with no sessions closes none
+ok   ses: agent handle 0 closes nothing
+-- (c) restart semantics
+ok   ses: session before init
+ok   ses: init frees every slot
+ok   ses: init clears the foreground
+ok   ses: init leaves the table usable
+ok   ses: ids continue after init (not reused)
+     last id after init: 21
+ok   ses: the pre-init id does not point at a live session
+ok   ses: open after init is stable
+-- (d) login flow
+ok   login: new flow is idle
+ok   login: idle prompt is empty
+ok   login: idle echoes nothing
+ok   login: a keystroke while idle is E_STATE
+ok   login: prompt is 'login: '
+ok   login: start moves to NAME
+ok   login: NAME echoes
+ok   login: Enter on an empty name refused
+ok   login: still NAME after the refusal
+ok   login: backspace at zero
+ok   login: name of LG_NAME_MAX-1 accepted
+ok   login: name at LG_NAME_MAX refused
+ok   login: length unchanged after refusal
+ok   login: a control byte is E_INVAL
+ok   login: Enter advances to TOKEN
+ok   login: TOKEN does not echo
+ok   login: TOKEN prompt
+ok   login: token of LG_TOKEN_MAX-1 accepted
+ok   login: token at LG_TOKEN_MAX refused
+ok   login: empty expected token refuses
+ok   login: failure is counted
+ok   login: failure returns to NAME
+ok   login: a wrong token is E_AUTH
+ok   login: second failure counted
+ok   login: third failure locks the flow
+ok   login: failed flow refuses keystrokes
+ok   login: failed flow has no prompt
+ok   login: end from failed
+ok   login: end resets attempts
+ok   login: end returns to idle
+ok   login: correct token opens a session
+ok   login: flow is ACTIVE
+ok   login: session is the one the flow opened
+ok   login: the session exists
+ok   login: end closes the session
+ok   login: session is CLOSED after end
+ok   login: end from idle is a no-op
+ok   login: compare equal
+ok   login: compare unequal
+ok   login: compare length mismatch
+t84 done  pass=106 fail=0
+exit: 0
+$ goose -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t129_session_r11.c --standalone services/.run_t129_session_r11.goose  (from services/tests/t129_session_r11.goose)
+services/session/login.goose:191: warning: redundant `as i64`: a u8 converts to i64 implicitly here
+  codegen t129_session_r11: OK
+$ clang -O1 /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t129_session_r11.c $SHIM -o /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t129_session_r11
+  cc t129_session_r11: OK
+$ /Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/test_t129_session_r11  (host run, 2s cap)
+t129 session r11
+ok   session: open a user session
+ok   session: a fresh session is LOGIN
+ok   session: attach -1 refused
+ok   session: attach console 0
+ok   session: attach does not focus
+ok   session: focus the active session
+ok   session: focus sets the visible console
+ok   session: focused active session accepts input
+ok   session: second user session opens
+ok   session: close releases the console
+ok   session: close clears the foreground
+ok   session: the closed session's console can be attached
+ok   session: a closed session cannot attach
+ok   session: a closed session cannot lock
+ok   session: a closed session cannot unlock
+ok   session: a closed session cannot be focused
+ok   session: double close is accepted (finding: no CLOSED guard)
+ok   session: reap the closed session
+ok   session: attach to a reaped id is E_NOTFOUND
+ok   session: a negative agent handle is accepted (finding)
+ok   session: a negative capability mask is stored as given (finding)
+ok   session: owner_agent returns the negative handle
+ok   session: an agent session without a handle is refused
+ok   session: a LOGIN session cannot be reaped
+ok   session: close the negative-handle session
+ok   session: reap after close
+ok   session: three agent sessions open
+ok   session: closing one agent closes only its sessions
+ok   session: agent 42's sessions are CLOSED
+ok   session: agent 43's session is untouched
+ok   login: submit from IDLE is E_STATE
+ok   login: the prompt is 'login: '
+ok   login: backspace at zero is accepted
+ok   login: name collected
+ok   login: Enter moves to TOKEN
+ok   login: Enter in TOKEN does not submit
+ok   login: an unknown owner is refused by ses_open
+ok   login: the flow stays in TOKEN after the refusal
+ok   login: a refused owner is not a failed attempt
+ok   login: the agent login opens a session
+ok   login: the flow is ACTIVE
+ok   login: the session belongs to the agent
+ok   login: the session is LOGIN until attached
+ok   login: end closes the session
+ok   login: reap the closed session
+ok   login: submit from NAME is E_STATE
+ok   login: end from NAME is a no-op
+ok   session: 120 open/attach/close/reap cycles
+LOAD session ops=120 ok=120 refused=0
+t129 done  pass=48 fail=0
+exit: 0
+tests built+run: 2/2
+# --- sys_* externs referenced by services/session/*.goose
+
+# Shim behavior for those calls: write_serial/write_console print to stdout; ticks = host monotonic ms; yield = no-op; exit = process exit; read_key = always empty (false); net_send/net_recv = -1 refusal; spawn = 0 (refused); kill = -1 (refused).
+VERDICT: COMPILED (/Users/test/Desktop/meta-os/os-build/layer1/host/build/laneB/mod_session + run above)

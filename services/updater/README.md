@@ -1,6 +1,6 @@
 # updater — manifest, verification, apply plan, rollback record
 
-Status: **RUNS** — the host corpus runs `tests/t58_updater`, and `tests/t79_limit_drivers`,
+Status: **COMPILED** (Lane B R5, 2026-11-04 — build+run log: services/updater/BUILD_LOG.txt; was RUNS on the 2026-11-02 host corpus) — the host corpus runs `tests/t58_updater`, and `tests/t79_limit_drivers`,
 `t80_limit_drivers2`, `t103_limits_rest` and `tests/t138_updater_r11` drive its limits and
 refusals. Layer 4, service 18. Nothing boots it on the kernel yet.
 
