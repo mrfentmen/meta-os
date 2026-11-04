@@ -266,7 +266,12 @@ for _f in $(find $_desktop_dirs -name '*.desktop' 2>/dev/null); do
   grep -q '^Exec=' "$_f" 2>/dev/null || _bad="$_bad $(basename "$_f"):no-Exec"
   _icon=$(sed -n 's/^Icon=//p' "$_f" 2>/dev/null | head -1)
   case "$_icon" in
-    /*) [ -e "$ROOT$_icon" ] || _bad="$_bad $(basename "$_f"):icon-missing" ;;
+    # An absolute Icon= names the INSTALLED path (/usr/share/icons/...), so it
+    # cannot resolve against the repo root. The payload ships the same PNG by
+    # basename under payload-theme/icons/metaos/, which apply.sh installs into
+    # metaos/128x128/apps/ at image time — resolve there too, and keep failing
+    # an icon that exists in neither place.
+    /*) [ -e "$ROOT$_icon" ] || [ -e "$ROOT/os-build/iso/payload-theme/icons/metaos/$(basename "$_icon")" ] || _bad="$_bad $(basename "$_f"):icon-missing" ;;
   esac
 done
 fi
@@ -288,10 +293,28 @@ done
 for _f in os-build/iso/build_iso.sh os-build/iso/build-arm64-inner.sh os-build/iso/finalize-iso-tree.sh os-build/iso/merge-layers.sh os-build/iso/metaos-install.sh; do
   [ -f "$ROOT/$_f" ] && _scope="$_scope $ROOT/$_f"
 done
+# A file only counts when the word sits in a VALUE a reader can meet on the
+# machine. A comment explaining what was removed ("the greeter fell back to the
+# Ubuntu warty background") or a checker's own regex (grep -qi ubuntu) is
+# commentary, not branding — counting those made twelve honest files read as
+# leaks while the real sweep (check_strings, row 2) passed on the same tree.
+# Markdown and the checker scripts are therefore skipped, and inside every other
+# file comment lines are skipped, including <!-- ... --> blocks.
+_comment_filter='
+  /<!--/ { inxml = 1 }
+  inxml { if (/-->/) inxml = 0; next }
+  /^[ \t]*(#|;|\/\/|\*)/ { next }
+  tolower($0) ~ /ubuntu/ { found = 1 }
+  END { exit(found ? 0 : 1) }
+'
 _hits=""
 if [ -n "$_scope" ]; then
   # shellcheck disable=SC2086
-  _hits=$(grep -rIl -i "ubuntu" $_scope 2>/dev/null | grep -v "/\.git/" || true)
+  for _f in $(grep -rIl -i "ubuntu" $_scope 2>/dev/null | grep -v "/\.git/" || true); do
+    case "$_f" in *.md|*.sh|*.mjs|*.js|*.py) continue ;; esac
+    case "$(basename "$_f")" in ALLOWLIST.tsv|meta.tokens.json) continue ;; esac
+    if awk "$_comment_filter" "$_f"; then _hits="$_hits $_f"; fi
+  done
 fi
 if [ -f "$ROOT/$OS1_ALLOWLIST" ] && [ -n "$_hits" ]; then
   _kept=""
@@ -307,9 +330,10 @@ if [ -f "$ROOT/$OS1_ALLOWLIST" ] && [ -n "$_hits" ]; then
   _hits=$(printf '%s' "$_kept" | tr ' ' '\n' | grep . || true)
 fi
 if [ -z "$_hits" ]; then
-  row "no-ubuntu" "PASS" "no case-insensitive ubuntu in shipped sources"
+  row "no-ubuntu" "PASS" "no case-insensitive ubuntu in shipped values (comments and checkers excluded)"
 else
-  _n=$(printf '%s' "$_hits" | wc -l | tr -d ' ')
+  # grep -c, not wc -l: a single hit has no trailing newline and wc counted 0.
+  _n=$(printf '%s\n' "$_hits" | grep -c . | tr -d ' ')
   _sample=$(printf '%s' "$_hits" | head -4 | sed "s|$ROOT/||" | tr '\n' ';' | cut -c1-140)
   row "no-ubuntu" "FAIL" "$_n files mention ubuntu (e.g. $_sample)"
 fi
