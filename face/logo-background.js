@@ -137,6 +137,36 @@
     typeof window.matchMedia === "function" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  // MOTION IS OFF BY DEFAULT — it has to be.
+  // This grid is 110 x 46 = 5,060 cells, and every cell that survives the
+  // z-buffer is a separate ctx.fillText call. Running that on
+  // requestAnimationFrame means thousands of text rasterisations per frame at
+  // 60 Hz; measured on this machine, one browser renderer sat at ~100% CPU
+  // with this page open and nothing else happening. That is a fan noise bug,
+  // not a design choice.
+  //
+  // So the page draws ONE still frame and stops. The look is unchanged — same
+  // ribbon, same palette, same dim drift phase — it just does not move. The
+  // spin belongs to the OS wallpaper, which is 60 pre-rendered frames played
+  // at 30 fps by meta-live.py (cheap: memcpy, no glyph rasterising).
+  //
+  // `?motion=1` opts back in for recording a demo clip, and reduced-motion
+  // still wins over the flag, because a user preference beats a URL.
+  var motionRequested = /(?:^|[?&])motion=1(?:&|$)/.test(window.location.search);
+  var animate = motionRequested && !reducedMotion;
+
+  // Default cadence: draw 4 times a second instead of 60.
+  //
+  // The scheduling still goes through requestAnimationFrame even when idle, and
+  // that is deliberate: a canvas that stops being animated can drop out of the
+  // compositor's live surface. Measured here — a genuinely still frame rendered
+  // 141,797 painted pixels (getImageData) while its screenshot came back solid
+  // black (998 colours, no ribbon). Staying in the rAF loop keeps the surface
+  // alive; the skip below keeps the glyph work off the CPU. 4 draws/second is
+  // 1/15th of the old rasterising cost and still reads as slow drift.
+  var IDLE_MS = 250;
+  var lastDraw = 0;
+
   function normalize(v) {
     var length = Math.hypot(v.x, v.y, v.z) || 1;
     return { x: v.x / length, y: v.y / length, z: v.z / length };
@@ -260,10 +290,36 @@
     Y_PROJECTION = X_PROJECTION * (viewWidth / viewHeight);
   }
 
-  if ("ResizeObserver" in window) {
-    new ResizeObserver(resizeCanvas).observe(canvas);
+  // A resize SETS canvas.width/height, and assigning either one CLEARS the
+  // canvas. That was invisible while the loop was always running — the next
+  // frame repainted it. With one still frame it meant a window resize left the
+  // background solid black until reload (caught by screenshotting the still
+  // frame: 998 colours, no ribbon). So the still path repaints itself, once per
+  // settle, and the animated path is untouched because it repaints anyway.
+  var repaintTicket = 0;
+  function afterResize() {
+    resizeCanvas();
+    if (animate) return;              // the loop's next frame does this job
+    // Debounced: a drag-resize fires this dozens of times and each repaint is
+    // 5,060 cells. One repaint just after the last event is enough.
+    if (repaintTicket) clearTimeout(repaintTicket);
+    repaintTicket = setTimeout(function () {
+      repaintTicket = 0;
+      renderFrame();
+    }, 120);
   }
-  window.addEventListener("resize", resizeCanvas, { passive: true });
+
+  // One place decides when the next frame happens, so the 60 Hz recording path
+  // and the 4 Hz idle path cannot drift apart.
+  function schedule() {
+    if (!running || reducedMotion || userPaused) return;
+    requestAnimationFrame(renderFrame);
+  }
+
+  if ("ResizeObserver" in window) {
+    new ResizeObserver(afterResize).observe(canvas);
+  }
+  window.addEventListener("resize", afterResize, { passive: true });
 
   // Pause while the tab is hidden so the background costs nothing
   // when nobody can see it.
@@ -272,16 +328,33 @@
       running = false;
     } else if (!reducedMotion && !userPaused) {
       running = true;
-      requestAnimationFrame(renderFrame);
+      schedule();
     }
   });
 
   function renderFrame() {
     if (!viewWidth || !viewHeight) resizeCanvas();
     if (!viewWidth || !viewHeight) {
-      requestAnimationFrame(renderFrame);
+      // A zero-sized canvas is a resize in progress, not a reason to spin.
+      schedule();
       return;
     }
+
+    // Idle cadence gate. rAF still fires at the display rate; this returns
+    // before any glyph work on the frames we do not need.
+    //
+    // ONE CLOCK ONLY. rAF hands us a timestamp counted from navigation
+    // (≈16, 32, 48 ms) while the first draw and the resize repaint happen
+    // outside rAF, where only Date.now() (≈1.7e12 ms) exists. Mixing them made
+    // `now - lastDraw` permanently negative, so every frame was skipped and the
+    // component drew exactly once in its lifetime — measured as 0 glyphs/sec
+    // against 114,208 for the 60 Hz path. Date.now() everywhere; `ts` is ignored.
+    var now = Date.now();
+    if (!animate && lastDraw && now - lastDraw < IDLE_MS - 8) {
+      schedule();
+      return;
+    }
+    lastDraw = now;
 
     // Slow drift: a background should move, not demand attention.
     // LOGO-2: the drift step comes from the speed slider, and a
@@ -386,7 +459,8 @@
     }
     ctx.shadowBlur = 0;
 
-    if (running && !reducedMotion && !userPaused) requestAnimationFrame(renderFrame);
+    // The only place the loop continues.
+    schedule();
   }
 
   // LOGO-2: speed and pause arrive from js/logo-animation.js.
@@ -400,7 +474,7 @@
   window.addEventListener("meta-trio-logo-paused", function (event) {
     var paused = event && event.detail && event.detail.paused === true;
     userPaused = paused;
-    if (!paused && running && !reducedMotion) requestAnimationFrame(renderFrame);
+    if (!paused && running && !reducedMotion) schedule();
   });
 
   // Tint from the product the page opened on, then follow switches.
