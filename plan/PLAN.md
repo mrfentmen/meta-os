@@ -120,7 +120,13 @@ cursor and a menu bar in it). The honest way is to record the guest's own
 framebuffer through the QEMU monitor: what you see is what the OS draws, at
 1920x1080, with no host chrome.
 
-### 3.1 Pipeline
+### 3.1 Pipeline — tool written: `os-build/tools/record_demo.sh`
+
+**Proof it works without a VM:** `sh os-build/tools/record_demo.sh --selftest` ran
+60 synthetic frames through the real encoder → `duration=6.033333`, 181 frames at
+`r_frame_rate=30/1`, `width=1920 height=1080`, exit 0. The no-boot guard also
+refused a bare `--record` with exit 2 and left no QEMU process, as designed.
+**Still unproven:** an actual take (needs one boot).
 
 ```
 boot once  →  /tmp/rec/mon (unix socket)
