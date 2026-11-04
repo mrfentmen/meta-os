@@ -12,7 +12,13 @@ import sys
 
 APP_DIR = "/usr/share/metaos/imperium"
 SERVER_DIR = "/usr/share/metaos/server"
-INDEX = os.path.join(APP_DIR, "index.html")
+# The console page links ../styles.css and ../vendor/maplibre, so it has to sit
+# one level under the site root to be styled at all. Installed on its own under
+# /usr/share/metaos/imperium it drew as bare HTML -- black text on white, blue
+# underlined links -- which is exactly the "it's a webpage" look this app is
+# meant to kill. Prefer the site-root copy when it is there.
+SITE_INDEX = "/opt/face-site/imperium/index.html"
+INDEX = SITE_INDEX if os.path.exists(SITE_INDEX) else os.path.join(APP_DIR, "index.html")
 PORT = int(os.environ.get("META_IMPERIUM_PORT", "8080"))
 
 

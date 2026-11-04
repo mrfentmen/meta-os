@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Calculator
+Comment=Desktop calculator (offline)
+Exec=galculator
+Icon=calculator
+Terminal=false
+Categories=Utility;Calculator;
+OnlyShowIn=XFCE;
+StartupNotify=true

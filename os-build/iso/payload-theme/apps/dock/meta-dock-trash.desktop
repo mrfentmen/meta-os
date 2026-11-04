@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Trash
+Comment=Deleted files, restorable (XDG trash)
+Exec=thunar trash:///
+Icon=trash
+Terminal=false
+Categories=System;FileManager;
+OnlyShowIn=XFCE;
+StartupNotify=true
