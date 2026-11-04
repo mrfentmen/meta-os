@@ -383,3 +383,9 @@ os-build/tools/verify_tree.sh	Xubuntu	attribution	gate's own grep patterns and f
 os-build/iso/payload-theme/apps/check-dock-tiles.sh	Xubuntu	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
 design/meta-musica-notes.html	canonical	compat	HTML rel=canonical head tag and prose about the canonical page; not the company name
 server/queue/metaosd_store.mjs	canonical	compat	JSON canonicalisation for the receipt HMAC (canonical(obj)), an English/programming word, not the company
+os-build/lanes/T1_REPORT.md	ubuntu	attribution	proof report: names the account, path and os-release value it removed
+os-build/lanes/T1_REPORT.md	Ubuntu	attribution	proof report: names the brand it removed
+os-build/lanes/T1_REPORT.md	Xubuntu	attribution	proof report: names the base it was measured on
+os-build/lanes/T1_REPORT.md	xubuntu	attribution	proof report: names the base image file it was measured on
+os-build/lanes/T2_REPORT.md	Xubuntu	attribution	T2 report: names the base whose 12 dock tiles it mapped
+os-build/lanes/T4_REPORT.md	canonical	attribution	English word (sha256-identical canonical catalogues), not the company

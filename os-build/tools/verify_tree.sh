@@ -366,6 +366,40 @@ else
   row "os-release-identity" "FAIL" "$(printf '%s' "$_os_bad" | cut -c1-160)"
 fi
 
+# --- row 9: the world corpus still parses (T4). Every pack the boards and the
+# trio read goes through os/worlds/validate_worlds.py; a truncated JSONL or a
+# pack that lost its index would otherwise only show as an empty panel at demo
+# time. Absent validator is a named FAIL, not a silent pass.
+if [ -f "$ROOT/os/worlds/validate_worlds.py" ]; then
+  if command -v python3 >/dev/null 2>&1; then
+    _wout=$(cd "$ROOT" && python3 os/worlds/validate_worlds.py 2>&1)
+    if [ $? -eq 0 ]; then
+      row "worlds-check" "PASS" "$(printf '%s' "$_wout" | tail -1 | cut -c1-140)"
+    else
+      row "worlds-check" "FAIL" "$(printf '%s' "$_wout" | grep -iE 'fail|error' | head -2 | tr '\n' ';' | cut -c1-160)"
+    fi
+  else
+    row "worlds-check" "SKIP" "python3 not on PATH"
+  fi
+else
+  row "worlds-check" "FAIL" "os/worlds/validate_worlds.py missing"
+fi
+
+# --- row 10: the lab pages' assets resolve (T4 section C). The molecule viewer
+# and the review pages must work with no network; check_assets names the page
+# and the URL that is missing, and resolves site-absolute (/vendor/...) paths
+# against the repo root, which is what the server does.
+if [ -f "$ROOT/labs/check_assets.py" ]; then
+  _lout=$(cd "$ROOT" && python3 labs/check_assets.py 2>&1)
+  if [ $? -eq 0 ]; then
+    row "lab-assets" "PASS" "$(printf '%s' "$_lout" | tail -1 | cut -c1-140)"
+  else
+    row "lab-assets" "FAIL" "$(printf '%s' "$_lout" | grep -i '^FAIL' | head -2 | tr '\n' ';' | sed "s|$ROOT/||" | cut -c1-160)"
+  fi
+else
+  row "lab-assets" "FAIL" "labs/check_assets.py missing"
+fi
+
 # --- output
 if [ "$MODE" = "json" ]; then
   printf '[\n'
