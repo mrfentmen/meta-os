@@ -7,10 +7,14 @@ import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
 import { runAndFile } from "./stub-runner.mjs";
+import { stateRoot } from "../agents/state-root.mjs";
 
 const HERE = path.dirname(url.fileURLToPath(import.meta.url));
 const root = path.dirname(HERE);
-const ledger = path.join(root, "os-build", "nervus", "stub-ledger.jsonl");
+// Read-only payload (the image): the ledger and receipt go to the user's state
+// dir, because /usr/share/metaos/agent cannot be written at run time.
+const out = stateRoot(root, "nervus");
+const ledger = path.join(out, "os-build", "nervus", "stub-ledger.jsonl");
 fs.mkdirSync(path.dirname(ledger), { recursive: true });
 
 console.log("nervus STUB hosted run — no model is loaded, no result is evidence");
@@ -21,7 +25,7 @@ for (const op of ["map_layers", "sweep", "steer", "ablate", "evaluate_delta"]) {
   console.log("  " + op + ": " + (r.ok ? "record written (stub)" : "refused: " + r.errors.join("; ")));
 }
 const bad = rows.filter((r) => !r.ok);
-fs.writeFileSync(path.join(root, "os-build", "nervus", "hosted-receipt.json"), JSON.stringify({
-  at: new Date().toISOString(), ledger: path.relative(root, ledger), rows, stub: true,
+fs.writeFileSync(path.join(out, "os-build", "nervus", "hosted-receipt.json"), JSON.stringify({
+  at: new Date().toISOString(), ledger: path.relative(out, ledger), rows, stub: true,
 }, null, 2));
 process.exit(bad.length ? 1 : 0);

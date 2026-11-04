@@ -244,6 +244,27 @@ say "agent runtime -> $PAYLOAD/agents"
 mkdir -p "$ROOT$PAYLOAD/agents"
 cp "$REPO"/agents/*.mjs "$REPO/agents/registry.json" "$ROOT$PAYLOAD/agents/"
 
+# The registry names hosted entry points that live beside the code
+# (`repo:nervus/hosted.mjs`, `repo:handsfree/hosted.mjs`, `repo:aegis/hosted.mjs`).
+# Only agents/ was staged, so in the image those jobs started a node process
+# that could not find its own file and exited 1 — the same "failed (exit 1)"
+# the Agents page showed for every order. Stage the trees the registry names.
+for tree in nervus aegis handsfree; do
+  [ -d "$REPO/$tree" ] || continue
+  say "hosted worker -> $PAYLOAD/$tree"
+  mkdir -p "$ROOT$PAYLOAD/$tree"
+  cp -R "$REPO/$tree/." "$ROOT$PAYLOAD/$tree/"
+done
+if [ -d "$REPO/os/worlds/officina/runtime" ]; then
+  say "hosted worker -> $PAYLOAD/os/worlds/officina/runtime"
+  mkdir -p "$ROOT$PAYLOAD/os/worlds/officina/runtime"
+  cp -R "$REPO/os/worlds/officina/runtime/." "$ROOT$PAYLOAD/os/worlds/officina/runtime/"
+fi
+if [ -f "$REPO/mcp-gateway/backends.json" ]; then
+  mkdir -p "$ROOT$PAYLOAD/mcp-gateway"
+  cp "$REPO/mcp-gateway/backends.json" "$ROOT$PAYLOAD/mcp-gateway/"
+fi
+
 say "units -> $UNITS"
 mkdir -p "$ROOT$UNITS"
 cp "$REPO"/agent-layer/units/*.service "$REPO"/agent-layer/units/*.timer "$ROOT$UNITS/"

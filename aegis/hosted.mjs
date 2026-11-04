@@ -13,14 +13,18 @@ import { Ledger } from "../agents/runtime.mjs";
 import { scanNames } from "./confusables.mjs";
 import { openFinding, acknowledgeFinding, closeFinding, chainOf } from "./lifecycle.mjs";
 import { classify, render, ALARM, QUIET } from "./alarm.mjs";
+import { stateRoot } from "../agents/state-root.mjs";
 
 const HERE = path.dirname(url.fileURLToPath(import.meta.url));
 const root = path.dirname(HERE);
-const outDir = path.join(root, "os-build", "aegis", "r11");
+// Code and data are read from the payload; receipts and the run ledger are
+// written where writing is allowed. In a checkout that is still the repo.
+const out = stateRoot(root, "aegis");
+const outDir = path.join(out, "os-build", "aegis", "r11");
 fs.mkdirSync(outDir, { recursive: true });
 
 const runId = "aegis-hosted-" + new Date().toISOString().replace(/[:.]/g, "-");
-const ledger = new Ledger(path.join(root, "os-build", "aegis", "runs.jsonl"));
+const ledger = new Ledger(path.join(out, "os-build", "aegis", "runs.jsonl"));
 ledger.add(runId, "hosted-local-start", { command: "aegis/hosted.mjs" });
 
 // The names as shipped: gateway backend prefixes and the tray's tool prefixes are the two places
