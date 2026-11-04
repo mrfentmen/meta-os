@@ -38,3 +38,31 @@ Validation (this lane, no boots): XML parsed, INI-style confs key-checked,
 `bash -n` on shell scripts, `python -m py_compile` on generators,
 PIL verify on all PNGs, plymouth script `Image()` refs resolved,
 no Apple/Ubuntu/Xubuntu marks in visible strings.
+
+## Status (lane D, 2026-11-03)
+
+- `apply.sh` rewritten: preflight gate (32 splash frames / 20 icons / 12
+  dock launchers + every named source), absolute dest paths, `[ROOT]` arg
+  for lane C (`./apply.sh /mnt`). Ran against `/tmp/metaos.ext4`;
+  `theme_proof.sh` 10/10, md5 repo-vs-image 98/98 MATCH, report:
+  `os-build/lanes/D_IDENTITY_REPORT.md`.
+- `splash/frames/`: 32-frame spinning ribbon (480x272, downscaled from the
+  settled `studio-loop-smooth` set `meta-live.py` plays at 16 fps);
+  `metaos.script` preloads all 32 and steps ~15 fps; mirrored byte-identical
+  to `os-build/iso/plymouth/metaos/`. Contact sheet:
+  `os-build/lanes/D_plymouth_contact.jpg`. Boot capture is lane C's.
+- `grub/`: `theme.txt` (Meta OS 1.0, timeout 10) + generated PNGs; lane C
+  wires `GRUB_THEME`.
+- `greeter/`: gtk-greeter conf (`icon-theme-name=metaos`) + new
+  `unity-greeter.conf` for the installed greeter. Autologin is
+  `autologin-user=meta` with `user-session=metaos`, matching the account
+  `rename_user.sh` creates — when this said `ubuntu` and the account was
+  `meta`, a rebuild landed on a greeter with no account to log into.
+- `identity/`: os-release `Meta OS 1.0 (Ribbon)` / `ID=metaos`, hostname,
+  issue, motd (symlink-preserving install).
+- `icons/`: 20 glyphs + `index.theme` (`Inherits=Papirus,elementary-xfce,
+  hicolor`) + `check-icons.sh` (98/98 resolve in image).
+- `apps/dock/`: 12 launchers; all 17 dock-app Names resolve (5 pre-existing).
+- `gtk.css`: Inter-first stack; terminal profile: Ubuntu Mono 11
+  (`FONTS.md` records both licences, no binaries shipped).
+- `metaos-theme/` left untouched (superseded tree, kept as-is).

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Officina
+Comment=Officina workshop page (MetaOS local service)
+Exec=epiphany-browser http://127.0.0.1:18934/index.html
+Icon=officina
+Terminal=false
+Categories=Development;
+OnlyShowIn=XFCE;
+StartupNotify=true

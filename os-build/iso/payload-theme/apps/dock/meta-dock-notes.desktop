@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Notes
+Comment=Local notes, stored as files in ~/Notes (offline)
+Exec=epiphany-browser http://127.0.0.1:18900/notes.html
+Icon=notes
+Terminal=false
+Categories=Office;Notes;
+OnlyShowIn=XFCE;
+StartupNotify=true

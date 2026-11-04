@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Musica
+Comment=Local music page (MetaOS local service)
+Exec=epiphany-browser http://127.0.0.1:18900/musica.html
+Icon=musica
+Terminal=false
+Categories=AudioVideo;Audio;
+OnlyShowIn=XFCE;
+StartupNotify=true

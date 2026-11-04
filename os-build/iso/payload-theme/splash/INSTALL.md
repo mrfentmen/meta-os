@@ -50,3 +50,11 @@ lsinitramfs /boot/initrd.img-$(uname -r) | grep 'plymouth/themes/metaos/'
 Live-boot screenshot of the splash on bare metal or VM — named, not faked:
 `screenshots/theme/H12-splash-boot.png` (progress bar visible mid-boot).
 No QEMU/VM boots are run from this lane; first live-boot confirmation is pending.
+
+## Ribbon animation (lane D)
+
+`frames/` holds the 32-frame spinning ribbon (480x272 PNGs downscaled from
+`../wallpapers/studio-loop-smooth/`, the set `meta-live.py` plays at 16 fps).
+`metaos.script` preloads all 32 and advances one frame per 4 refresh ticks
+(~15 fps at 60 Hz). `generate-frames.py` rebuilds the set; `frames.inc`
+records the inlined preload block. Install the whole dir including `frames/`.

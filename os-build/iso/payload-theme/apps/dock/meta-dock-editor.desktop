@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Code Editor
+Comment=Edit files in your home directory (offline)
+Exec=mousepad %U
+Icon=editor
+Terminal=false
+Categories=Development;TextEditor;
+OnlyShowIn=XFCE;
+StartupNotify=true
+MimeType=text/plain;

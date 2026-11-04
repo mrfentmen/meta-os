@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Dashboard
+Comment=System status at a glance (MetaOS local services)
+Exec=epiphany-browser http://127.0.0.1:18900/dashboard.html
+Icon=dashboard
+Terminal=false
+Categories=System;Monitor;
+OnlyShowIn=XFCE;
+StartupNotify=true

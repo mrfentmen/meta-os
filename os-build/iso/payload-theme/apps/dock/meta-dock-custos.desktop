@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Custos
+Comment=Custos watch page (MetaOS local service)
+Exec=epiphany-browser http://127.0.0.1:18934/surfaces.html
+Icon=custos
+Terminal=false
+Categories=System;
+OnlyShowIn=XFCE;
+StartupNotify=true

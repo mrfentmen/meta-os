@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=X-GNOME-Metatheme
+Name=MetaOS
+Comment=MetaOS 1.0 desktop theme — blue, white, black
+Encoding=UTF-8
+
+[X-GNOME-Metatheme]
+GtkTheme=MetaOS
+IconTheme=metaos
+MetacityTheme=MetaOS
