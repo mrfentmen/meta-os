@@ -325,3 +325,7 @@ os-build/iso/payload-theme/lightdm/README.md	Ubuntu	attribution	honest evidence 
 os-build/iso/payload-theme/lightdm/README.md	canonical	attribution	honest evidence record quoting what was found and removed
 os-build/iso/plymouth/check-plymouth.sh	ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
 os-build/iso/plymouth/check-plymouth.sh	Ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/lanes/R2_T1_REPORT.md	ubuntu	attribution	lane report quotes evidence lines; documentation
+os-build/lanes/R2_T1_REPORT.md	Ubuntu	attribution	lane report quotes evidence lines; documentation
+os-build/lanes/R2_T1_REPORT.md	Xubuntu	attribution	lane report quotes evidence lines; documentation
+os-build/lanes/R2_T1_REPORT.md	xubuntu	attribution	lane report quotes evidence lines; documentation
