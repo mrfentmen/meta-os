@@ -4,11 +4,14 @@ Written 2026-11-03, after the desktop booted, the user was renamed, and the
 surfaces became app windows. Everything below was run. Where something was not
 run, it says so.
 
-## The one-sentence pitch
+## The one-sentence pitch (carrier, not the kernel — read before demoing)
 
-Meta OS is a desktop Linux you can boot and use, where the apps are Meta's own
-surfaces and the machine can hand a job to an agent that actually does it — the
-first agentic OS from Meta's side of the fence.
+The demo carrier is a Meta-branded Xubuntu image you can boot and use, where
+the apps are Meta's own surfaces and the machine can hand a job to an agent
+that actually does it. Our kernel (kernel+services+lobster, layers 1–6) boots
+separately in QEMU (`kernel/logs/E-boot-vnc.txt:26`,
+`os-build/logs/K1-boot.txt:2`) and does NOT boot from the ISO
+(`os-build/iso/kernel/WHY_NOT_BOOTING.md`, GRUB entry DISABLED).
 
 ## Demo order (7 minutes)
 
@@ -21,8 +24,9 @@ first agentic OS from Meta's side of the fence.
    page, every one with its own icon (all 26 PNGs are tracked in git now).
    Open Board, Musica, Science, Officina, Aegis from the dock. Each one opens
    its own window with the app's name in the title bar. **No address bar, no
-   localhost, no tabs.** This is the "it's an OS, not a website" beat, and it is
-   the one people disbelieve, so do it twice.
+   localhost, no tabs.** This is the "it's a desktop, not a website" beat, and it is
+   the one people disbelieve, so do it twice. (Do not call the carrier "the OS":
+   the OS is kernel+services+lobster per `os-build/LAYERS.md`; the image is the carrier.)
 4. **Trio.** One click opens Imperium: Vigiles (police), Ignis (fire), Medicus
    (EMS) behind a product switcher. This is the product a first responder would
    actually open.
@@ -40,12 +44,12 @@ first agentic OS from Meta's side of the fence.
 |---|---|
 | Meta identity, not Ubuntu | `sh os-build/identity/debrand.sh --check` → PASS, plus `lsb_release -a` on the image reading `Meta OS 1.0 (Ribbon)` / `ribbon` / `MetaOS` |
 | No `ubuntu` user or home | `rename_user.sh --check` → PASS, `grep -r /home/ubuntu` → 0, the account is `meta` |
-| The OS boots | `proof_boot.sh` → PASS, framebuffer 1920×1080 not single-colour, capture `captures/proof-boot-1920x1080-20261103T203318Z.png` |
+| The carrier image boots (not our kernel) | `proof_boot.sh` → PASS, framebuffer 1920×1080 not single-colour, capture `captures/proof-boot-1920x1080-20261103T203318Z.png` (boots `/tmp/metaos.ext4` with Linux vmlinuz/initrd; our kernel boots only its own disk image in QEMU) |
 | Apps open as windows, no URL | **Board only, proven by capture** (`captures/app-window-board-2026-11-03.png`). The other tiles use the same `meta-app` line — say "same mechanism", not "all verified" |
 | Calendar has a real backend | `notesd --selftest` inside the image → 11/11 PASS (note survives restart, ICS export, import, settings) |
 | The agent registry is not decorative | 24 agents, 23 live, 1 draft, 0 missing entry files (checked from `agents/registry.json`) |
 | Agents can think and act | `evals/agentic/report-*` → 8/8 + relay, 43 model calls |
-| Runs inside the OS, not just on my Mac | in-guest self-test 8/8, `meta-code` exit 0 |
+| Runs inside the carrier image (live guest), not just on my Mac | in-guest self-test 8/8, `meta-code` exit 0 |
 | Key never in the repo | image `/etc/metaos/agent.env`, root 0600, sha-verified |
 | The dock is really on screen | `captures/dock-live-1920x1080-20261103T2109Z.png` — live guest 21:09 UTC: Meta OS top bar, ASCII wallpaper, blue `metaos` prompt, dock along the bottom |
 | The dock is 27 real tiles, not bookmarks | `grep -cE '^\s*add_app ' os-build/face/meta-desktop.sh` → 27; every tile's page path and icon file resolved from the tree by script |
@@ -54,7 +58,17 @@ first agentic OS from Meta's side of the fence.
 
 ## What you must NOT claim
 
-- **Not a rewritten Linux.** The kernel is Linux, the window manager is XFCE.
+- **The ISO boots the carrier, not our kernel.** The live image boots Ubuntu
+  Linux `casper/vmlinuz` + `initrd` → systemd → XFCE. Our Rust kernel boots
+  only its own `os-build/rk007/disk.img` / `bootimage-metaos-kernel.bin` in
+  QEMU (`kernel/logs/E-boot-vnc.txt:26`, `os-build/logs/K1-boot.txt:2`).
+  Lane F proved otherwise is false: the GRUB `MetaOS kernel (experimental)`
+  entry ships DISABLED for five independently fatal blockers (no handoff
+  protocol, no storage driver, no initramfs contract, display mismatch, no
+  live-session services) — `os-build/iso/kernel/WHY_NOT_BOOTING.md`. Say
+  "Meta-branded Xubuntu carrier; our kernel boots separately in QEMU", never
+  "the ISO boots our kernel".
+- **Not a rewritten Linux.** The carrier kernel is Linux, the window manager is XFCE.
   Say "a Meta distribution", never "we rewrote Linux". If a judge asks, the
   honest answer is: we took the parts that work and replaced everything a
   person sees, then added the agent layer.

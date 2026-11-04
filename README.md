@@ -6,6 +6,25 @@
 
 **A platform that never sleeps.**
 
+> Judge-first index (2026-11-04, Lane H, R5). The OS is layers 1–6 only:
+> Rust kernel (`kernel/`, QEMU-booted) + Goose services (`services/`,
+> 22 COMPILED + 18 libs COMPILED per `services/BUILD_MATRIX.md`, 3 NOT BUILT)
+> + Lobster runtime/shell (`lobster/`, WRITTEN host-only per
+> `lobster/RUNTIME_CONTRACT.md`). The image is a carrier: Xubuntu 24.04.5
+> base (5,211,408,384 bytes) + 17,968 KiB payload theme+face (~0.35%,
+> `os-build/LAYERS_TRUTH.md:A8`); it boots the carrier's Linux kernel, not
+> ours — our kernel boots only its own disk image in QEMU
+> (`kernel/logs/E-boot-vnc.txt:26` alive, `kernel/logs/E-framebuffer.png`
+> 1280x720, `os-build/logs/K1-boot.txt:2`) and the ISO's experimental kernel
+> entry ships DISABLED (`os-build/iso/kernel/WHY_NOT_BOOTING.md`). Programs
+> (layer 7: Imperium, Scientia, Officina, Musica, relay) run on the
+> host/carrier, never on our kernel. Layer index: `os-build/LAYERS.md`;
+> truth audit: `os-build/LAYERS_TRUTH.md`; kernel proofs:
+> `kernel/BUILD_LOG.md` + `os-build/logs/`; services: `services/BUILD_MATRIX.md`;
+> lobster: `lobster/RUNTIME_CONTRACT.md` + `lobster/run-tests.sh`;
+> crates: `crates/PARITY.md` (relay pick, 5 diffs, no switch) + `crates/TEST_RESULTS.md`;
+> carrier: `os-build/DEUBUNTU.md` (21/28 rows ours, gate PASS).
+
 [Live crew viewer](https://muse-relay-live.pages.dev) · [Task list](os-build/TASKS_V3.md) · [OpenCode tasks](os-build/OPENCODE_TASKS_100.md) · [Commit history](https://github.com/Mrfentmen/meta-os/commits/main)
 
 ![Node tests: 2071 run, 2016 passing](https://img.shields.io/badge/node%20tests-2071%20run%2C%202016%20passing-brightgreen) ![Rust tests: 2186 passing](https://img.shields.io/badge/rust%20tests-2186%20passing-brightgreen) ![Worlds packs: 12 of 12 valid](https://img.shields.io/badge/worlds%20packs-12%20of%2012%20valid-blue) ![Status: in active build](https://img.shields.io/badge/status-in%20active%20build-orange)
@@ -37,7 +56,7 @@ One person directs the build. Del, known as Mrfentmen, makes the calls and does 
 | Meta Custos | RETIRED (2026-11-02) as a standalone system. It was a night watch for machines — patrols of certificates, services, and known exploited vulnerabilities — and that watch idea now lives in the OS's agents | Retired — not a current system |
 | Meta Musica | A music studio that never closes. It composes, keeps the takes it likes, and learns from the ones it keeps | In build now, with a 3D notes scene on the OpenCode task list |
 | Meta Faber | The loop that improves Meta OS itself, one checked change at a time, with a stop switch and a rollback rule | UNIMPLEMENTED. Named in one document; there is no Faber code in this repo yet |
-| Meta OS, the kernel | Our own Rust kernel: boots to its own text console, schedules tasks, runs ring-3 programs, answers a shell | K1-K5 proven by committed boot logs; K6 proven except that no Goose service has a process yet (`os-build/KERNEL_STATUS.md`) |
+| Meta OS, the kernel | Our own Rust kernel: boots to its own text console, schedules tasks, runs ring-3 programs, answers a shell | K1-K5 PROVEN by committed boot logs; K6 PARTIALLY PROVEN — behavior lines present, Goose-service-load clause open (`os-build/KERNEL_SPEC.md:96-100`, `os-build/KERNEL_STATUS.md:47-49`, `os-build/LAYERS_TRUTH.md:A2`) |
 
 ## Meta Imperium
 
@@ -107,7 +126,7 @@ Camera access needs a secure context: `localhost` counts, as does HTTPS.
 
 ## Test numbers
 
-Every number below was measured on the current main on 2026-11-02. Recheck any of them with the commands in the next table column.
+Every number below was measured on the current main on 2026-11-02. Recheck any of them with the commands in the next table column. R5 Lane D (2026-11-04, branch `agent-r5`) re-ran per-crate release tests: 17 crates fully green (1,899 passed, 0 failed), `agent-runtime` 46/47 (1 live-data drift failure), `intel` 0 run (2 stale test files do not compile), `agent-ops` no test targets — `crates/TEST_RESULTS.md:8-32`, logs in `crates/test-logs/`. Relay HTTP contract vs Node: VERIFIED with 5 diffs R1–R5, no switch — `crates/PARITY.md:12-14,35-53`, `crates/verify-logs/relay-blackbox.log`.
 
 | Suite | Result | Run it with |
 | --- | --- | --- |
@@ -195,7 +214,7 @@ A missing confidence or latency key is rejected even though a null value is acce
 | `server/queue/` | The job queue service and the resident agent crew |
 | `os/` | The Meta OS tree: services, the job queue, the dashboard, and the world packs under `os/worlds/` |
 | `kernel/` | The Meta OS kernel: boot, memory, scheduler, syscalls, console, keyboard. Rust, `no_std`. Build recipe in `kernel/BUILD_LOG.md` |
-| `services/` | 25 Goose system services over 18 shared libraries, run as host processes today, not yet booted on the kernel |
+| `services/` | 22 Goose system services COMPILED + 3 NOT BUILT (registry/devmgr/sockets README-only by design) over 18 shared libraries COMPILED, run as host processes today, not yet booted on the kernel (`services/BUILD_MATRIX.md`) |
 | `crates/` | The Rust workspace: the port of the OS and services to Rust |
 | `native/` | The macOS app shell that hosts the console in a web view |
 | `relay/` | Meta Nuntius, the product's own relay and viewer |
@@ -236,7 +255,10 @@ A missing confidence or latency key is rejected even though a null value is acce
 Meta OS is not only the systems. Underneath them sits a real
 operating system, built in the open in this repo:
 
-- **A bare-metal kernel** (`kernel/`, Rust, about 5,800 lines across 13 files):
+- **A bare-metal kernel** (`kernel/`, Rust, `kernel/src/` 15 files / 8171 lines
+  on this tree via `wc -l kernel/src/*.rs`; Lane A 2026-11-04 measured 14 files /
+  7988 lines pre-`pci.rs`, 16 files / 9794 lines incl. build files in
+  `os-build/LAYERS_TRUTH.md:9-13`):
   boot, memory map and page tables, a scheduler, ring-3
   userspace, fault isolation, and a shell that reports the
   machine's real state. The claim is one sentence and every
@@ -248,7 +270,8 @@ operating system, built in the open in this repo:
 - **Seven layers**: L1 boot, L2 kernel core, L3 drivers
   (Rust), L4 system services (Goose), L5 agent runtime
   (Lobster), L6 shell and apps, L7 programs. The Rust OS
-  layer is 19 crates; the whole OS side — kernel, crates, the
+  layer is 20 port crates COMPILED per `crates/PARITY.md` + `crates/TEST_RESULTS.md`
+  (relay VERIFIED with 5 diffs, no switch; plus harness/build-log dirs in `crates/`); the whole OS side — kernel, crates, the
   Python root they port, the agent layer — is roughly
   122,000 lines, tests excluded.
 - **The agent layer** (`agents/`): named, badged agents with
@@ -298,57 +321,63 @@ on one named thing outside the code.
 
 ### The kernel (L1–L3)
 
-Our own bare-metal kernel in `kernel/` (Rust, `no_std`, about
-5,800 lines across 13 files): boot, memory map and page
+Our own bare-metal kernel in `kernel/` (Rust, `no_std`, `kernel/src/`
+15 files / 8171 lines on this tree; Lane A measured 14 / 7988 pre-`pci.rs` —
+`os-build/LAYERS_TRUTH.md:9-13`): boot, memory map and page
 tables, scheduler, ring-3 userspace, fault isolation, a text
 shell that reports the machine's real state.
 
-**Status: VERIFIED** for the text-boot machine. **Proof:**
-four committed QEMU boot logs (`os-build/logs/K1-boot.txt`
-and runs 1–3), and the combined tree's gate at `c7aeb162` —
-gate GREEN 7/7 with the serial log at
-`os-build/logs/WAVE3-combined-serial.txt` (banner, alive line,
-readkey `got=3`, the fetch screen, `status`/`mem`/`ps`
-answered with real state, bad syscall 99 refused, a faulting
-task killed while the shell keeps answering, panic count 0).
+**Status: VERIFIED** for the QEMU-boot machine (K1-K5 PROVEN, K6 PARTIALLY
+PROVEN — Goose-load clause open). **Proof:** four committed QEMU boot logs
+(`os-build/logs/K1-boot.txt` and runs 1–3), the combined tree's gate at
+`c7aeb162` (gate GREEN 7/7, `os-build/logs/WAVE3-combined-serial.txt`), and
+R5 Lane E: `kernel/logs/E-boot-vnc.txt` (`META OS KERNEL - alive (K1)` :26,
+`KF-03 framebuffer: 1280x720` :24, 6 PCI devices :118-125, demand
+`page mapped, retry` :176, IPC self-test :811-817) + `kernel/logs/E-boot-20261104.txt`
+(readkey typed proof :912-937) + `kernel/logs/E-framebuffer.png` (1280x720
+screendump) — full quotes in `kernel/BUILD_LOG.md:179-218`. Known gap carried
+forward: no `user bad syscall 99 refused` line in E's log (drill lives in
+unspawned `badcall.rs`; refusal arm byte-identical — `kernel/BUILD_LOG.md:190-194`).
 The standing soak record is 73 minutes with 0 panics
 (R5-5); the 2-hour soak verdict is still **PENDING**.
 
-Two build-outs are in flight, stated plainly:
+R5 build-outs, stated plainly (`kernel/BUILD_LOG.md:219-239`):
 
-- **Demand paging (K3): CODE-INSPECTED.** The build is landed
-  and gate-1 GREEN (compile and test gate). The Mac boot gate
-  — one boot proving the demand leg, crasher containment, and
-  the outside-region refusal — is still owed, so K3 is not
-  called proven.
-- **Inter-task messaging (K4 IPC): CODE-INSPECTED.** The
-  mailbox build (syscalls 6 and 7, dispatched in `user.rs`
-  only; `syscalls.rs` stays frozen) is landed. Its gate-1 and
-  Mac boot gates are still owed.
-- **Kernel graphics: UNIMPLEMENTED.** A framebuffer driver
-  file exists (`kernel/src/framebuffer.rs`, 576 lines) and is
-  not wired to anything: the pinned bootloader (0.9.35) hands
-  the kernel no framebuffer. The fix is a written build order
-  (`os-build/KERNEL_FACE_BUILD_ORDER.md`, Route 1: bootloader
-  upgrade, then wiring, then the kernel draws the boot screen
-  and a window holding the real shell). Until its screendump
-  proof pack exists, the kernel's screen is the text console.
+- **Demand paging: VERIFIED (boot leg).** `demand: touching promised page` →
+  `INT user demand-fault addr 0x0000700000000000: page mapped, retry` →
+  `demand: zero-fill confirmed` → `demand: writeback OK` → outside-region
+  `task killed`, other tasks continue (`kernel/logs/E-boot-vnc.txt:175-180`).
+- **Readkey (syscall 5): VERIFIED (typed proof).** `readkey got 35 … got 28
+  (Enter)`, `readkey: enter seen, done got=9` (`kernel/logs/E-boot-20261104.txt:912-937`).
+- **Inter-task messaging (K4 IPC): CODE-INSPECTED + kernel self-test only.**
+  Syscalls 6/7 dispatched in `user.rs` only; `kernel/logs/E-boot-vnc.txt:811-817`
+  proves the kernel-side self-test (sent / full-box refusal / small-buffer refusal
+  / received 10 bytes / empty / dead-peer). The Buffy talker/listener ring-3
+  acceptance pair stays owed; prefix is `ipc selftest:`, NOT the pinned
+  `user ipc` gate lines. No `cap_query`: syscall 6 is IPC per Pax ruling, spec
+  `cap_query` collides and was deliberately excluded (`kernel/BUILD_LOG.md:221-226`).
+- **Kernel graphics: VERIFIED (framebuffer, not modesetting).** The Lane E premise
+  "no framebuffer under 0.9.35" is outdated: under bootloader `0.11.17` the
+  bootloader supplies 1280x720 Bgr and the kernel draws real rectangles on it
+  (desktop, bars, window, dock — `kernel/logs/E-framebuffer.png`). Still true:
+  no modesetting of its own, no windowing/compositor, no mouse — and the ISO
+  chain cannot use it (`os-build/iso/kernel/WHY_NOT_BOOTING.md`).
 
 ### Goose services (L4)
 
-The system-services layer, written in Goose: 25 services over
-18 shared libraries — supervisor, logging, a log-structured
+The system-services layer, written in Goose: 22 services COMPILED + 3 NOT BUILT
+(registry/devmgr/sockets README-only by design) over 18 shared libraries
+COMPILED (`services/BUILD_MATRIX.md`) — supervisor, logging, a log-structured
 filesystem, storage, time, network protocol pack, shell, agent
-host — each with a test program compiled and run as a real
-host process.
+host — each with a build log and host run.
 
-**Status: CODE-INSPECTED.** **Proof:** the committed run
-record — 33 programs, 1,253 checks, 0 failed — in
-`os-build/layer1/SERVICE_RUNS.md` with raw transcripts in
-`os-build/layer1/TRANSCRIPTS.md`. The honest boundary, stated
-in that directory itself: **this layer is not booted.** It
-runs as host processes over a substituted syscall surface;
-no Goose service has a process on the kernel yet.
+**Status: COMPILED (22+18) / NOT BUILT (3).** **Proof:** per-service
+`services/*/BUILD_LOG.txt` + `services/common/BUILD_LOG.txt` via
+`services/BUILD_MATRIX.md:7-55` (toolchain `/opt/homebrew/bin/goose`).
+Prior corpus `os-build/layer1/SERVICE_RUNS.md` (33 programs, 1,253 checks)
+remains as history. The honest boundary, unchanged: **this layer is not
+booted.** It runs as host processes over a substituted syscall surface;
+no Goose service has a process on the kernel yet (K6 last clause open).
 
 ### The agent layer, the Gym, and the Graft (L5)
 
@@ -375,10 +404,12 @@ The shell layer. Two parts, two different states:
   machine's real state on the real keyboard — proof is the
   combined serial log named under the kernel above.
 - The Lobster language and its programs (`lobster/`):
-  **CODE-INSPECTED.** Programs exist and run on the host
-  through the services layer; the windowed shell — the real
+  **WRITTEN (host-only).** Contracts in `lobster/RUNTIME_CONTRACT.md`
+  (identity/lifecycle/capabilities/audit/budget/bus) pass
+  `lobster/run-tests.sh` 9/9 on the host interpreter; demos run on the
+  host, none is kernel-enforced; the windowed shell — the real
   shell answering inside a kernel-drawn window — is
-  **UNIMPLEMENTED** and is the top of the kernel-face build
+  **NOT BUILT** and is the top of the kernel-face build
   order.
 
 ### Meta Imperium (Vigiles · Ignis · Medicus)
