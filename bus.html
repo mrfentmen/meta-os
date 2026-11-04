@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>muse-relay — live bus</title>
+<link rel="icon" href="data:,">
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -202,7 +203,7 @@
 <header>
   <h1>muse-relay</h1>
   <div id="credentials" hidden>
-  <input id="url" type="text" placeholder="https://…upstash.io" autocomplete="off">
+  <input id="url" type="text" placeholder="paste the bus REST URL here" autocomplete="off">
   <input id="token" type="password" placeholder="REST token" autocomplete="off">
   <input id="room" class="room" type="text" placeholder="room (blank = main)">
   <input id="mynick" class="room" type="text" placeholder="your nick">
@@ -215,7 +216,7 @@
 <div id="presence" hidden></div>
 <div id="topicbar" hidden></div>
 <div id="main">
-<div id="log"><div id="searchbar" hidden><input id="q" type="text" placeholder="search loaded history…" autocomplete="off"><span id="qcount"></span></div><div id="hint">
+<div id="log" tabindex="0" role="log" aria-label="Message bus"><div id="searchbar" hidden><input id="q" type="text" placeholder="search loaded history…" autocomplete="off"><span id="qcount"></span></div><div id="hint">
   Click Enter above, then enter your Upstash <code>REST URL</code> and
   <code>REST token</code> to watch the bus live. They are kept in this browser's <code>localStorage</code> only —
   nothing is sent anywhere except your Upstash instance, and nothing is
@@ -291,6 +292,21 @@ function maybeNotify(fromNick, text) {
 function setStatus(text, cls) {
   statusEl.textContent = text;
   statusEl.className = cls || "";
+}
+
+// Dead-backend rule (house style: name WHAT failed and WHICH port, like
+// os-build/face/board.html names 18935). The bus URL is user-supplied, so
+// the host:port is parsed out of it; nothing is ever hardcoded here.
+function busEndpoint() {
+  try {
+    return new URL($("url").value.trim()).host;
+  } catch (e) { return null; }
+}
+function backendDown(e) {
+  const ep = busEndpoint();
+  setStatus(ep
+    ? "bus backend unreachable on " + ep + " (is the bus backend running? " + e.message + ")"
+    : "bus backend unreachable — enter the bus REST URL first (" + e.message + ")", "err");
 }
 
 async function api(path) {
@@ -391,9 +407,10 @@ async function poll() {
     const hint = $("hint");
     if (hint && (msgs.length || seen)) hint.remove();
     const fresh = [];
+    let malformed = 0;
     for (let mi = 0; mi < msgs.length; mi++) {
       const m = msgs[mi];
-      if (typeof m !== "string") continue;
+      if (typeof m !== "string") { malformed += 1; continue; }
       const i = m.indexOf(":");
       const nick = i > 0 ? m.slice(0, i).trim() : "?";
       const text = i > 0 ? m.slice(i + 1).trim() : m;
@@ -401,7 +418,7 @@ async function poll() {
       const hl = highlightMentions(esc(text));
       const div = document.createElement("div");
       div.className = "msg" + (hl.mentionsYou ? " mentions-you" : "");
-      const at = new Date().toLocaleTimeString();
+      const at = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
       div.innerHTML = '<span class="nick" style="color:' + nickColor(nick) + '">' +
         esc(nick) + "</span><span>" + hl.html + '</span><span class="at">' +
         esc(at) + "</span>";
@@ -411,21 +428,38 @@ async function poll() {
       window.busUtil.runHooks("message", { nick, text, el: div, idx,
         room: busKey() });
     }
+    if (malformed > 0) {
+      const skip = document.createElement("div");
+      skip.className = "msg skipped";
+      skip.textContent = "skipped " + malformed + " malformed record" +
+        (malformed === 1 ? "" : "s") + " (not text — dropped, nothing rendered).";
+      log.appendChild(skip);
+    }
+    const emptyNote = document.getElementById("bus-empty");
+    if (emptyNote && (msgs.length || seen)) emptyNote.remove();
     if (msgs.length) {
       seen += msgs.length;
       log.scrollTop = log.scrollHeight;
     }
     if (!primed) {
-      // First successful poll: history is loaded, let panels backfill.
+      // First successful poll: history is loaded, panels backfill.
       window.busUtil.runHooks("connect",
         { room: busKey(), history: fresh });
+      if (!seen) {
+        // Empty bus is a state, not a blank page: say so in the log.
+        const d = document.createElement("div");
+        d.className = "msg empty-bus";
+        d.id = "bus-empty";
+        d.textContent = "the bus is empty — no messages in " + roomName() + " yet.";
+        log.appendChild(d);
+      }
     } else if (fresh.length) {
       window.busUtil.runHooks("poll", { room: busKey(), fresh });
     }
     primed = true;  // history loaded — notify only for new arrivals
     setStatus("live — " + busKey(), "live");
   } catch (e) {
-    setStatus("error: " + e.message, "err");
+    backendDown(e);
   } finally {
     pollInFlight = false;
   }
@@ -490,7 +524,7 @@ async function sendMessage() {
     input.value = "";
     poll();  // show it immediately
   } catch (e) {
-    setStatus("send failed: " + e.message, "err");
+    backendDown(e);
   } finally {
     btn.disabled = false;
     input.focus();
@@ -1781,7 +1815,7 @@ try {
     try { err(""); } catch (e) {}
     var sub = subtle();
     if (!sub) {
-      err("crypto.subtle is unavailable here (needs HTTPS or localhost) — " +
+      err("crypto.subtle is unavailable in this page context — " +
         "dead drops won't work in this context.");
       return;
     }
@@ -3107,220 +3141,10 @@ try {
 })();
 
 
-// feature: phone push notifications — web push via the muse-relay-push worker.
-// Self-contained IIFE. Subscriptions live in the Upstash hash
-// `muse-bus:push-subs` (this page already holds the token); the worker is a
-// stateless VAPID signing pipe. Hooks: poll (when YOUR OWN message arrives,
-// read all subs and ask the worker to tickle every phone). Each phone's
-// service worker fetches the real message text from the bus itself using that
-// phone's own stored credentials, so a forged tickle can only buzz, never
-// fake content.
-//
-// iPhone requirement (Apple's rule): add the page to the Home Screen first,
-// then enable here. Android works straight from the browser.
-(function () {
-  "use strict";
-  var W = (typeof window !== "undefined") ? window : {};
-  var U = W.busUtil, H = W.busHooks;
-  if (!U || !H || !H.poll || !U.panel || !U.api) return;
-
-  var WORKER_URL = "https://muse-relay-push.contactae2000.workers.dev"; // baked in at build time
-  var VAPID_PUBLIC = "BFNfE49nVut3zTDPJGefNqqpROAgoewJGD7xbx9OmMGiIwRWq1Vs_bbUtZ5pEuKPgtoEHcjKRJfwmhqLWJsv-Ns"; // baked in at build time
-  var SUBS_KEY = "muse-bus:push-subs";
-  var LS_ON = "relay-push-on";
-  var notifiedIdx = {}; // bus idx -> 1, this session only
-
-  function el(id) { return document.getElementById(id); }
-  function setMsg(t, cls) {
-    try { var m = el("push-msg"); if (m) { m.textContent = t; m.className = cls || ""; } } catch (e) {}
-  }
-  function pushOn() {
-    try { return localStorage.getItem(LS_ON) === "1"; } catch (e) { return false; }
-  }
-  function setPushOn(v) {
-    try { localStorage.setItem(LS_ON, v ? "1" : "0"); } catch (e) {}
-  }
-
-  function urlB64ToU8(s) {
-    s = String(s).replace(/-/g, "+").replace(/_/g, "/");
-    while (s.length % 4) s += "=";
-    var bin = atob(s), out = new Uint8Array(bin.length);
-    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-    return out;
-  }
-
-  async function sha256hex(str) {
-    var d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
-    var v = new Uint8Array(d), h = "";
-    for (var i = 0; i < v.length; i++) h += v[i].toString(16).padStart(2, "0");
-    return h;
-  }
-
-  function idb() {
-    return new Promise(function (res, rej) {
-      var r = indexedDB.open("muse-relay-push", 1);
-      r.onupgradeneeded = function () {
-        try { r.result.createObjectStore("kv"); } catch (e) {}
-      };
-      r.onsuccess = function () { res(r.result); };
-      r.onerror = function () { rej(r.error); };
-    });
-  }
-  function idbSet(k, v) {
-    return idb().then(function (db) {
-      return new Promise(function (res, rej) {
-        var tx = db.transaction("kv", "readwrite");
-        tx.objectStore("kv").put(v, k);
-        tx.oncomplete = function () { res(); };
-        tx.onerror = function () { rej(tx.error); };
-      });
-    });
-  }
-
-  // Snapshot the credentials the service worker needs to read the bus.
-  function saveSwCfg() {
-    try {
-      return idbSet("cfg", {
-        url: localStorage.getItem("relay-url") || "",
-        token: localStorage.getItem("relay-token") || "",
-        busKey: U.busKey(),
-        nick: U.myNick(),
-      }).catch(function () {});
-    } catch (e) { return Promise.resolve(); }
-  }
-
-  async function enablePush() {
-    setMsg("");
-    try {
-      if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
-        setMsg("push not supported in this browser.", "err"); return;
-      }
-      if (!("Notification" in window)) {
-        setMsg("this browser has no notifications.", "err"); return;
-      }
-      var perm = await Notification.requestPermission();
-      if (perm !== "granted") {
-        setMsg("permission denied — enable notifications for this site.", "err"); return;
-      }
-      setMsg("registering…");
-      var reg = await navigator.serviceWorker.register("/push-sw.js");
-      var sub = await reg.pushManager.getSubscription();
-      if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlB64ToU8(VAPID_PUBLIC),
-        });
-      }
-      setMsg("saving subscription…");
-      var subId = "sub:" + await sha256hex(sub.endpoint);
-      await U.api("/hset/" + SUBS_KEY + "/" + subId + "/" +
-                  encodeURIComponent(JSON.stringify(sub.toJSON())));
-      await saveSwCfg();
-      setPushOn(true);
-      setMsg("notifications on for this phone.", "ok");
-      refreshBtn();
-    } catch (e) {
-      setMsg("failed: " + (e && e.message || e), "err");
-    }
-  }
-
-  async function disablePush() {
-    setMsg("");
-    try {
-      var reg = await navigator.serviceWorker.getRegistration();
-      var sub = reg ? await reg.pushManager.getSubscription() : null;
-      if (sub) {
-        var subId = "sub:" + await sha256hex(sub.endpoint);
-        try { await U.api("/hdel/" + SUBS_KEY + "/" + subId); } catch (e) {}
-        try { await sub.unsubscribe(); } catch (e) {}
-      }
-      setPushOn(false);
-      setMsg("notifications off for this phone.", "ok");
-      refreshBtn();
-    } catch (e) {
-      setMsg("failed: " + (e && e.message || e), "err");
-    }
-  }
-
-  function refreshBtn() {
-    try {
-      var b = el("push-toggle");
-      if (b) b.textContent = pushOn() ? "Disable notifications" : "Enable notifications";
-    } catch (e) {}
-  }
-
-  function buildPanel() {
-    try {
-      var body = U.panel("pushnotify", "Phone notifications");
-      body.innerHTML =
-        "<div style='margin-bottom:6px'>Buzz every subscribed phone the moment " +
-        "a message lands — like a text. Your phone fetches the message itself, " +
-        "nothing extra is sent.</div>" +
-        "<div style='margin-bottom:6px'><b>iPhone:</b> Share &gt; Add to Home " +
-        "Screen first, then enable here. Android works straight from the browser.</div>" +
-        "<button id='push-toggle'>Enable notifications</button> " +
-        "<span id='push-msg'></span>";
-      el("push-toggle").addEventListener("click", function () {
-        if (pushOn()) disablePush(); else enablePush();
-      });
-      refreshBtn();
-      if (pushOn()) setMsg("notifications on for this phone.", "ok");
-    } catch (e) { /* panel is best-effort */ }
-  }
-
-  // Read all subscriptions from Upstash, fan out tickles via the worker,
-  // prune dead endpoints the worker reports.
-  async function fanOut() {
-    try {
-      var data = await U.api("/hgetall/" + SUBS_KEY);
-      var arr = (data && data.result) || [];
-      var subs = [];
-      for (var i = 0; i + 1 < arr.length; i += 2) {
-        try {
-          var s = JSON.parse(arr[i + 1]);
-          if (s && s.endpoint) subs.push(s);
-        } catch (e) {}
-      }
-      if (!subs.length) return;
-      var r = await fetch(WORKER_URL + "/send", {
-        method: "POST", mode: "cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subs: subs }),
-      });
-      var out = await r.json().catch(function () { return null; });
-      var dead = (out && out.deadEndpoints) || [];
-      for (var d = 0; d < dead.length; d++) {
-        try {
-          await U.api("/hdel/" + SUBS_KEY + "/sub:" + await sha256hex(dead[d]));
-        } catch (e) {}
-      }
-    } catch (e) { /* fan-out is best-effort */ }
-  }
-
-  // When one of YOUR OWN messages arrives via poll, buzz every phone.
-  // Only the sender's browser fires, and each bus idx fires once.
-  H.poll.push(function (ctx) {
-    try {
-      if (!pushOn()) return;
-      saveSwCfg(); // keep the service worker's credentials fresh
-      var fresh = (ctx && ctx.fresh) || [];
-      var me = (U.myNick() || "").toLowerCase();
-      if (!me) return;
-      var mine = false;
-      for (var i = 0; i < fresh.length; i++) {
-        var m = fresh[i];
-        if (!m || typeof m.idx === "undefined") continue;
-        if (String(m.nick || "").toLowerCase() === me && !notifiedIdx[m.idx]) {
-          notifiedIdx[m.idx] = 1;
-          mine = true;
-        }
-      }
-      if (mine) fanOut();
-    } catch (e) { /* fan-out is best-effort */ }
-  });
-
-  try { buildPanel(); } catch (e) {}
-})();
+// Phone push (web-push via an internet worker) was removed here:
+// this OS has no internet in the demo, the worker URL is gone,
+// and /push-sw.js never existed. Local @-mention notices
+// (the Notify-me button) still work — they never leave the page.
 
 
 // === feature: intelPanel ===
