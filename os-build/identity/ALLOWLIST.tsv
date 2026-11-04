@@ -358,3 +358,28 @@ os-build/lanes/R2_T1_REPORT.md	ubuntu	attribution	lane report quotes evidence li
 os-build/lanes/R2_T1_REPORT.md	Ubuntu	attribution	lane report quotes evidence lines; documentation
 os-build/lanes/R2_T1_REPORT.md	Xubuntu	attribution	lane report quotes evidence lines; documentation
 os-build/lanes/R2_T1_REPORT.md	xubuntu	attribution	lane report quotes evidence lines; documentation
+# R3 merge: prose and probes merged from the round-two/eval lanes (each row names why it is not a shipped string)
+os-build/identity/SURFACES.md	ubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/identity/SURFACES.md	Ubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/identity/SURFACES.md	xubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/identity/WALLPAPERS.md	ubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/identity/WALLPAPERS.md	Ubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/identity/WALLPAPERS.md	Xubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/lanes/AGENT_DEBRAND_4_REPORT.md	ubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/lanes/AGENT_DEBRAND_4_REPORT.md	Xubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/lanes/R2_T2_REPORT.md	Ubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/lanes/R2_T2_REPORT.md	Xubuntu	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/lanes/R2_T3_REVIEW.md	canonical	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/lanes/R2_T4_REPORT.md	canonical	attribution	lane document describing the de-Ubuntu purge; names the base and the strings it removes, never shipped
+os-build/tools/DEBRAND_GATE.md	ubuntu	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+os-build/tools/DEBRAND_GATE.md	Ubuntu	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+os-build/tools/DEBRAND_GATE.md	Xubuntu	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+os-build/tools/DEBRAND_GATE.md	xubuntu	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+os-build/tools/DEBRAND_GATE.md	canonical	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+os-build/tools/DEBRAND_GATE.md	Canonical	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+os-build/tools/verify_tree.sh	ubuntu	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+os-build/tools/verify_tree.sh	Ubuntu	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+os-build/tools/verify_tree.sh	Xubuntu	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+os-build/iso/payload-theme/apps/check-dock-tiles.sh	Xubuntu	attribution	gate's own grep patterns and failure reasons name the strings it forbids; probe text, never shipped
+design/meta-musica-notes.html	canonical	compat	HTML rel=canonical head tag and prose about the canonical page; not the company name
+server/queue/metaosd_store.mjs	canonical	compat	JSON canonicalisation for the receipt HMAC (canonical(obj)), an English/programming word, not the company
