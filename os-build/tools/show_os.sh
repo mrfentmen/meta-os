@@ -97,6 +97,10 @@ DISPLAY_ARGS="-display cocoa,show-cursor=on,zoom-to-fit=on"
 
 # Audio: build the device list so a QEMU without coreaudio support still boots
 # (a missing sound card is a silent OS, not a dead one).
+# No-boot guard (OS-4): probing `-audiodev help` already executes the QEMU
+# binary, so the guard sits before it, not just before the VM launch.
+. "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/qemu_guard.sh"
+qemu_guard "show_os.sh"
 AUDIO_ARGS=""
 if [ "${META_NO_AUDIO:-0}" = "1" ]; then
   echo "show_os: sound disabled (META_NO_AUDIO=1)"

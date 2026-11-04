@@ -58,6 +58,9 @@ fi
 
 QEMU="qemu-system-aarch64"
 command -v "$QEMU" >/dev/null 2>&1 || { echo "proof_boot: FAIL: $QEMU not found" >&2; exit 2; }
+# No-boot guard (OS-4): before any QEMU execution, including the launch below.
+. "$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)/qemu_guard.sh"
+qemu_guard "proof_boot.sh"
 [ -f "$IMAGE" ] || { echo "proof_boot: FAIL: image not found: $IMAGE" >&2; exit 2; }
 [ -f "$KERNEL" ] || { echo "proof_boot: FAIL: kernel not found: $KERNEL" >&2; exit 2; }
 [ -f "$INITRD" ] || { echo "proof_boot: FAIL: initrd not found: $INITRD" >&2; exit 2; }

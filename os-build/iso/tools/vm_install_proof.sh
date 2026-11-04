@@ -22,6 +22,9 @@
 set -euo pipefail
 
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+# No-boot guard (OS-4) is sourced here and enforced inside start_vm(), which
+# is the only function that executes QEMU (dry, iso, and reboot paths alike).
+. "$HERE/../../tools/qemu_guard.sh"
 STAMP=$(date -u '+%Y%m%dT%H%M%SZ')
 PROOF="$HERE/../proof/$STAMP"
 ISO=""
@@ -106,6 +109,8 @@ shot() {  # shot <name> <label>
 }
 
 start_vm() {  # start_vm <boot-order> <with-cdrom 0|1>
+    # No-boot guard (OS-4): every boot path (dry, iso, reboot) enters here.
+    qemu_guard "vm_install_proof.sh"
     local boot=$1 with_cdrom=$2
     local args=(
         -machine q35 -m 4096 -smp 2 "${ACCEL_ARGS[@]}"

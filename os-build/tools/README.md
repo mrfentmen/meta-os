@@ -75,3 +75,24 @@ If one of those exits non-zero, the document it feeds is stale and the run is no
 |---|---|---|
 | `os-build/tools/drive.py` | `main`, `buffy/pax-12h-plan` | Drives the Pax-12h checkpoint list. Not on this branch — do not look for it here. |
 | `os-build/mcp/mcp_client.py` | this branch | The MCP client the lane used to wire its toolchain (`mcp/WIRING.md`). Not part of any build. |
+
+## QEMU guard (OS-4): which tools boot, and how they refuse
+
+Rule: no tool in this directory may start a VM unless `METAOS_ALLOW_QEMU=1`
+is present in its environment. The check lives once in
+`os-build/tools/qemu_guard.sh` (`qemu_guard "<tool>"`, read via `printenv`,
+never a flag or a file) and every booting tool sources it before its first
+QEMU execution. Refusal is `refused: <tool> boots QEMU. set
+METAOS_ALLOW_QEMU=1 to allow it.` with exit 2. The allowed path
+(`METAOS_ALLOW_QEMU=1 …`) is deliberately unexercised — see
+`os-build/lanes/AGENT_OS_4_REPORT.md`.
+
+| Tool | Boots a VM? | Guard |
+|---|---|---|
+| `show_os.sh` | yes (`"$QEMU" … &`, also the `-audiodev help` probe) | sourced + `qemu_guard "show_os.sh"` before the audio probe |
+| `proof_boot.sh` | yes (detached `"$QEMU" … &`) | sourced + `qemu_guard "proof_boot.sh"` after the binary check |
+| `proof_iso.sh` | yes (detached `"$QEMU" … &`) | sourced + `qemu_guard "proof_iso.sh"` after the binary check |
+| `frames_boot.sh` | yes (`qemu-system-aarch64 … &`) | sourced + `qemu_guard "frames_boot.sh"` before the launch |
+| `drive.py` | standalone mode only (`Popen(["qemu-system-x86_64", …])`); `--monitor` attach mode does not boot | `os.environ` check before `Popen`, exit 2 |
+| `../iso/tools/vm_install_proof.sh` | yes, all modes (`--dry` boots firmware too) | sourced + `qemu_guard` as first line of `start_vm()` |
+| every other script here (`sync_image.sh`, `proof_session.sh`, `proof_agent_pipeline.sh`, `dock_click_through.sh`, `diag_wall.sh`, `set_spark_key.sh`, `install_*.sh`, `*_gate.sh`, checkers) | no (no `qemu-system` execution found) | none needed |
