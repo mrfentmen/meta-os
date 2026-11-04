@@ -2,16 +2,17 @@
 runs a real Linux app behind the fullscreen browser. Allow-list only —
 no shell, no arguments. Runs on 127.0.0.1:18931, loopback only.
 
-Xubuntu 24.04.5 base (verified from casper/filesystem.manifest):
+Base-image mapping (verified from casper/filesystem.manifest + APP_MATRIX.md):
 - pcmanfm (absent, LXDE) -> thunar (present 4.18.8, Xfce file manager)
 - lxterminal (absent, LXDE) -> xfce4-terminal (present 1.1.3)
 - mousepad (present 0.6.1) -> kept
 - orage (absent, deprecated; no standalone calendar in base) ->
   thunderbird (present as snap, ships calendar) for a native calendar
 - galculator (absent) -> mate-calc (present 1.26.0)
-- chromium (absent as deb; Ubuntu shim) -> firefox (present as snap)
+- chromium (absent as deb; transitional shim) -> firefox (present as snap)
 """
 import json
+import shutil
 import subprocess
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -48,7 +49,11 @@ class H(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/apps":
-            return self._send(200, {"ok": True, "apps": sorted(ALLOW)})
+            # Computed, not hard-coded twice: an app is listed only when its
+            # binary resolves on this machine's PATH right now. A failed
+            # lookup drops the app from the list instead of lying about it.
+            live = sorted(a for a, c in ALLOW.items() if shutil.which(c[0]))
+            return self._send(200, {"ok": True, "apps": live})
         return self._send(404, {"ok": False, "error": "not found"})
 
     def do_POST(self):
@@ -63,12 +68,15 @@ class H(BaseHTTPRequestHandler):
         except Exception:
             return self._send(400, {"ok": False, "error": "bad json"})
         if app not in ALLOW:
-            return self._send(403, {"ok": False, "error": "not allowed"})
+            return self._send(403, {"ok": False,
+                                     "error": "not allowed: " + str(app)})
         try:
             subprocess.Popen(ALLOW[app], stdout=subprocess.DEVNULL,
                              stderr=subprocess.DEVNULL)
         except FileNotFoundError:
-            return self._send(500, {"ok": False, "error": "not installed"})
+            return self._send(500, {"ok": False, "error":
+                                     "not installed on this image: " +
+                                     " ".join(ALLOW[app])})
         return self._send(200, {"ok": True, "app": app})
 
 

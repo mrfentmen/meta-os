@@ -15,7 +15,7 @@ Provenance (copy-only, no forks):
   (`os-build/metaos1-base/packages.txt`) + Hana MIME map. No source .desktop
   exists in repo — these are net-new, package-named.
 - `atril.desktop` (active) vs `evince.desktop` (NoDisplay=true, degraded-off):
-  Xubuntu 24.04.5 base ships atril where KEEP lists evince. OC2 does NOT edit
+  The base ISO ships atril where KEEP lists evince. OC2 does NOT edit
   Hana's `os-build/metaos1-base/packages.txt` or `os-build/metaos1-base/defaults/mimeapps.list`. This pack ships both and
   maps PDF to atril in the drop-in `mimeapps.list` with a comment. If Hana
   records evince present, OC1 flips one line to evince.desktop — no repack.
