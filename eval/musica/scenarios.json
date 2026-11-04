@@ -1,0 +1,141 @@
+{
+ "scenarios": [
+  {
+   "description": "hn029 take-001 measurement against the keeper bar",
+   "expected_verdict": "keeper",
+   "kind": "keeper-measure",
+   "scenario_id": "MUS-KEEP-01",
+   "session": "hn029-chipsynth",
+   "take_id": "take-001"
+  },
+  {
+   "description": "hn029 take-004 measurement against the keeper bar (the session's only reject)",
+   "expected_verdict": "reject",
+   "kind": "keeper-measure",
+   "scenario_id": "MUS-KEEP-02",
+   "session": "hn029-chipsynth",
+   "take_id": "take-004"
+  },
+  {
+   "description": "hn029-chipsynth session counts from session.json",
+   "expected": {
+    "clones": 0,
+    "keepers": 11,
+    "rejects": 1,
+    "takes": 12
+   },
+   "kind": "session",
+   "scenario_id": "MUS-SESS-01",
+   "session": "hn029-chipsynth"
+  },
+  {
+   "description": "overnight-001 session counts plus its overnight report",
+   "expected": {
+    "clones": 0,
+    "elapsed_s": 76.6,
+    "keepers": 85,
+    "reject_rate": 0.15,
+    "rejects": 15,
+    "takes": 100
+   },
+   "kind": "session",
+   "scenario_id": "MUS-SESS-02",
+   "session": "overnight-001"
+  },
+  {
+   "description": "hn038 brief sessions, 4 takes each, all keepers, no clones",
+   "kind": "brief-sessions",
+   "scenario_id": "MUS-SESS-03",
+   "sessions": [
+    {
+     "clones": 0,
+     "keepers": 4,
+     "rejects": 0,
+     "session": "hn038-chipsynth",
+     "takes": 4
+    },
+    {
+     "clones": 0,
+     "keepers": 4,
+     "rejects": 0,
+     "session": "hn038-ambient",
+     "takes": 4
+    },
+    {
+     "clones": 0,
+     "keepers": 4,
+     "rejects": 0,
+     "session": "hn038-boom-bap",
+     "takes": 4
+    }
+   ]
+  },
+  {
+   "description": "Variation calibration from similarity.py: distinct-seed keepers at most 0.9242, a gain-changed clone at 0.9997, threshold 0.98",
+   "kind": "variation",
+   "pairs": [
+    {
+     "expected_clone": false,
+     "similarity": 0.9242
+    },
+    {
+     "expected_clone": true,
+     "similarity": 0.9997
+    }
+   ],
+   "scenario_id": "MUS-VAR-01",
+   "threshold": 0.98
+  },
+  {
+   "description": "hn029 rights log: 11 tracks checked, 11 passed, none rejected; an empty rights line fails the rule",
+   "expected": {
+    "passed": 11,
+    "rejected": 0,
+    "tracks_checked": 11
+   },
+   "kind": "rights",
+   "probes": [
+    {
+     "expected": false,
+     "licence": ""
+    },
+    {
+     "expected": true,
+     "licence": "own \u2014 generated in-studio by Meta Musica; no third-party material"
+    }
+   ],
+   "scenario_id": "MUS-RIGHTS-01",
+   "session": "hn029-chipsynth"
+  },
+  {
+   "description": "hn029 normalisation: target -16 LUFS, tolerance 1.0, all 11 tracks within tolerance",
+   "expected": {
+    "all_within": true,
+    "target_lufs": -16.0,
+    "tolerance_lufs": 1.0,
+    "tracks": 11
+   },
+   "kind": "normalization",
+   "scenario_id": "MUS-NORM-01",
+   "session": "hn029-chipsynth"
+  },
+  {
+   "description": "hn029 catalogue: 11 tracks, every track with licence, provenance, file, and sha256",
+   "expected": {
+    "tracks": 11
+   },
+   "kind": "catalogue",
+   "scenario_id": "MUS-CAT-01",
+   "session": "hn029-chipsynth"
+  },
+  {
+   "description": "overnight-001 catalogue: 85 tracks, every track with licence, provenance, file, and sha256",
+   "expected": {
+    "tracks": 85
+   },
+   "kind": "catalogue",
+   "scenario_id": "MUS-CAT-02",
+   "session": "overnight-001"
+  }
+ ]
+}
