@@ -46,6 +46,10 @@
 </template>
 
 <script src="logo-background.js"></script>
-<script src="face.js"></script>
+<!-- type="module" is required: face.js opens with `import { … } from "./logic.mjs"`.
+     As a classic script the browser threw "Cannot use import statement outside a
+     module" on line 8 and stopped, so no listener was ever attached and the Log In
+     button and Enter key did nothing — the page looked alive and was not. -->
+<script type="module" src="face.js"></script>
 </body>
 </html>
