@@ -443,3 +443,4 @@ os-build/lanes/WAKEUP_NATIVE_DESKTOP.md	ubuntu	attribution	lane report: records 
 os-build/metaos-brand/brand.sh	Ubuntu	attribution	the script rewrites a stock rootfs; these are its search and removal patterns
 os-build/metaos-brand/brand.sh	Xubuntu	attribution	the script rewrites a stock rootfs; these are its search and removal patterns
 os-build/metaos-brand/brand.sh	xubuntu	attribution	the script rewrites a stock rootfs; these are its search and removal patterns
+os-build/RELEASE.md	ubuntu	attribution	quotes the gate row name and the exact value that was fixed
