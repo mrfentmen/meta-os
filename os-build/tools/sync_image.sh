@@ -84,7 +84,9 @@ show() {   # $1 = humans-readable label, rest = command
 }
 
 count_tiles() { grep -cE '^[[:space:]]*add_app ' /mnt/img/opt/face/meta-desktop.sh 2>/dev/null || echo 0; }
-count_icons() { ls /mnt/img/usr/share/icons/metaos 2>/dev/null | wc -l | tr -d ' '; }
+# Count the PNGs, not every entry: the icon dir also holds index.theme and a
+# 128x128/ subdir, so a plain ls made a synced image look two icons ahead.
+count_icons() { find /mnt/img/usr/share/icons/metaos -maxdepth 1 -name '*.png' 2>/dev/null | wc -l | tr -d ' '; }
 has() { [ -e "$1" ] && echo yes || echo no; }
 
 if [ "$DRY" = 0 ]; then
@@ -99,7 +101,7 @@ fi
 echo
 echo "--- what the image now has ---"
 show "dock tiles (repo: $(grep -cE '^[[:space:]]*add_app ' /repo/os-build/face/meta-desktop.sh))" count_tiles
-show "dock icons (repo: $(ls /repo/os-build/iso/payload-theme/icons/metaos | wc -l | tr -d ' '))" count_icons
+show "dock icons (repo: $(find /repo/os-build/iso/payload-theme/icons/metaos -maxdepth 1 -name '*.png' | wc -l | tr -d ' '))" count_icons
 show "site aegis/index.html" has /mnt/img/opt/face-site/aegis/index.html
 show "site bus.html" has /mnt/img/opt/face-site/bus.html
 show "vendor/three.min.js" has /mnt/img/opt/face-site/vendor/three.min.js
