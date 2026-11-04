@@ -188,7 +188,77 @@ smoothed over.
 
 ## 5. Open questions for the boss
 
-- **The repo to pull:** the URL was not in the message. Need it (and whether it
-  goes alongside `meta-os` or replaces something).
+- ~~The repo to pull~~ — answered in §6. Eleven repos, cloned to `refs/`.
 - Video length: 3:30 as above, or a 60-second cut for the submission form?
 - Voiceover: your voice, or captions only?
+
+---
+
+## 6. Round 2 — the eleven reference repos
+
+Cloned shallow into `meta-os/refs/` (git-ignored, ~1.2 GB, licences noted). They
+are **reference material, not dependencies**: nothing here gets vendored into the
+image without a licence decision.
+
+| Repo | What it actually is | Licence | What we take |
+|---|---|---|---|
+| `heygen-com/hyperframes` | "Write HTML. Render video. Built for agents." HTML/CSS → mp4, node ≥22 | Apache-2.0 | The **title / transition / end card** renderer: our cards are already HTML, so a card is a file, not a screenshot of a browser |
+| `geneva-render/geneva` | CLI video editor; an edit is a JSON doc; titles and graphics are HTML+CSS drawn without a browser | MIT | The **main compose step**: our 1080p frames become an edit document, captions and labels are HTML |
+| `lemomo-ai/lemo-opuscar` | 66 film styles written in code, agent-directed | MIT / CC BY 4.0 | Style presets for the intro beat only — not the whole film |
+| `calesthio/OpenMontage` | Agentic video production pipeline | AGPLv3 | **Read-only**: pipeline shape (script → shots → render → review). AGPL code does not ship |
+| `gabosarmiento/demotape` | macOS demo recorder that narrates, captions, and cuts vertical | MIT | Caption typography and pacing reference; we do **not** use its recorder (it films the host screen) |
+| `remorses/usecomputer` | Desktop automation CLI: screenshot, click, type, scroll | MIT | Fallback driver if QMP input ever fails; not the primary path |
+| `AThevon/genjutsu` | Claude-Code skills that make an interface move and give a product its look | MIT | **UI look**: motion vocabulary and the "brand pack" structure for our token file |
+| `nexu-io/motion-anything` | Motion engine: 403 recipes, 58 video templates, 2,680 icons | see LICENSE | **Icon and motion recipes** — the 3 icon languages start from its icon grid |
+| `antvis/chart-visualization-skills` | AntV chart skills (statistical, graph, geo, unstructured) | see LICENSE | **Aegis** and any dashboard chart we currently fake with a number |
+| `every-app/open-seo` | Open-source Semrush alternative | see LICENSE | Not this round — marketing site, after submission |
+| `CoreBunch/Instatic` | Self-hosted CMS on Bun | MIT | Not this round. Possible later for the docs site |
+
+**The video stack, decided:** `record_demo.sh` captures the guest framebuffer →
+`geneva` composes the edit (captions, chapter labels, end card as HTML/CSS) →
+`hyperframes` renders the 3–4 HTML motion cards (boot, Trio, agents, end). No
+host screen recording, no cloud render, no per-second fee.
+
+---
+
+## 7. Round 2 — make the UI look nicer, then boot (order matters)
+
+Everything here happens **before** the next boot, because a boot costs a full
+sync + 2 minutes and we have hours, not days. Each item ends in a PNG we can
+look at without a VM.
+
+1. **Icons — pick one language.** 27 tiles currently ship as 3-tone blue glyphs
+   on transparency. Draw **three candidate languages** (A: monoline glyph on an
+   ink plate; B: solid ink→blue plate, knockout glyph; C: ASCII/dot-matrix glyph
+   in a bracket frame — the one that matches the spinner), 128 + 256 px, on light
+   and dark, in one contact sheet. Boss picks; then all 27.
+2. **Cursor.** White arrow, black outline, blue accent — drawn at 24/32/48 px
+   plus the hover/busy set (pointer, text, resize, wait). Xcursor pack, not a PNG.
+3. **Button language.** The twelve items in §2b, drawn as one sheet: traffic
+   lights (done), dock dot/badge/progress, real top-bar toggles, search field,
+   row states, sliders, toggles, toast, dialog, segmented control, tabs, empty
+   state, two loaders.
+4. **Dock and bar polish.** Tile spacing, running dot, hover lift, bar height,
+   clock weight, and the mark — measured off `face/face.css`, applied as tokens.
+5. **Window chrome proof.** A 3-window screenshot with the x/–/+ trio on a GTK
+   window, a WebKit app window, and a dialog — all three must agree.
+
+Then: sync → boot → click through every dock tile → fix what looks wrong → only
+then record.
+
+---
+
+## 8. Round 2 — app tweaks queued before boot
+
+Found by the lanes and by me; each is a real defect, not polish:
+
+- **Music3D burns 223% CPU while "Stopped"** (agent-4 measured it in the guest).
+  A stopped scene must stop its loop.
+- **Science and Music3D run at ~168% of a core** under llvmpipe at 1180x780.
+  Need a frame cap and a pause when the window is not focused.
+- **Trio/Imperium** must load through `127.0.0.1:8080`, never `file://` (§1.1).
+- **Terminal identity**: prompt blue `metaos`, no Ubuntu Mono font name, no
+  `ubuntu` GECOS left in the account DB.
+- **Agents page**: a submitted job must reach a run record and a receipt, and
+  every refusal must name its port.
+- **Aegis**: real run records only; no chart that shows a number we did not read.

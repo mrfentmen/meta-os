@@ -22,3 +22,6 @@ os-build/aegis/r11/run-secrets.txt
 # Local-only deploy staging (rebuilt by os/docs/deploy-trio-frontend.sh; never commit)
 .pages-trio-dist/
 .wrangler/
+
+# Reference repos cloned for study (plan/PLAN.md §6). Not dependencies.
+refs/
