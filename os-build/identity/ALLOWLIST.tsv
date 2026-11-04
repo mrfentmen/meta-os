@@ -306,3 +306,22 @@ os-build/iso/payload-theme/fonts/test-no-ubuntu.sh	Ubuntu	attribution	checker pr
 os-build/iso/payload-theme/fonts/META-FONTS.md	ubuntu	attribution	honest evidence record quoting what was found and removed
 os-build/iso/payload-theme/fonts/META-FONTS.md	Ubuntu	attribution	honest evidence record quoting what was found and removed
 os-build/iso/payload-theme/fonts/META-FONTS.md	Xubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/calamares/REPORT_E_F.md	ubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/calamares/REPORT_E_F.md	Ubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/calamares/REPORT_E_F.md	Xubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/calamares/REPORT_E_F.md	xubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/calamares/tools/check_installer.py	ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/calamares/tools/check_installer.py	Ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/calamares/tools/check_installer.py	Xubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/calamares/tools/check_installer.py	xubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/calamares/tools/check_target.sh	ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/calamares/tools/check_target.sh	Ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/payload-theme/grub/README.md	Ubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/payload-theme/grub/README.md	xubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/payload-theme/lightdm/check-greeter.sh	ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/payload-theme/lightdm/check-greeter.sh	Ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/payload-theme/lightdm/check-greeter.sh	xubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/payload-theme/lightdm/README.md	Ubuntu	attribution	honest evidence record quoting what was found and removed
+os-build/iso/payload-theme/lightdm/README.md	canonical	attribution	honest evidence record quoting what was found and removed
+os-build/iso/plymouth/check-plymouth.sh	ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
+os-build/iso/plymouth/check-plymouth.sh	Ubuntu	attribution	checker probe pattern that fails on the banned word; the fixer, not the leak
