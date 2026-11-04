@@ -1,0 +1,18 @@
+{
+  "posted": {
+    "status": 201,
+    "json": {
+      "index": 0
+    }
+  },
+  "read": {
+    "status": 200,
+    "json": {
+      "room": "eval-bus",
+      "total": 1,
+      "messages": [
+        "eval: hello bus [ts:1793793419]"
+      ]
+    }
+  }
+}

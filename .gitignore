@@ -32,3 +32,6 @@ os-build/captures/app-icons-*/
 # Agent run ledgers and per-agent memory are runtime state; re-created by running.
 runs/
 memory/
+
+# Local bus state (R2-T3): file-backed store defaults outside the tree; never commit it if pointed inside
+bus-data/

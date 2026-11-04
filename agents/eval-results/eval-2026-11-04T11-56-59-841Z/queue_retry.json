@@ -1,0 +1,17 @@
+{
+  "first": {
+    "ok": true,
+    "id": "q-1-r2",
+    "continuesFrom": "run-abc",
+    "existing": false
+  },
+  "second": {
+    "ok": true,
+    "id": "q-1-r2",
+    "continuesFrom": "run-abc",
+    "existing": true
+  },
+  "files": [
+    "q-1-r2.job.json"
+  ]
+}

@@ -1,0 +1,12 @@
+[Unit]
+Description=OC2 agent layer: daily offline eval gate (R2-T3 patrol/eval lane)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=%h/.config/oc2-agent/env
+ExecStart=/usr/bin/node ${OC2_CHECKOUT}/agents/eval.mjs --gate
+
+[Install]
+WantedBy=default.target

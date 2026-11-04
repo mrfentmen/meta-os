@@ -1,0 +1,14 @@
+{
+  "badRoom": {
+    "status": 400,
+    "json": {
+      "error": "room name must match [a-z0-9-]{1,32}"
+    }
+  },
+  "badSev": {
+    "status": 400,
+    "json": {
+      "error": "severity must be one of \"info\", \"warning\", \"critical\""
+    }
+  }
+}

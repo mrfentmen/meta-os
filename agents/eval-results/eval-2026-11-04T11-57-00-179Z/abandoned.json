@@ -1,0 +1,13 @@
+{
+  "marked": [
+    "run-old"
+  ],
+  "freshAbandoned": false,
+  "abandoned": {
+    "run": "run-old",
+    "startedAt": "2026-11-02T12:00:00.000Z",
+    "markedAt": "2026-11-04T12:00:00.000Z",
+    "ageMs": 172800000,
+    "reason": "stale-run"
+  }
+}

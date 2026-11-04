@@ -1,0 +1,253 @@
+{
+  "ts": 1793793420431,
+  "iso": "2026-11-04T11:57:00.431Z",
+  "commit": "047c1f162dbdd0cefa62b81dac5d7aae5af58904",
+  "provider": "stub (offline: in-process stubs, loopback board, local python3 stdlib only; no network, no paid calls)",
+  "runId": "eval-2026-11-04T11-57-00-179Z",
+  "total": 12,
+  "passed": 12,
+  "failed": 0,
+  "score": 1,
+  "tasks": [
+    {
+      "id": "bus-post-read",
+      "name": "Board bus posts and reads back one message",
+      "area": "bus",
+      "artifact": "bus_messages.json",
+      "pass": "POST /rooms/<room>/messages returns index 0 and GET since=-1 returns the exact nick+text line",
+      "ok": true,
+      "detail": "index 0, line round-trips"
+    },
+    {
+      "id": "bus-room-validation",
+      "name": "Board bus refuses bad room names and severities",
+      "area": "bus",
+      "artifact": "bus_validation.json",
+      "pass": "uppercase room name and bogus severity both return HTTP 400 with a JSON error body",
+      "ok": true,
+      "detail": "both refused 400 with JSON errors"
+    },
+    {
+      "id": "bus-notify-id",
+      "name": "Board notify id is deterministic and shaped",
+      "area": "bus",
+      "artifact": "bus_notify.json",
+      "pass": "same inputs give the same id twice, shape is ntf- + 16 lowercase hex",
+      "ok": true,
+      "detail": "ntf-5db4ec7fada7fdff deterministic"
+    },
+    {
+      "id": "queue-retry",
+      "name": "Failed queue job retries with continuation",
+      "area": "queue",
+      "artifact": "queue_retry.json",
+      "pass": "retryJob on a code-1 result returns ok:true with id <base>-r2 and continuesFrom the failed run; a repeat call returns existing:true, no second file",
+      "ok": true,
+      "detail": "r2 continues run-abc, repeat idempotent"
+    },
+    {
+      "id": "queue-retry-refuses-clean",
+      "name": "Clean queue job is not retryable",
+      "area": "queue",
+      "artifact": "queue_retry_refused.json",
+      "pass": "retryJob on a code-0 result returns ok:false with a reason naming the clean finish",
+      "ok": true,
+      "detail": "refused: job q-9 finished cleanly; nothing to retry"
+    },
+    {
+      "id": "receipt-valid",
+      "name": "Valid Spark receipts verify clean",
+      "area": "receipt",
+      "artifact": "receipt_valid.jsonl",
+      "pass": "server/queue/receipt_validate.py exits 0 on two well-formed Spark lines",
+      "ok": true,
+      "detail": "2 receipt line(s), 0 error(s)"
+    },
+    {
+      "id": "receipt-tamper",
+      "name": "Tampered receipts are caught with line numbers",
+      "area": "receipt",
+      "artifact": "receipt_tampered.jsonl",
+      "pass": "validator exits 1 and names each bad line number (non-Spark line carrying a dollar estimate; negative latency)",
+      "ok": true,
+      "detail": "exit 1, lines 2+3 named"
+    },
+    {
+      "id": "patrol-empty-record",
+      "name": "Patrol files a record even when it finds nothing",
+      "area": "patrol",
+      "artifact": "patrol_empty.json",
+      "pass": "Patrol.run_cycle with an empty camera list returns outcome no-cameras and writes a status record with state idle",
+      "ok": true,
+      "detail": "outcome no-cameras, status idle recorded"
+    },
+    {
+      "id": "watchman-alert",
+      "name": "Watchman alarms on a failed unit naming unit and reason",
+      "area": "watchman",
+      "artifact": "notices.jsonl",
+      "pass": "a job whose agent exits 1 leaves a severity-alarm notice whose title names the agent and whose body carries the exit code",
+      "ok": true,
+      "detail": "alarm names fail-fast + exit 1"
+    },
+    {
+      "id": "dedupe-window",
+      "name": "One failure rings once inside the dedupe window",
+      "area": "watchman",
+      "artifact": "dedupe.json",
+      "pass": "10 identical alarm notifies with the same key produce exactly 1 unrung (suppressed:false) record",
+      "ok": true,
+      "detail": "10 sends, 1 bell, 9 suppressed"
+    },
+    {
+      "id": "heartbeat-daily",
+      "name": "Daily heartbeat proves the scheduler ran",
+      "area": "scheduler",
+      "artifact": "heartbeat.jsonl",
+      "pass": "two beats the same UTC day write one line; a beat the next day writes a second line carrying commit + scheduler",
+      "ok": true,
+      "detail": "1 line day one, 2nd line next day"
+    },
+    {
+      "id": "cleanup-stale",
+      "name": "Runs older than a day are marked abandoned",
+      "area": "scheduler",
+      "artifact": "abandoned.json",
+      "pass": "a 2-day-old run with no exit marker gains abandoned.json + a run-abandoned ledger line; a fresh run is untouched",
+      "ok": true,
+      "detail": "run-old abandoned, run-fresh live"
+    }
+  ],
+  "gate": {
+    "applies": true,
+    "ok": true,
+    "last": {
+      "file": "/private/tmp/agent-r2-t3/agents/eval-results/eval-2026-11-04T11-56-59-841Z.json",
+      "ts": 1793793420098,
+      "iso": "2026-11-04T11:57:00.098Z",
+      "commit": "047c1f162dbdd0cefa62b81dac5d7aae5af58904",
+      "provider": "stub (offline: in-process stubs, loopback board, local python3 stdlib only; no network, no paid calls)",
+      "runId": "eval-2026-11-04T11-56-59-841Z",
+      "total": 12,
+      "passed": 12,
+      "failed": 0,
+      "score": 1,
+      "tasks": [
+        {
+          "id": "bus-post-read",
+          "name": "Board bus posts and reads back one message",
+          "area": "bus",
+          "artifact": "bus_messages.json",
+          "pass": "POST /rooms/<room>/messages returns index 0 and GET since=-1 returns the exact nick+text line",
+          "ok": true,
+          "detail": "index 0, line round-trips"
+        },
+        {
+          "id": "bus-room-validation",
+          "name": "Board bus refuses bad room names and severities",
+          "area": "bus",
+          "artifact": "bus_validation.json",
+          "pass": "uppercase room name and bogus severity both return HTTP 400 with a JSON error body",
+          "ok": true,
+          "detail": "both refused 400 with JSON errors"
+        },
+        {
+          "id": "bus-notify-id",
+          "name": "Board notify id is deterministic and shaped",
+          "area": "bus",
+          "artifact": "bus_notify.json",
+          "pass": "same inputs give the same id twice, shape is ntf- + 16 lowercase hex",
+          "ok": true,
+          "detail": "ntf-5db4ec7fada7fdff deterministic"
+        },
+        {
+          "id": "queue-retry",
+          "name": "Failed queue job retries with continuation",
+          "area": "queue",
+          "artifact": "queue_retry.json",
+          "pass": "retryJob on a code-1 result returns ok:true with id <base>-r2 and continuesFrom the failed run; a repeat call returns existing:true, no second file",
+          "ok": true,
+          "detail": "r2 continues run-abc, repeat idempotent"
+        },
+        {
+          "id": "queue-retry-refuses-clean",
+          "name": "Clean queue job is not retryable",
+          "area": "queue",
+          "artifact": "queue_retry_refused.json",
+          "pass": "retryJob on a code-0 result returns ok:false with a reason naming the clean finish",
+          "ok": true,
+          "detail": "refused: job q-9 finished cleanly; nothing to retry"
+        },
+        {
+          "id": "receipt-valid",
+          "name": "Valid Spark receipts verify clean",
+          "area": "receipt",
+          "artifact": "receipt_valid.jsonl",
+          "pass": "server/queue/receipt_validate.py exits 0 on two well-formed Spark lines",
+          "ok": true,
+          "detail": "2 receipt line(s), 0 error(s)"
+        },
+        {
+          "id": "receipt-tamper",
+          "name": "Tampered receipts are caught with line numbers",
+          "area": "receipt",
+          "artifact": "receipt_tampered.jsonl",
+          "pass": "validator exits 1 and names each bad line number (non-Spark line carrying a dollar estimate; negative latency)",
+          "ok": true,
+          "detail": "exit 1, lines 2+3 named"
+        },
+        {
+          "id": "patrol-empty-record",
+          "name": "Patrol files a record even when it finds nothing",
+          "area": "patrol",
+          "artifact": "patrol_empty.json",
+          "pass": "Patrol.run_cycle with an empty camera list returns outcome no-cameras and writes a status record with state idle",
+          "ok": true,
+          "detail": "outcome no-cameras, status idle recorded"
+        },
+        {
+          "id": "watchman-alert",
+          "name": "Watchman alarms on a failed unit naming unit and reason",
+          "area": "watchman",
+          "artifact": "notices.jsonl",
+          "pass": "a job whose agent exits 1 leaves a severity-alarm notice whose title names the agent and whose body carries the exit code",
+          "ok": true,
+          "detail": "alarm names fail-fast + exit 1"
+        },
+        {
+          "id": "dedupe-window",
+          "name": "One failure rings once inside the dedupe window",
+          "area": "watchman",
+          "artifact": "dedupe.json",
+          "pass": "10 identical alarm notifies with the same key produce exactly 1 unrung (suppressed:false) record",
+          "ok": true,
+          "detail": "10 sends, 1 bell, 9 suppressed"
+        },
+        {
+          "id": "heartbeat-daily",
+          "name": "Daily heartbeat proves the scheduler ran",
+          "area": "scheduler",
+          "artifact": "heartbeat.jsonl",
+          "pass": "two beats the same UTC day write one line; a beat the next day writes a second line carrying commit + scheduler",
+          "ok": true,
+          "detail": "1 line day one, 2nd line next day"
+        },
+        {
+          "id": "cleanup-stale",
+          "name": "Runs older than a day are marked abandoned",
+          "area": "scheduler",
+          "artifact": "abandoned.json",
+          "pass": "a 2-day-old run with no exit marker gains abandoned.json + a run-abandoned ledger line; a fresh run is untouched",
+          "ok": true,
+          "detail": "run-old abandoned, run-fresh live"
+        }
+      ],
+      "gate": {
+        "applies": false,
+        "ok": true,
+        "reason": "gate not requested"
+      }
+    },
+    "reason": "score 1 >= last 1"
+  }
+}

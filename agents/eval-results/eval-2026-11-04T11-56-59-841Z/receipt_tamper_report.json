@@ -1,0 +1,4 @@
+{
+  "exit": 1,
+  "output": "line 2: a non-Spark receipt must carry a null est_cost_usd\nline 3: latency_ms must be a non-negative integer\n3 receipt line(s), 2 error(s)\n"
+}

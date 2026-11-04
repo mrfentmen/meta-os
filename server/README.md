@@ -289,3 +289,65 @@ envelope and submit adapter through an injected stub queuePost
 (envelope fields and deterministic id, disabled / not-configured
 refusals before any transport call, filed-id echo, and submit-failure
 states). No test fires a live call.
+
+## Local message bus (`server/bus.mjs`, R2-T3 Section A)
+
+Local-only, file-backed bus. Node stdlib only, no npm deps, no
+Upstash/Redis import. Default port **18935** (the board port
+`js/site-chat.js` already uses); binds **127.0.0.1 only**.
+
+```sh
+node server/bus.mjs            # BUS_PORT=18935, data dir below
+node server/bus.test.mjs       # selftest: random port, exits 0/1
+```
+
+Data dir (one location, outside the git tree): `$BUS_DATA_DIR`, else
+`$METAOS_STATE/bus`, else `~/.local/state/metaos/bus`.
+
+| Endpoint | Notes |
+| --- | --- |
+| `GET /` | `{ ok, service, board_compat, dataDir, rooms }` |
+| `GET /health` | `{ ok, store: "file", dataDir, rooms, count, counts, lastWrite, uptimeSec, pageSize, maxLimit }` |
+| `GET /rooms` | `[{ room, count }]`; `general` always exists |
+| `POST /rooms { room }` | create; 200 exists / 201 created; needs token |
+| `GET /rooms/<room>/messages?since=<n>&limit=<k>` | board-compat lines + parallel `items`; `since=-1`/missing = all; `limit` 1–1000 |
+| `POST /rooms/<room>/messages { nick, text, attachmentIds? }` | 201 `{ index, id, ts, delivery }`; needs token |
+| `POST /rooms/<room>/notify { severity, topic, text }` | 201 `{ index, id (ntf-…), seq }`; needs token |
+| `GET /rooms/<room>/history?cursor=<id\|seq>&limit=<k>` | paged items, oldest-first; default page size 50, max 200; `nextCursor` |
+| `GET /rooms/<room>/search?q=<text>&limit=<k>` | case- and accent-insensitive over nick+text; max 200 |
+| `GET /rooms/<room>/presence` | `{ online, count }`, 60 s expiry |
+| `POST /rooms/<room>/presence { nick, action }` | `join`/`leave`/`heartbeat`; needs token |
+| `POST /rooms/<room>/join { nick }` | presence-join alias; needs token |
+| `POST /rooms/<room>/attachments { filename, mime, dataBase64 }` | 1 MiB cap; allowlist `image/png, image/jpeg, text/plain, application/pdf`; named codes `attachment_malformed` / `attachment_too_large` / `attachment_mime_not_allowed` / `attachment_filename_invalid`; needs token |
+| `GET /rooms/<room>/attachments/<id>` | raw bytes with stored MIME |
+| `POST /rooms/<room>/prune { before, keep_last? }` | retention-guarded: refuses below 500 (`retention_would_leave_fewer_than_500`); needs token |
+| `GET /rooms/<room>/events?cursor=<seq\|id>` | SSE `data:` JSON per message + `: heartbeat`; replays missed then streams live; `Last-Event-ID` also honoured |
+
+Validation mirrors `board/board.mjs` (room `[a-z0-9-]{1,32}`, nick/text
+single-line 1–40/1–2000, 16384-byte body cap, `ntf-` id shape), so
+`js/site-chat.js` reads work unchanged; writes need the local token
+(`<dataDir>/token`, mode 0600, created on first boot) via
+`x-bus-token` or `Authorization: Bearer`. Every stored item carries
+`delivery: { state: "stored", reason }`; refusals are 4xx with a named
+`code` and `delivery.state: "failed"`. Logs are one JSON line per
+write (`{ ts, room, id, result }`) — never the body. Appends are
+serialised through a single-writer chain. The server never
+auto-deletes; `/prune` keeps seqs stable (no renumbering).
+
+On-disk format: `<dataDir>/rooms/<room>.jsonl` (one message object
+per line: `id, seq, room, nick, text, ts, tsMs, kind, delivery`, plus
+`severity/topic/notifyId` for notifies and `attachments` when
+linked); `<dataDir>/attachments/<room>/<id>-<safe-name>` (raw bytes,
+record keeps the relative `attachments/<room>/…` path only — never
+inside the JSONL); `<dataDir>/presence.json` (ephemeral snapshot);
+`<dataDir>/token` (0600); `<dataDir>/meta.json` (counts/lastWrite).
+Migration from the old relay: Upstash `muse-bus` / `muse-bus:room:<r>`
+lists (`<nick>: <text>` lines, newest-500 trim) and `board/...jsonl`
+`{ room, line }` records map to bus items by parsing the line,
+assigning `seq` in order, `id = msg-<16 hex>`, `ts` from the
+`[ts:…]` suffix (or file mtime when absent), and copying any
+`BLOB:`-style side keys to `attachments/` with the relative path
+recorded. Remote path is off by default: `BUS_UPSTASH` unset/empty
+runs local; `BUS_UPSTASH=1` refuses to start. No Upstash token is
+read in the default path (`process.env` reads are only `BUS_DATA_DIR`,
+`METAOS_STATE`, `BUS_UPSTASH`, `BUS_PORT`/`BOARD_PORT`).
