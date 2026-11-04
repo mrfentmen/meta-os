@@ -64,6 +64,6 @@ no Apple/Ubuntu/Xubuntu marks in visible strings.
 - `icons/`: 20 glyphs + `index.theme` (`Inherits=Papirus,elementary-xfce,
   hicolor`) + `check-icons.sh` (98/98 resolve in image).
 - `apps/dock/`: 12 launchers; all 17 dock-app Names resolve (5 pre-existing).
-- `gtk.css`: Inter-first stack; terminal profile: Ubuntu Mono 11
+- `gtk.css`: Inter-first stack; terminal profile: Monospace 11
   (`FONTS.md` records both licences, no binaries shipped).
 - `metaos-theme/` left untouched (superseded tree, kept as-is).

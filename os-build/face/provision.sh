@@ -63,6 +63,55 @@ for src in "$HERE"/native/meta-*.py; do
   echo "provision(face): native $prog -> /usr/local/bin/$prog"
 done
 $SUDO chmod +x "$DST/meta-desktop.sh" "$DST/session.sh" 2>/dev/null || true
+# start.html was the "Meta OS Desktop — apps" hub behind the Web tile. The tile
+# is gone (the dock is the app list) and so is the page: a copy left in an old
+# image stayed reachable at 18900/start.html long after the source was deleted.
+$SUDO rm -f "$DST/start.html" 2>/dev/null || true
+
+# 1a4) the network. The base image's NetworkManager.conf says `managed=false`,
+# which means NetworkManager owns no interface at all: no DHCP lease, no DNS,
+# no camera feed, no model call. Everything that needs the network then fails
+# in a way that looks like an app bug ("did not load from the camera host").
+# The image also ships no netplan and no connection profile, so nothing else
+# brings the link up either. Fix both here: NM manages wired NICs, and a
+# DHCP profile exists for the first ethernet device it sees.
+NM_CONF="$ROOT/etc/NetworkManager/NetworkManager.conf"
+if [ -d "$ROOT/etc/NetworkManager" ]; then
+  if [ -f "$NM_CONF" ]; then
+    _tmp=$(mktemp)
+    awk '
+      $0 ~ /^\[main\]/ { inmain = 1 }
+      $0 ~ /^\[/ && $0 !~ /^\[main\]/ { inmain = 0 }
+      inmain && $0 ~ /^managed=/ { print "managed=true"; seen = 1; next }
+      { print }
+      END { if (!seen) print "managed=true" }
+    ' "$NM_CONF" > "$_tmp" && $SUDO mv "$_tmp" "$NM_CONF" || rm -f "$_tmp"
+    echo "provision(face): NetworkManager managed=true (was: $(grep -c '^managed=false' "$NM_CONF" 2>/dev/null || echo 0) false lines left)"
+  else
+    printf '[main]\nmanaged=true\n' | $SUDO tee "$NM_CONF" >/dev/null
+    echo "provision(face): wrote $NM_CONF (managed=true)"
+  fi
+  _conn="$ROOT/etc/NetworkManager/system-connections/metaos-wired.nmconnection"
+  $SUDO mkdir -p "$(dirname "$_conn")"
+  cat <<'NMEOF' | $SUDO tee "$_conn" >/dev/null
+[connection]
+id=Meta wired
+uuid=6f5f2c1e-6a4f-4c2b-9a7e-1d2c3b4a5e60
+type=ethernet
+autoconnect=true
+autoconnect-priority=10
+
+[ethernet]
+
+[ipv4]
+method=auto
+
+[ipv6]
+method=auto
+NMEOF
+  $SUDO chmod 600 "$_conn" 2>/dev/null || true
+  echo "provision(face): DHCP profile -> /etc/NetworkManager/system-connections/metaos-wired.nmconnection"
+fi
 
 # 1a3) the desktop theme pieces the native session reads at login. Each has
 # its own owner path, and a missing piece is a silent visual fallback — so
@@ -235,7 +284,7 @@ if [ -f "$THEME_SRC/panel/xfce4-panel.xml" ]; then
     $SUDO install -m644 "$THEME_SRC/panel/xfce4-panel.xml" "$d/xfce4-panel.xml"
   done
   # …and the users who already exist. meta-desktop.sh copies the channel at
-  # login, but the image's own account had a two-panel Xubuntu layout in its
+  # login, but the image's own account had a two-panel stock base-image layout in its
   # home that won the last time the session started, so the "top bar" was on
   # the bottom edge. Writing it here means the next login cannot disagree.
   for home in "$ROOT"/home/*; do
@@ -401,10 +450,11 @@ fi
 # 1b) stage repo-root product pages for the dock iframes (served on 18934).
 # Boards data only: os/worlds is ~100M, the pages fetch just pack.json,
 # officina runs and custos runs.
-# index.html and bus.html are gone from this repo: the hub page listed apps the
-# dock already lists, and the bus page was a client for a hosted relay we do not
-# run. The Board (18935) is the one messaging app. surfaces.html is the root
-# page now, so it is the sentinel that says this tree is a product site.
+# The old hub pages are gone from this repo: index.html listed apps the dock
+# already lists, bus.html was a client for a hosted relay we do not run, and
+# start.html was the same app list behind the "Web" tile. The Board (18935) is
+# the one messaging app. surfaces.html is the root page now, so it is the
+# sentinel that says this tree is a product site.
 if [ -f "$SITE_SRC/surfaces.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
   $SUDO mkdir -p "$SITE_DST"
   for f in surfaces.html styles.css manifest.webmanifest icon-180.png; do
@@ -418,7 +468,19 @@ if [ -f "$SITE_SRC/surfaces.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
       $SUDO cp -r "$SITE_SRC/$d" "$SITE_DST/$d"
     fi
   done
-  for lab in molecules music3d; do
+  # The ASCII logo studio is not a product page: it is the renderer the
+  # wallpaper frames are generated with at build time, and no dock tile opens
+  # it. Keeping it in the image only gave the app tour one more screen to skip.
+  $SUDO rm -f "$SITE_DST/design/meta-ascii-logo-studio.html" 2>/dev/null || true
+  # Pages an older provision copied and nothing opens any more. Copying the
+  # tree forward never deletes, so they survived every sync: the relay bus page
+  # (the one messaging app is the Board on 18935) and the 3D-notes lab that
+  # shipped under a music name. Remove them, or a stale path keeps resolving.
+  $SUDO rm -f "$SITE_DST/bus.html" 2>/dev/null || true
+  $SUDO rm -rf "$SITE_DST/labs/music3d" 2>/dev/null || true
+  # molecules only: labs/music3d is the wrong music app (it draws the same
+  # piano-roll as 3D Notes but opens under a music name), so it is not staged.
+  for lab in molecules; do
     if [ -f "$SITE_SRC/labs/$lab/index.html" ]; then
       $SUDO rm -rf "$SITE_DST/labs/$lab"
       $SUDO mkdir -p "$SITE_DST/labs"
@@ -512,6 +574,8 @@ fi
 # boot, so the kiosk always falls back to XFCE. See SESSION.md.
 RUNTIME_DST=/opt/face
 RUNTIME_SITE=/opt/face-site
+# The trio API server, installed by the ISO build next to its js/ imports.
+RUNTIME_SERVER=/usr/share/metaos/server
 mkdir -p "$U"
 cat > "$U/face-http.service" <<EOF
 [Unit]
@@ -593,14 +657,23 @@ Restart=on-failure
 [Install]
 WantedBy=default.target
 EOF
+# 18934 is the trio's backend as well as the product site. It used to be a
+# plain http.server, which served the pages and 404'd every /api/* call: the
+# divisions showed "camera list returned HTTP 404" and no snapshots. The repo's
+# own zero-dependency server (server/server.mjs) answers /api/cameras,
+# /api/ipcam/:id/snapshot, /api/assess and /api/agent/ask, and serves the same
+# static tree through METAOS_STATIC_ROOT, so one process covers both.
 cat > "$U/face-site.service" <<EOF
 [Unit]
-Description=face product site 18934 (repo-root pages for dock iframes)
+Description=face product site + trio API 18934 (pages and /api/*)
 After=network.target
 [Service]
-WorkingDirectory=$RUNTIME_SITE
-ExecStart=/usr/bin/python3 -m http.server 18934 --bind 127.0.0.1
+WorkingDirectory=$RUNTIME_SERVER
+Environment=PORT=18934
+Environment=METAOS_STATIC_ROOT=$RUNTIME_SITE
+ExecStart=/usr/bin/node $RUNTIME_SERVER/server.mjs
 Restart=on-failure
+RestartSec=2
 [Install]
 WantedBy=default.target
 EOF
@@ -689,7 +762,7 @@ else
   for f in face-http face-site face-launcher face-facts face-ptyd face-board face-files face-notesd; do
     if [ -f "$U/$f.service" ]; then echo "unit $f: OK"; else echo "unit $f: FAIL"; FAIL=1; fi
   done
-  for f in shell.html start.html login.html notesd.py ptyd.py launcher.py files.py facts.py notes.html calendar.html settings.html dashboard.html search.js; do
+  for f in shell.html login.html notesd.py ptyd.py launcher.py files.py facts.py notes.html calendar.html settings.html dashboard.html search.js; do
     if [ -f "$DST/$f" ]; then echo "face $f: OK"; else echo "face $f: FAIL"; FAIL=1; fi
   done
   if [ -f "$U/default.target.wants/face.target" ]; then echo "face.target enabled: OK"; else echo "face.target enabled: FAIL"; FAIL=1; fi

@@ -41,7 +41,7 @@ if [ "$CHECK_SITE" = 1 ]; then
   for f in surfaces.html styles.css manifest.webmanifest icon-180.png; do
     check_site "$f"
   done
-  for f in labs/molecules/index.html labs/music3d/index.html labs/science-lab-review/index.html \
+  for f in labs/molecules/index.html labs/science-lab-review/index.html \
            aegis/index.html \
            design/meta-musica-notes.html \
            design/meta-custos-watch.html design/meta-officina-blueprint.html \
@@ -104,12 +104,12 @@ if git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- trio 
 else
   log "site: trio not in $BRANCH, keeping previous copy"
 fi
-for lab in molecules music3d science-lab-review; do
+for lab in molecules science-lab-review; do
   git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- "labs/$lab" 2>/dev/null || log "site: labs/$lab not in $BRANCH, skipped"
 done
 if [ -d "$WORK/labs" ]; then
   mkdir -p "$SITE_DST/labs"
-  for lab in molecules music3d science-lab-review; do
+  for lab in molecules science-lab-review; do
     if [ -d "$WORK/labs/$lab" ]; then
       rm -rf "$SITE_DST/labs/$lab"
       cp -r "$WORK/labs/$lab" "$SITE_DST/labs/$lab"
@@ -135,6 +135,9 @@ for d in js vendor design; do
     log "site: $d not in $BRANCH, keeping previous copy"
   fi
 done
+# The logo studio is a build-time renderer (it makes the wallpaper frames), not
+# a page any tile opens. Drop it from the staged site copy.
+rm -f "$SITE_DST/design/meta-ascii-logo-studio.html" 2>/dev/null || true
 rm -rf "$SITE_DST/os"
 for p in os/worlds/custos/pack.json os/worlds/dep/pack.json os/worlds/doe/pack.json os/worlds/dsny/pack.json os/worlds/ems/pack.json os/worlds/fdny/pack.json os/worlds/hospital/pack.json os/worlds/mta/pack.json os/worlds/nypd/pack.json os/worlds/officina/pack.json os/worlds/custos/runs os/worlds/officina/runs; do
   git --git-dir="$MIRROR" --work-tree="$WORK" checkout -q -f "$BRANCH" -- "$p" 2>/dev/null || log "site: $p not in $BRANCH, skipped"

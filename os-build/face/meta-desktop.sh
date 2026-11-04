@@ -31,8 +31,8 @@ while [ $# -gt 0 ]; do
     *) echo "meta-desktop: unknown flag $1" >&2; exit 2 ;;
   esac
 done
-# The base image's account is "ubuntu"; after rename_user.sh it is "meta".
-# Hardcoding either one is how this script quietly did nothing on an image
+# The live account is "meta" (rename_user.sh renames the base account).
+# Hardcoding either name is how this script quietly did nothing on an image
 # where the other name was live, so ask the account database first and only
 # then fall back to the two names this project has ever used.
 [ -n "$HOME_DIR" ] || HOME_DIR="${HOME:-}"
@@ -113,7 +113,7 @@ fi
 if command -v xfconf-query >/dev/null 2>&1 && timeout 5 xfconf-query -c xfwm4 -l >/dev/null 2>&1; then
   timeout 5 xfconf-query -c xfce4-keyboard-shortcuts \
     -p '/commands/custom/<Primary><Alt>t' \
-    -n -t string -s 'xfce4-terminal --disable-server' >>"$LOG" 2>&1 \
+    -n -t string -s 'xfce4-terminal --disable-server' >>"${LOG:-/dev/null}" 2>&1 \
     && say "shortcut <- Ctrl+Alt+T runs xfce4-terminal --disable-server" \
     || say "shortcut <- Ctrl+Alt+T NOT set (xfconf-query failed or timed out, see log)"
 else
@@ -401,9 +401,10 @@ add_app fire      "Ignis"     fire            "$IMPERIUM" --division ignis
 add_app ems       "Medicus"   ems             "$IMPERIUM" --division medicus
 
 if [ -x "$META_APP" ]; then
-  # Web opens the local start page on 18900. It used to open 18934/index.html,
-  # the dead hub that listed apps the dock already lists; that page is gone.
-  add_app web       "Web"       web             "$META_APP" --title Web --url http://127.0.0.1:18900/start.html
+  # No "Web" tile. It opened start.html, the "Meta OS Desktop — apps" hub: one
+  # page listing the apps the dock already lists, plus a note that Imperium is
+  # one program and not the system. The page is deleted (the dock is the app
+  # list), so a tile for it would open nothing.
   add_app dashboard "Dashboard" dashboard       "$META_APP" --title Dashboard --url http://127.0.0.1:18900/dashboard.html
   add_app calendar  "Calendar"  calendar        "$META_APP" --title Calendar --url http://127.0.0.1:18900/calendar.html
   add_app musica    "Musica"    musica          "$META_APP" --title Musica --url http://127.0.0.1:18900/musica.html
@@ -422,7 +423,9 @@ if [ -x "$META_APP" ]; then
   # It replaced the face board.py stub, the Nuntius relay/viewer and the
   # Upstash-token bus page; rooms, presence and NOTIFY lines all live here.
   add_app messages  "Messages"  messages        "$META_APP" --title Messages --url http://127.0.0.1:18935/
-  add_app music3d   "Music 3D"  music3d         "$META_APP" --title "Music 3D" --url http://127.0.0.1:18934/labs/music3d/index.html
+  # No "Music 3D" tile: labs/music3d draws the same piano-roll as 3D Notes but
+  # opens under a music name, so the dock offered two music apps and the wrong
+  # one came first. Musica is the music app; 3D Notes is the note lab.
   add_app notes3d   "3D Notes"  notes3d         "$META_APP" --title "3D Notes" --url http://127.0.0.1:18934/design/meta-musica-notes.html
   # Aegis is agent-3's page (lands at /opt/face-site/aegis/). Same contract as
   # Messages: the tile is wired now, meta-app explains a missing backend.
