@@ -9,7 +9,10 @@
 #               /etc/issue, /etc/issue.net, /etc/hostname, /etc/hosts
 #               (127.0.1.1 line), login motd scripts, dead plymouth themes,
 #               stock Xubuntu wallpapers, every backdrop pointer, Xubuntu
-#               names in desktop-directories/applications
+#               names in desktop-directories/applications,
+#               xfce4 backdrops greybird-wall, desktop-base paint dirs,
+#               warty-final-ubuntu.png (now a symlink to meta-ink.png),
+#               the text.plymouth alternative (now metaos-text)
 #   kept        ID_LIKE=debian, /etc/apt/sources.list.d/*.sources, package
 #               names, fonts-ubuntu, 90-updates-available (real information)
 #
@@ -212,6 +215,98 @@ EOF
     done
   done
 
+  # No stock desktop may ever paint green. Three separate fallback paths
+  # all ended at stock art (verified on the image, read-only):
+  #   1. xfdesktop falls back to xfce4/backdrops/greybird-wall-1920x1200.png
+  #      when the configured backdrop is missing or not yet resolved.
+  #   2. /usr/share/desktop-base ships ten Debian themes; nothing in the
+  #      tree references their wallpaper/ dirs (only stock settings apps
+  #      read them), so the paint dirs go but the theme shells stay.
+  #   3. The greeter default path warty-final-ubuntu.png still carries
+  #      Ubuntu's name; it becomes a symlink to meta-ink.png because the
+  #      gsettings schema default and provision.sh both still name it.
+  #      If face provision runs after this script it replaces the link
+  #      with a regular file of identical Meta bytes — still no green.
+  # The payload never shipped these files, so there is no payload copy
+  # to delete: the image side is the only copy and it is removed here.
+  GRAY="$ROOT/usr/share/xfce4/backdrops/greybird-wall-1920x1200.png"
+  if [ -e "$GRAY" ] || [ -L "$GRAY" ]; then
+    rm -f "$GRAY"
+    changed "removed /usr/share/xfce4/backdrops/greybird-wall-1920x1200.png"
+  else
+    echo "  unchanged greybird-wall (already gone)"
+  fi
+
+  for t in "$ROOT"/usr/share/desktop-base/*-theme; do
+    [ -d "$t" ] || continue
+    for w in wallpaper wallpaper-withlogo; do
+      if [ -e "$t/$w" ]; then
+        rm -rf "$t/$w"
+        changed "removed ${t#"$ROOT"}/$w"
+      fi
+    done
+  done
+  echo "  desktop-base theme shells kept (paint dirs only removed)"
+
+  DEBRAND_HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+  INK_SRC="$DEBRAND_HERE/../iso/payload-theme/wallpapers/meta-ink.png"
+  [ -f "$INK_SRC" ] || INK_SRC=""
+  INK_DST="$ROOT/usr/share/backgrounds/meta-ink.png"
+  WARTY="$ROOT/usr/share/backgrounds/warty-final-ubuntu.png"
+  if [ -n "$INK_SRC" ]; then
+    [ -L "$INK_DST" ] && rm -f "$INK_DST"
+    cp -f "$INK_SRC" "$TMP"
+    install_text "$INK_DST" "$TMP"
+    if [ -L "$WARTY" ] && [ "$(readlink "$WARTY")" = "meta-ink.png" ]; then
+      echo "  unchanged warty-final-ubuntu.png (symlink -> meta-ink.png)"
+    else
+      rm -f "$WARTY"
+      ( cd "$ROOT/usr/share/backgrounds" && ln -s meta-ink.png warty-final-ubuntu.png )
+      changed "warty-final-ubuntu.png -> meta-ink.png symlink (schema default + provision.sh still name the old path)"
+    fi
+  elif [ -e "$WARTY" ] || [ -L "$WARTY" ]; then
+    echo "debrand: payload meta-ink.png missing, cannot replace warty art" >&2
+    rm -f "$TMP"
+    exit 1
+  fi
+
+  # Plymouth: keep the themes that can draw without stock art. metaos is
+  # ours; text and details are the text-mode fallbacks when KMS fails (a
+  # deleted text theme would leave an unreadable boot); spinner is the
+  # minimal graphical fallback some units still reference. Everything else
+  # (emerald, joy, Ubuntu art) is deleted from the image.
+  for d in "$ROOT"/usr/share/plymouth/themes/*/; do
+    [ -d "$d" ] || continue
+    base=$(basename "$d")
+    case "$base" in
+      metaos|text|details|spinner|metaos-text) echo "  unchanged plymouth theme $base (kept)" ;;
+      *) rm -rf "$d"; changed "removed plymouth theme $base" ;;
+    esac
+  done
+
+  # The Meta text theme: the text.plymouth alternative pointed at
+  # ubuntu-text, which the loop above just deleted. Create ours first,
+  # then repoint the alternative at it.
+  TEXTDIR="$ROOT/usr/share/plymouth/themes/metaos-text"
+  cat > "$TMP" <<'EOF'
+[Plymouth Theme]
+Name=Meta OS Text
+Description=Meta OS fallback text boot (no stock art)
+ModuleName=text
+EOF
+  install_text "$TEXTDIR/metaos-text.plymouth" "$TMP"
+
+  ALT="$ROOT/etc/alternatives/text.plymouth"
+  WANT="/usr/share/plymouth/themes/metaos-text/metaos-text.plymouth"
+  if [ -L "$ALT" ] && [ "$(readlink "$ALT")" = "$WANT" ]; then
+    echo "  unchanged text.plymouth alternative (points at metaos-text)"
+  else
+    old=$(readlink "$ALT" 2>/dev/null || echo missing)
+    mkdir -p "$(dirname "$ALT")"
+    ln -sfn "$WANT" "$ALT"
+    changed "text.plymouth alternative -> metaos-text (was: $old)"
+  fi
+
   rm -f "$TMP"
   echo "debrand: done, $CHANGED change(s). Verify with --check; apt stays on noble in sources.list.d on purpose."
 }
@@ -351,6 +446,54 @@ do_check() {
   [ -z "$dirty" ] \
     && say "desktop names clean" ok "no buntu string" "clean" "" \
     || say "desktop names clean" no "no buntu string" "dirty:$dirty" "still names Ubuntu/Xubuntu:$dirty"
+  # No green fallbacks: every stock paint path must be gone, the warty
+  # name must resolve to Meta ink, the text boot must resolve to Meta.
+  GRAY="$ROOT/usr/share/xfce4/backdrops/greybird-wall-1920x1200.png"
+  if [ -e "$GRAY" ] || [ -L "$GRAY" ]; then
+    say "greybird-wall removed" no "absent" "present" "still present: /usr/share/xfce4/backdrops/greybird-wall-1920x1200.png"
+  else
+    say "greybird-wall removed" ok "absent" "absent" ""
+  fi
+  DB_BAD=""
+  for t in "$ROOT"/usr/share/desktop-base/*-theme; do
+    [ -d "$t" ] || continue
+    for w in wallpaper wallpaper-withlogo; do
+      [ -e "$t/$w" ] && DB_BAD="$DB_BAD ${t#"$ROOT"}/$w"
+    done
+  done
+  [ -z "$DB_BAD" ] \
+    && say "desktop-base paint removed" ok "no wallpaper dirs" "clean" "" \
+    || say "desktop-base paint removed" no "no wallpaper dirs" "present:$DB_BAD" "stock paint still present:$DB_BAD"
+  if [ -L "$ROOT/usr/share/backgrounds/warty-final-ubuntu.png" ] \
+    && [ "$(readlink "$ROOT/usr/share/backgrounds/warty-final-ubuntu.png")" = "meta-ink.png" ]; then
+    say "warty resolves to meta-ink" ok "symlink -> meta-ink.png" "symlink -> meta-ink.png" ""
+  else
+    actual="missing"
+    [ -e "$ROOT/usr/share/backgrounds/warty-final-ubuntu.png" ] \
+      && actual="regular file ($(wc -c <"$ROOT/usr/share/backgrounds/warty-final-ubuntu.png" | tr -d ' ') bytes)"
+    [ -L "$ROOT/usr/share/backgrounds/warty-final-ubuntu.png" ] \
+      && actual="symlink -> $(readlink "$ROOT/usr/share/backgrounds/warty-final-ubuntu.png")"
+    say "warty resolves to meta-ink" no "symlink -> meta-ink.png" "$actual" "warty-final-ubuntu.png is $actual, not the meta-ink symlink"
+  fi
+  [ -f "$ROOT/usr/share/backgrounds/meta-ink.png" ] \
+    && say "meta-ink present" ok "present" "present" "" \
+    || say "meta-ink present" no "present" "missing" "meta-ink.png missing"
+  if [ -d "$ROOT/usr/share/plymouth/themes/emerald" ]; then
+    say "emerald theme removed" no "absent" "present" "still present: /usr/share/plymouth/themes/emerald"
+  else
+    say "emerald theme removed" ok "absent" "absent" ""
+  fi
+  if grep -qx "ModuleName=text" "$ROOT/usr/share/plymouth/themes/metaos-text/metaos-text.plymouth" 2>/dev/null; then
+    say "metaos-text theme present" ok "ModuleName=text" "ModuleName=text" ""
+  else
+    say "metaos-text theme present" no "ModuleName=text" "missing" "metaos-text theme missing or wrong module"
+  fi
+  ALT_TGT=$(readlink "$ROOT/etc/alternatives/text.plymouth" 2>/dev/null || echo missing)
+  if [ "$ALT_TGT" = "/usr/share/plymouth/themes/metaos-text/metaos-text.plymouth" ]; then
+    say "text alternative is Meta" ok "metaos-text" "$ALT_TGT" ""
+  else
+    say "text alternative is Meta" no "metaos-text" "$ALT_TGT" "text.plymouth points at $ALT_TGT"
+  fi
   if [ "$MODE" = json ]; then
     [ "$FAIL" = 0 ]
   else
