@@ -18,7 +18,21 @@ a.addEventListener('loadedmetadata',function(){st.textContent='ready: '+fmt(a.du
 a.addEventListener('play',function(){st.textContent='playing…';});
 a.addEventListener('timeupdate',function(){st.textContent='playing '+fmt(a.currentTime)+' / '+fmt(a.duration);});
 a.addEventListener('ended',function(){st.textContent='ended '+fmt(a.duration)+' — played end to end';});
-a.addEventListener('error',function(){st.textContent='backend unreachable on 18934 (is :18934 serving the wav?)';});
+// An <audio> error does not say why. Check the file itself before blaming the
+// backend: in QEMU there is no sound card, GStreamer cannot open a sink, and
+// media error fires while the wav is served perfectly well. Saying
+// "backend unreachable" there sends whoever reads it to the wrong place.
+a.addEventListener('error',function(){
+  st.textContent='checking the wav…';
+  fetch(a.src).then(function(r){
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    return r.arrayBuffer();
+  }).then(function(b){
+    st.textContent='wav served ('+Math.round(b.byteLength/1024)+' KB) — this machine has no audio device, so playback cannot start';
+  }).catch(function(){
+    st.textContent='backend unreachable on 18934 (is :18934 serving the wav?)';
+  });
+});
 a.play().catch(function(){st.textContent+=' (autoplay blocked: press play)';});
 })();
 </script></body></html>

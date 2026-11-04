@@ -164,6 +164,15 @@ say "plank settings -> $PLANK/settings"
 # launcher that opens nothing. A tile whose icon PNG is missing is still
 # written (the page matters more than the picture) but logs a named warning,
 # because a themed name the theme does not carry draws a blank white tile.
+# Idempotence. This script owns the dock, so it rewrites the whole set every
+# run. Without this clear, a leftover .dockitem from an earlier install (a
+# different numbering, or an app dropped from the list) sits beside the new
+# ones: the synced image's dock had 34 items with imperium, trio, dashboard,
+# board and calendar each in it twice. Numbering restarts at 01, so the two
+# files also share a prefix and neither looks obviously stale.
+rm -f "$PLANK"/launchers/*.dockitem "$APPS"/meta-*.desktop 2>/dev/null
+say "dock reset: writing the Meta tile set from scratch"
+
 APP_N=0
 ICON_DIR="${ICON_DIR:-/usr/share/icons/metaos}"
 add_app() {

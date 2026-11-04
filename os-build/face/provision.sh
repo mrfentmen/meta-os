@@ -104,6 +104,25 @@ if [ -d "$THEME_SRC/icons/metaos" ]; then
   echo "provision(face): dock icons -> /usr/share/icons/metaos"
 fi
 
+# 1a4b) the Meta terminal colours, as an actual XDG default rather than a
+# comment in a doc. metaos-terminal-profile.txt shipped to /usr/share/doc and
+# nothing read it, so Ctrl+Alt+T opened xfce4-terminal's white default while
+# the dock's Terminal tile was dark -- two terminals, two looks, one OS.
+TERM_RC="$ROOT/etc/xdg/xfce4/terminal/terminalrc"
+if [ ! -f "$TERM_RC" ]; then
+  $SUDO mkdir -p "$(dirname "$TERM_RC")"
+  $SUDO tee "$TERM_RC" >/dev/null <<'EOF'
+[Configuration]
+ColorUseTheme=FALSE
+ColorForeground=#EDF5FF
+ColorBackground=#070B16
+ColorPalette=#070B16;#FF4F9A;#20D6A3;#FFBD4A;#1877F2;#8B5CF6;#69DDFF;#EDF5FF;#52617A;#FF4F9A;#20D6A3;#FFBD4A;#78BAFF;#8B5CF6;#69DDFF;#FFFFFF
+FontName=Ubuntu Mono 11
+BackgroundMode=TERMINAL_BACKGROUND_SOLID
+EOF
+  echo "provision(face): terminal defaults -> /etc/xdg/xfce4/terminal/terminalrc"
+fi
+
 # 1a5) the plank dock theme. Without it plank falls back to its default look.
 THEME_DOCK="$THEME_SRC/dock/dock.theme"
 if [ -f "$THEME_DOCK" ]; then
@@ -138,6 +157,25 @@ if [ -f "$SITE_SRC/index.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
   # Aegis lives in the repo as aegis-page/ but is served as /aegis/ (that is
   # the path the dock tile opens). metaos-update.sh already did this copy; a
   # fresh provision did not, so a clean image shipped the tile and 404ed it.
+  # Imperium's console links ../styles.css and ../vendor, so it is served from
+  # the site root rather than from /usr/share/metaos/imperium where those
+  # relative paths fall off the end of the tree and the page renders unstyled.
+  if [ -f "$SITE_SRC/imperium/index.html" ]; then
+    $SUDO rm -rf "$SITE_DST/imperium"
+    $SUDO mkdir -p "$SITE_DST/imperium"
+    $SUDO cp -r "$SITE_SRC/imperium/." "$SITE_DST/imperium/"
+  else
+    echo "site stage: no imperium/ in $SITE_SRC — Trio falls back to the bare page"
+  fi
+  # The Imperium/Trio window is a python app that lives in the ISO payload, not
+  # in the face, so a face-only sync left an old copy in the image: the one that
+  # looked for the page under /usr/share/metaos/imperium and drew it unstyled.
+  # Install it here too, so the image's app and the repo's app are the same file.
+  IMP_PY="$SITE_SRC/os-build/iso/payload-theme/apps/metaos-imperium.py"
+  if [ -f "$IMP_PY" ]; then
+    $SUDO install -D -m755 "$IMP_PY" "${ROOT}/usr/share/metaos/apps/metaos-imperium.py"
+    echo "provision(face): imperium app -> /usr/share/metaos/apps/metaos-imperium.py"
+  fi
   if [ -f "$SITE_SRC/aegis-page/index.html" ]; then
     $SUDO rm -rf "$SITE_DST/aegis"
     $SUDO mkdir -p "$SITE_DST/aegis"
