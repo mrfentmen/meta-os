@@ -15,7 +15,7 @@
 
 - A person, verifying the dark-terminal values.
 - `terminal/check_profile.sh --check` (this directory): parses both copies as
-  key/value files, rejects duplicates, unknown keys, and Ubuntu-named fonts.
+  key/value files, rejects duplicates, unknown keys, and stock-distro-named fonts.
 - The provision step reads the *values*, not this file (it embeds its own copy;
   see the report's cross-lane request to change its `FontName` line).
 

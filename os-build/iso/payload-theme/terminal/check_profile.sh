@@ -4,7 +4,7 @@
 # --check: exit non-zero on any failure (for OS-4 verify_tree.sh).
 # Checks both copies (payload-theme + metaos-theme mirror) for:
 #   key=value parse, no duplicate keys, no unknown keys,
-#   no Ubuntu-named font, required keys present, identical copies.
+#   no stock-distro-named font, required keys present, identical copies.
 set -eu
 HERE=$(dirname "$0")
 FAIL=0
@@ -29,7 +29,7 @@ for f in "$HERE/metaos-terminal-profile.txt" \
   for k in ColorBackground ColorForeground ColorPalette FontName; do
     case " $seen " in *" $k "*) :;; *) fail "$f missing required key: $k";; esac
   done
-  if grep -qi "ubuntu" "$f"; then fail "$f contains an Ubuntu string"; fi
+  if grep -qi "ubuntu" "$f"; then fail "$f contains a banned distro string"; fi
   echo "profile-check: OK $f (keys:$seen )"
 done
 if cmp -s "$HERE/metaos-terminal-profile.txt" \
