@@ -5,6 +5,7 @@
 // work itself — it only rings the bell.
 //   node agents/watchman.mjs        (daemon: polls the jobs dir)
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import url from "node:url";
 import { loadRegistry, spawnAgent, Ledger } from "./runtime.mjs";
@@ -21,7 +22,7 @@ import {
   writeContinueJob,
 } from "./continue.mjs";
 
-export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDir, heartbeatFile = path.join(root, "watchman.heartbeat.json") }) {
+export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDir, repoRoot, heartbeatFile = path.join(root, "watchman.heartbeat.json") }) {
   // The job board and the result board are separate directories on a relay: work arrives on
   // one, receipts go back on the other (R11-256). They default to the same dir so a local
   // board keeps its old shape.
@@ -67,6 +68,18 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
     try {
       const r = JSON.parse(fs.readFileSync(path.join(resultDir, id + ".result.json"), "utf8"));
       return r && (r.signal === null || r.signal === undefined);
+    } catch { return false; }
+  }
+
+  // A finished job stays on the board -- it is the audit trail -- so a relay
+  // that starts with an empty state file (a restart after a wipe, or the
+  // `watch` agent, which IS a watchman) saw the same order again and spawned
+  // it a second time. The order being older than its own receipt is what makes
+  // it already done; re-submitting writes a newer job file and runs it again.
+  function finishedSince(id, jobPath) {
+    if (!resultFinished(id)) return false;   // a signaled run still gets its baton
+    try {
+      return fs.statSync(path.join(resultDir, id + ".result.json")).mtimeMs >= fs.statSync(jobPath).mtimeMs;
     } catch { return false; }
   }
 
@@ -159,6 +172,10 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
       }
       if (claimed.has(id) && !pending.has(id)) continue;
       if (pending.has(id)) { pending.delete(id); save(); }
+      if (finishedSince(id, jobPath)) {
+        claimed.delete(id); save();
+        continue;
+      }
       const agent = agents.find((a) => a.name === job.agent);
       claimed.add(id); save();
       if (!agent) {
@@ -232,7 +249,23 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
         continue;
       }
       const runStartedAt = Date.now();
-      const h = spawnAgent(agent, { root, job });
+      // A `watch` job orders one more drain. Asking for it from inside a drain
+      // spawns a watchman that reads this same board and finds this same order:
+      // recursion with no base case, one CPU per generation. The outer pass is
+      // already draining, so refuse by name and leave a receipt that says so.
+      const selfDrain = Array.isArray(agent.command)
+        && agent.command.some((part) => String(part).includes("watchman.mjs"));
+      if (selfDrain && Number(process.env.METAOS_RELAY_DEPTH || 1) > 1) {
+        ledger.add("watchman", "job-refused", { id, agent: job.agent, reason: "relay-nested-drain" });
+        fs.writeFileSync(path.join(resultDir, id + ".result.json"),
+          JSON.stringify({ id, agent: job.agent, refused: "relay-nested-drain",
+                           finishedAt: new Date().toISOString() }, null, 2));
+        continue;
+      }
+      // Commands resolve against the payload, not the state board: the
+      // registry names `agents/…`, `aegis/…`, `os/worlds/…` paths that exist
+      // beside the code, while runs and ledgers live under `root`.
+      const h = spawnAgent(agent, { root, job, repoRoot });
       runs.set(id, h);
       // A refused spawn (budget or memory) has no child and never will. Recording a bell and
       // a job-done for it made a job that never ran look finished. Name the refusal, write a
@@ -357,7 +390,20 @@ export function createWatchman({ registryFile, root, jobsDir, resultDir = jobsDi
 }
 
 /* ---- daemon ---- */
-if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileURLToPath(import.meta.url))) {
+// Compare real paths, not resolved ones: /tmp and /var are symlinks on macOS, so
+// `node /tmp/x/watchman.mjs` and the module's own /private/tmp URL disagree,
+// the guard falls through and the process exits 0 having drained nothing. A
+// relay that silently no-ops is exactly how jobs went missing on the bench.
+function isMainModule() {
+  if (!process.argv[1]) return false;
+  try {
+    return fs.realpathSync(process.argv[1]) === fs.realpathSync(url.fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) {
   const HERE = path.dirname(url.fileURLToPath(import.meta.url));
   // The image keeps the code read-only under /usr/share and writes state in the
   // user's own directory, so the CLI has to accept a root. Defaults stay HERE,
@@ -366,18 +412,58 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(url.fileUR
     const i = process.argv.indexOf(name);
     return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : null;
   };
-  const root = arg("--root") ? path.resolve(arg("--root")) : HERE;
+  // Every child of a relay is marked, and the mark is inherited: a drain that
+  // spawns a drain is the one shape that cannot terminate on its own, because
+  // the inner pass reads the same board and finds the same `watch` order.
+  // Depth counts relay generations (this process is 1), so the guard below can
+  // tell a person's `watch` job from a relay spawning itself.
+  process.env.METAOS_RELAY_DEPTH = String(Number(process.env.METAOS_RELAY_DEPTH || 0) + 1);
+  // A spawned job runs this file straight from the registry entry, with no
+  // --root: `repo:node agents/watchman.mjs --once`. In a checkout HERE is the
+  // repo and everything below works. In the installed image HERE is
+  // /usr/share/metaos/agent/agents, which is root-owned and read-only, so
+  // mkdir jobs/ threw EACCES, every watchman run exited 1, and every job the
+  // boss submitted came back "failed (exit 1)" with nothing on screen saying
+  // why. Fall back to the same state directory meta-ask writes the board into,
+  // but only when HERE cannot be written: a checkout keeps its old behaviour.
+  const writable = (dir) => {
+    try { fs.accessSync(dir, fs.constants.W_OK); return true; } catch { return false; }
+  };
+  const defaultRoot = () => {
+    if (process.env.METAOS_AGENT_STATE) return path.resolve(process.env.METAOS_AGENT_STATE);
+    if (writable(HERE)) return HERE;
+    const base = process.env.XDG_STATE_HOME || path.join(os.homedir(), ".local", "state");
+    return path.join(base, "oc2-agent");
+  };
+  const root = arg("--root") ? path.resolve(arg("--root")) : defaultRoot();
   const jobsDir = arg("--jobs") ? path.resolve(arg("--jobs")) : path.join(root, "jobs");
   const registryFile = arg("--registry")
     ? path.resolve(arg("--registry"))
     : path.join(HERE, "registry.json");
-  const w = createWatchman({ registryFile, root, jobsDir });
+  // The payload is the tree this file ships in (parent of agents/): repo:… 
+  // script paths resolve against it, while runs and the board stay under
+  // --root. In a checkout that is the repo; in the image it is
+  // /usr/share/metaos/agent.
+  const payloadRoot = path.dirname(HERE);
+  const w = createWatchman({ registryFile, root, jobsDir, repoRoot: payloadRoot });
   console.log("relay-watchman: watching", jobsDir);
-  const tick = async () => { await w.pollOnce(); };
-  await tick();
+  const tick = async () => w.pollOnce();
+  const spawned = await tick();
   // --once makes the watchman a hosted loop command: one drain, exit 0. A daemon never returns,
   // so a registry entry pointing at it without this flag would sit until its budget killed it
   // (R12-009).
-  if (process.argv.includes("--once")) process.exit(0);
+  //
+  // One pass means one COMPLETE pass: the runs this poll started are awaited
+  // before exit, so a `--once` invocation leaves results, exit lines and full
+  // logs behind — never a board of ghost runs with no terminal event. (The
+  // daemon path above is untouched: it lives on and its .then handlers land
+  // results as children finish.)
+  if (process.argv.includes("--once")) {
+    await Promise.allSettled(spawned.map((s) => s.handle.done));
+    // The result files are written in .then handlers attached before this
+    // await, so they land first; one extra turn guarantees it.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    process.exit(0);
+  }
   setInterval(tick, 2000);
 }
