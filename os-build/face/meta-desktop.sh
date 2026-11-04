@@ -31,7 +31,7 @@ while [ $# -gt 0 ]; do
     *) echo "meta-desktop: unknown flag $1" >&2; exit 2 ;;
   esac
 done
-[ -n "$HOME_DIR" ] || HOME_DIR="${HOME:-/home/ubuntu}"
+[ -n "$HOME_DIR" ] || HOME_DIR="${HOME:-/home/meta}"
 [ -d "$HOME_DIR" ] || { echo "meta-desktop: no home at $HOME_DIR" >&2; exit 1; }
 
 say() { echo "meta-desktop: $*"; }
