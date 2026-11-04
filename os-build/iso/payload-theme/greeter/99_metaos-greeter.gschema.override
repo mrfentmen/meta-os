@@ -1,0 +1,22 @@
+# Meta OS login screen, set where unity-greeter actually reads it.
+#
+# unity-greeter (the greeter installed in this image) ignores
+# /etc/lightdm/unity-greeter.conf — that file is dead config on this version.
+# Its real settings are the com.canonical.unity-greeter gsettings schema, so a
+# conf file left the login screen on the schema defaults: the Ubuntu "warty"
+# background and the stock Ubuntu logo. On a Meta OS build that file is not
+# even present any more, so lightdm fell back to the desktop-base emerald
+# wallpaper — the green screen with a foreign logo.
+#
+# Install: /usr/share/glib-2.0/schemas/99_metaos-greeter.gschema.override
+# then:    glib-compile-schemas /usr/share/glib-2.0/schemas
+# provision.sh also installs the two files the defaults point at, so a build
+# whose schemas are not recompiled still shows Meta art, never Ubuntu's.
+
+[com.canonical.unity-greeter]
+background='/usr/share/backgrounds/meta-rays.png'
+logo='/usr/share/backgrounds/meta-m.png'
+draw-user-backgrounds=false
+draw-grid=false
+show-hostname=false
+play-ready-sound=false

@@ -56,6 +56,18 @@ case "${1:-}" in
   *) echo "show_os: unknown option $1 (use --persist or --headless N)" >&2; exit 2 ;;
 esac
 
+# Network: the Imperium/Trio dispatch console draws no basemap without its
+# style URL, and the live NYC traffic-camera list is a remote feed. User-mode
+# NAT (no port forwards, nothing reachable from outside) is enough for those
+# two, and it is what a judge's laptop has anyway. METAOS_NO_NET=1 boots the
+# demo offline on purpose, e.g. to prove the desktop needs no network.
+if [ "${METAOS_NO_NET:-0}" = "1" ]; then
+  NETARGS=""
+  echo "show_os: METAOS_NO_NET=1 — headless-of-network boot"
+else
+  NETARGS="-netdev user,id=n0 -device virtio-net-pci,netdev=n0"
+fi
+
 QEMU=$(command -v qemu-system-aarch64 || true)
 [ -n "$QEMU" ] || { echo "show_os: qemu-system-aarch64 not on PATH" >&2; exit 2; }
 
@@ -123,6 +135,7 @@ VIRTFS=""
   -device virtio-gpu-pci,xres=1920,yres=1080 \
   $AUDIO_ARGS \
   -device qemu-xhci -device usb-kbd -device usb-tablet \
+  $NETARGS \
   $VIRTFS \
   -serial "file:$SER_LOG" \
   -monitor "unix:/tmp/metaos-show.qmp,server,nowait" \

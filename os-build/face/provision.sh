@@ -69,6 +69,76 @@ $SUDO chmod +x "$DST/meta-desktop.sh" "$DST/session.sh" 2>/dev/null || true
 # stage them together and say which ones landed.
 THEME_SRC="$HERE/../iso/payload-theme"
 
+# 1a2) the LOGIN SCREEN. unity-greeter is the greeter in this image and it
+# reads the com.canonical.unity-greeter gsettings schema, not
+# /etc/lightdm/unity-greeter.conf — so the conf we shipped was dead config and
+# the greeter fell back to the schema defaults: the Ubuntu warty background
+# (absent here, so desktop-base's green emerald showed instead) with the stock
+# Ubuntu logo. Two independent fixes, on purpose:
+#   a) the override that sets the Meta art, compiled when glib can be;
+#   b) the two files those defaults point at, written with Meta art, so a
+#      build whose schemas are not recompiled still cannot show Ubuntu's.
+# 1a2b) the animated wallpaper. meta-live.py plays /usr/share/metaos/studio-loop
+# at 30 fps; the image shipped 16 kernel frames there, so the loop span once a
+# second and stepped 22.5 degrees between frames. The set now comes from the
+# logo studio (loop_from_studio.mjs + loop_frames_to_wallpaper.py), 60 frames
+# per turn. Replace, never merge: an old 16-frame loop beside a new 60-frame
+# one makes the cycle play two different drawings in the same turn.
+LOOP_SRC="$THEME_SRC/wallpapers/studio-loop"
+if [ -d "$LOOP_SRC" ]; then
+  _n=$(ls "$LOOP_SRC"/loop-*.jpg 2>/dev/null | wc -l | tr -d ' ')
+  if [ "${_n:-0}" -ge 8 ]; then
+    $SUDO rm -rf "$ROOT/usr/share/metaos/studio-loop"
+    $SUDO mkdir -p "$ROOT/usr/share/metaos/studio-loop"
+    $SUDO cp -f "$LOOP_SRC"/loop-*.jpg "$ROOT/usr/share/metaos/studio-loop/"
+    echo "provision(face): wallpaper loop -> /usr/share/metaos/studio-loop (${_n} frames)"
+  else
+    echo "provision(face): wallpaper loop source has ${_n:-0} frames — left as is"
+  fi
+fi
+# the player itself, so a face-only sync also updates the animation code
+if [ -f "$THEME_SRC/wallpapers/live/meta-live.py" ]; then
+  $SUDO install -m755 "$THEME_SRC/wallpapers/live/meta-live.py" \
+    "$ROOT/usr/share/metaos/apps/meta-live.py"
+  echo "provision(face): wallpaper player -> /usr/share/metaos/apps/meta-live.py"
+fi
+
+GREETER_SRC="$THEME_SRC/greeter"
+if [ -f "$GREETER_SRC/99_metaos-greeter.gschema.override" ]; then
+  $SUDO mkdir -p "$ROOT/usr/share/glib-2.0/schemas"
+  $SUDO install -m644 "$GREETER_SRC/99_metaos-greeter.gschema.override" \
+    "$ROOT/usr/share/glib-2.0/schemas/99_metaos-greeter.gschema.override"
+  # No --strict here: this image carries schemas whose paths are deprecated
+  # (apps.light-locker, org.freedesktop.ibus, …), and --strict turns each of
+  # those warnings into a failure. That is why the cache stayed stale after the
+  # override was installed: the compile was refused, quietly, every time, and
+  # unity-greeter kept reading Ubuntu's art out of the old cache.
+  if [ "$(uname -s)" = Linux ] && command -v glib-compile-schemas >/dev/null 2>&1; then
+    glib-compile-schemas "$ROOT/usr/share/glib-2.0/schemas" 2>/dev/null \
+      && echo "provision(face): greeter schemas compiled" \
+      || echo "provision(face): greeter schemas NOT compiled (override installed; metaos-schemas.service retries at boot)"
+  else
+    echo "provision(face): no runnable glib here — metaos-schemas.service compiles at boot"
+  fi
+  echo "provision(face): greeter gsettings override -> /usr/share/glib-2.0/schemas"
+fi
+# The mark: unity-greeter's stock logo is the Ubuntu logo, at a fixed path.
+if [ -f "$GREETER_SRC/meta-m.png" ]; then
+  $SUDO mkdir -p "$ROOT/usr/share/unity-greeter"
+  $SUDO install -m644 "$GREETER_SRC/meta-m.png" "$ROOT/usr/share/unity-greeter/logo.png"
+  $SUDO install -m644 "$GREETER_SRC/meta-m.png" "$ROOT/usr/share/backgrounds/meta-m.png" 2>/dev/null || true
+  echo "provision(face): greeter logo -> /usr/share/unity-greeter/logo.png (Meta mark)"
+fi
+# The background: the schema's default path is the Ubuntu warty image. This
+# build debranded that file away, which is why a *green* desktop-base emerald
+# appeared — provide the path with Meta art instead of an empty fallback.
+if [ -f "$GREETER_SRC/meta-ascii.png" ]; then
+  $SUDO mkdir -p "$ROOT/usr/share/backgrounds"
+  $SUDO install -m644 "$GREETER_SRC/meta-ascii.png" \
+    "$ROOT/usr/share/backgrounds/warty-final-ubuntu.png"
+  echo "provision(face): greeter background default -> Meta ASCII (no Ubuntu art)"
+fi
+
 # top bar: the channel default AND skel, so an existing user and a new one
 # both get the Meta panel (meta-desktop.sh copies it into the user config).
 if [ -f "$THEME_SRC/panel/xfce4-panel.xml" ]; then
@@ -122,6 +192,23 @@ BackgroundMode=TERMINAL_BACKGROUND_SOLID
 EOF
   echo "provision(face): terminal defaults -> /etc/xdg/xfce4/terminal/terminalrc"
 fi
+# ...and into the profiles themselves. xfce4-terminal's first window starts a
+# terminal *server* that then owns the colours for every later window, so a
+# session whose first terminal opened before the user had a terminalrc shows
+# the stock white for the rest of that login — which is exactly what happened.
+# Writing it here makes the dark terminal deterministic; an existing file is
+# never overwritten, so a user's own colours survive a sync.
+if [ -f "$TERM_RC" ]; then
+  for _home in "$ROOT/etc/skel" "$ROOT"/home/*; do
+    [ -d "$_home" ] || continue
+    _dst="$_home/.config/xfce4/terminal/terminalrc"
+    if [ ! -f "$_dst" ]; then
+      $SUDO mkdir -p "$(dirname "$_dst")"
+      $SUDO cp -f "$TERM_RC" "$_dst"
+      echo "provision(face): terminal colours -> $_dst"
+    fi
+  done
+fi
 
 # 1a5) the plank dock theme. Without it plank falls back to its default look.
 THEME_DOCK="$THEME_SRC/dock/dock.theme"
@@ -129,6 +216,49 @@ if [ -f "$THEME_DOCK" ]; then
   $SUDO mkdir -p "$ROOT/usr/share/plank/themes/MetaOS"
   $SUDO install -m644 "$THEME_DOCK" "$ROOT/usr/share/plank/themes/MetaOS/dock.theme"
   echo "provision(face): plank theme -> /usr/share/plank/themes/MetaOS"
+fi
+
+# 1a6) compile the gsettings schema cache. This is what the login screen reads.
+# The greeter override (1a3) only takes effect through gschemas.compiled, and a
+# cache compiled before that override shipped still holds Ubuntu's emerald
+# background and Ubuntu logo — the green screen the user kept hitting. So the
+# compile runs here when a glib is actually runnable, and a oneshot unit re-runs
+# it at boot with the guest's own glib, which keeps host and guest versions from
+# ever disagreeing.
+SCHEMAS="$ROOT/usr/share/glib-2.0/schemas"
+if [ -d "$SCHEMAS" ]; then
+  if [ "$(uname -s)" = Linux ] && command -v glib-compile-schemas >/dev/null 2>&1; then
+    if glib-compile-schemas "$SCHEMAS" 2>/dev/null; then
+      echo "provision(face): schema cache compiled -> $SCHEMAS/gschemas.compiled"
+    else
+      echo "provision(face): schema compile failed here — the boot unit will do it"
+    fi
+  else
+    echo "provision(face): schema cache left to the boot unit (no glib on this host)"
+  fi
+  $SUDO mkdir -p "$ROOT/etc/systemd/system/graphical.target.wants"
+  $SUDO tee "$ROOT/etc/systemd/system/metaos-schemas.service" >/dev/null <<'EOF'
+[Unit]
+Description=Meta OS: recompile the gsettings schema cache before login
+Documentation=file:/opt/face/README.md
+After=local-fs.target
+Before=display-manager.service lightdm.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# No `set -e` games: a missing tool must never cost the login screen. If the
+# compile cannot run, the previous cache stays and the boot still proceeds.
+ExecStart=/bin/sh -c 'command -v glib-compile-schemas >/dev/null 2>&1 && glib-compile-schemas /usr/share/glib-2.0/schemas || echo "metaos-schemas: glib-compile-schemas unavailable, cache unchanged"'
+
+[Install]
+WantedBy=graphical.target
+EOF
+  ln -sf "../metaos-schemas.service" \
+    "$ROOT/etc/systemd/system/graphical.target.wants/metaos-schemas.service" 2>/dev/null \
+    || $SUDO ln -sf "../metaos-schemas.service" \
+         "$ROOT/etc/systemd/system/graphical.target.wants/metaos-schemas.service"
+  echo "provision(face): unit metaos-schemas.service -> /etc/systemd/system"
 fi
 
 # 1b) stage repo-root product pages for the dock iframes (served on 18934).
@@ -175,6 +305,17 @@ if [ -f "$SITE_SRC/index.html" ] && [ -f "$SITE_SRC/js/app.js" ]; then
   if [ -f "$IMP_PY" ]; then
     $SUDO install -D -m755 "$IMP_PY" "${ROOT}/usr/share/metaos/apps/metaos-imperium.py"
     echo "provision(face): imperium app -> /usr/share/metaos/apps/metaos-imperium.py"
+  fi
+  # The console's backend. face-only syncs used to leave the image's copy at
+  # whatever the last ISO bake wrote, so a server-side fix (the static-root
+  # override below) never reached the guest and Trio kept loading file://.
+  if [ -d "$SITE_SRC/server" ]; then
+    $SUDO mkdir -p "$ROOT/usr/share/metaos/server"
+    for mjs in "$SITE_SRC"/server/*.mjs; do
+      [ -f "$mjs" ] || continue
+      $SUDO cp -f "$mjs" "$ROOT/usr/share/metaos/server/"
+    done
+    echo "provision(face): console backend -> /usr/share/metaos/server"
   fi
   if [ -f "$SITE_SRC/aegis-page/index.html" ]; then
     $SUDO rm -rf "$SITE_DST/aegis"

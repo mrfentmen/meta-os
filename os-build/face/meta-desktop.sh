@@ -61,6 +61,28 @@ else
   say "no Meta panel xml on this system — panel left alone"
 fi
 
+# ------------------------------------------- 1b. Ctrl+Alt+T opens the terminal
+# Same reason as the dock tile above: the image's default shortcut is
+# `exo-open --launch TerminalEmulator`, which starts xfce4-terminal's *server*.
+# The first window then owns the colours for the whole login, so a session that
+# touched a terminal before the user's terminalrc existed stayed white.
+# `--disable-server` gives every window the user's own colours.
+#
+# Set ONE key, through xfconf, exactly like the Settings > Keyboard dialog does.
+# Writing the whole channel file would have dropped every other shortcut with
+# it; xfconf merges by property, so `commands/custom` overrides only the one
+# default in `commands/default` and everything else is untouched. Needs a live
+# X session (xfconf talks to xfconfd), so it is skipped when this runs offline.
+if command -v xfconf-query >/dev/null 2>&1 && xfconf-query -c xfwm4 -l >/dev/null 2>&1; then
+  xfconf-query -c xfce4-keyboard-shortcuts \
+    -p '/commands/custom/<Primary><Alt>t' \
+    -n -t string -s 'xfce4-terminal --disable-server' >>"$LOG" 2>&1 \
+    && say "shortcut <- Ctrl+Alt+T runs xfce4-terminal --disable-server" \
+    || say "shortcut <- Ctrl+Alt+T NOT set (xfconf-query failed, see log)"
+else
+  say "shortcut <- skipped: no live xfconf session"
+fi
+
 # ------------------------------------------------------- 2. wm + gtk theme
 # ElementTree, not sed: these files are nested properties and a blind replace
 # would happily corrupt them. Missing keys are inserted, existing ones set.
@@ -251,7 +273,12 @@ META_APP="${META_APP:-/usr/local/bin/meta-app}"
 # why neither tile showed the dispatch console.
 IMPERIUM="${IMPERIUM:-/usr/share/metaos/apps/metaos-imperium.py}"
 
-add_app terminal  "Terminal"   terminal        xfce4-terminal
+# --disable-server on purpose: xfce4-terminal's first window starts a server
+# that then owns the colours for every later window. That server came up white
+# even with the Meta terminalrc present, so Ctrl+Alt+T opened a white terminal
+# while a directly started one was dark. Without a server, every window reads
+# the user's own colours.
+add_app terminal  "Terminal"   terminal        "xfce4-terminal --disable-server"
 add_app files     "Files"      files           thunar
 add_app notes     "Notes"      notes           meta-notes
 add_app monitor   "Monitor"    dashboard       meta-monitor
@@ -260,8 +287,8 @@ add_app editor    "Editor"     editor          mousepad
 add_app calc      "Calculator" calculator      galculator
 add_app settings  "Settings"   settings        xfce4-settings-manager
 add_app trash     "Trash"      trash           thunar trash:///
-add_app trio      "Trio"      imperium        "$IMPERIUM"
-add_app imperium  "Imperium"  imperium        "$IMPERIUM"
+add_app trio      "Trio"      imperium        "$IMPERIUM" --title "Meta Trio - Dispatch"
+add_app imperium  "Imperium"  imperium        "$IMPERIUM" --title "Imperium - Command"
 
 if [ -x "$META_APP" ]; then
   add_app web       "Web"       web             "$META_APP" --title Web --url http://127.0.0.1:18934/index.html

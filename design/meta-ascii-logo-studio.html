@@ -1141,6 +1141,26 @@
     setPaused(storedPaused());
     resizeCanvas();
     renderFrame();
+
+    // EXPORT HOOK: render the loop at a chosen rotation, on demand, for the
+    // wallpaper art (os-build/iso/payload-theme/wallpapers/loop_from_studio.mjs).
+    // The rotating angles are closures, so a headless capture cannot set them
+    // from outside; this is the one seam that lets the OS build ask the studio
+    // for frame N of M instead of screen-recording the page and hoping the
+    // timer sampled evenly. Pausing inside keeps the rAF loop from painting
+    // over the frame between the render and the read. Nothing on the page's
+    // own render path changes: with no caller, this object is inert.
+    window.MetaAsciiStudio = {
+      renderAt(angle) {
+        if (!viewWidth || !viewHeight) resizeCanvas();
+        isPaused = true;
+        angleX = -0.045;
+        angleY = angle;
+        previousFrameTime = 0;
+        renderFrame(0);
+        return canvas.toDataURL('image/png');
+      }
+    };
     } // end if (ctx)
   </script>
 </body>

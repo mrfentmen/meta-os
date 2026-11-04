@@ -21,6 +21,26 @@ say() { echo "[$(date -u '+%Y-%m-%dT%H:%M:%SZ')] $*" >>"$LOG" 2>&1; }
 
 say "=== session start ==="
 
+# Resolution. QEMU's cocoa window opens at 640x360 and tells the guest so, and
+# X then keeps that mode for the whole session — a 640x360 desktop with the
+# wallpaper window sized to a monitor it does not fill, which reads as "the
+# wallpaper disappeared". The GPU advertises 1920x1080 as the preferred mode,
+# so ask for it explicitly. Headless boots already come up at 1920x1080 and
+# this is a no-op there. Best-effort: no xrandr (or no output) must not stop
+# the login.
+if command -v xrandr >/dev/null 2>&1; then
+  _out=$(xrandr 2>/dev/null | sed -n 's/^\([A-Za-z0-9-]*\) connected primary.*/\1/p' | head -1)
+  if [ -n "$_out" ]; then
+    if xrandr --output "$_out" --mode 1920x1080 >>"$LOG" 2>&1; then
+      say "resolution: $_out -> 1920x1080"
+    else
+      say "resolution: xrandr could not set 1920x1080 on $_out (desktop may be 640x360)"
+    fi
+  else
+    say "resolution: no connected primary output found — left as is"
+  fi
+fi
+
 # 3D: Science Lab (labs/molecules) and the 3D music notes are three.js scenes.
 # This VM's virtio-gpu exposes no 3D engine, so a hardware GL request fails and
 # the WebGL context comes back null — a blank canvas in the demo. Mesa ships

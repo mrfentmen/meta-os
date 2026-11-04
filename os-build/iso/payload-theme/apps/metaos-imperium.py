@@ -17,7 +17,8 @@ SERVER_DIR = "/usr/share/metaos/server"
 # /usr/share/metaos/imperium it drew as bare HTML -- black text on white, blue
 # underlined links -- which is exactly the "it's a webpage" look this app is
 # meant to kill. Prefer the site-root copy when it is there.
-SITE_INDEX = "/opt/face-site/imperium/index.html"
+SITE_ROOT = os.environ.get("METAOS_SITE_ROOT", "/opt/face-site")
+SITE_INDEX = os.path.join(SITE_ROOT, "imperium", "index.html")
 INDEX = SITE_INDEX if os.path.exists(SITE_INDEX) else os.path.join(APP_DIR, "index.html")
 PORT = int(os.environ.get("META_IMPERIUM_PORT", "8080"))
 
@@ -43,7 +44,14 @@ def ensure_backend():
         return None
     import subprocess
     import time
-    env = dict(os.environ, PORT=str(PORT))
+    # The page is served by this backend, not read off disk. Two things only
+    # work same-origin: GET /api/cameras (NYCTMC sends no CORS header, so the
+    # proxy is the only way the live camera list can load) and the relative
+    # ../js and ../vendor paths, which need the site root as the document
+    # root. Loaded as file:// the proxy became file:///api/cameras, the live
+    # list and the basemap both fell back, and the console looked like a plain
+    # web page with pins — which is what shipped and what was wrong.
+    env = dict(os.environ, PORT=str(PORT), METAOS_STATIC_ROOT=SITE_ROOT)
     try:
         p = subprocess.Popen(
             [node, main], env=env,
@@ -57,7 +65,22 @@ def ensure_backend():
         return None
 
 
+def doc_url():
+    """http:// when the backend answers, file:// only as the fallback."""
+    rel = os.path.relpath(INDEX, SITE_ROOT)
+    http = "http://127.0.0.1:%d/%s" % (PORT, rel.replace(os.sep, "/"))
+    return http if backend_up() else "file://" + INDEX
+
+
 def main(argv):
+    # Two dock tiles, one program: Trio (the three divisions) and Imperium (the
+    # console they sit in). The window title is the only thing that has to
+    # differ, and it is passed in by the launcher rather than guessed here.
+    title = os.environ.get("META_IMPERIUM_TITLE", "Imperium Console")
+    args = [a for a in argv[1:] if a != ""]
+    for i, a in enumerate(args):
+        if a == "--title" and i + 1 < len(args):
+            title = args[i + 1]
     ensure_backend()
     try:
         import gi
@@ -70,11 +93,11 @@ def main(argv):
     if not os.path.exists(INDEX):
         sys.stderr.write("metaos-imperium: missing %s\n" % INDEX)
         return 1
-    win = Gtk.Window(title="Imperium Console")
+    win = Gtk.Window(title=title)
     win.set_default_size(1280, 800)
     from gi.repository import WebKit2
     view = WebKit2.WebView()
-    view.load_uri("file://" + INDEX)
+    view.load_uri(doc_url())
     win.add(view)
     win.connect("destroy", Gtk.main_quit)
     win.show_all()

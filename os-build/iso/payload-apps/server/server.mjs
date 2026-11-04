@@ -40,7 +40,14 @@ import { readFiresCached } from "./fires.mjs";
 import { PRODUCT_IDS } from "../js/products.js";
 
 const MAX_BODY_BYTES = 12 * 1024 * 1024; // JSON envelope cap (image cap is in assess.mjs)
-const STATIC_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+// Where the console's own files (styles.css, js/, vendor/, imperium/) are
+// served from. Defaults to the parent of this server directory, which is
+// right for the repo and for /usr/share/metaos/server. The GTK app sets
+// METAOS_STATIC_ROOT to the installed site tree, which is the only place
+// that has js/ and vendor/ together with imperium/.
+const STATIC_ROOT = process.env.METAOS_STATIC_ROOT
+  ? path.resolve(process.env.METAOS_STATIC_ROOT)
+  : path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const CONTENT_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",

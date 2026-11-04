@@ -15,10 +15,20 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 FRAMES_PATH = os.path.join(HERE, "frames.txt")
 IMAGES_DIR = os.path.join(os.path.dirname(HERE), "studio-loop")
-# 16 frames at 8 fps is one turn every 2 s. The smooth set is 32 frames
-# (each original plus a 50% blend to the next), so it must play at 16 fps to
-# keep the same rotation speed while doubling the smoothness.
-FPS_IMAGES = 16
+# Two install layouts exist: the app tree (/usr/share/metaos/studio-loop, next
+# to this file) and the theme tree (/usr/share/backgrounds/metaos-studio, which
+# the ISO provision writes). Whichever holds frames first wins, so a build that
+# only gets the theme tree still animates instead of silently showing nothing.
+IMAGES_DIRS = [
+    os.environ.get("META_LIVE_IMAGES") or IMAGES_DIR,
+    IMAGES_DIR,
+    "/usr/share/backgrounds/metaos-studio",
+]
+# The frame set is now captured from the logo studio at 60 frames per turn
+# (the old kernel set was 16 frames, 22.5 degrees apart — a stutter, not a
+# spin). At 30 fps one revolution takes 2 s, the same speed as before with
+# nearly four times the frames.
+FPS_IMAGES = int(os.environ.get("META_LIVE_FPS", "30"))
 FPS = 8
 INK = (0.027, 0.043, 0.086)
 BLUE = "#1877F2"
@@ -75,8 +85,12 @@ def run_gui_images(framedir):
     gi.require_version("Gtk", "3.0")
     from gi.repository import Gtk, Gdk, GLib
     import glob
-    files = sorted(glob.glob(os.path.join(framedir, "loop-*.jpg")))
-    if not files:
+    for cand in ([framedir] + [d for d in IMAGES_DIRS if d != framedir]):
+        files = sorted(glob.glob(os.path.join(cand, "loop-*.jpg")))
+        if files:
+            framedir = cand
+            break
+    else:
         return 1
     win = Gtk.Window()
     win.set_decorated(False)
@@ -99,8 +113,23 @@ def run_gui_images(framedir):
     GLib.timeout_add(1000, lambda: (_fit_to_screen(win), True)[1])
     state = {"i": 0}
 
+    # Decode once, then blit. set_from_file() decodes a 1920x1080 JPEG on every
+    # tick, and at 30 fps that is a file decode 30 times a second for art that
+    # never changes inside the loop — the wallpaper should cost a blit, not a
+    # decoding pipeline. If the decode of the whole set cannot be held in
+    # memory, fall back to the per-frame file read rather than failing to draw.
+    preloaded = []
+    try:
+        from gi.repository import GdkPixbuf
+        preloaded = [GdkPixbuf.Pixbuf.new_from_file(f) for f in files]
+    except Exception:
+        preloaded = []
+
     def show():
-        img.set_from_file(files[state["i"] % len(files)])
+        if preloaded:
+            img.set_from_pixbuf(preloaded[state["i"] % len(preloaded)])
+        else:
+            img.set_from_file(files[state["i"] % len(files)])
         state["i"] += 1
         return True
 
