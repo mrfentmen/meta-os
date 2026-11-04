@@ -15,7 +15,10 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 FRAMES_PATH = os.path.join(HERE, "frames.txt")
 IMAGES_DIR = os.path.join(os.path.dirname(HERE), "studio-loop")
-FPS_IMAGES = 8
+# 16 frames at 8 fps is one turn every 2 s. The smooth set is 32 frames
+# (each original plus a 50% blend to the next), so it must play at 16 fps to
+# keep the same rotation speed while doubling the smoothness.
+FPS_IMAGES = 16
 FPS = 8
 INK = (0.027, 0.043, 0.086)
 BLUE = "#1877F2"
@@ -50,6 +53,23 @@ class Cycler:
         return self.frames[self.index]
 
 
+def _fit_to_screen(win):
+    """A wallpaper window must be exactly the screen, not whatever xfwm4
+    hands a maximized window.
+
+    win.maximize() on XFCE respects panel struts, so the art ends up inset by
+    the panel height and stops looking like a wallpaper. Asking the monitor
+    for its geometry and setting it directly cannot be argued with.
+    """
+    try:
+        scr = win.get_screen()
+        geo = scr.get_monitor_geometry(scr.get_primary_monitor())
+        win.move(geo.x, geo.y)
+        win.resize(geo.width, geo.height)
+    except Exception:
+        pass
+
+
 def run_gui_images(framedir):
     import gi
     gi.require_version("Gtk", "3.0")
@@ -72,6 +92,11 @@ def run_gui_images(framedir):
     win.add(img)
     win.maximize()
     win.show_all()
+    _fit_to_screen(win)
+    # Re-assert once a second: xfwm4 can re-place the window when the panel
+    # starts or the resolution changes under it (the guest tracks the window
+    # size), and a wallpaper that shrinks on resize is not a wallpaper.
+    GLib.timeout_add(1000, lambda: (_fit_to_screen(win), True)[1])
     state = {"i": 0}
 
     def show():
@@ -114,6 +139,11 @@ def run_gui(frames):
     win.add(label)
     win.maximize()
     win.show_all()
+    _fit_to_screen(win)
+    # Re-assert once a second: xfwm4 can re-place the window when the panel
+    # starts or the resolution changes under it (the guest tracks the window
+    # size), and a wallpaper that shrinks on resize is not a wallpaper.
+    GLib.timeout_add(1000, lambda: (_fit_to_screen(win), True)[1])
     below = [w for w in win.get_screen().get_window_stack()
              if w != win.get_window()]
     for w in below:
