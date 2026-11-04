@@ -1,8 +1,18 @@
-# MetaOS terminal defaults (xfce4-terminal). Apply via xfconf or profiles dir.
-# Font: monospace matching Inter stack; background #070B16 at 0.92 opacity;
-# foreground #EDF5FF; palette anchored on Meta blue #1877F2 + studio accents.
-# Welcome hook (append to ~/.bashrc.d or /etc/bash.bashrc.d/metaos.sh):
-#   node /usr/share/metaos/metafetch.mjs --once
+# MetaOS terminal defaults for xfce4-terminal (dark theme).
+# Reference copy. The live default is /etc/xdg/xfce4/terminal/terminalrc,
+# written by the face-lane provision step from these same values; this file
+# also ships as /usr/share/doc/metaos/terminal-profile.txt for inspection.
+# Nothing reads this file as code.
+# Font: Monospace 11 — the fontconfig generic monospace alias. It resolves
+# without any named package (falls back through the image's monospace stack,
+# DejaVu Sans Mono via fonts-dejavu-core).
+# Colours: dark background #070B16 at 0.92 opacity, light text #EDF5FF,
+# 16-colour palette anchored on Meta blue #1877F2 + studio accents.
+# Cursor shape and scrollback length are intentionally unset here:
+# xfce4-terminal's own defaults apply. This file asserts no URLs and makes no
+# claims beyond the colour/font values above.
+[Configuration]
+ColorUseTheme=FALSE
 ColorBackground=#070B16
 ColorForeground=#EDF5FF
 ColorPalette=#070B16;#FF4F9A;#20D6A3;#FFBD4A;#1877F2;#8B5CF6;#69DDFF;#EDF5FF;#52617A;#FF4F9A;#20D6A3;#FFBD4A;#78BAFF;#8B5CF6;#69DDFF;#FFFFFF

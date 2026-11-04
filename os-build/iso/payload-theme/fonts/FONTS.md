@@ -1,17 +1,43 @@
-# MetaOS 1.0 fonts (no binaries ship in this tree)
+# MetaOS 1.0 fonts — installed, referenced, missing
 
-Two faces, both open-licensed, both installed as distro packages, both
-referenced by name from GTK + terminal + greeter so no surface falls back
-to a third-party default.
+No font binaries ship in this tree or in this directory. Licence files live
+inside the installed packages, never here.
 
-| face | package in image | licence | referenced from |
-|---|---|---|---|
-| Inter (display/UI) | `fonts-inter` 4.0+ds-1 (OTF, `fc-list \| grep -i inter`) | SIL Open Font License 1.1 (full text inside the package: `/usr/share/doc/fonts-inter/copyright`, `License: OFL-1.1` stanza) | greeter `font-name=Inter 11`, `gtk.css` `font-family: 'Inter', …` |
-| Ubuntu Mono (monospace) | `fonts-ubuntu` (ships in the base image) | Ubuntu Font Licence 1.0 (grant recorded in `/usr/share/doc/fonts-ubuntu/copyright`, upstream `https://design.ubuntu.com/font/`) | terminal `FontName=Ubuntu Mono 11`, `gtk.css` fallback stack |
+## Installed in the image (tree evidence, not guesses)
 
-Licence files live in the installed packages, not here — that is why this
-dir carries no `.ttf`/`.otf`: nothing to re-licence, nothing unlicensed.
-`apply.sh` refuses to install the theme when `fc-list` cannot find either
-face (D7 gate); `theme_proof.sh` re-asserts it on the target root.
+| face | package | evidence |
+|---|---|---|
+| Inter (display/UI) | `fonts-inter` | `os-build/metaos1-base/packages.txt` (ADD), `iso/base/metaos.packages` (theme lane), installed by `payload-theme/apply.sh:162` |
+| Ubuntu Mono (monospace) | `fonts-ubuntu` | installed by `payload-theme/apply.sh:162`, gated by `theme_proof.sh` D7 (`fc-list` must find it) |
+| DejaVu Sans Mono (fallback) | `fonts-dejavu-core` | `iso/base/metaos.packages` (desktop-shell lane) |
+| Icon theme (not a font) | `papirus-icon-theme` | `iso/base/metaos.packages`; resolves the `accessories-*`, `utilities-*`, `system-*` icon names used by the desktop entries |
 
-Milo audit note (kept): both open-licensed, no Apple fonts anywhere.
+## Referenced from this lane
+
+| reference | file | resolves? |
+|---|---|---|
+| `FontName=Monospace 11` | `terminal/metaos-terminal-profile.txt` (both copies) | Yes — `Monospace` is the fontconfig generic alias; falls back through the installed monospace stack (DejaVu Sans Mono). Needs no named package. |
+| `Inter` UI stack | greeter/GTK CSS (outside this lane) | Per `iso/theme/lightdm/lightdm-gtk-greeter.conf` and `metaos-contracts/PACKAGES.md`; unconfirmed by this lane beyond the installed package. |
+
+## Missing
+
+Nothing this lane references is missing. `Ubuntu Mono` is installed but
+deliberately no longer referenced by the terminal profile (its name is the
+visible leftover this lane was asked to remove); it stays installed because
+removing packages belongs to the image lane, and other (non-lane) files still
+name it — see the OS-3 report's cross-lane requests.
+
+## Fallback chain (unreadable-text check)
+
+If `Monospace` somehow resolves to nothing, xfce4-terminal falls back to its
+compiled-in default — text stays readable, only the styling changes. No
+surface in this lane can go blank or unreadable from a missing font: the
+profile sets colours + one generic alias and nothing else.
+
+## Spelling
+
+`Monospace` (capital M, exact fontconfig alias), `Inter` (capital I). A typo
+in either means a silent fallback — `terminal/check_profile.sh --check`
+rejects unknown profile keys, and this file is the spelling reference.
+`fc-list`/`fc-match` do not exist on this build machine, so resolution is
+proven by package evidence above, not by running them here.
