@@ -11,16 +11,25 @@ import { dropOrders } from "./intake.mjs";
 import { briefFromJobs } from "./brief.mjs";
 import { requestApproval, dropApproval, readApproval } from "./approval.mjs";
 import { fileLatency, measureBoard } from "./latency.mjs";
+import { stateRoot } from "../agents/state-root.mjs";
 
 const HERE = path.dirname(url.fileURLToPath(import.meta.url));
 const root = path.dirname(HERE);
-const work = path.join(root, "os-build", "handsfree");
+const shipped = path.join(root, "os-build", "handsfree");
+// The image's payload is read-only, so the working board lives in the user's
+// state dir there; a checkout keeps writing beside the code.
+const work = path.join(stateRoot(root, "handsfree"), "os-build", "handsfree");
 const [, , role = "brief"] = process.argv;
 
 if (role === "intake") {
   const inbox = path.join(work, "inbox.txt");
   const jobsDir = path.join(work, "jobs");
   fs.mkdirSync(work, { recursive: true });
+  // The shipped inbox is the lane's standing orders. On a read-only payload it
+  // cannot be written in place, so the first run copies it into the board.
+  if (!fs.existsSync(inbox) && fs.existsSync(path.join(shipped, "inbox.txt"))) {
+    fs.copyFileSync(path.join(shipped, "inbox.txt"), inbox);
+  }
   if (!fs.existsSync(inbox)) {
     // The shipped inbox is the lane's standing orders, not invented work: two orders the crew
     // can actually pick up.
