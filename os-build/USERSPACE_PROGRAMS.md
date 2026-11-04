@@ -22,9 +22,9 @@ wired** until that list changes — the wiring is a proposal, not an edit.
 | `quitter` | exit status is reported truthfully | `quitter: exiting 7`, `user exit code 7` | **BUILT at 0x6400…, base verified**; needs one line in `BINS` to be wired |
 | `readkey` | syscall 5 returns real scancodes | `readkey: polling syscall 5`, `readkey got <n>`, `readkey: empty` | **WRITTEN, COMPILES**; a diagnostic probe, not for `BINS` |
 | `writer` | the one-page write cap is enforced | `writer: alive`, `writer: oversize returned 0`, `writer: cap returned 19` | **WRITTEN, COMPILES**; probe, not for `BINS` |
-| `badcall` | reserved numbers 6-15 refuse, not just 99 | `user bad syscall 6 refused` / `15` / `99`, then `badcall: 6 returned 18446744073709551615` and `badcall: survived all three` | **WRITTEN, COMPILES**; wiring proposal |
+| `badcall` | reserved numbers 8-15 refuse, not just 99 | `user bad syscall 8 refused` / `15` / `99`, then `badcall: 8 returned 18446744073709551615` and `badcall: survived all three` | **WRITTEN, COMPILES**; wiring proposal. Was 6 until 2026-11-04 — 6/7 are the frozen IPC pair (`KERNEL_SPEC.md`) |
 | `hog` | allocation is bounded and contained | `hog: allocating`, then the task killed by the fault; the shell must still answer `status` afterwards | **WRITTEN, COMPILES**; fault-containment drill, not an allocator test — no allocation syscall exists (wiring proposal: `os-build/userspace/WIRING_PROPOSAL_R12.md`) |
-| `talker` + `listener` | two tasks can exchange a message | `talker: sent <n>`, `listener: got <n>` | **BLOCKED — no IPC exists** |
+| `talker` + `listener` | two tasks can exchange a message | `talker: sent <n>`, `listener: got <n>` | **WRITTEN**; syscalls 6/7 (`ipc_send`/`ipc_recv`) are in `kernel/src/user.rs`, the ring-3 acceptance pair is still owed |
 | `abiprobe` | the six-call contract itself | `abiprobe: checks 9 failures 0`, `abiprobe: ABI OK` | **WRITTEN, BUILT** at 0x6818…, base verified; diagnostic, needs `BINS` + a fifth stack slot |
 | `selfinfo` | syscall 3 identity survives sleep | `selfinfo: pid <n>`, `selfinfo: identity held` | **WRITTEN, BUILT** at 0x6819…, base verified; diagnostic |
 | `writechain` | repeated and chunked writes | `writechain: failures 0`, `writechain: OK` | **WRITTEN, BUILT** at 0x681a…, base verified; diagnostic |
