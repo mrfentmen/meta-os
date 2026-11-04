@@ -104,6 +104,17 @@ if [ -f "$THEME_SRC/wallpapers/live/meta-live.py" ]; then
 fi
 
 GREETER_SRC="$THEME_SRC/greeter"
+# The X root at login is painted by unity-settings-daemon from
+# org.gnome.desktop.background, and Debian's 10_desktop-base.gschema.override
+# points that at the desktop-base alternative — the emerald teal + white swirl
+# that held the screen for 2.5 s before the desktop painted. Installed as its
+# own override so it survives a greeter override being absent.
+if [ -f "$GREETER_SRC/99_metaos-background.gschema.override" ]; then
+  $SUDO mkdir -p "$ROOT/usr/share/glib-2.0/schemas"
+  $SUDO install -m644 "$GREETER_SRC/99_metaos-background.gschema.override" \
+    "$ROOT/usr/share/glib-2.0/schemas/99_metaos-background.gschema.override"
+  echo "provision(face): root background override -> Meta wallpaper (no desktop-base art)"
+fi
 if [ -f "$GREETER_SRC/99_metaos-greeter.gschema.override" ]; then
   $SUDO mkdir -p "$ROOT/usr/share/glib-2.0/schemas"
   $SUDO install -m644 "$GREETER_SRC/99_metaos-greeter.gschema.override" \
@@ -113,10 +124,20 @@ if [ -f "$GREETER_SRC/99_metaos-greeter.gschema.override" ]; then
   # those warnings into a failure. That is why the cache stayed stale after the
   # override was installed: the compile was refused, quietly, every time, and
   # unity-greeter kept reading Ubuntu's art out of the old cache.
-  if [ "$(uname -s)" = Linux ] && command -v glib-compile-schemas >/dev/null 2>&1; then
+  # Compile in the TARGET, not on the host. The host here is macOS, which has
+  # no glib-compile-schemas at all, so the override used to sit unread until
+  # metaos-schemas.service ran at boot — and the greeter starts *before* that
+  # unit, so every boot's first login surface read the stale Ubuntu defaults.
+  # The image itself carries the compiler and the same arch, so chroot is a
+  # real check: if it runs, the cache is fixed before the image can boot.
+  if chroot "$ROOT" true 2>/dev/null; then
+    chroot "$ROOT" glib-compile-schemas /usr/share/glib-2.0/schemas 2>/dev/null \
+      && echo "provision(face): greeter schemas compiled in the image (chroot)" \
+      || echo "provision(face): greeter schemas NOT compiled (metaos-schemas.service retries at boot)"
+  elif [ "$(uname -s)" = Linux ] && command -v glib-compile-schemas >/dev/null 2>&1; then
     glib-compile-schemas "$ROOT/usr/share/glib-2.0/schemas" 2>/dev/null \
-      && echo "provision(face): greeter schemas compiled" \
-      || echo "provision(face): greeter schemas NOT compiled (override installed; metaos-schemas.service retries at boot)"
+      && echo "provision(face): greeter schemas compiled on the host" \
+      || echo "provision(face): greeter schemas NOT compiled (metaos-schemas.service retries at boot)"
   else
     echo "provision(face): no runnable glib here — metaos-schemas.service compiles at boot"
   fi
@@ -138,6 +159,72 @@ if [ -f "$GREETER_SRC/meta-ascii.png" ]; then
     "$ROOT/usr/share/backgrounds/warty-final-ubuntu.png"
   echo "provision(face): greeter background default -> Meta ASCII (no Ubuntu art)"
 fi
+
+# 1a2c) desktop-base — the LAST place Debian art can reach the screen, and the
+# one that actually did. Everything above fixes the greeter and the desktop
+# when their own key is set. This fixes what happens when it is NOT: Debian's
+# desktop-base owns the fallback art, and `/usr/share/desktop-base/active-theme`
+# on this base resolves to `emerald-theme` — #05475C teal with the white Debian
+# swirl. Measured on a snapshot boot: the screen was that teal frame from 3.6 s
+# to 6.2 s (13 frames of a 44-frame burst), i.e. 2.5 s of foreign branding
+# before the Meta desktop painted, every single boot. unity-greeter reaches it
+# through a gsettings cache that is only recompiled at boot by
+# metaos-schemas.service (the host has no glib-compile-schemas, so provision
+# cannot do it here) — a stale cache plus a missing Meta file was enough to
+# draw Debian's logo. So the fallback itself is turned into Meta art: same file
+# names, same layout, our pixels. A dangling alternative is what created this
+# bug in the first place, so nothing here may be left dangling.
+DB_SRC="$GREETER_SRC/desktop-base/metaos-theme"
+if [ -d "$DB_SRC" ]; then
+  DB="$ROOT/usr/share/desktop-base/metaos-theme"
+  $SUDO mkdir -p "$DB/wallpaper/contents/images" "$DB/login" "$DB/lockscreen"
+  $SUDO install -m644 "$DB_SRC/wallpaper/contents/images/1920x1080.svg" \
+    "$DB/wallpaper/contents/images/1920x1080.svg"
+  $SUDO install -m644 "$DB_SRC/login/background.svg" "$DB/login/background.svg"
+  # lockscreen art is the same login frame: GNOME/locker slots read it, and a
+  # missing file there is the same silent fallback as everywhere else.
+  $SUDO install -m644 "$DB_SRC/login/background.svg" "$DB/lockscreen/background.svg"
+  # relative on purpose: an absolute target here would be the provisioning
+  # host's path (/mnt/img/…) baked into the guest, which is a 404 at boot.
+  $SUDO ln -sfn background.svg "$DB/login/background-nologo.svg"
+
+  # The alternatives: absolute guest paths on purpose (they are read after the
+  # root is mounted, not while provisioning).
+  ALTDIR="$ROOT/etc/alternatives"
+  $SUDO mkdir -p "$ALTDIR"
+  $SUDO ln -sfn /usr/share/desktop-base/metaos-theme "$ALTDIR/desktop-theme"
+  $SUDO ln -sfn /usr/share/backgrounds/meta-wallpaper.png \
+    "$ALTDIR/desktop-background"
+  $SUDO ln -sfn /usr/share/desktop-base/metaos-theme/login/background.svg \
+    "$ALTDIR/desktop-login-background"
+  # …and the mirror links desktop-base ships beside them.
+  $SUDO mkdir -p "$ROOT/usr/share/images/desktop-base"
+  $SUDO ln -sfn /etc/alternatives/desktop-background \
+    "$ROOT/usr/share/images/desktop-base/desktop-background"
+  $SUDO ln -sfn desktop-background "$ROOT/usr/share/images/desktop-base/default"
+  $SUDO ln -sfn /etc/alternatives/desktop-login-background \
+    "$ROOT/usr/share/images/desktop-base/login-background.svg"
+  # GNOME-style background XML slots, pointing at the same PNG the desktop uses.
+  $SUDO install -m644 "$DB_SRC/wallpaper/gnome-background.xml" \
+    "$ROOT/usr/share/desktop-base/metaos-theme/wallpaper/gnome-background.xml"
+  $SUDO ln -sfn /usr/share/desktop-base/metaos-theme/wallpaper/gnome-background.xml \
+    "$ALTDIR/desktop-background.xml"
+  $SUDO ln -sfn "$ALTDIR/desktop-background.xml" \
+    "$ROOT/usr/share/images/desktop-base/desktop-background.xml"
+  # plymouth's Debian theme link, if the base ships one: not our theme, and it
+  # has no business pointing at stock art.
+  $SUDO rm -f "$ROOT/usr/share/plymouth/themes/debian-theme"
+  echo "provision(face): desktop-base fallback art -> Meta (theme, background, login)"
+fi
+
+# Leftovers from earlier branding runs. One of these still said
+# autologin-user=root, i.e. dead config that could log a demo in as root if a
+# later drop-in lost the race.
+for bak in "$ROOT"/etc/lightdm/lightdm.conf.bak-*; do
+  [ -e "$bak" ] || continue
+  $SUDO rm -f "$bak"
+  echo "provision(face): removed stale $(basename "$bak")"
+done
 
 # top bar: the channel default AND skel, so an existing user and a new one
 # both get the Meta panel (meta-desktop.sh copies it into the user config).

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Meta OS desktop-base background slot (gnome-background.xml).
+     Debian's desktop-base fills this with the active theme's wallpaper; the
+     stock active theme is emerald, so any consumer of
+     /etc/alternatives/desktop-background.xml drew Debian's teal + swirl.
+     One file, one picture: the same Meta wallpaper the desktop paints. -->
+<wallpapers>
+  <wallpaper deleted="false">
+    <name>Meta OS</name>
+    <filename>/usr/share/backgrounds/meta-wallpaper.png</filename>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#070b16</pcolor>
+    <scolor>#070b16</scolor>
+  </wallpaper>
+</wallpapers>

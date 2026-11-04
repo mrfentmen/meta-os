@@ -225,15 +225,37 @@ fi
 # exists; the guest's mode follows it (measured: 640x360 -> 2120x1192 on a
 # 1520x860 request). Best-effort and silent on failure: this needs the
 # Accessibility permission, and a boot must not depend on it.
-WINDOW_SIZE="${META_WINDOW:-1600x900}"
+WINDOW_SIZE="${META_WINDOW:-fit}"
 if [ "$WINDOW_SIZE" != "none" ] && command -v osascript >/dev/null 2>&1; then
   (
     sleep 4
-    w=${WINDOW_SIZE%x*}
-    h=${WINDOW_SIZE#*x}
+    if [ "$WINDOW_SIZE" = "fit" ]; then
+      # "fit" = the usable desktop (menu bar and dock already subtracted by
+      # Finder), so the default boot looks full screen without the user having
+      # to drag or press the green button. The guest follows the window size,
+      # so this is also the resolution the desktop is laid out at.
+      bounds=$(osascript -e 'tell application "Finder" to get bounds of window of desktop' 2>/dev/null)
+      case "$bounds" in
+        *,*) set -- $(printf '%s' "$bounds" | tr -d ' ' | tr ',' ' ')
+             w=$(($3 - $1)); h=$(($4 - $2)) ;;
+        *)   w=1600; h=900 ;;
+      esac
+      [ "$w" -ge 1024 ] && [ "$h" -ge 600 ] || { w=1600; h=900; }
+      echo "show_os: desktop is ${w}x${h} — sizing the window to fill it"
+    elif [ "$WINDOW_SIZE" = "full" ]; then
+      # Native macOS full screen (Ctrl+Cmd+F). Same permission as sizing.
+      osascript -e 'tell application "System Events" to keystroke "f" using {control down, command down}' \
+        >/dev/null 2>&1 \
+        && echo "show_os: asked for macOS full screen (Ctrl+Cmd+F)" \
+        || echo "show_os: could not enter full screen (grant Accessibility). Press Ctrl+Cmd+F yourself."
+      exit 0
+    else
+      w=${WINDOW_SIZE%x*}
+      h=${WINDOW_SIZE#*x}
+    fi
     osascript -e "tell application \"System Events\" to set size of window 1 of process \"qemu-system-aarch64\" to {$w, $h}" \
       >/dev/null 2>&1 \
-      && echo "show_os: window set to ${WINDOW_SIZE} (the guest's resolution follows it)" \
+      && echo "show_os: window set to ${w}x${h} (the guest's resolution follows it)" \
       || echo "show_os: could not size the window (grant Accessibility, or drag it). META_WINDOW=none disables this."
   ) &
 fi

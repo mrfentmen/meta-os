@@ -1,0 +1,28 @@
+# The X root at login, set where it is actually read.
+#
+# Measured, not guessed: at +0.5 s into the session the root window already has
+# a pixmap and no client window owns the screen, and the process list at that
+# moment contains unity-settings-daemon (shipped in this base image). Its
+# background plugin paints the root from org.gnome.desktop.background, and
+# Debian's own 10_desktop-base.gschema.override points picture-uri at
+# file:///usr/share/images/desktop-base/desktop-background.xml — the
+# desktop-base alternative. On this image that alternative resolved to
+# emerald's login art: #05475C teal, geometric shards, white Debian swirl. That
+# is the "Debian spiral before the desktop", and it held the screen for 2.5 s
+# on every boot (13 frames of a 44-frame 150 ms burst, 3.6 s → 6.2 s).
+#
+# Pointing that URI at our PNG is the fix that survives everything else: the
+# fallback path Debian left behind now draws Meta art, and if the file were
+# ever missing the fallback colour is Meta ink instead of GNOME's blue.
+#
+# Install: /usr/share/glib-2.0/schemas/99_metaos-background.gschema.override
+# then:    glib-compile-schemas /usr/share/glib-2.0/schemas  (provision does
+#          this inside the image, via chroot — the macOS host has no compiler)
+
+[org.gnome.desktop.background]
+picture-uri='file:///usr/share/backgrounds/meta-wallpaper.png'
+picture-uri-dark='file:///usr/share/backgrounds/meta-wallpaper.png'
+picture-options='zoom'
+primary-color='#070b16'
+secondary-color='#070b16'
+color-shading-type='solid'

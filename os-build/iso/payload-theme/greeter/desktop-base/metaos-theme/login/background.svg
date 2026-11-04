@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <!-- Meta OS login art (desktop-base `login/background.svg` slot).
+       Same reason as the wallpaper SVG beside it: this is the file Debian's
+       desktop-base hands every greeter that has no background of its own, and
+       the stock one is emerald's teal + white Debian swirl. Dimmer than the
+       wallpaper so a login box reads on top of it. -->
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#0f2a52" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#0a1526" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#060a13" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ribbon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5ea9ff"/>
+      <stop offset="100%" stop-color="#1877f2"/>
+    </linearGradient>
+  </defs>
+  <rect width="1920" height="1080" fill="#060a13"/>
+  <rect width="1920" height="1080" fill="url(#glow)"/>
+  <g transform="translate(960 500) scale(8.2) translate(-24 -24)" fill="none"
+     stroke="url(#ribbon)" stroke-width="4.3" stroke-linecap="round"
+     stroke-opacity="0.85">
+    <path d="M7 28.7C10.8 35.3 16.8 35.2 22.1 27.3L28.7 17.1C34.2 8.7 40.4 13.4 41 19.1C41.4 22.6 39.5 26.9 36.8 31.2"/>
+    <path d="M6.7 19.3C7.2 13.5 13.7 8.5 19.1 17.1L25.7 27.3C31 35.2 37 35.3 40.8 28.7"/>
+  </g>
+</svg>

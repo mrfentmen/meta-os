@@ -379,6 +379,24 @@ DESKTOP
     install -m644 "$PAYLOAD/greeter/lightdm-gtk-greeter.conf" "$tree/etc/lightdm/lightdm-gtk-greeter.conf"
     mkdir -p "$tree/etc/lightdm/lightdm.conf.d"
     install -m644 "$PAYLOAD/greeter/10-metaos-live.conf" "$tree/etc/lightdm/lightdm.conf.d/10-metaos-live.conf"
+    # PROV:greeter schema overrides + desktop-base art (mirror of provision.sh;
+    # same reason: without these the login surface falls back to Debian art).
+    mkdir -p "$tree/usr/share/glib-2.0/schemas" "$tree/usr/share/desktop-base/metaos-theme/wallpaper/contents/images" \
+             "$tree/usr/share/desktop-base/metaos-theme/login" "$tree/etc/alternatives" \
+             "$tree/usr/share/images/desktop-base"
+    for ov in 99_metaos-greeter.gschema.override 99_metaos-background.gschema.override; do
+      install -m644 "$PAYLOAD/greeter/$ov" "$tree/usr/share/glib-2.0/schemas/$ov"
+    done
+    install -m644 "$PAYLOAD/greeter/desktop-base/metaos-theme/wallpaper/contents/images/1920x1080.svg" \
+      "$tree/usr/share/desktop-base/metaos-theme/wallpaper/contents/images/1920x1080.svg"
+    install -m644 "$PAYLOAD/greeter/desktop-base/metaos-theme/wallpaper/gnome-background.xml" \
+      "$tree/usr/share/desktop-base/metaos-theme/wallpaper/gnome-background.xml"
+    install -m644 "$PAYLOAD/greeter/desktop-base/metaos-theme/login/background.svg" \
+      "$tree/usr/share/desktop-base/metaos-theme/login/background.svg"
+    ln -sfn /usr/share/desktop-base/metaos-theme "$tree/etc/alternatives/desktop-theme"
+    ln -sfn /usr/share/backgrounds/meta-wallpaper.png "$tree/etc/alternatives/desktop-background"
+    ln -sfn /usr/share/desktop-base/metaos-theme/login/background.svg \
+      "$tree/etc/alternatives/desktop-login-background"
     install -m644 "$PAYLOAD/wallpapers/meta-ascii.png" "$tree/usr/share/backgrounds/meta-ascii.png" 2>/dev/null || true
     install -m644 "$PAYLOAD/wallpapers/meta-rays.png" "$tree/usr/share/backgrounds/meta-rays.png" 2>/dev/null || true
     install -m644 "$PAYLOAD/wallpapers/meta-dusk.png" "$tree/usr/share/backgrounds/meta-dusk.png" 2>/dev/null || true

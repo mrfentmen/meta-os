@@ -109,6 +109,56 @@ install -m644 "$PAYLOAD/apps/metaos-welcome.desktop" "$ROOT/etc/xdg/autostart/me
 install -m644 "$PAYLOAD/greeter/lightdm-gtk-greeter.conf" "$ROOT/etc/lightdm/lightdm-gtk-greeter.conf"
 mkdir -p "$ROOT/etc/lightdm/lightdm.conf.d"
 install -m644 "$PAYLOAD/greeter/10-metaos-live.conf" "$ROOT/etc/lightdm/lightdm.conf.d/10-metaos-live.conf"
+
+# The login surface, where it is actually read. Two overrides, because two
+# different programs draw the screen before the desktop: unity-greeter (the
+# greeter in this image) and unity-settings-daemon, which paints the X root from
+# org.gnome.desktop.background. Debian's own 10_desktop-base.gschema.override
+# points that URI at the desktop-base alternative, whose active theme is
+# emerald: #05475C teal with the white Debian swirl. That frame held the screen
+# for 2.5 s on every boot (measured: 13 of 44 frames in a 150 ms burst, 3.6 s to
+# 6.2 s), which is the "Debian spiral before the desktop". Both paths are
+# pointed at Meta art here, and the fallback art behind them is replaced too,
+# so no unset key can reach stock branding.
+mkdir -p "$ROOT/usr/share/glib-2.0/schemas"
+for ov in 99_metaos-greeter.gschema.override 99_metaos-background.gschema.override; do
+  install -m644 "$PAYLOAD/greeter/$ov" "$ROOT/usr/share/glib-2.0/schemas/$ov"
+done
+DB="$ROOT/usr/share/desktop-base/metaos-theme"
+mkdir -p "$DB/wallpaper/contents/images" "$DB/login" "$DB/lockscreen"
+install -m644 "$PAYLOAD/greeter/desktop-base/metaos-theme/wallpaper/contents/images/1920x1080.svg" \
+  "$DB/wallpaper/contents/images/1920x1080.svg"
+install -m644 "$PAYLOAD/greeter/desktop-base/metaos-theme/wallpaper/gnome-background.xml" \
+  "$DB/wallpaper/gnome-background.xml"
+install -m644 "$PAYLOAD/greeter/desktop-base/metaos-theme/login/background.svg" \
+  "$DB/login/background.svg"
+install -m644 "$PAYLOAD/greeter/desktop-base/metaos-theme/login/background.svg" \
+  "$DB/lockscreen/background.svg"
+ln -sfn background.svg "$DB/login/background-nologo.svg"
+mkdir -p "$ROOT/etc/alternatives" "$ROOT/usr/share/images/desktop-base"
+ln -sfn /usr/share/desktop-base/metaos-theme "$ROOT/etc/alternatives/desktop-theme"
+ln -sfn /usr/share/backgrounds/meta-wallpaper.png "$ROOT/etc/alternatives/desktop-background"
+ln -sfn /usr/share/desktop-base/metaos-theme/login/background.svg \
+  "$ROOT/etc/alternatives/desktop-login-background"
+ln -sfn /usr/share/desktop-base/metaos-theme/wallpaper/gnome-background.xml \
+  "$ROOT/etc/alternatives/desktop-background.xml"
+ln -sfn /etc/alternatives/desktop-background "$ROOT/usr/share/images/desktop-base/desktop-background"
+ln -sfn desktop-background "$ROOT/usr/share/images/desktop-base/default"
+ln -sfn /etc/alternatives/desktop-login-background "$ROOT/usr/share/images/desktop-base/login-background.svg"
+ln -sfn /etc/alternatives/desktop-background.xml "$ROOT/usr/share/images/desktop-base/desktop-background.xml"
+rm -f "$ROOT/usr/share/plymouth/themes/debian-theme"
+rm -f "$ROOT"/etc/lightdm/lightdm.conf.bak-*
+# Compile the schema cache when this host can, so the greeter reads the
+# override on the first login instead of waiting for metaos-schemas.service
+# (which starts after the greeter).
+if chroot "$ROOT" true 2>/dev/null; then
+  chroot "$ROOT" glib-compile-schemas /usr/share/glib-2.0/schemas 2>/dev/null \
+    && say "login/boot schemas compiled in the tree" \
+    || say "login schemas NOT compiled — metaos-schemas.service retries at boot"
+elif command -v glib-compile-schemas >/dev/null 2>&1; then
+  glib-compile-schemas "$ROOT/usr/share/glib-2.0/schemas" 2>/dev/null \
+    && say "login/boot schemas compiled" || true
+fi
 install -m644 "$PAYLOAD/wallpapers/meta-ascii.png" "$ROOT/usr/share/backgrounds/meta-ascii.png" 2>/dev/null || true
 install -m644 "$PAYLOAD/wallpapers/meta-rays.png" "$ROOT/usr/share/backgrounds/meta-rays.png" 2>/dev/null || true
 install -m644 "$PAYLOAD/wallpapers/meta-dusk.png" "$ROOT/usr/share/backgrounds/meta-dusk.png" 2>/dev/null || true

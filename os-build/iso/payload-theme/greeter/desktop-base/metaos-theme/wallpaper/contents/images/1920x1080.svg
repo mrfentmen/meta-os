@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <!-- Meta OS desktop-base art.
+       Why this file exists: Debian's desktop-base supplies the image's
+       fallback wallpaper/login art, and in this Ubuntu base the *active* theme
+       is `emerald` — #05475C teal with the white Debian swirl. xfdesktop,
+       unity-greeter and lightdm-gtk-greeter all fall back to it whenever their
+       own key is unset or its file is missing, so for ~2.5 s before the Meta
+       desktop painted, the screen showed Debian's logo. Replacing the art at
+       this level means no fallback path can show foreign branding, even if a
+       greeter's gsettings cache is stale.
+       Palette and form are the same as /usr/share/backgrounds/meta-wallpaper.png
+       so the handover to the animated wallpaper is invisible. -->
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="46%" r="55%">
+      <stop offset="0%" stop-color="#12305c" stop-opacity="0.95"/>
+      <stop offset="55%" stop-color="#0a1730" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#070b16" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ribbon" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#78baff"/>
+      <stop offset="55%" stop-color="#1877f2"/>
+      <stop offset="100%" stop-color="#69ddff"/>
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#85aae6" stroke-opacity="0.055" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <rect width="1920" height="1080" fill="#070b16"/>
+  <rect width="1920" height="1080" fill="url(#grid)"/>
+  <rect width="1920" height="1080" fill="url(#glow)"/>
+
+  <g transform="translate(960 520) scale(9.4) translate(-24 -24)" fill="none"
+     stroke="url(#ribbon)" stroke-width="4.3" stroke-linecap="round"
+     stroke-opacity="0.92">
+    <path d="M7 28.7C10.8 35.3 16.8 35.2 22.1 27.3L28.7 17.1C34.2 8.7 40.4 13.4 41 19.1C41.4 22.6 39.5 26.9 36.8 31.2"/>
+    <path d="M6.7 19.3C7.2 13.5 13.7 8.5 19.1 17.1L25.7 27.3C31 35.2 37 35.3 40.8 28.7"/>
+  </g>
+</svg>
