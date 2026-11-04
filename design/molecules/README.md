@@ -1,9 +1,9 @@
 # Molecule viewer — data provenance
 
 Viewer: `design/meta-scientia-molecules.html` (Three.js r152 vendored at
-`design/vendor/three.min.js`; all other assets are same-origin files, so the
-page works with the network off — verified: every request it makes is
-127.0.0.1).
+the shared `vendor/three.min.js`; all other assets are same-origin files,
+so the page works with the network off — verified: every request it makes
+is 127.0.0.1).
 
 ## PubChem records (real measured/curated 3D, verbatim downloads)
 
@@ -32,7 +32,7 @@ Five Delaney ESOL solubility-set members, coordinates generated locally:
 
 ## Vendored library
 
-- `design/vendor/three.min.js`: three.js r152 UMD build, downloaded from
-  unpkg (`three@0.152.2/build/three.min.js`, 633,338 bytes). Only the core is
+- `vendor/three.min.js`: three.js r152 UMD build, downloaded from
+  unpkg (`three@0.152.2/build/three.min.js`, 633,338 bytes); shared by all four 3D pages. Only the core is
   vendored; orbit controls and label helpers are hand-rolled in the page
   (no examples/jsm code), so there is nothing else to license-track.
