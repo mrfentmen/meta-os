@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nervus — runtime status (read-only stub)</title>
+<link rel="icon" href="data:,">
+<style>
+body{font-family:ui-sans-serif,system-ui,sans-serif;background:#111;color:#eee;padding:24px;max-width:1080px;margin:auto}
+h1{font-size:22px;margin:0 0 4px}
+.sub{color:#aaa;margin:0 0 12px;font-size:14px}
+#sources{font-size:13px;color:#bbb;border:1px solid #333;background:#000;padding:8px 10px;margin:12px 0;white-space:pre-wrap}
+#failures{color:#ff9a9a;font-size:13px;margin:8px 0;white-space:pre-wrap}
+.panels{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:900px){.panels{grid-template-columns:1fr}}
+section.panel{border:1px solid #333;background:#181818;padding:10px 12px;min-width:0}
+section.panel h2{font-size:16px;margin:0 0 6px}
+.counts{font-size:13px;color:#bbb;margin:6px 0}
+.empty{border:1px dashed #555;padding:10px;font-style:italic;color:#ccc;background:#000}
+.fail{color:#ff9a9a;font-size:12px;margin:6px 0}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:4px 6px;border-bottom:1px solid #2a2a2a;vertical-align:top;overflow-wrap:anywhere}
+th{color:#999;font-weight:600}
+.ok{color:#7dd87d}.bad{color:#ff8888}
+.scrollbox{max-height:340px;overflow-y:auto;border:1px solid #2a2a2a;background:#000;padding:6px}
+.row{padding:6px;border-bottom:1px solid #222;font-size:13px}
+.row .meta{color:#888;font-size:12px}
+.note{font-size:12px;color:#888}
+pre{font-size:12px;color:#ccc;white-space:pre-wrap;overflow-wrap:anywhere}
+footer{margin-top:16px;font-size:12px;color:#888;border-top:1px solid #333;padding-top:8px}
+</style>
+</head>
+<body>
+<h1>Nervus — runtime status</h1>
+<p class="sub">A read-only status page over the Nervus stub lane's recorded files. It runs no model, loads no tensors, steers nothing, and writes nothing — every panel below is a GET over a file that already exists. Anything labelled STUB is a placeholder record, never evidence about a model.</p>
+<div id="sources" aria-live="polite">Loading sources…</div>
+<div id="failures" role="alert"></div>
+
+<div class="panels">
+<section class="panel" aria-labelledby="h-dose"><h2 id="h-dose">Dose windows</h2>
+<div class="counts" id="dose-counts">Loading…</div>
+<div class="scrollbox" id="dose-body" aria-live="polite"></div>
+</section>
+
+<section class="panel" aria-labelledby="h-hosted"><h2 id="h-hosted">Hosted lane state</h2>
+<div class="counts" id="hosted-counts">Loading…</div>
+<div class="scrollbox" id="hosted-body" aria-live="polite"></div>
+</section>
+
+<section class="panel" aria-labelledby="h-run"><h2 id="h-run">Last run</h2>
+<div class="counts" id="run-counts">Loading…</div>
+<div class="scrollbox" id="run-body" aria-live="polite"></div>
+</section>
+
+<section class="panel" aria-labelledby="h-curve"><h2 id="h-curve">Layer curve (measured points)</h2>
+<div class="counts" id="curve-counts">Loading…</div>
+<div class="scrollbox" id="curve-body" aria-live="polite"></div>
+</section>
+
+<section class="panel" aria-labelledby="h-tray"><h2 id="h-tray">Instrument tray</h2>
+<div class="counts" id="tray-counts">Loading…</div>
+<div class="scrollbox" id="tray-body" aria-live="polite"></div>
+</section>
+</div>
+
+<footer>Read-only: this page issues only GET fetches for the five files named in the sources line. Producers: hand-filled files list no command; generated files name theirs. Not covered: models, tensors, steering, or any claim about a model.</footer>
+
+<script>
+(function(){
+"use strict";
+var PORT=(window.location&&window.location.port)||"18934";
+/* Every file this page reads (task 83 + "list what you read"):
+   - dose-windows.json ......... dose windows (this dir, hand-filled)
+   - ../os-build/nervus/hosted-receipt.json .. hosted lane state (node nervus/hosted.mjs)
+   - ../os-build/nervus/stub-ledger.jsonl .... last run rows (node nervus/hosted.mjs)
+   - layer-curve.json .......... measured points (this dir, hand-recorded)
+   - tray.json ................. instrument tray (this dir, hand-maintained) */
+var FILES=["dose-windows.json","layer-curve.json","tray.json",
+  "../os-build/nervus/hosted-receipt.json","../os-build/nervus/stub-ledger.jsonl"];
+function fail(id,msg){var e=document.getElementById(id);if(e)e.textContent=msg;
+  var g=document.getElementById("failures");if(g&&msg)g.textContent+=msg+"\n";}
+function emptyBox(msg){var d=document.createElement("div");d.className="empty";d.textContent=msg;return d;}
+/* Missing file, named + the command that produces it (task 84). */
+function missingBox(file,producer){
+  return emptyBox("Missing: "+file+" (HTTP 404 on port "+PORT+"). Produce it with: "+producer);}
+function get(url){return fetch(url,{cache:"no-store"}).then(function(r){if(!r.ok)throw new Error("HTTP "+r.status);return r.text();});}
+function counts(el,txt){document.getElementById(el).textContent=txt;}
+
+var PRODUCERS={
+  "dose-windows.json":"hand-fill: write `source` (repo, file, commit) and the zone ranges — no command writes this file",
+  "layer-curve.json":"hand-recorded R11 points — no command writes this file",
+  "tray.json":"hand-maintained; validate with: node nervus/check-tray.mjs",
+  "../os-build/nervus/hosted-receipt.json":"run: node nervus/hosted.mjs",
+  "../os-build/nervus/stub-ledger.jsonl":"run: node nervus/hosted.mjs"
+};
+
+Promise.allSettled(FILES.map(function(f){return get(f).then(function(t){return {f:f,t:t};});}))
+.then(function(rs){
+  var byName={};rs.forEach(function(r){if(r.status==="fulfilled")byName[r.value.f]=r.value.t;});
+  var loaded=Object.keys(byName).length;
+  document.getElementById("sources").textContent=
+    "Sources read (same-origin GET, port "+PORT+", "+loaded+" of "+FILES.length+" present): "+FILES.join(", ")+".";
+
+  /* dose windows */
+  try{
+    if(!("dose-windows.json" in byName)){counts("dose-counts","dose windows: file missing.");
+      document.getElementById("dose-body").appendChild(missingBox("nervus/dose-windows.json",PRODUCERS["dose-windows.json"]));}
+    else{var dw=JSON.parse(byName["dose-windows.json"]);
+      var zones=dw.zones||{};var names=Object.keys(zones);
+      counts("dose-counts","dose windows: "+(dw.source?("source "+dw.source):"source UNFILLED")+" | zones: "+names.length);
+      var db=document.getElementById("dose-body");db.textContent="";
+      var n=document.createElement("div");n.className="row";
+      n.textContent=dw.note||"(no note)";db.appendChild(n);
+      if(!dw.source){var w=document.createElement("div");w.className="fail";
+        w.textContent="UNFILLED — source is null: until source (repo, file, commit) and zone ranges land, nervus/contracts.mjs refuses any steer record as measured.";db.appendChild(w);}
+      if(!names.length)db.appendChild(emptyBox("No dose zones recorded — the file carries empty zones {}."));
+      names.forEach(function(z){var r=document.createElement("div");r.className="row";
+        r.textContent=z+": "+JSON.stringify(zones[z]);db.appendChild(r);});
+    }}catch(e){fail("dose-counts","dose windows panel error on "+PORT+": "+e.message);}
+
+  /* hosted lane state */
+  try{
+    if(!("../os-build/nervus/hosted-receipt.json" in byName)){counts("hosted-counts","hosted lane: file missing.");
+      document.getElementById("hosted-body").appendChild(missingBox("os-build/nervus/hosted-receipt.json",PRODUCERS["../os-build/nervus/hosted-receipt.json"]));}
+    else{var hr=JSON.parse(byName["../os-build/nervus/hosted-receipt.json"]);
+      var rows=hr.rows||[];
+      var okc=rows.filter(function(r){return r.ok;}).length;
+      counts("hosted-counts","hosted receipt: "+rows.length+" ops ("+okc+" ok) | at "+(hr.at||"no timestamp")+" | stub="+(hr.stub===true?"true (placeholder, not evidence)":String(hr.stub)));
+      var hb=document.getElementById("hosted-body");hb.textContent="";
+      var tab=document.createElement("table");var th=document.createElement("tr");
+      ["op","result","detail"].forEach(function(h){var c=document.createElement("th");c.textContent=h;th.appendChild(c);});
+      tab.appendChild(th);
+      rows.forEach(function(r){var tr=document.createElement("tr");
+        var a=document.createElement("td");a.textContent=r.op||"—";tr.appendChild(a);
+        var b=document.createElement("td");b.textContent=r.ok?"ok":"refused";b.className=r.ok?"ok":"bad";tr.appendChild(b);
+        var c=document.createElement("td");c.textContent=(r.errors||[]).join("; ")||"—";tr.appendChild(c);
+        tab.appendChild(tr);});
+      hb.appendChild(tab);
+      if(!rows.length)hb.appendChild(emptyBox("Hosted receipt carries no op rows."));
+    }}catch(e){fail("hosted-counts","hosted lane panel error on "+PORT+": "+e.message);}
+
+  /* last run (ledger tail) */
+  try{
+    if(!("../os-build/nervus/stub-ledger.jsonl" in byName)){counts("run-counts","last run: file missing.");
+      document.getElementById("run-body").appendChild(missingBox("os-build/nervus/stub-ledger.jsonl",PRODUCERS["../os-build/nervus/stub-ledger.jsonl"]));}
+    else{var lines=byName["../os-build/nervus/stub-ledger.jsonl"].split("\n").filter(function(l){return l.trim();});
+      var last=null;try{last=JSON.parse(lines[lines.length-1]);}catch(e){last=null;}
+      counts("run-counts","ledger: "+lines.length+" records"+(last?(" | last op "+(last.operation||"—")+" at "+(last.at||last.ts||"no timestamp")):" | last line unparseable"));
+      var rb=document.getElementById("run-body");rb.textContent="";
+      if(!lines.length)rb.appendChild(emptyBox("Ledger file is present but holds zero records."));
+      else{var pre=document.createElement("pre");
+        pre.textContent=last?JSON.stringify(last,null,2).slice(0,2000):lines[lines.length-1].slice(0,2000);
+        rb.appendChild(pre);
+        var mm=document.createElement("div");mm.className="note";
+        mm.textContent="Last of "+lines.length+" stub records (all carry stub:true).";rb.appendChild(mm);}
+    }}catch(e){fail("run-counts","last-run panel error on "+PORT+": "+e.message);}
+
+  /* layer curve */
+  try{
+    if(!("layer-curve.json" in byName)){counts("curve-counts","layer curve: file missing.");
+      document.getElementById("curve-body").appendChild(missingBox("nervus/layer-curve.json",PRODUCERS["layer-curve.json"]));}
+    else{var lc=JSON.parse(byName["layer-curve.json"]);var pts=lc.points||[];
+      counts("curve-counts","layer curve: "+pts.length+" measured points | source: "+(lc.source||"unknown"));
+      var cb=document.getElementById("curve-body");cb.textContent="";
+      var nn=document.createElement("div");nn.className="row";nn.textContent=lc.note||"(no note)";cb.appendChild(nn);
+      if(!pts.length)cb.appendChild(emptyBox("No measured points recorded."));
+      pts.forEach(function(p){var r=document.createElement("div");r.className="row";
+        r.textContent="layer "+p.layer+": score "+p.score;cb.appendChild(r);});
+    }}catch(e){fail("curve-counts","layer-curve panel error on "+PORT+": "+e.message);}
+
+  /* tray */
+  try{
+    if(!("tray.json" in byName)){counts("tray-counts","tray: file missing.");
+      document.getElementById("tray-body").appendChild(missingBox("nervus/tray.json",PRODUCERS["tray.json"]));}
+    else{var tj=JSON.parse(byName["tray.json"]);var tools=tj.tools||[];
+      var groups={};tools.forEach(function(t){groups[t.group||"?"]=true;});
+      counts("tray-counts","tray: "+tools.length+" tools in "+Object.keys(groups).length+" groups");
+      var tb=document.getElementById("tray-body");tb.textContent="";
+      if(!tools.length)tb.appendChild(emptyBox("Tray file is present but lists zero tools."));
+      tools.forEach(function(t){var r=document.createElement("div");r.className="row";
+        var b=document.createElement("div");b.textContent=(t.tool||"—")+" ["+(t.prefix||"?")+"]";r.appendChild(b);
+        var m=document.createElement("div");m.className="meta";
+        m.textContent=(t.group||"?")+" — "+(t.bench_job||"");r.appendChild(m);tb.appendChild(r);});
+    }}catch(e){fail("tray-counts","tray panel error on "+PORT+": "+e.message);}
+});
+})();
+</script>
+</body>
+</html>

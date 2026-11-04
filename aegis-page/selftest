@@ -189,6 +189,69 @@ try:
 except Exception as e:  # never let the snapshot line itself fail the run opaquely
     check("snapshot time computable", False, str(e))
 
+# 7. tasks 75-81: dashboard behaviours asserted against the page source
+try:
+    html = open(PAGE, encoding="utf-8").read()
+except FileNotFoundError:
+    html = ""
+# 75. refresh without rebuild: every data read bypasses the HTTP cache
+check("task75 no-store reads", 'no-store' in html,
+      "fetch uses cache:no-store" if 'no-store' in html else "no cache:no-store in page")
+check("task75 reload affordance", 'id="reload"' in html,
+      "reload button present" if 'id="reload"' in html else "no reload button")
+# 76. last-updated + stale after ten minutes
+check("task76 freshness line", 'id="freshness"' in html and 'Last updated' in html,
+      "freshness element + label present" if 'id="freshness"' in html else "no freshness element")
+check("task76 ten-minute rule", 'STALE_MS' in html and '10*60*1000' in html and 'STALE' in html,
+      "STALE_MS=10*60*1000 with STALE warning" if 'STALE_MS' in html else "no ten-minute rule in page")
+# 77. KEV + liveness counts derived, not typed: page recomputes from rows/results
+check("task77 KEV derived", 'k.rows' in html and 'rows.length' in html,
+      "page counts from k.rows" if 'k.rows' in html else "no k.rows derivation in page")
+check("task77 liveness derived", 'res.length' in html or 'results.length' in html,
+      "page counts from results" if 'res.length' in html else "no results-length derivation in page")
+try:
+    k = json.load(open(os.path.join(DATA, "KEV.json"), encoding="utf-8"))
+    rows = k.get("rows") or []
+    yes = sum(1 for r in rows if r.get("kev") is True)
+    no = sum(1 for r in rows if r.get("kev") is False)
+    check("task77 KEV flagged==derived matches", k.get("flagged") == yes,
+          "flagged=%s derived=%d" % (k.get("flagged"), yes))
+    check("task77 KEV checked==decided rows", k.get("checked") == yes + no,
+          "checked=%s decided=%d" % (k.get("checked"), yes + no))
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    check("task77 KEV files readable", False, str(e))
+try:
+    lv = json.load(open(os.path.join(DATA, "LIVENESS.json"), encoding="utf-8"))
+    res = lv.get("results") or []
+    from collections import Counter as _C
+    _c = _C(r.get("liveness") for r in res)
+    check("task77 liveness counts sum to probes",
+          sum(_c.values()) == len(res),
+          "%d counted vs %d probes" % (sum(_c.values()), len(res)))
+except (FileNotFoundError, json.JSONDecodeError) as e:
+    check("task77 LIVENESS file readable", False, str(e))
+# 78. severity filter + result count
+check("task78 severity filter", 'id="find-sev"' in html and 'All severities' in html,
+      "severity select present" if 'id="find-sev"' in html else "no severity select")
+check("task78 result count", 'id="find-shown"' in html and 'Showing ' in html,
+      "showing-N-of-M line present" if 'id="find-shown"' in html else "no result count line")
+# 79. every row links to its source record
+nlinks = html.count('srcLink("data/')
+check("task79 rows link to source files", nlinks >= 3 and 'href="data/runs.jsonl"' in html,
+      "%d srcLink(data/…) call sites + run link" % nlinks if nlinks else "no srcLink call sites")
+# 80. per-panel empty states for missing files
+for pid, pname in (("find", "findings"), ("kev", "KEV"), ("live", "liveness"), ("run", "runs")):
+    has = ('id="%s-fail"' % pid) in html or ('"%s-fail"' % pid) in html
+    check("task80 %s panel names its missing file" % pname, has and 'file missing' in html,
+          ("empty state wired" if has else "no fail element for " + pname))
+# 81. read-only: no write verbs, exactly one button (the reload affordance)
+for verb in ('"POST"', '"PUT"', '"DELETE"', "'POST'", "'PUT'", "'DELETE'"):
+    check("task81 no %s in page" % verb.strip('"\' '), verb not in html,
+          "absent" if verb not in html else "WRITE VERB PRESENT")
+nbuttons = len(re.findall(r"<button", html))
+check("task81 single reload button", nbuttons == 1 and 'id="reload"' in html,
+      "%d <button> element(s)" % nbuttons)
+
 out = lines if not quiet else [l for l in lines if l.startswith("FAIL ")]
 print("\n".join(out))
 print(("SELFTEST FAIL" if failed else "SELFTEST PASS"))

@@ -17,6 +17,8 @@
   button[aria-pressed="true"] { background: #1d4d33; border-color: #3f9e63; }
   input[type="text"] { background: #0b1420; color: #d7e5f2; border: 1px solid #2b4258; padding: 5px 8px; font: inherit; font-size: 12px; width: 90px; }
   #meta { padding: 8px 16px; font-size: 12px; color: #9fd8b4; min-height: 18px; }
+  #counts { padding: 0 16px 4px; font-size: 12px; color: #9fd8b4; }
+  #elfilter button { margin-left: 4px; }
   #cap { padding: 0 16px 4px; font-size: 12px; color: #c9d8e2; }
   #view { display: block; width: 100%; height: 60vh; touch-action: none; cursor: crosshair; }
   .sw { display: inline-block; width: 10px; height: 10px; margin: 0 4px 0 10px; }
@@ -37,6 +39,7 @@
 </header>
 <div id="bar" role="toolbar" aria-label="Viewer controls">
   <span id="picker" role="group" aria-label="Embedded molecules"></span>
+  <span id="elfilter" role="group" aria-label="Element filter"></span>
   <input type="text" id="cid" inputmode="numeric" placeholder="CID…" aria-label="PubChem CID to load">
   <button id="btn-cid">Load CID</button>
   <button id="btn-bs" aria-pressed="true">Ball and stick</button>
@@ -46,10 +49,12 @@
   <button id="btn-measure" aria-pressed="false">Measure: off</button>
 </div>
 <div id="meta" aria-live="polite"></div>
+<div id="counts" aria-live="polite"></div>
 <div id="cap"></div>
 <div id="wrap"><canvas id="view"></canvas><div id="tip"></div><div id="legendbox"></div></div>
 <div id="err" role="alert"></div>
 <footer id="prov"></footer>
+<nav style="padding:8px 16px;font-size:11px;"><a href="../" style="color:#7fb8e8;">Science Lab home</a> · <a href="../science-lab-review/" style="color:#7fb8e8;">Reproduction cycles</a></nav>
 <script src="../../vendor/three.min.js"></script>
 <script>
 "use strict";
@@ -77,6 +82,66 @@ const elOf = (s) => EL[s] || OTHER;
 let renderer, scene, camera, group, atoms = [], theta = 0.6, phi = 1.05, dist = 14;
 let spinning = true, showLabels = false, measuring = false, picked = [];
 let current = null, currentMeta = null;
+let hiddenEl = new Set(); // element symbols hidden by the element filter
+
+// Element filter: hides atoms of filtered elements AND every bond mesh
+// touching a hidden atom. Counts are recomputed from data, not guessed.
+function applyFilter() {
+  if (current && group && document.body.dataset.state !== "no-webgl") {
+    group.children.forEach((o) => {
+      if (!o.userData) return;
+      if (o.userData.i !== undefined && !o.userData.isLabel) {
+        o.visible = !hiddenEl.has(o.userData.sym);
+      } else if (o.userData.isBondMesh) {
+        o.visible = !hiddenEl.has(o.userData.ends[0]) && !hiddenEl.has(o.userData.ends[1]);
+      } else if (o.userData.isLabel) {
+        o.visible = !hiddenEl.has(current.atoms[o.userData.atom].sym);
+      }
+    });
+  }
+  updateCounts();
+  if (current && document.body.dataset.state === "no-webgl") draw2D(current);
+}
+
+function updateCounts() {
+  const box = document.getElementById("counts");
+  if (!current) { box.textContent = ""; return; }
+  const na = current.atoms.filter((a) => !hiddenEl.has(a.sym)).length;
+  const nb = current.bonds.filter((bd) =>
+    !hiddenEl.has(current.atoms[bd.a].sym) && !hiddenEl.has(current.atoms[bd.b].sym)).length;
+  box.textContent = "showing " + na + " of " + current.atoms.length +
+    " atoms · " + nb + " of " + current.bonds.length + " bonds" +
+    (hiddenEl.size ? " (hidden: " + Array.from(hiddenEl).sort().join(", ") + ")"
+                   : " (no element filter)");
+}
+
+function buildElFilter() {
+  const bar = document.getElementById("elfilter");
+  bar.textContent = "";
+  const label = document.createElement("span");
+  label.textContent = "Filter:";
+  label.style.cssText = "font-size:12px;color:#8fa9bd;";
+  bar.appendChild(label);
+  const all = document.createElement("button");
+  all.textContent = "All";
+  all.setAttribute("aria-pressed", String(hiddenEl.size === 0));
+  all.title = "Show every element";
+  all.addEventListener("click", () => { hiddenEl.clear(); buildElFilter(); applyFilter(); });
+  bar.appendChild(all);
+  const els = Array.from(new Set(current.atoms.map((a) => a.sym))).sort();
+  els.forEach((sym) => {
+    const b = document.createElement("button");
+    const n = current.atoms.filter((a) => a.sym === sym).length;
+    b.textContent = sym + " (" + n + ")";
+    b.setAttribute("aria-pressed", String(!hiddenEl.has(sym)));
+    b.title = hiddenEl.has(sym) ? ("Show " + sym) : ("Hide " + sym);
+    b.addEventListener("click", () => {
+      if (hiddenEl.has(sym)) hiddenEl.delete(sym); else hiddenEl.add(sym);
+      buildElFilter(); applyFilter();
+    });
+    bar.appendChild(b);
+  });
+}
 
 function parseSDF(text) {
   const L = text.replace(/\r/g, "").split("\n");
@@ -147,10 +212,18 @@ function buildScene(mol, mode) {
         offs.push(s, s.clone().negate());
         if (bd.o === 3) offs.push(new THREE.Vector3());
       }
-      offs.forEach((o) => { const mm = bondMesh(p1, p2, bd.o === 1 ? 0.12 : 0.085, bm, o); mm.userData.bondOrder = bd.o; group.add(mm); });
+      offs.forEach((o) => { const mm = bondMesh(p1, p2, bd.o === 1 ? 0.12 : 0.085, bm, o); mm.userData.bondOrder = bd.o; mm.userData.ends = [mol.atoms[bd.a].sym, mol.atoms[bd.b].sym]; group.add(mm); });
     });
   }
   scene.add(group);
+  window.__molVisible = () => {
+    let a = 0, b = 0;
+    group.children.forEach((o) => {
+      if (o.userData && o.userData.i !== undefined && !o.userData.isLabel && o.visible) a++;
+      if (o.userData && o.userData.isBondMesh && o.visible) b++;
+    });
+    return { atoms: a, bondMeshes: b };
+  };
   buildLabels(mode);
   const box = new THREE.Box3().setFromObject(group);
   dist = Math.max(6, box.getSize(new THREE.Vector3()).length() * 1.1);
@@ -173,10 +246,68 @@ function buildLabels(mode) {
     sp.scale.set(w / 34 * 0.42, 0.42, 1);
     sp.position.copy(mesh.position);
     sp.userData.isLabel = true;
+    sp.userData.atom = i;
     group.add(sp);
   });
 }
 
+function css(e) { return "#" + e.c.toString(16).padStart(6, "0"); }
+
+// Named no-WebGL state ("2d-schematic"): plots atom x/y with bonds as
+// lines on the 2D canvas. Same data, same element filter — no 3D needed.
+function draw2D(mol) {
+  const cv = document.getElementById("view");
+  const ctx = cv.getContext("2d");
+  const W = cv.clientWidth || 800, H = Math.max(320, Math.round(W * 0.6));
+  cv.width = W; cv.height = H;
+  ctx.fillStyle = "#06090f";
+  ctx.fillRect(0, 0, W, H);
+  const vis = mol.atoms.map((a) => !hiddenEl.has(a.sym));
+  const xs = mol.atoms.filter((_, i) => vis[i]).map((a) => a.x);
+  const ys = mol.atoms.filter((_, i) => vis[i]).map((a) => a.y);
+  if (!xs.length) {
+    ctx.fillStyle = "#8fa9bd"; ctx.font = "14px monospace";
+    ctx.fillText("Every element is filtered out — press All to show atoms.", 20, 30);
+    return;
+  }
+  const lo_x = Math.min.apply(null, xs), hi_x = Math.max.apply(null, xs);
+  const lo_y = Math.min.apply(null, ys), hi_y = Math.max.apply(null, ys);
+  const sc = Math.min((W - 80) / Math.max(1e-6, hi_x - lo_x), (H - 80) / Math.max(1e-6, hi_y - lo_y), 60);
+  const px = (x) => W / 2 + (x - (lo_x + hi_x) / 2) * sc;
+  const py = (y) => H / 2 - (y - (lo_y + hi_y) / 2) * sc;
+  ctx.lineWidth = 2;
+  mol.bonds.forEach((bd) => {
+    if (!vis[bd.a] || !vis[bd.b]) return;
+    const x1 = px(mol.atoms[bd.a].x), y1 = py(mol.atoms[bd.a].y);
+    const x2 = px(mol.atoms[bd.b].x), y2 = py(mol.atoms[bd.b].y);
+    ctx.strokeStyle = "#8a99a8";
+    const off = (k) => {
+      const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1;
+      return [(-dy / L) * 4 * k, (dx / L) * 4 * k];
+    };
+    const reps = bd.o === 1 ? [0] : (bd.o === 2 ? [-1, 1] : [-1, 0, 1]);
+    reps.forEach((k) => {
+      const o = off(k);
+      ctx.beginPath(); ctx.moveTo(x1 + o[0], y1 + o[1]); ctx.lineTo(x2 + o[0], y2 + o[1]); ctx.stroke();
+    });
+  });
+  mol.atoms.forEach((a, i) => {
+    if (!vis[i]) return;
+    const X = px(a.x), Y = py(a.y);
+    ctx.beginPath(); ctx.arc(X, Y, 11, 0, 7); ctx.fillStyle = css(elOf(a.sym)); ctx.fill();
+    ctx.fillStyle = (a.sym === "H" || a.sym === "C") ? "#111" : "#fff";
+    ctx.font = "bold 10px monospace"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(a.sym, X, Y);
+  });
+  ctx.fillStyle = "#8fa9bd"; ctx.font = "12px monospace"; ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+  ctx.fillText("2D schematic (x/y projection, z ignored) — state: no-webgl", 12, H - 12);
+}
+
+function renderCurrent() {
+  if (!current) return;
+  if (document.body.dataset.state === "no-webgl") draw2D(current);
+  else buildScene(current, currentMode());
+}
 function showError(msg) {
   const e = document.getElementById("err");
   e.style.display = "block";
@@ -194,7 +325,10 @@ async function loadEmbedded(id) {
     current = mol;
     currentMeta = { id, embedded: true };
     document.querySelectorAll("#picker button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.id === id)));
-    buildScene(mol, currentMode());
+    hiddenEl.clear();
+    renderCurrent();
+    buildElFilter();
+    applyFilter();
     const meta = META.find((m) => m.id === id);
     document.getElementById("meta").textContent =
       meta.name + " — " + meta.formula + " — " + meta.weight.toFixed(2) + " g/mol — embedded JSON (" +
@@ -231,34 +365,66 @@ function currentMode() {
 let META = [];
 async function init() {
   const cv = document.getElementById("view");
-  // Honest WebGL fallback (NC-071): if no 3D context exists, say so and
-  // list the structures as text instead of a blank canvas. ?force2d=1
-  // exercises this path for testing.
-  let gl = null;
-  try {
-    gl = cv.getContext("webgl2") || cv.getContext("webgl");
-  } catch (e) { gl = null; }
-  if (!gl || new URLSearchParams(location.search).has("force2d")) {
-    document.getElementById("meta").textContent =
-      "3D unavailable in this browser (no WebGL context). Structures cannot be drawn — nothing is faked in their place.";
-    deadControls("needs the 3D view");
-    fetch("data/meta.json", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => {
-        document.getElementById("cap").textContent =
-          "Available structures (text only): " + j.compounds.map((c) => c.name + " " + c.formula).join("; ");
-      })
-      .catch(() => {
-        document.getElementById("cap").textContent =
-          "Structure list unavailable — data/meta.json could not be read on 18934.";
-      });
-    return;
-  }
   function deadControls(reason) {
     document.querySelectorAll("#bar button, #bar input").forEach(function (b) {
       b.disabled = true; b.title = reason;
     });
   }
+  function dead3DOnly(reason) {
+    // Named no-WebGL state keeps data controls live; only 3D rendering
+    // controls are disabled. Everything here still draws from real data.
+    ["btn-bs", "btn-sf", "btn-spin", "btn-labels", "btn-measure", "btn-cid", "cid"].forEach(function (id) {
+      const el = document.getElementById(id);
+      if (el) { el.disabled = true; el.title = reason; }
+    });
+  }
+  // Honest WebGL fallback (NC-071), named state "no-webgl": if no 3D
+  // context exists, draw a 2D schematic from the same validated JSON
+  // instead of a blank canvas. ?force2d=1 exercises this path for testing.
+  // The probe is skipped under ?force2d so the canvas keeps a fresh
+  // context for the 2D fallback (a canvas cannot serve both types).
+  const force2d = new URLSearchParams(location.search).has("force2d");
+  let gl = null;
+  if (!force2d) {
+    try {
+      gl = cv.getContext("webgl2") || cv.getContext("webgl");
+    } catch (e) { gl = null; }
+  }
+  if (!gl || force2d) {
+    document.body.dataset.state = "no-webgl";
+    window.__molState = "no-webgl";
+    document.getElementById("meta").textContent =
+      "State: no-webgl — 3D unavailable, showing the 2D schematic fallback drawn from the same structure data.";
+    dead3DOnly("needs the 3D view (2D fallback is showing)");
+    let metaRes2;
+    try {
+      metaRes2 = await fetch("data/meta.json", { cache: "no-store" });
+      if (!metaRes2.ok) throw new Error("HTTP " + metaRes2.status);
+    } catch (err) {
+      showError("compound list unreachable (data/meta.json: " + err.message + ").");
+      return;
+    }
+    META = (await metaRes2.json()).compounds;
+    if (!META.length) {
+      showError("compound list is empty (data/meta.json carries no compounds).");
+      return;
+    }
+    const pk2 = document.getElementById("picker");
+    META.forEach((m) => {
+      const b = document.createElement("button");
+      b.textContent = m.name + " " + m.formula;
+      b.title = m.name + " (" + m.formula + "), PubChem CID " + m.cid;
+      b.dataset.id = m.id;
+      b.setAttribute("aria-pressed", "false");
+      b.addEventListener("click", () => loadEmbedded(m.id));
+      pk2.appendChild(b);
+    });
+    window.addEventListener("resize", () => { if (current) draw2D(current); });
+    loadEmbedded(META[0].id);
+    return;
+  }
+  document.body.dataset.state = "webgl";
+  window.__molState = "webgl";
   if (!window.THREE) {
     document.getElementById("meta").textContent =
       "3D library missing (the shared vendor/three.min.js did not load on 18934). Structures cannot be drawn — nothing is faked in their place.";
@@ -289,7 +455,8 @@ async function init() {
   const pk = document.getElementById("picker");
   META.forEach((m) => {
     const b = document.createElement("button");
-    b.textContent = m.name;
+    b.textContent = m.name + " " + m.formula;
+    b.title = m.name + " (" + m.formula + "), PubChem CID " + m.cid;
     b.dataset.id = m.id;
     b.setAttribute("aria-pressed", "false");
     b.addEventListener("click", () => loadEmbedded(m.id));
@@ -361,7 +528,7 @@ async function init() {
   const setMode = (sf) => {
     document.getElementById("btn-sf").setAttribute("aria-pressed", String(sf));
     document.getElementById("btn-bs").setAttribute("aria-pressed", String(!sf));
-    if (current) buildScene(current, sf ? "sf" : "bs");
+    if (current) { buildScene(current, sf ? "sf" : "bs"); applyFilter(); }
   };
   document.getElementById("btn-bs").addEventListener("click", () => setMode(false));
   document.getElementById("btn-sf").addEventListener("click", () => setMode(true));
@@ -372,7 +539,7 @@ async function init() {
   document.getElementById("btn-labels").addEventListener("click", (e) => {
     const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
     e.currentTarget.setAttribute("aria-pressed", String(on));
-    if (typeof showLabels !== "undefined") { showLabels = on; if (current) buildScene(current, currentMode()); }
+    if (typeof showLabels !== "undefined") { showLabels = on; if (current) { buildScene(current, currentMode()); applyFilter(); } }
   });
   document.getElementById("btn-measure").addEventListener("click", (e) => {
     measuring = !measuring;
@@ -381,9 +548,29 @@ async function init() {
     e.currentTarget.textContent = measuring ? "Measure: click 2 atoms" : "Measure: off";
   });
   document.getElementById("btn-cid").addEventListener("click", () => loadCID(document.getElementById("cid").value));
+  // Keyboard controls: arrows rotate, + / - zoom, space toggles auto-rotate.
+  cv.tabIndex = 0;
+  cv.setAttribute("role", "application");
+  cv.setAttribute("aria-label", "3D molecule view. Arrow keys rotate, plus and minus zoom, space toggles auto-rotate.");
+  cv.title = "Arrow keys rotate · + / - zoom · space auto-rotate";
+  cv.addEventListener("keydown", (e) => {
+    const step = 0.12;
+    if (e.key === "ArrowLeft") { theta -= step; e.preventDefault(); }
+    else if (e.key === "ArrowRight") { theta += step; e.preventDefault(); }
+    else if (e.key === "ArrowUp") { phi = Math.max(0.05, phi - step); e.preventDefault(); }
+    else if (e.key === "ArrowDown") { phi = Math.min(Math.PI - 0.05, phi + step); e.preventDefault(); }
+    else if (e.key === "+" || e.key === "=") { dist = Math.max(3, dist * 0.9); e.preventDefault(); }
+    else if (e.key === "-" || e.key === "_") { dist = Math.min(60, dist * 1.1); e.preventDefault(); }
+    else if (e.key === " ") {
+      spinning = !spinning;
+      document.getElementById("btn-spin").setAttribute("aria-pressed", String(spinning));
+      e.preventDefault();
+    }
+  });
   let lastT = 0;
   const frame = (t) => {
     requestAnimationFrame(frame);
+    if (document.hidden) { lastT = t; return; } // visibility-paused: no GPU work while hidden
     const dt = Math.min(0.1, (t - lastT) / 1000 || 0);
     lastT = t;
     if (spinning) theta += dt * 0.35;

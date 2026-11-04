@@ -46,6 +46,8 @@
     background: var(--input-bg); color: var(--muted); overflow-wrap: anywhere;
   }
   .board-section div, .board-section p, .board-section li { overflow-wrap: anywhere; }
+  .board-src { font-size: 13px; color: var(--muted); margin: 0 0 8px; }
+  #board-index { font-size: 13px; color: var(--muted); margin: 4px 0 8px; }
   .fetch-fail { color: var(--err); font-size: 13px; }
   .lab-list { list-style: none; padding: 0; margin: 0; }
   .lab-row { display: flex; gap: 1rem; padding: 0.25rem 0; border-bottom: 1px solid var(--panel-border); }
@@ -81,67 +83,81 @@
     <a href="#board-systems">Systems</a>
   </nav>
   <p id="site-status" role="status">Loading boards…</p>
+  <p id="board-index" role="status">Counting boards…</p>
   <section class="board-section" id="board-lab" aria-labelledby="board-lab-heading">
     <h2 id="board-lab-heading">Lab board</h2>
     <p>Reads the lab's records when present (os/lab/records.json). No level is ever shown higher than its record's cap.</p>
+    <p class="board-src">Source: os/lab/records.json</p>
     <div id="lab-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section" id="board-hortus" aria-labelledby="board-hortus-heading">
     <h2 id="board-hortus-heading">Hortus run viewer</h2>
     <p>Generations charted from the real run JSONLs (best/mean per generation). Run JSONLs are expected at os/hortus/runs/*.jsonl; none exist in this repo yet, so the viewer shows its honest empty state until real runs land.</p>
+    <p class="board-src">Source: os/hortus/runs/*.jsonl (none shipped)</p>
     <div id="hortus-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section" id="board-gate" aria-labelledby="board-gate-heading">
     <h2 id="board-gate-heading">Gate status</h2>
     <p>Delaney gate state, read from the gate directory's files (gates/delaney/manifest.json).</p>
+    <p class="board-src">Source: gates/delaney/manifest.json</p>
     <div id="gate-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section incident-record" id="board-evidence" aria-labelledby="board-evidence-heading">
     <h2 id="board-evidence-heading">Evidence viewer</h2>
     <p>Flagged-incident evidence crops, from the live crew records (/api/crew/status). Crops exist only on flagged events; the card always reads ID: UNIDENTIFIED.</p>
+    <p class="board-src">Source: /api/crew/status (Trio backend, port 8080)</p>
     <div id="evidence-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section" id="board-tiers" aria-labelledby="board-tiers-heading">
     <h2 id="board-tiers-heading">Tier colours audit</h2>
     <p>Yellow/red rendering audited against the display table: 31 categories across vigiles (3 yellow, 3 red), ignis (8 yellow, 5 red), medicus (4 yellow, 8 red). One fix landed: untiered incident rows no longer inherit red; red rows carry an explicit red class. Visual proof: screenshots owed at Mac gate (docs/TIER_SCREENSHOT_PACK.md).</p>
+    <p class="board-src">Source: inline in this page (display-table audit, no data file)</p>
   </section>
   <section class="board-section incident-record" id="board-bolo" aria-labelledby="board-bolo-heading">
     <h2 id="board-bolo-heading">BOLO card</h2>
     <p>Recorded-description card from the live crew records (/api/crew/status). Exactly the BOLO key set, visible marks only, ID: UNIDENTIFIED — no name field exists.</p>
+    <p class="board-src">Source: /api/crew/status (Trio backend, port 8080)</p>
     <div id="bolo-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section incident-record" id="board-timeline" aria-labelledby="board-timeline-heading">
     <h2 id="board-timeline-heading">Records timeline</h2>
     <p>An incident's life as one timeline from its record file, via /api/crew/status (patrol → review → investigation → dispatch in the normal life).</p>
+    <p class="board-src">Source: /api/crew/status (Trio backend, port 8080)</p>
     <div id="timeline-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section" id="board-cameras" aria-labelledby="board-cameras-heading">
     <h2 id="board-cameras-heading">Camera wall labels</h2>
     <p>Every wall row and the pin card show their source + LIVE/TEST state in the UI itself: NYCTMC live → LIVE, offline subset → TEST. The pin card used to hardcode "test feed" for every feed, including live ones.</p>
+    <p class="board-src">Source: inline in this page (no data file)</p>
   </section>
   <section class="board-section incident-record" id="board-receipt" aria-labelledby="board-receipt-heading">
     <h2 id="board-receipt-heading">Dispatch receipt</h2>
     <p>The sim- receipt on the incident after a staged dispatch, via /api/crew/status, labelled SIMULATED in the view.</p>
+    <p class="board-src">Source: /api/crew/status (Trio backend, port 8080)</p>
     <div id="receipt-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section" id="board-costs" aria-labelledby="board-costs-heading">
     <h2 id="board-costs-heading">Cost ticker</h2>
     <p>Calls spent and dollars spent from the budget ledger (server/queue/spark_guardrail_state.json), refreshed as the chain runs.</p>
+    <p class="board-src">Source: server/queue/spark_guardrail_state.json</p>
     <div id="cost-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section" id="board-officina" aria-labelledby="board-officina-heading">
     <h2 id="board-officina-heading">Officina board</h2>
     <p>Workshop runs (variants, failures, proven design) rendered from Milo's records (os/worlds/officina/runs/*.json). A run is failed only on recorded failure evidence.</p>
+    <p class="board-src">Source: os/worlds/officina/runs/*.json (9 known files)</p>
     <div id="officina-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section" id="board-custos" aria-labelledby="board-custos-heading">
     <h2 id="board-custos-heading">Custos board</h2>
     <p>Patrol records by tier/source rendered from Rowan's records (os/worlds/custos/runs/*.jsonl).</p>
+    <p class="board-src">Source: os/worlds/custos/runs/*.jsonl (2 known files)</p>
     <div id="custos-content" aria-live="polite">Loading…</div>
   </section>
   <section class="board-section" id="board-systems" aria-labelledby="board-systems-heading">
     <h2 id="board-systems-heading">Systems home</h2>
     <p>Status chips from each world's own pack.json status field: custos, dep, doe, dsny, ems, fdny, hospital, mta, nypd, officina. The Trio products are live in this app; a spec is never shown as live.</p>
+    <p class="board-src">Source: os/worlds/*/pack.json (10 world packs)</p>
     <div id="systems-content" aria-live="polite">Loading…</div>
   </section>
 </main>
@@ -164,6 +180,10 @@
   const noSource = ["Lab board", "Gate status"];
   function summarize() {
     const el = document.getElementById("site-status");
+    // Board index count (task 88): derived from the sections on the page, not typed.
+    const nBoards = document.querySelectorAll(".board-section").length;
+    const idx = document.getElementById("board-index");
+    if (idx) idx.textContent = `${nBoards} boards on this page — each names its source file below; a missing source is stated, never fetched silently.`;
     const missing = noSource.length
       ? ` ${noSource.length} board(s) have no source file in this build (${noSource.join(", ")}).`
       : "";
@@ -176,14 +196,23 @@
   // under os/worlds/science-lab/). A board whose source file does not ship is
   // a stated empty board, not a red error: this page shipped that way and read
   // as broken.
-  try {
-    const res = await fetch("os/lab/records.json");
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    document.getElementById("lab-content").innerHTML = labBoard(await res.json());
-  } catch (e) {
-    document.getElementById("lab-content").innerHTML =
-      `<p class="empty-state">No lab records in this build — os/lab/records.json is not shipped. The Science Lab app reads os/worlds/science-lab/ instead.</p>` +
-      labBoard([]);
+  async function loadJsonOrMissing(url) {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) return { ok: false, status: res.status };
+    return { ok: true, status: res.status, data: await res.json() };
+  }
+  {
+    const r = await loadJsonOrMissing("os/lab/records.json");
+    if (r.ok) {
+      document.getElementById("lab-content").innerHTML = labBoard(r.data);
+    } else {
+      document.getElementById("lab-content").innerHTML =
+        `<p class="empty-state">Missing: os/lab/records.json (HTTP ${r.status} on port ${PORT}). ` +
+        `No command in this tree writes that path — the lab's own records live under os/worlds/science-lab/. ` +
+        `Fill owner: Lab lane (owns os/worlds/science-lab/ and labs/). Requested: a command that writes ` +
+        `os/lab/records.json, or a redirect of this board to the shipped records path. This miss is stated, never fetched silently.</p>` +
+        labBoard([]);
+    }
   }
   // Hortus: no run JSONLs exist in this repo yet; the honest empty state
   // is the correct render, stated in the section text above.
@@ -191,14 +220,19 @@
     hortusChart([]) + hortusChampion(null);
   // Gate manifest: gates/delaney/manifest.json is not in this tree either, so
   // the board prints its empty state instead of an unreachable-source line.
-  try {
-    const res = await fetch("gates/delaney/manifest.json");
-    if (!res.ok) throw new Error("HTTP " + res.status);
-    document.getElementById("gate-content").innerHTML = gateStatusPage(await res.json());
-  } catch (e) {
-    document.getElementById("gate-content").innerHTML =
-      `<p class="empty-state">No gate manifest in this build — gates/delaney/manifest.json is not shipped, so no gate state is shown rather than a guessed one.</p>` +
-      gateStatusPage(null);
+  {
+    const r = await loadJsonOrMissing("gates/delaney/manifest.json");
+    if (r.ok) {
+      document.getElementById("gate-content").innerHTML = gateStatusPage(r.data);
+    } else {
+      document.getElementById("gate-content").innerHTML =
+        `<p class="empty-state">Missing: gates/delaney/manifest.json (HTTP ${r.status} on port ${PORT}). ` +
+        `No command in this tree writes that path — no gates/ directory ships. ` +
+        `Fill owner: Gate lane (owns the Delaney gate state). Requested: a command that writes ` +
+        `gates/delaney/manifest.json (listing the gate files present), or the gate files themselves. ` +
+        `This miss is stated, never fetched silently.</p>` +
+        gateStatusPage(null);
+    }
   }
   // Crew records feed the four incident boards. One fetch, four honest
   // panels; a dead backend names itself in each panel it starves.
@@ -317,6 +351,28 @@
   if (/^#board-/.test(window.location.hash)) {
     const target = document.getElementById(window.location.hash.slice(1));
     if (target) requestAnimationFrame(() => target.scrollIntoView({ block: "start" }));
+  }
+  // Board loader selftest (task 90, inline): ?selftest=1 runs the real loader
+  // against one guaranteed-missing file. Pass means the miss surfaced with its
+  // path named (HTTP 404) — never a silent fetch, never an unhandled rejection.
+  if (new URLSearchParams(window.location.search).has("selftest")) {
+    let rejected = false;
+    window.addEventListener("unhandledrejection", () => { rejected = true; });
+    const verdictEl = document.getElementById("site-status");
+    loadJsonOrMissing("selftest/missing-probe-404.json").then((r) => {
+      const named = !r.ok && r.status === 404;
+      setTimeout(() => {
+        const verdict = (named && !rejected)
+          ? "BOARD LOADER SELFTEST PASS: missing selftest/missing-probe-404.json surfaced as HTTP 404 with its path named (no silent fetch, no unhandled rejection)."
+          : `BOARD LOADER SELFTEST FAIL: ok=${r.ok} status=${r.status} unhandledRejection=${rejected}.`;
+        verdictEl.textContent = verdict;
+        document.title = verdict.slice(0, 80);
+      }, 300);
+    }).catch((e) => {
+      const verdict = "BOARD LOADER SELFTEST FAIL: loader threw instead of returning a named miss (" + e.message + ").";
+      verdictEl.textContent = verdict;
+      document.title = verdict.slice(0, 80);
+    });
   }
 </script>
 <!-- One chat box for every board on this page. The room follows the anchor, so

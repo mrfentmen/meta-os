@@ -192,3 +192,56 @@ The base is Debian — we say so, because a judge will check."
 3. If a service is down, `bash /opt/face/proof_session.sh` inside the guest
    prints one row per port and ends with `DEAD ports:` naming the failures.
    Read those out loud; it is a better look than guessing.
+
+---
+
+## R2-T4 corrections, 2026-11-04 (agent-r2-t4 lane — appended, existing lines untouched)
+
+Evidence lane read the tree from `/tmp/agent-r2-t4` (branch `agent-r2-t4`) without
+booting. Beats needing QEMU, the guest, or services are marked cannot-run with why.
+
+**C1 — stale capture filenames.** `captures/proof-boot-1920x1080-20261103T205318Z.png`
+is not in the tree (`ls` → no such file). Quote a present capture instead.
+
+**C2 — dock count is 26 today.** `grep -cE '^\s*add_app ' os-build/face/meta-desktop.sh` → **26**
+(was 27, then 30 — sibling lanes keep adding tiles; recount before the show).
+
+**C3 — icons 30, sums file lives one level up.** `ls
+os-build/iso/payload-theme/icons/metaos | wc -l` → **30** PNGs;
+`SOURCES.sha256` is at `icons/SOURCES.sha256`, not `icons/metaos/`.
+
+**C4 — identity `--check` rows need the guest image, not this Mac.** They fail
+here by design (no `/mnt` root); run them in the guest or mounted chroot.
+
+**C5 — numbers re-verified still true on this tree:** `agents/registry.json`
+→ 24 agents, 23 live, 1 draft; `python3 os-build/face/notesd.py --selftest`
+→ 11/11 ok + PASS (ran 2026-11-04).
+
+## Beat 0 (PROPOSED) — sync the image, prove the tree matches — boot lane
+
+Do this before the pre-flight. It needs the image and one boot, so it stays
+in the boot lane and must not be shown as done until it passes.
+
+```sh
+git log --oneline -3
+sh os-build/tools/verify_tree.sh
+sh os-build/tools/proof_boot.sh --timeout 180     # must end in PASS
+bash /opt/face/proof_session.sh                   # inside the guest, expect 9/9
+```
+
+## Division-apps beat (paths only, no boot)
+
+| App | Page |
+|---|---|
+| Boards | `surfaces.html` (13 boards, `#board-index` count) |
+| Science bench / cycles | `labs/index.html` → `labs/molecules/`, `labs/science-lab-review/` |
+| Music | `labs/music3d/index.html` (`design/meta-musica-notes.html` redirects there) |
+| Security | `aegis-page/index.html` |
+| Messages | `bus.html` (rooms over T3 `board.mjs` :18935) |
+| Status | `nervus/index.html` (read-only; dock entry proposed, not wired) |
+
+## Agent-job beat (PROPOSED) — PENDING on this host
+
+`meta-ask --list` needs a staged relay (`~/.local/state/oc2-agent`) or the
+guest; on this host it prints `meta-ask: no registry found`. Do not demo
+until a lane proves one job end to end on the demo machine.
