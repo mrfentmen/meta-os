@@ -11,6 +11,8 @@
 //   POST /api/assess   the v2 assessment endpoint (see assess.mjs)
 //   GET  /api/health   { ok, service, products, model: {configured,
 //                      live_enabled} } — never exposes the key itself
+//   GET  /api/agent/roster  the bots the desk runs with (see bot-roster.mjs)
+//   GET  /api/agent/thread?id=…  one room's transcript, newest last
 //   GET  /api/crew/status  read-only agent-crew status for the
 //                      Command view's loop feed (see crew-status.mjs)
 //   GET  /api/cameras  same-origin proxy for the NYCTMC camera list,
@@ -37,6 +39,8 @@ import { fileURLToPath } from "node:url";
 
 import { handleAssess } from "./assess.mjs";
 import { askAgent } from "./agent-chat.mjs";
+import { loadRoster, stateDir } from "./bot-roster.mjs";
+import { readThread, validThreadId } from "./agent-thread.mjs";
 import { snapshot as ipcamSnapshot, ipCamList, FFMPEG as IPCAM_FFMPEG } from "./ipcam.mjs";
 import { modelStatus } from "./model.mjs";
 import { readCrewStatus } from "./crew-status.mjs";
@@ -194,6 +198,49 @@ export function createAssessServer(deps = {}) {
         }
         const { status, body } = await askAgent(payload, env, deps);
         sendJson(res, status, body);
+        return;
+      }
+      if (url.pathname === "/api/agent/roster") {
+        if (req.method !== "GET") {
+          sendJson(res, 405, { error: "method not allowed: use GET" });
+          return;
+        }
+        // The roster the desk actually runs with (shipped table plus any
+        // roster.json overrides). The chat box draws one chip per bot of the
+        // app it is on, so a page never offers an agent that cannot answer.
+        const roster = deps.roster ?? loadRoster(deps.rosterDir ?? stateDir(env), env);
+        sendJson(res, 200, {
+          bots: (roster.bots || []).map((b) => ({
+            id: b.id,
+            name: b.name,
+            title: b.title,
+            app: b.app,
+            glyph: b.glyph,
+            accent: b.accent,
+            model: b.model || null,
+          })),
+          notes: roster.notes || [],
+        });
+        return;
+      }
+      if (url.pathname === "/api/agent/thread") {
+        if (req.method !== "GET") {
+          sendJson(res, 405, { error: "method not allowed: use GET" });
+          return;
+        }
+        const id = url.searchParams.get("id") || "";
+        if (!validThreadId(id)) {
+          sendJson(res, 400, { error: "id: required and must be a thread id ([a-z0-9][a-z0-9_-]{0,63})" });
+          return;
+        }
+        try {
+          const out = readThread(deps.rosterDir ?? stateDir(env), id, 40);
+          sendJson(res, 200, { id, turns: out.turns, skipped: out.skipped || 0, total: out.total ?? out.turns.length });
+        } catch (err) {
+          sendJson(res, 500, {
+            error: `thread ${id} could not be read: ${err && err.message ? err.message : String(err)}`,
+          });
+        }
         return;
       }
       if (url.pathname === "/api/health") {

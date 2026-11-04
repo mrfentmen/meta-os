@@ -1,5 +1,18 @@
 // The in-app agent chat: one endpoint behind the chat box every app carries.
 //
+// Since the desk became a room with several bots (server/bot-roster.mjs), a
+// request may also name who should answer and which thread it belongs to:
+//
+//   POST /api/agent/ask  { app, question, context?, bot?, thread? }
+//   -> 200 { reply, app, bot: {id,name,title}, picked_by, thread, history_turns,
+//            model, latency_ms, spend }
+//
+// No bot and no mention: the app's own bot answers (picked_by "lead"). A
+// mention or a clear keyword match routes the question to the member it names,
+// and the answer says which of the two happened. A thread id makes the room
+// remember: the operator line is written before the call, the reply or the
+// failure after it, and the recent transcript is folded into the next prompt.
+//
 // The box the operator types into is js/agent-chat.js (floating, one per page)
 // or the console the three division pages draw inline (trio/agent.js). Both
 // POST the same shape here, so a fix in this file is a fix in every app:
@@ -22,6 +35,16 @@
 
 import { ModelError, modelConfig } from "./model.mjs";
 import { budgetStatus, checkBudget, recordBudgetCall } from "./budget.mjs";
+import {
+  botSystemPrompt,
+  botsForApp,
+  loadRoster,
+  parseMention,
+  pickResponder,
+  resolveBot,
+  stateDir,
+} from "./bot-roster.mjs";
+import { appendTurn, formatTranscript, readThread, validThreadId } from "./agent-thread.mjs";
 
 export const AGENT_ENDPOINT = "https://api.meta.ai/v1/chat/completions";
 // The contributor variant, not muse-spark-1.3: same API, same shape, cheaper
@@ -133,14 +156,17 @@ export function profileFor(app) {
   return APP_PROFILES[app] || APP_PROFILES.general;
 }
 
-export function systemPromptFor(app) {
+export function systemPromptFor(app, bot) {
   const profile = profileFor(app);
-  return [
+  const base = [
     `You are the ${profile.label} agent inside Meta OS, the operating system's own agent layer, running on this machine.`,
     profile.role,
     profile.scope,
     SHARED_RULES,
   ].join(" ");
+  // The app persona says what the page shows; the bot adds who is answering.
+  // Both are exported separately so a test can assert either without a call.
+  return bot ? botSystemPrompt(bot, base) : base;
 }
 
 export function validateAsk(payload) {
@@ -169,7 +195,55 @@ export function validateAsk(payload) {
     app = "general";
   }
   const context = typeof payload.context === "string" ? payload.context.slice(0, MAX_CONTEXT_CHARS) : "";
-  return { ok: true, value: { question, app, requestedApp: rawApp || rawDivision || null, context } };
+  // An unknown bot id is not a 400: the desk falls back to routing and says the
+  // id it could not find, so a page built later still gets an answer.
+  const requestedBot = typeof payload.bot === "string" && payload.bot.trim() ? payload.bot.trim().toLowerCase() : null;
+  const rawThread = typeof payload.thread === "string" ? payload.thread.trim() : "";
+  const thread = rawThread && validThreadId(rawThread) ? rawThread : null;
+  return {
+    ok: true,
+    value: {
+      question,
+      app,
+      requestedApp: rawApp || rawDivision || null,
+      context,
+      requestedBot,
+      thread,
+      threadRejected: Boolean(rawThread) && !thread,
+    },
+  };
+}
+
+// Who answers this message. Kept out of validateAsk because it needs the
+// roster, and out of askAgent so a test can ask the routing question alone.
+//
+// The room is the whole desk, not one app: the page's own bot is the lead, and
+// every other bot is a member you can reach by naming it (@Beaker) or by
+// asking something that clearly belongs to another desk ("how much memory is
+// free?" on the fire board). That is the point of a roster — one room, several
+// specialists — and the reply always says which of the two ways it was picked.
+export function chooseResponder(value, roster) {
+  const all = roster.bots || [];
+  const pageBots = botsForApp(roster, value.app);
+  const lead = pageBots[0] || all[0] || null;
+  // A typed @name beats the chip that happens to be selected: the box always
+  // sends its current chip, and "@Beaker …" must still reach Beaker, not the
+  // app's default because that chip was lit.
+  const mention = parseMention(value.question);
+  const mentionsSomeone = mention.all || mention.ids.length > 0;
+  if (value.requestedBot && !mentionsSomeone) {
+    const named = resolveBot(roster, value.requestedBot);
+    if (named) return { bot: named, picked_by: "chosen", score: 0 };
+  }
+  const picked = pickResponder({ bots: all, lead: lead && lead.id, text: value.question });
+  return {
+    bot: picked.bot,
+    picked_by:
+      value.requestedBot && picked.bot && picked.bot.id !== value.requestedBot && picked.picked_by === "lead"
+        ? "unknown-bot"
+        : picked.picked_by,
+    score: picked.score,
+  };
 }
 
 function content(data) {
@@ -181,27 +255,44 @@ function content(data) {
   return undefined;
 }
 
-export function chatModel(env = process.env) {
-  const model = typeof env.METAOS_CHAT_MODEL === "string" && env.METAOS_CHAT_MODEL.trim()
-    ? env.METAOS_CHAT_MODEL.trim()
-    : AGENT_MODEL;
+// A bot may carry its own model (roster.json). It only wins when the roster
+// named one from the known list; anything else keeps the server default, so a
+// stale name cannot point the desk at a model that is not there.
+export function chatModel(env = process.env, bot = null) {
+  const serverDefault =
+    typeof env.METAOS_CHAT_MODEL === "string" && env.METAOS_CHAT_MODEL.trim()
+      ? env.METAOS_CHAT_MODEL.trim()
+      : AGENT_MODEL;
+  const model = bot && typeof bot.model === "string" && bot.model ? bot.model : serverDefault;
   const configured = Number(env.METAOS_CHAT_MAX_TOKENS);
   const maxTokens = Number.isFinite(configured) && configured > 0 ? Math.min(configured, 8000) : DEFAULT_MAX_TOKENS;
   return { model, maxTokens };
 }
 
 // The request shape the model gets. Exported so a test can assert the persona
-// and the token cap without firing a call.
-export function buildChatBody(value, env = process.env) {
-  const { model, maxTokens } = chatModel(env);
+// and the token cap without firing a call. opts: { bot, transcript }
+//
+// The transcript goes in the user message, not in fake assistant turns: one
+// thread can hold several bots, and labelling every past line "assistant"
+// would tell the model it wrote lines it did not write.
+export function buildChatBody(value, env = process.env, opts = {}) {
+  const { model, maxTokens } = chatModel(env, opts.bot);
+  const transcript = typeof opts.transcript === "string" ? opts.transcript.trim() : "";
   return {
     model,
     messages: [
-      { role: "system", content: systemPromptFor(value.app) },
+      {
+        role: "system",
+        // A bot from another desk answers with its own desk's persona: the
+        // page context then reads as "what this screen shows", not as a claim
+        // about the bot's own app.
+        content: systemPromptFor(opts.bot && opts.bot.app !== value.app ? opts.bot.app : value.app, opts.bot),
+      },
       {
         role: "user",
         content:
           (value.context ? `What this app shows right now:\n${value.context}\n\n` : "") +
+          (transcript ? `Earlier in this room (oldest first):\n${transcript}\n\n` : "") +
           `Question: ${value.question}`,
       },
     ],
@@ -215,6 +306,10 @@ export function buildChatBody(value, env = process.env) {
 export async function askAgent(payload, env = process.env, deps = {}) {
   const req = validateAsk(payload);
   if (!req.ok) return { status: 400, body: { error: req.error } };
+
+  const state = deps.rosterDir ?? deps.stateDir ?? stateDir(env);
+  const roster = deps.roster ?? loadRoster(state, env);
+  const { bot, picked_by } = chooseResponder(req.value, roster);
 
   const cfg = modelConfig(env);
   if (!cfg.keyPresent) {
@@ -249,7 +344,29 @@ export async function askAgent(payload, env = process.env, deps = {}) {
     return { status: 500, body: { error: "No fetch implementation available." } };
   }
 
-  const body = buildChatBody(req.value, env);
+  // The operator's line is written before the call, so a transcript never
+  // loses what was asked even when the answer fails.
+  const thread = req.value.thread;
+  let history = { turns: [] };
+  if (thread) {
+    try {
+      history = readThread(state, thread, 24);
+      appendTurn(state, thread, { role: "operator", text: req.value.question });
+    } catch (err) {
+      // An unwritable state directory must not cost the operator an answer:
+      // the call goes ahead without memory and the response says so.
+      return {
+        status: 500,
+        body: {
+          error: `Thread ${thread} could not be written: ${err && err.message ? err.message : String(err)}`,
+          code: "thread_write_failed",
+        },
+      };
+    }
+  }
+
+  const transcript = history.turns.length ? formatTranscript(history.turns) : "";
+  const body = buildChatBody(req.value, env, { bot, transcript });
   const startedAt = Date.now();
   let res;
   try {      res = await fetchFn(chatEndpoint(env), {
@@ -262,13 +379,16 @@ export async function askAgent(payload, env = process.env, deps = {}) {
       signal: AbortSignal.timeout(Number(env.METAOS_CHAT_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS),
     });
   } catch (err) {
+    const reason = err && err.message ? err.message : String(err);
+    noteFailure(state, thread, `the model request failed: ${reason}`);
     return {
       status: 502,
-      body: { error: `Model request failed: ${err && err.message ? err.message : String(err)}`, code: "model_call_failed" },
+      body: { error: `Model request failed: ${reason}`, code: "model_call_failed" },
     };
   }
 
   if (!res.ok) {
+    noteFailure(state, thread, `the model request failed with HTTP ${res.status}`);
     return { status: 502, body: { error: `Model request failed with HTTP ${res.status}.`, code: "model_call_failed" } };
   }
 
@@ -276,6 +396,7 @@ export async function askAgent(payload, env = process.env, deps = {}) {
   try {
     data = await res.json();
   } catch {
+    noteFailure(state, thread, "the model response was not JSON");
     return { status: 502, body: { error: "Model response was not JSON.", code: "model_call_failed" } };
   }
 
@@ -289,6 +410,7 @@ export async function askAgent(payload, env = process.env, deps = {}) {
       deps.budgetPath,
     );
   } catch (err) {
+    noteFailure(state, thread, `the spend ledger could not be written: ${err && err.message ? err.message : String(err)}`);
     return {
       status: 502,
       body: {
@@ -307,6 +429,7 @@ export async function askAgent(payload, env = process.env, deps = {}) {
     const why = finish === "length"
       ? `it used all ${body.max_tokens} completion tokens (${reasoning ?? "?"} on reasoning) before writing an answer`
       : "it returned no text";
+    noteFailure(state, thread, `the model returned no reply text: ${why}`);
     return {
       status: 502,
       body: {
@@ -314,6 +437,21 @@ export async function askAgent(payload, env = process.env, deps = {}) {
         code: "model_call_failed",
       },
     };
+  }
+
+  // The bot's answer joins the thread it answered in.
+  if (thread) {
+    try {
+      appendTurn(state, thread, { role: "bot", bot: bot ? bot.name : "Agent", text: reply.trim() });
+    } catch (err) {
+      return {
+        status: 502,
+        body: {
+          error: `The model answered but thread ${thread} could not be written: ${err && err.message ? err.message : String(err)}`,
+          code: "thread_write_failed",
+        },
+      };
+    }
   }
 
   let spend = null;
@@ -329,11 +467,29 @@ export async function askAgent(payload, env = process.env, deps = {}) {
     body: {
       reply: reply.trim(),
       app: req.value.app,
+      bot: bot ? { id: bot.id, name: bot.name, title: bot.title } : null,
+      // "chosen" was a chip or a name; "mention" a typed @name; "routing" the
+      // desk's own guess; "lead" the app's default bot. The UI prints this, so
+      // a guess is never shown as if the operator had picked it.
+      picked_by,
+      thread: thread || null,
+      history_turns: thread ? history.turns.length : 0,
       model: data?.model ?? body.model,
       latency_ms: Date.now() - startedAt,
       spend,
     },
   };
+}
+
+// A failed turn is recorded too, in the thread the operator was in. Best
+// effort: the failure being reported is the model's, not the file's.
+function noteFailure(state, thread, reason) {
+  if (!thread) return;
+  try {
+    appendTurn(state, thread, { role: "error", text: reason });
+  } catch {
+    /* the transcript stays readable without this line */
+  }
 }
 
 // The endpoint can be pointed at a local OpenAI-compatible server (the same

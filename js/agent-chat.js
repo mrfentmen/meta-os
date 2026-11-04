@@ -14,10 +14,18 @@
  * data-api          backend base (default: this origin, or 127.0.0.1:18934 when
  *                   the page is served from the 18900 face or from file://)
  *
- * The box asks POST <api>/api/agent/ask { app, question, context }. It does not
- * compose an answer, and it does not retry a failed one: every refusal is
- * printed with the port and the server's own message, so a demo shows what
- * actually happened. window.MetaAgentChat exposes ask/open/close for probes.
+ * The box asks POST <api>/api/agent/ask { app, question, context, bot, thread }.
+ * It does not compose an answer, and it does not retry a failed one: every
+ * refusal is printed with the port and the server's own message, so a demo
+ * shows what actually happened. window.MetaAgentChat exposes ask/open/close for
+ * probes.
+ *
+ * Two things come from the roster (server/bot-roster.mjs):
+ *   - a row of bot chips under the header, one per bot of this app. Picking one
+ *     asks that bot; typing @Name in the box does the same thing for one
+ *     message. With nothing picked and no mention the app's lead bot answers.
+ *   - a thread id kept in localStorage, so reopening the panel (or the app)
+ *     re-reads the same room instead of starting from nothing.
  */
 (function () {
   "use strict";
@@ -31,6 +39,29 @@
   var STATIC_CONTEXT = (script && script.dataset.context) || "";
   var MAX_QUESTION = 2000;
   var MAX_CONTEXT = 4000;
+  var THREAD_KEY = "meta-agent-thread:" + APP;
+  var THREAD_ID = /^[a-z0-9][a-z0-9_-]{0,63}$/;
+
+  function threadId() {
+    var saved = "";
+    try {
+      saved = window.localStorage.getItem(THREAD_KEY) || "";
+    } catch (e) {
+      saved = "";
+    }
+    if (THREAD_ID.test(saved)) return saved;
+    var fresh = (APP + "-" + Math.random().toString(36).slice(2, 8)).toLowerCase();
+    try {
+      window.localStorage.setItem(THREAD_KEY, fresh);
+    } catch (e) {
+      /* private mode: this visit keeps the thread in memory only */
+    }
+    return fresh;
+  }
+
+  var THREAD = threadId();
+  var BOTS = [];
+  var BOT = null;
 
   // The face pages (18900) and a file:// open are different origins from the
   // API, and the chat is the one call that must still land: 18934 is the
@@ -89,6 +120,10 @@
     "#meta-agent-chat-log .agent{border-left:2px solid var(--mac-accent);padding-left:9px}",
     "#meta-agent-chat-log .note{color:#8b9cb8;font:11px ui-monospace,SFMono-Regular,Menlo,monospace}",
     "#meta-agent-chat-log .bad{color:#ff9a8f;border-left:2px solid #ff6b5e;padding-left:9px}",
+    "#meta-agent-chat-log .who{display:block;margin-bottom:2px;font:10px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--mac-accent);letter-spacing:.05em;text-transform:uppercase}",
+    "#meta-agent-chat-bots{display:flex;flex-wrap:wrap;gap:5px;padding:8px 10px;border-bottom:1px solid rgba(140,170,220,.14)}",
+    "#meta-agent-chat-bots button{height:24px;padding:0 9px;border:1px solid rgba(140,170,220,.28);border-radius:12px;background:transparent;color:#a9bcd8;font:11px ui-monospace,SFMono-Regular,Menlo,monospace;cursor:pointer}",
+    "#meta-agent-chat-bots button[aria-pressed=true]{border-color:var(--mac-accent);background:rgba(40,70,120,.4);color:#e9f1ff}",
     "#meta-agent-chat form{display:flex;gap:6px;padding:9px 10px 10px;border-top:1px solid rgba(140,170,220,.18)}",
     "#meta-agent-chat input{flex:1;min-width:0;height:34px;padding:0 9px;border:1px solid rgba(140,170,220,.3);border-radius:7px;background:#080f1a;color:inherit;font:12px ui-monospace,SFMono-Regular,Menlo,monospace}",
     "#meta-agent-chat button[type=submit]{height:34px;padding:0 13px;border:1px solid var(--mac-accent);border-radius:7px;background:rgba(30,60,100,.45);color:inherit;cursor:pointer;font:inherit}",
@@ -107,6 +142,7 @@
     "</button>" +
     '<div id="meta-agent-chat-panel" role="dialog" aria-label="' + esc(LABEL) + ' agent chat">' +
       '<div id="meta-agent-chat-head"><b>' + esc(LABEL) + '</b><span class="state">reading the server…</span></div>' +
+      '<div id="meta-agent-chat-bots" role="group" aria-label="Which agent answers"></div>' +
       '<div id="meta-agent-chat-log" role="log" aria-live="polite" aria-label="Agent transcript"></div>' +
       '<form autocomplete="off"><input type="text" name="question" maxlength="' + MAX_QUESTION + '" placeholder="' + esc(PLACEHOLDER) + '" aria-label="' + esc(PLACEHOLDER) + '"><button type="submit">Send</button></form>' +
     "</div>";
@@ -116,6 +152,7 @@
   var panel = root.querySelector("#meta-agent-chat-panel");
   var log = root.querySelector("#meta-agent-chat-log");
   var stateEl = root.querySelector("#meta-agent-chat-head .state");
+  var botsEl = root.querySelector("#meta-agent-chat-bots");
   var form = root.querySelector("form");
   var input = form.querySelector("input");
   var sendBtn = form.querySelector("button");
@@ -134,13 +171,112 @@
     root.dataset.state = bad ? "down" : "up";
   }
 
-  function addTurn(kind, text) {
+  function addTurn(kind, text, who) {
     var p = document.createElement("p");
     p.className = kind;
-    p.textContent = text;
+    if (who) {
+      var label = document.createElement("span");
+      label.className = "who";
+      label.textContent = who;
+      p.appendChild(label);
+    }
+    p.appendChild(document.createTextNode(text));
     log.appendChild(p);
     log.scrollTop = log.scrollHeight;
     return p;
+  }
+
+  // "Who answered, and how did that get decided" in the operator's words,
+  // never in the server's field names.
+  function why(pickedBy) {
+    var map = {
+      chosen: "the agent you picked",
+      mention: "you named it",
+      routing: "routed by the desk",
+      lead: "this desk's lead",
+      "everyone-to-lead": "@everyone, answered by the lead",
+      "unknown-mention": "that name is not in this room, so the lead answered",
+      "unknown-bot": "that agent is not in this room, so the lead answered",
+    };
+    return map[pickedBy] || "answered";
+  }
+
+  // One chip per bot of this app. No bots (an older server) leaves the row
+  // empty rather than offering a name the server would not know, and the box
+  // still answers with the app's own agent.
+  function renderBots() {
+    botsEl.innerHTML = "";
+    if (!BOTS.length) {
+      botsEl.style.display = "none";
+      return;
+    }
+    botsEl.style.display = "";
+    BOTS.forEach(function (bot) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = bot.name;
+      b.title = bot.title;
+      b.setAttribute("aria-pressed", String(BOT && BOT.id === bot.id));
+      b.addEventListener("click", function () {
+        BOT = bot;
+        renderBots();
+        input.focus();
+      });
+      botsEl.appendChild(b);
+    });
+  }
+
+  function loadRoster() {
+    return fetch(API + "/api/agent/roster", { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function (body) {
+        var all = (body && body.bots) || [];
+        // The room is the whole desk: this page's own bot first (it answers by
+        // default), then every other desk's bot, reachable by name.
+        var mine = all.filter(function (b) { return b.app === APP; });
+        var rest = all.filter(function (b) { return b.app !== APP; });
+        BOTS = mine.concat(rest);
+        if (!BOT || !BOTS.some(function (b) { return b.id === BOT.id; })) {
+          BOT = BOTS[0] || null;
+        }
+        renderBots();
+        return BOTS;
+      })
+      .catch(function () {
+        // The roster is a convenience; an older or unreachable server must not
+        // stop the box from answering. The chips stay hidden and the ask call
+        // lets the server pick the bot.
+        BOTS = [];
+        renderBots();
+        return [];
+      });
+  }
+
+  // Reopening the panel reads the room back. A thread the server does not have
+  // yet answers with no turns, which is the empty state, not an error.
+  function loadThread() {
+    return fetch(API + "/api/agent/thread?id=" + encodeURIComponent(THREAD), { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.json();
+      })
+      .then(function (body) {
+        var turns = (body && body.turns) || [];
+        if (!turns.length) return turns;
+        log.innerHTML = "";
+        turns.forEach(function (turn) {
+          if (turn.role === "operator") addTurn("user", turn.text);
+          else if (turn.role === "error") addTurn("bad", turn.text);
+          else addTurn("agent", turn.text, turn.bot);
+        });
+        return turns;
+      })
+      .catch(function () {
+        return [];
+      });
   }
 
   function health() {
@@ -177,7 +313,7 @@
     return fetch(API + "/api/agent/ask", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ app: APP, question: text, context: contextFor() }),
+      body: JSON.stringify({ app: APP, question: text, context: contextFor(), bot: BOT ? BOT.id : null, thread: THREAD }),
       signal: controller ? controller.signal : undefined,
     })
       .then(function (res) {
@@ -201,10 +337,25 @@
           addTurn("bad", empty);
           return { ok: false, reason: empty };
         }
-        addTurn("agent", reply);
+        var answered = out.body && out.body.bot;
+        addTurn("agent", reply, answered ? answered.name : null);
+        // A routed answer says so, once, under the reply. The operator picked
+        // nothing, and the transcript should not pretend otherwise.
+        var picked = out.body && out.body.picked_by;
+        if (answered && picked && picked !== "chosen" && picked !== "mention" && picked !== "lead") {
+          addTurn("note", answered.name + " — " + why(picked));
+        }
+        if (answered) {
+          var match = BOTS.filter(function (b) { return b.id === answered.id; })[0];
+          if (match) {
+            BOT = match;
+            renderBots();
+          }
+        }
         var spend = out.body && out.body.spend;
         setState(
-          "model live · " + (out.body.latency_ms ? out.body.latency_ms + " ms" : "answered") +
+          "model live · " + (answered ? answered.name + " · " : "") +
+            (out.body.latency_ms ? out.body.latency_ms + " ms" : "answered") +
             (spend && typeof spend.remaining_usd === "number" ? " · $" + spend.remaining_usd.toFixed(2) + " left" : ""),
           false
         );
@@ -229,6 +380,9 @@
     toggle.setAttribute("aria-expanded", "true");
     input.focus();
     health();
+    // Both reads are best-effort: an unreachable roster or thread leaves the
+    // box usable instead of blank.
+    loadRoster().then(loadThread);
   }
   function close() {
     delete root.dataset.open;
@@ -255,6 +409,11 @@
 
   window.MetaAgentChat = {
     app: APP,
+    thread: function () { return THREAD; },
+    bots: function () { return BOTS.slice(); },
+    bot: function () { return BOT ? BOT.id : null; },
+    loadRoster: loadRoster,
+    loadThread: loadThread,
     api: API,
     ask: ask,
     open: open,

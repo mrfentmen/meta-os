@@ -1,9 +1,31 @@
-// Text conversation with the same model transport the assessment path uses.
+// The in-app agent chat: one endpoint behind the chat box every app carries.
 //
-// The division pages each carry a small console where the operator can ask
-// the agent what it is looking at. That is a text call, not an image
-// assessment, so it gets its own module instead of bending /api/assess into
-// a shape it was not built for.
+// Since the desk became a room with several bots (server/bot-roster.mjs), a
+// request may also name who should answer and which thread it belongs to:
+//
+//   POST /api/agent/ask  { app, question, context?, bot?, thread? }
+//   -> 200 { reply, app, bot: {id,name,title}, picked_by, thread, history_turns,
+//            model, latency_ms, spend }
+//
+// No bot and no mention: the app's own bot answers (picked_by "lead"). A
+// mention or a clear keyword match routes the question to the member it names,
+// and the answer says which of the two happened. A thread id makes the room
+// remember: the operator line is written before the call, the reply or the
+// failure after it, and the recent transcript is folded into the next prompt.
+//
+// The box the operator types into is js/agent-chat.js (floating, one per page)
+// or the console the three division pages draw inline (trio/agent.js). Both
+// POST the same shape here, so a fix in this file is a fix in every app:
+//
+//   POST /api/agent/ask  { app, question, context? }
+//   -> 200 { reply, app, model, latency_ms, spend }
+//   -> 4xx/5xx { error, code }
+//
+// This module used to know only Vigiles, Ignis and Medicus ("division"), which
+// is why the chat box existed on three pages out of twelve: every other app
+// would have been refused with "division: must be ...". The app id is now the
+// unit, each id carries its own persona, and "division" is still accepted so
+// the three division pages keep working unchanged.
 //
 // It obeys the same three rules as server/model.mjs:
 //   1. ASSESS_LIVE_MODEL=1 must be set, or the call is refused as "held".
@@ -12,20 +34,139 @@
 // Nothing here reads a key from a request, logs one, or invents a reply.
 
 import { ModelError, modelConfig } from "./model.mjs";
-import { checkBudget, recordBudgetCall } from "./budget.mjs";
+import { budgetStatus, checkBudget, recordBudgetCall } from "./budget.mjs";
+import {
+  botSystemPrompt,
+  botsForApp,
+  loadRoster,
+  pickResponder,
+  resolveBot,
+  stateDir,
+} from "./bot-roster.mjs";
+import { appendTurn, formatTranscript, readThread, validThreadId } from "./agent-thread.mjs";
 
 export const AGENT_ENDPOINT = "https://api.meta.ai/v1/chat/completions";
-// Contributor tier by default (cheaper); METAOS_AGENT_MODEL overrides it.
-export const AGENT_MODEL = process.env.METAOS_AGENT_MODEL || "muse-spark-1.3-contributor";
+// The contributor variant, not muse-spark-1.3: same API, same shape, cheaper
+// per token, and the chat box only ever asks for a short plain-text answer.
+// METAOS_CHAT_MODEL overrides it without touching code.
+export const AGENT_MODEL = "muse-spark-1.3-contributor";
 export const MAX_QUESTION_CHARS = 2000;
+export const MAX_CONTEXT_CHARS = 4000;
+// muse-spark is a reasoning model: it bills its own thinking against the
+// completion budget, and the thinking is the expensive, variable part.
+// Measured against the live endpoint on 2026-11-04: a one-sentence answer cost
+// 337 reasoning tokens, a 64-token cap returned content:null, and 1200 was
+// still not enough for 3 of 14 app questions (each burned 1198 reasoning
+// tokens and returned nothing). 3000 covers that spread; the cap only limits
+// what is produced, so a short answer still bills short.
+export const DEFAULT_MAX_TOKENS = 3000;
+export const DEFAULT_TIMEOUT_MS = 45000;
 
-const SYSTEM_PROMPT = [
-  "You are the duty agent inside Meta OS, the operating system's own agent layer.",
-  "The operator is looking at a live camera board for one division: Vigiles (police), Ignis (fire) or Medicus (EMS).",
-  "Answer in at most four sentences of plain text. No markdown, no lists unless asked for one.",
-  "Say only what the provided context supports. If the context does not answer the question, say what is missing instead of guessing.",
-  "This system is situational awareness only. It never dispatches, never identifies people, and never states a cause of injury or fire.",
+// One persona per app in the dock. `role` says what the app is for; `scope`
+// says what the agent may talk about there. Both are claims about this machine
+// only — the agent is never told it can act.
+export const APP_PROFILES = {
+  vigiles: {
+    label: "Vigiles",
+    role: "The operator is looking at the police camera board: which cameras are watched, and what the assessment model recorded on each frame.",
+    scope: "Visual event awareness for a police division. A flag is a reason for a human to look, never a dispatch, and never an identification of a person.",
+  },
+  ignis: {
+    label: "Ignis",
+    role: "The operator is looking at the fire division's board: the camera timeline, the frames assessed, and the results on them.",
+    scope: "Visible fire and smoke only. A flag is a reason to look, not a report of an incident, and the agent never states a cause.",
+  },
+  medicus: {
+    label: "Medicus",
+    role: "The operator is looking at the EMS board: the camera layer, the queued frames, and the scene notes recorded on them.",
+    scope: "Scene and casualty awareness. Triage here sorts frames for review, not patients, and the agent never diagnoses.",
+  },
+  science: {
+    label: "Science Lab",
+    role: "The operator is in the molecule lab, which draws structures from the local SDF packs beside the page.",
+    scope: "Molecules on this machine: atoms, bonds, formulas, and what the loaded file records. Say when a file does not carry the property asked about.",
+  },
+  musica: {
+    label: "Musica",
+    role: "The operator is in the music app, which plays the session takes that ship on this machine.",
+    scope: "The tracks, sessions and takes on this machine. The agent does not claim to hear audio; it reads what the session records say.",
+  },
+  officina: {
+    label: "Officina",
+    role: "The operator is in Officina, the engineering and design system: blueprint pages, dimension callouts and build records.",
+    scope: "The figures on the page and the records behind them. Figures are records from the merged tree, not live telemetry.",
+  },
+  custos: {
+    label: "Custos",
+    role: "The operator is in Custos, the oversight view: what the agents did, what the queue holds, and what was spent.",
+    scope: "Agent records, receipts and spend estimates on this machine. Never present an estimate as a bill.",
+  },
+  boards: {
+    label: "Boards",
+    role: "The operator is on the dispatch boards page: the board sections, incidents and the rooms they post into.",
+    scope: "What the boards show and which room carries which thread. The agent does not dispatch anyone.",
+  },
+  aegis: {
+    label: "Aegis",
+    role: "The operator is in Aegis, the security review surface: sweeps, findings, manifests and secret counts.",
+    scope: "Findings that were recorded, with their file and reason. Do not invent a finding and do not call an unproven one confirmed.",
+  },
+  nervus: {
+    label: "Nervus",
+    role: "The operator is in Nervus, the machine's service view: ports, trays and which backend answered.",
+    scope: "Services on 127.0.0.1, their ports and their health as the page reads them. Say when a port did not answer.",
+  },
+  messages: {
+    label: "Messages",
+    role: "The operator is in Messages, the one messaging app: rooms on the Board, and the NOTIFY lines the agents post.",
+    scope: "Rooms and lines the Board returns. The agent does not speak as another person and does not send messages.",
+  },
+  monitor: {
+    label: "Monitor",
+    role: "The operator is in the monitor, which reads machine facts from the local facts service.",
+    scope: "CPU, memory, disk and uptime as the page last read them. Say when the reading is stale.",
+  },
+  notes: {
+    label: "3D Notes",
+    role: "The operator is in 3D Notes, the piano-roll lab: sessions rendered as notes over time.",
+    scope: "Sessions and notes on this machine as the page draws them. The agent does not claim to hear the take.",
+  },
+  general: {
+    label: "Meta OS",
+    role: "The operator is somewhere in Meta OS and the page did not name an app.",
+    scope: "The Meta OS applications that ship on this machine. Say plainly when the question needs an app that is not open.",
+  },
+};
+
+export const APP_IDS = Object.keys(APP_PROFILES);
+
+// The three division pages post { division } instead of { app }. Mapped rather
+// than special-cased so one persona table serves both callers.
+const DIVISION_TO_APP = { vigiles: "vigiles", ignis: "ignis", medicus: "medicus" };
+
+const SHARED_RULES = [
+  "Answer in at most four sentences of plain text. No markdown, no headings, no bullet lists unless the question asks for one.",
+  "Say only what the provided context supports. If the context does not answer the question, name what is missing instead of guessing.",
+  "You are a read-only assistant: you cannot open apps, move the pointer, change the board, or send anything. Never claim you did.",
+  "This is situational awareness inside one machine. Never identify a person, never state a cause of injury or fire, and never present yourself as emergency services.",
 ].join(" ");
+
+export function profileFor(app) {
+  return APP_PROFILES[app] || APP_PROFILES.general;
+}
+
+export function systemPromptFor(app, bot) {
+  const profile = profileFor(app);
+  const base = [
+    `You are the ${profile.label} agent inside Meta OS, the operating system's own agent layer, running on this machine.`,
+    profile.role,
+    profile.scope,
+    SHARED_RULES,
+  ].join(" ");
+  // The app persona says what the page shows; the bot adds who is answering.
+  // Both are exported separately so a test can assert either without a call.
+  return bot ? botSystemPrompt(bot, base) : base;
+}
 
 export function validateAsk(payload) {
   if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
@@ -36,12 +177,67 @@ export function validateAsk(payload) {
   if (question.length > MAX_QUESTION_CHARS) {
     return { ok: false, error: `question: must be at most ${MAX_QUESTION_CHARS} characters` };
   }
-  const division = typeof payload.division === "string" ? payload.division.trim().toLowerCase() : "medicus";
-  if (!["vigiles", "ignis", "medicus"].includes(division)) {
-    return { ok: false, error: 'division: must be "vigiles", "ignis" or "medicus"' };
+  // app wins; division is the older name the division pages still send.
+  const rawApp = typeof payload.app === "string" ? payload.app.trim().toLowerCase() : "";
+  const rawDivision = typeof payload.division === "string" ? payload.division.trim().toLowerCase() : "";
+  let app = rawApp || DIVISION_TO_APP[rawDivision] || "";
+  if (!app) {
+    return {
+      ok: false,
+      error: `app: required and must be one of ${APP_IDS.join(", ")}`,
+    };
   }
-  const context = typeof payload.context === "string" ? payload.context.slice(0, 4000) : "";
-  return { ok: true, value: { question, division, context } };
+  if (!APP_PROFILES[app]) {
+    // An unknown id is the general persona, not a 400: a page built later must
+    // still get an answer instead of a dead chat box. The id is echoed back so
+    // it is obvious which page fell back.
+    app = "general";
+  }
+  const context = typeof payload.context === "string" ? payload.context.slice(0, MAX_CONTEXT_CHARS) : "";
+  // An unknown bot id is not a 400: the desk falls back to routing and says the
+  // id it could not find, so a page built later still gets an answer.
+  const requestedBot = typeof payload.bot === "string" && payload.bot.trim() ? payload.bot.trim().toLowerCase() : null;
+  const rawThread = typeof payload.thread === "string" ? payload.thread.trim() : "";
+  const thread = rawThread && validThreadId(rawThread) ? rawThread : null;
+  return {
+    ok: true,
+    value: {
+      question,
+      app,
+      requestedApp: rawApp || rawDivision || null,
+      context,
+      requestedBot,
+      thread,
+      threadRejected: Boolean(rawThread) && !thread,
+    },
+  };
+}
+
+// Who answers this message. Kept out of validateAsk because it needs the
+// roster, and out of askAgent so a test can ask the routing question alone.
+//
+// The room is the whole desk, not one app: the page's own bot is the lead, and
+// every other bot is a member you can reach by naming it (@Beaker) or by
+// asking something that clearly belongs to another desk ("how much memory is
+// free?" on the fire board). That is the point of a roster — one room, several
+// specialists — and the reply always says which of the two ways it was picked.
+export function chooseResponder(value, roster) {
+  const all = roster.bots || [];
+  const pageBots = botsForApp(roster, value.app);
+  const lead = pageBots[0] || all[0] || null;
+  if (value.requestedBot) {
+    const named = resolveBot(roster, value.requestedBot);
+    if (named) return { bot: named, picked_by: "chosen", score: 0 };
+  }
+  const picked = pickResponder({ bots: all, lead: lead && lead.id, text: value.question });
+  return {
+    bot: picked.bot,
+    picked_by:
+      value.requestedBot && picked.bot && picked.bot.id !== value.requestedBot && picked.picked_by === "lead"
+        ? "unknown-bot"
+        : picked.picked_by,
+    score: picked.score,
+  };
 }
 
 function content(data) {
@@ -53,9 +249,61 @@ function content(data) {
   return undefined;
 }
 
+// A bot may carry its own model (roster.json). It only wins when the roster
+// named one from the known list; anything else keeps the server default, so a
+// stale name cannot point the desk at a model that is not there.
+export function chatModel(env = process.env, bot = null) {
+  const serverDefault =
+    typeof env.METAOS_CHAT_MODEL === "string" && env.METAOS_CHAT_MODEL.trim()
+      ? env.METAOS_CHAT_MODEL.trim()
+      : AGENT_MODEL;
+  const model = bot && typeof bot.model === "string" && bot.model ? bot.model : serverDefault;
+  const configured = Number(env.METAOS_CHAT_MAX_TOKENS);
+  const maxTokens = Number.isFinite(configured) && configured > 0 ? Math.min(configured, 8000) : DEFAULT_MAX_TOKENS;
+  return { model, maxTokens };
+}
+
+// The request shape the model gets. Exported so a test can assert the persona
+// and the token cap without firing a call. opts: { bot, transcript }
+//
+// The transcript goes in the user message, not in fake assistant turns: one
+// thread can hold several bots, and labelling every past line "assistant"
+// would tell the model it wrote lines it did not write.
+export function buildChatBody(value, env = process.env, opts = {}) {
+  const { model, maxTokens } = chatModel(env, opts.bot);
+  const transcript = typeof opts.transcript === "string" ? opts.transcript.trim() : "";
+  return {
+    model,
+    messages: [
+      {
+        role: "system",
+        // A bot from another desk answers with its own desk's persona: the
+        // page context then reads as "what this screen shows", not as a claim
+        // about the bot's own app.
+        content: systemPromptFor(opts.bot && opts.bot.app !== value.app ? opts.bot.app : value.app, opts.bot),
+      },
+      {
+        role: "user",
+        content:
+          (value.context ? `What this app shows right now:\n${value.context}\n\n` : "") +
+          (transcript ? `Earlier in this room (oldest first):\n${transcript}\n\n` : "") +
+          `Question: ${value.question}`,
+      },
+    ],
+    // 0, not a "personality" temperature: this answers from the context it was
+    // handed, and a demo wants the same answer twice.
+    temperature: 0,
+    max_tokens: maxTokens,
+  };
+}
+
 export async function askAgent(payload, env = process.env, deps = {}) {
   const req = validateAsk(payload);
   if (!req.ok) return { status: 400, body: { error: req.error } };
+
+  const state = deps.rosterDir ?? deps.stateDir ?? stateDir(env);
+  const roster = deps.roster ?? loadRoster(state, env);
+  const { bot, picked_by } = chooseResponder(req.value, roster);
 
   const cfg = modelConfig(env);
   if (!cfg.keyPresent) {
@@ -90,38 +338,51 @@ export async function askAgent(payload, env = process.env, deps = {}) {
     return { status: 500, body: { error: "No fetch implementation available." } };
   }
 
+  // The operator's line is written before the call, so a transcript never
+  // loses what was asked even when the answer fails.
+  const thread = req.value.thread;
+  let history = { turns: [] };
+  if (thread) {
+    try {
+      history = readThread(state, thread, 24);
+      appendTurn(state, thread, { role: "operator", text: req.value.question });
+    } catch (err) {
+      // An unwritable state directory must not cost the operator an answer:
+      // the call goes ahead without memory and the response says so.
+      return {
+        status: 500,
+        body: {
+          error: `Thread ${thread} could not be written: ${err && err.message ? err.message : String(err)}`,
+          code: "thread_write_failed",
+        },
+      };
+    }
+  }
+
+  const transcript = history.turns.length ? formatTranscript(history.turns) : "";
+  const body = buildChatBody(req.value, env, { bot, transcript });
   const startedAt = Date.now();
   let res;
-  try {
-    res = await fetchFn(AGENT_ENDPOINT, {
+  try {      res = await fetchFn(chatEndpoint(env), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${env.SPARK_API_KEY}`,
       },
-      body: JSON.stringify({
-        model: AGENT_MODEL,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          {
-            role: "user",
-            content:
-              `Division: ${req.value.division}.\n` +
-              (req.value.context ? `Board context:\n${req.value.context}\n\n` : "") +
-              `Question: ${req.value.question}`,
-          },
-        ],
-      }),
-      signal: AbortSignal.timeout(45000),
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(Number(env.METAOS_CHAT_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS),
     });
   } catch (err) {
+    const reason = err && err.message ? err.message : String(err);
+    noteFailure(state, thread, `the model request failed: ${reason}`);
     return {
       status: 502,
-      body: { error: `Model request failed: ${err && err.message ? err.message : String(err)}`, code: "model_call_failed" },
+      body: { error: `Model request failed: ${reason}`, code: "model_call_failed" },
     };
   }
 
   if (!res.ok) {
+    noteFailure(state, thread, `the model request failed with HTTP ${res.status}`);
     return { status: 502, body: { error: `Model request failed with HTTP ${res.status}.`, code: "model_call_failed" } };
   }
 
@@ -129,19 +390,21 @@ export async function askAgent(payload, env = process.env, deps = {}) {
   try {
     data = await res.json();
   } catch {
+    noteFailure(state, thread, "the model response was not JSON");
     return { status: 502, body: { error: "Model response was not JSON.", code: "model_call_failed" } };
   }
 
   // Billable from here on, so record before answering, matching model.mjs.
   try {
     recordBudgetCall(
-      `agent-chat:${req.value.division}`,
-      data?.model ?? AGENT_MODEL,
+      `agent-chat:${req.value.app}`,
+      data?.model ?? body.model,
       data?.usage,
       Date.now() - startedAt,
       deps.budgetPath,
     );
   } catch (err) {
+    noteFailure(state, thread, `the spend ledger could not be written: ${err && err.message ? err.message : String(err)}`);
     return {
       status: 502,
       body: {
@@ -153,12 +416,81 @@ export async function askAgent(payload, env = process.env, deps = {}) {
 
   const reply = content(data);
   if (!reply || !reply.trim()) {
-    return { status: 502, body: { error: "Model returned no text.", code: "model_call_failed" } };
+    // The one failure that used to read as a bug in the chat box: a reasoning
+    // model that spent the whole budget thinking returns content:null. Name it.
+    const finish = data?.choices?.[0]?.finish_reason;
+    const reasoning = data?.usage?.completion_tokens_details?.reasoning_tokens;
+    const why = finish === "length"
+      ? `it used all ${body.max_tokens} completion tokens (${reasoning ?? "?"} on reasoning) before writing an answer`
+      : "it returned no text";
+    noteFailure(state, thread, `the model returned no reply text: ${why}`);
+    return {
+      status: 502,
+      body: {
+        error: `Model returned no reply text: ${why}. Raise METAOS_CHAT_MAX_TOKENS on the server and try again.`,
+        code: "model_call_failed",
+      },
+    };
   }
+
+  // The bot's answer joins the thread it answered in.
+  if (thread) {
+    try {
+      appendTurn(state, thread, { role: "bot", bot: bot ? bot.name : "Agent", text: reply.trim() });
+    } catch (err) {
+      return {
+        status: 502,
+        body: {
+          error: `The model answered but thread ${thread} could not be written: ${err && err.message ? err.message : String(err)}`,
+          code: "thread_write_failed",
+        },
+      };
+    }
+  }
+
+  let spend = null;
+  try {
+    const s = budgetStatus(deps.budgetPath);
+    spend = { calls: s.calls, est_cost_usd: s.est_cost_usd, remaining_usd: s.remaining_usd };
+  } catch {
+    spend = null; // Ledger unreadable after the fact is a missing line, not a failed answer.
+  }
+
   return {
     status: 200,
-    body: { reply: reply.trim(), model: data?.model ?? AGENT_MODEL, latency_ms: Date.now() - startedAt },
+    body: {
+      reply: reply.trim(),
+      app: req.value.app,
+      bot: bot ? { id: bot.id, name: bot.name, title: bot.title } : null,
+      // "chosen" was a chip or a name; "mention" a typed @name; "routing" the
+      // desk's own guess; "lead" the app's default bot. The UI prints this, so
+      // a guess is never shown as if the operator had picked it.
+      picked_by,
+      thread: thread || null,
+      history_turns: thread ? history.turns.length : 0,
+      model: data?.model ?? body.model,
+      latency_ms: Date.now() - startedAt,
+      spend,
+    },
   };
+}
+
+// A failed turn is recorded too, in the thread the operator was in. Best
+// effort: the failure being reported is the model's, not the file's.
+function noteFailure(state, thread, reason) {
+  if (!thread) return;
+  try {
+    appendTurn(state, thread, { role: "error", text: reason });
+  } catch {
+    /* the transcript stays readable without this line */
+  }
+}
+
+// The endpoint can be pointed at a local OpenAI-compatible server (the same
+// hook agents/model_client.mjs has) so a demo can run without the cloud.
+function chatEndpoint(env) {
+  const custom = typeof env.METAOS_CHAT_ENDPOINT === "string" ? env.METAOS_CHAT_ENDPOINT.trim() : "";
+  return custom || AGENT_ENDPOINT;
 }
 
 export { ModelError };

@@ -126,10 +126,18 @@ CASES=$(node -e '
 ')
 
 SERVER_LOG=$(mktemp -t metaos-chat-proof.XXXXXX)
+# Threads are written to a throwaway state directory, never to the desk's own
+# ~/.local/state/metaos/agents: a proof run must not leave rooms behind.
+PROOF_STATE=$(mktemp -d -t metaos-agents-proof.XXXXXX)
 SPARK_API_KEY="$SPARK_API_KEY" ASSESS_LIVE_MODEL=1 PORT="$PORT" METAOS_STATIC_ROOT="$STATIC_ROOT" \
+  METAOS_AGENTS_STATE="$PROOF_STATE" \
   node server/server.mjs > "$SERVER_LOG" 2>&1 &
 SERVER_PID=$!
-cleanup() { kill "$SERVER_PID" 2>/dev/null || true; wait "$SERVER_PID" 2>/dev/null || true; }
+cleanup() {
+  kill "$SERVER_PID" 2>/dev/null || true
+  wait "$SERVER_PID" 2>/dev/null || true
+  rm -rf "$PROOF_STATE"
+}
 trap cleanup EXIT
 
 for _ in $(seq 1 60); do
@@ -191,6 +199,70 @@ while IFS=$'\t' read -r app label; do
     break
   fi
 done <<< "$APPS"
+
+# The room, not just the pipe: the roster the box draws its chips from, a
+# thread that remembers the turn before it, and an answer that names the bot
+# and says whether a person picked it or the desk routed it.
+echo
+echo "== the room: roster, thread memory, and who answered"
+bot_count=$(curl -s -m 5 "http://127.0.0.1:$PORT/api/agent/roster" | node -e '
+  let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+    try { process.stdout.write(String((JSON.parse(s).bots||[]).length)); } catch { process.stdout.write("0"); }
+  });')
+if [ "$bot_count" -ge 10 ]; then
+  printf '  [ok]   roster lists %s bots\n' "$bot_count"
+else
+  printf '  [FAIL] roster lists %s bots\n' "$bot_count"
+  fails=$((fails + 1))
+fi
+
+THREAD="proof-room-$RANDOM"
+room_ask() { # thread, question, bot
+  node --input-type=module -e '
+    const [port, thread, question, bot] = process.argv.slice(1);
+    const body = { app: "ignis", question, thread, bot: bot || null };
+    const res = await fetch(`http://127.0.0.1:${port}/api/agent/ask`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+    const j = await res.json();
+    process.stdout.write(JSON.stringify({
+      status: res.status,
+      bot: j.bot ? j.bot.id : null,
+      picked_by: j.picked_by || null,
+      history_turns: j.history_turns ?? null,
+      text: (j.reply || j.error || "").slice(0, 110),
+    }));
+  ' "$PORT" "$1" "$2" "$3"
+}
+room_ok() { # label, json, expected-substring
+  case "$2" in
+    *"$3"*) printf '  [ok]   %-34s %s\n' "$1" "$2" ;;
+    *) printf '  [FAIL] %-34s %s (wanted %s)\n' "$1" "$2" "$3"; fails=$((fails + 1)) ;;
+  esac
+}
+
+first=$(room_ask "$THREAD" "Frame take-003 shows a low grey column above the roofline. What is recorded?" "")
+room_ok "lead answers the first turn" "$first" '"picked_by":"lead"'
+room_ok "the fire desk's bot is Ember" "$first" '"bot":"ember"'
+room_ok "nothing to remember yet" "$first" '"history_turns":0'
+
+second=$(room_ask "$THREAD" "And what did the frame before it show?" "")
+room_ok "the second turn sees the first" "$second" '"history_turns":2'
+
+third=$(room_ask "$THREAD" "@Beaker how many atoms are in caffeine?" "")
+room_ok "a mention reaches Beaker" "$third" '"bot":"beaker"'
+room_ok "a mention is reported as one" "$third" '"picked_by":"mention"'
+
+turns=$(curl -s -m 5 "http://127.0.0.1:$PORT/api/agent/thread?id=$THREAD" | node -e '
+  let s=""; process.stdin.on("data",d=>s+=d).on("end",()=>{
+    try { process.stdout.write(String((JSON.parse(s).turns||[]).length)); } catch { process.stdout.write("0"); }
+  });')
+if [ "$turns" = "6" ]; then
+  printf '  [ok]   the thread kept all 6 lines\n'
+else
+  printf '  [FAIL] the thread kept %s lines, wanted 6\n' "$turns"
+  fails=$((fails + 1))
+fi
 
 # The two face pages live on the 18900 static server, not on this one, so they
 # are checked through a throwaway copy of that server on 18901. Their box loads
