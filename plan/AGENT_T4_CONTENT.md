@@ -31,8 +31,10 @@ Do not edit `os-build/face/`, `trio/`, `agents/`, `agent-layer/`,
 - Every page you claim renders needs a headless screenshot at 1440x900 and a
   note on what data it loaded.
 - A page with no data must say so in the page, not in the console.
-- Use subagents. Split the sections across at least three. A subagent stays in
-  its section's files. A fourth reads the diffs against this file at the end.
+- Call subagents. You must use the subagent tool (Task) for the sections
+  below, at least three of them, and you must not do the work yourself in one
+  pass. A subagent stays in its section's files. A fourth subagent reads the
+  diffs against this file at the end.
 
 ## Section A. What the data looks like (1-16)
 

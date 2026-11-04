@@ -31,9 +31,11 @@ Do not edit `os-build/face/meta-desktop.sh`, `trio/`, `agents/`,
 - Any page you claim works needs a screenshot at 1440x900 with the real
   backend running, or a written reason it cannot render here.
 - Never invent a feature you did not build. If a page is static, say static.
-- Use subagents. Split the sections across at least three, one section group
-  each, then have a fourth read the diffs against this file. A subagent stays
-  inside its section's files.
+- Call subagents. You must use the subagent tool (Task) for the sections
+  below, at least three of them, and you must not do the work yourself in one
+  pass. Give each subagent one section group and its file list. Then have a
+  fourth subagent read the diffs against this file. A subagent stays inside
+  its section's files.
 
 ## Section A. Shell behaviour (1-20)
 

@@ -35,8 +35,11 @@ Anything else, request it in your report. Do not edit `os-build/face/`, the
   needs root on the host, stop and write it down.
 - Every claim needs a command and its output pasted in the report. "Should
   work" is not a result.
-- Use subagents. Split the sections below across at least three, then have one
-  read their diffs against this file. A subagent may only touch files in the
+- Call subagents. You must use the subagent tool (Task) for the sections
+  below, at least three of them, and you must not do the work yourself in one
+  pass. Give each subagent one section, its file list, and the proof command
+  it must paste. Then have one more subagent read every diff against this file
+  and hunt for claims without evidence. A subagent may only touch files in the
   section it was given.
 
 ## Section A. One writer for identity (1-18)

@@ -30,9 +30,11 @@ Do not edit `os-build/face/`, `trio/`, `os-build/identity/`, or
 - Never print a key. Check the environment and the files by presence and
   permissions, not by value.
 - Every run you claim must have its record file path in the report.
-- Use subagents. Split the sections across at least three. A subagent may only
-  touch the section it was given. Have one subagent read the whole diff against
-  this file at the end and hunt for invented claims.
+- Call subagents. You must use the subagent tool (Task) for the sections
+  below, at least three of them, and you must not do the work yourself in one
+  pass. A subagent may only touch the section it was given. Have one more
+  subagent read the whole diff against this file at the end and hunt for
+  invented claims.
 
 ## Section A. What exists today (1-18)
 
