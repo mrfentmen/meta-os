@@ -17,7 +17,7 @@ set -eu
 fail() { echo "INSTALL-FAIL: $*" >&2; exit 1; }
 step() { echo "STEP: $*"; }
 
-SRC=""; DISK=""; HOSTNAME="metaos"; USER="ubuntu"; KERNEL=""; INITRD=""
+SRC=""; DISK=""; HOSTNAME="metaos"; USER="meta"; KERNEL=""; INITRD=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --src) SRC=${2:-}; shift 2 ;;

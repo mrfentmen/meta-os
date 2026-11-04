@@ -29,3 +29,13 @@ Install targets (OC1):
   `os-build/metaos1-base/firstboot/metaos1-firstboot.sh`)
 
 Proof: `tests/agent-layer/test_desktop_entries.py` green.
+
+## Why evince is hidden, and where that note now lives
+
+The lane note used to sit inside `evince.desktop` as a comment. The entries
+checker bans lane vocabulary in the entry files (a menu may read them, and
+`Hana`/`KEEP` are not user-visible words), so the note moved here:
+
+- `evince.desktop` is DEGRADED-OFF: KEEP lists evince, the base ships atril,
+  so the entry is `NoDisplay=true` until the desktop owner acks it. Do not map
+  MIME types to it from this lane. `Comment=` stays a plain description.

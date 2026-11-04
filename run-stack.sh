@@ -18,7 +18,7 @@
 # it is used only when TRIO_SPARK_VIA_HELPER=1 was exported by hand,
 # because the helper lives outside this repository. With no key and
 # no explicit helper opt-in, the stack still starts, in a clearly
-# labelled NOT CONFIGURED / offline mode: queue, relay, and UI run,
+# labelled NOT CONFIGURED / offline mode: board, queue, and UI run,
 # but generation is honestly unavailable (assessments fail as
 # not_configured) until SPARK_API_KEY is set. TRIO_JOB_NS, if
 # exported before running this script, is inherited by the queue
@@ -65,7 +65,7 @@ elif [ "${TRIO_SPARK_VIA_HELPER:-}" = "1" ]; then
   echo "         this repository and is not part of a standalone run."
 else
   echo "WARNING: SPARK_API_KEY is not set — generation is NOT CONFIGURED."
-  echo "         Starting in offline mode: relay, queue, and UI run, but"
+  echo "         Starting in offline mode: board, queue, and UI run, but"
   echo "         assessments are unavailable until SPARK_API_KEY is set"
   echo "         in the environment (the production direct path)."
 fi

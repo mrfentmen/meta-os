@@ -176,7 +176,7 @@ chmod 0644 "$WORK/rootfs/usr/share/xsessions/metaos.desktop"
 mkdir -p "$WORK/rootfs/etc/lightdm/lightdm.conf.d"
 cat > "$WORK/rootfs/etc/lightdm/lightdm.conf.d/50-metaos.conf" <<'LIGHTDM'
 [Seat:*]
-autologin-user=ubuntu
+autologin-user=meta
 autologin-user-timeout=0
 user-session=metaos
 greeter-session=lightdm-gtk-greeter

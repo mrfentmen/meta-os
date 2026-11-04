@@ -96,6 +96,17 @@ def main(argv):
         elif a == "--division" and i + 1 < len(args):
             division = args[i + 1].strip().lower()
     index = INDEX
+    # imperium/ was retired when the console split into three division apps:
+    # the image no longer ships that page, so a bare `metaos-imperium.py`
+    # launch (the menu entry) would open nothing and exit 1. Fall back to the
+    # first division page that is actually installed instead of dying on a
+    # path the image stopped shipping.
+    if not os.path.exists(index):
+        for _label, _page in DIVISIONS.values():
+            _candidate = os.path.join(SITE_ROOT, "trio", _page)
+            if os.path.exists(_candidate):
+                index = _candidate
+                break
     if division is not None:
         if division not in DIVISIONS:
             sys.stderr.write(

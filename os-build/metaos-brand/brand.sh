@@ -64,7 +64,7 @@ NAME="$NAME"
 VERSION="$VERSION"
 VERSION_ID="$VERSION"
 ID=metaos
-ID_LIKE=ubuntu debian
+ID_LIKE=debian
 HOME_URL="https://metaos.local"
 SUPPORT_URL="https://metaos.local/support"
 BUG_REPORT_URL="https://metaos.local/bugs"
@@ -111,7 +111,7 @@ fi
 mkdir -p "$ROOT/etc/lightdm/lightdm.conf.d"
 cat > "$ROOT/etc/lightdm/lightdm.conf.d/50-metaos.conf" <<'EOF'
 [Seat:*]
-autologin-user=ubuntu
+autologin-user=meta
 autologin-user-timeout=0
 user-session=metaos
 greeter-session=unity-greeter

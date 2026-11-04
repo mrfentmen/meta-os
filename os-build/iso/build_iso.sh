@@ -201,7 +201,7 @@ inspect_mode() {
         printf '  [OK]      autologin-user=meta, user-session=metaos\n'
         checked=$((checked + 1))
     else
-        printf '  [MISSING] autologin ubuntu + metaos session in 50-metaos.conf\n'
+        printf '  [MISSING] autologin-user=meta + metaos session in 50-metaos.conf\n'
         missing=1
     fi
     unsquashfs -cat "$tmp/fs.squashfs" usr/share/xsessions/metaos.desktop > "$tmp/metaos.desktop" 2>/dev/null \

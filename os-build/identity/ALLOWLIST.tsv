@@ -389,3 +389,57 @@ os-build/lanes/T1_REPORT.md	Xubuntu	attribution	proof report: names the base it 
 os-build/lanes/T1_REPORT.md	xubuntu	attribution	proof report: names the base image file it was measured on
 os-build/lanes/T2_REPORT.md	Xubuntu	attribution	T2 report: names the base whose 12 dock tiles it mapped
 os-build/lanes/T4_REPORT.md	canonical	attribution	English word (sha256-identical canonical catalogues), not the company
+
+# merge round 2026-11-04: rows the r5 docs and carrier scripts arrived without
+PLAN.md	Ubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+PLAN.md	Xubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+PLAN.md	ubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+README.md	Ubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+README.md	Xubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+README.md	xubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/DEUBUNTU.md	Ubuntu	compat	debrand spec: the document exists to name what is removed
+os-build/DEUBUNTU.md	Xubuntu	compat	debrand spec: the document exists to name what is removed
+os-build/DEUBUNTU.md	canonical	compat	debrand spec: the document exists to name what is removed
+os-build/DEUBUNTU.md	ubuntu	compat	debrand spec: the document exists to name what is removed
+os-build/DEUBUNTU.md	xubuntu	compat	debrand spec: the document exists to name what is removed
+os-build/HACKATHON.md	Xubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/LAYERS.md	Ubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/LAYERS.md	Xubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/LAYERS_TRUTH.md	Ubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/LAYERS_TRUTH.md	Xubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/LAYERS_TRUTH.md	xubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/identity/deubuntu-gate.sh	Ubuntu	attribution	the gate's own search vocabulary and absence-claim messages
+os-build/identity/deubuntu-gate.sh	Xubuntu	attribution	the gate's own search vocabulary and absence-claim messages
+os-build/identity/deubuntu-gate.sh	ubuntu	attribution	the gate's own search vocabulary and absence-claim messages
+os-build/identity/deubuntu-gate.sh	xubuntu	attribution	the gate's own search vocabulary and absence-claim messages
+os-build/iso/BASE_FACTS.md	Ubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/iso/build-arm64-inner.sh	ubuntu	compat	base ISO filename, package name and a comment about the base variant
+os-build/iso/build_iso.sh	ubuntu	compat	docker image name of the build container
+os-build/iso/finalize-iso-tree.sh	Ubuntu	attribution	replaces the base's menu strings, so the old text is the needle
+os-build/iso/grub/README.md	Ubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/iso/grub/README.md	Xubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/iso/grub/README.md	ubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/iso/grub/README.md	xubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/iso/kernel/WHY_NOT_BOOTING.md	Ubuntu	attribution	names the carrier honestly: the base distro is a declared fact
+os-build/iso/metaos-install.sh	ubuntu	attribution	comment quotes the base default credentials the installer replaces
+os-build/lanes/A_APPS_REPORT.md	Ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/A_APPS_REPORT.md	ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/B_AGENTS_REPORT.md	ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/C_ISO_REPORT.md	Canonical	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/C_ISO_REPORT.md	Ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/C_ISO_REPORT.md	Xubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/C_ISO_REPORT.md	ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/C_ISO_REPORT.md	xubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/D_IDENTITY_REPORT.md	Ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/D_IDENTITY_REPORT.md	ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/D_IDENTITY_REPORT.md	xubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/PROMPTS_4AGENTS_2026-11-03.md	Ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/PROMPTS_4AGENTS_2026-11-03.md	Xubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/PROMPTS_4AGENTS_2026-11-03.md	ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/PROMPTS_4AGENTS_2026-11-03.md	xubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/WAKEUP_NATIVE_DESKTOP.md	Ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/WAKEUP_NATIVE_DESKTOP.md	Xubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/lanes/WAKEUP_NATIVE_DESKTOP.md	ubuntu	attribution	lane report: records the removal by naming the base it removed
+os-build/metaos-brand/brand.sh	Ubuntu	attribution	the script rewrites a stock rootfs; these are its search and removal patterns
+os-build/metaos-brand/brand.sh	Xubuntu	attribution	the script rewrites a stock rootfs; these are its search and removal patterns
+os-build/metaos-brand/brand.sh	xubuntu	attribution	the script rewrites a stock rootfs; these are its search and removal patterns

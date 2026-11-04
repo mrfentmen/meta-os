@@ -5,6 +5,21 @@ Written 2026-11-03 20:35 UTC by reading the repo **and** the booted image
 against a file that exists. Where something is claimed working, the evidence is
 named.
 
+> **This is a snapshot, and six rows below are no longer true (2026-11-04).**
+> The corrections, each checked against the tree that ships:
+>
+> | Row in this document | What is true now |
+> |---|---|
+> | §1 puts Aegis and Nuntius under "Engine, no UI" | Aegis has pages: `aegis-page/index.html` and `nervus/index.html`, both carrying the desk chat. Nuntius is the Board app (`board/board.mjs`, :18935), with a dock tile named Messages. |
+> | §2 says 18934 serves `index.html` and `logo-studio.html` | Both are deleted. 18934 serves `surfaces.html`, `bus.html`, `labs/`, `design/`, `os/worlds/`, and the pages of `aegis-page/` and `nervus/`. |
+> | §3's tile table lists 19 tiles including "Trio" and "Imperium" | 13 tiles ship in `payload-theme/apps/dock/`; `meta-desktop.sh:399-401` adds Vigiles, Ignis and Medicus, each opening `metaos-imperium.py --division vigiles\|ignis\|medicus`. The single Imperium tile is gone with the page. |
+> | §4 lists Logo Studio and Agent Budget as built-but-unused pages | Both deleted 2026-11-04 by the boss's call: they were studio/demo bloat, not apps. |
+> | §4 says `bus.html` is not on the image | It ships now, and it talks to the Board on :18935. The relay it used to need is deleted from the repo. |
+> | §5 says the security app has "no page, no tile, no window" | False now: Aegis and Nervus are pages. They still have no dock tile, which is the open half of that row. |
+>
+> Everything else below (the native-vs-surface distinction, the 3D/software-render
+> note, the engine inventory) still holds.
+
 ---
 
 ## 1. What counts as an "app" in Meta OS

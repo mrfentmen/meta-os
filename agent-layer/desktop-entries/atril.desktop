@@ -3,9 +3,6 @@ Type=Application
 Version=1.0
 Name=Atril
 GenericName=Document Viewer
-# Lane note (not user-visible): base-observed binary; KEEP still lists evince
-# pending Hana ack — see README. Comment= is what a menu shows, so it carries
-# no base-name.
 Comment=View PDF files
 Exec=atril %U
 TryExec=atril

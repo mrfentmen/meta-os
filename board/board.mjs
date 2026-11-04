@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // The Board — Meta OS's in-OS messaging board (Layer 6: shell and apps).
 //
-// The Board is the crew relay remade as a native board inside Meta OS.
-// It speaks the same plain-text line protocol as relay/ ("Meta
-// Nuntius"), which itself mirrors the external muse-relay crew bus:
+// The Board is the crew bus remade as a native board inside Meta OS.
+// It speaks the plain-text line protocol the crew bus has always used
+// ("Meta Nuntius"), and the board is now its only implementation:
 //
 //   message line : "<nick>: <text> [ts:<epoch-seconds>]"
 //   notify line  : "board: NOTIFY:<id> <severity> [<topic>] <text>
