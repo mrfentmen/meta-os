@@ -18,10 +18,10 @@ if printf '%s\n' "$body" | grep -qi 'ubuntu\|xubuntu'; then
 else
   echo "PASS grub-brand: no ubuntu/xubuntu in boot-visible text ($f)"
 fi
-if grep -q 'MetaOS' "$f"; then
-  echo "PASS grub-brand: MetaOS title present ($f)"
+if grep -qE 'Meta ?OS' "$f"; then
+  echo "PASS grub-brand: Meta OS title present ($f)"
 else
-  echo "FAIL grub-brand: no MetaOS title in $f"
+  echo "FAIL grub-brand: no Meta OS title in $f"
   rc=1
 fi
 exit $rc
