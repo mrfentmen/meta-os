@@ -34,10 +34,17 @@
   // in any other window shape. 1.76 stays as the pre-resize
   // default so the first frame is sane.
   var Y_PROJECTION = 1.76;
-  // Sized so the whole loop fits inside the viewport with
-  // margin: the panels are see-through, so the loop ghosts
-  // through them as one complete loop, never a crop.
-  var SCALE = 0.9;
+  // FILL, not fit. The approved desktop (face/index.html at 1600x900) shows the
+  // ribbon running edge to edge behind the windows, cropped by the viewport —
+  // the old 0.9 fitted the whole loop inside with margin, which is why the boss
+  // kept seeing "the logo is small and stuck in the corner".
+  //
+  // SCALE is no longer a magic number: fillScale() below solves for the scale
+  // that makes the loop's projected radius reach the canvas edge, in cells,
+  // from the same geometry the projection uses. BLEED > 1 pushes the ribbon
+  // past the edge so no straight edge of the loop is ever visible on screen.
+  var BLEED = 1.12;
+  var SCALE = 0.9; // pre-resize default; fillScale() replaces it on first layout
   var GLYPHS = " .,:;irsXA253hMHGS#9B&@";
   // One ramp per product, each built around that product's accent:
   // Vigiles blue #4f7ec2, Ignis red #d92b2b, Medicus green #5da864.
@@ -284,10 +291,44 @@
       canvas.width = pixelWidth;
       canvas.height = pixelHeight;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-    }
-    viewWidth = rect.width;
+    }    viewWidth = rect.width;
     viewHeight = rect.height;
+
     Y_PROJECTION = X_PROJECTION * (viewWidth / viewHeight);
+    SCALE = fillScale();
+  }
+
+  // Solve the scale that fills the canvas.
+  //
+  // The projection maps a point to a cell like this (see renderFrame):
+  //
+  //   xCells = x * SCALE * (1/depth) * WIDTH  * X_PROJECTION
+  //   yCells = y * SCALE * (1/depth) * HEIGHT * Y_PROJECTION
+  //
+  // so to reach half the canvas in cells (WIDTH/2 * BLEED) we need
+  //
+  //   SCALE = BLEED / (2 * extent * (1/CAMERA_DISTANCE) * PROJECTION)
+  //
+  // with `extent` the loop's largest coordinate on that axis, ribbon included.
+  // Depth is taken at the resting distance rather than per-point: the loop's
+  // own depth wobble (LOOP_Z, ~8 units in 80) would otherwise make the scale
+  // breathe every frame, and a background that visibly zooms is worse than one
+  // that is 4% off at the far side.
+  //
+  // xExtent/yExtent are the loop's outer envelope: the path's own amplitude
+  // (LOOP_X * 1.018, LOOP_Y * 1.025 — the two bulges in loopPoint) plus one
+  // ribbon width, because the surface is swept a full RIBBON_WIDTH either side
+  // of the centre line. The two axes are solved separately and the larger scale
+  // wins: whichever axis binds first is the one that fills last, so using the
+  // larger value guarantees both edges are covered at every aspect ratio.
+  function fillScale() {
+    if (!viewWidth || !viewHeight) return SCALE;
+    var invDepth = 1 / CAMERA_DISTANCE;
+    var xExtent = LOOP_X * 1.018 + RIBBON_WIDTH;
+    var yExtent = LOOP_Y * 1.025 + RIBBON_WIDTH;
+    var sx = BLEED / (2 * xExtent * invDepth * X_PROJECTION);
+    var sy = BLEED / (2 * yExtent * invDepth * Y_PROJECTION);
+    return Math.max(sx, sy);
   }
 
   // A resize SETS canvas.width/height, and assigning either one CLEARS the
@@ -386,6 +427,8 @@
       var invDepth = 1 / depth;
       var xp = Math.round(WIDTH / 2 + x1 * SCALE * invDepth * WIDTH * X_PROJECTION);
       var yp = Math.round(HEIGHT / 2 - y2 * SCALE * invDepth * HEIGHT * Y_PROJECTION);
+      // Fill means the near side of the ribbon can project outside the grid;
+      // the bounds check below drops those cells, which is the crop we want.
       if (xp < 0 || xp >= WIDTH || yp < 0 || yp >= HEIGHT) continue;
       var index = xp + yp * WIDTH;
       if (invDepth <= zBuffer[index]) continue;

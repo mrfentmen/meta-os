@@ -80,6 +80,63 @@ def _fit_to_screen(win):
         pass
 
 
+def _cover(pixbuf, width, height):
+    """Scale a frame to FILL width x height, cropping the overflow.
+
+    This is the fix for "the wallpaper is small and stuck in the corner".
+    Gtk.Image draws a pixbuf at its natural size: a 1920x1080 frame on a
+    1600x900 screen was centred with black bars, and a 1280x720 frame on a
+    1920x1080 screen sat in the middle as a postage stamp. A wallpaper has to
+    cover the screen, not fit inside it.
+
+    Cover, not contain: scale by the larger of the two ratios so both edges are
+    reached, then take the centred sub-pixbuf, which throws away the overflow.
+    The result is exactly width x height, so the Gtk.Image can never letterbox.
+
+    Cost: one bilinear scale per frame, only when the frame size differs from
+    the screen. In the shipped configuration the studio renders its loop at
+    1920x1080 and the session runs at 1920x1080, so this returns the original
+    pixbuf untouched and costs nothing. It is here for every other resolution,
+    and that is worth a scale per frame rather than a postage stamp.
+    """
+    from gi.repository import GdkPixbuf
+    pw, ph = pixbuf.get_width(), pixbuf.get_height()
+    if pw <= 0 or ph <= 0 or width <= 0 or height <= 0:
+        return pixbuf
+    if (pw, ph) == (width, height):
+        return pixbuf
+    scale = max(width / float(pw), height / float(ph))
+    sw = max(width, int(round(pw * scale)))
+    sh = max(height, int(round(ph * scale)))
+    scaled = pixbuf.scale_simple(sw, sh, GdkPixbuf.InterpType.BILINEAR)
+    if scaled is None:
+        # Out of memory or a broken codec: a centred frame beats a blank screen.
+        return pixbuf
+    return scaled.new_subpixbuf((sw - width) // 2, (sh - height) // 2, width, height)
+
+
+def _screen_size(win):
+    """The size the wallpaper must cover, read from the window we just sized.
+
+    _fit_to_screen() has already set the window to the monitor geometry, so the
+    window's own allocation is the truth here. Falling back to the monitor
+    geometry covers the frame before the first allocation, when the window is
+    still 1x1.
+    """
+    try:
+        w, h = win.get_size()
+        if w > 1 and h > 1:
+            return w, h
+    except Exception:
+        pass
+    try:
+        scr = win.get_screen()
+        geo = scr.get_monitor_geometry(scr.get_primary_monitor())
+        return geo.width, geo.height
+    except Exception:
+        return 0, 0
+
+
 def run_gui_images(framedir):
     import gi
     gi.require_version("Gtk", "3.0")
@@ -103,6 +160,10 @@ def run_gui_images(framedir):
     except Exception:
         pass
     img = Gtk.Image()
+    # FILL, not CENTER: with the default alignment Gtk.Image centres whatever
+    # size the pixbuf happens to be, which is the small-in-the-corner bug.
+    img.set_halign(Gtk.Align.FILL)
+    img.set_valign(Gtk.Align.FILL)
     win.add(img)
     win.maximize()
     win.show_all()
@@ -126,10 +187,13 @@ def run_gui_images(framedir):
         preloaded = []
 
     def show():
+        width, height = _screen_size(win)
         if preloaded:
-            img.set_from_pixbuf(preloaded[state["i"] % len(preloaded)])
+            frame = preloaded[state["i"] % len(preloaded)]
         else:
-            img.set_from_file(files[state["i"] % len(files)])
+            from gi.repository import GdkPixbuf
+            frame = GdkPixbuf.Pixbuf.new_from_file(files[state["i"] % len(files)])
+        img.set_from_pixbuf(_cover(frame, width, height))
         state["i"] += 1
         return True
 

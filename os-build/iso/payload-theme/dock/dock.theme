@@ -1,13 +1,20 @@
-# Plank theme MetaOS. Install: /usr/share/plank/themes/MetaOS/dock.theme
+# GENERATED FILE — do not edit.
+# Source: os-build/iso/payload-theme/tokens/meta.tokens.json
+# Regenerate: python3 os-build/iso/payload-theme/tokens/gen_theme.py
+# Install: /usr/share/plank/themes/MetaOS/dock.theme
+#
+# The reference dock is a 72%-opaque plate with a 1 px hairline and a soft
+# shadow. Plank takes colours as r;;g;;b;;a with 0..255 channels, so the alpha
+# column below is the same 0..1 token multiplied by 255.
 [PlankTheme]
-TopColor=24;;119;;242;;255
-BottomColor=7;;11;;22;;255
-LineColor=237;;245;;255;;255
-FillStartColor=24;;119;;242;;255
-FillEndColor=24;;119;;242;;255
-InnerStrokeColor=237;;245;;255;;90
-OuterStrokeColor=7;;11;;22;;255
-UrgentDotColor=255;;79;;154;;255
-LaunchBounceTime=600
+TopColor=20;;22;;28;;184
+BottomColor=20;;22;;28;;184
+LineColor=127;;127;;127;;76
+FillStartColor=20;;22;;28;;184
+FillEndColor=20;;22;;28;;184
+InnerStrokeColor=127;;127;;127;;76
+OuterStrokeColor=127;;127;;127;;76
+UrgentDotColor=232;;85;;63;;255
+LaunchBounceTime=120
 FadeOpacity=1
 IconShadow=1

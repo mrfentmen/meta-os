@@ -1,28 +1,38 @@
-# MetaOS xfwm4 — frozen tokens: blue #1877F2, paper #EDF5FF, ink #070B16,
-# muted #8291AC, light-blue #78BAFF. Install:
-# /usr/share/themes/MetaOS/xfwm4/themerc (ships beside gtk-3.0/).
-# Color-only theme: no button pixmaps, xfwm4 renders its default buttons
-# tinted by these colors. Select via: xfconf-query -c xfwm4 -p /general/theme -s MetaOS
+# GENERATED FILE — do not edit.
+# Source: os-build/iso/payload-theme/tokens/meta.tokens.json
+# Regenerate: python3 os-build/iso/payload-theme/tokens/gen_theme.py
+# Install: /usr/share/themes/MetaOS/xfwm4/themerc
+#
+# xfwm4 renders flat titlebars from colour pairs; there is no gradient and no
+# backdrop blur. The reference's glass titlebar is approximated by the window
+# background tint plus the accent on the focused title.
 button_layout=O|SHMC
-button_spacing=4
-title_horizontal_offset=4
-title_vertical_offset_active=2
-title_vertical_offset_inactive=2
-active_color_1=#1877F2
-active_color_2=#070B16
-active_hilight_1=#EDF5FF
-active_hilight_2=#78BAFF
-active_mid_color_1=#1877F2
-active_mid_color_2=#070B16
-active_shadow_1=#070B16
-active_shadow_2=#070B16
-inactive_color_1=#23272F
-inactive_color_2=#070B16
-inactive_hilight_1=#8291AC
-inactive_hilight_2=#8291AC
-inactive_mid_color_1=#23272F
-inactive_mid_color_2=#070B16
-inactive_shadow_1=#070B16
-inactive_shadow_2=#070B16
-title_shadow_active=#070B16
-title_shadow_inactive=#070B16
+button_spacing=6
+title_horizontal_offset=12
+title_vertical_offset_active=8
+title_vertical_offset_inactive=8
+title_alignment=center
+
+active_text_color=#e8ecf4
+inactive_text_color=#8b93a7
+
+active_color_1=#0e1016
+active_color_2=#0e1016
+active_hilight_1=#4f7ec2
+active_hilight_2=#0750bc
+active_mid_color_1=#0e1016
+active_mid_color_2=#0e1016
+active_shadow_1=#000000
+active_shadow_2=#000000
+
+inactive_color_1=#0e1016
+inactive_color_2=#0e1016
+inactive_hilight_1=#7f7f7f
+inactive_hilight_2=#7f7f7f
+inactive_mid_color_1=#0e1016
+inactive_mid_color_2=#0e1016
+inactive_shadow_1=#000000
+inactive_shadow_2=#000000
+
+title_shadow_active=#000000
+title_shadow_inactive=#000000

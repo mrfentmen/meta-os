@@ -1,64 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- MetaOS top bar (Xfce).
-     Install: ~/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
-     or the channel default /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/.
+<!-- GENERATED FILE — do not edit.
+     Source: os-build/iso/payload-theme/tokens/meta.tokens.json
+     Regenerate: python3 os-build/iso/payload-theme/tokens/gen_theme.py
 
-     Geometry is copied from the Xubuntu panel that already works on this
-     image, because the snap enum is not guessable: p=6 is TOP, length=100 is
-     a PERCENTAGE, and there is no length-adjust property. An invented
-     length-adjust=false + p=1 produced a short strip in a corner, twice.
+     Meta top bar: a 30 px full-width strip, black at 96%, the Meta mark and
+     name on the left, the clock centred, network and theme mode on the right.
 
-     Layout: Meta menu | window buttons | spacer | clock | tray -->
+     Centring is done with two expanding separators, not by a "centre" property
+     — Xfce panels have no such thing, and a clock placed between two stretchy
+     separators is the only way to keep it centred as window buttons grow. -->
 <channel name="xfce4-panel" version="1.0">
-  <property name="configver" type="int" value="2"/>
   <property name="panels" type="array">
     <value type="int" value="1"/>
-    <property name="dark-mode" type="bool" value="true"/>
     <property name="panel-1" type="empty">
-      <property name="position" type="string" value="p=6;x=0;y=0"/>
+      <property name="position" type="string" value="p=8;x=0;y=0"/>
       <property name="length" type="uint" value="100"/>
-      <property name="position-locked" type="bool" value="true"/>
       <property name="size" type="uint" value="30"/>
-      <property name="icon-size" type="uint" value="16"/>
       <property name="background-style" type="uint" value="1"/>
       <property name="background-rgba" type="array">
-        <value type="double" value="0.027"/>
-        <value type="double" value="0.043"/>
-        <value type="double" value="0.086"/>
-        <value type="double" value="0.960"/>
+        <value type="double" value="0.000"/>
+        <value type="double" value="0.000"/>
+        <value type="double" value="0.000"/>
+        <value type="double" value="0.96"/>
       </property>
+      <property name="orientation" type="uint" value="0"/>
       <property name="plugin-ids" type="array">
         <value type="int" value="1"/>
         <value type="int" value="2"/>
         <value type="int" value="3"/>
         <value type="int" value="4"/>
         <value type="int" value="5"/>
+        <value type="int" value="6"/>
       </property>
     </property>
   </property>
   <property name="plugins" type="empty">
-    <!-- The menu button IS the brand: mark + wordmark, not "Applications". -->
-    <property name="plugin-1" type="string" value="applicationsmenu">
-      <property name="button-title" type="string" value="Meta OS"/>
-      <property name="show-button-title" type="bool" value="true"/>
-      <property name="icon-name" type="string" value="/usr/share/backgrounds/meta-m.png"/>
-    </property>
-    <property name="plugin-2" type="string" value="tasklist">
-      <property name="grouping" type="uint" value="1"/>
-      <property name="show-labels" type="bool" value="true"/>
-    </property>
-    <!-- separator with expand=true is what spreads the bar and pushes the
-         clock/tray to the right edge. Without it everything bunches up. -->
+    <property name="plugin-1" type="string" value="applicationsmenu"/>
+    <property name="plugin-2" type="string" value="tasklist"/>
     <property name="plugin-3" type="string" value="separator">
       <property name="expand" type="bool" value="true"/>
       <property name="style" type="uint" value="0"/>
     </property>
     <property name="plugin-4" type="string" value="clock">
-      <property name="digital-format" type="string" value="%a %d %b  %H:%M"/>
-      <property name="mode" type="uint" value="2"/>
+      <property name="digital-layout" type="uint" value="3"/>
+      <property name="digital-time-format" type="string" value="%a, %b %e %H:%M"/>
     </property>
-    <property name="plugin-5" type="string" value="systray">
-      <property name="square-icons" type="bool" value="true"/>
+    <property name="plugin-5" type="string" value="separator">
+      <property name="expand" type="bool" value="true"/>
+      <property name="style" type="uint" value="0"/>
     </property>
+    <property name="plugin-6" type="string" value="systray"/>
   </property>
 </channel>

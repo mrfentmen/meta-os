@@ -1,21 +1,135 @@
-/* MetaOS gtk.css override — applied over the base theme. Colors locked to
-   studio palette until boss locks brand kit (blue #1877F2, white #EDF5FF,
-   black #070B16). Install: /usr/share/themes/MetaOS/gtk-3.0/gtk.css */
-/* Type: Inter (SIL OFL 1.0+, package fonts-inter — same face the LightDM
-   greeter uses via font-name=Inter 11, see greeter/). Referenced here so
-   every GTK surface renders the Meta face even where xfconf is absent. */
-window, headerbar, button, menu, menuitem, label, entry, treeview {
-  font-family: 'Inter', 'Ubuntu', system-ui, sans-serif;
-}
-@define-color meta_blue #1877F2;
-@define-color meta_blue_light #78BAFF;
-@define-color meta_ink #070B16;
-@define-color meta_paper #EDF5FF;
-@define-color meta_muted #8291AC;
+/* GENERATED FILE — do not edit.
+ * Source: os-build/iso/payload-theme/tokens/meta.tokens.json
+ * Regenerate: python3 os-build/iso/payload-theme/tokens/gen_theme.py
+ * Verify:     python3 os-build/iso/payload-theme/tokens/gen_theme.py --check
+ *
+ * Reference: face/face.css (the desktop the boss approved). Two deliberate
+ * differences from the browser: no backdrop blur (GTK3 cannot do it at a sane
+ * cost) and no CSS animation on hover (GTK3 toggles, it does not tween).
+ */
+@define-color meta_accent #4f7ec2;
+@define-color meta_accent_deep #0750bc;
+@define-color meta_accent_bright #9dc0f2;
+@define-color meta_ink #000000;
+@define-color meta_paper #ffffff;
+@define-color meta_muted #8b93a7;
+@define-color meta_bg #04060c;
+@define-color meta_window rgba(14, 16, 22, 0.92);
+@define-color meta_win_fg #e8ecf4;
+@define-color meta_hairline rgba(127, 127, 127, 0.3);
 
-*:selected { background-color: @meta_blue; color: @meta_paper; }
-button.suggested-action { background-color: @meta_blue; color: @meta_paper; }
-entry:focus { border-color: @meta_blue; }
-headerbar { background-color: @meta_ink; color: @meta_paper; }
-headerbar button { color: @meta_paper; }
-tooltip { background-color: @meta_ink; color: @meta_paper; border-color: @meta_blue; }
+* {
+  font-family: 'Inter', -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  outline-color: @meta_accent;
+  outline-style: solid;
+  outline-width: 1px;
+  -GtkWidget-focus-padding: 0;
+  -GtkWidget-focus-line-width: 1px;
+}
+
+/* ---- windows ------------------------------------------------------- */
+window, .background {
+  background-color: @meta_window;
+  color: @meta_win_fg;
+  border-radius: 12px;
+}
+
+/* X11 has no rounded corners without a compositor, so the radius is a request,
+   not a guarantee. The hairline is what actually reads as a window edge. */
+decoration {
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(127, 127, 127, 0.3);
+}
+
+headerbar, .titlebar {
+  background-color: rgba(255, 255, 255, 0.08);
+  background-image: none;
+  color: @meta_win_fg;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+  box-shadow: none;
+  min-height: 0;
+}
+headerbar title, .titlebar .title {
+  font-size: 13px;
+  font-weight: 700;
+}
+headerbar button, .titlebar button {
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0;
+  margin-left: 6px;
+  border-radius: 11px;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  background-image: none;
+  background-color: rgba(127, 127, 127, 0.25);
+  color: inherit;
+}
+
+/* ---- content ------------------------------------------------------- */
+textview, textview text, .view {
+  background-color: @meta_window;
+  color: @meta_win_fg;
+  font-size: 14px;
+}
+label { color: inherit; }
+
+entry, spinbutton, textview.frame {
+  background-color: rgba(127, 127, 127, 0.12);
+  color: inherit;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 10px;
+  padding: 6px 9px;
+}
+entry:focus, spinbutton:focus { border-color: @meta_accent; }
+
+button {
+  background-image: none;
+  background-color: rgba(127, 127, 127, 0.12);
+  color: inherit;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 9px;
+  padding: 6px 12px;
+}
+button:hover { background-color: rgba(127, 127, 127, 0.22); }
+button:active, button:checked { background-color: @meta_accent; color: @meta_paper; }
+button.suggested-action { background-color: @meta_accent; color: @meta_paper; }
+button.destructive-action { background-color: #e8553f; color: @meta_paper; }
+
+menu, .menu, popover, .popover {
+  background-color: #0e1016;
+  color: @meta_win_fg;
+  border: 1px solid rgba(127, 127, 127, 0.3);
+  border-radius: 10px;
+  padding: 4px;
+}
+menuitem:hover, .menu menuitem:hover, popover modelbutton:hover {
+  background-color: @meta_accent;
+  color: @meta_paper;
+}
+
+*:selected, *:selected:focus, row:selected {
+  background-color: @meta_accent;
+  color: @meta_paper;
+}
+tooltip, tooltip.background {
+  background-color: @meta_ink;
+  color: @meta_paper;
+  border: 1px solid @meta_accent;
+  border-radius: 6px;
+}
+
+scrollbar slider {
+  background-color: rgba(127, 127, 127, 0.45);
+  border-radius: 999px;
+  min-width: 6px;
+  min-height: 6px;
+}
+scrollbar slider:hover { background-color: @meta_accent; }
+
+separator { background-color: rgba(127, 127, 127, 0.3); min-width: 1px; min-height: 1px; }
+
+/* The plank dock and the panel paint themselves; these rules exist so GTK apps
+   launched from them do not arrive in the base theme's grey. */
+.xfce4-panel { font-size: 13px; }
