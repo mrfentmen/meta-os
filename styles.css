@@ -13,7 +13,9 @@
   --ok: #5da864;
   --warn: #c9a227;
   --err: #c2504a;
-  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Vendored, not system-ui: on the image system-ui is DejaVu, not SF. */
+  --sans: "Manrope", ui-sans-serif, system-ui, -apple-system, sans-serif;
 }
 
 body[data-product="vigiles"] {
@@ -36,7 +38,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--sans);
   font-size: 15px;
   line-height: 1.45;
 }
@@ -395,7 +397,7 @@ select {
 }
 
 select {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--sans);
 }
 
 .note {

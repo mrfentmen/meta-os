@@ -64,6 +64,8 @@ const CONTENT_TYPES = {
   ".jsonl": "application/x-ndjson; charset=utf-8",
   ".geojson": "application/geo+json; charset=utf-8",
   ".webmanifest": "application/manifest+json",
+  ".woff2": "font/woff2",
+  ".woff": "font/woff",
   ".png": "image/png",
 };
 

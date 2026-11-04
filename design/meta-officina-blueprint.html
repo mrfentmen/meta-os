@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meta Officina — Workshop</title>
 <link rel="icon" href="data:,">
+<link rel="stylesheet" href="/vendor/fonts/fonts.css">
 <style>
   :root { color-scheme: dark; }
-  body { margin: 0; color: #dbe9ff; font-family: ui-monospace, Menlo, Consolas, monospace;
+  body { margin: 0; color: #dbe9ff; font-family: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
     background-color: #0a2a5e;
     background-image: linear-gradient(rgba(160,195,255,0.13) 1px, transparent 1px), linear-gradient(90deg, rgba(160,195,255,0.13) 1px, transparent 1px), linear-gradient(rgba(160,195,255,0.05) 5px, transparent 5px), linear-gradient(90deg, rgba(160,195,255,0.05) 5px, transparent 5px);
     background-size: 100px 100px, 100px 100px, 20px 20px, 20px 20px; }
@@ -31,6 +32,8 @@
   .officina-board ul { margin: 0 0 8px; padding-left: 16px; font-size: 12px; }
   #runs-content, #runs-content div, #runs-content p, #runs-content li { overflow-wrap: anywhere; }
   main, .card { min-width: 0; overflow-wrap: anywhere; }
+  header h1, .card h2, .officina-board h3 { font-weight: 600; }
+  .sheet, .card::before, .dim { font-family: "Space Mono", ui-monospace, monospace; }
 </style>
 </head>
 <body>

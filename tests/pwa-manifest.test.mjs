@@ -44,3 +44,9 @@ test("app server serves .webmanifest and .png instead of 404", () => {
   assert.ok(serverJs.includes('".webmanifest": "application/manifest+json"'));
   assert.ok(serverJs.includes('".png": "image/png"'));
 });
+
+test("app server serves vendored fonts instead of 404", () => {
+  // The offline type is woff2 under vendor/fonts; the static map is an
+  // allowlist, so a missing row is a silent fallback to system fonts.
+  assert.ok(serverJs.includes('".woff2": "font/woff2"'));
+});

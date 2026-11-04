@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:,">
+<link rel="stylesheet" href="/vendor/fonts/fonts.css">
 <title>Vigiles: Police console</title>
 <style>
   /* Vigiles is the map-first division. Everything else floats over the map,
@@ -12,15 +13,19 @@
 
      This page owns its whole stylesheet. The three division pages share
      behaviour (core.js, ops.js) and share no look: Vigiles is a cold, square,
-     dense console; Ignis is a warm serif gallery; Medicus is light paper. */
+     dense console; Ignis is a warm ember gallery; Medicus is light paper. */
 
   /* ---- base (page-owned, not inherited from a shared skin) ---- */
+  :root {
+    --sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
   body {
     background: #070b16;
     color: #e6ebf5;
-    font-family: "Helvetica Neue", "DejaVu Sans", system-ui, sans-serif;
+    font-family: var(--sans);
     font-size: 12.5px;
     line-height: 1.45;
     overflow: hidden;
@@ -33,7 +38,7 @@
   :focus-visible { outline: 1px solid #7fa8e0; outline-offset: 1px; }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: rgba(120, 150, 200, 0.25); }
-  .mono { font-family: ui-monospace, "SF Mono", "DejaVu Sans Mono", monospace; }
+  .mono { font-family: var(--mono); }
   .dim { color: #93a1ba; }
   .dimmer { color: #66748c; }
   .fail { color: #e0564f; }
