@@ -147,7 +147,20 @@ if [ -f "$THEME_SRC/panel/xfce4-panel.xml" ]; then
     $SUDO mkdir -p "$d"
     $SUDO install -m644 "$THEME_SRC/panel/xfce4-panel.xml" "$d/xfce4-panel.xml"
   done
-  echo "provision(face): Meta panel -> /etc/xdg + /etc/skel"
+  # …and the users who already exist. meta-desktop.sh copies the channel at
+  # login, but the image's own account had a two-panel Xubuntu layout in its
+  # home that won the last time the session started, so the "top bar" was on
+  # the bottom edge. Writing it here means the next login cannot disagree.
+  for home in "$ROOT"/home/*; do
+    [ -d "$home" ] || continue
+    d="$home/.config/xfce4/xfconf/xfce-perchannel-xml"
+    $SUDO mkdir -p "$d"
+    $SUDO install -m644 "$THEME_SRC/panel/xfce4-panel.xml" "$d/xfce4-panel.xml"
+    owner=$(basename "$home")
+    $SUDO chown "$owner" "$d/xfce4-panel.xml" 2>/dev/null || true
+    echo "provision(face): Meta panel -> $d"
+  done
+  echo "provision(face): Meta panel -> /etc/xdg + /etc/skel + existing homes"
 fi
 
 # window decorations. MetaOS/xfwm4/themerc is what colours the titlebar; the
